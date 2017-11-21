@@ -49,12 +49,17 @@ Any changes pushed to the `master` branch should be tagged with a version number
  - Lines of code need not to be restricted to 79 characters.  However, it is encouraged to break up obnoxiously long lines into several lines if it benefits the overall readability of the code
  -
 
+ Additionally, the code shall adhere to the following guidelines:
+
+ - Function and class definitions should be placed in alphabetical order in the module
+ -
+
 
 `jwql`-Specific Documentation Standards
 ---------------------------------------
 
 `jwql` code shall adhere to the `PEP257` and `numpydoc` conventions.  The following are further reccomendations:
 
-- Each module should have at minimum a description, `Authors`, `Use`, and `Dependencies` seciton.
+- Each module should have at minimum a description, `Authors` and `Use` seciton.
 - Each function/method should have at minimum a description, `Parameters` (if necessary), and `Returns` (if necessary) sections
 -
