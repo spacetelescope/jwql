@@ -26,9 +26,9 @@ All software development for the `jwql` project should follow a continuous integ
 5. Create a new pull request that compares the new branch to the target branch (usually `master`, unless one is branching off of another branch).
 6. Request a reviewer on the pull request.
 7. The reviewer checks the pull request against this style guide and proposes changes if necessary.
-8. The author and reviewer iterate on changes until everyone is satisfied.
+8. The author and reviewer iterate on changes until everyone is satisfied. The author can now squash commits if neccesary/desired.
 9. The reviewer accepts the pull request, merges the branch, and deletes the branch unless asked not to.
-10. The author comments on the original GitHub issue with link to appropriate pull request and closes the issue if satisfied.
+10. The author comments on the original GitHub issue with link to appropriate pull request and closes the issue if satisfied. (This can also be done by adding a "closes #3" in the original commit message, and the issue will be closed when that commit is merged into master.
 
 
 Version Numbers and Tags
