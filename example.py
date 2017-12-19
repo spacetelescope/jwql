@@ -67,6 +67,11 @@ import scipy
 from sqlalchemy import Float, Integer, String
 
 
+# Global variables should be avioded, but if used should be named with
+# all-caps
+A_GLOBAL_VARIABLE = 'foo'
+
+
 def my_main_function(path, filter):
     """The main function of the ``example`` module.
 
@@ -155,7 +160,14 @@ def some_other_function(an_int, a_float, a_bool, a_list, a_tuple, a_dict, an_obj
         The result of the function.
     """
 
-    pass
+    # File I/O should be handeled with 'with open' when possible
+    with open('my_file', 'w') as f:
+        f.write('My favorite integer is {}'.format(an_int))
+
+    # Operators should be separated by spaces
+    print(a_float + a_float)
+
+
 
 
 if __name__ == '__main__':
