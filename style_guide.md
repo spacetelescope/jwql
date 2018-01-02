@@ -73,3 +73,10 @@ If `jwql` code needs to be aware of this information, it should be stored in a c
 
 - Each module should have at minimum a description, `Authors` and `Use` section.
 - Each function/method should have at minimum a description, `Parameters` (if necessary), and `Returns` (if necessary) sections
+
+
+Tools and Library Recommendations
+---------------------------------
+
+- `argparse` for parsing command line arguments
+- `bokeh` for interactive plotting
