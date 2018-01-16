@@ -64,6 +64,7 @@ If `jwql` code needs to be aware of this information, it should be stored in a c
  Additionally, the code shall adhere to the following special guidelines:
 
  - Function and class definitions should be placed in alphabetical order in the module
+ - It is encouraged to annotate variables and functions using the [`typing`](https://docs.python.org/3/library/typing.html) module (see [PEP 483](https://www.python.org/dev/peps/pep-0483/), [PEP 484](https://www.python.org/dev/peps/pep-0484/), and [PEP 526](https://www.python.org/dev/peps/pep-0526/)). In addition, it is recommended that code be type-checked using [`mypy`](http://mypy-lang.org/) before a pull request is submitted.
 
 
 `jwql`-Specific Documentation Standards
