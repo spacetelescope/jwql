@@ -59,6 +59,7 @@ import argparse
 import glob
 import os
 import sys
+from typing import List, Union, Tuple, Optional, Any, Dict
 
 from astropy.io import fits
 import matplotlib.pyplot as plt
@@ -69,10 +70,10 @@ from sqlalchemy import Float, Integer, String
 
 # Global variables should be avioded, but if used should be named with
 # all-caps
-A_GLOBAL_VARIABLE = 'foo'
+A_GLOBAL_VARIABLE = 'foo' # type: str
 
 
-def my_main_function(path, filter):
+def my_main_function(path: str, filter: str) -> None:
     """The main function of the ``example`` module.
 
     This function performs the main tasks of the module.  See module
@@ -87,20 +88,20 @@ def my_main_function(path, filter):
     """
 
     print('Using {} as an input file'.format(path))
-    an_int = 1
-    a_float = 3.14
-    a_bool = True
-    a_list = ['Dog', 'Cat', 'Turtle', False, 7]
-    a_tuple = ('Dog', 'Cat', 'Turtle', False, 7)
-    a_dict = {'key1': 'value1', 'key2': 'value2'}
-    an_obj = object()
+    an_int = 1 # type: int
+    a_float = 3.14 # type: float
+    a_bool = True # type: bool
+    a_list = ['Dog', 'Cat', 'Turtle', False, 7] # type: List[Union[str, bool, int]]
+    a_tuple = ('Dog', 'Cat', 'Turtle', False, 7) # type: Tuple[str, str, str, bool, int]
+    a_dict = {'key1': 'value1', 'key2': 'value2'} # type: Dict[str, str]
+    an_obj = object() # type: object
 
-    result = some_other_function(an_int, a_float, a_bool, a_list, a_tuple, a_dict, an_obj)
+    result = some_other_function(an_int, a_float, a_bool, a_list, a_tuple, a_dict, an_obj) # type: Optional[int]
 
     print(result)
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     """Parse command line arguments. Returns ``args`` object.
 
     Returns
@@ -110,11 +111,11 @@ def parse_args():
     """
 
     # Create help strings
-    path_help = 'The path to the input file.'
-    filter_help = 'The filter to process (e.g. "F606W").'
+    path_help = 'The path to the input file.' # type: str
+    filter_help = 'The filter to process (e.g. "F606W").' # type: str
 
     # Add arguments
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser() # type: argparse.ArgumentParser
     parser.add_argument('path',
                         type=str,
                         default=os.getcwd(),
@@ -127,12 +128,13 @@ def parse_args():
                         help=filter_help)
 
     # Parse args
-    args = parser.parse_args()
+    args = parser.parse_args() # type: argparse.Namespace
 
     return args
 
 
-def some_other_function(an_int, a_float, a_bool, a_list, a_tuple, a_dict, an_obj):
+def some_other_function(an_int: int, a_float: float, a_bool: bool, a_list: List[Any], 
+                        a_tuple: Tuple[Any], a_dict: Dict[Any, Any], an_obj: object) -> int:
     """This function just does a bunch of nonsense.
 
     But it serves as a decent example of some things.
@@ -166,12 +168,13 @@ def some_other_function(an_int, a_float, a_bool, a_list, a_tuple, a_dict, an_obj
 
     # Operators should be separated by spaces
     print(a_float + a_float)
-
+    
+    return an_int
 
 
 
 if __name__ == '__main__':
 
-    args = parse_args()
+    args = parse_args() # type: argparse.Namespace
 
     my_main_function(args.path, args.filter)
