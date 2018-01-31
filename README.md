@@ -25,18 +25,47 @@ Be sure to talk about the [style guide](https://github.com/spacetelescope/jwql/b
 
 ### Make an issue on github
 
+This is most easily done 
+
 ### Make a branch
 
 ### Best Practices:
 
 (1) As you go be sure to follow the steps:
-    (a) git add ----
-    (b) git commit -m " "
-    (c) git push ----
-        *The first time that you push your branch you will get a warning and first need to run this: 
+    (a) git add 'file.py'
+    (b) git commit -m " This is the first commit of the first code for this project. "
+    (c) git push
+        *** The first time that you push your branch you will get a warning and first need to run this: 
         ```
-        git push --set-upstream origin ----
+        git push --set-upstream origin your_branch_name
         ```
+     (d) Repeat! Feel free to repeat everytime you make a big change to your project and/or at the end of every work day to ensure you're keeping track of your work in incremental steps that make sense for you. 
+
+### Switching Branches: 
+When you are working on a project you will have made a branch to change or add files. But what if you now need to go back to the current version of the project to work on something else? You can switch your branch!
+
+To check what branch you are on: 
+```
+git branch
+
+```
+
+To change to the current version of the project: 
+```
+git checkout -b master
+```
+
+To get up to date with the current version of the project:
+```
+git pull
+```
+
+### Merging your Branch with the Master Branch: 
+What do you do once you've finished your addition or changes to the project and want to get it into the most recent version?
+
+This is most easily done on the github website at the project page. 
+
+
 
 
 ## Versioning
