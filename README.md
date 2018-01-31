@@ -31,15 +31,25 @@ This is most easily done
 
 ### Best Practices:
 
-(1) As you go be sure to follow the steps:
-    (a) git add 'file.py'
-    (b) git commit -m " This is the first commit of the first code for this project. "
-    (c) git push
-        *** The first time that you push your branch you will get a warning and first need to run this: 
-        ```
-        git push --set-upstream origin your_branch_name
-        ```
-     (d) Repeat! Feel free to repeat everytime you make a big change to your project and/or at the end of every work day to ensure you're keeping track of your work in incremental steps that make sense for you. 
+As you go be sure to follow the steps:
+
+    ```
+    git add 'file.py'
+    ```
+    ```
+    git commit -m " This is the first commit of the first code for this project. "
+    ```
+    ```
+    git push
+    ```
+    
+    *** The first time that you push your branch you will get a warning and first need to run this: 
+    
+    ```
+    git push --set-upstream origin your_branch_name
+    ```
+
+Repeat! Feel free to repeat everytime you make a big change to your project and/or at the end of every work day to ensure you're keeping track of your work in incremental steps that make sense for you. 
 
 ### Switching Branches: 
 When you are working on a project you will have made a branch to change or add files. But what if you now need to go back to the current version of the project to work on something else? You can switch your branch!
