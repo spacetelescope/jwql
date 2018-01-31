@@ -35,17 +35,13 @@ As you go be sure to follow the steps:
 
     ```
     git add 'file.py'
-    ```
-    ```
+
     git commit -m " This is the first commit of the first code for this project. "
-    ```
-    ```
+
     git push
-    ```
     
     *** The first time that you push your branch you will get a warning and first need to run this: 
-    
-    ```
+
     git push --set-upstream origin your_branch_name
     ```
 
