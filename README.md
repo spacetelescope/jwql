@@ -58,8 +58,10 @@ As you go be sure to follow the steps:
 
 Repeat! Feel free to repeat everytime you make a big change to your project and/or at the end of every work day to ensure you're keeping track of your work in incremental steps that make sense for you. 
 
-### Git Ignore File: 
-It's a good idea to set up a .gitignore file to allow you to place file types that you don't want to upload to the git branch. For example, if you are testing your updates or codes in a jupyter notebook in the directory it's good practice to not upload that notebook. Therefore, you can create a '.gitignore' file in the directory and place ' *ipynb' in a line in that file. Then when you do a 'git status' those file types will not show up as having changed and needing to be commited.   
+### Git Ignore: 
+It's a good idea to set up a .gitignore file to allow you to place file types that you don't want to upload to the git branch. 
+
+For example, if you are testing your updates or codes in a jupyter notebook in the directory it's good practice to not upload that notebook. Therefore, you can create a '.gitignore' file in the directory and place ' *ipynb' in a line in that file. Then when you do a 'git status' those file types will not show up as having changed and needing to be commited. Other examples of files you would want to add are: ...   
 
 ### Switching Branches: 
 When you are working on a project you will have made a branch to change or add files. But what if you now need to go back to the current version of the project to work on something else? You can switch your branch!
