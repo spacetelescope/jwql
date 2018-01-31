@@ -7,6 +7,7 @@ One Paragraph of project description goes here.
 ### Prerequisites
 
 git
+flake8
 
 (Once we have more things we deem as prereqs for using and contributing to our project then we can add them here.) 
 
@@ -25,10 +26,16 @@ Be sure to talk about the [style guide](https://github.com/spacetelescope/jwql/b
 
 ### Make an issue on github
 
-This is most easily done 
+This is most easily done on the website [here](https://github.com/spacetelescope/jwql/issues).
+
+It's important to do this as  
 
 ### Make a branch (forking):
+You can do this either through your terminal or through the webpage. Here is an explaination of how to do each: 
 
+#### Webpage: 
+
+#### Terminal: 
 
 
 ### Best Practices Workflow:
@@ -36,6 +43,8 @@ This is most easily done
 As you go be sure to follow the steps:
 
     ```
+    git status 
+
     git add 'file.py'
 
     git commit -m " This is the first commit of the first code for this project. "
@@ -44,10 +53,13 @@ As you go be sure to follow the steps:
     
     *** The first time that you push your branch you will get a warning and first need to run this: 
 
-    git push --set-upstream origin your_branch_name
+    git push --set-upstream origin your-branch-name
     ```
 
 Repeat! Feel free to repeat everytime you make a big change to your project and/or at the end of every work day to ensure you're keeping track of your work in incremental steps that make sense for you. 
+
+### Git Ignore File: 
+It's a good idea to set up a .gitignore file to allow you to place file types that you don't want to upload to the git branch. For example, if you are testing your updates or codes in a jupyter notebook in the directory it's good practice to not upload that notebook. Therefore, you can create a '.gitignore' file in the directory and place ' *ipynb' in a line in that file. Then when you do a 'git status' those file types will not show up as having changed and needing to be commited.   
 
 ### Switching Branches: 
 When you are working on a project you will have made a branch to change or add files. But what if you now need to go back to the current version of the project to work on something else? You can switch your branch!
