@@ -20,16 +20,18 @@ git clone https://github.com/spacetelescope/jwql.git
 
 ## Contributing
 
-Be sure to talk about the [style guide](https://github.com/spacetelescope/jwql/blob/style-guide/style_guide/style_guide.md) and what's in there regarding this. 
+Be sure to talk about the [style guide](https://github.com/spacetelescope/jwql/blob/style-guide/style_guide/style_guide.md) and what's in there regarding this. The following is a bare bones example of a best work flow for contributing to the project. 
 
 
 ### Make an issue on github
 
 This is most easily done 
 
-### Make a branch
+### Make a branch (forking):
 
-### Best Practices:
+
+
+### Best Practices Workflow:
 
 As you go be sure to follow the steps:
 
@@ -53,7 +55,6 @@ When you are working on a project you will have made a branch to change or add f
 To check what branch you are on: 
 ```
 git branch
-
 ```
 
 To change to the current version of the project: 
@@ -66,16 +67,33 @@ To get up to date with the current version of the project:
 git pull
 ```
 
+You can then switch back to your project (or a different project) any time by checking the name of hte branch and then switching: 
+
+```
+git checkout -b name_of_branch
+```
+
 ### Merging your Branch with the Master Branch: 
 What do you do once you've finished your addition or changes to the project and want to get it into the most recent version?
 
 This is most easily done on the github website at the project page. 
 
+#### Pull Request: 
+On the webpage of our [project](https://github.com/spacetelescope/jwql/) you can change to the branch of your project under the 'Branch:master' button which will have a pull down list of all branches. 
 
+Switch to your branch, and there will be a 'new pull request' button which you will click. From there it's important to do the following: 
+
+##### 1. Fill out the tags to the side of the page including: choose a reviewer who will look over your changes and over suggestions to ensure your contributions follow the style guide, etc and tag yourself as the assignee. You can also add labels, projects or milestones if you would like as they help organize things. 
+
+##### 2. Add a comment and title to your pull request that will inform the reviewer what your updates are supposed to do so they are aware of what they are reviewing. 
+
+##### 3. Create the pull request and iterate with your reviewer on changes. You can follow the same workflow as above where you make changes to your local branch based on their comments on the webpage pull request. Then you will add, commit and push those changes to your branch which the pull request will keep track of. The pull request will also allow both you and the reviewer to track your changes. 
+
+*** It's useful sometimes to create a pull request for a branch that isn't 100% ready to be merged - you can in that case make a 'WIP' (work in progress) request which will allow you to assign a reviewer and allow iteration over the project with that reviewer. 
 
 
 ## Versioning
-See our [style guide](https://github.com/spacetelescope/jwql/blob/style-guide/style_guide/style_guide.md) (will place summary in here as well).
+See our [style guide](https://github.com/spacetelescope/jwql/blob/master/style-guide/style_guide.md) (will place summary in here as well).
 
 ## Environment Installation
 
