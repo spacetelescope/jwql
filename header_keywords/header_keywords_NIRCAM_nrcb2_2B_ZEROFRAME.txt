@@ -1,0 +1,10 @@
+BITPIX,integer
+BSCALE,float
+BZERO,integer
+GCOUNT,integer
+NAXIS,integer
+NAXIS1,integer
+NAXIS2,integer
+NAXIS3,integer
+PCOUNT,integer
+XTENSION,string
