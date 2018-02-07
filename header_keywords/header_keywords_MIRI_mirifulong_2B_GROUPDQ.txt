@@ -1,0 +1,11 @@
+BITPIX,integer
+EXTNAME,string
+EXTVER,int
+GCOUNT,integer
+NAXIS,integer
+NAXIS1,integer
+NAXIS2,integer
+NAXIS3,integer
+NAXIS4,integer
+PCOUNT,integer
+XTENSION,string
