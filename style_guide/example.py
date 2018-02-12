@@ -7,7 +7,7 @@ description (i.e. this).  Module dosctring lines should be limited to
 72 characters.  Monospace font can be achived with ``two single
 forward-apostrophes``.  The description should provided a detailed
 overview of the purpose of the module (what does it do) and how it
-acheieves this purpose (how does it do it).
+achieves this purpose (how does it do it).
 
 Authors
 -------
@@ -68,7 +68,7 @@ import scipy
 from sqlalchemy import Float, Integer, String
 
 
-# Global variables should be avioded, but if used should be named with
+# Global variables should be avoided, but if used should be named with
 # all-caps
 A_GLOBAL_VARIABLE = 'foo' # type: str
 
