@@ -65,9 +65,9 @@ It's a good idea to set up a .gitignore file to allow you to place file types th
 For example, if you are testing your updates or codes in a jupyter notebook in the directory it's good practice to not upload that notebook. Therefore, you can create a `.gitignore` file in the directory and place ` *ipynb` in a line in that file. Then when you do a `git status` those file types will not show up as having changed and needing to be commited. 
 
 Other examples of files you would want to add to your `.gitignore` file are: 
-1.`*.fits` ?
-2.`*.jpeg`?
-3.?
+  1.`*.fits` ?
+  2.`*.jpeg`?
+  3.?
 
 ## Authors - Current Development Team
 - Matthew Bourque (INS)
