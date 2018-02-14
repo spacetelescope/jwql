@@ -46,9 +46,28 @@ There are two current pages to review before you begin contributing to the `jwql
 The following is a bare bones example of a best work flow for contributing to the project. 
 
 The usual roadmap that you will want to follow is to: 
-1. 
+1. Create a fork off of the `jwql` repository.
+2. Make a local copy of your fork. 
+3. Ensure your personal fork is pointing `upstream` properly. 
+4. Create a branch on that personal fork. 
+5. Make your software changes. 
+6. Push that branch to the GitHub repository. 
+7. Create a pull request for this branch. 
+8. Assign a reviewr from the team for the pull request. 
+9. Iterate with the reviewer over any needed changes until the reviewer accepts and merges your branch. 
+10. Delete your local copy of your branch. 
 
-We provide an in-depth best practices workflow at [this project wikipage](https://github.com/spacetelescope/jwql/wiki/git-GitHub-workflow-for-contributing/).
+We provide a more in-depth version of this best practices workflow at [this project wikipage](https://github.com/spacetelescope/jwql/wiki/git-GitHub-workflow-for-contributing/) with further explanation for each step.
+
+### Git Ignore: 
+It's a good idea to set up a .gitignore file to allow you to place file types that you don't want to upload to the git branch. 
+
+For example, if you are testing your updates or codes in a jupyter notebook in the directory it's good practice to not upload that notebook. Therefore, you can create a `.gitignore` file in the directory and place ` *ipynb` in a line in that file. Then when you do a `git status` those file types will not show up as having changed and needing to be commited. 
+
+Other examples of files you would want to add to your `.gitignore` file are: 
+1.`*.fits` ?
+2.`*.jpeg`?
+3.?
 
 ## Authors - Current Development Team
 - Matthew Bourque (INS)
