@@ -1,6 +1,10 @@
 # The James Webb Quicklook Application 
 
-One Paragraph of project description goes here.
+The James Webb Quicklook Application (JWQL) is a repository of codes meant to create a system capable of the following for all JWST instrument teams: 
+1. A network file system that stores all uncalibrated and calibrated data products on disk in a centrally-located area (MAST), accessible to instrument team members.
+2. A relational database that stores observational metadata allowing for data discovery via relational queries.
+3. A software library that provides an API to the filesystem and database and serves as a platform on which to build automated instrument calibration and monitoring tasks.
+4. A web application that allows users to visually inspect new and archival JWST data as well as instrument-specific monitoring and calibration results.
 
 ## Getting Started
 
@@ -65,9 +69,9 @@ It's a good idea to set up a .gitignore file to allow you to place file types th
 For example, if you are testing your updates or codes in a jupyter notebook in the directory it's good practice to not upload that notebook. Therefore, you can create a `.gitignore` file in the directory and place ` *ipynb` in a line in that file. Then when you do a `git status` those file types will not show up as having changed and needing to be commited. 
 
 Other examples of files you would want to add to your `.gitignore` file are: 
-  1.`*.fits` ?
-  2.`*.jpeg`?
-  3.?
+1. `*.fits` ?
+2. `*.jpeg`?
+3. ?
 
 ## Authors - Current Development Team
 - Matthew Bourque (INS)
