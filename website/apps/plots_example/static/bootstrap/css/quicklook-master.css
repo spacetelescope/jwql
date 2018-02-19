@@ -1,0 +1,18 @@
+body {
+  padding-top: 5rem;
+}
+.navbar-left { /*padding around JWST logo*/
+  padding-left:10px;
+  padding-right:10px;
+}
+
+/* ---------- NAV BAR ---------- */
+/* Change color of dropdown links on hover */
+li.dropdown:hover .nav-link.dropdown-toggle {
+    color: #fff;
+}
+
+/* Show the dropdown menu on hover */
+li.dropdown:hover .dropdown-menu {
+    display: block;
+}

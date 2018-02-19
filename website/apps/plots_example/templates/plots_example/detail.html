@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+
+	{% load static %}
+	{% static "" as staticURL %}
+	<head>
+
+		<title>{{ inst }} - JWST Quicklook</title>
+
+		<!-- Bootstrap core CSS -->
+		<link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+		<!-- Custom styles for this template -->
+		<link href="{{staticURL}}bootstrap/css/quicklook-master.css?{% now 'U' %}" rel="stylesheet">
+		<link href="{{staticURL}}bootstrap/css/quicklook-detail.css?{% now 'U' %}" rel="stylesheet">
+
+	</head>
+
+	<body>
+		<!-- Navigation Bar -->
+		<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+		  <a class="navbar-left"><img src="{% static 'plots_example/images/JWSTlogo.png' %}" height=35 width=35></a>
+	      <a class="navbar-brand" href="{% url 'plots_example:index' %}">JWST Quicklook</a>
+	      <a class="navbar-brand" href="#"><font color='yellow'>{{ inst }}</font></a>
+	      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+	        <span class="navbar-toggler-icon"></span>
+	      </button>
+
+	      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+	        <ul class="navbar-nav mr-auto">
+	          <li class="nav-item active">
+	            <a class="nav-link" href="{% url 'plots_example:index' %}"><font color='#9A9D9F'>Home</font><span class="sr-only">(current)</span></a>
+	          </li>
+	          {% for inst_key, inst_tools in tools.items %}
+		          <li class="dropdown">
+		            <a class="nav-link dropdown-toggle disabled" href="{% url 'plots_example:detail' inst_key %}" id="dropdown"{{ inst_key }} aria-haspopup="true" aria-expanded="false"><font color='#9A9D9F'>{{ inst_key }}</font></a>
+		            <div class="dropdown-menu" aria-labelledby="dropdown01">
+		            	{% for tool in inst_tools %}
+		              		<a class="dropdown-item" href="#">{{ tool }}</a>
+		              	{% endfor %}
+		            </div>
+		          </li>
+		      {% endfor %}
+	        </ul>
+	        <!-- <form class="form-inline my-2 my-lg-0">
+	          <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
+	          <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+	        </form> -->
+	      </div>
+	    </nav>
+
+	    <main role="main" class="container">
+	    	<h1>{{ inst }}</h1></br>
+
+	    	<!-- List all possible tools -->
+	    	<h3>Tools</h3>
+			{% for key, inst_tools in tools.items %}
+				{% if key == inst %}
+					{% for tool in inst_tools %}
+						<button type="button" class="btn btn-outline-primary" href="#">{{ tool }}</button></br>
+					{% endfor %}
+				{% endif %}
+			{% endfor %}
+
+			</br>
+
+			<!-- Show all available data  -->
+			<h3>Data</h3>
+	    	{% if imdat %}
+				{% for file in imdat %}
+					<ul>
+						<img src="{{ staticURL }}/{{ file.filename }}" width=800/> </br>
+						<a>{{ file.filepath }}</a>
+					</ul>
+				{% endfor %}
+
+			{% else %}
+				<p>No data are available.</p>
+			{% endif %}
+
+		</main>
+	</body>
+</html>
