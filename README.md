@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://i.imgur.com/MwnjFVM.png" width="400"/>
+</p>
+
 # The James Webb Quicklook Application (`JWQL`)
 
 The James Webb Quicklook Application (`JWQL`) is a database-driven web application and software repository for use by the JWST instrument teams.  The system is comprised of the following:
