@@ -42,6 +42,8 @@ The following items should never be committed in the `jwql` source code or GitHu
 
 If `jwql` code needs to be aware of this information, it should be stored in a configuration file that is not part of the `jwql` repository.
 
+Additionally, developers of this project should be mindful of application security risks, and should adhere to the [OWASP Top 10](https://www.owasp.org/images/7/72/OWASP_Top_10-2017_%28en%29.pdf.pdf) as best possible.
+
 
 `jwql`-specific Code Standards
 ------------------------------
