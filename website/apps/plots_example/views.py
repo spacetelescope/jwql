@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.views import generic
 
 from .models import ImageData
+from .db import DatabaseConnection
 
 # class IndexView(generic.ListView):
 #     template_name = 'plots_example/index.html'
@@ -38,7 +39,9 @@ def index(request):
     return render(request, 'plots_example/index.html', context)
 
 def detail(request, inst):
-    imdat = ImageData.objects.filter(inst=inst)
+    # imdat = ImageData.objects.filter(inst=inst)
+    imdat = DatabaseConnection().get_filenames_for_instrument(inst)
+
     # for im in imdat:
     #     file_ext = im.filepath.split('.')[-1]
     #     if file_ext == 'fits':
@@ -49,6 +52,3 @@ def detail(request, inst):
                    'imdat': imdat,
                    'tools': TOOLS})
 
-# def plot(request, imagedata_id):
-#     imagedata = get_object_or_404(ImageData, pk=imagedata_id)
-#     return render(request, 'plots_example/plot.html', {'imagedata': imagedata})

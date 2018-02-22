@@ -28,3 +28,4 @@ class ImageData(BaseModel):
 
     class Meta:
         verbose_name_plural = "image data"
+        db_table = 'imagedata'

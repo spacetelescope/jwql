@@ -1,3 +1,4 @@
 *.pyc
 *.fits
 *.ipynb_checkpoints/
+website/config.txt
