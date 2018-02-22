@@ -69,8 +69,8 @@
 	    	{% if imdat %}
 				{% for file in imdat %}
 					<ul>
-						<img src="{{ staticURL }}/{{ file.filename }}" width=800/> </br>
-						<a>{{ file.filepath }}</a>
+						<img src="{{ staticURL }}/{{ file }}" width=800/> </br>
+						<a>{{ file }}</a>
 					</ul>
 				{% endfor %}
 
