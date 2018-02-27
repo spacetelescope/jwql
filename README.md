@@ -31,7 +31,19 @@ python setup.py develop
 
 ## Environment Installation
 
-Following the download of the `jwql` package, users can then install the `jwqldev` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project:
+Following the download of the `jwql` package, users can then install the `jwqldev` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project.  First, users should ensure that their version of `conda` is up to date:
+
+```
+conda update conda
+```
+
+Next, users should activate the `root` environment:
+
+```
+source activate root
+```
+
+Lastly, users can create the `jwqldev` environment via the `environment.yml` file:
 
 ```
 conda env create -f environment.yml
