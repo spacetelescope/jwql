@@ -31,7 +31,19 @@ python setup.py develop
 
 ## Environment Installation
 
-Following the download of the `jwql` package, users can then install the `jwqldev` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project:
+Following the download of the `jwql` package, users can then install the `jwqldev` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project.  First, users should ensure that their version of `conda` is up to date:
+
+```
+conda update conda
+```
+
+Next, users should activate the `root` environment:
+
+```
+source activate root
+```
+
+Lastly, users can create the `jwqldev` environment via the `environment.yml` file:
 
 ```
 conda env create -f environment.yml
@@ -40,7 +52,7 @@ conda env create -f environment.yml
 
 ## Contributing
 
-There are two current pages to review before you begin contributing to the `jwql` development. The first is our [style guide](https://github.com/spacetelescope/jwql/blob/style-guide/style_guide/style_guide.md) and the second is our [suggested git workflow page](https://github.com/spacetelescope/jwql/wiki/git-GitHub-workflow-for-contributing/), which contains an in-depth explanation of the workflow.
+There are two current pages to review before you begin contributing to the `jwql` development. The first is our [style guide](https://github.com/spacetelescope/jwql/blob/master/style_guide/style_guide.md) and the second is our [suggested git workflow page](https://github.com/spacetelescope/jwql/wiki/git-&-GitHub-workflow-for-contributing), which contains an in-depth explanation of the workflow.
 
 The following is a bare bones example of a best work flow for contributing to the project:
 
