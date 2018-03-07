@@ -1,5 +1,4 @@
 *.pyc
 *.fits
 *.ipynb_checkpoints/
-utils/config.yml
 utils/config.json
