@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""Tests for the permissions module
-
+"""Tests for the permissions module.
 
 Authors
 -------
@@ -28,11 +27,19 @@ TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'permission_test')
 
 @pytest.fixture(scope="module")
 def test_directory(test_dir=TEST_DIRECTORY):
-    """Create a test directory for permission management
+    """Create a test directory for permission management.
 
-    :return:
+    Parameters
+    ----------
+    test_dir : str
+        Path to directory used for testing
+
+    Returns
+    -------
+    test_dir : str
+        Path to directory used for testing
+
     """
-
     os.mkdir(test_dir) # default mode=511
 
     yield test_dir
@@ -42,13 +49,19 @@ def test_directory(test_dir=TEST_DIRECTORY):
 
 @pytest.fixture(scope="module")
 def test_file(test_dir=TEST_DIRECTORY):
-    """Create a test file for permission management
+    """Create a test file for permission management.
 
-    :param directory:
-    :return:
+    Parameters
+    ----------
+    test_dir : str
+        Path to directory used for testing
+
+    Returns
+    -------
+    filename : str
+        Path of file used for testing
+
     """
-    # test_dir = test_directory()
-    # print(test_dir)
     if not os.path.isdir(test_dir):
         os.mkdir(test_dir)
 
@@ -64,13 +77,14 @@ def test_file(test_dir=TEST_DIRECTORY):
         os.rmdir(test_dir)
 
 def test_file_permissions(test_file):
-    """Create a file with the standard permissions ('-rw-r--r--'), then set
-    the default permissions defined in permissions.py
-    Assert that these were set correctly.
+    """Create a file with the standard permissions ('-rw-r--r--').
+    Set the default permissions defined in permissions.py. Assert that these were set correctly.
 
-    :param test_file:
-    :return:
+    Parameters
+    ----------
+    test_file : str
+        Path of file used for testing
+
     """
-    # filename = test_file
     set_permissions(test_file)
     assert has_permissions(test_file)
