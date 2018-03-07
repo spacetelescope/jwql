@@ -1,75 +1,61 @@
 #! /usr/bin/env python
 
 """
-Create a preview image from a fits file
-containing an observation
+Create a preview image from a fits file containing an observation.
 
-Open questions:
 
-Q: What if there is >1 integration? 
-A: Currently the script makes a separate preview image
-   for each
+This module creates and saves a "preview image" from a fits file
+that contains a JWST observation. Data from the user-supplied 
+`extension` of the file are read in, along with the `PIXELDQ`
+extension if present. For each integration in the exposure, the
+first group is subtracted from the final group in order to create
+a difference image. The lower and upper limits to be displayed are
+defined as the `clip_percent` and (1. - `clip_percent') percentile
+signals. Matplotlib is then used to display a linear- or log-stretched
+version of the image, with accompanying colorbar. The image is then 
+saved.
 
-Q: Are there cases where we want to make an image of the data
-as contained in the file, rather than a CDS image?
-A: Maybe, but this isn't supported yet
+Authors:
+--------
 
-Code summary:
+    Bryan Hilbert
 
-1. Read in file
-  a. grab data from input extension ('SCI' is default)
-  b. grab pixeldq data if present, create map of non-science pixels
-2. Create a difference image for each integration
-3. Clip the brightest and darkest N% of the pixels (excluding 
-   non-science pixels) to determine the min and max scaling values
-4. Create image from each difference image using log (or linear) 
-   scaling
-5. Save using the input format 
+
+Use:
+----
+
+    This module can be imported as such:
+
+    >>> from preview_image import Image
+    im = Image(my_file, "SCI")
+    im.clip_percent = 0.01
+    im.scaling = 'log'
+    im.output_format = 'jpg'
+    im.make_image()
+
+
 """
 
 import os
 import sys
-import numpy as np
+
+from astropy.io import fits
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-from astropy.io import fits
+import numpy as np
+
 from jwst.datamodels import dqflags
 
 class Image():
-    def __init__(self, file, extension):
-        self.file = file
+    def __init__(self, filename, extension):
+        self.file = filename
         self.clip_percent = 0.01
         self.scaling = 'log'
         self.output_format = 'jpg'
 
         # Read in file
-        self.data, self.scipix = self.get_data(self.file, extension)
+        self.data, self.dq = self.get_data(self.file, extension)
         
-    def find_limits(self, data, pixmap, clipperc):
-        """
-        Find the minimum and maximum signal levels after 
-        clipping the top and bottom x% of the pixels. 
-
-        Parameters:
-        ----------
-        data -- 2D ndarray of floats
-        pixmap -- 2D boolean array of science pixel locations
-                (True for science pixels, False for non-science pix)
-        clipperc -- Float, Fraction of top and bottom signal
-                    levels to clip (e.g. 0.01 means to clip brightest and
-                    dimmest 1% of pixels)
-
-        Returns:
-        --------
-        Tuple of minimum and maximum signal levels
-        """
-        nelem = np.sum(pixmap)
-        numclip = np.int(clipperc * nelem)
-        sorted = np.sort(data[pixmap], axis=None)
-        minval = sorted[numclip]
-        maxval = sorted[-numclip-1]
-        return (minval, maxval)
-
     def diff_img(self, data):
         """
         Create a difference image from the data. Use last
@@ -79,21 +65,53 @@ class Image():
 
         Parameters:
         ----------
-        data -- 3D or 4D ndarray array
+        data : obj
+            3D or 4D numpy ndarray array of floats
 
         Returns:
         --------
-        Difference image(s)
+        result : obj
+            3D or 4D numpy ndarray containing the difference
+            image(s) from the input exposure
         """
         ndim = len(data.shape)
         if ndim == 3:
             diff = data[-1, :, :] - data[0, :, :]
         elif ndim == 4:
-            diff = data[0, -1, :, :] - data[:, 0, :, :]
+            diff = data[:, -1, :, :] - data[:, 0, :, :]
         else:
-            print(("Warning, difference imaging doesn't support"
-                   "arrays with {} dimensions!".format(ndim)))
+            raise ValueError(("Warning, difference imaging doesn't support"
+                              "arrays with {} dimensions!".format(ndim)))
         return diff
+
+    def find_limits(self, data, pixmap, clipperc):
+        """
+        Find the minimum and maximum signal levels after 
+        clipping the top and bottom x% of the pixels. 
+
+        Parameters:
+        ----------
+        data : obj
+            2D numpy ndarray of floats
+        pixmap : obj
+            2D numpy ndarray boolean array of science pixel locations
+            (True for science pixels, False for non-science pix)
+        clipperc : float 
+            Fraction of top and bottom signal levels to clip 
+            (e.g. 0.01 means to clip brightest and dimmest 1% 
+            of pixels)
+
+        Returns:
+        --------
+        results : tuple
+            Tuple of floats, minimum and maximum signal levels
+        """
+        nelem = np.sum(pixmap)
+        numclip = np.int(clipperc * nelem)
+        sorted = np.sort(data[pixmap], axis=None)
+        minval = sorted[numclip]
+        maxval = sorted[-numclip-1]
+        return (minval, maxval)
 
     def get_data(self, filename, ext):
         """
@@ -103,30 +121,34 @@ class Image():
 
         Parameters:
         ----------
-        filename -- string: Name of fits file containing data
-        ext -- string: Extension name to be read in
+        filename : str
+            Name of fits file containing data
+        ext : string
+            Extension name to be read in
 
         Returns:
         --------
-        data -- science data from file. A 2-, 3-, or 4D ndarray
-        dq -- 2D ndarray boolean map of reference pixels. Science
-              pixels flagged as True and non-science pixels are False
+        data : obj
+            Science data from file. A 2-, 3-, or 4D numpy ndarray
+        dq : obj
+            2D ndarray boolean map of reference pixels. Science
+            pixels flagged as True and non-science pixels are False
         """
         if os.path.isfile(filename):
             extnames = []
-            with fits.open(filename) as h:
-                for e in h:
+            with fits.open(filename) as hdulist:
+                for exten in hdulist:
                     try:
-                        extnames.append(e.header['EXTNAME'])
+                        extnames.append(exten.header['EXTNAME'])
                     except:
                         pass
                 if ext in extnames:
-                    data = h[ext].data
+                    data = hdulist[ext].data
                 else:
                     raise ValueError(("WARNING: no {} extension in {}!"
                                       .format(ext, filename)))
                 if 'PIXELDQ' in extnames:
-                    dq = h['PIXELDQ'].data
+                    dq = hdulist['PIXELDQ'].data
                     dq = (dq & dqflags.pixel['NON_SCIENCE'] == 0)
                 else:
                     yd, xd = data.shape[-2:]
@@ -136,22 +158,34 @@ class Image():
                                      .format(filename)))
         return data, dq
         
-    def make_figure(self, image, intnum, minv, maxv, scale, maxsize = 8):
+    def make_figure(self, image, integration_number, min_value, max_value,
+                    scale, maxsize = 8):
         """
         Create the matplotlib figure of the image
 
         Parameters:
         ----------
-        image -- 2D ndarray of floats
-        intum -- Integer. Integration number within exposure
-        minv -- Float. Minimum value for display
-        maxv -- Float. Maximum value for display
-        scale -- Image scaling (log, linear)
+        image : obj
+            2D numpy ndarray of floats
+        integration_number : int 
+            Integration number within exposure
+        min_value : float
+            Minimum value for display
+        max_value : float
+            Maximum value for display
+        scale : str
+            Image scaling ('log', 'linear')
 
         Returns:
         --------
-        Matplotlib AxesImage
+        result : obj
+            Matplotlib Figure object
         """
+        # Check the input scaling
+        if scale not in ['linear','log']:
+            raise ValueError(("WARNING: scaling option {} not supported."
+                              .format(scale)))
+        
         # Set the figure size
         yd, xd = image.shape
         ratio = yd / xd
@@ -164,23 +198,19 @@ class Image():
         fig, ax = plt.subplots(figsize=(xsize, ysize))
         
         if scale == 'log':
-            # Determine scaling
-            mindata = np.min(image)
-            maxdata = np.max(image)
-
             # Shift data so everything is positive
-            shiftdata = image - mindata + 1
+            shiftdata = image - min_value + 1
             shiftmin = 1
-            shiftmax = maxdata - mindata + 1
+            shiftmax = max_value - min_value + 1
 
             # Log normalize the colormap
             cax = ax.imshow(shiftdata,
                             norm=colors.LogNorm(vmin=shiftmin, vmax=shiftmax),
-                            cmap='gray')#PuBu_r')
+                            cmap='gray')
             
             # Add colorbar, with original data values
             tickvals = np.logspace(np.log10(shiftmin), np.log10(shiftmax), 5)
-            tlabelflt = tickvals + mindata - 1
+            tlabelflt = tickvals + min_value - 1
             tlabelstr = ["%.1f" % number for number in tlabelflt]
             cbar = fig.colorbar(cax, ticks=tickvals)
             cbar.ax.set_yticklabels(tlabelstr)
@@ -189,12 +219,12 @@ class Image():
             plt.rcParams.update({'axes.titlesize': 'small'})
 
         elif scale == 'linear':
-            cax = ax.imshow(image, clim=(minv, maxv), cmap='gray')
+            cax = ax.imshow(image, clim=(min_value, max_value), cmap='gray')
             cbar = fig.colorbar(cax)
             ax.set_xlabel('Pixels')
             ax.set_ylabel('Pixels')            
 
-        ax.set_title(self.file + ' Int: {}'.format(np.int(intnum)))
+        ax.set_title(self.file + ' Int: {}'.format(np.int(integration_number)))
         return fig
 
     def make_image(self):
@@ -215,24 +245,28 @@ class Image():
             frame = diff_img[i, :, :]
             
             # Find signal limits for the display
-            minval, maxval = self.find_limits(frame, self.scipix,
+            minval, maxval = self.find_limits(frame, self.dq,
                                               self.clip_percent)
 
             # Create matplotlib object
             indir, infile = os.path.split(self.file)
             suffix = '_integ{}.{}'.format(i, self.output_format)
             outfile = os.path.join(indir, infile.split('.')[0] + suffix)
-            fig = self.make_figure(frame, i, minval, maxval, self.scaling)
+            fig = self.make_figure(frame, i, minval, maxval, self.scaling.lower())
             self.save_image(fig, outfile)
-  
-    def save_image(self, image, fname):
+            plt.close()
+
+    @staticmethod
+    def save_image(image, fname):
         """
         Save an image in the requested output format
 
         Parameters:
         ----------
-        image -- A matplotlib figure object
-        fname -- Output filename
+        image : obj
+            A matplotlib figure object
+        fname : str
+            Output filename
 
         Returns:
         --------
