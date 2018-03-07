@@ -2,3 +2,6 @@
 *.fits
 *.ipynb_checkpoints/
 utils/config.json
+build/
+dist/
+jwql.egg-info/
