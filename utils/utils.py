@@ -27,7 +27,7 @@ def get_config():
         A dictionary that holds the contents of the config file.
     """
 
-    with open('config.json', 'r') as f:
-        settings = json.load(f)
+    with open('config.json', 'r') as config_file:
+        settings = json.load(config_file)
 
     return settings
