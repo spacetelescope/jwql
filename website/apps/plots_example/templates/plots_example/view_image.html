@@ -7,6 +7,9 @@
 
 		<title>View {{ inst }} Image - JWST Quicklook</title>
 
+		<!-- JWQL Icon as website image -->
+		<link rel="shortcut icon" href="{{ staticURL }}plots_example/images/favicon.ico?{% now 'U' %}" />
+
 		<!-- Bootstrap core CSS -->
 		<link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
@@ -14,10 +17,6 @@
 		<link href="{{staticURL}}bootstrap/css/quicklook-master.css?{% now 'U' %}" rel="stylesheet">
 		<link href="{{staticURL}}bootstrap/css/quicklook-instrument.css?{% now 'U' %}" rel="stylesheet">
 		<link href="{{staticURL}}bootstrap/css/sticky-footer.css?{% now 'U' %}" rel="stylesheet">
-
-		<!-- JWQL Icon as website image -->
-		<!-- <link rel="icon" type="image/x-icon" href="{% static 'plots_examples/images/favicon.ico' %}" /> -->
-		<link rel="icon" type="image/png" href="{% static 'plots_examples/images/JWQLlogo_small.png' %}" />
 
 
 	</head>
