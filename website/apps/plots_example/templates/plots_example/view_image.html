@@ -26,7 +26,7 @@
 		<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
 		  <a class="navbar-left"><img src="{% static 'plots_example/images/JWQLlogo_small.png' %}" height=35 width=35></a>
 	      <a class="navbar-brand" href="{% url 'plots_example:home' %}">JWST Quicklook</a>
-	      <a class="navbar-brand" href="#"><font color='yellow'>{{ inst }}</font></a>
+	      <a class="navbar-brand" href="#"><font color='#f2ce3a'>{{ inst }}</font></a>
 	      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
 	        <span class="navbar-toggler-icon"></span>
 	      </button>
@@ -40,6 +40,11 @@
 		          <li class="dropdown">
 		            <a class="nav-link dropdown-toggle disabled" href="{% url 'plots_example:instrument' inst_key %}" id="dropdown"{{ inst_key }} aria-haspopup="true" aria-expanded="false"><font color='#9A9D9F'>{{ inst_key }}</font></a>
 		            <div class="dropdown-menu" aria-labelledby="dropdown01">
+		            	<a class="dropdown-item text-muted" style="background-color: #d9dde2" href="#">Images</a>
+		            	<a class="dropdown-item" href="{% url 'plots_example:unlooked_im' inst_key %}">Unlooked Images</a>
+		            	<a class="dropdown-item" href="#">Image Anomalies</a>
+		            	<a class="dropdown-item" href="#">Archived Images</a>
+		            	<a class="dropdown-item text-muted" style="background-color: #d9dde2" href="#">Monitors</a>
 		            	{% for tool in inst_tools %}
 		              		<a class="dropdown-item" href="#">{{ tool }}</a>
 		              	{% endfor %}
@@ -61,7 +66,7 @@
 
 	    	<p>
 		    	<a class="btn btn-primary my-2 mx-2 disabled" role="button" href="#">View Header</a>
-		    	<a class="btn btn-primary my-2 mx-2 disabled" role="button" href="#">View Proposal</a>
+		    	<a class="btn btn-primary my-2 mx-2 disabled" role="button" href="#"> View Proposal</a>
 		    </p>
 
 	    	<p>
@@ -108,9 +113,9 @@
 
 		</main>
 
-		<footer class="footer">
+		<footer class="footer text-center">
 	      <div class="container">
-	        <span class="text-muted">Space Telescope Science Institute</span>
+	        <img src="{% static 'plots_example/images/STScIlogo.png' %}" height=36>
 	      </div>
 	    </footer>
 	</body>
