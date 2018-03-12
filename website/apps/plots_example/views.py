@@ -33,13 +33,12 @@ TOOLS = {'FGS': ['Bad Pixel Monitor'],
                      'Internal Lamp Monitor', 'Instrument Model Updates',
                      'Failed-open Shutter Monitor']}
 
-def index(request):
+def home(request):
     context = {'inst_list': INST_LIST,
                'tools': TOOLS}
-    return render(request, 'plots_example/index.html', context)
+    return render(request, 'plots_example/home.html', context)
 
-def detail(request, inst):
-    # imdat = ImageData.objects.filter(inst=inst)
+def instrument(request, inst):
     imdat = DatabaseConnection().get_filenames_for_instrument(inst)
 
     # for im in imdat:
@@ -47,8 +46,18 @@ def detail(request, inst):
     #     if file_ext == 'fits':
     #         raise ValueError('Cannot read .fits files')
 
-    return render(request, 'plots_example/detail.html',
+    return render(request, 'plots_example/instrument.html',
                   {'inst': inst,
                    'imdat': imdat,
                    'tools': TOOLS})
 
+def view_image(request, inst, file):
+    # for im in imdat:
+    #     file_ext = im.filepath.split('.')[-1]
+    #     if file_ext == 'fits':
+    #         raise ValueError('Cannot read .fits files')
+
+    return render(request, 'plots_example/view_image.html',
+                  {'inst': inst,
+                   'file': file,
+                   'tools': TOOLS})
