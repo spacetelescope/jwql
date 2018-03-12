@@ -39,6 +39,11 @@
 		          <li class="dropdown">
 		            <a class="nav-link dropdown-toggle disabled" href="{% url 'plots_example:instrument' inst %}" id="dropdown"{{ inst }} aria-haspopup="true" aria-expanded="false"><font color='#9A9D9F'>{{ inst }}</font></a>
 		            <div class="dropdown-menu" aria-labelledby="dropdown01">
+		            	<a class="dropdown-item text-muted" style="background-color: #d9dde2" href="#">Images</a>
+		            	<a class="dropdown-item" href="{% url 'plots_example:unlooked_im' inst %}">Unlooked Images</a>
+		            	<a class="dropdown-item" href="#">Image Anomalies</a>
+		            	<a class="dropdown-item" href="#">Archived Images</a>
+		            	<a class="dropdown-item text-muted" style="background-color: #d9dde2" href="#">Monitors</a>
 		            	{% for tool in inst_tools %}
 		              		<a class="dropdown-item" href="#">{{ tool }}</a>
 		              	{% endfor %}
@@ -61,7 +66,7 @@
 				<div class="col-md-6"><a class="btn btn-block btn-primary disabled" role="button" href="#">Query Database</a></div>
 			</div>
 
-	    	<h1>Instruments</h1>
+	    	<!--<h1 style="text-align: center">Instruments</h1>-->
 	    	<div class="instrument_select">
 		    	<div class="row">
 					{% if inst_list %}
@@ -84,9 +89,9 @@
 	    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 	    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
-	    <footer class="footer">
+	    <footer class="footer text-center">
 	      <div class="container">
-	        <span class="text-muted">Space Telescope Science Institute</span>
+	        <img src="{% static 'plots_example/images/STScIlogo.png' %}" height=36>
 	      </div>
 	    </footer>
 	</body>

@@ -5,7 +5,7 @@
 	{% static "" as staticURL %}
 	<head>
 
-		<title>{{ inst }} - JWST Quicklook</title>
+		<title>Unlooked {{ inst }} Images - JWST Quicklook</title>
 
 		<!-- JWQL Icon as website image -->
 		<link rel="shortcut icon" href="{{ staticURL }}plots_example/images/favicon.ico?{% now 'U' %}" />
@@ -51,42 +51,25 @@
 		          </li>
 		      {% endfor %}
 	        </ul>
-	        <!-- <form class="form-inline my-2 my-lg-0">
-	          <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
-	          <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-	        </form> -->
 	      </div>
 
 	      <a class="navbar-right" href="https://github.com/spacetelescope/jwql"><img src="{% static 'plots_example/images/githublogo.svg' %}" height=25 width=25></a>
 	    </nav>
 
 	    <main role="main" class="container">
-	    	<h1 style="text-align: center"><img src="{{staticURL}}/plots_example/images/{{inst}}logo.png" width=40 style="vertical-align: middle; max-width: 40; max-height: 40"> {{ inst }}</h1></br>
+	    	<h5>Unlooked {{ inst }} Images</h5>
 
-	    	<!-- List all possible tools -->
-	    	<div class="row">
-	    		<div class="col-md-6">
-	    			<!-- Images -->
-	    			<h3>Images</h3>
-	    			<a class="btn btn-primary my-2" role="button" href="{% url 'plots_example:unlooked_im' inst %}">Unlooked Images</a></br>
-	    			<button type="button" class="btn btn-primary my-2 disabled" href="#">Image Anomalies</button></br>
-	    			<button type="button" class="btn btn-primary my-2 disabled" href="#">Archived Images</button></br>
-    			</div>
-    			<div class="col-md-6">
-    				<!-- Monitors -->
-	    			<h3>Monitors</h3>
-	    			{% for key, inst_tools in tools.items %}
-						{% if key == inst %}
-							{% for tool in inst_tools %}
-								{% if "Monitor" in tool %}
-									<button type="button" class="btn btn-primary my-2 disabled" href="#">{{ tool }}</button></br>
-								{% endif %}
-							{% endfor %}
-						{% endif %}
-					{% endfor %}
-    			</div>
-			</div>
+			<!-- Show all available data  -->
+	    	{% if imdat %}
+				{% for file in imdat %}
+				<ul>
+					<a href="{% url 'plots_example:view_image' inst file %}">{{ file }}</a>
+				</ul>
+				{% endfor %}
 
+			{% else %}
+				<p>No data are available.</p>
+			{% endif %}
 
 		</main>
 

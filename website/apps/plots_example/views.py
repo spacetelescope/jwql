@@ -18,46 +18,45 @@ app_name = 'plots_example'
 
 INST_LIST = ['FGS', 'MIRI', 'NIRCam', 'NIRISS', 'NIRSpec']
 TOOLS = {'FGS': ['Bad Pixel Monitor'],
-         'MIRI': ['Visual Examination and Anamoly Tracking', 'Dark Current Monitor',
+         'MIRI': ['Dark Current Monitor',
                   'Bad Pixel Monitor', 'Cosmic Ray Monitor', 'Photometry Monitor',
                   'TA Failure Monitor', 'Blind Pointing Accuracy Monitor',
                   'Filter and Calibration Lamp Monitor', 'Thermal Emission Monitor'],
-         'NIRCam': ['Visual Examination and Anamoly Tracking', 'Bias Monitor',
+         'NIRCam': ['Bias Monitor',
                     'Readnoise Monitor', 'Gain Level Monitor',
-                    'Mean Dark Current Rate', 'Photometric Stability Monitor'],
-         'NIRISS': ['Visual Examination and Anamoly Tracking', 'Bad Pixel Monitor',
+                    'Mean Dark Current Rate Monitor', 'Photometric Stability Monitor'],
+         'NIRISS': ['Bad Pixel Monitor',
                     'Readnoise Monitor', 'AMI Calibrator Monitor', 'TSO RMS Monitor'],
-         'NIRSpec': ['Visual Examination and Anaomoly Tracking',
-                     'Optical Short Monitoring', 'Target Acquisition Monitor',
+         'NIRSpec': ['Optical Short Monitor', 'Target Acquisition Monitor',
                      'Detector Health Monitor', 'Ref Pix Monitor',
                      'Internal Lamp Monitor', 'Instrument Model Updates',
                      'Failed-open Shutter Monitor']}
 
 def home(request):
+    template = 'plots_example/home.html'
     context = {'inst_list': INST_LIST,
                'tools': TOOLS}
-    return render(request, 'plots_example/home.html', context)
+    return render(request, template, context)
 
 def instrument(request, inst):
     imdat = DatabaseConnection().get_filenames_for_instrument(inst)
-
-    # for im in imdat:
-    #     file_ext = im.filepath.split('.')[-1]
-    #     if file_ext == 'fits':
-    #         raise ValueError('Cannot read .fits files')
-
-    return render(request, 'plots_example/instrument.html',
+    template = 'plots_example/instrument.html'
+    return render(request, template,
                   {'inst': inst,
                    'imdat': imdat,
                    'tools': TOOLS})
 
 def view_image(request, inst, file):
-    # for im in imdat:
-    #     file_ext = im.filepath.split('.')[-1]
-    #     if file_ext == 'fits':
-    #         raise ValueError('Cannot read .fits files')
-
-    return render(request, 'plots_example/view_image.html',
+    template = 'plots_example/view_image.html'
+    return render(request, template,
                   {'inst': inst,
                    'file': file,
+                   'tools': TOOLS})
+
+def unlooked_images(request, inst):
+    imdat = DatabaseConnection().get_filenames_for_instrument(inst)
+    template = 'plots_example/unlooked.html'
+    return render(request, template,
+                  {'inst': inst,
+                   'imdat': imdat,
                    'tools': TOOLS})
