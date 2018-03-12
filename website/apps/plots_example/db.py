@@ -38,6 +38,23 @@ class DatabaseConnection:
         # Start a session to enable queries
         self.session = Session(engine)
 
+    def get_filepaths_for_instrument(self, instrument):
+        '''Given an instrument, query the database for all filenames
+        associated with said instrument'''
+        instrument = instrument.upper()
+
+        results = self.session.query(self.ObservationWebtest)\
+            .filter(self.ObservationWebtest.instrument == instrument)
+
+        filepaths = []
+        for i in results:
+            filename = i.filename
+            prog_id = filename[2:7]
+            file_path = os.path.join('jw' + prog_id, filename)
+            filepaths.append(file_path)
+
+        return filepaths
+
     def get_filenames_for_instrument(self, instrument):
         '''Given an instrument, query the database for all filenames
         associated with said instrument'''
@@ -49,8 +66,6 @@ class DatabaseConnection:
         filenames = []
         for i in results:
             filename = i.filename
-            prog_id = filename[2:7]
-            file_path = os.path.join(prog_id, filename)
-            filenames.append(file_path)
+            filenames.append(filename)
 
         return filenames

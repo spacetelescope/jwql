@@ -12,15 +12,21 @@
 
 		<!-- Custom styles for this template -->
 		<link href="{{staticURL}}bootstrap/css/quicklook-master.css?{% now 'U' %}" rel="stylesheet">
-		<link href="{{staticURL}}bootstrap/css/quicklook-detail.css?{% now 'U' %}" rel="stylesheet">
+		<link href="{{staticURL}}bootstrap/css/quicklook-instrument.css?{% now 'U' %}" rel="stylesheet">
+		<link href="{{staticURL}}bootstrap/css/sticky-footer.css?{% now 'U' %}" rel="stylesheet">
+
+		<!-- JWQL Icon as website image -->
+		<!-- <link rel="icon" type="image/x-icon" href="{% static 'plots_examples/images/favicon.ico' %}" /> -->
+		<link rel="icon" type="image/png" href="{% static 'plots_examples/images/JWQLlogo_small.png' %}" />
+
 
 	</head>
 
 	<body>
 		<!-- Navigation Bar -->
 		<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-		  <a class="navbar-left"><img src="{% static 'plots_example/images/JWSTlogo.png' %}" height=35 width=35></a>
-	      <a class="navbar-brand" href="{% url 'plots_example:index' %}">JWST Quicklook</a>
+		  <a class="navbar-left"><img src="{% static 'plots_example/images/JWQLlogo_small.png' %}" height=35 width=35></a>
+	      <a class="navbar-brand" href="{% url 'plots_example:home' %}">JWST Quicklook</a>
 	      <a class="navbar-brand" href="#"><font color='yellow'>{{ inst }}</font></a>
 	      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
 	        <span class="navbar-toggler-icon"></span>
@@ -29,11 +35,11 @@
 	      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
 	        <ul class="navbar-nav mr-auto">
 	          <li class="nav-item active">
-	            <a class="nav-link" href="{% url 'plots_example:index' %}"><font color='#9A9D9F'>Home</font><span class="sr-only">(current)</span></a>
+	            <a class="nav-link" href="{% url 'plots_example:home' %}"><font color='#9A9D9F'>Home</font><span class="sr-only">(current)</span></a>
 	          </li>
 	          {% for inst_key, inst_tools in tools.items %}
 		          <li class="dropdown">
-		            <a class="nav-link dropdown-toggle disabled" href="{% url 'plots_example:detail' inst_key %}" id="dropdown"{{ inst_key }} aria-haspopup="true" aria-expanded="false"><font color='#9A9D9F'>{{ inst_key }}</font></a>
+		            <a class="nav-link dropdown-toggle disabled" href="{% url 'plots_example:instrument' inst_key %}" id="dropdown"{{ inst_key }} aria-haspopup="true" aria-expanded="false"><font color='#9A9D9F'>{{ inst_key }}</font></a>
 		            <div class="dropdown-menu" aria-labelledby="dropdown01">
 		            	{% for tool in inst_tools %}
 		              		<a class="dropdown-item" href="#">{{ tool }}</a>
@@ -47,6 +53,8 @@
 	          <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
 	        </form> -->
 	      </div>
+
+	      <a class="navbar-right" href="https://github.com/spacetelescope/jwql"><img src="{% static 'plots_example/images/githublogo.svg' %}" height=25 width=25></a>
 	    </nav>
 
 	    <main role="main" class="container">
@@ -57,7 +65,7 @@
 			{% for key, inst_tools in tools.items %}
 				{% if key == inst %}
 					{% for tool in inst_tools %}
-						<button type="button" class="btn btn-outline-primary" href="#">{{ tool }}</button></br>
+						<button type="button" class="btn btn-primary my-2 disabled" href="#">{{ tool }}</button></br>
 					{% endfor %}
 				{% endif %}
 			{% endfor %}
@@ -68,10 +76,9 @@
 			<h3>Data</h3>
 	    	{% if imdat %}
 				{% for file in imdat %}
-					<ul>
-						<img src="{{ staticURL }}/{{ file }}" width=800/> </br>
-						<a>{{ file }}</a>
-					</ul>
+				<ul>
+					<a href="{% url 'plots_example:view_image' inst file %}">{{ file }}</a>
+				</ul>
 				{% endfor %}
 
 			{% else %}
@@ -79,5 +86,11 @@
 			{% endif %}
 
 		</main>
+
+		<footer class="footer">
+	      <div class="container">
+	        <span class="text-muted">Space Telescope Science Institute</span>
+	      </div>
+	    </footer>
 	</body>
 </html>

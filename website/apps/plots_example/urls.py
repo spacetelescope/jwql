@@ -4,6 +4,7 @@ from . import views
 
 app_name = 'plots_example'
 urlpatterns = [
-	path('', views.index, name='index'),
-	path('<str:inst>/', views.detail, name='detail'),
+	path('', views.home, name='home'),
+	path('<str:inst>/', views.instrument, name='instrument'),
+	path('<str:inst>/<str:file>/', views.view_image, name='view_image')
 ]

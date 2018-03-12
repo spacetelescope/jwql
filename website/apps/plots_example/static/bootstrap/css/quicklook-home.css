@@ -1,23 +1,22 @@
 .row {
   margin-bottom: 1rem;
 }
-.row .row {
-  margin-top: 1rem;
-  margin-bottom: 0;
-}
+
 [class*="col-"] {
   padding-top: 1rem;
   padding-bottom: 1rem;
-  margin: 1rem;
-  /*background-color: rgba(86, 61, 124, .15);*/
-  /*border: 4px solid rgba(86, 61, 124, .2);*/
 }
-.btn {
+
+/*Format the instrument selection buttons*/
+.instrument_select .btn {
 	font-size: 20px;
 	min-height: 150px;
 }
+.instrument_select .col-md-2 {
+  margin: 1rem;
+}
 /*Change active color of button*/
-.btn:hover, .btn:focus, .btn:active, .btn-primary.active, .open>.dropdown-toggle.btn-primary {
+.instrument_select .btn:hover, .btn:focus, .btn:active, .btn-primary.active, .open>.dropdown-toggle.btn-primary {
     color: #fff;
     background-color: #abcdf4;
     /*border-color: #285e8e; set the color you want here*/
