@@ -1,9 +1,11 @@
 name: jwqldev
 channels:
 - defaults
+- http://ssb.stsci.edu/astroconda-dev
 dependencies:
 - astropy=2.0.3
 - django=1.11.8
+- jwst=0.7.8rc9
 - matplotlib=2.1.1
 - numpy=1.14.0
 - postgresql=9.6.6
