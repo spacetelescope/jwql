@@ -3,7 +3,6 @@
 """
 Create a preview image from a fits file containing an observation.
 
-
 This module creates and saves a "preview image" from a fits file
 that contains a JWST observation. Data from the user-supplied 
 `extension` of the file are read in, along with the `PIXELDQ`
@@ -20,7 +19,6 @@ Authors:
 
     Bryan Hilbert
 
-
 Use:
 ----
 
@@ -32,8 +30,6 @@ Use:
     im.scaling = 'log'
     im.output_format = 'jpg'
     im.make_image()
-
-
 """
 
 import os
@@ -47,7 +43,17 @@ import numpy as np
 from jwst.datamodels import dqflags
 
 class Image():
+    
     def __init__(self, filename, extension):
+        """Initialize the class.
+        
+        Parameters
+        ----------
+        filename : str
+            Name of fits file containing data
+        extension : str
+            Extension name to be read in
+        """
         self.file = filename
         self.clip_percent = 0.01
         self.scaling = 'log'
@@ -123,7 +129,7 @@ class Image():
         ----------
         filename : str
             Name of fits file containing data
-        ext : string
+        ext : str
             Extension name to be read in
 
         Returns:
@@ -267,9 +273,5 @@ class Image():
             A matplotlib figure object
         fname : str
             Output filename
-
-        Returns:
-        --------
-        Nothing
         """
         image.savefig(fname, bbox_inches='tight')
