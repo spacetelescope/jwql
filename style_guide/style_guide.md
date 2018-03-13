@@ -17,18 +17,7 @@ It is assumed that the reader of this style guide has read and is familiar with 
 Workflow
 --------
 
-All software development for the `jwql` project should follow a continuous integration workflow which resembles the following:
-
-1. Open a GitHub issue - The GitHub issue should have an adequate description of the proposed feature, bug, or question.  Any appropriate individuals should be assigned to the issue, and a label(s), project(s) and/or milestone(s) should be tagged.
-2. Create a branch in which to perform the software development.  Branch names should be short but descriptive (e.g. `new-database-table` or `fix-ingest-algorithm`) and not too generic (e.g. `bug-fix`).  Also consistent use of hyphens is encouraged.
-3. Before committing any code changes, use `flake8` to check the code against `PEP8` standards.  Also check that your code is conforming to this style guide.
-4. Commit changes to the branch and push the branch to the remote repository.
-5. Create a new pull request that compares the new branch to the target branch (usually `master`, unless one is branching off of another branch).
-6. Request a reviewer on the pull request.
-7. The reviewer checks the pull request against this style guide and proposes changes if necessary.
-8. The author and reviewer iterate on changes until everyone is satisfied. The author can now squash commits if neccesary/desired.
-9. The reviewer accepts the pull request, merges the branch, and deletes the branch unless asked not to.
-10. The author comments on the original GitHub issue with link to appropriate pull request and closes the issue if satisfied. (This can also be done by adding a "closes #3" in the original commit message, and the issue will be closed when that commit is merged into master.
+All software development for the `jwql` project should follow a continuous integration workflow, described in the [`git` & GitHub workflow for contributing](https://github.com/spacetelescope/jwql/wiki/git-%26-GitHub-workflow-for-contributing).  Before committing any code changes, use `flake8` to check the code against `PEP8` standards.  Also check that your code is conforming to this style guide.
 
 
 Version Numbers and Tags
@@ -52,6 +41,8 @@ The following items should never be committed in the `jwql` source code or GitHu
 - Proprietary data
 
 If `jwql` code needs to be aware of this information, it should be stored in a configuration file that is not part of the `jwql` repository.
+
+Additionally, developers of this project should be mindful of application security risks, and should adhere to the [OWASP Top 10](https://www.owasp.org/images/7/72/OWASP_Top_10-2017_%28en%29.pdf.pdf) as best possible.
 
 
 `jwql`-specific Code Standards
