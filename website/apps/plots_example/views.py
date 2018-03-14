@@ -58,23 +58,23 @@ def view_image(request, inst, file, rewrite=False):
     jpg_filename = os.path.splitext(file)[0] + '_integ0.jpg'
     jpg_filepath = os.path.join(FILESYSTEM_DIR, dirname, jpg_filename)
 
+    # If it does, just call the existing jpg
     if os.path.exists(jpg_filepath) and not rewrite:
         pass
 
-    # If it doesn't, make it
+    # If it doesn't, make it using preview_image
     else:
         fits_filepath = os.path.join(FILESYSTEM_DIR, dirname, file)
 
         # Only process FITS files that are 3D+ (preview_image can't handle 2D)
-        if fits_filepath[-9:] != 'rate.fits':
+        if any([end in fits_filepath for end in ['rate.fits', 'cal.fits', 'i2d.fits']]):
+            jpg_filename = 'Cannot currently create JPEG preview for 2-dimensional FITS files.'
+        else:
             im = Image(fits_filepath, 'SCI')
             im.make_image()
-        else:
-            jpg_filename = 'Cannot currently create JPEG preview for rate.fits file.'
 
     return render(request, template,
-                  {'filesystem': FILESYSTEM_DIR,
-                   'inst': inst,
+                  {'inst': inst,
                    'file': file,
                    'tools': TOOLS,
                    'jpg': jpg_filename})
