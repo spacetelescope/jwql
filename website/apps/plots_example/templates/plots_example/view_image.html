@@ -69,11 +69,11 @@
 		    	<a class="btn btn-primary my-2 mx-2 disabled" role="button" href="#"> View Proposal</a>
 		    </p>
 
-		    <a><img src='{{ filesystem }}{{ file|slice:":7" }}/{{ jpg }}' alt='{{ jpg }}'></a>
+		    <a><img src='{{ staticURL }}{{ file|slice:":7" }}/{{ jpg }}' alt='{{ jpg }}'></a>
 
 	    	<p>
-		    	<a class="btn btn-primary my-2 mx-2" role="button" href='{{ filesystem }}{{ file|slice:":7" }}/{{ file }}'>Download FITS</a>
-		    	<a class="btn btn-primary my-2 mx-2" role="button" href='{{ filesystem }}{{ file|slice:":7" }}/{{ jpg }}'>Download JPEG</a>
+		    	<a class="btn btn-primary my-2 mx-2" role="button" href='{{ staticURL }}{{ file|slice:":7" }}/{{ file }}'>Download FITS</a>
+		    	<a class="btn btn-primary my-2 mx-2" role="button" href='{{ staticURL }}{{ file|slice:":7" }}/{{ jpg }}'>Download JPEG</a>
 		    	<a class="btn btn-primary my-2 mx-2 disabled" role="button" href="#">Submit Anomaly</a>
 		    </p>
 
