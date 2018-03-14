@@ -62,33 +62,25 @@ class Image():
         # Read in file
         self.data, self.dq = self.get_data(self.file, extension)
         
-    def diff_img(self, data):
+    def difference_image(self, data):
         """
         Create a difference image from the data. Use last
         group minus first group in order to maximize signal
-        to noise. If input is 4D, make a separate difference
+        to noise. With 4D input, make a separate difference
         image for each integration.
 
         Parameters:
         ----------
         data : obj
-            3D or 4D numpy ndarray array of floats
+            4D numpy ndarray array of floats
 
         Returns:
         --------
         result : obj
-            3D or 4D numpy ndarray containing the difference
+            3D numpy ndarray containing the difference
             image(s) from the input exposure
         """
-        ndim = len(data.shape)
-        if ndim == 3:
-            diff = data[-1, :, :] - data[0, :, :]
-        elif ndim == 4:
-            diff = data[:, -1, :, :] - data[:, 0, :, :]
-        else:
-            raise ValueError(("Warning, difference imaging doesn't support"
-                              "arrays with {} dimensions!".format(ndim)))
-        return diff
+        return data[:, -1, :, :] - data[:, 0, :, :]
 
     def find_limits(self, data, pixmap, clipperc):
         """
@@ -237,9 +229,14 @@ class Image():
         """
         MAIN FUNCTION
         """
-        # Create difference image(s)
-        diff_img = self.diff_img(self.data)
+        shape = self.data.shape
 
+        if len(shape) == 4:
+            # Create difference image(s)
+            diff_img = self.difference_image(self.data)
+        elif len(shape) < 4:
+            diff_img = self.data
+            
         # If there are multiple integrations in the file,
         # work on one integration at a time from here onwards
         ndim = len(diff_img.shape)
