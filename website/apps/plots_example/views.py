@@ -1,6 +1,7 @@
 import os
 import sys
 
+from astropy.io import fits
 from django.shortcuts import render
 # from django.views import generic # Weultimately might want to use generic views?
 
@@ -73,11 +74,20 @@ def view_image(request, inst, file, rewrite=False):
             im = Image(fits_filepath, 'SCI')
             im.make_image()
 
+def view_header(request, inst, file):
+    template = 'plots_example/view_header.html'
+
+    dirname = file[:7]
+
+    fits_filepath = os.path.join(FILESYSTEM_DIR, dirname, file)
+
+    header = fits.getheader(fits_filepath, ext=0).tostring(sep='\n')
+
     return render(request, template,
                   {'inst': inst,
                    'file': file,
                    'tools': TOOLS,
-                   'jpg': jpg_filename})
+                   'header': header})
 
 def unlooked_images(request, inst):
     imdat = DatabaseConnection().get_filenames_for_instrument(inst)

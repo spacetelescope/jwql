@@ -61,53 +61,17 @@
 	    	<h5>{{ file }}</h5>
 
 	    	<p>
-		    	<a class="btn btn-primary my-2 mx-2" role="button" href="{% url 'plots_example:view_header' inst file %}"">View Header</a>
+		    	<a class="btn btn-primary my-2 mx-2" role="button" href="{% url 'plots_example:view_image' inst file %}">View Image</a>
 		    	<a class="btn btn-primary my-2 mx-2 disabled" role="button" href="#"> View Proposal</a>
 		    </p>
 
-		    <a><img src='{{ staticURL }}{{ file|slice:":7" }}/{{ jpg }}' alt='{{ jpg }}'></a>
+		    <font face="Courier">{{ header|linebreaks }}</font>
 
 	    	<p>
 		    	<a class="btn btn-primary my-2 mx-2" role="button" href='{{ staticURL }}{{ file|slice:":7" }}/{{ file }}'>Download FITS</a>
 		    	<a class="btn btn-primary my-2 mx-2" role="button" href='{{ staticURL }}{{ file|slice:":7" }}/{{ jpg }}'>Download JPEG</a>
 		    	<a class="btn btn-primary my-2 mx-2 disabled" role="button" href="#">Submit Anomaly</a>
 		    </p>
-
-			<!-- Try the arrow-to-navigate thing -->
-			{% if imdat %}
-				<div class="container">
-				    <div id="slideshow">
-				        <img alt="{{ imdat.0 }}" src="{{ staticURL }}/{{ imdat.0 }}" width=800 id="imgClickAndChange" onclick="changeImage()" />
-				    </div>
-				</div>
-
-				<div id="demo"></div>
-				<script>
-				document.getElementById("demo").innerHTML = "Hello JavaScript!";
-				</script>
-
-				<!-- <script src="{% static 'image_click_to_change.js' %}"></script> -->
-
-				<script>
-				    var imgs = {{ imdat }};
-
-				    function changeImage(dir) {
-				    	document.getElementById("imgClickAndChange").innerHTML = 5 + 6;
-				        var img = document.getElementById("imgClickAndChange");
-				        img.src = imgs[(imgs.indexOf(img.src) + 1) % imgs.length];
-				    }
-
-				    document.onkeydown = function(e) {
-				        e = e || window.event;
-				        if (e.keyCode == '37') {
-				            changeImage(-1) //left <- show Prev image
-				        } else if (e.keyCode == '39') {
-				            // right -> show next image
-				            changeImage()
-				        }
-				    }
-				</script>
-			{% endif %}
 
 		</main>
 
