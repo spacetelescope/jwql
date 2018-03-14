@@ -3,31 +3,31 @@ Interact with the JWQL database
 '''
 
 import os
+import sys
 
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
 
-CONFIG = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'config.txt')
+# Temporary fix until converted into a package...
+current_dir = os.getcwd()
+parent_dir = os.path.join(os.path.dirname(current_dir), 'utils')
+sys.path.insert(0, parent_dir)
+from utils import get_config
 
 class DatabaseConnection:
     def __init__(self):
         '''Start session with Quicklook database that can be used to query the
         database for information'''
 
-        # Get database credentials from config.txt file
-        params = []
-        with open(CONFIG) as f:
-            for line in f.readlines():
-                params.append(line.split()[1])
-        dbengine, dbname, dbuser, dbpassword, dbhost, dbport = params
+        # Get database credentials from config file
+        connection_string = get_config()['database']['connection_string']
+
+        # Connect to the database
+        engine = create_engine(connection_string)
 
         # Allow for automapping of database tables to classes
         Base = automap_base()
-
-        # Connect to the database
-        connection_string = 'postgresql+psycopg2://{}:{}@{}/{}'.format(dbuser, dbpassword, dbhost, dbname)
-        engine = create_engine(connection_string)
 
         # Reflect the tables in the database
         Base.prepare(engine, reflect=True)
