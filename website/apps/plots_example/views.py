@@ -40,14 +40,14 @@ def home(request):
     template = 'plots_example/home.html'
     context = {'inst_list': INST_LIST,
                'tools': TOOLS}
+
     return render(request, template, context)
 
 def instrument(request, inst):
-    imdat = DatabaseConnection().get_filenames_for_instrument(inst)
     template = 'plots_example/instrument.html'
+
     return render(request, template,
                   {'inst': inst,
-                   'imdat': imdat,
                    'tools': TOOLS})
 
 def view_image(request, inst, file, rewrite=False):
@@ -74,6 +74,12 @@ def view_image(request, inst, file, rewrite=False):
             im = Image(fits_filepath, 'SCI')
             im.make_image()
 
+    return render(request, template,
+                  {'inst': inst,
+                   'file': file,
+                   'tools': TOOLS,
+                   'jpg': jpg_filename})
+
 def view_header(request, inst, file):
     template = 'plots_example/view_header.html'
 
@@ -92,6 +98,7 @@ def view_header(request, inst, file):
 def unlooked_images(request, inst):
     imdat = DatabaseConnection().get_filenames_for_instrument(inst)
     template = 'plots_example/unlooked.html'
+
     return render(request, template,
                   {'inst': inst,
                    'imdat': imdat,
