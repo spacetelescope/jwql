@@ -8,6 +8,5 @@ urlpatterns = [
 	path('<str:inst>/', views.instrument, name='instrument'),
 	path('<str:inst>/unlooked/', views.unlooked_images, name='unlooked_im'),
 	path('<str:inst>/<str:file>/', views.view_image, name='view_image'),
-
-
+	path('<str:inst>/<str:file>/hdr/', views.view_header, name='view_header'),
 ]
