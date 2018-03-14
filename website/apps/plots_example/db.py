@@ -1,6 +1,30 @@
-'''
-Interact with the JWQL database
-'''
+"""Connects to the JWQL database.
+
+This module is the primary interface between the JWQL webapp and the
+JWQL database. It uses SQLAlchemy to start a session with the database,
+and provides class methods that perform useful queries on that database
+(for example, getting the names of all the files associated with a
+certain instrument).
+
+Authors
+-------
+    - Lauren Chambers
+
+Use
+---
+    This module can be used as such:
+
+    ::
+        from db import DatabaseConnection
+        db_connect = DatabaseConnection()
+        data = db_connect.get_filenames_for_instrument('NIRCam')
+
+Dependencies
+------------
+    The user must have a configuration file named ``config.json``
+    placed in jwql/utils/ directory.
+
+"""
 
 import os
 import sys
@@ -16,9 +40,21 @@ sys.path.insert(0, parent_dir)
 from utils import get_config
 
 class DatabaseConnection:
+    """Facilitates connection with the jwql database using SQLAlchemy.
+
+    Attributes
+    ----------
+    ObservationWebtest : obj
+        Class instance in an "automap" schema corresponding to the
+        observationwebtest database table
+    session : obj
+        Session with the database that enables querying
+    """
+
     def __init__(self):
         '''Start session with Quicklook database that can be used to query the
-        database for information'''
+        database for information
+        '''
 
         # Get database credentials from config file
         connection_string = get_config()['database']['connection_string']
@@ -40,7 +76,19 @@ class DatabaseConnection:
 
     def get_filepaths_for_instrument(self, instrument):
         '''Given an instrument, query the database for all filenames
-        associated with said instrument'''
+        associated with said instrument
+
+        Parameters
+        ----------
+        instrument : str
+            Name of JWST instrument
+
+        Returns
+        -------
+        filepaths: list
+            List of all filepaths in database for the provided
+            instrument
+        '''
         instrument = instrument.upper()
 
         results = self.session.query(self.ObservationWebtest)\
@@ -56,8 +104,20 @@ class DatabaseConnection:
         return filepaths
 
     def get_filenames_for_instrument(self, instrument):
-        '''Given an instrument, query the database for all filenames
-        associated with said instrument'''
+        '''Given an instrument, query the database for all filepaths
+        associated with said instrument
+
+        Parameters
+        ----------
+        instrument : str
+            Name of JWST instrument
+
+        Returns
+        -------
+        filenames: list
+            List of all filenames in database for the provided
+            instrument
+        '''
         instrument = instrument.upper()
 
         results = self.session.query(self.ObservationWebtest)\
