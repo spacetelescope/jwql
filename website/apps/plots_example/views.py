@@ -1,8 +1,8 @@
 """Defines the views for the JWQL web app.
 
-In django, "a view function, or view for short, is simply a Python
+In Django, "a view function, or view for short, is simply a Python
 function that takes a Web request and returns a Web response" (from
-django documentation). This module defines all of the views that are
+Django documentation). This module defines all of the views that are
 used to generate the various webpages used for the Quicklook project.
 For example, these views can list the tools available to users, query
 the JWQL database, and display images and headers.
@@ -13,12 +13,18 @@ Authors
 
 Use
 ---
-    This module is called in urls.py as such:
+    This module is called in ``urls.py`` as such:
 
     ::
+        from django.urls import path
         from . import views
         urlpatterns = [path('web/path/to/view/',
                              views.view_name, name='view_name')]
+
+References
+----------
+For more information please see:
+    https://docs.djangoproject.com/en/2.0/topics/http/views/
 
 Dependencies
 ------------
@@ -26,7 +32,6 @@ Dependencies
     placed in jwql/utils/ directory.
 
 """
-
 
 import os
 import sys
@@ -70,12 +75,12 @@ def home(request):
 
     Parameters
     ----------
-    request : HttpRequest
+    request : HttpRequest object
         Incoming request from the webpage
 
     Returns
     -------
-    HttpResponse
+    HttpResponse object
         Outgoing response sent to the webpage
     """
     template = 'plots_example/home.html'
@@ -89,14 +94,14 @@ def instrument(request, inst):
 
     Parameters
     ----------
-    request : HttpRequest
+    request : HttpRequest object
         Incoming request from the webpage
     inst : str
         Name of JWST instrument
 
     Returns
     -------
-    HttpResponse
+    HttpResponse object
         Outgoing response sent to the webpage
     """
     template = 'plots_example/instrument.html'
@@ -110,7 +115,7 @@ def view_image(request, inst, file, rewrite=False):
 
     Parameters
     ----------
-    request : HttpRequest
+    request : HttpRequest object
         Incoming request from the webpage
     inst : str
         Name of JWST instrument
@@ -121,7 +126,7 @@ def view_image(request, inst, file, rewrite=False):
 
     Returns
     -------
-    HttpResponse
+    HttpResponse object
         Outgoing response sent to the webpage
     """
     template = 'plots_example/view_image.html'
@@ -158,7 +163,7 @@ def view_header(request, inst, file):
 
     Parameters
     ----------
-    request : HttpRequest
+    request : HttpRequest object
         Incoming request from the webpage
     inst : str
         Name of JWST instrument
@@ -167,7 +172,7 @@ def view_header(request, inst, file):
 
     Returns
     -------
-    HttpResponse
+    HttpResponse object
         Outgoing response sent to the webpage
     """
     template = 'plots_example/view_header.html'
@@ -188,14 +193,14 @@ def unlooked_images(request, inst):
 
     Parameters
     ----------
-    request : HttpRequest
+    request : HttpRequest object
         Incoming request from the webpage
     inst : str
         Name of JWST instrument
 
     Returns
     -------
-    HttpResponse
+    HttpResponse object
         Outgoing response sent to the webpage
     """
     template = 'plots_example/unlooked.html'
