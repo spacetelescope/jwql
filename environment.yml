@@ -3,7 +3,7 @@ channels:
 - defaults
 - http://ssb.stsci.edu/astroconda-dev
 dependencies:
-- astropy=2.0.3
+- astropy=3.0
 - django=1.11.8
 - jwst=0.7.8rc9
 - matplotlib=2.1.1
