@@ -27,18 +27,13 @@ Dependencies
 """
 
 import os
-import sys
 
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
 from astroquery.mast import Mast
 
-# Temporary fix until converted into a package...
-current_dir = os.getcwd()
-parent_dir = os.path.join(os.path.dirname(current_dir), 'utils')
-sys.path.insert(0, parent_dir)
-from utils import get_config
+from jwql.utils.utils import get_config
 
 
 class DatabaseConnection:
