@@ -204,9 +204,10 @@ def unlooked_images(request, inst):
         Outgoing response sent to the webpage
     """
     template = 'plots_example/unlooked.html'
-    imdat = DatabaseConnection().get_filenames_for_instrument(inst)
+    filepaths, filenames = DatabaseConnection('MAST', instrument=inst).\
+        get_files_for_instrument(inst)
 
     return render(request, template,
                   {'inst': inst,
-                   'imdat': imdat,
+                   'imdat': filenames,
                    'tools': TOOLS})

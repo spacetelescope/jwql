@@ -32,6 +32,7 @@ import sys
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
+from astroquery.mast import Mast
 
 # Temporary fix until converted into a package...
 current_dir = os.getcwd()
@@ -39,8 +40,9 @@ parent_dir = os.path.join(os.path.dirname(current_dir), 'utils')
 sys.path.insert(0, parent_dir)
 from utils import get_config
 
+
 class DatabaseConnection:
-    """Facilitates connection with the jwql database using SQLAlchemy.
+    """Facilitates connection with the jwql database.
 
     Attributes
     ----------
@@ -51,11 +53,23 @@ class DatabaseConnection:
         Session with the database that enables querying
     """
 
-    def __init__(self):
-        '''Start session with Quicklook database that can be used to query the
-        database for information
+    def __init__(self, db_type, instrument=None):
+        '''Determine what kind of database is being queried, and
+        call appropriate initialization method
         '''
+        self.db_type = db_type
 
+        assert self.db_type in ['MAST', 'SQL'], \
+            'Unrecognized database type: {}. Must be SQL or MAST.'.format(db_type)
+
+        if self.db_type == 'MAST':
+            self.init_MAST(instrument)
+        elif self.db_type == 'SQL':
+            self.init_SQL()
+
+    def init_SQL(self):
+        '''Start SQLAlchemy session with the  Quicklook database
+        '''
         # Get database credentials from config file
         connection_string = get_config()['database']['connection_string']
 
@@ -74,9 +88,22 @@ class DatabaseConnection:
         # Start a session to enable queries
         self.session = Session(engine)
 
-    def get_filepaths_for_instrument(self, instrument):
+    def init_MAST(self, instrument=None):
+        '''Determine the necessary service string to query the MAST
+        database'''
+        # Correctly format the instrument string
+        if instrument:
+            instrument = instrument[0].upper() + instrument[1:].lower()
+        else:
+            raise TypeError('Must provide instrument to initialize MAST database.')
+
+        # Define the service name for the given instrument
+        self.service = "Mast.Jwst.Filtered." + instrument
+        print(self.service)
+
+    def get_files_for_instrument(self, instrument):
         '''Given an instrument, query the database for all filenames
-        associated with said instrument
+        and paths associated with said instrument
 
         Parameters
         ----------
@@ -88,44 +115,31 @@ class DatabaseConnection:
         filepaths: list
             List of all filepaths in database for the provided
             instrument
-        '''
-        instrument = instrument.upper()
-
-        results = self.session.query(self.ObservationWebtest)\
-            .filter(self.ObservationWebtest.instrument == instrument)
-
-        filepaths = []
-        for i in results:
-            filename = i.filename
-            prog_id = filename[2:7]
-            file_path = os.path.join('jw' + prog_id, filename)
-            filepaths.append(file_path)
-
-        return filepaths
-
-    def get_filenames_for_instrument(self, instrument):
-        '''Given an instrument, query the database for all filepaths
-        associated with said instrument
-
-        Parameters
-        ----------
-        instrument : str
-            Name of JWST instrument
-
-        Returns
-        -------
         filenames: list
             List of all filenames in database for the provided
             instrument
         '''
         instrument = instrument.upper()
 
-        results = self.session.query(self.ObservationWebtest)\
-            .filter(self.ObservationWebtest.instrument == instrument)
+        if self.db_type == 'SQL':
+            results = self.session.query(self.ObservationWebtest)\
+                .filter(self.ObservationWebtest.instrument == instrument)
+        elif self.db_type == 'MAST':
+            params = {"columns": "*",
+                      "filters": []}
+            response = Mast.service_request_async(self.service, params)
+            results = response[0].json()['data']
 
+        filepaths = []
         filenames = []
         for i in results:
-            filename = i.filename
+            if self.db_type == 'SQL':
+                filename = i.filename
+            elif self.db_type == 'MAST':
+                filename = i['filename']
+            prog_id = filename[2:7]
+            file_path = os.path.join('jw' + prog_id, filename)
+            filepaths.append(file_path)
             filenames.append(filename)
 
-        return filenames
+        return filepaths, filenames
