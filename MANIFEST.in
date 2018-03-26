@@ -1,0 +1,10 @@
+include README.md
+include LICENSE
+include environment.yml
+include setup.py
+
+recursive-include notebooks *
+recursive-include style_guide *
+recursive-include typing_demo *
+
+exclude *.pyc
