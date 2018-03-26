@@ -24,12 +24,8 @@ Dependencies
 
 import os
 
-# Temporary fix until converted into a package...
-import sys
-current_dir = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-parent_dir = os.path.join(os.path.dirname(os.path.dirname(current_dir)), 'utils')
-sys.path.insert(0, parent_dir)
-from utils import get_config
+from jwql.utils.utils import get_config
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -64,7 +60,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'jwql.urls'
+ROOT_URLCONF = 'jwql_web.urls'
 
 TEMPLATES = [
     {
@@ -83,7 +79,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'jwql.wsgi.application'
+WSGI_APPLICATION = 'jwql_web.wsgi.application'
 
 
 # Database
@@ -138,4 +134,3 @@ STATICFILES_DIRS = [
     get_config()['filesystem'],
 ]
 
-MEDIA_ROOT = '/Users/lchambers/JWQL/jwql/apps/plots_example/media/'

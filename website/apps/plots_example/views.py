@@ -34,24 +34,15 @@ Dependencies
 """
 
 import os
-import sys
 
 from astropy.io import fits
 from django.shortcuts import render
 # from django.views import generic # We ultimately might want to use generic views?
 
+from jwql.preview_image.preview_image import PreviewImage
+from jwql.utils.utils import get_config
+
 from .db import DatabaseConnection
-
-# Temporary fix until converted into a package...
-current_dir = os.path.abspath(os.path.dirname(__file__))
-parent_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(current_dir))), 'preview_image')
-sys.path.insert(0, parent_dir)
-from preview_image import Image
-
-# Temporary fix until converted into a package...
-parent_dir = os.path.join(os.path.dirname(current_dir), 'utils')
-sys.path.insert(0, parent_dir)
-from utils import get_config
 
 FILESYSTEM_DIR = get_config()['filesystem']
 INST_LIST = ['FGS', 'MIRI', 'NIRCam', 'NIRISS', 'NIRSpec']
@@ -149,7 +140,7 @@ def view_image(request, inst, file, rewrite=False):
         if any([end in fits_filepath for end in ['rate.fits', 'cal.fits', 'i2d.fits']]):
             jpg_filename = 'Cannot currently create JPEG preview for 2-dimensional FITS files.'
         else:
-            im = Image(fits_filepath, 'SCI')
+            im = PreviewImage(fits_filepath, 'SCI')
             im.make_image()
 
     return render(request, template,
