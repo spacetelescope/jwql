@@ -4,14 +4,14 @@
 Create a preview image from a fits file containing an observation.
 
 This module creates and saves a "preview image" from a fits file
-that contains a JWST observation. Data from the user-supplied 
+that contains a JWST observation. Data from the user-supplied
 `extension` of the file are read in, along with the `PIXELDQ`
 extension if present. For each integration in the exposure, the
 first group is subtracted from the final group in order to create
 a difference image. The lower and upper limits to be displayed are
 defined as the `clip_percent` and (1. - `clip_percent') percentile
 signals. Matplotlib is then used to display a linear- or log-stretched
-version of the image, with accompanying colorbar. The image is then 
+version of the image, with accompanying colorbar. The image is then
 saved.
 
 Authors:
@@ -24,8 +24,8 @@ Use:
 
     This module can be imported as such:
 
-    >>> from preview_image import Image
-    im = Image(my_file, "SCI")
+    >>> from jwql.preview_image.preview_image import PreviewImage
+    im = PreviewImage(my_file, "SCI")
     im.clip_percent = 0.01
     im.scaling = 'log'
     im.output_format = 'jpg'
@@ -42,11 +42,11 @@ import numpy as np
 
 from jwst.datamodels import dqflags
 
-class Image():
-    
+class PreviewImage():
+
     def __init__(self, filename, extension):
         """Initialize the class.
-        
+
         Parameters
         ----------
         filename : str
@@ -61,7 +61,7 @@ class Image():
 
         # Read in file
         self.data, self.dq = self.get_data(self.file, extension)
-        
+
     def diff_img(self, data):
         """
         Create a difference image from the data. Use last
@@ -92,8 +92,8 @@ class Image():
 
     def find_limits(self, data, pixmap, clipperc):
         """
-        Find the minimum and maximum signal levels after 
-        clipping the top and bottom x% of the pixels. 
+        Find the minimum and maximum signal levels after
+        clipping the top and bottom x% of the pixels.
 
         Parameters:
         ----------
@@ -102,9 +102,9 @@ class Image():
         pixmap : obj
             2D numpy ndarray boolean array of science pixel locations
             (True for science pixels, False for non-science pix)
-        clipperc : float 
-            Fraction of top and bottom signal levels to clip 
-            (e.g. 0.01 means to clip brightest and dimmest 1% 
+        clipperc : float
+            Fraction of top and bottom signal levels to clip
+            (e.g. 0.01 means to clip brightest and dimmest 1%
             of pixels)
 
         Returns:
@@ -163,7 +163,7 @@ class Image():
             raise FileNotFoundError(("WARNING: {} does not exist!"
                                      .format(filename)))
         return data, dq
-        
+
     def make_figure(self, image, integration_number, min_value, max_value,
                     scale, maxsize = 8):
         """
@@ -173,7 +173,7 @@ class Image():
         ----------
         image : obj
             2D numpy ndarray of floats
-        integration_number : int 
+        integration_number : int
             Integration number within exposure
         min_value : float
             Minimum value for display
@@ -191,7 +191,7 @@ class Image():
         if scale not in ['linear','log']:
             raise ValueError(("WARNING: scaling option {} not supported."
                               .format(scale)))
-        
+
         # Set the figure size
         yd, xd = image.shape
         ratio = yd / xd
@@ -202,7 +202,7 @@ class Image():
             ysize = maxsize
             xsize = maxsize / ratio
         fig, ax = plt.subplots(figsize=(xsize, ysize))
-        
+
         if scale == 'log':
             # Shift data so everything is positive
             shiftdata = image - min_value + 1
@@ -213,7 +213,7 @@ class Image():
             cax = ax.imshow(shiftdata,
                             norm=colors.LogNorm(vmin=shiftmin, vmax=shiftmax),
                             cmap='gray')
-            
+
             # Add colorbar, with original data values
             tickvals = np.logspace(np.log10(shiftmin), np.log10(shiftmax), 5)
             tlabelflt = tickvals + min_value - 1
@@ -228,7 +228,7 @@ class Image():
             cax = ax.imshow(image, clim=(min_value, max_value), cmap='gray')
             cbar = fig.colorbar(cax)
             ax.set_xlabel('Pixels')
-            ax.set_ylabel('Pixels')            
+            ax.set_ylabel('Pixels')
 
         ax.set_title(self.file + ' Int: {}'.format(np.int(integration_number)))
         return fig
@@ -246,10 +246,10 @@ class Image():
         if ndim == 2:
             diff_img = np.expand_dims(diff_img, axis=0)
         nint, ny, nx = diff_img.shape
-        
+
         for i in range(nint):
             frame = diff_img[i, :, :]
-            
+
             # Find signal limits for the display
             minval, maxval = self.find_limits(frame, self.dq,
                                               self.clip_percent)
