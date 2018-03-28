@@ -58,37 +58,30 @@ class PreviewImage():
         self.clip_percent = 0.01
         self.scaling = 'log'
         self.output_format = 'jpg'
+        self.output_directory = None
 
         # Read in file
         self.data, self.dq = self.get_data(self.file, extension)
 
-    def diff_img(self, data):
+    def difference_image(self, data):
         """
         Create a difference image from the data. Use last
         group minus first group in order to maximize signal
-        to noise. If input is 4D, make a separate difference
+        to noise. With 4D input, make a separate difference
         image for each integration.
 
         Parameters:
         ----------
         data : obj
-            3D or 4D numpy ndarray array of floats
+            4D numpy ndarray array of floats
 
         Returns:
         --------
         result : obj
-            3D or 4D numpy ndarray containing the difference
+            3D numpy ndarray containing the difference
             image(s) from the input exposure
         """
-        ndim = len(data.shape)
-        if ndim == 3:
-            diff = data[-1, :, :] - data[0, :, :]
-        elif ndim == 4:
-            diff = data[:, -1, :, :] - data[:, 0, :, :]
-        else:
-            raise ValueError(("Warning, difference imaging doesn't support"
-                              "arrays with {} dimensions!".format(ndim)))
-        return diff
+        return data[:, -1, :, :] - data[:, 0, :, :]
 
     def find_limits(self, data, pixmap, clipperc):
         """
@@ -149,7 +142,7 @@ class PreviewImage():
                     except:
                         pass
                 if ext in extnames:
-                    data = hdulist[ext].data
+                    data = hdulist[ext].data.astype(np.float)
                 else:
                     raise ValueError(("WARNING: no {} extension in {}!"
                                       .format(ext, filename)))
@@ -217,7 +210,20 @@ class PreviewImage():
             # Add colorbar, with original data values
             tickvals = np.logspace(np.log10(shiftmin), np.log10(shiftmax), 5)
             tlabelflt = tickvals + min_value - 1
-            tlabelstr = ["%.1f" % number for number in tlabelflt]
+
+            # Adjust the number of digits after the decimal point
+            # in the colorbar labels based on the signal range
+            delta = tlabelflt[-1] - tlabelflt[0]
+            if delta >= 100:
+                dig = 0
+            elif ((delta < 100) & (delta >= 10)):
+                dig = 1
+            elif ((delta < 10) & (delta >= 1)):
+                dig = 2
+            elif delta < 1:
+                dig = 3
+            format_string = "%.{}f".format(dig)
+            tlabelstr = [format_string % number for number in tlabelflt]
             cbar = fig.colorbar(cax, ticks=tickvals)
             cbar.ax.set_yticklabels(tlabelstr)
             ax.set_xlabel('Pixels')
@@ -230,15 +236,21 @@ class PreviewImage():
             ax.set_xlabel('Pixels')
             ax.set_ylabel('Pixels')
 
-        ax.set_title(self.file + ' Int: {}'.format(np.int(integration_number)))
+        filename = os.path.split(self.file)[-1]
+        ax.set_title(filename + ' Int: {}'.format(np.int(integration_number)))
         return fig
 
     def make_image(self):
         """
         MAIN FUNCTION
         """
-        # Create difference image(s)
-        diff_img = self.diff_img(self.data)
+        shape = self.data.shape
+
+        if len(shape) == 4:
+            # Create difference image(s)
+            diff_img = self.difference_image(self.data)
+        elif len(shape) < 4:
+            diff_img = self.data
 
         # If there are multiple integrations in the file,
         # work on one integration at a time from here onwards
@@ -257,7 +269,11 @@ class PreviewImage():
             # Create matplotlib object
             indir, infile = os.path.split(self.file)
             suffix = '_integ{}.{}'.format(i, self.output_format)
-            outfile = os.path.join(indir, infile.split('.')[0] + suffix)
+            if self.output_directory is None:
+                outdir = indir
+            else:
+                outdir = self.output_directory
+            outfile = os.path.join(outdir, infile.split('.')[0] + suffix)
             fig = self.make_figure(frame, i, minval, maxval, self.scaling.lower())
             self.save_image(fig, outfile)
             plt.close()
