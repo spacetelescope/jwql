@@ -28,6 +28,11 @@ git clone https://github.com/spacetelescope/jwql.git
 cd jwql
 python setup.py develop
 ```
+If you have two factor authentication and sftp (rather than http) access set up on github, type
+```
+git clone git@github.com:spacetelescope/jwql.git  
+```
+instead, and then proceed as stated.
 
 ## Environment Installation
 
