@@ -20,7 +20,8 @@ Use
 import os
 import pytest
 
-from .permissions import set_permissions, has_permissions
+from jwql.permissions.permissions import set_permissions, has_permissions, \
+    get_owner_string, get_group_string
 
 # directory to be created and populated during tests running
 TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'permission_test')
@@ -35,7 +36,7 @@ def test_directory(test_dir=TEST_DIRECTORY):
     test_dir : str
         Path to directory used for testing
 
-    Returns
+    Yields
     -------
     test_dir : str
         Path to directory used for testing
@@ -51,6 +52,7 @@ def test_directory(test_dir=TEST_DIRECTORY):
 
 def test_directory_permissions(test_directory):
     """Create a directory with the standard permissions ('-rw-r--r--').
+
     Set the default permissions defined in permissions.py. Assert that these were set correctly.
 
     Parameters
@@ -59,8 +61,14 @@ def test_directory_permissions(test_directory):
         Path of directory used for testing
 
     """
-    set_permissions(test_directory)
-    assert has_permissions(test_directory)
+    # Get owner and group on the current system.This allows to implement the tests
+    # independently from the user.
+    owner = get_owner_string(test_directory)
+    group = get_group_string(test_directory)
+    print('\nCurrent owner={} group={}'.format(owner, group))
+
+    set_permissions(test_directory, owner=owner, group=group)
+    assert has_permissions(test_directory, owner=owner, group=group)
 
 
 @pytest.fixture()
@@ -72,7 +80,7 @@ def test_file(test_dir=TEST_DIRECTORY):
     test_dir : str
         Path to directory used for testing
 
-    Returns
+    Yields
     -------
     filename : str
         Path of file used for testing
@@ -82,9 +90,8 @@ def test_file(test_dir=TEST_DIRECTORY):
         os.mkdir(test_dir)
 
     filename = os.path.join(test_dir, 'permission_test.txt')
-    filestream = open(filename, 'w')
-    filestream.write('jwql permission test')
-    filestream.close()
+    with open(filename, 'w') as filestream:
+        filestream.write('jwql permission test')
     yield filename
     print("teardown test file and directory ")
     if os.path.isfile(filename):
@@ -95,6 +102,7 @@ def test_file(test_dir=TEST_DIRECTORY):
 
 def test_file_group(test_file):
     """Create a file with the standard permissions ('-rw-r--r--') and default group.
+
     Modify the group and set the default permissions defined in permissions.py.
     Assert that both group and permissions were set correctly.
 
@@ -104,16 +112,21 @@ def test_file_group(test_file):
         Path of file used for testing
 
     """
-    set_permissions(test_file, group='staff')
-    assert has_permissions(test_file, group='staff')
+    # Get owner and group on the current system.
+    owner = get_owner_string(test_file)
+    group = get_group_string(test_file)
+
+    set_permissions(test_file, group='staff', owner=owner)
+    assert has_permissions(test_file, group='staff', owner=owner)
 
     # return to default group
-    set_permissions(test_file)
-    assert has_permissions(test_file)
+    set_permissions(test_file, owner=owner, group=group)
+    assert has_permissions(test_file, owner=owner, group=group)
 
 
 def test_file_permissions(test_file):
     """Create a file with the standard permissions ('-rw-r--r--').
+
     Set the default permissions defined in permissions.py. Assert that these were set correctly.
 
     Parameters
@@ -122,5 +135,9 @@ def test_file_permissions(test_file):
         Path of file used for testing
 
     """
-    set_permissions(test_file)
-    assert has_permissions(test_file)
+    # Get owner and group on the current system.
+    owner = get_owner_string(test_file)
+    group = get_group_string(test_file)
+
+    set_permissions(test_file, owner=owner, group=group)
+    assert has_permissions(test_file, owner=owner, group=group)
