@@ -27,12 +27,6 @@ Use
 
     ``pathname`` - Directory or file for which the default permissions should be set
 
-
-TODO
-----
-
-    - write tests for setting group and managing directory permissions
-
 """
 
 import grp
@@ -40,18 +34,34 @@ import os
 import pwd
 import stat
 
-# for tests on dljwql:
-# DEFAULT_OWNER = 'jwqladm'
-# DEFAULT_GROUP = 'jwql_dev'
+# owner and group names for JWQL project
+DEFAULT_OWNER = 'jwqladm'
+DEFAULT_GROUP = 'jwql_dev'
 
-# for tests on on jsahlmann's machine:
-DEFAULT_OWNER = 'jsahlmann'
-DEFAULT_GROUP = r'STSCI\science'
 
 # set the default mode for DEFAULT_OWNER
 # see https://docs.python.org/3/library/stat.html#stat.S_ISUID
 # DEFAULT_MODE = stat.S_IRWXU # equivalent to '?rwx------'
 DEFAULT_MODE = stat.S_IRWXU | stat.S_IRGRP  # equivalent to '?rwxr-----'
+
+def get_group_string(pathname):
+    """Return the group of pathname in string representation.
+
+    Parameters
+    ----------
+    pathname : str
+        Directory or file to be inspected.
+
+    Returns
+    -------
+    group_name : str
+        String representation of the group.
+
+    """
+    file_statinfo = os.stat(pathname)
+    groupinfo = grp.getgrgid(file_statinfo.st_gid)
+    group_name = groupinfo.gr_name
+    return group_name
 
 
 def get_owner_string(pathname):
@@ -75,7 +85,8 @@ def get_owner_string(pathname):
 
 
 def has_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFAULT_GROUP):
-    """Return boolean indicating whether pathname has the specified owner, permission, and group scheme.
+    """Return boolean indicating whether pathname has the specified
+    owner, permission, and group scheme.
 
     Parameters
     ----------
@@ -84,7 +95,8 @@ def has_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFA
     owner : str
         String representation of the owner
     mode : int
-        Integer representation of the permission mode, compatible with os.stat output
+        Integer representation of the permission mode, compatible
+        with os.stat output
     group : str
         String representation of the group
 
