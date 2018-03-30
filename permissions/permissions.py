@@ -17,6 +17,16 @@ Authors
 Use
 ---
 
+    This module can be imported and used with
+
+    ::
+        from jwql.permissions import permissions
+        permissions.set_permissions(pathname)
+
+    Required arguments:
+
+    ``pathname`` - Directory or file for which the default permissions should be set
+
 
 TODO
 ----
@@ -90,7 +100,7 @@ def has_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFA
     # complement mode depending on whether input is file or directory
     if os.path.isfile(pathname):
         mode = mode | stat.S_IFREG
-    elif os.path.isfile(pathname):
+    elif os.path.isdir(pathname):
         mode = mode | stat.S_IFDIR
 
     if (get_owner_string(pathname) != owner) or (file_statinfo.st_mode != mode)\
@@ -169,5 +179,3 @@ def verify_path(pathname):
     """
     if (not os.path.isdir(pathname)) and (not os.path.isfile(pathname)):
         raise NotImplementedError('{} is not a valid path or filename'.format(pathname))
-
-
