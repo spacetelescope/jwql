@@ -65,14 +65,14 @@
 
 	    	<!-- List all possible tools -->
 	    	<div class="row">
-	    		<div class="col-md-6">
+	    		<div class="col-md-6 text-center">
 	    			<!-- Images -->
 	    			<h3>Images</h3>
 	    			<a class="btn btn-primary my-2" role="button" href="{% url 'plots_example:unlooked_im' inst %}">Unlooked Images</a></br>
 	    			<button type="button" class="btn btn-primary my-2 disabled" href="#">Image Anomalies</button></br>
 	    			<button type="button" class="btn btn-primary my-2 disabled" href="#">Archived Images</button></br>
     			</div>
-    			<div class="col-md-6">
+    			<div class="col-md-6 text-center">
     				<!-- Monitors -->
 	    			<h3>Monitors</h3>
 	    			{% for key, inst_tools in tools.items %}
