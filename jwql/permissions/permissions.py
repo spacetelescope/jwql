@@ -27,6 +27,44 @@ Use
 
     ``pathname`` - Directory or file for which the default permissions should be set
 
+Notes
+-----
+    Permissions are set and read using the stat module,
+    see https://docs.python.org/3/library/stat.html
+    Below is a list with the relevant stat attribute names,
+    integer, octal, and string representations.
+
+    stat_key stat_mode stat_mode_octal stat_mode_string
+    -------- --------- --------------- ----------------
+    S_IFPORT         0             0o0       ?---------
+    S_IFDOOR         0             0o0       ?---------
+     S_IXOTH         1             0o1       ?--------x
+     S_IWOTH         2             0o2       ?-------w-
+     S_IROTH         4             0o4       ?------r--
+     S_IRWXO         7             0o7       ?------rwx
+     S_IXGRP         8            0o10       ?-----x---
+     S_IWGRP        16            0o20       ?----w----
+     S_IRGRP        32            0o40       ?---r-----
+     S_IRWXG        56            0o70       ?---rwx---
+     S_IEXEC        64           0o100       ?--x------
+     S_IXUSR        64           0o100       ?--x------
+     S_IWUSR       128           0o200       ?-w-------
+    S_IWRITE       128           0o200       ?-w-------
+     S_IREAD       256           0o400       ?r--------
+     S_IRUSR       256           0o400       ?r--------
+     S_IRWXU       448           0o700       ?rwx------
+     S_ISVTX       512          0o1000       ?--------T
+     S_ISGID      1024          0o2000       ?-----S---
+     S_ISUID      2048          0o4000       ?--S------
+     S_IFIFO      4096             0o0       p---------
+     S_IFCHR      8192             0o0       c---------
+     S_IFDIR     16384             0o0       d---------
+     S_IFBLK     24576             0o0       b---------
+     S_IFREG     32768             0o0       ----------
+     S_IFLNK     40960             0o0       l---------
+    S_IFSOCK     49152             0o0       s---------
+     S_IFWHT     57344             0o0       w---------
+
 """
 
 import grp
@@ -38,10 +76,7 @@ import stat
 DEFAULT_OWNER = 'jwqladm'
 DEFAULT_GROUP = 'jwql_dev'
 
-
 # set the default mode for DEFAULT_OWNER
-# see https://docs.python.org/3/library/stat.html#stat.S_ISUID
-# DEFAULT_MODE = stat.S_IRWXU # equivalent to '?rwx------'
 DEFAULT_MODE = stat.S_IRWXU | stat.S_IRGRP  # equivalent to '?rwxr-----'
 
 def get_group_string(pathname):
