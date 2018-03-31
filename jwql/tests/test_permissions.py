@@ -116,8 +116,11 @@ def test_file_group(test_file):
     owner = get_owner_string(test_file)
     group = get_group_string(test_file)
 
-    set_permissions(test_file, group='staff', owner=owner)
-    assert has_permissions(test_file, group='staff', owner=owner)
+    test_group = 'science'
+    # test_group = 'staff'
+
+    set_permissions(test_file, group=test_group, owner=owner)
+    assert has_permissions(test_file, group=test_group, owner=owner)
 
     # return to default group
     set_permissions(test_file, owner=owner, group=group)
