@@ -17,10 +17,12 @@ import os
 import time
 import re
 import json
+import numpy as np
 from urllib.parse import quote as urlencode
 from urllib.request import urlretrieve
 import http.client as httplib 
 from astroquery.mast import Mast, Observations
+import astropy.table as at
 
 JWST_INSTRUMENTS = ['NIRISS','NIRCam','NIRSpec','MIRI','FGS']
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY', 'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
@@ -83,7 +85,7 @@ def mastQuery(request):
     
     return head,content
     
-def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS, return_data=False):
+def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS, add_filters={}, return_data=False):
     """Get the counts for a given instrument and data product
     
     Parameters
@@ -92,6 +94,9 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS, return_data=
         The instrument name, i.e. ['NIRISS','NIRCam','NIRSpec','MIRI','FGS']
     dataproduct: sequence, str
         The type of data product to search
+    filters: dict
+        The ('paramName':'values') pairs to include in the 'filters' argument of the request
+        e.g. filters = {'target_classification':'moving'}
     return_data: bool
         Return the actual data instead of counts only
     
@@ -104,16 +109,21 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS, return_data=
     if isinstance(dataproduct,str):
         dataproduct = [dataproduct]
         
+    # Set default filters
+    filters = [{'paramName':'obs_collection', 'values':['JWST']},
+               {'paramName':'instrument_name', 'values':[instrument]},
+               {'paramName':'dataproduct_type', 'values':dataproduct}]
+               
+    # Include additonal filters
+    for k,v in add_filters.items():
+        filters.append({'paramName':k, 'values':[v] if isinstance(v,str) else v})
+        
     # Assemble the request
     request = {'service':'Mast.Caom.Filtered',
                'format':'json',
                'params':{
                    'columns':'COUNT_BIG(*)',
-                   'filters':[
-                       {'paramName':'obs_collection', 'values':['JWST']},
-                       {'paramName':'instrument_name', 'values':[instrument]},
-                       {'paramName':'dataproduct_type', 'values':dataproduct}
-                   ]}}
+                   'filters':filters}}
                    
     # Just get the counts
     if return_data:
@@ -131,8 +141,15 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS, return_data=
     else:
         return result['data'][0]['Column1']
     
-def jwst_inventory():
+def jwst_inventory(instruments=JWST_INSTRUMENTS, dataproducts=['image','spectrum','cube']):
     """Gather a full inventory of all JWST data on MAST binned by instrument and mode
+    
+    Parameters
+    ----------
+    instruments: sequence
+        The list of instruments to count
+    dataproducts: sequence
+        The types of dataproducts to count
     
     Returns
     -------
@@ -140,10 +157,12 @@ def jwst_inventory():
         The table of record counts for each instrument and mode
     """
     # Make master table
-    inventory = at.Table(names=('instrument','dataproduct','count'))
+    inventory = at.Table(names=('instrument','dataproduct','count'), dtype=('S8','S12',int))
     
     # Iterate through instruments
-    for instrument in JWST_INSTRUMENTS:
-        for dataproduct in ['cube','image','spectrum']:
+    for instrument in instruments:
+        for dataproduct in dataproducts:
             count = instrument_inventory(instrument, dataproduct=dataproduct)
+            inventory.add_row([instrument, dataproduct, count])
             
+    return inventory
