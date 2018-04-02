@@ -95,7 +95,7 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
 
     Parameters
     ----------
-    instrument: str
+    instrument: sequence, str
         The instrument name, i.e. ['NIRISS','NIRCam','NIRSpec','MIRI','FGS']
     dataproduct: sequence, str
         The type of data product to search
@@ -114,9 +114,13 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
     if isinstance(dataproduct, str):
         dataproduct = [dataproduct]
 
+    # Make sure the instrument is a list
+    if isinstance(instrument, str):
+        instrument = [instrument]
+
     # Set default filters
     filters = [{'paramName': 'obs_collection', 'values': ['JWST']},
-               {'paramName': 'instrument_name', 'values': [instrument]},
+               {'paramName': 'instrument_name', 'values': instrument},
                {'paramName': 'dataproduct_type', 'values': dataproduct}]
 
     # Include additonal filters
@@ -173,5 +177,13 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
         for dataproduct in dataproducts:
             count = instrument_inventory(instrument, dataproduct=dataproduct)
             inventory.add_row([instrument, dataproduct, count])
+
+        # Get number of files for all datatypes for this instrument
+        count = instrument_inventory(instrument, dataproduct=dataproducts)
+        inventory.add_row([instrument, '*', count])
+
+    # Get number of files for all datatypes for this instrument
+    count = instrument_inventory(instruments, dataproduct=dataproducts)
+    inventory.add_row(['*', '*', count])
 
     return inventory
