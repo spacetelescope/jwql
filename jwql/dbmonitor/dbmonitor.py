@@ -182,7 +182,7 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
         count = instrument_inventory(instrument, dataproduct=dataproducts)
         inventory.add_row([instrument, '*', count])
 
-    # Get number of files for all datatypes for this instrument
+    # Get total number of files
     count = instrument_inventory(instruments, dataproduct=dataproducts)
     inventory.add_row(['*', '*', count])
 
