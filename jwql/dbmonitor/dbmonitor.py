@@ -12,7 +12,7 @@ Use
     To get an inventory of all JWST files do:
 
     >>> from jwql.dbmonitor import dbmonitor
-    >>> results = dbmonitor.jwst_inventory()
+    >>> inventory, keywords = dbmonitor.jwst_inventory()
 
 """
 import sys
@@ -90,7 +90,7 @@ def mastQuery(request):
 
 
 def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
-                         add_filters={}, return_data=False):
+                         add_filters={}, add_requests={}, return_data=False):
     """Get the counts for a given instrument and data product
 
     Parameters
@@ -99,9 +99,12 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
         The instrument name, i.e. ['NIRISS','NIRCam','NIRSpec','MIRI','FGS']
     dataproduct: sequence, str
         The type of data product to search
-    filters: dict
+    add_filters: dict
         The ('paramName':'values') pairs to include in the 'filters' argument
-        of the request e.g. filters = {'target_classification':'moving'}
+        of the request e.g. add_filters = {'target_classification':'moving'}
+    add_requests: dict
+        The ('request':'value') pairs to include in the request
+        e.g. add_requests = {'pagesize':1, 'page':1}
     return_data: bool
         Return the actual data instead of counts only
 
@@ -138,6 +141,10 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
     # Just get the counts
     if return_data:
         request['params']['columns'] = '*'
+
+    # Add requests
+    if add_requests:
+        request.update(add_requests)
 
     # Perform the query
     headers, outString = mastQuery(request)
@@ -186,4 +193,12 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
     count = instrument_inventory(instruments, dataproduct=dataproducts)
     inventory.add_row(['*', '*', count])
 
-    return inventory
+    # Retrieve one dataset to get header keywords
+    sample = instrument_inventory(instruments, dataproduct=dataproducts,
+                                  add_requests={'pagesize': 1, 'page': 1},
+                                  return_data=True)
+    names = [i['name'] for i in sample['fields']]
+    types = [i['type'] for i in sample['fields']]
+    keywords = at.Table([names, types], names=('keyword', 'dtype'))
+
+    return inventory, keywords
