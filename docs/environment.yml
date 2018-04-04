@@ -1,0 +1,14 @@
+name: stak-notebooks
+channels:
+  - http://ssb.stsci.edu/astroconda
+  - conda-forge
+dependencies:
+  - numpy
+  - scipy
+  - astropy
+  - numpydoc
+  - sphinx>=1.5
+  - sphinx_rtd_theme
+  - stsci_rtd_theme
+  - pip:
+    - sphinx-automodapi
