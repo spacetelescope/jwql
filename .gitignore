@@ -5,3 +5,5 @@ utils/config.json
 build/
 dist/
 jwql.egg-info/
+docs/build/
+docs/source/api/
