@@ -25,7 +25,9 @@ want to set up a recent directory for the most recent log file to be available
 all the time? 
 
 --> I started updating to use JWQL information instead. We still need to decide
-what our goal is for our log files. 
+what our goal is for our log files.
+
+5) Do we want a dev and production mode as well? 
 
 
 
