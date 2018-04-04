@@ -50,6 +50,9 @@ source_suffix = '.rst'
 # The master toctree document.
 master_doc = 'index'
 
+# Numpy doc setting, right now this supresses some warnings, not exactly sure why?
+numpydoc_show_class_members = False
+
 # General information about the project.
 project = 'jwql'
 copyright = '2018, STScI'
