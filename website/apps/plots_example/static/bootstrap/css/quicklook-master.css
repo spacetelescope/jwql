@@ -16,3 +16,18 @@ li.dropdown:hover .nav-link.dropdown-toggle {
 li.dropdown:hover .dropdown-menu {
     display: block;
 }
+/*---------- Make buttons STScI blue -----*/
+.btn-primary, .btn-primary.disabled {
+    background-color: #4C8BD8;
+    border-color: #4C8BD8;
+}
+
+.btn-primary:hover, .btn-primary.disabled:hover {
+    background-color: #346199;
+    border-color: #346199;
+}
+
+.btn-outline-primary {
+    border-color: #4C8BD8;
+    color: #4C8BD8;
+}
