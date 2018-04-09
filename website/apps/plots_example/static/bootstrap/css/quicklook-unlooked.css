@@ -1,0 +1,56 @@
+.thumbnail {
+    width: 8rem;
+    height: 8rem;
+    text-align: center;
+    position: relative;
+    display: inline-block;
+    margin: 0.5rem;
+}
+.thumbnail:hover {
+    cursor: pointer;
+}
+.thumbnail_info {
+    display: none;
+    width: 100%;
+    height: 100%;
+    padding-top: 0.5rem;
+    padding-left: 0.5rem;
+    padding-bottom: 0.5rem;
+    padding-right: 0.5rem;
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    text-align: left;
+    color: white;
+    z-index: 2;
+    font-size: 0.75rem;
+}
+.thumbnail:hover .thumbnail_info, .thumbnail:hover .color-fill {
+    display: inline;
+}
+.color-fill {
+    display: none;
+    width: 100%;
+    height: 100%;
+    background-color: #356198;
+    opacity: 0.6;
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    z-index: 1;
+}
+[class*="col-"] {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+/*Get the sorting buttons to look right*/
+.dropdown .btn {
+    background-color: #4C8BD8;
+    border-color: #4C8BD8;
+    color: white;
+}
+.dropdown .btn:hover {
+    background-color: #346199;
+    border-color: #346199;
+}

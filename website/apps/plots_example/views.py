@@ -34,9 +34,11 @@ Dependencies
 """
 
 import os
+import glob
 
 from astropy.io import fits
 from django.shortcuts import render
+import numpy as np
 # from django.views import generic # We ultimately might want to use generic views?
 
 from jwql.preview_image.preview_image import PreviewImage
@@ -75,7 +77,8 @@ def home(request):
         Outgoing response sent to the webpage
     """
     template = 'plots_example/home.html'
-    context = {'inst_list': INST_LIST,
+    context = {'inst': '',
+               'inst_list': INST_LIST,
                'tools': TOOLS}
 
     return render(request, template, context)
@@ -101,7 +104,7 @@ def instrument(request, inst):
                   {'inst': inst,
                    'tools': TOOLS})
 
-def view_image(request, inst, file, rewrite=False):
+def view_image(request, inst, file_root, rewrite=False):
     """Generate the image view page
 
     Parameters
@@ -122,32 +125,43 @@ def view_image(request, inst, file, rewrite=False):
     """
     template = 'plots_example/view_image.html'
 
+    # Find all of the matching files
+    dirname = file_root[:7]
+    search_filepath = os.path.join(FILESYSTEM_DIR, dirname, file_root + '*.fits')
+    all_files = glob.glob(search_filepath)
+    print('all files in {}:'.format(search_filepath), all_files)
+
     # Generate the jpg filename
-    dirname = file[:7]
-    jpg_filename = os.path.splitext(file)[0] + '_integ0.jpg'
-    jpg_filepath = os.path.join(FILESYSTEM_DIR, dirname, jpg_filename)
+    all_jpgs = []
+    suffixes = []
+    for file in all_files:
+        suffix = os.path.basename(file).split('_')[4].split('.')[0]
+        suffixes.append(suffix)
 
-    # Check that a jpg does not already exist. If it does (and rewrite=False),
-    # just call the existing jpg file
-    if os.path.exists(jpg_filepath) and not rewrite:
-        pass
+        jpg_filepath = os.path.splitext(file)[0] + '_integ0.jpg'
+        # jpg_filepath = os.path.join(FILESYSTEM_DIR, dirname, jpg_filename)
 
-    # If it doesn't, make it using the preview_image module
-    else:
-        fits_filepath = os.path.join(FILESYSTEM_DIR, dirname, file)
+        # Check that a jpg does not already exist. If it does (and rewrite=False),
+        # just call the existing jpg file
+        if os.path.exists(jpg_filepath) and not rewrite:
+            pass
 
-        # Only process FITS files that are 3D+ (preview_image can't handle 2D)
-        # if any([end in fits_filepath for end in ['rate.fits', 'cal.fits', 'i2d.fits']]):
-        #     jpg_filename = 'Cannot currently create JPEG preview for 2-dimensional FITS files.'
-        # else:
-        im = PreviewImage(fits_filepath, 'SCI')
-        im.make_image()
+        # If it doesn't, make it using the preview_image module
+        else:
+            im = PreviewImage(file, 'SCI')
+            im.make_image()
+
+        all_jpgs.append(jpg_filepath)
+
+    print('all jpgs:', all_jpgs)
 
     return render(request, template,
                   {'inst': inst,
-                   'file': file,
+                   'file_root': file_root,
                    'tools': TOOLS,
-                   'jpg': jpg_filename})
+                   'jpg_files': all_jpgs,
+                   'fits_files': all_files,
+                   'suffixes': suffixes})
 
 def view_header(request, inst, file):
     """Generate the header view page
@@ -173,11 +187,14 @@ def view_header(request, inst, file):
 
     header = fits.getheader(fits_filepath, ext=0).tostring(sep='\n')
 
+    file_root = '_'.join(file.split('_')[:-1])
+
     return render(request, template,
                   {'inst': inst,
                    'file': file,
                    'tools': TOOLS,
-                   'header': header})
+                   'header': header,
+                   'file_root': file_root})
 
 def unlooked_images(request, inst):
     """Generate the page listing all unlooked images in the database
@@ -195,10 +212,68 @@ def unlooked_images(request, inst):
         Outgoing response sent to the webpage
     """
     template = 'plots_example/unlooked.html'
-    filepaths, filenames = DatabaseConnection('MAST', instrument=inst).\
-        get_files_for_instrument(inst)
+
+    # Query files from MAST database
+    # filepaths, filenames = DatabaseConnection('MAST', instrument=inst).\
+    #     get_files_for_instrument(inst)
+
+    # Find all of the matching files in filesytem
+    # (TEMPORARY WHILE THE MAST STUFF IS BEING WORKED OUT)
+    instrument_match = {'FGS': 'guider',
+                        'MIRI': 'mir',
+                        'NIRCam': 'nrc',
+                        'NIRISS': 'nis',
+                        'NIRSpec': 'nrs'}
+    search_filepath = os.path.join(FILESYSTEM_DIR, '*', '*.fits')
+    all_filepaths = [f for f in glob.glob(search_filepath) if instrument_match[inst] in f]
+
+    # Determine file ID (everything except suffix)
+    full_ids = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in all_filepaths])
+
+    # Group files by ID
+    file_data = []
+    detectors = []
+    proposals = []
+    for i, file_id in enumerate(full_ids):
+        suffixes = []
+        count = 0
+        for file in all_filepaths:
+            if '_'.join(file.split('/')[-1].split('_')[:-1]) == file_id:
+                count += 1
+                suffix = file.split('/')[-1].split('_')[4].split('.')[0]
+                suffixes.append(suffix)
+        suffixes = list(set(suffixes))
+
+        proposal_id = file_id[2:7]
+        observation_id = file_id[7:10]
+        visit_id = file_id[10:13]
+        detector = file_id.split('_')[3]
+        if detector not in detectors:
+            detectors.append(detector)
+        if proposal_id not in proposals:
+            proposals.append(proposal_id)
+
+        file_dict = {'proposal_id': proposal_id,
+                     'observation_id': observation_id,
+                     'visit_id': visit_id,
+                     'suffixes': suffixes,
+                     'detector': detector,
+                     'file_count': count,
+                     'file_root': file_id,
+                     'index': i}
+
+        file_data.append(file_dict)
+    file_indices = np.arange(len(file_data))
+
+    # Extract information for sorting with dropdown menus
+    dropdown_menus = {'detector': detectors,
+                      'proposal': proposals}
+    print(dropdown_menus)
 
     return render(request, template,
                   {'inst': inst,
-                   'imdat': filenames,
-                   'tools': TOOLS})
+                   'all_filenames': [os.path.basename(f) for f in all_filepaths],
+                   'file_data': file_data,
+                   'tools': TOOLS,
+                   'thumbnail_zipped_list': zip(file_indices, file_data),
+                   'dropdown_menus': dropdown_menus})
