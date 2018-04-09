@@ -18,7 +18,7 @@
 /*Change active color of button*/
 .instrument_select .btn:hover, .btn:focus, .btn:active, .btn-primary.active, .open>.dropdown-toggle.btn-primary {
     color: #fff;
-    background-color: #abcdf4;
+    background-color: #A5C5EB;
     /*border-color: #285e8e; set the color you want here*/
 }
 
