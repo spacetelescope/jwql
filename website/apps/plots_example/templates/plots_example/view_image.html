@@ -9,26 +9,78 @@
 </head>
 
 <body>
+	<script>
+    	function change_filetype(type) {
+    		document.getElementById(type).checked = true;
 
+    		var fits_filename = '{{ file_root }}_' + type + '.fits'
+    		document.getElementById("jpg_filename").innerHTML = '{{ file_root }}_' + type + '_integ0.jpg';
+    		document.getElementById("fits_filename").innerHTML = fits_filename;
+
+    		var img = document.getElementById("image_viewer")
+    		var jpg_filepath = '{{ staticURL }}{{ file_root|slice:":7" }}/{{ file_root }}_' + type + '_integ0.jpg';
+    		img.src = jpg_filepath;
+    		img.alt = jpg_filepath;
+
+    		document.getElementById("download_fits").href = '{{ staticURL }}{{ file_root|slice:":7" }}/' + fits_filename;
+    		document.getElementById("download_jpg").href = jpg_filepath;
+    		document.getElementById("view_header").href = "/plots_example/{{ inst }}/" + fits_filename + "/hdr/";
+
+    	};
+    </script>
 
     <main role="main" class="container">
-	    	<h5>{{ file }}</h5>
+    	<!-- Show image group name -->
+    	<h3>{{ file_root }}</h3>
+
+    	<!-- Specify the filenames of what is currently being shown -->
+    	FITS Filename: <a id="fits_filename"></a><br>
+    	JPG Filename: <a id="jpg_filename"></a><br><br>
+
+    	<!-- Allow the user to change the file type that is being displayed -->
+    	View File Type:
+    	<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">
+	      	<div class="help-tip mx-1">i</div>
+	    </a><br>
+	    <form class="my-2" action="change_filetype(value)">
+	    	{% for suffix in suffixes %}
+	    		<input type="radio" name="filetype" value="{{ suffix }}" id="{{ suffix }}" onclick="change_filetype('{{ suffix }}');"> {{ suffix }} &nbsp;&nbsp;&nbsp;&nbsp;
+	    	{% endfor %}
+		</form>
+		<br>
+
 
     	<p>
-		    	<a class="btn btn-primary my-2 mx-2" role="button" href="{% url 'plots_example:view_header' inst file %}"">View Header</a>
-		    	<a class="btn btn-primary my-2 mx-2 disabled" role="button" href="#"> View Proposal</a>
+	    	<a id="view_header" class="btn btn-primary mx-2" role="button" href="">View Header</a>
+	    	<a class="btn btn-primary mx-2 disabled" role="button" href="#"> View Proposal {{ file_root|slice:"2:7" }}</a>
 	    </p>
 
-		    <a><img src='{{ staticURL }}{{ file|slice:":7" }}/{{ jpg }}' alt='{{ jpg }}'></a>
+	    <!-- Display the image -->
+	    <img id="image_viewer" src='{{ staticURL }}{{ file_root|slice:":7" }}/{{ file_root }}_cal_integ0.jpg' alt='{{ file_root }}_cal_integ0.jpg'>
 
 	    <p>
-		    	<a class="btn btn-primary my-2 mx-2" role="button" href='{{ staticURL }}{{ file|slice:":7" }}/{{ file }}'>Download FITS</a>
-		    	<a class="btn btn-primary my-2 mx-2" role="button" href='{{ staticURL }}{{ file|slice:":7" }}/{{ jpg }}'>Download JPEG</a>
+	    	<a id="download_fits" class="btn btn-primary my-2 mx-2" role="button" href='{{ staticURL }}{{ file|slice:":7" }}/{{ file }}' download>Download FITS</a>
+	    	<a id="download_jpg" class="btn btn-primary my-2 mx-2" role="button" href='{{ staticURL }}{{ file|slice:":7" }}/{{ jpg }}' download>Download JPEG</a>
 	    	<a class="btn btn-primary my-2 mx-2 disabled" role="button" href="#">Submit Anomaly</a>
 	    </p>
 
+	    <!-- Determine which filetype should be shown on load -->
+	    {% if 'cal' in suffixes %}
+	    	<script>change_filetype('cal');</script>
+	    {% elif 'rate' in suffixes %}
+	    	<script>change_filetype('rate');</script>
+	    {% elif 'uncal' in suffixes %}
+	    	<script>change_filetype('uncal');</script>
+	    {% elif suffixes|length == 1 %}
+	    	<script>change_filetype("{{ suffixes.0 }}");</script>
+	    {% else %}
+	    	<a>Lauren needs to figure out what to do with these: {{suffixes}}</a>
+	    {% endif %}
+
+
+
 		<!-- Try the arrow-to-navigate thing -->
-			{% if imdat %}
+		<!-- {% if imdat %}
 			<div class="container">
 			    <div id="slideshow">
 			        <img alt="{{ imdat.0 }}" src="{{ staticURL }}/{{ imdat.0 }}" width=800 id="imgClickAndChange" onclick="changeImage()" />
@@ -40,7 +92,6 @@
 			document.getElementById("demo").innerHTML = "Hello JavaScript!";
 			</script>
 
-				<!-- <script src="{% static 'image_click_to_change.js' %}"></script> -->
 
 			<script>
 			    var imgs = {{ imdat }};
@@ -61,8 +112,7 @@
 			        }
 			    }
 			</script>
-			{% endif %}
-
+		{% endif %} -->
 	</main>
 </body>
 

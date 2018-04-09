@@ -16,6 +16,21 @@ li.dropdown:hover .nav-link.dropdown-toggle {
 li.dropdown:hover .dropdown-menu {
     display: block;
 }
+
+/* ---------- HELP TIP ---------- */
+.help-tip {
+    text-align: center;
+    background-color: #D0D7D8;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    line-height: 20px;
+    font-weight: bold;
+    opacity: 0.5;
+    display: inline-block;
+}
+
 /*---------- Make buttons STScI blue -----*/
 .btn-primary, .btn-primary.disabled {
     background-color: #4C8BD8;
