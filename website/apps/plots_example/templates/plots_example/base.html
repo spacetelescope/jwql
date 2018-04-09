@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+
+	{% load static %}
+	{% static "" as staticURL %}
+	<head>
+		<!-- JWQL Icon as website image -->
+		<link rel="shortcut icon" href="{{ staticURL }}plots_example/images/favicon.ico?{% now 'U' %}" />
+
+		<!-- Bootstrap core CSS and JS -->
+		<link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+
+		<!-- Custom styles for this template -->
+		<link href="{{staticURL}}bootstrap/css/quicklook-master.css?{% now 'U' %}" rel="stylesheet">
+		<link href="{{staticURL}}bootstrap/css/sticky-footer.css?{% now 'U' %}" rel="stylesheet">
+
+	</head>
+
+	<body>
+		<!-- Navigation Bar -->
+		<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+		    <a class="navbar-left"><img src="{% static 'plots_example/images/JWQLlogo_small.png' %}" height=35 width=35></a>
+	        <a class="navbar-brand" href="{% url 'plots_example:home' %}">JWST Quicklook</a>
+	        <a class="navbar-brand" href="#"><font color='#f2ce3a'>{{ inst }}</font></a>
+	        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+	          <span class="navbar-toggler-icon"></span>
+	        </button>
+
+	        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+	        	<ul class="navbar-nav mr-auto">
+	          		<li class="nav-item active">
+	            		<a class="nav-link" href="{% url 'plots_example:home' %}"><font color='#9A9D9F'>Home</font><span class="sr-only">(current)</span></a>
+	          		</li>
+	          		{% for inst_key, inst_tools in tools.items %}
+		          	<li class="dropdown">
+		            	<a class="nav-link dropdown-toggle disabled" href="{% url 'plots_example:instrument' inst_key %}" id="dropdown"{{ inst_key }} aria-haspopup="true" aria-expanded="false"><font color='#9A9D9F'>{{ inst_key }}</font></a>
+		            	<div class="dropdown-menu" aria-labelledby="dropdown01">
+			            	<h6 class='mx-3'>Images</h6>
+			            	<a class="dropdown-item" href="{% url 'plots_example:unlooked_im' inst_key %}">Unlooked Images</a>
+			            	<a class="dropdown-item" href="#">Image Anomalies</a>
+			            	<a class="dropdown-item" href="{% url 'plots_example:archived_im' inst_key %}">Archived Images</a>
+			            	<div class="dropdown-divider"></div>
+			            	<h6 class='mx-3'>Monitors</h6>
+			            	{% for tool in inst_tools %}
+			              		<a class="dropdown-item" href="#">{{ tool }}</a>
+			              	{% endfor %}
+		            	</div>
+		          	</li>
+		      		{% endfor %}
+	        	</ul>
+	        </div>
+
+	    	<a class="navbar-right" href="https://github.com/spacetelescope/jwql" target="_blank"><img src="{% static 'plots_example/images/githublogo.svg' %}" height=25 width=25></a>
+	    </nav>
+
+    	{% block content %}
+        {% endblock %}
+
+		<footer class="footer text-center">
+	      	<div class="container">
+	        	<img src="{% static 'plots_example/images/STScIlogo.png' %}" height=36>
+	      	</div>
+	    </footer>
+	</body>
+</html>
