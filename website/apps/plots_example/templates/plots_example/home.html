@@ -1,98 +1,44 @@
-<!doctype html>
-<html lang="en">
+{% extends "plots_example/base.html" %}
+{% block content %}
 
-	{% load static %}
-	{% static "" as staticURL %}
-	<head>
+<head>
+	<title>Home - JWST Quicklook</title>
 
-		<title>Home - JWST Quicklook</title>
+	<!-- Custom styles for this template -->
+	<!-- Add "now" timetag to force autoreload the .css file -->
+	<link href="{{staticURL}}bootstrap/css/quicklook-home.css?{% now 'U' %}" rel="stylesheet">
+</head>
 
-		<!-- JWQL Icon as website image -->
-		<link rel="shortcut icon" href="{{ staticURL }}plots_example/images/favicon.ico?{% now 'U' %}" />
+<body>
 
-		<!-- Bootstrap core CSS -->
-		<link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <main role="main" class="container">
+    	<h4>Welcome to the JWST Quicklook page.</h4>
+    	<a> The James Webb Quicklook Application (JWQL) is a database-driven web application and software repository for use by the JWST instrument teams.</a>
 
-		<!-- Custom styles for this template -->
-		<!-- Add "now" timetag to force autoreload the .css file -->
-		<link href="{{staticURL}}bootstrap/css/quicklook-master.css?{% now 'U' %}" rel="stylesheet">
-    	<link href="{{staticURL}}bootstrap/css/quicklook-home.css?{% now 'U' %}" rel="stylesheet">
-    	<link href="{{staticURL}}bootstrap/css/sticky-footer.css?{% now 'U' %}" rel="stylesheet">
+    	<div class="row" style="margin-left: 7rem; margin-right: 7rem;">
+    		<div class="col-md-6"><a class="btn btn-block btn-primary disabled" role="button" href="#">Dashboard</a></div>
+			<div class="col-md-6"><a class="btn btn-block btn-primary disabled" role="button" href="#">Query Database</a></div>
+		</div>
 
-	</head>
-
-	<body>
-		<!-- Navigation Bar -->
-		<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-		  <a class="navbar-left"><img src="{% static 'plots_example/images/favicon.ico' %}" height=35 width=35></a>
-	      <a class="navbar-brand" href="{% url 'plots_example:home' %}">JWST Quicklook</a>
-	      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-	        <span class="navbar-toggler-icon"></span>
-	      </button>
-
-	      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-	        <ul class="navbar-nav mr-auto">
-	          <li class="nav-item active">
-	            <a class="nav-link" href="{% url 'plots_example:home' %}"><font color='#9A9D9F'>Home</font><span class="sr-only">(current)</span></a>
-	          </li>
-	          {% for inst, inst_tools in tools.items %}
-		          <li class="dropdown">
-		            <a class="nav-link dropdown-toggle disabled" href="{% url 'plots_example:instrument' inst %}" id="dropdown"{{ inst }} aria-haspopup="true" aria-expanded="false"><font color='#9A9D9F'>{{ inst }}</font></a>
-		            <div class="dropdown-menu" aria-labelledby="dropdown01">
-		            	<a class="dropdown-item text-muted" style="background-color: #d9dde2" href="#">Images</a>
-		            	<a class="dropdown-item" href="{% url 'plots_example:unlooked_im' inst %}">Unlooked Images</a>
-		            	<a class="dropdown-item" href="#">Image Anomalies</a>
-		            	<a class="dropdown-item" href="#">Archived Images</a>
-		            	<a class="dropdown-item text-muted" style="background-color: #d9dde2" href="#">Monitors</a>
-		            	{% for tool in inst_tools %}
-		              		<a class="dropdown-item" href="#">{{ tool }}</a>
-		              	{% endfor %}
-		            </div>
-		          </li>
-		      {% endfor %}
-	        </ul>
-	      </div>
-	      <a class="navbar-right" href="https://github.com/spacetelescope/jwql"><img src="{% static 'plots_example/images/githublogo.svg' %}" height=25 width=25></a>
-	    </nav>
-
-	    <!-- Main Body Text -->
-
-	    <main role="main" class="container">
-	    	<h4>Welcome to the JWST Quicklook page.</h4>
-	    	<a> The James Webb Quicklook Application (JWQL) is a database-driven web application and software repository for use by the JWST instrument teams.</a>
-
-	    	<div class="row" style="margin-left: 7rem; margin-right: 7rem;">
-	    		<div class="col-md-6"><a class="btn btn-block btn-primary disabled" role="button" href="#">Dashboard</a></div>
-				<div class="col-md-6"><a class="btn btn-block btn-primary disabled" role="button" href="#">Query Database</a></div>
+    	<!--<h1 style="text-align: center">Instruments</h1>-->
+    	<div class="instrument_select">
+	    	<div class="row">
+				{% if inst_list %}
+					{% for inst in inst_list %}
+						<div class="col-md-2 text-center">
+							<a class="btn btn-block btn-outline-primary" role="button" href="{% url 'plots_example:instrument' inst %}">
+								<div class="frame"><span class="helper"></span><img src="{{staticURL}}/plots_example/images/{{inst}}logo.png" width=100 style="vertical-align: middle"></div>
+								{{ inst }}
+							</a>
+						</div>
+					{% endfor %}
+				{% else %}
+					<p>No instruments are available.</p>
+				{% endif %}
 			</div>
+		</div>
+	</main>
 
-	    	<!--<h1 style="text-align: center">Instruments</h1>-->
-	    	<div class="instrument_select">
-		    	<div class="row">
-					{% if inst_list %}
-						{% for inst in inst_list %}
-							<div class="col-md-2 text-center">
-								<a class="btn btn-block btn-outline-primary" role="button" href="{% url 'plots_example:instrument' inst %}">
-									<div class="frame"><span class="helper"></span><img src="{{staticURL}}/plots_example/images/{{inst}}logo.png" width=100 style="vertical-align: middle"></div>
-									{{ inst }}
-								</a>
-							</div>
-						{% endfor %}
-					{% else %}
-						<p>No instruments are available.</p>
-					{% endif %}
-				</div>
-			</div>
-		</main>
+</body>
 
-		<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-	    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-	    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-
-	    <footer class="footer text-center">
-	      <div class="container">
-	        <img src="{% static 'plots_example/images/STScIlogo.png' %}" height=36>
-	      </div>
-	    </footer>
-	</body>
-</html>
+{% endblock %}
