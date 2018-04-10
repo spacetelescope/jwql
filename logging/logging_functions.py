@@ -6,40 +6,30 @@ to track failures and one to track useful system information. Are there
 any other things we will want to create a decorator for? 
 
 
-
 2) Also which module version information will we want to track with our info 
 decorator? 
 
 --> I updated this portion of the code to include everything from our 
 `setup.py` under the required section there. 
+--> Do we want ginga in there too?
 
+3) Do we want a dev and production mode as well? 
 
-
-3) Do we want to follow the same naming convention stuff? Have the make_log_file 
-function perform the same way?
-
-
-
-4) Will we follow the same saving convention of the different directories and 
-want to set up a recent directory for the most recent log file to be available 
-all the time? 
-
---> I started updating to use JWQL information instead. We still need to decide
-what our goal is for our log files.
-
-5) Do we want a dev and production mode as well? 
-
-
-
-
+TO DO: 
+Create a wiki page for how to use logging
+finish the doc strings
+make sure pep8 compliant
+open pull request
 
 Authors
 -------
 Catherine Martlin 2018
-
+Alek Viana, 2013 (WFC3 QL Version)
+ 
 
 Use
 ___
+Things will be written to '/grp/jwst/ins/jwql/logs/<module>/<module_log_filename>'
 
 
 Dependencies
@@ -49,8 +39,8 @@ ____________
 References
 __________
 
-Code will likely be adopted from python routine logging_functions.py written 
-by Alex Viana, 2013 for the WFC3 Quicklook automation platform.
+Code is adopted and updated from python routine logging_functions.py 
+written by Alex Viana, 2013 for the WFC3 Quicklook automation platform.
 
 Notes
 _____
@@ -136,7 +126,7 @@ def make_log_file(module, production_mode=True, path='./'):
         module = os.path.join('dev', module)
     
     if production_mode:
-        log_file = os.path.join('/grp/jwst/ins/jwql/logs/', module, filename)
+        log_file = os.path.join('/grp/jwst/ins/jwql/logs/', module, filename) # Do we not want this on the github?#
     else:
         log_file = os.path.join(path, filename)
 
@@ -296,7 +286,6 @@ def print_or_log(message, production):
         logging.info(message)
     else:
         print(message)
-
 
 # -----------------------------------------------------------------------------
 
