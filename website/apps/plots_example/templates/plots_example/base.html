@@ -7,15 +7,12 @@
 		<!-- JWQL Icon as website image -->
 		<link rel="shortcut icon" href="{{ staticURL }}plots_example/images/favicon.ico?{% now 'U' %}" />
 
-		<!-- Bootstrap core CSS and JS -->
-		<link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
-		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+		<!-- Bootstrap core CSS -->
+		<link rel="stylesheet" href="{{staticURL}}css/bootstrap.min.css?{% now 'U' %}">
 
 		<!-- Custom styles for this template -->
-		<link href="{{staticURL}}bootstrap/css/quicklook-master.css?{% now 'U' %}" rel="stylesheet">
-		<link href="{{staticURL}}bootstrap/css/sticky-footer.css?{% now 'U' %}" rel="stylesheet">
+		<link href="{{staticURL}}css/quicklook-master.css?{% now 'U' %}" rel="stylesheet">
+		<link href="{{staticURL}}css/sticky-footer.css?{% now 'U' %}" rel="stylesheet">
 
 	</head>
 
@@ -64,5 +61,12 @@
 	        	<img src="{% static 'plots_example/images/STScIlogo.png' %}" height=36>
 	      	</div>
 	    </footer>
+
+
+	    <!-- Needed javascript -->
+	    <!-- IMPORTANT: jQuery first, then popper, then Bootstrap -->
+		<script src="{{ staticURL }}js/jquery-3.3.1.min.js?{% now 'U' %}"></script>
+		<script src="{{ staticURL }}js/popper.min.js?{% now 'U' %}"></script>
+		<script src="{{ staticURL }}js/bootstrap.bundle.min.js?{% now 'U' %}"></script>
 	</body>
 </html>
