@@ -5,7 +5,7 @@
 	<title>View {{ inst }} Image - JWST Quicklook</title>
 
 	<!-- Custom styles for this template -->
-	<link href="{{staticURL}}bootstrap/css/quicklook-instrument.css?{% now 'U' %}" rel="stylesheet">
+	<link href="{{staticURL}}css/quicklook-instrument.css?{% now 'U' %}" rel="stylesheet">
 </head>
 
 <body>
@@ -16,6 +16,10 @@
     		var fits_filename = '{{ file_root }}_' + type + '.fits'
     		document.getElementById("jpg_filename").innerHTML = '{{ file_root }}_' + type + '_integ0.jpg';
     		document.getElementById("fits_filename").innerHTML = fits_filename;
+    		document.getElementById("proposal").innerHTML = '{{ file_root|slice:"2:7" }}';
+    		document.getElementById("obs_id").innerHTML = '{{ file_root|slice:"7:10" }}';
+    		document.getElementById("visit_id").innerHTML = '{{ file_root|slice:"10:13" }}';
+    		document.getElementById("detector").innerHTML = '{{ file_root}}'.split('_')[3];
 
     		var img = document.getElementById("image_viewer")
     		var jpg_filepath = '{{ staticURL }}{{ file_root|slice:":7" }}/{{ file_root }}_' + type + '_integ0.jpg';
@@ -33,7 +37,13 @@
     	<!-- Show image group name -->
     	<h3>{{ file_root }}</h3>
 
-    	<!-- Specify the filenames of what is currently being shown -->
+    	<!-- Specify the attributes of what is currently being shown -->
+    	<div class="d-flex flex-row">
+    		<div style="width: 20%">Proposal: <a id="proposal"></a></div>
+    		<div style="width: 20%">Observation: <a id="obs_id"></a></div>
+    		<div style="width: 20%">Visit: <a id="visit_id"></a></div>
+    		<div style="width: 20%">Detector: <a id="detector"></a></div>
+    	</div>
     	FITS Filename: <a id="fits_filename"></a><br>
     	JPG Filename: <a id="jpg_filename"></a><br><br>
 

@@ -234,6 +234,7 @@ def unlooked_images(request, inst):
     file_data = []
     detectors = []
     proposals = []
+    exp_starts = []
     for i, file_id in enumerate(full_ids):
         suffixes = []
         count = 0
@@ -242,13 +243,17 @@ def unlooked_images(request, inst):
                 count += 1
                 suffix = file.split('/')[-1].split('_')[4].split('.')[0]
                 suffixes.append(suffix)
+
+                hdr = fits.getheader(file, ext=0)
+                exp_start = hdr['EXPSTART']
+
         suffixes = list(set(suffixes))
 
         proposal_id = file_id[2:7]
         observation_id = file_id[7:10]
         visit_id = file_id[10:13]
         detector = file_id.split('_')[3]
-        if detector not in detectors:
+        if detector not in detectors and not detector.startswith('f'):
             detectors.append(detector)
         if proposal_id not in proposals:
             proposals.append(proposal_id)
@@ -256,6 +261,7 @@ def unlooked_images(request, inst):
         file_dict = {'proposal_id': proposal_id,
                      'observation_id': observation_id,
                      'visit_id': visit_id,
+                     'exp_start': exp_start,
                      'suffixes': suffixes,
                      'detector': detector,
                      'file_count': count,
@@ -268,7 +274,6 @@ def unlooked_images(request, inst):
     # Extract information for sorting with dropdown menus
     dropdown_menus = {'detector': detectors,
                       'proposal': proposals}
-    print(dropdown_menus)
 
     return render(request, template,
                   {'inst': inst,
