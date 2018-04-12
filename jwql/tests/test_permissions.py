@@ -119,7 +119,7 @@ def test_file_group(test_file):
     group = get_group_string(test_file)
 
     # attempt to retrieve a group name different from default
-    group_index = 1
+    group_index = 0
     test_group = grp.getgrgid(os.getgroups()[group_index]).gr_name
 
     set_permissions(test_file, group=test_group, owner=owner)
