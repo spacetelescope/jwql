@@ -5,5 +5,9 @@ utils/config.json
 build/
 dist/
 jwql.egg-info/
+<<<<<<< 4fc8c439c954023ec4c28f27b939aceaf3058723
 docs/build/
 docs/source/api/
+=======
+.cache
+.pytest_cache
