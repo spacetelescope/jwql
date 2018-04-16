@@ -4,7 +4,6 @@ Authors
 -------
 
     Matthew Bourque
-    Joe Hunkeler (filename_parser)
     Lauren Chambers
 
 Use
@@ -14,6 +13,12 @@ Use
 
     >>> import utils
     settings = get_config()
+
+References
+----------
+
+    Filename parser modifed from Joe Hunkeler:
+    https://gist.github.com/jhunkeler/f08783ca2da7bfd1f8e9ee1d207da5ff
 """
 
 import json
