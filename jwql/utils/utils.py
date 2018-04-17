@@ -1,25 +1,27 @@
-"""Various utility functions for the jwql project.
+"""Various utility functions for the ``jwql`` project.
 
 Authors
 -------
 
-    Matthew Bourque
+    - Matthew Bourque
 
 Use
 ---
 
     This module can be imported as such:
 
-    >>> import utils
-    settings = get_config()
+    ::
+
+        import utils
+        settings = get_config()
 """
 
 import json
 
 
 def get_config():
-    """Return a dictionary that holds the contents of the jwql config
-    file.
+    """Return a dictionary that holds the contents of the ``jwql``
+    config file.
 
     Returns
     -------
