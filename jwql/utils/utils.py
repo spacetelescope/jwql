@@ -15,6 +15,9 @@ Use
 """
 
 import json
+import os
+
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 
 def get_config():
@@ -27,7 +30,7 @@ def get_config():
         A dictionary that holds the contents of the config file.
     """
 
-    with open('config.json', 'r') as config_file:
+    with open(os.path.join(__location__, 'config.json'), 'r') as config_file:
         settings = json.load(config_file)
 
     return settings
