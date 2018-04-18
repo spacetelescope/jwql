@@ -25,6 +25,8 @@ import json
 import re
 import os
 
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
 
 def get_config():
     """Return a dictionary that holds the contents of the jwql config
@@ -36,7 +38,7 @@ def get_config():
         A dictionary that holds the contents of the config file.
     """
 
-    with open('config.json', 'r') as config_file:
+    with open(os.path.join(__location__, 'config.json'), 'r') as config_file:
         settings = json.load(config_file)
 
     return settings
@@ -79,6 +81,6 @@ def filename_parser(filename):
     if jwst_file is not None:
         filename_dict = jwst_file.groupdict()
     else:
-        raise ValueError('Provided file {} does not follow JWST naming conventions (jw<PPPPP><OOO><VVV>_<GGSAA>_<EEEEE>_<detector >_<suffix> .fits)')
+        raise ValueError('Provided file {} does not follow JWST naming conventions (jw<PPPPP><OOO><VVV>_<GGSAA>_<EEEEE>_<detector>_<suffix>.fits)'.format(filename))
 
     return filename_dict
