@@ -22,8 +22,8 @@ References
 """
 
 import json
-import re
 import os
+import re
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -54,7 +54,7 @@ def filename_parser(filename):
 
     Returns
     -------
-    dict
+    filename_dict : dict
         Collection of file properties
 
     Raises
