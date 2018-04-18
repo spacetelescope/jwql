@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Tests for the utils module.
+"""Tests for the ``utils`` module.
 
 Authors
 -------
@@ -14,6 +14,7 @@ Use
     suppress verbose output to stdout):
 
     ::
+
         pytest -s test_utils.py
 
 """
@@ -24,7 +25,7 @@ from jwql.utils.utils import get_config, filename_parser
 
 
 def test_get_config():
-    '''Assert that the get_config function successfuly creates a
+    '''Assert that the ``get_config`` function successfuly creates a
     dictionary.
     '''
     settings = get_config()
