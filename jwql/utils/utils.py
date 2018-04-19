@@ -3,8 +3,8 @@
 Authors
 -------
 
-    Matthew Bourque
-    Lauren Chambers
+    - Matthew Bourque
+    - Lauren Chambers
 
 Use
 ---
@@ -42,6 +42,7 @@ def get_config():
         settings = json.load(config_file)
 
     return settings
+
 
 def filename_parser(filename):
     """Return a dictionary that contains the properties of a given
