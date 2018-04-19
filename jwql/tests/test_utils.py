@@ -6,7 +6,6 @@ Authors
 
     - Lauren Chambers
 
-
 Use
 ---
 
@@ -16,7 +15,6 @@ Use
     ::
 
         pytest -s test_utils.py
-
 """
 
 import pytest
