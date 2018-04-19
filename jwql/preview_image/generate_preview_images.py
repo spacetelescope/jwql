@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 
-"""Generate preview images for all files in the jwql filesystem.
+"""Generate preview images for all files in the ``jwql`` filesystem.
 
 Execution of this script will generate preview images for each file in
-the jwql filesystem, if it does not already exist.
+the ``jwql`` filesystem, if it does not already exist.
 
 Authors
 -------
@@ -16,10 +16,15 @@ Use
 
     This script is intended to be executed as such:
 
-    >>> python generate_preview_images.py
+    ::
 
-Dependencies
-------------
+        python generate_preview_images.py
+
+Notes
+-----
+
+    Some of this code could be simplified by using a filename parser
+    utility function, which is in the works for ``jwql``.
 """
 
 import glob
@@ -52,13 +57,16 @@ def generate_preview_images():
             permissions.set_permissions(output_directory, verbose=False)
 
         # Create and save the preview image
-        im = PreviewImage(filename, "SCI")
-        im.clip_percent = 0.01
-        im.scaling = 'log'
-        im.output_format = 'jpg'
-        im.output_directory = output_directory
-        im.make_image()
-        print('Created preview image for {}'.format(filename))
+        try:
+            im = PreviewImage(filename, "SCI")
+            im.clip_percent = 0.01
+            im.scaling = 'log'
+            im.cmap = 'viridis'
+            im.output_format = 'jpg'
+            im.output_directory = output_directory
+            im.make_image()
+        except ValueError as error:
+            print(error)
 
 
 if __name__ == '__main__':
