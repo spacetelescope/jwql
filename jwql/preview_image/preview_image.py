@@ -36,11 +36,12 @@ import os
 import sys
 
 from astropy.io import fits
+from jwst.datamodels import dqflags
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import numpy as np
 
-from jwst.datamodels import dqflags
+from jwql.permissions import permissions
 
 class PreviewImage():
 
@@ -57,6 +58,7 @@ class PreviewImage():
         self.file = filename
         self.clip_percent = 0.01
         self.scaling = 'log'
+        self.cmap = 'viridis'
         self.output_format = 'jpg'
         self.output_directory = None
 
@@ -205,7 +207,7 @@ class PreviewImage():
             # Log normalize the colormap
             cax = ax.imshow(shiftdata,
                             norm=colors.LogNorm(vmin=shiftmin, vmax=shiftmax),
-                            cmap='gray')
+                            cmap=self.cmap)
 
             # Add colorbar, with original data values
             tickvals = np.logspace(np.log10(shiftmin), np.log10(shiftmax), 5)
@@ -279,15 +281,18 @@ class PreviewImage():
             plt.close()
 
     @staticmethod
-    def save_image(image, fname):
+    def save_image(image, outfile):
         """
-        Save an image in the requested output format
+        Save an image in the requested output format and sets the
+        appropriate permissions
 
         Parameters:
         ----------
         image : obj
             A matplotlib figure object
-        fname : str
+        outfile : str
             Output filename
         """
-        image.savefig(fname, bbox_inches='tight')
+        image.savefig(outfile, bbox_inches='tight')
+        permissions.set_permissions(outfile, verbose=False)
+        print('Saved image to {}'.format(outfile))
