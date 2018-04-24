@@ -28,6 +28,11 @@ git clone https://github.com/spacetelescope/jwql.git
 cd jwql
 python setup.py develop
 ```
+If you have two factor authentication and sftp (rather than http) access set up on github, type
+```
+git clone git@github.com:spacetelescope/jwql.git  
+```
+instead, and then proceed as stated.
 
 ## Environment Installation
 
@@ -68,7 +73,7 @@ The following is a bare bones example of a best work flow for contributing to th
 10. Delete your local copy of your branch.
 
 
-## Git Ignore
+## `gitignore`
 
 The `jwql` repository also contains a file named `.gitignore` that indicates specific directories, files or file types that should not be commited to the repository.  Feel free to add additional lines to this file if you want to avoid committing anything.  Some examples may include `.fits` files, `.jpeg` files, or `.ipynb_checkpoints/`.
 
@@ -104,6 +109,7 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Phil Grant (ITSD)
 - Dean Hines (INS)
 - Sherrie Holfeltz (INS)
+- Joe Hunkeler (OED)
 - Catherine Kaleida (OED)
 - Mark Kyprianou (OED)
 - Karen Levay (OED)
@@ -120,4 +126,5 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Linda Smith (INS)
 - Dave Unger (ITSD)
 - Jeff Valenti (INS)
+- Lara Wilkinson (OPO)
 - Joe Zahn (ITSD)
