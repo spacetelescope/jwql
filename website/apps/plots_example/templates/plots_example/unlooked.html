@@ -132,7 +132,7 @@
     			<div class="mr-4">
 			    	Show only {{filter_type}}:
 			    	<div class="dropdown">
-					  <button class="btn dropdown-toggle" type="button" id="{{filter_type}}_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">All {{filter_type}}s</button>
+					  <button class="btn btn-primary dropdown-toggle" type="button" id="{{filter_type}}_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">All {{filter_type}}s</button>
 					  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 					  	<a class="dropdown-item" href="#" onclick="show_only('{{filter_type}}', 'All {{filter_type}}s');">All {{filter_type}}s</a>
 					  	{% for option in filter_options %}
@@ -147,7 +147,7 @@
 			<div class="mx-4 mr-5 ml-auto">
 		    	Sort by:
 		    	<div class="dropdown">
-				  <button class="btn dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Default</button>
+				  <button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Default</button>
 				  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 				  	<a class="dropdown-item" href="#" onclick="sort_by('Default');">Default</a>
 			    	<a class="dropdown-item" href="#" onclick="sort_by('Name');">Name</a>

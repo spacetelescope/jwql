@@ -43,14 +43,3 @@
   padding-top: 1rem;
   padding-bottom: 1rem;
 }
-
-/*Get the sorting buttons to look right*/
-.dropdown .btn {
-    background-color: #4C8BD8;
-    border-color: #4C8BD8;
-    color: white;
-}
-.dropdown .btn:hover {
-    background-color: #346199;
-    border-color: #346199;
-}
