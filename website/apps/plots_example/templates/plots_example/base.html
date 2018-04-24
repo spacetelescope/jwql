@@ -14,11 +14,15 @@
 		<link href="{{staticURL}}css/quicklook-master.css?{% now 'U' %}" rel="stylesheet">
 		<link href="{{staticURL}}css/sticky-footer.css?{% now 'U' %}" rel="stylesheet">
 
+		<!-- Import fonts -->
+		<link href="https://fonts.googleapis.com/css?family=Oswald:700|Overpass" rel="stylesheet">
+
+
 	</head>
 
 	<body>
 		<!-- Navigation Bar -->
-		<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+		<nav class="navbar navbar-expand-md fixed-top">
 		    <a class="navbar-left"><img src="{% static 'plots_example/images/JWQLlogo_small.png' %}" height=35 width=35></a>
 	        <a class="navbar-brand" href="{% url 'plots_example:home' %}">JWST Quicklook</a>
 	        <a class="navbar-brand" href="#"><font color='#f2ce3a'>{{ inst }}</font></a>
@@ -29,18 +33,18 @@
 	        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
 	        	<ul class="navbar-nav mr-auto">
 	          		<li class="nav-item active">
-	            		<a class="nav-link" href="{% url 'plots_example:home' %}"><font color='#9A9D9F'>Home</font><span class="sr-only">(current)</span></a>
+	            		<a class="nav-link" href="{% url 'plots_example:home' %}">Home<span class="sr-only">(current)</span></a>
 	          		</li>
 	          		{% for inst_key, inst_tools in tools.items %}
 		          	<li class="dropdown">
-		            	<a class="nav-link dropdown-toggle disabled" href="{% url 'plots_example:instrument' inst_key %}" id="dropdown"{{ inst_key }} aria-haspopup="true" aria-expanded="false"><font color='#9A9D9F'>{{ inst_key }}</font></a>
+		            	<a class="nav-link dropdown-toggle disabled" href="{% url 'plots_example:instrument' inst_key %}" id="dropdown"{{ inst_key }} aria-haspopup="true" aria-expanded="false">{{ inst_key }}</a>
 		            	<div class="dropdown-menu" aria-labelledby="dropdown01">
-			            	<h6 class='mx-3'>Images</h6>
+			            	<a class='dropdown-heading mx-3'>Images</a>
 			            	<a class="dropdown-item" href="{% url 'plots_example:unlooked_im' inst_key %}">Unlooked Images</a>
 			            	<a class="dropdown-item" href="#">Image Anomalies</a>
 			            	<a class="dropdown-item" href="{% url 'plots_example:archived_im' inst_key %}">Archived Images</a>
 			            	<div class="dropdown-divider"></div>
-			            	<h6 class='mx-3'>Monitors</h6>
+			            	<a class='dropdown-heading mx-3'>Monitors</a>
 			            	{% for tool in inst_tools %}
 			              		<a class="dropdown-item" href="#">{{ tool }}</a>
 			              	{% endfor %}
@@ -52,13 +56,18 @@
 
 	    	<a class="navbar-right" href="https://github.com/spacetelescope/jwql" target="_blank"><img src="{% static 'plots_example/images/githublogo.svg' %}" height=25 width=25></a>
 	    </nav>
+	    <div class="banner">
+	    	<img src="{% static 'plots_example/images/hubble_image.jpg' %}">
+	    </div>
 
     	{% block content %}
         {% endblock %}
 
 		<footer class="footer text-center">
 	      	<div class="container">
-	        	<img src="{% static 'plots_example/images/STScIlogo.png' %}" height=36>
+	      		<a href="http://www.stsci.edu/" target="_blank">
+	        		<img src="{% static 'plots_example/images/STScIlogo_dark.png' %}"  height=36>
+	        	</a>
 	      	</div>
 	    </footer>
 
