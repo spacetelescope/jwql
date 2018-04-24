@@ -98,7 +98,7 @@
 		    };
 
 		    // Update the count of how many images are being shown
-		    document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/{{ file_data|length }} activities'
+		    document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/{{ n_fileids }} activities'
 		};
 
 		function sort_by(sort_type) {
@@ -120,7 +120,7 @@
     	<h3 id='title'>{{ inst }} Images</h3>
     	<script>determine_page_title();</script>
 
-    	<p id='img_show_count'>Showing {{ file_data|length }}/{{ file_data|length }} activities<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black"><span class="help-tip mx-2">i</span></a></p>
+    	<p id='img_show_count'>Showing {{ n_fileids }}/{{ n_fileids }} activities<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black"><span class="help-tip mx-2">i</span></a></p>
 
     	<!-- <a id='demo'>test</a> -->
     	<hr>
@@ -163,16 +163,16 @@
 		<div id='thumbnail-array'>
 		{% for i, file in thumbnail_zipped_list %}
 			{% url 'plots_example:view_image' inst file.file_root as viewimage_URL %}
-			<div class="thumbnail" detector="{{file.detector}}" proposal="{{file.proposal_id}}" file_root="{{file.file_root}}", exp_start="{{file.exp_start}}">
+			<div class="thumbnail" detector="{{file.detector}}" proposal="{{file.program_id}}" file_root="{{file.file_root}}", exp_start="{{file.exp_start}}">
 				<a href='{{ viewimage_URL }}'>
 					<img id='thumbnail{{i}}' onerror="this.src='{{staticURL}}plots_example/images/imagenotfound.png'" width=100%>
 					<script>determine_filetype_for_thumbnail("{{file.suffixes}}", "{{i}}", "{{file.file_root}}");</script>
 
 					<div class='color-fill' ></div>
 					<div class='thumbnail_info'>
-						Proposal: {{file.proposal_id}}<br>
-						Observation: {{file.observation_id}}<br>
-						Visit: {{file.visit_id}}<br>
+						Proposal: {{file.program_id}}<br>
+						Observation: {{file.observation}}<br>
+						Visit: {{file.visit}}<br>
 						Detector: {{file.detector}}<br>
 						Exp_Start: {{file.exp_start|floatformat:2}}<br>
 						<!-- Suffixes: {{file.3}}<br> -->

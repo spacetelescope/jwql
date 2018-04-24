@@ -42,7 +42,7 @@ import numpy as np
 # from django.views import generic # We ultimately might want to use generic views?
 
 from jwql.preview_image.preview_image import PreviewImage
-from jwql.utils.utils import get_config
+from jwql.utils.utils import get_config, filename_parser
 
 from .db import DatabaseConnection
 
@@ -129,7 +129,6 @@ def view_image(request, inst, file_root, rewrite=False):
     dirname = file_root[:7]
     search_filepath = os.path.join(FILESYSTEM_DIR, dirname, file_root + '*.fits')
     all_files = glob.glob(search_filepath)
-    print('all files in {}:'.format(search_filepath), all_files)
 
     # Generate the jpg filename
     all_jpgs = []
@@ -152,8 +151,6 @@ def view_image(request, inst, file_root, rewrite=False):
             im.make_image()
 
         all_jpgs.append(jpg_filepath)
-
-    print('all jpgs:', all_jpgs)
 
     return render(request, template,
                   {'inst': inst,
@@ -234,14 +231,18 @@ def unlooked_images(request, inst):
     file_data = []
     detectors = []
     proposals = []
-    exp_starts = []
     for i, file_id in enumerate(full_ids):
         suffixes = []
         count = 0
         for file in all_filepaths:
             if '_'.join(file.split('/')[-1].split('_')[:-1]) == file_id:
                 count += 1
-                suffix = file.split('/')[-1].split('_')[4].split('.')[0]
+
+                # Parse filename
+                file_dict = filename_parser(file)
+
+                # Determine suffix
+                suffix = file_dict['suffix']
                 suffixes.append(suffix)
 
                 hdr = fits.getheader(file, ext=0)
@@ -249,24 +250,17 @@ def unlooked_images(request, inst):
 
         suffixes = list(set(suffixes))
 
-        proposal_id = file_id[2:7]
-        observation_id = file_id[7:10]
-        visit_id = file_id[10:13]
-        detector = file_id.split('_')[3]
-        if detector not in detectors and not detector.startswith('f'):
-            detectors.append(detector)
-        if proposal_id not in proposals:
-            proposals.append(proposal_id)
+        # Add parameters to sort by
+        if file_dict['detector'] not in detectors and \
+           not file_dict['detector'].startswith('f'):
+            detectors.append(file_dict['detector'])
+        if file_dict['program_id'] not in proposals:
+            proposals.append(file_dict['program_id'])
 
-        file_dict = {'proposal_id': proposal_id,
-                     'observation_id': observation_id,
-                     'visit_id': visit_id,
-                     'exp_start': exp_start,
-                     'suffixes': suffixes,
-                     'detector': detector,
-                     'file_count': count,
-                     'file_root': file_id,
-                     'index': i}
+        file_dict['exp_start'] = exp_start
+        file_dict['suffixes'] = suffixes
+        file_dict['file_count'] = count
+        file_dict['file_root'] = file_id
 
         file_data.append(file_dict)
     file_indices = np.arange(len(file_data))
@@ -278,7 +272,7 @@ def unlooked_images(request, inst):
     return render(request, template,
                   {'inst': inst,
                    'all_filenames': [os.path.basename(f) for f in all_filepaths],
-                   'file_data': file_data,
                    'tools': TOOLS,
                    'thumbnail_zipped_list': zip(file_indices, file_data),
-                   'dropdown_menus': dropdown_menus})
+                   'dropdown_menus': dropdown_menus,
+                   'n_fileids': len(file_data)})
