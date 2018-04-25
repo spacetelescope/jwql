@@ -12,25 +12,37 @@
 <body>
 
     <main role="main" class="container">
-    	<h3>Welcome to the JWST Quicklook page.</h3>
+    	<h2>Welcome to the JWST Quicklook page.</h2>
     	The James Webb Quicklook Application (JWQL) is a database-driven web application and software repository for use by the JWST instrument teams.
 
-    	<div class="row" style="margin-left: 7rem; margin-right: 7rem;">
-    		<div class="col-md-6"><a class="btn btn-block btn-primary disabled" role="button" href="#">Dashboard</a></div>
-			<div class="col-md-6"><a class="btn btn-block btn-primary disabled" role="button" href="#">Query Database</a></div>
+    	<div class="row my-2" style="margin-left: 7rem; margin-right: 7rem;">
+    		<div class="col-md-6 py-2"><a class="btn btn-block btn-primary disabled" role="button" href="#">Dashboard</a></div>
+			<div class="col-md-6 py-2"><a class="btn btn-block btn-primary disabled" role="button" href="#">Query Database</a></div>
 		</div>
 
-    	<!--<h1 style="text-align: center">Instruments</h1>-->
+        <!-- <div class='instrument_header'>
+            <h3 style="text-align: left; color: white">Instruments</h3>
+        </div> -->
     	<div class="instrument_select">
-	    	<div class="row">
+            <!-- <h3 style="text-align: left; color: white">Instruments</h3>
+            <hr> -->
+	    	<div class="d-flex justify-content-between">
 				{% if inst_list %}
 					{% for inst in inst_list %}
-						<div class="col-md-2 text-center">
-							<a class="btn btn-block btn-outline-primary" role="button" href="{% url 'plots_example:instrument' inst %}">
-								<div class="frame"><span class="helper"></span><img src="{{staticURL}}/plots_example/images/{{inst}}logo.png" width=100 style="vertical-align: middle"></div>
-								{{ inst }}
+						<!-- <div class="col-md-2 text-center"> -->
+							<a class='instrument_panel' href="{% url 'plots_example:instrument' inst %}">
+
+                                <!-- <p class="btn btn-primary" role="button">{{ inst }}</p> -->
+                                <p class="instrument_name">{{ inst }}</p>
+                                <!-- <h4>{{ inst }}</h4> -->
+                                <div class="frame">
+                                <!-- <p class="btn btn-primary" role="button">{{ inst }}</p> -->
+<!--  -->
+                                    <span class="helper"></span><img src="{{staticURL}}/plots_example/images/{{inst}}logo.png" width=100 style="vertical-align: middle">
+                                </div><br>
+
 							</a>
-						</div>
+						<!-- </div> -->
 					{% endfor %}
 				{% else %}
 					<p>No instruments are available.</p>
