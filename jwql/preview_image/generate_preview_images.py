@@ -40,6 +40,7 @@ def generate_preview_images():
 
     filesystem = get_config()['filesystem']
     preview_image_filesystem = get_config()['preview_image_filesystem']
+    thumbnail_filesystem = get_config()['thumbnail_filesystem']
     filenames = glob.glob(os.path.join(filesystem, '*/*.fits'))
 
     for filename in filenames:
@@ -50,6 +51,7 @@ def generate_preview_images():
             rootname_elements[0],  # Program ID + observation + visit
             rootname_elements[1])  # Visit group + parallel sequence ID + activity
         output_directory = os.path.join(preview_image_filesystem, preview_image_dir)
+        thumbnail_output_directory = os.path.join(thumbnail_filesystem, preview_image_dir)
 
         # Create the output directory if necessary
         if not os.path.exists(output_directory):
@@ -64,6 +66,20 @@ def generate_preview_images():
             im.cmap = 'viridis'
             im.output_format = 'jpg'
             im.output_directory = output_directory
+            im.make_image()
+        except ValueError as error:
+            print(error)
+
+        # Create and save a thumbnail of the preview image
+        try:
+            im = PreviewImage(filename, "SCI")
+            im.clip_percent = 0.01
+            im.scaling = 'log'
+            im.cmap = 'viridis'
+            im.output_format = 'thumb'
+            im.output_directory = thumbnail_output_directory
+            im.thumbnail = True
+            print(im)
             im.make_image()
         except ValueError as error:
             print(error)
