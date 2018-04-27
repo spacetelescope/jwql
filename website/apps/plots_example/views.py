@@ -134,6 +134,7 @@ def view_image(request, inst, file_root, rewrite=False):
     # Generate the jpg filename
     all_jpgs = []
     suffixes = []
+    n_ints = {}
     for file in all_files:
         suffix = os.path.basename(file).split('_')[4].split('.')[0]
         suffixes.append(suffix)
@@ -155,6 +156,11 @@ def view_image(request, inst, file_root, rewrite=False):
             im.output_directory = jpg_dir
             im.make_image()
 
+        # Record how many integrations there are per filetype
+        search_jpgs = os.path.join(PREVIEW_DIR, dirname, file_root + '_{}_integ*.jpg'.format(suffix))
+        n_jpgs = len(glob.glob(search_jpgs))
+        n_ints[suffix] = n_jpgs
+
         all_jpgs.append(jpg_filepath)
 
     return render(request, template,
@@ -163,7 +169,8 @@ def view_image(request, inst, file_root, rewrite=False):
                    'tools': TOOLS,
                    'jpg_files': all_jpgs,
                    'fits_files': all_files,
-                   'suffixes': suffixes})
+                   'suffixes': suffixes,
+                   'n_ints': n_ints})
 
 def view_header(request, inst, file):
     """Generate the header view page
