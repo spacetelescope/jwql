@@ -89,6 +89,7 @@ li.dropdown:hover .dropdown-menu {
 .help-tip {
     text-align: center;
     background-color: #D0D7D8;
+    color: black;
     border-radius: 50%;
     width: 20px;
     height: 20px;
