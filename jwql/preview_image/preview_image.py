@@ -37,11 +37,16 @@ import sys
 
 from astropy.io import fits
 from jwst.datamodels import dqflags
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
 import numpy as np
 
 from jwql.permissions import permissions
+
+# Use the 'Agg' backend to avoid invoking $DISPLAY
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+
 
 class PreviewImage():
 
@@ -55,12 +60,13 @@ class PreviewImage():
         extension : str
             Extension name to be read in
         """
-        self.file = filename
         self.clip_percent = 0.01
-        self.scaling = 'log'
         self.cmap = 'viridis'
+        self.file = filename
         self.output_format = 'jpg'
         self.output_directory = None
+        self.scaling = 'log'
+        self.thumbnail = False
 
         # Read in file
         self.data, self.dq = self.get_data(self.file, extension)
@@ -159,8 +165,7 @@ class PreviewImage():
                                      .format(filename)))
         return data, dq
 
-    def make_figure(self, image, integration_number, min_value, max_value,
-                    scale, maxsize = 8):
+    def make_figure(self, image, integration_number, min_value, max_value, scale):
         """
         Create the matplotlib figure of the image
 
@@ -182,12 +187,17 @@ class PreviewImage():
         result : obj
             Matplotlib Figure object
         """
+
         # Check the input scaling
         if scale not in ['linear','log']:
             raise ValueError(("WARNING: scaling option {} not supported."
                               .format(scale)))
 
         # Set the figure size
+        if self.thumbnail:
+            maxsize = 2
+        else:
+            maxsize = 8
         yd, xd = image.shape
         ratio = yd / xd
         if xd >= yd:
@@ -210,36 +220,41 @@ class PreviewImage():
                             cmap=self.cmap)
 
             # Add colorbar, with original data values
-            tickvals = np.logspace(np.log10(shiftmin), np.log10(shiftmax), 5)
-            tlabelflt = tickvals + min_value - 1
+            if not self.thumbnail:
+                tickvals = np.logspace(np.log10(shiftmin), np.log10(shiftmax), 5)
+                tlabelflt = tickvals + min_value - 1
 
-            # Adjust the number of digits after the decimal point
-            # in the colorbar labels based on the signal range
-            delta = tlabelflt[-1] - tlabelflt[0]
-            if delta >= 100:
-                dig = 0
-            elif ((delta < 100) & (delta >= 10)):
-                dig = 1
-            elif ((delta < 10) & (delta >= 1)):
-                dig = 2
-            elif delta < 1:
-                dig = 3
-            format_string = "%.{}f".format(dig)
-            tlabelstr = [format_string % number for number in tlabelflt]
-            cbar = fig.colorbar(cax, ticks=tickvals)
-            cbar.ax.set_yticklabels(tlabelstr)
-            ax.set_xlabel('Pixels')
-            ax.set_ylabel('Pixels')
-            plt.rcParams.update({'axes.titlesize': 'small'})
+                # Adjust the number of digits after the decimal point
+                # in the colorbar labels based on the signal range
+                delta = tlabelflt[-1] - tlabelflt[0]
+                if delta >= 100:
+                    dig = 0
+                elif ((delta < 100) & (delta >= 10)):
+                    dig = 1
+                elif ((delta < 10) & (delta >= 1)):
+                    dig = 2
+                elif delta < 1:
+                    dig = 3
+                format_string = "%.{}f".format(dig)
+                tlabelstr = [format_string % number for number in tlabelflt]
+                cbar = fig.colorbar(cax, ticks=tickvals)
+                cbar.ax.set_yticklabels(tlabelstr)
+                ax.set_xlabel('Pixels')
+                ax.set_ylabel('Pixels')
+                plt.rcParams.update({'axes.titlesize': 'small'})
 
         elif scale == 'linear':
-            cax = ax.imshow(image, clim=(min_value, max_value), cmap='gray')
-            cbar = fig.colorbar(cax)
-            ax.set_xlabel('Pixels')
-            ax.set_ylabel('Pixels')
+            cax = ax.imshow(image, clim=(min_value, max_value), cmap=self.cmap)
 
-        filename = os.path.split(self.file)[-1]
-        ax.set_title(filename + ' Int: {}'.format(np.int(integration_number)))
+            if not self.thumbnail:
+                cbar = fig.colorbar(cax)
+                ax.set_xlabel('Pixels')
+                ax.set_ylabel('Pixels')
+
+        if not self.thumbnail:
+            filename = os.path.split(self.file)[-1]
+            ax.set_title(filename + ' Int: {}'.format(np.int(integration_number)))
+
         return fig
 
     def make_image(self):
