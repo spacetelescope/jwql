@@ -132,5 +132,6 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
     get_config()['filesystem'],
+    get_config()['preview_image_dir'],
 ]
 

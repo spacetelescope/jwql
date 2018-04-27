@@ -47,6 +47,7 @@ from jwql.utils.utils import get_config, filename_parser
 from .db import DatabaseConnection
 
 FILESYSTEM_DIR = get_config()['filesystem']
+PREVIEW_DIR = get_config()['preview_image_dir']
 INST_LIST = ['FGS', 'MIRI', 'NIRCam', 'NIRISS', 'NIRSpec']
 TOOLS = {'FGS': ['Bad Pixel Monitor'],
          'MIRI': ['Dark Current Monitor',
@@ -137,8 +138,9 @@ def view_image(request, inst, file_root, rewrite=False):
         suffix = os.path.basename(file).split('_')[4].split('.')[0]
         suffixes.append(suffix)
 
-        jpg_filepath = os.path.splitext(file)[0] + '_integ0.jpg'
-        # jpg_filepath = os.path.join(FILESYSTEM_DIR, dirname, jpg_filename)
+        jpg_dir = os.path.join(PREVIEW_DIR, dirname)
+        jpg_filename = os.path.basename(os.path.splitext(file)[0] + '_integ0.jpg')
+        jpg_filepath = os.path.join(jpg_dir, jpg_filename)
 
         # Check that a jpg does not already exist. If it does (and rewrite=False),
         # just call the existing jpg file
@@ -147,7 +149,10 @@ def view_image(request, inst, file_root, rewrite=False):
 
         # If it doesn't, make it using the preview_image module
         else:
+            if not os.path.exists(jpg_dir):
+                os.makedirs(jpg_dir)
             im = PreviewImage(file, 'SCI')
+            im.output_directory = jpg_dir
             im.make_image()
 
         all_jpgs.append(jpg_filepath)
