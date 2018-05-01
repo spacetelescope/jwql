@@ -33,6 +33,7 @@ import os
 from jwql.permissions import permissions
 from jwql.preview_image.preview_image import PreviewImage
 from jwql.utils.utils import get_config
+from jwql.utils.utils import filename_parser
 
 
 def generate_preview_images():
@@ -46,17 +47,17 @@ def generate_preview_images():
     for filename in filenames:
 
         # Determine the save location
-        rootname_elements = os.path.basename(filename).split('.fits')[0].split('_')
-        preview_image_dir = '{}_{}'.format(
-            rootname_elements[0],  # Program ID + observation + visit
-            rootname_elements[1])  # Visit group + parallel sequence ID + activity
-        output_directory = os.path.join(preview_image_filesystem, preview_image_dir)
-        thumbnail_output_directory = os.path.join(thumbnail_filesystem, preview_image_dir)
+        identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
+        output_directory = os.path.join(preview_image_filesystem, identifier)
+        thumbnail_output_directory = os.path.join(thumbnail_filesystem, identifier)
 
-        # Create the output directory if necessary
+        # Create the output directories if necessary
         if not os.path.exists(output_directory):
             os.makedirs(output_directory)
             permissions.set_permissions(output_directory, verbose=False)
+        if not os.path.exists(thumbnail_output_directory):
+            os.makedirs(thumbnail_output_directory)
+            permissions.set_permissions(thumbnail_output_directory, verbose=False)
 
         # Create and save the preview image
         try:
@@ -76,10 +77,8 @@ def generate_preview_images():
             im.clip_percent = 0.01
             im.scaling = 'log'
             im.cmap = 'viridis'
-            im.output_format = 'thumb'
             im.output_directory = thumbnail_output_directory
             im.thumbnail = True
-            print(im)
             im.make_image()
         except ValueError as error:
             print(error)
