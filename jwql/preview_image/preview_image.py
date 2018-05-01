@@ -251,9 +251,14 @@ class PreviewImage():
                 ax.set_xlabel('Pixels')
                 ax.set_ylabel('Pixels')
 
+        # If preview image, set a title
         if not self.thumbnail:
             filename = os.path.split(self.file)[-1]
             ax.set_title(filename + ' Int: {}'.format(np.int(integration_number)))
+
+        # If thumbnail, turn off the axes
+        if self.thumbnail:
+            plt.axis('off')
 
         return fig
 
@@ -295,8 +300,7 @@ class PreviewImage():
             self.save_image(fig, outfile)
             plt.close()
 
-    @staticmethod
-    def save_image(image, outfile):
+    def save_image(self, image, outfile):
         """
         Save an image in the requested output format and sets the
         appropriate permissions
@@ -308,6 +312,14 @@ class PreviewImage():
         outfile : str
             Output filename
         """
+
         image.savefig(outfile, bbox_inches='tight')
         permissions.set_permissions(outfile, verbose=False)
-        print('Saved image to {}'.format(outfile))
+
+        # If the image is a thumbnail, rename to '.thumb'
+        if self.thumbnail:
+            new_outfile = outfile.replace('.jpg', '.thumb')
+            os.rename(outfile, new_outfile)
+            print('Saved image to {}'.format(new_outfile))
+        else:
+            print('Saved image to {}'.format(outfile))
