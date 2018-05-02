@@ -22,7 +22,7 @@ import sys
 from urllib.parse import quote as urlencode
 
 from astroquery.mast import Mast
-from bokeh.charts import Donut, show, output_file
+from bkcharts import Donut, show, output_file
 import pandas as pd
 
 from ..utils.utils import JWST_DATAPRODUCTS, JWST_INSTRUMENTS
@@ -70,7 +70,7 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
     # Assemble the request
     params = {'columns': 'COUNT_BIG(*)', 
               'filters': filters, 
-              'removenullcolumns':True,}
+              'removenullcolumns': True,}
 
     # Just get the counts
     if return_data:
@@ -136,7 +136,9 @@ def instrument_inventory_caom(instrument, dataproduct=JWST_DATAPRODUCTS,
                         if isinstance(value, str) else value})
 
     # Assemble the request
-    params = {'columns': 'COUNT_BIG(*)', 'filters': filters,}
+    params = {'columns': 'COUNT_BIG(*)', 
+              'filters': filters,
+              'removenullcolumns': True,}
 
     # Just get the counts
     if return_data:
@@ -158,50 +160,66 @@ def instrument_inventory_caom(instrument, dataproduct=JWST_DATAPRODUCTS,
         return result['data'][0]['Column1']
 
 
-# def jwst_inventory(instruments=JWST_INSTRUMENTS,
-#                    dataproducts=['image', 'spectrum', 'cube']):
-#     """Gather a full inventory of all JWST data on MAST by instrument/dtype
-#
-#     Parameters
-#     ----------
-#     instruments: sequence
-#         The list of instruments to count
-#     dataproducts: sequence
-#         The types of dataproducts to count
-#
-#     Returns
-#     -------
-#     astropy.table.table.Table
-#         The table of record counts for each instrument and mode
-#     """
-#     # Make master table
-#     inventory = at.Table(names=('instrument', 'dataproduct', 'count'),
-#                          dtype=('S8', 'S12', int))
-#
-#     # Iterate through instruments
-#     for instrument in instruments:
-#         for dataproduct in dataproducts:
-#             count = instrument_inventory_caom(instrument, dataproduct=dataproduct)
-#             inventory.add_row([instrument, dataproduct, count])
-#
-#         # Get number of files for all datatypes for this instrument
-#         count = instrument_inventory_caom(instrument, dataproduct=dataproducts)
-#         inventory.add_row([instrument, '*', count])
-#
-#     # Get total number of files
-#     count = instrument_inventory_caom(instruments, dataproduct=dataproducts)
-#     inventory.add_row(['*', '*', count])
-#
-#     # Retrieve one dataset to get header keywords
-#     sample = instrument_inventory_caom(instruments, dataproduct=dataproducts,
-#                                   add_requests={'pagesize': 1, 'page': 1},
-#                                   return_data=True)
-#     names = [i['name'] for i in sample['fields']]
-#     types = [i['type'] for i in sample['fields']]
-#     keywords = at.Table([names, types], names=('keyword', 'dtype'))
-#
-#     return inventory, keywords
+def jwst_inventory(instruments=JWST_INSTRUMENTS,
+                        dataproducts=['image', 'spectrum', 'cube'],
+                        plot=False):
+    """Gather a full inventory of all JWST data on MAST by instrument/dtype
 
+    Parameters
+    ----------
+    instruments: sequence
+        The list of instruments to count
+    dataproducts: sequence
+        The types of dataproducts to count
+    plot: bool
+        Return a pie chart of the data
+
+    Returns
+    -------
+    astropy.table.table.Table
+        The table of record counts for each instrument and mode
+    """
+    # Iterate through instruments
+    inventory = []
+    for instrument in instruments:
+        ins = [instrument]
+        for dp in dataproducts:
+            count = instrument_inventory(instrument, dataproduct=dp)
+            ins.append(count)
+        
+        # Get the total
+        ins.append(sum(ins[-3:]))
+        
+        # Add it to the list
+        inventory.append(ins)
+    
+    # Make the table
+    table = pd.DataFrame(inventory, columns=['instrument']+dataproducts+['total'])
+    
+    # Melt the table
+    table = pd.melt(table, id_vars=['instrument'],
+                    value_vars=dataproducts,
+                    value_name='files', var_name='dataproduct')
+    
+    # Retrieve one dataset to get header keywords
+    sample = instrument_inventory_caom(instruments, dataproduct=dataproducts,
+                                  add_requests={'pagesize': 1, 'page': 1},
+                                  return_data=True)
+    data = [[i['name'],i['type']] for i in sample['fields']]
+    keywords = pd.DataFrame(data, columns=('keyword', 'dtype'))
+
+    # Plot it
+    if plot:
+
+        # Make the plot
+        plt = Donut(table, label=['instrument', 'dataproduct'], values='files',
+                    text_font_size='12pt', hover_text='files',
+                    name="JWST Inventory", plot_width=600, plot_height=600)
+
+        show(plt)
+
+    return table, keywords
+    
 
 def jwst_inventory_caom(instruments=JWST_INSTRUMENTS,
                         dataproducts=['image', 'spectrum', 'cube'],
