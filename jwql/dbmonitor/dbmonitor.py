@@ -22,7 +22,7 @@ import sys
 from urllib.parse import quote as urlencode
 
 from astroquery.mast import Mast
-from bkcharts import Donut, show, output_file
+from bkcharts import Donut, show
 import pandas as pd
 
 from ..utils.utils import JWST_DATAPRODUCTS, JWST_INSTRUMENTS
@@ -55,7 +55,7 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
     """
     # Declare the service
     service = 'Mast.Jwst.Filtered.{}'.format(instrument.title())
-                         
+
     # Make sure the dataproduct is a list
     if isinstance(dataproduct, str):
         dataproduct = [dataproduct]
@@ -68,9 +68,9 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
     filters = []
 
     # Assemble the request
-    params = {'columns': 'COUNT_BIG(*)', 
-              'filters': filters, 
-              'removenullcolumns': True,}
+    params = {'columns': 'COUNT_BIG(*)',
+              'filters': filters,
+              'removenullcolumns': True}
 
     # Just get the counts
     if return_data:
@@ -79,7 +79,7 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
     # Add requests
     if add_requests:
         params.update(add_requests)
-    
+
     response = Mast.service_request_async(service, params)
     result = response[0].json()
 
@@ -93,7 +93,8 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
 
 
 def instrument_inventory_caom(instrument, dataproduct=JWST_DATAPRODUCTS,
-                         add_filters={}, add_requests={}, return_data=False):
+                              add_filters={}, add_requests={},
+                              return_data=False):
     """Get the counts for a given instrument and data product
 
     Parameters
@@ -136,9 +137,9 @@ def instrument_inventory_caom(instrument, dataproduct=JWST_DATAPRODUCTS,
                         if isinstance(value, str) else value})
 
     # Assemble the request
-    params = {'columns': 'COUNT_BIG(*)', 
+    params = {'columns': 'COUNT_BIG(*)',
               'filters': filters,
-              'removenullcolumns': True,}
+              'removenullcolumns': True}
 
     # Just get the counts
     if return_data:
@@ -147,7 +148,7 @@ def instrument_inventory_caom(instrument, dataproduct=JWST_DATAPRODUCTS,
     # Add requests
     if add_requests:
         params.update(add_requests)
-    
+
     response = Mast.service_request_async('Mast.Caom.Filtered', params)
     result = response[0].json()
 
@@ -161,8 +162,8 @@ def instrument_inventory_caom(instrument, dataproduct=JWST_DATAPRODUCTS,
 
 
 def jwst_inventory(instruments=JWST_INSTRUMENTS,
-                        dataproducts=['image', 'spectrum', 'cube'],
-                        plot=False):
+                   dataproducts=['image', 'spectrum', 'cube'],
+                   plot=False):
     """Gather a full inventory of all JWST data on MAST by instrument/dtype
 
     Parameters
@@ -186,26 +187,27 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
         for dp in dataproducts:
             count = instrument_inventory(instrument, dataproduct=dp)
             ins.append(count)
-        
+
         # Get the total
         ins.append(sum(ins[-3:]))
-        
+
         # Add it to the list
         inventory.append(ins)
-    
+
     # Make the table
-    table = pd.DataFrame(inventory, columns=['instrument']+dataproducts+['total'])
-    
+    all_cols = ['instrument']+dataproducts+['total']
+    table = pd.DataFrame(inventory, columns=all_cols)
+
     # Melt the table
     table = pd.melt(table, id_vars=['instrument'],
                     value_vars=dataproducts,
                     value_name='files', var_name='dataproduct')
-    
+
     # Retrieve one dataset to get header keywords
     sample = instrument_inventory_caom(instruments, dataproduct=dataproducts,
-                                  add_requests={'pagesize': 1, 'page': 1},
-                                  return_data=True)
-    data = [[i['name'],i['type']] for i in sample['fields']]
+                                       add_requests={'pagesize': 1, 'page': 1},
+                                       return_data=True)
+    data = [[i['name'], i['type']] for i in sample['fields']]
     keywords = pd.DataFrame(data, columns=('keyword', 'dtype'))
 
     # Plot it
@@ -219,7 +221,7 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
         show(plt)
 
     return table, keywords
-    
+
 
 def jwst_inventory_caom(instruments=JWST_INSTRUMENTS,
                         dataproducts=['image', 'spectrum', 'cube'],
@@ -247,26 +249,27 @@ def jwst_inventory_caom(instruments=JWST_INSTRUMENTS,
         for dp in dataproducts:
             count = instrument_inventory_caom(instrument, dataproduct=dp)
             ins.append(count)
-        
+
         # Get the total
         ins.append(sum(ins[-3:]))
-        
+
         # Add it to the list
         inventory.append(ins)
-    
+
     # Make the table
-    table = pd.DataFrame(inventory, columns=['instrument']+dataproducts+['total'])
-    
+    all_cols = ['instrument']+dataproducts+['total']
+    table = pd.DataFrame(inventory, columns=all_cols)
+
     # Melt the table
     table = pd.melt(table, id_vars=['instrument'],
                     value_vars=dataproducts,
                     value_name='files', var_name='dataproduct')
-    
+
     # Retrieve one dataset to get header keywords
     sample = instrument_inventory_caom(instruments, dataproduct=dataproducts,
-                                  add_requests={'pagesize': 1, 'page': 1},
-                                  return_data=True)
-    data = [[i['name'],i['type']] for i in sample['fields']]
+                                       add_requests={'pagesize': 1, 'page': 1},
+                                       return_data=True)
+    data = [[i['name'], i['type']] for i in sample['fields']]
     keywords = pd.DataFrame(data, columns=('keyword', 'dtype'))
 
     # Plot it
@@ -342,4 +345,3 @@ def mastQuery(request):
     conn.close()
 
     return head, content
-
