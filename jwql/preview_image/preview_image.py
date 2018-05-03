@@ -165,10 +165,10 @@ class PreviewImage():
                                      .format(filename)))
         return data, dq
 
-    def make_figure(self, image, integration_number, min_value, max_value, scale):
+    def make_figure(self, image, integration_number, min_value, max_value,
+                    scale, maxsize=8):
         """
         Create the matplotlib figure of the image
-
         Parameters:
         ----------
         image : obj
@@ -181,11 +181,6 @@ class PreviewImage():
             Maximum value for display
         scale : str
             Image scaling ('log', 'linear')
-
-        Returns:
-        --------
-        result : obj
-            Matplotlib Figure object
         """
 
         # Check the input scaling
