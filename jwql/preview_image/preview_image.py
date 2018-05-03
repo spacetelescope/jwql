@@ -194,10 +194,6 @@ class PreviewImage():
                               .format(scale)))
 
         # Set the figure size
-        if self.thumbnail:
-            maxsize = 2
-        else:
-            maxsize = 8
         yd, xd = image.shape
         ratio = yd / xd
         if xd >= yd:
@@ -206,21 +202,31 @@ class PreviewImage():
         else:
             ysize = maxsize
             xsize = maxsize / ratio
-        fig, ax = plt.subplots(figsize=(xsize, ysize))
 
         if scale == 'log':
+
             # Shift data so everything is positive
             shiftdata = image - min_value + 1
             shiftmin = 1
             shiftmax = max_value - min_value + 1
 
-            # Log normalize the colormap
-            cax = ax.imshow(shiftdata,
-                            norm=colors.LogNorm(vmin=shiftmin, vmax=shiftmax),
-                            cmap=self.cmap)
+            # If making a thumbnail, make a figure with no axes
+            if self.thumbnail:
+                fig = plt.imshow(shiftdata,
+                           norm=colors.LogNorm(vmin=shiftmin, vmax=shiftmax),
+                           cmap=self.cmap)
+                plt.axis('off')
+                fig.axes.get_xaxis().set_visible(False)
+                fig.axes.get_yaxis().set_visible(False)
 
-            # Add colorbar, with original data values
-            if not self.thumbnail:
+            # If preview image, add axes and colorbars
+            else:
+                fig, ax = plt.subplots(figsize=(xsize, ysize))
+                cax = ax.imshow(shiftdata,
+                                norm=colors.LogNorm(vmin=shiftmin, vmax=shiftmax),
+                                cmap=self.cmap)
+
+                # Add colorbar, with original data values
                 tickvals = np.logspace(np.log10(shiftmin), np.log10(shiftmax), 5)
                 tlabelflt = tickvals + min_value - 1
 
@@ -244,6 +250,7 @@ class PreviewImage():
                 plt.rcParams.update({'axes.titlesize': 'small'})
 
         elif scale == 'linear':
+            fig, ax = plt.subplots(figsize=(xsize, ysize))
             cax = ax.imshow(image, clim=(min_value, max_value), cmap=self.cmap)
 
             if not self.thumbnail:
@@ -255,12 +262,6 @@ class PreviewImage():
         if not self.thumbnail:
             filename = os.path.split(self.file)[-1]
             ax.set_title(filename + ' Int: {}'.format(np.int(integration_number)))
-
-        # If thumbnail, turn off the axes
-        if self.thumbnail:
-            plt.axis('off')
-
-        return fig
 
     def make_image(self):
         """
@@ -296,24 +297,23 @@ class PreviewImage():
             else:
                 outdir = self.output_directory
             outfile = os.path.join(outdir, infile.split('.')[0] + suffix)
-            fig = self.make_figure(frame, i, minval, maxval, self.scaling.lower())
-            self.save_image(fig, outfile)
+            self.make_figure(frame, i, minval, maxval, self.scaling.lower())
+            self.save_image(outfile)
             plt.close()
 
-    def save_image(self, image, outfile):
+
+    def save_image(self, outfile):
         """
         Save an image in the requested output format and sets the
         appropriate permissions
 
         Parameters:
         ----------
-        image : obj
-            A matplotlib figure object
         outfile : str
             Output filename
         """
 
-        image.savefig(outfile, bbox_inches='tight')
+        plt.savefig(outfile, bbox_inches='tight', pad_inches=0)
         permissions.set_permissions(outfile, verbose=False)
 
         # If the image is a thumbnail, rename to '.thumb'
