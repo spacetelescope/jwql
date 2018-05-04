@@ -74,16 +74,21 @@ release = '0.4.1'
 # Usually you set "language" from the command line for these cases.
 language = None
 
+# This is a fix for warnings because of sphinx-autodoc interaction for classes, however it removes
+# method table from the docs.
+numpydoc_show_class_members = False
+
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = []
+exclude_patterns = ['api/*.rst']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
+
 
 
 # -- Options for HTML output ----------------------------------------------
