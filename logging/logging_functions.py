@@ -1,35 +1,18 @@
-""" Logging functions for the James Webb Quicklook automation platform
-
-Working notes: 
-1) Will definitely want the same type of decorators that WFC3 QL uses - one
-to track failures and one to track useful system information. Are there
-any other things we will want to create a decorator for? 
-
-
-2) Also which module version information will we want to track with our info 
-decorator? 
-
---> I updated this portion of the code to include everything from our 
-`setup.py` under the required section there. 
---> Do we want ginga in there too?
-
-3) Do we want a dev and production mode as well? 
-
-TO DO: 
-Create a wiki page for how to use logging
-finish the doc strings
-make sure pep8 compliant
-open pull request
+""" Logging functions for the James Webb Quicklook automation platform.
 
 Authors
 -------
 Catherine Martlin 2018
-Alek Viana, 2013 (WFC3 QL Version)
+Alex Viana, 2013 (WFC3 QL Version)
  
 
 Use
 ___
-Things will be written to '/grp/jwst/ins/jwql/logs/<module>/<module_log_filename>'
+Things will be written to '/grp/jwst/ins/jwql/logs/dev/<module>/<module_log_filename>'
+for now. 
+
+Once we have a live production environment and codebase we'll have those
+logs sent to '/grp/jwst/ins/jwql/logs/<module>/<module_log_filename>'. 
 
 
 Dependencies
@@ -98,9 +81,7 @@ def make_log_file(module, production_mode=True, path='./'):
     """Create the log file name based on the module name.
 
     The name of the ``log_file`` is a combination of the name of the
-    module being logged and the current datetime.  If the code is being
-    executed by ``jwqladmin``, it goes to the production area.
-    Otherwise it goes to the ``_______`` area.
+    module being logged and the current datetime.
 
     Parameters
     ----------
@@ -286,34 +267,6 @@ def print_or_log(message, production):
         logging.info(message)
     else:
         print(message)
-
-# -----------------------------------------------------------------------------
-
-def production_only(func, prod_serv):
-    """Decorator that only executes the decorated code on the
-    production server.
-
-    Parameters
-    ----------
-    func : func
-        The function to decorate.
-    prod_serv : str
-        The name of the production server
-
-    Returns
-    -------
-    wrapped : func
-        The wrapped function.
-    """
-
-    @wraps(func)
-    def wrapped():
-        if socket.gethostname() == prod_serv:
-            func()
-        else:
-            print('Dev mode. Not running ' + func.__name__)
-
-    return wrapped
 
 
 
