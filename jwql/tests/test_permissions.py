@@ -17,6 +17,7 @@ Use
 
 """
 
+import grp
 import os
 import pytest
 
@@ -100,6 +101,7 @@ def test_file(test_dir=TEST_DIRECTORY):
         os.rmdir(test_dir)
 
 
+# @pytest.mark.xfail
 def test_file_group(test_file):
     """Create a file with the standard permissions ('-rw-r--r--') and default group.
 
@@ -116,8 +118,9 @@ def test_file_group(test_file):
     owner = get_owner_string(test_file)
     group = get_group_string(test_file)
 
-    test_group = 'science'
-    # test_group = 'staff'
+    # attempt to retrieve a group name different from default
+    group_index = 0
+    test_group = grp.getgrgid(os.getgroups()[group_index]).gr_name
 
     set_permissions(test_file, group=test_group, owner=owner)
     assert has_permissions(test_file, group=test_group, owner=owner)
