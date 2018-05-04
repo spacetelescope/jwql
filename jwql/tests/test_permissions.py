@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
+
 """Tests for the permissions module.
 
 Authors
@@ -10,11 +11,12 @@ Authors
 Use
 ---
 
-    These tests can be run via the command line (omit the -s to suppress verbose output to stdout):
+    These tests can be run via the command line (omit the ``-s`` to
+    suppress verbose output to ``stdout``):
 
     ::
-        pytest -s test_permissions.py
 
+        pytest -s test_permissions.py
 """
 
 import grp
@@ -41,7 +43,6 @@ def test_directory(test_dir=TEST_DIRECTORY):
     -------
     test_dir : str
         Path to directory used for testing
-
     """
     os.mkdir(test_dir)  # creates directory with default mode=511
 
@@ -52,15 +53,16 @@ def test_directory(test_dir=TEST_DIRECTORY):
 
 
 def test_directory_permissions(test_directory):
-    """Create a directory with the standard permissions ('-rw-r--r--').
+    """Create a directory with the standard permissions
+    ``('-rw-r--r--')``.
 
-    Set the default permissions defined in permissions.py. Assert that these were set correctly.
+    Set the default permissions defined in ``permissions.py``. Assert
+    that these were set correctly.
 
     Parameters
     ----------
     test_directory : str
         Path of directory used for testing
-
     """
     # Get owner and group on the current system.This allows to implement the tests
     # independently from the user.
@@ -85,7 +87,6 @@ def test_file(test_dir=TEST_DIRECTORY):
     -------
     filename : str
         Path of file used for testing
-
     """
     if not os.path.isdir(test_dir):
         os.mkdir(test_dir)
@@ -103,16 +104,17 @@ def test_file(test_dir=TEST_DIRECTORY):
 
 # @pytest.mark.xfail
 def test_file_group(test_file):
-    """Create a file with the standard permissions ('-rw-r--r--') and default group.
+    """Create a file with the standard permissions ``('-rw-r--r--')``
+    and default group.
 
-    Modify the group and set the default permissions defined in permissions.py.
-    Assert that both group and permissions were set correctly.
+    Modify the group and set the default permissions defined in
+    ``permissions.py``.  Assert that both group and permissions were
+    set correctly.
 
     Parameters
     ----------
     test_file : str
         Path of file used for testing
-
     """
     # Get owner and group on the current system.
     owner = get_owner_string(test_file)
@@ -131,15 +133,15 @@ def test_file_group(test_file):
 
 
 def test_file_permissions(test_file):
-    """Create a file with the standard permissions ('-rw-r--r--').
+    """Create a file with the standard permissions ``('-rw-r--r--')``.
 
-    Set the default permissions defined in permissions.py. Assert that these were set correctly.
+    Set the default permissions defined in ``permissions.py``. Assert
+    that these were set correctly.
 
     Parameters
     ----------
     test_file : str
         Path of file used for testing
-
     """
     # Get owner and group on the current system.
     owner = get_owner_string(test_file)
