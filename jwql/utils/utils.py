@@ -1,4 +1,4 @@
-"""Various utility functions for the jwql project.
+"""Various utility functions for the ``jwql`` project.
 
 Authors
 -------
@@ -11,8 +11,10 @@ Use
 
     This module can be imported as such:
 
-    >>> import utils
-    settings = get_config()
+    ::
+
+        import utils
+        settings = get_config()
 
 References
 ----------
@@ -29,8 +31,8 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 
 
 def get_config():
-    """Return a dictionary that holds the contents of the jwql config
-    file.
+    """Return a dictionary that holds the contents of the ``jwql``
+    config file.
 
     Returns
     -------
