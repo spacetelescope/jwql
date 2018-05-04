@@ -2,8 +2,12 @@
 
 """Generate preview images for all files in the ``jwql`` filesystem.
 
-Execution of this script will generate preview images for each file in
-the ``jwql`` filesystem, if it does not already exist.
+Execution of this script will generate preview images and thumbnail
+images for each file in the ``jwql`` filesystem.  Preview images have
+axes labels, titles, and colorbars, wheras thumbnail images are
+smaller and contain no labels.  Images are saved into the
+``preview_image_filesystem`` and ``thumbnail_filesystem``, organized
+by subdirectories pertaining to the ``program_id`` in the filenames.
 
 Authors
 -------
@@ -19,12 +23,6 @@ Use
     ::
 
         python generate_preview_images.py
-
-Notes
------
-
-    Some of this code could be simplified by using a filename parser
-    utility function, which is in the works for ``jwql``.
 """
 
 import glob
@@ -47,7 +45,11 @@ def generate_preview_images():
     for filename in filenames:
 
         # Determine the save location
-        identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
+        try:
+            identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
+        except ValueError as error:
+            identifier = os.path.basename(filename).split('.fits')[0]
+
         output_directory = os.path.join(preview_image_filesystem, identifier)
         thumbnail_output_directory = os.path.join(thumbnail_filesystem, identifier)
 
