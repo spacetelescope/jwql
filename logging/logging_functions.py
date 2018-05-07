@@ -17,7 +17,8 @@ logs sent to '/grp/jwst/ins/jwql/logs/<module>/<module_log_filename>'.
 
 Dependencies
 ____________
-
+The user must have a configuration file named ``config.json``
+placed in the current working directory.
 
 References
 __________
@@ -35,6 +36,7 @@ _____
 import datetime
 import getpass
 import glob
+import importlib
 import logging
 import os
 import pwd
@@ -141,49 +143,24 @@ def log_info(func):
         logging.info('Python Version: ' + sys.version.replace('\n', ''))
         logging.info('Python Executable Path: ' + sys.executable)
 
+
+        with open("../setup.py") as setup:   # When I've got the config file up, change this to not be a path. 
+            for line in setup:
+                if line[0:8] == "REQUIRES":
+                    mod_required = line[12:-2]
+                    mod_list = mod_required.split(',')
+
         # Log common module version information
-        try:
-            import astropy
-            logging.info('astropy Version: ' + astropy.__version__)
-            logging.info('astropy Path: ' + astropy.__path__[0])
-        except ImportError as err:
-            logging.warning(err.message)
-        try:
-            import django
-            logging.info('django Version: ' + django.__version__)
-            logging.info('django Path: ' + django.__path__[0])
-        except ImportError as err:
-            logging.warning(err.message)
-        try:
-            import matplotlib
-            logging.info('matplotlib Version: ' + matplotlib.__version__)
-            logging.info('matplotlib Path: ' + matplotlib.__path__[0])
-        except ImportError as err:
-            logging.warning(err.message)
-        try:
-            import numpy
-            logging.info('numpy Version: ' + numpy.__version__)
-            logging.info('numpy Path: ' + numpy.__path__[0])
-        except ImportError as err:
-            logging.warning(err.message)
-        try:
-            import sphinx
-            logging.info('sphinx Version: ' + sphinx.__version__)
-            logging.info('sphinx Path: ' + sphinx.__path__[0])
-        except ImportError as err:
-            logging.warning(err.message)
-        try:
-            import sqlalchemy
-            logging.info('sqlalchemy Version: ' + sqlalchemy.__version__)
-            logging.info('sqlalchemy Path: ' + sqlalchemy.__path__[0])
-        except ImportError as err:
-            logging.warning(err.message)
-        try:
-            import yaml
-            logging.info('yaml Version: ' + yaml.__version__)
-            logging.info('yaml Path: ' + yaml.__path__[0])
-        except ImportError as err:
-            logging.warning(err.message)
+        for mod in mod_list:
+            mod = mod.replace('"', '')
+            mod = mod.replace("'", '')
+            mod = mod.replace(' ', '')
+            try: 
+                m = importlib.import_module(mod)
+                logging.info(mod + ' Version: ' + m.__version__)
+                logging.info(mod + ' Path: ' + m.__path__[0])
+            except: ImportError as err:
+                logging.warning(err.message)
 
         # Call the function and time it
         t1_cpu = time.clock()
