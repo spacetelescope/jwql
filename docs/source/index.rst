@@ -9,7 +9,7 @@ Welcome to jwql's documentation!
 General JWQL description here.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
 API documentation
@@ -19,7 +19,10 @@ API documentation
    :maxdepth: 1
    :caption: Contents:
 
-   api_docs.rst	     
+   permissions.rst
+   preview_image.rst
+   utils.rst
+   tests.rst
 	     
 
 Indices and tables
