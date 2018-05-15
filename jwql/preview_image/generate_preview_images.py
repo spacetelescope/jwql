@@ -61,30 +61,20 @@ def generate_preview_images():
             os.makedirs(thumbnail_output_directory)
             permissions.set_permissions(thumbnail_output_directory, verbose=False)
 
-        # Create and save the preview image
-        try:
-            im = PreviewImage(filename, "SCI")
-            im.clip_percent = 0.01
-            im.scaling = 'log'
-            im.cmap = 'viridis'
-            im.output_format = 'jpg'
-            im.output_directory = output_directory
-            im.make_image()
-        except ValueError as error:
-            print(error)
-
-        # Create and save a thumbnail of the preview image
-        try:
-            im = PreviewImage(filename, "SCI")
-            im.clip_percent = 0.01
-            im.scaling = 'log'
-            im.cmap = 'viridis'
-            im.output_directory = thumbnail_output_directory
-            im.thumbnail = True
-            im.make_image()
-        except ValueError as error:
-            print(error)
-
+        # Create and save the preview image and thumbnail
+        args = zip((False, output_directory), (True, thumbnail_output_directory))
+        for thumbnail_bool, directory in args:
+            try:
+                im = PreviewImage(filename, "SCI")
+                im.clip_percent = 0.01
+                im.scaling = 'log'
+                im.cmap = 'viridis'
+                im.output_format = 'jpg'
+                im.thumbnail = thumbnail_bool
+                im.output_directory = directory
+                im.make_image()
+            except ValueError as error:
+                print(error)
 
 if __name__ == '__main__':
 
