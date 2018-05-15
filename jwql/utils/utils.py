@@ -72,7 +72,7 @@ def filename_parser(filename):
                    "(?P<visit>\d{3})"
                    "_(?P<visit_group>\d{2})"
                    "(?P<parallel_seq_id>\d{1})"
-                   "(?P<activity>\d{2})"
+                   "(?P<activity>\w{2})"
                    "_(?P<exposure_id>\d+)"
                    "_(?P<detector>\w+)"
                    "_(?P<suffix>\w+).*")
