@@ -62,7 +62,7 @@ def generate_preview_images():
             permissions.set_permissions(thumbnail_output_directory, verbose=False)
 
         # Create and save the preview image and thumbnail
-        args = zip((False, output_directory), (True, thumbnail_output_directory))
+        args = zip((False, True), (output_directory, thumbnail_output_directory))
         for thumbnail_bool, directory in args:
             try:
                 im = PreviewImage(filename, "SCI")
