@@ -5,31 +5,33 @@ Create a preview image from a fits file containing an observation.
 
 This module creates and saves a "preview image" from a fits file
 that contains a JWST observation. Data from the user-supplied
-`extension` of the file are read in, along with the `PIXELDQ`
+``extension`` of the file are read in, along with the ``PIXELDQ``
 extension if present. For each integration in the exposure, the
 first group is subtracted from the final group in order to create
 a difference image. The lower and upper limits to be displayed are
-defined as the `clip_percent` and (1. - `clip_percent') percentile
-signals. Matplotlib is then used to display a linear- or log-stretched
-version of the image, with accompanying colorbar. The image is then
-saved.
+defined as the ``clip_percent`` and (1. - ``clip_percent``) percentile
+signals. ``matplotlib`` is then used to display a linear- or
+log-stretched version of the image, with accompanying colorbar. The
+image is then saved.
 
 Authors:
 --------
 
-    Bryan Hilbert
+    - Bryan Hilbert
 
 Use:
 ----
 
     This module can be imported as such:
 
-    >>> from jwql.preview_image.preview_image import PreviewImage
-    im = PreviewImage(my_file, "SCI")
-    im.clip_percent = 0.01
-    im.scaling = 'log'
-    im.output_format = 'jpg'
-    im.make_image()
+    ::
+
+        from jwql.preview_image.preview_image import PreviewImage
+        im = PreviewImage(my_file, "SCI")
+        im.clip_percent = 0.01
+        im.scaling = 'log'
+        im.output_format = 'jpg'
+        im.make_image()
 """
 
 import os
@@ -46,6 +48,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+
 
 
 class PreviewImage():
@@ -73,43 +76,42 @@ class PreviewImage():
 
     def difference_image(self, data):
         """
-        Create a difference image from the data. Use last
-        group minus first group in order to maximize signal
-        to noise. With 4D input, make a separate difference
-        image for each integration.
+        Create a difference image from the data. Use last group minus
+        first group in order to maximize signal to noise. With 4D
+        input, make a separate difference image for each integration.
 
-        Parameters:
+        Parameters
         ----------
         data : obj
-            4D numpy ndarray array of floats
+            4D ``numpy`` ``ndarray`` array of floats
 
-        Returns:
-        --------
+        Returns
+        -------
         result : obj
-            3D numpy ndarray containing the difference
-            image(s) from the input exposure
+            3D ``numpy`` ``ndarray`` containing the difference image(s)
+            from the input exposure
         """
         return data[:, -1, :, :] - data[:, 0, :, :]
 
     def find_limits(self, data, pixmap, clipperc):
         """
-        Find the minimum and maximum signal levels after
-        clipping the top and bottom x% of the pixels.
+        Find the minimum and maximum signal levels after clipping the
+        top and bottom ``clipperc`` of the pixels.
 
-        Parameters:
+        Parameters
         ----------
         data : obj
             2D numpy ndarray of floats
         pixmap : obj
             2D numpy ndarray boolean array of science pixel locations
-            (True for science pixels, False for non-science pix)
+            (``True`` for science pixels, ``False`` for non-science
+            pixels)
         clipperc : float
-            Fraction of top and bottom signal levels to clip
-            (e.g. 0.01 means to clip brightest and dimmest 1%
-            of pixels)
+            Fraction of top and bottom signal levels to clip (e.g. 0.01
+            means to clip brightest and dimmest 1% of pixels)
 
-        Returns:
-        --------
+        Returns
+        -------
         results : tuple
             Tuple of floats, minimum and maximum signal levels
         """
@@ -122,24 +124,24 @@ class PreviewImage():
 
     def get_data(self, filename, ext):
         """
-        Read in the data from the given file and extension
-        Also find how many rows/cols of reference pixels are
-        present.
+        Read in the data from the given file and extension.  Also find
+        how many rows/cols of reference pixels are present.
 
-        Parameters:
+        Parameters
         ----------
         filename : str
             Name of fits file containing data
         ext : str
             Extension name to be read in
 
-        Returns:
-        --------
+        Returns
+        -------
         data : obj
             Science data from file. A 2-, 3-, or 4D numpy ndarray
         dq : obj
-            2D ndarray boolean map of reference pixels. Science
-            pixels flagged as True and non-science pixels are False
+            2D ``ndarray`` boolean map of reference pixels. Science
+            pixels flagged as ``True`` and non-science pixels are
+            ``False``
         """
         if os.path.isfile(filename):
             extnames = []
@@ -169,10 +171,11 @@ class PreviewImage():
                     scale, maxsize=8):
         """
         Create the matplotlib figure of the image
-        Parameters:
+
+        Parameters
         ----------
         image : obj
-            2D numpy ndarray of floats
+            2D ``numpy`` ``ndarray`` of floats
         integration_number : int
             Integration number within exposure
         min_value : float
@@ -180,7 +183,12 @@ class PreviewImage():
         max_value : float
             Maximum value for display
         scale : str
-            Image scaling ('log', 'linear')
+            Image scaling (``log``, ``linear``)
+
+        Returns
+        -------
+        result : obj
+            Matplotlib Figure object
         """
 
         # Check the input scaling
@@ -302,9 +310,11 @@ class PreviewImage():
         Save an image in the requested output format and sets the
         appropriate permissions
 
-        Parameters:
+        Parameters
         ----------
-        outfile : str
+        image : obj
+            A ``matplotlib`` figure object
+        fname : str
             Output filename
         """
 
