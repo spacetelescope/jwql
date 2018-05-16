@@ -26,7 +26,7 @@
 
     		// Show the appropriate image
     		var img = document.getElementById("image_viewer")
-    		var jpg_filepath = '{{ staticURL }}{{ file_root|slice:":7" }}/{{ file_root }}_' + type + '_integ0.jpg';
+    		var jpg_filepath = '{{ staticURL }}preview_images/{{ file_root|slice:":7" }}/{{ file_root }}_' + type + '_integ0.jpg';
     		img.src = jpg_filepath;
     		img.alt = jpg_filepath;
 
@@ -44,9 +44,12 @@
     		}
 
     		// Update the image download and header links
-    		document.getElementById("download_fits").href = '{{ staticURL }}{{ file_root|slice:":7" }}/' + fits_filename;
+    		document.getElementById("download_fits").href = '{{ staticURL }}preview_images/{{ file_root|slice:":7" }}/' + fits_filename;
     		document.getElementById("download_jpg").href = jpg_filepath;
     		document.getElementById("view_header").href = "/plots_example/{{ inst }}/" + fits_filename + "/hdr/";
+
+    		// Disable the "left" button, since this will be showing integ0
+    		document.getElementById("int_before").disabled = true;
 
     	};
 
@@ -85,7 +88,7 @@
 
     		// Update the JPG filename
 			var jpg_filename = '{{ file_root }}_' + suffix + '_integ' + new_integration + '.jpg'
-			var jpg_filepath = '{{ staticURL }}{{ file_root|slice:":7" }}/' + jpg_filename
+			var jpg_filepath = '{{ staticURL }}preview_images/{{ file_root|slice:":7" }}/' + jpg_filename
 			document.getElementById("jpg_filename").innerHTML = jpg_filename;
 
 			// Show the appropriate image
@@ -140,15 +143,15 @@
 		    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("left");' disabled>&#9664;</button>
 		    <span class="image_preview">
 		    	<a id="int_count">Displaying integration 1/1</a><br>
-		    	<img id="image_viewer" src='{{ staticURL }}{{ file_root|slice:":7" }}/{{ file_root }}_cal_integ0.jpg' alt='{{ file_root }}_cal_integ0.jpg'>
+		    	<img id="image_viewer" src='{{ staticURL }}preview_images/{{ file_root|slice:":7" }}/{{ file_root }}_cal_integ0.jpg' alt='{{ file_root }}_cal_integ0.jpg'>
 		    </span>
 		    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("right");' disabled>&#9658;</button>
 		</div>
 
 		<!-- Download the images? -->
 	    <p>
-	    	<a id="download_fits" class="btn btn-primary my-2 mx-2" role="button" href='{{ staticURL }}{{ file|slice:":7" }}/{{ file }}' download>Download FITS</a>
-	    	<a id="download_jpg" class="btn btn-primary my-2 mx-2" role="button" href='{{ staticURL }}{{ file|slice:":7" }}/{{ jpg }}' download>Download JPEG</a>
+	    	<a id="download_fits" class="btn btn-primary my-2 mx-2" role="button" href='{{ staticURL }}preview_images/{{ file|slice:":7" }}/{{ file }}' download>Download FITS</a>
+	    	<a id="download_jpg" class="btn btn-primary my-2 mx-2" role="button" href='{{ staticURL }}preview_images/{{ file|slice:":7" }}/{{ jpg }}' download>Download JPEG</a>
 	    	<a class="btn btn-primary my-2 mx-2 disabled" role="button" href="#">Submit Anomaly</a>
 	    </p>
 
