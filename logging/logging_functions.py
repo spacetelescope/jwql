@@ -144,7 +144,7 @@ def log_info(func):
         logging.info('Python Executable Path: ' + sys.executable)
 
 
-        with open("../setup.py") as setup:   # When I've got the config file up, change this to not be a path. 
+        with open("../setup.py") as setup:   # When I've got the config file up, change this to not be a path.
             for line in setup:
                 if line[0:8] == "REQUIRES":
                     mod_required = line[12:-2]
@@ -218,33 +218,6 @@ def log_fail(func):
                 shutil.copyfile(LOG_FILE_LOC, recent_filename)
 
     return wrapped
-
-
-def print_or_log(message, production):
-    """Print or log the given message, depending if the script is being
-    executed in production mode or not.
-
-    When 'production' is True, it is assumed that the user is operating
-    the script in production and thus wishes to have the output of the
-    script be logged.  Otherwise, the message is printed to standard
-    output.
-
-    Parameters:
-        message : string
-            The message to log or print.
-        production : boolean
-            True/False if operating in production or not.
-
-    Outputs:
-        Either a logged message or a printed message to the standard
-        output.
-    """
-
-    if production:
-        logging.info(message)
-    else:
-        print(message)
-
 
 
 
