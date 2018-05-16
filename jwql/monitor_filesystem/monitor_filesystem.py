@@ -1,30 +1,33 @@
 #! /usr/bin/env python
 """
-This module is meant to monitor and gather statistics of the filesystem that hosts
-data for the JW QL tool. This will answer questions such as the total number of files,
-how much disk space is being used, and then plot these values over time.
+This module is meant to monitor and gather statistics of the filesystem 
+that hosts data for the JW QL tool. This will answer questions such as
+the total number of files, how much disk space is being used, and then
+ plot these values over time.
 
 Authors
 -------
     - Misty Cracraft
 Use
 ---
-    This module can be called from scripts with the following import statements:
+    This module can be called from scripts with the following import 
+    statements:
     ::
     from monitor_filesystem import filesys_monitor
     from monitor_filesystem import plot_system_stats
 
-
         
     Required arguments (in a config.json file):
-    ``filepath`` - The path to the input file needs to be in a config.json file
-               in the utils directory
-    "outdir" - The path to the output files needs to be in a config.json file in 
-               the utils directory.
+    ``filepath`` - The path to the input file needs to be in a 
+                config.json file in the utils directory
+    "outdir" - The path to the output files needs to be in a 
+               config.json file in the utils directory.
 
     Required arguments for plotting:
-    "inputfile" - The name of the file to save all of the system statistics to
-    "filebytype" - The name of the file to save stats on fits type files to
+    "inputfile" - The name of the file to save all of the system
+                  statistics to
+    "filebytype" - The name of the file to save stats on fits type 
+                   files to
 
     
 Dependencies
@@ -35,15 +38,17 @@ Dependencies
 
 Notes
 -----
-    The filesys_monitor function queries the file system, calculates the statistics and saves
-    the output file(s) in the directory specified in the config.json file.
+    The filesys_monitor function queries the file system, calculates 
+    the statistics and saves the output file(s) in the directory 
+    specified in the config.json file.
 
-    The plot_system_stats function reads in the two specified files of statistics and plots
-    the figures to an html output page as well as saving them to an output html file.
+    The plot_system_stats function reads in the two specified files of
+    statistics and plots the figures to an html output page as well as
+    saving them to an output html file.
 
 """
 
-
+from collections import defaultdict
 import datetime
 import numpy as np
 import os
@@ -54,16 +59,12 @@ from bokeh.plotting import figure, output_file, show
 from bokeh.layouts import row
 from bokeh.layouts import gridplot
 
+from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 
 
 def filesys_monitor():
    """ Get statistics on filesystem
-
-   Parameters:
-   -----------
-   filesystem and outdir are read in from the config.json file
-
    """
   
    # Get path, directories and files in system and count files in all directories
@@ -74,28 +75,17 @@ def filesys_monitor():
    # set counters to zero
    file_count = 0   
    fitsfiles = 0
-   uncalfiles = 0
-   calfiles = 0
-   ratefiles = 0
-   rateintfiles = 0
-   i2dfiles = 0
 
+   results_dict = defaultdict(int)
    # Walk through all directories recursively and count files 
    for dirpath,dirs,files in os.walk(filesystem):  #.__next__()
-      file_count += len(files)  # find total number of files
-      for x in files:
-         if x.endswith(".fits"):  # find total number of fits files
+      #results_dict['file_count'] += 1
+      file_count += len(files)
+      for filename in files:         
+         if filename.endswith(".fits"):  # find total number of fits files
             fitsfiles += 1
-         if x.endswith("uncal.fits"):  # find total number of fits files
-            uncalfiles += 1
-         if x.endswith("_cal.fits"):  # find total number of fits files
-            calfiles += 1
-         if x.endswith("rate.fits"):  # find total number of fits files
-            ratefiles += 1
-         if x.endswith("rateints.fits"):  # find total number of fits files
-            rateintfiles += 1
-         if x.endswith("i2d.fits"):  # find total number of fits files
-            i2dfiles += 1
+            suffix = filename_parser(filename)['suffix']
+            results_dict[suffix] += 1
 
    #print("There are ",file_count," files.")
    #print("There are ",fitsfiles," fits files.")
@@ -116,28 +106,32 @@ def filesys_monitor():
    #print(now)
 
    # set up output file and write stats
-   output = Path(outdir+'statsfile.txt')
+   output = os.path.join(outdir,'statsfile.txt')
  
-   file = open(output,"a")
-   file.write("{0} {1:15d} {2:15d} {3:15d} {4:15d} {5}\n".format(now,file_count,total,available,used2,percent_used))
+   with open(output,"a") as f:
+    f.write("{0} {1:15d} {2:15d} {3:15d} {4:15d} {5}\n".format(now,file_count,total,
+            available,used2,percent_used))
 
-   file.close()
 
    # set up and read out stats on files by type
-   filesbytype = Path(outdir+'filesbytype.txt')
-   file2 = open(filesbytype,"a+")
-   file2.write("{0} {1} {2} {3} {4} {5}\n".format(fitsfiles,uncalfiles,calfiles,ratefiles,rateintfiles,i2dfiles))
-   file2.close()
+   filesbytype = os.path.join(outdir,'filesbytype.txt')
+   with open(filesbytype,"a+") as f2:
+     f2.write("{0} {1} {2} {3} {4} {5}\n".format(fitsfiles,results_dict['uncal'],
+         results_dict['cal'],results_dict['rate'],results_dict['rateints'],
+         results_dict['i2d']))
+   
 
 def plot_system_stats(stats_file,filebytype):
+   """ Read in the file of saved stats over time and plot them.
 
-   """ 
-       Read in the file of saved stats over time and plot them.
+   Parameters
+   -----------    
 
-       Parameters:
-       outdir: directory where file of stats can be found (read from config file)
-       stats_file: file containing information of stats over time
-       filebytype: file containing information of file counts by type over time
+       stats_file : str
+            file containing information of stats over time
+       filebytype : str
+            file containing information of file counts by type over
+            time
 
    """
    # get path for files
@@ -151,7 +145,8 @@ def plot_system_stats(stats_file,filebytype):
    #print(date)
    #print(sysize.astype(int))
    
-   fitsfiles,uncalfiles,calfiles,ratefiles,rateintsfiles,i2dfiles = np.loadtxt(outdir+filebytype,dtype=str,unpack=True)
+   fitsfiles,uncalfiles,calfiles,ratefiles,rateintsfiles,i2dfiles = np.loadtxt(outdir+filebytype,
+      dtype=str,unpack=True)
 
    # put in proper np array types
    dates = np.array(date,dtype='datetime64')
@@ -174,7 +169,8 @@ def plot_system_stats(stats_file,filebytype):
    p1 = figure(
        tools='pan,box_zoom,reset,save',x_axis_type='datetime',
        title="Total File Counts",x_axis_label='Date',y_axis_label='Count')
-   p1.line(dates,file_count,line_width=2)
+   p1.line(dates,file_count,line_width=2,line_color='blue')
+   p1.circle(dates,file_count,color='blue')
 
    # Plot system stats vs. date
    p2 = figure(
@@ -201,8 +197,8 @@ def plot_system_stats(stats_file,filebytype):
    p3.triangle(dates,rate,color='green')
    p3.line(dates,rateints,legend='rateints fits files',line_color='orange')
    p3.asterisk(dates,rateints,color='orange')
-   p3.line(dates,i2d,legend='i2d fits files',line_color='yellow')
-   p3.x(dates,i2d,color='yellow')
+   p3.line(dates,i2d,legend='i2d fits files',line_color='purple')
+   p3.x(dates,i2d,color='purple')
 
    # create a layout with a grid pattern 
    grid = gridplot([[p1,p2],[p3,None]])
