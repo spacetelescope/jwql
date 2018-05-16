@@ -1,4 +1,4 @@
-"""Various utility functions for the jwql project.
+"""Various utility functions for the ``jwql`` project.
 
 Authors
 -------
@@ -19,7 +19,7 @@ References
 
     Filename parser modifed from Joe Hunkeler:
     https://gist.github.com/jhunkeler/f08783ca2da7bfd1f8e9ee1d207da5ff
-"""
+ """
 
 import json
 import os
@@ -29,8 +29,8 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 
 
 def get_config():
-    """Return a dictionary that holds the contents of the jwql config
-    file.
+    """Return a dictionary that holds the contents of the ``jwql``
+    config file.
 
     Returns
     -------
@@ -72,7 +72,7 @@ def filename_parser(filename):
                    "(?P<visit>\d{3})"
                    "_(?P<visit_group>\d{2})"
                    "(?P<parallel_seq_id>\d{1})"
-                   "(?P<activity>\d{2})"
+                   "(?P<activity>\w{2})"
                    "_(?P<exposure_id>\d+)"
                    "_(?P<detector>\w+)"
                    "_(?P<suffix>\w+).*")

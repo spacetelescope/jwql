@@ -7,3 +7,5 @@ dist/
 jwql.egg-info/
 docs/build/
 docs/source/api/
+.cache
+.pytest_cache
