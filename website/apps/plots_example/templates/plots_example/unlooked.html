@@ -42,13 +42,13 @@
 		    // Update the thumbnail to show the most processed filetype
 		    var img = document.getElementById('thumbnail'+i);
 		    if (suffixes.indexOf("cal") >= 0) {
-		        var jpg_path = '{{ staticURL }}' + file_root.slice(0,7) + '/' + file_root + '_cal_integ0.jpg';
+		        var jpg_path = '{{ staticURL }}thumbnails/' + file_root.slice(0,7) + '/' + file_root + '_cal_integ0.thumb';
 		        img.src = jpg_path;
 		    } else if (suffixes.indexOf("rate") >= 0) {
-		        var jpg_path = '{{ staticURL }}' + file_root.slice(0,7) + '/' + file_root + '_rate_integ0.jpg';
+		        var jpg_path = '{{ staticURL }}thumbnails/' + file_root.slice(0,7) + '/' + file_root + '_rate_integ0.thumb';
 		        img.src = jpg_path;
 		    } else if (suffixes.indexOf("uncal") >= 0) {
-		        var jpg_path = '{{ staticURL }}' + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.jpg';
+		        var jpg_path = '{{ staticURL }}thumbnails/' + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
 		        img.src = jpg_path;
 		    }
 		};
@@ -120,7 +120,11 @@
     	<h3 id='title'>{{ inst }} Images</h3>
     	<script>determine_page_title();</script>
 
-    	<p id='img_show_count'>Showing {{ n_fileids }}/{{ n_fileids }} activities<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black"><span class="help-tip mx-2">i</span></a></p>
+    	<p id='img_show_count'>Showing {{ n_fileids }}/{{ n_fileids }} activities
+    		<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">
+    			<span class="help-tip mx-2">i</span>
+    		</a>
+    	</p>
 
     	<!-- <a id='demo'>test</a> -->
     	<hr>

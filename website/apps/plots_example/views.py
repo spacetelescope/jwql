@@ -47,7 +47,7 @@ from jwql.utils.utils import get_config, filename_parser
 from .db import DatabaseConnection
 
 FILESYSTEM_DIR = get_config()['filesystem']
-PREVIEW_DIR = get_config()['preview_image_dir']
+PREVIEW_DIR = os.path.join(get_config()['jwql_dir'], 'preview_images')
 INST_LIST = ['FGS', 'MIRI', 'NIRCam', 'NIRISS', 'NIRSpec']
 TOOLS = {'FGS': ['Bad Pixel Monitor'],
          'MIRI': ['Dark Current Monitor',
@@ -237,6 +237,7 @@ def unlooked_images(request, inst):
     all_filepaths = [f for f in glob.glob(search_filepath) if instrument_match[inst] in f]
 
     # Determine file ID (everything except suffix)
+    # e.g. jw00327001001_02101_00002_nrca1
     full_ids = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in all_filepaths])
 
     # Group files by ID
@@ -251,7 +252,20 @@ def unlooked_images(request, inst):
                 count += 1
 
                 # Parse filename
-                file_dict = filename_parser(file)
+                try:
+                    file_dict = filename_parser(file)
+                except ValueError:
+                    # Temporary workaround for noncompliant files in filesystem
+                     filedict = {'activity': file_id[17:19],
+                                 'detector': file_id[26:],
+                                 'exposure_id': file_id[20:25],
+                                 'observation': file_id[7:10],
+                                 'parallel_seq_id': file_id[16],
+                                 'program_id': file_id[2:7],
+                                 'suffix': file.split('/')[-1].split('.')[0].split('_')[-1],
+                                 'visit': file_id[10:13],
+                                 'visit_group': file_id[14:16]}
+
 
                 # Determine suffix
                 suffix = file_dict['suffix']
