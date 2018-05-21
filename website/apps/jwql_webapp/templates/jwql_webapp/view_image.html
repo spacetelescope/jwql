@@ -1,4 +1,4 @@
-{% extends "plots_example/base.html" %}
+{% extends "jwql_webapp/base.html" %}
 {% block content %}
 
 <head>
@@ -46,7 +46,7 @@
     		// Update the image download and header links
     		document.getElementById("download_fits").href = '{{ staticURL }}preview_images/{{ file_root|slice:":7" }}/' + fits_filename;
     		document.getElementById("download_jpg").href = jpg_filepath;
-    		document.getElementById("view_header").href = "/plots_example/{{ inst }}/" + fits_filename + "/hdr/";
+    		document.getElementById("view_header").href = "/jwql_webapp/{{ inst }}/" + fits_filename + "/hdr/";
 
     		// Disable the "left" button, since this will be showing integ0
     		document.getElementById("int_before").disabled = true;

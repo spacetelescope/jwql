@@ -77,7 +77,7 @@ def home(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'plots_example/home.html'
+    template = 'jwql_webapp/home.html'
     context = {'inst': '',
                'inst_list': INST_LIST,
                'tools': TOOLS}
@@ -99,7 +99,7 @@ def instrument(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'plots_example/instrument.html'
+    template = 'jwql_webapp/instrument.html'
 
     return render(request, template,
                   {'inst': inst,
@@ -124,7 +124,7 @@ def view_image(request, inst, file_root, rewrite=False):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'plots_example/view_image.html'
+    template = 'jwql_webapp/view_image.html'
 
     # Find all of the matching files
     dirname = file_root[:7]
@@ -189,7 +189,7 @@ def view_header(request, inst, file):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'plots_example/view_header.html'
+    template = 'jwql_webapp/view_header.html'
 
     dirname = file[:7]
     fits_filepath = os.path.join(FILESYSTEM_DIR, dirname, file)
@@ -220,7 +220,7 @@ def unlooked_images(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'plots_example/unlooked.html'
+    template = 'jwql_webapp/unlooked.html'
 
     # Query files from MAST database
     # filepaths, filenames = DatabaseConnection('MAST', instrument=inst).\

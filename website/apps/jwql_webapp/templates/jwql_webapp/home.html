@@ -1,4 +1,4 @@
-{% extends "plots_example/base.html" %}
+{% extends "jwql_webapp/base.html" %}
 {% block content %}
 
 <head>
@@ -30,7 +30,7 @@
 				{% if inst_list %}
 					{% for inst in inst_list %}
 						<!-- <div class="col-md-2 text-center"> -->
-							<a class='instrument_panel' href="{% url 'plots_example:instrument' inst %}">
+							<a class='instrument_panel' href="{% url 'jwql_webapp:instrument' inst %}">
 
                                 <!-- <p class="btn btn-primary" role="button">{{ inst }}</p> -->
                                 <p class="instrument_name">{{ inst }}</p>
@@ -38,7 +38,7 @@
                                 <div class="frame">
                                 <!-- <p class="btn btn-primary" role="button">{{ inst }}</p> -->
 <!--  -->
-                                    <span class="helper"></span><img src="{{staticURL}}/plots_example/images/{{inst}}logo.png" width=100 style="vertical-align: middle">
+                                    <span class="helper"></span><img src="{{staticURL}}/jwql_webapp/images/{{inst}}logo.png" width=100 style="vertical-align: middle">
                                 </div><br>
 
 							</a>

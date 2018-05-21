@@ -5,7 +5,7 @@
 	{% static "" as staticURL %}
 	<head>
 		<!-- JWQL Icon as website image -->
-		<link rel="shortcut icon" href="{{ staticURL }}plots_example/images/favicon.ico?{% now 'U' %}" />
+		<link rel="shortcut icon" href="{{ staticURL }}jwql_webapp/images/favicon.ico?{% now 'U' %}" />
 
 		<!-- Bootstrap core CSS -->
 		<link rel="stylesheet" href="{{staticURL}}css/bootstrap.min.css?{% now 'U' %}">
@@ -23,8 +23,8 @@
 	<body>
 		<!-- Navigation Bar -->
 		<nav class="navbar navbar-expand-md fixed-top">
-		    <a class="navbar-left"><img src="{% static 'plots_example/images/JWQLlogo_small.png' %}" height=35 width=35></a>
-	        <a class="navbar-brand" href="{% url 'plots_example:home' %}">JWST Quicklook</a>
+		    <a class="navbar-left"><img src="{% static 'jwql_webapp/images/JWQLlogo_small.png' %}" height=35 width=35></a>
+	        <a class="navbar-brand" href="{% url 'jwql_webapp:home' %}">JWST Quicklook</a>
 	        <a class="navbar-brand" href="#"><font color='#f2ce3a'>{{ inst }}</font></a>
 	        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
 	          <span class="navbar-toggler-icon"></span>
@@ -33,16 +33,16 @@
 	        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
 	        	<ul class="navbar-nav mr-auto">
 	          		<li class="nav-item active">
-	            		<a class="nav-link" href="{% url 'plots_example:home' %}">Home<span class="sr-only">(current)</span></a>
+	            		<a class="nav-link" href="{% url 'jwql_webapp:home' %}">Home<span class="sr-only">(current)</span></a>
 	          		</li>
 	          		{% for inst_key, inst_tools in tools.items %}
 		          	<li class="dropdown">
-		            	<a class="nav-link dropdown-toggle disabled" href="{% url 'plots_example:instrument' inst_key %}" id="dropdown"{{ inst_key }} aria-haspopup="true" aria-expanded="false">{{ inst_key }}</a>
+		            	<a class="nav-link dropdown-toggle disabled" href="{% url 'jwql_webapp:instrument' inst_key %}" id="dropdown"{{ inst_key }} aria-haspopup="true" aria-expanded="false">{{ inst_key }}</a>
 		            	<div class="dropdown-menu" aria-labelledby="dropdown01">
 			            	<a class='dropdown-heading mx-3'>Images</a>
-			            	<a class="dropdown-item" href="{% url 'plots_example:unlooked_im' inst_key %}">Unlooked Images</a>
+			            	<a class="dropdown-item" href="{% url 'jwql_webapp:unlooked_im' inst_key %}">Unlooked Images</a>
 			            	<a class="dropdown-item" href="#">Image Anomalies</a>
-			            	<a class="dropdown-item" href="{% url 'plots_example:archived_im' inst_key %}">Archived Images</a>
+			            	<a class="dropdown-item" href="{% url 'jwql_webapp:archived_im' inst_key %}">Archived Images</a>
 			            	<div class="dropdown-divider"></div>
 			            	<a class='dropdown-heading mx-3'>Monitors</a>
 			            	{% for tool in inst_tools %}
@@ -54,10 +54,10 @@
 	        	</ul>
 	        </div>
 
-	    	<a class="navbar-right" href="https://github.com/spacetelescope/jwql" target="_blank"><img src="{% static 'plots_example/images/githublogo.svg' %}" height=25 width=25></a>
+	    	<a class="navbar-right" href="https://github.com/spacetelescope/jwql" target="_blank"><img src="{% static 'jwql_webapp/images/githublogo.svg' %}" height=25 width=25></a>
 	    </nav>
 	    <div class="banner">
-	    	<img src="{% static 'plots_example/images/hubble_image.jpg' %}">
+	    	<img src="{% static 'jwql_webapp/images/hubble_image.jpg' %}">
 	    </div>
 
     	{% block content %}
@@ -66,7 +66,7 @@
 		<footer class="footer text-center">
 	      	<div class="container">
 	      		<a href="http://www.stsci.edu/" target="_blank">
-	        		<img src="{% static 'plots_example/images/STScIlogo_dark.png' %}"  height=36>
+	        		<img src="{% static 'jwql_webapp/images/STScIlogo_dark.png' %}"  height=36>
 	        	</a>
 	      	</div>
 	    </footer>

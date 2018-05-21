@@ -1,4 +1,4 @@
-{% extends "plots_example/base.html" %}
+{% extends "jwql_webapp/base.html" %}
 {% block content %}
 
 <head>
@@ -6,6 +6,7 @@
 
 	<!-- Custom styles and scripts for this template -->
 	<link href="{{staticURL}}css/quicklook-unlooked.css?{% now 'U' %}" rel="stylesheet">
+	<!-- <link href="{{staticURL}}css/loader.css?{% now 'U' %}" rel="stylesheet"> -->
 
 </head>
 
@@ -163,13 +164,36 @@
 
 		<hr>
 
+		<!-- <div id="loading" class='text-center'>
+	        <div class="cssload-container">
+				<div class="cssload-circle-1">
+					<div class="cssload-circle-2">
+						<div class="cssload-circle-3">
+							<div class="cssload-circle-4">
+								<div class="cssload-circle-5">
+									<div class="cssload-circle-6">
+										<div class="cssload-circle-7">
+											<div class="cssload-circle-8">
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+	        <br>
+	        Loading thumbnails...
+	    </div> -->
+
 		<!-- Display the data -->
-		<div id='thumbnail-array'>
+		<div id='thumbnail-array'><!--  style="display: none"> -->
 		{% for i, file in thumbnail_zipped_list %}
-			{% url 'plots_example:view_image' inst file.file_root as viewimage_URL %}
+			{% url 'jwql_webapp:view_image' inst file.file_root as viewimage_URL %}
 			<div class="thumbnail" detector="{{file.detector}}" proposal="{{file.program_id}}" file_root="{{file.file_root}}", exp_start="{{file.exp_start}}">
 				<a href='{{ viewimage_URL }}'>
-					<img id='thumbnail{{i}}' onerror="this.src='{{staticURL}}plots_example/images/imagenotfound.png'" width=100%>
+					<img id='thumbnail{{i}}' onerror="this.src='{{staticURL}}jwql_webapp/images/imagenotfound.png'" width=100%>
 					<script>determine_filetype_for_thumbnail("{{file.suffixes}}", "{{i}}", "{{file.file_root}}");</script>
 
 					<div class='color-fill' ></div>
@@ -193,6 +217,16 @@
 
 	<!-- Needed javascript -->
 	<script src="{{staticURL}}js/tinysort.min.js?{% now 'U' %}"></script>
+
+	<!-- <script type="text/javascript">
+    function preloader(){
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("thumbnail-array").style.display = "block";
+        // $(".thumb img").attr('src', '/../static/img/wow.png');
+    }
+    window.onload = preloader;
+    // document.getElementById("thumbnail-array").onload = preloader;
+	</script> -->
 
 
 </body>
