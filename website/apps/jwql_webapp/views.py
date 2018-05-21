@@ -293,6 +293,31 @@ def unlooked_images(request, inst):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
+def split_files(file_list, type):
+    """JUST FOR USE DURING DEVELOPMENT WITH FILESYSTEM
+
+    Splits the files in the filesystem into "unlooked" and
+    "archived", with the "unlooked" images being the 10%
+    most recent ones.
+    """
+    exp_times = []
+    for file in file_list:
+        hdr = fits.getheader(file, ext=0)
+        exp_start = hdr['EXPSTART']
+        exp_times.append(exp_start)
+
+    exp_times_sorted = sorted(exp_times)
+    i_cutoff = int(len(exp_times) * .1)
+    t_cutoff = exp_times_sorted[i_cutoff]
+
+    mask_unlooked = np.array([t < t_cutoff for t in exp_times])
+
+    if type == 'unlooked':
+        print('ONLY RETURNING {} "UNLOOKED" FILES OF {} ORIGINAL FILES'.format(len([m for m in mask_unlooked if m]), len(file_list)))
+        return [f for i, f in enumerate(file_list) if mask_unlooked[i]]
+    elif type == 'archive':
+        print('ONLY RETURNING {} "ARCHIVED" FILES OF {} ORIGINAL FILES'.format(len([m for m in mask_unlooked if not m]), len(file_list)))
+        return [f for i, f in enumerate(file_list) if not mask_unlooked[i]]
 
 
 def thumbnails(request, inst, proposal=None):
@@ -329,6 +354,13 @@ def thumbnails(request, inst, proposal=None):
     search_filepath = os.path.join(FILESYSTEM_DIR, '*', '*.fits')
     all_filepaths = [f for f in glob.glob(search_filepath) if instrument_match[inst] in f]
 
+    # JUST FOR DEVELOPMENT
+    # Split files into "archived" and "unlooked"
+    if proposal is not None:
+        page_type = 'archive'
+    else:
+        page_type = 'unlooked'
+    all_filepaths = split_files(all_filepaths, page_type)
 
     # Determine file ID (everything except suffix)
     # e.g. jw00327001001_02101_00002_nrca1
