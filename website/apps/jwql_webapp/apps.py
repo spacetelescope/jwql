@@ -13,7 +13,7 @@ Use
 ---
     This module is called in ``settings.py`` as such:
     ::
-        INSTALLED_APPS = ['apps.plots_example.PlotsExampleConfig',
+        INSTALLED_APPS = ['apps.jwql_webapp.PlotsExampleConfig',
         ...
         ]
 
@@ -27,4 +27,4 @@ For more information please see:
 from django.apps import AppConfig
 
 class PlotsExampleConfig(AppConfig):
-    name = 'plots_example'
+    name = 'jwql_webapp'

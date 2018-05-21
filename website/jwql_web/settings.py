@@ -41,7 +41,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'apps.plots_example',
+    'apps.jwql_webapp',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
