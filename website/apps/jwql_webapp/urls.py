@@ -45,8 +45,9 @@ app_name = 'jwql_webapp'
 urlpatterns = [
     path('', views.home, name='home'),
     path('<str:inst>/', views.instrument, name='instrument'),
-    path('<str:inst>/archived/', views.unlooked_images, name='archived_im'),
-    path('<str:inst>/unlooked/', views.unlooked_images, name='unlooked_im'),
+    path('<str:inst>/archive/', views.archived_proposals, name='archive'),
+    path('<str:inst>/unlooked/', views.unlooked_images, name='unlooked'),
     path('<str:inst>/<str:file_root>/', views.view_image, name='view_image'),
     path('<str:inst>/<str:file>/hdr/', views.view_header, name='view_header'),
+    path('<str:inst>/archive/<str:proposal>', views.archive_thumbnails, name='archive_thumb'),
 ]

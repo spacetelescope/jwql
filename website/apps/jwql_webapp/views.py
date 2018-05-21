@@ -44,7 +44,6 @@ import numpy as np
 from jwql.preview_image.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser
 
-from .db import DatabaseConnection
 
 FILESYSTEM_DIR = get_config()['filesystem']
 PREVIEW_DIR = os.path.join(get_config()['jwql_dir'], 'preview_images')
@@ -63,6 +62,69 @@ TOOLS = {'FGS': ['Bad Pixel Monitor'],
                      'Detector Health Monitor', 'Ref Pix Monitor',
                      'Internal Lamp Monitor', 'Instrument Model Updates',
                      'Failed-open Shutter Monitor']}
+
+
+def archived_proposals(request, inst):
+    """Generate the page listing all archived proposals in the database
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    template = 'jwql_webapp/archive.html'
+
+    # Query files from MAST database
+    # filepaths, filenames = DatabaseConnection('MAST', instrument=inst).\
+    #     get_files_for_instrument(inst)
+
+    # Find all of the matching files in filesytem
+    # (TEMPORARY WHILE THE MAST STUFF IS BEING WORKED OUT)
+    instrument_match = {'FGS': 'guider',
+                        'MIRI': 'mir',
+                        'NIRCam': 'nrc',
+                        'NIRISS': 'nis',
+                        'NIRSpec': 'nrs'}
+    search_filepath = os.path.join(FILESYSTEM_DIR, '*', '*.fits')
+    all_filepaths = [f for f in glob.glob(search_filepath) if instrument_match[inst] in f]
+
+    # Determine proposal ID, e.g. 00327
+    proposals = list(set([f.split('/')[-1][2:7] for f in all_filepaths]))
+
+    return render(request, template,
+                  {'inst': inst,
+                   'all_filenames': [os.path.basename(f) for f in all_filepaths],
+                   'tools': TOOLS,
+                   'proposals': proposals})
+
+
+def archive_thumbnails(request, inst, proposal):
+    """Generate the page listing all archived images in the database
+    for a certain proposal
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    proposal : str
+        Number of observing proposal
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    return thumbnails(request, inst, proposal)
+
 
 def home(request):
     """Generate the home page
@@ -84,6 +146,7 @@ def home(request):
 
     return render(request, template, context)
 
+
 def instrument(request, inst):
     """Generate the instrument tool index page
 
@@ -104,6 +167,7 @@ def instrument(request, inst):
     return render(request, template,
                   {'inst': inst,
                    'tools': TOOLS})
+
 
 def view_image(request, inst, file_root, rewrite=False):
     """Generate the image view page
@@ -172,6 +236,7 @@ def view_image(request, inst, file_root, rewrite=False):
                    'suffixes': suffixes,
                    'n_ints': n_ints})
 
+
 def view_header(request, inst, file):
     """Generate the header view page
 
@@ -205,6 +270,7 @@ def view_header(request, inst, file):
                    'header': header,
                    'file_root': file_root})
 
+
 def unlooked_images(request, inst):
     """Generate the page listing all unlooked images in the database
 
@@ -220,7 +286,34 @@ def unlooked_images(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'jwql_webapp/unlooked.html'
+    return thumbnails(request, inst)
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# HELPER FUNCTIONS
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+
+
+def thumbnails(request, inst, proposal=None):
+    """Generate a page showing thumbnail images corresponding to
+    activities, from a given proposal
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    proposal : str (optional)
+        Number of APT proposal to filter
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    template = 'jwql_webapp/thumbnails.html'
 
     # Query files from MAST database
     # filepaths, filenames = DatabaseConnection('MAST', instrument=inst).\
@@ -236,9 +329,15 @@ def unlooked_images(request, inst):
     search_filepath = os.path.join(FILESYSTEM_DIR, '*', '*.fits')
     all_filepaths = [f for f in glob.glob(search_filepath) if instrument_match[inst] in f]
 
+
     # Determine file ID (everything except suffix)
     # e.g. jw00327001001_02101_00002_nrca1
     full_ids = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in all_filepaths])
+
+    # If the proposal is specified (i.e. if the page being loaded is
+    # an archive page), only collect data for given proposal
+    if proposal is not None:
+        full_ids = [f for f in full_ids if f[2:7] == proposal]
 
     # Group files by ID
     file_data = []
@@ -256,7 +355,7 @@ def unlooked_images(request, inst):
                     file_dict = filename_parser(file)
                 except ValueError:
                     # Temporary workaround for noncompliant files in filesystem
-                     filedict = {'activity': file_id[17:19],
+                    file_dict = {'activity': file_id[17:19],
                                  'detector': file_id[26:],
                                  'exposure_id': file_id[20:25],
                                  'observation': file_id[7:10],
@@ -265,7 +364,6 @@ def unlooked_images(request, inst):
                                  'suffix': file.split('/')[-1].split('.')[0].split('_')[-1],
                                  'visit': file_id[10:13],
                                  'visit_group': file_id[14:16]}
-
 
                 # Determine suffix
                 suffix = file_dict['suffix']
@@ -292,8 +390,13 @@ def unlooked_images(request, inst):
     file_indices = np.arange(len(file_data))
 
     # Extract information for sorting with dropdown menus
-    dropdown_menus = {'detector': detectors,
-                      'proposal': proposals}
+    # (Don't include the proposal as a sorting parameter if the
+    # proposal has already been specified)
+    if proposal is not None:
+        dropdown_menus = {'detector': detectors}
+    else:
+        dropdown_menus = {'detector': detectors,
+                          'proposal': proposals}
 
     return render(request, template,
                   {'inst': inst,
@@ -301,4 +404,6 @@ def unlooked_images(request, inst):
                    'tools': TOOLS,
                    'thumbnail_zipped_list': zip(file_indices, file_data),
                    'dropdown_menus': dropdown_menus,
-                   'n_fileids': len(file_data)})
+                   'n_fileids': len(file_data),
+                   'prop': proposal})
+

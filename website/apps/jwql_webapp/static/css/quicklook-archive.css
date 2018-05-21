@@ -1,0 +1,25 @@
+/*Don't let the search bar be super long*/
+.input-group {
+    width: 250px;
+}
+
+/*Stop the search box from glowing blue*/
+.form-control:focus {
+    box-shadow: none;
+    border-color: #cfd4da;
+}
+
+/*Space the proposal links out*/
+.proposal {
+    display: inline-block;
+    width: 150px;
+    height: 40px;
+}
+
+/*Make the search icon look like a button*/
+.input-group-text {
+    background-color: #c85108 !important;
+    border-color: #c85108 !important;
+    color: white !important;
+    border-radius: 0px;
+}

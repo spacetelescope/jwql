@@ -5,7 +5,7 @@
 	<title>Unlooked {{ inst }} Images - JWST Quicklook</title>
 
 	<!-- Custom styles and scripts for this template -->
-	<link href="{{staticURL}}css/quicklook-unlooked.css?{% now 'U' %}" rel="stylesheet">
+	<link href="{{staticURL}}css/quicklook-thumbnails.css?{% now 'U' %}" rel="stylesheet">
 	<!-- <link href="{{staticURL}}css/loader.css?{% now 'U' %}" rel="stylesheet"> -->
 
 </head>
@@ -16,18 +16,17 @@
     	<script>
 		// JS function to determine whether the page is archived or unlooked
 		function determine_page_title() {
-		    // Determine if the URL is 'archived' or 'unlooked'
+		    // Determine if the URL is 'archive' or 'unlooked'
 		    var url = document.URL;
 		    var url_split = url.split('/');
 		    var url_title = url_split[url_split.length - 2];
-		    if (url_title == 'archived') {
-		        page_title = 'Archived';
+		    if (url_title == 'archive') {
+		        final_title = 'Archived {{ inst }} Images: Proposal {{ prop }}'
 		    } else if (url_title == 'unlooked') {
-		        page_title = 'Unlooked';
+		        final_title = 'Unlooked {{ inst }} Images';
 		    }
 
 		    // Update the titles accordingly
-		    final_title = page_title + ' {{ inst }} Images'
 		    document.getElementById('title').innerHTML = final_title;
 		    if (document.title != final_title) {
 		        document.title = final_title;
@@ -164,6 +163,7 @@
 
 		<hr>
 
+		<!-- Add an animated "loader" while the images load -->
 		<!-- <div id="loading" class='text-center'>
 	        <div class="cssload-container">
 				<div class="cssload-circle-1">
@@ -188,12 +188,12 @@
 	    </div> -->
 
 		<!-- Display the data -->
-		<div id='thumbnail-array'><!--  style="display: none"> -->
+		<div id='thumbnail-array'>
 		{% for i, file in thumbnail_zipped_list %}
 			{% url 'jwql_webapp:view_image' inst file.file_root as viewimage_URL %}
 			<div class="thumbnail" detector="{{file.detector}}" proposal="{{file.program_id}}" file_root="{{file.file_root}}", exp_start="{{file.exp_start}}">
 				<a href='{{ viewimage_URL }}'>
-					<img id='thumbnail{{i}}' onerror="this.src='{{staticURL}}jwql_webapp/images/imagenotfound.png'" width=100%>
+					<span class="helper"></span><img id='thumbnail{{i}}' onerror="this.src='{{staticURL}}jwql_webapp/images/imagenotfound.png'">
 					<script>determine_filetype_for_thumbnail("{{file.suffixes}}", "{{i}}", "{{file.file_root}}");</script>
 
 					<div class='color-fill' ></div>
@@ -207,7 +207,6 @@
 						<!-- ID: {{file.file_root}}<br> -->
 					</div>
 				</a>
-				<!-- <a -->
 			</div>
 		{% endfor %}
 		</div>
