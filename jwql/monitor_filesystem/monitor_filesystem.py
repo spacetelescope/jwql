@@ -14,11 +14,16 @@ Authors
 Use
 ---
 
-    This module can be called from scripts with the following import
-    statements:
+    This module can be executed from the command line:
     ::
 
-      from monitor_filesystem import filesys_monitor
+        python monitor_filesystem.py
+
+    Alternatively, it can be called from scripts with the following
+    import statements:
+    ::
+
+      from monitor_filesystem import filesystem_monitor
       from monitor_filesystem import plot_system_stats
 
 
@@ -44,9 +49,9 @@ Dependencies
 Notes
 -----
 
-    The ``filesys_monitor`` function queries the filesystem, calculates
-    the statistics and saves the output file(s) in the directory
-    specified in the ``config.json`` file.
+    The ``filesystem_monitor`` function queries the filesystem,
+    calculates the statistics and saves the output file(s) in the
+    directory specified in the ``config.json`` file.
 
     The ``plot_system_stats`` function reads in the two specified files
     of statistics and plots the figures to an html output page as well as
@@ -66,7 +71,7 @@ from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 
 
-def filesys_monitor():
+def filesystem_monitor():
     """ Get statistics on filesystem"""
 
     # Get path, directories and files in system and count files in all directories
@@ -190,3 +195,12 @@ def plot_system_stats(stats_file, filebytype):
     # create a layout with a grid pattern
     grid = gridplot([[p1, p2], [p3, None]])
     show(grid)
+
+
+if __name__ == '__main__':
+
+   inputfile = 'statsfile.txt'
+   filebytype = 'filesbytype.txt'
+
+   filesystem_monitor()
+   plot_system_stats(inputfile,filebytype)
