@@ -94,7 +94,7 @@ def filesystem_monitor():
                 results_dict[suffix] += 1
 
     # Get df style stats on file system
-    out = subprocess.check_output('df .', shell=True)
+    out = subprocess.check_output('df {}'.format(filesystem), shell=True)
     outstring = out.decode("utf-8")  # put into string for parsing from byte format
     parsed = outstring.split(sep=None)
 
@@ -139,10 +139,8 @@ def plot_system_stats(stats_file, filebytype):
     outputs_dir = os.path.join(settings['outputs'], 'filesystem_monitor')
 
     # read in file of statistics
-    date, f_count, sysize, frsize, used, percent = np.loadtxt(outputs_dir + stats_file, dtype=str, unpack=True)
-
-    fits_files, uncalfiles, calfiles, ratefiles, rateintsfiles, i2dfiles = np.loadtxt(outputs_dir + filebytype,
-                                                                                      dtype=str, unpack=True)
+    date, f_count, sysize, frsize, used, percent = np.loadtxt(os.path.join(outputs_dir, stats_file), dtype=str, unpack=True)
+    fits_files, uncalfiles, calfiles, ratefiles, rateintsfiles, i2dfiles = np.loadtxt(os.path.join(outputs_dir, filebytype), dtype=str, unpack=True)
 
     # put in proper np array types
     dates = np.array(date, dtype='datetime64')
@@ -160,7 +158,7 @@ def plot_system_stats(stats_file, filebytype):
 
     # plot the data
     # Plot filecount vs. date
-    output_file(outputs_dir + "filecount.html")
+    output_file(os.path.join(outputs_dir, "filecount.html"))
     p1 = figure(
        tools='pan,box_zoom,reset,save', x_axis_type='datetime',
        title="Total File Counts", x_axis_label='Date', y_axis_label='Count')
