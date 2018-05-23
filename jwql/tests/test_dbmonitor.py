@@ -4,8 +4,7 @@
 Authors
 -------
 
-    - Joe Filippazzo
-
+    Joe Filippazzo
 
 Use
 ---
