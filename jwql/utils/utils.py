@@ -31,10 +31,6 @@ JWST_INSTRUMENTS = ['NIRISS', 'NIRCam', 'NIRSpec', 'MIRI', 'FGS']
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
                      'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
 
-JWST_INSTRUMENTS = ['NIRISS', 'NIRCam', 'NIRSpec', 'MIRI', 'FGS']
-JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
-                     'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
-
 def get_config():
     """Return a dictionary that holds the contents of the jwql config
     file.
