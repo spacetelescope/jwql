@@ -79,20 +79,21 @@ def filesystem_monitor():
     filesystem = settings['filesystem']
     outputs_dir = os.path.join(settings['outputs'], 'filesystem_monitor')
 
-    # set counters to zero
-    file_count = 0
-    fits_files = 0
-
+    # set up dictionaries for output
     results_dict = defaultdict(int)
+    size_dict = defaultdict(float)
     # Walk through all directories recursively and count files
-    for dirpath, dirs, files in os.walk(filesystem):  # .__next__()
-        file_count += len(files)
+    for dirpath, dirs, files in os.walk(filesystem):  
+        results_dict['file_count'] += len(files)  # find number of all files
         for filename in files:
+            file_path = os.path.join(dirpath,filename)
             if filename.endswith(".fits"):  # find total number of fits files
-                fits_files += 1
+                results_dict['fits_files'] += 1
+                size_dict['size_fits'] += os.path.getsize(file_path)
                 suffix = filename_parser(filename)['suffix']
                 results_dict[suffix] += 1
-
+                size_dict[suffix] += os.path.getsize(file_path)
+    
     # Get df style stats on file system
     out = subprocess.check_output('df {}'.format(filesystem), shell=True)
     outstring = out.decode("utf-8")  # put into string for parsing from byte format
@@ -110,19 +111,26 @@ def filesystem_monitor():
     # set up output file and write stats
     output = os.path.join(outputs_dir, 'statsfile.txt')
 
-    with open(output, "a") as f:
-        f.write("{0} {1:15d} {2:15d} {3:15d} {4:15d} {5}\n".format(now, file_count, total,
-                available, used, percent_used))
+    with open(output, "a+") as f:
+        f.write("{0} {1:15d} {2:15d} {3:15d} {4:15d} {5}\n".format(now, results_dict['file_count'],
+                total, available, used, percent_used))
 
     # set up and read out stats on files by type
     filesbytype = os.path.join(outputs_dir, 'filesbytype.txt')
     with open(filesbytype, "a+") as f2:
-        f2.write("{0} {1} {2} {3} {4} {5}\n".format(fits_files, results_dict['uncal'],
-                 results_dict['cal'], results_dict['rate'], results_dict['rateints'],
-                 results_dict['i2d']))
+        f2.write("{0} {1} {2} {3} {4} {5}\n".format(results_dict['fits_files'],
+                 results_dict['uncal'], results_dict['cal'], results_dict['rate'], 
+                 results_dict['rateints'], results_dict['i2d']))
+
+    # set up file size by type file
+    sizebytype = os.path.join(outputs_dir, 'sizebytype.txt')
+    with open(sizebytype, "a+") as f3:
+        f3.write("{0} {1} {2} {3} {4} {5}\n".format(size_dict['size_fits'],
+                 size_dict['uncal'],size_dict['cal'],size_dict['rate'],
+                 size_dict['rateints'],size_dict['i2d']))
 
 
-def plot_system_stats(stats_file, filebytype):
+def plot_system_stats(stats_file, filebytype,sizebytype):
     """Read in the file of saved stats over time and plot them.
 
     Parameters
@@ -132,6 +140,8 @@ def plot_system_stats(stats_file, filebytype):
     filebytype : str
         file containing information of file counts by type over
         time
+    sizebytype : str
+        file containing information on file sizes by type over time
     """
 
     # get path for files
@@ -141,13 +151,14 @@ def plot_system_stats(stats_file, filebytype):
     # read in file of statistics
     date, f_count, sysize, frsize, used, percent = np.loadtxt(os.path.join(outputs_dir, stats_file), dtype=str, unpack=True)
     fits_files, uncalfiles, calfiles, ratefiles, rateintsfiles, i2dfiles = np.loadtxt(os.path.join(outputs_dir, filebytype), dtype=str, unpack=True)
+    fits_sz, uncal_sz, cal_sz, rate_sz, rateints_sz, i2d_sz = np.loadtxt(os.path.join(outputs_dir, sizebytype), dtype=str, unpack=True)
 
-    # put in proper np array types
+    # put in proper np array types and convert to GB sizes
     dates = np.array(date, dtype='datetime64')
-    file_count = f_count.astype(int)
-    systemsize = sysize.astype(int)
-    freesize = frsize.astype(int)
-    usedsize = used.astype(int)
+    file_count = f_count.astype(float) 
+    systemsize = sysize.astype(float) / (1024.**3)
+    freesize = frsize.astype(float) / (1024.**3)
+    usedsize = used.astype(float) / (1024.**3)
 
     fits = fits_files.astype(int)
     uncal = uncalfiles.astype(int)
@@ -155,6 +166,15 @@ def plot_system_stats(stats_file, filebytype):
     rate = ratefiles.astype(int)
     rateints = rateintsfiles.astype(int)
     i2d = i2dfiles.astype(int)
+
+    fits_size = fits_sz.astype(float) / (1024.**3)
+    uncal_size = uncal_sz.astype(float) / (1024.**3)
+    cal_size = cal_sz.astype(float) / (1024.**3)
+    rate_size = rate_sz.astype(float) / (1024.**3)
+    rateints_size = rateints_sz.astype(float) / (1024.**3) 
+    i2d_size = i2d_sz.astype(float) / (1024.**3)
+
+    #print(fits_size)
 
     # plot the data
     # Plot filecount vs. date
@@ -168,10 +188,13 @@ def plot_system_stats(stats_file, filebytype):
     # Plot system stats vs. date
     p2 = figure(
       tools='pan,box_zoom,reset,save', x_axis_type='datetime',
-      title='System stats', x_axis_label='Date', y_axis_label='Bytes')
+      title='System stats', x_axis_label='Date', y_axis_label='GB')
     p2.line(dates, systemsize, legend='Total size', line_color='red')
+    p2.circle(dates, systemsize, color='red')
     p2.line(dates, freesize, legend='Free bytes', line_color='blue')
+    p2.circle(dates, freesize, color='blue')
     p2.line(dates, usedsize, legend='Used bytes', line_color='green')
+    p2.circle(dates, usedsize, color='green')
 
     # Plot fits files by type vs. date
     p3 = figure(
@@ -190,8 +213,25 @@ def plot_system_stats(stats_file, filebytype):
     p3.line(dates, i2d, legend='i2d fits files', line_color='purple')
     p3.x(dates, i2d, color='purple')
 
+    # plot size of total fits files by type
+    p4 = figure(
+       tools='pan,box_zoom,reset,save', x_axis_type='datetime',
+       title="Total File Sizes by Type", x_axis_label='Date', y_axis_label='GB')
+    p4.line(dates, fits_size, legend='Total fits files', line_color='black')
+    p4.circle(dates, fits_size, color='black')
+    p4.line(dates, uncal_size, legend='uncalibrated fits files', line_color='red')
+    p4.diamond(dates, uncal_size, color='red')
+    p4.line(dates, cal_size, legend='calibrated fits files', line_color='blue')
+    p4.square(date, cal_size, color='blue')
+    p4.line(dates, rate_size, legend='rate fits files', line_color='green')
+    p4.triangle(dates, rate_size, color='green')
+    p4.line(dates, rateints_size, legend='rateints fits files', line_color='orange')
+    p4.asterisk(dates, rateints_size, color='orange')
+    p4.line(dates, i2d_size, legend='i2d fits files', line_color='purple')
+    p4.x(dates, i2d_size, color='purple')
+
     # create a layout with a grid pattern
-    grid = gridplot([[p1, p2], [p3, None]])
+    grid = gridplot([[p1, p2], [p3, p4]])
     show(grid)
 
 
@@ -199,6 +239,7 @@ if __name__ == '__main__':
 
    inputfile = 'statsfile.txt'
    filebytype = 'filesbytype.txt'
+   sizebytype = 'sizebytype.txt'
 
    filesystem_monitor()
-   plot_system_stats(inputfile,filebytype)
+   plot_system_stats(inputfile,filebytype,sizebytype)
