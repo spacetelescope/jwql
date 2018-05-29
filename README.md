@@ -86,7 +86,7 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Matthew Bourque (INS)
 - Lauren Chambers (INS)
 - Misty Cracraft (INS)
-- Joseph Filippazo (INS)
+- Joe Filippazzo (INS)
 - Bryan Hilbert (INS)
 - Graham Kanarek (INS)
 - Catherine Martlin (INS)
