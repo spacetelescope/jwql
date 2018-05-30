@@ -10,7 +10,6 @@ Catherine Martlin 2018
 
 Use
 ___
-=======
 Alex Viana, 2013 (WFC3 QL Version)
  
 
@@ -34,6 +33,7 @@ References
 __________
 Code is adopted and updated from python routine logging_functions.py 
 written by Alex Viana, 2013 for the WFC3 Quicklook automation platform.
+
 
 Notes
 _____
