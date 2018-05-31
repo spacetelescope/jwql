@@ -16,11 +16,13 @@ Use
         inventory, keywords = dbmonitor.jwst_inventory()
 """
 
+import os
+
 from astroquery.mast import Mast
-from bkcharts import Donut, show
+from bokeh.charts import Donut, save, output_file
 import pandas as pd
 
-from ..utils.utils import JWST_DATAPRODUCTS, JWST_INSTRUMENTS
+from ..utils.utils import get_config, JWST_DATAPRODUCTS, JWST_INSTRUMENTS
 
 
 def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
@@ -188,6 +190,13 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
                     text_font_size='12pt', hover_text='files',
                     name="JWST Inventory", plot_width=600, plot_height=600)
 
-        show(plt)
+        # Save the plot
+        if caom:
+            output_filename = 'database_monitor_caom.html'
+        else:
+            output_filename = 'database_monitor_jwst.html'
+        outfile = os.path.join(get_config()['outputs'], 'database_monitor', output_filename)
+        output_file(outfile)
+        save(plt)
 
     return table, keywords
