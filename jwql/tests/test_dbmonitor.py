@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-"""Tests for the dbmonitor module.
+"""Tests for the ``dbmonitor`` module.
 
 Authors
 -------
