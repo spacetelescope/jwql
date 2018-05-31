@@ -54,8 +54,8 @@ Notes
     directory specified in the ``config.json`` file.
 
     The ``plot_system_stats`` function reads in the two specified files
-    of statistics and plots the figures to an html output page as well as
-    saving them to an output html file.
+    of statistics and plots the figures to an html output page as well
+    as saving them to an output html file.
 """
 
 from collections import defaultdict
@@ -83,7 +83,7 @@ def filesystem_monitor():
     results_dict = defaultdict(int)
     size_dict = defaultdict(float)
     # Walk through all directories recursively and count files
-    for dirpath, dirs, files in os.walk(filesystem):  
+    for dirpath, dirs, files in os.walk(filesystem):
         results_dict['file_count'] += len(files)  # find number of all files
         for filename in files:
             file_path = os.path.join(dirpath,filename)
@@ -93,7 +93,7 @@ def filesystem_monitor():
                 suffix = filename_parser(filename)['suffix']
                 results_dict[suffix] += 1
                 size_dict[suffix] += os.path.getsize(file_path)
-    
+
     # Get df style stats on file system
     out = subprocess.check_output('df {}'.format(filesystem), shell=True)
     outstring = out.decode("utf-8")  # put into string for parsing from byte format
@@ -119,7 +119,7 @@ def filesystem_monitor():
     filesbytype = os.path.join(outputs_dir, 'filesbytype.txt')
     with open(filesbytype, "a+") as f2:
         f2.write("{0} {1} {2} {3} {4} {5}\n".format(results_dict['fits_files'],
-                 results_dict['uncal'], results_dict['cal'], results_dict['rate'], 
+                 results_dict['uncal'], results_dict['cal'], results_dict['rate'],
                  results_dict['rateints'], results_dict['i2d']))
 
     # set up file size by type file
@@ -155,7 +155,7 @@ def plot_system_stats(stats_file, filebytype,sizebytype):
 
     # put in proper np array types and convert to GB sizes
     dates = np.array(date, dtype='datetime64')
-    file_count = f_count.astype(float) 
+    file_count = f_count.astype(float)
     systemsize = sysize.astype(float) / (1024.**3)
     freesize = frsize.astype(float) / (1024.**3)
     usedsize = used.astype(float) / (1024.**3)
@@ -171,10 +171,8 @@ def plot_system_stats(stats_file, filebytype,sizebytype):
     uncal_size = uncal_sz.astype(float) / (1024.**3)
     cal_size = cal_sz.astype(float) / (1024.**3)
     rate_size = rate_sz.astype(float) / (1024.**3)
-    rateints_size = rateints_sz.astype(float) / (1024.**3) 
+    rateints_size = rateints_sz.astype(float) / (1024.**3)
     i2d_size = i2d_sz.astype(float) / (1024.**3)
-
-    #print(fits_size)
 
     # plot the data
     # Plot filecount vs. date
