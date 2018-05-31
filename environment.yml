@@ -1,4 +1,4 @@
-name: jwqldev
+name: jwql
 channels:
 - defaults
 - http://ssb.stsci.edu/astroconda-dev
