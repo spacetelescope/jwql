@@ -22,6 +22,7 @@ from astroquery.mast import Mast
 from bokeh.charts import Donut, save, output_file
 import pandas as pd
 
+from ..permissions.permissions import set_permissions
 from ..utils.utils import get_config, JWST_DATAPRODUCTS, JWST_INSTRUMENTS
 
 
@@ -198,5 +199,6 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
         outfile = os.path.join(get_config()['outputs'], 'database_monitor', output_filename)
         output_file(outfile)
         save(plt)
+        set_permissions(outfile, verbose=False)
 
     return table, keywords
