@@ -64,9 +64,10 @@ import numpy as np
 import os
 import subprocess
 
-from bokeh.plotting import figure, output_file, show
+from bokeh.plotting import figure, output_file, save
 from bokeh.layouts import gridplot
 
+from jwql.permissions.permissions import set_permissions
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 
@@ -109,11 +110,11 @@ def filesystem_monitor():
     now = datetime.datetime.now().isoformat(sep='T', timespec='auto')  # get date of stats
 
     # set up output file and write stats
-    output = os.path.join(outputs_dir, 'statsfile.txt')
-
-    with open(output, "a+") as f:
+    statsfile = os.path.join(outputs_dir, 'statsfile.txt')
+    with open(statsfile, "a+") as f:
         f.write("{0} {1:15d} {2:15d} {3:15d} {4:15d} {5}\n".format(now, results_dict['file_count'],
                 total, available, used, percent_used))
+    set_permissions(statsfile, verbose=False)
 
     # set up and read out stats on files by type
     filesbytype = os.path.join(outputs_dir, 'filesbytype.txt')
@@ -121,6 +122,7 @@ def filesystem_monitor():
         f2.write("{0} {1} {2} {3} {4} {5}\n".format(results_dict['fits_files'],
                  results_dict['uncal'], results_dict['cal'], results_dict['rate'],
                  results_dict['rateints'], results_dict['i2d']))
+    set_permissions(filesbytype, verbose=False)
 
     # set up file size by type file
     sizebytype = os.path.join(outputs_dir, 'sizebytype.txt')
@@ -128,6 +130,7 @@ def filesystem_monitor():
         f3.write("{0} {1} {2} {3} {4} {5}\n".format(size_dict['size_fits'],
                  size_dict['uncal'], size_dict['cal'], size_dict['rate'],
                  size_dict['rateints'], size_dict['i2d']))
+    set_permissions(sizebytype, verbose=False)
 
 
 def plot_system_stats(stats_file, filebytype, sizebytype):
@@ -176,7 +179,6 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
 
     # plot the data
     # Plot filecount vs. date
-    output_file(os.path.join(outputs_dir, "filecount.html"))
     p1 = figure(
        tools='pan,box_zoom,reset,save', x_axis_type='datetime',
        title="Total File Counts", x_axis_label='Date', y_axis_label='Count')
@@ -230,7 +232,10 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
 
     # create a layout with a grid pattern
     grid = gridplot([[p1, p2], [p3, p4]])
-    show(grid)
+    outfile = os.path.join(outputs_dir, "filecount.html")
+    output_file(outfile)
+    save(grid)
+    set_permissions(outfile, verbose=False)
 
 
 if __name__ == '__main__':
