@@ -7,7 +7,7 @@ VERSION = '0.4.0'
 AUTHORS = 'Matthew Bourque, Sara Ogaz, Joe Filippazzo, Bryan Hilbert, Misty Cracraft, Graham Kanarek'
 AUTHORS += 'Johannes Sahlmann, Lauren Chambers, Catherine Martlin'
 
-REQUIRES = ['astropy', 'django', 'matplotlib', 'numpy', 'python-dateutil', 'sphinx', 'sphinx-automodapi', 'sqlalchemy']
+REQUIRES = ['astropy', 'astroquery', 'bokeh', 'django', 'matplotlib', 'numpy', 'python-dateutil', 'sphinx', 'sphinx-automodapi', 'sqlalchemy']
 
 setup(
     name = 'jwql',
