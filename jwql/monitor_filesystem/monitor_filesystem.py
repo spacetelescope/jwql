@@ -101,10 +101,10 @@ def filesystem_monitor():
     parsed = outstring.split(sep=None)
 
     # Select desired elements from parsed string
-    total = int(parsed[11])  # in blocks of 512 bytes
-    used = int(parsed[12])
-    available = int(parsed[13])
-    percent_used = parsed[14]
+    total = int(parsed[8])  # in blocks of 512 bytes
+    used = int(parsed[9])
+    available = int(parsed[10])
+    percent_used = parsed[11]
 
     # Save stats for plotting over time
     now = datetime.datetime.now().isoformat(sep='T', timespec='auto')  # get date of stats
@@ -232,7 +232,7 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
 
     # create a layout with a grid pattern
     grid = gridplot([[p1, p2], [p3, p4]])
-    outfile = os.path.join(outputs_dir, "filecount.html")
+    outfile = os.path.join(outputs_dir, "filesystem_monitor.html")
     output_file(outfile)
     save(grid)
     set_permissions(outfile, verbose=False)
