@@ -19,11 +19,12 @@ API documentation
    :maxdepth: 1
    :caption: Contents:
 
+   dbmonitor.rst
    permissions.rst
    preview_image.rst
    utils.rst
    tests.rst
-	     
+
 
 Indices and tables
 ==================
