@@ -86,7 +86,7 @@ def filesystem_monitor():
     for dirpath, dirs, files in os.walk(filesystem):
         results_dict['file_count'] += len(files)  # find number of all files
         for filename in files:
-            file_path = os.path.join(dirpath,filename)
+            file_path = os.path.join(dirpath, filename)
             if filename.endswith(".fits"):  # find total number of fits files
                 results_dict['fits_files'] += 1
                 size_dict['size_fits'] += os.path.getsize(file_path)
@@ -126,11 +126,11 @@ def filesystem_monitor():
     sizebytype = os.path.join(outputs_dir, 'sizebytype.txt')
     with open(sizebytype, "a+") as f3:
         f3.write("{0} {1} {2} {3} {4} {5}\n".format(size_dict['size_fits'],
-                 size_dict['uncal'],size_dict['cal'],size_dict['rate'],
-                 size_dict['rateints'],size_dict['i2d']))
+                 size_dict['uncal'], size_dict['cal'], size_dict['rate'],
+                 size_dict['rateints'], size_dict['i2d']))
 
 
-def plot_system_stats(stats_file, filebytype,sizebytype):
+def plot_system_stats(stats_file, filebytype, sizebytype):
     """Read in the file of saved stats over time and plot them.
 
     Parameters
@@ -235,9 +235,9 @@ def plot_system_stats(stats_file, filebytype,sizebytype):
 
 if __name__ == '__main__':
 
-   inputfile = 'statsfile.txt'
-   filebytype = 'filesbytype.txt'
-   sizebytype = 'sizebytype.txt'
+    inputfile = 'statsfile.txt'
+    filebytype = 'filesbytype.txt'
+    sizebytype = 'sizebytype.txt'
 
-   filesystem_monitor()
-   plot_system_stats(inputfile,filebytype,sizebytype)
+    filesystem_monitor()
+    plot_system_stats(inputfile, filebytype, sizebytype)
