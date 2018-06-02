@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-"""Tests for the permissions module.
+"""Tests for the ``permissions`` module.
 
 Authors
 -------
