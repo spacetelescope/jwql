@@ -25,11 +25,7 @@ import pytest
 
 from astropy.io import fits
 
-from jwql.permissions import permissions
 from jwql.preview_image.preview_image import PreviewImage
-
-# from jwql.permissions.permissions import set_permissions, has_permissions, \
-#     get_owner_string, get_group_string
 
 # directory to be created and populated during tests running
 TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'preview_image_test')
@@ -39,7 +35,7 @@ TEST_DATA_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), '
 
 @pytest.fixture(scope="module")
 def test_directory(test_dir=TEST_DIRECTORY):
-    """Create a test directory for permission management.
+    """Create a test directory for preview image.
 
     Parameters
     ----------
@@ -50,144 +46,60 @@ def test_directory(test_dir=TEST_DIRECTORY):
     -------
     test_dir : str
         Path to directory used for testing
+
     """
     os.mkdir(test_dir)  # creates directory
-    permissions.set_permissions(test_dir, verbose=True)
     yield test_dir
     print("teardown test directory")
     if os.path.isdir(test_dir):
-        os.remove(test_dir)
-
-
-
-
-
-
+        os.rmdir(test_dir)
 
 
 def test_make_image(test_directory):
-    """Create a directory with the standard permissions
-    ``('-rw-r--r--')``.
+    """Use PreviewImage.make_image to create preview images of a sample JWST exposure.
 
-    Set the default permissions defined in ``permissions.py``. Assert
-    that these were set correctly.
+    Assert that the number of JPGs created corresponds to the number of integrations.
 
     Parameters
     ----------
     test_directory : str
         Path of directory used for testing
+        
     """
-    # Get owner and group on the current system.This allows to implement the tests
-    # independently from the user.
-
     filenames = glob.glob(os.path.join(TEST_DATA_DIRECTORY, '*.fits'))
     print('\nGenerating preview images for {}.'.format(filenames))
 
     output_directory = test_directory
-    thumbnail_output_directory = test_directory
 
     for filename in filenames:
 
         header = fits.getheader(filename)
 
-        # Create and save the preview image and thumbnail
-        try:
-            im = PreviewImage(filename, "SCI")
-            im.clip_percent = 0.01
-            im.scaling = 'log'
-            im.cmap = 'viridis'
-            im.output_format = 'jpg'
-            im.thumbnail = False
-            im.output_directory = output_directory
-            im.make_image()
-        except ValueError as error:
-            print(error)
+        # Create and save the preview image or thumbnail
+        for create_thumbnail in [False, True]:
+            try:
+                image = PreviewImage(filename, "SCI")
+                image.clip_percent = 0.01
+                image.scaling = 'log'
+                image.cmap = 'viridis'
+                image.output_format = 'jpg'
+                image.thumbnail = create_thumbnail
+                image.output_directory = output_directory
+                image.make_image()
+            except ValueError as error:
+                print(error)
 
+            if create_thumbnail:
+                extension = 'thumb'
+            else:
+                extension = 'jpg'
 
-        preview_image_filenames = glob.glob(os.path.join(test_directory, '*.jpg'))
+            # list of preview images
+            preview_image_filenames = glob.glob(os.path.join(test_directory, '*.{}'.format(
+                extension)))
 
-        print(header)
+            assert len(preview_image_filenames) == header['NINTS']
 
-    # owner = get_owner_string(test_directory)
-    # group = get_group_string(test_directory)
-    # print('\nCurrent owner={} group={}'.format(owner, group))
-    #
-    # set_permissions(test_directory, owner=owner, group=group)
-    # assert has_permissions(test_directory, owner=owner, group=group)
-
-
-# @pytest.fixture()
-# def test_file(test_dir=TEST_DIRECTORY):
-#     """Create a test file for permission management.
-#
-#     Parameters
-#     ----------
-#     test_dir : str
-#         Path to directory used for testing
-#
-#     Yields
-#     -------
-#     filename : str
-#         Path of file used for testing
-#     """
-#     if not os.path.isdir(test_dir):
-#         os.mkdir(test_dir)
-#
-#     filename = os.path.join(test_dir, 'permission_test.txt')
-#     with open(filename, 'w') as filestream:
-#         filestream.write('jwql permission test')
-#     yield filename
-#     print("teardown test file and directory ")
-#     if os.path.isfile(filename):
-#         os.remove(filename)
-#     if os.path.isdir(test_dir):
-#         os.rmdir(test_dir)
-#
-#
-# # @pytest.mark.xfail
-# def test_file_group(test_file):
-#     """Create a file with the standard permissions ``('-rw-r--r--')``
-#     and default group.
-#
-#     Modify the group and set the default permissions defined in
-#     ``permissions.py``.  Assert that both group and permissions were
-#     set correctly.
-#
-#     Parameters
-#     ----------
-#     test_file : str
-#         Path of file used for testing
-#     """
-#     # Get owner and group on the current system.
-#     owner = get_owner_string(test_file)
-#     group = get_group_string(test_file)
-#
-#     # attempt to retrieve a group name different from default
-#     group_index = 0
-#     test_group = grp.getgrgid(os.getgroups()[group_index]).gr_name
-#
-#     set_permissions(test_file, group=test_group, owner=owner)
-#     assert has_permissions(test_file, group=test_group, owner=owner)
-#
-#     # return to default group
-#     set_permissions(test_file, owner=owner, group=group)
-#     assert has_permissions(test_file, owner=owner, group=group)
-#
-#
-# def test_file_permissions(test_file):
-#     """Create a file with the standard permissions ``('-rw-r--r--')``.
-#
-#     Set the default permissions defined in ``permissions.py``. Assert
-#     that these were set correctly.
-#
-#     Parameters
-#     ----------
-#     test_file : str
-#         Path of file used for testing
-#     """
-#     # Get owner and group on the current system.
-#     owner = get_owner_string(test_file)
-#     group = get_group_string(test_file)
-#
-#     set_permissions(test_file, owner=owner, group=group)
-#     assert has_permissions(test_file, owner=owner, group=group)
+            # clean up: delete preview images
+            for file in preview_image_filenames:
+                os.remove(file)
