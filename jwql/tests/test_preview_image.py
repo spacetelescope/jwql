@@ -64,7 +64,7 @@ def test_make_image(test_directory):
     ----------
     test_directory : str
         Path of directory used for testing
-        
+
     """
     filenames = glob.glob(os.path.join(TEST_DATA_DIRECTORY, '*.fits'))
     print('\nGenerating preview images for {}.'.format(filenames))

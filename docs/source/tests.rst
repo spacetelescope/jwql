@@ -10,3 +10,6 @@ tests
 
 .. automodule:: jwql.tests.test_utils
     :members:
+
+.. automodule:: jwql.tests.test_preview_image
+    :members:
