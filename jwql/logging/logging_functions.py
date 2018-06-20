@@ -1,55 +1,63 @@
 
-""" Logging functions for the James Webb Quicklook automation platform.
+""" Logging functions for the ``jwql`` automation platform.
+
+This module provides decorators to log the execution of modules.  Log
+files are written to the ``logs/`` directory in the ``jwql`` central
+storage area, named by module name and timestamp, e.g.
+``monitor_filesystem/monitor_filesystem_2018-06-20-15:22:51.log``
 
 
 Authors
 -------
-Catherine Martlin 2018
 
-
-
-Use
-___
-Alex Viana, 2013 (WFC3 QL Version)
- 
+    Catherine Martlin 2018
+    Alex Viana, 2013 (WFC3 QL Version)
 
 Use
-___
-Things will be written to '/grp/jwst/ins/jwql/logs/dev/<module>/<module_log_filename>'
-for now. 
+---
 
-Once we have a live production environment and codebase we'll have those
-logs sent to '/grp/jwst/ins/jwql/logs/<module>/<module_log_filename>'. 
+    To log the execution of a module, use:
+    ::
 
+        import os
+        import logging
 
+        from jwql.logging.logging_functions import configure_logging
+        from jwql.logging.logging_functions import log_info
+        from jwql.logging.logging_functions import log_fail
+
+        @log_info
+        @log_fail
+        def my_main_function():
+            pass
+
+        if __name__ == '__main__':
+
+            module = os.path.basename(__file__).replace('.py', '')
+            configure_logging(module)
+
+            my_main_function()
 
 Dependencies
-____________
-The user must have a configuration file named ``config.json``
-placed in the utils directory.
+------------
+
+    The user must have a configuration file named ``config.json``
+    placed in the ``utils`` directory.
 
 
 References
-__________
-Code is adopted and updated from python routine logging_functions.py 
-written by Alex Viana, 2013 for the WFC3 Quicklook automation platform.
-
-
-Notes
-_____
-
-
-
+----------
+    This code is adopted and updated from python routine
+    ``logging_functions.py`` written by Alex Viana, 2013 for the WFC3
+    Quicklook automation platform.
 """
 
 import datetime
 import getpass
-import glob
 import importlib
 import logging
 import os
 import pwd
-import shutil
 import socket
 import sys
 import time
@@ -63,17 +71,19 @@ PRODUCTION_BOOL = ''
 
 
 def configure_logging(module, production_mode=True, path='./'):
-    """Configure the standard logging format.
+    """Configure the log file with a standard logging format.
 
     Parameters
     ----------
     module : str
         The name of the module being logged.
     production_mode : bool
-        Whether or not the output should be written to the production environement.
+        Whether or not the output should be written to the production
+        environement.
     path : str
         Where to write the log if user-supplied path; default to working dir.
     """
+
     if production_mode:
         log_file = make_log_file(module)
     else:
@@ -100,9 +110,11 @@ def make_log_file(module, production_mode=True, path='./'):
     module : str
         The name of the module being logged.
     production_mode : bool
-        Whether or not the output should be written to the production environment.
+        Whether or not the output should be written to the production
+        environment.
     path : str
-        Where to write the log if user-supplied path; default to working dir.
+        Where to write the log if user-supplied path; default to
+        working dir.
 
     Returns
     -------
@@ -113,14 +125,13 @@ def make_log_file(module, production_mode=True, path='./'):
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M')
     filename = '{0}_{1}.log'.format(module, timestamp)
     user = pwd.getpwuid(os.getuid()).pw_name
-    settings = get_config()
-    prod_server = settings['production_server'] 
-    log_path = settings['log_directory']
+    admin_account = get_config()['admin_account']
+    log_path = get_config()['log_dir']
 
-    #exempt_modules = []
-    if user != prod_server and module not in exempt_modules and production_mode:
+    exempt_modules = []
+    if user != admin_account and module not in exempt_modules and production_mode:
         module = os.path.join('dev', module)
-    
+
     if production_mode:
         log_file = os.path.join(log_path, module, filename)
     else:
@@ -133,8 +144,8 @@ def log_info(func):
     """Decorator to log useful system information.
 
     This function can be used as a decorator to log user environment
-    and system information. Future packages we want to track can be 
-    added or removed as necessary.  
+    and system information. Future packages we want to track can be
+    added or removed as necessary.
 
     Parameters
     ----------
@@ -156,25 +167,22 @@ def log_info(func):
         logging.info('Python Version: ' + sys.version.replace('\n', ''))
         logging.info('Python Executable Path: ' + sys.executable)
 
-        setup_file_name = settings['setup_path']
-
+        setup_file_name = get_config()['setup_file']
         with open(setup_file_name) as setup:
             for line in setup:
                 if line[0:8] == "REQUIRES":
-                    mod_required = line[12:-2]
-                    mod_list = mod_required.split(',')
+                    module_required = line[12:-2]
+                    module_list = module_required.split(',')
 
         # Log common module version information
-        for mod in mod_list:
-            mod = mod.replace('"', '')
-            mod = mod.replace("'", '')
-            mod = mod.replace(' ', '')
-            try: 
-                m = importlib.import_module(mod)
-                logging.info(mod + ' Version: ' + m.__version__)
-                logging.info(mod + ' Path: ' + m.__path__[0])
-            except: ImportError as err:
-                logging.warning(err.message)
+        for module in module_list:
+            module = module.replace('"', '').replace("'", '').replace(' ', '')
+            try:
+                mod = importlib.import_module(module)
+                logging.info(module + ' Version: ' + mod.__version__)
+                logging.info(module + ' Path: ' + mod.__path__[0])
+            except ImportError as err:
+                logging.warning(err)
 
         # Call the function and time it
         t1_cpu = time.clock()
@@ -217,18 +225,8 @@ def log_fail(func):
             func(*a, **kw)
             logging.info('Completed Successfully')
 
-        except Exception as err:
+        except Exception:
             logging.critical(traceback.format_exc())
             logging.critical('CRASHED')
-
-        finally:
-            if PRODUCTION_BOOL:        
-                # Copy the log to the recent/ directory
-                recent_dir = os.path.join(os.path.dirname(LOG_FILE_LOC), 'recent/')
-                recent_filename = os.path.join(recent_dir, os.path.basename(LOG_FILE_LOC))
-                existing_logs = glob.glob(os.path.join(recent_dir, '*.log'))
-                for existing_log in existing_logs:
-                    os.remove(existing_log)
-                shutil.copyfile(LOG_FILE_LOC, recent_filename)
 
     return wrapped
