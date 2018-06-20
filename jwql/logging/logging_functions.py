@@ -1,8 +1,15 @@
+
 """ Logging functions for the James Webb Quicklook automation platform.
+
 
 Authors
 -------
 Catherine Martlin 2018
+
+
+
+Use
+___
 Alex Viana, 2013 (WFC3 QL Version)
  
 
@@ -15,16 +22,18 @@ Once we have a live production environment and codebase we'll have those
 logs sent to '/grp/jwst/ins/jwql/logs/<module>/<module_log_filename>'. 
 
 
+
 Dependencies
 ____________
 The user must have a configuration file named ``config.json``
-placed in the current working directory.
+placed in the utils directory.
+
 
 References
 __________
-
 Code is adopted and updated from python routine logging_functions.py 
 written by Alex Viana, 2013 for the WFC3 Quicklook automation platform.
+
 
 Notes
 _____
@@ -47,6 +56,7 @@ import time
 import traceback
 
 from functools import wraps
+from jwql.utils.utils import get_config
 
 LOG_FILE_LOC = ''
 PRODUCTION_BOOL = ''
@@ -103,13 +113,16 @@ def make_log_file(module, production_mode=True, path='./'):
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M')
     filename = '{0}_{1}.log'.format(module, timestamp)
     user = pwd.getpwuid(os.getuid()).pw_name
+    settings = get_config()
+    prod_server = settings['production_server'] 
+    log_path = settings['log_directory']
 
     #exempt_modules = []
-    if user != 'jwqladmin' and module not in exempt_modules and production_mode:
+    if user != prod_server and module not in exempt_modules and production_mode:
         module = os.path.join('dev', module)
     
     if production_mode:
-        log_file = os.path.join('/grp/jwst/ins/jwql/logs/', module, filename) # Do we not want this on the github?#
+        log_file = os.path.join(log_path, module, filename)
     else:
         log_file = os.path.join(path, filename)
 
@@ -143,8 +156,9 @@ def log_info(func):
         logging.info('Python Version: ' + sys.version.replace('\n', ''))
         logging.info('Python Executable Path: ' + sys.executable)
 
+        setup_file_name = settings['setup_path']
 
-        with open("../setup.py") as setup:   # When I've got the config file up, change this to not be a path.
+        with open(setup_file_name) as setup:
             for line in setup:
                 if line[0:8] == "REQUIRES":
                     mod_required = line[12:-2]
@@ -218,6 +232,3 @@ def log_fail(func):
                 shutil.copyfile(LOG_FILE_LOC, recent_filename)
 
     return wrapped
-
-
-
