@@ -4,6 +4,9 @@
 
 # The James Webb Quicklook Application (`JWQL`)
 
+[![Build Status](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/badge/icon)](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/)
+[![STScI](https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat)](http://www.stsci.edu)
+
 The James Webb Quicklook Application (`JWQL`) is a database-driven web application and software repository for use by the JWST instrument teams.  The system is comprised of the following:
 1. A network file system that stores all uncalibrated and calibrated data products on disk in a centrally-located area, accessible to instrument team members.
 2. A relational database that stores observational metadata allowing for data discovery via relational queries.
@@ -86,7 +89,7 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Matthew Bourque (INS)
 - Lauren Chambers (INS)
 - Misty Cracraft (INS)
-- Joseph Filippazo (INS)
+- Joe Filippazzo (INS)
 - Bryan Hilbert (INS)
 - Graham Kanarek (INS)
 - Catherine Martlin (INS)
@@ -99,6 +102,7 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Sara Anderson (OED)
 - Tracy Beck (INS)
 - Francesca Boffi (INS)
+- Clara Brasseur (OED)
 - Matthew Burger (OED)
 - Rosa Diaz (INS)
 - Van Dixon (INS)
@@ -127,6 +131,7 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Matt Rendina (OED)
 - Massimo Robberto (INS)
 - Mary Romelfanger (OED)
+- Bernie Shiao (OED)
 - Matthew Sienkiewicz (ITSD)
 - Arfon Smith (DSMO)
 - Linda Smith (INS)
@@ -134,5 +139,6 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Dave Unger (ITSD)
 - Jeff Valenti (JWSTMO)
 - Thomas Walker (ITSD)
+- Geoff Wallace (OED)
 - Lara Wilkinson (OPO)
 - Joe Zahn (ITSD)
