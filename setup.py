@@ -10,17 +10,17 @@ AUTHORS += 'Johannes Sahlmann, Lauren Chambers, Catherine Martlin'
 REQUIRES = ['astropy', 'astroquery', 'bokeh==0.12.5', 'django', 'matplotlib', 'numpy', 'python-dateutil', 'sphinx', 'sphinx-automodapi', 'sqlalchemy']
 
 setup(
-    name = 'jwql',
-    version = VERSION,
-    description = 'The JWST Quicklook Project',
-    url = 'https://github.com/spacetelescope/jwql.git',
-    author = AUTHORS,
+    name='jwql',
+    version=VERSION,
+    description='The JWST Quicklook Project',
+    url='https://github.com/spacetelescope/jwql.git',
+    author=AUTHORS,
     author_email='jwql@stsci.edu',
     license='BSD',
-    keywords = ['astronomy', 'python'],
-    classifiers = ['Programming Language :: Python'],
-    packages = find_packages(),
-    install_requires = REQUIRES,
+    keywords=['astronomy', 'python'],
+    classifiers=['Programming Language :: Python'],
+    packages=find_packages(),
+    install_requires=REQUIRES,
     include_package_data=True,
-    include_dirs = [np.get_include()],
+    include_dirs=[np.get_include()],
     )
