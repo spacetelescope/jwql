@@ -1,0 +1,217 @@
+@import url('https://fonts.googleapis.com/css?family=EB+Garamond');
+
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  vertical-align: baseline;
+}
+
+body {
+  background-color: #fff; 
+  /*background-color: #1D1B4D; 
+  background-image: url(http://jt-astro.science/banner-luvoir1.png);
+  background-position: top;
+  background-repeat: repeat-x;
+  margin-top: 50px;*/
+}
+
+img {
+    vertical-align: text-middle;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: Helvetica, Garamond, Baskerville, "Baskerville Old Face", "Hoefler Text", "Times New Roman", serif;
+  font-weight: light;
+  color: #000;
+  line-height: 1.5;
+  margin: 0 0 1.5rem 0;
+  text-align: center;
+}
+
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
+  color: inherit;
+  text-decoration: none;
+  box-shadow: 0px 0.25px 0px 0px #fff;
+  padding-bottom: 2px;
+}
+
+h1 a:hover, h2 a:hover, h3 a:hover, h4 a:hover, h5 a:hover, h6 a:hover {
+  color: inherit;
+  text-decoration: none;
+  box-shadow: 0px 1px 0px 0px #428bca;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+h2 {
+  font-size: 1.75rem;
+}
+
+h3 {
+  font-size: 1.35rem;
+}
+
+h4 {
+  font-size: 1.1rem;
+}
+
+h5 {
+  font-size: 0.9rem;
+}
+
+h6 {
+  font-size: 0.7rem;
+}
+
+/* Bokeh Root Overrides*/
+.bk-root {
+  background-color: rgba(0,0,0,0);
+  overflow: auto;
+  padding: 20px 0px;
+}
+
+/*Bokeh Bootstrap Tabs Override*/
+.bk-root .bk-bs-nav-tabs{
+  background-color: #1D1B4D;
+  color: #fff; 
+  text-align: left; 
+  border: none;
+  font-family: Helvetica, Garamond, Baskerville, "Baskerville Old Face", "Hoefler Text", "Times New Roman", serif;
+  margin: 0px;
+  padding: 0 10px; 
+}
+.bk-root .bk-bs-nav-tabs> li {
+  margin: 0 2px 0 0;
+  font-size:20px;
+}
+.bk-root .bk-bs-nav-tabs> li > a {
+  border: 0;
+  border-radius: 0;
+  margin-right: 0;
+  color: #ffffff;
+  text-decoration: none;
+  padding: 6px 12px;
+}
+.bk-root .bk-bs-nav-tabs> li > a > i {
+  color: #c6dff5;
+}
+.bk-root .bk-bs-nav-tabs> li.open, .bk-root .bk-bs-nav-tabs> li:hover {
+  border-bottom: 4px solid #d1e9fd;
+}
+.bk-root .bk-bs-nav-tabs> li.open > a, .bk-root .bk-bs-nav-tabs> li:hover > a {
+  border: 0;
+  background: none !important;
+  color: #333333;
+}
+.bk-root .bk-bs-nav-tabs> li.open > a > i, .bk-root .bk-bs-nav-tabs> li:hover > a > i {
+  color: #c6dff5;
+}
+.bk-root .bk-bs-nav-tabs> li.open .dropdown-menu, .bk-root .bk-bs-nav-tabs> li:hover .dropdown-menu {
+  margin-top: 0px;
+}
+.bk-root .bk-bs-nav-tabs> li.bk-bs-active {
+  border-bottom: 5px solid #66A0FE;
+  position: relative;
+}
+.bk-root .bk-bs-nav-tabs> li.bk-bs-active > a {
+  border: 0;
+  color: #333333;
+}
+.bk-root .bk-bs-nav-tabs> li.bk-bs-active > a > i {
+  /*color: #404040; */ 
+  color: #FF0000;
+}
+.bk-root .bk-slider-parent { 
+  background-color: #FF0000;
+  font-size:20px;
+  font-family: Helvetica; 
+  color:#f00;
+}
+/* This controls sliders, etc if they are inside tabs */ 
+.bk-bs-tab-content {
+  background-color: #1D1B4D;
+  color: #fff; 
+  border: 0;
+  border-top: 1px solid #eee;
+  font-family: Helvetica, Garamond, Baskerville, "Baskerville Old Face", "Hoefler Text", "Times New Roman", serif;
+  margin-top: -4px;
+  padding: 15px 0;
+  text-align: left; 
+  overflow: auto;
+}
+.bk-bs-tab-content p {
+  margin-bottom: 4px;
+}
+.bk-markup {
+  padding: 0 15px;
+} 
+.bk-root .bk-ui-state-default, .bk-root .bk-ui-widget-content .bk-ui-state-default, .bk-root .bk-ui-widget-header .bk-ui-state-default {
+  background: #428bca;
+}
+.bk-root .bk-bs-nav-tabs>li.bk-bs-active>a, .bk-root .bk-bs-nav-tabs>li.bk-bs-active>a:hover, .bk-root .bk-bs-nav-tabs>li.bk-bs-active>a:focus {
+  border: none;
+}
+
+/*Bokeh Toolbar Overrides - e.g. colors used in bokeh tools */
+.bk-root .bk-toolbar-right .bk-toolbar-button.bk-active, .bk-root .bk-toolbar-left .bk-toolbar-button.bk-active {
+    border-left-color: #BAD8FF; 
+    border-right-color: #BAD8FF; 
+}
+
+.bk-root .bk-slider-parent input[type="text"] {
+  color: #FFF;
+  margin-bottom: 2px;
+}
+
+.bk-root .bk-ui-slider-horizontal .bk-ui-slider-handle {
+    top: -.5em;
+}
+
+.bk-root .bk-ui-slider .bk-ui-slider-handle {
+    width: 1em;
+    height: 1em;
+}
+
+.bk-root .bk-ui-state-active, .bk-root .bk-ui-widget-content .bk-ui-state-active, .bk-root .bk-ui-widget-header .bk-ui-state-active {
+    border: 1px solid #000;
+}
+
+.bk-root .bk-bs-nav-tabs> li.open > a, .bk-root .bk-bs-nav-tabs> li:hover > a {
+    background: #272727 !important;
+    color: #ffffff;
+}
+
+.bk-root .bk-bs-nav-tabs> li.bk-bs-active:hover > a {
+    background: #fff !important;
+    color: #272727;
+}
+
+.bk-root .bk-bs-btn{
+color: #FFFFFF;
+background-color: #0748FF;
+border-color: #0748FF;
+}
+.bk-root .bk-bs-btn-success {
+color: #FFFFFF;
+background-color: #0748FF;
+border-color: #0748FF;
+}
+.bk-root .bk-bs-btn-success:focus {
+color: #BAD8FF;
+background-color: #0748FF;
+border-color: #0748FF;
+}
+.bk-root .bk-bs-btn-success:active {
+color: #BAD8FF;
+background-color: #0748FF;
+border-color: #0748FF;
+}
+.bk-root .bk-bs-btn-success:hover {
+color: #FDFEFE;
+background-color: #66A0FE;
+border-color: #66A0FE;
+}
