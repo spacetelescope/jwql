@@ -101,7 +101,7 @@ def configure_logging(module, production_mode=True, path='./'):
                         format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%m/%d/%Y %H:%M:%S %p',
                         level=logging.INFO)
-    set_permissions(log_file, verbose=False)
+    set_permissions(log_file)
 
 
 def make_log_file(module, production_mode=True, path='./'):

@@ -199,6 +199,6 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
         outfile = os.path.join(get_config()['outputs'], 'database_monitor', output_filename)
         output_file(outfile)
         save(plt)
-        set_permissions(outfile, verbose=False)
+        set_permissions(outfile)
 
     return table, keywords
