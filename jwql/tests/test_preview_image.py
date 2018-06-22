@@ -26,11 +26,15 @@ import pytest
 from astropy.io import fits
 
 from jwql.preview_image.preview_image import PreviewImage
-from jwql.utils.utils import get_config
 
+# directory to be created and populated during tests running
+TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'preview_image_test')
+
+# directory that contains sample images
+TEST_DATA_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_data')
 
 @pytest.fixture(scope="module")
-def test_directory():
+def test_directory(test_dir=TEST_DIRECTORY):
     """Create a test directory for preview image.
 
     Parameters
@@ -44,8 +48,6 @@ def test_directory():
         Path to directory used for testing
 
     """
-
-    test_dir = os.path.join(get_config()['test_dir'], 'preview_image_test')
     os.mkdir(test_dir)  # creates directory
     yield test_dir
     print("teardown test directory")
@@ -54,20 +56,17 @@ def test_directory():
 
 
 def test_make_image(test_directory):
-    """Use ``PreviewImage.make_image`` to create preview images of a
-    sample JWST exposure.
+    """Use PreviewImage.make_image to create preview images of a sample JWST exposure.
 
-    Assert that the number of JPGs created corresponds to the number of
-    integrations.
+    Assert that the number of JPGs created corresponds to the number of integrations.
 
     Parameters
     ----------
     test_directory : str
         Path of directory used for testing
-    """
 
-    test_data_directory = get_config()['test_data']
-    filenames = glob.glob(os.path.join(test_data_directory, '*.fits'))
+    """
+    filenames = glob.glob(os.path.join(TEST_DATA_DIRECTORY, '*.fits'))
     print('\nGenerating preview images for {}.'.format(filenames))
 
     output_directory = test_directory
