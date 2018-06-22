@@ -64,6 +64,8 @@ import time
 import traceback
 
 from functools import wraps
+
+from jwql.permissions.permissions import set_permissions
 from jwql.utils.utils import get_config
 
 LOG_FILE_LOC = ''
@@ -84,19 +86,22 @@ def configure_logging(module, production_mode=True, path='./'):
         Where to write the log if user-supplied path; default to working dir.
     """
 
+    # Determine log file location
     if production_mode:
         log_file = make_log_file(module)
     else:
         log_file = make_log_file(module, production_mode=False, path=path)
-
     global LOG_FILE_LOC
     global PRODUCTION_BOOL
     LOG_FILE_LOC = log_file
     PRODUCTION_BOOL = production_mode
+
+    # Create the log file and set the permissions
     logging.basicConfig(filename=log_file,
                         format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%m/%d/%Y %H:%M:%S %p',
                         level=logging.INFO)
+    set_permissions(log_file, verbose=False)
 
 
 def make_log_file(module, production_mode=True, path='./'):
@@ -167,6 +172,7 @@ def log_info(func):
         logging.info('Python Version: ' + sys.version.replace('\n', ''))
         logging.info('Python Executable Path: ' + sys.executable)
 
+        # Read in setup.py file to build list of required modules
         setup_file_name = get_config()['setup_file']
         with open(setup_file_name) as setup:
             for line in setup:
@@ -174,9 +180,12 @@ def log_info(func):
                     module_required = line[12:-2]
                     module_list = module_required.split(',')
 
+        # Clean up the module list
+        module_list = [module.replace('"', '').replace("'", '').replace(' ', '') for module in module_list]
+        module_list = [module.split('=')[0] for module in module_list]
+
         # Log common module version information
         for module in module_list:
-            module = module.replace('"', '').replace("'", '').replace(' ', '')
             try:
                 mod = importlib.import_module(module)
                 logging.info(module + ' Version: ' + mod.__version__)
