@@ -130,8 +130,10 @@ def make_log_file(module, production_mode=True, path='./'):
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M')
     filename = '{0}_{1}.log'.format(module, timestamp)
     user = pwd.getpwuid(os.getuid()).pw_name
-    admin_account = get_config()['admin_account']
-    log_path = get_config()['log_dir']
+    
+    settings = get_config()
+    admin_account = settings['production_server']
+    log_path = settings['log_directory']
 
     exempt_modules = []
     if user != admin_account and module not in exempt_modules and production_mode:
@@ -173,7 +175,9 @@ def log_info(func):
         logging.info('Python Executable Path: ' + sys.executable)
 
         # Read in setup.py file to build list of required modules
-        setup_file_name = get_config()['setup_file']
+
+        settings = get_config()
+        setup_file_name = settings['setup_path']
         with open(setup_file_name) as setup:
             for line in setup:
                 if line[0:8] == "REQUIRES":
