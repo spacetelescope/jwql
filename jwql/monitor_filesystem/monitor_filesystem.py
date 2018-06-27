@@ -60,6 +60,7 @@ Notes
 
 from collections import defaultdict
 import datetime
+import logging
 import numpy as np
 import os
 import subprocess
@@ -70,10 +71,17 @@ from bokeh.layouts import gridplot
 from jwql.permissions.permissions import set_permissions
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
+from jwql.logging.logging_functions import configure_logging
+from jwql.logging.logging_functions import log_info
+from jwql.logging.logging_functions import log_fail
 
-
+@log_fail
+@log_info
 def filesystem_monitor():
     """ Get statistics on filesystem"""
+
+        # Begin logging: 
+    logging.info("Beginning the script run: ")
 
     # Get path, directories and files in system and count files in all directories
     settings = get_config()
@@ -132,7 +140,7 @@ def filesystem_monitor():
                  size_dict['rateints'], size_dict['i2d']))
     set_permissions(sizebytype, verbose=False)
 
-
+ 
 def plot_system_stats(stats_file, filebytype, sizebytype):
     """Read in the file of saved stats over time and plot them.
 
@@ -237,12 +245,19 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     save(grid)
     set_permissions(outfile, verbose=False)
 
+    # Begin logging: 
+    logging.info("Completed.")
+
+
 
 if __name__ == '__main__':
 
     inputfile = 'statsfile.txt'
     filebytype = 'filesbytype.txt'
     sizebytype = 'sizebytype.txt'
+
+    module = os.path.basename(__file__).strip('.py')
+    configure_logging(module)
 
     filesystem_monitor()
     plot_system_stats(inputfile, filebytype, sizebytype)
