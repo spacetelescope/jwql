@@ -19,7 +19,7 @@ API documentation
    :maxdepth: 1
    :caption: Contents:
 
-   dbmonitor.rst
+   monitor_mast.rst
    permissions.rst
    preview_image.rst
    utils.rst
