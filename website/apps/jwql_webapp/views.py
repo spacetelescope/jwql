@@ -65,6 +65,27 @@ TOOLS = {'FGS': ['Bad Pixel Monitor'],
                      'Failed-open Shutter Monitor']}
 
 
+def about(request):
+    """Generate the about page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    template = 'jwql_webapp/about.html'
+    context = {'inst': '',
+               'inst_list': INST_LIST,
+               'tools': TOOLS}
+
+    return render(request, template, context)
+
+
 def archived_proposals(request, inst):
     """Generate the page listing all archived proposals in the database
 

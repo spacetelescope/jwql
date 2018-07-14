@@ -44,6 +44,7 @@ from . import views
 app_name = 'jwql_webapp'
 urlpatterns = [
     path('', views.home, name='home'),
+    path('about/', views.about, name='about'),
     path('<str:inst>/', views.instrument, name='instrument'),
     path('<str:inst>/archive/', views.archived_proposals, name='archive'),
     path('<str:inst>/unlooked/', views.unlooked_images, name='unlooked'),
