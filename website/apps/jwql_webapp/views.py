@@ -45,8 +45,9 @@ from jwql.preview_image.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser
 
 
-FILESYSTEM_DIR = get_config()['filesystem']
+FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 PREVIEW_DIR = os.path.join(get_config()['jwql_dir'], 'preview_images')
+THUMBNAIL_DIR = os.path.join(get_config()['jwql_dir'], 'thumbnails')
 INST_LIST = ['FGS', 'MIRI', 'NIRCam', 'NIRISS', 'NIRSpec']
 TOOLS = {'FGS': ['Bad Pixel Monitor'],
          'MIRI': ['Dark Current Monitor',
@@ -98,11 +99,28 @@ def archived_proposals(request, inst):
     # Determine proposal ID, e.g. 00327
     proposals = list(set([f.split('/')[-1][2:7] for f in all_filepaths]))
 
+    # For each proposal, get the first available thumbnail and determine
+    # how many files there are
+    thumbnails = []
+    n_files = []
+    for prop in proposals:
+        thumb_search_filepath = os.path.join(THUMBNAIL_DIR, 'jw{}'.format(prop), 'jw{}*rate*.thumb'.format(prop))
+        thumbnail = glob.glob(thumb_search_filepath)
+        if len(thumbnail) > 0:
+            thumbnail = thumbnail[0]
+            thumbnail = '/'.join(thumbnail.split('/')[-2:])
+        thumbnails.append(thumbnail)
+
+        fits_search_filepath = os.path.join(FILESYSTEM_DIR, 'jw{}'.format(prop), 'jw{}*.fits'.format(prop))
+        n = len(glob.glob(fits_search_filepath))
+        n_files.append(n)
+
     return render(request, template,
                   {'inst': inst,
                    'all_filenames': [os.path.basename(f) for f in all_filepaths],
                    'tools': TOOLS,
-                   'proposals': proposals})
+                   'n_proposals': len(proposals),
+                   'zipped_thumbnails': zip(proposals, thumbnails, n_files)})
 
 
 def archive_thumbnails(request, inst, proposal):
@@ -123,7 +141,10 @@ def archive_thumbnails(request, inst, proposal):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    return thumbnails(request, inst, proposal)
+    template = 'jwql_webapp/thumbnails.html'
+    dict_to_render = thumbnails(inst, proposal)
+    return render(request, template,
+                  dict_to_render)
 
 
 def home(request):
@@ -286,7 +307,10 @@ def unlooked_images(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    return thumbnails(request, inst)
+    template = 'jwql_webapp/thumbnails.html'
+    dict_to_render = thumbnails(inst)
+    return render(request, template,
+                  dict_to_render)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # HELPER FUNCTIONS
@@ -296,9 +320,8 @@ def unlooked_images(request, inst):
 def split_files(file_list, type):
     """JUST FOR USE DURING DEVELOPMENT WITH FILESYSTEM
 
-    Splits the files in the filesystem into "unlooked" and
-    "archived", with the "unlooked" images being the 10%
-    most recent ones.
+    Splits the files in the filesystem into "unlooked" and "archived",
+    with the "unlooked" images being the most recent 10% of files.
     """
     exp_times = []
     for file in file_list:
@@ -320,14 +343,12 @@ def split_files(file_list, type):
         return [f for i, f in enumerate(file_list) if not mask_unlooked[i]]
 
 
-def thumbnails(request, inst, proposal=None):
+def thumbnails(inst, proposal=None):
     """Generate a page showing thumbnail images corresponding to
     activities, from a given proposal
 
     Parameters
     ----------
-    request : HttpRequest object
-        Incoming request from the webpage
     inst : str
         Name of JWST instrument
     proposal : str (optional)
@@ -335,10 +356,9 @@ def thumbnails(request, inst, proposal=None):
 
     Returns
     -------
-    HttpResponse object
-        Outgoing response sent to the webpage
+    dict_to_render : dict
+        Dictionary of parameters for the thumbnails
     """
-    template = 'jwql_webapp/thumbnails.html'
 
     # Query files from MAST database
     # filepaths, filenames = DatabaseConnection('MAST', instrument=inst).\
@@ -430,12 +450,12 @@ def thumbnails(request, inst, proposal=None):
         dropdown_menus = {'detector': detectors,
                           'proposal': proposals}
 
-    return render(request, template,
-                  {'inst': inst,
-                   'all_filenames': [os.path.basename(f) for f in all_filepaths],
-                   'tools': TOOLS,
-                   'thumbnail_zipped_list': zip(file_indices, file_data),
-                   'dropdown_menus': dropdown_menus,
-                   'n_fileids': len(file_data),
-                   'prop': proposal})
+    dict_to_render = {'inst': inst,
+                      'all_filenames': [os.path.basename(f) for f in all_filepaths],
+                      'tools': TOOLS,
+                      'thumbnail_zipped_list': zip(file_indices, file_data),
+                      'dropdown_menus': dropdown_menus,
+                      'n_fileids': len(file_data),
+                      'prop': proposal}
+    return dict_to_render
 

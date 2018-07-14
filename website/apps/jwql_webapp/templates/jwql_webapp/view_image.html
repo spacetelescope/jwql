@@ -44,7 +44,7 @@
     		}
 
     		// Update the image download and header links
-    		document.getElementById("download_fits").href = '{{ staticURL }}preview_images/{{ file_root|slice:":7" }}/' + fits_filename;
+    		document.getElementById("download_fits").href = '{{ staticURL }}filesystem/{{ file_root|slice:":7" }}/' + fits_filename;
     		document.getElementById("download_jpg").href = jpg_filepath;
     		document.getElementById("view_header").href = "/jwql_webapp/{{ inst }}/" + fits_filename + "/hdr/";
 
