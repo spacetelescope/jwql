@@ -9,3 +9,4 @@ docs/build/
 docs/source/api/
 .cache
 *.pytest_cache
+config.json
