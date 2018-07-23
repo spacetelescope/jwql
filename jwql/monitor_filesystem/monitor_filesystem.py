@@ -99,7 +99,6 @@ def filesystem_monitor():
                 results_dict[instrument] += 1
                 size_dict[instrument] += os.path.getsize(file_path)
 
-
     # Get df style stats on file system
     out = subprocess.check_output('df {}'.format(filesystem), shell=True)
     outstring = out.decode("utf-8")  # put into string for parsing from byte format
@@ -240,8 +239,6 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     p3.line(dates, fgs, legend='fgs fits files', line_color='darkred')
     p3.x(dates, fgs, color='darkred')
 
-
-
     # plot size of total fits files by type
     p4 = figure(
        tools='pan,box_zoom,wheel_zoom,reset,save', x_axis_type='datetime',
@@ -258,7 +255,8 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     p4.asterisk(dates, rateints_size, color='orange')
     p4.line(dates, i2d_size, legend='i2d fits files', line_color='purple')
     p4.x(dates, i2d_size, color='purple')
-    p3.x(dates, nircam, color='midnightblue')
+    p4.line(dates, nircam_size, legend='nircam fits files', line_color='midnightblue')
+    p4.x(dates, nircam_size, color='midnightblue')
     p4.line(dates, nirspec_size, legend='nirspec fits files', line_color='springgreen')
     p4.x(dates, nirspec_size, color='springgreen')
     p4.line(dates, niriss_size, legend='niriss fits files', line_color='darkcyan')
