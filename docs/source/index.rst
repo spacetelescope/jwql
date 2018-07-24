@@ -26,6 +26,7 @@ API documentation
    preview_image.rst
    utils.rst
    tests.rst
+   monitor_filesystem.rst
 
 
 Indices and tables
