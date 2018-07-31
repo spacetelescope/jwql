@@ -1,15 +1,16 @@
 {% extends "jwql_webapp/base.html" %}
+
+{% block preamble %}
+
+    <title>About - JWST Quicklook</title>
+
+    <!-- Custom styles for this template -->
+    <!-- Add "now" timetag to force autoreload the .css file -->
+    <link href="{{staticURL}}css/quicklook-home.css?{% now 'U' %}" rel="stylesheet">
+
+{% endblock %}
+
 {% block content %}
-
-<head>
-	<title>About - JWST Quicklook</title>
-
-	<!-- Custom styles for this template -->
-	<!-- Add "now" timetag to force autoreload the .css file -->
-	<link href="{{staticURL}}css/quicklook-home.css?{% now 'U' %}" rel="stylesheet">
-</head>
-
-<body>
 
     <main role="main" class="container">
         <div style="text-align: center"><img src="{{staticURL}}jwql_webapp/images/JWQLlogo.png" width=350px></div><br>
@@ -50,7 +51,5 @@
         The JWQL project would not be possible without the contributions of the following individuals: Faith Abney (OED), Anastasia Alexov (OED), Sara Anderson (OED), Tracy Beck (INS), Francesca Boffi (INS), Clara Brasseur (OED), Matthew Burger (OED), Rosa Diaz (INS), Van Dixon (INS), Tom Donaldson (OED), Michael Fox (DSMO), Scott Friedman (INS), Alex Fullerton (INS), Lisa Gardner (OED), Vera Gibbs (ITSD), Catherine Gosmeyer (INS), Phil Grant (ITSD), Dean Hines (INS), Sherie Holfeltz (INS), Joe Hunkeler (OED), Catherine Kaleida (OED), Mark Kyprianou (OED), Karen Levay (OED), Greg Masci (ITSD), Margaret Meixner (INS), Prem Mishra (ITSD), Don Mueller (ITSD), Maria Antonia Nieto-Santisteban (OED), Joe Pollizzi (JWSTMO), Lee Quick (OED), Anupinder Rai (ITSD), Matt Rendina (OED), Massimo Robberto (INS.), Mary Romelfanger (OED), Bernie Shiao (OED), Matthew Sienkiewicz (ITSD), Arfon Smith (DSMO), Linda Smith (INS), Patrick Taylor (ITSD), Dave Unger (ITSD), Jeff Valenti (JWSTMO), Thomas Walker (ITSD), Geoff Wallace (OED), Lara Wilkinson (OPO), Joe Zahn (ITSD).
 
 	</main>
-
-</body>
 
 {% endblock %}

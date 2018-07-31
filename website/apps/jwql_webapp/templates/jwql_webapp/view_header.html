@@ -1,15 +1,16 @@
 {% extends "jwql_webapp/base.html" %}
-{% block content %}
 
-<head>
+{% block preamble %}
+
 	<title>View {{ inst }} Image - JWST Quicklook</title>
 
 	<!-- Custom styles for this template -->
 	<link href="{{staticURL}}css/quicklook-instrument.css?{% now 'U' %}" rel="stylesheet">
 
-</head>
+{% endblock %}
 
-<body>
+{% block content %}
+
     <main role="main" class="container">
     	<h5>{{ file }}</h5>
 
@@ -27,6 +28,5 @@
 	    </p>
 
 	</main>
-</body>
 
 {% endblock %}
