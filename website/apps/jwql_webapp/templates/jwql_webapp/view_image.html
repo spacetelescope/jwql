@@ -1,15 +1,17 @@
 {% extends "jwql_webapp/base.html" %}
-{% block content %}
 
-<head>
+{% block preamble %}
+
 	<title>View {{ inst }} Image - JWST Quicklook</title>
 
 	<!-- Custom styles for this template -->
 	<link href="{{staticURL}}css/quicklook-instrument.css?{% now 'U' %}" rel="stylesheet">
 	<link href="{{staticURL}}css/quicklook-viewimage.css?{% now 'U' %}" rel="stylesheet">
-</head>
 
-<body>
+{% endblock %}
+
+{% block content %}
+
 	<script>
     	function change_filetype(type) {
     		// Change the radio button to check the right filetype
@@ -205,6 +207,5 @@
 			</script>
 		{% endif %} -->
 	</main>
-</body>
 
 {% endblock %}

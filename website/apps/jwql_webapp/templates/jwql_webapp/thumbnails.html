@@ -1,16 +1,17 @@
 {% extends "jwql_webapp/base.html" %}
-{% block content %}
 
-<head>
+{% block preamble %}
+
 	<title>Unlooked {{ inst }} Images - JWST Quicklook</title>
 
 	<!-- Custom styles and scripts for this template -->
 	<link href="{{staticURL}}css/quicklook-thumbnails.css?{% now 'U' %}" rel="stylesheet">
 	<!-- <link href="{{staticURL}}css/loader.css?{% now 'U' %}" rel="stylesheet"> -->
 
-</head>
+{% endblock %}
 
-<body>
+{% block content %}
+
     <main role="main" class="container">
 
     	<script>
@@ -226,8 +227,5 @@
     window.onload = preloader;
     // document.getElementById("thumbnail-array").onload = preloader;
 	</script> -->
-
-
-</body>
 
 {% endblock %}

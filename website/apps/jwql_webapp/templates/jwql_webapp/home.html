@@ -1,15 +1,16 @@
 {% extends "jwql_webapp/base.html" %}
-{% block content %}
 
-<head>
+{% block preamble %}
+
 	<title>Home - JWST Quicklook</title>
 
 	<!-- Custom styles for this template -->
 	<!-- Add "now" timetag to force autoreload the .css file -->
 	<link href="{{staticURL}}css/quicklook-home.css?{% now 'U' %}" rel="stylesheet">
-</head>
 
-<body>
+{% endblock %}
+
+{% block content %}
 
     <main role="main" class="container">
     	<h2>Welcome to the JWST Quicklook page.</h2>
@@ -50,7 +51,5 @@
 			</div>
 		</div>
 	</main>
-
-</body>
 
 {% endblock %}
