@@ -7,20 +7,22 @@
 [![Build Status](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/badge/icon)](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/)
 [![STScI](https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat)](http://www.stsci.edu)
 
-The James Webb Quicklook Application (`JWQL`) is a database-driven web application and automation framework for use by the JWST instrument teams.  The system is comprised of the following:
+The James Webb Quicklook Application (`JWQL`) is a database-driven web application and automation framework for use by the JWST instrument teams to monitor the health and stability of the JWST instruments.  The system is comprised of the following:
 1. A network file system that stores all uncalibrated and calibrated data products on disk in a centrally-located area, accessible to instrument team members (MAST data cache)
 2. A relational database that stores observational metadata allowing for data discovery via relational queries (MAST database API).
-3. A software library that provides tools to support an automation platform on which to build automated instrument calibration and monitoring tasks.
+3. A software library that provides tools to support an automation framework in which to build automated instrument monitoring tasks.
 4. A web application that allows users to visually inspect new and archival JWST data as well as instrument-specific monitoring and calibration results.
+
+The `jwql` application is currently under heavy development.  The `1.0` release is expected in 2019.
 
 ## Prerequisites
 
-It is highly suggested that users have a working installation of `anaconda` or `miniconda` for Python 3.6.  Downloads and installation instructions are  available here:
+It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.6.  Downloads and installation instructions are  available here:
 
 - [Miniconda](https://conda.io/miniconda.html)
 - [Anaconda](https://www.continuum.io/downloads)
 
-Requirements for contributing to the `jwql` package will be included in the `jwqldev` `conda` environment, which is included in our installation instructions below. Further package requirements will be provided for `jwql` by a `setup.py` script included in the repository.
+Requirements for contributing to the `jwql` package will be included in the `jwql` `conda` environment, which is included in our installation instructions below. Further package requirements will be provided for `jwql` by a `setup.py` script included in the repository.
 
 ## Package Installation
 
@@ -31,27 +33,30 @@ git clone https://github.com/spacetelescope/jwql.git
 cd jwql
 python setup.py develop
 ```
-If you have two factor authentication and sftp (rather than http) access set up on github, type
+
+or, if you would rather use `SSH` instead of `https`, type
 ```
-git clone git@github.com:spacetelescope/jwql.git  
+git clone git@github.com:spacetelescope/jwql.git 
+cd jwql
+python setup.py develop
 ```
 instead, and then proceed as stated.
 
 ## Environment Installation
 
-Following the download of the `jwql` package, users can then install the `jwqldev` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project.  First, users should ensure that their version of `conda` is up to date:
+Following the download of the `jwql` package, contributors can then install the `jwql` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project.  First, one should ensure that their version of `conda` is up to date:
 
 ```
 conda update conda
 ```
 
-Next, users should activate the `base` environment:
+Next, one should activate the `base` environment:
 
 ```
 source activate base
 ```
 
-Lastly, users can create the `jwqldev` environment via the `environment.yml` file:
+Lastly, one can create the `jwql` environment via the `environment.yml` file:
 
 ```
 conda env create -f environment.yml
