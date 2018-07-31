@@ -35,6 +35,8 @@ Dependencies
 
 import os
 import glob
+from collections import OrderedDict
+import time
 
 from astropy.io import fits
 from django.shortcuts import render
@@ -48,6 +50,7 @@ from jwql.utils.utils import get_config, filename_parser
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 PREVIEW_DIR = os.path.join(get_config()['jwql_dir'], 'preview_images')
 THUMBNAIL_DIR = os.path.join(get_config()['jwql_dir'], 'thumbnails')
+OUTPUT_DIR = get_config()['outputs']
 INST_LIST = ['FGS', 'MIRI', 'NIRCam', 'NIRISS', 'NIRSpec']
 TOOLS = {'FGS': ['Bad Pixel Monitor'],
          'MIRI': ['Dark Current Monitor',
@@ -166,6 +169,38 @@ def archive_thumbnails(request, inst, proposal):
     dict_to_render = thumbnails(inst, proposal)
     return render(request, template,
                   dict_to_render)
+
+
+def dashboard(request):
+    """Generate the dashbaord page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    template = 'jwql_webapp/dashboard.html'
+
+    bokeh_page = os.path.abspath('apps/jwql_webapp/templates/jwql_webapp/filesystem_monitor_full.html')
+    bokeh_dict = {}
+    with open(bokeh_page) as f:
+        bokehplot = f.read()
+    bokeh_dict[bokeh_page.split('/')[-1]] = [bokehplot, time.ctime(os.path.getmtime(bokeh_page))]
+    bokeh_dict = OrderedDict(sorted(bokeh_dict.items()))
+
+    context = {'inst': '',
+               'inst_list': INST_LIST,
+               'tools': TOOLS,
+               'outputs': OUTPUT_DIR,
+               'filesystem_html': os.path.join(OUTPUT_DIR, 'filesystem_monitor', 'filesystem_monitor.html'),
+               'bokeh_dict': bokeh_dict}
+
+    return render(request, template, context)
 
 
 def home(request):

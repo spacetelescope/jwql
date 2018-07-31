@@ -17,6 +17,10 @@
 		<!-- Import fonts -->
 		<link href="https://fonts.googleapis.com/css?family=Oswald:700|Overpass" rel="stylesheet">
 
+		<!-- Needed javascript -->
+		<!-- IMPORTANT: jQuery first, then popper, then Bootstrap -->
+		<script src="{{ staticURL }}js/jquery-3.3.1.min.js?{% now 'U' %}"></script>
+
 
 	</head>
 
@@ -77,7 +81,6 @@
 
 	    <!-- Needed javascript -->
 	    <!-- IMPORTANT: jQuery first, then popper, then Bootstrap -->
-		<script src="{{ staticURL }}js/jquery-3.3.1.min.js?{% now 'U' %}"></script>
 		<script src="{{ staticURL }}js/popper.min.js?{% now 'U' %}"></script>
 		<script src="{{ staticURL }}js/bootstrap.bundle.min.js?{% now 'U' %}"></script>
 	</body>
