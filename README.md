@@ -81,9 +81,9 @@ The following is a bare bones example of a best work flow for contributing to th
 10. Delete your local copy of your branch.
 
 
-## `gitignore`
+## Code of Conduct
 
-The `jwql` repository also contains a file named `.gitignore` that indicates specific directories, files or file types that should not be commited to the repository.  Feel free to add additional lines to this file if you want to avoid committing anything.  Some examples may include `.fits` files, `.jpeg` files, or `.ipynb_checkpoints/`.
+Users and contributors to the `jwql` repository should adhere to the [Code of Conduct](https://github.com/spacetelescope/jwql/blob/master/CODE_OF_CONDUCT.md).  Any issues or violations pertaining to the Code of Conduct should be brought to the attention of a `jwql` team member or to `jwql@stsci.edu`.
 
 ## Questions
 
