@@ -6,7 +6,7 @@
 
     <!-- Custom styles for this template -->
     <!-- Add "now" timetag to force autoreload the .css file -->
-    <link href="{{staticURL}}css/quicklook-dashboard.css?{% now 'U' %}" rel="stylesheet">
+    <link href="{{ static('css/quicklook-dashboard.css') }}?{% now 'U' %}" rel="stylesheet">
 
    <!--  <script>
     $(function(){
@@ -30,8 +30,8 @@
     <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.5.min.js"></script>
 
     <!-- <script type="text/javascript" src="/Users/lchambers/JWQL/filesystem_monitor.js?{% now 'U' %}"></script> -->
-    <script type="text/javascript" src="{{staticURL}}js/filesystem_monitor.js?{% now 'U' %}"></script>
-    <script type="text/javascript" src="{{staticURL}}js/filesystem_monitor2.js?{% now 'U' %}"></script>
+    <script type="text/javascript" src="{{ static('js/filesystem_monitor.js') }}?{% now 'U' %}"></script>
+    <script type="text/javascript" src="{{ static('js/filesystem_monitor2.js') }}?{% now 'U' %}"></script>
 
 {% endblock %}
 
@@ -41,13 +41,13 @@
 
         I am here. It's not completely broken. {{outputs}}filesystem_monitor/filesystem_monitor.html
 
-        {% comment %}
+        {#
         <!-- <div class="filesystem_monitor" style="border: 5px solid #bec4d4; display: inline-block; padding-bottom: 50%">
             {% include "filesystem_monitor.html" %}
         </div> -->
-        {% endcomment %}
+        #}
 
-        {% for filename, path in bokeh_dict.items %}
+        {% for filename, path in bokeh_dict.items() %}
             <p>
                 <!-- <h4>{{filename}}</h4> -->
                 <!-- <h6>Date Modified: {{path.1}}</h6> -->
@@ -56,7 +56,7 @@
         {% endfor %}
 
 
-        {% comment %}
+        {#
         <div class="row">
             <div class="col-6">
                 {% include "filesystem_monitor.html" %}
@@ -73,11 +73,11 @@
                 {% include "filesystem_monitor2.html" %}
             </div>
         </div>
-        {% endcomment %}
+        #}
 
-        {% comment %}
+        {#
         <!-- {% include "jwql_webapp/filesystem_monitor_full.html" %} -->
-        {% endcomment %}
+        #}
 
 
         <!-- <div id="includedContent">Hello?</div>

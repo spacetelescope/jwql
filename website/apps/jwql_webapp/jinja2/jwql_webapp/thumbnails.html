@@ -5,7 +5,7 @@
 	<title>Unlooked {{ inst }} Images - JWST Quicklook</title>
 
 	<!-- Custom styles and scripts for this template -->
-	<link href="{{staticURL}}css/quicklook-thumbnails.css?{% now 'U' %}" rel="stylesheet">
+	<link href="{{ static('css/quicklook-thumbnails.css') }}?{% now 'U' %}" rel="stylesheet">
 	<!-- <link href="{{staticURL}}css/loader.css?{% now 'U' %}" rel="stylesheet"> -->
 
 {% endblock %}
@@ -43,13 +43,13 @@
 		    // Update the thumbnail to show the most processed filetype
 		    var img = document.getElementById('thumbnail'+i);
 		    if (suffixes.indexOf("cal") >= 0) {
-		        var jpg_path = '{{ staticURL }}thumbnails/' + file_root.slice(0,7) + '/' + file_root + '_cal_integ0.thumb';
+		        var jpg_path = '{{ static("thumbnails/") }}' + file_root.slice(0,7) + '/' + file_root + '_cal_integ0.thumb';
 		        img.src = jpg_path;
 		    } else if (suffixes.indexOf("rate") >= 0) {
-		        var jpg_path = '{{ staticURL }}thumbnails/' + file_root.slice(0,7) + '/' + file_root + '_rate_integ0.thumb';
+		        var jpg_path = '{{ static("thumbnails/") }}' + file_root.slice(0,7) + '/' + file_root + '_rate_integ0.thumb';
 		        img.src = jpg_path;
 		    } else if (suffixes.indexOf("uncal") >= 0) {
-		        var jpg_path = '{{ staticURL }}thumbnails/' + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
+		        var jpg_path = '{{ static("thumbnails/") }}' + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
 		        img.src = jpg_path;
 		    }
 		};
@@ -133,7 +133,7 @@
     	<!-- Filter and sort options -->
 		<div class="d-flex flex-row">
 			<!-- Filter Options -->
-			{% for filter_type, filter_options in dropdown_menus.items %}
+			{% for filter_type, filter_options in dropdown_menus.items() %}
     			<div class="mr-4">
 			    	Show only {{filter_type}}:
 			    	<div class="dropdown">
@@ -191,10 +191,9 @@
 		<!-- Display the data -->
 		<div id='thumbnail-array'>
 		{% for i, file in thumbnail_zipped_list %}
-			{% url 'jwql_webapp:view_image' inst file.file_root as viewimage_URL %}
 			<div class="thumbnail" detector="{{file.detector}}" proposal="{{file.program_id}}" file_root="{{file.file_root}}", exp_start="{{file.exp_start}}">
-				<a href='{{ viewimage_URL }}'>
-					<span class="helper"></span><img id='thumbnail{{i}}' onerror="this.src='{{staticURL}}jwql_webapp/images/imagenotfound.png'">
+				<a href={{ url('jwql_webapp:view_image', args=[inst, file.file_root]) }}>
+					<span class="helper"></span><img id='thumbnail{{i}}' onerror="this.src={{ static('jwql_webapp/images/imagenotfound.png') }}">
 					<script>determine_filetype_for_thumbnail("{{file.suffixes}}", "{{i}}", "{{file.file_root}}");</script>
 
 					<div class='color-fill' ></div>
@@ -203,7 +202,7 @@
 						Observation: {{file.observation}}<br>
 						Visit: {{file.visit}}<br>
 						Detector: {{file.detector}}<br>
-						Exp_Start: {{file.exp_start|floatformat:2}}<br>
+						Exp_Start: {{'%0.2f' | format(file.exp_start|float) }}<br>
 						<!-- Suffixes: {{file.3}}<br> -->
 						<!-- ID: {{file.file_root}}<br> -->
 					</div>
@@ -216,7 +215,7 @@
 	</main>
 
 	<!-- Needed javascript -->
-	<script src="{{staticURL}}js/tinysort.min.js?{% now 'U' %}"></script>
+	<script src="{{ static('js/tinysort.min.js') }}?{% now 'U' %}"></script>
 
 	<!-- <script type="text/javascript">
     function preloader(){

@@ -5,8 +5,8 @@
 	<title>View {{ inst }} Image - JWST Quicklook</title>
 
 	<!-- Custom styles for this template -->
-	<link href="{{staticURL}}css/quicklook-instrument.css?{% now 'U' %}" rel="stylesheet">
-	<link href="{{staticURL}}css/quicklook-viewimage.css?{% now 'U' %}" rel="stylesheet">
+	<link href="{{ static('css/quicklook-instrument.css') }}?{% now 'U' %}" rel="stylesheet">
+	<link href="{{ static('css/quicklook-viewimage.css') }}?{% now 'U' %}" rel="stylesheet">
 
 {% endblock %}
 
@@ -21,14 +21,14 @@
     		var fits_filename = '{{ file_root }}_' + type + '.fits'
     		document.getElementById("jpg_filename").innerHTML = '{{ file_root }}_' + type + '_integ0.jpg';
     		document.getElementById("fits_filename").innerHTML = fits_filename;
-    		document.getElementById("proposal").innerHTML = '{{ file_root|slice:"2:7" }}';
-    		document.getElementById("obs_id").innerHTML = '{{ file_root|slice:"7:10" }}';
-    		document.getElementById("visit_id").innerHTML = '{{ file_root|slice:"10:13" }}';
+    		document.getElementById("proposal").innerHTML = '{{ file_root[2:7] }}';
+    		document.getElementById("obs_id").innerHTML = '{{ file_root[7:10] }}';
+    		document.getElementById("visit_id").innerHTML = '{{ file_root[10:13] }}';
     		document.getElementById("detector").innerHTML = '{{ file_root}}'.split('_')[3];
 
     		// Show the appropriate image
     		var img = document.getElementById("image_viewer")
-    		var jpg_filepath = '{{ staticURL }}preview_images/{{ file_root|slice:":7" }}/{{ file_root }}_' + type + '_integ0.jpg';
+    		var jpg_filepath = '{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}_' + type + '_integ0.jpg';
     		img.src = jpg_filepath;
     		img.alt = jpg_filepath;
 
@@ -46,7 +46,7 @@
     		}
 
     		// Update the image download and header links
-    		document.getElementById("download_fits").href = '{{ staticURL }}filesystem/{{ file_root|slice:":7" }}/' + fits_filename;
+    		document.getElementById("download_fits").href = '{{ static("") }}filesystem/{{ file_root[:7] }}/' + fits_filename;
     		document.getElementById("download_jpg").href = jpg_filepath;
     		document.getElementById("view_header").href = "/jwql_webapp/{{ inst }}/" + fits_filename + "/hdr/";
 
@@ -90,7 +90,7 @@
 
     		// Update the JPG filename
 			var jpg_filename = '{{ file_root }}_' + suffix + '_integ' + new_integration + '.jpg'
-			var jpg_filepath = '{{ staticURL }}preview_images/{{ file_root|slice:":7" }}/' + jpg_filename
+			var jpg_filepath = '{{ static("") }}preview_images/{{ file_root[:7] }}/' + jpg_filename
 			document.getElementById("jpg_filename").innerHTML = jpg_filename;
 
 			// Show the appropriate image
@@ -137,7 +137,7 @@
 		<!-- View Header and proposal information -->
     	<p>
 	    	<a id="view_header" class="btn btn-primary mx-2" role="button" href="">View Header</a>
-	    	<a class="btn btn-primary mx-2 disabled" role="button" href="#"> View Proposal {{ file_root|slice:"2:7" }}</a>
+	    	<a class="btn btn-primary mx-2 disabled" role="button" href="#"> View Proposal {{ file_root[2:7] }}</a>
 	    </p>
 
 	    <!-- Display the image -->
@@ -145,15 +145,15 @@
 		    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("left");' disabled>&#9664;</button>
 		    <span class="image_preview">
 		    	<a id="int_count">Displaying integration 1/1</a><br>
-		    	<img id="image_viewer" src='{{ staticURL }}preview_images/{{ file_root|slice:":7" }}/{{ file_root }}_cal_integ0.jpg' alt='{{ file_root }}_cal_integ0.jpg'>
+		    	<img id="image_viewer" src='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}_cal_integ0.jpg' alt='{{ file_root }}_cal_integ0.jpg'>
 		    </span>
 		    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("right");' disabled>&#9658;</button>
 		</div>
 
 		<!-- Download the images? -->
 	    <p>
-	    	<a id="download_fits" class="btn btn-primary my-2 mx-2" role="button" href='{{ staticURL }}preview_images/{{ file|slice:":7" }}/{{ file }}' download>Download FITS</a>
-	    	<a id="download_jpg" class="btn btn-primary my-2 mx-2" role="button" href='{{ staticURL }}preview_images/{{ file|slice:":7" }}/{{ jpg }}' download>Download JPEG</a>
+	    	<a id="download_fits" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}' download>Download FITS</a>
+	    	<a id="download_jpg" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ jpg }}' download>Download JPEG</a>
 	    	<a class="btn btn-primary my-2 mx-2 disabled" role="button" href="#">Submit Anomaly</a>
 	    </p>
 

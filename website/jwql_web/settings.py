@@ -77,6 +77,15 @@ TEMPLATES = [
             ],
         },
     },
+    {
+        'BACKEND': 'django.template.backends.jinja2.Jinja2',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'environment': 'jwql_web.jinja2.environment',
+            'extensions': ['jwql_web.jinja2.DjangoNow'],
+        },
+    }
 ]
 
 WSGI_APPLICATION = 'jwql_web.wsgi.application'
