@@ -6,14 +6,14 @@
 
     <!-- Custom styles for this template -->
     <!-- Add "now" timetag to force autoreload the .css file -->
-    <link href="{{staticURL}}css/quicklook-home.css?{% now 'U' %}" rel="stylesheet">
+    <link href="{{ static('css/quicklook-home.css') }}?{% now 'U' %}" rel="stylesheet">
 
 {% endblock %}
 
 {% block content %}
 
     <main role="main" class="container">
-        <div style="text-align: center"><img src="{{staticURL}}jwql_webapp/images/JWQLlogo.png" width=350px></div><br>
+        <div style="text-align: center"><img src={{ static('jwql_webapp/images/JWQLlogo.png') }} width=350px></div><br>
 
     	<h4>About the project</h4>
 
@@ -21,7 +21,7 @@
 
         The project consists of the following components:<br><br>
 
-        <div style='text-align: center'><img src="{{staticURL}}jwql_webapp/images/jwql_project.png" width=80%></div><br>
+        <div style='text-align: center'><img src={{ static('jwql_webapp/images/jwql_project.png') }} width=80%></div><br>
 
         The list of automated monitors that the JWQL team is currently planning to develop, in collaboration with each instrument team, can be found on <a href="https://innerspace.stsci.edu/display/JWQLPROJ/Instrument+Monitor+Overview" target="_blank">Innerspace</a>.
 

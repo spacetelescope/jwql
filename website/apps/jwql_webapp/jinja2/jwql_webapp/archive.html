@@ -5,7 +5,7 @@
 	<title>Archived {{ inst }} Images - JWST Quicklook</title>
 
 	<!-- Custom styles and scripts for this template -->
-	<link href="{{staticURL}}css/quicklook-archive.css?{% now 'U' %}" rel="stylesheet">
+	<link href="{{ static('css/quicklook-archive.css') }}?{% now 'U' %}" rel="stylesheet">
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
 	<!-- <link href="{{staticURL}}css/loader.css?{% now 'U' %}" rel="stylesheet"> -->
 
@@ -25,13 +25,13 @@
 		    // Update the thumbnail to show the most processed filetype
 		    var img = document.getElementById('thumbnail'+i);
 		    if (suffixes.indexOf("cal") >= 0) {
-		        var jpg_path = '{{ staticURL }}thumbnails/' + file_root.slice(0,7) + '/' + file_root + '_cal_integ0.thumb';
+		        var jpg_path = '{{ static("thumbnails/") }}' + file_root.slice(0,7) + '/' + file_root + '_cal_integ0.thumb';
 		        img.src = jpg_path;
 		    } else if (suffixes.indexOf("rate") >= 0) {
-		        var jpg_path = '{{ staticURL }}thumbnails/' + file_root.slice(0,7) + '/' + file_root + '_rate_integ0.thumb';
+		        var jpg_path = '{{ static("thumbnails/") }}' + file_root.slice(0,7) + '/' + file_root + '_rate_integ0.thumb';
 		        img.src = jpg_path;
 		    } else if (suffixes.indexOf("uncal") >= 0) {
-		        var jpg_path = '{{ staticURL }}thumbnails/' + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
+		        var jpg_path = '{{ static("thumbnails/") }}' + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
 		        img.src = jpg_path;
 		    }
 		};
@@ -121,10 +121,9 @@
 		<!-- Display the data -->
 		<div id='proposal-array'>
 		{% for prop, thumb, n in zipped_thumbnails %}
-			{% url 'jwql_webapp:archive_thumb' inst prop as viewimage_URL %}
 			<div class="proposal text-center">
-				<a href='{{ viewimage_URL }}' id="proposal{{ forloop.counter0 }}" proposal="{{prop}}">
-					<span class="helper"></span><img src='{{ staticURL }}thumbnails/{{thumb}}' alt='' width=100%>
+				<a href={{ url('jwql_webapp:archive_thumb', args=[inst, prop]) }} id="proposal{{ loop.index }}" proposal="{{prop}}">
+					<span class="helper"></span><img src='{{ static("thumbnails/") }}{{thumb}}' alt='' width=100%>
 					<div class='color-fill' ></div>
 					<div class='thumbnail_info'>
 						<h3>{{prop}}</h3>
@@ -140,6 +139,6 @@
 	</main>
 
 	<!-- Needed javascript -->
-	<script src="{{staticURL}}js/tinysort.min.js?{% now 'U' %}"></script>
+	<script src="{{ static('js/tinysort.min.js') }}?{% now 'U' %}"></script>
 
 {% endblock %}

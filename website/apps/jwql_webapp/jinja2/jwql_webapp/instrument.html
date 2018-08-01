@@ -5,28 +5,28 @@
 	<title>{{ inst }} - JWST Quicklook</title>
 
 	<!-- Custom styles for this template -->
-	<link href="{{staticURL}}css/quicklook-instrument.css?{% now 'U' %}" rel="stylesheet">
+	<link href="{{ static('css/quicklook-instrument.css') }}?{% now 'U' %}" rel="stylesheet">
 
 {% endblock %}
 
 {% block content %}
 
     <main role="main" class="container">
-    	<h1 style="text-align: center"><img src="{{staticURL}}/jwql_webapp/images/{{inst}}logo.png" width=40 style="vertical-align: middle; max-width: 40; max-height: 40"> {{ inst }}</h1></br>
+    	<h1 style="text-align: center"><img src="{{ static('') }}/jwql_webapp/images/{{inst}}logo.png" width=40 style="vertical-align: middle; max-width: 40; max-height: 40"> {{ inst }}</h1></br>
 
     	<!-- List all possible tools -->
     	<div class="row">
     		<div class="col-md-6 text-center">
     			<!-- Images -->
     			<h3>Images</h3>
-    			<a class="btn btn-primary my-2" role="button" href="{% url 'jwql_webapp:unlooked' inst %}">Unlooked Images</a></br>
+    			<a class="btn btn-primary my-2" role="button" href={{ url('jwql_webapp:unlooked', args=[inst]) }}>Unlooked Images</a></br>
     			<a role="button" class="btn btn-primary my-2 disabled" href="#">Image Anomalies</a></br>
-    			<a role="button" class="btn btn-primary my-2" href="{% url 'jwql_webapp:archive' inst %}">Archived Images</a></br>
+    			<a role="button" class="btn btn-primary my-2" href={{ url('jwql_webapp:archive', args=[inst]) }}>Archived Images</a></br>
 			</div>
 			<div class="col-md-6 text-center">
 				<!-- Monitors -->
     			<h3>Monitors</h3>
-    			{% for key, inst_tools in tools.items %}
+    			{% for key, inst_tools in tools.items() %}
 					{% if key == inst %}
 						{% for tool in inst_tools %}
 							{% if "Monitor" in tool %}

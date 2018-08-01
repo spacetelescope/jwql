@@ -6,7 +6,7 @@
 
 	<!-- Custom styles for this template -->
 	<!-- Add "now" timetag to force autoreload the .css file -->
-	<link href="{{staticURL}}css/quicklook-home.css?{% now 'U' %}" rel="stylesheet">
+	<link href="{{ static('css/quicklook-home.css') }}?{% now 'U' %}" rel="stylesheet">
 
 {% endblock %}
 
@@ -17,7 +17,7 @@
     	The James Webb Quicklook Application (JWQL) is a database-driven web application and software repository for use by the JWST instrument teams.
 
     	<div class="row my-2" style="margin-left: 7rem; margin-right: 7rem;">
-    		<div class="col-md-6 py-2"><a class="btn btn-block btn-primary" role="button" href="{% url 'jwql_webapp:dashboard' %}">Dashboard</a></div>
+    		<div class="col-md-6 py-2"><a class="btn btn-block btn-primary" role="button" href={{ url('jwql_webapp:dashboard') }}>Dashboard</a></div>
 			<div class="col-md-6 py-2"><a class="btn btn-block btn-primary disabled" role="button" href="#">Query Database</a></div>
 		</div>
 
@@ -31,7 +31,7 @@
 				{% if inst_list %}
 					{% for inst in inst_list %}
 						<!-- <div class="col-md-2 text-center"> -->
-							<a class='instrument_panel' href="{% url 'jwql_webapp:instrument' inst %}">
+							<a class='instrument_panel' href={{ url('jwql_webapp:instrument', args=[inst]) }}>
 
                                 <!-- <p class="btn btn-primary" role="button">{{ inst }}</p> -->
                                 <p class="instrument_name">{{ inst }}</p>
@@ -39,7 +39,7 @@
                                 <div class="frame">
                                 <!-- <p class="btn btn-primary" role="button">{{ inst }}</p> -->
 <!--  -->
-                                    <span class="helper"></span><img src="{{staticURL}}/jwql_webapp/images/{{inst}}logo.png" width=100 style="vertical-align: middle">
+                                    <span class="helper"></span><img src="{{ static('') }}jwql_webapp/images/{{ inst }}logo.png" width=100 style="vertical-align: middle">
                                 </div><br>
 
 							</a>
