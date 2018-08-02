@@ -113,8 +113,8 @@ class Anomaly(base):
         a_list = [col for col, val in self.__dict__.items()
                   if val is True and isinstance(val, bool)]
 
-        return """Anomaly {0.id}: {0.filename} flagged at {0.flag_date} for\
-                  {1}""".format(self, a_list)
+        return """Anomaly {0.id}: {0.filename} flagged at {0.flag_date} for \
+{1}""".format(self, a_list)
 
 
 base.metadata.create_all(engine)
