@@ -24,35 +24,42 @@ Authors
 
 """
 
-import os
-
+import pandas as pd
+from ..utils import utils
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import create_engine
-from sqlalchemy import Date
 from sqlalchemy import DateTime
-from sqlalchemy import Index
-from sqlalchemy import Enum
-from sqlalchemy import ForeignKey
-from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy import Integer
 from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import String
-from sqlalchemy import Time
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.types import Float
+from sqlalchemy.orm.query import Query
+from datetime import datetime
+
+# SETTINGS = utils.get_config()
+SETTINGS = {'connection_string': 'sqlite://'}
+
+
+# Monkey patch Query with data_frame method
+def data_frame(self):
+    """Method to return a pandas.DataFrame of the results"""
+    return pd.read_sql(self.statement, self.session.bind)
+
+
+Query.data_frame = data_frame
 
 
 def load_connection(connection_string):
-    """Return ``session``, ``base``, and ``engine`` objects for
+    """Return ``session``, ``base``, ``engine``, and ``metadata`` objects for
     connecting to the ``jwqldb`` database.
 
     Create an ``engine`` using an given ``connection_string``. Create a
     ``base`` class and ``session`` class from the ``engine``. Create an
     instance of the ``session`` class. Return the ``session``,
     ``base``, and ``engine`` instances.
-    
+
     Stolen from https://github.com/spacetelescope/acsql/blob/master/acsql/
     database/database_interface.py
 
@@ -72,8 +79,10 @@ def load_connection(connection_string):
         Provides a base class for declarative class definitions.
     engine : engine object
         Provides a source of database connectivity and behavior.
+    meta: metadata object
+        The connection metadata
     """
-    engine = create_engine(connection_string, echo=False, pool_timeout=100000)
+    engine = create_engine(connection_string, echo=False)
     base = declarative_base(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
@@ -82,4 +91,30 @@ def load_connection(connection_string):
     return session, base, engine, meta
 
 
-# session, base, engine = load_connection(SETTINGS['connection_string'])
+session, base, engine, meta = load_connection(SETTINGS['connection_string'])
+
+
+class Anomaly(base):
+    """ORM for the anomalies table"""
+    # Name the table
+    __tablename__ = 'anomalies'
+
+    # Define the columns
+    id = Column(Integer, primary_key=True, nullable=False)
+    filename = Column(String, nullable=False)
+    flag_date = Column(DateTime, nullable=False, default=datetime.now())
+    bowtie = Column(Boolean, nullable=False, default=False)
+    dragon = Column(Boolean, nullable=False, default=False)
+    snowball = Column(Boolean, nullable=False, default=False)
+
+    def __repr__(self):
+
+        # Get the columns that are True
+        a_list = [col for col, val in self.__dict__.items()
+                  if val is True and isinstance(val, bool)]
+
+        return """Anomaly {0.id}: {0.filename} flagged at {0.flag_date} for\
+                  {1}""".format(self, a_list)
+
+
+base.metadata.create_all(engine)
