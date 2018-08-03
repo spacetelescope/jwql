@@ -470,9 +470,9 @@ def generate_preview_images():
     #thumbnail_filesystem = get_config()['thumbnail_filesystem']
 
     # FOR TESTING
-    filesystem = '/Users/hilbert/python_repos/test_jwql/testing/'
-    preview_image_filesystem = '/Users/hilbert/python_repos/test_jwql/preview_images/'
-    thumbnail_filesystem = '/Users/hilbert/python_repos/test_jwql/thumbnail_images/'
+    filesystem = 'python_repos/test_jwql/testing/'
+    preview_image_filesystem = 'python_repos/test_jwql/preview_images/'
+    thumbnail_filesystem = 'python_repos/test_jwql/thumbnail_images/'
 
     filenames = glob(os.path.join(filesystem, '*/*.fits'))
     grouped_filenames  = group_filenames(filenames)
