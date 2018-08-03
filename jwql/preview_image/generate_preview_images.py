@@ -484,20 +484,20 @@ def generate_preview_images():
         except ValueError as error:
             identifier = os.path.basename(file_list[0]).split('.fits')[0]
 
-        output_directory = os.path.join(preview_image_filesystem, identifier)
+        preview_output_directory = os.path.join(preview_image_filesystem, identifier)
         thumbnail_output_directory = os.path.join(thumbnail_filesystem, identifier)
 
         # Check to see if the preview images already exist and skip
         # if they do
-        file_exists = check_existence(file_list[0], output_directory)
+        file_exists = check_existence(file_list[0], preview_output_directory)
         if file_exists:
             print("JPG already exists for {}, skipping.".format(file_list[0]))
             continue
 
         # Create the output directories if necessary
-        if not os.path.exists(output_directory):
-            os.makedirs(output_directory)
-            permissions.set_permissions(output_directory)
+        if not os.path.exists(preview_output_directory):
+            os.makedirs(preview_output_directory)
+            permissions.set_permissions(preview_output_directory)
         if not os.path.exists(thumbnail_output_directory):
             os.makedirs(thumbnail_output_directory)
             permissions.set_permissions(thumbnail_output_directory)
@@ -517,30 +517,55 @@ def generate_preview_images():
                 max_size = 32
             
         # Create and save the preview image and thumbnail
-        args = zip((False, True), (output_directory, thumbnail_output_directory))
-        for thumbnail_bool, directory in args:
-            try:
-                im = PreviewImage(filename, "SCI")
-                im.clip_percent = 0.01
-                im.scaling = 'log'
-                im.cmap = 'viridis'
-                im.output_format = 'jpg'
-                im.thumbnail = thumbnail_bool
-                im.output_directory = directory
+        #args = zip((False, True), (output_directory, thumbnail_output_directory))
+        #for thumbnail_bool, directory in args:
+        #    try:
+        #        im = PreviewImage(filename, "SCI")
+        #        im.clip_percent = 0.01
+        #        im.scaling = 'log'
+        #        im.cmap = 'viridis'
+        #        im.output_format = 'jpg'
+        #        im.thumbnail = thumbnail_bool
+        #        im.output_directory = directory
+        #
+        #        # If a mosaic was made from more than one file
+        #        # insert it and it's associated DQ array into the
+        #        # instance of PreviewImage. Also set the input
+        #        # filename to indicate that we have mosaicked data
+        #        if len(file_list) != 1:
+        #            im.data = mosaic_image
+        #            im.dq = mosaic_dq
+        #            im.file = dummy_file
+        #            
+        #        im.make_image(max_img_size=max_size)
+        #    except ValueError as error:
+        #        print(error)
 
-                # If a mosaic was made from more than one file
-                # insert it and it's associated DQ array into the
-                # instance of PreviewImage. Also set the input
-                # filename to indicate that we have mosaicked data
-                if len(file_list) != 1:
-                    im.data = mosaic_image
-                    im.dq = mosaic_dq
-                    im.file = dummy_file
+        try:
+            im = PreviewImage(filename, "SCI")
+            im.clip_percent = 0.01
+            im.scaling = 'log'
+            im.cmap = 'viridis'
+            im.output_format = 'jpg'
+            im.preview_output_directory = preview_output_directory
+            im.thumbnail_output_directory = thumbnail_output_directory
+
+            # If a mosaic was made from more than one file
+            # insert it and it's associated DQ array into the
+            # instance of PreviewImage. Also set the input
+            # filename to indicate that we have mosaicked data
+            if len(file_list) != 1:
+                im.data = mosaic_image
+                im.dq = mosaic_dq
+                im.file = dummy_file
                     
-                im.make_image(max_img_size=max_size)
-            except ValueError as error:
-                print(error)
+            im.make_image(max_img_size=max_size)
+        except ValueError as error:
+            print(error)
+            
 
+
+                
 def group_filenames(input_files):
     """Given a list of jwst filenames, group together
     files from the same exposure. These files will share

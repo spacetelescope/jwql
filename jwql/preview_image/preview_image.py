@@ -67,9 +67,9 @@ class PreviewImage():
         self.cmap = 'viridis'
         self.file = filename
         self.output_format = 'jpg'
-        self.output_directory = None
+        self.preview_output_directory = None
+        self.thumbnail_output_directory = None
         self.scaling = 'log'
-        self.thumbnail = False
 
         # Read in file
         self.data, self.dq = self.get_data(self.file, extension)
@@ -180,7 +180,7 @@ class PreviewImage():
         return data, dq
 
     def make_figure(self, image, integration_number, min_value, max_value,
-                    scale, maxsize=8):
+                    scale, maxsize=8, thumbnail=False):
         """
         Create the matplotlib figure of the image
 
@@ -188,14 +188,25 @@ class PreviewImage():
         ----------
         image : obj
             2D ``numpy`` ``ndarray`` of floats
+
         integration_number : int
             Integration number within exposure
+
         min_value : float
             Minimum value for display
+
         max_value : float
             Maximum value for display
+
         scale : str
             Image scaling (``log``, ``linear``)
+
+        maxsize : int
+            Size of the longest dimension of the output figure (inches)
+
+        thumbnail : bool
+            True to create a thumbnail image, False to create the full 
+            preview image
 
         Returns
         -------
@@ -226,7 +237,7 @@ class PreviewImage():
             shiftmax = max_value - min_value + 1
 
             # If making a thumbnail, make a figure with no axes
-            if self.thumbnail:
+            if thumbnail:
                 fig = plt.imshow(shiftdata,
                            norm=colors.LogNorm(vmin=shiftmin, vmax=shiftmax),
                            cmap=self.cmap)
@@ -275,13 +286,13 @@ class PreviewImage():
             fig, ax = plt.subplots(figsize=(xsize, ysize))
             cax = ax.imshow(image, clim=(min_value, max_value), cmap=self.cmap)
 
-            if not self.thumbnail:
+            if not thumbnail:
                 cbar = fig.colorbar(cax)
                 ax.set_xlabel('Pixels')
                 ax.set_ylabel('Pixels')
 
         # If preview image, set a title
-        if not self.thumbnail:
+        if not thumbnail:
             filename = os.path.split(self.file)[-1]
             ax.set_title(filename + ' Int: {}'.format(np.int(integration_number)))
 
@@ -311,21 +322,31 @@ class PreviewImage():
             minval, maxval = self.find_limits(frame, self.dq,
                                               self.clip_percent)
 
-            # Create matplotlib object
+            # Create preview image matplotlib object
             indir, infile = os.path.split(self.file)
             suffix = '_integ{}.{}'.format(i, self.output_format)
-            if self.output_directory is None:
+            if self.preview_output_directory is None:
                 outdir = indir
             else:
-                outdir = self.output_directory
+                outdir = self.preview_output_directory
             outfile = os.path.join(outdir, infile.split('.')[0] + suffix)
             self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
-                             maxsize=max_img_size)
-            self.save_image(outfile)
+                             maxsize=max_img_size, thumbnail=False)
+            self.save_image(outfile, thumbnail=False)
             plt.close()
 
+            # Create thumbnail image matplotlib object
+            if self.thumbnail_output_directory is None:
+                outdir = indir
+            else:
+                outdir = self.thumbnail_output_directory
+            outfile = os.path.join(outdir, infile.split('.')[0] + suffix)
+            self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
+                             maxsize=max_img_size, thumbnail=True)
+            self.save_image(outfile, thumbnail=True)
+            plt.close()
 
-    def save_image(self, outfile):
+    def save_image(self, fname, thumbnail=False):
         """
         Save an image in the requested output format and sets the
         appropriate permissions
@@ -334,17 +355,22 @@ class PreviewImage():
         ----------
         image : obj
             A ``matplotlib`` figure object
+
         fname : str
             Output filename
+
+        thumbnail : bool
+            True if saving a thumbnail image, false for the full
+            preview image.
         """
 
-        plt.savefig(outfile, bbox_inches='tight', pad_inches=0)
-        permissions.set_permissions(outfile)
+        plt.savefig(fname, bbox_inches='tight', pad_inches=0)
+        permissions.set_permissions(fname)
 
         # If the image is a thumbnail, rename to '.thumb'
-        if self.thumbnail:
-            new_outfile = outfile.replace('.jpg', '.thumb')
-            os.rename(outfile, new_outfile)
-            print('Saved image to {}'.format(new_outfile))
+        if thumbnail:
+            thumb_fname = fname.replace('.jpg', '.thumb')
+            os.rename(fname, thumb_fname)
+            print('Saved image to {}'.format(thumb_fname))
         else:
-            print('Saved image to {}'.format(outfile))
+            print('Saved image to {}'.format(fname))
