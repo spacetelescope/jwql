@@ -152,7 +152,11 @@ class PreviewImage():
                     except:
                         pass
                 if ext in extnames:
-                    data = hdulist[ext].data.astype(np.float)
+                    dimensions = len(hdulist[ext].data.shape)
+                    if dimensions == 4:
+                        data = hdulist[ext].data[:, [0,-1], :, :].astype(np.float)
+                    else:
+                        data = hdulist[ext].data.astype(np.float)
                 else:
                     raise ValueError(("WARNING: no {} extension in {}!"
                                       .format(ext, filename)))
@@ -162,6 +166,14 @@ class PreviewImage():
                 else:
                     yd, xd = data.shape[-2:]
                     dq = np.ones((yd, xd), dtype="bool")
+
+                # Collect information on aperture location within the
+                # full detector. This is needed for mosaicking NIRCam
+                # detectors later.
+                self.xstart = hdulist[0].header['SUBSTRT1']
+                self.ystart = hdulist[0].header['SUBSTRT2']
+                self.xlen = hdulist[0].header['SUBSIZE1']
+                self.ylen = hdulist[0].header['SUBSIZE2']
         else:
             raise FileNotFoundError(("WARNING: {} does not exist!"
                                      .format(filename)))
@@ -248,10 +260,17 @@ class PreviewImage():
                 tlabelstr = [format_string % number for number in tlabelflt]
                 cbar = fig.colorbar(cax, ticks=tickvals)
                 cbar.ax.set_yticklabels(tlabelstr)
-                ax.set_xlabel('Pixels')
-                ax.set_ylabel('Pixels')
+                cbar.ax.tick_params(labelsize=maxsize * 5./4)
+                #cbar.ax.set_ylabel('Signal', rotation=270, fontsize=maxsize*5./4)
+                ax.set_xlabel('Pixels', fontsize = maxsize * 5./4)
+                ax.set_ylabel('Pixels', fontsize = maxsize * 5./4)
+                ax.tick_params(labelsize=maxsize)
                 plt.rcParams.update({'axes.titlesize': 'small'})
-
+                plt.rcParams.update({'font.size': maxsize * 5./4})
+                plt.rcParams.update({'axes.labelsize': maxsize * 5./4})
+                plt.rcParams.update({'ytick.labelsize': maxsize * 5./4})
+                plt.rcParams.update({'xtick.labelsize': maxsize * 5./4})
+                
         elif scale == 'linear':
             fig, ax = plt.subplots(figsize=(xsize, ysize))
             cax = ax.imshow(image, clim=(min_value, max_value), cmap=self.cmap)
@@ -266,7 +285,7 @@ class PreviewImage():
             filename = os.path.split(self.file)[-1]
             ax.set_title(filename + ' Int: {}'.format(np.int(integration_number)))
 
-    def make_image(self):
+    def make_image(self, max_img_size=8):
         """
         MAIN FUNCTION
         """
@@ -300,7 +319,8 @@ class PreviewImage():
             else:
                 outdir = self.output_directory
             outfile = os.path.join(outdir, infile.split('.')[0] + suffix)
-            self.make_figure(frame, i, minval, maxval, self.scaling.lower())
+            self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
+                             maxsize=max_img_size)
             self.save_image(outfile)
             plt.close()
 
