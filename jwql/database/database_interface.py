@@ -38,11 +38,11 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.query import Query
 from datetime import datetime
 
-# SETTINGS = utils.get_config()
-SETTINGS = {'connection_string': 'sqlite://'}
+SETTINGS = utils.get_config()
 
 
 # Monkey patch Query with data_frame method
+@property
 def data_frame(self):
     """Method to return a pandas.DataFrame of the results"""
     return pd.read_sql(self.statement, self.session.bind)
