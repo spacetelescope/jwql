@@ -127,13 +127,22 @@ class Anomaly(base):
     other = Column(Boolean, nullable=False, default=False)
 
     def __repr__(self):
-
+        """Return the canonical string representation of the object"""
         # Get the columns that are True
         a_list = [col for col, val in self.__dict__.items()
                   if val is True and isinstance(val, bool)]
 
         return """Anomaly {0.id}: {0.filename} flagged at {0.flag_date} for \
 {1}""".format(self, a_list)
+
+    @property
+    def colnames(self):
+        """A list of all the column names in this table"""
+        # Get the columns
+        a_list = [col for col, val in self.__dict__.items()
+                  if isinstance(val, bool)]
+
+        return a_list
 
 
 base.metadata.create_all(engine)
