@@ -292,6 +292,7 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     plots = [p1, p2, p3, p4]
     plot_names = ['filecount', 'system_stats', 'filecount_type', 'size_type']
     for plot, name in zip(plots, plot_names):
+        plot.sizing_mode = 'stretch_both'
         script, div = components(plot)
 
         div_outfile = os.path.join(outputs_dir, "{}_component.html".format(name))
