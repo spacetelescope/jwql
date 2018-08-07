@@ -48,9 +48,6 @@ from jwql.utils.utils import get_config, filename_parser
 
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
-PREVIEW_DIR = os.path.join(get_config()['jwql_dir'], 'preview_images')
-THUMBNAIL_DIR = os.path.join(get_config()['jwql_dir'], 'thumbnails')
-OUTPUT_DIR = get_config()['outputs']
 INST_LIST = ['FGS', 'MIRI', 'NIRCam', 'NIRISS', 'NIRSpec']
 TOOLS = {'FGS': ['Bad Pixel Monitor'],
          'MIRI': ['Dark Current Monitor',
@@ -105,6 +102,7 @@ def archived_proposals(request, inst):
         Outgoing response sent to the webpage
     """
     template = 'jwql_webapp/archive.html'
+    thumbnail_dir = os.path.join(get_config()['jwql_dir'], 'thumbnails')
 
     # Query files from MAST database
     # filepaths, filenames = DatabaseConnection('MAST', instrument=inst).\
@@ -128,7 +126,7 @@ def archived_proposals(request, inst):
     thumbnails = []
     n_files = []
     for prop in proposals:
-        thumb_search_filepath = os.path.join(THUMBNAIL_DIR, 'jw{}'.format(prop), 'jw{}*rate*.thumb'.format(prop))
+        thumb_search_filepath = os.path.join(thumbnail_dir, 'jw{}'.format(prop), 'jw{}*rate*.thumb'.format(prop))
         thumbnail = glob.glob(thumb_search_filepath)
         if len(thumbnail) > 0:
             thumbnail = thumbnail[0]
@@ -185,20 +183,34 @@ def dashboard(request):
         Outgoing response sent to the webpage
     """
     template = 'jwql_webapp/dashboard.html'
+    output_dir = get_config()['outputs']
 
-    bokeh_page = os.path.abspath('apps/jwql_webapp/templates/jwql_webapp/filesystem_monitor_full.html')
-    bokeh_dict = {}
-    with open(bokeh_page) as f:
-        bokehplot = f.read()
-    bokeh_dict[bokeh_page.split('/')[-1]] = [bokehplot, time.ctime(os.path.getmtime(bokeh_page))]
-    bokeh_dict = OrderedDict(sorted(bokeh_dict.items()))
+    embed_components = {}
+    for dir_name, subdir_list, file_list in os.walk(output_dir):
+        monitor_name = os.path.basename(dir_name)
+        embed_components[monitor_name] = {}
+        for fname in file_list:
+            if 'component' in fname:
+                full_fname = '{}/{}'.format(monitor_name, fname)
+                plot_name = fname.split('_component')[0]
+
+                # Get the div
+                html_file = full_fname.split('.')[0] + '.html'
+                with open(os.path.join(output_dir, html_file)) as f:
+                    div = f.read()
+
+                # Get the script
+                js_file = full_fname.split('.')[0] + '.js'
+                with open(os.path.join(output_dir, js_file)) as f:
+                    script = f.read()
+                embed_components[monitor_name][plot_name] = [div, script]
 
     context = {'inst': '',
                'inst_list': INST_LIST,
                'tools': TOOLS,
-               'outputs': OUTPUT_DIR,
-               'filesystem_html': os.path.join(OUTPUT_DIR, 'filesystem_monitor', 'filesystem_monitor.html'),
-               'bokeh_dict': bokeh_dict}
+               'outputs': output_dir,
+               'filesystem_html': os.path.join(output_dir, 'filesystem_monitor', 'filesystem_monitor.html'),
+               'embed_components': embed_components}
 
     return render(request, template, context)
 
@@ -266,6 +278,7 @@ def view_image(request, inst, file_root, rewrite=False):
         Outgoing response sent to the webpage
     """
     template = 'jwql_webapp/view_image.html'
+    preview_dir = os.path.join(get_config()['jwql_dir'], 'preview_images')
 
     # Find all of the matching files
     dirname = file_root[:7]
@@ -280,7 +293,7 @@ def view_image(request, inst, file_root, rewrite=False):
         suffix = os.path.basename(file).split('_')[4].split('.')[0]
         suffixes.append(suffix)
 
-        jpg_dir = os.path.join(PREVIEW_DIR, dirname)
+        jpg_dir = os.path.join(preview_dir, dirname)
         jpg_filename = os.path.basename(os.path.splitext(file)[0] + '_integ0.jpg')
         jpg_filepath = os.path.join(jpg_dir, jpg_filename)
 
@@ -298,7 +311,7 @@ def view_image(request, inst, file_root, rewrite=False):
             im.make_image()
 
         # Record how many integrations there are per filetype
-        search_jpgs = os.path.join(PREVIEW_DIR, dirname, file_root + '_{}_integ*.jpg'.format(suffix))
+        search_jpgs = os.path.join(preview_dir, dirname, file_root + '_{}_integ*.jpg'.format(suffix))
         n_jpgs = len(glob.glob(search_jpgs))
         n_ints[suffix] = n_jpgs
 

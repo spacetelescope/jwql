@@ -8,30 +8,16 @@
     <!-- Add "now" timetag to force autoreload the .css file -->
     <link href="{{ static('css/quicklook-dashboard.css') }}?{% now 'U' %}" rel="stylesheet">
 
-   <!--  <script>
-    $(function(){
-        // var filename = "file://{{outputs}}filesystem_monitor/filesystem_monitor.html"
-        var url = "/jwql_webapp/filesystem_monitor"
-        $("#includedContent").load(url, function(){
-            alert('URL ' + url + ' was loaded');
-        });
-        // $('#includedContent').text('yeah hello, ' + url);
-        // document.getElementById("includedContent").innerHTML='<object type="text/html" data="{{outputs}}filesystem_monitor/ filesystem_monitor.html" ></object>'
-        // alert('something happened at least:' + filename);
-    });
-
-    // function load_filesystem (filename) {
-    //     $("#includedContent").load(filename);
-    //     $('#includedContent').text('yeah hello, ' + filename);
-    // }
-    </script> -->
 
     <link href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.5.min.css" rel="stylesheet" type="text/css">
-    <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.5.min.js"></script>
-
-    <!-- <script type="text/javascript" src="/Users/lchambers/JWQL/filesystem_monitor.js?{% now 'U' %}"></script> -->
-    <script type="text/javascript" src="{{ static('js/filesystem_monitor.js') }}?{% now 'U' %}"></script>
-    <script type="text/javascript" src="{{ static('js/filesystem_monitor2.js') }}?{% now 'U' %}"></script>
+    <script type="text/javascript" src="http://cdn.pydata.org/bokeh/release/bokeh-0.12.5.min.js"></script>
+    <script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.5.min.js"></script>
+    {% for monitor_name, plots in embed_components.items() %}
+        {% for plot_name, components in plots.items() %}
+            {{ components[1] | safe}}
+            <!--{# <script type="text/javascript" src={{ static(components[1]) }}></script> #} -->
+        {% endfor %}
+    {% endfor %}
 
 {% endblock %}
 
@@ -39,52 +25,16 @@
 
     <main role="main" class='dashboard'>
 
-        I am here. It's not completely broken. {{outputs}}filesystem_monitor/filesystem_monitor.html
-
-        {#
-        <!-- <div class="filesystem_monitor" style="border: 5px solid #bec4d4; display: inline-block; padding-bottom: 50%">
-            {% include "filesystem_monitor.html" %}
-        </div> -->
-        #}
-
-        {% for filename, path in bokeh_dict.items() %}
-            <p>
-                <!-- <h4>{{filename}}</h4> -->
-                <!-- <h6>Date Modified: {{path.1}}</h6> -->
-                {{path.0|safe}}
-            </p>
-        {% endfor %}
-
-
-        {#
         <div class="row">
-            <div class="col-6">
-                {% include "filesystem_monitor.html" %}
-            </div>
-            <div class="col-6"">
-                {% include "filesystem_monitor2.html" %}
-            </div>
+            {% for monitor_name, plots in embed_components.items() %}
+                {% for plot_name, components in plots.items() %}
+                    <div class="col-6">
+                        {{  components[0] | safe }}
+                    </div>
+                {% endfor %}
+            {% endfor %}
         </div>
-        <div class="row">
-            <div class="col-6">
-                {% include "filesystem_monitor.html" %}
-            </div>
-            <div class="col-6"">
-                {% include "filesystem_monitor2.html" %}
-            </div>
-        </div>
-        #}
 
-        {#
-        <!-- {% include "jwql_webapp/filesystem_monitor_full.html" %} -->
-        #}
-
-
-        <!-- <div id="includedContent">Hello?</div>
-         <script>load_filesystem('{{outputs}}filesystem_monitor/filesystem_monitor.html');</script>
-
-        <div id="demo">test</div>
- -->
 	</main>
 
 {% endblock %}
