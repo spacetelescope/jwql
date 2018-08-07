@@ -1,4 +1,4 @@
-"""Maps URL paths to views in the jwql project.
+"""Maps URL paths to views in the ``jwql`` project.
 
 This module connects requested URL paths to the corresponding view in
 ``views.py`` for each webpage in the Quicklook project. When Django is

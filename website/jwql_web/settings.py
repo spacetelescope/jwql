@@ -1,4 +1,4 @@
-"""Django settings for jwql project.
+"""Django settings for ``jwql`` project.
 
 Contains essential project settings, including a list of installed
 apps, where to find templates, credentials for connection to the
@@ -19,7 +19,7 @@ For the full list of settings and their values, see
 Dependencies
 ------------
     The user must have a configuration file named ``config.json``
-    placed in jwql/utils/ directory.
+    placed in the ``jwql/utils/`` directory.
 """
 
 import os
