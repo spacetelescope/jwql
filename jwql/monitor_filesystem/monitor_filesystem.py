@@ -110,7 +110,6 @@ def filesystem_monitor():
     out = subprocess.check_output('df {}'.format(filesystem), shell=True)
     outstring = out.decode("utf-8")  # put into string for parsing from byte format
     parsed = outstring.split(sep=None)
-    logging.info(parsed)
 
     # Select desired elements from parsed string
     total = int(parsed[8])  # in blocks of 512 bytes
@@ -127,8 +126,7 @@ def filesystem_monitor():
         f.write("{0} {1:15d} {2:15d} {3:15d} {4:15d} {5}\n".format(now, results_dict['file_count'],
                 total, available, used, percent_used))
     set_permissions(statsfile)
-    logging.info('Saved file statistics to:')
-    logging.info('{}'.format(statsfile))
+    logging.info('Saved file statistics to: {}'.format(statsfile))
 
     # set up and read out stats on files by type
     filesbytype = os.path.join(outputs_dir, 'filesbytype.txt')
@@ -306,7 +304,7 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
             f.write(script)
             f.close()
 
-        logging.info('Saved components files: {}, {}'.format(div_outfile, script_outfile))
+        logging.info('Saved components files: {}_component.html and {}_component.js'.format(name, name))
 
     logging.info('Filesystem statistics plotting complete.')
 
