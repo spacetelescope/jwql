@@ -17,13 +17,17 @@ Use
 """
 
 import os
+import logging
+
 
 from astroquery.mast import Mast
 from bokeh.charts import Donut, save, output_file
+from bokeh.embed import components
 import pandas as pd
 
-from ..permissions.permissions import set_permissions
-from ..utils.utils import get_config, JWST_DATAPRODUCTS, JWST_INSTRUMENTS
+from jwql.permissions.permissions import set_permissions
+from jwql.utils.utils import get_config, JWST_DATAPRODUCTS, JWST_INSTRUMENTS
+from jwql.logging.logging_functions import configure_logging, log_info, log_fail
 
 
 def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
@@ -135,6 +139,8 @@ def instrument_keywords(instrument, caom=False):
     return keywords
 
 
+@log_fail
+@log_info
 def jwst_inventory(instruments=JWST_INSTRUMENTS,
                    dataproducts=['image', 'spectrum', 'cube'],
                    caom=False, plot=False):
@@ -157,6 +163,7 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
     astropy.table.table.Table
         The table of record counts for each instrument and mode
     """
+    logging.info('Searching database...')
     # Iterate through instruments
     inventory, keywords = [], {}
     for instrument in instruments:
@@ -174,6 +181,9 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
         # Add the keywords to the dict
         keywords[instrument] = instrument_keywords(instrument, caom=caom)
 
+    logging.info('Completed database search for {} instruments and {} data products.'.
+                 format(instruments, dataproducts))
+
     # Make the table
     all_cols = ['instrument']+dataproducts+['total']
     table = pd.DataFrame(inventory, columns=all_cols)
@@ -185,20 +195,60 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
 
     # Plot it
     if plot:
+        # Determine plot location and names
+        output_dir = get_config()['outputs']
+
+        if caom:
+            output_filename = 'database_monitor_caom'
+        else:
+            output_filename = 'database_monitor_jwst'
 
         # Make the plot
         plt = Donut(table, label=['instrument', 'dataproduct'], values='files',
                     text_font_size='12pt', hover_text='files',
                     name="JWST Inventory", plot_width=600, plot_height=600)
 
-        # Save the plot
-        if caom:
-            output_filename = 'database_monitor_caom.html'
-        else:
-            output_filename = 'database_monitor_jwst.html'
-        outfile = os.path.join(get_config()['outputs'], 'database_monitor', output_filename)
+        # Save the plot as full html
+        html_filename = output_filename + '.html'
+        outfile = os.path.join(output_dir, 'database_monitor', html_filename)
         output_file(outfile)
         save(plt)
         set_permissions(outfile)
 
+        logging.info('Saved Bokeh plots as HTML file: ', html_filename)
+
+        # Save the plot as components
+        plt.sizing_mode = 'stretch_both'
+        script, div = components(plt)
+
+        div_outfile = os.path.join(output_dir, output_filename + "_component.html")
+        with open(div_outfile, 'w') as f:
+            f.write(div)
+            f.close()
+        set_permissions(div_outfile)
+
+        script_outfile = os.path.join(output_dir, output_filename + "_component.js")
+        with open(script_outfile, 'w') as f:
+            f.write(script)
+            f.close()
+        set_permissions(script_outfile)
+
+        logging.info('Saved Bokeh components files: {}_component.html and {}_component.js'.format(output_filename, output_filename))
+
     return table, keywords
+
+
+if __name__ == '__main__':
+
+    # Configure logging
+    module = os.path.basename(__file__).strip('.py')
+    configure_logging(module)
+
+    # Run the monitors
+    logging.info('Beginning database monitoring.')
+    jwst_inventory(instruments=JWST_INSTRUMENTS,
+                   dataproducts=['image', 'spectrum', 'cube'],
+                   caom=False, plot=True)
+    jwst_inventory(instruments=JWST_INSTRUMENTS,
+                   dataproducts=['image', 'spectrum', 'cube'],
+                   caom=True, plot=True)
