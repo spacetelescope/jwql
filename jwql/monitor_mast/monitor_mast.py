@@ -215,19 +215,19 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
         save(plt)
         set_permissions(outfile)
 
-        logging.info('Saved Bokeh plots as HTML file: ', html_filename)
+        logging.info('Saved Bokeh plots as HTML file: {}'.format(html_filename))
 
         # Save the plot as components
         plt.sizing_mode = 'stretch_both'
         script, div = components(plt)
 
-        div_outfile = os.path.join(output_dir, output_filename + "_component.html")
+        div_outfile = os.path.join(output_dir, 'database_monitor', output_filename + "_component.html")
         with open(div_outfile, 'w') as f:
             f.write(div)
             f.close()
         set_permissions(div_outfile)
 
-        script_outfile = os.path.join(output_dir, output_filename + "_component.js")
+        script_outfile = os.path.join(output_dir, 'database_monitor', output_filename + "_component.js")
         with open(script_outfile, 'w') as f:
             f.write(script)
             f.close()
