@@ -63,15 +63,20 @@ import datetime
 import numpy as np
 import os
 import subprocess
+import logging
 
 from bokeh.plotting import figure, output_file, save
 from bokeh.layouts import gridplot
+from bokeh.embed import components
 
 from jwql.permissions.permissions import set_permissions
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
+from jwql.logging.logging_functions import configure_logging, log_info, log_fail
 
 
+@log_fail
+@log_info
 def filesystem_monitor():
     """ Get statistics on filesystem"""
 
@@ -84,6 +89,7 @@ def filesystem_monitor():
     results_dict = defaultdict(int)
     size_dict = defaultdict(float)
     # Walk through all directories recursively and count files
+    logging.info('Searching filesystem...')
     for dirpath, dirs, files in os.walk(filesystem):
         results_dict['file_count'] += len(files)  # find number of all files
         for filename in files:
@@ -98,11 +104,13 @@ def filesystem_monitor():
                 instrument = detector[0:3]  # first three characters of detector specify instrument
                 results_dict[instrument] += 1
                 size_dict[instrument] += os.path.getsize(file_path)
+    logging.info('{} files found in filesystem'.format(results_dict['fits_files']))
 
     # Get df style stats on file system
     out = subprocess.check_output('df {}'.format(filesystem), shell=True)
     outstring = out.decode("utf-8")  # put into string for parsing from byte format
     parsed = outstring.split(sep=None)
+    logging.info(parsed)
 
     # Select desired elements from parsed string
     total = int(parsed[8])  # in blocks of 512 bytes
@@ -119,6 +127,8 @@ def filesystem_monitor():
         f.write("{0} {1:15d} {2:15d} {3:15d} {4:15d} {5}\n".format(now, results_dict['file_count'],
                 total, available, used, percent_used))
     set_permissions(statsfile)
+    logging.info('Saved file statistics to:')
+    logging.info('{}'.format(statsfile))
 
     # set up and read out stats on files by type
     filesbytype = os.path.join(outputs_dir, 'filesbytype.txt')
@@ -128,6 +138,7 @@ def filesystem_monitor():
                  results_dict['rateints'], results_dict['i2d'], results_dict['nrc'],
                  results_dict['nrs'], results_dict['nis'], results_dict['mir'], results_dict['gui']))
     set_permissions(filesbytype, verbose=False)
+    logging.info('Saved file statistics by type to {}'.format(filesbytype))
 
     # set up file size by type file
     sizebytype = os.path.join(outputs_dir, 'sizebytype.txt')
@@ -137,8 +148,12 @@ def filesystem_monitor():
                  size_dict['rateints'], size_dict['i2d'], size_dict['nrc'],
                  size_dict['nrs'], size_dict['nis'], size_dict['mir'], size_dict['gui']))
     set_permissions(sizebytype, verbose=False)
+    logging.info('Saved file sizes by type to {}'.format(sizebytype))
 
+    logging.info('Filesystem statistics calculation complete.')
 
+@log_fail
+@log_info
 def plot_system_stats(stats_file, filebytype, sizebytype):
     """Read in the file of saved stats over time and plot them.
 
@@ -161,6 +176,7 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     date, f_count, sysize, frsize, used, percent = np.loadtxt(os.path.join(outputs_dir, stats_file), dtype=str, unpack=True)
     fits_files, uncalfiles, calfiles, ratefiles, rateintsfiles, i2dfiles, nrcfiles, nrsfiles, nisfiles, mirfiles, fgsfiles = np.loadtxt(os.path.join(outputs_dir, filebytype), dtype=str, unpack=True)
     fits_sz, uncal_sz, cal_sz, rate_sz, rateints_sz, i2d_sz, nrc_sz, nrs_sz, nis_sz, mir_sz, fgs_sz = np.loadtxt(os.path.join(outputs_dir, sizebytype), dtype=str, unpack=True)
+    logging.info('Read in file statistics from {}, {}, {}'.format(stats_file, filebytype, sizebytype))
 
     # put in proper np array types and convert to GB sizes
     dates = np.array(date, dtype='datetime64')
@@ -266,19 +282,45 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     p4.line(dates, fgs_size, legend='fgs fits files', line_color='darkred')
     p4.x(dates, fgs_size, color='darkred')
 
-    # create a layout with a grid pattern
+    # create a layout with a grid pattern to save all plots
     grid = gridplot([[p1, p2], [p3, p4]])
     outfile = os.path.join(outputs_dir, "filesystem_monitor.html")
     output_file(outfile)
     save(grid)
     set_permissions(outfile)
+    logging.info('Saved plot of all statistics to {}'.format(outfile))
+
+    # Save each plot's components
+    plots = [p1, p2, p3, p4]
+    plot_names = ['filecount', 'system_stats', 'filecount_type', 'size_type']
+    for plot, name in zip(plots, plot_names):
+        script, div = components(plot)
+
+        div_outfile = os.path.join(outputs_dir, "{}_component.html".format(name))
+        with open(div_outfile, 'w') as f:
+            f.write(div)
+            f.close()
+
+        script_outfile = os.path.join(outputs_dir, "{}_component.js".format(name))
+        with open(script_outfile, 'w') as f:
+            f.write(script)
+            f.close()
+
+        logging.info('Saved components files: {}, {}'.format(div_outfile, script_outfile))
+
+    logging.info('Filesystem statistics plotting complete.')
 
 
 if __name__ == '__main__':
+
+    # Configure logging
+    module = os.path.basename(__file__).strip('.py')
+    configure_logging(module)
 
     inputfile = 'statsfile.txt'
     filebytype = 'filesbytype.txt'
     sizebytype = 'sizebytype.txt'
 
+    logging.info('Beginning filesystem monitoring.')
     filesystem_monitor()
     plot_system_stats(inputfile, filebytype, sizebytype)
