@@ -1,4 +1,35 @@
 .dashboard {
-    margin-left: 5%;
-    margin-right: 5%;
+    margin-left: 2%;
+    margin-right: 2%;
 }
+
+.plot-container {
+    width: 100%;
+    height: 600px;
+    position: relative;
+    display: inline-block;
+    border-color: #c85108 !important ;
+    border-style: solid;
+    border-radius: 0px;
+    border-width: 1px;
+}
+
+.monitor-name {
+    background-color: #c85108;
+    color: white;
+    width: 100%;
+    height: 100%;
+
+}
+
+.plot-header {
+    background-color: #c85108 !important;
+    border-color: #c85108 !important ;
+    color: #c85108 !important;
+    border-style: solid;
+    border-radius: 0px;
+    border-width: 1px;
+
+    width: 100%;
+}
+
