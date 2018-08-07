@@ -142,7 +142,7 @@ def make_log_file(module, production_mode=True, path='./'):
     else:
         log_file = os.path.join(path, filename)
 
-    ensure_dir_exists(log_file)
+    ensure_dir_exists(os.path.dirname(log_file))
 
     return log_file
 
