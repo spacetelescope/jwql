@@ -1,11 +1,11 @@
-"""Defines the views for the JWQL web app.
+"""Defines the views for the ``jwql`` web app.
 
 In Django, "a view function, or view for short, is simply a Python
 function that takes a Web request and returns a Web response" (from
 Django documentation). This module defines all of the views that are
 used to generate the various webpages used for the Quicklook project.
 For example, these views can list the tools available to users, query
-the JWQL database, and display images and headers.
+the ``jwql`` database, and display images and headers.
 
 Authors
 -------
@@ -29,13 +29,12 @@ For more information please see:
 Dependencies
 ------------
     The user must have a configuration file named ``config.json``
-    placed in jwql/utils/ directory.
-
+    placed in the ``jwql/utils/`` directory.
 """
 
-import os
-import glob
 from collections import OrderedDict
+import glob
+import os
 import time
 
 from astropy.io import fits
@@ -44,29 +43,14 @@ import numpy as np
 # from django.views import generic # We ultimately might want to use generic views?
 
 from jwql.preview_image.preview_image import PreviewImage
-from jwql.utils.utils import get_config, filename_parser
+from jwql.utils.utils import get_config, JWST_INSTRUMENTS, filename_parser, MONITORS
 
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
-INST_LIST = ['FGS', 'MIRI', 'NIRCam', 'NIRISS', 'NIRSpec']
-TOOLS = {'FGS': ['Bad Pixel Monitor'],
-         'MIRI': ['Dark Current Monitor',
-                  'Bad Pixel Monitor', 'Cosmic Ray Monitor', 'Photometry Monitor',
-                  'TA Failure Monitor', 'Blind Pointing Accuracy Monitor',
-                  'Filter and Calibration Lamp Monitor', 'Thermal Emission Monitor'],
-         'NIRCam': ['Bias Monitor',
-                    'Readnoise Monitor', 'Gain Level Monitor',
-                    'Mean Dark Current Rate Monitor', 'Photometric Stability Monitor'],
-         'NIRISS': ['Bad Pixel Monitor',
-                    'Readnoise Monitor', 'AMI Calibrator Monitor', 'TSO RMS Monitor'],
-         'NIRSpec': ['Optical Short Monitor', 'Target Acquisition Monitor',
-                     'Detector Health Monitor', 'Ref Pix Monitor',
-                     'Internal Lamp Monitor', 'Instrument Model Updates',
-                     'Failed-open Shutter Monitor']}
 
 
 def about(request):
-    """Generate the about page
+    """Generate the ``about`` page
 
     Parameters
     ----------
@@ -80,8 +64,8 @@ def about(request):
     """
     template = 'jwql_webapp/about.html'
     context = {'inst': '',
-               'inst_list': INST_LIST,
-               'tools': TOOLS}
+               'inst_list': JWST_INSTRUMENTS,
+               'tools': MONITORS}
 
     return render(request, template, context)
 
@@ -124,25 +108,24 @@ def archived_proposals(request, inst):
     # For each proposal, get the first available thumbnail and determine
     # how many files there are
     thumbnails = []
-    n_files = []
-    for prop in proposals:
-        thumb_search_filepath = os.path.join(thumbnail_dir, 'jw{}'.format(prop), 'jw{}*rate*.thumb'.format(prop))
-        thumbnail = glob.glob(thumb_search_filepath)
+    num_files = []
+    for proposal in proposals:
+        thumbnail_search_filepath = os.path.join(thumbnail_dir, 'jw{}'.format(proposal), 'jw{}*rate*.thumb'.format(proposal))
+        thumbnail = glob.glob(thumbnail_search_filepath)
         if len(thumbnail) > 0:
             thumbnail = thumbnail[0]
             thumbnail = '/'.join(thumbnail.split('/')[-2:])
         thumbnails.append(thumbnail)
 
-        fits_search_filepath = os.path.join(FILESYSTEM_DIR, 'jw{}'.format(prop), 'jw{}*.fits'.format(prop))
-        n = len(glob.glob(fits_search_filepath))
-        n_files.append(n)
+        fits_search_filepath = os.path.join(FILESYSTEM_DIR, 'jw{}'.format(proposal), 'jw{}*.fits'.format(proposal))
+        num_files.append(len(glob.glob(fits_search_filepath)))
 
     return render(request, template,
-                  {'inst': inst,
-                   'all_filenames': [os.path.basename(f) for f in all_filepaths],
-                   'tools': TOOLS,
-                   'n_proposals': len(proposals),
-                   'zipped_thumbnails': zip(proposals, thumbnails, n_files)})
+        {'inst': inst,
+         'all_filenames': [os.path.basename(f) for f in all_filepaths],
+         'tools': MONITORS,
+         'num_proposals': len(proposals),
+         'zipped_thumbnails': zip(proposals, thumbnails, num_files)})
 
 
 def archive_thumbnails(request, inst, proposal):
@@ -165,8 +148,8 @@ def archive_thumbnails(request, inst, proposal):
     """
     template = 'jwql_webapp/thumbnails.html'
     dict_to_render = thumbnails(inst, proposal)
-    return render(request, template,
-                  dict_to_render)
+
+    return render(request, template, dict_to_render)
 
 
 def dashboard(request):
@@ -206,8 +189,8 @@ def dashboard(request):
                 embed_components[monitor_name][plot_name] = [div, script]
 
     context = {'inst': '',
-               'inst_list': INST_LIST,
-               'tools': TOOLS,
+               'inst_list': JWST_INSTRUMENTS,
+               'tools': MONITORS,
                'outputs': output_dir,
                'filesystem_html': os.path.join(output_dir, 'filesystem_monitor', 'filesystem_monitor.html'),
                'embed_components': embed_components}
@@ -230,8 +213,8 @@ def home(request):
     """
     template = 'jwql_webapp/home.html'
     context = {'inst': '',
-               'inst_list': INST_LIST,
-               'tools': TOOLS}
+               'inst_list': JWST_INSTRUMENTS,
+               'tools': MONITORS}
 
     return render(request, template, context)
 
@@ -255,7 +238,7 @@ def instrument(request, inst):
 
     return render(request, template,
                   {'inst': inst,
-                   'tools': TOOLS})
+                   'tools': MONITORS})
 
 
 def view_image(request, inst, file_root, rewrite=False):
@@ -320,7 +303,7 @@ def view_image(request, inst, file_root, rewrite=False):
     return render(request, template,
                   {'inst': inst,
                    'file_root': file_root,
-                   'tools': TOOLS,
+                   'tools': MONITORS,
                    'jpg_files': all_jpgs,
                    'fits_files': all_files,
                    'suffixes': suffixes,
@@ -356,7 +339,7 @@ def view_header(request, inst, file):
     return render(request, template,
                   {'inst': inst,
                    'file': file,
-                   'tools': TOOLS,
+                   'tools': MONITORS,
                    'header': header,
                    'file_root': file_root})
 
@@ -414,7 +397,7 @@ def split_files(file_list, type):
 
 def thumbnails(inst, proposal=None):
     """Generate a page showing thumbnail images corresponding to
-    activities, from a given proposal
+    activities, from a given ``proposal``
 
     Parameters
     ----------
@@ -521,7 +504,7 @@ def thumbnails(inst, proposal=None):
 
     dict_to_render = {'inst': inst,
                       'all_filenames': [os.path.basename(f) for f in all_filepaths],
-                      'tools': TOOLS,
+                      'tools': MONITORS,
                       'thumbnail_zipped_list': zip(file_indices, file_data),
                       'dropdown_menus': dropdown_menus,
                       'n_fileids': len(file_data),
