@@ -15,76 +15,9 @@
 
     <main role="main" class="container">
 
-    	<script>
-		// JS function to determine what filetype to use for the thumbnail
-		function determine_filetype_for_thumbnail(suffixes, i, file_root) {
-		    // Get all suffixes for the specific thumbnail
-		    var suffixes = suffixes.replace(/&#39;/g, '"');
-		    var suffixes = JSON.parse(suffixes);
-
-		    // Update the thumbnail to show the most processed filetype
-		    var img = document.getElementById('thumbnail'+i);
-		    if (suffixes.indexOf("cal") >= 0) {
-		        var jpg_path = '{{ static("thumbnails/") }}' + file_root.slice(0,7) + '/' + file_root + '_cal_integ0.thumb';
-		        img.src = jpg_path;
-		    } else if (suffixes.indexOf("rate") >= 0) {
-		        var jpg_path = '{{ static("thumbnails/") }}' + file_root.slice(0,7) + '/' + file_root + '_rate_integ0.thumb';
-		        img.src = jpg_path;
-		    } else if (suffixes.indexOf("uncal") >= 0) {
-		        var jpg_path = '{{ static("thumbnails/") }}' + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
-		        img.src = jpg_path;
-		    }
-		};
-
-		function search() {
-		    // Find all proposal elements
-		    var proposals = document.getElementsByClassName("proposal");
-
-		    // Determine the current search value
-		    var search_value = document.getElementById("search_box").value;
-
-		    // Determine whether or not to display each thumbnail
-		    var num_proposals_displayed = 0;
-		    for (i = 0; i < proposals.length; i++) {
-		        // Evaluate if the proposal number matches the search
-		        var prop_name = document.getElementById("proposal" + i).getAttribute('proposal')
-
-		        if (prop_name.startsWith(search_value)) {
-		        	proposals[i].style.display = "inline-block";
-		            num_proposals_displayed++;
-		        } else {
-		            proposals[i].style.display = "none";
-		        }
-		    };
-
-		    // If there are no proposals to display, tell the user
-		    if (num_proposals_displayed == 0) {
-		        document.getElementById('no_proposals_msg').style.display = 'inline-block';
-		    } else {
-		        document.getElementById('no_proposals_msg').style.display = 'none';
-		    };
-
-		    // Update the count of how many images are being shown
-		    document.getElementById('img_show_count').innerHTML = 'Showing ' + num_proposals_displayed + '/{{ proposals|length }} proposals'
-		};
-
-		function sort_by(sort_type) {
-		    // Update dropdown menu text
-		    document.getElementById('sort_dropdownMenuButton').innerHTML = sort_type;
-
-		    // Sort the thumbnails accordingly
-		    var props = $('div#proposal-array>div')
-		    if (sort_type == 'Ascending') {
-		        tinysort(props, {order:'asc'});
-		    } else if (sort_type == 'Descending') {
-		        tinysort(props, {order:'desc'});
-		    }
-		};
-    	</script>
-
     	<h3 id='title'>Archived {{ inst }} Images</h3>
 
-    	<p id='img_show_count'>Showing {{ n_proposals }}/{{ n_proposals }} proposals
+    	<p id='img_show_count'>Showing {{ num_proposals }}/{{ num_proposals }} proposals
     		<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">
     			<span class="help-tip mx-2">i</span>
     		</a>
@@ -109,8 +42,8 @@
 		    	<span class="dropdown">
 				  <button class="btn btn-primary dropdown-toggle ml-3" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Ascending</button>
 				  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-				  	<a class="dropdown-item" href="#" onclick="sort_by('Ascending');">Ascending</a>
-			    	<a class="dropdown-item" href="#" onclick="sort_by('Descending');">Descending</a>
+				  	<a class="dropdown-item" href="#" onclick="sort_by_proposals('Ascending');">Ascending</a>
+			    	<a class="dropdown-item" href="#" onclick="sort_by_proposals('Descending');">Descending</a>
 				  </div>
 				</span>
 			</div>
@@ -137,8 +70,5 @@
 		<a id="no_proposals_msg" style='display: none'>No proposals match the search criteria.</a>
 
 	</main>
-
-	<!-- Needed javascript -->
-	<script src="{{ static('js/tinysort.min.js') }}?{% now 'U' %}"></script>
 
 {% endblock %}
