@@ -299,11 +299,13 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
         with open(div_outfile, 'w') as f:
             f.write(div)
             f.close()
+        set_permissions(div_outfile)
 
         script_outfile = os.path.join(outputs_dir, "{}_component.js".format(name))
         with open(script_outfile, 'w') as f:
             f.write(script)
             f.close()
+        set_permissions(script_outfile)
 
         logging.info('Saved components files: {}_component.html and {}_component.js'.format(name, name))
 
