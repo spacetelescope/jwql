@@ -25,11 +25,22 @@ import json
 import os
 import re
 
+from ..permissions import permissions
+
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 JWST_INSTRUMENTS = ['NIRISS', 'NIRCam', 'NIRSpec', 'MIRI', 'FGS']
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
                      'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
+
+
+def ensure_dir_exists(fullpath):
+    """Creates dirs from ``fullpath`` if they do not already exist.
+    """
+    if not os.path.exists(fullpath):
+        os.makedirs(fullpath)
+        permissions.set_permissions(fullpath)
+
 
 def get_config():
     """Return a dictionary that holds the contents of the ``jwql``
