@@ -10,8 +10,6 @@
 
 
     <link href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.5.min.css" rel="stylesheet" type="text/css">
-    <script type="text/javascript" src="http://cdn.pydata.org/bokeh/release/bokeh-0.12.5.min.js"></script>
-    <script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.5.min.js"></script>
     {% for monitor_name, plots in embed_components.items() %}
         {% for plot_name, components in plots.items() %}
             {{ components[1] | safe}}

@@ -14,112 +14,8 @@
 
     <main role="main" class="container">
 
-    	<script>
-		// JS function to determine whether the page is archived or unlooked
-		function determine_page_title() {
-		    // Determine if the URL is 'archive' or 'unlooked'
-		    var url = document.URL;
-		    var url_split = url.split('/');
-		    var url_title = url_split[url_split.length - 2];
-		    if (url_title == 'archive') {
-		        final_title = 'Archived {{ inst }} Images: Proposal {{ prop }}'
-		    } else if (url_title == 'unlooked') {
-		        final_title = 'Unlooked {{ inst }} Images';
-		    }
-
-		    // Update the titles accordingly
-		    document.getElementById('title').innerHTML = final_title;
-		    if (document.title != final_title) {
-		        document.title = final_title;
-		    }
-		};
-
-		// JS function to determine what filetype to use for the thumbnail
-		function determine_filetype_for_thumbnail(suffixes, i, file_root) {
-		    // Get all suffixes for the specific thumbnail
-		    var suffixes = suffixes.replace(/&#39;/g, '"');
-		    var suffixes = JSON.parse(suffixes);
-
-		    // Update the thumbnail to show the most processed filetype
-		    var img = document.getElementById('thumbnail'+i);
-		    if (suffixes.indexOf("cal") >= 0) {
-		        var jpg_path = '{{ static("thumbnails/") }}' + file_root.slice(0,7) + '/' + file_root + '_cal_integ0.thumb';
-		        img.src = jpg_path;
-		    } else if (suffixes.indexOf("rate") >= 0) {
-		        var jpg_path = '{{ static("thumbnails/") }}' + file_root.slice(0,7) + '/' + file_root + '_rate_integ0.thumb';
-		        img.src = jpg_path;
-		    } else if (suffixes.indexOf("uncal") >= 0) {
-		        var jpg_path = '{{ static("thumbnails/") }}' + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
-		        img.src = jpg_path;
-		    }
-		};
-
-		function show_only(filter_type, value) {
-		    // Get all filter options from {{dropdown_menus}} variable
-		    var all_filters = '{{dropdown_menus.keys}}'.slice(10,'{{dropdown_menus.keys}}'.length-1).replace(/&#39;/g, '"');
-		    var all_filters = JSON.parse(all_filters);
-
-		    // Update dropdown menu text
-		    document.getElementById(filter_type + '_dropdownMenuButton').innerHTML = value;
-
-		    // Find all thumbnail elements
-		    var thumbnails = document.getElementsByClassName("thumbnail");
-
-		    // Determine the current value for each filter
-		    var filter_values = [];
-		    for (j = 0; j < all_filters.length; j++) {
-		        var filter_value = document.getElementById(all_filters[j] + '_dropdownMenuButton').innerHTML;
-		        filter_values.push(filter_value);
-		    }
-
-		    // Determine whether or not to display each thumbnail
-		    var num_thumbnails_displayed = 0;
-		    for (i = 0; i < thumbnails.length; i++) {
-		        // Evaluate if the thumbnail meets all filter criteria
-		        var criteria = [];
-		        for (j = 0; j < all_filters.length; j++) {
-		            var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0) || (thumbnails[i].getAttribute(all_filters[j]) == filter_values[j]);
-		            criteria.push(criterion);
-		        };
-
-		        // Only display if all filter criteria are met
-		        if (criteria.every(function(r){return r})) {
-		            thumbnails[i].style.display = "inline-block";
-		            num_thumbnails_displayed++;
-		        } else {
-		            thumbnails[i].style.display = "none";
-		        }
-		    };
-
-		    // If there are no thumbnails to display, tell the user
-		    if (num_thumbnails_displayed == 0) {
-		        document.getElementById('no_thumbnails_msg').style.display = 'inline-block';
-		    } else {
-		        document.getElementById('no_thumbnails_msg').style.display = 'none';
-		    };
-
-		    // Update the count of how many images are being shown
-		    document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/{{ n_fileids }} activities'
-		};
-
-		function sort_by(sort_type) {
-		    // Update dropdown menu text
-		    document.getElementById('sort_dropdownMenuButton').innerHTML = sort_type;
-
-		    // Sort the thumbnails accordingly
-		    var thumbs = $('div#thumbnail-array>div')
-		    if (sort_type == 'Name') {
-		        tinysort(thumbs, {attr:'file_root'});
-		    } else if (sort_type == 'Default') {
-		        tinysort(thumbs, {selector: 'img', attr:'id'});
-		    } else if (sort_type == 'Exposure Start Time') {
-		        tinysort(thumbs, {attr:'exp_start'});
-		    }
-		};
-    	</script>
-
     	<h3 id='title'>{{ inst }} Images</h3>
-    	<script>determine_page_title();</script>
+    	<script>determine_page_title('{{ inst }}','{{ prop }}');</script>
 
     	<p id='img_show_count'>Showing {{ n_fileids }}/{{ n_fileids }} activities
     		<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">
@@ -139,9 +35,9 @@
 			    	<div class="dropdown">
 					  <button class="btn btn-primary dropdown-toggle" type="button" id="{{filter_type}}_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">All {{filter_type}}s</button>
 					  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-					  	<a class="dropdown-item" href="#" onclick="show_only('{{filter_type}}', 'All {{filter_type}}s');">All {{filter_type}}s</a>
+					  	<a class="dropdown-item" href="#" onclick="show_only('{{filter_type}}', 'All {{filter_type}}s', '{{dropdown_menus.keys}}', '{{ n_fileids }}');">All {{filter_type}}s</a>
 					  	{% for option in filter_options %}
-					    	<a class="dropdown-item" href="#" onclick="show_only('{{filter_type}}', '{{option}}');">{{option}}</a>
+					    	<a class="dropdown-item" href="#" onclick="show_only('{{filter_type}}', '{{option}}', '{{dropdown_menus.keys}}');">{{option}}</a>
 					    {% endfor %}
 					  </div>
 					</div>
@@ -154,9 +50,9 @@
 		    	<div class="dropdown">
 				  <button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Default</button>
 				  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-				  	<a class="dropdown-item" href="#" onclick="sort_by('Default');">Default</a>
-			    	<a class="dropdown-item" href="#" onclick="sort_by('Name');">Name</a>
-			    	<a class="dropdown-item" href="#" onclick="sort_by('Exposure Start Time');">Exposure Start Time</a>
+				  	<a class="dropdown-item" href="#" onclick="sort_by_thumbnails('Default');">Default</a>
+			    	<a class="dropdown-item" href="#" onclick="sort_by_thumbnails('Name');">Name</a>
+			    	<a class="dropdown-item" href="#" onclick="sort_by_thumbnails('Exposure Start Time');">Exposure Start Time</a>
 				  </div>
 				</div>
 			</div>
@@ -213,9 +109,6 @@
 		<a id="no_thumbnails_msg" style='display: none'>No data match the selected criteria.</a>
 
 	</main>
-
-	<!-- Needed javascript -->
-	<script src="{{ static('js/tinysort.min.js') }}?{% now 'U' %}"></script>
 
 	<!-- <script type="text/javascript">
     function preloader(){
