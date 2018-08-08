@@ -187,6 +187,8 @@ def dashboard(request):
 
     name_dict = {'': '',
                  'database_monitor': 'Database Monitor',
+                 'database_monitor_jwst': 'JWST',
+                 'database_monitor_caom': 'JWST (CAOM)',
                  'filesystem_monitor': 'Filesystem Monitor',
                  'filecount_type': 'Total File Counts by Type',
                  'size_type': 'Total File Sizes by Type',
