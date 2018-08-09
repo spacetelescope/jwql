@@ -168,10 +168,18 @@ def dashboard(request):
     template = 'jwql_webapp/dashboard.html'
     output_dir = get_config()['outputs']
 
+    name_dict = {'': '',
+                 'database_monitor': 'Database Monitor',
+                 'filesystem_monitor': 'Filesystem Monitor',
+                 'filecount_type': 'Total File Counts by Type',
+                 'size_type': 'Total File Sizes by Type',
+                 'filecount': 'Total File Counts',
+                 'system_stats': 'System Statistics'}
+
     embed_components = {}
     for dir_name, subdir_list, file_list in os.walk(output_dir):
         monitor_name = os.path.basename(dir_name)
-        embed_components[monitor_name] = {}
+        embed_components[name_dict[monitor_name]] = {}
         for fname in file_list:
             if 'component' in fname:
                 full_fname = '{}/{}'.format(monitor_name, fname)
@@ -186,7 +194,7 @@ def dashboard(request):
                 js_file = full_fname.split('.')[0] + '.js'
                 with open(os.path.join(output_dir, js_file)) as f:
                     script = f.read()
-                embed_components[monitor_name][plot_name] = [div, script]
+                embed_components[name_dict[monitor_name]][name_dict[plot_name]] = [div, script]
 
     context = {'inst': '',
                'inst_list': JWST_INSTRUMENTS,
