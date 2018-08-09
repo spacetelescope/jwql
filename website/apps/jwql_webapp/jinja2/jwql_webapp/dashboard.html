@@ -4,11 +4,6 @@
 
 	<title>Dashboard - JWST Quicklook</title>
 
-    <!-- Custom styles for this template -->
-    <!-- Add "now" timetag to force autoreload the .css file -->
-    <link href="{{ static('css/quicklook-dashboard.css') }}?{% now 'U' %}" rel="stylesheet">
-
-
     <!-- Add bokeh files -->
     <link href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.5.min.css" rel="stylesheet" type="text/css">
     {% for monitor_name, plots in embed_components.items() %}
