@@ -60,7 +60,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'jwql_web.urls'
+ROOT_URLCONF = 'jwql_proj.urls'
 
 TEMPLATES = [
     {
@@ -68,13 +68,13 @@ TEMPLATES = [
         'DIRS': [os.path.join(BASE_DIR, 'apps', 'jwql_webapp', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
-            'environment': 'jwql_web.jinja2.environment',
-            'extensions': ['jwql_web.jinja2.DjangoNow'],
+            'environment': 'jwql_proj.jinja2.environment',
+            'extensions': ['jwql_proj.jinja2.DjangoNow'],
         },
     }
 ]
 
-WSGI_APPLICATION = 'jwql_web.wsgi.application'
+WSGI_APPLICATION = 'jwql_proj.wsgi.application'
 
 
 # Database
