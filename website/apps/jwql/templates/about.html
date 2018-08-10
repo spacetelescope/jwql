@@ -11,7 +11,7 @@
     <main role="main" class="container">
         <div style="text-align: center"><img src={{ static('img/JWQLlogo.png') }} width=350px></div><br>
 
-    	<h4>About the project</h4>
+        <h4>About the project</h4>
 
         The James Webb Quicklook Application (JWQL) is a database-driven web application and software repository for use by the JWST instrument teams. Developed in Python, it exists within a private <a href="https://github.com/spacetelescope/jwql" target="_blank">GitHub repository</a>. The team actively strives to adhere to software engineering best practices, strictly following defined workflows and Python style guides.<br><br>
 
@@ -44,8 +44,14 @@
 
         <h4>Acknowledgements</h4>
 
-        The JWQL project would not be possible without the contributions of the following individuals: Faith Abney (OED), Anastasia Alexov (OED), Sara Anderson (OED), Tracy Beck (INS), Francesca Boffi (INS), Clara Brasseur (OED), Matthew Burger (OED), Rosa Diaz (INS), Van Dixon (INS), Tom Donaldson (OED), Michael Fox (DSMO), Scott Friedman (INS), Alex Fullerton (INS), Lisa Gardner (OED), Vera Gibbs (ITSD), Catherine Gosmeyer (INS), Phil Grant (ITSD), Dean Hines (INS), Sherie Holfeltz (INS), Joe Hunkeler (OED), Catherine Kaleida (OED), Mark Kyprianou (OED), Karen Levay (OED), Greg Masci (ITSD), Margaret Meixner (INS), Prem Mishra (ITSD), Don Mueller (ITSD), Maria Antonia Nieto-Santisteban (OED), Joe Pollizzi (JWSTMO), Lee Quick (OED), Anupinder Rai (ITSD), Matt Rendina (OED), Massimo Robberto (INS.), Mary Romelfanger (OED), Bernie Shiao (OED), Matthew Sienkiewicz (ITSD), Arfon Smith (DSMO), Linda Smith (INS), Patrick Taylor (ITSD), Dave Unger (ITSD), Jeff Valenti (JWSTMO), Thomas Walker (ITSD), Geoff Wallace (OED), Lara Wilkinson (OPO), Joe Zahn (ITSD).
+        The JWQL project would not be possible without the contributions of the following individuals:
 
-	</main>
+        <ul>
+        {% for person in acknowledgements %}
+            <li>{{ person }}</li>
+        {% endfor %}
+        </ul>
+
+    </main>
 
 {% endblock %}
