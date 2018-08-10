@@ -1,4 +1,4 @@
-"""Customizes the JWQL web app administrative page.
+"""Customizes the ``jwql`` web app administrative page.
 
 ** CURRENTLY NOT IN USE **
 
@@ -13,7 +13,6 @@ References
 ----------
 For more information please see:
     https://docs.djangoproject.com/en/2.0/ref/contrib/admin/
-
 """
 
 from django.contrib import admin

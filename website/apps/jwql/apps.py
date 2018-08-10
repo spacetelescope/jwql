@@ -1,4 +1,4 @@
-"""Customizes the jwql_webapp settings.
+"""Customizes the ``jwql`` app settings.
 
 ** CURRENTLY NOT IN USE **
 
@@ -13,7 +13,7 @@ Use
 ---
     This module is called in ``settings.py`` as such:
     ::
-        INSTALLED_APPS = ['apps.jwql_webapp.PlotsExampleConfig',
+        INSTALLED_APPS = ['apps.jwql.PlotsExampleConfig',
         ...
         ]
 
@@ -21,10 +21,9 @@ References
 ----------
 For more information please see:
     https://docs.djangoproject.com/en/2.0/ref/applications/
-
 """
 
 from django.apps import AppConfig
 
 class PlotsExampleConfig(AppConfig):
-    name = 'jwql_webapp'
+    name = 'jwql'

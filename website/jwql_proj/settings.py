@@ -41,7 +41,7 @@ ALLOWED_HOSTS = ['127.0.0.1', '10.128.19.164']
 # Application definition
 
 INSTALLED_APPS = [
-    'apps.jwql_webapp',
+    'apps.jwql',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -65,7 +65,7 @@ ROOT_URLCONF = 'jwql_proj.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.jinja2.Jinja2',
-        'DIRS': [os.path.join(BASE_DIR, 'apps', 'jwql_webapp', 'templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'apps', 'jwql', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'environment': 'jwql_proj.jinja2.environment',

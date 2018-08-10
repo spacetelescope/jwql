@@ -1,4 +1,4 @@
-"""Defines the models for the JWQL web app.
+"""Defines the models for the ``jwql`` app.
 
 ** CURRENTLY NOT IN USE **
 
@@ -48,7 +48,7 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True  # specify this model as an Abstract Model
-        app_label = 'jwql_webapp'
+        app_label = 'jwql'
 
 
 class ImageData(BaseModel):
