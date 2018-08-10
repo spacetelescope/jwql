@@ -64,22 +64,8 @@ ROOT_URLCONF = 'jwql_web.urls'
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'django.template.context_processors.media',
-            ],
-        },
-    },
-    {
         'BACKEND': 'django.template.backends.jinja2.Jinja2',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'apps', 'jwql_webapp', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'environment': 'jwql_web.jinja2.environment',

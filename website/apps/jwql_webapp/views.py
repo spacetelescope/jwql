@@ -62,7 +62,7 @@ def about(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'jwql_webapp/about.html'
+    template = 'about.html'
     context = {'inst': '',
                'inst_list': JWST_INSTRUMENTS,
                'tools': MONITORS}
@@ -85,7 +85,7 @@ def archived_proposals(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'jwql_webapp/archive.html'
+    template = 'archive.html'
     thumbnail_dir = os.path.join(get_config()['jwql_dir'], 'thumbnails')
 
     # Query files from MAST database
@@ -146,7 +146,7 @@ def archive_thumbnails(request, inst, proposal):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'jwql_webapp/thumbnails.html'
+    template = 'thumbnails.html'
     dict_to_render = thumbnails(inst, proposal)
 
     return render(request, template, dict_to_render)
@@ -165,7 +165,7 @@ def dashboard(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'jwql_webapp/dashboard.html'
+    template = 'dashboard.html'
     output_dir = get_config()['outputs']
 
     name_dict = {'': '',
@@ -219,7 +219,7 @@ def home(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'jwql_webapp/home.html'
+    template = 'home.html'
     context = {'inst': '',
                'inst_list': JWST_INSTRUMENTS,
                'tools': MONITORS}
@@ -242,7 +242,7 @@ def instrument(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'jwql_webapp/instrument.html'
+    template = 'instrument.html'
 
     return render(request, template,
                   {'inst': inst,
@@ -268,7 +268,7 @@ def view_image(request, inst, file_root, rewrite=False):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'jwql_webapp/view_image.html'
+    template = 'view_image.html'
     preview_dir = os.path.join(get_config()['jwql_dir'], 'preview_images')
 
     # Find all of the matching files
@@ -335,7 +335,7 @@ def view_header(request, inst, file):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'jwql_webapp/view_header.html'
+    template = 'view_header.html'
 
     dirname = file[:7]
     fits_filepath = os.path.join(FILESYSTEM_DIR, dirname, file)
@@ -367,7 +367,7 @@ def unlooked_images(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'jwql_webapp/thumbnails.html'
+    template = 'thumbnails.html'
     dict_to_render = thumbnails(inst)
     return render(request, template,
                   dict_to_render)
