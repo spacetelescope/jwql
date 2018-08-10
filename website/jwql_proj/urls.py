@@ -47,6 +47,6 @@ from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
-    path('jwql_webapp/', include('apps.jwql_webapp.urls')),
+    path('jwql/', include('apps.jwql.urls')),
     path('admin/', admin.site.urls),
 ]

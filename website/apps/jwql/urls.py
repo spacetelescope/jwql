@@ -1,7 +1,7 @@
-"""Maps URL paths to views in the jwql_webapp app.
+"""Maps URL paths to views in the ``jwql`` app.
 
 This module connects requested URL paths to the corresponding view in
-views.py for each webpage in the jwql_webapp app. When django is
+views.py for each webpage in the ``jwql`` app. When django is
 provided a path, it searches through the urlpatterns list provided
 here until it finds one that matches. It then calls the assigned view
 to load the appropriate webpage, passing an HttpRequest object.
@@ -41,7 +41,7 @@ from django.urls import path
 
 from . import views
 
-app_name = 'jwql_webapp'
+app_name = 'jwql'
 urlpatterns = [
     path('', views.home, name='home'),
     path('about/', views.about, name='about'),

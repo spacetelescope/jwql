@@ -1,4 +1,4 @@
-"""Write unit tests for the JWQL web app.
+"""Write unit tests for the ``jwql`` app.
 
 ** CURRENTLY NOT IN USE **
 

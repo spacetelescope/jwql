@@ -84,7 +84,7 @@
 		<div id='thumbnail-array'>
 		{% for i, file in thumbnail_zipped_list %}
 			<div class="thumbnail" detector="{{file.detector}}" proposal="{{file.program_id}}" file_root="{{file.file_root}}", exp_start="{{file.exp_start}}">
-				<a href={{ url('jwql_webapp:view_image', args=[inst, file.file_root]) }}>
+				<a href={{ url('jwql:view_image', args=[inst, file.file_root]) }}>
 					<span class="helper"></span><img id='thumbnail{{i}}' onerror="this.src={{ static('img/imagenotfound.png') }}">
 					<script>determine_filetype_for_thumbnail("{{file.suffixes}}", "{{i}}", "{{file.file_root}}");</script>
 
