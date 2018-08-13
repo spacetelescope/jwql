@@ -36,6 +36,14 @@ from jwql.preview_image.preview_image import PreviewImage
 from jwql.utils.utils import get_config
 from jwql.utils.utils import filename_parser
 
+# Size of NIRCam inter- and intra-module chip gaps
+SW_MOD_GAP = 1387  # pixels = int(43 arcsec / 0.031 arcsec/pixel)
+LW_MOD_GAP = 741  # pixels = int(46 arcsec / 0.062 arcsec/pixel)
+SW_DET_GAP = 145  # pixels = int(4.5 arcsec / 0.031 arcsec/pixel)
+FULLX = 2048  # Width of the full detector
+FULLY = 2048  # Height of the full detector
+
+
 def array_coordinates(channelmod, detector_list, lowerleft_list):
     """Create an appropriately sized numpy array to contain
     the mosaic image given the channel and module of the data
@@ -69,45 +77,41 @@ def array_coordinates(channelmod, detector_list, lowerleft_list):
 
     module_lowerlefts : dict
         Dictionary giving the (x, y) coordinate in the coordinate system
-        of the full module(s) where the lower left corner of the data 
+        of the full module(s) where the lower left corner of the data
         from a given detector will be placed. (e.g. "NRCA1": (1888, 1888)
         means that the data from detector NRCA1 should be placed into
         [1888: 1888+y_dim_of_data, 1888: 1888+x_dim_of_data] within
         the final array (which has total dimensions of (xdim, ydim)
     """
-    # Size of inter- and intra-module chip gaps
-    sw_mod_gap = 1387 # pixels = int(43 arcsec / 0.031 arcsec/pixel)
-    lw_mod_gap = 741 # pixels = int(46 arcsec / 0.062 arcsec/pixel)
-    sw_det_gap = 145 # pixels = int(4.5 arcsec / 0.031 arcsec/pixel)
-    fullx = 2048 # Width of the full detector
-    fully = 2048 # Height of the full detector
-
     # Create dictionary of lower left pixel values for each
     # detector as it sits in the MODULE. B1-B4 values here will
     # need to have sw_mod_gap added to their x coordinates in
     # order to translate to the full A and B module coordinate system.
     # The only case where LW data will be in this function is where
     # both detectors are used, so set A5/B5 coordinates to be in
-    # the full module A and B coordinate system
+    # the full module A and B coordinate system. Note that these
+    # tuples are (x,y), NOT (y,x)
     ashort = ["NRCA1", "NRCA2", "NRCA3", "NRCA4"]
     bshort = ["NRCB1", "NRCB2", "NRCB3", "NRCB4"]
     module_lowerlefts = {"NRCA1": (0, 0),
-                         "NRCA2": (0, fully + sw_det_gap),
-                         "NRCA3": (fullx + sw_det_gap, 0),
-                         "NRCA4": (fullx + sw_det_gap, fully + sw_det_gap),
-                         "NRCB1": (fullx + sw_det_gap, fully + sw_det_gap),
-                         "NRCB2": (fullx + sw_det_gap, 0),
-                         "NRCB3": (0, fully + sw_det_gap),
+                         "NRCA2": (0, FULLY + SW_DET_GAP),
+                         "NRCA3": (FULLX + SW_DET_GAP, 0),
+                         "NRCA4": (FULLX + SW_DET_GAP, FULLY + SW_DET_GAP),
+                         "NRCB1": (FULLX + SW_DET_GAP, FULLY + SW_DET_GAP),
+                         "NRCB2": (FULLX + SW_DET_GAP, 0),
+                         "NRCB3": (0, FULLY + SW_DET_GAP),
                          "NRCB4": (0, 0),
                          "NRCA5": (0, 0),
-                         "NRCB5": (fullx + lw_mod_gap, 0)}
+                         "NRCB5": (FULLX + LW_MOD_GAP, 0)}
     # If both module A and B are used, then shift the B module
     # coordinates to account for the intermodule gap
     if channelmod == "SW":
-        mod_delta = (fullx * 2 + sw_det_gap + sw_mod_gap, 0)
+        mod_delta = (FULLX * 2 + SW_DET_GAP + SW_MOD_GAP, 0)
         for b_detector in bshort:
-            module_lowerlefts[b_detector] = tuple([sum(x) for x in zip(module_lowerlefts[b_detector], mod_delta)])
-            
+            module_lowerlefts[b_detector] = tuple([sum(x) for x in
+                                                  zip(module_lowerlefts[b_detector],
+                                                      mod_delta)])
+
     # The only subarrays we need to worry about are the SW SUBXXX
     # All other subarrays are on a single detector.
     # All we need to do is find the lower left values for NRCA1 and/or NRCB4.
@@ -127,40 +131,43 @@ def array_coordinates(channelmod, detector_list, lowerleft_list):
         elif np.sum(b4) == 1:
             subx, suby = lowerleft_list[b4][0]
         else:
-            raise ValueError("SW data provided, but neither NRCA1 nor NRCB4 are present.")
+            raise ValueError(("SW data provided, but neither NRCA1 nor NRCB4"
+                              " are present."))
 
     # Adjust the lower left positions of the apertures within
     # the module(s) in the case of subarrays
     if ((subx != 1) | (suby != 1)):
-        subarr_delta = {"NRCA1": (subx, suby),
-                 "NRCA2": (subx, 0),
-                 "NRCA3": (0, suby),
-                 "NRCA4": (0, 0),
-                 "NRCB1": (0, 0),
-                 "NRCB2": (0, suby),
-                 "NRCB3": (subx, 0),
-                 "NRCB4": (subx, suby)}
+        subarr_delta = {"NRCA1": (0, 0),
+                        "NRCA2": (0, 0 - suby),
+                        "NRCA3": (0 - subx, 0),
+                        "NRCA4": (0 - subx, 0 - suby),
+                        "NRCB1": (0 - subx, 0 - suby),
+                        "NRCB2": (0 - subx, 0),
+                        "NRCB3": (0, 0 - suby),
+                        "NRCB4": (0, 0)}
+
         for det in ashort + bshort:
-            module_lowerlefts[det] = tuple([sum(x) for x in zip(module_lowerlefts[det], subarr_delta[det])])
+            module_lowerlefts[det] = tuple([sum(x) for x in zip(module_lowerlefts[det],
+                                                                subarr_delta[det])])
 
     # Dimensions of array to hold all data
     # Adjust dimensions of individual detector for subarray if necessary
-    aperturex = fullx - (subx - 1)
-    aperturey = fully - (suby - 1)
+    aperturex = FULLX - (subx - 1)
+    aperturey = FULLY - (suby - 1)
 
     # Full module(s) dimensions
     if channelmod in ['SWA', 'SWB']:
-        xdim = 2 * aperturex + sw_det_gap
-        ydim = 2 * aperturey + sw_det_gap
+        xdim = 2 * aperturex + SW_DET_GAP
+        ydim = 2 * aperturey + SW_DET_GAP
     elif channelmod == 'SW':
-        xdim = 4 * aperturex + 2 * sw_det_gap + sw_mod_gap
-        #ydim = 4 * aperturey + 2 * sw_det_gap + sw_mod_gap
-        ydim = 2 * aperturey + sw_det_gap
+        xdim = 4 * aperturex + 2 * SW_DET_GAP + SW_MOD_GAP
+        ydim = 2 * aperturey + SW_DET_GAP
     elif channelmod == 'LW':
-        xdim = 2 * aperturex + lw_mod_gap
+        xdim = 2 * aperturex + LW_MOD_GAP
         ydim = aperturey
 
     return xdim, ydim, module_lowerlefts
+
 
 def check_existence(infile, outdir):
     """Given the name of a fits file, determine if a preview image
@@ -173,7 +180,7 @@ def check_existence(infile, outdir):
 
     outdir : str
         Directory that will contain the preview image if it exists
-    
+
     Returns:
     --------
     exists : bool
@@ -182,12 +189,13 @@ def check_existence(infile, outdir):
     indir, inbase = os.path.split(infile)
     file_parts = inbase.split('_')
     search_string = file_parts[0] + '_' + file_parts[1] + '_' + file_parts[2] + \
-                    '*' + file_parts[4].strip(".fits") + '*.jpg'
+        '*' + file_parts[4].strip(".fits") + '*.jpg'
     current_files = glob(os.path.join(outdir, search_string))
     if len(current_files) > 0:
         return True
     else:
         return False
+
 
 def create_dummy_filename(filelist):
     """Create a dummy filename indicating the detectors used to create
@@ -232,7 +240,8 @@ def create_dummy_filename(filelist):
                 suffix = "NRC_SWB_MOSAIC"
     dummy_name = filelist[0].replace(det_string_list[0], suffix)
     return dummy_name
-    
+
+
 def create_mosaic(filenames):
     """If an exposure comprises data from multiple detectors
     read in all the appropriate files and create a mosaic
@@ -256,7 +265,7 @@ def create_mosaic(filenames):
     data_lower_left = []
     for filename in filenames:
         image = PreviewImage(filename, "SCI")
-        #now have image.data, image.dq
+        # Now have image.data, image.dq
         data_dim = len(image.data.shape)
         if data_dim == 4:
             diff_im = image.difference_image(image.data)
@@ -278,7 +287,7 @@ def create_mosaic(filenames):
     # on the channel, module, and subarray size
     if nrc_swa_total != 0:
         if nrc_lw_total != 0:
-            raise ValueError("Cannot mix NIRCam SW and LW data in same mosaic.")
+            raise ValueError("Can't mix NIRCam SW and LW data in same mosaic.")
         else:
             if nrc_swb_total != 0:
                 print("NIRCam SW module A and B data")
@@ -289,7 +298,8 @@ def create_mosaic(filenames):
     else:
         if nrc_swb_total != 0:
             if nrc_lw_total != 0:
-                raise ValueError("Cannot mix NIRCam SW and LW data in same mosaic.")
+                raise ValueError(("Can't mix NIRCam SW and LW data in same"
+                                  " mosaic."))
             else:
                 print("NIRCam SW module B data")
                 m_type = "SWB"
@@ -300,9 +310,9 @@ def create_mosaic(filenames):
                 print(filenames)
                 raise ValueError("No NIRCam SW nor LW data")
 
-    print(filenames)
-    full_xdim, full_ydim, full_lower_left = array_coordinates(m_type, detector, data_lower_left)
-    
+    full_xdim, full_ydim, full_lower_left = array_coordinates(m_type, detector,
+                                                              data_lower_left)
+
     # Create the array to hold all the data
     datashape = data[0].shape
     datadim = len(datashape)
@@ -311,48 +321,32 @@ def create_mosaic(filenames):
     elif datadim == 3:
         full_array = np.zeros((datashape[0], full_ydim, full_xdim)) * np.nan
     else:
-        raise ValueError("Difference image for {} must be either 2D or 3D.".format(filenames[0]))
-        
+        raise ValueError(("Difference image for {} must be either 2D or 3D."
+                          .format(filenames[0])))
+
     # Place the data from the individual detectors in the appropriate
     # places in the final image
     for pixdata, detect in zip(data, detector):
         x0, y0 = full_lower_left[detect]
         if datadim == 2:
             yd, xd = pixdata.shape
-            full_array[0, y0: y0+yd, x0: x0+xd] = pixdata
+            full_array[0, y0: y0 + yd, x0: x0 + xd] = pixdata
         elif datadim == 3:
             ints, yd, xd = pixdata.shape
-            full_array[:, y0: y0+yd, x0: x0+xd] = pixdata
-            
+            full_array[:, y0: y0 + yd, x0: x0 + xd] = pixdata
+
     # Create associated DQ array and set unpopulated pixels to be skipped
     # in preview image scaling
-    #full_dq = np.ones((full_ydim, full_xdim), dtype="bool")
-    #full_dq[np.isnan(full_array[0, :, :])] = 0
+    # full_dq = np.ones((full_ydim, full_xdim), dtype="bool")
+    # full_dq[np.isnan(full_array[0, :, :])] = 0
 
     # Add the reference pixels to be skipped in the preview image scaling
     full_dq = create_dq_array(full_xdim, full_ydim, full_array[0, :, :], m_type)
-
-    # Vertical flip because matplotlib's output orientation is upside down
-    # compared to ds9
-
-    from astropy.io import fits
-    h0=fits.PrimaryHDU(full_array)
-    
-    if len(full_array.shape) == 3:
-        full_array = full_array[:, ::-1, :]
-    else:
-        full_array = full_array[::-1, :]
-    
-    full_dq = np.flipud(full_dq)
-    
-    h1 = fits.ImageHDU(full_array)
-    hl = fits.HDUList([h0,h1])
-    hl.writeto('/Users/hilbert/python_repos/test_jwql/temp.fits',overwrite=True)
-    
     return full_array, full_dq
 
+
 def create_dq_array(xd, yd, mosaic, module):
-    """Create DQ array that goes with the mosaic image. Set unpopulated pixels 
+    """Create DQ array that goes with the mosaic image. Set unpopulated pixels
     to be skipped in preview image scaling. Same for the reference pixels for
     all detectors
 
@@ -374,16 +368,9 @@ def create_dq_array(xd, yd, mosaic, module):
     --------
     dq : obj
         2D numpy array containing the DQ array. Pixels that are True
-        are considered science pixels and are used when scaling the 
+        are considered science pixels and are used when scaling the
         preview image. Pixels that are False are skipped.
     """
-    print("REplace below with self... when you make this a class")
-    sw_mod_gap = 1387 # pixels = int(43 arcsec / 0.031 arcsec/pixel)
-    lw_mod_gap = 741 # pixels = int(46 arcsec / 0.062 arcsec/pixel)
-    sw_det_gap = 145 # pixels = int(4.5 arcsec / 0.031 arcsec/pixel)
-    fullx = 2048 # Width of the full detector
-    fully = 2048 # Height of the full detector
-
     # Create array
     dq = np.ones((yd, xd), dtype="bool")
 
@@ -393,33 +380,33 @@ def create_dq_array(xd, yd, mosaic, module):
     # Flag reference pixels as False
 
     # Present in all cases other than subarrays
-    if xd > 2047:
+    if xd >= FULLX:
         dq[0:4, :] = 0
         dq[:, 0:4] = 0
         dq[2044:2048, :] = 0
         dq[:, 2044:2048] = 0
 
         if module == "LW":
-            lwb_lower = fullx + lw_mod_gap
-            dq[:, lwb_lower:lwb_lower+4] = 0
-            dq[:, lwb_lower+2044:lwb_lower+2048] = 0
-        
+            lwb_lower = FULLX + LW_MOD_GAP
+            dq[:, lwb_lower:lwb_lower + 4] = 0
+            dq[:, lwb_lower + 2044:lwb_lower + 2048] = 0
+
         if module in ["SWA", "SWB", "SW"]:
             # Present for full frame single module or both modules
-            lowerval = fullx + sw_det_gap
-            dq[lowerval: lowerval+4, :] = 0
-            dq[(lowerval+2044):, :] = 0
-            dq[:, lowerval: lowerval+4] = 0
-            dq[:, (lowerval+2044):(lowerval+2048)] = 0
+            lowerval = FULLX + SW_DET_GAP
+            dq[lowerval: lowerval + 4, :] = 0
+            dq[(lowerval + 2044):, :] = 0
+            dq[:, lowerval: lowerval + 4] = 0
+            dq[:, (lowerval + 2044):(lowerval + 2048)] = 0
 
         if module == "SW":
             # Present only if both modules are used (full frame)
-            modb_lower = lowerval + fullx + sw_mod_gap
-            dq[:, modb_lower:(modb_lower+4)] = 0
-            dq[:, (modb_lower+2044):(modb_lower+2048)] = 0
-            modb_upper = modb_lower + fullx + sw_det_gap
-            dq[:, modb_upper:(modb_upper+4)] = 0
-            dq[:, (modb_upper+2044):(modb_upper+2048)] = 0
+            modb_lower = lowerval + FULLX + SW_MOD_GAP
+            dq[:, modb_lower:(modb_lower + 4)] = 0
+            dq[:, (modb_lower + 2044):(modb_lower + 2048)] = 0
+            modb_upper = modb_lower + FULLX + SW_DET_GAP
+            dq[:, modb_upper:(modb_upper + 4)] = 0
+            dq[:, (modb_upper + 2044):(modb_upper + 2048)] = 0
 
     else:
         # Subarrays: expand the pixels flagged due to chip gaps
@@ -427,21 +414,22 @@ def create_dq_array(xd, yd, mosaic, module):
         nan_indexes = np.where(np.isnan(mosaic))
         match = nan_indexes[0] == yd - 1
         vert_xmin = np.min(nan_indexes[1][match])
-        vert_xmax = vert_xmin + sw_det_gap - 1
+        vert_xmax = vert_xmin + SW_DET_GAP - 1
 
         match2 = nan_indexes[1] == xd - 1
         horiz_ymin = np.min(nan_indexes[0][match2])
-        horiz_ymax = horiz_ymin + sw_det_gap - 1
+        horiz_ymax = horiz_ymin + SW_DET_GAP - 1
 
-        dq[:, vert_xmin-4:vert_xmin] = 0
-        dq[:, vert_xmax+1:vert_xmax+5] = 0
-        dq[horiz_ymin-4:horiz_ymin, :] = 0
-        dq[horiz_ymax+1:horiz_ymax+5, :] = 0
+        dq[:, vert_xmin - 4:vert_xmin] = 0
+        dq[:, vert_xmax + 1:vert_xmax + 5] = 0
+        dq[horiz_ymin - 4:horiz_ymin, :] = 0
+        dq[horiz_ymax + 1:horiz_ymax + 5, :] = 0
 
     return dq
-        
+
+
 def detector_check(detector_list, search_string):
-    """Search a given list of detector names for the 
+    """Search a given list of detector names for the
     provided regular expression sting.
 
     Parameters:
@@ -462,6 +450,7 @@ def detector_check(detector_list, search_string):
     total = np.sum(np.array([m is not None for m in match]))
     return total
 
+
 def generate_preview_images():
     """The main function of the generate_preview_image module."""
 
@@ -475,7 +464,7 @@ def generate_preview_images():
     thumbnail_filesystem = 'python_repos/test_jwql/thumbnail_images/'
 
     filenames = glob(os.path.join(filesystem, '*/*.fits'))
-    grouped_filenames  = group_filenames(filenames)
+    grouped_filenames = group_filenames(filenames)
 
     for file_list in grouped_filenames:
         # Determine the save location
@@ -511,35 +500,10 @@ def generate_preview_images():
         if numfiles != 1:
             mosaic_image, mosaic_dq = create_mosaic(file_list)
             dummy_file = create_dummy_filename(file_list)
-            if numfiles  == 4:
+            if numfiles == 4:
                 max_size = 16
             elif numfiles in [2, 8]:
                 max_size = 32
-            
-        # Create and save the preview image and thumbnail
-        #args = zip((False, True), (output_directory, thumbnail_output_directory))
-        #for thumbnail_bool, directory in args:
-        #    try:
-        #        im = PreviewImage(filename, "SCI")
-        #        im.clip_percent = 0.01
-        #        im.scaling = 'log'
-        #        im.cmap = 'viridis'
-        #        im.output_format = 'jpg'
-        #        im.thumbnail = thumbnail_bool
-        #        im.output_directory = directory
-        #
-        #        # If a mosaic was made from more than one file
-        #        # insert it and it's associated DQ array into the
-        #        # instance of PreviewImage. Also set the input
-        #        # filename to indicate that we have mosaicked data
-        #        if len(file_list) != 1:
-        #            im.data = mosaic_image
-        #            im.dq = mosaic_dq
-        #            im.file = dummy_file
-        #            
-        #        im.make_image(max_img_size=max_size)
-        #    except ValueError as error:
-        #        print(error)
 
         try:
             im = PreviewImage(filename, "SCI")
@@ -558,14 +522,12 @@ def generate_preview_images():
                 im.data = mosaic_image
                 im.dq = mosaic_dq
                 im.file = dummy_file
-                    
+
             im.make_image(max_img_size=max_size)
         except ValueError as error:
             print(error)
-            
 
 
-                
 def group_filenames(input_files):
     """Given a list of jwst filenames, group together
     files from the same exposure. These files will share
@@ -581,8 +543,8 @@ def group_filenames(input_files):
     Returns:
     --------
     grouped : list
-        grouped list of filenames where each element is a 
-        list and contains the names of filenames with matching 
+        grouped list of filenames where each element is a
+        list and contains the names of filenames with matching
         exposure information
     """
     grouped = []
@@ -604,13 +566,13 @@ def group_filenames(input_files):
         last_under_index = filename.rindex('_')
         file_parts = filename.split('_')
         detector = file_parts[3].upper()
-        obs_base = file_parts[0] + '_' + file_parts[1] + '_' + file_parts[2]
-        
+        # obs_base = file_parts[0] + '_' + file_parts[1] + '_' + file_parts[2]
+
         if detector in nrc_shortwave_detectors:
             match_str = filename[0:26] + 'NRC[AB][1234]' + filename[last_under_index:]
         elif detector in nrc_longwave_detectors:
             match_str = filename[0:26] + 'NRC[AB]5' + filename[last_under_index:]
-        else: #non-NIRCam detectors - should never be used I think??
+        else:  # non-NIRCam detectors - should never be used I think??
             match_str = filename[0:26] + '(.*)' + filename[last_under_index:]
         match_str = os.path.join(filedirectory, match_str)
         pattern = re.compile(match_str)

@@ -35,7 +35,6 @@ Use:
 """
 
 import os
-import sys
 
 from astropy.io import fits
 from jwst.datamodels import dqflags
@@ -48,7 +47,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-
 
 
 class PreviewImage():
@@ -205,7 +203,7 @@ class PreviewImage():
             Size of the longest dimension of the output figure (inches)
 
         thumbnail : bool
-            True to create a thumbnail image, False to create the full 
+            True to create a thumbnail image, False to create the full
             preview image
 
         Returns
@@ -215,7 +213,7 @@ class PreviewImage():
         """
 
         # Check the input scaling
-        if scale not in ['linear','log']:
+        if scale not in ['linear', 'log']:
             raise ValueError(("WARNING: scaling option {} not supported."
                               .format(scale)))
 
@@ -239,8 +237,12 @@ class PreviewImage():
             # If making a thumbnail, make a figure with no axes
             if thumbnail:
                 fig = plt.imshow(shiftdata,
-                           norm=colors.LogNorm(vmin=shiftmin, vmax=shiftmax),
-                           cmap=self.cmap)
+                                 norm=colors.LogNorm(vmin=shiftmin,
+                                                     vmax=shiftmax),
+                                 cmap=self.cmap)
+                # Invert y axis
+                plt.gca().invert_yaxis()
+
                 plt.axis('off')
                 fig.axes.get_xaxis().set_visible(False)
                 fig.axes.get_yaxis().set_visible(False)
@@ -249,8 +251,11 @@ class PreviewImage():
             else:
                 fig, ax = plt.subplots(figsize=(xsize, ysize))
                 cax = ax.imshow(shiftdata,
-                                norm=colors.LogNorm(vmin=shiftmin, vmax=shiftmax),
+                                norm=colors.LogNorm(vmin=shiftmin,
+                                                    vmax=shiftmax),
                                 cmap=self.cmap)
+                # Invert y axis
+                plt.gca().invert_yaxis()
 
                 # Add colorbar, with original data values
                 tickvals = np.logspace(np.log10(shiftmin), np.log10(shiftmax), 5)
@@ -281,7 +286,7 @@ class PreviewImage():
                 plt.rcParams.update({'axes.labelsize': maxsize * 5./4})
                 plt.rcParams.update({'ytick.labelsize': maxsize * 5./4})
                 plt.rcParams.update({'xtick.labelsize': maxsize * 5./4})
-                
+
         elif scale == 'linear':
             fig, ax = plt.subplots(figsize=(xsize, ysize))
             cax = ax.imshow(image, clim=(min_value, max_value), cmap=self.cmap)
