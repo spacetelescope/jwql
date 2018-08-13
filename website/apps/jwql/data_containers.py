@@ -14,6 +14,11 @@ Authors
 Use
 ---
 
+    The functions within this module are intended to be imported and
+    used by ``views.py``, e.g.:
+
+    ::
+        from .data_containers import get_proposal_info
 """
 
 import glob
@@ -61,7 +66,19 @@ def get_acknowledgements():
 
 
 def get_filenames_by_instrument(instrument):
-    """
+    """Returns a list of paths to files that match the given
+    ``instrument``.
+
+    Parameters
+    ----------
+    instrument : str
+        The instrument of interest (e.g. `FGS`).
+
+    Returns
+    -------
+    filepaths : list
+        A list of full paths to the files that match the given
+        instrument.
     """
 
     # Query files from MAST database
@@ -82,7 +99,23 @@ def get_filenames_by_instrument(instrument):
 
 
 def get_proposal_info(filepaths):
-    """
+    """Builds and returns a dictionary containing various information
+    about the proposal(s) that correspond to the given ``filepaths``.
+
+    The information returned contains such things as the number of
+    proposals, the paths to the corresponding thumbnails, and the total
+    number of files.
+
+    Parameters
+    ----------
+    filepaths : list
+        A list of full paths to files of interest.
+
+    Returns
+    -------
+    proposal_info : dict
+        A dictionary containing various information about the
+        proposal(s) and files corresponding to the given ``filepaths``.
     """
 
     proposals = list(set([f.split('/')[-1][2:7] for f in filepaths]))
