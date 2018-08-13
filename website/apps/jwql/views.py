@@ -32,14 +32,9 @@ Dependencies
     placed in the ``jwql/utils/`` directory.
 """
 
-from collections import OrderedDict
-import glob
 import os
-import time
 
-from astropy.io import fits
 from django.shortcuts import render
-import numpy as np
 # from django.views import generic # We ultimately might want to use generic views?
 
 from .data_containers import get_acknowledgements
@@ -49,8 +44,7 @@ from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
-from jwql.preview_image.preview_image import PreviewImage
-from jwql.utils.utils import get_config, JWST_INSTRUMENTS, filename_parser, MONITORS
+from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS
 
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -103,14 +97,15 @@ def archived_proposals(request, inst):
     all_filenames = [os.path.basename(f) for f in filepaths]
     proposal_info = get_proposal_info(filepaths)
 
-    return render(request, template,
-        {'inst': inst,
-         'all_filenames': all_filenames,
-         'tools': MONITORS,
-         'num_proposals': proposal_info['num_proposals'],
-         'zipped_thumbnails': zip(proposal_info['proposals'],
-                                  proposal_info['thumbnail_paths'],
-                                  proposal_info['num_files'])})
+    context = {'inst': inst,
+               'all_filenames': all_filenames,
+               'tools': MONITORS,
+               'num_proposals': proposal_info['num_proposals'],
+               'zipped_thumbnails': zip(proposal_info['proposals'],
+                                        proposal_info['thumbnail_paths'],
+                                        proposal_info['num_files'])}
+
+    return render(request, template, context)
 
 
 def archive_thumbnails(request, inst, proposal):
@@ -132,9 +127,9 @@ def archive_thumbnails(request, inst, proposal):
         Outgoing response sent to the webpage
     """
     template = 'thumbnails.html'
-    dict_to_render = thumbnails(inst, proposal)
+    context = thumbnails(inst, proposal)
 
-    return render(request, template, dict_to_render)
+    return render(request, template, context)
 
 
 def dashboard(request):
@@ -201,10 +196,9 @@ def instrument(request, inst):
         Outgoing response sent to the webpage
     """
     template = 'instrument.html'
+    context = {'inst': inst, 'tools': MONITORS}
 
-    return render(request, template,
-                  {'inst': inst,
-                   'tools': MONITORS})
+    return render(request, template, context)
 
 
 def view_image(request, inst, file_root, rewrite=False):
@@ -228,15 +222,15 @@ def view_image(request, inst, file_root, rewrite=False):
     """
     template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
+    context = {'inst': inst,
+               'file_root': file_root,
+               'tools': MONITORS,
+               'jpg_files': image_info['all_jpegs'],
+               'fits_files': image_info['all_files'],
+               'suffixes': image_info['suffixes'],
+               'num_ints': image_info['num_ints']}
 
-    return render(request, template,
-                  {'inst': inst,
-                   'file_root': file_root,
-                   'tools': MONITORS,
-                   'jpg_files': image_info['all_jpegs'],
-                   'fits_files': image_info['all_files'],
-                   'suffixes': image_info['suffixes'],
-                   'num_ints': image_info['num_ints']})
+    return render(request, template, context)
 
 
 def view_header(request, inst, file):
@@ -284,6 +278,6 @@ def unlooked_images(request, inst):
         Outgoing response sent to the webpage
     """
     template = 'thumbnails.html'
-    dict_to_render = thumbnails(inst)
-    return render(request, template,
-                  dict_to_render)
+    context = thumbnails(inst)
+
+    return render(request, template, context)
