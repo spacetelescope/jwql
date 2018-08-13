@@ -152,7 +152,7 @@ class PreviewImage():
                 if ext in extnames:
                     dimensions = len(hdulist[ext].data.shape)
                     if dimensions == 4:
-                        data = hdulist[ext].data[:, [0,-1], :, :].astype(np.float)
+                        data = hdulist[ext].data[:, [0, -1], :, :].astype(np.float)
                     else:
                         data = hdulist[ext].data.astype(np.float)
                 else:
@@ -277,9 +277,9 @@ class PreviewImage():
                 cbar = fig.colorbar(cax, ticks=tickvals)
                 cbar.ax.set_yticklabels(tlabelstr)
                 cbar.ax.tick_params(labelsize=maxsize * 5./4)
-                #cbar.ax.set_ylabel('Signal', rotation=270, fontsize=maxsize*5./4)
-                ax.set_xlabel('Pixels', fontsize = maxsize * 5./4)
-                ax.set_ylabel('Pixels', fontsize = maxsize * 5./4)
+                # cbar.ax.set_ylabel('Signal', rotation=270, fontsize=maxsize*5./4)
+                ax.set_xlabel('Pixels', fontsize=maxsize * 5./4)
+                ax.set_ylabel('Pixels', fontsize=maxsize * 5./4)
                 ax.tick_params(labelsize=maxsize)
                 plt.rcParams.update({'axes.titlesize': 'small'})
                 plt.rcParams.update({'font.size': maxsize * 5./4})
