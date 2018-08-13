@@ -43,6 +43,7 @@ import numpy as np
 # from django.views import generic # We ultimately might want to use generic views?
 
 from .data_containers import get_acknowledgements
+from .data_containers import get_dashboard_components
 from .data_containers import get_filenames_by_instrument
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
@@ -149,41 +150,14 @@ def dashboard(request):
     """
     template = 'dashboard.html'
     output_dir = get_config()['outputs']
-
-    name_dict = {'': '',
-                 'database_monitor': 'Database Monitor',
-                 'filesystem_monitor': 'Filesystem Monitor',
-                 'filecount_type': 'Total File Counts by Type',
-                 'size_type': 'Total File Sizes by Type',
-                 'filecount': 'Total File Counts',
-                 'system_stats': 'System Statistics'}
-
-    embed_components = {}
-    for dir_name, subdir_list, file_list in os.walk(output_dir):
-        monitor_name = os.path.basename(dir_name)
-        embed_components[name_dict[monitor_name]] = {}
-        for fname in file_list:
-            if 'component' in fname:
-                full_fname = '{}/{}'.format(monitor_name, fname)
-                plot_name = fname.split('_component')[0]
-
-                # Get the div
-                html_file = full_fname.split('.')[0] + '.html'
-                with open(os.path.join(output_dir, html_file)) as f:
-                    div = f.read()
-
-                # Get the script
-                js_file = full_fname.split('.')[0] + '.js'
-                with open(os.path.join(output_dir, js_file)) as f:
-                    script = f.read()
-                embed_components[name_dict[monitor_name]][name_dict[plot_name]] = [div, script]
+    dashboard_components = get_dashboard_components()
 
     context = {'inst': '',
                'inst_list': JWST_INSTRUMENTS,
                'tools': MONITORS,
                'outputs': output_dir,
                'filesystem_html': os.path.join(output_dir, 'filesystem_monitor', 'filesystem_monitor.html'),
-               'embed_components': embed_components}
+               'dashboard_components': dashboard_components}
 
     return render(request, template, context)
 
