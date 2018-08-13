@@ -45,6 +45,8 @@ import numpy as np
 from .data_containers import get_acknowledgements
 from .data_containers import get_dashboard_components
 from .data_containers import get_filenames_by_instrument
+from .data_containers import get_header_info
+from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from jwql.preview_image.preview_image import PreviewImage
@@ -225,53 +227,16 @@ def view_image(request, inst, file_root, rewrite=False):
         Outgoing response sent to the webpage
     """
     template = 'view_image.html'
-    preview_dir = os.path.join(get_config()['jwql_dir'], 'preview_images')
-
-    # Find all of the matching files
-    dirname = file_root[:7]
-    search_filepath = os.path.join(FILESYSTEM_DIR, dirname, file_root + '*.fits')
-    all_files = glob.glob(search_filepath)
-
-    # Generate the jpg filename
-    all_jpgs = []
-    suffixes = []
-    n_ints = {}
-    for file in all_files:
-        suffix = os.path.basename(file).split('_')[4].split('.')[0]
-        suffixes.append(suffix)
-
-        jpg_dir = os.path.join(preview_dir, dirname)
-        jpg_filename = os.path.basename(os.path.splitext(file)[0] + '_integ0.jpg')
-        jpg_filepath = os.path.join(jpg_dir, jpg_filename)
-
-        # Check that a jpg does not already exist. If it does (and rewrite=False),
-        # just call the existing jpg file
-        if os.path.exists(jpg_filepath) and not rewrite:
-            pass
-
-        # If it doesn't, make it using the preview_image module
-        else:
-            if not os.path.exists(jpg_dir):
-                os.makedirs(jpg_dir)
-            im = PreviewImage(file, 'SCI')
-            im.output_directory = jpg_dir
-            im.make_image()
-
-        # Record how many integrations there are per filetype
-        search_jpgs = os.path.join(preview_dir, dirname, file_root + '_{}_integ*.jpg'.format(suffix))
-        n_jpgs = len(glob.glob(search_jpgs))
-        n_ints[suffix] = n_jpgs
-
-        all_jpgs.append(jpg_filepath)
+    image_info = get_image_info(file_root, rewrite)
 
     return render(request, template,
                   {'inst': inst,
                    'file_root': file_root,
                    'tools': MONITORS,
-                   'jpg_files': all_jpgs,
-                   'fits_files': all_files,
-                   'suffixes': suffixes,
-                   'n_ints': n_ints})
+                   'jpg_files': image_info['all_jpegs'],
+                   'fits_files': image_info['all_files'],
+                   'suffixes': image_info['suffixes'],
+                   'num_ints': image_info['num_ints']})
 
 
 def view_header(request, inst, file):
@@ -292,12 +257,7 @@ def view_header(request, inst, file):
         Outgoing response sent to the webpage
     """
     template = 'view_header.html'
-
-    dirname = file[:7]
-    fits_filepath = os.path.join(FILESYSTEM_DIR, dirname, file)
-
-    header = fits.getheader(fits_filepath, ext=0).tostring(sep='\n')
-
+    header = get_header_info(file)
     file_root = '_'.join(file.split('_')[:-1])
 
     return render(request, template,

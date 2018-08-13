@@ -140,6 +140,93 @@ def get_filenames_by_instrument(instrument):
     return filepaths
 
 
+def get_header_info(file):
+    """Return the header information for a given ``file``.
+
+    Parameters
+    ----------
+    file : str
+        The name of the file of interest.
+
+    Returns
+    -------
+    header : str
+        The primary FITS header for the given ``file``.
+    """
+
+    dirname = file[:7]
+    fits_filepath = os.path.join(FILESYSTEM_DIR, dirname, file)
+    header = fits.getheader(fits_filepath, ext=0).tostring(sep='\n')
+
+    return header
+
+
+def get_image_info(file_root, rewrite):
+    """Build and return a dictionary containing information for a given
+    ``file_root``.
+
+    Parameters
+    ----------
+    file_root : str
+        The rootname of the file of interest.
+    rewrite : bool
+        ``True`` if the corresponding JPEG needs to be rewritten,
+        ``False`` if not.
+
+    Returns
+    -------
+    image_info : dict
+        A dictionary containing various information for the given
+        ``file_root``.
+    """
+
+    # Initialize dictionary to store information
+    image_info = {}
+    image_info['all_jpegs'] = []
+    image_info['suffixes'] = []
+    image_info['num_ints'] = {}
+
+    preview_dir = os.path.join(get_config()['jwql_dir'], 'preview_images')
+
+    # Find all of the matching files
+    dirname = file_root[:7]
+    search_filepath = os.path.join(FILESYSTEM_DIR, dirname, file_root + '*.fits')
+    image_info['all_files'] = glob.glob(search_filepath)
+
+    for file in image_info['all_files']:
+
+        # Get suffix information
+        suffix = os.path.basename(file).split('_')[4].split('.')[0]
+        image_info['suffixes'].append(suffix)
+
+        # Determine JPEG file location
+        jpg_dir = os.path.join(preview_dir, dirname)
+        jpg_filename = os.path.basename(os.path.splitext(file)[0] + '_integ0.jpg')
+        jpg_filepath = os.path.join(jpg_dir, jpg_filename)
+
+        # Check that a jpg does not already exist. If it does (and rewrite=False),
+        # just call the existing jpg file
+        if os.path.exists(jpg_filepath) and not rewrite:
+            pass
+
+        # If it doesn't, make it using the preview_image module
+        else:
+            if not os.path.exists(jpg_dir):
+                os.makedirs(jpg_dir)
+            im = PreviewImage(file, 'SCI')
+            im.output_directory = jpg_dir
+            im.make_image()
+
+        # Record how many integrations there are per filetype
+        search_jpgs = os.path.join(preview_dir, dirname, file_root + '_{}_integ*.jpg'.format(suffix))
+        num_jpgs = len(glob.glob(search_jpgs))
+        image_info['num_ints'][suffix] = num_jpgs
+
+        image_info['all_jpegs'].append(jpg_filepath)
+
+    return image_info
+
+
 def get_proposal_info(filepaths):
     """Builds and returns a dictionary containing various information
     about the proposal(s) that correspond to the given ``filepaths``.

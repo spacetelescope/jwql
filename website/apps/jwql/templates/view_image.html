@@ -30,12 +30,12 @@
 
     		// Update the number of integrations
     		var int_counter = document.getElementById("int_count");
-    		var n_ints = '{{n_ints}}'.replace(/&#39;/g, '"');
-    		var n_ints = JSON.parse(n_ints)
-    		int_counter.innerHTML = 'Displaying integration 1/' + n_ints[type];
+    		var num_ints = '{{num_ints}}'.replace(/&#39;/g, '"');
+    		var num_ints = JSON.parse(num_ints)
+    		int_counter.innerHTML = 'Displaying integration 1/' + num_ints[type];
 
     		// Update the integration changing buttons
-    		if (n_ints[type] > 1) {
+    		if (num_ints[type] > 1) {
     			document.getElementById("int_after").disabled = false;
     		} else {
     			document.getElementById("int_after").disabled = true;
@@ -57,11 +57,11 @@
     		var integration = Number(suffix[suffix.length - 1][5]);
     		var suffix = suffix[suffix.length - 2];
 
-    		var n_ints = '{{n_ints}}'.replace(/&#39;/g, '"');
-    		var n_ints = JSON.parse(n_ints)[suffix];
+    		var num_ints = '{{num_ints}}'.replace(/&#39;/g, '"');
+    		var num_ints = JSON.parse(num_ints)[suffix];
 
 
-    		if ((integration == n_ints - 1 && direction == 'right')||
+    		if ((integration == num_ints - 1 && direction == 'right')||
     		    (integration == 0 && direction == 'left')) {
     			return;
     		} else if (direction == 'right') {
@@ -69,7 +69,7 @@
     			var new_integration = integration + 1
 
 	    		// Don't let them go further if they're at the last integration
-	    		if (new_integration == n_ints - 1) {
+	    		if (new_integration == num_ints - 1) {
 	    			document.getElementById("int_after").disabled = true;
 	    		}
 	    		document.getElementById("int_before").disabled = false;
@@ -97,7 +97,7 @@
     		// Update the number of integrations
     		var int_counter = document.getElementById("int_count");
     		var int_display = new_integration + 1;
-    		int_counter.innerHTML = 'Displaying integration ' + int_display + '/' + n_ints;
+    		int_counter.innerHTML = 'Displaying integration ' + int_display + '/' + num_ints;
 
     		// Update the jpg download link
     		document.getElementById("download_jpg").href = jpg_filepath;
