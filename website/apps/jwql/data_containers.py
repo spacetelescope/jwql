@@ -27,6 +27,7 @@ import os
 from astropy.io import fits
 import numpy as np
 
+from jwql.preview_image.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser, MONITORS
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -60,7 +61,7 @@ def get_acknowledgements():
 
     # Parse out the list of individuals
     acknowledgements = data[index+1:]
-    acknowledgements = [item.strip().replace('- ','').split('@')[0].strip() for item in acknowledgements]
+    acknowledgements = [item.strip().replace('- ', '').split('@')[0].strip() for item in acknowledgements]
 
     return acknowledgements
 
@@ -296,7 +297,6 @@ def split_files(file_list, page_type):
     elif page_type == 'archive':
         print('ONLY RETURNING {} "ARCHIVED" FILES OF {} ORIGINAL FILES'.format(len([m for m in mask_unlooked if not m]), len(file_list)))
         return [f for i, f in enumerate(file_list) if not mask_unlooked[i]]
-
 
 
 def thumbnails(inst, proposal=None):
