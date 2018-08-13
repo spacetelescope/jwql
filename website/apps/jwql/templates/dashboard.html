@@ -6,7 +6,7 @@
 
     <!-- Add bokeh files -->
     <link href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.5.min.css" rel="stylesheet" type="text/css">
-    {% for monitor_name, plots in embed_components.items() %}
+    {% for monitor_name, plots in dashboard_components.items() %}
         {% for plot_name, components in plots.items() %}
             {{ components[1] | safe}}
         {% endfor %}
@@ -20,7 +20,7 @@
 
         <div class="container-fluid">
             <div class="row justify-content-md-center">
-            {% for monitor_name, plots in embed_components.items() %}
+            {% for monitor_name, plots in dashboard_components.items() %}
                 {% for plot_name, components in plots.items() %}
                     <div class="col-xl-6 col-12 plot-column">
 
@@ -29,7 +29,7 @@
                             <span class="dropdown">
                               <button class="btn btn-primary dropdown-toggle" type="button" id="{{monitor_name}}_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{monitor_name}}</button>
                               <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                {% for monitor_name, plots in embed_components.items() %}
+                                {% for monitor_name, plots in dashboard_components.items() %}
                                     <a class="dropdown-item" href="#" >{{monitor_name}}</a>
                                 {% endfor %}
                               </div>

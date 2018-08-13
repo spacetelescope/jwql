@@ -65,6 +65,48 @@ def get_acknowledgements():
     return acknowledgements
 
 
+def get_dashboard_components():
+    """Build and return a dictionary containing components needed for
+    the dashboard.
+
+    Returns
+    -------
+    dashboard_components : dict
+        A dictionary containing components needed for the dashboard.
+    """
+
+    output_dir = get_config()['outputs']
+    name_dict = {'': '',
+                 'database_monitor': 'Database Monitor',
+                 'filesystem_monitor': 'Filesystem Monitor',
+                 'filecount_type': 'Total File Counts by Type',
+                 'size_type': 'Total File Sizes by Type',
+                 'filecount': 'Total File Counts',
+                 'system_stats': 'System Statistics'}
+
+    dashboard_components = {}
+    for dir_name, subdir_list, file_list in os.walk(output_dir):
+        monitor_name = os.path.basename(dir_name)
+        dashboard_components[name_dict[monitor_name]] = {}
+        for fname in file_list:
+            if 'component' in fname:
+                full_fname = '{}/{}'.format(monitor_name, fname)
+                plot_name = fname.split('_component')[0]
+
+                # Get the div
+                html_file = full_fname.split('.')[0] + '.html'
+                with open(os.path.join(output_dir, html_file)) as f:
+                    div = f.read()
+
+                # Get the script
+                js_file = full_fname.split('.')[0] + '.js'
+                with open(os.path.join(output_dir, js_file)) as f:
+                    script = f.read()
+                dashboard_components[name_dict[monitor_name]][name_dict[plot_name]] = [div, script]
+
+    return dashboard_components
+
+
 def get_filenames_by_instrument(instrument):
     """Returns a list of paths to files that match the given
     ``instrument``.
