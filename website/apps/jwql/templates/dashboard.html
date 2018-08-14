@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>Dashboard - JWST Quicklook</title>
+
+    <!-- Add bokeh files -->
+    <link href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.5.min.css" rel="stylesheet" type="text/css">
+    {% for monitor_name, plots in dashboard_components.items() %}
+        {% for plot_name, components in plots.items() %}
+            {{ components[1] | safe}}
+        {% endfor %}
+    {% endfor %}
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class='dashboard'>
+
+        <div class="container-fluid">
+            <div class="row justify-content-md-center">
+            {% for monitor_name, plots in dashboard_components.items() %}
+                {% for plot_name, components in plots.items() %}
+                    <div class="col-xl-6 col-12 plot-column">
+
+                        <!--Plot selection menus-->
+                        <div class="d-flex">
+                            <span class="dropdown">
+                              <button class="btn btn-primary dropdown-toggle" type="button" id="{{monitor_name}}_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{monitor_name}}</button>
+                              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                {% for monitor_name, plots in dashboard_components.items() %}
+                                    <a class="dropdown-item" href="#" >{{monitor_name}}</a>
+                                {% endfor %}
+                              </div>
+                            </span>
+
+                            <span class="dropdown ml-1">
+                              <button class="btn btn-primary dropdown-toggle" type="button" id="{{monitor_name}}_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{plot_name}}</button>
+                              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                {% for plot_name, components in plots.items() %}
+                                    <a class="dropdown-item" href="#" >{{plot_name}}</a>
+                                {% endfor %}
+                              </div>
+                            </span>
+
+                            {# <span class='plot-header ml-1'></span> #}
+                        </div>
+
+                        <!--Bokeh plot divs-->
+                        <span class='plot-container px-1'>
+                            {{  components[0] | safe }}
+                        </span>
+
+                    </div>
+                {% endfor %}
+            {% endfor %}
+            </div>
+        </div>
+
+	</main>
+
+{% endblock %}
