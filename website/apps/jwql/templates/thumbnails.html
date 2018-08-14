@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>Unlooked {{ inst }} Images - JWST Quicklook</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+
+    	<h3 id='title'>{{ inst }} Images</h3>
+    	<script>determine_page_title('{{ inst }}','{{ prop }}');</script>
+
+    	<p id='img_show_count'>Showing {{ n_fileids }}/{{ n_fileids }} activities
+    		<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">
+    			<span class="help-tip mx-2">i</span>
+    		</a>
+    	</p>
+
+    	<!-- <a id='demo'>test</a> -->
+    	<hr>
+
+    	<!-- Filter and sort options -->
+		<div class="d-flex flex-row">
+			<!-- Filter Options -->
+			{% for filter_type, filter_options in dropdown_menus.items() %}
+    			<div class="mr-4">
+			    	Show only {{filter_type}}:
+			    	<div class="dropdown">
+					  <button class="btn btn-primary dropdown-toggle" type="button" id="{{filter_type}}_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">All {{filter_type}}s</button>
+					  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+					  	<a class="dropdown-item" href="#" onclick="show_only('{{filter_type}}', 'All {{filter_type}}s', '{{dropdown_menus.keys}}', '{{ n_fileids }}');">All {{filter_type}}s</a>
+					  	{% for option in filter_options %}
+					    	<a class="dropdown-item" href="#" onclick="show_only('{{filter_type}}', '{{option}}', '{{dropdown_menus.keys}}');">{{option}}</a>
+					    {% endfor %}
+					  </div>
+					</div>
+				</div>
+			{% endfor %}
+
+			<!-- Sort Options -->
+			<div class="mx-4 mr-5 ml-auto">
+		    	Sort by:
+		    	<div class="dropdown">
+				  <button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Default</button>
+				  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+				  	<a class="dropdown-item" href="#" onclick="sort_by_thumbnails('Default');">Default</a>
+			    	<a class="dropdown-item" href="#" onclick="sort_by_thumbnails('Name');">Name</a>
+			    	<a class="dropdown-item" href="#" onclick="sort_by_thumbnails('Exposure Start Time');">Exposure Start Time</a>
+				  </div>
+				</div>
+			</div>
+		</div>
+
+		<hr>
+
+		<!-- Add an animated "loader" while the images load -->
+		<!-- <div id="loading" class='text-center'>
+	        <div class="cssload-container">
+				<div class="cssload-circle-1">
+					<div class="cssload-circle-2">
+						<div class="cssload-circle-3">
+							<div class="cssload-circle-4">
+								<div class="cssload-circle-5">
+									<div class="cssload-circle-6">
+										<div class="cssload-circle-7">
+											<div class="cssload-circle-8">
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+	        <br>
+	        Loading thumbnails...
+	    </div> -->
+
+		<!-- Display the data -->
+		<div id='thumbnail-array'>
+		{% for i, file in thumbnail_zipped_list %}
+			<div class="thumbnail" detector="{{file.detector}}" proposal="{{file.program_id}}" file_root="{{file.file_root}}", exp_start="{{file.exp_start}}">
+				<a href={{ url('jwql:view_image', args=[inst, file.file_root]) }}>
+					<span class="helper"></span><img id='thumbnail{{i}}' onerror="this.src={{ static('img/imagenotfound.png') }}">
+					<script>determine_filetype_for_thumbnail("{{file.suffixes}}", "{{i}}", "{{file.file_root}}");</script>
+
+					<div class='color-fill' ></div>
+					<div class='thumbnail_info'>
+						Proposal: {{file.program_id}}<br>
+						Observation: {{file.observation}}<br>
+						Visit: {{file.visit}}<br>
+						Detector: {{file.detector}}<br>
+						Exp_Start: {{'%0.2f' | format(file.exp_start|float) }}<br>
+						<!-- Suffixes: {{file.3}}<br> -->
+						<!-- ID: {{file.file_root}}<br> -->
+					</div>
+				</a>
+			</div>
+		{% endfor %}
+		</div>
+		<a id="no_thumbnails_msg" style='display: none'>No data match the selected criteria.</a>
+
+	</main>
+
+	<!-- <script type="text/javascript">
+    function preloader(){
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("thumbnail-array").style.display = "block";
+        // $(".thumb img").attr('src', '/../static/img/wow.png');
+    }
+    window.onload = preloader;
+    // document.getElementById("thumbnail-array").onload = preloader;
+	</script> -->
+
+{% endblock %}

@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>View {{ inst }} Image - JWST Quicklook</title>
+
+{% endblock %}
+
+{% block content %}
+
+	<script>
+    	function change_filetype(type) {
+    		// Change the radio button to check the right filetype
+    		document.getElementById(type).checked = true;
+
+    		// Propogate the text fields showing the filename and APT parameters
+    		var fits_filename = '{{ file_root }}_' + type + '.fits'
+    		document.getElementById("jpg_filename").innerHTML = '{{ file_root }}_' + type + '_integ0.jpg';
+    		document.getElementById("fits_filename").innerHTML = fits_filename;
+    		document.getElementById("proposal").innerHTML = '{{ file_root[2:7] }}';
+    		document.getElementById("obs_id").innerHTML = '{{ file_root[7:10] }}';
+    		document.getElementById("visit_id").innerHTML = '{{ file_root[10:13] }}';
+    		document.getElementById("detector").innerHTML = '{{ file_root}}'.split('_')[3];
+
+    		// Show the appropriate image
+    		var img = document.getElementById("image_viewer")
+    		var jpg_filepath = '{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}_' + type + '_integ0.jpg';
+    		img.src = jpg_filepath;
+    		img.alt = jpg_filepath;
+
+    		// Update the number of integrations
+    		var int_counter = document.getElementById("int_count");
+    		var num_ints = '{{num_ints}}'.replace(/&#39;/g, '"');
+    		var num_ints = JSON.parse(num_ints)
+    		int_counter.innerHTML = 'Displaying integration 1/' + num_ints[type];
+
+    		// Update the integration changing buttons
+    		if (num_ints[type] > 1) {
+    			document.getElementById("int_after").disabled = false;
+    		} else {
+    			document.getElementById("int_after").disabled = true;
+    		}
+
+    		// Update the image download and header links
+    		document.getElementById("download_fits").href = '{{ static("") }}filesystem/{{ file_root[:7] }}/' + fits_filename;
+    		document.getElementById("download_jpg").href = jpg_filepath;
+    		document.getElementById("view_header").href = "/jwql/{{ inst }}/" + fits_filename + "/hdr/";
+
+    		// Disable the "left" button, since this will be showing integ0
+    		document.getElementById("int_before").disabled = true;
+
+    	};
+
+    	function change_int(direction) {
+    		// Figure out the current image and integration
+    		var suffix = document.getElementById("jpg_filename").innerHTML.split('_');
+    		var integration = Number(suffix[suffix.length - 1][5]);
+    		var suffix = suffix[suffix.length - 2];
+
+    		var num_ints = '{{num_ints}}'.replace(/&#39;/g, '"');
+    		var num_ints = JSON.parse(num_ints)[suffix];
+
+
+    		if ((integration == num_ints - 1 && direction == 'right')||
+    		    (integration == 0 && direction == 'left')) {
+    			return;
+    		} else if (direction == 'right') {
+    			// Update integration number
+    			var new_integration = integration + 1
+
+	    		// Don't let them go further if they're at the last integration
+	    		if (new_integration == num_ints - 1) {
+	    			document.getElementById("int_after").disabled = true;
+	    		}
+	    		document.getElementById("int_before").disabled = false;
+    		} else if (direction == 'left') {
+    			// Update integration number
+    			var new_integration = integration - 1
+
+	    		// Don't let them go further if they're at the first integration
+	    		if (new_integration == 0) {
+	    			document.getElementById("int_before").disabled = true;
+	    		}
+	    		document.getElementById("int_after").disabled = false;
+    		}
+
+    		// Update the JPG filename
+			var jpg_filename = '{{ file_root }}_' + suffix + '_integ' + new_integration + '.jpg'
+			var jpg_filepath = '{{ static("") }}preview_images/{{ file_root[:7] }}/' + jpg_filename
+			document.getElementById("jpg_filename").innerHTML = jpg_filename;
+
+			// Show the appropriate image
+    		var img = document.getElementById("image_viewer")
+    		img.src = jpg_filepath;
+    		img.alt = jpg_filepath;
+
+    		// Update the number of integrations
+    		var int_counter = document.getElementById("int_count");
+    		var int_display = new_integration + 1;
+    		int_counter.innerHTML = 'Displaying integration ' + int_display + '/' + num_ints;
+
+    		// Update the jpg download link
+    		document.getElementById("download_jpg").href = jpg_filepath;
+    	};
+    </script>
+
+    <main role="main" class="container">
+    	<!-- Show image group name -->
+    	<h3>{{ file_root }}</h3>
+
+    	<!-- Specify the attributes of what is currently being shown -->
+    	<div class="d-flex flex-row">
+    		<div class="APT_parameters">Proposal: <a id="proposal"></a></div>
+    		<div class="APT_parameters">Observation: <a id="obs_id"></a></div>
+    		<div class="APT_parameters">Visit: <a id="visit_id"></a></div>
+    		<div class="APT_parameters">Detector: <a id="detector"></a></div>
+    	</div>
+    	FITS Filename: <a id="fits_filename"></a><br>
+    	JPG Filename: <a id="jpg_filename"></a><br><br>
+
+    	<!-- Allow the user to change the file type that is being displayed -->
+    	View File Type:
+    	<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank">
+	      	<span class="help-tip mx-1">i</span>
+	    </a><br>
+	    <form class="my-2" action="change_filetype(value)">
+	    	{% for suffix in suffixes %}
+	    		<input type="radio" name="filetype" value="{{ suffix }}" id="{{ suffix }}" onclick="change_filetype('{{ suffix }}');"> {{ suffix }} &nbsp;&nbsp;&nbsp;&nbsp;
+	    	{% endfor %}
+		</form>
+		<br>
+
+		<!-- View Header and proposal information -->
+    	<p>
+	    	<a id="view_header" class="btn btn-primary mx-2" role="button" href="">View Header</a>
+	    	<a class="btn btn-primary mx-2 disabled" role="button" href="#"> View Proposal {{ file_root[2:7] }}</a>
+	    </p>
+
+	    <!-- Display the image -->
+	    <div class='text-center'>
+		    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("left");' disabled>&#9664;</button>
+		    <span class="image_preview">
+		    	<a id="int_count">Displaying integration 1/1</a><br>
+		    	<img id="image_viewer" src='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}_cal_integ0.jpg' alt='{{ file_root }}_cal_integ0.jpg'>
+		    </span>
+		    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("right");' disabled>&#9658;</button>
+		</div>
+
+		<!-- Download the images? -->
+	    <p>
+	    	<a id="download_fits" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}' download>Download FITS</a>
+	    	<a id="download_jpg" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ jpg }}' download>Download JPEG</a>
+	    	<a class="btn btn-primary my-2 mx-2 disabled" role="button" href="#">Submit Anomaly</a>
+	    </p>
+
+	    <!-- Determine which filetype should be shown on load -->
+	    {% if 'cal' in suffixes %}
+	    	<script>change_filetype('cal');</script>
+	    {% elif 'rate' in suffixes %}
+	    	<script>change_filetype('rate');</script>
+	    {% elif 'uncal' in suffixes %}
+	    	<script>change_filetype('uncal');</script>
+	    {% elif suffixes|length == 1 %}
+	    	<script>change_filetype("{{ suffixes.0 }}");</script>
+	    {% else %}
+	    	<a>Lauren needs to figure out what to do with these: {{suffixes}}</a>
+	    {% endif %}
+
+
+
+		<!-- Try the arrow-to-navigate thing -->
+		<!-- {% if imdat %}
+			<div class="container">
+			    <div id="slideshow">
+			        <img alt="{{ imdat.0 }}" src="{{ staticURL }}/{{ imdat.0 }}" width=800 id="imgClickAndChange" onclick="changeImage()" />
+			    </div>
+			</div>
+
+			<div id="demo"></div>
+			<script>
+			document.getElementById("demo").innerHTML = "Hello JavaScript!";
+			</script>
+
+
+			<script>
+			    var imgs = {{ imdat }};
+
+			    function changeImage(dir) {
+			    	document.getElementById("imgClickAndChange").innerHTML = 5 + 6;
+			        var img = document.getElementById("imgClickAndChange");
+			        img.src = imgs[(imgs.indexOf(img.src) + 1) % imgs.length];
+			    }
+
+			    document.onkeydown = function(e) {
+			        e = e || window.event;
+			        if (e.keyCode == '37') {
+			            changeImage(-1) //left <- show Prev image
+			        } else if (e.keyCode == '39') {
+			            // right -> show next image
+			            changeImage()
+			        }
+			    }
+			</script>
+		{% endif %} -->
+	</main>
+
+{% endblock %}

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<!-- JWQL Icon as website image -->
+		<link rel="shortcut icon" href="{{ static('img/favicon.ico') }}?{% now 'U' %}" />
+
+		<!-- Bootstrap core CSS -->
+		<link rel="stylesheet" href="{{ static('css/bootstrap.min.css') }}?{% now 'U' %}">
+
+		<!-- Custom styles for this template -->
+		<link href="{{ static('css/jwql.css') }}?{% now 'U' %}" rel="stylesheet">
+		<link href="{{ static('css/sticky-footer.css') }}?{% now 'U' %}" rel="stylesheet">
+
+		<!-- Import fonts -->
+		<link href="https://fonts.googleapis.com/css?family=Oswald:700|Overpass" rel="stylesheet">
+
+		<!-- Needed javascript -->
+		<!-- IMPORTANT: jQuery first, then popper, then Bootstrap -->
+		<script src="{{ static('js/jquery-3.3.1.min.js') }}?{% now 'U' %}"></script>
+		<script src="{{ static('js/tinysort.min.js') }}?{% now 'U' %}"></script>
+	    <script type="text/javascript" src="http://cdn.pydata.org/bokeh/release/bokeh-0.12.5.min.js"></script>
+	    <script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.5.min.js"></script>
+		<script src="{{ static('js/jwql.js') }}?{% now 'U' %}"></script>
+
+		{% block preamble %}
+        {% endblock %}
+
+
+	</head>
+
+	<body>
+		<!-- Navigation Bar -->
+		<nav class="navbar navbar-expand-md fixed-top">
+		    <a class="navbar-left" href={{ url('jwql:home') }}><img src={{ static('img/JWQLlogo_small.png') }} height=35 width=35></a>
+	        <a class="navbar-brand" href={{ url('jwql:home') }}>JWST Quicklook</a>
+	        <a class="navbar-brand" href="#"><font color='#f2ce3a'>{{ inst }}</font></a>
+	        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+	          <span class="navbar-toggler-icon"></span>
+	        </button>
+
+	        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+	        	<ul class="navbar-nav mr-auto">
+	          		<li class="nav-item active">
+	            		<a class="nav-link" href={{ url('jwql:home') }}>Home<span class="sr-only">(current)</span></a>
+	          		</li>
+	          		<li class="nav-item active">
+	            		<a class="nav-link" href={{ url('jwql:about') }}>About<span class="sr-only">(current)</span></a>
+	          		</li>
+	          		{% for inst_key, inst_tools in tools.items() %}
+		          	<li class="dropdown">
+		            	<a class="nav-link dropdown-toggle disabled" href={{ url('jwql:instrument', args=[inst_key]) }} id="dropdown"{{ inst_key }} aria-haspopup="true" aria-expanded="false">{{ inst_key }}</a>
+		            	<div class="dropdown-menu" aria-labelledby="dropdown01">
+			            	<a class='dropdown-heading mx-3'>Images</a>
+			            	<a class="dropdown-item" href={{ url('jwql:unlooked', args=[inst_key]) }}>Unlooked Images</a>
+			            	<a class="dropdown-item" href="#">Image Anomalies</a>
+			            	<a class="dropdown-item" href={{ url('jwql:archive', args=[inst_key]) }}>Archived Images</a>
+			            	<div class="dropdown-divider"></div>
+			            	<a class='dropdown-heading mx-3'>Monitors</a>
+			            	{% for tool in inst_tools %}
+			              		<a class="dropdown-item" href="#">{{ tool }}</a>
+			              	{% endfor %}
+		            	</div>
+		          	</li>
+		      		{% endfor %}
+	        	</ul>
+	        </div>
+
+	    	<a class="navbar-right" href="https://github.com/spacetelescope/jwql" target="_blank"><img src={{ static('img/githublogo.svg') }} height=25 width=25></a>
+	    </nav>
+	    <div class="banner">
+	    	<img src={{ static('img/hubble_image.jpg') }}>
+	    </div>
+
+    	{% block content %}
+        {% endblock %}
+
+		<footer class="footer text-center">
+	      	<div class="container">
+	      		<a href="http://www.stsci.edu/" target="_blank">
+	        		<img src={{ static('img/STScIlogo_dark.png') }}   height=36>
+	        	</a>
+	      	</div>
+	    </footer>
+
+
+	    <!-- Needed javascript -->
+	    <!-- IMPORTANT: jQuery first, then popper, then Bootstrap -->
+		<script src="{{ static('js/popper.min.js') }}?{% now 'U' %}"></script>
+		<script src="{{ static('js/bootstrap.bundle.min.js') }}?{% now 'U' %}"></script>
+	</body>
+</html>
