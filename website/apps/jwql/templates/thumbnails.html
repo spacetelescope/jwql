@@ -31,9 +31,10 @@
 			    	<div class="dropdown">
 					  <button class="btn btn-primary dropdown-toggle" type="button" id="{{filter_type}}_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">All {{filter_type}}s</button>
 					  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-					  	<a class="dropdown-item" href="#" onclick="show_only('{{filter_type}}', 'All {{filter_type}}s', '{{dropdown_menus.keys}}', '{{ n_fileids }}');">All {{filter_type}}s</a>
+					  	{% set dropdown_keys_list = dropdown_menus.keys() | replace("'", '"') %}
+					  	<a class="dropdown-item" href="#" onclick="show_only('{{filter_type}}', 'All {{filter_type}}s', '{{dropdown_keys_list}}', '{{ n_fileids }}');">All {{filter_type}}s</a>
 					  	{% for option in filter_options %}
-					    	<a class="dropdown-item" href="#" onclick="show_only('{{filter_type}}', '{{option}}', '{{dropdown_menus.keys}}');">{{option}}</a>
+					    	<a class="dropdown-item" href="#" onclick="show_only('{{filter_type}}', '{{option}}', '{{dropdown_keys_list}}' );">{{option}}</a>
 					    {% endfor %}
 					  </div>
 					</div>
@@ -86,7 +87,7 @@
 			<div class="thumbnail" detector="{{file.detector}}" proposal="{{file.program_id}}" file_root="{{file.file_root}}", exp_start="{{file.exp_start}}">
 				<a href={{ url('jwql:view_image', args=[inst, file.file_root]) }}>
 					<span class="helper"></span><img id='thumbnail{{i}}' onerror="this.src={{ static('img/imagenotfound.png') }}">
-					<script>determine_filetype_for_thumbnail("{{file.suffixes}}", "{{i}}", "{{file.file_root}}");</script>
+					<script>determine_filetype_for_thumbnail('{{ static("thumbnails/") }}' , "{{file.suffixes}}", "{{i}}", "{{file.file_root}}");</script>
 
 					<div class='color-fill' ></div>
 					<div class='thumbnail_info'>
