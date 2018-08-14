@@ -1,5 +1,5 @@
 // JS function to determine what filetype to use for the thumbnail
-function determine_filetype_for_thumbnail(suffixes, i, file_root) {
+function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root) {
     // Get all suffixes for the specific thumbnail
     var suffixes = suffixes.replace(/&#39;/g, '"');
     var suffixes = JSON.parse(suffixes);
@@ -7,13 +7,13 @@ function determine_filetype_for_thumbnail(suffixes, i, file_root) {
     // Update the thumbnail to show the most processed filetype
     var img = document.getElementById('thumbnail'+i);
     if (suffixes.indexOf("cal") >= 0) {
-        var jpg_path = '{{ static("thumbnails/") }}' + file_root.slice(0,7) + '/' + file_root + '_cal_integ0.thumb';
+        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_cal_integ0.thumb';
         img.src = jpg_path;
     } else if (suffixes.indexOf("rate") >= 0) {
-        var jpg_path = '{{ static("thumbnails/") }}' + file_root.slice(0,7) + '/' + file_root + '_rate_integ0.thumb';
+        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_rate_integ0.thumb';
         img.src = jpg_path;
     } else if (suffixes.indexOf("uncal") >= 0) {
-        var jpg_path = '{{ static("thumbnails/") }}' + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
+        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
         img.src = jpg_path;
     }
 };
@@ -39,7 +39,7 @@ function determine_page_title(instrument, proposal) {
 };
 
 
-function search() {
+function search(n_proposals) {
     // Find all proposal elements
     var proposals = document.getElementsByClassName("proposal");
 
@@ -50,7 +50,9 @@ function search() {
     var num_proposals_displayed = 0;
     for (i = 0; i < proposals.length; i++) {
         // Evaluate if the proposal number matches the search
-        var prop_name = document.getElementById("proposal" + i).getAttribute('proposal')
+        var j = i + 1
+        var prop_name = document.getElementById("proposal" + j).getAttribute('proposal')
+
 
         if (prop_name.startsWith(search_value)) {
             proposals[i].style.display = "inline-block";
@@ -68,7 +70,7 @@ function search() {
     };
 
     // Update the count of how many images are being shown
-    document.getElementById('img_show_count').innerHTML = 'Showing ' + num_proposals_displayed + '/{{ proposals|length }} proposals'
+    document.getElementById('img_show_count').innerHTML = 'Showing ' + num_proposals_displayed + '/' + n_proposals + ' proposals';
 };
 
 
