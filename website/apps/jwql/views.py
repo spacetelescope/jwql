@@ -201,8 +201,8 @@ def instrument(request, inst):
     return render(request, template, context)
 
 
-def view_image(request, inst, file_root, rewrite=False):
-    """Generate the image view page
+def unlooked_images(request, inst):
+    """Generate the page listing all unlooked images in the database
 
     Parameters
     ----------
@@ -210,25 +210,14 @@ def view_image(request, inst, file_root, rewrite=False):
         Incoming request from the webpage
     inst : str
         Name of JWST instrument
-    file : str
-        FITS filename of selected image in filesystem
-    rewrite : bool, optional
-        Regenerate the jpg preview of `file` if it already exists?
 
     Returns
     -------
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'view_image.html'
-    image_info = get_image_info(file_root, rewrite)
-    context = {'inst': inst,
-               'file_root': file_root,
-               'tools': MONITORS,
-               'jpg_files': image_info['all_jpegs'],
-               'fits_files': image_info['all_files'],
-               'suffixes': image_info['suffixes'],
-               'num_ints': image_info['num_ints']}
+    template = 'thumbnails.html'
+    context = thumbnails(inst)
 
     return render(request, template, context)
 
@@ -262,8 +251,8 @@ def view_header(request, inst, file):
                    'file_root': file_root})
 
 
-def unlooked_images(request, inst):
-    """Generate the page listing all unlooked images in the database
+def view_image(request, inst, file_root, rewrite=False):
+    """Generate the image view page
 
     Parameters
     ----------
@@ -271,13 +260,24 @@ def unlooked_images(request, inst):
         Incoming request from the webpage
     inst : str
         Name of JWST instrument
+    file : str
+        FITS filename of selected image in filesystem
+    rewrite : bool, optional
+        Regenerate the jpg preview of `file` if it already exists?
 
     Returns
     -------
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'thumbnails.html'
-    context = thumbnails(inst)
+    template = 'view_image.html'
+    image_info = get_image_info(file_root, rewrite)
+    context = {'inst': inst,
+               'file_root': file_root,
+               'tools': MONITORS,
+               'jpg_files': image_info['all_jpegs'],
+               'fits_files': image_info['all_files'],
+               'suffixes': image_info['suffixes'],
+               'num_ints': image_info['num_ints']}
 
     return render(request, template, context)
