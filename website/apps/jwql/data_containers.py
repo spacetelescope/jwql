@@ -63,7 +63,7 @@ def get_acknowledgements():
 
     # Parse out the list of individuals
     acknowledgements = data[index+1:]
-    acknowledgements = [item.strip().replace('- ', '').split('@')[0].strip() for item in acknowledgements]
+    acknowledgements = [item.strip().replace('- ', '').split(' [@')[0].strip() for item in acknowledgements]
 
     return acknowledgements
 
