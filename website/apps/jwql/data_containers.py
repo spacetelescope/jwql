@@ -30,7 +30,9 @@ import numpy as np
 from jwql.preview_image.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser, MONITORS
 
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
+REPO_DIR = __location__.split('website')[0]
 
 
 def get_acknowledgements():
@@ -48,7 +50,7 @@ def get_acknowledgements():
     """
 
     # Locate README file
-    readme_file = os.path.join(os.path.abspath('view.py').split('website')[0], 'README.md')
+    readme_file = os.path.join(REPO_DIR, 'README.md')
 
     # Get contents of the README file
     with open(readme_file, 'r') as f:
