@@ -89,7 +89,7 @@
 					<span class="helper"></span><img id='thumbnail{{i}}' onerror="this.src={{ static('img/imagenotfound.png') }}">
 					<script>determine_filetype_for_thumbnail('{{ static("thumbnails/") }}' , "{{file.suffixes}}", "{{i}}", "{{file.file_root}}");</script>
 
-					<div class='color-fill' ></div>
+					<div class='thumbnail-color-fill' ></div>
 					<div class='thumbnail_info'>
 						Proposal: {{file.program_id}}<br>
 						Observation: {{file.observation}}<br>
