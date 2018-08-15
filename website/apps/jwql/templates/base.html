@@ -47,6 +47,9 @@
 	          		<li class="nav-item active">
 	            		<a class="nav-link" href={{ url('jwql:about') }}>About<span class="sr-only">(current)</span></a>
 	          		</li>
+	          		<li class="nav-item active">
+	            		<a class="nav-link" href={{ url('jwql:dashboard') }}>Dashboard<span class="sr-only">(current)</span></a>
+	          		</li>
 	          		{% for inst_key, inst_tools in tools.items() %}
 		          	<li class="dropdown">
 		            	<a class="nav-link dropdown-toggle disabled" href={{ url('jwql:instrument', args=[inst_key]) }} id="dropdown"{{ inst_key }} aria-haspopup="true" aria-expanded="false">{{ inst_key }}</a>
