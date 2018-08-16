@@ -9,10 +9,12 @@ the ``jwql`` database, and display images and headers.
 
 Authors
 -------
+
     - Lauren Chambers
 
 Use
 ---
+
     This module is called in ``urls.py`` as such:
 
     ::
@@ -23,8 +25,8 @@ Use
 
 References
 ----------
-For more information please see:
-    https://docs.djangoproject.com/en/2.0/topics/http/views/
+    For more information please see:
+        ``https://docs.djangoproject.com/en/2.0/topics/http/views/``
 
 Dependencies
 ------------
