@@ -8,10 +8,12 @@ to load the appropriate webpage, passing an HttpRequest object.
 
 Authors
 -------
+
     - Lauren Chambers
 
 Use
 ---
+
     Function views
         1. Add an import:
             from my_app import views
@@ -30,21 +32,23 @@ Use
 
 References
 ----------
-For more information please see:
-    https://docs.djangoproject.com/en/2.0/topics/http/urls/
+
+    For more information please see:
+        ``https://docs.djangoproject.com/en/2.0/topics/http/urls/``
 
 Notes
 -----
-Be aware that when a url is requested, it will be directed to the
-first matching path in the urlpatterns list that it finds. The
-<str:var> tag is just a placeholder. To avoid complications, users
-should order their paths in order from shortest to longest, and after
-that from most to least specific.
 
+    Be aware that when a url is requested, it will be directed to the
+    first matching path in the ``urlpatterns`` list that it finds. The
+    ``<str:var>`` tag is just a placeholder. To avoid complications,
+    users should order their paths in order from shortest to longest,
+    and after that from most to least specific.
 """
 
 from django.contrib import admin
 from django.urls import include, path
+
 
 urlpatterns = [
     path('jwql/', include('apps.jwql.urls')),

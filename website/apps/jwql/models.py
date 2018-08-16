@@ -25,15 +25,14 @@ Use
 
 References
 ----------
-For more information please see:
-    https://docs.djangoproject.com/en/2.0/topics/db/models/
-
+    For more information please see:
+        ```https://docs.djangoproject.com/en/2.0/topics/db/models/```
 """
 
-import datetime
 import os
 
 from django.db import models
+
 
 INSTRUMENT_LIST = (('FGS', 'FGS'),
                    ('MIRI', 'MIRI'),
@@ -43,7 +42,7 @@ INSTRUMENT_LIST = (('FGS', 'FGS'),
 
 class BaseModel(models.Model):
     """A base model that other classes will inherit. Created to avoid
-    an obscure error about a missing app_label.
+    an obscure error about a missing ``app_label``.
     """
 
     class Meta:
@@ -67,7 +66,7 @@ class ImageData(BaseModel):
 
     inst = models.CharField('instrument', max_length=6, choices=INSTRUMENT_LIST, default=None)
     pub_date = models.DateTimeField('date published')
-    filepath = models.FilePathField(path='/user/lchambers/jwql/')#upload_to=str(inst))
+    filepath = models.FilePathField(path='/user/lchambers/jwql/')  #upload_to=str(inst))
 
     def filename(self):
         return os.path.basename(self.filepath)

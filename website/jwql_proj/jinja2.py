@@ -1,16 +1,17 @@
-"""Jinja2 config for jwql project.
+"""Jinja2 config for ``jwql`` project.
 
-Set up Jinja2 environment and configure it to read Django 'static' and
-'url' tags. Define custom Jinja extensions.
+Set up Jinja2 environment and configure it to read Django ``static``
+and ``url`` tags. Define custom Jinja extensions.
 
 References
 ----------
     Environment definition copied from blog post about integrating Django
     with Jinja2, found here:
-        https://medium.com/@samuh/using-jinja2-with-django-1-8-onwards-9c58fe1204dc
+        ``https://medium.com/@samuh/using-jinja2-with-django-1-8-onwards-9c58fe1204dc``
     Re-implementation of the Django "now" tag found here:
-        https://www.webforefront.com/django/useandcreatejinjaextensions.html
+        ``https://www.webforefront.com/django/useandcreatejinjaextensions.html``
 """
+
 from datetime import datetime
 
 from django.conf import settings

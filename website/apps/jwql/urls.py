@@ -1,17 +1,19 @@
 """Maps URL paths to views in the ``jwql`` app.
 
 This module connects requested URL paths to the corresponding view in
-views.py for each webpage in the ``jwql`` app. When django is
-provided a path, it searches through the urlpatterns list provided
+``views.py`` for each webpage in the ``jwql`` app. When django is
+provided a path, it searches through the ``urlpatterns`` list provided
 here until it finds one that matches. It then calls the assigned view
-to load the appropriate webpage, passing an HttpRequest object.
+to load the appropriate webpage, passing an ``HttpRequest`` object.
 
 Authors
 -------
+
     - Lauren Chambers
 
 Use
 ---
+
     Function views
         1. Add an import:  from my_app import views
         2. Add a URL to urlpatterns:  path('', views.home, name='home')
@@ -24,17 +26,16 @@ Use
 
 References
 ----------
-For more information please see:
-    https://docs.djangoproject.com/en/2.0/topics/http/urls/
+    For more information please see:
+        ``https://docs.djangoproject.com/en/2.0/topics/http/urls/``
 
 Notes
 -----
-Be aware that when a url is requested, it will be directed to the
-first matching path in the urlpatterns list that it finds. The
-<str:var> tag is just a placeholder. To avoid complications, users
-should order their paths in order from shortest to longest, and after
-that from most to least specific.
-
+    Be aware that when a url is requested, it will be directed to the
+    first matching path in the ``urlpatterns`` list that it finds. The
+    ``<str:var>`` tag is just a placeholder. To avoid complications,
+    users should order their paths in order from shortest to longest,
+    and after that from most to least specific.
 """
 
 from django.urls import path

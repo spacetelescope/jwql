@@ -1,13 +1,14 @@
-"""Connects to the JWQL database.
+"""Connects to the ``jwql`` database.
 
-This module is the primary interface between the JWQL webapp and the
-JWQL database. It uses SQLAlchemy to start a session with the database,
-and provides class methods that perform useful queries on that database
-(for example, getting the names of all the files associated with a
-certain instrument).
+This module is the primary interface between the ``jwql`` webapp and
+the ``jwql`` database. It uses ``SQLAlchemy`` to start a session with
+the database, and provides class methods that perform useful queries on
+that database (for example, getting the names of all the files
+associated with a certain instrument).
 
 Authors
 -------
+
     - Lauren Chambers
 
 Use
@@ -22,8 +23,7 @@ Use
 Dependencies
 ------------
     The user must have a configuration file named ``config.json``
-    placed in jwql/utils/ directory.
-
+    placed in ``jwql/utils/`` directory.
 """
 
 import os
@@ -37,21 +37,22 @@ from jwql.utils.utils import get_config
 
 
 class DatabaseConnection:
-    """Facilitates connection with the jwql database.
+    """Facilitates connection with the ``jwql`` database.
 
     Attributes
     ----------
     ObservationWebtest : obj
         Class instance in an "automap" schema corresponding to the
-        observationwebtest database table
+        ``observationwebtest`` database table
     session : obj
         Session with the database that enables querying
     """
 
     def __init__(self, db_type, instrument=None):
-        '''Determine what kind of database is being queried, and
+        """Determine what kind of database is being queried, and
         call appropriate initialization method
-        '''
+        """
+
         self.db_type = db_type
 
         assert self.db_type in ['MAST', 'SQL'], \
@@ -63,8 +64,8 @@ class DatabaseConnection:
             self.init_SQL()
 
     def init_SQL(self):
-        '''Start SQLAlchemy session with the  Quicklook database
-        '''
+        """Start SQLAlchemy session with the ``jwql`` database"""
+
         # Get database credentials from config file
         connection_string = get_config()['database']['connection_string']
 
@@ -84,8 +85,10 @@ class DatabaseConnection:
         self.session = Session(engine)
 
     def init_MAST(self, instrument=None):
-        '''Determine the necessary service string to query the MAST
-        database'''
+        """Determine the necessary service string to query the MAST
+        database.
+        """
+
         # Correctly format the instrument string
         if instrument:
             instrument = instrument[0].upper() + instrument[1:].lower()
@@ -96,8 +99,9 @@ class DatabaseConnection:
         self.service = "Mast.Jwst.Filtered." + instrument
         print(self.service)
 
+
     def get_files_for_instrument(self, instrument):
-        '''Given an instrument, query the database for all filenames
+        """Given an instrument, query the database for all filenames
         and paths associated with said instrument
 
         Parameters
@@ -113,7 +117,8 @@ class DatabaseConnection:
         filenames: list
             List of all filenames in database for the provided
             instrument
-        '''
+        """
+
         instrument = instrument.upper()
 
         if self.db_type == 'SQL':
