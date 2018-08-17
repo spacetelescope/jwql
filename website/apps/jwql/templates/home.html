@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>Home - JWST Quicklook</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+    	<h2>Welcome to the JWST Quicklook page.</h2>
+        <hr>
+
+    	<div class="instrument_select">
+            {# <h3 style="text-align: center; color: black">Instruments</h3> #}
+
+	    	<div class="d-flex justify-content-between">
+				{% for inst in inst_list %}
+					<a class='instrument_panel' href={{ url('jwql:instrument', args=[inst]) }}>
+
+                        <div class="instrument_frame">
+
+                            <span class="helper"></span><img src="{{ static('') }}img/{{ inst }}logo.png" width=100px>
+                            <span class="helper"></span><span class='instrument-name'><br>{{ inst }}</span>
+                            <div class='instrument-color-fill' ></div>
+
+                        </div><br>
+
+					</a>
+				{% endfor %}
+			</div>
+		</div>
+
+        <div class="row my-2" style="margin-left: 7rem; margin-right: 7rem;">
+            <div class="col-md-6 py-2"><a class="btn btn-block btn-primary" role="button" href={{ url('jwql:dashboard') }}>Dashboard</a></div>
+            <div class="col-md-6 py-2"><a class="btn btn-block btn-primary disabled" role="button" href="#">Query Database</a></div>
+        </div>
+
+        <br>
+        The James Webb Quicklook Application (JWQL) is a database-driven web application and automation framework for use by the JWST instrument teams to monitor the health and stability of the JWST instruments.
+        Visit our <a href={{ url('jwql:about') }}>about page</a> to learn more about our project, goals, and developers.<br><br>
+
+        The JWQL application is currently under heavy development. The 1.0 release is expected in 2019.
+
+
+	</main>
+
+{% endblock %}
