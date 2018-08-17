@@ -16,18 +16,17 @@ Use
         inventory, keywords = monitor_mast.jwst_inventory()
 """
 
-import os
 import logging
-
+import os
 
 from astroquery.mast import Mast
 from bokeh.charts import Donut, save, output_file
 from bokeh.embed import components
 import pandas as pd
 
+from jwql.logging.logging_functions import configure_logging, log_info, log_fail
 from jwql.permissions.permissions import set_permissions
 from jwql.utils.utils import get_config, JWST_DATAPRODUCTS, JWST_INSTRUMENTS
-from jwql.logging.logging_functions import configure_logging, log_info, log_fail
 
 
 def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
@@ -139,8 +138,6 @@ def instrument_keywords(instrument, caom=False):
     return keywords
 
 
-@log_fail
-@log_info
 def jwst_inventory(instruments=JWST_INSTRUMENTS,
                    dataproducts=['image', 'spectrum', 'cube'],
                    caom=False, plot=False):
@@ -210,7 +207,7 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
 
         # Save the plot as full html
         html_filename = output_filename + '.html'
-        outfile = os.path.join(output_dir, 'database_monitor', html_filename)
+        outfile = os.path.join(output_dir, 'monitor_mast', html_filename)
         output_file(outfile)
         save(plt)
         set_permissions(outfile)
@@ -221,13 +218,13 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
         plt.sizing_mode = 'stretch_both'
         script, div = components(plt)
 
-        div_outfile = os.path.join(output_dir, 'database_monitor', output_filename + "_component.html")
+        div_outfile = os.path.join(output_dir, 'monitor_mast', output_filename + "_component.html")
         with open(div_outfile, 'w') as f:
             f.write(div)
             f.close()
         set_permissions(div_outfile)
 
-        script_outfile = os.path.join(output_dir, 'database_monitor', output_filename + "_component.js")
+        script_outfile = os.path.join(output_dir, 'monitor_mast', output_filename + "_component.js")
         with open(script_outfile, 'w') as f:
             f.write(script)
             f.close()
@@ -238,6 +235,22 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
     return table, keywords
 
 
+@log_fail
+@log_info
+def monitor_mast():
+    """The main function of the ``monitor_mast`` module."""
+
+    # Perform inventory of the JWST service
+    jwst_inventory(instruments=JWST_INSTRUMENTS,
+                   dataproducts=['image', 'spectrum', 'cube'],
+                   caom=False, plot=True)
+
+    # Perform inventory of the CAOM service
+    jwst_inventory(instruments=JWST_INSTRUMENTS,
+                   dataproducts=['image', 'spectrum', 'cube'],
+                   caom=True, plot=True)
+
+
 if __name__ == '__main__':
 
     # Configure logging
@@ -246,9 +259,4 @@ if __name__ == '__main__':
 
     # Run the monitors
     logging.info('Beginning database monitoring.')
-    jwst_inventory(instruments=JWST_INSTRUMENTS,
-                   dataproducts=['image', 'spectrum', 'cube'],
-                   caom=False, plot=True)
-    jwst_inventory(instruments=JWST_INSTRUMENTS,
-                   dataproducts=['image', 'spectrum', 'cube'],
-                   caom=True, plot=True)
+
