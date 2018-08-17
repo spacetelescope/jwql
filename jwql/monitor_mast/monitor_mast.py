@@ -259,4 +259,5 @@ if __name__ == '__main__':
 
     # Run the monitors
     logging.info('Beginning database monitoring.')
+    monitor_mast()
 
