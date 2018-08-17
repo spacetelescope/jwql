@@ -80,7 +80,7 @@ def get_dashboard_components():
 
     output_dir = get_config()['outputs']
     name_dict = {'': '',
-                 'database_monitor': 'Database Monitor',
+                 'monitor_mast': 'Database Monitor',
                  'database_monitor_jwst': 'JWST',
                  'database_monitor_caom': 'JWST (CAOM)',
                  'monitor_filesystem': 'Filesystem Monitor',
