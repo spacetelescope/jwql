@@ -155,7 +155,7 @@ def dashboard(request):
                'inst_list': JWST_INSTRUMENTS,
                'tools': MONITORS,
                'outputs': output_dir,
-               'filesystem_html': os.path.join(output_dir, 'filesystem_monitor', 'filesystem_monitor.html'),
+               'filesystem_html': os.path.join(output_dir, 'monitor_filesystem', 'filesystem_monitor.html'),
                'dashboard_components': dashboard_components}
 
     return render(request, template, context)
