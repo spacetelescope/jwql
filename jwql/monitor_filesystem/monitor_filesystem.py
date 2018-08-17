@@ -284,7 +284,7 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
 
     # create a layout with a grid pattern to save all plots
     grid = gridplot([[p1, p2], [p3, p4]])
-    outfile = os.path.join(outputs_dir, "monitor_filesystem.html")
+    outfile = os.path.join(outputs_dir, "filesystem_monitor.html")
     output_file(outfile)
     save(grid)
     set_permissions(outfile)
