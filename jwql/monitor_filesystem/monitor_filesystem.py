@@ -102,6 +102,10 @@ def filesystem_monitor():
                 suffix = filename_parser(filename)['suffix']
                 results_dict[suffix] += 1
                 size_dict[suffix] += os.path.getsize(file_path)
+                detector = filename_parser(filename)['detector']
+                instrument = detector[0:3]  # first three characters of detector specify instrument
+                results_dict[instrument] += 1
+                size_dict[instrument] += os.path.getsize(file_path)
 
     # Get df style stats on file system
     out = subprocess.check_output('df {}'.format(filesystem), shell=True)
@@ -122,22 +126,24 @@ def filesystem_monitor():
     with open(statsfile, "a+") as f:
         f.write("{0} {1:15d} {2:15d} {3:15d} {4:15d} {5}\n".format(now, results_dict['file_count'],
                 total, available, used, percent_used))
-    set_permissions(statsfile, verbose=False)
+    set_permissions(statsfile)
 
     # set up and read out stats on files by type
     filesbytype = os.path.join(outputs_dir, 'filesbytype.txt')
     with open(filesbytype, "a+") as f2:
-        f2.write("{0} {1} {2} {3} {4} {5}\n".format(results_dict['fits_files'],
+        f2.write("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10}\n".format(results_dict['fits_files'],
                  results_dict['uncal'], results_dict['cal'], results_dict['rate'],
-                 results_dict['rateints'], results_dict['i2d']))
+                 results_dict['rateints'], results_dict['i2d'], results_dict['nrc'],
+                 results_dict['nrs'], results_dict['nis'], results_dict['mir'], results_dict['gui']))
     set_permissions(filesbytype, verbose=False)
 
     # set up file size by type file
     sizebytype = os.path.join(outputs_dir, 'sizebytype.txt')
     with open(sizebytype, "a+") as f3:
-        f3.write("{0} {1} {2} {3} {4} {5}\n".format(size_dict['size_fits'],
+        f3.write("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10}\n".format(size_dict['size_fits'],
                  size_dict['uncal'], size_dict['cal'], size_dict['rate'],
-                 size_dict['rateints'], size_dict['i2d']))
+                 size_dict['rateints'], size_dict['i2d'], size_dict['nrc'],
+                 size_dict['nrs'], size_dict['nis'], size_dict['mir'], size_dict['gui']))
     set_permissions(sizebytype, verbose=False)
 
  
@@ -177,6 +183,11 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     rate = ratefiles.astype(int)
     rateints = rateintsfiles.astype(int)
     i2d = i2dfiles.astype(int)
+    nircam = nrcfiles.astype(int)
+    nirspec = nrsfiles.astype(int)
+    niriss = nisfiles.astype(int)
+    miri = mirfiles.astype(int)
+    fgs = fgsfiles.astype(int)
 
     fits_size = fits_sz.astype(float) / (1024.**3)
     uncal_size = uncal_sz.astype(float) / (1024.**3)
@@ -184,18 +195,23 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     rate_size = rate_sz.astype(float) / (1024.**3)
     rateints_size = rateints_sz.astype(float) / (1024.**3)
     i2d_size = i2d_sz.astype(float) / (1024.**3)
+    nircam_size = nrc_sz.astype(float) / (1024.**3)
+    nirspec_size = nrs_sz.astype(float) / (1024.**3)
+    niriss_size = nis_sz.astype(float) / (1024.**3)
+    miri_size = mir_sz.astype(float) / (1024.**3)
+    fgs_size = fgs_sz.astype(float) / (1024.**3)
 
     # plot the data
     # Plot filecount vs. date
     p1 = figure(
-       tools='pan,box_zoom,reset,save', x_axis_type='datetime',
+       tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
        title="Total File Counts", x_axis_label='Date', y_axis_label='Count')
     p1.line(dates, file_count, line_width=2, line_color='blue')
     p1.circle(dates, file_count, color='blue')
 
     # Plot system stats vs. date
     p2 = figure(
-      tools='pan,box_zoom,reset,save', x_axis_type='datetime',
+      tools='pan,box_zoom,wheel_zoom,reset,save', x_axis_type='datetime',
       title='System stats', x_axis_label='Date', y_axis_label='GB')
     p2.line(dates, systemsize, legend='Total size', line_color='red')
     p2.circle(dates, systemsize, color='red')
@@ -206,7 +222,7 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
 
     # Plot fits files by type vs. date
     p3 = figure(
-       tools='pan,box_zoom,reset,save', x_axis_type='datetime',
+       tools='pan,box_zoom,wheel_zoom,reset,save', x_axis_type='datetime',
        title="Total File Counts by Type", x_axis_label='Date', y_axis_label='Count')
     p3.line(dates, fits, legend='Total fits files', line_color='black')
     p3.circle(dates, fits, color='black')
@@ -220,10 +236,20 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     p3.asterisk(dates, rateints, color='orange')
     p3.line(dates, i2d, legend='i2d fits files', line_color='purple')
     p3.x(dates, i2d, color='purple')
+    p3.line(dates, nircam, legend='nircam fits files', line_color='midnightblue')
+    p3.x(dates, nircam, color='midnightblue')
+    p3.line(dates, nirspec, legend='nirspec fits files', line_color='springgreen')
+    p3.x(dates, nirspec, color='springgreen')
+    p3.line(dates, niriss, legend='niriss fits files', line_color='darkcyan')
+    p3.x(dates, niriss, color='darkcyan')
+    p3.line(dates, miri, legend='miri fits files', line_color='dodgerblue')
+    p3.x(dates, miri, color='dodgerblue')
+    p3.line(dates, fgs, legend='fgs fits files', line_color='darkred')
+    p3.x(dates, fgs, color='darkred')
 
     # plot size of total fits files by type
     p4 = figure(
-       tools='pan,box_zoom,reset,save', x_axis_type='datetime',
+       tools='pan,box_zoom,wheel_zoom,reset,save', x_axis_type='datetime',
        title="Total File Sizes by Type", x_axis_label='Date', y_axis_label='GB')
     p4.line(dates, fits_size, legend='Total fits files', line_color='black')
     p4.circle(dates, fits_size, color='black')
@@ -237,13 +263,23 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     p4.asterisk(dates, rateints_size, color='orange')
     p4.line(dates, i2d_size, legend='i2d fits files', line_color='purple')
     p4.x(dates, i2d_size, color='purple')
+    p4.line(dates, nircam_size, legend='nircam fits files', line_color='midnightblue')
+    p4.x(dates, nircam_size, color='midnightblue')
+    p4.line(dates, nirspec_size, legend='nirspec fits files', line_color='springgreen')
+    p4.x(dates, nirspec_size, color='springgreen')
+    p4.line(dates, niriss_size, legend='niriss fits files', line_color='darkcyan')
+    p4.x(dates, niriss_size, color='darkcyan')
+    p4.line(dates, miri_size, legend='miri fits files', line_color='dodgerblue')
+    p4.x(dates, miri_size, color='dodgerblue')
+    p4.line(dates, fgs_size, legend='fgs fits files', line_color='darkred')
+    p4.x(dates, fgs_size, color='darkred')
 
     # create a layout with a grid pattern
     grid = gridplot([[p1, p2], [p3, p4]])
     outfile = os.path.join(outputs_dir, "filesystem_monitor.html")
     output_file(outfile)
     save(grid)
-    set_permissions(outfile, verbose=False)
+    set_permissions(outfile)
 
     # Begin logging: 
     logging.info("Completed.")

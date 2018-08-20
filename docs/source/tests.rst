@@ -2,7 +2,7 @@
 tests
 *****
 
-.. automodule:: jwql.tests.test_dbmonitor
+.. automodule:: jwql.tests.test_monitor_mast
     :members:
 
 .. automodule:: jwql.tests.test_permissions

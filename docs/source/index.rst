@@ -19,12 +19,14 @@ API documentation
    :maxdepth: 1
    :caption: Contents:
 
-   dbmonitor.rst
+   logging.rst
+   monitor_filesystem.rst
+   monitor_mast.rst
    permissions.rst
    preview_image.rst
    utils.rst
    tests.rst
-   logging.rst
+   monitor_filesystem.rst
 
 
 Indices and tables
