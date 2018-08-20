@@ -12,8 +12,8 @@ Use
     To get an inventory of all JWST files do:
     ::
 
-        from jwql.dbmonitor import dbmonitor
-        inventory, keywords = dbmonitor.jwst_inventory()
+        from jwql.monitor_mast import monitor_mast
+        inventory, keywords = monitor_mast.jwst_inventory()
 """
 
 import os
@@ -199,6 +199,6 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
         outfile = os.path.join(get_config()['outputs'], 'database_monitor', output_filename)
         output_file(outfile)
         save(plt)
-        set_permissions(outfile, verbose=False)
+        set_permissions(outfile)
 
     return table, keywords

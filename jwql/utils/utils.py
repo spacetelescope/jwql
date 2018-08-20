@@ -27,9 +27,24 @@ import re
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-JWST_INSTRUMENTS = ['NIRISS', 'NIRCam', 'NIRSpec', 'MIRI', 'FGS']
+JWST_INSTRUMENTS = sorted(['NIRISS', 'NIRCam', 'NIRSpec', 'MIRI', 'FGS'])
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
                      'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
+MONITORS = {
+    'FGS': ['Bad Pixel Monitor'],
+    'MIRI': ['Dark Current Monitor',
+             'Bad Pixel Monitor', 'Cosmic Ray Monitor', 'Photometry Monitor',
+             'TA Failure Monitor', 'Blind Pointing Accuracy Monitor',
+             'Filter and Calibration Lamp Monitor', 'Thermal Emission Monitor'],
+    'NIRCam': ['Bias Monitor',
+               'Readnoise Monitor', 'Gain Level Monitor',
+               'Mean Dark Current Rate Monitor', 'Photometric Stability Monitor'],
+    'NIRISS': ['Bad Pixel Monitor',
+               'Readnoise Monitor', 'AMI Calibrator Monitor', 'TSO RMS Monitor'],
+    'NIRSpec': ['Optical Short Monitor', 'Target Acquisition Monitor',
+                'Detector Health Monitor', 'Ref Pix Monitor',
+                'Internal Lamp Monitor', 'Instrument Model Updates',
+                'Failed-open Shutter Monitor']}
 
 def get_config():
     """Return a dictionary that holds the contents of the ``jwql``
