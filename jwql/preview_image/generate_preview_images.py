@@ -26,6 +26,7 @@ Use
 """
 
 from glob import glob
+import logging
 import os
 import re
 
@@ -35,6 +36,9 @@ from jwql.permissions import permissions
 from jwql.preview_image.preview_image import PreviewImage
 from jwql.utils.utils import get_config
 from jwql.utils.utils import filename_parser
+from jwql.logging.logging_functions import configure_logging
+from jwql.logging.logging_functions import log_info
+from jwql.logging.logging_functions import log_fail
 
 # Size of NIRCam inter- and intra-module chip gaps
 SW_MOD_GAP = 1387  # pixels = int(43 arcsec / 0.031 arcsec/pixel)
@@ -131,8 +135,9 @@ def array_coordinates(channelmod, detector_list, lowerleft_list):
         elif np.sum(b4) == 1:
             subx, suby = lowerleft_list[b4][0]
         else:
-            raise ValueError(("SW data provided, but neither NRCA1 nor NRCB4"
-                              " are present."))
+            missing_a14 = "SW data provided, but neither NRCA1 nor NRCB4 are present."
+            logging.error(missing_a14)
+            raise ValueError(missing_a14)
 
     # Adjust the lower left positions of the apertures within
     # the module(s) in the case of subarrays
@@ -285,30 +290,30 @@ def create_mosaic(filenames):
     # Make sure SW and LW data are not being mixed. Create the
     # appropriately sized numpy array to hold all the data based
     # on the channel, module, and subarray size
+    both_channels = "Can't mix NIRCam SW and LW data in same mosaic."
     if nrc_swa_total != 0:
         if nrc_lw_total != 0:
-            raise ValueError("Can't mix NIRCam SW and LW data in same mosaic.")
+            logging.error(both_channels)
+            raise ValueError(both_channels)
         else:
             if nrc_swb_total != 0:
-                print("NIRCam SW module A and B data")
                 m_type = "SW"
             else:
-                print("NIRCam SW module A data")
                 m_type = "SWA"
     else:
         if nrc_swb_total != 0:
             if nrc_lw_total != 0:
-                raise ValueError(("Can't mix NIRCam SW and LW data in same"
-                                  " mosaic."))
+                logging.error(both_channels)
+                raise ValueError(both_channels)
             else:
-                print("NIRCam SW module B data")
                 m_type = "SWB"
         else:
             if nrc_lw_total != 0:
                 m_type = "LW"
             else:
-                print(filenames)
-                raise ValueError("No NIRCam SW nor LW data")
+                nodata = "No NIRCam SW nor LW data"
+                logging.error(nodata)
+                raise ValueError(nodata)
 
     full_xdim, full_ydim, full_lower_left = array_coordinates(m_type, detector,
                                                               data_lower_left)
@@ -321,8 +326,9 @@ def create_mosaic(filenames):
     elif datadim == 3:
         full_array = np.zeros((datashape[0], full_ydim, full_xdim)) * np.nan
     else:
-        raise ValueError(("Difference image for {} must be either 2D or 3D."
-                          .format(filenames[0])))
+        four_d = "Difference image for {} must be either 2D or 3D.".format(filenames[0])
+        logging.error(four_d)
+        raise ValueError(four_d)
 
     # Place the data from the individual detectors in the appropriate
     # places in the final image
@@ -451,17 +457,17 @@ def detector_check(detector_list, search_string):
     return total
 
 
+@log_fail
+@log_info
 def generate_preview_images():
     """The main function of the generate_preview_image module."""
 
-    #filesystem = get_config()['filesystem']
-    #preview_image_filesystem = get_config()['preview_image_filesystem']
-    #thumbnail_filesystem = get_config()['thumbnail_filesystem']
+    # Begin logging
+    logging.info("Beginning the script run: ")
 
-    # FOR TESTING
-    filesystem = 'python_repos/test_jwql/testing/'
-    preview_image_filesystem = 'python_repos/test_jwql/preview_images/'
-    thumbnail_filesystem = 'python_repos/test_jwql/thumbnail_images/'
+    filesystem = get_config()['filesystem']
+    preview_image_filesystem = get_config()['preview_image_filesystem']
+    thumbnail_filesystem = get_config()['thumbnail_filesystem']
 
     filenames = glob(os.path.join(filesystem, '*/*.fits'))
     grouped_filenames = group_filenames(filenames)
@@ -480,7 +486,7 @@ def generate_preview_images():
         # if they do
         file_exists = check_existence(file_list[0], preview_output_directory)
         if file_exists:
-            print("JPG already exists for {}, skipping.".format(file_list[0]))
+            logging.info("JPG already exists for {}, skipping.".format(file_list[0]))
             continue
 
         # Create the output directories if necessary
@@ -500,9 +506,9 @@ def generate_preview_images():
         if numfiles != 1:
             mosaic_image, mosaic_dq = create_mosaic(file_list)
             dummy_file = create_dummy_filename(file_list)
-            if numfiles == 4:
+            if numfiles in [2, 4]:
                 max_size = 16
-            elif numfiles in [2, 8]:
+            elif numfiles in [8]:
                 max_size = 32
 
         try:
@@ -525,7 +531,10 @@ def generate_preview_images():
 
             im.make_image(max_img_size=max_size)
         except ValueError as error:
-            print(error)
+            logging.warning(error)
+
+    # Complete logging:
+    logging.info("Completed.")
 
 
 def group_filenames(input_files):
@@ -607,4 +616,6 @@ def group_filenames(input_files):
 
 if __name__ == '__main__':
 
+    module = os.path.basename(__file__).strip('.py')
+    configure_logging(module)
     generate_preview_images()
