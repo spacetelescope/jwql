@@ -68,12 +68,12 @@ import subprocess
 from bokeh.plotting import figure, output_file, save
 from bokeh.layouts import gridplot
 
-from jwql.permissions.permissions import set_permissions
-from jwql.utils.utils import filename_parser
-from jwql.utils.utils import get_config
 from jwql.logging.logging_functions import configure_logging
 from jwql.logging.logging_functions import log_info
 from jwql.logging.logging_functions import log_fail
+from jwql.permissions.permissions import set_permissions
+from jwql.utils.utils import filename_parser
+from jwql.utils.utils import get_config
 
 
 @log_fail
