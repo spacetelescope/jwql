@@ -34,6 +34,7 @@ Use:
         im.make_image()
 """
 
+import logging
 import os
 
 from astropy.io import fits
@@ -376,6 +377,6 @@ class PreviewImage():
         if thumbnail:
             thumb_fname = fname.replace('.jpg', '.thumb')
             os.rename(fname, thumb_fname)
-            print('Saved image to {}'.format(thumb_fname))
+            logging.info('Saved image to {}'.format(thumb_fname))
         else:
-            print('Saved image to {}'.format(fname))
+            logging.info('Saved image to {}'.format(fname))
