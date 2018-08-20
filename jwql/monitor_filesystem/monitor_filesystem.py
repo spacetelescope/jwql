@@ -87,7 +87,7 @@ def filesystem_monitor():
     # Get path, directories and files in system and count files in all directories
     settings = get_config()
     filesystem = settings['filesystem']
-    outputs_dir = os.path.join(settings['outputs'], 'filesystem_monitor')
+    outputs_dir = os.path.join(settings['outputs'], 'monitor_filesystem')
 
     # set up dictionaries for output
     results_dict = defaultdict(int)
