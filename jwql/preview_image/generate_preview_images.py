@@ -56,10 +56,10 @@ def generate_preview_images():
         # Create the output directories if necessary
         if not os.path.exists(output_directory):
             os.makedirs(output_directory)
-            permissions.set_permissions(output_directory, verbose=False)
+            permissions.set_permissions(output_directory)
         if not os.path.exists(thumbnail_output_directory):
             os.makedirs(thumbnail_output_directory)
-            permissions.set_permissions(thumbnail_output_directory, verbose=False)
+            permissions.set_permissions(thumbnail_output_directory)
 
         # Create and save the preview image and thumbnail
         args = zip((False, True), (output_directory, thumbnail_output_directory))

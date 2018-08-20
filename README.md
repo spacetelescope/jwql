@@ -7,20 +7,22 @@
 [![Build Status](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/badge/icon)](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/)
 [![STScI](https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat)](http://www.stsci.edu)
 
-The James Webb Quicklook Application (`JWQL`) is a database-driven web application and software repository for use by the JWST instrument teams.  The system is comprised of the following:
-1. A network file system that stores all uncalibrated and calibrated data products on disk in a centrally-located area, accessible to instrument team members.
-2. A relational database that stores observational metadata allowing for data discovery via relational queries.
-3. A software library that provides an API to the filesystem and database and serves as a platform on which to build automated instrument calibration and monitoring tasks.
+The James Webb Quicklook Application (`JWQL`) is a database-driven web application and automation framework for use by the JWST instrument teams to monitor the health and stability of the JWST instruments.  The system is comprised of the following:
+1. A network file system that stores all uncalibrated and calibrated data products on disk in a centrally-located area, accessible to instrument team members (MAST data cache)
+2. A relational database that stores observational metadata allowing for data discovery via relational queries (MAST database API).
+3. A software library that provides tools to support an automation framework in which to build automated instrument monitoring tasks.
 4. A web application that allows users to visually inspect new and archival JWST data as well as instrument-specific monitoring and calibration results.
+
+The `jwql` application is currently under heavy development.  The `1.0` release is expected in 2019.
 
 ## Prerequisites
 
-It is highly suggested that users have a working installation of `anaconda` or `miniconda` for Python 3.6.  Downloads and installation instructions are  available here:
+It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.6.  Downloads and installation instructions are  available here:
 
 - [Miniconda](https://conda.io/miniconda.html)
 - [Anaconda](https://www.continuum.io/downloads)
 
-Requirements for contributing to the `jwql` package will be included in the `jwqldev` `conda` environment, which is included in our installation instructions below. Further package requirements will be provided for `jwql` by a `setup.py` script included in the repository.
+Requirements for contributing to the `jwql` package will be included in the `jwql` `conda` environment, which is included in our installation instructions below. Further package requirements will be provided for `jwql` by a `setup.py` script included in the repository.
 
 ## Package Installation
 
@@ -31,27 +33,30 @@ git clone https://github.com/spacetelescope/jwql.git
 cd jwql
 python setup.py develop
 ```
-If you have two factor authentication and sftp (rather than http) access set up on github, type
+
+or, if you would rather use `SSH` instead of `https`, type
 ```
-git clone git@github.com:spacetelescope/jwql.git  
+git clone git@github.com:spacetelescope/jwql.git
+cd jwql
+python setup.py develop
 ```
 instead, and then proceed as stated.
 
 ## Environment Installation
 
-Following the download of the `jwql` package, users can then install the `jwqldev` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project.  First, users should ensure that their version of `conda` is up to date:
+Following the download of the `jwql` package, contributors can then install the `jwql` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project.  First, one should ensure that their version of `conda` is up to date:
 
 ```
 conda update conda
 ```
 
-Next, users should activate the `root` environment:
+Next, one should activate the `base` environment:
 
 ```
-source activate root
+source activate base
 ```
 
-Lastly, users can create the `jwqldev` environment via the `environment.yml` file:
+Lastly, one can create the `jwql` environment via the `environment.yml` file:
 
 ```
 conda env create -f environment.yml
@@ -76,9 +81,9 @@ The following is a bare bones example of a best work flow for contributing to th
 10. Delete your local copy of your branch.
 
 
-## `gitignore`
+## Code of Conduct
 
-The `jwql` repository also contains a file named `.gitignore` that indicates specific directories, files or file types that should not be commited to the repository.  Feel free to add additional lines to this file if you want to avoid committing anything.  Some examples may include `.fits` files, `.jpeg` files, or `.ipynb_checkpoints/`.
+Users and contributors to the `jwql` repository should adhere to the [Code of Conduct](https://github.com/spacetelescope/jwql/blob/master/CODE_OF_CONDUCT.md).  Any issues or violations pertaining to the Code of Conduct should be brought to the attention of a `jwql` team member or to `jwql@stsci.edu`.
 
 ## Questions
 
@@ -86,40 +91,43 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 
 
 ## Current Development Team
-- Matthew Bourque (INS)
-- Lauren Chambers (INS)
-- Misty Cracraft (INS)
-- Joe Filippazzo (INS)
-- Bryan Hilbert (INS)
-- Graham Kanarek (INS)
-- Catherine Martlin (INS)
-- Sara Ogaz (OED)
-- Johannes Sahlmann (INS)
+- Matthew Bourque (INS) [@bourque](https://github.com/bourque)
+- Lauren Chambers (INS) [@laurenmarietta](https://github.com/laurenmarietta)
+- Misty Cracraft (INS) [@cracraft](https://github.com/cracraft)
+- Joe Filippazzo (INS) [@hover2pi](https://github.com/hover2pi)
+- Bryan Hilbert (INS) [@bilhbert4](https://github.com/bhilbert4)
+- Graham Kanarek (INS) [@gkanarek](https://github.com/gkanarek)
+- Catherine Martlin (INS) [@catherine-martlin](https://github.com/catherine-martlin)
+- Sara Ogaz (OED) [@SaOgaz](https://github.com/SaOgaz)
+- Johannes Sahlmann (INS) [@Johannes-Sahlmann](https://github.com/johannes-sahlmann)
 
 ## Acknowledgments:
 - Faith Abney (OED)
 - Anastasia Alexov (OED)
 - Sara Anderson (OED)
 - Tracy Beck (INS)
-- Francesca Boffi (INS)
-- Clara Brasseur (OED)
+- Francesca Boffi (INS) [@frboffi](https://github.com/frboffi)
+- Clara Brasseur (OED) [@ceb8](https://github.com/ceb8)
 - Matthew Burger (OED)
-- Rosa Diaz (INS)
+- Steven Crawford (OED) [@stscicrawford](https://github.com/stscicrawford)
+- James Davies (OED) [@jdavies-st](https://github.com/jdavies-st)
+- Rosa Diaz (INS) [@rizeladiaz](https://github.com/rizeladiaz)
 - Van Dixon (INS)
-- Tom Donaldson (OED)
-- Michael Fox (DSMO)
+- Tom Donaldson (OED) [@tomdonaldson](https://github.com/tomdonaldson)
+- Mike Fox (DSMO) [@mfox22](https://github.com/mfox22)
 - Scott Friedman (INS)
-- Alex Fullerton (INS)
+- Alex Fullerton (INS) [@awfullerton](https://github.com/awfullerton)
 - Lisa Gardner (OED)
 - Vera Gibbs (ITSD)
-- Catherine Gosmeyer (INS)
+- Catherine Gosmeyer (INS) [@cgosmeyer](https://github.com/cgosmeyer)
 - Phil Grant (ITSD)
 - Dean Hines (INS)
-- Sherrie Holfeltz (INS)
-- Joe Hunkeler (OED)
+- Sherie Holfeltz (INS) [@stholfeltz](https://github.com/stholfeltz)
+- Joe Hunkeler (OED) [@jhunkeler](https://github.com/jhunkeler)
 - Catherine Kaleida (OED)
-- Mark Kyprianou (OED)
+- Mark Kyprianou (OED) [@mkyp](https://github.com/mkyp)
 - Karen Levay (OED)
+- Crystal Mannfolk (OED) [@cmannfolk](https://github.com/cmannfolk)
 - Greg Masci (ITSD)
 - Margaret Meixner (INS)
 - Prem Mishra (ITSD)
@@ -128,16 +136,16 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Joe Pollizzi (JWSTMO)
 - Lee Quick (OED)
 - Anupinder Rai (ITSD)
-- Matt Rendina (OED)
-- Massimo Robberto (INS)
+- Matt Rendina (OED) [@rendinam](https://github.com/rendinam)
+- Massimo Robberto (INS) [@mrobberto](https://github.com/mrobberto)
 - Mary Romelfanger (OED)
 - Bernie Shiao (OED)
 - Matthew Sienkiewicz (ITSD)
-- Arfon Smith (DSMO)
+- Arfon Smith (DSMO) [@arfon](https://github.com/arfon)
 - Linda Smith (INS)
 - Patrick Taylor (ITSD)
 - Dave Unger (ITSD)
-- Jeff Valenti (JWSTMO)
+- Jeff Valenti (JWSTMO) [@JeffValenti](https://github.com/JeffValenti)
 - Thomas Walker (ITSD)
 - Geoff Wallace (OED)
 - Lara Wilkinson (OPO)
