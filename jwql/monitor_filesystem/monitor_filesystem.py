@@ -157,12 +157,12 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
 
     # get path for files
     settings = get_config()
-    outputs_dir = os.path.join(settings['outputs'], 'filesystem_monitor')
+    outputs_dir = os.path.join(settings['outputs'], 'monitor_filesystem')
 
     # read in file of statistics
     date, f_count, sysize, frsize, used, percent = np.loadtxt(os.path.join(outputs_dir, stats_file), dtype=str, unpack=True)
-    fits_files, uncalfiles, calfiles, ratefiles, rateintsfiles, i2dfiles = np.loadtxt(os.path.join(outputs_dir, filebytype), dtype=str, unpack=True)
-    fits_sz, uncal_sz, cal_sz, rate_sz, rateints_sz, i2d_sz = np.loadtxt(os.path.join(outputs_dir, sizebytype), dtype=str, unpack=True)
+    fits_files, uncalfiles, calfiles, ratefiles, rateintsfiles, i2dfiles, nrcfiles, nrsfiles, nisfiles, mirfiles, fgsfiles = np.loadtxt(os.path.join(outputs_dir, filebytype), dtype=str, unpack=True)
+    fits_sz, uncal_sz, cal_sz, rate_sz, rateints_sz, i2d_sz, nrc_sz, nrs_sz, nis_sz, mir_sz, fgs_sz = np.loadtxt(os.path.join(outputs_dir, sizebytype), dtype=str, unpack=True)
 
     # put in proper np array types and convert to GB sizes
     dates = np.array(date, dtype='datetime64')
