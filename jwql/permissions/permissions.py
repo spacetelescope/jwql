@@ -159,7 +159,7 @@ def has_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFA
     return True
 
 
-def set_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFAULT_GROUP, verbose=True):
+def set_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFAULT_GROUP, verbose=False):
     """Set mode and group of the file/directory identfied by
     ``pathname``, if and only if it is owned by ``owner``.
 

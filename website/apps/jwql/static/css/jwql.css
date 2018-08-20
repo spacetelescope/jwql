@@ -1,0 +1,347 @@
+.APT_parameters {
+    width: 20%
+}
+
+.banner {
+  position: absolute;
+  top: 55px;
+  width: 100%;
+  height: 3rem;
+  overflow: hidden;
+}
+
+.banner img{
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  right: -9999px;
+  bottom: -9999px;
+  width: 100%;
+  margin: auto;
+}
+
+/*Make normal buttons and highlighted outline buttons orange*/
+.btn-primary, .btn-primary.disabled, .btn-outline-primary:hover,
+.btn-outline-primary.active {
+    background-color: #c85108 !important;
+    border-color: #c85108 !important;
+    color: white !important;
+    border-radius: 0px;
+}
+
+/*Make outline buttons and highlighted normal buttons white*/
+.btn-primary:hover, .btn-primary.active, .btn-outline-primary,
+.show > .btn-primary.dropdown-toggle {
+    background-color: white !important;
+    border-color: #c85108 !important ;
+    color: #c85108 !important;
+    border-radius: 0px;
+}
+
+/*Stop them from glowing blue*/
+.btn:focus, .btn.focus, .btn:active:focus, .btn.active:focus, .btn:active,
+.btn.active, .show > .btn.dropdown-toggle:focus {
+    box-shadow: none !important;
+}
+
+[class*="col-"] {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+/*  margin: 1rem;
+  background-color: rgba(86, 61, 124, .15);
+  border: 1px solid rgba(86, 61, 124, .2);*/
+}
+
+.dashboard {
+    margin-left: 2%;
+    margin-right: 2%;
+}
+
+/*Define dropdown menu colors*/
+.dropdown-item:hover{
+    color: #c85108;
+    background-color: #2d353c;
+}
+
+.dropdown-menu {
+    background-color: #2d353c;
+    border-radius: 0px;
+}
+
+.dropdown-menu .dropdown-item {
+    color: white;
+}
+
+.dropdown-menu .dropdown-heading {
+    color: #c85108 !important;
+    text-transform: uppercase;
+}
+
+/*Stop the search box from glowing blue*/
+.form-control:focus {
+    box-shadow: none;
+    border-color: #cfd4da;
+}
+
+/*Make sure the thumbnails are actually vertically centered*/
+.helper {
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+}
+
+.help-tip {
+    text-align: center;
+    background-color: #D0D7D8;
+    color: black;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    line-height: 20px;
+    font-weight: bold;
+    opacity: 0.5;
+    display: inline-block;
+}
+
+/*Don't let the search bar be super long*/
+.input-group {
+    width: 250px;
+}
+
+/*Make the search icon look like a button*/
+.input-group-text {
+    background-color: #c85108 !important;
+    border-color: #c85108 !important;
+    color: white !important;
+    border-radius: 0px;
+}
+
+/*Format the color background*/
+.instrument-color-fill {
+    display: none;
+    width: 100%;
+    height: 100%;
+    background-color: #2d353c;
+    opacity: 0.5;
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    z-index: 1;
+}
+
+/*To make the instrument logos vertically centered*/
+.instrument_frame {
+    height: 140px;
+    width: 140px;
+    background-color: white;
+    /*padding: 10px;*/
+    border: 3px solid #2d353c;
+    position: relative;
+    display: inline-block;
+}
+
+.instrument-name {
+  font-size: 25px;
+  color: white;
+  text-transform: uppercase;
+  display: none;
+  width: 100%;
+  height: 100%;
+  padding-top: 0.5rem;
+  padding-left: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-right: 0.5rem;
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  /*text-align: left;*/
+  z-index: 2;
+  vertical-align: middle;
+}
+
+.instrument_panel {
+  text-align: center;
+  padding: 1rem;
+  padding-bottom: 0rem;
+}
+
+.instrument_panel:hover .instrument-color-fill {
+  display: inline;
+}
+
+.instrument_panel:hover .instrument-name {
+  display: inline-block;
+}
+
+.instrument_select {m;
+  padding-top: 1rem;
+  padding-bottom: 2rem;
+  /*margin-top: 4rem;*/
+  margin-right: 5rem;
+  margin-left: 5rem;
+}
+
+.image_preview {
+    display: inline-block;
+}
+
+.monitor-name {
+    background-color: #c85108;
+    color: white;
+    width: 100%;
+    height: 100%;
+}
+
+/* Define navbar color*/
+.navbar {
+    background-color: black;
+}
+
+.navbar-brand {
+    color: white;
+    text-transform: uppercase;
+}
+
+/* Set padding around JWST logo*/
+.navbar-left {
+  padding-left:10px;
+  padding-right:10px;
+}
+
+/*Define navbar font color*/
+.nav-link, .nav-link.disabled {
+    color: #bec4d4;
+    text-transform: uppercase;
+}
+
+.plot-container {
+    width: 100%;
+    height: 600px;
+    position: relative;
+    display: inline-block;
+    border-color: #c85108 !important ;
+    border-style: solid;
+    border-radius: 0px;
+    border-width: 1px;
+}
+
+.plot-header {
+    background-color: #c85108 !important;
+    border-color: #c85108 !important ;
+    color: #c85108 !important;
+    border-style: solid;
+    border-radius: 0px;
+    border-width: 1px;
+    width: 100%;
+}
+
+/*Define the proposal thumbnails*/
+.proposal {
+    display: inline-block;
+    width: 8rem;
+    height: 8rem;
+    text-align: center;
+    position: relative;
+    display: inline-block;
+    margin: 0.1rem;
+}
+
+.proposal img {
+    filter: grayscale(100%);
+}
+
+.row {
+  margin-bottom: 1rem;
+}
+
+.row .row {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
+.thumbnail {
+    width: 8rem;
+    height: 8rem;
+    text-align: center;
+    position: relative;
+    display: inline-block;
+    margin: 0.1rem;
+}
+
+/*Format the color background*/
+.thumbnail-color-fill {
+    display: none;
+    width: 100%;
+    height: 100%;
+    background-color: #356198;
+    opacity: 0.3;
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    z-index: 1;
+}
+
+.thumbnail:hover {
+    cursor: pointer;
+}
+
+.thumbnail:hover .thumbnail_info, .thumbnail:hover .thumbnail-color-fill {
+    display: inline;
+}
+
+.thumbnail img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    vertical-align: middle;
+}
+
+/*Format the proposal number and number of files*/
+.thumbnail_info {
+    display: none;
+    width: 100%;
+    height: 100%;
+    padding-top: 0.5rem;
+    padding-left: 0.5rem;
+    padding-bottom: 0.5rem;
+    padding-right: 0.5rem;
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    text-align: left;
+    color: white;
+    z-index: 2;
+    font-size: 0.75rem;
+}
+
+
+body {
+  padding-top: 8rem;
+}
+
+body {
+    font-family: 'Overpass', sans-serif !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Oswald', sans-serif !important;
+}
+h1, h2, h3, h4 {
+    text-transform: uppercase;
+}
+h1 {
+    letter-spacing: 0.05em;
+}
+
+
+/* Change color of dropdown links on hover */
+li:hover .nav-link, .navbar-brand:hover {
+    color: #fff;
+}
+
+/* Show the dropdown menu on hover */
+li.dropdown:hover .dropdown-menu {
+    display: block;
+}

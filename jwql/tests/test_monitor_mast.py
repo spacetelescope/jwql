@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-"""Tests for the ``dbmonitor`` module.
+"""Tests for the ``monitor_mast`` module.
 
 Authors
 -------
@@ -14,10 +14,10 @@ Use
     suppress verbose output to stdout):
     ::
 
-        pytest -s test_dbmonitor.py
+        pytest -s test_monitor_mast.py
 """
 
-from ..dbmonitor import dbmonitor as db
+from ..monitor_mast import monitor_mast as mm
 from ..utils.utils import JWST_INSTRUMENTS
 
 
@@ -26,7 +26,7 @@ def test_caom_instrument_keywords():
     instruments"""
     kw = []
     for ins in JWST_INSTRUMENTS:
-        kw.append(db.instrument_keywords(ins, caom=True)['keyword'].tolist())
+        kw.append(mm.instrument_keywords(ins, caom=True)['keyword'].tolist())
 
     assert kw[0] == kw[1] == kw[2] == kw[3] == kw[4]
 
@@ -36,7 +36,7 @@ def test_filtered_instrument_keywords():
     different for all instruments"""
     kw = []
     for ins in JWST_INSTRUMENTS:
-        kw.append(db.instrument_keywords(ins, caom=False)['keyword'].tolist())
+        kw.append(mm.instrument_keywords(ins, caom=False)['keyword'].tolist())
 
     assert kw[0] != kw[1] != kw[2] != kw[3] != kw[4]
 
@@ -44,7 +44,7 @@ def test_filtered_instrument_keywords():
 def test_instrument_inventory_filtering():
     """Test to see that the instrument inventory can be filtered"""
     filt = 'GR150R'
-    data = db.instrument_inventory('niriss',
+    data = mm.instrument_inventory('niriss',
                                    add_filters={'filter': filt},
                                    return_data=True)
 
@@ -57,7 +57,7 @@ def test_instrument_dataproduct_filtering():
     """Test to see that the instrument inventory can be filtered
     by data product"""
     dp = 'spectrum'
-    data = db.instrument_inventory('nirspec', dataproduct=dp, caom=True,
+    data = mm.instrument_inventory('nirspec', dataproduct=dp, caom=True,
                                    return_data=True)
 
     dps = [row['dataproduct_type'] for row in data['data']]

@@ -319,7 +319,7 @@ class PreviewImage():
         """
 
         plt.savefig(outfile, bbox_inches='tight', pad_inches=0)
-        permissions.set_permissions(outfile, verbose=False)
+        permissions.set_permissions(outfile)
 
         # If the image is a thumbnail, rename to '.thumb'
         if self.thumbnail:
