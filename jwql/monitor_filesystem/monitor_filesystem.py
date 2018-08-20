@@ -80,6 +80,9 @@ from jwql.utils.utils import get_config
 def monitor_filesystem():
     """The main function of the ``monitor_filesystem`` module."""
 
+    # Begin logging
+    logging.info('Beginning filesystem monitoring.')
+
     # Get path, directories and files in system and count files in all directories
     settings = get_config()
     filesystem = settings['filesystem']
@@ -320,5 +323,4 @@ if __name__ == '__main__':
     module = os.path.basename(__file__).strip('.py')
     configure_logging(module)
 
-    logging.info('Beginning filesystem monitoring.')
     monitor_filesystem()
