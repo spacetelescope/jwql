@@ -75,12 +75,13 @@ from jwql.logging.logging_functions import configure_logging
 from jwql.logging.logging_functions import log_info
 from jwql.logging.logging_functions import log_fail
 
+
 @log_fail
 @log_info
 def filesystem_monitor():
     """ Get statistics on filesystem"""
 
-        # Begin logging: 
+    # Begin logging
     logging.info("Beginning the script run: ")
 
     # Get path, directories and files in system and count files in all directories
@@ -146,7 +147,7 @@ def filesystem_monitor():
                  size_dict['nrs'], size_dict['nis'], size_dict['mir'], size_dict['gui']))
     set_permissions(sizebytype, verbose=False)
 
- 
+
 def plot_system_stats(stats_file, filebytype, sizebytype):
     """Read in the file of saved stats over time and plot them.
 
@@ -280,10 +281,9 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     output_file(outfile)
     save(grid)
     set_permissions(outfile)
-
-    # Begin logging: 
+    
+    # Begin logging:
     logging.info("Completed.")
-
 
 
 if __name__ == '__main__':
