@@ -60,6 +60,7 @@ Notes
 
 from collections import defaultdict
 import datetime
+import logging
 import numpy as np
 import os
 import subprocess
@@ -67,18 +68,26 @@ import subprocess
 from bokeh.plotting import figure, output_file, save
 from bokeh.layouts import gridplot
 
+from jwql.logging.logging_functions import configure_logging
+from jwql.logging.logging_functions import log_info
+from jwql.logging.logging_functions import log_fail
 from jwql.permissions.permissions import set_permissions
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 
 
+@log_fail
+@log_info
 def filesystem_monitor():
     """ Get statistics on filesystem"""
+
+    # Begin logging
+    logging.info("Beginning the script run: ")
 
     # Get path, directories and files in system and count files in all directories
     settings = get_config()
     filesystem = settings['filesystem']
-    outputs_dir = os.path.join(settings['outputs'], 'filesystem_monitor')
+    outputs_dir = os.path.join(settings['outputs'], 'monitor_filesystem')
 
     # set up dictionaries for output
     results_dict = defaultdict(int)
@@ -155,7 +164,7 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
 
     # get path for files
     settings = get_config()
-    outputs_dir = os.path.join(settings['outputs'], 'filesystem_monitor')
+    outputs_dir = os.path.join(settings['outputs'], 'monitor_filesystem')
 
     # read in file of statistics
     date, f_count, sysize, frsize, used, percent = np.loadtxt(os.path.join(outputs_dir, stats_file), dtype=str, unpack=True)
@@ -272,6 +281,9 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     output_file(outfile)
     save(grid)
     set_permissions(outfile)
+    
+    # Begin logging:
+    logging.info("Completed.")
 
 
 if __name__ == '__main__':
@@ -279,6 +291,9 @@ if __name__ == '__main__':
     inputfile = 'statsfile.txt'
     filebytype = 'filesbytype.txt'
     sizebytype = 'sizebytype.txt'
+
+    module = os.path.basename(__file__).strip('.py')
+    configure_logging(module)
 
     filesystem_monitor()
     plot_system_stats(inputfile, filebytype, sizebytype)
