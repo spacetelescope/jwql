@@ -15,29 +15,31 @@ Use
 ---
 
     This module can be executed from the command line:
+
     ::
 
         python monitor_filesystem.py
 
     Alternatively, it can be called from scripts with the following
     import statements:
+
     ::
 
-      from monitor_filesystem import filesystem_monitor
-      from monitor_filesystem import plot_system_stats
+        from monitor_filesystem import filesystem_monitor
+        from monitor_filesystem import plot_system_stats
 
 
     Required arguments (in a ``config.json`` file):
     ``filepath`` - The path to the input file needs to be in a
-                 ``config.json`` file in the ``utils`` directory
+    ``config.json`` file in the ``utils`` directory
     ``outputs`` - The path to the output files needs to be in a
-                ``config.json`` file in the ``utils`` directory.
+    ``config.json`` file in the ``utils`` directory.
 
     Required arguments for plotting:
     ``inputfile`` - The name of the file to save all of the system
-                  statistics to
+    statistics to
     ``filebytype`` - The name of the file to save stats on fits type
-                   files to
+    files to
 
 
 Dependencies
@@ -281,7 +283,7 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     output_file(outfile)
     save(grid)
     set_permissions(outfile)
-    
+
     # Begin logging:
     logging.info("Completed.")
 
