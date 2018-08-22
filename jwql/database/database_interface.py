@@ -24,19 +24,22 @@ Authors
 
 """
 
+from datetime import datetime
+
 import pandas as pd
-from ..utils import utils
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import create_engine
 from sqlalchemy import DateTime
 from sqlalchemy import Integer
 from sqlalchemy import MetaData
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy import String
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
-from datetime import datetime
+
+from ..utils import utils
+
 
 SETTINGS = utils.get_config()
 
@@ -52,16 +55,14 @@ Query.data_frame = data_frame
 
 
 def load_connection(connection_string):
-    """Return ``session``, ``base``, ``engine``, and ``metadata`` objects for
-    connecting to the ``jwqldb`` database.
+    """Return ``session``, ``base``, ``engine``, and ``metadata``
+    objects for connecting to the ``jwqldb`` database.
 
-    Create an ``engine`` using an given ``connection_string``. Create a
-    ``base`` class and ``session`` class from the ``engine``. Create an
-    instance of the ``session`` class. Return the ``session``,
-    ``base``, and ``engine`` instances.
-
-    Stolen from https://github.com/spacetelescope/acsql/blob/master/acsql/
-    database/database_interface.py
+    Create an ``engine`` using an given ``connection_string``. Create
+    a ``base`` class and ``session`` class from the ``engine``. Create
+    an instance of the ``session`` class. Return the ``session``,
+    ``base``, and ``engine`` instances. This was stolen from the
+    `ascql`_ repository.
 
     Parameters
     ----------
@@ -81,6 +82,10 @@ def load_connection(connection_string):
         Provides a source of database connectivity and behavior.
     meta: metadata object
         The connection metadata
+
+    .. _ascql:
+        https://github.com/spacetelescope/acsql/blob/master/acsql/
+        database/database_interface.py
     """
     engine = create_engine(connection_string, echo=False)
     base = declarative_base(engine)
@@ -132,8 +137,10 @@ class Anomaly(base):
         a_list = [col for col, val in self.__dict__.items()
                   if val is True and isinstance(val, bool)]
 
-        return """Anomaly {0.id}: {0.filename} flagged at {0.flag_date} for \
-{1}""".format(self, a_list)
+        txt = ('Anomaly {0.id}: {0.filename} flagged at '
+               '{0.flag_date} for {1}').format(self, a_list)
+
+        return txt
 
     @property
     def colnames(self):
@@ -145,4 +152,6 @@ class Anomaly(base):
         return a_list
 
 
-base.metadata.create_all(engine)
+if __name__ == '__main__':
+
+    base.metadata.create_all(engine)
