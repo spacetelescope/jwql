@@ -175,14 +175,14 @@ def array_coordinates(channelmod, detector_list, lowerleft_list):
     return xdim, ydim, module_lowerlefts
 
 
-def check_existence(infile, outdir):
-    """Given the name of a fits file, determine if a preview image
+def check_existence(file_list, outdir):
+    """Given a list of fits files, determine if a preview image
     has already been created in outdir.
 
     Parameters
     ----------
-    infile : str
-        Name of fits file from which preview image will be generated
+    file_list : list
+        List of fits filenames from which preview image will be generated
 
     outdir : str
         Directory that will contain the preview image if it exists
@@ -192,12 +192,25 @@ def check_existence(infile, outdir):
     exists : bool
         True if preview image exists, False if it does not
     """
-    indir, inbase = os.path.split(infile)
-    file_parts = filename_parser(infile)
-    search_string = 'jw' + file_parts['program_id'] + file_parts['observation'] + \
-                    file_parts['visit'] + '_' + file_parts['visit_group'] + \
-                    file_parts['parallel_seq_id'] + file_parts['activity'] + '_' + \
-                    file_parts['exposure_id'] + '*' + file_parts['suffix'] + '*.jpg'
+    # If file_list contains only a single file, then we need to search
+    # for a preview image name that contains the detector name
+    if len(file_list) == 1:
+        basename = os.path.split(file_list[0])[1]
+        search_string = basename.split('.fits')[0] + '_*.jpg'
+    else:
+        # If file_list contains multiple files, then we need to search
+        # for the appropriately named jpg of the mosaic, which depends
+        # on the specific detectors in the file_list
+        file_parts = filename_parser(file_list[0])
+        detector = file_parts['detector']
+        if detector in utils.NIRCAM_SHORTWAVE_DETECTORS:
+            mosaic_str = "NRC_SW*_MOSAIC_"
+        elif detector in utils.NIRCAM_LONGWAVE_DETECTORS:
+            mosaic_str = "NRC_LW*_MOSAIC_"
+        search_string = 'jw' + file_parts['program_id'] + file_parts['observation'] + \
+                        file_parts['visit'] + '_' + file_parts['visit_group'] + \
+                        file_parts['parallel_seq_id'] + file_parts['activity'] + '_' + \
+                        file_parts['exposure_id'] + '_' + mosaic_str + file_parts['suffix'] + '*.jpg'
     current_files = glob(os.path.join(outdir, search_string))
     if len(current_files) > 0:
         return True
@@ -499,7 +512,7 @@ def generate_preview_images():
 
         # Check to see if the preview images already exist and skip
         # if they do
-        file_exists = check_existence(file_list[0], preview_output_directory)
+        file_exists = check_existence(file_list, preview_output_directory)
         if file_exists:
             logging.info("JPG already exists for {}, skipping.".format(file_list[0]))
             continue
