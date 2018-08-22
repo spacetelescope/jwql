@@ -32,13 +32,14 @@ import re
 
 import numpy as np
 
+from jwql.logging.logging_functions import configure_logging
+from jwql.logging.logging_functions import log_info
+from jwql.logging.logging_functions import log_fail
 from jwql.permissions import permissions
 from jwql.preview_image.preview_image import PreviewImage
 from jwql.utils.utils import get_config
 from jwql.utils.utils import filename_parser
-from jwql.logging.logging_functions import configure_logging
-from jwql.logging.logging_functions import log_info
-from jwql.logging.logging_functions import log_fail
+from jwql.utils import utils
 
 # Size of NIRCam inter- and intra-module chip gaps
 SW_MOD_GAP = 1387  # pixels = int(43 arcsec / 0.031 arcsec/pixel)
@@ -52,8 +53,8 @@ def array_coordinates(channelmod, detector_list, lowerleft_list):
     """Create an appropriately sized numpy array to contain
     the mosaic image given the channel and module of the data
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     channelmod : str
         Indicator of the NIRCam channel/module of the data.
         Options are:
@@ -71,8 +72,8 @@ def array_coordinates(channelmod, detector_list, lowerleft_list):
         within the full frame detector. These values come from
         the SUBSTRT1 and 2 values in the file headers.
 
-    Returns:
-    --------
+    Returns
+    -------
     xdim : int
         Length of the output array needed to contain all detectors' data
 
@@ -178,23 +179,25 @@ def check_existence(infile, outdir):
     """Given the name of a fits file, determine if a preview image
     has already been created in outdir.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     infile : str
         Name of fits file from which preview image will be generated
 
     outdir : str
         Directory that will contain the preview image if it exists
 
-    Returns:
-    --------
+    Returns
+    -------
     exists : bool
         True if preview image exists, False if it does not
     """
     indir, inbase = os.path.split(infile)
-    file_parts = inbase.split('_')
-    search_string = file_parts[0] + '_' + file_parts[1] + '_' + file_parts[2] + \
-        '*' + file_parts[4].strip(".fits") + '*.jpg'
+    file_parts = filename_parser(infile)
+    search_string = 'jw' + file_parts['program_id'] + file_parts['observation'] + \
+                    file_parts['visit'] + '_' + file_parts['visit_group'] + \
+                    file_parts['parallel_seq_id'] + file_parts['activity'] + '_' + \
+                    file_parts['exposure_id'] + '*' + file_parts['suffix'] + '*.jpg'
     current_files = glob(os.path.join(outdir, search_string))
     if len(current_files) > 0:
         return True
@@ -204,26 +207,28 @@ def check_existence(infile, outdir):
 
 def create_dummy_filename(filelist):
     """Create a dummy filename indicating the detectors used to create
-    the mosaic. Check the list of detectors used to determine the proper
-    text to substitute into the initial filename.
+    the mosaic. Check the list of detectors used to determine the
+    proper text to substitute into the initial filename.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     filelist : list
         List of filenames containing the data used to create the mosaic.
-        It is assumed these filenames follow JWST filenaming conventions.
+        It is assumed these filenames follow JWST filenaming
+        conventions.
 
-    Returns:
-    --------
+    Returns
+    -------
     dummy_name : str
-        The first filename in filelist is modified, such that the detector
-        name is replaced with text indicating the source of the mosaic data.
+        The first filename in filelist is modified, such that the
+        detector name is replaced with text indicating the source of
+        the mosaic data.
     """
     det_string_list = []
     modules = []
     for filename in filelist:
         indir, infile = os.path.split(filename)
-        det_string = infile.split('_')[3]
+        det_string = filename_parser(infile)['detector']
         det_string_list.append(det_string)
         modules.append(det_string[3])
 
@@ -252,13 +257,13 @@ def create_mosaic(filenames):
     read in all the appropriate files and create a mosaic
     so that the preview image will show all the data together.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     filenames : list
         List of filenames to be combined into a mosaic
 
-    Returns:
-    --------
+    Returns
+    -------
     mosaic_filename : str
         Name of fits file containing the mosaicked data
     """
@@ -277,45 +282,15 @@ def create_mosaic(filenames):
         else:
             diff_im = image.data
         data.append(diff_im)
-        basedir, basename = os.path.split(filename)
-        detector_name = basename.split('_')[3]
+        detector_name = filename_parser(filename)['detector']
         detector.append(detector_name)
         data_lower_left.append((image.xstart, image.ystart))
-
-    # Check the detector names for all files.
-    nrc_swa_total = detector_check(detector, "NRCA[1-4]")
-    nrc_swb_total = detector_check(detector, "NRCB[1-4]")
-    nrc_lw_total = detector_check(detector, "NRC[AB]5")
 
     # Make sure SW and LW data are not being mixed. Create the
     # appropriately sized numpy array to hold all the data based
     # on the channel, module, and subarray size
-    both_channels = "Can't mix NIRCam SW and LW data in same mosaic."
-    if nrc_swa_total != 0:
-        if nrc_lw_total != 0:
-            logging.error(both_channels)
-            raise ValueError(both_channels)
-        else:
-            if nrc_swb_total != 0:
-                m_type = "SW"
-            else:
-                m_type = "SWA"
-    else:
-        if nrc_swb_total != 0:
-            if nrc_lw_total != 0:
-                logging.error(both_channels)
-                raise ValueError(both_channels)
-            else:
-                m_type = "SWB"
-        else:
-            if nrc_lw_total != 0:
-                m_type = "LW"
-            else:
-                nodata = "No NIRCam SW nor LW data"
-                logging.error(nodata)
-                raise ValueError(nodata)
-
-    full_xdim, full_ydim, full_lower_left = array_coordinates(m_type, detector,
+    mosaic_channel = find_data_channel(detector)
+    full_xdim, full_ydim, full_lower_left = array_coordinates(mosaic_channel, detector,
                                                               data_lower_left)
 
     # Create the array to hold all the data
@@ -326,9 +301,8 @@ def create_mosaic(filenames):
     elif datadim == 3:
         full_array = np.zeros((datashape[0], full_ydim, full_xdim)) * np.nan
     else:
-        four_d = "Difference image for {} must be either 2D or 3D.".format(filenames[0])
-        logging.error(four_d)
-        raise ValueError(four_d)
+        raise ValueError(("Difference image for {} must be either 2D or 3D."
+                          .format(filenames[0])))
 
     # Place the data from the individual detectors in the appropriate
     # places in the final image
@@ -343,21 +317,17 @@ def create_mosaic(filenames):
 
     # Create associated DQ array and set unpopulated pixels to be skipped
     # in preview image scaling
-    # full_dq = np.ones((full_ydim, full_xdim), dtype="bool")
-    # full_dq[np.isnan(full_array[0, :, :])] = 0
-
-    # Add the reference pixels to be skipped in the preview image scaling
-    full_dq = create_dq_array(full_xdim, full_ydim, full_array[0, :, :], m_type)
+    full_dq = create_dq_array(full_xdim, full_ydim, full_array[0, :, :], mosaic_channel)
     return full_array, full_dq
 
 
 def create_dq_array(xd, yd, mosaic, module):
-    """Create DQ array that goes with the mosaic image. Set unpopulated pixels
-    to be skipped in preview image scaling. Same for the reference pixels for
-    all detectors
+    """Create DQ array that goes with the mosaic image. Set unpopulated
+    pixels to be skipped in preview image scaling. Same for the
+    reference pixels for all detectors
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     xd : int
         X-coordinate dimension of the DQ array
 
@@ -370,8 +340,8 @@ def create_dq_array(xd, yd, mosaic, module):
     module : str
         Module used for mosaic. Options are "LW", "SW", "SWA", "SWB"
 
-    Returns:
-    --------
+    Returns
+    -------
     dq : obj
         2D numpy array containing the DQ array. Pixels that are True
         are considered science pixels and are used when scaling the
@@ -438,16 +408,16 @@ def detector_check(detector_list, search_string):
     """Search a given list of detector names for the
     provided regular expression sting.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     detector_list : list
         List of detector names (e.g. NRCA5)
 
     search_string : str
         Regular expression string to use for search
 
-    Returns:
-    --------
+    Returns
+    -------
     total : int
         Number of detectors in detector_list that match search_string
     """
@@ -455,6 +425,51 @@ def detector_check(detector_list, search_string):
     match = [pattern.match(detector) for detector in detector_list]
     total = np.sum(np.array([m is not None for m in match]))
     return total
+
+
+def find_data_channel(detectors):
+    """Using a list of detectors, identify the channel(s) that the data
+    are from.
+
+    Parameters
+    ----------
+    detectors : list
+        List of detector names
+
+    Returns
+    -------
+    channel : str
+        Identifier noting which channels the given detectors are in.
+        Can be "SWA" for shortwave, module A only, "SWB" for shortwave,
+        module B only, "SW", for shortwave modeules A and B, and "LW"
+        for longwave.
+    """
+    # Check the detector names for all files.
+    nrc_swa_total = detector_check(detectors, "NRCA[1-4]")
+    nrc_swb_total = detector_check(detectors, "NRCB[1-4]")
+    nrc_lw_total = detector_check(detectors, "NRC[AB]5")
+
+    both_channels = "Can't mix NIRCam SW and LW data in same mosaic."
+    if nrc_swa_total != 0:
+        if nrc_lw_total != 0:
+            raise ValueError(both_channels)
+        else:
+            if nrc_swb_total != 0:
+                channel = "SW"
+            else:
+                channel = "SWA"
+    else:
+        if nrc_swb_total != 0:
+            if nrc_lw_total != 0:
+                raise ValueError(both_channels)
+            else:
+                channel = "SWB"
+        else:
+            if nrc_lw_total != 0:
+                channel = "LW"
+            else:
+                raise ValueError("No NIRCam SW nor LW data")
+    return channel
 
 
 @log_fail
@@ -504,7 +519,10 @@ def generate_preview_images():
         # than one detector was used), then create a mosaic
         numfiles = len(file_list)
         if numfiles != 1:
-            mosaic_image, mosaic_dq = create_mosaic(file_list)
+            try:
+                mosaic_image, mosaic_dq = create_mosaic(file_list)
+            except (ValueError, FileNotFoundError) as error:
+                logging.error(error)
             dummy_file = create_dummy_filename(file_list)
             if numfiles in [2, 4]:
                 max_size = 16
@@ -538,28 +556,24 @@ def generate_preview_images():
 
 
 def group_filenames(input_files):
-    """Given a list of jwst filenames, group together
-    files from the same exposure. These files will share
-    the same program_id, observation, visit, visit_group,
-    parallel_seq_id, activity, exposure, and suffix. Only
-    the detector will be different.
+    """Given a list of jwst filenames, group together files from the
+    same exposure. These files will share the same program_id,
+    observation, visit, visit_group, parallel_seq_id, activity,
+    exposure, and suffix. Only the detector will be different.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     input_files : list
         list of filenames
 
-    Returns:
-    --------
+    Returns
+    -------
     grouped : list
         grouped list of filenames where each element is a
         list and contains the names of filenames with matching
         exposure information
     """
     grouped = []
-    nrc_shortwave_detectors = ['NRCA1', 'NRCA2', 'NRCA3', 'NRCA4',
-                               'NRCB1', 'NRCB2', 'NRCB3', 'NRCB4']
-    nrc_longwave_detectors = ['NRCA5', 'NRCB5']
 
     # Sort files first
     input_files.sort()
@@ -572,17 +586,27 @@ def group_filenames(input_files):
         filedirectory, filename = os.path.split(fullfilename)
 
         # Generate string to be matched with other filenames
-        last_under_index = filename.rindex('_')
-        file_parts = filename.split('_')
-        detector = file_parts[3].upper()
-        # obs_base = file_parts[0] + '_' + file_parts[1] + '_' + file_parts[2]
+        filename_parts = filename_parser(filename)
+        program = filename_parts['program_id']
+        observation = filename_parts['observation']
+        visit = filename_parts['visit']
+        visit_group = filename_parts['visit_group']
+        parallel = filename_parts['parallel_seq_id']
+        activity = filename_parts['activity']
+        exposure = filename_parts['exposure_id']
+        detector = filename_parts['detector']
+        suffix = filename_parts['suffix']
 
-        if detector in nrc_shortwave_detectors:
-            match_str = filename[0:26] + 'NRC[AB][1234]' + filename[last_under_index:]
-        elif detector in nrc_longwave_detectors:
-            match_str = filename[0:26] + 'NRC[AB]5' + filename[last_under_index:]
+        observation_base = 'jw' + program + observation + visit + '_' + visit_group \
+                           + parallel + activity + '_' + exposure + '_'
+
+        if detector in utils.NIRCAM_SHORTWAVE_DETECTORS:
+            detector_str = 'NRC[AB][1234]'
+        elif detector in utils.NIRCAM_LONGWAVE_DETECTORS:
+            detector_str = 'NRC[AB]5'
         else:  # non-NIRCam detectors - should never be used I think??
-            match_str = filename[0:26] + '(.*)' + filename[last_under_index:]
+            detector_str = '(.*)'
+        match_str = observation_base + detector_str + '_' + suffix + '.fits'
         match_str = os.path.join(filedirectory, match_str)
         pattern = re.compile(match_str)
 
