@@ -1,0 +1,140 @@
+.cssload-container {
+    width: 102px;
+    margin: 0 auto;
+}
+
+.cssload-circle-1 {
+    height: 102px;
+    width: 102px;
+    background: rgb(97,46,141);
+}
+
+.cssload-circle-2 {
+    height: 85px;
+    width: 85px;
+    background: rgb(194,34,134);
+}
+
+.cssload-circle-3 {
+    height: 68px;
+    width: 68px;
+    background: rgb(234,34,94);
+}
+
+.cssload-circle-4 {
+    height: 51px;
+    width: 51px;
+    background: rgb(237,91,53);
+}
+
+.cssload-circle-5 {
+    height: 34px;
+    width: 34px;
+    background: rgb(245,181,46);
+}
+
+.cssload-circle-6 {
+    height: 17px;
+    width: 17px;
+    background: rgb(129,197,64);
+}
+
+.cssload-circle-7 {
+    height: 8px;
+    width: 8px;
+    background: rgb(0,163,150);
+}
+
+.cssload-circle-8 {
+    height: 4px;
+    width: 4px;
+    background: rgb(22,116,188);
+}
+
+.cssload-circle-1,
+.cssload-circle-2,
+.cssload-circle-3,
+.cssload-circle-4,
+.cssload-circle-5,
+.cssload-circle-6,
+.cssload-circle-7,
+.cssload-circle-8 {
+    border-bottom: none;
+    border-radius: 50%;
+        -o-border-radius: 50%;
+        -ms-border-radius: 50%;
+        -webkit-border-radius: 50%;
+        -moz-border-radius: 50%;
+    box-shadow: 1px 1px 1px rgba(0,0,0,0.1);
+        -o-box-shadow: 1px 1px 1px rgba(0,0,0,0.1);
+        -ms-box-shadow: 1px 1px 1px rgba(0,0,0,0.1);
+        -webkit-box-shadow: 1px 1px 1px rgba(0,0,0,0.1);
+        -moz-box-shadow: 1px 1px 1px rgba(0,0,0,0.1);
+    animation-name: cssload-spin;
+        -o-animation-name: cssload-spin;
+        -ms-animation-name: cssload-spin;
+        -webkit-animation-name: cssload-spin;
+        -moz-animation-name: cssload-spin;
+    animation-duration: 3400ms;
+        -o-animation-duration: 3400ms;
+        -ms-animation-duration: 3400ms;
+        -webkit-animation-duration: 3400ms;
+        -moz-animation-duration: 3400ms;
+    animation-iteration-count: infinite;
+        -o-animation-iteration-count: infinite;
+        -ms-animation-iteration-count: infinite;
+        -webkit-animation-iteration-count: infinite;
+        -moz-animation-iteration-count: infinite;
+    animation-timing-function: linear;
+        -o-animation-timing-function: linear;
+        -ms-animation-timing-function: linear;
+        -webkit-animation-timing-function: linear;
+        -moz-animation-timing-function: linear;
+}
+
+
+
+@keyframes cssload-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@-o-keyframes cssload-spin {
+    from {
+        -o-transform: rotate(0deg);
+    }
+    to {
+        -o-transform: rotate(360deg);
+    }
+}
+
+@-ms-keyframes cssload-spin {
+    from {
+        -ms-transform: rotate(0deg);
+    }
+    to {
+        -ms-transform: rotate(360deg);
+    }
+}
+
+@-webkit-keyframes cssload-spin {
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+    to {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@-moz-keyframes cssload-spin {
+    from {
+        -moz-transform: rotate(0deg);
+    }
+    to {
+        -moz-transform: rotate(360deg);
+    }
+}
