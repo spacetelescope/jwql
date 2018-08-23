@@ -62,7 +62,7 @@ def load_connection(connection_string):
     a ``base`` class and ``session`` class from the ``engine``. Create
     an instance of the ``session`` class. Return the ``session``,
     ``base``, and ``engine`` instances. This was stolen from the
-    `ascql`_ repository.
+    `ascql` repository.
 
     Parameters
     ----------
@@ -83,9 +83,10 @@ def load_connection(connection_string):
     meta: metadata object
         The connection metadata
 
-    .. _ascql:
-        https://github.com/spacetelescope/acsql/blob/master/acsql/
-        database/database_interface.py
+    References
+    ----------
+    ``ascql``:
+        https://github.com/spacetelescope/acsql/blob/master/acsql/database/database_interface.py
     """
     engine = create_engine(connection_string, echo=False)
     base = declarative_base(engine)

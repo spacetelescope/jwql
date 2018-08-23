@@ -19,6 +19,7 @@ API documentation
    :maxdepth: 1
    :caption: Contents:
 
+   database.rst
    dbmonitor.rst
    permissions.rst
    preview_image.rst
