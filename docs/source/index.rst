@@ -20,12 +20,14 @@ API documentation
    :caption: Contents:
 
    database.rst
-   dbmonitor.rst
+   logging.rst
+   monitor_filesystem.rst
+   monitor_mast.rst
    permissions.rst
    preview_image.rst
    utils.rst
    tests.rst
-   logging.rst
+   monitor_filesystem.rst
 
 
 Indices and tables
