@@ -13,6 +13,7 @@ Authors
 -------
 
     Matthew Bourque
+    Bryan Hilbert
 
 
 Use
