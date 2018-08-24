@@ -238,7 +238,10 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
 @log_fail
 @log_info
 def monitor_mast():
-    """The main function of the ``monitor_mast`` module."""
+    """Tabulates the inventory of all JWST data products in the MAST
+    archive and generates plots.
+    """
+    logging.info('Beginning database monitoring.')
 
     # Perform inventory of the JWST service
     jwst_inventory(instruments=JWST_INSTRUMENTS,
@@ -258,6 +261,4 @@ if __name__ == '__main__':
     configure_logging(module)
 
     # Run the monitors
-    logging.info('Beginning database monitoring.')
     monitor_mast()
-

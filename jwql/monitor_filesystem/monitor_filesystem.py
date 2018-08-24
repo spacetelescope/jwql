@@ -79,7 +79,9 @@ from jwql.utils.utils import get_config
 @log_fail
 @log_info
 def monitor_filesystem():
-    """The main function of the ``monitor_filesystem`` module."""
+    """Tabulates the inventory of the JWST filesystem, saving
+    statistics to files, and generates plots.
+    """
 
     # Begin logging
     logging.info('Beginning filesystem monitoring.')
