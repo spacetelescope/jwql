@@ -36,7 +36,7 @@ python setup.py develop
 
 or, if you would rather use `SSH` instead of `https`, type
 ```
-git clone git@github.com:spacetelescope/jwql.git 
+git clone git@github.com:spacetelescope/jwql.git
 cd jwql
 python setup.py develop
 ```
@@ -122,7 +122,7 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Catherine Gosmeyer (INS) [@cgosmeyer](https://github.com/cgosmeyer)
 - Phil Grant (ITSD)
 - Dean Hines (INS)
-- Sherrie Holfeltz (INS) [@stholfeltz](https://github.com/stholfeltz)
+- Sherie Holfeltz (INS) [@stholfeltz](https://github.com/stholfeltz)
 - Joe Hunkeler (OED) [@jhunkeler](https://github.com/jhunkeler)
 - Catherine Kaleida (OED)
 - Mark Kyprianou (OED) [@mkyp](https://github.com/mkyp)
