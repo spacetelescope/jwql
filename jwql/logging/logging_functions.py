@@ -66,7 +66,7 @@ import traceback
 from functools import wraps
 
 from jwql.permissions.permissions import set_permissions
-from jwql.utils.utils import get_config
+from jwql.utils.utils import get_config, ensure_dir_exists
 
 LOG_FILE_LOC = ''
 PRODUCTION_BOOL = ''
@@ -143,6 +143,8 @@ def make_log_file(module, production_mode=True, path='./'):
         log_file = os.path.join(log_path, module, filename)
     else:
         log_file = os.path.join(path, filename)
+
+    ensure_dir_exists(os.path.dirname(log_file))
 
     return log_file
 

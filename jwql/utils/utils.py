@@ -25,6 +25,8 @@ import json
 import os
 import re
 
+from ..permissions import permissions
+
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 JWST_INSTRUMENTS = sorted(['NIRISS', 'NIRCam', 'NIRSpec', 'MIRI', 'FGS'])
@@ -48,6 +50,15 @@ MONITORS = {
 NIRCAM_SHORTWAVE_DETECTORS = ['NRCA1', 'NRCA2', 'NRCA3', 'NRCA4',
                               'NRCB1', 'NRCB2', 'NRCB3', 'NRCB4']
 NIRCAM_LONGWAVE_DETECTORS = ['NRCA5', 'NRCB5']
+
+
+
+def ensure_dir_exists(fullpath):
+    """Creates dirs from ``fullpath`` if they do not already exist.
+    """
+    if not os.path.exists(fullpath):
+        os.makedirs(fullpath)
+        permissions.set_permissions(fullpath)
 
 
 def get_config():
