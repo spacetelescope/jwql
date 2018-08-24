@@ -24,14 +24,8 @@ Use
     import statements:
 
     ::
-
-<<<<<<< HEAD
         from monitor_filesystem import filesystem_monitor
         from monitor_filesystem import plot_system_stats
-=======
-      from monitor_filesystem import monitor_filesystem
-      from monitor_filesystem import plot_system_stats
->>>>>>> 5095b34a45cfe52c098465f2f18ed8dc6bf598fe
 
 
     Required arguments (in a ``config.json`` file):
