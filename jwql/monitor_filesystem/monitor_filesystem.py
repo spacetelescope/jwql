@@ -25,8 +25,13 @@ Use
 
     ::
 
+<<<<<<< HEAD
         from monitor_filesystem import filesystem_monitor
         from monitor_filesystem import plot_system_stats
+=======
+      from monitor_filesystem import monitor_filesystem
+      from monitor_filesystem import plot_system_stats
+>>>>>>> 5095b34a45cfe52c098465f2f18ed8dc6bf598fe
 
 
     Required arguments (in a ``config.json`` file):
@@ -51,7 +56,7 @@ Dependencies
 Notes
 -----
 
-    The ``filesystem_monitor`` function queries the filesystem,
+    The ``monitor_filesystem`` function queries the filesystem,
     calculates the statistics and saves the output file(s) in the
     directory specified in the ``config.json`` file.
 
@@ -66,28 +71,24 @@ import logging
 import numpy as np
 import os
 import subprocess
-import logging
 
-from bokeh.plotting import figure, output_file, save
-from bokeh.layouts import gridplot
 from bokeh.embed import components
+from bokeh.layouts import gridplot
+from bokeh.plotting import figure, output_file, save
 
-from jwql.logging.logging_functions import configure_logging
-from jwql.logging.logging_functions import log_info
-from jwql.logging.logging_functions import log_fail
+from jwql.logging.logging_functions import configure_logging, log_info, log_fail
 from jwql.permissions.permissions import set_permissions
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
-from jwql.logging.logging_functions import configure_logging, log_info, log_fail
 
 
 @log_fail
 @log_info
-def filesystem_monitor():
-    """ Get statistics on filesystem"""
+def monitor_filesystem():
+    """The main function of the ``monitor_filesystem`` module."""
 
     # Begin logging
-    logging.info("Beginning the script run: ")
+    logging.info('Beginning filesystem monitoring.')
 
     # Get path, directories and files in system and count files in all directories
     settings = get_config()
@@ -159,8 +160,10 @@ def filesystem_monitor():
 
     logging.info('Filesystem statistics calculation complete.')
 
-@log_fail
-@log_info
+    # Create the plots
+    plot_system_stats(statsfile, filesbytype, sizebytype)
+
+
 def plot_system_stats(stats_file, filebytype, sizebytype):
     """Read in the file of saved stats over time and plot them.
 
@@ -180,9 +183,9 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     outputs_dir = os.path.join(settings['outputs'], 'monitor_filesystem')
 
     # read in file of statistics
-    date, f_count, sysize, frsize, used, percent = np.loadtxt(os.path.join(outputs_dir, stats_file), dtype=str, unpack=True)
-    fits_files, uncalfiles, calfiles, ratefiles, rateintsfiles, i2dfiles, nrcfiles, nrsfiles, nisfiles, mirfiles, fgsfiles = np.loadtxt(os.path.join(outputs_dir, filebytype), dtype=str, unpack=True)
-    fits_sz, uncal_sz, cal_sz, rate_sz, rateints_sz, i2d_sz, nrc_sz, nrs_sz, nis_sz, mir_sz, fgs_sz = np.loadtxt(os.path.join(outputs_dir, sizebytype), dtype=str, unpack=True)
+    date, f_count, sysize, frsize, used, percent = np.loadtxt(stats_file, dtype=str, unpack=True)
+    fits_files, uncalfiles, calfiles, ratefiles, rateintsfiles, i2dfiles, nrcfiles, nrsfiles, nisfiles, mirfiles, fgsfiles = np.loadtxt(filebytype, dtype=str, unpack=True)
+    fits_sz, uncal_sz, cal_sz, rate_sz, rateints_sz, i2d_sz, nrc_sz, nrs_sz, nis_sz, mir_sz, fgs_sz = np.loadtxt(sizebytype, dtype=str, unpack=True)
     logging.info('Read in file statistics from {}, {}, {}'.format(stats_file, filebytype, sizebytype))
 
     # put in proper np array types and convert to GB sizes
@@ -330,11 +333,4 @@ if __name__ == '__main__':
     module = os.path.basename(__file__).strip('.py')
     configure_logging(module)
 
-    inputfile = 'statsfile.txt'
-    filebytype = 'filesbytype.txt'
-    sizebytype = 'sizebytype.txt'
-
-    logging.info('Beginning filesystem monitoring.')
-
-    filesystem_monitor()
-    plot_system_stats(inputfile, filebytype, sizebytype)
+    monitor_filesystem()
