@@ -3,16 +3,16 @@
 """
 Create a preview image from a fits file containing an observation.
 
-This module creates and saves a "preview image" from a fits file
-that contains a JWST observation. Data from the user-supplied
-``extension`` of the file are read in, along with the ``PIXELDQ``
-extension if present. For each integration in the exposure, the
-first group is subtracted from the final group in order to create
-a difference image. The lower and upper limits to be displayed are
-defined as the ``clip_percent`` and (1. - ``clip_percent``) percentile
-signals. ``matplotlib`` is then used to display a linear- or
-log-stretched version of the image, with accompanying colorbar. The
-image is then saved.
+This module creates and saves a "preview image" from a fits file that
+contains a JWST observation. Data from the user-supplied ``extension``
+of the file are read in, along with the ``PIXELDQ`` extension if
+present. For each integration in the exposure, the first group is
+subtracted from the final group in order to create a difference image.
+The lower and upper limits to be displayed are defined as the
+``clip_percent`` and ``(1. - clip_percent)`` percentile signals.
+``matplotlib`` is then used to display a linear- or log-stretched
+version of the image, with accompanying colorbar. The image is then
+saved.
 
 Authors:
 --------
@@ -51,6 +51,49 @@ import matplotlib.colors as colors
 
 
 class PreviewImage():
+    """An object for generating and saving preview images, used by
+    ``generate_preview_images``.
+
+    Attributes
+    ----------
+    clip_percent : float
+        The amount to sigma clip the input data by when scaling the
+        preview image.  Default is 0.01.
+    cmap : str
+        The colormap used by ``matplotlib`` in the preview image.
+        Default value is ``viridis``.
+    data : obj
+        The data used to generate the preview image.
+    dq : obj
+        The DQ data used to generate the preview image.
+    file : str
+        The filename to generate the preview image from.
+    output_format : str
+        The format to which the preview image is saved.  Options are
+        ``jpg`` and ``thumb``
+    preview_output_directory : str or None
+        The output directory to which the preview image is saved.
+    scaling : str
+        The scaling used in the preview image.  Default is ``log``.
+    thumbnail_output_directory : str or None
+        The output directory to which the thumbnail is saved.
+
+    Methods
+    -------
+    difference_image(data)
+        Create a difference image from the data
+    find_limits(data, pixmap, clipperc)
+        Find the min and max signal levels after clipping by
+        ``clipperc``
+    get_data(filename, ext)
+        Read in data from the given ``filename`` and ``ext``
+    make_figure(image, integration_number, min_value, max_value, scale, maxsize, thumbnail)
+        Create the ``matplotlib`` figure
+    make_image(max_img_size)
+        Main function
+    save_image(fname, thumbnail)
+        Save the figure
+    """
 
     def __init__(self, filename, extension):
         """Initialize the class.
@@ -67,8 +110,8 @@ class PreviewImage():
         self.file = filename
         self.output_format = 'jpg'
         self.preview_output_directory = None
-        self.thumbnail_output_directory = None
         self.scaling = 'log'
+        self.thumbnail_output_directory = None
 
         # Read in file
         self.data, self.dq = self.get_data(self.file, extension)
@@ -303,9 +346,8 @@ class PreviewImage():
             ax.set_title(filename + ' Int: {}'.format(np.int(integration_number)))
 
     def make_image(self, max_img_size=8):
-        """
-        MAIN FUNCTION
-        """
+        """The main function of the ``PreviewImage`` class."""
+
         shape = self.data.shape
 
         if len(shape) == 4:
