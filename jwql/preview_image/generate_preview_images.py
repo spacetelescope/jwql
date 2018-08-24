@@ -12,8 +12,8 @@ by subdirectories pertaining to the ``program_id`` in the filenames.
 Authors
 -------
 
-    Matthew Bourque
-    Bryan Hilbert
+    - Matthew Bourque
+    - Bryan Hilbert
 
 
 Use
@@ -51,27 +51,27 @@ FULLY = 2048  # Height of the full detector
 
 
 def array_coordinates(channelmod, detector_list, lowerleft_list):
-    """Create an appropriately sized numpy array to contain
-    the mosaic image given the channel and module of the data
+    """Create an appropriately sized ``numpy`` array to contain the
+    mosaic image given the channel and module of the data.
 
     Parameters
     ----------
     channelmod : str
         Indicator of the NIRCam channel/module of the data.
         Options are:
-            LW - for longwave channel data
-            SWA - for shortwave A module only (4 detectors) data
-            SWB - for shortwave B module only (4 detectors) data
-            SW - for shortwave both module data (8 detectors)
+            ``LW`` - for longwave channel data
+            ``SWA`` - for shortwave A module only (4 detectors) data
+            ``SWB`` - for shortwave B module only (4 detectors) data
+            ``SW`` - for shortwave both module data (8 detectors)
 
     detector_list : list
         List of detectors used in data to be simulated
 
     lowerleft_list : list
         Each element is a tuple giving the (x, y) coordinates
-        corresponding to the lower left corner of the aperture
-        within the full frame detector. These values come from
-        the SUBSTRT1 and 2 values in the file headers.
+        corresponding to the lower left corner of the aperture within
+        the full frame detector. These values come from the
+        ``SUBSTRT1`` and 2 values in the file headers.
 
     Returns
     -------
@@ -82,13 +82,15 @@ def array_coordinates(channelmod, detector_list, lowerleft_list):
         Height of the output array needed to contain all detectors' data
 
     module_lowerlefts : dict
-        Dictionary giving the (x, y) coordinate in the coordinate system
-        of the full module(s) where the lower left corner of the data
-        from a given detector will be placed. (e.g. "NRCA1": (1888, 1888)
-        means that the data from detector NRCA1 should be placed into
-        [1888: 1888+y_dim_of_data, 1888: 1888+x_dim_of_data] within
-        the final array (which has total dimensions of (xdim, ydim)
+        Dictionary giving the ``(x, y)`` coordinate in the coordinate
+        system of the full module(s) where the lower left corner of the
+        data from a given detector will be placed. (e.g.
+        ``NRCA1: (1888, 1888)`` means that the data from detector
+        ``NRCA1`` should be placed into
+        ``[1888: 1888+y_dim_of_data, 1888: 1888+x_dim_of_data]`` within
+        the final array (which has total dimensions of ``(xdim, ydim)``
     """
+
     # Create dictionary of lower left pixel values for each
     # detector as it sits in the MODULE. B1-B4 values here will
     # need to have sw_mod_gap added to their x coordinates in
@@ -109,6 +111,7 @@ def array_coordinates(channelmod, detector_list, lowerleft_list):
                          "NRCB4": (0, 0),
                          "NRCA5": (0, 0),
                          "NRCB5": (FULLX + LW_MOD_GAP, 0)}
+
     # If both module A and B are used, then shift the B module
     # coordinates to account for the intermodule gap
     if channelmod == "SW":
@@ -177,13 +180,14 @@ def array_coordinates(channelmod, detector_list, lowerleft_list):
 
 
 def check_existence(file_list, outdir):
-    """Given a list of fits files, determine if a preview image
-    has already been created in outdir.
+    """Given a list of fits files, determine if a preview image has
+    already been created in ``outdir``.
 
     Parameters
     ----------
     file_list : list
-        List of fits filenames from which preview image will be generated
+        List of fits filenames from which preview image will be
+        generated
 
     outdir : str
         Directory that will contain the preview image if it exists
@@ -191,8 +195,9 @@ def check_existence(file_list, outdir):
     Returns
     -------
     exists : bool
-        True if preview image exists, False if it does not
+        ``True`` if preview image exists, ``False`` if it does not
     """
+
     # If file_list contains only a single file, then we need to search
     # for a preview image name that contains the detector name
     if len(file_list) == 1:
@@ -213,6 +218,7 @@ def check_existence(file_list, outdir):
                         file_parts['parallel_seq_id'] + file_parts['activity'] + '_' + \
                         file_parts['exposure_id'] + '_' + mosaic_str + file_parts['suffix'] + '*.jpg'
     current_files = glob(os.path.join(outdir, search_string))
+
     if len(current_files) > 0:
         return True
     else:
@@ -221,8 +227,8 @@ def check_existence(file_list, outdir):
 
 def create_dummy_filename(filelist):
     """Create a dummy filename indicating the detectors used to create
-    the mosaic. Check the list of detectors used to determine the
-    proper text to substitute into the initial filename.
+    the mosaic. Check the list of detectors used to determine the proper
+    text to substitute into the initial filename.
 
     Parameters
     ----------
@@ -234,10 +240,11 @@ def create_dummy_filename(filelist):
     Returns
     -------
     dummy_name : str
-        The first filename in filelist is modified, such that the
-        detector name is replaced with text indicating the source of
-        the mosaic data.
+        The first filename in ``filelist`` is modified, such that the
+        detector name is replaced with text indicating the source of the
+        mosaic data.
     """
+
     det_string_list = []
     modules = []
     for filename in filelist:
@@ -263,13 +270,14 @@ def create_dummy_filename(filelist):
             if modb > 0:
                 suffix = "NRC_SWB_MOSAIC"
     dummy_name = filelist[0].replace(det_string_list[0], suffix)
+
     return dummy_name
 
 
 def create_mosaic(filenames):
-    """If an exposure comprises data from multiple detectors
-    read in all the appropriate files and create a mosaic
-    so that the preview image will show all the data together.
+    """If an exposure comprises data from multiple detectors read in all
+    the appropriate files and create a mosaic so that the preview image
+    will show all the data together.
 
     Parameters
     ----------
@@ -288,8 +296,7 @@ def create_mosaic(filenames):
     detector = []
     data_lower_left = []
     for filename in filenames:
-        image = PreviewImage(filename, "SCI")
-        # Now have image.data, image.dq
+        image = PreviewImage(filename, "SCI")  # Now have image.data, image.dq
         data_dim = len(image.data.shape)
         if data_dim == 4:
             diff_im = image.difference_image(image.data)
@@ -332,6 +339,7 @@ def create_mosaic(filenames):
     # Create associated DQ array and set unpopulated pixels to be skipped
     # in preview image scaling
     full_dq = create_dq_array(full_xdim, full_ydim, full_array[0, :, :], mosaic_channel)
+
     return full_array, full_dq
 
 
@@ -349,18 +357,21 @@ def create_dq_array(xd, yd, mosaic, module):
         Y-coordinate dimension of the DQ array
 
     mosaic : obj
-        2D numpy array containing the mosaic image
+        2D ``numpy`` array containing the mosaic image
 
     module : str
-        Module used for mosaic. Options are "LW", "SW", "SWA", "SWB"
+        Module used for mosaic. Options are ``LW``,`` SW``, ``SWA``,
+        ``SWB``
 
     Returns
     -------
     dq : obj
-        2D numpy array containing the DQ array. Pixels that are True
-        are considered science pixels and are used when scaling the
-        preview image. Pixels that are False are skipped.
+        2D ``numpy`` array containing the DQ array. Pixels that are
+        ``True`` are considered science pixels and are used when
+        scaling the preview image. Pixels that are ``False`` are
+        skipped.
     """
+
     # Create array
     dq = np.ones((yd, xd), dtype="bool")
 
@@ -419,13 +430,13 @@ def create_dq_array(xd, yd, mosaic, module):
 
 
 def detector_check(detector_list, search_string):
-    """Search a given list of detector names for the
-    provided regular expression sting.
+    """Search a given list of detector names for the provided regular
+    expression sting.
 
     Parameters
     ----------
     detector_list : list
-        List of detector names (e.g. NRCA5)
+        List of detector names (e.g. ``NRCA5``)
 
     search_string : str
         Regular expression string to use for search
@@ -433,11 +444,14 @@ def detector_check(detector_list, search_string):
     Returns
     -------
     total : int
-        Number of detectors in detector_list that match search_string
+        Number of detectors in ``detector_list`` that match
+        ``search_string``
     """
+
     pattern = re.compile(search_string)
     match = [pattern.match(detector) for detector in detector_list]
     total = np.sum(np.array([m is not None for m in match]))
+
     return total
 
 
@@ -454,10 +468,11 @@ def find_data_channel(detectors):
     -------
     channel : str
         Identifier noting which channels the given detectors are in.
-        Can be "SWA" for shortwave, module A only, "SWB" for shortwave,
-        module B only, "SW", for shortwave modeules A and B, and "LW"
-        for longwave.
+        Can be ``SWA`` for shortwave, module A only, ``SWB`` for
+        shortwave, module B only, ``SW``, for shortwave modules A and B,
+        and ``LW`` for longwave.
     """
+
     # Check the detector names for all files.
     nrc_swa_total = detector_check(detectors, "NRCA[1-4]")
     nrc_swb_total = detector_check(detectors, "NRCB[1-4]")
@@ -489,7 +504,7 @@ def find_data_channel(detectors):
 @log_fail
 @log_info
 def generate_preview_images():
-    """The main function of the generate_preview_image module."""
+    """The main function of the ``generate_preview_image`` module."""
 
     # Begin logging
     logging.info("Beginning the script run: ")
@@ -570,10 +585,11 @@ def generate_preview_images():
 
 
 def group_filenames(input_files):
-    """Given a list of jwst filenames, group together files from the
-    same exposure. These files will share the same program_id,
-    observation, visit, visit_group, parallel_seq_id, activity,
-    exposure, and suffix. Only the detector will be different.
+    """Given a list of JWST filenames, group together files from the
+    same exposure. These files will share the same ``program_id``,
+    ``observation``, ``visit``, ``visit_group``, ``parallel_seq_id``,
+    ``activity``, ``exposure``, and ``suffix``. Only the ``detector``
+    will be different.
 
     Parameters
     ----------
@@ -583,10 +599,11 @@ def group_filenames(input_files):
     Returns
     -------
     grouped : list
-        grouped list of filenames where each element is a
-        list and contains the names of filenames with matching
-        exposure information
+        grouped list of filenames where each element is a list and
+        contains the names of filenames with matching exposure
+        information.
     """
+
     grouped = []
 
     # Sort files first
@@ -656,4 +673,5 @@ if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
     configure_logging(module)
+
     generate_preview_images()
