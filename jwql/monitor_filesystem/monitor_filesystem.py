@@ -15,29 +15,31 @@ Use
 ---
 
     This module can be executed from the command line:
+
     ::
 
         python monitor_filesystem.py
 
     Alternatively, it can be called from scripts with the following
     import statements:
+
     ::
 
-      from monitor_filesystem import filesystem_monitor
-      from monitor_filesystem import plot_system_stats
+        from monitor_filesystem import filesystem_monitor
+        from monitor_filesystem import plot_system_stats
 
 
     Required arguments (in a ``config.json`` file):
     ``filepath`` - The path to the input file needs to be in a
-                 ``config.json`` file in the ``utils`` directory
+    ``config.json`` file in the ``utils`` directory
     ``outputs`` - The path to the output files needs to be in a
-                ``config.json`` file in the ``utils`` directory.
+    ``config.json`` file in the ``utils`` directory.
 
     Required arguments for plotting:
     ``inputfile`` - The name of the file to save all of the system
-                  statistics to
+    statistics to
     ``filebytype`` - The name of the file to save stats on fits type
-                   files to
+    files to
 
 
 Dependencies
@@ -60,6 +62,7 @@ Notes
 
 from collections import defaultdict
 import datetime
+import logging
 import numpy as np
 import os
 import subprocess
@@ -69,6 +72,9 @@ from bokeh.plotting import figure, output_file, save
 from bokeh.layouts import gridplot
 from bokeh.embed import components
 
+from jwql.logging.logging_functions import configure_logging
+from jwql.logging.logging_functions import log_info
+from jwql.logging.logging_functions import log_fail
 from jwql.permissions.permissions import set_permissions
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
@@ -80,10 +86,13 @@ from jwql.logging.logging_functions import configure_logging, log_info, log_fail
 def filesystem_monitor():
     """ Get statistics on filesystem"""
 
+    # Begin logging
+    logging.info("Beginning the script run: ")
+
     # Get path, directories and files in system and count files in all directories
     settings = get_config()
     filesystem = settings['filesystem']
-    outputs_dir = os.path.join(settings['outputs'], 'filesystem_monitor')
+    outputs_dir = os.path.join(settings['outputs'], 'monitor_filesystem')
 
     # set up dictionaries for output
     results_dict = defaultdict(int)
@@ -168,7 +177,7 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
 
     # get path for files
     settings = get_config()
-    outputs_dir = os.path.join(settings['outputs'], 'filesystem_monitor')
+    outputs_dir = os.path.join(settings['outputs'], 'monitor_filesystem')
 
     # read in file of statistics
     date, f_count, sysize, frsize, used, percent = np.loadtxt(os.path.join(outputs_dir, stats_file), dtype=str, unpack=True)
@@ -311,6 +320,9 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
 
     logging.info('Filesystem statistics plotting complete.')
 
+    # Begin logging:
+    logging.info("Completed.")
+
 
 if __name__ == '__main__':
 
@@ -323,5 +335,6 @@ if __name__ == '__main__':
     sizebytype = 'sizebytype.txt'
 
     logging.info('Beginning filesystem monitoring.')
+
     filesystem_monitor()
     plot_system_stats(inputfile, filebytype, sizebytype)
