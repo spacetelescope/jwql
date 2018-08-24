@@ -40,7 +40,8 @@ from jwql.permissions import permissions
 from jwql.preview_image.preview_image import PreviewImage
 from jwql.utils.utils import get_config
 from jwql.utils.utils import filename_parser
-from jwql.utils import utils
+from jwql.utils.utils import NIRCAM_LONGWAVE_DETECTORS
+from jwql.utils.utils import NIRCAM_SHORTWAVE_DETECTORS
 
 # Size of NIRCam inter- and intra-module chip gaps
 SW_MOD_GAP = 1387  # pixels = int(43 arcsec / 0.031 arcsec/pixel)
@@ -201,24 +202,24 @@ def check_existence(file_list, outdir):
     # If file_list contains only a single file, then we need to search
     # for a preview image name that contains the detector name
     if len(file_list) == 1:
-        basename = os.path.split(file_list[0])[1]
-        search_string = basename.split('.fits')[0] + '_*.jpg'
+        filename = os.path.split(file_list[0])[1]
+        search_string = filename.split('.fits')[0] + '_*.jpg'
     else:
         # If file_list contains multiple files, then we need to search
         # for the appropriately named jpg of the mosaic, which depends
         # on the specific detectors in the file_list
         file_parts = filename_parser(file_list[0])
-        detector = file_parts['detector']
-        if detector in utils.NIRCAM_SHORTWAVE_DETECTORS:
+        if file_parts['detector'] in NIRCAM_SHORTWAVE_DETECTORS:
             mosaic_str = "NRC_SW*_MOSAIC_"
-        elif detector in utils.NIRCAM_LONGWAVE_DETECTORS:
+        elif file_parts['detector'] in NIRCAM_LONGWAVE_DETECTORS:
             mosaic_str = "NRC_LW*_MOSAIC_"
-        search_string = 'jw' + file_parts['program_id'] + file_parts['observation'] + \
-                        file_parts['visit'] + '_' + file_parts['visit_group'] + \
-                        file_parts['parallel_seq_id'] + file_parts['activity'] + '_' + \
-                        file_parts['exposure_id'] + '_' + mosaic_str + file_parts['suffix'] + '*.jpg'
-    current_files = glob(os.path.join(outdir, search_string))
+        search_string = 'jw{}{}{}_{}{}{}_{}_{}{}*.jpg'.format(
+                        file_parts['program_id'], file_parts['observation'],
+                        file_parts['visit'], file_parts['visit_group'],
+                        file_parts['parallel_seq_id'], file_parts['activity'],
+                        file_parts['exposure_id'], mosaic_str, file_parts['suffix'])
 
+    current_files = glob(os.path.join(outdir, search_string))
     if len(current_files) > 0:
         return True
     else:
@@ -322,8 +323,7 @@ def create_mosaic(filenames):
     elif datadim == 3:
         full_array = np.zeros((datashape[0], full_ydim, full_xdim)) * np.nan
     else:
-        raise ValueError(("Difference image for {} must be either 2D or 3D."
-                          .format(filenames[0])))
+        raise ValueError((f'Difference image for {filenames[0]} must be either 2D or 3D.'))
 
     # Place the data from the individual detectors in the appropriate
     # places in the final image
@@ -507,7 +507,7 @@ def generate_preview_images():
     """The main function of the ``generate_preview_image`` module."""
 
     # Begin logging
-    logging.info("Beginning the script run: ")
+    logging.info("Beginning the script run")
 
     filesystem = get_config()['filesystem']
     preview_image_filesystem = get_config()['preview_image_filesystem']
@@ -515,13 +515,15 @@ def generate_preview_images():
 
     filenames = glob(os.path.join(filesystem, '*/*.fits'))
     grouped_filenames = group_filenames(filenames)
+    logging.info(f"Found {len(filenames)} filenames")
 
     for file_list in grouped_filenames:
+        filename = file_list[0]
         # Determine the save location
         try:
-            identifier = 'jw{}'.format(filename_parser(file_list[0])['program_id'])
+            identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
         except ValueError as error:
-            identifier = os.path.basename(file_list[0]).split('.fits')[0]
+            identifier = os.path.basename(filename).split('.fits')[0]
 
         preview_output_directory = os.path.join(preview_image_filesystem, identifier)
         thumbnail_output_directory = os.path.join(thumbnail_filesystem, identifier)
@@ -530,26 +532,29 @@ def generate_preview_images():
         # if they do
         file_exists = check_existence(file_list, preview_output_directory)
         if file_exists:
-            logging.info("JPG already exists for {}, skipping.".format(file_list[0]))
+            logging.info("JPG already exists for {}, skipping.".format(filename))
             continue
 
         # Create the output directories if necessary
         if not os.path.exists(preview_output_directory):
             os.makedirs(preview_output_directory)
             permissions.set_permissions(preview_output_directory)
+            logging.info(f'Created directory {preview_output_directory}')
         if not os.path.exists(thumbnail_output_directory):
             os.makedirs(thumbnail_output_directory)
             permissions.set_permissions(thumbnail_output_directory)
-
-        filename = file_list[0]
-        max_size = 8
+            logging.info(f'Created directory {thumbnail_output_directory}')
 
         # If the exposure contains more than one file (because more
         # than one detector was used), then create a mosaic
+        max_size = 8
         numfiles = len(file_list)
         if numfiles != 1:
             try:
                 mosaic_image, mosaic_dq = create_mosaic(file_list)
+                logging.info('Created mosiac for:')
+                for item in file_list:
+                    logging.info('\t{item}')
             except (ValueError, FileNotFoundError) as error:
                 logging.error(error)
             dummy_file = create_dummy_filename(file_list)
@@ -558,6 +563,7 @@ def generate_preview_images():
             elif numfiles in [8]:
                 max_size = 32
 
+        # Create the nominal preview image and thumbnail
         try:
             im = PreviewImage(filename, "SCI")
             im.clip_percent = 0.01
@@ -613,8 +619,8 @@ def group_filenames(input_files):
     input_files = np.array(input_files)
 
     # Loop over each file in the list of good files
-    for index, fullfilename in enumerate(input_files[goodindex]):
-        filedirectory, filename = os.path.split(fullfilename)
+    for index, full_filename in enumerate(input_files[goodindex]):
+        file_directory, filename = os.path.split(full_filename)
 
         # Generate string to be matched with other filenames
         filename_parts = filename_parser(filename)
@@ -628,17 +634,16 @@ def group_filenames(input_files):
         detector = filename_parts['detector']
         suffix = filename_parts['suffix']
 
-        observation_base = 'jw' + program + observation + visit + '_' + visit_group \
-                           + parallel + activity + '_' + exposure + '_'
+        observation_base = f'jw{program}{observation}{visit}_{visit_group}{parallel}{activity}_{exposure}_'
 
-        if detector in utils.NIRCAM_SHORTWAVE_DETECTORS:
+        if detector in NIRCAM_SHORTWAVE_DETECTORS:
             detector_str = 'NRC[AB][1234]'
-        elif detector in utils.NIRCAM_LONGWAVE_DETECTORS:
+        elif detector in NIRCAM_LONGWAVE_DETECTORS:
             detector_str = 'NRC[AB]5'
         else:  # non-NIRCam detectors - should never be used I think??
             detector_str = '(.*)'
-        match_str = observation_base + detector_str + '_' + suffix + '.fits'
-        match_str = os.path.join(filedirectory, match_str)
+        match_str = f'{observation_base}{detector_str}_{suffix}.fits'
+        match_str = os.path.join(file_directory, match_str)
         pattern = re.compile(match_str)
 
         # Try to match the substring to each good file
