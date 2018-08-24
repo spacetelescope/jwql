@@ -200,8 +200,7 @@ class PreviewImage():
                     else:
                         data = hdulist[ext].data.astype(np.float)
                 else:
-                    raise ValueError(("WARNING: no {} extension in {}!"
-                                      .format(ext, filename)))
+                    raise ValueError((f'WARNING: no {ext} extension in {filename}!'))
                 if 'PIXELDQ' in extnames:
                     dq = hdulist['PIXELDQ'].data
                     dq = (dq & dqflags.pixel['NON_SCIENCE'] == 0)
@@ -217,8 +216,8 @@ class PreviewImage():
                 self.xlen = hdulist[0].header['SUBSIZE1']
                 self.ylen = hdulist[0].header['SUBSIZE2']
         else:
-            raise FileNotFoundError(("WARNING: {} does not exist!"
-                                     .format(filename)))
+            raise FileNotFoundError((f'WARNING: {filename} does not exist!'))
+
         return data, dq
 
     def make_figure(self, image, integration_number, min_value, max_value,
@@ -258,8 +257,7 @@ class PreviewImage():
 
         # Check the input scaling
         if scale not in ['linear', 'log']:
-            raise ValueError(("WARNING: scaling option {} not supported."
-                              .format(scale)))
+            raise ValueError((f'WARNING: scaling option {scale} not supported.'))
 
         # Set the figure size
         yd, xd = image.shape
@@ -419,6 +417,6 @@ class PreviewImage():
         if thumbnail:
             thumb_fname = fname.replace('.jpg', '.thumb')
             os.rename(fname, thumb_fname)
-            logging.info('Saved image to {}'.format(thumb_fname))
+            logging.info(f'Saved image to {thumb_fname}')
         else:
-            logging.info('Saved image to {}'.format(fname))
+            logging.info(f'Saved image to {fname}')
