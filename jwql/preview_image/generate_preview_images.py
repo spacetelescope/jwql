@@ -201,18 +201,15 @@ def check_existence(file_list, outdir):
 
     # If file_list contains only a single file, then we need to search
     # for a preview image name that contains the detector name
-    file_parts = filename_parser(file_list[0])
-    if ((len(file_list) == 1) | ('NRC' not in file_parts['detector'])):
-        print("File_list input to check_existence: {}".format(file_list))
-        print("Working on {}".format(file_to_check))
+    if len(file_list) == 1:
         filename = os.path.split(file_list[0])[1]
         search_string = filename.split('.fits')[0] + '_*.jpg'
     else:
         # If file_list contains multiple files, then we need to search
         # for the appropriately named jpg of the mosaic, which depends
         # on the specific detectors in the file_list
-        detector = file_parts['detector']
-        if detector in utils.NIRCAM_SHORTWAVE_DETECTORS:
+        file_parts = filename_parser(file_list[0])
+        if file_parts['detector'] in NIRCAM_SHORTWAVE_DETECTORS:
             mosaic_str = "NRC_SW*_MOSAIC_"
         elif file_parts['detector'] in NIRCAM_LONGWAVE_DETECTORS:
             mosaic_str = "NRC_LW*_MOSAIC_"
@@ -223,7 +220,6 @@ def check_existence(file_list, outdir):
                         file_parts['exposure_id'], mosaic_str, file_parts['suffix'])
 
     current_files = glob(os.path.join(outdir, search_string))
-    print(len(current_files))
     if len(current_files) > 0:
         return True
     else:
@@ -522,10 +518,10 @@ def generate_preview_images():
     logging.info(f"Found {len(filenames)} filenames")
 
     for file_list in grouped_filenames:
-        filename_parts = filename_parser(file_list[0])
+        filename = file_list[0]
         # Determine the save location
         try:
-            identifier = 'jw{}'.format(filename_parts['program_id'])
+            identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
         except ValueError as error:
             identifier = os.path.basename(filename).split('.fits')[0]
 
@@ -553,13 +549,12 @@ def generate_preview_images():
         # than one detector was used), then create a mosaic
         max_size = 8
         numfiles = len(file_list)
-        detector_abbrev = filename_parts['detector']
-        if ((numfiles != 1) & ('NRC' in detector_abbrev)):
+        if numfiles != 1:
             try:
                 mosaic_image, mosaic_dq = create_mosaic(file_list)
                 logging.info('Created mosiac for:')
                 for item in file_list:
-                    logging.info('\t{item}')
+                    logging.info(f'\t{item}')
             except (ValueError, FileNotFoundError) as error:
                 logging.error(error)
             dummy_file = create_dummy_filename(file_list)
@@ -582,7 +577,7 @@ def generate_preview_images():
             # insert it and it's associated DQ array into the
             # instance of PreviewImage. Also set the input
             # filename to indicate that we have mosaicked data
-            if ((numfiles != 1) & ('NRC' in detector_abbrev)):
+            if numfiles != 1:
                 im.data = mosaic_image
                 im.dq = mosaic_dq
                 im.file = dummy_file
@@ -600,7 +595,10 @@ def group_filenames(input_files):
     same exposure. These files will share the same ``program_id``,
     ``observation``, ``visit``, ``visit_group``, ``parallel_seq_id``,
     ``activity``, ``exposure``, and ``suffix``. Only the ``detector``
-    will be different.
+    will be different. Currently only NIRCam files for a given exposure
+    will be grouped together. For other instruments multiple files for
+    a given exposure will be kept separate from one another and no
+    mosaic will be made.
 
     Parameters
     ----------
@@ -646,7 +644,7 @@ def group_filenames(input_files):
         elif detector in NIRCAM_LONGWAVE_DETECTORS:
             detector_str = 'NRC[AB]5'
         else:  # non-NIRCam detectors - should never be used I think??
-            detector_str = '(.*)'
+            detector_str = detector
         match_str = f'{observation_base}{detector_str}_{suffix}.fits'
         match_str = os.path.join(file_directory, match_str)
         pattern = re.compile(match_str)
