@@ -209,9 +209,9 @@ def check_existence(file_list, outdir):
         # for the appropriately named jpg of the mosaic, which depends
         # on the specific detectors in the file_list
         file_parts = filename_parser(file_list[0])
-        if file_parts['detector'] in NIRCAM_SHORTWAVE_DETECTORS:
+        if file_parts['detector'].upper() in NIRCAM_SHORTWAVE_DETECTORS:
             mosaic_str = "NRC_SW*_MOSAIC_"
-        elif file_parts['detector'] in NIRCAM_LONGWAVE_DETECTORS:
+        elif file_parts['detector'].upper() in NIRCAM_LONGWAVE_DETECTORS:
             mosaic_str = "NRC_LW*_MOSAIC_"
         search_string = 'jw{}{}{}_{}{}{}_{}_{}{}*.jpg'.format(
                         file_parts['program_id'], file_parts['observation'],
@@ -252,7 +252,7 @@ def create_dummy_filename(filelist):
         indir, infile = os.path.split(filename)
         det_string = filename_parser(infile)['detector']
         det_string_list.append(det_string)
-        modules.append(det_string[3])
+        modules.append(det_string[3].upper())
 
     # Previous sorting means that either all of the
     # input files are LW, or all are SW. So we can check any
@@ -304,8 +304,7 @@ def create_mosaic(filenames):
         else:
             diff_im = image.data
         data.append(diff_im)
-        detector_name = filename_parser(filename)['detector']
-        detector.append(detector_name)
+        detector.append(filename_parser(filename)['detector'].upper())
         data_lower_left.append((image.xstart, image.ystart))
 
     # Make sure SW and LW data are not being mixed. Create the
@@ -448,7 +447,7 @@ def detector_check(detector_list, search_string):
         ``search_string``
     """
 
-    pattern = re.compile(search_string)
+    pattern = re.compile(search_string, re.IGNORECASE)
     match = [pattern.match(detector) for detector in detector_list]
     total = np.sum(np.array([m is not None for m in match]))
 
@@ -634,7 +633,7 @@ def group_filenames(input_files):
         parallel = filename_parts['parallel_seq_id']
         activity = filename_parts['activity']
         exposure = filename_parts['exposure_id']
-        detector = filename_parts['detector']
+        detector = filename_parts['detector'].upper()
         suffix = filename_parts['suffix']
 
         observation_base = f'jw{program}{observation}{visit}_{visit_group}{parallel}{activity}_{exposure}_'
@@ -647,7 +646,7 @@ def group_filenames(input_files):
             detector_str = detector
         match_str = f'{observation_base}{detector_str}_{suffix}.fits'
         match_str = os.path.join(file_directory, match_str)
-        pattern = re.compile(match_str)
+        pattern = re.compile(match_str, re.IGNORECASE)
 
         # Try to match the substring to each good file
         matches = []
@@ -659,7 +658,6 @@ def group_filenames(input_files):
             if match is not None:
                 matched_name.append(file2match)
                 matches.append(goodindex[index2])
-
         # For any matched files, remove from goodindex so we don't
         # use them as a basis for matching later
         all_locs = []
