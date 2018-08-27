@@ -3,16 +3,16 @@
 """
 Create a preview image from a fits file containing an observation.
 
-This module creates and saves a "preview image" from a fits file
-that contains a JWST observation. Data from the user-supplied
-``extension`` of the file are read in, along with the ``PIXELDQ``
-extension if present. For each integration in the exposure, the
-first group is subtracted from the final group in order to create
-a difference image. The lower and upper limits to be displayed are
-defined as the ``clip_percent`` and (1. - ``clip_percent``) percentile
-signals. ``matplotlib`` is then used to display a linear- or
-log-stretched version of the image, with accompanying colorbar. The
-image is then saved.
+This module creates and saves a "preview image" from a fits file that
+contains a JWST observation. Data from the user-supplied ``extension``
+of the file are read in, along with the ``PIXELDQ`` extension if
+present. For each integration in the exposure, the first group is
+subtracted from the final group in order to create a difference image.
+The lower and upper limits to be displayed are defined as the
+``clip_percent`` and ``(1. - clip_percent)`` percentile signals.
+``matplotlib`` is then used to display a linear- or log-stretched
+version of the image, with accompanying colorbar. The image is then
+saved.
 
 Authors:
 --------
@@ -34,8 +34,8 @@ Use:
         im.make_image()
 """
 
+import logging
 import os
-import sys
 
 from astropy.io import fits
 from jwst.datamodels import dqflags
@@ -50,8 +50,50 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
 
-
 class PreviewImage():
+    """An object for generating and saving preview images, used by
+    ``generate_preview_images``.
+
+    Attributes
+    ----------
+    clip_percent : float
+        The amount to sigma clip the input data by when scaling the
+        preview image.  Default is 0.01.
+    cmap : str
+        The colormap used by ``matplotlib`` in the preview image.
+        Default value is ``viridis``.
+    data : obj
+        The data used to generate the preview image.
+    dq : obj
+        The DQ data used to generate the preview image.
+    file : str
+        The filename to generate the preview image from.
+    output_format : str
+        The format to which the preview image is saved.  Options are
+        ``jpg`` and ``thumb``
+    preview_output_directory : str or None
+        The output directory to which the preview image is saved.
+    scaling : str
+        The scaling used in the preview image.  Default is ``log``.
+    thumbnail_output_directory : str or None
+        The output directory to which the thumbnail is saved.
+
+    Methods
+    -------
+    difference_image(data)
+        Create a difference image from the data
+    find_limits(data, pixmap, clipperc)
+        Find the min and max signal levels after clipping by
+        ``clipperc``
+    get_data(filename, ext)
+        Read in data from the given ``filename`` and ``ext``
+    make_figure(image, integration_number, min_value, max_value, scale, maxsize, thumbnail)
+        Create the ``matplotlib`` figure
+    make_image(max_img_size)
+        Main function
+    save_image(fname, thumbnail)
+        Save the figure
+    """
 
     def __init__(self, filename, extension):
         """Initialize the class.
@@ -67,9 +109,9 @@ class PreviewImage():
         self.cmap = 'viridis'
         self.file = filename
         self.output_format = 'jpg'
-        self.output_directory = None
+        self.preview_output_directory = None
         self.scaling = 'log'
-        self.thumbnail = False
+        self.thumbnail_output_directory = None
 
         # Read in file
         self.data, self.dq = self.get_data(self.file, extension)
@@ -152,23 +194,34 @@ class PreviewImage():
                     except:
                         pass
                 if ext in extnames:
-                    data = hdulist[ext].data.astype(np.float)
+                    dimensions = len(hdulist[ext].data.shape)
+                    if dimensions == 4:
+                        data = hdulist[ext].data[:, [0, -1], :, :].astype(np.float)
+                    else:
+                        data = hdulist[ext].data.astype(np.float)
                 else:
-                    raise ValueError(("WARNING: no {} extension in {}!"
-                                      .format(ext, filename)))
+                    raise ValueError((f'WARNING: no {ext} extension in {filename}!'))
                 if 'PIXELDQ' in extnames:
                     dq = hdulist['PIXELDQ'].data
                     dq = (dq & dqflags.pixel['NON_SCIENCE'] == 0)
                 else:
                     yd, xd = data.shape[-2:]
                     dq = np.ones((yd, xd), dtype="bool")
+
+                # Collect information on aperture location within the
+                # full detector. This is needed for mosaicking NIRCam
+                # detectors later.
+                self.xstart = hdulist[0].header['SUBSTRT1']
+                self.ystart = hdulist[0].header['SUBSTRT2']
+                self.xlen = hdulist[0].header['SUBSIZE1']
+                self.ylen = hdulist[0].header['SUBSIZE2']
         else:
-            raise FileNotFoundError(("WARNING: {} does not exist!"
-                                     .format(filename)))
+            raise FileNotFoundError((f'WARNING: {filename} does not exist!'))
+
         return data, dq
 
     def make_figure(self, image, integration_number, min_value, max_value,
-                    scale, maxsize=8):
+                    scale, maxsize=8, thumbnail=False):
         """
         Create the matplotlib figure of the image
 
@@ -176,14 +229,25 @@ class PreviewImage():
         ----------
         image : obj
             2D ``numpy`` ``ndarray`` of floats
+
         integration_number : int
             Integration number within exposure
+
         min_value : float
             Minimum value for display
+
         max_value : float
             Maximum value for display
+
         scale : str
             Image scaling (``log``, ``linear``)
+
+        maxsize : int
+            Size of the longest dimension of the output figure (inches)
+
+        thumbnail : bool
+            True to create a thumbnail image, False to create the full
+            preview image
 
         Returns
         -------
@@ -192,9 +256,8 @@ class PreviewImage():
         """
 
         # Check the input scaling
-        if scale not in ['linear','log']:
-            raise ValueError(("WARNING: scaling option {} not supported."
-                              .format(scale)))
+        if scale not in ['linear', 'log']:
+            raise ValueError((f'WARNING: scaling option {scale} not supported.'))
 
         # Set the figure size
         yd, xd = image.shape
@@ -214,10 +277,14 @@ class PreviewImage():
             shiftmax = max_value - min_value + 1
 
             # If making a thumbnail, make a figure with no axes
-            if self.thumbnail:
+            if thumbnail:
                 fig = plt.imshow(shiftdata,
-                           norm=colors.LogNorm(vmin=shiftmin, vmax=shiftmax),
-                           cmap=self.cmap)
+                                 norm=colors.LogNorm(vmin=shiftmin,
+                                                     vmax=shiftmax),
+                                 cmap=self.cmap)
+                # Invert y axis
+                plt.gca().invert_yaxis()
+
                 plt.axis('off')
                 fig.axes.get_xaxis().set_visible(False)
                 fig.axes.get_yaxis().set_visible(False)
@@ -226,8 +293,11 @@ class PreviewImage():
             else:
                 fig, ax = plt.subplots(figsize=(xsize, ysize))
                 cax = ax.imshow(shiftdata,
-                                norm=colors.LogNorm(vmin=shiftmin, vmax=shiftmax),
+                                norm=colors.LogNorm(vmin=shiftmin,
+                                                    vmax=shiftmax),
                                 cmap=self.cmap)
+                # Invert y axis
+                plt.gca().invert_yaxis()
 
                 # Add colorbar, with original data values
                 tickvals = np.logspace(np.log10(shiftmin), np.log10(shiftmax), 5)
@@ -248,28 +318,34 @@ class PreviewImage():
                 tlabelstr = [format_string % number for number in tlabelflt]
                 cbar = fig.colorbar(cax, ticks=tickvals)
                 cbar.ax.set_yticklabels(tlabelstr)
-                ax.set_xlabel('Pixels')
-                ax.set_ylabel('Pixels')
+                cbar.ax.tick_params(labelsize=maxsize * 5./4)
+                # cbar.ax.set_ylabel('Signal', rotation=270, fontsize=maxsize*5./4)
+                ax.set_xlabel('Pixels', fontsize=maxsize * 5./4)
+                ax.set_ylabel('Pixels', fontsize=maxsize * 5./4)
+                ax.tick_params(labelsize=maxsize)
                 plt.rcParams.update({'axes.titlesize': 'small'})
+                plt.rcParams.update({'font.size': maxsize * 5./4})
+                plt.rcParams.update({'axes.labelsize': maxsize * 5./4})
+                plt.rcParams.update({'ytick.labelsize': maxsize * 5./4})
+                plt.rcParams.update({'xtick.labelsize': maxsize * 5./4})
 
         elif scale == 'linear':
             fig, ax = plt.subplots(figsize=(xsize, ysize))
             cax = ax.imshow(image, clim=(min_value, max_value), cmap=self.cmap)
 
-            if not self.thumbnail:
+            if not thumbnail:
                 cbar = fig.colorbar(cax)
                 ax.set_xlabel('Pixels')
                 ax.set_ylabel('Pixels')
 
         # If preview image, set a title
-        if not self.thumbnail:
+        if not thumbnail:
             filename = os.path.split(self.file)[-1]
             ax.set_title(filename + ' Int: {}'.format(np.int(integration_number)))
 
-    def make_image(self):
-        """
-        MAIN FUNCTION
-        """
+    def make_image(self, max_img_size=8):
+        """The main function of the ``PreviewImage`` class."""
+
         shape = self.data.shape
 
         if len(shape) == 4:
@@ -292,20 +368,31 @@ class PreviewImage():
             minval, maxval = self.find_limits(frame, self.dq,
                                               self.clip_percent)
 
-            # Create matplotlib object
+            # Create preview image matplotlib object
             indir, infile = os.path.split(self.file)
             suffix = '_integ{}.{}'.format(i, self.output_format)
-            if self.output_directory is None:
+            if self.preview_output_directory is None:
                 outdir = indir
             else:
-                outdir = self.output_directory
+                outdir = self.preview_output_directory
             outfile = os.path.join(outdir, infile.split('.')[0] + suffix)
-            self.make_figure(frame, i, minval, maxval, self.scaling.lower())
-            self.save_image(outfile)
+            self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
+                             maxsize=max_img_size, thumbnail=False)
+            self.save_image(outfile, thumbnail=False)
             plt.close()
 
+            # Create thumbnail image matplotlib object
+            if self.thumbnail_output_directory is None:
+                outdir = indir
+            else:
+                outdir = self.thumbnail_output_directory
+            outfile = os.path.join(outdir, infile.split('.')[0] + suffix)
+            self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
+                             maxsize=max_img_size, thumbnail=True)
+            self.save_image(outfile, thumbnail=True)
+            plt.close()
 
-    def save_image(self, outfile):
+    def save_image(self, fname, thumbnail=False):
         """
         Save an image in the requested output format and sets the
         appropriate permissions
@@ -314,17 +401,22 @@ class PreviewImage():
         ----------
         image : obj
             A ``matplotlib`` figure object
+
         fname : str
             Output filename
+
+        thumbnail : bool
+            True if saving a thumbnail image, false for the full
+            preview image.
         """
 
-        plt.savefig(outfile, bbox_inches='tight', pad_inches=0)
-        permissions.set_permissions(outfile)
+        plt.savefig(fname, bbox_inches='tight', pad_inches=0)
+        permissions.set_permissions(fname)
 
         # If the image is a thumbnail, rename to '.thumb'
-        if self.thumbnail:
-            new_outfile = outfile.replace('.jpg', '.thumb')
-            os.rename(outfile, new_outfile)
-            print('Saved image to {}'.format(new_outfile))
+        if thumbnail:
+            thumb_fname = fname.replace('.jpg', '.thumb')
+            os.rename(fname, thumb_fname)
+            logging.info(f'Saved image to {thumb_fname}')
         else:
-            print('Saved image to {}'.format(outfile))
+            logging.info(f'Saved image to {fname}')
