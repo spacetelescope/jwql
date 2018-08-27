@@ -47,6 +47,10 @@ MONITORS = {
                 'Detector Health Monitor', 'Ref Pix Monitor',
                 'Internal Lamp Monitor', 'Instrument Model Updates',
                 'Failed-open Shutter Monitor']}
+NIRCAM_SHORTWAVE_DETECTORS = ['NRCA1', 'NRCA2', 'NRCA3', 'NRCA4',
+                              'NRCB1', 'NRCB2', 'NRCB3', 'NRCB4']
+NIRCAM_LONGWAVE_DETECTORS = ['NRCA5', 'NRCB5']
+
 
 
 def ensure_dir_exists(fullpath):
