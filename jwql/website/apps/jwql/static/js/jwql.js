@@ -119,7 +119,7 @@ function show_only(filter_type, value, dropdown_keys, num_fileids) {
             };
 
             // Update the count of how many images are being shown
-            document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/ ' + num_fileids + 'activities'
+            document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/' + num_fileids + ' activities'
         };
 
 
