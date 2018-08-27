@@ -201,15 +201,18 @@ def check_existence(file_list, outdir):
 
     # If file_list contains only a single file, then we need to search
     # for a preview image name that contains the detector name
-    if len(file_list) == 1:
+    file_parts = filename_parser(file_list[0])
+    if ((len(file_list) == 1) | ('NRC' not in file_parts['detector'])):
+        print("File_list input to check_existence: {}".format(file_list))
+        print("Working on {}".format(file_to_check))
         filename = os.path.split(file_list[0])[1]
         search_string = filename.split('.fits')[0] + '_*.jpg'
     else:
         # If file_list contains multiple files, then we need to search
         # for the appropriately named jpg of the mosaic, which depends
         # on the specific detectors in the file_list
-        file_parts = filename_parser(file_list[0])
-        if file_parts['detector'] in NIRCAM_SHORTWAVE_DETECTORS:
+        detector = file_parts['detector']
+        if detector in utils.NIRCAM_SHORTWAVE_DETECTORS:
             mosaic_str = "NRC_SW*_MOSAIC_"
         elif file_parts['detector'] in NIRCAM_LONGWAVE_DETECTORS:
             mosaic_str = "NRC_LW*_MOSAIC_"
@@ -220,6 +223,7 @@ def check_existence(file_list, outdir):
                         file_parts['exposure_id'], mosaic_str, file_parts['suffix'])
 
     current_files = glob(os.path.join(outdir, search_string))
+    print(len(current_files))
     if len(current_files) > 0:
         return True
     else:
@@ -518,10 +522,10 @@ def generate_preview_images():
     logging.info(f"Found {len(filenames)} filenames")
 
     for file_list in grouped_filenames:
-        filename = file_list[0]
+        filename_parts = filename_parser(file_list[0])
         # Determine the save location
         try:
-            identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
+            identifier = 'jw{}'.format(filename_parts['program_id'])
         except ValueError as error:
             identifier = os.path.basename(filename).split('.fits')[0]
 
@@ -549,7 +553,8 @@ def generate_preview_images():
         # than one detector was used), then create a mosaic
         max_size = 8
         numfiles = len(file_list)
-        if numfiles != 1:
+        detector_abbrev = filename_parts['detector']
+        if ((numfiles != 1) & ('NRC' in detector_abbrev)):
             try:
                 mosaic_image, mosaic_dq = create_mosaic(file_list)
                 logging.info('Created mosiac for:')
@@ -577,7 +582,7 @@ def generate_preview_images():
             # insert it and it's associated DQ array into the
             # instance of PreviewImage. Also set the input
             # filename to indicate that we have mosaicked data
-            if len(file_list) != 1:
+            if ((numfiles != 1) & ('NRC' in detector_abbrev)):
                 im.data = mosaic_image
                 im.dq = mosaic_dq
                 im.file = dummy_file
