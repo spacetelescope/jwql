@@ -6,10 +6,10 @@ monitoring scripts and to demonstrate how to format them to fully
 utilize the ``jwql`` framework.
 
 Each monitoring script must be executable from the command line (i.e.
-have a ``if '__name__' == '__main__' section), as well as a "main"
+have a ``if '__name__' == '__main__' section), as well as have a "main"
 function that calls all other functions, methods, or modules (i.e.
 the entirety of the code is executed within the scope of the main
-function).
+function), as shown in this example.
 
 Users may utilize the ``jwql`` framework functions for logging,
 setting permissions, parsing filenames, etc. (See related ``import``s).
@@ -18,6 +18,7 @@ Authors
 -------
 
     - Catherine Martlin
+    - Matthew Bourque
 
 Use
 ---
@@ -51,6 +52,9 @@ Notes
 import os
 import logging
 
+from astroquery.mast import Mast
+from jwst import datamodels
+
 # Functions for logging
 from jwql.logging.logging_functions import configure_logging
 from jwql.logging.logging_functions import log_info
@@ -64,29 +68,55 @@ from jwql.utils.utils import filename_parser
 
 # Objects for hard-coded information
 from jwql.utils.utils import get_config
+from jwql.utils.utils import JWST_DATAPRODUCTS
 from jwql.utils.utils import JWST_INSTRUMENTS
+
 
 @log_fail
 @log_info
-def main_monitor_template():
-    """ The main function of the module."""
+def monitor_template_main():
+    """ The main function of the ``monitor_template`` module."""
 
     # Example of logging
-    logging.info(" ")
-    logging.info(" ")
-    logging.info("Beginning the script run: ")
-
-    # Example of locating a dataset in filesystem
-
+    my_variable = 'foo'
+    logging.info(f"Some useful information: {my_variable}")
 
     # Example of querying for a dataset via MAST API
-
-
-    # Example of saving a file and setting permissions
-
+    service = "Mast.Jwst.Filtered.Niriss"
+    params = {"columns": "filename",
+              "filters": [{"paramName": "filter",
+                          "values": ['F430M']}]}
+    response = Mast.service_request_async(service, params)
+    result = response[0].json()['data']
+    filename_of_interest = result[0]['filename']  # jw00304002001_02102_00001_nis_uncal.fits
 
     # Example of parsing a filename
+    filename_dict = filename_parser(filename_of_interest)
+    # Contents of filename_dict:
+    #     {'program_id': '00304',
+    #      'observation': '002',
+    #      'visit': '001',
+    #      'visit_group': '02',
+    #      'parallel_seq_id': '1',
+    #      'activity': '02',
+    #      'exposure_id': '00001',
+    #      'detector': 'nis',
+    #      'suffix': 'uncal'}
 
+    # Example of locating a dataset in the filesystem
+    filesystem = get_config()['filesystem']
+    dataset = os.path.join(filesystem, f"jw{filename_dict['program_id']}", filename_of_interest)
+
+    # Example of reading in dataset using jwst.datamodels
+    im = datamodels.open(dataset)
+    # Now have access to:
+    #     im.data  # Data array
+    #     im.err  # ERR array
+    #     im.meta  # Metadata such as header keywords
+
+    # Example of saving a file and setting permissions
+    im.save('some_filename.fits')
+    set_permissions('some_filename.fits')
 
     # Perform any other necessary code
     well_named_variable = "Function does something."
@@ -94,15 +124,25 @@ def main_monitor_template():
 
 
 def second_function(input_value):
-    """ This is your axiliary function; you may have many of these."""
+    """ This is your axiliary function; you may have many of these.
+
+    Parameters
+    ----------
+    input_value : str
+        Some value to modify in the function.
+
+    Returns
+    -------
+    useful_result : str
+        The result of modifying the input value.
+    """
 
     # Begin logging:
     logging.info(" ")
     logging.info("The auxiliary function has started running.")
 
     # Example function:
-    well_named_input = input_value
-    useful_result = input_value + " The other function did something, too. "
+    useful_result = input_value + " The other function did something, too."
 
     logging.info("The auxiliary function is returning: ")
     logging.info(useful_result)
@@ -118,4 +158,4 @@ if __name__ == '__main__':
     configure_logging(module)
 
     # Call the main function
-    main_monitor_function()
+    monitor_template_main()
