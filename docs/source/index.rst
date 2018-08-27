@@ -19,6 +19,7 @@ API documentation
    :maxdepth: 1
    :caption: Contents:
 
+   database.rst
    logging.rst
    monitor_filesystem.rst
    monitor_mast.rst
