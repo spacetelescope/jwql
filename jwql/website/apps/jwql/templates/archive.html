@@ -28,7 +28,7 @@
 		<div class="d-flex flex-row">
 			<!-- Search Bar -->
 		    <div class="input-group mb-3">
-			  <input id='search_box' type="text" class="form-control" placeholder="Search" aria-label="Search by proposal" oninput="search('{{ proposals|length }}');">
+			  <input id='search_box' type="text" class="form-control" placeholder="Search" aria-label="Search by proposal" oninput="search('{{ num_proposals }}');">
 			  <div class="input-group-append">
 			  	<span class="input-group-text"><span class="fas fa-search" aria-hidden="true"></span></span>
 			    <!--<button class="btn btn-primary" type="button"><span class="fas fa-search" aria-hidden="true"></span></button>-->
@@ -57,8 +57,8 @@
 			<div class="proposal text-center">
 				<a href={{ url('jwql:archive_thumb', args=[inst, prop]) }} id="proposal{{ loop.index }}" proposal="{{prop}}">
 					<span class="helper"></span><img src='{{ static("thumbnails/") }}{{thumb}}' alt='' width=100%>
-					<div class='color-fill' ></div>
-					<div class='thumbnail_info'>
+					<div class='proposal-color-fill' ></div>
+					<div class='proposal-info'>
 						<h3>{{prop}}</h3>
 						<h6>{{n}} Files</h6>
 					</div>
