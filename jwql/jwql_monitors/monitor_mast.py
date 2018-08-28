@@ -24,9 +24,9 @@ from bokeh.charts import Donut, save, output_file
 from bokeh.embed import components
 import pandas as pd
 
-from jwql.logging.logging_functions import configure_logging, log_info, log_fail
-from jwql.permissions.permissions import set_permissions
-from jwql.utils.utils import get_config, JWST_DATAPRODUCTS, JWST_INSTRUMENTS
+from ..utils.logging_functions import configure_logging, log_info, log_fail
+from ..utils.permissions import set_permissions
+from ..utils.utils import get_config, JWST_DATAPRODUCTS, JWST_INSTRUMENTS
 
 
 def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,

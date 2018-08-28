@@ -17,7 +17,7 @@ Use
         pytest -s test_monitor_mast.py
 """
 
-from ..monitor_mast import monitor_mast as mm
+from ..jwql_monitors import monitor_mast as mm
 from ..utils.utils import JWST_INSTRUMENTS
 
 

@@ -65,8 +65,8 @@ import traceback
 
 from functools import wraps
 
-from jwql.permissions.permissions import set_permissions
-from jwql.utils.utils import get_config, ensure_dir_exists
+from ..utils.permissions import set_permissions
+from ..utils.utils import get_config, ensure_dir_exists
 
 LOG_FILE_LOC = ''
 PRODUCTION_BOOL = ''
