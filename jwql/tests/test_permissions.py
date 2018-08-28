@@ -23,7 +23,7 @@ import grp
 import os
 import pytest
 
-from jwql.permissions.permissions import set_permissions, has_permissions, \
+from ..utils.permissions import set_permissions, has_permissions, \
     get_owner_string, get_group_string
 
 # directory to be created and populated during tests running

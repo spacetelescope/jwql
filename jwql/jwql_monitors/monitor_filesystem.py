@@ -70,10 +70,10 @@ from bokeh.embed import components
 from bokeh.layouts import gridplot
 from bokeh.plotting import figure, output_file, save
 
-from jwql.logging.logging_functions import configure_logging, log_info, log_fail
-from jwql.permissions.permissions import set_permissions
-from jwql.utils.utils import filename_parser
-from jwql.utils.utils import get_config
+from ..utils.logging_functions import configure_logging, log_info, log_fail
+from ..utils.permissions import set_permissions
+from ..utils.utils import filename_parser
+from ..utils.utils import get_config
 
 
 @log_fail
