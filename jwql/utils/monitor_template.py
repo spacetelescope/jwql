@@ -54,6 +54,8 @@ import logging
 
 from astroquery.mast import Mast
 from jwst import datamodels
+from bokeh.charts import Donut
+from bokeh.embed import components
 
 # Functions for logging
 from jwql.logging.logging_functions import configure_logging
@@ -117,6 +119,21 @@ def monitor_template_main():
     # Example of saving a file and setting permissions
     im.save('some_filename.fits')
     set_permissions('some_filename.fits')
+
+    # Example of creating and exporting a Bokeh plot
+    plt = Donut(im.data, plot_width=600, plot_height=600)
+    plt.sizing_mode = 'stretch_both'  # Necessary for responsive sizing on web app
+    script, div = components(plt)
+
+    plot_output_dir = get_config()['outputs']
+    div_outfile = os.path.join(plot_output_dir, 'monitor_name', filename_of_interest + "_component.html")
+    script_outfile = os.path.join(plot_output_dir, 'monitor_name', filename_of_interest + "_component.js")
+
+    for outfile, component in zip([div_outfile, script_outfile], [div, script]):
+        with open(outfile, 'w') as f:
+            f.write(component)
+            f.close()
+        set_permissions(outfile)
 
     # Perform any other necessary code
     well_named_variable = "Function does something."
