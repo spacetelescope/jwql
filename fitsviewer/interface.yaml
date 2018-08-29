@@ -1,0 +1,320 @@
+#Dummy sources for input control flow
+- !ColumnDataSource: &dummy_zoom
+    ref: "dummy_zoom"
+    data:
+        value: []
+    on_change: ['data', !self.zoom_callback ]
+- !ColumnDataSource: &dummy_file
+    ref: "dummy_file"
+    data:
+        value: []
+    on_change: ['data', !self.load_callback ]
+- !ColumnDataSource: &dummy_pan
+    ref: "dummy_pan"
+    data:
+        value: []
+    on_change: ['data', !self.pan_callback ]
+- !ColumnDataSource: &dummy_pan_tap
+    ref: "dummy_pan_tap"
+    data:
+        value: []
+    on_change: ['data', !self.pan_tap_callback ]
+- !ColumnDataSource: &dummy_box
+    ref: "dummy_box"
+    data:
+        value: []
+    on_change: ['data', !self.box_callback ]
+#In-browser callback to allow for on_release updates instead of instantaneous
+- !CustomJS: &zoom_callback
+    ref: "zoom_callback"
+    args:
+        source: *dummy_zoom
+    code: "\n    source.data = { value: [cb_obj.delta] }\n"
+#In-browser callback for file loading
+- !CustomJS: &file_callback
+    ref: "file_callback"
+    args:
+        source: *dummy_file
+    code: "\n    source.data = { value: [cb_obj.value] }\n"
+#In-browser callbacks for panning
+- !CustomJS: &pan_callback
+    ref: "pan_callback"
+    args:
+        source: *dummy_pan
+    code: "\n    source.data = { value: [cb_obj.delta_x, cb_obj.delta_y] }\n"
+- !CustomJS: &pan_tap_callback
+    ref: "pan_tap_callback"
+    args:
+        source: *dummy_pan_tap
+    code: "\n    source.data = { value: [cb_obj.x, cb_obj.y] }\n"
+#In-browser callback for box select
+- !CustomJS: &box_callback
+    ref: "box_callback"
+    args:
+        source: *dummy_box
+    code: "\n    source.data = { value: [cb_data['geometry']['x0'], cb_data['geometry']['y0'], cb_data['geometry']['x1'], cb_data['geometry']['y1'] ] }\n"
+#Tool for box selecting
+- !BoxSelectTool: &box_tool
+    ref: "box_tool"
+    callback: *box_callback
+#Inputs
+- !TextInput: &fitsfile_input
+    ref: "fitsfile_input"
+    value: ""
+    title: "Load a fits file:"
+    callback: *file_callback
+#Main image (will be controlled by the Ginga backend)
+- !ColumnDataSource: &select_box_source_main
+    ref: "select_box_source_main"
+    data:
+        rx: []
+        ry: []
+        rw: []
+        rh: []
+- !Figure: &main_figure
+    ref: "main_figure"
+    plot_height: 600
+    plot_width: 600
+    x_range: !!python/tuple [0, 600]
+    y_range: !!python/tuple [0, 600]
+    tools: [*box_tool ]#, *zoom_tool ]
+    js_on_event:
+        - ['wheel', *zoom_callback ]
+    elements:
+        - {'kind': 'rect', 'fill_alpha': 0., 'line_color': 'orange', 'source': *select_box_source_main, 'level': 'overlay'}
+#Pan image
+- !ColumnDataSource: &pan_box_source
+    ref: "pan_box_source"
+    data:
+        x: [0, 0, 200, 200, 0]
+        y: [0, 200, 200, 0, 0]
+- !ColumnDataSource: &select_box_source_pan
+    ref: "select_box_source_pan"
+    data:
+        rx: []
+        ry: []
+        rw: []
+        rh: []
+- !Figure: &pan_image
+    ref: "pan_image"
+    plot_height: 200
+    plot_width: 200
+    tools: ""
+    axis:
+        visible: False
+    x_range: !!python/tuple [0, 200]
+    y_range: !!python/tuple [0, 200]
+    js_on_event:
+        - ['tap', *pan_tap_callback ]
+    elements:
+        - {'kind': 'line', 'source': *pan_box_source, 'line_color': 'limegreen', 'level': 'overlay'} 
+        - {'kind': 'rect', 'fill_alpha': 0., 'line_color': 'orange', 'source': *select_box_source_pan, 'level': 'overlay'}
+#Histogram plot
+- !ColumnDataSource: &hist_source
+    ref: "hist_source"
+    data:
+        x: []
+        y: []
+- !Range1d: &hist_xrange
+    ref: "hist_xrange"
+    start: 0
+    end: 500
+    bounds: !!python/tuple [0, 500]
+- !Range1d: &hist_yrange
+    ref: "hist_yrange"
+    start: 0
+    end: 500
+    bounds: !!python/tuple [0, 500]    
+- !Figure: &hist_plot
+    ref: "hist_plot"
+    plot_height: 200
+    plot_width: 200
+    x_range: *hist_xrange
+    y_range: *hist_yrange
+    y_axis_label: '# of pixels'
+    x_axis_label: 'pixel value'
+    axis:
+        visible: False
+    elements:
+        - {'kind': 'line', 'source': *hist_source, 'line_color': 'orange'}
+#Enclosed energy plot
+- !ColumnDataSource: &encl_source
+    ref: "encl_source"
+    data:
+        x: []
+        y: []
+- !BasicTickFormatter: &encl_formatter
+    ref: "encl_formatter"
+    precision: 1
+- !Range1d: &encl_xrange
+    ref: "encl_xrange"
+    start: 0
+    end: 500
+    bounds: !!python/tuple [0, 500]
+- !Range1d: &encl_yrange
+    ref: "encl_yrange"
+    start: 0
+    end: 500
+    bounds: !!python/tuple [0, 500]
+- !Figure: &encl_plot
+    ref: "encl_plot"
+    plot_height: 200
+    plot_width: 200
+    x_range: *encl_xrange
+    y_range: *encl_yrange
+    x_axis_label: "Distance (px)"
+    y_axis_label: "Enclosed Energy"
+    axis:
+        visible: False
+    elements:
+        - {'kind': 'line', 'source': *encl_source, 'line_color': 'orange'}
+#X projection plot
+- !ColumnDataSource: &xproj_source
+    ref: "xproj_source"
+    data:
+        x: []
+        y: []
+- !Range1d: &xproj_xrange
+    ref: "xproj_xrange"
+    start: 0
+    end: 500
+    bounds: !!python/tuple [0, 500]
+- !Range1d: &xproj_yrange
+    ref: "xproj_yrange"
+    start: 0
+    end: 500
+    bounds: !!python/tuple [0, 500]
+- !Figure: &xproj_plot
+    ref: "xproj_plot"
+    plot_height: 200
+    plot_width: 200
+    x_range: *xproj_xrange
+    y_range: *xproj_yrange
+    x_axis_label: "Pixel"
+    y_axis_label: "Flux"
+    axis:
+        visible: False
+    elements:
+        - {'kind': 'circle', 'source': *xproj_source, 'line_color': 'orange', 'size': 2}
+#Y projection plot
+- !ColumnDataSource: &yproj_source
+    ref: "yproj_source"
+    data:
+        x: []
+        y: []
+- !Range1d: &yproj_xrange
+    ref: "yproj_xrange"
+    start: 0
+    end: 500
+    bounds: !!python/tuple [0, 500]
+- !Range1d: &yproj_yrange
+    ref: "yproj_yrange"
+    start: 0
+    end: 500
+    bounds: !!python/tuple [0, 500]
+- !Figure: &yproj_plot
+    ref: "yproj_plot"
+    plot_height: 200
+    plot_width: 200
+    x_range: *yproj_xrange
+    y_range: *yproj_yrange
+    x_axis_label: "Pixel"
+    y_axis_label: "Flux"
+    axis:
+        visible: False
+    elements:
+        - {'kind': 'circle', 'source': *yproj_source, 'line_color': 'orange', 'size': 2}
+#Radial projection plot
+- !ColumnDataSource: &rproj_source
+    ref: "rproj_source"
+    data:
+        x: []
+        y: []
+- !Range1d: &rproj_xrange
+    ref: "rproj_xrange"
+    start: 0
+    end: 500
+    bounds: !!python/tuple [0, 500]
+- !Range1d: &rproj_yrange
+    ref: "rproj_yrange"
+    start: 0
+    end: 500
+    bounds: !!python/tuple [0, 500]
+- !Figure: &rproj_plot
+    ref: "rproj_plot"
+    plot_height: 200
+    plot_width: 200
+    x_range: *rproj_xrange
+    y_range: *rproj_yrange
+    x_axis_label: "Pixel"
+    y_axis_label: "Flux"
+    axis:
+        visible: False
+    elements:
+        - {'kind': 'circle', 'source': *rproj_source, 'line_color': 'orange', 'size': 2}
+#3D Surface
+- !ColumnDataSource: &surf_source
+    ref: "surf_source"
+    data:
+        x: [0, 0]
+        y: [0, 0]
+        z: [0, 0]
+- !Range1d: &surf_xrange
+    ref: "surf_xrange"
+    start: 0
+    end: 500
+    bounds: !!python/tuple [0, 500]
+- !Range1d: &surf_yrange
+    ref: "surf_yrange"
+    start: 0
+    end: 500
+    bounds: !!python/tuple [0, 500]
+- !Range1d: &surf_zrange
+    ref: "surf_zrange"
+    start: 0
+    end: 500
+    bounds: !!python/tuple [0, 500]
+- !Surface3d: &surf_plot
+    ref: 'surf_plot'
+    height: 200
+    width: 200
+    data_source: *surf_source
+    x: 'x'
+    y: 'y'
+    z: 'z'
+#Debugging inspector stuff
+- !ColumnDataSource: &inspector_source
+    ref: "inspector_source"
+    data:
+        value: []
+    on_change: ['data', !self.inspector_callback ]
+- !CustomJS: &inspector_callback
+    ref: "inspector_callback"
+    args:
+        source: *inspector_source
+    code: "\n    source.data = { value: [cb_obj.value] }\n"
+- !TextInput: &inspector_input
+    ref: "inspector_input"
+    value: ""
+    title: "Object to inspect"
+    callback: *inspector_callback
+- !Div: &inspector_output
+    ref: "inspector_output"
+    width: 300
+#Document structure
+- !Document:
+    - !column:
+        - !row:
+            - *main_figure
+            - !column:
+                - *pan_image
+                - *hist_plot
+                - *encl_plot
+        - !row:
+            - *xproj_plot
+            - *yproj_plot
+            - *rproj_plot
+            - *surf_plot
+        - *fitsfile_input
+#        - *inspector_input # for data source introspection, uncomment for debugging only
+        - *inspector_output

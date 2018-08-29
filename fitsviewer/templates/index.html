@@ -1,0 +1,89 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>JWQL Fits Viewer</title>
+        {{ bokeh_css }}
+        {{ bokeh_js }}
+
+        <style>
+         {% include 'styles.css' %}
+        </style>
+
+ 
+        <style>
+
+img {
+    vertical-align: text-center;
+}
+.bk-root .bk-widget .bk-slider-horizontal {
+  width: 93%;
+  margin-left: 8px;
+  height: 10px;
+}
+.bk-root .bk-bs-nav-tabs {
+  border-bottom: 1px solid #ddd;
+  font-family: 'Helvetica';
+  font-size: 14pt 
+}
+.bk-root .bk-ui-slider { 
+  font-family: 'Helvetica';
+}
+.bk-root .bk-tab-parent {
+  color: #F00; 
+}
+.bk-root .bk-slider-parent input[type="text"] {
+  display: inline-block;
+  border: 0;
+  font-weight: 600;
+  margin-left: 4px;
+  color: #F00; 
+  font-size: 20px;
+  vertical-align: text-bottom;
+  padding: 0;
+  min-width: 20px;
+  font-family: 'Helvetica';
+  /* Add in defaults to counteract bokehplots.com css */
+  background-color: inherit;
+  border-radius: inherit;
+  box-shadow: inherit;
+  box-sizing: inherit;
+  margin-bottom: inherit;
+  transition: inherit;
+  width: inherit;
+}
+.bk-root .bk-ui-slider .bk-ui-slider-handle {
+  position: absolute;
+  z-index: 2;
+  width: 1.2em;
+  height: 1.2em;
+  cursor: default;
+  -ms-touch-action: none;
+  touch-action: none;
+}
+        </style>
+    </head>
+
+
+    <div class="container", text-align: center>
+      <div class="header clearfix">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+          </ul>
+        </nav>
+
+        <p><h1 class="text-muted">JWQL Fits Image Viewer</p> 
+        <p> </p> 
+        <br> 
+        <br> 
+      </div>
+
+    <body>
+     <center>
+        {{ plot_div|indent(8) }}
+        {{ plot_script|indent(8) }}
+     </center>
+    </body>
+</html>
