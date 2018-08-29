@@ -34,7 +34,7 @@
 					  	{% set dropdown_keys_list = dropdown_menus.keys() | replace("'", '"') %}
 					  	<a class="dropdown-item" href="#" onclick="show_only('{{filter_type}}', 'All {{filter_type}}s', '{{dropdown_keys_list}}', '{{ n_fileids }}');">All {{filter_type}}s</a>
 					  	{% for option in filter_options %}
-					    	<a class="dropdown-item" href="#" onclick="show_only('{{filter_type}}', '{{option}}', '{{dropdown_keys_list}}' );">{{option}}</a>
+					    	<a class="dropdown-item" href="#" onclick="show_only('{{filter_type}}', '{{option}}', '{{dropdown_keys_list}}', '{{ n_fileids }}' );">{{option}}</a>
 					    {% endfor %}
 					  </div>
 					</div>
@@ -90,7 +90,7 @@
 					<script>determine_filetype_for_thumbnail('{{ static("thumbnails/") }}' , "{{file.suffixes}}", "{{i}}", "{{file.file_root}}");</script>
 
 					<div class='thumbnail-color-fill' ></div>
-					<div class='thumbnail_info'>
+					<div class='thumbnail-info'>
 						Proposal: {{file.program_id}}<br>
 						Observation: {{file.observation}}<br>
 						Visit: {{file.visit}}<br>
