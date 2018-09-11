@@ -52,7 +52,6 @@ NIRCAM_SHORTWAVE_DETECTORS = ['NRCA1', 'NRCA2', 'NRCA3', 'NRCA4',
 NIRCAM_LONGWAVE_DETECTORS = ['NRCA5', 'NRCB5']
 
 
-
 def ensure_dir_exists(fullpath):
     """Creates dirs from ``fullpath`` if they do not already exist.
     """
