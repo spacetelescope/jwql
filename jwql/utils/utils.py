@@ -25,7 +25,7 @@ import json
 import os
 import re
 
-from ..permissions import permissions
+from jwql.utils import permissions
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -50,7 +50,6 @@ MONITORS = {
 NIRCAM_SHORTWAVE_DETECTORS = ['NRCA1', 'NRCA2', 'NRCA3', 'NRCA4',
                               'NRCB1', 'NRCB2', 'NRCB3', 'NRCB4']
 NIRCAM_LONGWAVE_DETECTORS = ['NRCA5', 'NRCB5']
-
 
 
 def ensure_dir_exists(fullpath):
