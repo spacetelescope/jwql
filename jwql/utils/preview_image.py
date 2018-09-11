@@ -41,7 +41,7 @@ from astropy.io import fits
 from jwst.datamodels import dqflags
 import numpy as np
 
-from ..utils import permissions
+from jwql.utils import permissions
 
 # Use the 'Agg' backend to avoid invoking $DISPLAY
 import matplotlib

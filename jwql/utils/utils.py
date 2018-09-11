@@ -25,7 +25,7 @@ import json
 import os
 import re
 
-from . import permissions
+from jwql.utils import permissions
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 

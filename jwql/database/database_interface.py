@@ -38,7 +38,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
 
-from ..utils import utils
+from jwql.utils import utils
 
 
 SETTINGS = utils.get_config()
