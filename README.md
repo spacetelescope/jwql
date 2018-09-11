@@ -4,8 +4,11 @@
 
 # The James Webb Quicklook Application (`JWQL`)
 
+![PyPI - License](https://img.shields.io/pypi/l/Django.svg)
+![Python](https://img.shields.io/badge/Python-3.6-blue.svg)
 [![Build Status](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/badge/icon)](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/)
 [![STScI](https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat)](http://www.stsci.edu)
+
 
 The James Webb Quicklook Application (`JWQL`) is a database-driven web application and automation framework for use by the JWST instrument teams to monitor the health and stability of the JWST instruments.  The system is comprised of the following:
 1. A network file system that stores all uncalibrated and calibrated data products on disk in a centrally-located area, accessible to instrument team members (MAST data cache)
