@@ -35,6 +35,7 @@ FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
+
 def get_acknowledgements():
     """Returns a list of individuals who are acknowledged on the
     ``about`` page.

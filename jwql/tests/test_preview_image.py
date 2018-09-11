@@ -33,6 +33,7 @@ TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'preview_image_test')
 # directory that contains sample images
 TEST_DATA_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_data')
 
+
 @pytest.fixture(scope="module")
 def test_directory(test_dir=TEST_DIRECTORY):
     """Create a test directory for preview image.
