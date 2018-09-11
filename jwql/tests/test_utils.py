@@ -19,7 +19,7 @@ Use
 
 import pytest
 
-from ..utils.utils import get_config, filename_parser
+from jwql.utils.utils import get_config, filename_parser
 
 @pytest.mark.xfail
 def test_get_config():

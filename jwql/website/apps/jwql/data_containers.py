@@ -27,7 +27,7 @@ import os
 from astropy.io import fits
 import numpy as np
 
-from jwql.preview_image.preview_image import PreviewImage
+from jwql.utils.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser, MONITORS
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))

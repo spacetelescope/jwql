@@ -17,8 +17,8 @@ Use
         pytest -s test_monitor_mast.py
 """
 
-from ..jwql_monitors import monitor_mast as mm
-from ..utils.utils import JWST_INSTRUMENTS
+from jwql.jwql_monitors import monitor_mast as mm
+from jwql.utils.utils import JWST_INSTRUMENTS
 
 
 def test_caom_instrument_keywords():

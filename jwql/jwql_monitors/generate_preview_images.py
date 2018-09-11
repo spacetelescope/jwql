@@ -33,15 +33,15 @@ import re
 
 import numpy as np
 
-from ..utils import permissions
-from ..utils.logging_functions import configure_logging
-from ..utils.logging_functions import log_info
-from ..utils.logging_functions import log_fail
-from ..utils.preview_image import PreviewImage
-from ..utils.utils import get_config
-from ..utils.utils import filename_parser
-from ..utils.utils import NIRCAM_LONGWAVE_DETECTORS
-from ..utils.utils import NIRCAM_SHORTWAVE_DETECTORS
+from jwql.utils import permissions
+from jwql.utils.logging_functions import configure_logging
+from jwql.utils.logging_functions import log_info
+from jwql.utils.logging_functions import log_fail
+from jwql.utils.preview_image import PreviewImage
+from jwql.utils.utils import get_config
+from jwql.utils.utils import filename_parser
+from jwql.utils.utils import NIRCAM_LONGWAVE_DETECTORS
+from jwql.utils.utils import NIRCAM_SHORTWAVE_DETECTORS
 
 # Size of NIRCam inter- and intra-module chip gaps
 SW_MOD_GAP = 1387  # pixels = int(43 arcsec / 0.031 arcsec/pixel)
