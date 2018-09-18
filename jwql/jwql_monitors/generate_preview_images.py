@@ -33,11 +33,11 @@ import re
 
 import numpy as np
 
-from jwql.logging.logging_functions import configure_logging
-from jwql.logging.logging_functions import log_info
-from jwql.logging.logging_functions import log_fail
-from jwql.permissions import permissions
-from jwql.preview_image.preview_image import PreviewImage
+from jwql.utils import permissions
+from jwql.utils.logging_functions import configure_logging
+from jwql.utils.logging_functions import log_info
+from jwql.utils.logging_functions import log_fail
+from jwql.utils.preview_image import PreviewImage
 from jwql.utils.utils import get_config
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import NIRCAM_LONGWAVE_DETECTORS
@@ -60,10 +60,10 @@ def array_coordinates(channelmod, detector_list, lowerleft_list):
     channelmod : str
         Indicator of the NIRCam channel/module of the data.
         Options are:
-            ``LW`` - for longwave channel data
-            ``SWA`` - for shortwave A module only (4 detectors) data
-            ``SWB`` - for shortwave B module only (4 detectors) data
-            ``SW`` - for shortwave both module data (8 detectors)
+        ``LW`` - for longwave channel data
+        ``SWA`` - for shortwave A module only (4 detectors) data
+        ``SWB`` - for shortwave B module only (4 detectors) data
+        ``SW`` - for shortwave both module data (8 detectors)
 
     detector_list : list
         List of detectors used in data to be simulated

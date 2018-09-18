@@ -20,14 +20,9 @@ API documentation
    :caption: Contents:
 
    database.rst
-   logging.rst
-   monitor_filesystem.rst
-   monitor_mast.rst
-   permissions.rst
-   preview_image.rst
+   jwql_monitors.rst
    utils.rst
    tests.rst
-   monitor_filesystem.rst
 
 
 Indices and tables
