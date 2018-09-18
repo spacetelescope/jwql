@@ -24,8 +24,8 @@ from bokeh.charts import Donut, save, output_file
 from bokeh.embed import components
 import pandas as pd
 
-from jwql.logging.logging_functions import configure_logging, log_info, log_fail
-from jwql.permissions.permissions import set_permissions
+from jwql.utils.logging_functions import configure_logging, log_info, log_fail
+from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_config, JWST_DATAPRODUCTS, JWST_INSTRUMENTS
 
 
