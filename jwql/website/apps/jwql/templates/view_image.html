@@ -137,20 +137,32 @@
 	    </p>
 
 	    <!-- Display the image -->
-	    <div class='text-center'>
-		    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("left");' disabled>&#9664;</button>
-		    <span class="image_preview">
-		    	<a id="int_count">Displaying integration 1/1</a><br>
-		    	<img id="image_viewer" src='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}_cal_integ0.jpg' alt='{{ file_root }}_cal_integ0.jpg'>
-		    </span>
-		    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("right");' disabled>&#9658;</button>
-		</div>
+        <div class='row'>
+    	    <div class='col-9 text-center'>
+    		    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("left");' disabled>&#9664;</button>
+    		    <span class="image_preview">
+    		    	<a id="int_count">Displaying integration 1/1</a><br>
+    		    	<img id="image_viewer" src='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}_cal_integ0.jpg' alt='{{ file_root }}_cal_integ0.jpg'>
+    		    </span>
+    		    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("right");' disabled>&#9658;</button>
+    		</div>
+
+            <!-- Add Anomoly form -->
+    	    <div class='col-3'>
+                <h6>Anomalies in this image:</h6>
+    		    <ul class='no-bullets'>
+                    {% for anom in anomalies %}
+                    <li><input type="checkbox" name="anomaly" value="{{ anom }}" id="{{ anom }}">&nbsp;&nbsp;{{ anom }}</li>
+                    {% endfor %}
+                </ul>
+                <a class="btn btn-primary my-2 disabled" role="button" href="#">Submit Anomalies</a>
+    		</div>
+        </div>
 
 		<!-- Download the images? -->
 	    <p>
 	    	<a id="download_fits" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}' download>Download FITS</a>
 	    	<a id="download_jpg" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ jpg }}' download>Download JPEG</a>
-	    	<a class="btn btn-primary my-2 mx-2 disabled" role="button" href="#">Submit Anomaly</a>
 	    </p>
 
 	    <!-- Determine which filetype should be shown on load -->
