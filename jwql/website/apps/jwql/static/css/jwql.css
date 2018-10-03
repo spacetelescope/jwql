@@ -373,3 +373,9 @@ li:hover .nav-link, .navbar-brand:hover {
 li.dropdown:hover .dropdown-menu {
     display: block;
 }
+
+ul.no-bullets {
+    list-style: none;
+    padding-left:10px;
+    line-height:25px;
+}
