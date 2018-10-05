@@ -47,6 +47,7 @@ from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS
+from jwql.database import database_interface as di
 
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -281,6 +282,6 @@ def view_image(request, inst, file_root, rewrite=False):
                'fits_files': image_info['all_files'],
                'suffixes': image_info['suffixes'],
                'num_ints': image_info['num_ints'],
-               'anomalies': ['foo','bar','baz']}
+               'anomalies': di.Anomaly().colnames}
 
     return render(request, template, context)

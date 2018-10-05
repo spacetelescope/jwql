@@ -147,8 +147,8 @@ class Anomaly(base):
     def colnames(self):
         """A list of all the column names in this table"""
         # Get the columns
-        a_list = [col for col, val in self.__dict__.items()
-                  if isinstance(val, bool)]
+        a_list = [col for col, val in self._sa_instance_state.attrs.items()
+                  if col not in ['id', 'filename', 'flag_date']]
 
         return a_list
 
