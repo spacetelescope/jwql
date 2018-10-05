@@ -275,6 +275,14 @@ def view_image(request, inst, file_root, rewrite=False):
     """
     template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
+
+    # Get a list of previously flagged anomalies
+    query = di.session.query(di.Anomaly).filter(di.Anomaly.file_root == file_root)
+    all_records = query.data_frame()
+    prev_anom = ', '.join([col for col, val in
+                           np.sum(all_records, axis=0).items() if val])
+
+    # Build the context
     context = {'inst': inst,
                'file_root': file_root,
                'tools': MONITORS,
@@ -282,6 +290,7 @@ def view_image(request, inst, file_root, rewrite=False):
                'fits_files': image_info['all_files'],
                'suffixes': image_info['suffixes'],
                'num_ints': image_info['num_ints'],
-               'anomalies': di.Anomaly().colnames}
+               'anomalies': di.Anomaly().colnames,
+               'prev_anom': prev_anom}
 
     return render(request, template, context)
