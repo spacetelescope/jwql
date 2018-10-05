@@ -150,6 +150,7 @@
             <!-- Add Anomoly form -->
     	    <div class='col-3'>
                 <h6>Anomalies in this image:</h6>
+                <p>Previously flagged: {{ prev_anom }}</p>
     		    <ul class='no-bullets'>
                     {% for anom in anomalies %}
                     <li><input type="checkbox" name="anomaly" value="{{ anom }}" id="{{ anom }}">&nbsp;&nbsp;{{ anom }}</li>
