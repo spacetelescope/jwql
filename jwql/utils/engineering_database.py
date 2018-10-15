@@ -79,7 +79,8 @@ def query_single_mnemonic(mnemonic_identifier, start_time, end_time, verbose=Fal
 
     Returns
     -------
-        data: dict
+        mnemonic : instance of EdbMnemonic
+            Object that contains the returned data
 
     """
     if not isinstance(start_time, astropy.time.core.Time):

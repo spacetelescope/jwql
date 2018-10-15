@@ -2,6 +2,10 @@
 utils
 *****
 
+.. automodule:: jwql.utils.engineering_database
+    :members:
+    :undoc-members:
+
 .. automodule:: jwql.utils.logging_functions
     :members:
     :undoc-members:
