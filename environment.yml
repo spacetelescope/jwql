@@ -23,4 +23,4 @@ dependencies:
 - sqlalchemy=1.2.0
 - stsci_rtd_theme=0.0.1
 - pip:
-  - sphinx-automodapi==0.7
+  - sphinx-automodapi==0.8
