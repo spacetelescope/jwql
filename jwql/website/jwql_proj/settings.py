@@ -39,6 +39,7 @@ SECRET_KEY = 'nx4xai#69@7pfb@l182z9aa#h8dfoms0$eitcrt5!77en*8(y4'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+
 ALLOWED_HOSTS = ['*']
 
 # Application definition
@@ -62,7 +63,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'jwql_proj.urls'
+ROOT_URLCONF = 'jwql.website.jwql_proj.urls'
 
 TEMPLATES = [
     {
@@ -70,13 +71,13 @@ TEMPLATES = [
         'DIRS': [os.path.join(BASE_DIR, 'apps', 'jwql', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
-            'environment': 'jwql_proj.jinja2.environment',
-            'extensions': ['jwql_proj.jinja2.DjangoNow'],
+            'environment': 'jwql.website.jwql_proj.jinja2.environment',
+            'extensions': ['jwql.website.jwql_proj.jinja2.DjangoNow'],
         },
     }
 ]
 
-WSGI_APPLICATION = 'jwql_proj.wsgi.application'
+WSGI_APPLICATION = 'jwql.website.jwql_proj.wsgi.application'
 
 
 # Database
@@ -127,6 +128,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
+    os.path.join(BASE_DIR, "static/"),
     get_config()['jwql_dir']
 ]
