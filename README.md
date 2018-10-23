@@ -153,4 +153,5 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Thomas Walker (ITSD)
 - Geoff Wallace (OED)
 - Lara Wilkinson (OPO)
+- Alex Yermolaev (ITSD)
 - Joe Zahn (ITSD)
