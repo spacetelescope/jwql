@@ -21,8 +21,9 @@ API documentation
 
    database.rst
    jwql_monitors.rst
-   utils.rst
    tests.rst
+   utils.rst
+   website.rst
 
 
 Indices and tables

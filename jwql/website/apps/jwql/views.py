@@ -16,12 +16,11 @@ Use
 ---
 
     This module is called in ``urls.py`` as such:
-
     ::
+
         from django.urls import path
         from . import views
-        urlpatterns = [path('web/path/to/view/',
-                             views.view_name, name='view_name')]
+        urlpatterns = [path('web/path/to/view/', views.view_name, name='view_name')]
 
 References
 ----------
