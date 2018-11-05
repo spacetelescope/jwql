@@ -17,4 +17,4 @@ sphinx=1.6.6
 sphinx_rtd_theme=0.1.9
 sqlalchemy=1.2.0
 stsci_rtd_theme=0.0.1
-sphinx-automodapi==0.7
+sphinx-automodapi==0.8
