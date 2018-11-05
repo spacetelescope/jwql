@@ -188,6 +188,71 @@ class Anomaly(base):
         return a_list
 
 
+Class Filesystem():
+    """ORM for the filesystem monitor table"""
+    # Name the table
+    __tablename__ = 'filesystem'
+
+    # Define the columns
+    id = Column(Integer, primary_key=True, nullable=False)
+    date = Column(DateTime, nullable=False, default=datetime.now())
+    file_count = Column(Integer, nullable=False)  # all files, not just fits
+    total_size = Column(Float, nullable=False)
+    used_size = Column(Float, nullable=False)
+    available_size = Column(Float, nullable=False)
+    fits_files = Column(Integer, nullable=False)
+    size_fits = Column(Float, nullable=False)
+    nrc_uncal_count = Column(Integer, nullable=False)
+    nrc_cal_count = Column(Integer, nullable=False)
+    nrc_rate_count = Column(Integer, nullable=False)
+    nrc_rateints_count = Column(Integer, nullable=False)
+    nrc_i2d_count = Column(Integer, nullable=False)
+    nrs_uncal_count = Column(Integer, nullable=False)
+    nrs_cal_count = Column(Integer, nullable=False)
+    nrs_rate_count = Column(Integer, nullable=False)
+    nrs_rateints_count = Column(Integer, nullable=False)
+    nrs_i2d_count = Column(Integer, nullable=False)
+    nis_uncal_count = Column(Integer, nullable=False)
+    nis_cal_count = Column(Integer, nullable=False)
+    nis_rate_count = Column(Integer, nullable=False)
+    nis_rateints_count = Column(Integer, nullable=False)
+    nis_i2d_count = Column(Integer, nullable=False)
+    mir_uncal_count = Column(Integer, nullable=False)
+    mir_cal_count = Column(Integer, nullable=False)
+    mir_rate_count = Column(Integer, nullable=False)
+    mir_rateints_count = Column(Integer, nullable=False)
+    mir_i2d_count = Column(Integer, nullable=False)
+    gui_uncal_count = Column(Integer, nullable=False)
+    gui_cal_count = Column(Integer, nullable=False)
+    gui_rate_count = Column(Integer, nullable=False)
+    gui_rateints_count = Column(Integer, nullable=False)
+    gui_i2d_count = Column(Integer, nullable=False)
+    nrc_uncal_size = Column(Float, nullable=False)
+    nrc_cal_size = Column(Float, nullable=False)
+    nrc_rate_size = Column(Float, nullable=False)
+    nrc_rateints_size = Column(Float, nullable=False)
+    nrc_i2d_size = Column(Float, nullable=False)
+    nrs_uncal_size = Column(Float, nullable=False)
+    nrs_cal_size = Column(Float, nullable=False)
+    nrs_rate_size = Column(Float, nullable=False)
+    nrs_rateints_size = Column(Float, nullable=False)
+    nrs_i2d_size = Column(Float, nullable=False)
+    nis_uncal_size = Column(Float, nullable=False)
+    nis_cal_size = Column(Float, nullable=False)
+    nis_rate_size = Column(Float, nullable=False)
+    nis_rateints_size = Column(Float, nullable=False)
+    nis_i2d_size = Column(Float, nullable=False)
+    mir_uncal_size = Column(Float, nullable=False)
+    mir_cal_size = Column(Float, nullable=False)
+    mir_rate_size = Column(Float, nullable=False)
+    mir_rateints_size = Column(Float, nullable=False)
+    mir_i2d_size = Column(Float, nullable=False)
+    gui_uncal_size = Column(Float, nullable=False)
+    gui_cal_size = Column(Float, nullable=False)
+    gui_rate_size = Column(Float, nullable=False)
+    gui_rateints_size = Column(Float, nullable=False)
+    gui_i2d_size = Column(Float, nullable=False)
+
 if __name__ == '__main__':
 
     base.metadata.create_all(engine)

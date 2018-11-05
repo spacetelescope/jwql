@@ -71,6 +71,7 @@ from bokeh.embed import components
 from bokeh.layouts import gridplot
 from bokeh.plotting import figure, output_file, save
 
+from jwql.database import database_interface as di
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import filename_parser
@@ -95,6 +96,7 @@ def monitor_filesystem():
     # set up dictionaries for output
     results_dict = defaultdict(int)
     size_dict = defaultdict(float)
+
     # Walk through all directories recursively and count files
     logging.info('Searching filesystem...')
     for dirpath, dirs, files in os.walk(filesystem):
@@ -102,15 +104,16 @@ def monitor_filesystem():
         for filename in files:
             file_path = os.path.join(dirpath, filename)
             if filename.endswith(".fits"):  # find total number of fits files
-                results_dict['fits_files'] += 1
-                size_dict['size_fits'] += os.path.getsize(file_path)
-                suffix = filename_parser(filename)['suffix']
-                results_dict[suffix] += 1
-                size_dict[suffix] += os.path.getsize(file_path)
+                suffix = filename_parser(filename)['suffix']  # define suffix
                 detector = filename_parser(filename)['detector']
                 instrument = detector[0:3]  # first three characters of detector specify instrument
-                results_dict[instrument] += 1
-                size_dict[instrument] += os.path.getsize(file_path)
+                key_count = instrument+'_'+suffix+'_count'
+                key_size = instrument+'_'+suffix+'_size'
+                results_dict['fits_files'] += 1
+                size_dict['size_fits'] += os.path.getsize(file_path)
+                results_dict[key_count] += 1
+                size_dict[key_size] += os.path.getsize(file_path)
+                #size_dict[instrument] += os.path.getsize(file_path)
     logging.info('{} files found in filesystem'.format(results_dict['fits_files']))
 
     # Get df style stats on file system
@@ -118,14 +121,17 @@ def monitor_filesystem():
     outstring = out.decode("utf-8")  # put into string for parsing from byte format
     parsed = outstring.split(sep=None)
 
-    # Select desired elements from parsed string
+    # Select desired elements from parsed string - put these in dictionary, too?
     total = int(parsed[8])  # in blocks of 512 bytes
     used = int(parsed[9])
     available = int(parsed[10])
     percent_used = parsed[11]
 
-    # Save stats for plotting over time
+    # Save stats for plotting over time  # also define this as part of database
     now = datetime.datetime.now().isoformat(sep='T', timespec='auto')  # get date of stats
+
+    # change sections below to write to database rather than files
+    # write in date (now), total, used, available, then the counts and sizes in dictionaries
 
     # set up output file and write stats
     statsfile = os.path.join(outputs_dir, 'statsfile.txt')
