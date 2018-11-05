@@ -122,9 +122,9 @@ def monitor_filesystem():
     parsed = outstring.split(sep=None)
 
     # Select desired elements from parsed string - put these in dictionary, too?
-    total = int(parsed[8])  # in blocks of 512 bytes
-    used = int(parsed[9])
-    available = int(parsed[10])
+    total_size = int(parsed[8])  # in blocks of 512 bytes
+    used_size = int(parsed[9])
+    available_size = int(parsed[10])
     percent_used = parsed[11]
 
     # Save stats for plotting over time  # also define this as part of database
@@ -133,6 +133,29 @@ def monitor_filesystem():
     # change sections below to write to database rather than files
     # write in date (now), total, used, available, then the counts and sizes in dictionaries
 
+
+    current_columns = di.Filesystem_instrument.inscolnames
+
+    # add row to filesystem_general table
+    di.session.add(di.Filesystem_general(date=now, total_size=total_size,
+                                         used_size=used_size,
+                                         available_size=available_size,
+                                         file_count = results_dict['file_count'],
+                                         fits_files = results_dict['fits_files'],
+                                         size_fits = size_dict['size_fits']))
+
+    # Add row to filesystem_instrument table
+    combo_dict = {**results_dict, **size_dict} #fancy dictionary stuff
+    filtered_dict = {k: combo_dict.get(k, 0) for k in current_columns} # more fancy dict stuff
+    di.session.add(di.Filesystem_instrument(date=now, **filtered_dict))
+
+    # Commit new rows to database
+    di.session.commit()
+
+
+    # Plotting goes here!
+
+    '''
     # set up output file and write stats
     statsfile = os.path.join(outputs_dir, 'statsfile.txt')
     with open(statsfile, "a+") as f:
@@ -165,6 +188,7 @@ def monitor_filesystem():
 
     # Create the plots
     plot_system_stats(statsfile, filesbytype, sizebytype)
+    '''
 
 
 def plot_system_stats(stats_file, filebytype, sizebytype):

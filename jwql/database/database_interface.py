@@ -188,20 +188,27 @@ class Anomaly(base):
         return a_list
 
 
-Class Filesystem():
-    """ORM for the filesystem monitor table"""
+class Filesystem_general():
+    """ORM for the general (non instrument specific) filesystem monitor table"""
     # Name the table
-    __tablename__ = 'filesystem'
-
+    __tablename__ = 'filesystem_general'
     # Define the columns
-    id = Column(Integer, primary_key=True, nullable=False)
-    date = Column(DateTime, nullable=False, default=datetime.now())
+    date = Column(DateTime, nullable=False)
     file_count = Column(Integer, nullable=False)  # all files, not just fits
     total_size = Column(Float, nullable=False)
     used_size = Column(Float, nullable=False)
     available_size = Column(Float, nullable=False)
     fits_files = Column(Integer, nullable=False)
     size_fits = Column(Float, nullable=False)
+
+
+class Filesystem_instrument():
+    """ORM for the instrument specific filesystem monitor table"""
+    # Name the table
+    __tablename__ = 'filesystem_instrument'
+
+    # Define the columns
+    date = Column(DateTime, nullable=False)
     nrc_uncal_count = Column(Integer, nullable=False)
     nrc_cal_count = Column(Integer, nullable=False)
     nrc_rate_count = Column(Integer, nullable=False)
@@ -252,6 +259,15 @@ Class Filesystem():
     gui_rate_size = Column(Float, nullable=False)
     gui_rateints_size = Column(Float, nullable=False)
     gui_i2d_size = Column(Float, nullable=False)
+
+    @property
+    def inscolnames(self):
+        """A list of all the column names in this table EXCEPT the date column"""
+        # Get the columns
+        a_list = [col for col, val in self.__dict__.items()
+                  if not isinstance(val, datetime)]
+
+        return a_list
 
 if __name__ == '__main__':
 
