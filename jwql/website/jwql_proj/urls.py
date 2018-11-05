@@ -1,7 +1,7 @@
 """Maps URL paths to views in the ``jwql`` project.
 
 This module connects requested URL paths to the corresponding view in
-``views.py`` for each webpage in the Quicklook project. When Django is
+``views.py`` for each webpage in the JWQL application. When Django is
 provided a path, it searches through the urlpatterns list provided
 here until it finds one that matches. It then calls the assigned view
 to load the appropriate webpage, passing an HttpRequest object.
