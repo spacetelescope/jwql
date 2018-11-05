@@ -2,7 +2,7 @@
   <img src="https://i.imgur.com/MwnjFVM.png" width="400"/>
 </p>
 
-# The James Webb Quicklook Application (`JWQL`)
+# The JWST Quicklook Application (`JWQL`)
 
 [![PyPI - License](https://img.shields.io/pypi/l/Django.svg)](https://github.com/spacetelescope/jwql/blob/master/LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.6-blue.svg)](https://www.python.org/)
@@ -11,11 +11,11 @@
 [![STScI](https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat)](http://www.stsci.edu)
 
 
-The James Webb Quicklook Application (`JWQL`) is a database-driven web application and automation framework for use by the JWST instrument teams to monitor the health and stability of the JWST instruments.  The system is comprised of the following:
+The JWST Quicklook Application (`JWQL`) is a database-driven web application and automation framework for use by the JWST instrument teams to monitor and trend the health, stability, and performance of the JWST instruments.  The system is comprised of the following:
 1. A network file system that stores all uncalibrated and calibrated data products on disk in a centrally-located area, accessible to instrument team members (MAST data cache)
 2. A relational database that stores observational metadata allowing for data discovery via relational queries (MAST database API).
-3. A software library that provides tools to support an automation framework in which to build automated instrument monitoring tasks.
-4. A web application that allows users to visually inspect new and archival JWST data as well as instrument-specific monitoring and calibration results.
+3. A software library that provides tools to support an automation framework in which to build automated instrument monitoring routines.
+4. A web application that allows users to visually inspect new and archival JWST data as well as instrument-specific monitoring and performance results.
 
 The `jwql` application is currently under heavy development.  The `1.0` release is expected in 2019.
 
