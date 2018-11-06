@@ -36,10 +36,12 @@ Dependencies
 
 import os
 
+from django.http import JsonResponse
 from django.shortcuts import render
 # from django.views import generic # We ultimately might want to use generic views?
 
 from .data_containers import get_acknowledgements
+from .data_containers import get_all_proposals
 from .data_containers import get_dashboard_components
 from .data_containers import get_filenames_by_instrument
 from .data_containers import get_header_info
@@ -73,6 +75,24 @@ def about(request):
                'tools': MONITORS}
 
     return render(request, template, context)
+
+
+def api_all_proposals(request):
+    """Return a list of proposals for the mission
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+
+    proposals = get_all_proposals()
+    return JsonResponse({'proposals': proposals})
 
 
 def archived_proposals(request, inst):

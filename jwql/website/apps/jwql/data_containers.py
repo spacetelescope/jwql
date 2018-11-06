@@ -69,6 +69,23 @@ def get_acknowledgements():
     return acknowledgements
 
 
+def get_all_proposals():
+    """Return a list of all proposals that exist in the filesystem.
+
+    Returns
+    -------
+    proposals : list
+        A list of proposal numbers for all proposals that exist in the
+        filesystem
+    """
+
+    proposals = glob.glob(os.path.join(FILESYSTEM_DIR, '*'))
+    proposals = [proposal.split('jw')[-1] for proposal in proposals]
+    proposals = [proposal for proposal in proposals if len(proposal) == 5]
+
+    return proposals
+
+
 def get_dashboard_components():
     """Build and return a dictionary containing components needed for
     the dashboard.
