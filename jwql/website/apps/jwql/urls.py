@@ -54,4 +54,5 @@ urlpatterns = [
     path('jwql/<str:inst>/<str:file>/hdr/', views.view_header, name='view_header'),
     path('jwql/<str:inst>/archive/<str:proposal>', views.archive_thumbnails, name='archive_thumb'),
     path('api/proposals/', views.api_all_proposals, name='api_all_proposals'),
+    path('api/<str:inst>/proposals/', views.api_instrument_proposals, name='api_instrument_proposals')
 ]

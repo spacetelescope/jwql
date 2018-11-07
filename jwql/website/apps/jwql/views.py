@@ -45,6 +45,7 @@ from .data_containers import get_all_proposals
 from .data_containers import get_dashboard_components
 from .data_containers import get_filenames_by_instrument
 from .data_containers import get_header_info
+from .data_containers import get_instrument_proposals
 from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
@@ -92,6 +93,26 @@ def api_all_proposals(request):
     """
 
     proposals = get_all_proposals()
+    return JsonResponse({'proposals': proposals})
+
+
+def api_instrument_proposals(request, inst):
+    """Return a list of proposals for the given instrument
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst: str
+        Name of JWST instrument
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+
+    proposals = get_instrument_proposals(inst)
     return JsonResponse({'proposals': proposals})
 
 

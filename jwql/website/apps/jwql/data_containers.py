@@ -25,6 +25,7 @@ import glob
 import os
 
 from astropy.io import fits
+from astroquery.mast import Mast
 import numpy as np
 
 from jwql.utils.preview_image import PreviewImage
@@ -248,6 +249,32 @@ def get_image_info(file_root, rewrite):
         image_info['all_jpegs'].append(jpg_filepath)
 
     return image_info
+
+
+def get_instrument_proposals(instrument):
+    """Return a list of proposals for the given instrument
+
+    Parameters
+    ----------
+    instrument : str
+        Name of the JWST instrument
+
+    Returns
+    -------
+    proposals : list
+        List of proposals for the given instrument
+    """
+
+    service = "Mast.Jwst.Filtered.{}".format(instrument)
+    params = {"columns":"filename",
+              "filters":[]}
+    response = Mast.service_request_async(service, params)
+    results = response[0].json()['data']
+
+    filenames = [result['filename'] for result in results]
+    proposals = list(set([filename[0:7].split('jw')[-1] for filename in filenames]))
+
+    return proposals
 
 
 def get_proposal_info(filepaths):
