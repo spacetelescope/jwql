@@ -150,10 +150,13 @@
             <!-- Add Anomoly form -->
     	    <div class='col-3'>
                 <h6>Anomalies in this image:</h6>
-                <p>Previously flagged: {{ prev_anom }}</p>
     		    <ul class='no-bullets'>
                     {% for anom in anomalies %}
-                    <li><input type="checkbox" name="anomaly" value="{{ anom }}" id="{{ anom }}">&nbsp;&nbsp;{{ anom }}</li>
+                        {% if anom in prev_anom %}
+                            <li><input type="checkbox" name="anomaly" value="{{ anom }}" id="{{ anom }}" checked>&nbsp;&nbsp;{{ anom }}</li>
+                        {% else %}
+                            <li><input type="checkbox" name="anomaly" value="{{ anom }}" id="{{ anom }}">&nbsp;&nbsp;{{ anom }}</li>
+                        {% endif %}
                     {% endfor %}
                 </ul>
                 <a class="btn btn-primary my-2" role="button" href="#">Submit Anomalies</a>
