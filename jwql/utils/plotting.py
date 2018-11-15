@@ -1,3 +1,29 @@
+#! /usr/bin/env python
+
+"""
+This module is a collection of plotting functions that may be used
+across the JWQL web application.
+
+Authors:
+--------
+
+    - Joe Filippazzo
+
+Use:
+----
+
+    This module can be use as follows:
+
+    ::
+
+        from jwql.utils import plotting
+        from pandas import DataFrame
+        data = DataFrame({'meow': {'foo': 12, 'bar': 23, 'baz': 2},
+                          'mix': {'foo': 45, 'bar': 31, 'baz': 23},
+                          'deliver': {'foo': 62, 'bar': 20, 'baz': 9}})
+        data = data.reset_index()
+        plt = plotting.bar_chart(data, 'index')
+"""
 from bokeh.models import ColumnDataSource, FactorRange, HoverTool
 from bokeh.plotting import figure
 from bokeh.transform import factor_cmap
