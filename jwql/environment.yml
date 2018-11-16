@@ -4,7 +4,7 @@ channels:
 - http://ssb.stsci.edu/astroconda-dev
 dependencies:
 - python=3.6
-- astropy=3.0
+- astropy=4.0
 - astroquery=0.3.8
 - bokeh=0.12.5
 - django=2.0.5
