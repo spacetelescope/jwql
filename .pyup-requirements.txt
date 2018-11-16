@@ -1,4 +1,4 @@
-astropy=3.0
+astropy=4.0
 astroquery=0.3.8
 bokeh=1.0.1
 django=2.0.5
