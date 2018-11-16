@@ -3,7 +3,7 @@
 In Django, "a view function, or view for short, is simply a Python
 function that takes a Web request and returns a Web response" (from
 Django documentation). This module defines all of the views that are
-used to generate the various webpages used for the Quicklook project.
+used to generate the various webpages used for the JWQL application.
 For example, these views can list the tools available to users, query
 the ``jwql`` database, and display images and headers.
 
