@@ -7,7 +7,7 @@ jinja2==2.10
 matplotlib==3.0.2
 numpy==1.15.4
 numpydoc==0.8.0
-psycopg2==2.7.5
+psycopg2==2.7.6.1
 python-dateutil==2.6.1
 pytest==3.4.2
 sphinx==1.6.6
