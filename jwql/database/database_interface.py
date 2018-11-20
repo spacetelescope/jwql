@@ -188,7 +188,7 @@ class Anomaly(base):
         return a_list
 
 
-class Filesystem_general():
+class Filesystem_general(base):
     """ORM for the general (non instrument specific) filesystem monitor table"""
     # Name the table
     __tablename__ = 'filesystem_general'
@@ -202,7 +202,7 @@ class Filesystem_general():
     size_fits = Column(Float, nullable=False)
 
 
-class Filesystem_instrument():
+class Filesystem_instrument(base):
     """ORM for the instrument specific filesystem monitor table"""
     # Name the table
     __tablename__ = 'filesystem_instrument'
