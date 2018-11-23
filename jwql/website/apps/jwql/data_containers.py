@@ -29,7 +29,7 @@ from astroquery.mast import Mast
 import numpy as np
 
 from jwql.utils.preview_image import PreviewImage
-from jwql.utils.utils import get_config, filename_parser, MONITORS
+from jwql.utils.utils import get_config, filename_parser, MAST_SERVICES, MONITORS
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -162,6 +162,35 @@ def get_filenames_by_instrument(instrument):
     filepaths = [f for f in glob.glob(search_filepath) if instrument_match[instrument] in f]
 
     return filepaths
+
+
+def get_filenames_by_proposal(proposal):
+    """Return a list of filenames that are part of the given
+    ``proposal``.
+
+    These filenames are determined by a query to the
+    ``astroquery.mast`` service.
+
+    Parameters
+    ----------
+    proposal : str
+        The five-digit proposal number (e.g. ``88600``).
+
+    Returns
+    -------
+    filenames : list
+        A list of filenames associated with the given ``proposal``.
+    """
+
+    filenames = []
+    for service in MAST_SERVICES:
+        params = {"columns":"filename","filters":[{"paramName":"program", "values":[proposal]}]}
+        response = Mast.service_request_async(service,params)
+        result = response[0].json()
+        if result['data']:
+            filenames.extend(sorted([item['filename'] for item in result['data']]))
+
+    return filenames
 
 
 def get_header_info(file):
