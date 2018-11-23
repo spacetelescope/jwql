@@ -45,12 +45,15 @@ from .data_containers import get_all_proposals
 from .data_containers import get_dashboard_components
 from .data_containers import get_filenames_by_instrument
 from .data_containers import get_filenames_by_proposal
+from .data_containers import get_filenames_by_rootname
 from .data_containers import get_header_info
 from .data_containers import get_instrument_proposals
 from .data_containers import get_image_info
 from .data_containers import get_preview_images_by_proposal
+from .data_containers import get_preview_images_by_rootname
 from .data_containers import get_proposal_info
 from .data_containers import get_thumbnails_by_proposal
+from .data_containers import get_thumbnails_by_rootname
 from .data_containers import thumbnails
 from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS
 
@@ -119,6 +122,26 @@ def api_filenames_by_proposal(request, proposal):
     return JsonResponse({'filenames': filenames})
 
 
+def api_filenames_by_rootname(request, rootname):
+    """Return a list of filenames for the given ``rootname``
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    rootname : str
+        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+
+    filenames = get_filenames_by_rootname(rootname)
+    return JsonResponse({'filenames': filenames})
+
+
 def api_instrument_proposals(request, inst):
     """Return a list of proposals for the given instrument
 
@@ -160,6 +183,27 @@ def api_preview_images_by_proposal(request, proposal):
     return JsonResponse({'preview_images': preview_images})
 
 
+def api_preview_images_by_rootname(request, rootname):
+    """Return a list of available preview images in the filesystem for
+    the given ``rootname``.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    rootname : str
+        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+
+    preview_images = get_preview_images_by_rootname(rootname)
+    return JsonResponse({'preview_images': preview_images})
+
+
 def api_thumbnails_by_proposal(request, proposal):
     """Return a list of available thumbnails in the filesystem for the
     given ``proposal``.
@@ -178,6 +222,27 @@ def api_thumbnails_by_proposal(request, proposal):
     """
 
     thumbnails = get_thumbnails_by_proposal(proposal)
+    return JsonResponse({'thumbnails': thumbnails})
+
+
+def api_thumbnails_by_rootname(request, rootname):
+    """Return a list of available thumbnails in the filesystem for the
+    given ``rootname``.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    rootname : str
+        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+
+    thumbnails = get_thumbnails_by_rootname(rootname)
     return JsonResponse({'thumbnails': thumbnails})
 
 

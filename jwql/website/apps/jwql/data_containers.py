@@ -196,11 +196,8 @@ def get_filenames_by_proposal(proposal):
 
 
 def get_filenames_by_rootname(rootname):
-    """Return a list of filenames that are part of the given
-    ``rootname``.
-
-    These filenames are determined by a query to the
-    ``astroquery.mast`` service.
+    """Return a list of filenames available in the filesystem that
+    are part of the given ``rootname``.
 
     Parameters
     ----------
@@ -213,18 +210,13 @@ def get_filenames_by_rootname(rootname):
         A list of filenames associated with the given ``rootname``.
     """
 
-    # Currently non-operational until I can figure out how to use wildcards in queries
-    pass
+    proposal = rootname.split('_')[0].split('jw')[-1][0:5]
+    filenames = sorted(glob.glob(os.path.join(
+        FILESYSTEM_DIR,
+        'jw{}'.format(proposal),
+        '{}*'.format(rootname))))
 
-    # filenames = []
-    # for service in MAST_SERVICES:
-    #     params = {"columns":"filename","filters":[{"paramName":"filename", "values":[rootname]}]}
-    #     response = Mast.service_request_async(service,params)
-    #     result = response[0].json()
-    #     if result['data']:
-    #         filenames.extend(sorted([item['filename'] for item in result['data']]))
-
-    # return filenames
+    return filenames
 
 
 def get_header_info(file):
@@ -360,6 +352,31 @@ def get_preview_images_by_proposal(proposal):
     return preview_images
 
 
+def get_preview_images_by_rootname(rootname):
+    """Return a list of preview images available in the filesystem for
+    the given ``rootname``.
+
+    Parameters
+    ----------
+    rootname : str
+        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+
+    Returns
+    -------
+    preview_images : list
+        A list of preview images available in the filesystem for the
+        given ``rootname``.
+    """
+
+    proposal = rootname.split('_')[0].split('jw')[-1][0:5]
+    preview_images = sorted(glob.glob(os.path.join(
+        PREVIEW_IMAGE_FILESYSTEM,
+        'jw{}'.format(proposal),
+        '{}*'.format(rootname))))
+
+    return preview_images
+
+
 def get_proposal_info(filepaths):
     """Builds and returns a dictionary containing various information
     about the proposal(s) that correspond to the given ``filepaths``.
@@ -422,6 +439,31 @@ def get_thumbnails_by_proposal(proposal):
     """
 
     thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, 'jw{}'.format(proposal), '*'))
+    return thumbnails
+
+
+def get_thumbnails_by_rootname(rootname):
+    """Return a list of preview images available in the filesystem for
+    the given ``rootname``.
+
+    Parameters
+    ----------
+    rootname : str
+        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+
+    Returns
+    -------
+    thumbnails : list
+        A list of preview images available in the filesystem for the
+        given ``rootname``.
+    """
+
+    proposal = rootname.split('_')[0].split('jw')[-1][0:5]
+    thumbnails = sorted(glob.glob(os.path.join(
+        THUMBNAIL_FILESYSTEM,
+        'jw{}'.format(proposal),
+        '{}*'.format(rootname))))
+
     return thumbnails
 
 
