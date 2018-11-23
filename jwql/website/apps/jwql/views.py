@@ -44,6 +44,7 @@ from .data_containers import get_acknowledgements
 from .data_containers import get_all_proposals
 from .data_containers import get_dashboard_components
 from .data_containers import get_filenames_by_instrument
+from .data_containers import get_filenames_by_proposal
 from .data_containers import get_header_info
 from .data_containers import get_instrument_proposals
 from .data_containers import get_image_info
@@ -94,6 +95,26 @@ def api_all_proposals(request):
 
     proposals = get_all_proposals()
     return JsonResponse({'proposals': proposals})
+
+
+def api_filenames_by_proposal(request, proposal):
+    """Return a list of filenames for the given ``proposal``
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    proposal: str
+        The five-digit proposal number (e.g. ``88600``)
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+
+    filenames = get_filenames_by_proposal(proposal)
+    return JsonResponse({'filenames': filenames})
 
 
 def api_instrument_proposals(request, inst):
