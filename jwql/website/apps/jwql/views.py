@@ -48,7 +48,9 @@ from .data_containers import get_filenames_by_proposal
 from .data_containers import get_header_info
 from .data_containers import get_instrument_proposals
 from .data_containers import get_image_info
+from .data_containers import get_preview_images_by_proposal
 from .data_containers import get_proposal_info
+from .data_containers import get_thumbnails_by_proposal
 from .data_containers import thumbnails
 from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS
 
@@ -104,7 +106,7 @@ def api_filenames_by_proposal(request, proposal):
     ----------
     request : HttpRequest object
         Incoming request from the webpage
-    proposal: str
+    proposal : str
         The five-digit proposal number (e.g. ``88600``)
 
     Returns
@@ -124,7 +126,7 @@ def api_instrument_proposals(request, inst):
     ----------
     request : HttpRequest object
         Incoming request from the webpage
-    inst: str
+    inst : str
         Name of JWST instrument
 
     Returns
@@ -135,6 +137,48 @@ def api_instrument_proposals(request, inst):
 
     proposals = get_instrument_proposals(inst)
     return JsonResponse({'proposals': proposals})
+
+
+def api_preview_images_by_proposal(request, proposal):
+    """Return a list of available preview images in the filesystem for
+    the given ``proposal``.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    proposal : str
+        The five-digit proposal number (e.g. ``88600``)
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+
+    preview_images = get_preview_images_by_proposal(proposal)
+    return JsonResponse({'preview_images': preview_images})
+
+
+def api_thumbnails_by_proposal(request, proposal):
+    """Return a list of available thumbnails in the filesystem for the
+    given ``proposal``.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    proposal : str
+        The five-digit proposal number (e.g. ``88600``)
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+
+    thumbnails = get_thumbnails_by_proposal(proposal)
+    return JsonResponse({'thumbnails': thumbnails})
 
 
 def archived_proposals(request, inst):

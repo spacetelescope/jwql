@@ -33,6 +33,8 @@ from jwql.utils.utils import get_config, filename_parser, MAST_SERVICES, MONITOR
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
+PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_images')
+THUMBNAIL_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'thumbnails')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
@@ -193,6 +195,38 @@ def get_filenames_by_proposal(proposal):
     return filenames
 
 
+def get_filenames_by_rootname(rootname):
+    """Return a list of filenames that are part of the given
+    ``rootname``.
+
+    These filenames are determined by a query to the
+    ``astroquery.mast`` service.
+
+    Parameters
+    ----------
+    rootname : str
+        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+
+    Returns
+    -------
+    filenames : list
+        A list of filenames associated with the given ``rootname``.
+    """
+
+    # Currently non-operational until I can figure out how to use wildcards in queries
+    pass
+
+    # filenames = []
+    # for service in MAST_SERVICES:
+    #     params = {"columns":"filename","filters":[{"paramName":"filename", "values":[rootname]}]}
+    #     response = Mast.service_request_async(service,params)
+    #     result = response[0].json()
+    #     if result['data']:
+    #         filenames.extend(sorted([item['filename'] for item in result['data']]))
+
+    # return filenames
+
+
 def get_header_info(file):
     """Return the header information for a given ``file``.
 
@@ -306,6 +340,26 @@ def get_instrument_proposals(instrument):
     return proposals
 
 
+def get_preview_images_by_proposal(proposal):
+    """Return a list of preview images available in the filesystem for
+    the given ``proposal``.
+
+    Parameters
+    ----------
+    proposal : str
+        The five-digit proposal number (e.g. ``88600``).
+
+    Returns
+    -------
+    preview_images : list
+        A list of preview images available in the filesystem for the
+        given ``proposal``.
+    """
+
+    preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, 'jw{}'.format(proposal), '*'))
+    return preview_images
+
+
 def get_proposal_info(filepaths):
     """Builds and returns a dictionary containing various information
     about the proposal(s) that correspond to the given ``filepaths``.
@@ -349,6 +403,26 @@ def get_proposal_info(filepaths):
     proposal_info['num_files'] = num_files
 
     return proposal_info
+
+
+def get_thumbnails_by_proposal(proposal):
+    """Return a list of thumbnails available in the filesystem for the
+    given ``proposal``.
+
+    Parameters
+    ----------
+    proposal : str
+        The five-digit proposal number (e.g. ``88600``).
+
+    Returns
+    -------
+    thumbnails : list
+        A list of thumbnails available in the filesystem for the given
+        ``proposal``.
+    """
+
+    thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, 'jw{}'.format(proposal), '*'))
+    return thumbnails
 
 
 def split_files(file_list, page_type):
