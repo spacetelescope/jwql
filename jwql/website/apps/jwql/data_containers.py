@@ -332,6 +332,47 @@ def get_instrument_proposals(instrument):
     return proposals
 
 
+def get_preview_images_by_instrument(inst):
+    """Return a list of preview images available in the filesystem for
+    the given instrument.
+
+    Parameters
+    ----------
+    inst : str
+        The instrument of interest (e.g. ``NIRCam``).
+
+    Returns
+    -------
+    preview_images : list
+        A list of preview images available in the filesystem for the
+        given instrument.
+    """
+
+    # Make sure the instrument is of the proper format (e.g. "Nircam")
+    instrument = inst[0].upper() + inst[1:].lower()
+
+    # Query MAST for all rootnames for the instrument
+    service = "Mast.Jwst.Filtered.{}".format(instrument)
+    params = {"columns":"filename",
+              "filters":[]}
+    response = Mast.service_request_async(service, params)
+    results = response[0].json()['data']
+
+    # Parse the results to get the rootnames
+    filenames = [result['filename'].split('.')[0] for result in results]
+
+    # Build list of available preview images
+    preview_images = []
+    for filename in filenames:
+        proposal = filename[0:7]
+        preview_images.extend(glob.glob(os.path.join(
+            PREVIEW_IMAGE_FILESYSTEM,
+            proposal,
+            '{}*.jpg'.format(filename))))
+
+    return preview_images
+
+
 def get_preview_images_by_proposal(proposal):
     """Return a list of preview images available in the filesystem for
     the given ``proposal``.
@@ -420,6 +461,47 @@ def get_proposal_info(filepaths):
     proposal_info['num_files'] = num_files
 
     return proposal_info
+
+
+def get_thumbnails_by_instrument(inst):
+    """Return a list of thumbnails available in the filesystem for the
+    given instrument.
+
+    Parameters
+    ----------
+    inst : str
+        The instrument of interest (e.g. ``NIRCam``).
+
+    Returns
+    -------
+    preview_images : list
+        A list of thumbnails available in the filesystem for the
+        given instrument.
+    """
+
+    # Make sure the instrument is of the proper format (e.g. "Nircam")
+    instrument = inst[0].upper() + inst[1:].lower()
+
+    # Query MAST for all rootnames for the instrument
+    service = "Mast.Jwst.Filtered.{}".format(instrument)
+    params = {"columns":"filename",
+              "filters":[]}
+    response = Mast.service_request_async(service, params)
+    results = response[0].json()['data']
+
+    # Parse the results to get the rootnames
+    filenames = [result['filename'].split('.')[0] for result in results]
+
+    # Build list of available preview images
+    thumbnails = []
+    for filename in filenames:
+        proposal = filename[0:7]
+        thumbnails.extend(glob.glob(os.path.join(
+            THUMBNAIL_FILESYSTEM,
+            proposal,
+            '{}*.thumb'.format(filename))))
+
+    return thumbnails
 
 
 def get_thumbnails_by_proposal(proposal):

@@ -44,6 +44,9 @@ from django.urls import re_path
 from . import views
 
 app_name = 'jwql'
+
+api_instruments = 'nircam|NIRCam|niriss|NIRISS|nirspec|NIRSpec|miri|MIRI|fgs|FGS'
+
 urlpatterns = [
     path('', views.home, name='home'),
     path('about/', views.about, name='about'),
@@ -56,6 +59,8 @@ urlpatterns = [
     path('jwql/<str:inst>/archive/<str:proposal>', views.archive_thumbnails, name='archive_thumb'),
     path('api/proposals/', views.api_all_proposals, name='api_all_proposals'),
     path('api/<str:inst>/proposals/', views.api_instrument_proposals, name='api_instrument_proposals'),
+    re_path(r'^api/(?P<inst>({}))/preview_images/$'.format(api_instruments), views.api_preview_images_by_instrument, name='api_preview_images_by_instrument'),
+    re_path(r'^api/(?P<inst>({}))/thumbnails/$'.format(api_instruments), views.api_thumbnails_by_instrument, name='api_thumbnails_by_instrument'),
     re_path(r'^api/(?P<proposal>[\d]{5})/filenames/$', views.api_filenames_by_proposal, name='api_filenames_by_proposal'),
     re_path(r'^api/(?P<proposal>[\d]{5})/preview_images/$', views.api_preview_images_by_proposal, name='api_preview_images_by_proposal'),
     re_path(r'^api/(?P<proposal>[\d]{5})/thumbnails/$', views.api_thumbnails_by_proposal, name='api_preview_images_by_proposal'),
