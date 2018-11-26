@@ -25,6 +25,7 @@ Authors
 """
 
 from datetime import datetime
+import socket
 
 import pandas as pd
 from sqlalchemy import Boolean
@@ -92,6 +93,15 @@ def load_connection(connection_string):
     meta = MetaData()
 
     return session, base, engine, meta
+
+
+# Import a global session.  If running from readthedocs, pass a dummy connection string
+if 'build' and 'project' and 'jwql' in socket.gethostname():
+    dummy_connection_string = 'postgresql+psycopg2://account:password@hostname:0000/db_name'
+    session, base, engine, meta = load_connection(dummy_connection_string)
+else:
+    SETTINGS = utils.get_config()
+    session, base, engine, meta = load_connection(SETTINGS['connection_string'])
 
 
 class Anomaly(base):
