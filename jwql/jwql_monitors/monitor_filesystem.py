@@ -67,6 +67,8 @@ import numpy as np
 import os
 import subprocess
 
+from sqlalchemy import func
+
 from bokeh.embed import components
 from bokeh.layouts import gridplot
 from bokeh.plotting import figure, output_file, save
@@ -125,16 +127,12 @@ def monitor_filesystem():
     total_size = int(parsed[8])  # in blocks of 512 bytes
     used_size = int(parsed[9])
     available_size = int(parsed[10])
-    percent_used = parsed[11]
 
     # Save stats for plotting over time  # also define this as part of database
     now = datetime.datetime.now().isoformat(sep='T', timespec='auto')  # get date of stats
 
     # change sections below to write to database rather than files
     # write in date (now), total, used, available, then the counts and sizes in dictionaries
-
-
-    current_columns = di.Filesystem_instrument.inscolnames
 
     # add row to filesystem_general table
     di.session.add(di.Filesystem_general(date=now, total_size=total_size,
@@ -145,6 +143,9 @@ def monitor_filesystem():
                                          size_fits = size_dict['size_fits']))
 
     # Add row to filesystem_instrument table
+    current_columns = [t.name for t in di.Filesystem_instrument.metadata.sorted_tables[2].columns]
+    current_columns.remove('date')
+
     combo_dict = {**results_dict, **size_dict} #fancy dictionary stuff
     filtered_dict = {k: combo_dict.get(k, 0) for k in current_columns} # more fancy dict stuff
     di.session.add(di.Filesystem_instrument(date=now, **filtered_dict))
@@ -155,40 +156,40 @@ def monitor_filesystem():
 
     # Plotting goes here!
 
-    '''
+
     # set up output file and write stats
-    statsfile = os.path.join(outputs_dir, 'statsfile.txt')
-    with open(statsfile, "a+") as f:
-        f.write("{0} {1:15d} {2:15d} {3:15d} {4:15d} {5}\n".format(now, results_dict['file_count'],
-                total, available, used, percent_used))
-    set_permissions(statsfile)
-    logging.info('Saved file statistics to: {}'.format(statsfile))
-
-    # set up and read out stats on files by type
-    filesbytype = os.path.join(outputs_dir, 'filesbytype.txt')
-    with open(filesbytype, "a+") as f2:
-        f2.write("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10}\n".format(results_dict['fits_files'],
-                 results_dict['uncal'], results_dict['cal'], results_dict['rate'],
-                 results_dict['rateints'], results_dict['i2d'], results_dict['nrc'],
-                 results_dict['nrs'], results_dict['nis'], results_dict['mir'], results_dict['gui']))
-    set_permissions(filesbytype, verbose=False)
-    logging.info('Saved file statistics by type to {}'.format(filesbytype))
-
-    # set up file size by type file
-    sizebytype = os.path.join(outputs_dir, 'sizebytype.txt')
-    with open(sizebytype, "a+") as f3:
-        f3.write("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10}\n".format(size_dict['size_fits'],
-                 size_dict['uncal'], size_dict['cal'], size_dict['rate'],
-                 size_dict['rateints'], size_dict['i2d'], size_dict['nrc'],
-                 size_dict['nrs'], size_dict['nis'], size_dict['mir'], size_dict['gui']))
-    set_permissions(sizebytype, verbose=False)
-    logging.info('Saved file sizes by type to {}'.format(sizebytype))
-
-    logging.info('Filesystem statistics calculation complete.')
+    # statsfile = os.path.join(outputs_dir, 'statsfile.txt')
+    # with open(statsfile, "a+") as f:
+    #     f.write("{0} {1:15d} {2:15d} {3:15d} {4:15d} {5}\n".format(now, results_dict['file_count'],
+    #             total, available, used, percent_used))
+    # set_permissions(statsfile)
+    # logging.info('Saved file statistics to: {}'.format(statsfile))
+    #
+    # # set up and read out stats on files by type
+    # filesbytype = os.path.join(outputs_dir, 'filesbytype.txt')
+    # with open(filesbytype, "a+") as f2:
+    #     f2.write("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10}\n".format(results_dict['fits_files'],
+    #              results_dict['uncal'], results_dict['cal'], results_dict['rate'],
+    #              results_dict['rateints'], results_dict['i2d'], results_dict['nrc'],
+    #              results_dict['nrs'], results_dict['nis'], results_dict['mir'], results_dict['gui']))
+    # set_permissions(filesbytype, verbose=False)
+    # logging.info('Saved file statistics by type to {}'.format(filesbytype))
+    #
+    # # set up file size by type file
+    # sizebytype = os.path.join(outputs_dir, 'sizebytype.txt')
+    # with open(sizebytype, "a+") as f3:
+    #     f3.write("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10}\n".format(size_dict['size_fits'],
+    #              size_dict['uncal'], size_dict['cal'], size_dict['rate'],
+    #              size_dict['rateints'], size_dict['i2d'], size_dict['nrc'],
+    #              size_dict['nrs'], size_dict['nis'], size_dict['mir'], size_dict['gui']))
+    # set_permissions(sizebytype, verbose=False)
+    # logging.info('Saved file sizes by type to {}'.format(sizebytype))
+    #
+    # logging.info('Filesystem statistics calculation complete.')
 
     # Create the plots
     plot_system_stats(statsfile, filesbytype, sizebytype)
-    '''
+
 
 
 def plot_system_stats(stats_file, filebytype, sizebytype):
@@ -205,22 +206,43 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
         file containing information on file sizes by type over time
     """
 
+    # pull up database tables
+    filesystem_general = di.session.query(di.Filesystem_general)
+    filesystem_instrument = di.session.query(di.Filesystem_instrument)
+
+
     # get path for files
-    settings = get_config()
-    outputs_dir = os.path.join(settings['outputs'], 'monitor_filesystem')
+    #settings = get_config()
 
     # read in file of statistics
-    date, f_count, sysize, frsize, used, percent = np.loadtxt(stats_file, dtype=str, unpack=True)
-    fits_files, uncalfiles, calfiles, ratefiles, rateintsfiles, i2dfiles, nrcfiles, nrsfiles, nisfiles, mirfiles, fgsfiles = np.loadtxt(filebytype, dtype=str, unpack=True)
-    fits_sz, uncal_sz, cal_sz, rate_sz, rateints_sz, i2d_sz, nrc_sz, nrs_sz, nis_sz, mir_sz, fgs_sz = np.loadtxt(sizebytype, dtype=str, unpack=True)
+    date = filesystem_general.date
+    file_count = filesystem_general.file_count
+    sy_size = filesystem_general.total_size
+    used_size = filesystem_general.used_size
+    free_size = filesystem_general.available_size
+    fits_files = filesystem_general.fits_files
+    fits_sz = filesystem_general.size_fits
+
+    uncal_size = di.session.query(func.count(
+        di.filesystem_instrument.filter(di.filesystem_instrument.column.like('*_uncal*')))) / (1024.**3)
+
+
+    #uncalfiles, calfiles, ratefiles, rateintsfiles, i2dfiles, nrcfiles, nrsfiles, \
+    #nisfiles, mirfiles, fgsfiles = np.loadtxt(filebytype, dtype=str, unpack=True)
+
+
+    #uncal_sz, cal_sz, rate_sz, rateints_sz, i2d_sz, nrc_sz, nrs_sz, nis_sz, \
+    #mir_sz, fgs_sz = np.loadtxt(sizebytype, dtype=str, unpack=True)
+
+
     logging.info('Read in file statistics from {}, {}, {}'.format(stats_file, filebytype, sizebytype))
 
     # put in proper np array types and convert to GB sizes
     dates = np.array(date, dtype='datetime64')
-    file_count = f_count.astype(float)
-    systemsize = sysize.astype(float) / (1024.**3)
-    freesize = frsize.astype(float) / (1024.**3)
-    usedsize = used.astype(float) / (1024.**3)
+    systemsize = sy_size / (1024.**3)
+    freesize = free_size / (1024.**3)
+    usedsize = used_size / (1024.**3)
+    fits_size = fits_sz/ (1024.**3)
 
     fits = fits_files.astype(int)
     uncal = uncalfiles.astype(int)
@@ -234,8 +256,8 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     miri = mirfiles.astype(int)
     fgs = fgsfiles.astype(int)
 
-    fits_size = fits_sz.astype(float) / (1024.**3)
-    uncal_size = uncal_sz.astype(float) / (1024.**3)
+
+    #uncal_size = uncal_sz.astype(float) / (1024.**3)
     cal_size = cal_sz.astype(float) / (1024.**3)
     rate_size = rate_sz.astype(float) / (1024.**3)
     rateints_size = rateints_sz.astype(float) / (1024.**3)
