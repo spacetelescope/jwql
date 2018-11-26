@@ -167,11 +167,8 @@ def get_filenames_by_instrument(instrument):
 
 
 def get_filenames_by_proposal(proposal):
-    """Return a list of filenames that are part of the given
-    ``proposal``.
-
-    These filenames are determined by a query to the
-    ``astroquery.mast`` service.
+    """Return a list of filenames that are available in the filesystem
+    for the given ``proposal``.
 
     Parameters
     ----------
@@ -184,13 +181,8 @@ def get_filenames_by_proposal(proposal):
         A list of filenames associated with the given ``proposal``.
     """
 
-    filenames = []
-    for service in MAST_SERVICES:
-        params = {"columns":"filename","filters":[{"paramName":"program", "values":[proposal]}]}
-        response = Mast.service_request_async(service,params)
-        result = response[0].json()
-        if result['data']:
-            filenames.extend(sorted([item['filename'] for item in result['data']]))
+    filenames = sorted(glob.glob(os.path.join(
+        FILESYSTEM_DIR, 'jw{}'.format(proposal), '*')))
 
     return filenames
 
