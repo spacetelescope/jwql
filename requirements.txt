@@ -9,7 +9,7 @@ numpy==1.15.4
 numpydoc==0.8.0
 psycopg2==2.7.6.1
 python-dateutil==2.7.5
-pytest==4.0.0
+pytest==4.0.1
 sphinx==1.8.2
 sphinx-automodapi==0.9
 sqlalchemy==1.2.14
