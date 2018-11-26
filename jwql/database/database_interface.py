@@ -20,8 +20,37 @@ example.
 
 Authors
 -------
-    Joe Filippazzo, Johannes Sahlmann, Matthew Bourque
 
+    - Joe Filippazzo
+    - Johannes Sahlmann
+    - Matthew Bourque
+
+Use
+---
+
+    Executing the module on the command line will build the database
+    tables defined within:
+
+    ::
+
+        python database_interface.py
+
+    Users wishing to interact with the existing database may do so by
+    importing various connection objects and database tables, for
+    example:
+
+    ::
+
+        from jwql.database.database_interface import Anomaly
+        from jwql.database.database_interface import session
+
+        results = session.query(Anomaly).all()
+
+Dependencies
+------------
+
+    The user must have a configuration file named ``config.json``
+    placed in the ``utils`` directory.
 """
 
 from datetime import datetime
@@ -45,9 +74,8 @@ from jwql.utils import utils
 # Monkey patch Query with data_frame method
 @property
 def data_frame(self):
-    """Method to return a pandas.DataFrame of the results"""
+    """Method to return a ``pandas.DataFrame`` of the results"""
     return pd.read_sql(self.statement, self.session.bind)
-
 
 Query.data_frame = data_frame
 
@@ -105,7 +133,8 @@ else:
 
 
 class Anomaly(base):
-    """ORM for the anomalies table"""
+    """ORM for the ``anomalies`` table"""
+
     # Name the table
     __tablename__ = 'anomalies'
 
@@ -138,6 +167,7 @@ class Anomaly(base):
 
     def __repr__(self):
         """Return the canonical string representation of the object"""
+
         # Get the columns that are True
         a_list = [col for col, val in self.__dict__.items()
                   if val is True and isinstance(val, bool)]
@@ -150,6 +180,7 @@ class Anomaly(base):
     @property
     def colnames(self):
         """A list of all the column names in this table"""
+
         # Get the columns
         a_list = [col for col, val in self.__dict__.items()
                   if isinstance(val, bool)]
