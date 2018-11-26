@@ -10,7 +10,7 @@ Welcome to the ``jwql`` API documentation!
 ==========================================
 
 The JWST Quicklook Application (``JWQL``) is a database-driven web application and automation framework for JWST instrument monitoring and performance trending.  This site serves as the official API documentation for
-the project.  The ``JWQL`` website can currently be found at `dljwql.stsci.edu <dljwql.stsci.edu>`_.  The ``JWQL`` source code, installation instructions, and instructions for issue reporting and feature requests can be found in the `jwql GitHub repository <https://github.com/spacetelescope/jwql>`_.
+the project.  The ``JWQL`` website can currently be found at `https://dljwql.stsci.edu <http://dljwql.stsci.edu>`_.  The ``JWQL`` source code, installation instructions, and instructions for issue reporting and feature requests can be found in the `jwql GitHub repository <https://github.com/spacetelescope/jwql>`_.
 
 .. toctree::
    :maxdepth: 1
