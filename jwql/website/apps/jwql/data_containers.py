@@ -183,6 +183,7 @@ def get_filenames_by_proposal(proposal):
 
     filenames = sorted(glob.glob(os.path.join(
         FILESYSTEM_DIR, 'jw{}'.format(proposal), '*')))
+    filenames = [os.path.basename(filename) for filename in filenames]
 
     return filenames
 
@@ -207,6 +208,7 @@ def get_filenames_by_rootname(rootname):
         FILESYSTEM_DIR,
         'jw{}'.format(proposal),
         '{}*'.format(rootname))))
+    filenames = [os.path.basename(filename) for filename in filenames]
 
     return filenames
 
@@ -362,6 +364,9 @@ def get_preview_images_by_instrument(inst):
             proposal,
             '{}*.jpg'.format(filename))))
 
+    # Only return the filenames
+    preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
+
     return preview_images
 
 
@@ -382,6 +387,8 @@ def get_preview_images_by_proposal(proposal):
     """
 
     preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, 'jw{}'.format(proposal), '*'))
+    preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
+
     return preview_images
 
 
@@ -406,6 +413,7 @@ def get_preview_images_by_rootname(rootname):
         PREVIEW_IMAGE_FILESYSTEM,
         'jw{}'.format(proposal),
         '{}*'.format(rootname))))
+    preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
 
     return preview_images
 
@@ -493,6 +501,9 @@ def get_thumbnails_by_instrument(inst):
             proposal,
             '{}*.thumb'.format(filename))))
 
+    # Only return the filenames
+    thumbnails = [os.path.basename(thumbnail) for thumbnail in thumbnails]
+
     return thumbnails
 
 
@@ -513,6 +524,8 @@ def get_thumbnails_by_proposal(proposal):
     """
 
     thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, 'jw{}'.format(proposal), '*'))
+    thumbnails = [os.path.basename(thumbnail) for thumbnail in thumbnails]
+
     return thumbnails
 
 
@@ -537,6 +550,8 @@ def get_thumbnails_by_rootname(rootname):
         THUMBNAIL_FILESYSTEM,
         'jw{}'.format(proposal),
         '{}*'.format(rootname))))
+
+    thumbnails = [os.path.basename(thumbnail) for thumbnail in thumbnails]
 
     return thumbnails
 
