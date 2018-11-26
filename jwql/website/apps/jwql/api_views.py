@@ -47,7 +47,6 @@ References
 from django.http import JsonResponse
 
 from .data_containers import get_all_proposals
-from .data_containers import get_filenames_by_instrument
 from .data_containers import get_filenames_by_proposal
 from .data_containers import get_filenames_by_rootname
 from .data_containers import get_instrument_proposals

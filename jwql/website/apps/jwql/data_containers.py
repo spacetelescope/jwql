@@ -29,7 +29,7 @@ from astroquery.mast import Mast
 import numpy as np
 
 from jwql.utils.preview_image import PreviewImage
-from jwql.utils.utils import get_config, filename_parser, MAST_SERVICES, MONITORS
+from jwql.utils.utils import get_config, filename_parser, MONITORS
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -315,8 +315,8 @@ def get_instrument_proposals(instrument):
     """
 
     service = "Mast.Jwst.Filtered.{}".format(instrument)
-    params = {"columns":"filename",
-              "filters":[]}
+    params = {"columns": "filename",
+              "filters": []}
     response = Mast.service_request_async(service, params)
     results = response[0].json()['data']
 
@@ -347,8 +347,8 @@ def get_preview_images_by_instrument(inst):
 
     # Query MAST for all rootnames for the instrument
     service = "Mast.Jwst.Filtered.{}".format(instrument)
-    params = {"columns":"filename",
-              "filters":[]}
+    params = {"columns": "filename",
+              "filters": []}
     response = Mast.service_request_async(service, params)
     results = response[0].json()['data']
 
@@ -484,8 +484,8 @@ def get_thumbnails_by_instrument(inst):
 
     # Query MAST for all rootnames for the instrument
     service = "Mast.Jwst.Filtered.{}".format(instrument)
-    params = {"columns":"filename",
-              "filters":[]}
+    params = {"columns": "filename",
+              "filters": []}
     response = Mast.service_request_async(service, params)
     results = response[0].json()['data']
 
