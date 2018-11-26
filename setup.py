@@ -24,3 +24,6 @@ setup(
     include_package_data=True,
     include_dirs=[np.get_include()],
     )
+
+import socket
+print(socket.gethostname())
