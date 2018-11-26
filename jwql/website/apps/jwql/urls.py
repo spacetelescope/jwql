@@ -41,6 +41,7 @@ Notes
 from django.urls import path
 from django.urls import re_path
 
+from . import api_views
 from . import views
 
 app_name = 'jwql'
@@ -57,14 +58,14 @@ urlpatterns = [
     path('jwql/<str:inst>/<str:file_root>/', views.view_image, name='view_image'),
     path('jwql/<str:inst>/<str:file>/hdr/', views.view_header, name='view_header'),
     path('jwql/<str:inst>/archive/<str:proposal>', views.archive_thumbnails, name='archive_thumb'),
-    path('api/proposals/', views.api_all_proposals, name='api_all_proposals'),
-    path('api/<str:inst>/proposals/', views.api_instrument_proposals, name='api_instrument_proposals'),
-    re_path(r'^api/(?P<inst>({}))/preview_images/$'.format(api_instruments), views.api_preview_images_by_instrument, name='api_preview_images_by_instrument'),
-    re_path(r'^api/(?P<inst>({}))/thumbnails/$'.format(api_instruments), views.api_thumbnails_by_instrument, name='api_thumbnails_by_instrument'),
-    re_path(r'^api/(?P<proposal>[\d]{5})/filenames/$', views.api_filenames_by_proposal, name='api_filenames_by_proposal'),
-    re_path(r'^api/(?P<proposal>[\d]{5})/preview_images/$', views.api_preview_images_by_proposal, name='api_preview_images_by_proposal'),
-    re_path(r'^api/(?P<proposal>[\d]{5})/thumbnails/$', views.api_thumbnails_by_proposal, name='api_preview_images_by_proposal'),
-    re_path(r'^api/(?P<rootname>[\w]+)/filenames/$', views.api_filenames_by_rootname, name='api_filenames_by_rootname'),
-    re_path(r'^api/(?P<rootname>[\w]+)/preview_images/$', views.api_preview_images_by_rootname, name='api_preview_images_by_rootname'),
-    re_path(r'^api/(?P<rootname>[\w]+)/thumbnails/$', views.api_thumbnails_by_rootname, name='api_thumbnails_by_rootname')
+    path('api/proposals/', api_views.all_proposals, name='all_proposals'),
+    path('api/<str:inst>/proposals/', api_views.instrument_proposals, name='instrument_proposals'),
+    re_path(r'^api/(?P<inst>({}))/preview_images/$'.format(api_instruments), api_views.preview_images_by_instrument, name='preview_images_by_instrument'),
+    re_path(r'^api/(?P<inst>({}))/thumbnails/$'.format(api_instruments), api_views.thumbnails_by_instrument, name='thumbnails_by_instrument'),
+    re_path(r'^api/(?P<proposal>[\d]{5})/filenames/$', api_views.filenames_by_proposal, name='filenames_by_proposal'),
+    re_path(r'^api/(?P<proposal>[\d]{5})/preview_images/$', api_views.preview_images_by_proposal, name='preview_images_by_proposal'),
+    re_path(r'^api/(?P<proposal>[\d]{5})/thumbnails/$', api_views.thumbnails_by_proposal, name='preview_images_by_proposal'),
+    re_path(r'^api/(?P<rootname>[\w]+)/filenames/$', api_views.filenames_by_rootname, name='filenames_by_rootname'),
+    re_path(r'^api/(?P<rootname>[\w]+)/preview_images/$', api_views.preview_images_by_rootname, name='preview_images_by_rootname'),
+    re_path(r'^api/(?P<rootname>[\w]+)/thumbnails/$', api_views.thumbnails_by_rootname, name='thumbnails_by_rootname')
 ]
