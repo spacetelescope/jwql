@@ -7,6 +7,7 @@ jinja2==2.10
 matplotlib==3.0.2
 numpy==1.15.4
 numpydoc==0.8.0
+pandas=0.23.4
 psycopg2==2.7.6.1
 python-dateutil==2.7.5
 pytest==4.0.0
