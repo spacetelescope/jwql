@@ -41,9 +41,6 @@ from sqlalchemy.orm.query import Query
 from jwql.utils import utils
 
 
-SETTINGS = utils.get_config()
-
-
 # Monkey patch Query with data_frame method
 @property
 def data_frame(self):
@@ -95,9 +92,6 @@ def load_connection(connection_string):
     meta = MetaData()
 
     return session, base, engine, meta
-
-
-session, base, engine, meta = load_connection(SETTINGS['connection_string'])
 
 
 class Anomaly(base):
