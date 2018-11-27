@@ -88,7 +88,8 @@ def get_dashboard_components():
                  'filecount_type': 'Total File Counts by Type',
                  'size_type': 'Total File Sizes by Type',
                  'filecount': 'Total File Counts',
-                 'system_stats': 'System Statistics'}
+                 'system_stats': 'System Statistics'
+                 'monitor_cron_jobs': 'Cron Job Status'}
 
     dashboard_components = {}
     for dir_name, subdir_list, file_list in os.walk(output_dir):
