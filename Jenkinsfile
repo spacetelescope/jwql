@@ -8,7 +8,7 @@ bc0.name = "debug"
 bc0.build_cmds = ["conda env update --file=environment.yml",
 	       	  "with_env -n jwql python setup.py install",
               "pip install codecov"]
-bc0.test_cmds = ["with_env -n jwql pytest -s --junitxml=result.xml", --cov=./ --cov-report xml",
+bc0.test_cmds = ["with_env -n jwql pytest -s --junitxml=result.xml --cov=./ --cov-report xml",
                  "codecov --token=3084ae1d-1734-4a5d-8679-c52713035b84"]
 bc0.failedUnstableThresh = 1
 bc0.failedFailureThresh = 1
