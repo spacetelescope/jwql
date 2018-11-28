@@ -21,6 +21,3 @@ bc0.failedFailureThresh = 1
 // Iterate over configurations that define the (distibuted) build matrix.
 // Spawn a host of the given nodetype for each combination and run in parallel.
 utils.run([bc0])
-
-// Call codecov
-codecov --token=3084ae1d-1734-4a5d-8679-c52713035b84
