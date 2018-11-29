@@ -6,13 +6,14 @@ dependencies:
 - astropy=4.0
 - astroquery=0.3.8
 - bokeh=0.12.5
-- django=2.0.5
+- django=2.1.2
 - ipython=6.4.0
 - jinja2=2.10
 - jwst=0.7.8rc9
 - matplotlib=2.1.1
 - numpy=1.14.0
 - numpydoc=0.8.0
+- pandas=0.23.4
 - postgresql=9.6.6
 - psycopg2=2.7.5
 - python=3.6.4
