@@ -31,7 +31,6 @@ import numpy as np
 import os
 import time
 
-#from bokeh.charts import save, output_file
 from bokeh.embed import components
 from bokeh.io import output_file, save, show
 from bokeh.layouts import widgetbox
@@ -52,7 +51,6 @@ def create_table(status_dict):
     status_dict : dict
         Status results from all logfiles
     """
-
     # Rearrange the nested dictionary into a non-nested dict for the table
     filenames = []
     dates = []
@@ -90,7 +88,6 @@ def create_table(status_dict):
 
     data = dict(name=list(status_dict.keys()), filename=filenames, date=dates, missing=missings,
                 result=results)
-    print(data)
     source = ColumnDataSource(data)
 
     datefmt = DateFormatter(format="RFC-2822")
@@ -106,12 +103,11 @@ def create_table(status_dict):
     # Save the plot as full html
     output_dir = get_config()['outputs']
     output_filename = "cron_status_table"
-    html_filename = output_filename + '.html'
-    outfile = os.path.join(output_dir, 'monitor_cron_jobs', html_filename)
-    output_file(outfile)
-    print("Show only during development")
-    show(widgetbox(data_table))
-    #save(outfile)
+    #html_filename = output_filename + '.html'
+    #outfile = os.path.join(output_dir, 'monitor_cron_jobs', html_filename)
+    #output_file(outfile)
+    #show(widgetbox(data_table))
+    # save(outfile)
     #set_permissions(outfile)
     #logging.info('Saved Bokeh DataTable as html file: {}'.format(outfile))
 
@@ -122,18 +118,16 @@ def create_table(status_dict):
     with open(div_outfile, 'w') as f:
         f.write(div)
         f.close()
-    #set_permissions(div_outfile)
+    set_permissions(div_outfile)
 
     script_outfile = os.path.join(output_dir, 'monitor_cron_jobs', output_filename + "_component.js")
     with open(script_outfile, 'w') as f:
         f.write(script)
         f.close()
-    #set_permissions(script_outfile)
+    set_permissions(script_outfile)
 
     #logging.info('Saved Bokeh components files: {}_component.html and {}_component.js'
     #             .format(output_filename, output_filename))
-
-    stophere
 
 
 def find_latest(logfiles):
@@ -180,14 +174,15 @@ def get_cadence(filenames):
     stdev_delta : float
         Standard deviation in seconds between the appearance of consecutive log files
     """
+    minimum_log_num = 3  # Set to a low value for now since we don't have many logfiles
     times = [os.path.getctime(filename) for filename in filenames]
-    if len(times) > 2:
+    if len(times) >= minimum_log_num:
         sorted_times = np.array(sorted(times))
         delta_times = sorted_times[1:] - sorted_times[0:-1]
         mean_delta = np.mean(delta_times)
         stdev_delta = np.std(delta_times)
     else:
-        # If there are only 1 or 2 files, then let's assume we can't
+        # If there are < minimum_log_num logfiles, then let's assume we can't
         # get a reliable measure of cadence. Fall back to a value of
         # 1 year between files, to avoid accidentally flagging this monitor
         # as running late in the subsequent check
@@ -224,10 +219,8 @@ def status(production_mode=True):
     #logging.info("Beginning cron job status monitor")
 
     # Get main logfile path
-    #settings = get_config()
-    #log_path = settings['log_dir']
-    print("LOG PATH HARDWIRED FOR DEVELOPMENT. CHANGE BEFORE PUSHING")
-    log_path = '/grp/jwst/ins/jwql/logs/'
+    settings = get_config()
+    log_path = settings['log_dir']
 
     # If we are in development mode, the log files are in a slightly
     # different location than in production mode
@@ -273,8 +266,7 @@ def status(production_mode=True):
 
     # Create table of results using Bokeh
     create_table(logfile_status)
-    stophere
-    return logfile_status
+    #return logfile_status
 
 
 def missing_file_check(avg_time_between, uncertainty, latest_file):

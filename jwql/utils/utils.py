@@ -69,7 +69,6 @@ def get_config():
     settings : dict
         A dictionary that holds the contents of the config file.
     """
-
     with open(os.path.join(__location__, 'config.json'), 'r') as config_file:
         settings = json.load(config_file)
 
