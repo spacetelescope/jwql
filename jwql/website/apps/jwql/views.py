@@ -197,7 +197,17 @@ def instrument(request, inst):
         Outgoing response sent to the webpage
     """
     template = 'instrument.html'
-    context = {'inst': inst, 'tools': MONITORS}
+    url_dict = {'FGS': 'http://jwst-docs.stsci.edu/display/JTI/Fine+Guidance+Sensor%2C+FGS?q=fgs',
+                'MIRI': 'http://jwst-docs.stsci.edu/display/JTI/Mid-Infrared+Instrument%2C+MIRI',
+                'NIRISS': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Imager+and+Slitless+Spectrograph',
+                'NIRSpec': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Spectrograph',
+                'NIRCam': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Camera'}
+
+    doc_url = url_dict[inst]
+
+    context = {'inst': inst, 
+                'tools': MONITORS,
+                'doc_url': doc_url}
 
     return render(request, template, context)
 
