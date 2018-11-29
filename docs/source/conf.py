@@ -173,6 +173,3 @@ texinfo_documents = [
      author, 'jwql', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-
