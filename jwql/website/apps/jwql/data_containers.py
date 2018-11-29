@@ -27,6 +27,7 @@ import os
 from astropy.io import fits
 import numpy as np
 
+from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser, MONITORS
 
@@ -88,8 +89,12 @@ def get_dashboard_components():
                  'filecount_type': 'Total File Counts by Type',
                  'size_type': 'Total File Sizes by Type',
                  'filecount': 'Total File Counts',
-                 'system_stats': 'System Statistics'
-                 'monitor_cron_jobs': 'Cron Job Status'}
+                 'system_stats': 'System Statistics',
+                 'monitor_cron_jobs': 'Cron Job Monitor',
+                 'cron_status_table': 'Cron Job Status'}
+
+    # Run the cron job monitor to produce an updated table
+    monitor_cron_jobs.status(production_mode=False)
 
     dashboard_components = {}
     for dir_name, subdir_list, file_list in os.walk(output_dir):
