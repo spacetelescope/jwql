@@ -7,7 +7,7 @@ bc0.nodetype = "linux-stable"
 bc0.name = "debug"
 bc0.build_cmds = ["conda env update --file=environment.yml",
 	       	  "with_env -n jwql python setup.py install"]
-bc0.test_cmds = ["with_env -n jwql pytest -s --junitxml=result.xml"]
+bc0.test_cmds = ["with_env -n jwql pytest -s --junitxml=result.xml --cov=./ --cov-report xml"]
 bc0.failedUnstableThresh = 1
 bc0.failedFailureThresh = 1
 
