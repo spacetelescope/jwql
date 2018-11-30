@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Tests for the ``plotting`` module.
 
 Authors
@@ -16,14 +17,15 @@ Use
 
         pytest -s test_plotting.py
 """
+
 from pandas import DataFrame
 
 from jwql.utils.plotting import bar_chart
 
 
 def test_bar_chart():
-    '''Make sure some dummy data generates a Bokeh plot
-    '''
+    """Make sure some dummy data generates a ``bokeh`` plot"""
+    
     # Make a toy dataframe
     data = DataFrame({'meow': {'foo': 12, 'bar': 23, 'baz': 2},
                       'mix': {'foo': 45, 'bar': 31, 'baz': 23},
