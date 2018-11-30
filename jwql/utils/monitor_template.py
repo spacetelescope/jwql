@@ -81,7 +81,7 @@ def monitor_template_main():
 
     # Example of logging
     my_variable = 'foo'
-    logging.info(f"Some useful information: {my_variable}")
+    logging.info('Some useful information: {}'.format(my_variable))
 
     # Example of querying for a dataset via MAST API
     service = "Mast.Jwst.Filtered.Niriss"
@@ -107,7 +107,7 @@ def monitor_template_main():
 
     # Example of locating a dataset in the filesystem
     filesystem = get_config()['filesystem']
-    dataset = os.path.join(filesystem, f"jw{filename_dict['program_id']}", filename_of_interest)
+    dataset = os.path.join(filesystem, 'jw{}'.format(filename_dict['program_id']), filename_of_interest)
 
     # Example of reading in dataset using jwst.datamodels
     im = datamodels.open(dataset)

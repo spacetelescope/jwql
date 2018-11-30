@@ -2,7 +2,7 @@
 
 """
 This module is a collection of plotting functions that may be used
-across the JWQL web application.
+across the ``jwql`` application.
 
 Authors:
 --------
@@ -24,10 +24,11 @@ Use:
         data = data.reset_index()
         plt = plotting.bar_chart(data, 'index')
 """
+
 from bokeh.models import ColumnDataSource, FactorRange, HoverTool
+from bokeh.palettes import Category20c
 from bokeh.plotting import figure
 from bokeh.transform import factor_cmap
-from bokeh.palettes import Category20c
 
 
 def bar_chart(dataframe, groupcol, datacols=None, **kwargs):
@@ -35,23 +36,24 @@ def bar_chart(dataframe, groupcol, datacols=None, **kwargs):
 
     Parameters
     ----------
-    dataframe: pandas.DataFrame
+    dataframe : pandas.DataFrame
         A dataframe of values
-    groupcol: str
+    groupcol : str
         The name of the column with the group labels
-    datacol: str, sequence (optional)
+    datacol : str, sequence (optional)
         The name or list of names of the column containing the data.
         In None, uses all columns except **groupcol**
 
     Returns
     -------
-    bokeh.figure
-        The generated figure
+    plt : obj
+        The generated bokeh.figure object
     """
+    
     # Get the groups
     groups = list(dataframe[groupcol])
 
-    # Get the daacols
+    # Get the datacols
     if datacols is None:
         datacols = [col for col in list(dataframe.columns) if col != groupcol]
 
