@@ -21,7 +21,7 @@ import os
 
 from astroquery.mast import Mast
 from bokeh.embed import components
-bokeh.io import save, output_file
+from bokeh.io import save, output_file
 import pandas as pd
 
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
