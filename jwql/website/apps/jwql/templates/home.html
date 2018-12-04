@@ -4,6 +4,9 @@
 
 	<title>Home - JWQL</title>
 
+    <!-- Custom styles and scripts for this template -->
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+
 {% endblock %}
 
 {% block content %}
@@ -38,6 +41,29 @@
 
         The JWQL application is currently under heavy development. The 1.0 release is expected in 2019.
 
+        <hr>
+
+        <h4>Find a JWST Proposal or File</h4>
+
+        Submit a proposal number (e.g. 86600) or file root (e.g. jw86600006001_02101_00008_guider1) to view that proposal or file:
+
+        <!--Show any errors from a previous form submission-->
+        {% if form.errors %}
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
+
+        <!--Load the file search form from the view-->
+        <form action="" method="post" id="homepage_filesearch">
+            {{ csrf_input }}
+            {{ form }}
+            <button class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
+        </form>
 
 	</main>
 
