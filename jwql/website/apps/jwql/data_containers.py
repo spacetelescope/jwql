@@ -321,7 +321,7 @@ def get_instrument_proposals(instrument):
     results = response[0].json()['data']
 
     filenames = [result['filename'] for result in results]
-    proposals = list(set([filename[0:7].split('jw')[-1] for filename in filenames]))
+    proposals = list(set(filename_parser(filename)['program_id'] for filename in filenames))
 
     return proposals
 
@@ -358,10 +358,10 @@ def get_preview_images_by_instrument(inst):
     # Build list of available preview images
     preview_images = []
     for filename in filenames:
-        proposal = filename[0:7]
+        proposal = filename_parser(filename)['program_id']
         preview_images.extend(glob.glob(os.path.join(
             PREVIEW_IMAGE_FILESYSTEM,
-            proposal,
+            'jw{}'.format(proposal),
             '{}*.jpg'.format(filename))))
 
     # Only return the filenames
@@ -495,10 +495,10 @@ def get_thumbnails_by_instrument(inst):
     # Build list of available preview images
     thumbnails = []
     for filename in filenames:
-        proposal = filename[0:7]
+        proposal = filename_parser(filename)['program_id']
         thumbnails.extend(glob.glob(os.path.join(
             THUMBNAIL_FILESYSTEM,
-            proposal,
+            'jw{}'.format(proposal),
             '{}*.thumb'.format(filename))))
 
     # Only return the filenames

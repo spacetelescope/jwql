@@ -34,7 +34,7 @@ Use
 
     ::
         from django.urls import path
-        from . import views
+        from . import api_views
         urlpatterns = [path('web/path/to/view/',
                              api_views.view_name, name='view_name')]
 
@@ -124,7 +124,10 @@ def instrument_proposals(request, inst):
     request : HttpRequest object
         Incoming request from the webpage
     inst : str
-        Name of JWST instrument
+        The instrument of interest.  The name of the instrument must
+        mach one of the following: (``nircam``, ``NIRCam``, ``niriss``,
+        ``NIRISS``, ``nirspec``, ``NIRSpec``, ``miri``, ``MIRI``,
+        ``fgs``, ``FGS``).
 
     Returns
     -------
@@ -144,7 +147,7 @@ def preview_images_by_instrument(request, inst):
     ----------
     request : HttpRequest object
         Incoming request from the webpage
-    instrument : str
+    inst : str
         The instrument of interest.  The name of the instrument must
         mach one of the following: (``nircam``, ``NIRCam``, ``niriss``,
         ``NIRISS``, ``nirspec``, ``NIRSpec``, ``miri``, ``MIRI``,
@@ -210,7 +213,7 @@ def thumbnails_by_instrument(request, inst):
     ----------
     request : HttpRequest object
         Incoming request from the webpage
-    instrument : str
+    inst : str
         The instrument of interest.  The name of the instrument must
         mach one of the following: (``nircam``, ``NIRCam``, ``niriss``,
         ``NIRISS``, ``nirspec``, ``NIRSpec``, ``miri``, ``MIRI``,
