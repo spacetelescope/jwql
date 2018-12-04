@@ -1,7 +1,7 @@
 """Defines the forms for the ``jwql`` web app.
 
 Django allows for an object-oriented model representation of forms for
-users to provide input through HTTP POST methods.This module defines
+users to provide input through HTTP POST methods. This module defines
 all of the forms that are used across the various webpages used for the
 JWQL application.
 
@@ -13,11 +13,20 @@ Authors
 Use
 ---
 
-    This module is called in ``views.py`` as such:
+    This module is used within ``views.py`` as such:
     ::
         from .forms import FileSearchForm
-        def view_function():
+        def view_function(request):
             form = FileSearchForm(request.POST or None)
+
+            if request.method == 'POST':
+                if form.is_valid():
+                    # Process form input and redirect
+                    return redirect(new_url)
+
+            template = 'some_template.html'
+            context = {'form': form, ...}
+            return render(request, template, context)
 
 References
 ----------
@@ -50,6 +59,7 @@ class FileSearchForm(forms.Form):
                              empty_value='Search')
 
     # Initialize attributes
+    fileroot_dict = None
     search_type = None
     instrument = None
 
