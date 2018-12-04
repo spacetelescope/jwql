@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
 
 """Utility module for administrative tasks.
 
@@ -14,14 +14,17 @@ Use
 
     To run the web app server:
     ::
+
         python manage.py runserver
 
     To start the interactive shellL:
     ::
+
         python manage.py shell
 
     To run tests for all installed apps:
     ::
+
         python manage.py test
 
 References
