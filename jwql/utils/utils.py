@@ -50,6 +50,11 @@ MONITORS = {
 NIRCAM_SHORTWAVE_DETECTORS = ['NRCA1', 'NRCA2', 'NRCA3', 'NRCA4',
                               'NRCB1', 'NRCB2', 'NRCB3', 'NRCB4']
 NIRCAM_LONGWAVE_DETECTORS = ['NRCA5', 'NRCB5']
+INSTRUMENTS_SHORTHAND = {'gui': 'FGS',
+                         'mir': 'MIRI',
+                         'nis': 'NIRISS',
+                         'nrc': 'NIRCam',
+                         'nrs': 'NIRSpec'}
 
 
 def ensure_dir_exists(fullpath):
@@ -117,3 +122,44 @@ def filename_parser(filename):
         raise ValueError('Provided file {} does not follow JWST naming conventions (jw<PPPPP><OOO><VVV>_<GGSAA>_<EEEEE>_<detector>_<suffix>.fits)'.format(filename))
 
     return filename_dict
+
+def fileroot_parser(fileroot):
+    """Return a dictionary that contains the properties of a given
+    JWST file root (e.g. program ID, visit number, detector, etc.)
+
+    Parameters
+    ----------
+    fileroot : str
+        Path or name of JWST fileroot to parse
+
+    Returns
+    -------
+    filename_dict : dict
+        Collection of file properties
+
+    Raises
+    ------
+    ValueError
+        When the provided file does not follow naming conventions
+    """
+    fileroot = os.path.basename(fileroot)
+
+    elements = \
+        re.compile(r"[a-z]+"
+                   "(?P<program_id>\d{5})"
+                   "(?P<observation>\d{3})"
+                   "(?P<visit>\d{3})"
+                   "_(?P<visit_group>\d{2})"
+                   "(?P<parallel_seq_id>\d{1})"
+                   "(?P<activity>\w{2})"
+                   "_(?P<exposure_id>\d+)"
+                   "_(?P<detector>\w+)")
+
+    jwst_file = elements.match(fileroot)
+
+    if jwst_file is not None:
+        fileroot_dict = jwst_file.groupdict()
+    else:
+        raise ValueError('Provided file {} does not follow JWST naming conventions (jw<PPPPP><OOO><VVV>_<GGSAA>_<EEEEE>_<detector>_<suffix>.fits)'.format(fileroot))
+
+    return fileroot_dict
