@@ -1,7 +1,8 @@
 #! /usr/bin/env python
 
-"""This module monitors the status of monitors run via cron job via log files. Basic
-results (e.g. success, failure) are collected
+"""This module monitors the status of JWQL monitors run via cron job via log files. Basic
+results (e.g. success, failure) are collected and placed in a Bokeh table for display
+on the web app
 
 Authors
 -------
@@ -15,8 +16,8 @@ Use
 
     ::
 
-        from somewhere import something
-        something.doooooo_it()
+        from jwql.jwql_monitors import monitor_cron_jobs
+        monitor_cron_jobs.status()
 
 Dependencies
 ------------
@@ -43,13 +44,12 @@ from jwql.utils.utils import get_config
 
 
 def create_table(status_dict):
-    """Create interactive Bokeh table containing the logfile status results. Modified from
-    https://bokeh.pydata.org/en/latest/docs/user_guide/examples/interaction_data_table.html
+    """Create interactive Bokeh table containing the logfile status results.
 
     Parameters
     ----------
     status_dict : dict
-        Status results from all logfiles
+        Nested dictionary with status results from all logfiles
     """
     # Rearrange the nested dictionary into a non-nested dict for the table
     filenames = []
@@ -62,6 +62,7 @@ def create_table(status_dict):
         missings.append(str(status_dict[key]['missing_file']))
         results.append(status_dict[key]['status'])
 
+    # div to color the boxes in the status column
     success_template = """
     <div style="background:<%=
         (function colorfromstr(){
@@ -73,6 +74,7 @@ def create_table(status_dict):
     <%= value %></div>
     """
 
+    # div to color the boxes in the column for possibly late logfiles
     missing_template = """
     <div style="background:<%=
         (function colorfrombool(){
@@ -100,16 +102,8 @@ def create_table(status_dict):
     ]
     data_table = DataTable(source=source, columns=columns, width=800, height=280, index_position=None)
 
-    # Save the plot as full html
+    # Get output directory for saving the table files
     output_dir = get_config()['outputs']
-    output_filename = "cron_status_table"
-    #html_filename = output_filename + '.html'
-    #outfile = os.path.join(output_dir, 'monitor_cron_jobs', html_filename)
-    #output_file(outfile)
-    #show(widgetbox(data_table))
-    # save(outfile)
-    #set_permissions(outfile)
-    #logging.info('Saved Bokeh DataTable as html file: {}'.format(outfile))
 
     # Save plot as components
     script, div = components(data_table)
@@ -126,8 +120,8 @@ def create_table(status_dict):
         f.close()
     set_permissions(script_outfile)
 
-    #logging.info('Saved Bokeh components files: {}_component.html and {}_component.js'
-    #             .format(output_filename, output_filename))
+    logging.info('Saved Bokeh components files: {}_component.html and {}_component.js'
+                 .format(div_outfile, script_outfile))
 
 
 def find_latest(logfiles):
@@ -137,13 +131,11 @@ def find_latest(logfiles):
 
     Parameters
     ----------
-
     logfiles : list
         List of logfiles in the directory
 
     Returns
     -------
-
     latest : str
         Filename of the most recent file
 
@@ -161,13 +153,11 @@ def get_cadence(filenames):
 
     Parameters
     ---------
-
     filenames : list
         List of log files to examine
 
     Returns
     -------
-
     mean_delta : float
         Mean time in seconds between the appearance of consecutive log files
 
@@ -191,22 +181,20 @@ def get_cadence(filenames):
     return mean_delta, stdev_delta
 
 
-#@log_fail
-#@log_info
+@log_fail
+@log_info
 def status(production_mode=True):
     """Main function: determine the status of the instrument montiors by examining
     log files.
 
     Parameters
     ----------
-
     production_mode : bool
         If true, look in the main log directory. If false, look in the dev log
         file directory.
 
     Returns
     -------
-
     logfile_status : dict
         Nested dictionary containing the status for all monitors. Top level keys
         include all monitors. Within a given monitor, the value is a dictionary
@@ -216,7 +204,8 @@ def status(production_mode=True):
         either 'success' or 'failure'.
     """
     # Begin logging
-    #logging.info("Beginning cron job status monitor")
+    configure_logging('monitor_cron_jobs', production_mode=production_mode)
+    logging.info("Beginning cron job status monitor")
 
     # Get main logfile path
     settings = get_config()
@@ -238,26 +227,22 @@ def status(production_mode=True):
         if len(filenames) > 0:
             monitor_name = subdir.split('/')[-1]
             log_file_list = [os.path.join(subdir, filename) for filename in filenames]
-            print('log_file_list', log_file_list)
 
             # Find the cadence of the monitor
             delta_time, stdev_time = get_cadence(log_file_list)
-            print('delta_time: {}, {}'.format(delta_time, stdev_time))
 
             # Identify the most recent log file
             latest_log, latest_log_time = find_latest(log_file_list)
-            print('latest_log: {}'.format(latest_log))
 
             # Check to see if we expect a file more recent than the latest
             missing_file = missing_file_check(delta_time, stdev_time, latest_log)
             if missing_file:
-                print('Expected a more recent {} logfile than {}'.format(monitor_name, os.path.basename(latest_log)))
-                #logging.warning('Expected a more recent {} logfile than {}'
-                #                .format(monitor_name, os.path.basename(latest_log)))
+                logging.warning('Expected a more recent {} logfile than {}'
+                                .format(monitor_name, os.path.basename(latest_log)))
 
             # Check the file for success/failure
             result = success_check(latest_log)
-            print('result: {}'.format(result))
+            logging.info('{}: Latest log file indicates {}'.format(monitor_name, result))
 
             # Add results to the dictionary
             logfile_status[monitor_name] = {'logname': os.path.basename(latest_log),
@@ -266,7 +251,7 @@ def status(production_mode=True):
 
     # Create table of results using Bokeh
     create_table(logfile_status)
-    #return logfile_status
+    logging.info('Cron job status monitor completed successfully.')
 
 
 def missing_file_check(avg_time_between, uncertainty, latest_file):
@@ -277,7 +262,6 @@ def missing_file_check(avg_time_between, uncertainty, latest_file):
 
     Parameters
     ----------
-
     avg_time_between : float
         Average number of seconds between log files
 
@@ -309,13 +293,11 @@ def success_check(filename):
 
     Parameters
     ----------
-
     filename : str
         Name of the log file to parse
 
     Returns
     -------
-
     execution : str
         'success' or 'failure'
     """
