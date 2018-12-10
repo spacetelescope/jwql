@@ -116,6 +116,11 @@
     border-color: #cfd4da;
 }
 
+/*Make the form fields be inline*/
+.homepage_form_fieldWrapper {
+    display: inline;
+}
+
 /*Don't let the search bar be super long*/
 .input-group {
     width: 250px;

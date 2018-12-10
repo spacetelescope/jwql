@@ -47,21 +47,34 @@
 
         Submit a proposal number (e.g. 86600) or file root (e.g. jw86600006001_02101_00008_guider1) to view that proposal or file:
 
-        <!--Show any errors from a previous form submission-->
-        {% if form.errors %}
-            {% for field in form %}
-                {% for error in field.errors %}
-                    <div class="alert alert-danger">
-                        <strong>{{ error|escape }}</strong>
-                    </div>
-                {% endfor %}
-            {% endfor %}
-        {% endif %}
+
+
 
         <!--Load the file search form from the view-->
         <form action="" method="post" id="homepage_filesearch">
+            <!--Show any errors from a previous form submission-->
+            {% if form.errors %}
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger">
+                            <strong>{{ error|escape }}</strong>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            {% endif %}
+
+            <!--Django Cross-Site Request Forgery magic-->
             {{ csrf_input }}
-            {{ form }}
+
+            <!--Show the field forms-->
+            {% for field in form %}
+                <div class="homepage_form_fieldWrapper">
+                    {{ field }}
+                    {% if field.help_text %}
+                        <p class="help">{{ field.help_text|safe }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
             <button class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
         </form>
 
