@@ -82,7 +82,7 @@ class FileSearchForm(forms.Form):
         elif self._search_is_fileroot(search):
             self.search_type = 'fileroot'
         else:
-            forms.ValidationError('Invalid search term {}. Please provide proposal number or file root.'.format(search))
+            raise forms.ValidationError('Invalid search term {}. Please provide proposal number or file root.'.format(search))
 
         # If they searched for a proposal...
         if self.search_type == 'proposal':
