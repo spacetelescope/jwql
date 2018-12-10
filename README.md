@@ -19,7 +19,7 @@ The JWST Quicklook Application (`JWQL`) is a database-driven web application and
 
 Official API documentation can be found on [ReadTheDocs](https://jwql.readthedocs.io)
 
-The `jwql` application is currently under heavy development.  The `1.0` release is expected in 2019.  Currently, a development version of the web application can be found at [dljwql.stsci.edu](dljwql.stsci.edu).
+The `jwql` application is currently under heavy development.  The `1.0` release is expected in 2019.  Currently, a development version of the web application can be found at [https://dljwql.stsci.edu](https://dljwql.stsci.edu).
 
 ## Prerequisites
 
