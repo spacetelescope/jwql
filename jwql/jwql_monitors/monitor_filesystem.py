@@ -9,7 +9,7 @@ being used, and then plot these values over time.
 Authors
 -------
 
-    - Misty Cracraft
+    - Misty Cracraft, Sara Ogaz
 
 Use
 ---
@@ -60,20 +60,19 @@ Notes
     as saving them to an output html file.
 """
 
-from collections import defaultdict
 import datetime
 import logging
 import numpy as np
 import os
 import subprocess
 
-from sqlalchemy import func
-
 from bokeh.embed import components
 from bokeh.layouts import gridplot
 from bokeh.plotting import figure, output_file, save
 
 from jwql.database import database_interface as di
+from jwql.database.database_interface import Filesystem_general
+from jwql.database.database_interface import Filesystem_instrument as InsDb
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import filename_parser
@@ -83,21 +82,21 @@ from jwql.utils.utils import get_config
 @log_fail
 @log_info
 def monitor_filesystem():
-    """Tabulates the inventory of the JWST filesystem, saving
+    """
+    Tabulates the inventory of the JWST filesystem, saving
     statistics to files, and generates plots.
     """
 
     # Begin logging
     logging.info('Beginning filesystem monitoring.')
 
-    # Get path, directories and files in system and count files in all directories
+    # Get path, dirs and files in system and count files in all directories
     settings = get_config()
     filesystem = settings['filesystem']
-    outputs_dir = os.path.join(settings['outputs'], 'monitor_filesystem')
 
     # set up dictionaries for output
-    results_dict = defaultdict(int)
-    size_dict = defaultdict(float)
+    results_dict = {}
+    size_dict = {}
 
     # Walk through all directories recursively and count files
     logging.info('Searching filesystem...')
@@ -108,165 +107,260 @@ def monitor_filesystem():
             if filename.endswith(".fits"):  # find total number of fits files
                 suffix = filename_parser(filename)['suffix']  # define suffix
                 detector = filename_parser(filename)['detector']
-                instrument = detector[0:3]  # first three characters of detector specify instrument
+                # first three characters of detector specify instrument
+                instrument = detector[0:3]
                 key_count = instrument+'_'+suffix+'_count'
                 key_size = instrument+'_'+suffix+'_size'
                 results_dict['fits_files'] += 1
                 size_dict['size_fits'] += os.path.getsize(file_path)
                 results_dict[key_count] += 1
                 size_dict[key_size] += os.path.getsize(file_path)
-                #size_dict[instrument] += os.path.getsize(file_path)
-    logging.info('{} files found in filesystem'.format(results_dict['fits_files']))
+                # size_dict[instrument] += os.path.getsize(file_path)
+    logging.info('{} files found in filesystem'.format(
+        results_dict['fits_files']))
 
     # Get df style stats on file system
     out = subprocess.check_output('df {}'.format(filesystem), shell=True)
-    outstring = out.decode("utf-8")  # put into string for parsing from byte format
+    # put into string for parsing from byte format
+    outstring = out.decode("utf-8")
     parsed = outstring.split(sep=None)
 
-    # Select desired elements from parsed string - put these in dictionary, too?
+    # Select desired elements from parsed string, put these in dictionary, too?
     total_size = int(parsed[8])  # in blocks of 512 bytes
     used_size = int(parsed[9])
     available_size = int(parsed[10])
 
     # Save stats for plotting over time  # also define this as part of database
-    now = datetime.datetime.now().isoformat(sep='T', timespec='auto')  # get date of stats
-
-    # change sections below to write to database rather than files
-    # write in date (now), total, used, available, then the counts and sizes in dictionaries
+    # get date of stats
+    now = datetime.datetime.now().isoformat(sep='T')
 
     # add row to filesystem_general table
     di.session.add(di.Filesystem_general(date=now, total_size=total_size,
                                          used_size=used_size,
                                          available_size=available_size,
-                                         file_count = results_dict['file_count'],
-                                         fits_files = results_dict['fits_files'],
-                                         size_fits = size_dict['size_fits']))
+                                         file_count=results_dict['file_count'],
+                                         fits_files=results_dict['fits_files'],
+                                         size_fits=size_dict['size_fits']))
 
     # Add row to filesystem_instrument table
-    current_columns = [t.name for t in di.Filesystem_instrument.metadata.sorted_tables[2].columns]
+    current_columns = [t.name for t in
+                       di.Filesystem_instrument.metadata.sorted_tables[2].columns]
     current_columns.remove('date')
 
-    combo_dict = {**results_dict, **size_dict} #fancy dictionary stuff
-    filtered_dict = {k: combo_dict.get(k, 0) for k in current_columns} # more fancy dict stuff
+    # fancy dictionary stuff
+    combo_dict = {**results_dict, **size_dict}
+    # more fancy dict stuff
+    filtered_dict = {k: combo_dict.get(k, 0) for k in current_columns}
     di.session.add(di.Filesystem_instrument(date=now, **filtered_dict))
 
     # Commit new rows to database
     di.session.commit()
 
-
-    # Plotting goes here!
-
-
-    # set up output file and write stats
-    # statsfile = os.path.join(outputs_dir, 'statsfile.txt')
-    # with open(statsfile, "a+") as f:
-    #     f.write("{0} {1:15d} {2:15d} {3:15d} {4:15d} {5}\n".format(now, results_dict['file_count'],
-    #             total, available, used, percent_used))
-    # set_permissions(statsfile)
-    # logging.info('Saved file statistics to: {}'.format(statsfile))
-    #
-    # # set up and read out stats on files by type
-    # filesbytype = os.path.join(outputs_dir, 'filesbytype.txt')
-    # with open(filesbytype, "a+") as f2:
-    #     f2.write("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10}\n".format(results_dict['fits_files'],
-    #              results_dict['uncal'], results_dict['cal'], results_dict['rate'],
-    #              results_dict['rateints'], results_dict['i2d'], results_dict['nrc'],
-    #              results_dict['nrs'], results_dict['nis'], results_dict['mir'], results_dict['gui']))
-    # set_permissions(filesbytype, verbose=False)
-    # logging.info('Saved file statistics by type to {}'.format(filesbytype))
-    #
-    # # set up file size by type file
-    # sizebytype = os.path.join(outputs_dir, 'sizebytype.txt')
-    # with open(sizebytype, "a+") as f3:
-    #     f3.write("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10}\n".format(size_dict['size_fits'],
-    #              size_dict['uncal'], size_dict['cal'], size_dict['rate'],
-    #              size_dict['rateints'], size_dict['i2d'], size_dict['nrc'],
-    #              size_dict['nrs'], size_dict['nis'], size_dict['mir'], size_dict['gui']))
-    # set_permissions(sizebytype, verbose=False)
-    # logging.info('Saved file sizes by type to {}'.format(sizebytype))
-    #
-    # logging.info('Filesystem statistics calculation complete.')
-
     # Create the plots
-    plot_system_stats(statsfile, filesbytype, sizebytype)
+    plot_system_stats()
 
 
-
-def plot_system_stats(stats_file, filebytype, sizebytype):
-    """Read in the file of saved stats over time and plot them.
-
-    Parameters
-    -----------
-    stats_file : str
-        file containing information of stats over time
-    filebytype : str
-        file containing information of file counts by type over
-        time
-    sizebytype : str
-        file containing information on file sizes by type over time
+def plot_system_stats():
+    """
+    Read in the file of saved stats over time and plot them.
     """
 
-    # pull up database tables
-    filesystem_general = di.session.query(di.Filesystem_general)
-    filesystem_instrument = di.session.query(di.Filesystem_instrument)
-
-
     # get path for files
-    #settings = get_config()
+    settings = get_config()
+    outputs_dir = os.path.join(settings['outputs'], 'monitor_filesystem')
 
     # read in file of statistics
-    date = filesystem_general.date
-    file_count = filesystem_general.file_count
-    sy_size = filesystem_general.total_size
-    used_size = filesystem_general.used_size
-    free_size = filesystem_general.available_size
-    fits_files = filesystem_general.fits_files
-    fits_sz = filesystem_general.size_fits
+    general_query = di.session.query(Filesystem_general.date,
+                                     Filesystem_general.file_count,
+                                     Filesystem_general.total_size,
+                                     Filesystem_general.used_size,
+                                     Filesystem_general.available_size,
+                                     Filesystem_general.fits_files,
+                                     Filesystem_general.size_fits).all()
+    date_list_general, file_count, sy_size, used_size, free_size, fits_files, \
+        fits_sz = [], [], [], [], [], [], []
 
-    uncal_size = di.session.query(func.count(
-        di.filesystem_instrument.filter(di.filesystem_instrument.column.like('*_uncal*')))) / (1024.**3)
-
-
-    #uncalfiles, calfiles, ratefiles, rateintsfiles, i2dfiles, nrcfiles, nrsfiles, \
-    #nisfiles, mirfiles, fgsfiles = np.loadtxt(filebytype, dtype=str, unpack=True)
-
-
-    #uncal_sz, cal_sz, rate_sz, rateints_sz, i2d_sz, nrc_sz, nrs_sz, nis_sz, \
-    #mir_sz, fgs_sz = np.loadtxt(sizebytype, dtype=str, unpack=True)
-
-
-    logging.info('Read in file statistics from {}, {}, {}'.format(stats_file, filebytype, sizebytype))
+    for row in general_query:
+        date_list_general.append(row[0])
+        file_count.append(row[1])
+        sy_size.append(row[2])
+        used_size.append(row[3])
+        free_size.append(row[4])
+        fits_files.append(row[5])
+        fits_sz.append(row[6])
 
     # put in proper np array types and convert to GB sizes
-    dates = np.array(date, dtype='datetime64')
-    systemsize = sy_size / (1024.**3)
-    freesize = free_size / (1024.**3)
-    usedsize = used_size / (1024.**3)
-    fits_size = fits_sz/ (1024.**3)
+    dates = np.array(date_list_general, dtype='datetime64')
+    systemsize = np.array(sy_size) / (1024.**3)
+    freesize = np.array(free_size) / (1024.**3)
+    usedsize = np.array(used_size) / (1024.**3)
+    fits_size = np.array(fits_sz) / (1024.**3)
+    fits = fits_files
 
-    fits = fits_files.astype(int)
-    uncal = uncalfiles.astype(int)
-    cal = calfiles.astype(int)
-    rate = ratefiles.astype(int)
-    rateints = rateintsfiles.astype(int)
-    i2d = i2dfiles.astype(int)
-    nircam = nrcfiles.astype(int)
-    nirspec = nrsfiles.astype(int)
-    niriss = nisfiles.astype(int)
-    miri = mirfiles.astype(int)
-    fgs = fgsfiles.astype(int)
+    # Information from Filesystem_instrument
+    # There is a better way to do this... but we don't know what the column
+    # name lists will be ahead of time, so from what I can tell, we have to
+    # either hard code the column names or do the summation after the query.
+    uncal_filecount_results = di.session.query((InsDb.nrc_uncal_count +
+                                                InsDb.nrs_uncal_count +
+                                                InsDb.nis_uncal_count +
+                                                InsDb.mir_uncal_count +
+                                                InsDb.gui_uncal_count).
+                                               label("uncal_count")).all()
+    uncal = [row[0] for row in uncal_filecount_results]
 
+    cal_filecount_results = di.session.query((InsDb.nrc_cal_count +
+                                              InsDb.nrs_cal_count +
+                                              InsDb.nis_cal_count +
+                                              InsDb.mir_cal_count +
+                                              InsDb.gui_cal_count).
+                                             label("cal_count")).all()
+    cal = [row[0] for row in cal_filecount_results]
 
-    #uncal_size = uncal_sz.astype(float) / (1024.**3)
-    cal_size = cal_sz.astype(float) / (1024.**3)
-    rate_size = rate_sz.astype(float) / (1024.**3)
-    rateints_size = rateints_sz.astype(float) / (1024.**3)
-    i2d_size = i2d_sz.astype(float) / (1024.**3)
-    nircam_size = nrc_sz.astype(float) / (1024.**3)
-    nirspec_size = nrs_sz.astype(float) / (1024.**3)
-    niriss_size = nis_sz.astype(float) / (1024.**3)
-    miri_size = mir_sz.astype(float) / (1024.**3)
-    fgs_size = fgs_sz.astype(float) / (1024.**3)
+    rate_filecount_results = di.session.query((InsDb.nrc_rate_count +
+                                               InsDb.nrs_rate_count +
+                                               InsDb.nis_rate_count +
+                                               InsDb.mir_rate_count +
+                                               InsDb.gui_rate_count).
+                                              label("rate_count")).all()
+    rate = [row[0] for row in rate_filecount_results]
+
+    rateints_filecount_results = di.session.query((InsDb.nrc_rateints_count +
+                                                   InsDb.nrs_rateints_count +
+                                                   InsDb.nis_rateints_count +
+                                                   InsDb.mir_rateints_count +
+                                                   InsDb.gui_rateints_count).
+                                                  label("rateints_count")).all()
+    rateints = [row[0] for row in rateints_filecount_results]
+
+    i2d_filecount_results = di.session.query((InsDb.nrc_i2d_count +
+                                              InsDb.nrs_i2d_count +
+                                              InsDb.nis_i2d_count +
+                                              InsDb.mir_i2d_count +
+                                              InsDb.gui_i2d_count).
+                                             label("i2d_count")).all()
+    i2d = [row[0] for row in i2d_filecount_results]
+
+    nircam_filecount_results = di.session.query((InsDb.nrc_uncal_count +
+                                                 InsDb.nrc_cal_count +
+                                                 InsDb.nrc_rate_count +
+                                                 InsDb.nrc_rateints_count +
+                                                 InsDb.nrc_i2d_count).
+                                                label("nir_count")).all()
+    nircam = [row[0] for row in nircam_filecount_results]
+
+    nirspec_filecount_results = di.session.query((InsDb.nrs_uncal_count +
+                                                  InsDb.nrs_cal_count +
+                                                  InsDb.nrs_rate_count +
+                                                  InsDb.nrs_rateints_count +
+                                                  InsDb.nrs_i2d_count).
+                                                 label("nrs_count")).all()
+    nirspec = [row[0] for row in nirspec_filecount_results]
+
+    niriss_filecount_results = di.session.query((InsDb.nis_uncal_count +
+                                                 InsDb.nis_cal_count +
+                                                 InsDb.nis_rate_count +
+                                                 InsDb.nis_rateints_count +
+                                                 InsDb.nis_i2d_count).
+                                                label("nis_count")).all()
+    niriss = [row[0] for row in niriss_filecount_results]
+
+    miri_filecount_results = di.session.query((InsDb.mir_uncal_count +
+                                               InsDb.mir_cal_count +
+                                               InsDb.mir_rate_count +
+                                               InsDb.mir_rateints_count +
+                                               InsDb.mir_i2d_count).
+                                              label("mir_count")).all()
+    miri = [row[0] for row in miri_filecount_results]
+
+    fgs_filecount_results = di.session.query((InsDb.gui_uncal_count +
+                                              InsDb.gui_cal_count +
+                                              InsDb.gui_rate_count +
+                                              InsDb.gui_rateints_count +
+                                              InsDb.gui_i2d_count).
+                                             label("nir_count")).all()
+    fgs = [row[0] for row in fgs_filecount_results]
+
+    # Next is the size set
+    uncal_size_results = di.session.query((InsDb.nrc_uncal_size +
+                                           InsDb.nrs_uncal_size +
+                                           InsDb.nis_uncal_size +
+                                           InsDb.mir_uncal_size +
+                                           InsDb.gui_uncal_size).
+                                          label("uncal_size")).all()
+    uncal_size = np.array([row[0] for row in uncal_size_results]) / (1024.**3)
+
+    cal_size_results = di.session.query((InsDb.nrc_cal_size +
+                                         InsDb.nrs_cal_size +
+                                         InsDb.nis_cal_size +
+                                         InsDb.mir_cal_size +
+                                         InsDb.gui_cal_size).
+                                        label("cal_size")).all()
+    cal_size = np.array([row[0] for row in cal_size_results]) / (1024.**3)
+
+    rate_size_results = di.session.query((InsDb.nrc_rate_size +
+                                          InsDb.nrs_rate_size +
+                                          InsDb.nis_rate_size +
+                                          InsDb.mir_rate_size +
+                                          InsDb.gui_rate_size).
+                                         label("rate_size")).all()
+    rate_size = np.array([row[0] for row in rate_size_results]) / (1024.**3)
+
+    rateints_size_results = di.session.query((InsDb.nrc_rateints_size +
+                                              InsDb.nrs_rateints_size +
+                                              InsDb.nis_rateints_size +
+                                              InsDb.mir_rateints_size +
+                                              InsDb.gui_rateints_size).
+                                             label("rateints_size")).all()
+    rateints_size = np.array([row[0] for row in rateints_size_results]) / (1024.**3)
+
+    i2d_size_results = di.session.query((InsDb.nrc_i2d_size +
+                                         InsDb.nrs_i2d_size +
+                                         InsDb.nis_i2d_size +
+                                         InsDb.mir_i2d_size +
+                                         InsDb.gui_i2d_size).
+                                        label("i2d_size")).all()
+    i2d_size = np.array([row[0] for row in i2d_size_results]) / (1024.**3)
+
+    nircam_size_results = di.session.query((InsDb.nrc_uncal_size +
+                                            InsDb.nrc_cal_size +
+                                            InsDb.nrc_rate_size +
+                                            InsDb.nrc_rateints_size +
+                                            InsDb.nrc_i2d_size).
+                                           label("nrc_size")).all()
+    nircam_size = np.array([row[0] for row in nircam_size_results]) / (1024.**3)
+
+    nirspec_size_results = di.session.query((InsDb.nrs_uncal_size +
+                                             InsDb.nrs_cal_size +
+                                             InsDb.nrs_rate_size +
+                                             InsDb.nrs_rateints_size +
+                                             InsDb.nrs_i2d_size).
+                                            label("nrs_size")).all()
+    nirspec_size = np.array([row[0] for row in nirspec_size_results]) / (1024.**3)
+
+    niriss_size_results = di.session.query((InsDb.nis_uncal_size +
+                                            InsDb.nis_cal_size +
+                                            InsDb.nis_rate_size +
+                                            InsDb.nis_rateints_size +
+                                            InsDb.nis_i2d_size).
+                                           label("nis_size")).all()
+    niriss_size = np.array([row[0] for row in niriss_size_results]) / (1024.**3)
+
+    miri_size_results = di.session.query((InsDb.mir_uncal_size +
+                                          InsDb.mir_cal_size +
+                                          InsDb.mir_rate_size +
+                                          InsDb.mir_rateints_size +
+                                          InsDb.mir_i2d_size).
+                                         label("mir_size")).all()
+    miri_size = np.array([row[0] for row in miri_size_results]) / (1024.**3)
+
+    fgs_size_results = di.session.query((InsDb.gui_uncal_size +
+                                         InsDb.gui_cal_size +
+                                         InsDb.gui_rate_size +
+                                         InsDb.gui_rateints_size +
+                                         InsDb.gui_i2d_size).
+                                        label("mir_size")).all()
+    fgs_size = np.array([row[0] for row in fgs_size_results]) / (1024.**3)
 
     # plot the data
     # Plot filecount vs. date
@@ -296,7 +390,8 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     p3.line(dates, uncal, legend='uncalibrated fits files', line_color='red')
     p3.diamond(dates, uncal, color='red')
     p3.line(dates, cal, legend='calibrated fits files', line_color='blue')
-    p3.square(date, cal, color='blue')
+    # This was original "date", what did we want here?
+    p3.square(dates, cal, color='blue')
     p3.line(dates, rate, legend='rate fits files', line_color='green')
     p3.triangle(dates, rate, color='green')
     p3.line(dates, rateints, legend='rateints fits files', line_color='orange')
@@ -323,7 +418,8 @@ def plot_system_stats(stats_file, filebytype, sizebytype):
     p4.line(dates, uncal_size, legend='uncalibrated fits files', line_color='red')
     p4.diamond(dates, uncal_size, color='red')
     p4.line(dates, cal_size, legend='calibrated fits files', line_color='blue')
-    p4.square(date, cal_size, color='blue')
+    # This was original "date", what did we want here?
+    p4.square(dates, cal_size, color='blue')
     p4.line(dates, rate_size, legend='rate fits files', line_color='green')
     p4.triangle(dates, rate_size, color='green')
     p4.line(dates, rateints_size, legend='rateints fits files', line_color='orange')

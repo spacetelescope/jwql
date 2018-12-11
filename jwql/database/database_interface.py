@@ -62,6 +62,7 @@ from sqlalchemy import Column
 from sqlalchemy import create_engine
 from sqlalchemy import DateTime
 from sqlalchemy import Integer
+from sqlalchemy import Float
 from sqlalchemy import MetaData
 from sqlalchemy import String
 from sqlalchemy.ext.declarative import declarative_base
@@ -193,7 +194,7 @@ class Filesystem_general(base):
     # Name the table
     __tablename__ = 'filesystem_general'
     # Define the columns
-    date = Column(DateTime, nullable=False)
+    date = Column(DateTime, primary_key=True, nullable=False)
     file_count = Column(Integer, nullable=False)  # all files, not just fits
     total_size = Column(Float, nullable=False)
     used_size = Column(Float, nullable=False)
@@ -208,7 +209,7 @@ class Filesystem_instrument(base):
     __tablename__ = 'filesystem_instrument'
 
     # Define the columns
-    date = Column(DateTime, nullable=False)
+    date = Column(DateTime, primary_key=True, nullable=False)
     nrc_uncal_count = Column(Integer, nullable=False)
     nrc_cal_count = Column(Integer, nullable=False)
     nrc_rate_count = Column(Integer, nullable=False)
