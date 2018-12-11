@@ -36,9 +36,9 @@ Use:
 
 import logging
 import os
+import socket
 
 from astropy.io import fits
-from jwst.datamodels import dqflags
 import numpy as np
 
 from jwql.utils import permissions
@@ -48,6 +48,10 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+
+# Only import jwst if not running from readthedocs
+if 'build' and 'project' and 'jwql' not in socket.gethostname():
+    from jwst.datamodels import dqflags
 
 
 class PreviewImage():
@@ -200,7 +204,7 @@ class PreviewImage():
                     else:
                         data = hdulist[ext].data.astype(np.float)
                 else:
-                    raise ValueError((f'WARNING: no {ext} extension in {filename}!'))
+                    raise ValueError(('WARNING: no {} extension in {}!'.format(ext, filename)))
                 if 'PIXELDQ' in extnames:
                     dq = hdulist['PIXELDQ'].data
                     dq = (dq & dqflags.pixel['NON_SCIENCE'] == 0)
@@ -216,7 +220,7 @@ class PreviewImage():
                 self.xlen = hdulist[0].header['SUBSIZE1']
                 self.ylen = hdulist[0].header['SUBSIZE2']
         else:
-            raise FileNotFoundError((f'WARNING: {filename} does not exist!'))
+            raise FileNotFoundError(('WARNING: {} does not exist!'.format(filename)))
 
         return data, dq
 
@@ -257,7 +261,7 @@ class PreviewImage():
 
         # Check the input scaling
         if scale not in ['linear', 'log']:
-            raise ValueError((f'WARNING: scaling option {scale} not supported.'))
+            raise ValueError(('WARNING: scaling option {} not supported.'.format(scale)))
 
         # Set the figure size
         yd, xd = image.shape
@@ -417,6 +421,6 @@ class PreviewImage():
         if thumbnail:
             thumb_fname = fname.replace('.jpg', '.thumb')
             os.rename(fname, thumb_fname)
-            logging.info(f'Saved image to {thumb_fname}')
+            logging.info('Saved image to {}'.format(thumb_fname))
         else:
-            logging.info(f'Saved image to {fname}')
+            logging.info('Saved image to {}'.format(fname))
