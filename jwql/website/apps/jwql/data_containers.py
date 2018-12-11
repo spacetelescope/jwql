@@ -94,7 +94,7 @@ def get_dashboard_components():
                  'cron_status_table': 'Cron Job Status'}
 
     # Run the cron job monitor to produce an updated table
-    monitor_cron_jobs.status(production_mode=False)
+    monitor_cron_jobs.status(production_mode=True)
 
     dashboard_components = {}
     for dir_name, subdir_list, file_list in os.walk(output_dir):
