@@ -2,7 +2,7 @@
 
 {% block preamble %}
 
-	<title>{{ inst }} - JWST Quicklook</title>
+	<title>{{ inst }} - JWQL</title>
 
 {% endblock %}
 
@@ -34,6 +34,11 @@
 					{% endif %}
 				{% endfor %}
 			</div>
+			<div class="col-md-6 text-center">
+					<!-- Documentation -->
+					<h3>Documentation</h3>
+					<a class="btn btn-primary my-2" role="button" href= {{doc_url}}> {{ inst }} Documentation</a></br>
+				</div>
 		</div>
 
 	</main>
