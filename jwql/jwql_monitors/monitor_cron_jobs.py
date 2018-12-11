@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 
-"""This module monitors the status of JWQL monitors run via cron job via log files. Basic
-results (e.g. success, failure) are collected and placed in a Bokeh table for display
-on the web app
+"""This module monitors the status of JWQL monitors run via cron job
+via log files. Basic results (e.g. success, failure) are collected
+and placed in a Bokeh table for display on the web app
 
 Authors
 -------
@@ -126,8 +126,10 @@ def create_table(status_dict):
 
 def find_latest(logfiles):
     """Given a list of log files in a directory, identify the most recent.
-    We should be able to do this by either looking at timestamps, or by
-    parsing filenames. Let's use timestamps.
+    The way that jwql.utils.logging_functions.make_log_file is set up, log
+    files for all monitors are guaranteed to be the name of the monitor
+    followed by the datetime that they were run, so we should be able to
+    simply sort the filenames and the last will be the most recent.
 
     Parameters
     ----------
@@ -142,7 +144,7 @@ def find_latest(logfiles):
     latest_time : float
         Time associated with the most recent log file
     """
-    latest = max(logfiles, key=os.path.getctime)
+    latest = sorted(logfiles)[-1]
     latest_time = os.path.getctime(latest)
     return (latest, latest_time)
 
@@ -181,79 +183,6 @@ def get_cadence(filenames):
     return mean_delta, stdev_delta
 
 
-@log_fail
-@log_info
-def status(production_mode=True):
-    """Main function: determine the status of the instrument montiors by examining
-    log files.
-
-    Parameters
-    ----------
-    production_mode : bool
-        If true, look in the main log directory. If false, look in the dev log
-        file directory.
-
-    Returns
-    -------
-    logfile_status : dict
-        Nested dictionary containing the status for all monitors. Top level keys
-        include all monitors. Within a given monitor, the value is a dictionary
-        containing 'missing_file' and 'status' keys. 'missing_file' is a boolean
-        describing whether or not there is a suspected missing log file based
-        on the timestamps of the existing files. 'status' is a string that is
-        either 'success' or 'failure'.
-    """
-    # Begin logging
-    configure_logging('monitor_cron_jobs', production_mode=production_mode)
-    logging.info("Beginning cron job status monitor")
-
-    # Get main logfile path
-    settings = get_config()
-    log_path = settings['log_dir']
-
-    # If we are in development mode, the log files are in a slightly
-    # different location than in production mode
-    if not production_mode:
-        log_path = os.path.join(log_path, 'dev')
-
-    # Set up a dictionary to keep track of results
-    logfile_status = {}
-
-    # Get a list of the directories under the main logging directory.
-    generator = os.walk(log_path, topdown=True)
-
-    # Loop over monitors (note that subsubdir should always be empty)
-    for subdir, subsubdir, filenames in generator:
-        if len(filenames) > 0:
-            monitor_name = subdir.split('/')[-1]
-            log_file_list = [os.path.join(subdir, filename) for filename in filenames]
-
-            # Find the cadence of the monitor
-            delta_time, stdev_time = get_cadence(log_file_list)
-
-            # Identify the most recent log file
-            latest_log, latest_log_time = find_latest(log_file_list)
-
-            # Check to see if we expect a file more recent than the latest
-            missing_file = missing_file_check(delta_time, stdev_time, latest_log)
-            if missing_file:
-                logging.warning('Expected a more recent {} logfile than {}'
-                                .format(monitor_name, os.path.basename(latest_log)))
-
-            # Check the file for success/failure
-            result = success_check(latest_log)
-            logging.info('{}: Latest log file indicates {}'.format(monitor_name, result))
-
-            # Add results to the dictionary
-            logfile_status[monitor_name] = {'logname': os.path.basename(latest_log),
-                                            'latest_time': latest_log_time,
-                                            'missing_file': missing_file, 'status': result}
-
-    # Create table of results using Bokeh
-    create_table(logfile_status)
-    logging.info('Cron job status monitor completed successfully.')
-
-
 def missing_file_check(avg_time_between, uncertainty, latest_file):
     """Given the name of the most recent log file, along with the historical average
     time between files and the stdev of the time between files, determine whether we
@@ -287,6 +216,83 @@ def missing_file_check(avg_time_between, uncertainty, latest_file):
     return late
 
 
+@log_fail
+@log_info
+def status(production_mode=True):
+    """Main function: determine the status of the instrument montiors by examining
+    log files.
+
+    Parameters
+    ----------
+    production_mode : bool
+        If true, look in the main log directory. If false, look in the dev log
+        file directory.
+
+    Returns
+    -------
+    logfile_status : dict
+        Nested dictionary containing the status for all monitors. Top level keys
+        include all monitors. Within a given monitor, the value is a dictionary
+        containing 'missing_file' and 'status' keys. 'missing_file' is a boolean
+        describing whether or not there is a suspected missing log file based
+        on the timestamps of the existing files. 'status' is a string that is
+        either 'success' or 'failure'.
+    """
+    # Begin logging
+    configure_logging('monitor_cron_jobs', production_mode=production_mode)
+    logging.info("Beginning cron job status monitor")
+
+    # Get main logfile path
+    log_path = get_config['log_dir']
+
+    # If we are in development mode, the log files are in a slightly
+    # different location than in production mode
+    if not production_mode:
+        log_path = os.path.join(log_path, 'dev')
+
+    # Set up a dictionary to keep track of results
+    logfile_status = {}
+
+    # Get a list of the directories under the main logging directory.
+    generator = os.walk(log_path, topdown=True)
+
+    # Loop over monitors
+    for subdir, subsubdir, filenames in generator:
+        # When running in production mode, skip the 'dev' subdirectory,
+        # as it contains the development version of the monitor logs
+        if production_mode:
+            subsubdir[:] = [dirname for dirname in subsubdir if dirname != 'dev']
+
+        if len(filenames) > 0:
+            monitor_name = subdir.split('/')[-1]
+            log_file_list = [os.path.join(subdir, filename) for filename in filenames]
+
+            # Find the cadence of the monitor
+            delta_time, stdev_time = get_cadence(log_file_list)
+
+            # Identify the most recent log file
+            latest_log, latest_log_time = find_latest(log_file_list)
+
+            # Check to see if we expect a file more recent than the latest
+            missing_file = missing_file_check(delta_time, stdev_time, latest_log)
+            if missing_file:
+                logging.warning('Expected a more recent {} logfile than {}'
+                                .format(monitor_name, os.path.basename(latest_log)))
+
+            # Check the file for success/failure
+            result = success_check(latest_log)
+            logging.info('{}: Latest log file indicates {}'.format(monitor_name, result))
+
+            # Add results to the dictionary
+            logfile_status[monitor_name] = {'logname': os.path.basename(latest_log),
+                                            'latest_time': latest_log_time,
+                                            'missing_file': missing_file, 'status': result}
+
+    # Create table of results using Bokeh
+    create_table(logfile_status)
+    logging.info('Cron job status monitor completed successfully.')
+
+
 def success_check(filename):
     """Parse the given log file and check whether the script execution was
     successful or not
@@ -309,3 +315,11 @@ def success_check(filename):
     else:
         execution = 'failure'
     return execution
+
+
+if __name__ == '__main__':
+
+    module = os.path.basename(__file__).strip('.py')
+    configure_logging(module, production_mode=True)
+
+    status()
