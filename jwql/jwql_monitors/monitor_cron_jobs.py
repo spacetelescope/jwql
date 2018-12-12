@@ -103,17 +103,18 @@ def create_table(status_dict):
 
     # Get output directory for saving the table files
     output_dir = get_config()['outputs']
+    output_filename = 'cron_status_table'
 
     # Save plot as components
     script, div = components(data_table)
 
-    div_outfile = os.path.join(output_dir, 'monitor_cron_jobs', output_filename + "_component.html")
+    div_outfile = os.path.join(output_dir, 'monitor_cron_jobs', '{}_component.html'.format(output_filename))
     with open(div_outfile, 'w') as f:
         f.write(div)
         f.close()
     set_permissions(div_outfile)
 
-    script_outfile = os.path.join(output_dir, 'monitor_cron_jobs', output_filename + "_component.js")
+    script_outfile = os.path.join(output_dir, 'monitor_cron_jobs', '{}_component.js'.format(output_filename))
     with open(script_outfile, 'w') as f:
         f.write(script)
         f.close()
@@ -247,7 +248,7 @@ def status(production_mode=True):
     logging.info("Beginning cron job status monitor")
 
     # Get main logfile path
-    log_path = get_config['log_dir']
+    log_path = get_config()['log_dir']
 
     # If we are in development mode, the log files are in a slightly
     # different location than in production mode
