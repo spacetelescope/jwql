@@ -322,7 +322,7 @@ def create_mosaic(filenames):
     elif datadim == 3:
         full_array = np.zeros((datashape[0], full_ydim, full_xdim)) * np.nan
     else:
-        raise ValueError((f'Difference image for {filenames[0]} must be either 2D or 3D.'))
+        raise ValueError(('Difference image for {} must be either 2D or 3D.'.format(filenames[0])))
 
     # Place the data from the individual detectors in the appropriate
     # places in the final image
@@ -514,7 +514,7 @@ def generate_preview_images():
 
     filenames = glob(os.path.join(filesystem, '*/*.fits'))
     grouped_filenames = group_filenames(filenames)
-    logging.info(f"Found {len(filenames)} filenames")
+    logging.info('Found {} filenames'.format(len(filenames)))
 
     for file_list in grouped_filenames:
         filename = file_list[0]
@@ -538,11 +538,11 @@ def generate_preview_images():
         if not os.path.exists(preview_output_directory):
             os.makedirs(preview_output_directory)
             permissions.set_permissions(preview_output_directory)
-            logging.info(f'Created directory {preview_output_directory}')
+            logging.info('Created directory {}'.format(preview_output_directory))
         if not os.path.exists(thumbnail_output_directory):
             os.makedirs(thumbnail_output_directory)
             permissions.set_permissions(thumbnail_output_directory)
-            logging.info(f'Created directory {thumbnail_output_directory}')
+            logging.info('Created directory {}'.format(thumbnail_output_directory))
 
         # If the exposure contains more than one file (because more
         # than one detector was used), then create a mosaic
@@ -553,7 +553,7 @@ def generate_preview_images():
                 mosaic_image, mosaic_dq = create_mosaic(file_list)
                 logging.info('Created mosiac for:')
                 for item in file_list:
-                    logging.info(f'\t{item}')
+                    logging.info('\t{}'.format(item))
             except (ValueError, FileNotFoundError) as error:
                 logging.error(error)
             dummy_file = create_dummy_filename(file_list)
@@ -636,7 +636,9 @@ def group_filenames(input_files):
         detector = filename_parts['detector'].upper()
         suffix = filename_parts['suffix']
 
-        observation_base = f'jw{program}{observation}{visit}_{visit_group}{parallel}{activity}_{exposure}_'
+        observation_base = 'jw{}{}{}_{}{}{}_{}_'.format(
+                        program, observation, visit, visit_group,
+                        parallel, activity, exposure)
 
         if detector in NIRCAM_SHORTWAVE_DETECTORS:
             detector_str = 'NRC[AB][1234]'
@@ -644,7 +646,7 @@ def group_filenames(input_files):
             detector_str = 'NRC[AB]5'
         else:  # non-NIRCam detectors - should never be used I think??
             detector_str = detector
-        match_str = f'{observation_base}{detector_str}_{suffix}.fits'
+        match_str = '{}{}_{}.fits'.format(observation_base, detector_str, suffix)
         match_str = os.path.join(file_directory, match_str)
         pattern = re.compile(match_str, re.IGNORECASE)
 

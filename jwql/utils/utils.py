@@ -32,6 +32,9 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 JWST_INSTRUMENTS = sorted(['NIRISS', 'NIRCam', 'NIRSpec', 'MIRI', 'FGS'])
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
                      'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
+MAST_SERVICES = ['Mast.Jwst.Filtered.Nircam', 'Mast.Jwst.Filtered.Nirspec',
+                'Mast.Jwst.Filtered.Niriss', 'Mast.Jwst.Filtered.Miri',
+                'Mast.Jwst.Filtered.Fgs']
 MONITORS = {
     'FGS': ['Bad Pixel Monitor'],
     'MIRI': ['Dark Current Monitor',

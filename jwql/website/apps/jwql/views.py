@@ -16,12 +16,11 @@ Use
 ---
 
     This module is called in ``urls.py`` as such:
-
     ::
+
         from django.urls import path
         from . import views
-        urlpatterns = [path('web/path/to/view/',
-                             views.view_name, name='view_name')]
+        urlpatterns = [path('web/path/to/view/', views.view_name, name='view_name')]
 
 References
 ----------
@@ -37,7 +36,6 @@ Dependencies
 import os
 
 from django.shortcuts import render
-# from django.views import generic # We ultimately might want to use generic views?
 
 from .data_containers import get_acknowledgements
 from .data_containers import get_dashboard_components
@@ -198,7 +196,17 @@ def instrument(request, inst):
         Outgoing response sent to the webpage
     """
     template = 'instrument.html'
-    context = {'inst': inst, 'tools': MONITORS}
+    url_dict = {'FGS': 'http://jwst-docs.stsci.edu/display/JTI/Fine+Guidance+Sensor%2C+FGS?q=fgs',
+                'MIRI': 'http://jwst-docs.stsci.edu/display/JTI/Mid-Infrared+Instrument%2C+MIRI',
+                'NIRISS': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Imager+and+Slitless+Spectrograph',
+                'NIRSpec': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Spectrograph',
+                'NIRCam': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Camera'}
+
+    doc_url = url_dict[inst]
+
+    context = {'inst': inst, 
+                'tools': MONITORS,
+                'doc_url': doc_url}
 
     return render(request, template, context)
 

@@ -17,7 +17,9 @@ The JWST Quicklook Application (`JWQL`) is a database-driven web application and
 3. A software library that provides tools to support an automation framework in which to build automated instrument monitoring routines.
 4. A web application that allows users to visually inspect new and archival JWST data as well as instrument-specific monitoring and performance results.
 
-The `jwql` application is currently under heavy development.  The `1.0` release is expected in 2019.
+Official API documentation can be found on [ReadTheDocs](https://jwql.readthedocs.io)
+
+The `jwql` application is currently under heavy development.  The `1.0` release is expected in 2019.  Currently, a development version of the web application can be found at [https://dljwql.stsci.edu](https://dljwql.stsci.edu).
 
 ## Prerequisites
 
@@ -67,7 +69,7 @@ conda env create -f environment.yml
 ```
 
 
-## Contributing
+## Software Contributions
 
 There are two current pages to review before you begin contributing to the `jwql` development. The first is our [style guide](https://github.com/spacetelescope/jwql/blob/master/style_guide/style_guide.md) and the second is our [suggested git workflow page](https://github.com/spacetelescope/jwql/wiki/git-&-GitHub-workflow-for-contributing), which contains an in-depth explanation of the workflow.
 
@@ -83,6 +85,14 @@ The following is a bare bones example of a best work flow for contributing to th
 8. Assign a reviewer from the team for the pull request.
 9. Iterate with the reviewer over any needed changes until the reviewer accepts and merges your branch.
 10. Delete your local copy of your branch.
+
+
+## Issue Reporting / Feature Requests
+
+Users who wish to report an issue or request a new feature may do so through the following channels:
+
+1. Submit a new issue on GitHub (preferred method): https://github.com/spacetelescope/jwql/issues
+2. Submit a new ticket on Jira: https://jira.stsci.edu/projects/JWQL/
 
 
 ## Code of Conduct
