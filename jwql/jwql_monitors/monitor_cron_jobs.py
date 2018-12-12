@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 
-"""This module monitors the status of JWQL monitors run via cron job
-via log files. Basic results (e.g. success, failure) are collected
-and placed in a Bokeh table for display on the web app
+"""This module monitors the status of the ``jwql`` monitors via their
+log files. Basic results (e.g. ``success``, ``failure``) are collected
+and placed in a ``bokeh`` table for display on the web app.
 
 Authors
 -------
@@ -33,8 +33,6 @@ import os
 import time
 
 from bokeh.embed import components
-from bokeh.io import output_file, save, show
-from bokeh.layouts import widgetbox
 from bokeh.models import ColumnDataSource
 from bokeh.models.widgets import DataTable, DateFormatter, HTMLTemplateFormatter, TableColumn
 
@@ -44,7 +42,8 @@ from jwql.utils.utils import get_config
 
 
 def create_table(status_dict):
-    """Create interactive Bokeh table containing the logfile status results.
+    """Create interactive ``bokeh`` table containing the logfile status
+    results.
 
     Parameters
     ----------
@@ -125,11 +124,12 @@ def create_table(status_dict):
 
 
 def find_latest(logfiles):
-    """Given a list of log files in a directory, identify the most recent.
-    The way that jwql.utils.logging_functions.make_log_file is set up, log
-    files for all monitors are guaranteed to be the name of the monitor
-    followed by the datetime that they were run, so we should be able to
-    simply sort the filenames and the last will be the most recent.
+    """Given a list of log files in a directory, identify the most
+    recent. The way that ``jwql.utils.logging_functions.make_log_file``
+    is set up, log files for all monitors are guaranteed to be the name
+    of the monitor followed by the datetime that they were run, so we
+    should be able to simply sort the filenames and the last will be the
+    most recent.
 
     Parameters
     ----------
@@ -161,10 +161,12 @@ def get_cadence(filenames):
     Returns
     -------
     mean_delta : float
-        Mean time in seconds between the appearance of consecutive log files
+        Mean time in seconds between the appearance of consecutive log
+        files
 
     stdev_delta : float
-        Standard deviation in seconds between the appearance of consecutive log files
+        Standard deviation in seconds between the appearance of
+        consecutive log files
     """
     minimum_log_num = 3  # Set to a low value for now since we don't have many logfiles
     times = [os.path.getctime(filename) for filename in filenames]
@@ -184,10 +186,11 @@ def get_cadence(filenames):
 
 
 def missing_file_check(avg_time_between, uncertainty, latest_file):
-    """Given the name of the most recent log file, along with the historical average
-    time between files and the stdev of the time between files, determine whether we
-    expect a more recent log file than the file given. This could hint at a problem
-    with the cron job used to create the log files.
+    """Given the name of the most recent log file, along with the
+    historical average time between files and the stdev of the time
+    between files, determine whether we expect a more recent log file
+    than the file given. This could hint at a problem with the cron job
+    used to create the log files.
 
     Parameters
     ----------
@@ -204,7 +207,8 @@ def missing_file_check(avg_time_between, uncertainty, latest_file):
     -------
     late : bool
         True = We expect a more recent file than that given
-        False =  It is reasonable that the file given is the most recent
+        False =  It is reasonable that the file given is the most
+        recent
     """
     latest_time = os.path.getctime(latest_file)
     now = time.time()
@@ -219,27 +223,27 @@ def missing_file_check(avg_time_between, uncertainty, latest_file):
 @log_fail
 @log_info
 def status(production_mode=True):
-    """Main function: determine the status of the instrument montiors by examining
-    log files.
+    """Main function: determine the status of the instrument montiors
+    by examining log files.
 
     Parameters
     ----------
     production_mode : bool
-        If true, look in the main log directory. If false, look in the dev log
-        file directory.
+        If ``True``, look in the main log directory. If ``False``, look
+        in the ``dev`` log file directory.
 
     Returns
     -------
     logfile_status : dict
-        Nested dictionary containing the status for all monitors. Top level keys
-        include all monitors. Within a given monitor, the value is a dictionary
-        containing 'missing_file' and 'status' keys. 'missing_file' is a boolean
-        describing whether or not there is a suspected missing log file based
-        on the timestamps of the existing files. 'status' is a string that is
-        either 'success' or 'failure'.
+        Nested dictionary containing the status for all monitors. Top
+        level keys include all monitors. Within a given monitor, the
+        value is a dictionary containing 'missing_file' and 'status'
+        keys. 'missing_file' is a boolean describing whether or not
+        there is a suspected missing log file based on the timestamps
+        of the existing files. 'status' is a string that is either
+        'success' or 'failure'.
     """
     # Begin logging
-    configure_logging('monitor_cron_jobs', production_mode=production_mode)
     logging.info("Beginning cron job status monitor")
 
     # Get main logfile path
@@ -294,8 +298,8 @@ def status(production_mode=True):
 
 
 def success_check(filename):
-    """Parse the given log file and check whether the script execution was
-    successful or not
+    """Parse the given log file and check whether the script execution
+    was successful or not
 
     Parameters
     ----------
@@ -305,7 +309,7 @@ def success_check(filename):
     Returns
     -------
     execution : str
-        'success' or 'failure'
+        ``success`` or ``failure``
     """
     with open(filename, 'r') as file_obj:
         all_lines = file_obj.readlines()

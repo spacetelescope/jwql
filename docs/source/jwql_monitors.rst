@@ -2,6 +2,10 @@
 jwql_monitors
 *************
 
+.. automodule:: jwql.jwql_monitors.monitor_cron_jobs
+    :members:
+    :undoc-members:
+
 .. automodule:: jwql.jwql_monitors.monitor_filesystem
     :members:
     :undoc-members:
