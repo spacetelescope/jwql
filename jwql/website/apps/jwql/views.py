@@ -36,7 +36,6 @@ Dependencies
 import os
 
 from django.shortcuts import render
-# from django.views import generic # We ultimately might want to use generic views?
 
 from .data_containers import get_acknowledgements
 from .data_containers import get_dashboard_components
