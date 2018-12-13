@@ -49,6 +49,24 @@ def test_filename_parser_filename():
 
     assert filename_dict == correct_dict
 
+def test_filename_parser_filename_root():
+    '''Generate a dictionary with parameters from a JWST filename.
+    Assert that the dictionary matches what is expected.
+    '''
+    filename = 'jw00327001001_02101_00002_nrca1'
+    filename_dict = filename_parser(filename)
+
+    correct_dict = {'activity': '01',
+                    'detector': 'nrca1',
+                    'exposure_id': '00002',
+                    'observation': '001',
+                    'parallel_seq_id': '1',
+                    'program_id': '00327',
+                    'visit': '001',
+                    'visit_group': '02'}
+
+    assert filename_dict == correct_dict
+
 
 def test_filename_parser_filepath():
     '''Generate a dictionary with parameters from a JWST filepath
