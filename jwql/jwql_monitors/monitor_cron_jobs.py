@@ -112,13 +112,19 @@ def create_table(status_dict):
     with open(div_outfile, 'w') as f:
         f.write(div)
         f.close()
-    set_permissions(div_outfile)
+    try:
+        set_permissions(div_outfile)
+    except PermissionError:
+        logging.warning('Unable to set permissions for {}'.format(div_outfile))
 
     script_outfile = os.path.join(output_dir, 'monitor_cron_jobs', '{}_component.js'.format(output_filename))
     with open(script_outfile, 'w') as f:
         f.write(script)
         f.close()
-    set_permissions(script_outfile)
+    try:
+        set_permissions(script_outfile)
+    except PermissionError:
+        logging.warning('Unable to set permissions for {}'.format(script_outfile))
 
     logging.info('Saved Bokeh components files: {}_component.html and {}_component.js'
                  .format(div_outfile, script_outfile))
