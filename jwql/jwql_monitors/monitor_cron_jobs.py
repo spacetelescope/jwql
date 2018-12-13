@@ -33,6 +33,7 @@ import os
 import time
 
 from bokeh.embed import components
+from bokeh.io import save, output_file
 from bokeh.models import ColumnDataSource
 from bokeh.models.widgets import DataTable, DateFormatter, HTMLTemplateFormatter, TableColumn
 
@@ -111,7 +112,6 @@ def create_table(status_dict):
     div_outfile = os.path.join(output_dir, 'monitor_cron_jobs', '{}_component.html'.format(output_filename))
     with open(div_outfile, 'w') as f:
         f.write(div)
-        f.close()
     try:
         set_permissions(div_outfile)
     except PermissionError:
@@ -120,14 +120,23 @@ def create_table(status_dict):
     script_outfile = os.path.join(output_dir, 'monitor_cron_jobs', '{}_component.js'.format(output_filename))
     with open(script_outfile, 'w') as f:
         f.write(script)
-        f.close()
     try:
         set_permissions(script_outfile)
     except PermissionError:
         logging.warning('Unable to set permissions for {}'.format(script_outfile))
 
-    logging.info('Saved Bokeh components files: {}_component.html and {}_component.js'
+    logging.info('Saved Bokeh components files: {} and {}'
                  .format(div_outfile, script_outfile))
+
+    # Save full html
+    html_outfile = os.path.join(output_dir, 'monitor_cron_jobs', '{}.html'.format(output_filename))
+    output_file(html_outfile)
+    save(data_table)
+    try:
+        set_permissions(html_outfile)
+    except PermissionError:
+        logging.warning('Unable to set permissions for {}'.format(html_outfile))
+    logging.info('Saved Bokeh full HTML file: {}'.format(html_outfile))
 
 
 def find_latest(logfiles):
