@@ -45,7 +45,7 @@ import os
 from django import forms
 from django.shortcuts import redirect
 
-from jwql.utils.utils import get_config, filename_parser, fileroot_parser, INSTRUMENTS_SHORTHAND
+from jwql.utils.utils import get_config, filename_parser, INSTRUMENTS_SHORTHAND
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
@@ -132,7 +132,7 @@ class FileSearchForm(forms.Form):
             Is the search term formatted like a fileroot?
         """
         try:
-            self.fileroot_dict = fileroot_parser(search)
+            self.fileroot_dict = filename_parser(search)
             return True
         except ValueError:
             return False

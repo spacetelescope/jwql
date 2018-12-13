@@ -29,6 +29,7 @@ from jwql.utils import permissions
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
+FILE_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'uncal']
 JWST_INSTRUMENTS = sorted(['NIRISS', 'NIRCam', 'NIRSpec', 'MIRI', 'FGS'])
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
                      'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
@@ -102,17 +103,23 @@ def filename_parser(filename):
     """
     filename = os.path.basename(filename)
 
+    file_root_name = (len(filename.split('.')) < 2)
+
+    regex_string_to_compile = r"[a-z]+" \
+                               "(?P<program_id>\d{5})"\
+                               "(?P<observation>\d{3})"\
+                               "(?P<visit>\d{3})"\
+                               "_(?P<visit_group>\d{2})"\
+                               "(?P<parallel_seq_id>\d{1})"\
+                               "(?P<activity>\w{2})"\
+                               "_(?P<exposure_id>\d+)"\
+                               "_(?P<detector>\w+)"
+
+    if not file_root_name:
+        regex_string_to_compile += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
+
     elements = \
-        re.compile(r"[a-z]+"
-                   "(?P<program_id>\d{5})"
-                   "(?P<observation>\d{3})"
-                   "(?P<visit>\d{3})"
-                   "_(?P<visit_group>\d{2})"
-                   "(?P<parallel_seq_id>\d{1})"
-                   "(?P<activity>\w{2})"
-                   "_(?P<exposure_id>\d+)"
-                   "_(?P<detector>\w+)"
-                   "_(?P<suffix>\w+).*")
+        re.compile(regex_string_to_compile)
 
     jwst_file = elements.match(filename)
 
@@ -122,44 +129,3 @@ def filename_parser(filename):
         raise ValueError('Provided file {} does not follow JWST naming conventions (jw<PPPPP><OOO><VVV>_<GGSAA>_<EEEEE>_<detector>_<suffix>.fits)'.format(filename))
 
     return filename_dict
-
-def fileroot_parser(fileroot):
-    """Return a dictionary that contains the properties of a given
-    JWST file root (e.g. program ID, visit number, detector, etc.)
-
-    Parameters
-    ----------
-    fileroot : str
-        Path or name of JWST fileroot to parse
-
-    Returns
-    -------
-    filename_dict : dict
-        Collection of file properties
-
-    Raises
-    ------
-    ValueError
-        When the provided file does not follow naming conventions
-    """
-    fileroot = os.path.basename(fileroot)
-
-    elements = \
-        re.compile(r"[a-z]+"
-                   "(?P<program_id>\d{5})"
-                   "(?P<observation>\d{3})"
-                   "(?P<visit>\d{3})"
-                   "_(?P<visit_group>\d{2})"
-                   "(?P<parallel_seq_id>\d{1})"
-                   "(?P<activity>\w{2})"
-                   "_(?P<exposure_id>\d+)"
-                   "_(?P<detector>\w+)")
-
-    jwst_file = elements.match(fileroot)
-
-    if jwst_file is not None:
-        fileroot_dict = jwst_file.groupdict()
-    else:
-        raise ValueError('Provided file {} does not follow JWST naming conventions (jw<PPPPP><OOO><VVV>_<GGSAA>_<EEEEE>_<detector>_<suffix>.fits)'.format(fileroot))
-
-    return fileroot_dict
