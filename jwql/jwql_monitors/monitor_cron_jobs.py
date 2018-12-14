@@ -285,28 +285,32 @@ def status(production_mode=True):
 
         if len(filenames) > 0:
             monitor_name = subdir.split('/')[-1]
-            log_file_list = [os.path.join(subdir, filename) for filename in filenames]
 
-            # Find the cadence of the monitor
-            delta_time, stdev_time = get_cadence(log_file_list)
+            # Avoid monitor_cron_jobs itseft
+            if monitor_name != 'monitor_cron_jobs':
 
-            # Identify the most recent log file
-            latest_log, latest_log_time = find_latest(log_file_list)
+                log_file_list = [os.path.join(subdir, filename) for filename in filenames]
 
-            # Check to see if we expect a file more recent than the latest
-            missing_file = missing_file_check(delta_time, stdev_time, latest_log)
-            if missing_file:
-                logging.warning('Expected a more recent {} logfile than {}'
-                                .format(monitor_name, os.path.basename(latest_log)))
+                # Find the cadence of the monitor
+                delta_time, stdev_time = get_cadence(log_file_list)
 
-            # Check the file for success/failure
-            result = success_check(latest_log)
-            logging.info('{}: Latest log file indicates {}'.format(monitor_name, result))
+                # Identify the most recent log file
+                latest_log, latest_log_time = find_latest(log_file_list)
 
-            # Add results to the dictionary
-            logfile_status[monitor_name] = {'logname': os.path.basename(latest_log),
-                                            'latest_time': latest_log_time,
-                                            'missing_file': missing_file, 'status': result}
+                # Check to see if we expect a file more recent than the latest
+                missing_file = missing_file_check(delta_time, stdev_time, latest_log)
+                if missing_file:
+                    logging.warning('Expected a more recent {} logfile than {}'
+                                    .format(monitor_name, os.path.basename(latest_log)))
+
+                # Check the file for success/failure
+                result = success_check(latest_log)
+                logging.info('{}: Latest log file indicates {}'.format(monitor_name, result))
+
+                # Add results to the dictionary
+                logfile_status[monitor_name] = {'logname': os.path.basename(latest_log),
+                                                'latest_time': latest_log_time,
+                                                'missing_file': missing_file, 'status': result}
 
     # Create table of results using Bokeh
     create_table(logfile_status)
