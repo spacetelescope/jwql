@@ -1,3 +1,37 @@
+0.16.0
+======
+
+This is the first release of the new release proceedures of ``jwql``.  The development team is now developing in release-driven sprints, so future releases will be less frequent, but with more changes
+
+Changes since the ``0.15.3`` release include:
+
+- Various updates and additions to the ``jwql`` ``conda`` environment:
+    - Updated ``bokeh`` to version 1.0
+    - Updated ``django`` to fix security issues
+    - Added ``pandas`` as a dependency
+- Various updates and additions to the project and API documentation:
+    - Added a project description in the API docs
+    - Added web app API docs
+- Various changes to the web application:
+    - Made changes to the code to get it working on the web development server
+    - Added several REST API services
+    - Added API documentation button to the navbar and anded link to API documentation in the ``about`` page
+    - Added instrument-specific documentation button to the instrument landing pages
+    - Replaced ``monitor_mast`` donut charts with bar charts
+    - Removed dashboard and database query buttons from homepage
+    - Added form to homepage that allows user to view preview images for a given rootname or proposal number
+    - Changed URL patters to allow for separation between nominal web app and REST API service
+    - Added ``monitor_cron_jobs`` monitor that builds and renders a table displaying ``cron`` job execution status
+- Various changes to the ``jwql`` repository:
+    - Added badges to the ``README``
+    - Configured ``pyup`` service for the ``jwql`` repository via ``.pyup.yml`` file
+    - Added a separate ``requirement.txt`` file to keep track of requirements needed by ReadTheDocs and the ``pyup`` service
+    - Added various ``jwql`` presentations in separate ``presentations/`` directory
+- Other various code changes:
+    - Changed ``logging_functions.py`` to be more conservative on when to write log files to the production area
+    - Added ``plotting.py`` module (and supporting unit tests), which stores various plotting-related functions
+
+
 0.15.3
 ======
 
