@@ -28,6 +28,7 @@ from astropy.io import fits
 from astroquery.mast import Mast
 import numpy as np
 
+from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser, MONITORS
 
@@ -90,13 +91,15 @@ def get_all_proposals():
 
 
 def get_dashboard_components():
-    """Build and return a dictionary containing components needed for
-    the dashboard.
+    """Build and return dictionaries containing components and html
+    needed for the dashboard.
 
     Returns
     -------
     dashboard_components : dict
         A dictionary containing components needed for the dashboard.
+    dashboard_components : dict
+        A dictionary containing full HTML needed for the dashboard.
     """
 
     output_dir = get_config()['outputs']
@@ -110,27 +113,41 @@ def get_dashboard_components():
                  'filecount': 'Total File Counts',
                  'system_stats': 'System Statistics'}
 
+    # Exclude monitors that can't be saved as components
+    exclude_list = ['monitor_cron_jobs']
+
+    # Run the cron job monitor to produce an updated table
+    monitor_cron_jobs.status(production_mode=True)
+
+    # Build dictionary of components
     dashboard_components = {}
     for dir_name, subdir_list, file_list in os.walk(output_dir):
         monitor_name = os.path.basename(dir_name)
-        dashboard_components[name_dict[monitor_name]] = {}
-        for fname in file_list:
-            if 'component' in fname:
-                full_fname = '{}/{}'.format(monitor_name, fname)
-                plot_name = fname.split('_component')[0]
+        if monitor_name not in exclude_list:
+            dashboard_components[name_dict[monitor_name]] = {}
+            for fname in file_list:
+                if 'component' in fname:
+                    full_fname = '{}/{}'.format(monitor_name, fname)
+                    plot_name = fname.split('_component')[0]
 
-                # Get the div
-                html_file = full_fname.split('.')[0] + '.html'
-                with open(os.path.join(output_dir, html_file)) as f:
-                    div = f.read()
+                    # Get the div
+                    html_file = full_fname.split('.')[0] + '.html'
+                    with open(os.path.join(output_dir, html_file)) as f:
+                        div = f.read()
 
-                # Get the script
-                js_file = full_fname.split('.')[0] + '.js'
-                with open(os.path.join(output_dir, js_file)) as f:
-                    script = f.read()
-                dashboard_components[name_dict[monitor_name]][name_dict[plot_name]] = [div, script]
+                    # Get the script
+                    js_file = full_fname.split('.')[0] + '.js'
+                    with open(os.path.join(output_dir, js_file)) as f:
+                        script = f.read()
+                    dashboard_components[name_dict[monitor_name]][name_dict[plot_name]] = [div, script]
 
-    return dashboard_components
+    # Add HTML that cannot be saved as components to the dictionary
+    with open(os.path.join(output_dir, 'monitor_cron_jobs', 'cron_status_table.html')) as f:
+        cron_status_table_html = f.read()
+    dashboard_html = {}
+    dashboard_html['Cron Job Monitor'] = cron_status_table_html
+
+    return dashboard_components, dashboard_html
 
 
 def get_filenames_by_instrument(instrument):

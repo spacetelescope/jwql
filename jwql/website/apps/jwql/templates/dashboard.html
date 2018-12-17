@@ -5,7 +5,7 @@
 	<title>Dashboard - JWQL</title>
 
     <!-- Add bokeh files -->
-    <link href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.5.min.css" rel="stylesheet" type="text/css">
+    <link href="https://cdn.pydata.org/bokeh/release/bokeh-1.0.1.min.css" rel="stylesheet" type="text/css">
     {% for monitor_name, plots in dashboard_components.items() %}
         {% for plot_name, components in plots.items() %}
             {{ components[1] | safe}}
@@ -20,6 +20,14 @@
 
         <h1 style="text-align: center">JWQL Dashboard</h1>
         <hr>
+
+
+        <div class="row justify-content-md-center">
+        {% for monitor_name, plot in dashboard_html.items() %}
+            {{ plot | safe }}
+        {% endfor %}
+        </div>
+
 
         <div class="container-fluid">
             <div class="row justify-content-md-center">
