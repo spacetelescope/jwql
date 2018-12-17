@@ -20,7 +20,7 @@ import logging
 import os
 
 from astroquery.mast import Mast
-from bokeh.charts import Donut, save, output_file
+from bokeh.io import save, output_file
 from bokeh.embed import components
 import pandas as pd
 
