@@ -104,6 +104,23 @@
     display: inline-block;
 }
 
+/*Stop the search box from glowing blue*/
+#homepage_filesearch #id_search {
+    width: 500px;
+    height: 100%;
+    padding: 0px;
+}
+
+#homepage_filesearch #id_search:focus {
+    box-shadow: none;
+    border-color: #cfd4da;
+}
+
+/*Make the form fields be inline*/
+.homepage_form_fieldWrapper {
+    display: inline;
+}
+
 /*Don't let the search bar be super long*/
 .input-group {
     width: 250px;
