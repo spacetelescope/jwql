@@ -106,28 +106,6 @@ def create_table(status_dict):
     output_dir = get_config()['outputs']
     output_filename = 'cron_status_table'
 
-    # Save plot as components
-    script, div = components(data_table)
-
-    div_outfile = os.path.join(output_dir, 'monitor_cron_jobs', '{}_component.html'.format(output_filename))
-    with open(div_outfile, 'w') as f:
-        f.write(div)
-    try:
-        set_permissions(div_outfile)
-    except PermissionError:
-        logging.warning('Unable to set permissions for {}'.format(div_outfile))
-
-    script_outfile = os.path.join(output_dir, 'monitor_cron_jobs', '{}_component.js'.format(output_filename))
-    with open(script_outfile, 'w') as f:
-        f.write(script)
-    try:
-        set_permissions(script_outfile)
-    except PermissionError:
-        logging.warning('Unable to set permissions for {}'.format(script_outfile))
-
-    logging.info('Saved Bokeh components files: {} and {}'
-                 .format(div_outfile, script_outfile))
-
     # Save full html
     html_outfile = os.path.join(output_dir, 'monitor_cron_jobs', '{}.html'.format(output_filename))
     output_file(html_outfile)
