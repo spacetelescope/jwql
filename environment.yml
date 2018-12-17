@@ -1,15 +1,15 @@
 name: jwql
 channels:
-- defaults
 - http://ssb.stsci.edu/astroconda-dev
+- defaults
 dependencies:
-- astropy=4.0
+- astropy
 - astroquery=0.3.8
 - bokeh=1.0.1
 - django=2.1.2
 - ipython=6.4.0
 - jinja2=2.10
-- jwst=0.7.8rc9
+- jwst
 - matplotlib=2.1.1
 - numpy=1.14.0
 - numpydoc=0.8.0
