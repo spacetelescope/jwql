@@ -29,9 +29,13 @@ from jwql.utils import permissions
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
+FILE_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'uncal']
 JWST_INSTRUMENTS = sorted(['NIRISS', 'NIRCam', 'NIRSpec', 'MIRI', 'FGS'])
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
                      'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
+MAST_SERVICES = ['Mast.Jwst.Filtered.Nircam', 'Mast.Jwst.Filtered.Nirspec',
+                'Mast.Jwst.Filtered.Niriss', 'Mast.Jwst.Filtered.Miri',
+                'Mast.Jwst.Filtered.Fgs']
 MONITORS = {
     'FGS': ['Bad Pixel Monitor'],
     'MIRI': ['Dark Current Monitor',
@@ -50,6 +54,11 @@ MONITORS = {
 NIRCAM_SHORTWAVE_DETECTORS = ['NRCA1', 'NRCA2', 'NRCA3', 'NRCA4',
                               'NRCB1', 'NRCB2', 'NRCB3', 'NRCB4']
 NIRCAM_LONGWAVE_DETECTORS = ['NRCA5', 'NRCB5']
+INSTRUMENTS_SHORTHAND = {'gui': 'FGS',
+                         'mir': 'MIRI',
+                         'nis': 'NIRISS',
+                         'nrc': 'NIRCam',
+                         'nrs': 'NIRSpec'}
 
 
 def ensure_dir_exists(fullpath):
@@ -69,7 +78,6 @@ def get_config():
     settings : dict
         A dictionary that holds the contents of the config file.
     """
-
     with open(os.path.join(__location__, 'config.json'), 'r') as config_file:
         settings = json.load(config_file)
 
@@ -97,17 +105,23 @@ def filename_parser(filename):
     """
     filename = os.path.basename(filename)
 
+    file_root_name = (len(filename.split('.')) < 2)
+
+    regex_string_to_compile = r"[a-z]+" \
+                               "(?P<program_id>\d{5})"\
+                               "(?P<observation>\d{3})"\
+                               "(?P<visit>\d{3})"\
+                               "_(?P<visit_group>\d{2})"\
+                               "(?P<parallel_seq_id>\d{1})"\
+                               "(?P<activity>\w{2})"\
+                               "_(?P<exposure_id>\d+)"\
+                               "_(?P<detector>\w+)"
+
+    if not file_root_name:
+        regex_string_to_compile += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
+
     elements = \
-        re.compile(r"[a-z]+"
-                   "(?P<program_id>\d{5})"
-                   "(?P<observation>\d{3})"
-                   "(?P<visit>\d{3})"
-                   "_(?P<visit_group>\d{2})"
-                   "(?P<parallel_seq_id>\d{1})"
-                   "(?P<activity>\w{2})"
-                   "_(?P<exposure_id>\d+)"
-                   "_(?P<detector>\w+)"
-                   "_(?P<suffix>\w+).*")
+        re.compile(regex_string_to_compile)
 
     jwst_file = elements.match(filename)
 
