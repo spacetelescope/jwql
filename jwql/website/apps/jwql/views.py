@@ -148,14 +148,15 @@ def dashboard(request):
     """
     template = 'dashboard.html'
     output_dir = get_config()['outputs']
-    dashboard_components = get_dashboard_components()
+    dashboard_components, dashboard_html = get_dashboard_components()
 
     context = {'inst': '',
                'inst_list': JWST_INSTRUMENTS,
                'tools': MONITORS,
                'outputs': output_dir,
                'filesystem_html': os.path.join(output_dir, 'monitor_filesystem', 'filesystem_monitor.html'),
-               'dashboard_components': dashboard_components}
+               'dashboard_components': dashboard_components,
+               'dashboard_html': dashboard_html}
 
     return render(request, template, context)
 
@@ -215,7 +216,7 @@ def instrument(request, inst):
 
     doc_url = url_dict[inst]
 
-    context = {'inst': inst, 
+    context = {'inst': inst,
                 'tools': MONITORS,
                 'doc_url': doc_url}
 
