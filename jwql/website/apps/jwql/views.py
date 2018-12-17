@@ -44,6 +44,7 @@ from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
+from .forms import FileSearchForm
 from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS
 
 
@@ -173,10 +174,20 @@ def home(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
+    # Create a form instance and populate it with data from the request
+    form = FileSearchForm(request.POST or None)
+
+    # If this is a POST request, we need to process the form data
+    if request.method == 'POST':
+        if form.is_valid():
+            return form.redirect_to_files()
+
     template = 'home.html'
     context = {'inst': '',
                'inst_list': JWST_INSTRUMENTS,
-               'tools': MONITORS}
+               'tools': MONITORS,
+               'form': form}
 
     return render(request, template, context)
 
