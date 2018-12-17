@@ -2,6 +2,12 @@
 jwql_monitors
 *************
 
+monitor_cron_jobs.py
+--------------------
+.. automodule:: jwql.jwql_monitors.monitor_cron_jobs
+    :members:
+    :undoc-members:
+    
 monitor_filesystem.py
 ---------------------
 .. automodule:: jwql.jwql_monitors.monitor_filesystem
