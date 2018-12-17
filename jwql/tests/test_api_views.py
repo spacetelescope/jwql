@@ -49,7 +49,7 @@ urls = ['{}/{}'.format(base_url, url) for url in urls]
 
 
 @pytest.mark.parametrize('url', urls)
-def test_api_view(url):
+def test_api_views(url):
     """Test to see if the given ``url`` returns a populated JSON object
 
     Parameters
