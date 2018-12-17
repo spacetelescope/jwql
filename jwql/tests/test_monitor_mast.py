@@ -17,8 +17,21 @@ Use
         pytest -s test_monitor_mast.py
 """
 
+from astroquery.mast import Mast
+
 from jwql.jwql_monitors import monitor_mast as mm
 from jwql.utils.utils import JWST_INSTRUMENTS
+
+
+def test_astroquery_mast():
+    """Test to see if the astroquery.mast service can complete a request"""
+    service = 'Mast.Caom.Filtered'
+    params = {'columns': 'COUNT_BIG(*)', 'filters': [], 'pagesize': 1,
+              'page': 1}
+    response = Mast.service_request_async(service, params)
+    result = response[0].json()
+
+    assert result['status'] == 'COMPLETE'
 
 
 def test_caom_instrument_keywords():
