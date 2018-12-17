@@ -32,7 +32,6 @@ import numpy as np
 import os
 import time
 
-from bokeh.embed import components
 from bokeh.io import save, output_file
 from bokeh.models import ColumnDataSource
 from bokeh.models.widgets import DataTable, DateFormatter, HTMLTemplateFormatter, TableColumn
