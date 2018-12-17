@@ -197,8 +197,13 @@ class Dark():
         could be useful for other monitors
         slope_image, stdev_image = self.mean_slope_image(slope_files, sigma_threshold=3)
 
+        # Check the hot/dead pixel population for changes
+        new_hot_pix = self.hot_pixel_check()
+        new_dead_pix = self.dead_pixel_check()
+        print('New hot/dead pixels should go? into an ascii file and then a table on the webpage?')
+
         # Read in the file containing historical image statistics
-        stats_file = somewhere_and_based_on_instrument_detector_aperture
+        stats_file = in_output_dir_and_based_on_instrument_detector_aperture
         history = ascii.read(stats_file)
 
         # Calculate mean and stdev values, and fit a Gaussian to the
