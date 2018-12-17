@@ -12,7 +12,7 @@ Use
     To get an inventory of all JWST files do:
     ::
 
-        from jwql.monitor_mast import monitor_mast
+        from jwql.jwql_monitors import monitor_mast
         inventory, keywords = monitor_mast.jwst_inventory()
 """
 
@@ -20,13 +20,14 @@ import logging
 import os
 
 from astroquery.mast import Mast
-from bokeh.io import save, output_file
 from bokeh.embed import components
+from bokeh.io import save, output_file
 import pandas as pd
 
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_config, JWST_DATAPRODUCTS, JWST_INSTRUMENTS
+from jwql.utils.plotting import bar_chart
 
 
 def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
@@ -185,11 +186,6 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
     all_cols = ['instrument']+dataproducts+['total']
     table = pd.DataFrame(inventory, columns=all_cols)
 
-    # Melt the table
-    table = pd.melt(table, id_vars=['instrument'],
-                    value_vars=dataproducts,
-                    value_name='files', var_name='dataproduct')
-
     # Plot it
     if plot:
         # Determine plot location and names
@@ -201,9 +197,8 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
             output_filename = 'database_monitor_jwst'
 
         # Make the plot
-        plt = Donut(table, label=['instrument', 'dataproduct'], values='files',
-                    text_font_size='12pt', hover_text='files',
-                    name="JWST Inventory", plot_width=600, plot_height=600)
+        plt = bar_chart(table, 'instrument', dataproducts,
+                        title="JWST Inventory")
 
         # Save the plot as full html
         html_filename = output_filename + '.html'
@@ -231,6 +226,11 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
         set_permissions(script_outfile)
 
         logging.info('Saved Bokeh components files: {}_component.html and {}_component.js'.format(output_filename, output_filename))
+
+    # Melt the table
+    table = pd.melt(table, id_vars=['instrument'],
+                    value_vars=dataproducts,
+                    value_name='files', var_name='dataproduct')
 
     return table, keywords
 

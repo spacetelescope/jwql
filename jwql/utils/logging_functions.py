@@ -135,8 +135,7 @@ def make_log_file(module, production_mode=True, path='./'):
     admin_account = settings['admin_account']
     log_path = settings['log_dir']
 
-    exempt_modules = []
-    if user != admin_account and module not in exempt_modules and production_mode:
+    if user != admin_account or not production_mode:
         module = os.path.join('dev', module)
 
     if production_mode:
