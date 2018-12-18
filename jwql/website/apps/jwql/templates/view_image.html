@@ -151,11 +151,11 @@
     	    <div class='col-3'>
                 <h6>Anomalies in this image:</h6>
     		    <ul class='no-bullets'>
-                    {% for anom in anomalies %}
+                    {% for anom, name in anomalies %}
                         {% if anom in prev_anom %}
-                            <li><input type="checkbox" name="anomaly" value="{{ anom }}" id="{{ anom }}" checked>&nbsp;&nbsp;{{ anom }}</li>
+                            <li><input type="checkbox" name="anomaly" value="{{ anom }}" id="{{ anom }}" checked>&nbsp;&nbsp;{{ name }}</li>
                         {% else %}
-                            <li><input type="checkbox" name="anomaly" value="{{ anom }}" id="{{ anom }}">&nbsp;&nbsp;{{ anom }}</li>
+                            <li><input type="checkbox" name="anomaly" value="{{ anom }}" id="{{ anom }}">&nbsp;&nbsp;{{ name }}</li>
                         {% endif %}
                     {% endfor %}
                 </ul>

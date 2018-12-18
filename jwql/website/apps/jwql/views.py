@@ -278,13 +278,15 @@ def view_image(request, inst, file_root, rewrite=False):
 
     # Get a list of previously flagged anomalies
     prev_anom = None
-    # query = di.session.query(di.Anomaly).filter(di.Anomaly.file_root == file_root)
-    # all_records = query.data_frame()
-    # if not all_records.empty:
-        # prev_anom = ', '.join([col for col, val in np.sum(all_records, axis=0).items() if val])
-    prev_anom = ', '.join(['bowtie', 'snowball'])
+    query = di.session.query(di.Anomaly).filter(di.Anomaly.filename == file_root)
+    all_records = query.data_frame()
+    print(all_records)
+    if not all_records.empty:
+        prev_anom = ', '.join([col for col, val in np.sum(all_records, axis=0).items() if val])
+    # prev_anom = ', '.join(['bowtie', 'snowball'])
 
     # Build the context
+    anom = di.Anomaly()
     context = {'inst': inst,
                'file_root': file_root,
                'tools': MONITORS,
@@ -292,7 +294,7 @@ def view_image(request, inst, file_root, rewrite=False):
                'fits_files': image_info['all_files'],
                'suffixes': image_info['suffixes'],
                'num_ints': image_info['num_ints'],
-               'anomalies': di.Anomaly().colnames,
+               'anomalies': zip(anom.colnames, anom.names),
                'prev_anom': prev_anom}
 
     return render(request, template, context)
