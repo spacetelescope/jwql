@@ -27,14 +27,10 @@ Authors
 from datetime import datetime
 
 import pandas as pd
-from sqlalchemy import Boolean
-from sqlalchemy import Column
+from sqlalchemy import Boolean, Column, DateTime, Integer, MetaData, String, Table
 from sqlalchemy import create_engine
-from sqlalchemy import DateTime
-from sqlalchemy import Integer
-from sqlalchemy import MetaData
-from sqlalchemy import String
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
 
@@ -92,65 +88,63 @@ def load_connection(connection_string):
     base = declarative_base(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
-    meta = MetaData()
+    meta = MetaData(engine)
+
+    # Make sure it has an anomalies table
+    if not engine.has_table('anomalies'):
+        print("No 'anomalies' table. Generating one now...")
+
+        # Define anomaly table column names
+        columns = ['bowtie', 'snowball', 'cosmic_ray_shower', 'crosstalk',
+                   'cte_correction_error', 'data_transfer_error', 'detector_ghost',
+                   'diamond', 'diffraction_spike', 'dragon_breath', 'earth_limb',
+                   'excessive_saturation', 'figure8_ghost', 'filter_ghost',
+                   'fringing', 'guidestar_failure', 'banding', 'persistence',
+                   'prominent_blobs', 'trail', 'scattered_light', 'other']
+
+        # Create a table with the appropriate Columns
+        anomalies = Table('anomalies', meta,
+                          Column('id', Integer, primary_key=True, nullable=False),
+                          Column('filename', String, nullable=False),
+                          Column('flag_date', DateTime, nullable=False, server_default=str(datetime.now())),
+                          *[Column(name, String, nullable=False, server_default="False") for name in columns])
+
+        # Implement it
+        meta.create_all()
 
     return session, base, engine, meta
 
 
+# Load the objects for the database
 session, base, engine, meta = load_connection(SETTINGS['connection_string'])
 
 
-class Anomaly(base):
-    """ORM for the anomalies table"""
-    # Name the table
-    __tablename__ = 'anomalies'
+# Make convenience methods for Base class
+@property
+def colnames(self):
+    """A list of all the column names in this table"""
+    # Get the columns
+    a_list = sorted([col for col, val in self._sa_instance_state.attrs.items()
+              if col not in ['id', 'filename', 'flag_date']])
 
-    # Define the columns
-    id = Column(Integer, primary_key=True, nullable=False)
-    filename = Column(String, nullable=False)
-    flag_date = Column(DateTime, nullable=False, default=datetime.now())
-    bowtie = Column(Boolean, nullable=False, default=False)
-    snowball = Column(Boolean, nullable=False, default=False)
-    cosmic_ray_shower = Column(Boolean, nullable=False, default=False)
-    crosstalk = Column(Boolean, nullable=False, default=False)
-    cte_correction_error = Column(Boolean, nullable=False, default=False)
-    data_transfer_error = Column(Boolean, nullable=False, default=False)
-    detector_ghost = Column(Boolean, nullable=False, default=False)
-    diamond = Column(Boolean, nullable=False, default=False)
-    diffraction_spike = Column(Boolean, nullable=False, default=False)
-    dragon_breath = Column(Boolean, nullable=False, default=False)
-    earth_limb = Column(Boolean, nullable=False, default=False)
-    excessive_saturation = Column(Boolean, nullable=False, default=False)
-    figure8_ghost = Column(Boolean, nullable=False, default=False)
-    filter_ghost = Column(Boolean, nullable=False, default=False)
-    fringing = Column(Boolean, nullable=False, default=False)
-    guidestar_failure = Column(Boolean, nullable=False, default=False)
-    banding = Column(Boolean, nullable=False, default=False)
-    persistence = Column(Boolean, nullable=False, default=False)
-    prominent_blobs = Column(Boolean, nullable=False, default=False)
-    trail = Column(Boolean, nullable=False, default=False)
-    scattered_light = Column(Boolean, nullable=False, default=False)
-    other = Column(Boolean, nullable=False, default=False)
+    return a_list
 
-    def __repr__(self):
-        """Return the canonical string representation of the object"""
-        # Get the columns that are True
-        a_list = [col for col, val in self.__dict__.items()
-                  if val is True and isinstance(val, bool)]
 
-        txt = ('Anomaly {0.id}: {0.filename} flagged at '
-               '{0.flag_date} for {1}').format(self, a_list)
+@property
+def names(self):
+    """A list of human readable names for all the columns in this table"""
+    return [name.replace('_', ' ') for name in self.colnames]
 
-        return txt
 
-    @property
-    def colnames(self):
-        """A list of all the column names in this table"""
-        # Get the columns
-        a_list = [col for col, val in self._sa_instance_state.attrs.items()
-                  if col not in ['id', 'filename', 'flag_date']]
+# Generate Base class and add methods
+Base = automap_base()
+Base.colnames = colnames
+Base.names = names
+Base.prepare(engine, reflect=True)
 
-        return a_list
+
+# Automap Anomaly class from Base class for anomalies table
+Anomaly = Base.classes.anomalies
 
 
 if __name__ == '__main__':
