@@ -45,30 +45,47 @@ Maybe compare to a baseline noise image and flag pixels that are different by th
 import numpy as np
 
 from astropy.stats import sigma_clip
+from astropy.time import Time
 from jwst import datamodels
 
+from jwql.jwql_monitors import monitor_mast
 from jwql.utils import maths, instrument_properties
+from jwql.utils.utils import get_config, JWST_INSTRUMENTS, JWST_DATAPRODUCTS
 
 
 class Dark():
     def __init__(self):
-        # Search for new files
-        new_files = file_query(to_mast, or_to_filesystem)
+        # Get the output directory
+        output_dir = os.path.join(get_config()['outputs'], 'monitor_darks')
+        history_file = os.path.join(output_dir, 'mast_query_history.txt')
 
-        # If there are new files, separate by instrument, detector,
-        # and aperture.
-        for filename in new_files:
-            info = get_info_through_header_or_filesystem_database
+        # Use the current time as the end time for MAST query
+        current_time = Time.now().mjd
 
-        # Check to see if there are enough for
-        # the monitor's signal-to-noise requirements
-        for instrument, detector, aperture in info:
-            if number_of_matching_files > threshold_value:
-                files_to_use = get_list_of_matching_files
-                self.run(files_to_use)
-            else:
-                print(("Not enough new data for {}, {}, {} to run dark current monitor.")
-                      .format(instrument, detector, aperture))
+        # Open file containing history of queries
+        past_queries = ascii.read(history_file)
+        for row in past_queries:
+            starting_time = Time(row['Last_query']).mjd
+            # starting_time = datetime.strptime(row['Last_query'], '%Y-%m-%dT%H:%M:%S')  # '2018-12-18T11-8-58'
+            new_files = mast_query_darks(row['Instrument'], row['Aperture'], starting_time, current_time)
+
+            # If there are new files, separate by instrument, detector,
+            # and aperture.
+            #for filename in new_files:
+            #    info = get_info_through_header_or_filesystem_database
+
+            # Check to see if there are enough for
+            # the monitor's signal-to-noise requirements
+            for detector, aperture in info:
+                if number_of_matching_files > threshold_value:
+                    files_to_use = get_list_of_matching_files
+                    self.run(files_to_use)
+
+                    # Update the query history for the next call
+                    specific_query['Last_query'] = current_time.strftime("%Y-%m-%dT%H:%M:%S")
+                else:
+                    print(("Not enough new data for {}, {}, {} to run dark current monitor.")
+                          .format(instrument, detector, aperture))
         logging.info('Dark Monitor completed successfully.')
 
     def find_amp_boundaries(self, data):
@@ -258,3 +275,97 @@ class Dark():
 if __name__ == '__main__':
     #logging.configure_logging()
     monitor = Dark()
+
+
+def create_history_file():
+    """Create the initial version of the query history file that will
+    be used with the dark current monitor
+    """
+    import pysiaf
+
+    # Get the name of the file to save the table to
+    file_base = 'mast_query_history.txt'
+    output_dir = os.path.join(get_config()['outputs'], 'monitor_darks')
+    history_file = os.path.join(output_dir, file_base)
+
+    # Make the time of the last MAST query far back in time for this
+    # initial version of the file
+    initial_time = '2012-01-01T00:00:00'
+
+    instruments = []
+    apertures = []
+    last_query_time = []
+
+    # Add a row for each instrument/aperture combination
+    for instrument in JWST_INSTRUMENTS:
+        siaf = pysiaf.Siaf(instrument)
+        apertures.extend(list(siaf.apernames))
+        instruments.extend([instrument] * len(apertures))
+        last_query_time.extend([initial_time] * len(apertures))
+
+    # Create and populate table
+    history = Table()
+    history['Instrument'] = instruments
+    history['Aperture'] = apertures
+    history['Last_query'] = last_query_time
+    history.meta['comments'] = [('This file contains a table listing the ending time of the last '
+                                 'query to MAST for each instrument/aperture')]
+    history.write(history_file, format='ascii')
+    print('New version of the MAST query history file ({}) generated.'.format(file_base))
+
+
+def mast_query_darks(instrument, aperture, start_date, end_date):
+    """Query MAST for dark current data
+
+    Parameters
+    ----------
+    instrument : str
+
+    aperture : str
+        (e.g. NRCA1_FULL)
+
+    start_date : ?
+
+    end_date : ?
+
+    Returns
+    -------
+    something
+    """
+    # Make sure instrument is correct case
+    if instrument.lower() == 'nircam':
+        instrument = 'NIRCam'
+    elif instrument.lower() == 'niriss':
+        instrument = 'NIRISS'
+    elif instrument.lower() == 'nirspec':
+        instrument = 'NIRSpec'
+    elif instrument.lower() == 'miri':
+        instrument = 'MIRI'
+
+    # Create dictionary of parameters to add
+    dark_template_list = ['NRC_DARK', 'NRS_DARK', 'NIS_DARK', 'MIR_DARKALL', 'MIR_DARKIMG',
+                          'MIR_DARKMRS', 'FGS_DARK']
+    parameters = {"filters": [{"paramName": "date_obs_mjd", "values": [{"min": start_date, "max": end_date}]},
+                              {"paramName": "apername", "values": [aperture]},
+                              {"paramName": "exp_type", "values": dark_template_list}]}
+    # or try pps_aper rather than apername?
+
+    query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
+                                              add_filters=parameters, return_data=True, caom=False)
+    return query
+
+
+def advancedSearchCounts():
+    """This works, in terms of the search paying attention to my requested filters.
+    I still haven't got the instrument_inventory query to pay attention to my filters.
+    I'm not sure why. It looks like it should work...
+    """
+    service = "Mast.Jwst.Filtered.NIRCAM"
+    params = {"columns": "*",
+              "filters": [{"paramName": "date_obs_mjd", "values": [{"min": 56843.1, "max": 58640.2}]},
+                          {"paramName": "apername", "values": ['NRCA1_FULL']},
+                          {"paramName": "exp_type", "values": ['NRC_DARK']}
+                          ]
+              }
+    response = Mast.service_request_async(service, params)
+    return response[0].json

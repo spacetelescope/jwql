@@ -107,6 +107,11 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
     if isinstance(add_requests, dict):
         params.update(add_requests)
 
+
+    print('Params going into MAST query:', params)
+
+
+
     response = Mast.service_request_async(service, params)
     result = response[0].json()
 
