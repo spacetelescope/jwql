@@ -32,6 +32,62 @@ from jwql.utils.constants import FILE_SUFFIX_TYPES
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 
+def copy_from_filesystem(files, out_dir):
+    """Copy a given file from the filesystem to a given directory.
+    Short-term fix: if the file does not exist in the filesystem
+    then try downloading from MAST
+    """
+    for input_file in files:
+        success = []
+        failed = []
+        try:
+            shutil.copy2(input_file, out_dir)
+            success.append(input_file)
+        except:
+            filed.append(input_file)
+    return success, failed
+
+
+def download_mast_data(query_results, output_dir):
+    """Example function for downloading MAST query results. From MAST website
+    https://mast.stsci.edu/api/v0/pyex.html
+
+    Parameters
+    ----------
+    query_results : list
+        List of dictionaries returned by a MAST query.
+
+    output_dir : str
+        Directory into which the files will be downlaoded
+    """
+    # Set up the https connection
+    server = 'mast.stsci.edu'
+    conn = httplib.HTTPSConnection(server)
+
+    # Dowload the products
+    for i in range(len(query_results)):
+
+        # Make full output file path
+        output_file = os.path.join(output_dir, query_results[i]['filename'])
+
+        # Download the data
+        uri = query_results[i]['dataURI']
+        conn.request("GET", "/api/v0/download/file?uri="+uri)
+        resp = conn.getresponse()
+        file_content = resp.read()
+
+        # Save to file
+        with open(output_file, 'wb') as file_obj:
+            file_obj.write(file_content)
+
+        # Check for file
+        if not os.path.isfile(output_file):
+            print("ERROR: " + output_file + " failed to download.")
+        else:
+            print("DOWNLOAD COMPLETE: ", output_file)
+    conn.close()
+
+
 def ensure_dir_exists(fullpath):
     """Creates dirs from ``fullpath`` if they do not already exist.
     """
@@ -196,3 +252,29 @@ def get_config():
         settings = json.load(config_file)
 
     return settings
+
+
+def filesystem_path(filename):
+    """Return the full path to a given file in the filesystem
+
+    Parameters
+    ----------
+    filename : str
+        File to locate (e.g. jw86600006001_02101_00008_guider1_cal.fits)
+
+    Returns
+    -------
+    full_path : str
+        Full path to the given file, including filename
+    """
+    filesystem_base = get_config()["filesystem"]
+
+    # Subdirectory name is based on the proposal ID
+    subdir = filename[0:7]
+    full_path = os.path.join(filesystem_base, subdir, filename)
+
+    # Check to see if the file exists
+    if os.path.isfile(full_path):
+        return full_path
+    else:
+        raise FileNotFoundError('{} is not in the predicted location: {}'.format(filename, full_path))

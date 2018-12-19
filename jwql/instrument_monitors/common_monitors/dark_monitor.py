@@ -48,15 +48,23 @@ from astropy.stats import sigma_clip
 from astropy.time import Time
 from jwst import datamodels
 
+from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils import maths, instrument_properties
-from jwql.utils.utils import get_config, JWST_INSTRUMENTS, JWST_DATAPRODUCTS
+from jwql.utils.utils import download_mast_data, copy_from_filesystem, get_config, filesystem_path, JWST_INSTRUMENTS, JWST_DATAPRODUCTS
 
 
 class Dark():
-    def __init__(self):
+    def __init__(self, new_dark_threshold=10):
+        """
+        Parameters
+        ----------
+        new_dark_threshold : int
+            Minimum number of new dark current files needed in order to
+            run the dark current monitor.
+        """
         # Get the output directory
-        output_dir = os.path.join(get_config()['outputs'], 'monitor_darks')
+        self.output_dir = os.path.join(get_config()['outputs'], 'monitor_darks')
         history_file = os.path.join(output_dir, 'mast_query_history.txt')
 
         # Use the current time as the end time for MAST query
@@ -64,28 +72,39 @@ class Dark():
 
         # Open file containing history of queries
         past_queries = ascii.read(history_file)
+
+        # Loop over instrument/aperture combinations, and query MAST for new files
         for row in past_queries:
             starting_time = Time(row['Last_query']).mjd
-            # starting_time = datetime.strptime(row['Last_query'], '%Y-%m-%dT%H:%M:%S')  # '2018-12-18T11-8-58'
-            new_files = mast_query_darks(row['Instrument'], row['Aperture'], starting_time, current_time)
-
-            # If there are new files, separate by instrument, detector,
-            # and aperture.
-            #for filename in new_files:
-            #    info = get_info_through_header_or_filesystem_database
+            new_entries = mast_query_darks(row['Instrument'], row['Aperture'], starting_time, current_time)
 
             # Check to see if there are enough for
             # the monitor's signal-to-noise requirements
-            for detector, aperture in info:
-                if number_of_matching_files > threshold_value:
-                    files_to_use = get_list_of_matching_files
-                    self.run(files_to_use)
+            if len(new_entries) >= new_dark_threshold:
+                # Get full paths to the files
+                new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
 
-                    # Update the query history for the next call
-                    specific_query['Last_query'] = current_time.strftime("%Y-%m-%dT%H:%M:%S")
-                else:
-                    print(("Not enough new data for {}, {}, {} to run dark current monitor.")
-                          .format(instrument, detector, aperture))
+                # Copy files from filesystem
+                copied, not_copied = copy_from_filesystem(new_filenames, self.output_dir)
+
+                # Short-term fix: if some of the files from the query are not
+                # in the filesystem, try downloading them from MAST
+                uncopied_basenames = [os.path.basename(infile) for infile in not_copied]
+                uncopied_results = [entry if entry['filename'] in uncopied_basenames for entry in new_entries]
+                download_mast_data(uncopied_results, self.output_dir)
+
+                # Run the dark monitor
+                dark_files = [os.path.join(self.output_dir, filename) for filename in new_filenames]
+                self.run(dark_files, row['Instrument'], row['Aperture'])
+
+                # Update the query history for the next call
+                specific_query['Last_query'] = current_time.strftime("%Y-%m-%dT%H:%M:%S")
+            else:
+                print(("Dark monitor skipped. {} new dark files for {}, {}. {} new files are "
+                       "required to run dark current monitor.").format(len(new_entries),
+                                                                       row['Instrument'],
+                                                                       row['Aperture'],
+                                                                       new_dark_threshold))
         logging.info('Dark Monitor completed successfully.')
 
     def find_amp_boundaries(self, data):
@@ -121,55 +140,68 @@ class Dark():
             print('is this case possible with any of the instruments?')
         return amp_bounds
 
-    def mean_slope_image(self, file_list, sigma_threshold=3):
-        """Combine a list of slope images into a mean slope image,
-        using sigma-clipping
+    def hot_dead_pixel_check(self, mean_image, comparison_image, hot_threshold=2., dead_threshold=0.1):
+        """Get the ratio of the slope image to a baseline slope image.
+        Pixels in the ratio image with values above hot_threshold will
+        be marked as newly hot, and those with ratio values less than
+        dead_threshold will be marked as newly dead.
 
         Parameters
         ----------
-        file_list : list
-            List of filenames to be included in the mean calculations
+        mean_image : numpy.ndarray
+            2D array containing the slope image from the new data
 
-        sigma_threshold : int
-            Number of sigma to use when sigma-clipping values in each
-            pixel
+        comparison_image : numpy.ndarray
+            2D array containing the baseline slope image to compare
+            against the new slope image.
+
+        hot_threshold : float
+            (mean_image / comparison_image) ratio value above which
+            a pixel is considered newly hot.
+
+        dead_threshold : float
+            mean_image / comparison_image) ratio value below which
+            a pixel is considered newly dead.
 
         Returns
         -------
-        mean_image : numpy.ndarray
-            2D sigma-clipped mean image
+        hotpix : tuple
+            Tuple of x,y coordinates of newly hot pixels
 
-        stdev_image : numpy.ndarray
-            2D sigma-clipped standard deviation image
+        deadpix : tuple
+            Tuple of x,y coordinates of newly dead pixels
         """
-        for i, input_file in enumerate(file_list):
-            model = datamodels.open(input_file)
-            image = model.data
+        ratio = mean_image / comparison_image
+        hotpix = np.where(ratio > hot_threshold)
+        deadpix = np.where(ratio < dead_threshold)
+        return hotpix, deadpix
 
-            # Stack all inputs together into a single 3D image cube
-            if i == 0:
-                ndim_base = image.shape
-                if len(ndim_base) == 3:
-                    cube = copy.deepcopy(image)
-                elif len(ndim_base) == 2:
-                    cube = np.expand_dims(image, 0)
+    def noise_check(self, new_noise_image, baseline_noise_image, threshold=1.5):
+        """Get the ratio of the stdev (noise) image to a baseline noise
+        image. Pixels in the ratio image with values above threshold
+        will be marked as newly noisy.
 
-            ndim = image.shape
-            if ndim_base[-2:] == ndim[-2:]:
-                if len(ndim) == 2:
-                    image = np.expand_dims(image, 0)
-                elif len(ndim) > 3:
-                    raise ValueError("4-dimensional input images not supported.")
-                cube = np.vstack((cube, image))
-            else:
-                raise ValueError("Input images are of inconsistent size in x/y dimension.")
+        Parameters
+        ----------
+        new_noise_image : numpy.ndarray
+            2D array containing the noise image from the new data
 
-        # Create mean and standard deviation images, using sigma-
-        # clipping on a pixel-by-pixel basis
-        clipped_cube = sigma_clip(cube, sigma=sigma_threshold, axis=0, masked=False)
-        mean_image = np.mean(clipped_cube, axis=0)
-        std_image = np.nanstd(clipped_cube, axis=0)
-        return mean_image, std_image
+        baseline_noise_image : numpy.ndarray
+            2D array containing the baseline noise image to compare
+            against the new noise image.
+
+        threshold : float
+            (new_noise_image / baseline_noise_image) ratio value above
+            which a pixel is considered newly noisey.
+
+        Returns
+        -------
+        noisy : tuple
+            Tuple of x,y coordinates of newly noisy pixels
+        """
+        ratio = new_noise_image / baseline_noise_image
+        noisy = np.where(ratio > threshold)
+        return noisy
 
     def number_of_amps(frametime, sample_time, array_x_dim, array_y_dim):
         """Calculate the number of amplifiers used to collect the data
@@ -180,7 +212,7 @@ class Dark():
         if fullframe:
             num_amps = 4
         else:
-            if subarray_name not in []:
+            if subarray_name not in ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']:
                 num_amps = 1
             else:
                 # These are the tougher cases. Subarrays that can be
@@ -188,8 +220,10 @@ class Dark():
 
                 # Compare the given frametime with the calculated frametimes
                 # using 4 amps or 1 amp.
-                amp4_time = instrument_properties.calc_frame_time(instrument, aperture, xdim, ydim, sample_time, amps)
-                amp1_time = instrument_properties.calc_frame_time(instrument, aperture, xdim, ydim, sample_time, amps)
+                amp4_time = instrument_properties.calc_frame_time(instrument, aperture, xdim, ydim,
+                                                                  sample_time, amps)
+                amp1_time = instrument_properties.calc_frame_time(instrument, aperture, xdim, ydim,
+                                                                  sample_time, amps)
                 if amp4_time == frametime:
                     num_amps = 4
                 elif amp1_time == framtime:
@@ -200,27 +234,63 @@ class Dark():
                                      .format(amp4_time, amp1_time, frametime))
         return num_amps
 
-    def run(self, file_list):
-        """MAIN FUNCTION"""
-        # First run calwebb_detector1 if necessary
-        if inputs_are_raw:
-            run_calwebb_detector1(input_files)
-            slope_files = [pipeline_output_files]
-        else:
-            slope_files = file_list
+    def run(self, file_list, instrument, aperture):
+        """MAIN FUNCTION
+
+        Parameters
+        ----------
+        file_list : list
+            List of filenames (including full paths) to the dark
+            current files
+
+        instrument : str
+            Instrument name
+
+        aperture : str
+            Aperture name of the files (e.g. 'NRCA1_FULL') From
+            'apername' field in the MAST query results
+        """
+        required_steps = pipeline_tools.get_pipeline_steps(instrument)
+
+        # Make sure dark subtraction is skipped on dark current files
+        required_steps['dark_current'] = False
+
+        but slightly different than the full list....(remove dark sub
+            and what steps to skip for MIRI?)
+
+        slope_files = []
+        for filename in file_list:
+            completed_steps = pipeline_tools.completed_pipeline_steps(filename)
+            steps_to_run = pipeline_tools.steps_to_run(required_steps, completed_steps)
+
+            # Run any remaining required pipeline steps
+            if all(steps_to_run.values()):
+                slope_files.append(filename)
+            else:
+                processed_file = run_calwebb_detector1(filename, steps_to_run)
+                slope_files.append(processed_file)
 
         # Calculate a mean slope image from the inputs
-        should we move mean_slope_image into utils? or maybe make a static method?
-        could be useful for other monitors
-        slope_image, stdev_image = self.mean_slope_image(slope_files, sigma_threshold=3)
+        slope_image, stdev_image = maths.mean_image(slope_files, sigma_threshold=3)
+
+        # Read in baseline mean slope image and stdev image
+        baseline_file = '{}_{}_baseline_slope_and_stdev_images.fits'.format(instrument, aperture)
+        baseline_filepath = os.path.join(self.output_dir, 'baseline/', baseline_file)
+        with fits.open(baseline_file) as hdu:
+            baseline_mean = hdu['MEAN'].data
+            baseline_stdev = hdu['STDEV'].data
 
         # Check the hot/dead pixel population for changes
-        new_hot_pix = self.hot_pixel_check()
-        new_dead_pix = self.dead_pixel_check()
-        print('New hot/dead pixels should go? into an ascii file and then a table on the webpage?')
+        new_hot_pix, new_dead_pix = self.hot_dead_pixel_check(slope_image, baseline_mean)
+        print('New hot/dead pixels should go? into an ascii file and then a table/image on the webpage?')
+
+        # Check for any pixels that are significanly more noisy than
+        # in the baseline stdev image
+        new_noisy_pixels = self.noise_check(stdev_image, baseline_stdev)
 
         # Read in the file containing historical image statistics
-        stats_file = in_output_dir_and_based_on_instrument_detector_aperture
+        stats_file = '{}_{}_dark_current_statistics.txt'.format(instrument, aperture)
+        stats_filepath = os.path.join(self.output_dir, 'stats/', stats_file)
         history = ascii.read(stats_file)
 
         # Calculate mean and stdev values, and fit a Gaussian to the
@@ -233,7 +303,6 @@ class Dark():
             row = [key, amp_mean[key], amp_stdev[key], gauss_peak[key], gauss_peak_err[key],
                    gauss_stdev[key], gauss_stdev_err[key]]
             history.add_row(row)
-            make_sure_later_plotter_can_handle_this_mix_of_amps()
 
     def stats_by_amp(self, image, instrument, plot=True):
         """Calculate statistics in the input image for each amplifier
@@ -246,6 +315,9 @@ class Dark():
         gaussian_stdevs = {}
         gaussian_peak_errs = {}
         gaussian_stdev_errs = {}
+
+        Add full image coords to the list of amp_boundaries, so that full frame stats are
+        also calculated.
         for x, y in zip(x_boundaries, y_boundaries):
             amp_mean, amp_stdev = maths.mean_stdev(image[y_start: y_end, x_start: x_end])
             key = "{}_{}".format(x, y)
@@ -262,6 +334,9 @@ class Dark():
             gaussian_stdevs[key] = width[0]
             gaussian_peak_errs[key] = peak[1]
             gaussian_stdev_errs[key] = width[1]
+
+            if full_frame:
+                maths.double_gaussian_fit(bin_centers, hist, initial_params)
 
             # If requested, plot the histrogram(s) and Gaussian fits
             if plot:
@@ -335,30 +410,40 @@ def mast_query_darks(instrument, aperture, start_date, end_date):
     # Make sure instrument is correct case
     if instrument.lower() == 'nircam':
         instrument = 'NIRCam'
+        dark_template = ['NRC_DARK']
     elif instrument.lower() == 'niriss':
         instrument = 'NIRISS'
+        dark_template = ['NIS_DARK']
     elif instrument.lower() == 'nirspec':
         instrument = 'NIRSpec'
+        dark_template = 'NRS_DARK'
+    elif instrument.lower() == 'fgs':
+        instrument = 'FGS'
+        dark_template = 'FGS_DARK'
     elif instrument.lower() == 'miri':
         instrument = 'MIRI'
+        dark_template = ['MIR_DARKALL', 'MIR_DARKIMG', 'MIR_DARKMRS']
 
-    # Create dictionary of parameters to add
-    dark_template_list = ['NRC_DARK', 'NRS_DARK', 'NIS_DARK', 'MIR_DARKALL', 'MIR_DARKIMG',
-                          'MIR_DARKMRS', 'FGS_DARK']
-    parameters = {"filters": [{"paramName": "date_obs_mjd", "values": [{"min": start_date, "max": end_date}]},
-                              {"paramName": "apername", "values": [aperture]},
-                              {"paramName": "exp_type", "values": dark_template_list}]}
-    # or try pps_aper rather than apername?
+    # monitor_mast.instrument_inventory does not allow list inputs to the added_filters
+    # input (or at least if you do provide a list, then it becomes a nested list when
+    # it sends the query to MAST. The nested list is subsequently ignored by MAST.)
+    # So query once for each dark template, and combine outputs into a single list.
+    query_results = []
+    for template_name in template_list:
+        # Create dictionary of parameters to add
+        parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
+                      "apername": aperture, "exp_type": template_name}
 
-    query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
-                                              add_filters=parameters, return_data=True, caom=False)
-    return query
+        query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
+                                                  add_filters=parameters, return_data=True, caom=False)
+        if len(query['data']) > 0:
+            query_results.extend(query['data'])
+    return query_results
 
 
 def advancedSearchCounts():
-    """This works, in terms of the search paying attention to my requested filters.
-    I still haven't got the instrument_inventory query to pay attention to my filters.
-    I'm not sure why. It looks like it should work...
+    """Example function for MAST query from MAST website. Should be able to delete before merging
+    https://mast.stsci.edu/api/v0/pyex.html
     """
     service = "Mast.Jwst.Filtered.NIRCAM"
     params = {"columns": "*",
