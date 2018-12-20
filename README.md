@@ -73,7 +73,9 @@ conda env create -f environment.yml
 
 There are two current pages to review before you begin contributing to the `jwql` development. The first is our [style guide](https://github.com/spacetelescope/jwql/blob/master/style_guide/style_guide.md) and the second is our [suggested git workflow page](https://github.com/spacetelescope/jwql/wiki/git-&-GitHub-workflow-for-contributing), which contains an in-depth explanation of the workflow.
 
-The following is a bare bones example of a best work flow for contributing to the project:
+Contributors are also encouraged to check out the [Checklist for Contributors Guide](https://github.com/spacetelescope/jwql/wiki/Checklist-for-Contributors-and-Reviewers-of-Pull-Requests) to ensure the pull request contains all of the necessary changes.
+
+The following is a bare-bones example of a best work flow for contributing to the project:
 
 1. Create a fork off of the `spacetelescope` `jwql` repository.
 2. Make a local clone of your fork.
