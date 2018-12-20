@@ -55,7 +55,6 @@ def test_filtered_instrument_keywords():
     assert kw[0] != kw[1] != kw[2] != kw[3] != kw[4]
 
 
-@pytest.mark.xfail
 def test_instrument_inventory_filtering():
     """Test to see that the instrument inventory can be filtered"""
     filt = 'GR150R'
