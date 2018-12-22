@@ -45,7 +45,7 @@ from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .forms import FileSearchForm
-from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS
+from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS, INSTRUMENTS_CAPITALIZED
 
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -89,6 +89,8 @@ def archived_proposals(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+    # Ensure the instrument is correctly capitalized
+    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
 
     template = 'archive.html'
 
@@ -127,6 +129,9 @@ def archive_thumbnails(request, inst, proposal):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+    # Ensure the instrument is correctly capitalized
+    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+
     template = 'thumbnails.html'
     context = thumbnails(inst, proposal)
 
@@ -207,6 +212,9 @@ def instrument(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+    # Ensure the instrument is correctly capitalized
+    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+
     template = 'instrument.html'
     url_dict = {'FGS': 'http://jwst-docs.stsci.edu/display/JTI/Fine+Guidance+Sensor%2C+FGS?q=fgs',
                 'MIRI': 'http://jwst-docs.stsci.edu/display/JTI/Mid-Infrared+Instrument%2C+MIRI',
@@ -238,6 +246,9 @@ def unlooked_images(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+    # Ensure the instrument is correctly capitalized
+    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+
     template = 'thumbnails.html'
     context = thumbnails(inst)
 
@@ -261,6 +272,9 @@ def view_header(request, inst, file):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+    # Ensure the instrument is correctly capitalized
+    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+
     template = 'view_header.html'
     header = get_header_info(file)
     file_root = '_'.join(file.split('_')[:-1])
@@ -292,6 +306,9 @@ def view_image(request, inst, file_root, rewrite=False):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+    # Ensure the instrument is correctly capitalized
+    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+
     template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
     context = {'inst': inst,
