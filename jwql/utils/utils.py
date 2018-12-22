@@ -59,6 +59,11 @@ INSTRUMENTS_SHORTHAND = {'gui': 'FGS',
                          'nis': 'NIRISS',
                          'nrc': 'NIRCam',
                          'nrs': 'NIRSpec'}
+INSTRUMENTS_CAPITALIZED = {'fgs': 'FGS',
+                           'miri': 'MIRI',
+                           'nircam': 'NIRCam',
+                           'niriss': 'NIRISS',
+                           'nirspec': 'NIRSpec'}
 
 
 def ensure_dir_exists(fullpath):

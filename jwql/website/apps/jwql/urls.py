@@ -45,23 +45,22 @@ from . import api_views
 from . import views
 
 app_name = 'jwql'
-
-api_instruments = 'nircam|NIRCam|niriss|NIRISS|nirspec|NIRSpec|miri|MIRI|fgs|FGS'
+instruments = 'nircam|NIRCam|niriss|NIRISS|nirspec|NIRSpec|miri|MIRI|fgs|FGS'
 
 urlpatterns = [
     path('', views.home, name='home'),
     path('about/', views.about, name='about'),
     path('dashboard/', views.dashboard, name='dashboard'),
-    path('jwql/<str:inst>/', views.instrument, name='instrument'),
-    path('jwql/<str:inst>/archive/', views.archived_proposals, name='archive'),
-    path('jwql/<str:inst>/unlooked/', views.unlooked_images, name='unlooked'),
-    path('jwql/<str:inst>/<str:file_root>/', views.view_image, name='view_image'),
-    path('jwql/<str:inst>/<str:file>/hdr/', views.view_header, name='view_header'),
-    path('jwql/<str:inst>/archive/<str:proposal>', views.archive_thumbnails, name='archive_thumb'),
+    re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
+    re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
+    re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),
+    re_path(r'^(?P<inst>({}))/(?P<file_root>[\w]+)/$'.format(instruments), views.view_image, name='view_image'),
+    re_path(r'^(?P<inst>({}))/(?P<file>.+)/hdr/$'.format(instruments), views.view_header, name='view_header'),
+    re_path(r'^(?P<inst>({}))/archive/(?P<proposal>[\d]{{5}})/$'.format(instruments), views.archive_thumbnails, name='archive_thumb'),
     path('api/proposals/', api_views.all_proposals, name='all_proposals'),
-    path('api/<str:inst>/proposals/', api_views.instrument_proposals, name='instrument_proposals'),
-    re_path(r'^api/(?P<inst>({}))/preview_images/$'.format(api_instruments), api_views.preview_images_by_instrument, name='preview_images_by_instrument'),
-    re_path(r'^api/(?P<inst>({}))/thumbnails/$'.format(api_instruments), api_views.thumbnails_by_instrument, name='thumbnails_by_instrument'),
+    re_path(r'^api/(?P<inst>({}))/proposals/$'.format(instruments), api_views.instrument_proposals, name='instrument_proposals'),
+    re_path(r'^api/(?P<inst>({}))/preview_images/$'.format(instruments), api_views.preview_images_by_instrument, name='preview_images_by_instrument'),
+    re_path(r'^api/(?P<inst>({}))/thumbnails/$'.format(instruments), api_views.thumbnails_by_instrument, name='thumbnails_by_instrument'),
     re_path(r'^api/(?P<proposal>[\d]{5})/filenames/$', api_views.filenames_by_proposal, name='filenames_by_proposal'),
     re_path(r'^api/(?P<proposal>[\d]{5})/preview_images/$', api_views.preview_images_by_proposal, name='preview_images_by_proposal'),
     re_path(r'^api/(?P<proposal>[\d]{5})/thumbnails/$', api_views.thumbnails_by_proposal, name='preview_images_by_proposal'),
