@@ -151,8 +151,8 @@ class FileSearchForm(forms.Form):
 
         # If they searched for a proposal
         if self.search_type == 'proposal':
-            return redirect('/jwql/{}/archive/{}'.format(self.instrument, search))
+            return redirect('/{}/archive/{}'.format(self.instrument, search))
 
         # If they searched for a file root
         elif self.search_type == 'fileroot':
-            return redirect('/jwql/{}/{}'.format(self.instrument, search))
+            return redirect('/{}/{}'.format(self.instrument, search))

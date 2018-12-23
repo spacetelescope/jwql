@@ -29,7 +29,8 @@ from jwql.utils import permissions
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-FILE_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'uncal']
+FILE_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled',
+                     'i2d', 'x1d', 's2d', 's3d', 'dark', 'ami', 'crf']
 JWST_INSTRUMENTS = sorted(['NIRISS', 'NIRCam', 'NIRSpec', 'MIRI', 'FGS'])
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
                      'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
@@ -59,6 +60,11 @@ INSTRUMENTS_SHORTHAND = {'gui': 'FGS',
                          'nis': 'NIRISS',
                          'nrc': 'NIRCam',
                          'nrs': 'NIRSpec'}
+INSTRUMENTS_CAPITALIZED = {'fgs': 'FGS',
+                           'miri': 'MIRI',
+                           'nircam': 'NIRCam',
+                           'niriss': 'NIRISS',
+                           'nirspec': 'NIRSpec'}
 
 
 def ensure_dir_exists(fullpath):
