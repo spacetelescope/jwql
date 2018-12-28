@@ -3,6 +3,7 @@ channels:
 - http://ssb.stsci.edu/astroconda-dev
 - defaults
 dependencies:
+- asdf>=2.3.0
 - astropy
 - astroquery=0.3.8
 - bokeh=1.0.1
