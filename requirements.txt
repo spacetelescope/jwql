@@ -12,7 +12,7 @@ pandas==0.23.4
 psycopg2==2.7.6.1
 python-dateutil==2.7.5
 pytest==4.0.2
-sphinx==1.8.2
+sphinx==1.8.3
 sphinx-automodapi==0.9
 sqlalchemy==1.2.15
 stsci_rtd_theme==0.0.2
