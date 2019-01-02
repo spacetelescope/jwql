@@ -53,6 +53,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
+    re_path(r'^ajax/(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals_ajax, name='archive_ajax'),
     re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),
     re_path(r'^(?P<inst>({}))/(?P<file_root>[\w]+)/$'.format(instruments), views.view_image, name='view_image'),
     re_path(r'^(?P<inst>({}))/(?P<file>.+)/hdr/$'.format(instruments), views.view_header, name='view_header'),

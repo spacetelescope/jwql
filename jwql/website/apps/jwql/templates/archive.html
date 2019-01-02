@@ -6,11 +6,52 @@
 
 	<!-- Custom styles and scripts for this template -->
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
-	<!-- <link href="{{staticURL}}css/loader.css?{% now 'U' %}" rel="stylesheet"> -->
+
+	<script type="text/javascript">
+	function make_proposal_array() {
+		$.ajax({
+			url: 'http://127.0.0.1:8000/ajax/FGS/archive/',
+			success: function(data){
+
+        		// Add content to the proposal array div
+        		for (var i = 0; i < data.thumbnails.proposals.length; i++) {
+
+        			// Parse out useful variables
+        			inst = data.inst;
+        			prop = data.thumbnails.proposals[i];
+        			thumb = data.thumbnails.thumbnail_paths[i];
+        			n = data.thumbnails.num_files[i];
+
+        			// Build div content
+        			content = '<div class="proposal text-center">';
+        			content += '<a href="/' + inst + '/archive/' + prop + '/" id="proposal' + i + '" proposal="' + prop + '"';
+        			content += '<span class="helper"></span><img src="{{ static("thumbnails/") }}' + thumb + '" alt="" width=100%>';
+        			content += '<div class="proposal-color-fill" ></div>';
+        			content += '<div class="proposal-info">';
+        			content += '<h3>' + prop + '</h3>';
+        			content += '<h6>' + n + ' Files</h6>';
+        			content += '</div></a></div>';
+
+        			// Add the content to the div
+        			$("#proposal-array")[0].innerHTML += content;
+
+				// Replace loading screen with the proposal array div
+            	document.getElementById("loading").style.display = "none";
+            	document.getElementById("proposal-array").style.display = "block";
+        		};
+		}});
+	};
+	</script>
+
 
 {% endblock %}
 
 {% block content %}
+
+	<style type="text/css">
+		div#proposal-array { display: none; }
+		div#loading { text-align:center; z-index: 1000; }
+	</style>
 
     <main role="main" class="container">
 
@@ -51,22 +92,28 @@
 
 		<hr>
 
-		<!-- Display the data -->
-		<div id='proposal-array'>
-		{% for prop, thumb, n in zipped_thumbnails %}
-			<div class="proposal text-center">
-				<a href={{ url('jwql:archive_thumb', args=[inst, prop]) }} id="proposal{{ loop.index }}" proposal="{{prop}}">
-					<span class="helper"></span><img src='{{ static("thumbnails/") }}{{thumb}}' alt='' width=100%>
-					<div class='proposal-color-fill' ></div>
-					<div class='proposal-info'>
-						<h3>{{prop}}</h3>
-						<h6>{{n}} Files</h6>
+		<!-- Loading animation -->
+		<div id="loading">
+			<div class="lds-css ng-scope">
+				<div style="width:100%;height:100%" class="lds-magnify">
+					<div>
+						<div>
+							<div>
+							</div>
+							<div>
+							</div>
+						</div>
 					</div>
-				</a>
-				<!-- <a -->
+				</div>
+				<br>Loading ...
 			</div>
-		{% endfor %}
 		</div>
+
+		<!-- Display the data -->
+		<div id='proposal-array'></div>
+		<script>
+			make_proposal_array();
+		</script>
 		<a id="no_proposals_msg" style='display: none'>No proposals match the search criteria.</a>
 
 	</main>
