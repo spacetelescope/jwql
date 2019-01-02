@@ -35,6 +35,7 @@ Dependencies
 
 import os
 
+from django.http import JsonResponse
 from django.shortcuts import render
 
 from .data_containers import get_acknowledgements
@@ -109,6 +110,43 @@ def archived_proposals(request, inst):
                                         proposal_info['num_files'])}
 
     return render(request, template, context)
+
+
+def archived_proposals_ajax(request, inst):
+    """Generate the page listing all archived proposals in the database
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    # Ensure the instrument is correctly capitalized
+    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+
+    template = 'archive.html'
+
+    # For each proposal, get the first available thumbnail and determine
+    # how many files there are
+    filepaths = get_filenames_by_instrument(inst)
+    all_filenames = [os.path.basename(f) for f in filepaths]
+    proposal_info = get_proposal_info(filepaths)
+
+    context = {'inst': inst,
+               'all_filenames': all_filenames,
+               'tools': MONITORS,
+               'num_proposals': proposal_info['num_proposals'],
+               'thumbnails': {'proposals': proposal_info['proposals'],
+                              'thumbnail_paths': proposal_info['thumbnail_paths'],
+                              'num_files': proposal_info['num_files']}}
+
+    return JsonResponse(context)
 
 
 def archive_thumbnails(request, inst, proposal):
