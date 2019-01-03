@@ -94,20 +94,8 @@ def archived_proposals(request, inst):
     inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
 
     template = 'archive.html'
-
-    # For each proposal, get the first available thumbnail and determine
-    # how many files there are
-    filepaths = get_filenames_by_instrument(inst)
-    all_filenames = [os.path.basename(f) for f in filepaths]
-    proposal_info = get_proposal_info(filepaths)
-
     context = {'inst': inst,
-               'all_filenames': all_filenames,
-               'tools': MONITORS,
-               'num_proposals': proposal_info['num_proposals'],
-               'zipped_thumbnails': zip(proposal_info['proposals'],
-                                        proposal_info['thumbnail_paths'],
-                                        proposal_info['num_files'])}
+               'tools': MONITORS}
 
     return render(request, template, context)
 
@@ -174,6 +162,33 @@ def archive_thumbnails(request, inst, proposal):
     context = thumbnails(inst, proposal)
 
     return render(request, template, context)
+
+
+def archive_thumbnails_ajax(request, inst, proposal):
+    """Generate the page listing all archived images in the database
+    for a certain proposal
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    proposal : str
+        Number of observing proposal
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    # Ensure the instrument is correctly capitalized
+    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+
+    template = 'thumbnails.html'
+    context = thumbnails(inst, proposal)
+
+    return JsonResponse(context)
 
 
 def dashboard(request):

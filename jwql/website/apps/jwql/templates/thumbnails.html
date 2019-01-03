@@ -2,6 +2,55 @@
 
 {% block preamble %}
 
+    <!-- Custom styles and scripts for this template -->
+    <style type="text/css">
+        div#thumbnail-array { display: none; }
+    </style>
+
+    <script type="text/javascript">
+    function update_thumbnails_page(inst, proposal) {
+        $.ajax({
+            url: 'http://127.0.0.1:8000/ajax/' + inst + '/archive/' + proposal + '/',
+            success: function(data){
+
+                // Update the number of proposals displayed
+                n_fileids = data.file_data.length;
+                $("#img_show_count")[0].innerText = 'Showing ' + n_fileids + '/' + n_fileids + ' activities';
+
+                // Add content to the thumbail array div
+                for (var i = 0; i < data.file_data.length; i++) {
+
+                    // Parse out useful variables
+                    file = data.file_data[i];
+                    inst = data.inst;
+
+                    // Build div content
+                    content = '<div class="thumbnail" detector="' + file.detector + '" proposal="' + file.program_id + '" file_root="' + file.file_root + '", exp_start="' + file.exp_start + '">';
+                    content += '<a href="/' + inst + '/' + file.file_root + '/">';
+                    content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="this.src={{ static("img/imagenotfound.png") }}">';
+                    content += '<div class="thumbnail-color-fill" ></div>';
+                    content += '<div class="thumbnail-info">';
+                    content += 'Proposal: ' + file.program_id + '<br>';
+                    content += 'Observation: ' + file.observation + '<br>';
+                    content += 'Visit: ' + file.visit + '<br>';
+                    content += 'Detector: ' + file.detector + '<br>';
+                    content += 'Exp_Start: ' + file.exp_start.toFixed(2) + '<br>';
+                    content += '</div></a></div>';
+
+                    // Add the content to the div
+                    $("#thumbnail-array")[0].innerHTML += content;
+
+                    // Add the appropriate image to the thumbnail
+                    determine_filetype_for_thumbnail('{{ static("thumbnails/") }}' , file.suffixes, i, file.file_root);
+
+                // Replace loading screen with the proposal array div
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("thumbnail-array").style.display = "block";
+                };
+        }});
+    };
+    </script>
+
 	<title>Unlooked {{ inst }} Images - JWQL</title>
 
 {% endblock %}
@@ -13,7 +62,7 @@
     	<h3 id='title'>{{ inst }} Images</h3>
     	<script>determine_page_title('{{ inst }}','{{ prop }}');</script>
 
-    	<p id='img_show_count'>Showing {{ n_fileids }}/{{ n_fileids }} activities
+    	<p id='img_show_count'></p>
     		<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">
     			<span class="help-tip mx-2">i</span>
     		</a>
@@ -57,64 +106,28 @@
 
 		<hr>
 
-		<!-- Add an animated "loader" while the images load -->
-		<!-- <div id="loading" class='text-center'>
-	        <div class="cssload-container">
-				<div class="cssload-circle-1">
-					<div class="cssload-circle-2">
-						<div class="cssload-circle-3">
-							<div class="cssload-circle-4">
-								<div class="cssload-circle-5">
-									<div class="cssload-circle-6">
-										<div class="cssload-circle-7">
-											<div class="cssload-circle-8">
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-	        <br>
-	        Loading thumbnails...
-	    </div> -->
+        <!-- Loading animation -->
+        <div id="loading">
+            <div class="lds-css ng-scope">
+                <div style="width:100%;height:100%" class="lds-magnify">
+                    <div>
+                        <div>
+                            <div>
+                            </div>
+                            <div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                Loading ...
+            </div>
+        </div>
 
-		<!-- Display the data -->
-		<div id='thumbnail-array'>
-		{% for i, file in thumbnail_zipped_list %}
-			<div class="thumbnail" detector="{{file.detector}}" proposal="{{file.program_id}}" file_root="{{file.file_root}}", exp_start="{{file.exp_start}}">
-				<a href={{ url('jwql:view_image', args=[inst, file.file_root]) }}>
-					<span class="helper"></span><img id='thumbnail{{i}}' onerror="this.src={{ static('img/imagenotfound.png') }}">
-					<script>determine_filetype_for_thumbnail('{{ static("thumbnails/") }}' , "{{file.suffixes}}", "{{i}}", "{{file.file_root}}");</script>
-
-					<div class='thumbnail-color-fill' ></div>
-					<div class='thumbnail-info'>
-						Proposal: {{file.program_id}}<br>
-						Observation: {{file.observation}}<br>
-						Visit: {{file.visit}}<br>
-						Detector: {{file.detector}}<br>
-						Exp_Start: {{'%0.2f' | format(file.exp_start|float) }}<br>
-						<!-- Suffixes: {{file.3}}<br> -->
-						<!-- ID: {{file.file_root}}<br> -->
-					</div>
-				</a>
-			</div>
-		{% endfor %}
-		</div>
-		<a id="no_thumbnails_msg" style='display: none'>No data match the selected criteria.</a>
+        <!-- Display the data -->
+        <div id='thumbnail-array'></div>
+        <script>update_thumbnails_page('{{inst}}', '{{prop}}');</script>
+        <a id="no_thumbnails_msg" style='display: none'>No data match the selected criteria.</a>
 
 	</main>
-
-	<!-- <script type="text/javascript">
-    function preloader(){
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("thumbnail-array").style.display = "block";
-        // $(".thumb img").attr('src', '/../static/img/wow.png');
-    }
-    window.onload = preloader;
-    // document.getElementById("thumbnail-array").onload = preloader;
-	</script> -->
 
 {% endblock %}
