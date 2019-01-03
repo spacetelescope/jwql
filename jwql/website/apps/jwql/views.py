@@ -135,7 +135,7 @@ def archived_proposals_ajax(request, inst):
                               'thumbnail_paths': proposal_info['thumbnail_paths'],
                               'num_files': proposal_info['num_files']}}
 
-    return JsonResponse(context)
+    return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
 def archive_thumbnails(request, inst, proposal):
@@ -183,13 +183,13 @@ def archive_thumbnails_ajax(request, inst, proposal):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
 
-    template = 'thumbnails.html'
-    context = thumbnails_ajax(inst, proposal)
+    data = thumbnails_ajax(inst, proposal)
 
-    return JsonResponse(context)
+    return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
 def dashboard(request):
