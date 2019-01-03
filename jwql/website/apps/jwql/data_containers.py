@@ -635,6 +635,81 @@ def thumbnails(inst, proposal=None):
     if proposal is not None:
         full_ids = [f for f in full_ids if f[2:7] == proposal]
 
+    detectors = []
+    proposals = []
+    for i, file_id in enumerate(full_ids):
+        for file in filepaths:
+            if '_'.join(file.split('/')[-1].split('_')[:-1]) == file_id:
+
+                # Parse filename to get program_id
+                try:
+                    program_id = filename_parser(file)['program_id']
+                    detector = filename_parser(file)['detector']
+                except ValueError:
+                    # Temporary workaround for noncompliant files in filesystem
+                    program_id =nfile_id[2:7]
+                    detector = file_id[26:]
+
+        # Add parameters to sort by
+        if detector not in detectors and not detector.startswith('f'):
+            detectors.append(detector)
+        if program_id not in proposals:
+            proposals.append(program_id)
+
+
+    # Extract information for sorting with dropdown menus
+    # (Don't include the proposal as a sorting parameter if the
+    # proposal has already been specified)
+    if proposal is not None:
+        dropdown_menus = {'detector': detectors}
+    else:
+        dropdown_menus = {'detector': detectors,
+                          'proposal': proposals}
+
+    dict_to_render = {'inst': inst,
+                      'tools': MONITORS,
+                      'dropdown_menus': dropdown_menus,
+                      'prop': proposal}
+
+    return dict_to_render
+
+
+def thumbnails_ajax(inst, proposal=None):
+    """Generate a page showing thumbnail images corresponding to
+    activities, from a given ``proposal``
+
+    Parameters
+    ----------
+    inst : str
+        Name of JWST instrument
+    proposal : str (optional)
+        Number of APT proposal to filter
+
+    Returns
+    -------
+    dict_to_render : dict
+        Dictionary of parameters for the thumbnails
+    """
+
+    filepaths = get_filenames_by_instrument(inst)
+
+    # JUST FOR DEVELOPMENT
+    # Split files into "archived" and "unlooked"
+    if proposal is not None:
+        page_type = 'archive'
+    else:
+        page_type = 'unlooked'
+    filepaths = split_files(filepaths, page_type)
+
+    # Determine file ID (everything except suffix)
+    # e.g. jw00327001001_02101_00002_nrca1
+    full_ids = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filepaths])
+
+    # If the proposal is specified (i.e. if the page being loaded is
+    # an archive page), only collect data for given proposal
+    if proposal is not None:
+        full_ids = [f for f in full_ids if f[2:7] == proposal]
+
     # Group files by ID
     file_data = []
     detectors = []
@@ -683,21 +758,8 @@ def thumbnails(inst, proposal=None):
         file_dict['file_root'] = file_id
         file_data.append(file_dict)
 
-    # Extract information for sorting with dropdown menus
-    # (Don't include the proposal as a sorting parameter if the
-    # proposal has already been specified)
-    if proposal is not None:
-        dropdown_menus = {'detector': detectors}
-    else:
-        dropdown_menus = {'detector': detectors,
-                          'proposal': proposals}
-
     dict_to_render = {'inst': inst,
                       'all_filenames': [os.path.basename(f) for f in filepaths],
-                      'tools': MONITORS,
-                      'file_data' : file_data,
-                      'dropdown_menus': dropdown_menus,
-                      'n_fileids': len(file_data),
-                      'prop': proposal}
+                      'file_data' : file_data}
 
     return dict_to_render

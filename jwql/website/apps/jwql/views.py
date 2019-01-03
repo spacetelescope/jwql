@@ -45,6 +45,7 @@ from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
+from .data_containers import thumbnails_ajax
 from .forms import FileSearchForm
 from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS, INSTRUMENTS_CAPITALIZED
 
@@ -186,7 +187,7 @@ def archive_thumbnails_ajax(request, inst, proposal):
     inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
 
     template = 'thumbnails.html'
-    context = thumbnails(inst, proposal)
+    context = thumbnails_ajax(inst, proposal)
 
     return JsonResponse(context)
 
