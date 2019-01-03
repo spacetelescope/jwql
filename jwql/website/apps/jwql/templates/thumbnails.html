@@ -14,34 +14,35 @@
             success: function(data){
 
                 // Update the number of proposals displayed
-                n_fileids = data.file_data.length;
-                $("#img_show_count")[0].innerText = 'Showing ' + n_fileids + '/' + n_fileids + ' activities';
+                num_rootnames = Object.keys(data.file_data).length;
+                $("#img_show_count")[0].innerText = 'Showing ' + num_rootnames + '/' + num_rootnames + ' activities';
 
                 // Add content to the thumbail array div
-                for (var i = 0; i < data.file_data.length; i++) {
+                for (var i = 0; i < num_rootnames; i++) {
 
                     // Parse out useful variables
-                    file = data.file_data[i];
-                    inst = data.inst;
+                    rootname = Object.keys(data.file_data)[i];
+                    file = data.file_data[rootname];
+                    filename_dict = file.filename_dict;
 
                     // Build div content
-                    content = '<div class="thumbnail" detector="' + file.detector + '" proposal="' + file.program_id + '" file_root="' + file.file_root + '", exp_start="' + file.exp_start + '">';
-                    content += '<a href="/' + inst + '/' + file.file_root + '/">';
+                    content = '<div class="thumbnail" detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
+                    content += '<a href="/' + data.inst + '/' + rootname + '/">';
                     content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="this.src={{ static("img/imagenotfound.png") }}">';
                     content += '<div class="thumbnail-color-fill" ></div>';
                     content += '<div class="thumbnail-info">';
-                    content += 'Proposal: ' + file.program_id + '<br>';
-                    content += 'Observation: ' + file.observation + '<br>';
-                    content += 'Visit: ' + file.visit + '<br>';
-                    content += 'Detector: ' + file.detector + '<br>';
-                    content += 'Exp_Start: ' + file.exp_start.toFixed(2) + '<br>';
+                    content += 'Proposal: ' + filename_dict.program_id + '<br>';
+                    content += 'Observation: ' + filename_dict.observation + '<br>';
+                    content += 'Visit: ' + filename_dict.visit + '<br>';
+                    content += 'Detector: ' + filename_dict.detector + '<br>';
+                    content += 'Exp_Start: ' + file.expstart.toFixed(2) + '<br>';
                     content += '</div></a></div>';
 
                     // Add the content to the div
                     $("#thumbnail-array")[0].innerHTML += content;
 
                     // Add the appropriate image to the thumbnail
-                    determine_filetype_for_thumbnail('{{ static("thumbnails/") }}' , file.suffixes, i, file.file_root);
+                    determine_filetype_for_thumbnail('{{ static("thumbnails/") }}' , file.suffixes, i, rootname);
 
                 // Replace loading screen with the proposal array div
                 document.getElementById("loading").style.display = "none";
