@@ -1,8 +1,5 @@
 // JS function to determine what filetype to use for the thumbnail
 function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root) {
-    // Get all suffixes for the specific thumbnail
-    var suffixes = suffixes.replace(/&#39;/g, '"');
-    var suffixes = JSON.parse(suffixes);
 
     // Update the thumbnail to show the most processed filetype
     var img = document.getElementById('thumbnail'+i);

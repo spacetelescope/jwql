@@ -58,6 +58,7 @@ urlpatterns = [
     re_path(r'^(?P<inst>({}))/(?P<file_root>[\w]+)/$'.format(instruments), views.view_image, name='view_image'),
     re_path(r'^(?P<inst>({}))/(?P<file>.+)/hdr/$'.format(instruments), views.view_header, name='view_header'),
     re_path(r'^(?P<inst>({}))/archive/(?P<proposal>[\d]{{5}})/$'.format(instruments), views.archive_thumbnails, name='archive_thumb'),
+    re_path(r'^ajax/(?P<inst>({}))/archive/(?P<proposal>[\d]{{5}})/$'.format(instruments), views.archive_thumbnails_ajax, name='archive_thumb_ajax'),
     path('api/proposals/', api_views.all_proposals, name='all_proposals'),
     re_path(r'^api/(?P<inst>({}))/proposals/$'.format(instruments), api_views.instrument_proposals, name='instrument_proposals'),
     re_path(r'^api/(?P<inst>({}))/preview_images/$'.format(instruments), api_views.preview_images_by_instrument, name='preview_images_by_instrument'),

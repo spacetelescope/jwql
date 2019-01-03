@@ -681,9 +681,7 @@ def thumbnails(inst, proposal=None):
         file_dict['suffixes'] = suffixes
         file_dict['file_count'] = count
         file_dict['file_root'] = file_id
-
         file_data.append(file_dict)
-    file_indices = np.arange(len(file_data))
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the
@@ -697,7 +695,7 @@ def thumbnails(inst, proposal=None):
     dict_to_render = {'inst': inst,
                       'all_filenames': [os.path.basename(f) for f in filepaths],
                       'tools': MONITORS,
-                      'thumbnail_zipped_list': zip(file_indices, file_data),
+                      'file_data' : file_data,
                       'dropdown_menus': dropdown_menus,
                       'n_fileids': len(file_data),
                       'prop': proposal}
