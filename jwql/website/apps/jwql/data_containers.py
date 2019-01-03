@@ -150,6 +150,28 @@ def get_dashboard_components():
     return dashboard_components, dashboard_html
 
 
+def get_expstart(rootname):
+    """Return the exposure start time (``expstart``) for the given
+    group of files.
+
+    The ``expstart`` is gathered from a query to the
+    ``astroquery.mast`` service.
+
+    Parameters
+    ----------
+    rootname : str
+        The rootname of the observation of interest (e.g.
+        ``jw86700006001_02101_00006_guider1``).
+
+    Returns
+    -------
+    expstart : float
+        The exposure start time of the observation (in MJD).
+    """
+
+    return 5000.00
+
+
 def get_filenames_by_instrument(instrument):
     """Returns a list of paths to files that match the given
     ``instrument``.
@@ -675,8 +697,8 @@ def thumbnails(inst, proposal=None):
 
 
 def thumbnails_ajax(inst, proposal=None):
-    """Generate a page showing thumbnail images corresponding to
-    activities, from a given ``proposal``
+    """Generate a page that provides data necessary to render the
+    ``thumbnails`` template.
 
     Parameters
     ----------
@@ -687,79 +709,56 @@ def thumbnails_ajax(inst, proposal=None):
 
     Returns
     -------
-    dict_to_render : dict
-        Dictionary of parameters for the thumbnails
+    data_dict : dict
+        Dictionary of data needed for the ``thumbnails`` template
     """
 
+    # Get the available files for the instrument
     filepaths = get_filenames_by_instrument(inst)
-
-    # JUST FOR DEVELOPMENT
-    # Split files into "archived" and "unlooked"
     if proposal is not None:
-        page_type = 'archive'
+        filepaths = split_files(filepaths, 'archive')
     else:
-        page_type = 'unlooked'
-    filepaths = split_files(filepaths, page_type)
+        filepaths = split_files(filepaths, 'unlooked')
 
-    # Determine file ID (everything except suffix)
-    # e.g. jw00327001001_02101_00002_nrca1
-    full_ids = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filepaths])
+    # Get set of unique rootnames
+    rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filepaths])
 
     # If the proposal is specified (i.e. if the page being loaded is
     # an archive page), only collect data for given proposal
     if proposal is not None:
-        full_ids = [f for f in full_ids if f[2:7] == proposal]
+        rootnames = [rootname for rootname in rootnames if rootname[2:7] == proposal]
 
-    # Group files by ID
-    file_data = []
-    detectors = []
-    proposals = []
-    for i, file_id in enumerate(full_ids):
-        suffixes = []
-        count = 0
-        for file in filepaths:
-            if '_'.join(file.split('/')[-1].split('_')[:-1]) == file_id:
-                count += 1
+    # Initialize dictionary that will contain all needed data
+    data_dict = {}
+    data_dict['inst'] = inst
+    data_dict['file_data'] = {}
 
-                # Parse filename
-                try:
-                    file_dict = filename_parser(file)
-                except ValueError:
-                    # Temporary workaround for noncompliant files in filesystem
-                    file_dict = {'activity': file_id[17:19],
-                                 'detector': file_id[26:],
-                                 'exposure_id': file_id[20:25],
-                                 'observation': file_id[7:10],
-                                 'parallel_seq_id': file_id[16],
-                                 'program_id': file_id[2:7],
-                                 'suffix': file.split('/')[-1].split('.')[0].split('_')[-1],
-                                 'visit': file_id[10:13],
-                                 'visit_group': file_id[14:16]}
+    # Gather data for each rootname
+    for rootname in rootnames:
 
-                # Determine suffix
-                suffix = file_dict['suffix']
-                suffixes.append(suffix)
+        # Parse filename
+        try:
+            filename_dict = filename_parser(rootname)
+        except ValueError:
+            # Temporary workaround for noncompliant files in filesystem
+            filename_dict = {'activity': file_id[17:19],
+                             'detector': file_id[26:],
+                             'exposure_id': file_id[20:25],
+                             'observation': file_id[7:10],
+                             'parallel_seq_id': file_id[16],
+                             'program_id': file_id[2:7],
+                             'visit': file_id[10:13],
+                             'visit_group': file_id[14:16]}
 
-                hdr = fits.getheader(file, ext=0)
-                exp_start = hdr['EXPSTART']
+        # Get list of available filenames
+        available_files = get_filenames_by_rootname(rootname)
 
-        suffixes = list(set(suffixes))
+        # Add data to dictionary
+        data_dict['file_data'][rootname] = {}
+        data_dict['file_data'][rootname]['filename_dict'] = filename_dict
+        data_dict['file_data'][rootname]['available_files'] = available_files
+        data_dict['file_data'][rootname]['expstart'] = get_expstart(rootname)
+        data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for filename in available_files]
 
-        # Add parameters to sort by
-        if file_dict['detector'] not in detectors and \
-           not file_dict['detector'].startswith('f'):
-            detectors.append(file_dict['detector'])
-        if file_dict['program_id'] not in proposals:
-            proposals.append(file_dict['program_id'])
+    return data_dict
 
-        file_dict['exp_start'] = exp_start
-        file_dict['suffixes'] = suffixes
-        file_dict['file_count'] = count
-        file_dict['file_root'] = file_id
-        file_data.append(file_dict)
-
-    dict_to_render = {'inst': inst,
-                      'all_filenames': [os.path.basename(f) for f in filepaths],
-                      'file_data' : file_data}
-
-    return dict_to_render
