@@ -206,9 +206,9 @@ function update_sort_options(data) {
     $("#thumbnail-sort")[0].innerHTML = content;
 };
 
-function update_thumbnails_page(inst, proposal) {
+function update_thumbnails_page(inst, proposal, base_url) {
     $.ajax({
-        url: 'http://127.0.0.1:8000/ajax/' + inst + '/archive/' + proposal + '/',
+        url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/',
         success: function(data){
 
             // Perform various updates to divs
