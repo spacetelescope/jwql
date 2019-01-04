@@ -160,7 +160,9 @@ def archive_thumbnails(request, inst, proposal):
     inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
 
     template = 'thumbnails.html'
-    context = thumbnails(inst, proposal)
+    context = {'inst': inst,
+               'prop': proposal,
+               'tools': MONITORS}
 
     return render(request, template, context)
 
