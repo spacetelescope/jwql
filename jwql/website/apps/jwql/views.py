@@ -47,7 +47,7 @@ from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
 from .forms import FileSearchForm
-from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS, INSTRUMENTS_CAPITALIZED
+from jwql.utils.utils import get_base_url, get_config, JWST_INSTRUMENTS, MONITORS, INSTRUMENTS_CAPITALIZED
 
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -96,7 +96,8 @@ def archived_proposals(request, inst):
 
     template = 'archive.html'
     context = {'inst': inst,
-               'tools': MONITORS}
+               'tools': MONITORS,
+               'base_url': get_base_url()}
 
     return render(request, template, context)
 
@@ -162,7 +163,8 @@ def archive_thumbnails(request, inst, proposal):
     template = 'thumbnails.html'
     context = {'inst': inst,
                'prop': proposal,
-               'tools': MONITORS}
+               'tools': MONITORS,
+               'base_url': get_base_url()}
 
     return render(request, template, context)
 

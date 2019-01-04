@@ -21,6 +21,7 @@ References
     https://gist.github.com/jhunkeler/f08783ca2da7bfd1f8e9ee1d207da5ff
  """
 
+import getpass
 import json
 import os
 import re
@@ -74,22 +75,6 @@ def ensure_dir_exists(fullpath):
         os.makedirs(fullpath)
         permissions.set_permissions(fullpath)
 
-
-def get_config():
-    """Return a dictionary that holds the contents of the ``jwql``
-    config file.
-
-    Returns
-    -------
-    settings : dict
-        A dictionary that holds the contents of the config file.
-    """
-    with open(os.path.join(__location__, 'config.json'), 'r') as config_file:
-        settings = json.load(config_file)
-
-    return settings
-
-
 def filename_parser(filename):
     """Return a dictionary that contains the properties of a given
     JWST file (e.g. program ID, visit number, detector, etc.)
@@ -137,3 +122,31 @@ def filename_parser(filename):
         raise ValueError('Provided file {} does not follow JWST naming conventions (jw<PPPPP><OOO><VVV>_<GGSAA>_<EEEEE>_<detector>_<suffix>.fits)'.format(filename))
 
     return filename_dict
+
+
+def get_base_url():
+    """
+    """
+
+    username = getpass.getuser()
+    if username == get_config()['admin_account']:
+        base_url = 'https://dljwql.stsci.edu'
+    else:
+        base_url = 'http://127.0.0.1:8000'
+
+    return base_url
+
+
+def get_config():
+    """Return a dictionary that holds the contents of the ``jwql``
+    config file.
+
+    Returns
+    -------
+    settings : dict
+        A dictionary that holds the contents of the config file.
+    """
+    with open(os.path.join(__location__, 'config.json'), 'r') as config_file:
+        settings = json.load(config_file)
+
+    return settings

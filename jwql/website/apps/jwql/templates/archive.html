@@ -8,9 +8,9 @@
     </style>
 
     <script type="text/javascript">
-    function update_archive_page(inst) {
+    function update_archive_page(inst, base_url) {
         $.ajax({
-            url: 'http://127.0.0.1:8000/ajax/' + inst + '/archive/',
+            url: base_url + '/ajax/' + inst + '/archive/',
             success: function(data){
 
                 // Update the number of proposals displayed
@@ -111,7 +111,7 @@
 
         <!-- Display the data -->
         <div id='proposal-array'></div>
-        <script>update_archive_page('{{inst}}');</script>
+        <script>update_archive_page('{{inst}}', '{{base_url}}');</script>
         <a id="no_proposals_msg" style='display: none'>No proposals match the search criteria.</a>
 
     </main>
