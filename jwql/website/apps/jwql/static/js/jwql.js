@@ -12,7 +12,7 @@ function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root)
     } else if (suffixes.indexOf("uncal") >= 0) {
         var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
         img.src = jpg_path;
-    }
+    };
 };
 
 
@@ -33,7 +33,7 @@ function determine_page_title(instrument, proposal) {
         document.getElementById('title').innerHTML = final_title;
         if (document.title != final_title) {
             document.title = final_title;
-        }
+        };
     };
 };
 
@@ -74,52 +74,52 @@ function search(n_proposals) {
 
 
 function show_only(filter_type, value, dropdown_keys, num_fileids) {
-            // Get all filter options from {{dropdown_menus}} variable
-            var all_filters = dropdown_keys.slice(10,dropdown_keys.length-1).replace(/&#39;/g, '"');
-            var all_filters = JSON.parse(all_filters);
 
-            // Update dropdown menu text
-            document.getElementById(filter_type + '_dropdownMenuButton').innerHTML = value;
+    // Get all filter options from {{dropdown_menus}} variable
+    var all_filters = dropdown_keys.split(',');
 
-            // Find all thumbnail elements
-            var thumbnails = document.getElementsByClassName("thumbnail");
+    // Update dropdown menu text
+    document.getElementById(filter_type + '_dropdownMenuButton').innerHTML = value;
 
-            // Determine the current value for each filter
-            var filter_values = [];
-            for (j = 0; j < all_filters.length; j++) {
-                var filter_value = document.getElementById(all_filters[j] + '_dropdownMenuButton').innerHTML;
-                filter_values.push(filter_value);
-            }
+    // Find all thumbnail elements
+    var thumbnails = document.getElementsByClassName("thumbnail");
 
-            // Determine whether or not to display each thumbnail
-            var num_thumbnails_displayed = 0;
-            for (i = 0; i < thumbnails.length; i++) {
-                // Evaluate if the thumbnail meets all filter criteria
-                var criteria = [];
-                for (j = 0; j < all_filters.length; j++) {
-                    var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0) || (thumbnails[i].getAttribute(all_filters[j]) == filter_values[j]);
-                    criteria.push(criterion);
-                };
+    // Determine the current value for each filter
+    var filter_values = [];
+    for (j = 0; j < all_filters.length; j++) {
+        var filter_value = document.getElementById(all_filters[j] + '_dropdownMenuButton').innerHTML;
+        filter_values.push(filter_value);
+    }
 
-                // Only display if all filter criteria are met
-                if (criteria.every(function(r){return r})) {
-                    thumbnails[i].style.display = "inline-block";
-                    num_thumbnails_displayed++;
-                } else {
-                    thumbnails[i].style.display = "none";
-                }
-            };
-
-            // If there are no thumbnails to display, tell the user
-            if (num_thumbnails_displayed == 0) {
-                document.getElementById('no_thumbnails_msg').style.display = 'inline-block';
-            } else {
-                document.getElementById('no_thumbnails_msg').style.display = 'none';
-            };
-
-            // Update the count of how many images are being shown
-            document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/' + num_fileids + ' activities'
+    // Determine whether or not to display each thumbnail
+    var num_thumbnails_displayed = 0;
+    for (i = 0; i < thumbnails.length; i++) {
+        // Evaluate if the thumbnail meets all filter criteria
+        var criteria = [];
+        for (j = 0; j < all_filters.length; j++) {
+            var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0) || (thumbnails[i].getAttribute(all_filters[j]) == filter_values[j]);
+            criteria.push(criterion);
         };
+
+        // Only display if all filter criteria are met
+        if (criteria.every(function(r){return r})) {
+            thumbnails[i].style.display = "inline-block";
+            num_thumbnails_displayed++;
+        } else {
+            thumbnails[i].style.display = "none";
+        }
+    };
+
+    // If there are no thumbnails to display, tell the user
+    if (num_thumbnails_displayed == 0) {
+        document.getElementById('no_thumbnails_msg').style.display = 'inline-block';
+    } else {
+        document.getElementById('no_thumbnails_msg').style.display = 'none';
+    };
+
+    // Update the count of how many images are being shown
+    document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/' + num_fileids + ' activities'
+};
 
 
 function sort_by_proposals(sort_type) {
@@ -137,6 +137,7 @@ function sort_by_proposals(sort_type) {
 
 
 function sort_by_thumbnails(sort_type) {
+
     // Update dropdown menu text
     document.getElementById('sort_dropdownMenuButton').innerHTML = sort_type;
 
