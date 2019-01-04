@@ -24,10 +24,10 @@
     		content += '<div class="dropdown">';
     		content += '<button class="btn btn-primary dropdown-toggle" type="button" id="' + filter_type + '_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> All ' + filter_type + 's </button>';
     		content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
-    		content += '<a class="dropdown-item" href="#" onclick="show_only("' + filter_type + '", "All ' + filter_type + 's", "' + dropdown_key_list + '","' + num_rootnames + '");">All ' + filter_type + 's</a>';
+    		content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'All ' + filter_type + 's\', \'' + dropdown_key_list + '\',\'' + num_rootnames + '\');">All ' + filter_type + 's</a>';
 
     		for (var j = 0; j < filter_options.length; j++) {
-    			content += '<a class="dropdown-item" href="#" onclick="show_only("' + filter_type + '", "' + filter_options[j] + '", ' + dropdown_key_list + '", "' + num_rootnames + '" );">' + filter_options[j] + '</a>';
+    			content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + dropdown_key_list + '\', \'' + num_rootnames + '\');">' + filter_options[j] + '</a>';
     		};
 
     		content += '</div></div>';
@@ -35,7 +35,6 @@
 
 		// Add the content to the div
         $("#thumbnail-filter")[0].innerHTML = content;
-
     };
 
     function update_show_count(data) {
@@ -87,11 +86,28 @@
             	update_show_count(data);
             	update_thumbnail_array(data);
             	update_filter_options(data);
+            	update_sort_options(data);
 
                 // Replace loading screen with the proposal array div
                 document.getElementById("loading").style.display = "none";
                 document.getElementById("thumbnail-array").style.display = "block";
             }});
+    };
+
+    function update_sort_options(data) {
+
+		// Build div content
+		content = 'Sort by:';
+		content += '<div class="dropdown">';
+		content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Default</button>';
+		content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
+		content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Default\');">Default</a>';
+		content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Name\');">Name</a>';
+		content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Exposure Start Time\');">Exposure Start Time</a>';
+		content += '</div></div>';
+
+		// Add the content to the div
+        $("#thumbnail-sort")[0].innerHTML = content;
     };
     </script>
 
@@ -113,22 +129,8 @@
 
     	<!-- Filter and sort options -->
 		<div class="d-flex flex-row">
-
-			<!-- Filter Options -->
 			<div class="mr-4" id="thumbnail-filter"></div>
-
-			<!-- Sort Options -->
-			<div class="mx-4 mr-5 ml-auto">
-		    	Sort by:
-		    	<div class="dropdown">
-				  <button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Default</button>
-				  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-				  	<a class="dropdown-item" href="#" onclick="sort_by_thumbnails('Default');">Default</a>
-			    	<a class="dropdown-item" href="#" onclick="sort_by_thumbnails('Name');">Name</a>
-			    	<a class="dropdown-item" href="#" onclick="sort_by_thumbnails('Exposure Start Time');">Exposure Start Time</a>
-				  </div>
-				</div>
-			</div>
+			<div class="mx-4 mr-5 ml-auto" id="thumbnail-sort"></div>
 		</div>
 
 		<hr>
