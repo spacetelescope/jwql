@@ -29,10 +29,12 @@ function determine_page_title(instrument, proposal) {
     }
 
     // Update the titles accordingly
-    document.getElementById('title').innerHTML = final_title;
-    if (document.title != final_title) {
-        document.title = final_title;
-    }
+    if (typeof final_title !== 'undefined') {
+        document.getElementById('title').innerHTML = final_title;
+        if (document.title != final_title) {
+            document.title = final_title;
+        }
+    };
 };
 
 
