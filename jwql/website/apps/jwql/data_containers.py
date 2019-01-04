@@ -760,5 +760,20 @@ def thumbnails_ajax(inst, proposal=None):
         data_dict['file_data'][rootname]['expstart'] = get_expstart(rootname)
         data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for filename in available_files]
 
+    # Extract information for sorting with dropdown menus
+    # (Don't include the proposal as a sorting parameter if the
+    # proposal has already been specified)
+    detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for rootname in list(data_dict['file_data'].keys())]
+    proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for rootname in list(data_dict['file_data'].keys())]
+    if proposal is not None:
+        dropdown_menus = {'detector': detectors}
+    else:
+        dropdown_menus = {'detector': detectors,
+                          'proposal': proposals}
+
+    data_dict['tools'] = MONITORS
+    data_dict['dropdown_menus'] = dropdown_menus
+    data_dict['prop'] = proposal
+
     return data_dict
 
