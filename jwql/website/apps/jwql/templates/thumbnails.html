@@ -8,44 +8,6 @@
     </style>
 
     <script type="text/javascript">
-    function update_filter_options(data) {
-
-    	for (var i = 0; i < Object.keys(data.dropdown_menus).length; i++) {
-
-			// Parse out useful variables
-    		filter_type = Object.keys(data.dropdown_menus)[i];
-    		filter_options = Array.from(new Set(data.dropdown_menus[filter_type]));
-    		num_rootnames = Object.keys(data.file_data).length;
-    		dropdown_key_list = Object.keys(data.dropdown_menus);
-
-    		// Build div content
-    		content = '<div class="mr-4">';
-    		content += 'Show only ' + filter_type + ':';
-    		content += '<div class="dropdown">';
-    		content += '<button class="btn btn-primary dropdown-toggle" type="button" id="' + filter_type + '_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> All ' + filter_type + 's </button>';
-    		content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
-    		content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'All ' + filter_type + 's\', \'' + dropdown_key_list + '\',\'' + num_rootnames + '\');">All ' + filter_type + 's</a>';
-
-    		for (var j = 0; j < filter_options.length; j++) {
-    			content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + dropdown_key_list + '\', \'' + num_rootnames + '\');">' + filter_options[j] + '</a>';
-    		};
-
-    		content += '</div></div>';
-    	};
-
-		// Add the content to the div
-        $("#thumbnail-filter")[0].innerHTML = content;
-    };
-
-    function update_show_count(data) {
-
-    	num_rootnames = Object.keys(data.file_data).length;
-        content = 'Showing ' + num_rootnames + '/' + num_rootnames + ' activities';
-        content += '<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">';
-        content += '<span class="help-tip mx-2">i</span></a>';
-        $("#img_show_count")[0].innerHTML = content;
-    };
-
     function update_thumbnail_array(data) {
 
     	// Add content to the thumbail array div
@@ -75,39 +37,6 @@
             // Add the appropriate image to the thumbnail
             determine_filetype_for_thumbnail('{{ static("thumbnails/") }}' , file.suffixes, i, rootname);
         };
-    };
-
-    function update_thumbnails_page(inst, proposal) {
-        $.ajax({
-            url: 'http://127.0.0.1:8000/ajax/' + inst + '/archive/' + proposal + '/',
-            success: function(data){
-
-            	// Perform various updates to divs
-            	update_show_count(data);
-            	update_thumbnail_array(data);
-            	update_filter_options(data);
-            	update_sort_options(data);
-
-                // Replace loading screen with the proposal array div
-                document.getElementById("loading").style.display = "none";
-                document.getElementById("thumbnail-array").style.display = "block";
-            }});
-    };
-
-    function update_sort_options(data) {
-
-		// Build div content
-		content = 'Sort by:';
-		content += '<div class="dropdown">';
-		content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Default</button>';
-		content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
-		content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Default\');">Default</a>';
-		content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Name\');">Name</a>';
-		content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Exposure Start Time\');">Exposure Start Time</a>';
-		content += '</div></div>';
-
-		// Add the content to the div
-        $("#thumbnail-sort")[0].innerHTML = content;
     };
     </script>
 
