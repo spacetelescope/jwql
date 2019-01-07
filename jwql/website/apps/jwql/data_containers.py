@@ -67,7 +67,7 @@ def get_acknowledgements():
             index = i
 
     # Parse out the list of individuals
-    acknowledgements = data[index+1:]
+    acknowledgements = data[index + 1:]
     acknowledgements = [item.strip().replace('- ', '').split(' [@')[0].strip() for item in acknowledgements]
 
     return acknowledgements
@@ -669,7 +669,7 @@ def thumbnails(inst, proposal=None):
                     detector = filename_parser(file)['detector']
                 except ValueError:
                     # Temporary workaround for noncompliant files in filesystem
-                    program_id =nfile_id[2:7]
+                    program_id = nfile_id[2:7]
                     detector = file_id[26:]
 
         # Add parameters to sort by
@@ -677,7 +677,6 @@ def thumbnails(inst, proposal=None):
             detectors.append(detector)
         if program_id not in proposals:
             proposals.append(program_id)
-
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the
@@ -776,4 +775,3 @@ def thumbnails_ajax(inst, proposal=None):
     data_dict['prop'] = proposal
 
     return data_dict
-

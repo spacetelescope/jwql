@@ -283,8 +283,8 @@ def instrument(request, inst):
     doc_url = url_dict[inst]
 
     context = {'inst': inst,
-                'tools': MONITORS,
-                'doc_url': doc_url}
+               'tools': MONITORS,
+               'doc_url': doc_url}
 
     return render(request, template, context)
 
