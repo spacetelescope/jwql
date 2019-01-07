@@ -22,7 +22,7 @@ import json
 import pytest
 import urllib.request
 
-from jwql.utils.utils import get_base_url, get_config
+from jwql.utils.utils import get_base_url
 
 
 # Determine if this module is being run in production or locally
@@ -38,8 +38,7 @@ urls = [
     'api/jw86700005001_02101_00001_guider1/preview_images/',  # preview_images_by_rootname
     'api/fgs/thumbnails/',  # thumbnails_by_instrument
     'api/86700/thumbnails/',  # thumbnails_by_proposal
-    'api/jw86700005001_02101_00001_guider1/thumbnails/'  # thumbnails_by_rootname
-    ]
+    'api/jw86700005001_02101_00001_guider1/thumbnails/']  # thumbnails_by_rootname
 urls = ['{}/{}'.format(base_url, url) for url in urls]
 
 
