@@ -8,6 +8,11 @@
     </style>
 
     <script type="text/javascript">
+    /**
+     * Updates various compnents on the archive page
+     * @param {String} inst - The instrument of interest (e.g. "FGS")
+     * @param {String} base_url - The base URL for gathering data from the AJAX view.
+     */
     function update_archive_page(inst, base_url) {
         $.ajax({
             url: base_url + '/ajax/' + inst + '/archive/',

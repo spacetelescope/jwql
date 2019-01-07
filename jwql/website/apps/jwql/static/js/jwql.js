@@ -1,3 +1,10 @@
+/**
+ * Various JS functions to support the JWQL web application.
+ *
+ * @author Lauren Chambers
+ * @author Matthew Bourque
+ */
+
 // JS function to determine what filetype to use for the thumbnail
 function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root) {
 
@@ -152,6 +159,10 @@ function sort_by_thumbnails(sort_type) {
     }
 };
 
+/**
+ * Updates the thumbnail-filter div with filter options
+ * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ */
 function update_filter_options(data) {
 
     for (var i = 0; i < Object.keys(data.dropdown_menus).length; i++) {
@@ -181,6 +192,10 @@ function update_filter_options(data) {
     $("#thumbnail-filter")[0].innerHTML = content;
 };
 
+/**
+ * Updates the img_show_count component
+ * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ */
 function update_show_count(data) {
 
     num_rootnames = Object.keys(data.file_data).length;
@@ -190,6 +205,10 @@ function update_show_count(data) {
     $("#img_show_count")[0].innerHTML = content;
 };
 
+/**
+ * Updates the thumbnail-sort div with sorting options
+ * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ */
 function update_sort_options(data) {
 
     // Build div content
@@ -206,6 +225,12 @@ function update_sort_options(data) {
     $("#thumbnail-sort")[0].innerHTML = content;
 };
 
+/**
+ * Updates various compnents on the thumbnails page
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} proposal - The proposal number of interest (e.g. "88660")
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
 function update_thumbnails_page(inst, proposal, base_url) {
     $.ajax({
         url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/',
