@@ -32,6 +32,11 @@ from jwql.utils.constants import FILE_SUFFIX_TYPES
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 
+AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 0), (512, 2048)], '2': [(512, 0), (1024, 2048)],
+                                   '3': [(1024, 0), (1536, 2048)], '4': [(1536, 0), (2048, 2048)]}
+                        }
+
+
 def copy_from_filesystem(files, out_dir):
     """Copy a given file from the filesystem to a given directory.
     Short-term fix: if the file does not exist in the filesystem

@@ -17,10 +17,11 @@ Use
 import numpy as np
 
 from astropy.modeling import fitting, models
+from scipy.optimize import curve_fit
 from scipy.stats import sigmaclip
 
 
-def double_gaussian(x, params):
+def double_gaussian(x, amp1, peak1, sigma1, amp2, peak2, sigma2):
     """Equation two Gaussians
 
     Parameters
@@ -32,13 +33,12 @@ def double_gaussian(x, params):
         Gaussian coefficients
         [amplitude1, peak1, stdev1, amplitude2, peak2, stdev2]
     """
-    (amp1, peak1, sigma1, amp2, peak2, sigma2) = params
     y_values = amp1 * np.exp(-(x - peak1)**2.0 / (2.0 * sigma1**2.0)) \
-             + amp2 * np.exp(-(x - peak2)**2.0 / (2.0 * sigma2**2.0))
+        + amp2 * np.exp(-(x - peak2)**2.0 / (2.0 * sigma2**2.0))
     return y_values
 
 
-def double_gaussian_fit(x_values, y_values, params):
+def double_gaussian_fit(x_values, y_values, input_params):
     """Fit two Gaussians to the given array
 
     Parameters
@@ -53,11 +53,12 @@ def double_gaussian_fit(x_values, y_values, params):
         Initial guesses for Gaussian coefficients
         [amplitude1, peak1, stdev1, amplitude2, peak2, stdev2]
     """
-    fit = double_gaussian(x_values, params)
-    return (fit - y_values)
+    params, cov = curve_fit(double_gaussian, x_values, y_values, input_params)
+    sigma = np.sqrt(diag(cov))
+    return params, sigma
 
 
-def gaussian1d_fit(x_values, y_values):
+def gaussian1d_fit(x_values, y_values, params):
     """Fit 1D Gaussian to an array. Designed around fitting to
     histogram of pixel values.
 
@@ -80,7 +81,7 @@ def gaussian1d_fit(x_values, y_values):
     width : tup
         Tuple of the best fit Gaussian width and uncertainty
     """
-    model_gauss = models.Gaussian1D()
+    model_gauss = models.Gaussian1D(amplitude=params[0], mean=params[1], stddev=params[2])
     fitter_gauss = fitting.LevMarLSQFitter()
     best_fit = fitter_gauss(model_gauss, x_values, y_values)
     cov_diag = np.diag(fitter_gauss.fit_info['param_cov'])
