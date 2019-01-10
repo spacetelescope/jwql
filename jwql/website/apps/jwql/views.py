@@ -35,7 +35,6 @@ Dependencies
 
 import os
 
-from django.http import JsonResponse
 from django.shortcuts import render
 
 from .data_containers import get_acknowledgements
@@ -45,15 +44,64 @@ from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
-from .data_containers import thumbnails_ajax
 from .forms import FileSearchForm
-from jwql.utils.utils import get_base_url, get_config, JWST_INSTRUMENTS, MONITORS, INSTRUMENTS_CAPITALIZED
+from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS, INSTRUMENTS_CAPITALIZED
+
 
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
+from authlib.django.client import OAuth
+oauth = OAuth()
 
-def about(request):
+client_kwargs = {
+    'scope': 'mast:user:info',
+}
+
+oauth.register(
+'mast_auth',
+client_id='client_id',
+client_secret='client_secret',
+#request_token_url='https://auth.mast.stsci.edu/oauth/request_token',
+#request_token_params=None,
+access_token_url='https://auth.mastdev.stsci.edu/oauth/access_token?client_secret=$client_secret',
+access_token_params=None,
+refresh_token_url=None,
+authorize_url='https://auth.mastdev.stsci.edu/oauth/authorize',
+api_base_url='https://auth.mastdev.stsci.edu/1.1/',
+client_kwargs=client_kwargs,
+)
+
+FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
+
+def auth_info(fn):
+    def user_info(request):
+        cookie = request.COOKIES.get("ASB-AUTH")
+        # TODO if cookie not set, don't hit auth.mast
+        import requests
+        resp = requests.get("https://auth.mastdev.stsci.edu/info", headers={
+            "Accept": "application/json",
+            "Authorization": "token %s" % cookie,
+        })
+        return fn(request, resp.json())
+    return user_info
+
+def login(request):
+    # build a full authorize callback uri
+    # TODO if the user already has a token, don't re-authorize
+    redirect_uri = request.build_absolute_uri('/authorize')
+    return oauth.mast_auth.authorize_redirect(request, redirect_uri)
+
+def authorize(request):
+    token = oauth.mast_auth.authorize_access_token(request, headers={'Accept': 'application/json'})
+    resp = home(request)
+    # TODO set cookie properties safely
+    # TODO change home to a redirect
+    resp.set_cookie("ASB-AUTH", token["access_token"])
+    return resp
+
+@auth_info
+def about(request, user):
     """Generate the ``about`` page
 
     Parameters
@@ -68,6 +116,7 @@ def about(request):
     """
     template = 'about.html'
     acknowledgements = get_acknowledgements()
+    acknowledgements += ["%s" % user]
     context = {'acknowledgements': acknowledgements,
                'inst': '',
                'inst_list': JWST_INSTRUMENTS,
@@ -77,32 +126,6 @@ def about(request):
 
 
 def archived_proposals(request, inst):
-    """Generate the page listing all archived proposals in the database
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    inst : str
-        Name of JWST instrument
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-    # Ensure the instrument is correctly capitalized
-    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
-
-    template = 'archive.html'
-    context = {'inst': inst,
-               'tools': MONITORS,
-               'base_url': get_base_url()}
-
-    return render(request, template, context)
-
-
-def archived_proposals_ajax(request, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -132,11 +155,11 @@ def archived_proposals_ajax(request, inst):
                'all_filenames': all_filenames,
                'tools': MONITORS,
                'num_proposals': proposal_info['num_proposals'],
-               'thumbnails': {'proposals': proposal_info['proposals'],
-                              'thumbnail_paths': proposal_info['thumbnail_paths'],
-                              'num_files': proposal_info['num_files']}}
+               'zipped_thumbnails': zip(proposal_info['proposals'],
+                                        proposal_info['thumbnail_paths'],
+                                        proposal_info['num_files'])}
 
-    return JsonResponse(context, json_dumps_params={'indent': 2})
+    return render(request, template, context)
 
 
 def archive_thumbnails(request, inst, proposal):
@@ -161,39 +184,9 @@ def archive_thumbnails(request, inst, proposal):
     inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
 
     template = 'thumbnails.html'
-    context = {'inst': inst,
-               'prop': proposal,
-               'tools': MONITORS,
-               'base_url': get_base_url()}
+    context = thumbnails(inst, proposal)
 
     return render(request, template, context)
-
-
-def archive_thumbnails_ajax(request, inst, proposal):
-    """Generate the page listing all archived images in the database
-    for a certain proposal
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    inst : str
-        Name of JWST instrument
-    proposal : str
-        Number of observing proposal
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-
-    # Ensure the instrument is correctly capitalized
-    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
-
-    data = thumbnails_ajax(inst, proposal)
-
-    return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
 def dashboard(request):
@@ -283,8 +276,8 @@ def instrument(request, inst):
     doc_url = url_dict[inst]
 
     context = {'inst': inst,
-               'tools': MONITORS,
-               'doc_url': doc_url}
+                'tools': MONITORS,
+                'doc_url': doc_url}
 
     return render(request, template, context)
 
