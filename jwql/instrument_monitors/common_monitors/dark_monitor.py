@@ -51,7 +51,8 @@ from jwst import datamodels
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils import maths, instrument_properties
-from jwql.utils.utils import download_mast_data, copy_from_filesystem, get_config, filesystem_path, JWST_INSTRUMENTS, JWST_DATAPRODUCTS
+from jwql.utils.utils import download_mast_data, copy_from_filesystem, get_config, filesystem_path,\
+                             AMPLIFIER_BOUNDARIES, JWST_INSTRUMENTS, JWST_DATAPRODUCTS
 
 
 class Dark():
@@ -61,7 +62,9 @@ class Dark():
         ----------
         new_dark_threshold : int
             Minimum number of new dark current files needed in order to
-            run the dark current monitor.
+            run the dark current monitor. This means that this class needs
+            to be instantiated for each instrument/detector/subarray
+            combination
         """
         # Get the output directory
         self.output_dir = os.path.join(get_config()['outputs'], 'monitor_darks')
@@ -115,6 +118,7 @@ class Dark():
 
         NIRCam: subarrays are 1 amp (except grism stripe which can be 1 or 4)
         """
+        instrument = data.meta.instrument.name
         x0 = data.meta.subarray.xstart
         y0 = data.meta.subarray.ystart
         xsize = data.meta.subarray.xsize
@@ -122,23 +126,11 @@ class Dark():
 
         # There is no keyword specifying number of amps used.
         # Calculate from frametime and array size
+        # Also find the amp boundaries in the subarray coordinate system
         sample_time = data.meta.exposure.sample_time
         frame_time = data.meta.exposure.frame_time
-        num_amps = number_of_amps(frame_time, sample_time, xsize, ysize)
-
-        # Get the amp boundaries in full frame coordinates
-        amp_boundaries = NOMINAL_AMP_BOUNDARIES[data.meta.instrument.name]
-
-        # Shift the amp boundaries into the coordinate system of the
-        # aperture of this file
-        if num_amps == 1:
-            amp_bounds = {'lower_left': ([0], [0]), 'upper_right': ([xsize], [ysize])}
-        elif num_amps == 4:
-            lower_left_x = amp_boundaries['lower_left']
-            amp_bounds = {'lower_left': ([], []), 'upper_right': ([], [])}
-        else:
-            print('is this case possible with any of the instruments?')
-        return amp_bounds
+        num_amps, amp_edges = amplifier_info(instrument, frame_time, sample_time, xsize, ysize)
+        return num_amps, amp_edges
 
     def hot_dead_pixel_check(self, mean_image, comparison_image, hot_threshold=2., dead_threshold=0.1):
         """Get the ratio of the slope image to a baseline slope image.
@@ -203,36 +195,79 @@ class Dark():
         noisy = np.where(ratio > threshold)
         return noisy
 
-    def number_of_amps(frametime, sample_time, array_x_dim, array_y_dim):
+    def amplifier_info(instrument, frametime, sample_time, array_x_dim, array_y_dim):
         """Calculate the number of amplifiers used to collect the data
         from the array size and exposure time of a single frame
         (This is needed because there is no header keyword specifying
         how many amps were used.)
         """
-        if fullframe:
+        four_amp_subarrays = ['WFSS128R', 'WFSS64R']
+
+        # Full frame data will be 2048x2048 for all instruments
+        if ((array_x_dim == 2048) and (array_y_dim == 2048)) or subarray_name in four_amp_subarrays:
             num_amps = 4
+            amp_bounds = AMPLIFIER_BOUNDARIES[instrument]
         else:
             if subarray_name not in ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']:
                 num_amps = 1
+                amp_bounds = {'1': [(0, 0), (array_x_dim, array_y_dim)]}
             else:
                 # These are the tougher cases. Subarrays that can be
                 # used with multiple amp combinations
 
                 # Compare the given frametime with the calculated frametimes
                 # using 4 amps or 1 amp.
+
+                # Right now this is used only for the NIRCam grism stripe
+                # subarrays, so we don't need this to be a general case that
+                # can handle any subarray orientation relative to any amp
+                # orientation
                 amp4_time = instrument_properties.calc_frame_time(instrument, aperture, xdim, ydim,
                                                                   sample_time, amps)
                 amp1_time = instrument_properties.calc_frame_time(instrument, aperture, xdim, ydim,
                                                                   sample_time, amps)
                 if amp4_time == frametime:
                     num_amps = 4
+                    # In this case, keep the full frame amp boundaries in
+                    # the x direction, and set  the boundaries in the y
+                    # direction equal to the hight of the subarray
+                    amp_bounds = AMPLIFIER_BOUNDARIES[instrument]
+                    for amp_num in ['1', '2', '3', '4']:
+                        amp_bounds[amp_num][0][1] = array_y_dim
+                        amp_bounds[amp_num][1][1] = array_y_dim
                 elif amp1_time == framtime:
                     num_amps = 1
+                    amp_bounds = {'1': [(0, 0), (array_x_dim, array_y_dim)]}
                 else:
                     raise ValueError(("Unable to determine number of amps used for exposure. 4-amp frametime"
                                       "is {}. 1-amp frametime is {}. Reported frametime is {}.")
                                      .format(amp4_time, amp1_time, frametime))
-        return num_amps
+        return num_amps, amp_bounds
+
+    def read_baseline_slope_image(self, filename):
+        """Read in a baseline mean slope image and associated standard
+        deviation image from the give fits file
+
+        Parameters
+        ----------
+        filename : str
+            Name of fits file to be read in
+
+        Returns
+        -------
+        mean_image : numpy.ndarray
+            2D mean slope image
+
+        stdev_image : numpy.ndarray
+            2D stdev image
+        """
+        try:
+            with fits.open(filename) as hdu:
+                mean_image = hdu['MEAN'].data
+                stdev_image = hdu['STDEV'].data
+            return mean_image, stdev_image
+        except (FileNotFoundError, KeyError) as e:
+            logging.warning('Trying to read {}: {}'.format(filename, e))
 
     def run(self, file_list, instrument, aperture):
         """MAIN FUNCTION
@@ -264,7 +299,7 @@ class Dark():
             steps_to_run = pipeline_tools.steps_to_run(required_steps, completed_steps)
 
             # Run any remaining required pipeline steps
-            if all(steps_to_run.values()):
+            if any(steps_to_run.values()) is False:
                 slope_files.append(filename)
             else:
                 processed_file = run_calwebb_detector1(filename, steps_to_run)
@@ -276,9 +311,7 @@ class Dark():
         # Read in baseline mean slope image and stdev image
         baseline_file = '{}_{}_baseline_slope_and_stdev_images.fits'.format(instrument, aperture)
         baseline_filepath = os.path.join(self.output_dir, 'baseline/', baseline_file)
-        with fits.open(baseline_file) as hdu:
-            baseline_mean = hdu['MEAN'].data
-            baseline_stdev = hdu['STDEV'].data
+        baseline_mean, baseline_stev = self.read_baseline_slope_image(baseline_filepath)
 
         # Check the hot/dead pixel population for changes
         new_hot_pix, new_dead_pix = self.hot_dead_pixel_check(slope_image, baseline_mean)
@@ -293,10 +326,13 @@ class Dark():
         stats_filepath = os.path.join(self.output_dir, 'stats/', stats_file)
         history = ascii.read(stats_file)
 
+        # Find amplifier boundaries so per-amp statistics can be calculated
+        number_of_amps, amp_bounds = self.find_amp_boundaries(slope_files[0])
+
         # Calculate mean and stdev values, and fit a Gaussian to the
         # histogram of the pixels in each amp
         (amp_mean, amp_stdev, gauss_peak, gauss_peak_err, gauss_stdev, gauss_stdev_err) =
-        self.stats_by_amp(model.data, model.meta.instrument.name)
+        self.stats_by_amp(slope_image, amp_bounds, instrument)
 
         # Add the new statistics to the history file
         for key in stats[0].keys():
@@ -304,47 +340,90 @@ class Dark():
                    gauss_stdev[key], gauss_stdev_err[key]]
             history.add_row(row)
 
-    def stats_by_amp(self, image, instrument, plot=True):
+    def stats_by_amp(self, image, amps, instrument_name, plot=True):
         """Calculate statistics in the input image for each amplifier
-        Warpper around calls to mean_stdev and gaussian_fit"""
-        self.find_amp_boundaries(filename) - move this one level up
-        statistics = {}
+        Warpper around calls to mean_stdev and gaussian_fit
+
+        Parameters
+        ----------
+        image : numpy.ndarray
+            2D array on which to calculate statistics
+
+        amps : dict
+            Dictionary containing amp boundary coordinates
+            (output from find_amp_boundaries function)
+
+        Returns
+        -------
+        some stuff
+        """
         amp_means = {}
         amp_stdevs = {}
-        gaussian_peaks = {}
-        gaussian_stdevs = {}
-        gaussian_peak_errs = {}
-        gaussian_stdev_errs = {}
+        gaussian_params = {}
+        gaussian_chi_squared = {}
+        double_gaussian_params = {}
+        double_gaussian_chi_squared = {}
 
-        Add full image coords to the list of amp_boundaries, so that full frame stats are
-        also calculated.
-        for x, y in zip(x_boundaries, y_boundaries):
+        # Add full image coords to the list of amp_boundaries, so that full
+        # frame stats are also calculated.
+        image_shape = image.shape
+        if image_shape == (2048, 2048):
+            amps['5'] = [(0, 0), (2048, 2048)]
+
+        for key in amps:
+            x_start, y_start = amps[key][0]
+            x_end, y_end = amps[key][1]
+
+            # Basic statistics, sigma clipped areal mean and stdev
             amp_mean, amp_stdev = maths.mean_stdev(image[y_start: y_end, x_start: x_end])
-            key = "{}_{}".format(x, y)
             amp_means[key] = amp_mean
             amp_stdevs[key] = amp_stdev
 
+            # Create a histogram
             lower_bound = (amp_mean - 7*amp_stdev)
             upper_bound = (amp_mean + 7*amp_stdev)
             hist, bin_edges = np.histogram(image[y_start: y_end, x_start: x_end], bins='auto',
                                            range=(lower_bound, upper_bound))
-            bin_centers = bin_edges[0: -1] + (bin_edges[1:] - bin_edges[0: -1]) / 2.
-            amplitude, peak, width = maths.gaussian1d_fit(bin_centers, hist)
-            gaussian_peaks[key] = peak[0]
-            gaussian_stdevs[key] = width[0]
-            gaussian_peak_errs[key] = peak[1]
-            gaussian_stdev_errs[key] = width[1]
+            bin_centers = (bin_edges[1:] + bin_edges[0: -1]) / 2.
+            initial_params = [np.max(hist), amp_mean, amp_stdev]
 
-            if full_frame:
-                maths.double_gaussian_fit(bin_centers, hist, initial_params)
+            # Fit a Gaussian to the histogram. Save best-fit params and
+            # uncertainties, as well as reduced chi squared
+            amplitude, peak, width = maths.gaussian1d_fit(bin_centers, hist, initial_params)
+            gaussian_params[key] = [amplitude, peak, width]
+            gauss_fit_model = models.Gaussian1D(amplitude=amplitude[0], mean=peak[0], stddev=width[0])
+            gauss_fit = gauss_fit_model(bin_centers)
+            degrees_of_freedom = len(hist) - 3
+            gaussian_chi_squared[key] = np.sum((gauss_fit - hist)**2 / hist) / degrees_of_freedom
 
-            # If requested, plot the histrogram(s) and Gaussian fits
-            if plot:
-                make_plot()
-                save_somewhere_and_in_format_to_be_displayed_in_webapp()
+            # If chisq is large enough to suggest a bad fit, save the
+            # histogram and fit for later plotting
+            if gaussian_chi_squared[key] > chisq_threshold:
+                where_do_we_send_this(key, bin_centers, hist, gauss_fit)
 
-        return (amp_means, amp_stdevs, gaussian_peaks, gaussian_stdevs, gaussian_peak_errs,
-                gaussian_stdev_errs)
+            # Double Gaussian fit only for full frame data (and only for
+            # NIRISS at the moment.)
+            if instrument_name.upper() in ['NIRISS']:
+                if key == '5':
+                    initial_params = (np.max(hist), amp_mean, amp_stdev*0.8,
+                                      np.max(hist)/7., amp_mean/2., amp_stdev*0.9)
+                    double_gauss_params, double_gauss_sigma = maths.double_gaussian_fit(bin_centers, hist,
+                                                                                        initial_params)
+                    double_gaussian_params[key] = [(param, sig) for param, sig in zip(double_gauss_params,
+                                                                                      double_gauss_sigma)]
+                    double_gauss_fit = maths.double_gaussian(bin_centers, *double_gauss_params)
+                    degrees_of_freedom = len(bin_centers) - 6
+                    double_gaussian_chi_squared[key] = np.sum((double_gauss_fit - hist)**2 / hist) / degrees_of_freedom
+
+                    # If chisq is large enough to suggest a bad fit, save the
+                    # histogram and fit for later plotting
+                    if gaussian_chi_squared[key] > chisq_threshold:
+                        where_do_we_send_this(key, bin_centers, hist, double_gauss_fit)
+                        save_to_an_ascii_file_to_be_read_in_by_webb_app()
+                        or_do_we_have_webb_app_plot_all_histograms()
+
+        return (amp_means, amp_stdevs, gaussian_params, gaussian_chi_squared, double_gaussian_params,
+                double_gaussian_chi_squared)
 
 
 if __name__ == '__main__':
