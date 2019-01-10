@@ -48,9 +48,9 @@ app_name = 'jwql'
 instruments = 'nircam|NIRCam|niriss|NIRISS|nirspec|NIRSpec|miri|MIRI|fgs|FGS'
 
 urlpatterns = [
-
-    # Main site views
     path('', views.home, name='home'),
+    path('login/', views.login, name='login'),
+    path('authorize/', views.authorize, name='authorize'),
     path('about/', views.about, name='about'),
     path('dashboard/', views.dashboard, name='dashboard'),
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
@@ -59,12 +59,6 @@ urlpatterns = [
     re_path(r'^(?P<inst>({}))/(?P<file_root>[\w]+)/$'.format(instruments), views.view_image, name='view_image'),
     re_path(r'^(?P<inst>({}))/(?P<file>.+)/hdr/$'.format(instruments), views.view_header, name='view_header'),
     re_path(r'^(?P<inst>({}))/archive/(?P<proposal>[\d]{{5}})/$'.format(instruments), views.archive_thumbnails, name='archive_thumb'),
-
-    # AJAX views
-    re_path(r'^ajax/(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals_ajax, name='archive_ajax'),
-    re_path(r'^ajax/(?P<inst>({}))/archive/(?P<proposal>[\d]{{5}})/$'.format(instruments), views.archive_thumbnails_ajax, name='archive_thumb_ajax'),
-
-    # REST API views
     path('api/proposals/', api_views.all_proposals, name='all_proposals'),
     re_path(r'^api/(?P<inst>({}))/proposals/$'.format(instruments), api_views.instrument_proposals, name='instrument_proposals'),
     re_path(r'^api/(?P<inst>({}))/preview_images/$'.format(instruments), api_views.preview_images_by_instrument, name='preview_images_by_instrument'),
