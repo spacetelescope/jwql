@@ -21,9 +21,10 @@ from jwst import datamodels
 
 # Define the fits header keyword that accompanies each step
 PIPE_KEYWORDS = {'S_GRPSCL': 'group_scale', 'S_DQINIT': 'dq_init', 'S_SATURA': 'saturation',
-                 'S_REFPIX': 'refpix', 'S_SUPERB': 'superbias', 'S_IPC': 'ipc', 'S_PERSIS': 'persistence',
-                 'S_DARK': 'dark_current', 'S_LINEAR': 'linearlity', 'S_FRSTFR': 'firstframe',
-                 'S_LASTFR': 'lastframe', 'S_RSCD': 'rscd', 'S_JUMP': 'jump',  'S_RAMP': 'rate'}
+                 'S_REFPIX': 'refpix', 'S_SUPERB': 'superbias', 'S_IPC': 'ipc',
+                 'S_PERSIS': 'persistence', 'S_DARK': 'dark_current', 'S_LINEAR': 'linearlity',
+                 'S_FRSTFR': 'firstframe', 'S_LASTFR': 'lastframe', 'S_RSCD': 'rscd',
+                 'S_JUMP': 'jump', 'S_RAMP': 'rate'}
 
 
 def completed_pipeline_steps(filename):
@@ -49,12 +50,9 @@ def completed_pipeline_steps(filename):
 
     header = fits.getheader(input_file)
     for key in PIPE_KEYWORDS.keys():
-        try:
-            value = header.get(key)
-            if value == 'COMPLETE':
-                completed[PIPE_KEYWORDS[key]] = True
-        except:
-            pass
+        value = header.get(key)
+        if value == 'COMPLETE':
+            completed[PIPE_KEYWORDS[key]] = True
     return completed
 
 

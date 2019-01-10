@@ -10,8 +10,8 @@ Use
 
     This module can be imported as such:
 
-    >>> import math
-    mean_val, stdev_val = math.mean_stdev(image, sigma_threshold=4)
+    >>> import maths
+    mean_val, stdev_val = maths.mean_stdev(image, sigma_threshold=4)
  """
 
 import numpy as np

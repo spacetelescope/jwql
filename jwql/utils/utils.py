@@ -282,4 +282,5 @@ def filesystem_path(filename):
     if os.path.isfile(full_path):
         return full_path
     else:
-        raise FileNotFoundError('{} is not in the predicted location: {}'.format(filename, full_path))
+        raise FileNotFoundError(('{} is not in the predicted location: {}'
+                                 .format(filename, full_path)))
