@@ -81,9 +81,18 @@
 	        <!-- Oauth login and GitHub -->
 	        <div class="navbar-right">
 	            <ul class="navbar-nav mr-auto">
-	            	<li class="nav-item active">
-	            		<a role="button" class="btn btn-primary my-2" href={{ url('jwql:login') }}>{{ user.ezid }}</a>
-	    			</li>
+	            	{% if user.ezid %}
+	            		<li class="nav-item active">
+	            			<a class="nav-link" href="#" id="oauth_user">{{ user.ezid }}</a>
+	            		</li>
+	            		<li>
+	            			<a role="button" class="btn btn-primary my-2" href="#">logout</a>
+	            		</li>
+	            	{% else %}
+	            		<li class="nav-item active">
+	            			<a role="button" class="btn btn-primary my-2" href={{ url('jwql:login') }}>login</a>
+	            		</li>
+	            	{% endif %}
 	            	<li class="nav-item active">
 						<a class="nav-link" href="https://github.com/spacetelescope/jwql" target="_blank"><img src={{ static('img/githublogo.svg') }} height=35 width=35></a>
 					</li>
