@@ -75,7 +75,7 @@ def authorize(request):
 
     return resp
 
-@auth_info
+
 def about(request, user):
     """Generate the ``about`` page
 
@@ -91,7 +91,6 @@ def about(request, user):
     """
     template = 'about.html'
     acknowledgements = get_acknowledgements()
-    acknowledgements += ["%s" % user]
     context = {'acknowledgements': acknowledgements,
                'inst': '',
                'inst_list': JWST_INSTRUMENTS,
@@ -192,7 +191,8 @@ def dashboard(request):
     return render(request, template, context)
 
 
-def home(request):
+@auth_info
+def home(request, user):
     """Generate the home page
 
     Parameters
@@ -218,7 +218,8 @@ def home(request):
     context = {'inst': '',
                'inst_list': JWST_INSTRUMENTS,
                'tools': MONITORS,
-               'form': form}
+               'form': form,
+               'user': user}
 
     return render(request, template, context)
 

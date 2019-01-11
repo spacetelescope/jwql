@@ -35,6 +35,8 @@
 	<body>
 		<!-- Navigation Bar -->
 		<nav class="navbar navbar-expand-md fixed-top">
+
+			<!-- Logo and Project Name -->
 		    <a class="navbar-left" href={{ url('jwql:home') }}><img src={{ static('img/JWQLlogo_small.png') }} height=35 width=35></a>
 	        <a class="navbar-brand" href={{ url('jwql:home') }}>JWQL</a>
 	        <a class="navbar-brand" href="#"><font color='#f2ce3a'>{{ inst }}</font></a>
@@ -42,6 +44,7 @@
 	          <span class="navbar-toggler-icon"></span>
 	        </button>
 
+			<!-- Various pages -->
 	        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
 	        	<ul class="navbar-nav mr-auto">
 	          		<li class="nav-item active">
@@ -75,7 +78,17 @@
 	        	</ul>
 	        </div>
 
-	    	<a class="navbar-right" href="https://github.com/spacetelescope/jwql" target="_blank"><img src={{ static('img/githublogo.svg') }} height=25 width=25></a>
+	        <!-- Oauth login and GitHub -->
+	        <div class="navbar-right">
+	            <ul class="navbar-nav mr-auto">
+	            	<li class="nav-item active">
+	            		<a role="button" class="btn btn-primary my-2" href={{ url('jwql:login') }}>{{ user.ezid }}</a>
+	    			</li>
+	            	<li class="nav-item active">
+						<a class="nav-link" href="https://github.com/spacetelescope/jwql" target="_blank"><img src={{ static('img/githublogo.svg') }} height=35 width=35></a>
+					</li>
+	    		</ul>
+	    	</div>
 	    </nav>
 	    <div class="banner">
 	    	<img src={{ static('img/hubble_image.jpg') }}>
