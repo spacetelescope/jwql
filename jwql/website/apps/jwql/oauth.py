@@ -30,6 +30,8 @@ import requests
 
 from authlib.django.client import OAuth
 
+from jwql.utils.utils import get_config
+
 
 def auth_info(fn):
     """
@@ -42,9 +44,9 @@ def auth_info(fn):
         cookie = request.COOKIES.get("ASB-AUTH")
         # TODO if cookie not set, don't hit auth.mast
         resp = requests.get(
-            "https://auth.mastdev.stsci.edu/info",
-            headers={"Accept": "application/json",
-                     "Authorization": "token %s" % cookie})
+            'https://{}/info'.format(get_config()['auth_mast']),
+            headers={'Accept': 'application/json',
+                     'Authorization': 'token {}'.format(cookie)})
 
         return fn(request, resp.json())
 
@@ -55,19 +57,25 @@ def register_oauth():
     """
     """
 
+    # Get configuration parameters
+    client_id = get_config()['client_id']
+    client_secret = get_config()['client_secret']
+    auth_mast = get_config()['auth_mast']
+
     oauth = OAuth()
     client_kwargs = {'scope' : 'mast:user:info'}
     oauth.register(
         'mast_auth',
-        client_id='4263f8e374e6de22',
-        client_secret='dea4340c583ce126bc735746b49568ec864f98339bd7b2484c943d05d7ef2d13',
-        access_token_url='https://auth.mastdev.stsci.edu/oauth/access_token?client_secret=dea4340c583ce126bc735746b49568ec864f98339bd7b2484c943d05d7ef2d13',
+        client_id='{}'.format(client_id),
+        client_secret='{}'.format(client_secret),
+        access_token_url='https://{}/oauth/access_token?client_secret={}'.format(auth_mast, client_secret),
         access_token_params=None,
         refresh_token_url=None,
-        authorize_url='https://auth.mastdev.stsci.edu/oauth/authorize',
-        api_base_url='https://auth.mastdev.stsci.edu/1.1/',
+        authorize_url='https://{}/oauth/authorize'.format(auth_mast),
+        api_base_url='https://{}/1.1/'.format(auth_mast),
         client_kwargs=client_kwargs)
 
     return oauth
 
-JWQL_OATH = register_oauth()
+
+JWQL_OAUTH = register_oauth()
