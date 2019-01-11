@@ -50,7 +50,7 @@ def auth_info(fn):
                          'Authorization': 'token {}'.format(cookie)})
             response = response.json()
         else:
-            response = {}
+            response = {'ezid' : None}
 
         return fn(request, response)
 
