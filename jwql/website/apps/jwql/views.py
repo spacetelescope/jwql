@@ -35,6 +35,7 @@ Dependencies
 
 import os
 
+from authlib.django.client import OAuth
 from django.shortcuts import render
 
 from .data_containers import get_acknowledgements
@@ -45,59 +46,33 @@ from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .forms import FileSearchForm
+from .oauth import auth_info, JWQL_OAUTH
 from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS, INSTRUMENTS_CAPITALIZED
 
-
-
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
-from authlib.django.client import OAuth
-oauth = OAuth()
-
-client_kwargs = {
-    'scope': 'mast:user:info',
-}
-
-oauth.register(
-'mast_auth',
-client_id='client_id',
-client_secret='client_secret',
-#request_token_url='https://auth.mast.stsci.edu/oauth/request_token',
-#request_token_params=None,
-access_token_url='https://auth.mastdev.stsci.edu/oauth/access_token?client_secret=$client_secret',
-access_token_params=None,
-refresh_token_url=None,
-authorize_url='https://auth.mastdev.stsci.edu/oauth/authorize',
-api_base_url='https://auth.mastdev.stsci.edu/1.1/',
-client_kwargs=client_kwargs,
-)
-
-FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
-
-def auth_info(fn):
-    def user_info(request):
-        cookie = request.COOKIES.get("ASB-AUTH")
-        # TODO if cookie not set, don't hit auth.mast
-        import requests
-        resp = requests.get("https://auth.mastdev.stsci.edu/info", headers={
-            "Accept": "application/json",
-            "Authorization": "token %s" % cookie,
-        })
-        return fn(request, resp.json())
-    return user_info
 
 def login(request):
+    """
+    """
+
     # build a full authorize callback uri
     # TODO if the user already has a token, don't re-authorize
     redirect_uri = request.build_absolute_uri('/authorize')
-    return oauth.mast_auth.authorize_redirect(request, redirect_uri)
+
+    return JWQL_OAUTH.mast_auth.authorize_redirect(request, redirect_uri)
+
 
 def authorize(request):
-    token = oauth.mast_auth.authorize_access_token(request, headers={'Accept': 'application/json'})
+    """
+    """
+
+    token = JWQL_OAUTH.mast_auth.authorize_access_token(request, headers={'Accept': 'application/json'})
     resp = home(request)
     # TODO set cookie properties safely
     # TODO change home to a redirect
     resp.set_cookie("ASB-AUTH", token["access_token"])
+
     return resp
 
 @auth_info
