@@ -42,13 +42,17 @@ def auth_info(fn):
         """
 
         cookie = request.COOKIES.get("ASB-AUTH")
-        # TODO if cookie not set, don't hit auth.mast
-        resp = requests.get(
-            'https://{}/info'.format(get_config()['auth_mast']),
-            headers={'Accept': 'application/json',
-                     'Authorization': 'token {}'.format(cookie)})
 
-        return fn(request, resp.json())
+        if cookie is not None:
+            response = requests.get(
+                'https://{}/info'.format(get_config()['auth_mast']),
+                headers={'Accept': 'application/json',
+                         'Authorization': 'token {}'.format(cookie)})
+            response = response.json()
+        else:
+            response = {}
+
+        return fn(request, response)
 
     return user_info
 
