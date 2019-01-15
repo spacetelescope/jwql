@@ -75,21 +75,6 @@ def ensure_dir_exists(fullpath):
         permissions.set_permissions(fullpath)
 
 
-def get_config():
-    """Return a dictionary that holds the contents of the ``jwql``
-    config file.
-
-    Returns
-    -------
-    settings : dict
-        A dictionary that holds the contents of the config file.
-    """
-    with open(os.path.join(__location__, 'config.json'), 'r') as config_file:
-        settings = json.load(config_file)
-
-    return settings
-
-
 def filename_parser(filename):
     """Return a dictionary that contains the properties of a given
     JWST file (e.g. program ID, visit number, detector, etc.).
@@ -128,11 +113,11 @@ def filename_parser(filename):
 
     # Stage 3 filenames, e.g. "jw80600-o009_t001_miri_f1130w_i2d.fits"
     stage_3 = r"jw" \
-                           "(?P<program_id>\d{5})"\
-                           "-(?P<ac_id>(o|c|a|r)\d{3})"\
-                           "_(?P<target_id>(t|s)\d{3})"\
-                           "_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
-                           "_(?P<optical_elements>((?!_)[\w-])+)"
+               "(?P<program_id>\d{5})"\
+               "-(?P<ac_id>(o|c|a|r)\d{3})"\
+               "_(?P<target_id>(t|s)\d{3})"\
+               "_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
+               "_(?P<optical_elements>((?!_)[\w-])+)"
     if not file_root_name:
         stage_3 += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
 
@@ -149,15 +134,15 @@ def filename_parser(filename):
 
     # Time series filenames, e.g. "jw00733003001_02101_00002-seg001_nrs1_rate.fits"
     time_series = r"jw" \
-                     "(?P<program_id>\d{5})"\
-                     "(?P<observation>\d{3})"\
-                     "(?P<visit>\d{3})"\
-                     "_(?P<visit_group>\d{2})"\
-                     "(?P<parallel_seq_id>\d{1})"\
-                     "(?P<activity>\w{2})"\
-                     "_(?P<exposure_id>\d+)"\
-                     "-seg(?P<segment>\d{3})"\
-                     "_(?P<detector>\w+)"
+                   "(?P<program_id>\d{5})"\
+                   "(?P<observation>\d{3})"\
+                   "(?P<visit>\d{3})"\
+                   "_(?P<visit_group>\d{2})"\
+                   "(?P<parallel_seq_id>\d{1})"\
+                   "(?P<activity>\w{2})"\
+                   "_(?P<exposure_id>\d+)"\
+                   "-seg(?P<segment>\d{3})"\
+                   "_(?P<detector>\w+)"
     if not file_root_name:
         time_series += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
 
@@ -178,3 +163,18 @@ def filename_parser(filename):
         raise ValueError('Provided file {} does not follow JWST naming conventions (jw<PPPPP><OOO><VVV>_<GGSAA>_<EEEEE>_<detector>_<suffix>.fits)'.format(filename))
 
     return filename_dict
+
+
+def get_config():
+    """Return a dictionary that holds the contents of the ``jwql``
+    config file.
+
+    Returns
+    -------
+    settings : dict
+        A dictionary that holds the contents of the config file.
+    """
+    with open(os.path.join(__location__, 'config.json'), 'r') as config_file:
+        settings = json.load(config_file)
+
+    return settings
