@@ -192,7 +192,7 @@ def dashboard(request):
 
 
 @auth_info
-def home(request, user):
+def home(request):
     """Generate the home page
 
     Parameters
