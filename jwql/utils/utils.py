@@ -92,7 +92,7 @@ def get_config():
 
 def filename_parser(filename):
     """Return a dictionary that contains the properties of a given
-    JWST file (e.g. program ID, visit number, detector, etc.)
+    JWST file (e.g. program ID, visit number, detector, etc.).
 
     Parameters
     ----------
@@ -109,31 +109,72 @@ def filename_parser(filename):
     ValueError
         When the provided file does not follow naming conventions
     """
-    filename = os.path.basename(filename)
 
+    filename = os.path.basename(filename)
     file_root_name = (len(filename.split('.')) < 2)
 
-    regex_string_to_compile = r"[a-z]+" \
-                               "(?P<program_id>\d{5})"\
-                               "(?P<observation>\d{3})"\
-                               "(?P<visit>\d{3})"\
-                               "_(?P<visit_group>\d{2})"\
-                               "(?P<parallel_seq_id>\d{1})"\
-                               "(?P<activity>\w{2})"\
-                               "_(?P<exposure_id>\d+)"\
-                               "_(?P<detector>\w+)"
-
+    # Stage 1 and 2 filenames, e.g. "jw80500012009_01101_00012_nrcalong_uncal.fits"
+    stage_1_and_2 = r"jw" \
+                     "(?P<program_id>\d{5})"\
+                     "(?P<observation>\d{3})"\
+                     "(?P<visit>\d{3})"\
+                     "_(?P<visit_group>\d{2})"\
+                     "(?P<parallel_seq_id>\d{1})"\
+                     "(?P<activity>\w{2})"\
+                     "_(?P<exposure_id>\d+)"\
+                     "_(?P<detector>((?!_)[\w])+)"
     if not file_root_name:
-        regex_string_to_compile += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
+        stage_1_and_2 += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
 
-    elements = \
-        re.compile(regex_string_to_compile)
+    # Stage 3 filenames, e.g. "jw80600-o009_t001_miri_f1130w_i2d.fits"
+    stage_3 = r"jw" \
+                           "(?P<program_id>\d{5})"\
+                           "-(?P<ac_id>(o|c|a|r)\d{3})"\
+                           "_(?P<target_id>(t|s)\d{3})"\
+                           "_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
+                           "_(?P<optical_elements>((?!_)[\w-])+)"
+    if not file_root_name:
+        stage_3 += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
 
-    jwst_file = elements.match(filename)
+    # Stage 3 filenames with epoch, e.g. "jw80600-o009_t001-epoch1_miri_f1130w_i2d.fits"
+    stage_3_with_epoch = r"jw" \
+                           "(?P<program_id>\d{5})"\
+                           "-(?P<ac_id>(o|c|a|r)\d{3})"\
+                           "_(?P<target_id>(t|s)\d{3})"\
+                           "-epoch(?P<epoch>\d{1})"\
+                           "_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
+                           "_(?P<optical_elements>((?!_)[\w-])+)"
+    if not file_root_name:
+        stage_3_with_epoch += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
 
-    if jwst_file is not None:
+    # Time series filenames, e.g. "jw00733003001_02101_00002-seg001_nrs1_rate.fits"
+    time_series = r"jw" \
+                     "(?P<program_id>\d{5})"\
+                     "(?P<observation>\d{3})"\
+                     "(?P<visit>\d{3})"\
+                     "_(?P<visit_group>\d{2})"\
+                     "(?P<parallel_seq_id>\d{1})"\
+                     "(?P<activity>\w{2})"\
+                     "_(?P<exposure_id>\d+)"\
+                     "-seg(?P<segment>\d{3})"\
+                     "_(?P<detector>\w+)"
+    if not file_root_name:
+        time_series += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
+
+    # Build list of filename types
+    filename_types = [stage_1_and_2, stage_3, stage_3_with_epoch, time_series]
+
+    # Try to parse the filename
+    for filename_type in filename_types:
+        elements = re.compile(filename_type)
+        jwst_file = elements.match(filename)
+        if jwst_file is not None:
+            break
+
+    # Raise error if unable to parse the filename
+    try:
         filename_dict = jwst_file.groupdict()
-    else:
+    except AttributeError:
         raise ValueError('Provided file {} does not follow JWST naming conventions (jw<PPPPP><OOO><VVV>_<GGSAA>_<EEEEE>_<detector>_<suffix>.fits)'.format(filename))
 
     return filename_dict
