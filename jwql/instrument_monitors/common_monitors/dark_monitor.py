@@ -101,7 +101,7 @@ class Dark():
                 self.run(dark_files, row['Instrument'], row['Aperture'])
 
                 # Update the query history for the next call
-                specific_query['Last_query'] = current_time.strftime("%Y-%m-%dT%H:%M:%S")
+                row['Last_query'] = current_time.strftime("%Y-%m-%dT%H:%M:%S")
             else:
                 print(("Dark monitor skipped. {} new dark files for {}, {}. {} new files are "
                        "required to run dark current monitor.").format(len(new_entries),
@@ -484,7 +484,7 @@ def mast_query_darks(instrument, aperture, start_date, end_date):
     # it sends the query to MAST. The nested list is subsequently ignored by MAST.)
     # So query once for each dark template, and combine outputs into a single list.
     query_results = []
-    for template_name in template_list:
+    for template_name in dark_template:
         # Create dictionary of parameters to add
         parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
                       "apername": aperture, "exp_type": template_name}
