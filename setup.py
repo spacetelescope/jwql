@@ -2,6 +2,8 @@ import numpy as np
 from setuptools import setup
 from setuptools import find_packages
 
+from version import get_version
+
 VERSION = '0.16.0'
 
 AUTHORS = 'Matthew Bourque, Sara Ogaz, Joe Filippazzo, Bryan Hilbert, Misty Cracraft, Graham Kanarek'
@@ -11,7 +13,7 @@ REQUIRES = ['astroquery', 'bokeh==1.0.1', 'django==2.1.2', 'matplotlib', 'numpy'
 
 setup(
     name='jwql',
-    version=VERSION,
+    version=get_version(),
     description='The JWST Quicklook Project',
     url='https://github.com/spacetelescope/jwql.git',
     author=AUTHORS,
