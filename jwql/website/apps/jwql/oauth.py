@@ -34,12 +34,36 @@ from jwql.utils.utils import get_config
 
 
 def auth_required(fn):
-    """
+    """A decorator function that requires the given function to have
+    authentication through ``auth.mast`` set up.
+
+    Parameters
+    ----------
+    fn : function
+        The function to decorate
+
+    Returns
+    -------
+    check_auth : function
+        The decorated function
     """
 
     @auth_info
     def check_auth(request, user):
-        """
+        """Check if the user is authenticated through ``auth.mast``.
+        If not, perform the authorization.
+
+        Parameters
+        ----------
+        request : HttpRequest object
+            Incoming request from the webpage
+        user : dict
+            A dictionary of user credentials
+
+        Returns
+        -------
+        fn : function
+            The decorated function
         """
 
         # If user is currently anonymous, require a login
@@ -54,11 +78,34 @@ def auth_required(fn):
 
 
 def auth_info(fn):
-    """
+    """A decorator function that will return user credientials along
+    with what is returned by the original function.
+
+    Parameters
+    ----------
+    fn : function
+        The function to decorate
+
+    Returns
+    -------
+    user_info : function
+        The decorated function
     """
 
     def user_info(request):
-        """
+        """Store authenticated user credentials in a cookie and return
+        it.  If the user is not authenticated, store no credentials in
+        the cookie.
+
+        Parameters
+        ----------
+        request : HttpRequest object
+            Incoming request from the webpage
+
+        Returns
+        -------
+        fn : function
+            The decorated function
         """
 
         cookie = request.COOKIES.get("ASB-AUTH")
@@ -81,7 +128,14 @@ def auth_info(fn):
 
 
 def register_oauth():
-    """
+    """Register the ``jwql`` application with the ``auth.mast``
+    authentication service.
+
+    Returns
+    -------
+    oauth : Object
+        An object containing methods to authenticate a user, provided
+        by the ``auth.mast`` service.
     """
 
     # Get configuration parameters
@@ -89,6 +143,7 @@ def register_oauth():
     client_secret = get_config()['client_secret']
     auth_mast = get_config()['auth_mast']
 
+    # Register with auth.mast
     oauth = OAuth()
     client_kwargs = {'scope' : 'mast:user:info'}
     oauth.register(

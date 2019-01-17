@@ -52,35 +52,6 @@ from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS, INSTRUMENTS
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
-@auth_required
-def login(request, user):
-    """
-    """
-    return redirect("/")
-
-
-def logout(request):
-    """
-    """
-
-    response = redirect("/")
-    response.delete_cookie("ASB-AUTH")
-
-    return response
-
-
-def authorize(request):
-    """
-    """
-
-    token = JWQL_OAUTH.mast_auth.authorize_access_token(request, headers={'Accept': 'application/json'})
-    response = redirect("/")
-    # TODO set cookie properties safely
-    response.set_cookie("ASB-AUTH", token["access_token"])
-
-    return response
-
-
 def about(request):
     """Generate the ``about`` page
 
@@ -168,6 +139,34 @@ def archive_thumbnails(request, inst, proposal):
     return render(request, template, context)
 
 
+def authorize(request):
+    """Spawn the authentication process for the user
+
+    The authentication process involves retreiving an access token
+    from ``auth.mast`` and porting the data to a cookie.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # Get auth.mast token
+    token = JWQL_OAUTH.mast_auth.authorize_access_token(request, headers={'Accept': 'application/json'})
+
+    response = redirect("/")
+    response.set_cookie("ASB-AUTH", token["access_token"])
+
+    # TODO set cookie properties safely
+
+    return response
+
+
 def dashboard(request):
     """Generate the dashbaord page
 
@@ -204,6 +203,8 @@ def home(request, user):
     ----------
     request : HttpRequest object
         Incoming request from the webpage
+    user : dict
+        A dictionary of user credentials.
 
     Returns
     -------
@@ -261,6 +262,55 @@ def instrument(request, inst):
                 'doc_url': doc_url}
 
     return render(request, template, context)
+
+
+@auth_required
+def login(request, user):
+    """Spawn a login process for the user
+
+    The ``auth_requred`` decorator is used to require that the user
+    authenticate through ``auth.mast``, then the user is redirected
+    back to the homepage.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    user : dict
+        A dictionary of user credentials.
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    return redirect("/")
+
+
+def logout(request):
+    """Spawn a logout process for the user
+
+    Upon logout, the user's ``auth.mast`` credientials are removed and
+    the user is redirected back to the homepage.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    user : dict
+        A dictionary of user credentials.
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    response = redirect("/")
+    response.delete_cookie("ASB-AUTH")
+
+    return response
 
 
 def unlooked_images(request, inst):
