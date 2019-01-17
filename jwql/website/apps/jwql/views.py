@@ -36,7 +36,7 @@ Dependencies
 import os
 
 from authlib.django.client import OAuth
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 from .data_containers import get_acknowledgements
 from .data_containers import get_dashboard_components
@@ -46,21 +46,27 @@ from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .forms import FileSearchForm
-from .oauth import auth_info, JWQL_OAUTH
+from .oauth import auth_info, auth_required, JWQL_OAUTH
 from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS, INSTRUMENTS_CAPITALIZED
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
-def login(request):
+@auth_required
+def login(request, user):
+    """
+    """
+    return redirect("/")
+
+
+def logout(request):
     """
     """
 
-    # build a full authorize callback uri
-    # TODO if the user already has a token, don't re-authorize
-    redirect_uri = request.build_absolute_uri('/authorize')
+    response = redirect("/")
+    response.delete_cookie("ASB-AUTH")
 
-    return JWQL_OAUTH.mast_auth.authorize_redirect(request, redirect_uri)
+    return response
 
 
 def authorize(request):
@@ -68,15 +74,14 @@ def authorize(request):
     """
 
     token = JWQL_OAUTH.mast_auth.authorize_access_token(request, headers={'Accept': 'application/json'})
-    resp = home(request)
+    response = redirect("/")
     # TODO set cookie properties safely
-    # TODO change home to a redirect
-    resp.set_cookie("ASB-AUTH", token["access_token"])
+    response.set_cookie("ASB-AUTH", token["access_token"])
 
-    return resp
+    return response
 
 
-def about(request, user):
+def about(request):
     """Generate the ``about`` page
 
     Parameters
@@ -192,7 +197,7 @@ def dashboard(request):
 
 
 @auth_info
-def home(request):
+def home(request, user):
     """Generate the home page
 
     Parameters
