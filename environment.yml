@@ -5,8 +5,8 @@ channels:
 dependencies:
 - astropy
 - astroquery=0.3.8
+- beautifulsoup4=4.6.3
 - bokeh=1.0.1
-- bs4=4.6.3
 - django=2.1.2
 - ipython=6.4.0
 - jinja2=2.10
