@@ -50,6 +50,7 @@ instruments = 'nircam|NIRCam|niriss|NIRISS|nirspec|NIRSpec|miri|MIRI|fgs|FGS'
 urlpatterns = [
     path('', views.home, name='home'),
     path('login/', views.login, name='login'),
+    path('logout/', views.logout, name='logout'),
     path('authorize/', views.authorize, name='authorize'),
     path('about/', views.about, name='about'),
     path('dashboard/', views.dashboard, name='dashboard'),

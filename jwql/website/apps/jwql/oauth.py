@@ -33,6 +33,26 @@ from authlib.django.client import OAuth
 from jwql.utils.utils import get_config
 
 
+def auth_required(fn):
+    """
+    """
+
+    @auth_info
+    def check_auth(request, user):
+        """
+        """
+
+        # If user is currently anonymous, require a login
+        if user["anon"]:
+            # Redirect to oauth login
+            redirect_uri = request.build_absolute_uri('/authorize')
+            return JWQL_OAUTH.mast_auth.authorize_redirect(request, redirect_uri)
+
+        return fn(request, user)
+
+    return check_auth
+
+
 def auth_info(fn):
     """
     """
@@ -43,14 +63,17 @@ def auth_info(fn):
 
         cookie = request.COOKIES.get("ASB-AUTH")
 
+        # If user is authenticated, return user credentials
         if cookie is not None:
             response = requests.get(
                 'https://{}/info'.format(get_config()['auth_mast']),
                 headers={'Accept': 'application/json',
                          'Authorization': 'token {}'.format(cookie)})
             response = response.json()
+
+        # If user is not authenticated, return no credentials
         else:
-            response = {'ezid' : None}
+            response = {'ezid' : None, "anon": True}
 
         return fn(request, response)
 

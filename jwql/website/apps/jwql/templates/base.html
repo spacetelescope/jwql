@@ -86,7 +86,7 @@
 	            			<a class="nav-link" href="https://auth.mastdev.stsci.edu/tokens" id="oauth_user">{{ user.ezid }}</a>
 	            		</li>
 	            		<li>
-	            			<a role="button" class="btn btn-primary my-2" href="#">logout</a>
+	            			<a role="button" class="btn btn-primary my-2" href={{ url('jwql:logout') }}>logout</a>
 	            		</li>
 	            	{% else %}
 	            		<li class="nav-item active">
