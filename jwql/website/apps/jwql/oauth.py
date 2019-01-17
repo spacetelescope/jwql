@@ -1,4 +1,6 @@
-"""Provides an OAuth object for authentication of the ``jwql`` web app.
+"""Provides an OAuth object for authentication of the ``jwql`` web app,
+as well as decorator functions to require user authentication in other
+views of the web application.
 
 
 Authors
@@ -13,7 +15,17 @@ Use
     This module is intended to be imported and used as such:
     ::
 
+        from .oauth import auth_info
+        from .oauth import auth_required
         from .oauth import JWQL_OAUTH
+
+        @auth_info
+        def some_view(request):
+            pass
+
+        @auth_required
+        def login(request):
+            pass
 
 References
 ----------
