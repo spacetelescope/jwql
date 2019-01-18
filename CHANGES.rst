@@ -1,7 +1,7 @@
 0.16.0
 ======
 
-This is the first release of the new release proceedures of ``jwql``.  The development team is now developing in release-driven sprints, so future releases will be less frequent, but with more changes
+This is the first release of the new release procedures of ``jwql``.  The development team is now developing in release-driven sprints, so future releases will be less frequent, but with more changes
 
 Changes since the ``0.15.3`` release include:
 
