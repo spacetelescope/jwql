@@ -147,7 +147,7 @@ def get_cadence(filenames):
     Use timestamps
 
     Parameters
-    ---------
+    ----------
     filenames : list
         List of log files to examine
 
