@@ -18,7 +18,9 @@ dependencies:
 - psycopg2=2.7.5
 - python=3.6.4
 - python-dateutil=2.6.1
-- pytest=3.4.2
+- pytest=4.1.0
+- pytest-cov=2.6.1
+- pytest-html=1.19.0
 - sphinx=1.8.1
 - sphinx_rtd_theme=0.1.9
 - sqlalchemy=1.2.0
