@@ -17,7 +17,7 @@ Use
 References
 ----------
 
-    Filename parser modifed from Joe Hunkeler:
+    Filename parser modified from Joe Hunkeler:
     https://gist.github.com/jhunkeler/f08783ca2da7bfd1f8e9ee1d207da5ff
  """
 
@@ -52,11 +52,11 @@ MONITORS = {
 NIRCAM_SHORTWAVE_DETECTORS = ['NRCA1', 'NRCA2', 'NRCA3', 'NRCA4',
                               'NRCB1', 'NRCB2', 'NRCB3', 'NRCB4']
 NIRCAM_LONGWAVE_DETECTORS = ['NRCA5', 'NRCB5']
-INSTRUMENTS_SHORTHAND = {'gui': 'FGS',
-                         'mir': 'MIRI',
-                         'nis': 'NIRISS',
-                         'nrc': 'NIRCam',
-                         'nrs': 'NIRSpec'}
+JWST_INSTRUMENT_NAMES_SHORTHAND = {'gui': 'fgs',
+                         'mir': 'miri',
+                         'nis': 'niriss',
+                         'nrc': 'nircam',
+                         'nrs': 'nirspec'}
 JWST_INSTRUMENT_NAMES_MIXEDCASE = {'fgs': 'FGS',
                            'miri': 'MIRI',
                            'nircam': 'NIRCam',
