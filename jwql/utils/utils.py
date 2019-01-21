@@ -31,24 +31,21 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 
 FILE_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled',
                      'i2d', 'x1d', 's2d', 's3d', 'dark', 'ami', 'crf']
-JWST_INSTRUMENTS = sorted(['NIRISS', 'NIRCam', 'NIRSpec', 'MIRI', 'FGS'])
+JWST_INSTRUMENT_NAMES = sorted(['niriss', 'nircam', 'nirspec', 'miri', 'fgs'])
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
                      'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
-MAST_SERVICES = ['Mast.Jwst.Filtered.Nircam', 'Mast.Jwst.Filtered.Nirspec',
-                'Mast.Jwst.Filtered.Niriss', 'Mast.Jwst.Filtered.Miri',
-                'Mast.Jwst.Filtered.Fgs']
 MONITORS = {
-    'FGS': ['Bad Pixel Monitor'],
-    'MIRI': ['Dark Current Monitor',
+    'fgs': ['Bad Pixel Monitor'],
+    'miri': ['Dark Current Monitor',
              'Bad Pixel Monitor', 'Cosmic Ray Monitor', 'Photometry Monitor',
              'TA Failure Monitor', 'Blind Pointing Accuracy Monitor',
              'Filter and Calibration Lamp Monitor', 'Thermal Emission Monitor'],
-    'NIRCam': ['Bias Monitor',
+    'nircam': ['Bias Monitor',
                'Readnoise Monitor', 'Gain Level Monitor',
                'Mean Dark Current Rate Monitor', 'Photometric Stability Monitor'],
-    'NIRISS': ['Bad Pixel Monitor',
+    'niriss': ['Bad Pixel Monitor',
                'Readnoise Monitor', 'AMI Calibrator Monitor', 'TSO RMS Monitor'],
-    'NIRSpec': ['Optical Short Monitor', 'Target Acquisition Monitor',
+    'nirspec': ['Optical Short Monitor', 'Target Acquisition Monitor',
                 'Detector Health Monitor', 'Ref Pix Monitor',
                 'Internal Lamp Monitor', 'Instrument Model Updates',
                 'Failed-open Shutter Monitor']}
@@ -60,11 +57,18 @@ INSTRUMENTS_SHORTHAND = {'gui': 'FGS',
                          'nis': 'NIRISS',
                          'nrc': 'NIRCam',
                          'nrs': 'NIRSpec'}
-INSTRUMENTS_CAPITALIZED = {'fgs': 'FGS',
+JWST_INSTRUMENT_NAMES_MIXEDCASE = {'fgs': 'FGS',
                            'miri': 'MIRI',
                            'nircam': 'NIRCam',
                            'niriss': 'NIRISS',
                            'nirspec': 'NIRSpec'}
+JWST_INSTRUMENT_NAMES_UPPERCASE = {key: value.upper() for key, value in JWST_INSTRUMENT_NAMES_MIXEDCASE.items()}
+JWST_INSTRUMENT_NAMES_MAST = {'fgs': 'Fgs',
+                           'miri': 'Miri',
+                           'nircam': 'Nircam',
+                           'niriss': 'Niriss',
+                           'nirspec': 'Nirspec'}
+JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value) for key, value in JWST_INSTRUMENT_NAMES_MAST.items()]
 
 
 def ensure_dir_exists(fullpath):
