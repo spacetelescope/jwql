@@ -69,6 +69,15 @@ FILENAME_PARSER_TEST_DATA = [
      'suffix': 'i2d',
      'target_id': 't001'}),
 
+# Test full stage 3 filename with target_id and different ac_id
+('jw80600-c0001_t001_miri_f1130w_i2d.fits',
+    {'ac_id': 'c0001',
+     'instrument': 'miri',
+     'optical_elements': 'f1130w',
+     'program_id': '80600',
+     'suffix': 'i2d',
+     'target_id': 't001'}),
+
 # Test full stage 3 filename with source_id
 ('jw80600-o009_s00001_miri_f1130w_i2d.fits',
     {'ac_id': 'o009',
