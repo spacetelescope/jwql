@@ -60,7 +60,7 @@ FILENAME_PARSER_TEST_DATA = [
      'visit': '001',
      'visit_group': '02'}),
 
-# Test full stage 3 filename
+# Test full stage 3 filename with target_id
 ('jw80600-o009_t001_miri_f1130w_i2d.fits',
     {'ac_id': 'o009',
      'instrument': 'miri',
@@ -69,7 +69,16 @@ FILENAME_PARSER_TEST_DATA = [
      'suffix': 'i2d',
      'target_id': 't001'}),
 
-# Test stage 3 filename with epoch
+# Test full stage 3 filename with source_id
+('jw80600-o009_s00001_miri_f1130w_i2d.fits',
+    {'ac_id': 'o009',
+     'instrument': 'miri',
+     'optical_elements': 'f1130w',
+     'program_id': '80600',
+     'source_id': 's00001',
+     'suffix': 'i2d'}),
+
+# Test stage 3 filename with target_id and epoch
 ('jw80600-o009_t001-epoch1_miri_f1130w_i2d.fits',
     {'ac_id': 'o009',
      'instrument': 'miri',
@@ -79,13 +88,31 @@ FILENAME_PARSER_TEST_DATA = [
      'suffix': 'i2d',
      'target_id': 't001'}),
 
-# Test root stage 3 filename
+# Test stage 3 filename with source_id and epoch
+('jw80600-o009_s00001-epoch1_miri_f1130w_i2d.fits',
+    {'ac_id': 'o009',
+     'instrument': 'miri',
+     'epoch': '1',
+     'optical_elements': 'f1130w',
+     'program_id': '80600',
+     'source_id': 's00001',
+     'suffix': 'i2d'}),
+
+# Test root stage 3 filename with target_id
 ('jw80600-o009_t001_miri_f1130w',
     {'ac_id': 'o009',
      'instrument': 'miri',
      'optical_elements': 'f1130w',
      'program_id': '80600',
      'target_id': 't001'}),
+
+# Test root stage 3 filename with source_id
+('jw80600-o009_s00001_miri_f1130w',
+    {'ac_id': 'o009',
+     'instrument': 'miri',
+     'optical_elements': 'f1130w',
+     'program_id': '80600',
+     'source_id': 's00001'}),
 
 # Test full time series filename
 ('jw00733003001_02101_00002-seg001_nrs1_rate.fits',
@@ -144,7 +171,6 @@ def test_filename_parser_nonJWST():
     that is not formatted in the JWST naming convention. Ensure the
     appropriate error is raised.
     """
-    with pytest.raises(ValueError,
-                       match=r'Provided file .+ does not follow JWST naming conventions \(jw<PPPPP><OOO><VVV>_<GGSAA>_<EEEEE>_<detector>_<suffix>\.fits\)'):
+    with pytest.raises(ValueError):
         filename = 'not_a_jwst_file.fits'
         filename_parser(filename)
