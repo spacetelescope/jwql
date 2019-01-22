@@ -30,7 +30,8 @@ from jwql.utils import permissions
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 FILE_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled',
-                     'i2d', 'x1d', 's2d', 's3d', 'dark', 'ami', 'crf']
+                     'i2d', 'x1d', 's2d', 's3d', 'dark', 'ami', 'crf',
+                     'crfints']
 JWST_INSTRUMENTS = sorted(['NIRISS', 'NIRCam', 'NIRSpec', 'MIRI', 'FGS'])
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
                      'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
@@ -114,7 +115,7 @@ def filename_parser(filename):
     stage_3_target_id = \
         r"jw" \
         r"(?P<program_id>\d{5})"\
-        r"-(?P<ac_id>(o|c|a|r)\d{3})"\
+        r"-(?P<ac_id>(o|c|a|r)\d{3,4})"\
         r"_(?P<target_id>(t)\d{3})"\
         r"_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
         r"_(?P<optical_elements>((?!_)[\w-])+)"
@@ -123,7 +124,7 @@ def filename_parser(filename):
     stage_3_source_id = \
         r"jw" \
         r"(?P<program_id>\d{5})"\
-        r"-(?P<ac_id>(o|c|a|r)\d{3})"\
+        r"-(?P<ac_id>(o|c|a|r)\d{3,4})"\
         r"_(?P<source_id>(s)\d{5})"\
         r"_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
         r"_(?P<optical_elements>((?!_)[\w-])+)"
@@ -132,7 +133,7 @@ def filename_parser(filename):
     stage_3_target_id_epoch = \
         r"jw" \
         r"(?P<program_id>\d{5})"\
-        r"-(?P<ac_id>(o|c|a|r)\d{3})"\
+        r"-(?P<ac_id>(o|c|a|r)\d{3,4})"\
         r"_(?P<target_id>(t)\d{3})"\
         r"-epoch(?P<epoch>\d{1})"\
         r"_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
@@ -142,7 +143,7 @@ def filename_parser(filename):
     stage_3_source_id_epoch = \
         r"jw" \
         r"(?P<program_id>\d{5})"\
-        r"-(?P<ac_id>(o|c|a|r)\d{3})"\
+        r"-(?P<ac_id>(o|c|a|r)\d{3,4})"\
         r"_(?P<source_id>(s)\d{5})"\
         r"-epoch(?P<epoch>\d{1})"\
         r"_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
