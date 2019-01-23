@@ -18,6 +18,8 @@ Use
         pytest -s test_utils.py
 """
 
+import os
+
 import pytest
 
 from jwql.utils.utils import get_config, filename_parser
@@ -114,9 +116,9 @@ FILENAME_PARSER_TEST_DATA = [
 ]
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason='User must manually download config file.')
 def test_get_config():
-    """Assert that the ``get_config`` function successfuly creates a
+    """Assert that the ``get_config`` function successfully creates a
     dictionary.
     """
     settings = get_config()
@@ -137,6 +139,39 @@ def test_filename_parser(filename, solution):
     """
 
     assert filename_parser(filename) == solution
+
+@pytest.mark.xfail(reason='Known non-compliant files in filesystem')
+def test_filename_parser_whole_filesystem(capsys):
+    """Test the filename_parser on all files currently in the filesystem.
+    """
+    # Get all files
+    filesystem_dir = get_config()['filesystem']
+    all_files = []
+    for dirName, _, fileList in os.walk(filesystem_dir):
+        for file in fileList:
+            if file.endswith('.fits'):
+                all_files.append(os.path.join(dirName, file))
+
+    # Run the filename_parser on all files
+    bad_filenames = []
+    for filepath in all_files:
+        try:
+            filename_parser(filepath)
+        except ValueError:
+            bad_filenames.append(os.path.basename(filepath))
+
+    # Determine if the test failed
+    fail = bad_filenames != []
+    failure_msg = '{} files could not be successfully parsed: \n - {}'.format(len(bad_filenames),
+                                                                              '\n - '.join(bad_filenames))
+
+    # Still show the non-compliant filenames even with the xfail decorator
+    if fail:
+        with capsys.disabled():
+            print('\n' + failure_msg)
+
+    # Check which ones failed
+    assert not fail, failure_msg
 
 
 def test_filename_parser_nonJWST():
