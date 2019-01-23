@@ -67,6 +67,11 @@ Additionally, developers of this project should be mindful of application securi
 - Each function/method should have at minimum a description, `Parameters` (if necessary), and `Returns` (if necessary) sections
 
 
+`jwql`-Specific Logging Standards
+---------------------------------------
+`jwql` logging shall adhere to conventions we plan to update shortly.  The following points will be further recommendations and also updated shortly. 
+
+
 Tools and Library Recommendations
 ---------------------------------
 
