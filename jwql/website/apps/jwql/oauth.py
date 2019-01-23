@@ -38,10 +38,12 @@ Dependencies
     placed in the ``jwql/utils/`` directory.
 """
 
+import os
 import requests
 
 from authlib.django.client import OAuth
 
+from jwql.utils.utils import get_base_url
 from jwql.utils.utils import get_config
 
 
@@ -81,7 +83,7 @@ def auth_required(fn):
         # If user is currently anonymous, require a login
         if user["anon"]:
             # Redirect to oauth login
-            redirect_uri = request.build_absolute_uri('/authorize')
+            redirect_uri = os.path.join(get_base_url(), 'authorize')
             return JWQL_OAUTH.mast_auth.authorize_redirect(request, redirect_uri)
 
         return fn(request, user)
