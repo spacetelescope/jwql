@@ -47,7 +47,7 @@ from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .forms import FileSearchForm
 from .oauth import auth_info, auth_required, JWQL_OAUTH
-from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS, INSTRUMENTS_CAPITALIZED
+from jwql.utils.utils import get_base_url, get_config, JWST_INSTRUMENTS, MONITORS, INSTRUMENTS_CAPITALIZED
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
@@ -159,10 +159,19 @@ def authorize(request):
     # Get auth.mast token
     token = JWQL_OAUTH.mast_auth.authorize_access_token(request, headers={'Accept': 'application/json'})
 
-    response = redirect("/")
-    response.set_cookie("ASB-AUTH", token["access_token"])
+    # Determine domain
+    base_url = get_base_url()
+    if '127' in base_url:
+        domain = '127.0.0.1'
+    else:
+        domain = base_url.split('//')[-1]
 
-    # TODO set cookie properties safely
+    response = redirect("/")
+    cookie_args = {}
+    # cookie_args['domain'] = domain
+    # cookie_args['secure'] = True
+    cookie_args['httponly'] = True
+    response.set_cookie("ASB-AUTH", token["access_token"], **cookie_args)
 
     return response
 
