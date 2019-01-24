@@ -2,7 +2,7 @@
 """Module to interface the JWST Engineering Database.
 
 This module provides ``jwql`` with functions to interface and query the
- JWST Engineering Database.
+ JWST DMS Engineering Database.
 
 Authors
 -------
@@ -27,40 +27,33 @@ Use
 
 Notes
 -----
-    This module is built on top of the engineering database tools provided by the jwst pipeline
-    package (https://github.com/spacetelescope/jwst/blob/master/jwst/lib/engdb_tools.py)
-
-TODO
-----
-    interpolate: return table including delta_t to nearest datapoint
-
-    add function find `similar` mnemonics (same category etc.)
-
-
+    This module is built on top of astroquery.mast and uses JWST-specific MAST services.
+    The user has to provide a valid MAST authentication token.
 
 """
 import astropy
 from astropy.table import Table
 from astroquery.mast import Mast
-import numpy as np
 
-from jwql.utils.utils import get_config
+from .utils import get_config
 
-# should use oauth.register_oauth()
+# should use oauth.register_oauth()?
 settings = get_config()
 mast_token = settings['mast_token']
 
 Mast.login(token=mast_token)
 
+# could eventually be moved to constants.py
 mast_edb_timeseries_service = 'Mast.JwstEdb.GetTimeseries.All'
 mast_edb_dictionary_service = 'Mast.JwstEdb.Dictionary'
 mast_edb_mnemonic_service = 'Mast.JwstEdb.Mnemonics'
+
 
 class EdbMnemonic():
     """Class to hold and manipulate results of EngDB queries."""
 
     def __init__(self, mnemonic_identifier, start_time, end_time, data, meta, info):
-        """Populate attributes and separate data into timestamp and value."""
+        """Populate attributes."""
         self.mnemonic_identifier = mnemonic_identifier
         self.start_time = start_time
         self.end_time = end_time
@@ -74,9 +67,9 @@ class EdbMnemonic():
             self.mnemonic_identifier, len(self.data), self.start_time.isot,
             self.end_time.isot)
 
-    def interpolate(self, date, **kwargs):
-        """Interpolate value at times specified in data argument."""
-        raise NotImplementedError
+    # def interpolate(self, date, **kwargs):
+    #     """Interpolate value at times specified in data argument."""
+    #     raise NotImplementedError
 
 
 def process_mast_service_request_result(result):
@@ -84,20 +77,29 @@ def process_mast_service_request_result(result):
 
     Parameters
     ----------
-    result : 
+    result : list of requests.models.Response instances
+        The object returned by a call to Mast.service_request_async
 
     Returns
     -------
+        data : astropy.table.Table
+            Table representation of the returned data.
+        meta : dict
+            Additional information returned by the query
 
     """
     json_data = result[0].json()
     if json_data['status'] != 'COMPLETE':
-        raise RuntimeError('mnemonic query did not complete!')
+        print(json_data['status'])
+        raise RuntimeError('mnemonic query did not complete.')
 
-    # timestamp-value pairs in the form of an astropy table
-    data = Table(json_data['data'])
+    try:
+        # timestamp-value pairs in the form of an astropy table
+        data = Table(json_data['data'])
+    except KeyError:
+        raise RuntimeError('Query did not return any data.')
 
-    #collect meta data
+    # collect meta data
     meta = {}
     for key in json_data.keys():
         if key.lower() != 'data':
@@ -106,16 +108,43 @@ def process_mast_service_request_result(result):
     return data, meta
 
 
-def query_single_mnemonic(mnemonic_identifier, start_time, end_time):
-    """Query the EDB to return the mnemonic readings between start_time and end_time.
+def get_all_mnemonic_identifiers():
+    """Return identifiers and meta data for all mnemonics in the DMS engineering database."""
+    out = Mast.service_request_async(mast_edb_mnemonic_service, {})
+    data, meta = process_mast_service_request_result(out)
+    return data, meta
+
+
+def query_mnemonic_info(mnemonic_identifier):
+    """Query the EDB to return the mnemonic description.
 
     Parameters
     ----------
     mnemonic_identifier: str
-        Can be full mnemonic or can contain wildcard syntax.
-    start_time: astropy.time.Time instance
+        Telemetry mnemonic identifier, e.g. 'SA_ZFGOUTFOV'
+
+    Returns
+    -------
+        info : dict
+            Object that contains the returned data
+
+    """
+    parameters = {"mnemonic": "{}".format(mnemonic_identifier)}
+    result = Mast.service_request_async(mast_edb_dictionary_service, parameters)
+    info = process_mast_service_request_result(result)[0]
+    return info
+
+
+def query_single_mnemonic(mnemonic_identifier, start_time, end_time):
+    """Query the DMS EDB to return the mnemonic readings between start_time and end_time.
+
+    Parameters
+    ----------
+    mnemonic_identifier : str
+        Telemetry mnemonic identifier, e.g. 'SA_ZFGOUTFOV'
+    start_time : astropy.time.Time instance
         Start time
-    end_time: astropy.time.Time instance
+    end_time : astropy.time.Time instance
         End time
 
     Returns
@@ -130,39 +159,16 @@ def query_single_mnemonic(mnemonic_identifier, start_time, end_time):
     if not isinstance(end_time, astropy.time.core.Time):
         raise RuntimeError('Please specify a valid end time (instance of astropy.time.core.Time)')
 
+    if not isinstance(mnemonic_identifier, str):
+        raise RuntimeError('Please provide mnemonic_identifier of type string')
+
     parameters = {'mnemonic': mnemonic_identifier, 'start': start_time.iso, 'end': end_time.iso}
-    out = Mast.service_request_async(mast_edb_timeseries_service, parameters)
-    data, meta = process_mast_service_request_result(out)
+    result = Mast.service_request_async(mast_edb_timeseries_service, parameters)
+    data, meta = process_mast_service_request_result(result)
+
+    # get auxiliary information (description, subsystem, ...)
     info = query_mnemonic_info(mnemonic_identifier)
 
     # create and return instance
     mnemonic = EdbMnemonic(mnemonic_identifier, start_time, end_time, data, meta, info)
     return mnemonic
-
-
-def query_mnemonic_info(mnemonic_identifier):
-    """Query the EDB to return the mnemonic description.
-
-    Parameters
-    ----------
-    mnemonic_identifier: str
-        Can be full mnemonic or can contain wildcard syntax.
-
-    Returns
-    -------
-        info : dict
-            Object that contains the returned data
-
-    """
-    parameters = {"mnemonic": "{}".format(mnemonic_identifier)}
-    out = Mast.service_request_async(mast_edb_dictionary_service, parameters)
-    info = out[0].json()['data'][0]
-    return info
-
-
-def get_all_mnemonic_identifiers():
-    """Return identifiers and meta data for all mnemonics in the engineering database."""
-    out = Mast.service_request_async(mast_edb_mnemonic_service, {})
-    data, meta = process_mast_service_request_result(out)
-
-    return data, meta
