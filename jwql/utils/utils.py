@@ -21,6 +21,7 @@ References
     https://gist.github.com/jhunkeler/f08783ca2da7bfd1f8e9ee1d207da5ff
  """
 
+import getpass
 import json
 import os
 import re
@@ -35,8 +36,8 @@ JWST_INSTRUMENTS = sorted(['NIRISS', 'NIRCam', 'NIRSpec', 'MIRI', 'FGS'])
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
                      'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
 MAST_SERVICES = ['Mast.Jwst.Filtered.Nircam', 'Mast.Jwst.Filtered.Nirspec',
-                'Mast.Jwst.Filtered.Niriss', 'Mast.Jwst.Filtered.Miri',
-                'Mast.Jwst.Filtered.Fgs']
+                 'Mast.Jwst.Filtered.Niriss', 'Mast.Jwst.Filtered.Miri',
+                 'Mast.Jwst.Filtered.Fgs']
 MONITORS = {
     'FGS': ['Bad Pixel Monitor'],
     'MIRI': ['Dark Current Monitor',
@@ -73,21 +74,6 @@ def ensure_dir_exists(fullpath):
     if not os.path.exists(fullpath):
         os.makedirs(fullpath)
         permissions.set_permissions(fullpath)
-
-
-def get_config():
-    """Return a dictionary that holds the contents of the ``jwql``
-    config file.
-
-    Returns
-    -------
-    settings : dict
-        A dictionary that holds the contents of the config file.
-    """
-    with open(os.path.join(__location__, 'config.json'), 'r') as config_file:
-        settings = json.load(config_file)
-
-    return settings
 
 
 def filename_parser(filename):
@@ -137,3 +123,41 @@ def filename_parser(filename):
         raise ValueError('Provided file {} does not follow JWST naming conventions (jw<PPPPP><OOO><VVV>_<GGSAA>_<EEEEE>_<detector>_<suffix>.fits)'.format(filename))
 
     return filename_dict
+
+
+def get_base_url():
+    """Return the beginning part of the URL to the ``jwql`` web app
+    based on which user is running the software.
+
+    If the admin account is running the code, the ``base_url`` is
+    assumed to be the production URL.  If not, the ``base_url`` is
+    assumed to be local.
+
+    Returns
+    -------
+    base_url : str
+        The beginning part of the URL to the ``jwql`` web app
+    """
+
+    username = getpass.getuser()
+    if username == get_config()['admin_account']:
+        base_url = 'https://dljwql.stsci.edu'
+    else:
+        base_url = 'http://127.0.0.1:8000'
+
+    return base_url
+
+
+def get_config():
+    """Return a dictionary that holds the contents of the ``jwql``
+    config file.
+
+    Returns
+    -------
+    settings : dict
+        A dictionary that holds the contents of the config file.
+    """
+    with open(os.path.join(__location__, 'config.json'), 'r') as config_file:
+        settings = json.load(config_file)
+
+    return settings

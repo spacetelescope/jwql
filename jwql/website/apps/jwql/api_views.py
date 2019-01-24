@@ -73,7 +73,7 @@ def all_proposals(request):
     """
 
     proposals = get_all_proposals()
-    return JsonResponse({'proposals': proposals})
+    return JsonResponse({'proposals': proposals}, json_dumps_params={'indent': 2})
 
 
 def filenames_by_proposal(request, proposal):
@@ -93,7 +93,7 @@ def filenames_by_proposal(request, proposal):
     """
 
     filenames = get_filenames_by_proposal(proposal)
-    return JsonResponse({'filenames': filenames})
+    return JsonResponse({'filenames': filenames}, json_dumps_params={'indent': 2})
 
 
 def filenames_by_rootname(request, rootname):
@@ -113,7 +113,7 @@ def filenames_by_rootname(request, rootname):
     """
 
     filenames = get_filenames_by_rootname(rootname)
-    return JsonResponse({'filenames': filenames})
+    return JsonResponse({'filenames': filenames}, json_dumps_params={'indent': 2})
 
 
 def instrument_proposals(request, inst):
@@ -136,7 +136,7 @@ def instrument_proposals(request, inst):
     """
 
     proposals = get_instrument_proposals(inst)
-    return JsonResponse({'proposals': proposals})
+    return JsonResponse({'proposals': proposals}, json_dumps_params={'indent': 2})
 
 
 def preview_images_by_instrument(request, inst):
@@ -160,7 +160,7 @@ def preview_images_by_instrument(request, inst):
     """
 
     preview_images = get_preview_images_by_instrument(inst)
-    return JsonResponse({'preview_images': preview_images})
+    return JsonResponse({'preview_images': preview_images}, json_dumps_params={'indent': 2})
 
 
 def preview_images_by_proposal(request, proposal):
@@ -181,7 +181,7 @@ def preview_images_by_proposal(request, proposal):
     """
 
     preview_images = get_preview_images_by_proposal(proposal)
-    return JsonResponse({'preview_images': preview_images})
+    return JsonResponse({'preview_images': preview_images}, json_dumps_params={'indent': 2})
 
 
 def preview_images_by_rootname(request, rootname):
@@ -202,7 +202,7 @@ def preview_images_by_rootname(request, rootname):
     """
 
     preview_images = get_preview_images_by_rootname(rootname)
-    return JsonResponse({'preview_images': preview_images})
+    return JsonResponse({'preview_images': preview_images}, json_dumps_params={'indent': 2})
 
 
 def thumbnails_by_instrument(request, inst):
@@ -226,7 +226,7 @@ def thumbnails_by_instrument(request, inst):
     """
 
     thumbnails = get_thumbnails_by_instrument(inst)
-    return JsonResponse({'thumbnails': thumbnails})
+    return JsonResponse({'thumbnails': thumbnails}, json_dumps_params={'indent': 2})
 
 
 def thumbnails_by_proposal(request, proposal):
@@ -247,7 +247,7 @@ def thumbnails_by_proposal(request, proposal):
     """
 
     thumbnails = get_thumbnails_by_proposal(proposal)
-    return JsonResponse({'thumbnails': thumbnails})
+    return JsonResponse({'thumbnails': thumbnails}, json_dumps_params={'indent': 2})
 
 
 def thumbnails_by_rootname(request, rootname):
@@ -268,4 +268,4 @@ def thumbnails_by_rootname(request, rootname):
     """
 
     thumbnails = get_thumbnails_by_rootname(rootname)
-    return JsonResponse({'thumbnails': thumbnails})
+    return JsonResponse({'thumbnails': thumbnails}, json_dumps_params={'indent': 2})
