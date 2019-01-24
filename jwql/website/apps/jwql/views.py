@@ -36,7 +36,6 @@ Dependencies
 import os
 
 from django.shortcuts import render
-# from django.views import generic # We ultimately might want to use generic views?
 
 from .data_containers import get_acknowledgements
 from .data_containers import get_dashboard_components
@@ -45,7 +44,8 @@ from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
-from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS
+from .forms import FileSearchForm
+from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS, INSTRUMENTS_CAPITALIZED
 
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -89,6 +89,8 @@ def archived_proposals(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+    # Ensure the instrument is correctly capitalized
+    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
 
     template = 'archive.html'
 
@@ -127,6 +129,9 @@ def archive_thumbnails(request, inst, proposal):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+    # Ensure the instrument is correctly capitalized
+    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+
     template = 'thumbnails.html'
     context = thumbnails(inst, proposal)
 
@@ -148,14 +153,15 @@ def dashboard(request):
     """
     template = 'dashboard.html'
     output_dir = get_config()['outputs']
-    dashboard_components = get_dashboard_components()
+    dashboard_components, dashboard_html = get_dashboard_components()
 
     context = {'inst': '',
                'inst_list': JWST_INSTRUMENTS,
                'tools': MONITORS,
                'outputs': output_dir,
                'filesystem_html': os.path.join(output_dir, 'monitor_filesystem', 'filesystem_monitor.html'),
-               'dashboard_components': dashboard_components}
+               'dashboard_components': dashboard_components,
+               'dashboard_html': dashboard_html}
 
     return render(request, template, context)
 
@@ -173,10 +179,20 @@ def home(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
+    # Create a form instance and populate it with data from the request
+    form = FileSearchForm(request.POST or None)
+
+    # If this is a POST request, we need to process the form data
+    if request.method == 'POST':
+        if form.is_valid():
+            return form.redirect_to_files()
+
     template = 'home.html'
     context = {'inst': '',
                'inst_list': JWST_INSTRUMENTS,
-               'tools': MONITORS}
+               'tools': MONITORS,
+               'form': form}
 
     return render(request, template, context)
 
@@ -196,6 +212,9 @@ def instrument(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+    # Ensure the instrument is correctly capitalized
+    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+
     template = 'instrument.html'
     url_dict = {'FGS': 'http://jwst-docs.stsci.edu/display/JTI/Fine+Guidance+Sensor%2C+FGS?q=fgs',
                 'MIRI': 'http://jwst-docs.stsci.edu/display/JTI/Mid-Infrared+Instrument%2C+MIRI',
@@ -205,7 +224,7 @@ def instrument(request, inst):
 
     doc_url = url_dict[inst]
 
-    context = {'inst': inst, 
+    context = {'inst': inst,
                 'tools': MONITORS,
                 'doc_url': doc_url}
 
@@ -227,6 +246,9 @@ def unlooked_images(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+    # Ensure the instrument is correctly capitalized
+    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+
     template = 'thumbnails.html'
     context = thumbnails(inst)
 
@@ -250,6 +272,9 @@ def view_header(request, inst, file):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+    # Ensure the instrument is correctly capitalized
+    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+
     template = 'view_header.html'
     header = get_header_info(file)
     file_root = '_'.join(file.split('_')[:-1])
@@ -281,6 +306,9 @@ def view_image(request, inst, file_root, rewrite=False):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+    # Ensure the instrument is correctly capitalized
+    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+
     template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
     context = {'inst': inst,
