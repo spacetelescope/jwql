@@ -85,7 +85,12 @@ def test_make_image(test_directory):
                 image.cmap = 'viridis'
                 image.output_format = 'jpg'
                 image.thumbnail = create_thumbnail
-                image.output_directory = output_directory
+
+                if create_thumbnail:
+                    image.thumbnail_output_directory = output_directory
+                else:
+                    image.preview_output_directory = output_directory
+
                 image.make_image()
             except ValueError as error:
                 print(error)
@@ -98,7 +103,6 @@ def test_make_image(test_directory):
             # list of preview images
             preview_image_filenames = glob.glob(os.path.join(test_directory, '*.{}'.format(
                 extension)))
-
             assert len(preview_image_filenames) == header['NINTS']
 
             # clean up: delete preview images

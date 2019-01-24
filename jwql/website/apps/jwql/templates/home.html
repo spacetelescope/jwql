@@ -4,6 +4,9 @@
 
 	<title>Home - JWQL</title>
 
+    <!-- Custom styles and scripts for this template -->
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+
 {% endblock %}
 
 {% block content %}
@@ -32,17 +35,48 @@
 			</div>
 		</div>
 
-        <div class="row my-2" style="margin-left: 7rem; margin-right: 7rem;">
-            <div class="col-md-6 py-2"><a class="btn btn-block btn-primary" role="button" href={{ url('jwql:dashboard') }}>Dashboard</a></div>
-            <div class="col-md-6 py-2"><a class="btn btn-block btn-primary disabled" role="button" href="#">Query Database</a></div>
-        </div>
-
         <br>
         The JWST Quicklook Application (JWQL) is a database-driven web application and automation framework for use by the JWST instrument teams to monitor the health and stability of the JWST instruments.
         Visit our <a href={{ url('jwql:about') }}>about page</a> to learn more about our project, goals, and developers.<br><br>
 
         The JWQL application is currently under heavy development. The 1.0 release is expected in 2019.
 
+        <hr>
+
+        <h4>Find a JWST Proposal or File</h4>
+
+        Submit a proposal number (e.g. 86600) or file root (e.g. jw86600006001_02101_00008_guider1) to view that proposal or file:
+
+
+
+
+        <!--Load the file search form from the view-->
+        <form action="" method="post" id="homepage_filesearch">
+            <!--Show any errors from a previous form submission-->
+            {% if form.errors %}
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger">
+                            <strong>{{ error|escape }}</strong>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            {% endif %}
+
+            <!--Django Cross-Site Request Forgery magic-->
+            {{ csrf_input }}
+
+            <!--Show the field forms-->
+            {% for field in form %}
+                <div class="homepage_form_fieldWrapper">
+                    {{ field }}
+                    {% if field.help_text %}
+                        <p class="help">{{ field.help_text|safe }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
+        </form>
 
 	</main>
 

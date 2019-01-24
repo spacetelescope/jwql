@@ -2,6 +2,12 @@
 tests
 *****
 
+test_api_views.py
+-----------------
+.. automodule:: jwql.tests.test_api_views
+    :members:
+    :undoc-members:
+
 test_monitor_mast.py
 --------------------
 .. automodule:: jwql.tests.test_monitor_mast

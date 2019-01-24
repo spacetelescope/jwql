@@ -25,13 +25,17 @@ import glob
 import os
 
 from astropy.io import fits
+from astroquery.mast import Mast
 import numpy as np
 
+from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser, MONITORS
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
+PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_images')
+THUMBNAIL_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'thumbnails')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
@@ -69,14 +73,33 @@ def get_acknowledgements():
     return acknowledgements
 
 
+def get_all_proposals():
+    """Return a list of all proposals that exist in the filesystem.
+
+    Returns
+    -------
+    proposals : list
+        A list of proposal numbers for all proposals that exist in the
+        filesystem
+    """
+
+    proposals = glob.glob(os.path.join(FILESYSTEM_DIR, '*'))
+    proposals = [proposal.split('jw')[-1] for proposal in proposals]
+    proposals = [proposal for proposal in proposals if len(proposal) == 5]
+
+    return proposals
+
+
 def get_dashboard_components():
-    """Build and return a dictionary containing components needed for
-    the dashboard.
+    """Build and return dictionaries containing components and html
+    needed for the dashboard.
 
     Returns
     -------
     dashboard_components : dict
         A dictionary containing components needed for the dashboard.
+    dashboard_components : dict
+        A dictionary containing full HTML needed for the dashboard.
     """
 
     output_dir = get_config()['outputs']
@@ -90,27 +113,41 @@ def get_dashboard_components():
                  'filecount': 'Total File Counts',
                  'system_stats': 'System Statistics'}
 
+    # Exclude monitors that can't be saved as components
+    exclude_list = ['monitor_cron_jobs']
+
+    # Run the cron job monitor to produce an updated table
+    monitor_cron_jobs.status(production_mode=True)
+
+    # Build dictionary of components
     dashboard_components = {}
     for dir_name, subdir_list, file_list in os.walk(output_dir):
         monitor_name = os.path.basename(dir_name)
-        dashboard_components[name_dict[monitor_name]] = {}
-        for fname in file_list:
-            if 'component' in fname:
-                full_fname = '{}/{}'.format(monitor_name, fname)
-                plot_name = fname.split('_component')[0]
+        if monitor_name not in exclude_list:
+            dashboard_components[name_dict[monitor_name]] = {}
+            for fname in file_list:
+                if 'component' in fname:
+                    full_fname = '{}/{}'.format(monitor_name, fname)
+                    plot_name = fname.split('_component')[0]
 
-                # Get the div
-                html_file = full_fname.split('.')[0] + '.html'
-                with open(os.path.join(output_dir, html_file)) as f:
-                    div = f.read()
+                    # Get the div
+                    html_file = full_fname.split('.')[0] + '.html'
+                    with open(os.path.join(output_dir, html_file)) as f:
+                        div = f.read()
 
-                # Get the script
-                js_file = full_fname.split('.')[0] + '.js'
-                with open(os.path.join(output_dir, js_file)) as f:
-                    script = f.read()
-                dashboard_components[name_dict[monitor_name]][name_dict[plot_name]] = [div, script]
+                    # Get the script
+                    js_file = full_fname.split('.')[0] + '.js'
+                    with open(os.path.join(output_dir, js_file)) as f:
+                        script = f.read()
+                    dashboard_components[name_dict[monitor_name]][name_dict[plot_name]] = [div, script]
 
-    return dashboard_components
+    # Add HTML that cannot be saved as components to the dictionary
+    with open(os.path.join(output_dir, 'monitor_cron_jobs', 'cron_status_table.html')) as f:
+        cron_status_table_html = f.read()
+    dashboard_html = {}
+    dashboard_html['Cron Job Monitor'] = cron_status_table_html
+
+    return dashboard_components, dashboard_html
 
 
 def get_filenames_by_instrument(instrument):
@@ -144,6 +181,53 @@ def get_filenames_by_instrument(instrument):
     filepaths = [f for f in glob.glob(search_filepath) if instrument_match[instrument] in f]
 
     return filepaths
+
+
+def get_filenames_by_proposal(proposal):
+    """Return a list of filenames that are available in the filesystem
+    for the given ``proposal``.
+
+    Parameters
+    ----------
+    proposal : str
+        The five-digit proposal number (e.g. ``88600``).
+
+    Returns
+    -------
+    filenames : list
+        A list of filenames associated with the given ``proposal``.
+    """
+
+    filenames = sorted(glob.glob(os.path.join(
+        FILESYSTEM_DIR, 'jw{}'.format(proposal), '*')))
+    filenames = [os.path.basename(filename) for filename in filenames]
+
+    return filenames
+
+
+def get_filenames_by_rootname(rootname):
+    """Return a list of filenames available in the filesystem that
+    are part of the given ``rootname``.
+
+    Parameters
+    ----------
+    rootname : str
+        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+
+    Returns
+    -------
+    filenames : list
+        A list of filenames associated with the given ``rootname``.
+    """
+
+    proposal = rootname.split('_')[0].split('jw')[-1][0:5]
+    filenames = sorted(glob.glob(os.path.join(
+        FILESYSTEM_DIR,
+        'jw{}'.format(proposal),
+        '{}*'.format(rootname))))
+    filenames = [os.path.basename(filename) for filename in filenames]
+
+    return filenames
 
 
 def get_header_info(file):
@@ -233,6 +317,124 @@ def get_image_info(file_root, rewrite):
     return image_info
 
 
+def get_instrument_proposals(instrument):
+    """Return a list of proposals for the given instrument
+
+    Parameters
+    ----------
+    instrument : str
+        Name of the JWST instrument
+
+    Returns
+    -------
+    proposals : list
+        List of proposals for the given instrument
+    """
+
+    service = "Mast.Jwst.Filtered.{}".format(instrument)
+    params = {"columns": "filename",
+              "filters": []}
+    response = Mast.service_request_async(service, params)
+    results = response[0].json()['data']
+
+    filenames = [result['filename'] for result in results]
+    proposals = list(set(filename_parser(filename)['program_id'] for filename in filenames))
+
+    return proposals
+
+
+def get_preview_images_by_instrument(inst):
+    """Return a list of preview images available in the filesystem for
+    the given instrument.
+
+    Parameters
+    ----------
+    inst : str
+        The instrument of interest (e.g. ``NIRCam``).
+
+    Returns
+    -------
+    preview_images : list
+        A list of preview images available in the filesystem for the
+        given instrument.
+    """
+
+    # Make sure the instrument is of the proper format (e.g. "Nircam")
+    instrument = inst[0].upper() + inst[1:].lower()
+
+    # Query MAST for all rootnames for the instrument
+    service = "Mast.Jwst.Filtered.{}".format(instrument)
+    params = {"columns": "filename",
+              "filters": []}
+    response = Mast.service_request_async(service, params)
+    results = response[0].json()['data']
+
+    # Parse the results to get the rootnames
+    filenames = [result['filename'].split('.')[0] for result in results]
+
+    # Build list of available preview images
+    preview_images = []
+    for filename in filenames:
+        proposal = filename_parser(filename)['program_id']
+        preview_images.extend(glob.glob(os.path.join(
+            PREVIEW_IMAGE_FILESYSTEM,
+            'jw{}'.format(proposal),
+            '{}*.jpg'.format(filename))))
+
+    # Only return the filenames
+    preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
+
+    return preview_images
+
+
+def get_preview_images_by_proposal(proposal):
+    """Return a list of preview images available in the filesystem for
+    the given ``proposal``.
+
+    Parameters
+    ----------
+    proposal : str
+        The five-digit proposal number (e.g. ``88600``).
+
+    Returns
+    -------
+    preview_images : list
+        A list of preview images available in the filesystem for the
+        given ``proposal``.
+    """
+
+    preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, 'jw{}'.format(proposal), '*'))
+    preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
+
+    return preview_images
+
+
+def get_preview_images_by_rootname(rootname):
+    """Return a list of preview images available in the filesystem for
+    the given ``rootname``.
+
+    Parameters
+    ----------
+    rootname : str
+        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+
+    Returns
+    -------
+    preview_images : list
+        A list of preview images available in the filesystem for the
+        given ``rootname``.
+    """
+
+    proposal = rootname.split('_')[0].split('jw')[-1][0:5]
+    preview_images = sorted(glob.glob(os.path.join(
+        PREVIEW_IMAGE_FILESYSTEM,
+        'jw{}'.format(proposal),
+        '{}*'.format(rootname))))
+    preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
+
+    return preview_images
+
+
 def get_proposal_info(filepaths):
     """Builds and returns a dictionary containing various information
     about the proposal(s) that correspond to the given ``filepaths``.
@@ -276,6 +478,99 @@ def get_proposal_info(filepaths):
     proposal_info['num_files'] = num_files
 
     return proposal_info
+
+
+def get_thumbnails_by_instrument(inst):
+    """Return a list of thumbnails available in the filesystem for the
+    given instrument.
+
+    Parameters
+    ----------
+    inst : str
+        The instrument of interest (e.g. ``NIRCam``).
+
+    Returns
+    -------
+    preview_images : list
+        A list of thumbnails available in the filesystem for the
+        given instrument.
+    """
+
+    # Make sure the instrument is of the proper format (e.g. "Nircam")
+    instrument = inst[0].upper() + inst[1:].lower()
+
+    # Query MAST for all rootnames for the instrument
+    service = "Mast.Jwst.Filtered.{}".format(instrument)
+    params = {"columns": "filename",
+              "filters": []}
+    response = Mast.service_request_async(service, params)
+    results = response[0].json()['data']
+
+    # Parse the results to get the rootnames
+    filenames = [result['filename'].split('.')[0] for result in results]
+
+    # Build list of available preview images
+    thumbnails = []
+    for filename in filenames:
+        proposal = filename_parser(filename)['program_id']
+        thumbnails.extend(glob.glob(os.path.join(
+            THUMBNAIL_FILESYSTEM,
+            'jw{}'.format(proposal),
+            '{}*.thumb'.format(filename))))
+
+    # Only return the filenames
+    thumbnails = [os.path.basename(thumbnail) for thumbnail in thumbnails]
+
+    return thumbnails
+
+
+def get_thumbnails_by_proposal(proposal):
+    """Return a list of thumbnails available in the filesystem for the
+    given ``proposal``.
+
+    Parameters
+    ----------
+    proposal : str
+        The five-digit proposal number (e.g. ``88600``).
+
+    Returns
+    -------
+    thumbnails : list
+        A list of thumbnails available in the filesystem for the given
+        ``proposal``.
+    """
+
+    thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, 'jw{}'.format(proposal), '*'))
+    thumbnails = [os.path.basename(thumbnail) for thumbnail in thumbnails]
+
+    return thumbnails
+
+
+def get_thumbnails_by_rootname(rootname):
+    """Return a list of preview images available in the filesystem for
+    the given ``rootname``.
+
+    Parameters
+    ----------
+    rootname : str
+        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+
+    Returns
+    -------
+    thumbnails : list
+        A list of preview images available in the filesystem for the
+        given ``rootname``.
+    """
+
+    proposal = rootname.split('_')[0].split('jw')[-1][0:5]
+    thumbnails = sorted(glob.glob(os.path.join(
+        THUMBNAIL_FILESYSTEM,
+        'jw{}'.format(proposal),
+        '{}*'.format(rootname))))
+
+    thumbnails = [os.path.basename(thumbnail) for thumbnail in thumbnails]
+
+    return thumbnails
 
 
 def split_files(file_list, page_type):
