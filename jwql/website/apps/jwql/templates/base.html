@@ -22,8 +22,8 @@
 		<!-- IMPORTANT: jQuery first, then popper, then Bootstrap -->
 		<script src="{{ static('js/jquery-3.3.1.min.js') }}?{% now 'U' %}"></script>
 		<script src="{{ static('js/tinysort.min.js') }}?{% now 'U' %}"></script>
-	    <script type="text/javascript" src="http://cdn.pydata.org/bokeh/release/bokeh-1.0.1.min.js"></script>
-	    <script src="http://cdn.pydata.org/bokeh/release/bokeh-widgets-1.0.1.min.js"></script>
+	    <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-1.0.1.min.js"></script>
+	    <script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.0.1.min.js"></script>
 		<script src="{{ static('js/jwql.js') }}?{% now 'U' %}"></script>
 
 		{% block preamble %}
@@ -35,7 +35,7 @@
 	<body>
 		<!-- Navigation Bar -->
 		<nav class="navbar navbar-expand-md fixed-top">
-		    <a class="navbar-left" href={{ url('jwql:home') }}><img src={{ static('img/JWQLlogo_small.png') }} height=35 width=35></a>
+		    <a class="navbar-left" href={{ url('jwql:home') }}><img src={{ static('img/jwql_logo_short_transparent.png') }} height=35 width=35></a>
 	        <a class="navbar-brand" href={{ url('jwql:home') }}>JWQL</a>
 	        <a class="navbar-brand" href="#"><font color='#f2ce3a'>{{ inst }}</font></a>
 	        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
