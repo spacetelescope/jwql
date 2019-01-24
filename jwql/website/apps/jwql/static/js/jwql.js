@@ -45,9 +45,11 @@ function determine_page_title(instrument, proposal) {
 };
 
 
-function search(n_proposals) {
+function search() {
+
     // Find all proposal elements
     var proposals = document.getElementsByClassName("proposal");
+    var n_proposals = document.getElementsByClassName("proposal").length;
 
     // Determine the current search value
     var search_value = document.getElementById("search_box").value;
