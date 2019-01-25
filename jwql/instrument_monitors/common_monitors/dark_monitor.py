@@ -42,8 +42,15 @@ In stdev image, flag pixels with values above threshold (as noisy).
 Maybe compare to a baseline noise image and flag pixels that are different by threshold as newly noisy.
 """
 
-import numpy as np
+import glob  # only during testing
+import matplotlib.pyplot as plt  # only for testing
 
+
+import numpy as np
+import os
+
+from astropy.io import ascii, fits
+from astropy.modeling import models
 from astropy.stats import sigma_clip
 from astropy.time import Time
 from jwst import datamodels
@@ -51,8 +58,8 @@ from jwst import datamodels
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils import maths, instrument_properties
-from jwql.utils.utils import download_mast_data, copy_from_filesystem, get_config, filesystem_path,\
-                             AMPLIFIER_BOUNDARIES, JWST_INSTRUMENTS, JWST_DATAPRODUCTS
+from jwql.utils.utils import copy_from_filesystem, download_mast_data, ensure_dir_exists, get_config, \
+                             filesystem_path, AMPLIFIER_BOUNDARIES, JWST_INSTRUMENTS, JWST_DATAPRODUCTS
 
 
 class Dark():
@@ -67,19 +74,22 @@ class Dark():
             combination
         """
         # Get the output directory
-        self.output_dir = os.path.join(get_config()['outputs'], 'monitor_darks')
+        #self.output_dir = os.path.join(get_config()['outputs'], 'monitor_darks')
+        print('Use the real outptut directory above before merging')
+        self.output_dir = '~/python_repos/test_jwql/test_dark_monitor'
         history_file = os.path.join(self.output_dir, 'mast_query_history.txt')
 
         # Use the current time as the end time for MAST query
-        current_time = Time.now().mjd
+        current_time = Time.now()
+        current_time_mjd = current_time.mjd
 
         # Open file containing history of queries
         past_queries = ascii.read(history_file)
 
         # Loop over instrument/aperture combinations, and query MAST for new files
         for row in past_queries:
-            starting_time = Time(row['Last_query']).mjd
-            new_entries = mast_query_darks(row['Instrument'], row['Aperture'], starting_time, current_time)
+            starting_time = Time(row['Last_Query']).mjd
+            new_entries = mast_query_darks(row['Instrument'], row['Aperture'], starting_time, current_time_mjd)
 
             # Check to see if there are enough for
             # the monitor's signal-to-noise requirements
@@ -87,21 +97,30 @@ class Dark():
                 # Get full paths to the files
                 new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
 
+                # Set up directories for the copied data
+                ensure_dir_exists(os.path.join(self.output_dir, 'data'))
+                self.data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(row['Instrument'].lower(),
+                                                                                  row['Aperture'].lower()))
+                ensure_dir_exists(self.data_dir)
+
                 # Copy files from filesystem
-                copied, not_copied = copy_from_filesystem(new_filenames, self.output_dir)
+                copied, not_copied = copy_from_filesystem(new_filenames, self.data_dir)
 
                 # Short-term fix: if some of the files from the query are not
                 # in the filesystem, try downloading them from MAST
-                uncopied_basenames = [os.path.basename(infile) for infile in not_copied]
-                uncopied_results = [entry if entry['filename'] in uncopied_basenames for entry in new_entries]
-                download_mast_data(uncopied_results, self.output_dir)
+                if len(not_copied) > 0:
+                    uncopied_basenames = [os.path.basename(infile) for infile in not_copied]
+                    uncopied_results = [entry for entry in new_entries if entry['filename'] in uncopied_basenames]
+                    download_mast_data(uncopied_results, self.output_dir)
 
                 # Run the dark monitor
-                dark_files = [os.path.join(self.output_dir, filename) for filename in new_filenames]
+                #dark_files = [os.path.join(self.output_dir, filename) for filename in new_filenames]
+                dark_files = copied
+                print('later add MAST results to this list')
                 self.run(dark_files, row['Instrument'], row['Aperture'])
 
                 # Update the query history for the next call
-                row['Last_query'] = current_time.strftime("%Y-%m-%dT%H:%M:%S")
+                row['Last_Query'] = current_time.strftime("%Y-%m-%dT%H:%M:%S")
             else:
                 print(("Dark monitor skipped. {} new dark files for {}, {}. {} new files are "
                        "required to run dark current monitor.").format(len(new_entries),
@@ -233,36 +252,62 @@ class Dark():
         """
         required_steps = pipeline_tools.get_pipeline_steps(instrument)
 
-        # Make sure dark subtraction is skipped on dark current files
+        print('REQUIRED STEPS:', required_steps)
+
+        # Modify the list of pipeline steps to skip those not needed
+        # for the preparation of dark current data
         required_steps['dark_current'] = False
-        what steps to skip for MIRI?
+        print('what steps to skip for MIRI?')
 
         slope_files = []
         for filename in file_list:
             completed_steps = pipeline_tools.completed_pipeline_steps(filename)
-            steps_to_run = pipeline_tools.steps_to_run(required_steps, completed_steps)
+            print('but if a step was skipped, often you cant go back and run it. e.g. you cant run persistence after things have been linearized.')
+            print('so maybe in this case we just want to run jump and ramp fitting and be done. persistence is not run as part of the dark pipeline')
+            print('but linearization is. Maybe we assume this wont be a problem')
+            steps_to_run = pipeline_tools.steps_to_run(filename, required_steps, completed_steps)
+
+            for key in steps_to_run:
+                if key in ['jump', 'rate']:
+                    steps_to_run[key] = True
+                else:
+                    steps_to_run[key] = False
+            print('COMPLETED STEPS:', completed_steps)
+            print('STEPS TO RUN:', steps_to_run)
 
             # Run any remaining required pipeline steps
             if any(steps_to_run.values()) is False:
                 slope_files.append(filename)
             else:
-                processed_file = run_calwebb_detector1(filename, steps_to_run)
+                processed_file = pipeline_tools.run_calwebb_detector1_steps(filename, steps_to_run)
                 slope_files.append(processed_file)
 
+        print('slope files are: ', slope_files)
+
+        # Read in all slope images and place into a list
+        slope_image_stack = pipeline_tools.image_stack(slope_files)
+
         # Calculate a mean slope image from the inputs
-        slope_image, stdev_image = maths.mean_image(slope_files, sigma_threshold=3)
+        slope_image, stdev_image = maths.mean_image(slope_image_stack, sigma_threshold=3)
 
         # Basic metadata that will be needed later
         self.get_metadata(slope_files[0])
 
         # Search for new hot/dead/noisy pixels----------------------------
         # Read in baseline mean slope image and stdev image
-        baseline_file = '{}_{}_baseline_slope_and_stdev_images.fits'.format(instrument, aperture)
-        baseline_filepath = os.path.join(self.output_dir, 'baseline/', baseline_file)
-        baseline_mean, baseline_stev = self.read_baseline_slope_image(baseline_filepath)
+        #baseline_file = '{}_{}_baseline_slope_and_stdev_images.fits'.format(instrument, aperture)
+        #baseline_filepath = os.path.join(self.output_dir, 'baseline/', baseline_file)
+        #baseline_mean, baseline_stev = self.read_baseline_slope_image(baseline_filepath)
+        print('baseline check removed for testing')
+        baseline_mean = np.zeros((2048, 2048)) + 0.004
+        baseline_stdev = np.zeros((2048, 2048)) + 0.004
 
         # Check the hot/dead pixel population for changes
         new_hot_pix, new_dead_pix = self.hot_dead_pixel_check(slope_image, baseline_mean)
+
+        print('Found {} new hot pixels'.format(len(new_hot_pix)))
+        print(len(new_hot_pix[0]))
+
 
         # Shift the coordinates to be in full frame coordinate system
         new_hot_pix = self.shift_to_full_frame(new_hot_pix)
@@ -281,21 +326,24 @@ class Dark():
         # Read in the file containing historical image statistics
         stats_file = '{}_{}_dark_current_statistics.txt'.format(instrument, aperture)
         stats_filepath = os.path.join(self.output_dir, 'stats/', stats_file)
-        history = ascii.read(stats_file)
+        #history = ascii.read(stats_file)
 
         # Find amplifier boundaries so per-amp statistics can be calculated
         number_of_amps, amp_bounds = instrument_properties.amplifier_info(slope_files[0])
 
+        print('AMP_BOUNDS:')
+        print(amp_bounds)
+
         # Calculate mean and stdev values, and fit a Gaussian to the
         # histogram of the pixels in each amp
-        (amp_mean, amp_stdev, gauss_param, gauss_chisquared, double_gauss_params, double_gauss_chisquared) =
-        self.stats_by_amp(slope_image, amp_bounds, instrument)
+        (amp_mean, amp_stdev, gauss_param, gauss_chisquared, double_gauss_params, double_gauss_chisquared) = \
+         self.stats_by_amp(slope_image, amp_bounds, instrument)
 
         # Add the new statistics to the history file
-        for key in stats[0].keys():
-            row = [key, amp_mean[key], amp_stdev[key], gauss_peak[key], gauss_peak_err[key],
-                   gauss_stdev[key], gauss_stdev_err[key]]
-            history.add_row(row)
+        #for key in stats[0].keys():
+        #    row = [key, amp_mean[key], amp_stdev[key], gauss_peak[key], gauss_peak_err[key],
+        #           gauss_stdev[key], gauss_stdev_err[key]]
+        #    history.add_row(row)
 
     def shift_to_full_frame(self, coords):
         """Shift the input list of pixels from the subarray coordinate
@@ -315,7 +363,7 @@ class Dark():
         y += self.y0
         return (x, y)
 
-    def stats_by_amp(self, image, amps, instrument_name, plot=True):
+    def stats_by_amp(self, image, amps, instrument_name, chisq_threshold=1.1, plot=True):
         """Calculate statistics in the input image for each amplifier
         Warpper around calls to mean_stdev and gaussian_fit
 
@@ -369,18 +417,29 @@ class Dark():
             gaussian_params[key] = [amplitude, peak, width]
             gauss_fit_model = models.Gaussian1D(amplitude=amplitude[0], mean=peak[0], stddev=width[0])
             gauss_fit = gauss_fit_model(bin_centers)
+
+            positive = hist > 0
             degrees_of_freedom = len(hist) - 3
-            gaussian_chi_squared[key] = np.sum((gauss_fit - hist)**2 / hist) / degrees_of_freedom
+
+
+            gaussian_chi_squared[key] = np.sum((gauss_fit[positive] - hist[positive])**2 / hist[positive]) / degrees_of_freedom
+
+
+            f, a = plt.subplots()
+            a.plot(bin_centers, hist, color='black')
+            a.plot(bin_centers, gauss_fit, color='red')
+            plt.show()
+
 
             # If chisq is large enough to suggest a bad fit, save the
             # histogram and fit for later plotting
-            if gaussian_chi_squared[key] > chisq_threshold:
-                where_do_we_send_this(key, bin_centers, hist, gauss_fit)
+            #if gaussian_chi_squared[key] > chisq_threshold:
+            #    where_do_we_send_this(key, bin_centers, hist, gauss_fit)
 
             # Double Gaussian fit only for full frame data (and only for
             # NIRISS at the moment.)
             if key == '5':
-                if instrument_name.upper() in ['NIRISS']:
+                if instrument_name.upper() in ['NIRISS', 'NIRCAM']:
                     initial_params = (np.max(hist), amp_mean, amp_stdev * 0.8,
                                       np.max(hist) / 7., amp_mean / 2., amp_stdev * 0.9)
                     double_gauss_params, double_gauss_sigma = maths.double_gaussian_fit(bin_centers, hist,
@@ -389,15 +448,31 @@ class Dark():
                                                                                       double_gauss_sigma)]
                     double_gauss_fit = maths.double_gaussian(bin_centers, *double_gauss_params)
                     degrees_of_freedom = len(bin_centers) - 6
-                    double_gaussian_chi_squared[key] = np.sum((double_gauss_fit - hist)**2 / hist) / degrees_of_freedom
+                    double_gaussian_chi_squared[key] = np.sum((double_gauss_fit[positive] - hist[positive])**2
+                                                              / hist[positive]) / degrees_of_freedom
+
+
+                    f, a = plt.subplots()
+                    a.plot(bin_centers, hist, color='black')
+                    a.plot(bin_centers, gauss_fit, color='red')
+                    a.plot(bin_centers, double_gauss_fit, color='blue')
+                    plt.show()
+
+
+                else:
+                    double_gaussian_params[key] = [(None, None)]
+                    double_gaussian_chi_squared[key] = None
 
                     # If chisq is large enough to suggest a bad fit, save the
                     # histogram and fit for later plotting
-                    if gaussian_chi_squared[key] > chisq_threshold:
-                        where_do_we_send_this(key, bin_centers, hist, double_gauss_fit)
-                        save_to_an_ascii_file_to_be_read_in_by_webb_app()
-                        or_do_we_have_webb_app_plot_all_histograms()
+                    #if gaussian_chi_squared[key] > chisq_threshold:
+                    #    where_do_we_send_this(key, bin_centers, hist, double_gauss_fit)
+                    #    save_to_an_ascii_file_to_be_read_in_by_webb_app()
+                    #    or_do_we_have_webb_app_plot_all_histograms()
 
+        print('RESULTS OF STATS_BY_AMP:')
+        print(amp_means, amp_stdevs, gaussian_params, gaussian_chi_squared, double_gaussian_params,
+                double_gaussian_chi_squared)
         return (amp_means, amp_stdevs, gaussian_params, gaussian_chi_squared, double_gaussian_params,
                 double_gaussian_chi_squared)
 
@@ -437,7 +512,7 @@ def create_history_file():
     history = Table()
     history['Instrument'] = instruments
     history['Aperture'] = apertures
-    history['Last_query'] = last_query_time
+    history['Last_Query'] = last_query_time
     history.meta['comments'] = [('This file contains a table listing the ending time of the last '
                                  'query to MAST for each instrument/aperture')]
     history.write(history_file, format='ascii')

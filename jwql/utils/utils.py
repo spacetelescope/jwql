@@ -25,6 +25,7 @@ import getpass
 import json
 import os
 import re
+import shutil
 
 from jwql.utils import permissions
 from jwql.utils.constants import FILE_SUFFIX_TYPES
@@ -39,17 +40,22 @@ AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 0), (512, 2048)], '2': [(512, 0), (
 
 def copy_from_filesystem(files, out_dir):
     """Copy a given file from the filesystem to a given directory.
-    Short-term fix: if the file does not exist in the filesystem
-    then try downloading from MAST
+    Only try to copy the file if it is not already present in the
+    output directory.
     """
+    # Copy files if they do not already exist
+    success = []
+    failed = []
     for input_file in files:
-        success = []
-        failed = []
-        try:
-            shutil.copy2(input_file, out_dir)
-            success.append(input_file)
-        except:
-            filed.append(input_file)
+        input_new_path = os.path.join(out_dir, os.path.basename(input_file))
+        if os.path.isfile(input_new_path):
+            success.append(input_new_path)
+        else:
+            try:
+                shutil.copy2(input_file, out_dir)
+                success.append(input_new_path)
+            except:
+                failed.append(input_file)
     return success, failed
 
 

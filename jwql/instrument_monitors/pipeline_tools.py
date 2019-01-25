@@ -15,16 +15,45 @@ Use
  """
 
 from collections import OrderedDict
+import copy
+import numpy as np
+
+from astropy.io import fits
+from jwst import datamodels
+from jwst.dq_init import DQInitStep
+from jwst.dark_current import DarkCurrentStep
+from jwst.firstframe import FirstFrameStep
+from jwst.group_scale import GroupScaleStep
+from jwst.ipc import IPCStep
+from jwst.jump import JumpStep
+from jwst.lastframe import LastFrameStep
+from jwst.linearity import LinearityStep
+from jwst.persistence import PersistenceStep
+from jwst.ramp_fitting import RampFitStep
+from jwst.refpix import RefPixStep
+from jwst.rscd import RSCD_Step
+from jwst.saturation import SaturationStep
+from jwst.superbias import SuperBiasStep
 
 from jwql.utils.utils import JWST_INSTRUMENTS
-from jwst import datamodels
+
 
 # Define the fits header keyword that accompanies each step
 PIPE_KEYWORDS = {'S_GRPSCL': 'group_scale', 'S_DQINIT': 'dq_init', 'S_SATURA': 'saturation',
-                 'S_REFPIX': 'refpix', 'S_SUPERB': 'superbias', 'S_IPC': 'ipc',
-                 'S_PERSIS': 'persistence', 'S_DARK': 'dark_current', 'S_LINEAR': 'linearlity',
+                 'S_IPC': 'ipc', 'S_REFPIX': 'refpix', 'S_SUPERB': 'superbias',
+                 'S_PERSIS': 'persistence', 'S_DARK': 'dark_current', 'S_LINEAR': 'linearity',
                  'S_FRSTFR': 'firstframe', 'S_LASTFR': 'lastframe', 'S_RSCD': 'rscd',
                  'S_JUMP': 'jump', 'S_RAMP': 'rate'}
+
+PIPELINE_STEP_MAPPING = {'dq_init': DQInitStep, 'dark_current': DarkCurrentStep,
+                         'firstframe': FirstFrameStep, 'group_scale': GroupScaleStep,
+                         'ipc': IPCStep, 'jump': JumpStep, 'lastframe': LastFrameStep,
+                         'linearity': LinearityStep, 'persistence': PersistenceStep,
+                         'rate': RampFitStep, 'refpix': RefPixStep, 'rscd': RSCD_Step,
+                         'saturation': SaturationStep, 'superbias': SuperBiasStep}
+
+print('Remove line below before merging. Uppercase list of inst. is in a PR already')
+JWST_INSTRUMENTS = [entry.upper() for entry in JWST_INSTRUMENTS]
 
 
 def completed_pipeline_steps(filename):
@@ -48,7 +77,7 @@ def completed_pipeline_steps(filename):
     for key in PIPE_KEYWORDS.values():
         completed[key] = False
 
-    header = fits.getheader(input_file)
+    header = fits.getheader(filename)
     for key in PIPE_KEYWORDS.keys():
         value = header.get(key)
         if value == 'COMPLETE':
@@ -92,23 +121,64 @@ def get_pipeline_steps(instrument):
         if instrument == 'NIRSPEC':
             steps.remove('persistence')
 
+    # IPC correction currently not done for any instrument
+    steps.remove('ipc')
+
     # Initialize using PIPE_KEYWORDS so the steps will be in the right
     # order
     req = OrderedDict({})
+    for key in steps:
+        req[key] = True
     for key in PIPE_KEYWORDS.values():
-        req[key] = False
-    if stepstr is None:
-        return req
+        if key not in req.keys():
+            req[key] = False
 
-    for ele in steps:
-        try:
-            req[ele] = True
-        except KeyError as error:
-            print(error)
     return req
 
 
-def run_calwebb_detector1(input_file, steps):
+def image_stack(file_list):
+    """Given a list of fits files containing 2D images, read in all data
+    and place into a 3D stack
+
+    Parameters
+    ----------
+    file_list : list
+        List of fits file names
+
+    Returns
+    -------
+    cube : numpy.ndarray
+        3D stack of the 2D images
+    """
+    for i, input_file in enumerate(file_list):
+        model = datamodels.open(input_file)
+        image = model.data
+
+        # Stack all inputs together into a single 3D image cube
+        if i == 0:
+            ndim_base = image.shape
+            if len(ndim_base) == 3:
+                cube = copy.deepcopy(image)
+            elif len(ndim_base) == 2:
+                cube = np.expand_dims(image, 0)
+
+        ndim = image.shape
+        if ndim_base[-2:] == ndim[-2:]:
+            if len(ndim) == 2:
+                image = np.expand_dims(image, 0)
+            elif len(ndim) > 3:
+                #raise ValueError("4-dimensional input images not supported.")
+                print('')
+                print('using the initial frame for early testing!!!!!')
+                print('remove line below before merging!!')
+                image = np.expand_dims(image[0, :, :], 0)
+            cube = np.vstack((cube, image))
+        else:
+            raise ValueError("Input images are of inconsistent size in x/y dimension.")
+    return cube
+
+
+def run_calwebb_detector1_steps(input_file, steps):
     """Run the steps of calwebb_detector1 specified in the steps
     dictionary on the input file
 
@@ -123,9 +193,24 @@ def run_calwebb_detector1(input_file, steps):
         whether a step should be run or not. Steps are run in the
         official calwebb_detector1 order.
     """
+    first_step_to_be_run = True
     for step_name in steps.keys():
-        if step[step_name]:
-            run_that_step!!
+        if steps[step_name]:
+            if first_step_to_be_run:
+                model = PIPELINE_STEP_MAPPING[step_name].call(input_file)
+                first_step_to_be_run = False
+            else:
+                model = PIPELINE_STEP_MAPPING[step_name].call(model)
+            suffix = step_name
+    output_filename = input_file.replace('.fits', '_{}.fits'.format(suffix))
+    print('in run_calwebb_detector1_steps, input and output filenames are:')
+    print(input_file)
+    print(output_filename)
+    print('STEPS RUN:', steps)
+    if suffix != 'rate':
+        model.save(output_filename)
+    else:
+        model[0].save(output_filename)
 
 
 def steps_to_run(input_file, all_steps, finished_steps):

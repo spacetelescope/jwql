@@ -11,11 +11,14 @@ Uses
 stuff
 """
 from astropy.io import fits
+import numpy as np
+
+from jwst.datamodels import dqflags
 
 from jwql.utils.utils import AMPLIFIER_BOUNDARIES
 
 
-def amplifier_info(filename):
+def amplifier_info(filename, omit_reference_pixels=True):
     """Calculate the number of amplifiers used to collect the data in a
     given file using the array size and exposure time of a single frame
     (This is needed because there is no header keyword specifying
@@ -76,6 +79,49 @@ def amplifier_info(filename):
                 raise ValueError(("Unable to determine number of amps used for exposure. 4-amp frametime"
                                   "is {}. 1-amp frametime is {}. Reported frametime is {}.")
                                  .format(amp4_time, amp1_time, frame_time))
+
+    if omit_reference_pixels:
+        # If requested, ignore reference pixels by adjusting the indexes of
+        # the amp boundaries.
+        with fits.open(filename) as hdu:
+            data_quality = hdu['DQ'].data
+
+        # Reference pixels should be flagged in the DQ array with the
+        # REFERENCE_PIXEL flag. Find the science pixels by looping for
+        # pixels that don't have that bit set.
+        scipix = np.where(data_quality & dqflags.pixel['REFERENCE_PIXEL'] == 0)
+        xmin = np.min(scipix[0])
+        ymin = np.min(scipix[1])
+        xmax = np.max(scipix[0]) + 1
+        ymax = np.max(scipix[1]) + 1
+
+        # Adjust the minimum and maximum x and y values if they are within
+        # the reference pixels
+        print('BEFORE: ', amp_bounds)
+        for key in amp_bounds:
+            bounds = amp_bounds[key]
+            prev_xmin, prev_ymin = bounds[0]
+            prev_xmax, prev_ymax = bounds[1]
+            print(prev_xmin, xmin)
+            if prev_xmin < xmin:
+                new_xmin = xmin
+            else:
+                new_xmin = prev_xmin
+            if prev_ymin < ymin:
+                new_ymin = ymin
+            else:
+                new_ymin = prev_ymin
+            if prev_xmax > xmax:
+                new_xmax = xmax
+            else:
+                new_xmax = prev_xmax
+            if prev_ymax > ymax:
+                new_ymax = ymax
+            else:
+                new_ymax = prev_ymax
+            amp_bounds[key] = [(new_xmin, new_ymin), (new_xmax, new_ymax)]
+
+        print("AFTER: ", amp_bounds)
     return num_amps, amp_bounds
 
 
