@@ -18,20 +18,15 @@ Use
         pytest -s test_api_views.py
 """
 
-import getpass
 import json
 import pytest
 import urllib.request
 
-from jwql.utils.utils import get_config
+from jwql.utils.utils import get_base_url
 
 
 # Determine if this module is being run in production or locally
-username = getpass.getuser()
-if username == get_config()['admin_account']:
-    base_url = 'https://dljwql.stsci.edu'
-else:
-    base_url = 'http://127.0.0.1:8000'
+base_url = get_base_url()
 
 urls = [
     'api/proposals/',  # all_proposals
@@ -43,8 +38,7 @@ urls = [
     'api/jw86700005001_02101_00001_guider1/preview_images/',  # preview_images_by_rootname
     'api/fgs/thumbnails/',  # thumbnails_by_instrument
     'api/86700/thumbnails/',  # thumbnails_by_proposal
-    'api/jw86700005001_02101_00001_guider1/thumbnails/'  # thumbnails_by_rootname
-    ]
+    'api/jw86700005001_02101_00001_guider1/thumbnails/']  # thumbnails_by_rootname
 urls = ['{}/{}'.format(base_url, url) for url in urls]
 
 
