@@ -1,0 +1,74 @@
+@keyframes lds-magnify {
+  0% {
+    -webkit-transform: translate(2px, 2px);
+    transform: translate(2px, 2px);
+  }
+  33.33% {
+    -webkit-transform: translate(102px, 2px);
+    transform: translate(102px, 2px);
+  }
+  66.66% {
+    -webkit-transform: translate(42px, 102px);
+    transform: translate(42px, 102px);
+  }
+  100% {
+    -webkit-transform: translate(2px, 2px);
+    transform: translate(2px, 2px);
+  }
+}
+@-webkit-keyframes lds-magnify {
+  0% {
+    -webkit-transform: translate(2px, 2px);
+    transform: translate(2px, 2px);
+  }
+  33.33% {
+    -webkit-transform: translate(102px, 2px);
+    transform: translate(102px, 2px);
+  }
+  66.66% {
+    -webkit-transform: translate(42px, 102px);
+    transform: translate(42px, 102px);
+  }
+  100% {
+    -webkit-transform: translate(2px, 2px);
+    transform: translate(2px, 2px);
+  }
+}
+.lds-magnify {
+  position: relative;
+}
+.lds-magnify > div {
+  -webkit-transform: scale(0.4);
+  transform: scale(0.4);
+  -webkit-transform-origin: 100px 100px;
+  transform-origin: 100px 100px;
+}
+.lds-magnify > div > div {
+  -webkit-animation: lds-magnify 1.5s linear infinite;
+  animation: lds-magnify 1.5s linear infinite;
+  position: absolute;
+}
+.lds-magnify > div > div div:nth-child(1) {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 12px solid #000000;
+  background: #ffd04f;
+}
+.lds-magnify > div > div div:nth-child(2) {
+  width: 17px;
+  height: 51px;
+  -webkit-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+  background: #000000;
+  border-radius: 0 0 8px 8px;
+  position: absolute;
+  top: 68px;
+  left: 85px;
+}
+.lds-magnify {
+  width: 200px !important;
+  height: 200px !important;
+  -webkit-transform: translate(-100px, -100px) scale(1) translate(100px, 100px);
+  transform: translate(-100px, -100px) scale(1) translate(100px, 100px);
+}
