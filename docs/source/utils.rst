@@ -3,7 +3,7 @@ utils
 *****
 
 engineering_database.py
---------------------
+-----------------------
 .. automodule:: jwql.utils.engineering_database
     :members:
     :undoc-members:

@@ -1,8 +1,8 @@
 #! /usr/bin/env python
-"""Module to interface the JWST Engineering Database.
+"""Module to interface the JWST DMS Engineering Database.
 
-This module provides ``jwql`` with functions to interface and query the
- JWST DMS Engineering Database.
+This module provides ``jwql`` with classes and functions to interface
+and query the JWST DMS Engineering Database.
 
 Authors
 -------
@@ -16,7 +16,9 @@ Use
 
     ::
 
-        from jwql.engineering_database import query_single_mnemonic
+        from jwql.utils.engineering_database import
+        query_single_mnemonic
+
         query_single_mnemonic(mnemonic_identifier, start_time, end_time)
 
     Required arguments:
@@ -27,8 +29,14 @@ Use
 
 Notes
 -----
-    This module is built on top of astroquery.mast and uses JWST-specific MAST services.
+    This module is built on top of astroquery.mast and uses
+    JWST-specific MAST services.
     The user has to provide a valid MAST authentication token.
+
+References
+----------
+    The MAST JWST EDB web portal is located at
+    https://mast.stsci.edu/portal/Mashup/Clients/JwstEdb/JwstEdb.html
 
 """
 import astropy
@@ -49,11 +57,29 @@ mast_edb_dictionary_service = 'Mast.JwstEdb.Dictionary'
 mast_edb_mnemonic_service = 'Mast.JwstEdb.Mnemonics'
 
 
-class EdbMnemonic():
-    """Class to hold and manipulate results of EngDB queries."""
+class EdbMnemonic:
+    """Class to hold and manipulate results of DMS EngDB queries."""
 
     def __init__(self, mnemonic_identifier, start_time, end_time, data, meta, info):
-        """Populate attributes."""
+        """Populate attributes.
+
+        Parameters
+        ----------
+        mnemonic_identifier : str
+            Telemetry mnemonic identifier
+        start_time : astropy.time.Time instance
+            Start time
+        end_time : astropy.time.Time instance
+            End time
+        data : astropy.table.Table
+            Table representation of the returned data.
+        meta : dict
+            Additional information returned by the query
+        info : dict
+            Auxiliary information on the mnemonic (description,
+            category, unit)
+
+        """
         self.mnemonic_identifier = mnemonic_identifier
         self.start_time = start_time
         self.end_time = end_time
@@ -67,13 +93,13 @@ class EdbMnemonic():
             self.mnemonic_identifier, len(self.data), self.start_time.isot,
             self.end_time.isot)
 
-    # def interpolate(self, date, **kwargs):
-    #     """Interpolate value at times specified in data argument."""
-    #     raise NotImplementedError
+    def interpolate(self, times, **kwargs):
+        """Interpolate value at specified times."""
+        raise NotImplementedError
 
 
 def process_mast_service_request_result(result):
-    """Parse the result of a MAST EDB query into a astropy data table and a meta dictionary.
+    """Parse the result of a MAST EDB query.
 
     Parameters
     ----------
@@ -82,10 +108,10 @@ def process_mast_service_request_result(result):
 
     Returns
     -------
-        data : astropy.table.Table
-            Table representation of the returned data.
-        meta : dict
-            Additional information returned by the query
+    data : astropy.table.Table
+        Table representation of the returned data.
+    meta : dict
+        Additional information returned by the query
 
     """
     json_data = result[0].json()
@@ -109,7 +135,16 @@ def process_mast_service_request_result(result):
 
 
 def get_all_mnemonic_identifiers():
-    """Return identifiers and meta data for all mnemonics in the DMS engineering database."""
+    """Return all mnemonics in the DMS engineering database.
+
+    Returns
+    -------
+    data : astropy.table.Table
+        Table representation of the mnemonic inventory.
+    meta : dict
+        Additional information returned by the query.
+
+    """
     out = Mast.service_request_async(mast_edb_mnemonic_service, {})
     data, meta = process_mast_service_request_result(out)
     return data, meta
@@ -120,13 +155,13 @@ def query_mnemonic_info(mnemonic_identifier):
 
     Parameters
     ----------
-    mnemonic_identifier: str
+    mnemonic_identifier : str
         Telemetry mnemonic identifier, e.g. 'SA_ZFGOUTFOV'
 
     Returns
     -------
-        info : dict
-            Object that contains the returned data
+    info : dict
+        Object that contains the returned data
 
     """
     parameters = {"mnemonic": "{}".format(mnemonic_identifier)}
@@ -136,7 +171,7 @@ def query_mnemonic_info(mnemonic_identifier):
 
 
 def query_single_mnemonic(mnemonic_identifier, start_time, end_time):
-    """Query the DMS EDB to return the mnemonic readings between start_time and end_time.
+    """Query DMS EDB to get the mnemonic readings in a time interval.
 
     Parameters
     ----------
@@ -149,8 +184,8 @@ def query_single_mnemonic(mnemonic_identifier, start_time, end_time):
 
     Returns
     -------
-        mnemonic : instance of EdbMnemonic
-            Object that contains the returned data
+    mnemonic : instance of EdbMnemonic
+        Object that contains the returned data
 
     """
     if not isinstance(start_time, astropy.time.core.Time):
