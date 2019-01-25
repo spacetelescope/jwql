@@ -17,6 +17,7 @@ Use
 import numpy as np
 
 from astropy.modeling import fitting, models
+from astropy.stats import sigma_clip
 from scipy.optimize import curve_fit
 from scipy.stats import sigmaclip
 
@@ -54,7 +55,7 @@ def double_gaussian_fit(x_values, y_values, input_params):
         [amplitude1, peak1, stdev1, amplitude2, peak2, stdev2]
     """
     params, cov = curve_fit(double_gaussian, x_values, y_values, input_params)
-    sigma = np.sqrt(diag(cov))
+    sigma = np.sqrt(np.diag(cov))
     return params, sigma
 
 
@@ -93,14 +94,14 @@ def gaussian1d_fit(x_values, y_values, params):
     return amplitude, peak, width
 
 
-def mean_image(file_list, sigma_threshold=3):
-    """Combine a list of images into a mean slope image,
-    using sigma-clipping
+def mean_image(cube, sigma_threshold=3):
+    """Combine a stack of 2D images into a mean slope image, using
+    sigma-clipping on a pixel-by-pixel basis
 
     Parameters
     ----------
-    file_list : list
-        List of filenames to be included in the mean calculations
+    cube : numpy.ndarray
+        3D array containing a stack of 2D images
 
     sigma_threshold : int
         Number of sigma to use when sigma-clipping values in each
@@ -114,32 +115,8 @@ def mean_image(file_list, sigma_threshold=3):
     stdev_image : numpy.ndarray
         2D sigma-clipped standard deviation image
     """
-    for i, input_file in enumerate(file_list):
-        model = datamodels.open(input_file)
-        image = model.data
-
-        # Stack all inputs together into a single 3D image cube
-        if i == 0:
-            ndim_base = image.shape
-            if len(ndim_base) == 3:
-                cube = copy.deepcopy(image)
-            elif len(ndim_base) == 2:
-                cube = np.expand_dims(image, 0)
-
-        ndim = image.shape
-        if ndim_base[-2:] == ndim[-2:]:
-            if len(ndim) == 2:
-                image = np.expand_dims(image, 0)
-            elif len(ndim) > 3:
-                raise ValueError("4-dimensional input images not supported.")
-            cube = np.vstack((cube, image))
-        else:
-            raise ValueError("Input images are of inconsistent size in x/y dimension.")
-
-    # Create mean and standard deviation images, using sigma-
-    # clipping on a pixel-by-pixel basis
     clipped_cube = sigma_clip(cube, sigma=sigma_threshold, axis=0, masked=False)
-    mean_image = np.mean(clipped_cube, axis=0)
+    mean_image = np.nanmean(clipped_cube, axis=0)
     std_image = np.nanstd(clipped_cube, axis=0)
     return mean_image, std_image
 
