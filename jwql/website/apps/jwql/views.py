@@ -47,7 +47,7 @@ from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
 from .forms import FileSearchForm
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_UPPERCASE
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
 
 
@@ -93,7 +93,7 @@ def archived_proposals(request, inst):
         Outgoing response sent to the webpage
     """
     # Ensure the instrument is correctly capitalized
-    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'archive.html'
     context = {'inst': inst,
@@ -119,7 +119,7 @@ def archived_proposals_ajax(request, inst):
         Outgoing response sent to the webpage
     """
     # Ensure the instrument is correctly capitalized
-    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'archive.html'
 
@@ -159,7 +159,7 @@ def archive_thumbnails(request, inst, proposal):
         Outgoing response sent to the webpage
     """
     # Ensure the instrument is correctly capitalized
-    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'thumbnails.html'
     context = {'inst': inst,
@@ -190,7 +190,7 @@ def archive_thumbnails_ajax(request, inst, proposal):
     """
 
     # Ensure the instrument is correctly capitalized
-    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     data = thumbnails_ajax(inst, proposal)
 
@@ -272,14 +272,14 @@ def instrument(request, inst):
         Outgoing response sent to the webpage
     """
     # Ensure the instrument is correctly capitalized
-    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'instrument.html'
-    url_dict = {'FGS': 'http://jwst-docs.stsci.edu/display/JTI/Fine+Guidance+Sensor%2C+FGS?q=fgs',
-                'MIRI': 'http://jwst-docs.stsci.edu/display/JTI/Mid-Infrared+Instrument%2C+MIRI',
-                'NIRISS': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Imager+and+Slitless+Spectrograph',
-                'NIRSpec': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Spectrograph',
-                'NIRCam': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Camera'}
+    url_dict = {'fgs': 'http://jwst-docs.stsci.edu/display/JTI/Fine+Guidance+Sensor%2C+FGS?q=fgs',
+                'miri': 'http://jwst-docs.stsci.edu/display/JTI/Mid-Infrared+Instrument%2C+MIRI',
+                'niriss': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Imager+and+Slitless+Spectrograph',
+                'nirspec': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Spectrograph',
+                'nircam': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Camera'}
 
     doc_url = url_dict[inst]
 
@@ -306,7 +306,7 @@ def unlooked_images(request, inst):
         Outgoing response sent to the webpage
     """
     # Ensure the instrument is correctly capitalized
-    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'thumbnails.html'
     context = thumbnails(inst)
@@ -332,7 +332,7 @@ def view_header(request, inst, file):
         Outgoing response sent to the webpage
     """
     # Ensure the instrument is correctly capitalized
-    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'view_header.html'
     header = get_header_info(file)
@@ -366,7 +366,7 @@ def view_image(request, inst, file_root, rewrite=False):
         Outgoing response sent to the webpage
     """
     # Ensure the instrument is correctly capitalized
-    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
