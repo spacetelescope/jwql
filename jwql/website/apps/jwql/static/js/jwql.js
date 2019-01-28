@@ -45,9 +45,11 @@ function determine_page_title(instrument, proposal) {
 };
 
 
-function search(n_proposals) {
+function search() {
+
     // Find all proposal elements
     var proposals = document.getElementsByClassName("proposal");
+    var n_proposals = document.getElementsByClassName("proposal").length;
 
     // Determine the current search value
     var search_value = document.getElementById("search_box").value;
@@ -194,12 +196,12 @@ function update_filter_options(data) {
 
 /**
  * Updates the img_show_count component
- * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ * @param {Integer} count - The count to display
+ * @param {String} type - The type of the count (e.g. "activities")
  */
-function update_show_count(data) {
+function update_show_count(count, type) {
 
-    num_rootnames = Object.keys(data.file_data).length;
-    content = 'Showing ' + num_rootnames + '/' + num_rootnames + ' activities';
+    content = 'Showing ' + count + '/' + count + ' ' + type;
     content += '<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">';
     content += '<span class="help-tip mx-2">i</span></a>';
     $("#img_show_count")[0].innerHTML = content;
@@ -237,7 +239,7 @@ function update_thumbnails_page(inst, proposal, base_url) {
         success: function(data){
 
             // Perform various updates to divs
-            update_show_count(data);
+            update_show_count(Object.keys(data.file_data).length, 'activities');
             update_thumbnail_array(data);
             update_filter_options(data);
             update_sort_options(data);

@@ -20,7 +20,7 @@
 
                 // Update the number of proposals displayed
                 num_proposals = data.thumbnails.proposals.length;
-                $("#img_show_count")[0].innerText = 'Showing ' + num_proposals + '/' + num_proposals + ' proposals';
+                update_show_count(num_proposals, 'proposals')
 
                 // Add content to the proposal array div
                 for (var i = 0; i < data.thumbnails.proposals.length; i++) {
@@ -32,7 +32,7 @@
 
                     // Build div content
                     content = '<div class="proposal text-center">';
-                    content += '<a href="/' + inst + '/archive/' + prop + '/" id="proposal' + i + '" proposal="' + prop + '"';
+                    content += '<a href="/' + inst + '/archive/' + prop + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
                     content += '<span class="helper"></span><img src="{{ static("thumbnails/") }}' + thumb + '" alt="" width=100%>';
                     content += '<div class="proposal-color-fill" ></div>';
                     content += '<div class="proposal-info">';
@@ -63,18 +63,13 @@
         <h3 id='title'>Archived {{ inst }} Images</h3>
 
         <p id='img_show_count'></p>
-            <a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">
-                <span class="help-tip mx-2">i</span>
-            </a>
-        </p>
-
         <hr>
 
         <!-- Filter and sort options -->
         <div class="d-flex flex-row">
             <!-- Search Bar -->
             <div class="input-group mb-3">
-              <input id='search_box' type="text" class="form-control" placeholder="Search" aria-label="Search by proposal" oninput="search('{{ num_proposals }}');">
+              <input id='search_box' type="text" class="form-control" placeholder="Search" aria-label="Search by proposal" oninput="search();">
               <div class="input-group-append">
                 <span class="input-group-text"><span class="fas fa-search" aria-hidden="true"></span></span>
                 <!--<button class="btn btn-primary" type="button"><span class="fas fa-search" aria-hidden="true"></span></button>-->

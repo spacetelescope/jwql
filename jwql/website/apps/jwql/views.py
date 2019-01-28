@@ -36,6 +36,7 @@ Dependencies
 import os
 
 from authlib.django.client import OAuth
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
 from .data_containers import get_acknowledgements
@@ -45,9 +46,9 @@ from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
+from .data_containers import thumbnails_ajax
 from .forms import FileSearchForm
 from .oauth import auth_info, auth_required, JWQL_OAUTH
-from jwql.utils.utils import get_base_url, get_config, JWST_INSTRUMENTS, MONITORS, INSTRUMENTS_CAPITALIZED
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
@@ -94,6 +95,32 @@ def archived_proposals(request, inst):
     inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
 
     template = 'archive.html'
+    context = {'inst': inst,
+               'tools': MONITORS,
+               'base_url': get_base_url()}
+
+    return render(request, template, context)
+
+
+def archived_proposals_ajax(request, inst):
+    """Generate the page listing all archived proposals in the database
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    # Ensure the instrument is correctly capitalized
+    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+
+    template = 'archive.html'
 
     # For each proposal, get the first available thumbnail and determine
     # how many files there are
@@ -105,11 +132,11 @@ def archived_proposals(request, inst):
                'all_filenames': all_filenames,
                'tools': MONITORS,
                'num_proposals': proposal_info['num_proposals'],
-               'zipped_thumbnails': zip(proposal_info['proposals'],
-                                        proposal_info['thumbnail_paths'],
-                                        proposal_info['num_files'])}
+               'thumbnails': {'proposals': proposal_info['proposals'],
+                              'thumbnail_paths': proposal_info['thumbnail_paths'],
+                              'num_files': proposal_info['num_files']}}
 
-    return render(request, template, context)
+    return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
 def archive_thumbnails(request, inst, proposal):
@@ -134,21 +161,26 @@ def archive_thumbnails(request, inst, proposal):
     inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
 
     template = 'thumbnails.html'
-    context = thumbnails(inst, proposal)
+    context = {'inst': inst,
+               'prop': proposal,
+               'tools': MONITORS,
+               'base_url': get_base_url()}
 
     return render(request, template, context)
 
-
-def authorize(request):
-    """Spawn the authentication process for the user
-
-    The authentication process involves retreiving an access token
-    from ``auth.mast`` and porting the data to a cookie.
+  
+def archive_thumbnails_ajax(request, inst, proposal):
+    """Generate the page listing all archived images in the database
+    for a certain proposal
 
     Parameters
     ----------
     request : HttpRequest object
         Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    proposal : str
+        Number of observing proposal
 
     Returns
     -------
@@ -156,6 +188,31 @@ def authorize(request):
         Outgoing response sent to the webpage
     """
 
+    # Ensure the instrument is correctly capitalized
+    inst = INSTRUMENTS_CAPITALIZED[inst.lower()]
+
+    data = thumbnails_ajax(inst, proposal)
+
+    return JsonResponse(data, json_dumps_params={'indent': 2})
+ 
+
+def authorize(request):
+    """Spawn the authentication process for the user
+
+    The authentication process involves retreiving an access token
+    from ``auth.mast`` and porting the data to a cookie.
+    
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+        
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    
     # Get auth.mast token
     token = JWQL_OAUTH.mast_auth.authorize_access_token(request, headers={'Accept': 'application/json'})
 
@@ -267,8 +324,8 @@ def instrument(request, inst):
     doc_url = url_dict[inst]
 
     context = {'inst': inst,
-                'tools': MONITORS,
-                'doc_url': doc_url}
+               'tools': MONITORS,
+               'doc_url': doc_url}
 
     return render(request, template, context)
 
