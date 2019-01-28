@@ -203,6 +203,13 @@
     display: inline-block;
 }
 
+#loading {
+  text-align:center;
+  margin: 0 auto;
+  width: 200px;
+  z-index: 1000;
+}
+
 .monitor-name {
     background-color: #c85108;
     color: white;

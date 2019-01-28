@@ -67,7 +67,7 @@ def get_acknowledgements():
             index = i
 
     # Parse out the list of individuals
-    acknowledgements = data[index+1:]
+    acknowledgements = data[index + 1:]
     acknowledgements = [item.strip().replace('- ', '').split(' [@')[0].strip() for item in acknowledgements]
 
     return acknowledgements
@@ -148,6 +148,28 @@ def get_dashboard_components():
     dashboard_html['Cron Job Monitor'] = cron_status_table_html
 
     return dashboard_components, dashboard_html
+
+
+def get_expstart(rootname):
+    """Return the exposure start time (``expstart``) for the given
+    group of files.
+
+    The ``expstart`` is gathered from a query to the
+    ``astroquery.mast`` service.
+
+    Parameters
+    ----------
+    rootname : str
+        The rootname of the observation of interest (e.g.
+        ``jw86700006001_02101_00006_guider1``).
+
+    Returns
+    -------
+    expstart : float
+        The exposure start time of the observation (in MJD).
+    """
+
+    return 5000.00
 
 
 def get_filenames_by_instrument(instrument):
@@ -635,55 +657,26 @@ def thumbnails(inst, proposal=None):
     if proposal is not None:
         full_ids = [f for f in full_ids if f[2:7] == proposal]
 
-    # Group files by ID
-    file_data = []
     detectors = []
     proposals = []
     for i, file_id in enumerate(full_ids):
-        suffixes = []
-        count = 0
         for file in filepaths:
             if '_'.join(file.split('/')[-1].split('_')[:-1]) == file_id:
-                count += 1
 
-                # Parse filename
+                # Parse filename to get program_id
                 try:
-                    file_dict = filename_parser(file)
+                    program_id = filename_parser(file)['program_id']
+                    detector = filename_parser(file)['detector']
                 except ValueError:
                     # Temporary workaround for noncompliant files in filesystem
-                    file_dict = {'activity': file_id[17:19],
-                                 'detector': file_id[26:],
-                                 'exposure_id': file_id[20:25],
-                                 'observation': file_id[7:10],
-                                 'parallel_seq_id': file_id[16],
-                                 'program_id': file_id[2:7],
-                                 'suffix': file.split('/')[-1].split('.')[0].split('_')[-1],
-                                 'visit': file_id[10:13],
-                                 'visit_group': file_id[14:16]}
-
-                # Determine suffix
-                suffix = file_dict['suffix']
-                suffixes.append(suffix)
-
-                hdr = fits.getheader(file, ext=0)
-                exp_start = hdr['EXPSTART']
-
-        suffixes = list(set(suffixes))
+                    program_id = nfile_id[2:7]
+                    detector = file_id[26:]
 
         # Add parameters to sort by
-        if file_dict['detector'] not in detectors and \
-           not file_dict['detector'].startswith('f'):
-            detectors.append(file_dict['detector'])
-        if file_dict['program_id'] not in proposals:
-            proposals.append(file_dict['program_id'])
-
-        file_dict['exp_start'] = exp_start
-        file_dict['suffixes'] = suffixes
-        file_dict['file_count'] = count
-        file_dict['file_root'] = file_id
-
-        file_data.append(file_dict)
-    file_indices = np.arange(len(file_data))
+        if detector not in detectors and not detector.startswith('f'):
+            detectors.append(detector)
+        if program_id not in proposals:
+            proposals.append(program_id)
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the
@@ -695,11 +688,90 @@ def thumbnails(inst, proposal=None):
                           'proposal': proposals}
 
     dict_to_render = {'inst': inst,
-                      'all_filenames': [os.path.basename(f) for f in filepaths],
                       'tools': MONITORS,
-                      'thumbnail_zipped_list': zip(file_indices, file_data),
                       'dropdown_menus': dropdown_menus,
-                      'n_fileids': len(file_data),
                       'prop': proposal}
 
     return dict_to_render
+
+
+def thumbnails_ajax(inst, proposal=None):
+    """Generate a page that provides data necessary to render the
+    ``thumbnails`` template.
+
+    Parameters
+    ----------
+    inst : str
+        Name of JWST instrument
+    proposal : str (optional)
+        Number of APT proposal to filter
+
+    Returns
+    -------
+    data_dict : dict
+        Dictionary of data needed for the ``thumbnails`` template
+    """
+
+    # Get the available files for the instrument
+    filepaths = get_filenames_by_instrument(inst)
+    if proposal is not None:
+        filepaths = split_files(filepaths, 'archive')
+    else:
+        filepaths = split_files(filepaths, 'unlooked')
+
+    # Get set of unique rootnames
+    rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filepaths])
+
+    # If the proposal is specified (i.e. if the page being loaded is
+    # an archive page), only collect data for given proposal
+    if proposal is not None:
+        rootnames = [rootname for rootname in rootnames if rootname[2:7] == proposal]
+
+    # Initialize dictionary that will contain all needed data
+    data_dict = {}
+    data_dict['inst'] = inst
+    data_dict['file_data'] = {}
+
+    # Gather data for each rootname
+    for rootname in rootnames:
+
+        # Parse filename
+        try:
+            filename_dict = filename_parser(rootname)
+        except ValueError:
+            # Temporary workaround for noncompliant files in filesystem
+            filename_dict = {'activity': file_id[17:19],
+                             'detector': file_id[26:],
+                             'exposure_id': file_id[20:25],
+                             'observation': file_id[7:10],
+                             'parallel_seq_id': file_id[16],
+                             'program_id': file_id[2:7],
+                             'visit': file_id[10:13],
+                             'visit_group': file_id[14:16]}
+
+        # Get list of available filenames
+        available_files = get_filenames_by_rootname(rootname)
+
+        # Add data to dictionary
+        data_dict['file_data'][rootname] = {}
+        data_dict['file_data'][rootname]['filename_dict'] = filename_dict
+        data_dict['file_data'][rootname]['available_files'] = available_files
+        data_dict['file_data'][rootname]['expstart'] = get_expstart(rootname)
+        data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for filename in available_files]
+
+    # Extract information for sorting with dropdown menus
+    # (Don't include the proposal as a sorting parameter if the
+    # proposal has already been specified)
+    detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for rootname in list(data_dict['file_data'].keys())]
+    proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for rootname in list(data_dict['file_data'].keys())]
+    if proposal is not None:
+        dropdown_menus = {'detector': detectors}
+    else:
+        dropdown_menus = {'detector': detectors,
+                          'proposal': proposals}
+
+    data_dict['tools'] = MONITORS
+    data_dict['dropdown_menus'] = dropdown_menus
+    data_dict['prop'] = proposal
+
+    return data_dict
