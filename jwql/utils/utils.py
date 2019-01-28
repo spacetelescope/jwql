@@ -84,7 +84,8 @@ def filename_parser(filename):
     if jwst_file is not None:
         filename_dict = jwst_file.groupdict()
     else:
-        raise ValueError('Provided file {} does not follow JWST naming conventions (jw<PPPPP><OOO><VVV>_<GGSAA>_<EEEEE>_<detector>_<suffix>.fits)'.format(filename))
+        raise ValueError('Provided file {} does not follow JWST naming conventions '
+                         '(jw<PPPPP><OOO><VVV>_<GGSAA>_<EEEEE>_<detector>_<suffix>.fits)'.format(filename))
 
     return filename_dict
 
