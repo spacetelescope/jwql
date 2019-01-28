@@ -20,7 +20,8 @@ Use
 
         from django.urls import path
         from . import views
-        urlpatterns = [path('web/path/to/view/', views.view_name, name='view_name')]
+        urlpatterns = [path('web/path/to/view/', views.view_name,
+        name='view_name')]
 
 References
 ----------
@@ -218,7 +219,8 @@ def dashboard(request):
                'inst_list': JWST_INSTRUMENT_NAMES,
                'tools': MONITORS,
                'outputs': output_dir,
-               'filesystem_html': os.path.join(output_dir, 'monitor_filesystem', 'filesystem_monitor.html'),
+               'filesystem_html': os.path.join(output_dir, 'monitor_filesystem',
+                                               'filesystem_monitor.html'),
                'dashboard_components': dashboard_components,
                'dashboard_html': dashboard_html}
 
@@ -281,7 +283,7 @@ def instrument(request, inst):
                 'nirspec': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Spectrograph',
                 'nircam': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Camera'}
 
-    doc_url = url_dict[inst]
+    doc_url = url_dict[inst.lower()]
 
     context = {'inst': inst,
                'tools': MONITORS,

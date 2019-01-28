@@ -23,8 +23,9 @@ import pytest
 from jwql.jwql_monitors import monitor_mast as mm
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 
+
 def test_astroquery_mast():
-    """Test to see if the astroquery.mast service can complete a request"""
+    """Test if the astroquery.mast service can complete a request"""
     service = 'Mast.Caom.Filtered'
     params = {'columns': 'COUNT_BIG(*)', 'filters': [], 'pagesize': 1,
               'page': 1}

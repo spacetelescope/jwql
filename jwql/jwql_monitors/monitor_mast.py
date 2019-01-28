@@ -1,5 +1,5 @@
-"""This module is home to a suite of MAST queries that gather bulk properties
-of available JWST data for JWQL
+"""This module is home to a suite of MAST queries that gather bulk
+properties of available JWST data for JWQL.
 
 Authors
 -------
@@ -39,12 +39,13 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
     Parameters
     ----------
     instrument: str
-        The instrument name, i.e. ['NIRISS','NIRCam','NIRSpec','MIRI','FGS']
+        The instrument name, i.e. one of ['niriss','nircam','nirspec',
+        'miri','fgs']
     dataproduct: sequence, str
         The type of data product to search
     add_filters: dict
-        The ('paramName':'values') pairs to include in the 'filters' argument
-        of the request e.g. add_filters = {'filter':'GR150R'}
+        The ('paramName':'values') pairs to include in the 'filters'
+        argument of the request e.g. add_filters = {'filter':'GR150R'}
     add_requests: dict
         The ('request':'value') pairs to include in the request
         e.g. add_requests = {'pagesize':1, 'page':1}
@@ -122,7 +123,8 @@ def instrument_keywords(instrument, caom=False):
     Parameters
     ----------
     instrument: str
-        The instrument name, i.e. ['NIRISS','NIRCam','NIRSpec','MIRI','FGS']
+        The instrument name, i.e. one of ['niriss','nircam','nirspec',
+        'miri','fgs']
     caom: bool
         Query CAOM service
 
@@ -226,7 +228,8 @@ def jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
             f.close()
         set_permissions(script_outfile)
 
-        logging.info('Saved Bokeh components files: {}_component.html and {}_component.js'.format(output_filename, output_filename))
+        logging.info('Saved Bokeh components files: {}_component.html and {}_component.js'.format(
+            output_filename, output_filename))
 
     # Melt the table
     table = pd.melt(table, id_vars=['instrument'],

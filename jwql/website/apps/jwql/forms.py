@@ -45,7 +45,8 @@ import os
 from django import forms
 from django.shortcuts import redirect
 
-from jwql.utils.utils import get_config, filename_parser, INSTRUMENTS_SHORTHAND
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.utils import get_config, filename_parser
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
@@ -99,7 +100,7 @@ class FileSearchForm(forms.Form):
                 if len(set(all_instruments)) > 1:
                     raise forms.ValidationError('Cannot return result for proposal with multiple instruments.')
 
-                self.instrument = INSTRUMENTS_SHORTHAND[all_instruments[0]]
+                self.instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[all_instruments[0]]
             else:
                 raise forms.ValidationError('Proposal {} not in the filesystem.'.format(search))
 
@@ -114,7 +115,7 @@ class FileSearchForm(forms.Form):
                 raise forms.ValidationError('Fileroot {} not in the filesystem.'.format(search))
 
             instrument = search.split('_')[-1][:3]
-            self.instrument = INSTRUMENTS_SHORTHAND[instrument]
+            self.instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[instrument]
 
         return self.cleaned_data['search']
 
