@@ -45,7 +45,7 @@ from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .forms import FileSearchForm
-from jwql.utils.utils import get_config, JWST_INSTRUMENTS, MONITORS, INSTRUMENTS_CAPITALIZED
+from jwql.utils.utils import get_config, JWST_INSTRUMENT_NAMES, MONITORS, INSTRUMENTS_CAPITALIZED
 
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -68,7 +68,7 @@ def about(request):
     acknowledgements = get_acknowledgements()
     context = {'acknowledgements': acknowledgements,
                'inst': '',
-               'inst_list': JWST_INSTRUMENTS,
+               'inst_list': JWST_INSTRUMENT_NAMES,
                'tools': MONITORS}
 
     return render(request, template, context)
@@ -156,7 +156,7 @@ def dashboard(request):
     dashboard_components, dashboard_html = get_dashboard_components()
 
     context = {'inst': '',
-               'inst_list': JWST_INSTRUMENTS,
+               'inst_list': JWST_INSTRUMENT_NAMES,
                'tools': MONITORS,
                'outputs': output_dir,
                'filesystem_html': os.path.join(output_dir, 'monitor_filesystem', 'filesystem_monitor.html'),
@@ -190,7 +190,7 @@ def home(request):
 
     template = 'home.html'
     context = {'inst': '',
-               'inst_list': JWST_INSTRUMENTS,
+               'inst_list': JWST_INSTRUMENT_NAMES,
                'tools': MONITORS,
                'form': form}
 

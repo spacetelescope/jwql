@@ -24,9 +24,10 @@ from bokeh.embed import components
 from bokeh.io import save, output_file
 import pandas as pd
 
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import get_config, JWST_DATAPRODUCTS, JWST_INSTRUMENTS
+from jwql.utils.utils import get_config
 from jwql.utils.plotting import bar_chart
 
 
@@ -65,8 +66,8 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
         dataproduct = [dataproduct]
 
     # Make sure the instrument is supported
-    if instrument.lower() not in [ins.lower() for ins in JWST_INSTRUMENTS]:
-        raise TypeError('Supported instruments include:', JWST_INSTRUMENTS)
+    if instrument.lower() not in [ins.lower() for ins in JWST_INSTRUMENT_NAMES]:
+        raise TypeError('Supported instruments include:', JWST_INSTRUMENT_NAMES)
 
     # CAOM service
     if caom:
@@ -139,7 +140,7 @@ def instrument_keywords(instrument, caom=False):
     return keywords
 
 
-def jwst_inventory(instruments=JWST_INSTRUMENTS,
+def jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
                    dataproducts=['image', 'spectrum', 'cube'],
                    caom=False, plot=False):
     """Gather a full inventory of all JWST data in each instrument
@@ -244,12 +245,12 @@ def monitor_mast():
     logging.info('Beginning database monitoring.')
 
     # Perform inventory of the JWST service
-    jwst_inventory(instruments=JWST_INSTRUMENTS,
+    jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
                    dataproducts=['image', 'spectrum', 'cube'],
                    caom=False, plot=True)
 
     # Perform inventory of the CAOM service
-    jwst_inventory(instruments=JWST_INSTRUMENTS,
+    jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
                    dataproducts=['image', 'spectrum', 'cube'],
                    caom=True, plot=True)
 
