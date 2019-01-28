@@ -16,8 +16,8 @@ Use
     ::
 
         pytest -s test_edb_interface.py
-
 """
+
 from astropy.time import Time
 
 from ..utils.engineering_database import query_single_mnemonic, get_all_mnemonic_identifiers
