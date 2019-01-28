@@ -26,12 +26,9 @@ import os
 import re
 
 from jwql.utils import permissions
+from jwql.utils.constants import FILE_SUFFIX_TYPES
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-
-
-# JWST_INSTRUMENTS
-
 
 def ensure_dir_exists(fullpath):
     """Creates dirs from ``fullpath`` if they do not already exist.
