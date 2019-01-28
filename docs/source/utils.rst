@@ -2,6 +2,12 @@
 utils
 *****
 
+engineering_database.py
+-----------------------
+.. automodule:: jwql.utils.engineering_database
+    :members:
+    :undoc-members:
+
 logging_functions.py
 --------------------
 .. automodule:: jwql.utils.logging_functions
