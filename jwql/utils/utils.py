@@ -31,6 +31,7 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 
 FILE_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled',
                      'i2d', 'x1d', 's2d', 's3d', 'dark', 'ami', 'crf']
+# JWST_INSTRUMENTS = 0
 JWST_INSTRUMENT_NAMES = sorted(['niriss', 'nircam', 'nirspec', 'miri', 'fgs'])
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
                      'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
