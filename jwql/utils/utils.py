@@ -17,7 +17,7 @@ Use
 References
 ----------
 
-    Filename parser modifed from Joe Hunkeler:
+    Filename parser modified from Joe Hunkeler:
     https://gist.github.com/jhunkeler/f08783ca2da7bfd1f8e9ee1d207da5ff
  """
 
@@ -27,46 +27,9 @@ import os
 import re
 
 from jwql.utils import permissions
+from jwql.utils.constants import FILE_SUFFIX_TYPES
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-
-FILE_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled',
-                     'i2d', 'x1d', 's2d', 's3d', 'dark', 'ami', 'crf',
-                     'crfints']
-JWST_INSTRUMENTS = sorted(['NIRISS', 'NIRCam', 'NIRSpec', 'MIRI', 'FGS'])
-JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
-                     'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
-MAST_SERVICES = ['Mast.Jwst.Filtered.Nircam', 'Mast.Jwst.Filtered.Nirspec',
-                 'Mast.Jwst.Filtered.Niriss', 'Mast.Jwst.Filtered.Miri',
-                 'Mast.Jwst.Filtered.Fgs']
-MONITORS = {
-    'FGS': ['Bad Pixel Monitor'],
-    'MIRI': ['Dark Current Monitor',
-             'Bad Pixel Monitor', 'Cosmic Ray Monitor', 'Photometry Monitor',
-             'TA Failure Monitor', 'Blind Pointing Accuracy Monitor',
-             'Filter and Calibration Lamp Monitor', 'Thermal Emission Monitor'],
-    'NIRCam': ['Bias Monitor',
-               'Readnoise Monitor', 'Gain Level Monitor',
-               'Mean Dark Current Rate Monitor', 'Photometric Stability Monitor'],
-    'NIRISS': ['Bad Pixel Monitor',
-               'Readnoise Monitor', 'AMI Calibrator Monitor', 'TSO RMS Monitor'],
-    'NIRSpec': ['Optical Short Monitor', 'Target Acquisition Monitor',
-                'Detector Health Monitor', 'Ref Pix Monitor',
-                'Internal Lamp Monitor', 'Instrument Model Updates',
-                'Failed-open Shutter Monitor']}
-NIRCAM_SHORTWAVE_DETECTORS = ['NRCA1', 'NRCA2', 'NRCA3', 'NRCA4',
-                              'NRCB1', 'NRCB2', 'NRCB3', 'NRCB4']
-NIRCAM_LONGWAVE_DETECTORS = ['NRCA5', 'NRCB5']
-INSTRUMENTS_SHORTHAND = {'gui': 'FGS',
-                         'mir': 'MIRI',
-                         'nis': 'NIRISS',
-                         'nrc': 'NIRCam',
-                         'nrs': 'NIRSpec'}
-INSTRUMENTS_CAPITALIZED = {'fgs': 'FGS',
-                           'miri': 'MIRI',
-                           'nircam': 'NIRCam',
-                           'niriss': 'NIRISS',
-                           'nirspec': 'NIRSpec'}
 
 
 def ensure_dir_exists(fullpath):
