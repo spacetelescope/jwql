@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://i.imgur.com/MwnjFVM.png" width="400"/>
+  <img src="logos/jwql_logo_full_transparent.png" width="400"/>
 </p>
 
 # The JWST Quicklook Application (`JWQL`)

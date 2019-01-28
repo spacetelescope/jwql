@@ -21,6 +21,7 @@ References
     https://gist.github.com/jhunkeler/f08783ca2da7bfd1f8e9ee1d207da5ff
  """
 
+import getpass
 import json
 import os
 import re
@@ -30,13 +31,14 @@ from jwql.utils import permissions
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 FILE_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled',
-                     'i2d', 'x1d', 's2d', 's3d', 'dark', 'ami', 'crf']
+                     'i2d', 'x1d', 's2d', 's3d', 'dark', 'ami', 'crf',
+                     'crfints']
 JWST_INSTRUMENTS = sorted(['NIRISS', 'NIRCam', 'NIRSpec', 'MIRI', 'FGS'])
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
                      'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
 MAST_SERVICES = ['Mast.Jwst.Filtered.Nircam', 'Mast.Jwst.Filtered.Nirspec',
-                'Mast.Jwst.Filtered.Niriss', 'Mast.Jwst.Filtered.Miri',
-                'Mast.Jwst.Filtered.Fgs']
+                 'Mast.Jwst.Filtered.Niriss', 'Mast.Jwst.Filtered.Miri',
+                 'Mast.Jwst.Filtered.Fgs']
 MONITORS = {
     'FGS': ['Bad Pixel Monitor'],
     'MIRI': ['Dark Current Monitor',
@@ -99,58 +101,78 @@ def filename_parser(filename):
     file_root_name = (len(filename.split('.')) < 2)
 
     # Stage 1 and 2 filenames, e.g. "jw80500012009_01101_00012_nrcalong_uncal.fits"
-    stage_1_and_2 = r"jw" \
-                     "(?P<program_id>\d{5})"\
-                     "(?P<observation>\d{3})"\
-                     "(?P<visit>\d{3})"\
-                     "_(?P<visit_group>\d{2})"\
-                     "(?P<parallel_seq_id>\d{1})"\
-                     "(?P<activity>\w{2})"\
-                     "_(?P<exposure_id>\d+)"\
-                     "_(?P<detector>((?!_)[\w])+)"
-    if not file_root_name:
-        stage_1_and_2 += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
+    stage_1_and_2 = \
+        r"jw" \
+        r"(?P<program_id>\d{5})"\
+        r"(?P<observation>\d{3})"\
+        r"(?P<visit>\d{3})"\
+        r"_(?P<visit_group>\d{2})"\
+        r"(?P<parallel_seq_id>\d{1})"\
+        r"(?P<activity>\w{2})"\
+        r"_(?P<exposure_id>\d+)"\
+        r"_(?P<detector>((?!_)[\w])+)"
 
-    # Stage 3 filenames, e.g. "jw80600-o009_t001_miri_f1130w_i2d.fits"
-    stage_3 = r"jw" \
-               "(?P<program_id>\d{5})"\
-               "-(?P<ac_id>(o|c|a|r)\d{3})"\
-               "_(?P<target_id>(t|s)\d{3})"\
-               "_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
-               "_(?P<optical_elements>((?!_)[\w-])+)"
-    if not file_root_name:
-        stage_3 += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
+    # Stage 3 filenames with target ID, e.g. "jw80600-o009_t001_miri_f1130w_i2d.fits"
+    stage_3_target_id = \
+        r"jw" \
+        r"(?P<program_id>\d{5})"\
+        r"-(?P<ac_id>(o|c|a|r)\d{3,4})"\
+        r"_(?P<target_id>(t)\d{3})"\
+        r"_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
+        r"_(?P<optical_elements>((?!_)[\w-])+)"
 
-    # Stage 3 filenames with epoch, e.g. "jw80600-o009_t001-epoch1_miri_f1130w_i2d.fits"
-    stage_3_with_epoch = r"jw" \
-                           "(?P<program_id>\d{5})"\
-                           "-(?P<ac_id>(o|c|a|r)\d{3})"\
-                           "_(?P<target_id>(t|s)\d{3})"\
-                           "-epoch(?P<epoch>\d{1})"\
-                           "_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
-                           "_(?P<optical_elements>((?!_)[\w-])+)"
-    if not file_root_name:
-        stage_3_with_epoch += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
+    # Stage 3 filenames with source ID, e.g. "jw80600-o009_s00001_miri_f1130w_i2d.fits"
+    stage_3_source_id = \
+        r"jw" \
+        r"(?P<program_id>\d{5})"\
+        r"-(?P<ac_id>(o|c|a|r)\d{3,4})"\
+        r"_(?P<source_id>(s)\d{5})"\
+        r"_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
+        r"_(?P<optical_elements>((?!_)[\w-])+)"
+
+    # Stage 3 filenames with target ID and epoch, e.g. "jw80600-o009_t001-epoch1_miri_f1130w_i2d.fits"
+    stage_3_target_id_epoch = \
+        r"jw" \
+        r"(?P<program_id>\d{5})"\
+        r"-(?P<ac_id>(o|c|a|r)\d{3,4})"\
+        r"_(?P<target_id>(t)\d{3})"\
+        r"-epoch(?P<epoch>\d{1})"\
+        r"_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
+        r"_(?P<optical_elements>((?!_)[\w-])+)"
+
+    # Stage 3 filenames with source ID and epoch, e.g. "jw80600-o009_s00001-epoch1_miri_f1130w_i2d.fits"
+    stage_3_source_id_epoch = \
+        r"jw" \
+        r"(?P<program_id>\d{5})"\
+        r"-(?P<ac_id>(o|c|a|r)\d{3,4})"\
+        r"_(?P<source_id>(s)\d{5})"\
+        r"-epoch(?P<epoch>\d{1})"\
+        r"_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
+        r"_(?P<optical_elements>((?!_)[\w-])+)"
 
     # Time series filenames, e.g. "jw00733003001_02101_00002-seg001_nrs1_rate.fits"
-    time_series = r"jw" \
-                   "(?P<program_id>\d{5})"\
-                   "(?P<observation>\d{3})"\
-                   "(?P<visit>\d{3})"\
-                   "_(?P<visit_group>\d{2})"\
-                   "(?P<parallel_seq_id>\d{1})"\
-                   "(?P<activity>\w{2})"\
-                   "_(?P<exposure_id>\d+)"\
-                   "-seg(?P<segment>\d{3})"\
-                   "_(?P<detector>\w+)"
-    if not file_root_name:
-        time_series += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
+    time_series = \
+        r"jw" \
+        r"(?P<program_id>\d{5})"\
+        r"(?P<observation>\d{3})"\
+        r"(?P<visit>\d{3})"\
+        r"_(?P<visit_group>\d{2})"\
+        r"(?P<parallel_seq_id>\d{1})"\
+        r"(?P<activity>\w{2})"\
+        r"_(?P<exposure_id>\d+)"\
+        r"-seg(?P<segment>\d{3})"\
+        r"_(?P<detector>\w+)"
 
     # Build list of filename types
-    filename_types = [stage_1_and_2, stage_3, stage_3_with_epoch, time_series]
+    filename_types = [stage_1_and_2, stage_3_target_id, stage_3_source_id, stage_3_target_id_epoch, stage_3_source_id_epoch, time_series]
 
     # Try to parse the filename
     for filename_type in filename_types:
+
+        # If full filename, try using suffix
+        if not file_root_name:
+            filename_type += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
+
         elements = re.compile(filename_type)
         jwst_file = elements.match(filename)
         if jwst_file is not None:
@@ -160,9 +182,33 @@ def filename_parser(filename):
     try:
         filename_dict = jwst_file.groupdict()
     except AttributeError:
-        raise ValueError('Provided file {} does not follow JWST naming conventions (jw<PPPPP><OOO><VVV>_<GGSAA>_<EEEEE>_<detector>_<suffix>.fits)'.format(filename))
+        jdox_url = 'https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products'
+        raise ValueError('Provided file {} does not follow JWST naming conventions.  See {} for further information.'.format(filename, jdox_url))
 
     return filename_dict
+
+
+def get_base_url():
+    """Return the beginning part of the URL to the ``jwql`` web app
+    based on which user is running the software.
+
+    If the admin account is running the code, the ``base_url`` is
+    assumed to be the production URL.  If not, the ``base_url`` is
+    assumed to be local.
+
+    Returns
+    -------
+    base_url : str
+        The beginning part of the URL to the ``jwql`` web app
+    """
+
+    username = getpass.getuser()
+    if username == get_config()['admin_account']:
+        base_url = 'https://dljwql.stsci.edu'
+    else:
+        base_url = 'http://127.0.0.1:8000'
+
+    return base_url
 
 
 def get_config():

@@ -1,8 +1,12 @@
+/**
+ * Various JS functions to support the JWQL web application.
+ *
+ * @author Lauren Chambers
+ * @author Matthew Bourque
+ */
+
 // JS function to determine what filetype to use for the thumbnail
 function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root) {
-    // Get all suffixes for the specific thumbnail
-    var suffixes = suffixes.replace(/&#39;/g, '"');
-    var suffixes = JSON.parse(suffixes);
 
     // Update the thumbnail to show the most processed filetype
     var img = document.getElementById('thumbnail'+i);
@@ -15,7 +19,7 @@ function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root)
     } else if (suffixes.indexOf("uncal") >= 0) {
         var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
         img.src = jpg_path;
-    }
+    };
 };
 
 
@@ -32,16 +36,20 @@ function determine_page_title(instrument, proposal) {
     }
 
     // Update the titles accordingly
-    document.getElementById('title').innerHTML = final_title;
-    if (document.title != final_title) {
-        document.title = final_title;
-    }
+    if (typeof final_title !== 'undefined') {
+        document.getElementById('title').innerHTML = final_title;
+        if (document.title != final_title) {
+            document.title = final_title;
+        };
+    };
 };
 
 
-function search(n_proposals) {
+function search() {
+
     // Find all proposal elements
     var proposals = document.getElementsByClassName("proposal");
+    var n_proposals = document.getElementsByClassName("proposal").length;
 
     // Determine the current search value
     var search_value = document.getElementById("search_box").value;
@@ -75,52 +83,52 @@ function search(n_proposals) {
 
 
 function show_only(filter_type, value, dropdown_keys, num_fileids) {
-            // Get all filter options from {{dropdown_menus}} variable
-            var all_filters = dropdown_keys.slice(10,dropdown_keys.length-1).replace(/&#39;/g, '"');
-            var all_filters = JSON.parse(all_filters);
 
-            // Update dropdown menu text
-            document.getElementById(filter_type + '_dropdownMenuButton').innerHTML = value;
+    // Get all filter options from {{dropdown_menus}} variable
+    var all_filters = dropdown_keys.split(',');
 
-            // Find all thumbnail elements
-            var thumbnails = document.getElementsByClassName("thumbnail");
+    // Update dropdown menu text
+    document.getElementById(filter_type + '_dropdownMenuButton').innerHTML = value;
 
-            // Determine the current value for each filter
-            var filter_values = [];
-            for (j = 0; j < all_filters.length; j++) {
-                var filter_value = document.getElementById(all_filters[j] + '_dropdownMenuButton').innerHTML;
-                filter_values.push(filter_value);
-            }
+    // Find all thumbnail elements
+    var thumbnails = document.getElementsByClassName("thumbnail");
 
-            // Determine whether or not to display each thumbnail
-            var num_thumbnails_displayed = 0;
-            for (i = 0; i < thumbnails.length; i++) {
-                // Evaluate if the thumbnail meets all filter criteria
-                var criteria = [];
-                for (j = 0; j < all_filters.length; j++) {
-                    var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0) || (thumbnails[i].getAttribute(all_filters[j]) == filter_values[j]);
-                    criteria.push(criterion);
-                };
+    // Determine the current value for each filter
+    var filter_values = [];
+    for (j = 0; j < all_filters.length; j++) {
+        var filter_value = document.getElementById(all_filters[j] + '_dropdownMenuButton').innerHTML;
+        filter_values.push(filter_value);
+    }
 
-                // Only display if all filter criteria are met
-                if (criteria.every(function(r){return r})) {
-                    thumbnails[i].style.display = "inline-block";
-                    num_thumbnails_displayed++;
-                } else {
-                    thumbnails[i].style.display = "none";
-                }
-            };
-
-            // If there are no thumbnails to display, tell the user
-            if (num_thumbnails_displayed == 0) {
-                document.getElementById('no_thumbnails_msg').style.display = 'inline-block';
-            } else {
-                document.getElementById('no_thumbnails_msg').style.display = 'none';
-            };
-
-            // Update the count of how many images are being shown
-            document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/' + num_fileids + ' activities'
+    // Determine whether or not to display each thumbnail
+    var num_thumbnails_displayed = 0;
+    for (i = 0; i < thumbnails.length; i++) {
+        // Evaluate if the thumbnail meets all filter criteria
+        var criteria = [];
+        for (j = 0; j < all_filters.length; j++) {
+            var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0) || (thumbnails[i].getAttribute(all_filters[j]) == filter_values[j]);
+            criteria.push(criterion);
         };
+
+        // Only display if all filter criteria are met
+        if (criteria.every(function(r){return r})) {
+            thumbnails[i].style.display = "inline-block";
+            num_thumbnails_displayed++;
+        } else {
+            thumbnails[i].style.display = "none";
+        }
+    };
+
+    // If there are no thumbnails to display, tell the user
+    if (num_thumbnails_displayed == 0) {
+        document.getElementById('no_thumbnails_msg').style.display = 'inline-block';
+    } else {
+        document.getElementById('no_thumbnails_msg').style.display = 'none';
+    };
+
+    // Update the count of how many images are being shown
+    document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/' + num_fileids + ' activities'
+};
 
 
 function sort_by_proposals(sort_type) {
@@ -138,6 +146,7 @@ function sort_by_proposals(sort_type) {
 
 
 function sort_by_thumbnails(sort_type) {
+
     // Update dropdown menu text
     document.getElementById('sort_dropdownMenuButton').innerHTML = sort_type;
 
@@ -150,4 +159,93 @@ function sort_by_thumbnails(sort_type) {
     } else if (sort_type == 'Exposure Start Time') {
         tinysort(thumbs, {attr:'exp_start'});
     }
+};
+
+/**
+ * Updates the thumbnail-filter div with filter options
+ * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ */
+function update_filter_options(data) {
+
+    for (var i = 0; i < Object.keys(data.dropdown_menus).length; i++) {
+
+        // Parse out useful variables
+        filter_type = Object.keys(data.dropdown_menus)[i];
+        filter_options = Array.from(new Set(data.dropdown_menus[filter_type]));
+        num_rootnames = Object.keys(data.file_data).length;
+        dropdown_key_list = Object.keys(data.dropdown_menus);
+
+        // Build div content
+        content = '<div class="mr-4">';
+        content += 'Show only ' + filter_type + ':';
+        content += '<div class="dropdown">';
+        content += '<button class="btn btn-primary dropdown-toggle" type="button" id="' + filter_type + '_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> All ' + filter_type + 's </button>';
+        content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
+        content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'All ' + filter_type + 's\', \'' + dropdown_key_list + '\',\'' + num_rootnames + '\');">All ' + filter_type + 's</a>';
+
+        for (var j = 0; j < filter_options.length; j++) {
+            content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + dropdown_key_list + '\', \'' + num_rootnames + '\');">' + filter_options[j] + '</a>';
+        };
+
+        content += '</div></div>';
+    };
+
+    // Add the content to the div
+    $("#thumbnail-filter")[0].innerHTML = content;
+};
+
+/**
+ * Updates the img_show_count component
+ * @param {Integer} count - The count to display
+ * @param {String} type - The type of the count (e.g. "activities")
+ */
+function update_show_count(count, type) {
+
+    content = 'Showing ' + count + '/' + count + ' ' + type;
+    content += '<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">';
+    content += '<span class="help-tip mx-2">i</span></a>';
+    $("#img_show_count")[0].innerHTML = content;
+};
+
+/**
+ * Updates the thumbnail-sort div with sorting options
+ * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ */
+function update_sort_options(data) {
+
+    // Build div content
+    content = 'Sort by:';
+    content += '<div class="dropdown">';
+    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Default</button>';
+    content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
+    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Default\');">Default</a>';
+    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Name\');">Name</a>';
+    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Exposure Start Time\');">Exposure Start Time</a>';
+    content += '</div></div>';
+
+    // Add the content to the div
+    $("#thumbnail-sort")[0].innerHTML = content;
+};
+
+/**
+ * Updates various compnents on the thumbnails page
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} proposal - The proposal number of interest (e.g. "88660")
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function update_thumbnails_page(inst, proposal, base_url) {
+    $.ajax({
+        url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/',
+        success: function(data){
+
+            // Perform various updates to divs
+            update_show_count(Object.keys(data.file_data).length, 'activities');
+            update_thumbnail_array(data);
+            update_filter_options(data);
+            update_sort_options(data);
+
+            // Replace loading screen with the proposal array div
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("thumbnail-array").style.display = "block";
+        }});
 };
