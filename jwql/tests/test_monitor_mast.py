@@ -21,8 +21,7 @@ from astroquery.mast import Mast
 import pytest
 
 from jwql.jwql_monitors import monitor_mast as mm
-from jwql.utils.utils import JWST_INSTRUMENTS
-
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 
 def test_astroquery_mast():
     """Test to see if the astroquery.mast service can complete a request"""
@@ -39,7 +38,7 @@ def test_caom_instrument_keywords():
     """Test to see that the CAOM keywords are the same for all
     instruments"""
     kw = []
-    for ins in JWST_INSTRUMENTS:
+    for ins in JWST_INSTRUMENT_NAMES:
         kw.append(mm.instrument_keywords(ins, caom=True)['keyword'].tolist())
 
     assert kw[0] == kw[1] == kw[2] == kw[3] == kw[4]
@@ -49,7 +48,7 @@ def test_filtered_instrument_keywords():
     """Test to see that the instrument specific service keywords are
     different for all instruments"""
     kw = []
-    for ins in JWST_INSTRUMENTS:
+    for ins in JWST_INSTRUMENT_NAMES:
         kw.append(mm.instrument_keywords(ins, caom=False)['keyword'].tolist())
 
     assert kw[0] != kw[1] != kw[2] != kw[3] != kw[4]
