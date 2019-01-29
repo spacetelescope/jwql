@@ -201,11 +201,6 @@ def test_filename_parser_whole_filesystem(capsys):
     failure_msg = '{} files could not be successfully parsed: \n - {}'.format(len(bad_filenames),
                                                                               '\n - '.join(bad_filenames))
 
-    # Still show the non-compliant filenames even with the xfail decorator
-    if fail:
-        with capsys.disabled():
-            print('\n' + failure_msg)
-
     # Check which ones failed
     assert not fail, failure_msg
 
