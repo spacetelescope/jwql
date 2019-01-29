@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>DMS Engineering Database - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+    	<h2>Explore mnemonics in the DMS Engineering Database</h2>
+        <hr>
+
+
+        <br>
+        This page allows interactive exploration of mnemonics stored in the Engineering Database (EDB) powered by MAST. It is built on top of the programmatic access module REF. Example programmatic code for EDB queries is available: REF
+
+        <h4>Query an EDB mnemonic</h4>
+
+        Submit a mnemonic identfier (e.g. SA_ZFGOUTFOV) with a time range to view the corresponding EDB records:
+
+        <!--Load the file search form from the view-->
+        <form action="" method="post" id="homepage_filesearch">
+            <!--Show any errors from a previous form submission-->
+            {% if form.errors %}
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger">
+                            <strong>{{ error|escape }}</strong>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            {% endif %}
+
+            <!--Django Cross-Site Request Forgery magic-->
+            {{ csrf_input }}
+
+            <!--Show the field forms-->
+            {% for field in form %}
+                <div class="homepage_form_fieldWrapper">
+                    {{ field }}
+                    {% if field.help_text %}
+                        <p class="help">{{ field.help_text|safe }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
+        </form>
+
+	</main>
+
+{% endblock %}

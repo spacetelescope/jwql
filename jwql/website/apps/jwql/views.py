@@ -258,6 +258,37 @@ def home(request):
     return render(request, template, context)
 
 
+def engineering_database(request):
+    """Generate the EDB page.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # Create a form instance and populate it with data from the request
+    form = FileSearchForm(request.POST or None)
+
+    # If this is a POST request, we need to process the form data
+    if request.method == 'POST':
+        if form.is_valid():
+            return form.redirect_to_files()
+
+    template = 'engineering_database.html'
+    context = {'inst': '',
+               'inst_list': JWST_INSTRUMENT_NAMES,
+               'tools': MONITORS,
+               'form': form}
+
+    return render(request, template, context)
+
+
 def instrument(request, inst):
     """Generate the instrument tool index page
 
