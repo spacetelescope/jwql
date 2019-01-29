@@ -176,6 +176,7 @@ def test_filename_parser(filename, solution):
 
     assert filename_parser(filename) == solution
 
+
 @pytest.mark.xfail(reason='Known non-compliant files in filesystem')
 def test_filename_parser_whole_filesystem(capsys):
     """Test the filename_parser on all files currently in the filesystem.
@@ -198,8 +199,8 @@ def test_filename_parser_whole_filesystem(capsys):
 
     # Determine if the test failed
     fail = bad_filenames != []
-    failure_msg = '{} files could not be successfully parsed: \n - {}'.format(len(bad_filenames),
-                                                                              '\n - '.join(bad_filenames))
+    failure_msg = '{} files could not be successfully parsed: \n - {}'.\
+        format(len(bad_filenames), '\n - '.join(bad_filenames))
 
     # Check which ones failed
     assert not fail, failure_msg
