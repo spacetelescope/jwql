@@ -633,8 +633,8 @@ def group_filenames(input_files):
         suffix = filename_parts['suffix']
 
         observation_base = 'jw{}{}{}_{}{}{}_{}_'.format(
-                        program, observation, visit, visit_group,
-                        parallel, activity, exposure)
+            program, observation, visit, visit_group,
+            parallel, activity, exposure)
 
         if detector in NIRCAM_SHORTWAVE_DETECTORS:
             detector_str = 'NRC[AB][1234]'
