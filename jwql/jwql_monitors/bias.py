@@ -22,6 +22,7 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 
 DIMS = {'niriss': (2048, 2048)}
 
+
 def fetch_data(instrument, test=10):
     """Fetch the masked data for this instrument from MAST or generate
     a test dataset with the appropriate dimensions
@@ -50,7 +51,7 @@ def fetch_data(instrument, test=10):
         # Make fake data
         data = np.ones((test, *dims))
 
-        # Simulate 1% bad pixels randomly
+        # Simulate 1 percent bad pixels randomly
         idx = random.sample(range(np.prod(dims)), int(np.prod(dims)*0.01))
         flatmap = badpixmap.flatten()
         flatmap[idx] = 1
