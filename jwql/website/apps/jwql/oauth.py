@@ -178,7 +178,7 @@ def auth_info(fn):
         The decorated function
     """
 
-    def user_info(request):
+    def user_info(request, **kwargs):
         """Store authenticated user credentials in a cookie and return
         it.  If the user is not authenticated, store no credentials in
         the cookie.
@@ -208,7 +208,7 @@ def auth_info(fn):
         else:
             response = {'ezid' : None, "anon": True}
 
-        return fn(request, response)
+        return fn(request, response, **kwargs)
 
     return user_info
 
