@@ -52,7 +52,7 @@ def fetch_data(instrument, test=10):
         data = np.ones((test, *dims))
 
         # Simulate 1 percent bad pixels randomly
-        idx = random.sample(range(np.prod(dims)), int(np.prod(dims)*0.01))
+        idx = random.sample(range(np.prod(dims)), int(np.prod(dims) * 0.01))
         flatmap = badpixmap.flatten()
         flatmap[idx] = 1
         badpixmap = flatmap.reshape(*dims)
