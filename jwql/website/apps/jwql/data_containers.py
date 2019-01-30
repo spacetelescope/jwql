@@ -29,8 +29,9 @@ from astroquery.mast import Mast
 import numpy as np
 
 from jwql.jwql_monitors import monitor_cron_jobs
+from jwql.utils.constants import MONITORS
 from jwql.utils.preview_image import PreviewImage
-from jwql.utils.utils import get_config, filename_parser, MONITORS
+from jwql.utils.utils import get_config, filename_parser
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
