@@ -42,6 +42,7 @@ from django.urls import path
 from django.urls import re_path
 
 from . import api_views
+from . import oauth
 from . import views
 
 app_name = 'jwql'
@@ -49,11 +50,15 @@ instruments = 'nircam|NIRCam|niriss|NIRISS|nirspec|NIRSpec|miri|MIRI|fgs|FGS'
 
 urlpatterns = [
 
-    # Main site views
+    # Home
     path('', views.home, name='home'),
-    path('login/', views.login, name='login'),
-    path('logout/', views.logout, name='logout'),
-    path('authorize/', views.authorize, name='authorize'),
+
+    # Authentication
+    path('login/', oauth.login, name='login'),
+    path('logout/', oauth.logout, name='logout'),
+    path('authorize/', oauth.authorize, name='authorize'),
+
+    # Main site views
     path('about/', views.about, name='about'),
     path('dashboard/', views.dashboard, name='dashboard'),
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),

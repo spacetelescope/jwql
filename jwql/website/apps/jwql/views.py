@@ -36,9 +36,8 @@ Dependencies
 
 import os
 
-from authlib.django.client import OAuth
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 
 from .data_containers import get_acknowledgements
 from .data_containers import get_dashboard_components
@@ -49,7 +48,7 @@ from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
 from .forms import FileSearchForm
-from .oauth import auth_info, auth_required, JWQL_OAUTH
+from .oauth import auth_info
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
 
@@ -123,8 +122,6 @@ def archived_proposals_ajax(request, inst):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    template = 'archive.html'
-
     # For each proposal, get the first available thumbnail and determine
     # how many files there are
     filepaths = get_filenames_by_instrument(inst)
@@ -171,7 +168,7 @@ def archive_thumbnails(request, inst, proposal):
 
     return render(request, template, context)
 
-  
+
 def archive_thumbnails_ajax(request, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
@@ -197,43 +194,6 @@ def archive_thumbnails_ajax(request, inst, proposal):
     data = thumbnails_ajax(inst, proposal)
 
     return JsonResponse(data, json_dumps_params={'indent': 2})
- 
-
-def authorize(request):
-    """Spawn the authentication process for the user
-
-    The authentication process involves retreiving an access token
-    from ``auth.mast`` and porting the data to a cookie.
-    
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-        
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-    
-    # Get auth.mast token
-    token = JWQL_OAUTH.mast_auth.authorize_access_token(request, headers={'Accept': 'application/json'})
-
-    # Determine domain
-    base_url = get_base_url()
-    if '127' in base_url:
-        domain = '127.0.0.1'
-    else:
-        domain = base_url.split('//')[-1]
-
-    response = redirect("/")
-    cookie_args = {}
-    # cookie_args['domain'] = domain
-    # cookie_args['secure'] = True
-    cookie_args['httponly'] = True
-    response.set_cookie("ASB-AUTH", token["access_token"], **cookie_args)
-
-    return response
 
 
 def dashboard(request):
@@ -332,55 +292,6 @@ def instrument(request, inst):
                'doc_url': doc_url}
 
     return render(request, template, context)
-
-
-@auth_required
-def login(request, user):
-    """Spawn a login process for the user
-
-    The ``auth_requred`` decorator is used to require that the user
-    authenticate through ``auth.mast``, then the user is redirected
-    back to the homepage.
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    user : dict
-        A dictionary of user credentials.
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-
-    return redirect("/")
-
-
-def logout(request):
-    """Spawn a logout process for the user
-
-    Upon logout, the user's ``auth.mast`` credientials are removed and
-    the user is redirected back to the homepage.
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    user : dict
-        A dictionary of user credentials.
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-
-    response = redirect("/")
-    response.delete_cookie("ASB-AUTH")
-
-    return response
 
 
 def unlooked_images(request, inst):

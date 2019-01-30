@@ -42,9 +42,81 @@ import os
 import requests
 
 from authlib.django.client import OAuth
+from django.shortcuts import redirect
 
-from jwql.utils.utils import get_base_url
-from jwql.utils.utils import get_config
+from jwql.utils.utils import get_base_url, get_config
+
+
+def register_oauth():
+    """Register the ``jwql`` application with the ``auth.mast``
+    authentication service.
+
+    Returns
+    -------
+    oauth : Object
+        An object containing methods to authenticate a user, provided
+        by the ``auth.mast`` service.
+    """
+
+    # Get configuration parameters
+    client_id = get_config()['client_id']
+    client_secret = get_config()['client_secret']
+    auth_mast = get_config()['auth_mast']
+
+    # Register with auth.mast
+    oauth = OAuth()
+    client_kwargs = {'scope': 'mast:user:info'}
+    oauth.register(
+        'mast_auth',
+        client_id='{}'.format(client_id),
+        client_secret='{}'.format(client_secret),
+        access_token_url='https://{}/oauth/access_token?client_secret={}'.format(auth_mast, client_secret),
+        access_token_params=None,
+        refresh_token_url=None,
+        authorize_url='https://{}/oauth/authorize'.format(auth_mast),
+        api_base_url='https://{}/1.1/'.format(auth_mast),
+        client_kwargs=client_kwargs)
+
+    return oauth
+
+JWQL_OAUTH = register_oauth()
+
+
+def authorize(request):
+    """Spawn the authentication process for the user
+
+    The authentication process involves retreiving an access token
+    from ``auth.mast`` and porting the data to a cookie.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # Get auth.mast token
+    token = JWQL_OAUTH.mast_auth.authorize_access_token(request, headers={'Accept': 'application/json'})
+
+    # Determine domain
+    base_url = get_base_url()
+    if '127' in base_url:
+        domain = '127.0.0.1'
+    else:
+        domain = base_url.split('//')[-1]
+
+    response = redirect("/")
+    cookie_args = {}
+    # cookie_args['domain'] = domain
+    # cookie_args['secure'] = True
+    cookie_args['httponly'] = True
+    response.set_cookie("ASB-AUTH", token["access_token"], **cookie_args)
+
+    return response
 
 
 def auth_required(fn):
@@ -92,7 +164,7 @@ def auth_required(fn):
 
 
 def auth_info(fn):
-    """A decorator function that will return user credientials along
+    """A decorator function that will return user credentials along
     with what is returned by the original function.
 
     Parameters
@@ -141,37 +213,50 @@ def auth_info(fn):
     return user_info
 
 
-def register_oauth():
-    """Register the ``jwql`` application with the ``auth.mast``
-    authentication service.
+@auth_required
+def login(request, user):
+    """Spawn a login process for the user
+
+    The ``auth_requred`` decorator is used to require that the user
+    authenticate through ``auth.mast``, then the user is redirected
+    back to the homepage.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    user : dict
+        A dictionary of user credentials.
 
     Returns
     -------
-    oauth : Object
-        An object containing methods to authenticate a user, provided
-        by the ``auth.mast`` service.
+    HttpResponse object
+        Outgoing response sent to the webpage
     """
 
-    # Get configuration parameters
-    client_id = get_config()['client_id']
-    client_secret = get_config()['client_secret']
-    auth_mast = get_config()['auth_mast']
-
-    # Register with auth.mast
-    oauth = OAuth()
-    client_kwargs = {'scope' : 'mast:user:info'}
-    oauth.register(
-        'mast_auth',
-        client_id='{}'.format(client_id),
-        client_secret='{}'.format(client_secret),
-        access_token_url='https://{}/oauth/access_token?client_secret={}'.format(auth_mast, client_secret),
-        access_token_params=None,
-        refresh_token_url=None,
-        authorize_url='https://{}/oauth/authorize'.format(auth_mast),
-        api_base_url='https://{}/1.1/'.format(auth_mast),
-        client_kwargs=client_kwargs)
-
-    return oauth
+    return redirect("/")
 
 
-JWQL_OAUTH = register_oauth()
+def logout(request):
+    """Spawn a logout process for the user
+
+    Upon logout, the user's ``auth.mast`` credientials are removed and
+    the user is redirected back to the homepage.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    user : dict
+        A dictionary of user credentials.
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    response = redirect("/")
+    response.delete_cookie("ASB-AUTH")
+
+    return response
