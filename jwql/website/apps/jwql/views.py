@@ -277,13 +277,13 @@ def view_image(request, inst, file_root, rewrite=False):
     image_info = get_image_info(file_root, rewrite)
 
     # Get a list of previously flagged anomalies
-    prev_anom = None
-    query = di.session.query(di.Anomaly).filter(di.Anomaly.filename == file_root)
-    all_records = query.data_frame()
-    print(all_records)
-    if not all_records.empty:
-        prev_anom = ', '.join([col for col, val in np.sum(all_records, axis=0).items() if val])
-    # prev_anom = ', '.join(['bowtie', 'snowball'])
+    # prev_anom = None
+    # query = di.session.query(di.Anomaly).filter(di.Anomaly.filename == file_root)
+    # all_records = query.data_frame()
+    # print(all_records)
+    # if not all_records.empty:
+    #     prev_anom = ', '.join([col for col, val in np.sum(all_records, axis=0).items() if val])
+    prev_anom = ', '.join(['bowtie', 'snowball'])
 
     # Build the context
     anom = di.Anomaly()
