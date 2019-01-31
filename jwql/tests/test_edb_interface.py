@@ -19,6 +19,7 @@ Use
 """
 
 from astropy.time import Time
+import pytest
 
 
 @pytest.mark.xfail
