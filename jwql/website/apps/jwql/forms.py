@@ -9,6 +9,7 @@ Authors
 -------
 
     - Lauren Chambers
+    - Johannes Sahlmann
 
 Use
 ---
@@ -42,10 +43,12 @@ Dependencies
 import glob
 import os
 
+from astropy.time import Time, TimeDelta
 from django import forms
 from django.shortcuts import redirect
 
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.engineering_database import is_valid_mnemonic
 from jwql.utils.utils import get_config, filename_parser
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -157,3 +160,110 @@ class FileSearchForm(forms.Form):
         # If they searched for a file root
         elif self.search_type == 'fileroot':
             return redirect('/{}/{}'.format(self.instrument, search))
+
+
+class MnemonicSearchForm(forms.Form):
+    """A single-field form to search for a mnemonic in the DMS EDB."""
+    # Define search field
+    search = forms.CharField(label='', max_length=500, required=True,
+                             empty_value='Search')
+                #, help_text="Enter the mnemonic identifier."
+
+    # Initialize attributes
+    search_type = None
+
+    def clean_search(self):
+        """Validate the "search" field by checking that the input
+        is a valid mnemonic identifier.
+
+        Returns
+        -------
+        str
+            The cleaned data input into the "search" field
+        """
+        # Get the cleaned search data
+        search = self.cleaned_data['search']
+
+        # Make sure the search is a valid mnemonic identifier
+        if _is_valid_mnemonic(search):
+            self.search_type = 'mnemonic'
+        else:
+            raise forms.ValidationError('Invalid search term {}. Please enter a valid DMS EDB '
+                                        'mnemonic.'.format(search))
+
+        return self.cleaned_data['search']
+
+
+class MnemonicQueryForm(forms.Form):
+    """A triple-field form to query mnemonic records in the DMS EDB."""
+
+    # times for default query
+    now = Time.now()
+    delta_day = -7.
+    range_day = 1.
+    default_start_time = now + TimeDelta(delta_day, format='jd')
+    default_end_time = now + TimeDelta(delta_day+range_day, format='jd')
+
+    # Define search fields
+    search = forms.CharField(label='mnemonic', max_length=500, required=True, empty_value='Search', help_text="Enter the mnemonic identifier.")
+    start_time = forms.CharField(label='start', max_length=500, required=False, initial=default_start_time.iso, help_text="Enter the start date.")
+    end_time = forms.CharField(label='end', max_length=500, required=False, initial=default_end_time, help_text="Enter the end date.")
+
+
+    # Initialize attributes
+    # fileroot_dict = None
+    search_type = None
+    # instrument = None
+
+    def clean_search(self):
+        """Validate the "search" field by checking that the input
+        is a valid mnemonic identifier.
+
+        Returns
+        -------
+        str
+            The cleaned data input into the "search" field
+        """
+        # Get the cleaned search data
+        search = self.cleaned_data['search']
+
+        if _is_valid_mnemonic(search):
+            self.search_type = 'mnemonic'
+        else:
+            raise forms.ValidationError('Invalid search term {}. Please enter a valid DMS EDB '
+                                        'mnemonic.'.format(search))
+
+        return self.cleaned_data['search']
+
+    def clean_start_time(self):
+        start_time = self.cleaned_data['start_time']
+        try:
+            Time(start_time, format='iso')
+        except ValueError:
+            raise forms.ValidationError('Invalid time {}. Please enter a time in iso format, e.g.'
+                                        '2019-01-16T00:01:00.000.'.format(start_time))
+        return self.cleaned_data['start_time']
+
+    def clean_end_time(self):
+        end_time = self.cleaned_data['end_time']
+        try:
+            Time(end_time, format='iso')
+        except ValueError:
+            raise forms.ValidationError('Invalid time {}. Please enter a time in iso format, e.g.'
+                                        '2019-01-16T00:01:00.000.'.format(end_time))
+        return self.cleaned_data['end_time']
+
+def _is_valid_mnemonic(mnemonic):
+    """Determine if a search value is a valid EDB mnemonic.
+
+    Parameters
+    ----------
+    mnemonic : str
+        The search term input by the user.
+
+    Returns
+    -------
+    bool
+        Is the search term a valid EDB mnemonic?
+    """
+    return is_valid_mnemonic(mnemonic)

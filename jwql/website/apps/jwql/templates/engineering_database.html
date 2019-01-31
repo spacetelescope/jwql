@@ -16,37 +16,131 @@
         <br>
         This page allows interactive exploration of mnemonics stored in the Engineering Database (EDB) powered by MAST. It is built on top of the programmatic access module REF. Example programmatic code for EDB queries is available: REF
 
-        <h4>Query an EDB mnemonic</h4>
+        <!--<h4>Find a JWST Proposal or File</h4>-->
 
-        Submit a mnemonic identfier (e.g. SA_ZFGOUTFOV) with a time range to view the corresponding EDB records:
+        <!--Submit a proposal number (e.g. 86600) or file root (e.g. jw86600006001_02101_00008_guider1) to view that proposal or file:-->
 
         <!--Load the file search form from the view-->
-        <form action="" method="post" id="homepage_filesearch">
-            <!--Show any errors from a previous form submission-->
-            {% if form.errors %}
-                {% for field in form %}
-                    {% for error in field.errors %}
-                        <div class="alert alert-danger">
-                            <strong>{{ error|escape }}</strong>
+        <!--<form action="" method="post" id="homepage_filesearch">-->
+            <!--&lt;!&ndash;Show any errors from a previous form submission&ndash;&gt;-->
+            <!--{% if form.errors %}-->
+                <!--{% for field in form %}-->
+                    <!--{% for error in field.errors %}-->
+                        <!--<div class="alert alert-danger">-->
+                            <!--<strong>{{ error|escape }}</strong>-->
+                        <!--</div>-->
+                    <!--{% endfor %}-->
+                <!--{% endfor %}-->
+            <!--{% endif %}-->
+
+            <!--&lt;!&ndash;Django Cross-Site Request Forgery magic&ndash;&gt;-->
+            <!--{{ csrf_input }}-->
+
+            <!--&lt;!&ndash;Show the field forms&ndash;&gt;-->
+            <!--{% for field in form %}-->
+                <!--<div class="homepage_form_fieldWrapper">-->
+                    <!--{{ field }}-->
+                    <!--{% if field.help_text %}-->
+                        <!--<p class="help">{{ field.help_text|safe }}</p>-->
+                    <!--{% endif %}-->
+                <!--</div>-->
+            <!--{% endfor %}-->
+            <!--<button name=filesearch class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>-->
+        <!--</form>-->
+
+
+        <!--<div class="mnemonic_name_search_section">-->
+        <p></p>
+        <h4>Search for an EDB mnemonic</h4>
+        <p></p>
+        <div class="mnemonic_name_search_row">
+
+            <div class="mnemonic_name_search_col">
+                Submit a mnemonic identifier (e.g. SA_ZFGOUTFOV):
+                <p></p>
+                <!--Load the EDB mnemonic search form from the view-->
+                <form action="" method="post" id="mnemonic_name_search">
+                    <!--Show any errors from a previous form submission-->
+                    {% if mnemonic_name_search_form.errors %}
+                        {% for field in mnemonic_name_search_form %}
+                            {% for error in field.errors %}
+                                <div class="alert alert-danger">
+                                    <strong>{{ error|escape }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                    {% endif %}
+
+                    <!--Django Cross-Site Request Forgery magic-->
+                    {{ csrf_input }}
+
+                    <!--Show the field forms-->
+                    {% for field in mnemonic_name_search_form %}
+                        <div class="homepage_form_fieldWrapper">
+                            {{ field }}
+                            {% if field.help_text %}
+                                <p class="help">{{ field.help_text|safe }}</p>
+                            {% endif %}
                         </div>
                     {% endfor %}
+                    <button name=mnemonic_name_search class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
+
+                </form>
+            </div>
+            <div class="mnemonic_name_search_col">
+                Description and details of menemonic from EDB:
+                <p></p>
+            <!--<div class="mnemonic_name_search_section">-->
+                <ul>
+                {% for key, value in mnemonic_result.items() %}
+                    <li>{{ '{:>20}'.format(key) }} {{ value }}</li>
                 {% endfor %}
-            {% endif %}
+                </ul>
+            </div>
+        </div>
 
-            <!--Django Cross-Site Request Forgery magic-->
-            {{ csrf_input }}
+        <p></p>
 
-            <!--Show the field forms-->
-            {% for field in form %}
-                <div class="homepage_form_fieldWrapper">
-                    {{ field }}
-                    {% if field.help_text %}
-                        <p class="help">{{ field.help_text|safe }}</p>
-                    {% endif %}
-                </div>
-            {% endfor %}
-            <button class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
-        </form>
+        <div class="mnemonic_query_section">
+
+            <h4>Query for records of an EDB mnemonic</h4>
+
+            <p></p>
+            Submit a mnemonic identfier (e.g. SA_ZFGOUTFOV) with a time range to view the corresponding EDB records:
+
+            <p></p>
+            <!--Load the EDB mnemonic search form from the view-->
+            <form action="" method="post" id="mnemonic_name_search">
+                <!--Show any errors from a previous form submission-->
+                {% if mnemonic_query_form.errors %}
+                    {% for field in mnemonic_query_form %}
+                        {% for error in field.errors %}
+                            <div class="alert alert-danger">
+                                <strong>{{ error|escape }}</strong>
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                {% endif %}
+
+                <!--Django Cross-Site Request Forgery magic-->
+                {{ csrf_input }}
+
+                <!--Show the field forms-->
+                {% for field in mnemonic_query_form %}
+                    <div class="mnemonic_query_field">
+                        {{ field }}
+                        <!--{{ field.value() }}-->
+                        {% if field.help_text %}
+                            <p class="help">{{ field.help_text|safe }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                <button name=mnemonic_query class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
+
+            </form>
+        </div>
+
+
 
 	</main>
 

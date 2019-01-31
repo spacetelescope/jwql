@@ -20,12 +20,12 @@ Use
 
 from astropy.time import Time
 
-from ..utils.engineering_database import query_single_mnemonic, get_all_mnemonic_identifiers
+from ..utils.engineering_database import query_single_mnemonic, mnemonic_inventory
 
 
-def test_get_all_mnemonics():
+def test_mnemonic_inventory():
     """Test the retrieval of all mnemonics."""
-    all_mnemonics = get_all_mnemonic_identifiers()[0]
+    all_mnemonics = mnemonic_inventory()[0]
     assert len(all_mnemonics) > 1000
 
 
