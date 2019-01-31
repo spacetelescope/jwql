@@ -96,7 +96,43 @@ class EdbMnemonic:
         raise NotImplementedError
 
 
-def process_mast_service_request_result(result):
+def is_valid_mnemonic(mnemonic_identifier):
+    """Determine if the given string is a valid EDB mnemonic.
+
+    Parameters
+    ----------
+    mnemonic_identifier : str
+        The mnemonic_identifier string to be examined.
+
+    Returns
+    -------
+    bool
+        Is mnemonic_identifier a valid EDB mnemonic?
+    """
+    inventory = mnemonic_inventory()[0]
+    if mnemonic_identifier in inventory['tlmMnemonic']:
+        return True
+    else:
+        return False
+
+
+def mnemonic_inventory():
+    """Return all mnemonics in the DMS engineering database.
+
+    Returns
+    -------
+    data : astropy.table.Table
+        Table representation of the mnemonic inventory.
+    meta : dict
+        Additional information returned by the query.
+    """
+
+    out = Mast.service_request_async(mast_edb_mnemonic_service, {})
+    data, meta = process_mast_service_request_result(out)
+    return data, meta
+
+
+def process_mast_service_request_result(result, data_as_table=True):
     """Parse the result of a MAST EDB query.
 
     Parameters
@@ -119,7 +155,10 @@ def process_mast_service_request_result(result):
 
     try:
         # timestamp-value pairs in the form of an astropy table
-        data = Table(json_data['data'])
+        if data_as_table:
+            data = Table(json_data['data'])
+        else:
+            data = json_data['data'][0]
     except KeyError:
         raise RuntimeError('Query did not return any data.')
 
@@ -129,22 +168,6 @@ def process_mast_service_request_result(result):
         if key.lower() != 'data':
             meta[key] = json_data[key]
 
-    return data, meta
-
-
-def get_all_mnemonic_identifiers():
-    """Return all mnemonics in the DMS engineering database.
-
-    Returns
-    -------
-    data : astropy.table.Table
-        Table representation of the mnemonic inventory.
-    meta : dict
-        Additional information returned by the query.
-    """
-
-    out = Mast.service_request_async(mast_edb_mnemonic_service, {})
-    data, meta = process_mast_service_request_result(out)
     return data, meta
 
 
@@ -164,7 +187,7 @@ def query_mnemonic_info(mnemonic_identifier):
 
     parameters = {"mnemonic": "{}".format(mnemonic_identifier)}
     result = Mast.service_request_async(mast_edb_dictionary_service, parameters)
-    info = process_mast_service_request_result(result)[0]
+    info = process_mast_service_request_result(result, data_as_table=False)[0]
     return info
 
 

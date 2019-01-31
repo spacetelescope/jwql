@@ -11,6 +11,7 @@ Authors
 -------
 
     - Lauren Chambers
+    - Johannes Sahlmann
 
 Use
 ---
@@ -36,6 +37,7 @@ Dependencies
 
 import os
 
+from astropy.time import Time
 from django.http import JsonResponse
 from django.shortcuts import render
 
@@ -47,7 +49,8 @@ from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
-from .forms import FileSearchForm
+from .forms import FileSearchForm, MnemonicSearchForm, MnemonicQueryForm
+from jwql.utils.engineering_database import query_mnemonic_info, query_single_mnemonic
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
 
@@ -272,19 +275,67 @@ def engineering_database(request):
         Outgoing response sent to the webpage
     """
 
-    # Create a form instance and populate it with data from the request
-    form = FileSearchForm(request.POST or None)
+    mnemonic_result = {}
+    mnemonic_query_result = {}
+
 
     # If this is a POST request, we need to process the form data
     if request.method == 'POST':
-        if form.is_valid():
-            return form.redirect_to_files()
+        print(request.POST)
+
+        if 'mnemonic_name_search' in request.POST.keys():
+            mnemonic_name_search_form = MnemonicSearchForm(request.POST, prefix='mnemonic_name_search')
+
+            if mnemonic_name_search_form.is_valid():
+                mnemonic_identifier = mnemonic_name_search_form['search'].value()
+                if mnemonic_identifier is not None:
+                    mnemonic_result = query_mnemonic_info(mnemonic_identifier)
+
+            # create forms for search fields not clicked
+            form = FileSearchForm(prefix='file_search')
+            mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
+
+        elif 'mnemonic_query' in request.POST.keys():
+            mnemonic_query_form = MnemonicQueryForm(request.POST, prefix='mnemonic_query')
+
+            # proceed only if entries make sense
+            if mnemonic_query_form.is_valid():
+                mnemonic_identifier = mnemonic_query_form['search'].value()
+                start_time = Time(mnemonic_query_form['start_time'].value(), format='iso')
+                end_time = Time(mnemonic_query_form['end_time'].value(), format='iso')
+
+                if mnemonic_identifier is not None:
+                    mnemonic_query_result = query_single_mnemonic(mnemonic_identifier, start_time, end_time)
+
+            # create forms for search fields not clicked
+            form = FileSearchForm(prefix='file_search')
+            mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
+
+        elif 'filesearch' in request.POST.keys():
+            # Create a form instance and populate it with data from the request
+            form = FileSearchForm(request.POST, prefix='file_search')
+            if form.is_valid():
+                return form.redirect_to_files()
+
+            # create forms for search fields not clicked
+            mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
+            mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
+
+    else:
+        form = FileSearchForm(prefix='file_search')
+        mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
+        mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
+
 
     template = 'engineering_database.html'
     context = {'inst': '',
                'inst_list': JWST_INSTRUMENT_NAMES,
                'tools': MONITORS,
-               'form': form}
+               'form': form,
+               'mnemonic_query_form': mnemonic_query_form,
+               'mnemonic_query_result': mnemonic_query_result,
+               'mnemonic_name_search_form': mnemonic_name_search_form,
+               'mnemonic_result': mnemonic_result}
 
     return render(request, template, context)
 

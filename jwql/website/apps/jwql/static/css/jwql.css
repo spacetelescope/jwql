@@ -111,6 +111,38 @@
     padding: 0px;
 }
 
+
+#mnemonic_name_search {
+    width: 300px;
+    height: 100%;
+    padding: 0px;
+}
+
+.mnemonic_name_search_row {
+    display: flex;
+}
+
+.mnemonic_name_search_col {
+  /* flex: 1; /* equal width */
+  padding: 1em;
+  border: 1px solid #F2CE3A;
+}
+
+.mnemonic_name_search_section {
+    width: 100%;
+    height: 100%;
+    padding: 0px;
+    border:solid #4C8BD8;
+}
+
+.mnemonic_query_section {
+    width: 100%;
+    height: 100%;
+    padding: 0px;
+    border:solid #000000;
+}
+
+
 #homepage_filesearch #id_search:focus {
     box-shadow: none;
     border-color: #cfd4da;
@@ -119,6 +151,11 @@
 /*Make the form fields be inline*/
 .homepage_form_fieldWrapper {
     display: inline;
+}
+
+.mnemonic_query_field {
+float:left;
+width:30%;
 }
 
 /*Don't let the search bar be super long*/
