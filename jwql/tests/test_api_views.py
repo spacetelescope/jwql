@@ -37,6 +37,7 @@ urls = [
     'api/86700/thumbnails/',  # thumbnails_by_proposal
     'api/jw86700005001_02101_00001_guider1/thumbnails/']  # thumbnails_by_rootname
 
+
 @pytest.mark.xfail
 @pytest.mark.parametrize('url', urls)
 def test_api_views(url):
