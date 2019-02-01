@@ -109,11 +109,14 @@ def authorize(request):
     else:
         domain = base_url.split('//')[-1]
 
-    response = redirect("/")
+    # Set secure cookie parameters
     cookie_args = {}
-    # cookie_args['domain'] = domain
-    # cookie_args['secure'] = True
+    # cookie_args['domain'] = domain  # Currently broken
+    # cookie_args['secure'] = True  # Currently broken
     cookie_args['httponly'] = True
+
+    # Set the cookie
+    response = redirect("/")
     response.set_cookie("ASB-AUTH", token["access_token"], **cookie_args)
 
     return response
