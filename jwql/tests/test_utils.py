@@ -152,7 +152,7 @@ FILENAME_PARSER_TEST_DATA = [
 ]
 
 
-@pytest.mark.xfail(reason='User must manually download config file.')
+@pytest.mark.xfail(reason='User must manually supply config file.')
 def test_get_config():
     """Assert that the ``get_config`` function successfully creates a
     dictionary.
@@ -178,16 +178,16 @@ def test_filename_parser(filename, solution):
 
 
 @pytest.mark.xfail(reason='Known non-compliant files in filesystem')
-def test_filename_parser_whole_filesystem(capsys):
+def test_filename_parser_whole_filesystem():
     """Test the filename_parser on all files currently in the filesystem.
     """
     # Get all files
     filesystem_dir = get_config()['filesystem']
     all_files = []
-    for dirName, _, fileList in os.walk(filesystem_dir):
-        for file in fileList:
+    for dir_name, _, file_list in os.walk(filesystem_dir):
+        for file in file_list:
             if file.endswith('.fits'):
-                all_files.append(os.path.join(dirName, file))
+                all_files.append(os.path.join(dir_name, file))
 
     # Run the filename_parser on all files
     bad_filenames = []
