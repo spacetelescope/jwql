@@ -239,6 +239,14 @@
     text-transform: uppercase;
 }
 
+#oauth_user {
+  color: #c85108;
+}
+
+#oauth_user:hover {
+  color: white;
+}
+
 .plot-container {
     width: 100%;
     height: 600px;

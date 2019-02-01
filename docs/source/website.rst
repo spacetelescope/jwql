@@ -14,6 +14,12 @@ db.py
     :members:
     :undoc-members:
 
+oauth.py
+--------
+.. automodule:: jwql.website.apps.jwql.oauth
+    :members:
+    :undoc-members:
+
 manage.py
 ---------
 .. automodule:: jwql.website.manage
