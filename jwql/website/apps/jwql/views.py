@@ -278,17 +278,15 @@ def engineering_database(request):
 
     mnemonic_result = {}
     mnemonic_query_result = {}
-    # mnemonic_query_result_table = {}
     mnemonic_query_result_table_html = {}
     mnemonic_query_result_plot = None
 
-
     # If this is a POST request, we need to process the form data
     if request.method == 'POST':
-        print(request.POST)
 
         if 'mnemonic_name_search' in request.POST.keys():
-            mnemonic_name_search_form = MnemonicSearchForm(request.POST, prefix='mnemonic_name_search')
+            mnemonic_name_search_form = MnemonicSearchForm(request.POST,
+                                                           prefix='mnemonic_name_search')
 
             if mnemonic_name_search_form.is_valid():
                 mnemonic_identifier = mnemonic_name_search_form['search'].value()
@@ -309,8 +307,8 @@ def engineering_database(request):
                 end_time = Time(mnemonic_query_form['end_time'].value(), format='iso')
 
                 if mnemonic_identifier is not None:
-                    mnemonic_query_result = query_single_mnemonic(mnemonic_identifier, start_time, end_time)
-                    # mnemonic_query_result_table = ascii.write(mnemonic_query_result.data, format='html')
+                    mnemonic_query_result = query_single_mnemonic(mnemonic_identifier, start_time,
+                                                                  end_time)
                     import tempfile
                     import sys
                     tmpdir = tempfile.mkdtemp()
@@ -342,7 +340,6 @@ def engineering_database(request):
         form = FileSearchForm(prefix='file_search')
         mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
         mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
-
 
     template = 'engineering_database.html'
     context = {'inst': '',
