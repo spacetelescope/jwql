@@ -111,9 +111,12 @@
     padding: 0px;
 }
 
+/* START structures for engineering_database page
+    width: 300px;
+*/
 
 #mnemonic_name_search {
-    width: 300px;
+    width: 100%;
     height: 100%;
     padding: 0px;
 }
@@ -126,8 +129,14 @@
   /* flex: 1; /* equal width */
   padding: 1em;
   border: 1px solid #F2CE3A;
+  /*width: 100%; */
 }
 
+.mnemonic_name_search_tab {
+    /*position:absolute;left:75px;*/
+    display: inline-block;
+    margin-left: 40px;
+}
 .mnemonic_name_search_section {
     width: 100%;
     height: 100%;
@@ -139,8 +148,23 @@
     width: 100%;
     height: 100%;
     padding: 0px;
-    border:solid #000000;
+    /*border:solid #000000;*/
+    border: 1px solid #F2CE3A;
 }
+
+.mnemonic_query_field {
+float:left;
+width:300px;
+list-style-type: none;
+display : inline;
+}
+
+/*
+width:60px;
+
+*/
+
+/* END structures for engineering_database page */
 
 
 #homepage_filesearch #id_search:focus {
@@ -151,11 +175,6 @@
 /*Make the form fields be inline*/
 .homepage_form_fieldWrapper {
     display: inline;
-}
-
-.mnemonic_query_field {
-float:left;
-width:30%;
 }
 
 /*Don't let the search bar be super long*/

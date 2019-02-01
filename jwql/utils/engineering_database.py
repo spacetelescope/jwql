@@ -39,7 +39,9 @@ References
 
 import astropy
 from astropy.table import Table
+from astropy.time import Time
 from astroquery.mast import Mast
+# import bokeh
 
 from .utils import get_config
 
@@ -94,6 +96,33 @@ class EdbMnemonic:
     def interpolate(self, times, **kwargs):
         """Interpolate value at specified times."""
         raise NotImplementedError
+
+    def bokeh_plot(self):
+        """
+
+        Returns
+        -------
+
+        """
+        from bokeh.embed import components
+        # from bokeh.layouts import gridplot
+        from bokeh.plotting import figure, output_file, save
+
+        # abscissa = self.data['MJD']
+        abscissa = Time(self.data['MJD'], format='mjd').datetime
+        ordinate = self.data['euvalue']
+
+
+        p1 = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
+                    title=self.mnemonic_identifier, x_axis_label='Time',
+                    y_axis_label='Value ({})'.format(self.info['unit']))
+        p1.line(abscissa, ordinate, line_width=1, line_color='blue', line_dash='dashed')
+        p1.circle(abscissa, ordinate, color='blue')
+
+        plot = p1
+        script, div = components(plot)
+
+        return [div, script]
 
 
 def is_valid_mnemonic(mnemonic_identifier):
