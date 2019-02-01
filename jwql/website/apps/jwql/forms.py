@@ -166,7 +166,7 @@ class MnemonicSearchForm(forms.Form):
     """A single-field form to search for a mnemonic in the DMS EDB."""
     # Define search field
     search = forms.CharField(label='', max_length=500, required=True,
-                             empty_value='Search')
+                             empty_value='Search', initial='SA_ZFGOUTFOV')
                 #, help_text="Enter the mnemonic identifier."
 
     # Initialize attributes
@@ -204,10 +204,14 @@ class MnemonicQueryForm(forms.Form):
     default_start_time = now + TimeDelta(delta_day, format='jd')
     default_end_time = now + TimeDelta(delta_day+range_day, format='jd')
 
+    default_start_time = Time('2019-01-16 00:00:00.000', format='iso')
+    default_end_time = Time('2019-01-16 00:01:00.000', format='iso')
+    default_mnemonic_identifier = 'IMIR_HK_ICE_SEC_VOLT4'
+
     # Define search fields
-    search = forms.CharField(label='mnemonic', max_length=500, required=True, empty_value='Search', help_text="Enter the mnemonic identifier.")
-    start_time = forms.CharField(label='start', max_length=500, required=False, initial=default_start_time.iso, help_text="Enter the start date.")
-    end_time = forms.CharField(label='end', max_length=500, required=False, initial=default_end_time, help_text="Enter the end date.")
+    search = forms.CharField(label='mnemonic', max_length=500, required=True, initial=default_mnemonic_identifier, empty_value='Search', help_text="Mnemonic identifier")
+    start_time = forms.CharField(label='start', max_length=500, required=False, initial=default_start_time.iso, help_text="Start time")
+    end_time = forms.CharField(label='end', max_length=500, required=False, initial=default_end_time, help_text="End time")
 
 
     # Initialize attributes

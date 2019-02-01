@@ -37,6 +37,7 @@ Dependencies
 
 import os
 
+from astropy.io import ascii
 from astropy.time import Time
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -277,6 +278,9 @@ def engineering_database(request):
 
     mnemonic_result = {}
     mnemonic_query_result = {}
+    # mnemonic_query_result_table = {}
+    mnemonic_query_result_table_html = {}
+    mnemonic_query_result_plot = None
 
 
     # If this is a POST request, we need to process the form data
@@ -306,6 +310,19 @@ def engineering_database(request):
 
                 if mnemonic_identifier is not None:
                     mnemonic_query_result = query_single_mnemonic(mnemonic_identifier, start_time, end_time)
+                    # mnemonic_query_result_table = ascii.write(mnemonic_query_result.data, format='html')
+                    import tempfile
+                    import sys
+                    tmpdir = tempfile.mkdtemp()
+                    mnemonic_query_result_table_html = os.path.join(tmpdir, 'mnemonic_query_result_table.html')
+                    print(mnemonic_query_result_table_html)
+                    # with open(mnemonic_query_result_table_html, 'w') as tmp:
+                    #     mnemonic_query_result.data.write(tmp, format='jsviewer')
+                    mnemonic_query_result.data[0:2].write(mnemonic_query_result_table_html, format='html')
+                    mnemonic_query_result.data[0:2].write(sys.stdout, format='html')
+                    # mnemonic_query_result.data.write(mnemonic_query_result_table_html, format='jsviewer')
+                    mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
+                    print(mnemonic_query_result_table_html)
 
             # create forms for search fields not clicked
             form = FileSearchForm(prefix='file_search')
@@ -334,6 +351,8 @@ def engineering_database(request):
                'form': form,
                'mnemonic_query_form': mnemonic_query_form,
                'mnemonic_query_result': mnemonic_query_result,
+               'mnemonic_query_result_table_html': mnemonic_query_result_table_html,
+               'mnemonic_query_result_plot': mnemonic_query_result_plot,
                'mnemonic_name_search_form': mnemonic_name_search_form,
                'mnemonic_result': mnemonic_result}
 
