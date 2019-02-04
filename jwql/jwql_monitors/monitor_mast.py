@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 """This module is home to a suite of MAST queries that gather bulk
 properties of available JWST data for JWQL.
 
