@@ -1,5 +1,33 @@
-0.16.0
-======
+0.17.0 (2019-02-05)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Added a wiki page for how to do a software release
+- Added a wiki page with a checklist for contributors and reviewers
+- Added a wiki page about the web server
+- Defined specific variable value/type standards for JWST instruments and program/proposal identifiers in the Style Guide
+
+Web Application
+~~~~~~~~~~~~~~~
+- Added authentication to all pages using the ``auth.mast`` service provided by the Archive Services Branch
+- Implemented AJAX requests to load the ``thumbnails.html`` and ``archive.html`` pages
+- Used regular expressions to restrict URLs
+- Updated permissions in ``nginx`` settings to fix bug where dashboard page would not display
+- Added a loading widget while thumbnails compile
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+- Added interface with the JWST DMS engineering database: ``utils.engineering_database``
+- Expanded ``utils.filename_parser`` to handle time series and DMS stage 3 file names
+- Consolidated important constants in new ``utils.constants`` module
+
+
+0.16.0 (2018-12-17)
+===================
 
 This is the first release of the new release procedures of ``jwql``.  The development team is now developing in release-driven sprints, so future releases will be less frequent, but with more changes
 
