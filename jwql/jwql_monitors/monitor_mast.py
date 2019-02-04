@@ -188,7 +188,7 @@ def jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
                  format(instruments, dataproducts))
 
     # Make the table
-    all_cols = ['instrument']+dataproducts+['total']
+    all_cols = ['instrument'] + dataproducts + ['total']
     table = pd.DataFrame(inventory, columns=all_cols)
 
     # Plot it
