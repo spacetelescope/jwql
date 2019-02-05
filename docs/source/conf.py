@@ -90,7 +90,6 @@ pygments_style = 'sphinx'
 todo_include_todos = False
 
 
-
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -115,7 +114,7 @@ html_theme_path = [stsci_rtd_theme.get_html_theme_path()]
 #
 # This is required for the alabaster theme
 # refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
-#html_sidebars = {}
+# html_sidebars = {}
 
 
 # -- Options for HTMLHelp output ------------------------------------------
