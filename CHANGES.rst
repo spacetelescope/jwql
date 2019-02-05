@@ -7,16 +7,15 @@ New Features
 Project & API Documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - Added a wiki page for how to do a software release
-- Added a wiki page with a checklist for contributors and reviewers
-- Added a wiki page about the web server
+- Added a wiki page with a checklist for contributors and reviewers of pull requests
+- Added a wiki page about how the web server is configured
 - Defined specific variable value/type standards for JWST instruments and program/proposal identifiers in the Style Guide
 
 Web Application
 ~~~~~~~~~~~~~~~
 - Added authentication to all pages using the ``auth.mast`` service provided by the Archive Services Branch
 - Implemented AJAX requests to load the ``thumbnails.html`` and ``archive.html`` pages
-- Used regular expressions to restrict URLs
-- Updated permissions in ``nginx`` settings to fix bug where dashboard page would not display
+- Used regular expressions to restrict URLs to specific patterns
 - Added a loading widget while thumbnails compile
 
 ``jwql`` Repository
@@ -24,6 +23,14 @@ Web Application
 - Added interface with the JWST DMS engineering database: ``utils.engineering_database``
 - Expanded ``utils.filename_parser`` to handle time series and DMS stage 3 file names
 - Consolidated important constants in new ``utils.constants`` module
+
+Bug Fixes
+---------
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Updated permissions in ``nginx`` settings to fix bug where dashboard page would not display
 
 
 0.16.0 (2018-12-17)
