@@ -50,15 +50,15 @@ from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
 from .forms import FileSearchForm, MnemonicSearchForm, MnemonicQueryForm
+from .oauth import auth_info
 from jwql.utils.engineering_database import query_mnemonic_info, query_single_mnemonic
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
 
-
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
-
-def about(request):
+@auth_info
+def about(request, user):
     """Generate the ``about`` page
 
     Parameters
@@ -76,12 +76,14 @@ def about(request):
     context = {'acknowledgements': acknowledgements,
                'inst': '',
                'inst_list': JWST_INSTRUMENT_NAMES,
-               'tools': MONITORS}
+               'tools': MONITORS,
+               'user': user}
 
     return render(request, template, context)
 
 
-def archived_proposals(request, inst):
+@auth_info
+def archived_proposals(request, user, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -102,6 +104,7 @@ def archived_proposals(request, inst):
     template = 'archive.html'
     context = {'inst': inst,
                'tools': MONITORS,
+               'user': user,
                'base_url': get_base_url()}
 
     return render(request, template, context)
@@ -125,8 +128,6 @@ def archived_proposals_ajax(request, inst):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    template = 'archive.html'
-
     # For each proposal, get the first available thumbnail and determine
     # how many files there are
     filepaths = get_filenames_by_instrument(inst)
@@ -144,7 +145,8 @@ def archived_proposals_ajax(request, inst):
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-def archive_thumbnails(request, inst, proposal):
+@auth_info
+def archive_thumbnails(request, user, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -169,6 +171,7 @@ def archive_thumbnails(request, inst, proposal):
     context = {'inst': inst,
                'prop': proposal,
                'tools': MONITORS,
+               'user': user,
                'base_url': get_base_url()}
 
     return render(request, template, context)
@@ -201,7 +204,8 @@ def archive_thumbnails_ajax(request, inst, proposal):
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
-def dashboard(request):
+@auth_info
+def dashboard(request, user):
     """Generate the dashbaord page
 
     Parameters
@@ -221,6 +225,7 @@ def dashboard(request):
     context = {'inst': '',
                'inst_list': JWST_INSTRUMENT_NAMES,
                'tools': MONITORS,
+               'user': user,
                'outputs': output_dir,
                'filesystem_html': os.path.join(output_dir, 'monitor_filesystem',
                                                'filesystem_monitor.html'),
@@ -230,13 +235,16 @@ def dashboard(request):
     return render(request, template, context)
 
 
-def home(request):
+@auth_info
+def home(request, user):
     """Generate the home page
 
     Parameters
     ----------
     request : HttpRequest object
         Incoming request from the webpage
+    user : dict
+        A dictionary of user credentials.
 
     Returns
     -------
@@ -256,7 +264,8 @@ def home(request):
     context = {'inst': '',
                'inst_list': JWST_INSTRUMENT_NAMES,
                'tools': MONITORS,
-               'form': form}
+               'form': form,
+               'user': user}
 
     return render(request, template, context)
 
@@ -325,7 +334,8 @@ def engineering_database(request):
     return render(request, template, context)
 
 
-def instrument(request, inst):
+@auth_info
+def instrument(request, user, inst):
     """Generate the instrument tool index page
 
     Parameters
@@ -354,12 +364,14 @@ def instrument(request, inst):
 
     context = {'inst': inst,
                'tools': MONITORS,
+               'user': user,
                'doc_url': doc_url}
 
     return render(request, template, context)
 
 
-def unlooked_images(request, inst):
+@auth_info
+def unlooked_images(request, user, inst):
     """Generate the page listing all unlooked images in the database
 
     Parameters
@@ -379,11 +391,13 @@ def unlooked_images(request, inst):
 
     template = 'thumbnails.html'
     context = thumbnails(inst)
+    context['user'] = user
 
     return render(request, template, context)
 
 
-def view_header(request, inst, file):
+@auth_info
+def view_header(request, user, inst, file):
     """Generate the header view page
 
     Parameters
@@ -411,11 +425,13 @@ def view_header(request, inst, file):
                   {'inst': inst,
                    'file': file,
                    'tools': MONITORS,
+                   'user': user,
                    'header': header,
                    'file_root': file_root})
 
 
-def view_image(request, inst, file_root, rewrite=False):
+@auth_info
+def view_image(request, user, inst, file_root, rewrite=False):
     """Generate the image view page
 
     Parameters
@@ -442,6 +458,7 @@ def view_image(request, inst, file_root, rewrite=False):
     context = {'inst': inst,
                'file_root': file_root,
                'tools': MONITORS,
+               'user': user,
                'jpg_files': image_info['all_jpegs'],
                'fits_files': image_info['all_files'],
                'suffixes': image_info['suffixes'],
