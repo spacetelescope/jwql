@@ -23,22 +23,36 @@ import pytest
 import urllib.request
 
 from jwql.utils.utils import get_base_url
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES
+
+urls = []
+
+# Generic URLs
+urls.append('api/proposals/')  # all_proposals
+
+# Instrument-specific URLs
+for instrument in JWST_INSTRUMENT_NAMES:
+    urls.append('api/{}/proposals/'.format(instrument))  # instrument_proposals
+    urls.append('api/{}/preview_images/'.format(instrument))  # preview_images_by_instrument
+    urls.append('api/{}/thumbnails/'.format(instrument))  # thumbnails_by_instrument
+
+# Proposal-specific URLs
+proposals = ['86700'  # FGS
+            ]
+for proposal in proposals:
+    urls.append('api/{}/filenames/'.format(proposal))  # filenames_by_proposal
+    urls.append('api/{}/preview_images/'.format(proposal))  # preview_images_by_proposal
+    urls.append('api/{}/thumbnails/'.format(proposal))  # thumbnails_by_proposal
+
+# Filename-specific URLs
+rootnames = ['jw86700005001_02101_00001_guider1'  # FGS
+]
+for rootname in rootnames:
+    urls.append('api/{}/filenames/'.format(rootname))  # filenames_by_rootname
+    urls.append('api/{}/preview_images/'.format(rootname))  # preview_images_by_rootname
+    urls.append('api/{}/thumbnails'.format(rootname))  # thumbnails_by_rootname
 
 
-urls = [
-    'api/proposals/',  # all_proposals
-    'api/86700/filenames/',  # filenames_by_proposal
-    'api/jw86700005001_02101_00001_guider1/filenames/',  # filenames_by_rootname
-    'api/fgs/proposals/',  # instrument_proposals
-    'api/fgs/preview_images/',  # preview_images_by_instrument
-    'api/86700/preview_images/',  # preview_images_by_proposal
-    'api/jw86700005001_02101_00001_guider1/preview_images/',  # preview_images_by_rootname
-    'api/fgs/thumbnails/',  # thumbnails_by_instrument
-    'api/86700/thumbnails/',  # thumbnails_by_proposal
-    'api/jw86700005001_02101_00001_guider1/thumbnails/']  # thumbnails_by_rootname
-
-
-@pytest.mark.xfail
 @pytest.mark.parametrize('url', urls)
 def test_api_views(url):
     """Test to see if the given ``url`` returns a populated JSON object
@@ -53,6 +67,7 @@ def test_api_views(url):
     # Build full URL
     base_url = get_base_url()
     url = '{}/{}'.format(base_url, url)
+    print('Testing {}'.format(url))
 
     # Determine the type of data to check for based on the url
     data_type = url.split('/')[-2]
