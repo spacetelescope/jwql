@@ -31,8 +31,8 @@
                 <!--Load the EDB mnemonic search form from the view-->
                 <form action="" method="post" id="mnemonic_name_search">
                     <!--Show any errors from a previous form submission-->
-                    {% if mnemonic_name_search_form.errors %}
-                        {% for field in mnemonic_name_search_form %}
+                    {% if edb_components['mnemonic_name_search_form'].errors %}
+                        {% for field in edb_components['mnemonic_name_search_form'] %}
                             {% for error in field.errors %}
                                 <div class="alert alert-danger">
                                     <strong>{{ error|escape }}</strong>
@@ -45,7 +45,7 @@
                     {{ csrf_input }}
 
                     <!--Show the field forms-->
-                    {% for field in mnemonic_name_search_form %}
+                    {% for field in edb_components['mnemonic_name_search_form'] %}
                         <div class="homepage_form_fieldWrapper">
                             {{ field }}
                             {% if field.help_text %}
@@ -62,7 +62,7 @@
                 <p></p>
                 <table>
                 <ul>
-                {% for key, value in mnemonic_result.items() %}
+                {% for key, value in edb_components['mnemonic_name_search_result'].items() %}
                     <tr> <td><i>{{ key }}</i> :<td> <td>{{ value }}<td></tr>
                 {% endfor %}
                 </ul>
@@ -82,8 +82,8 @@
             <!--Load the EDB mnemonic search form from the view-->
             <form action="" method="post" id="mnemonic_name_search">
                 <!--Show any errors from a previous form submission-->
-                {% if mnemonic_query_form.errors %}
-                    {% for field in mnemonic_query_form %}
+                {% if edb_components['mnemonic_query_form'].errors %}
+                    {% for field in edb_components['mnemonic_query_form'] %}
                         {% for error in field.errors %}
                             <div class="alert alert-danger">
                                 <strong>{{ error|escape }}</strong>
@@ -96,7 +96,7 @@
                 {{ csrf_input }}
 
                 <!--Show the field forms-->
-                {% for field in mnemonic_query_form %}
+                {% for field in edb_components['mnemonic_query_form'] %}
                     <div class="mnemonic_query_field">
                         {{ field }}
                         {% if field.help_text %}
@@ -107,21 +107,17 @@
                 <button name=mnemonic_query class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
 
             </form>
-            <!--<div class="mnemonic_name_search_col">-->
-            {% if mnemonic_query_result %}
+            {% if edb_components['mnemonic_query_result'] %}
                 <br />
                 <br />
-                Query returned {{ mnemonic_query_result.meta['paging']['rows'] }} records:
+                Query returned {{ edb_components['mnemonic_query_result'].meta['paging']['rows'] }} records:
                 <br />
-                <!--{{mnemonic_query_result_table_html}}-->
-                <!--<iframe src={{'file:'+mnemonic_query_result_table_html}} seamless></iframe>-->
-                <!--{{mnemonic_query_result_plot_div}}-->
 
                 <!-- Add bokeh files -->
                 <link href="https://cdn.pydata.org/bokeh/release/bokeh-1.0.1.min.css" rel="stylesheet" type="text/css">
-                {{ mnemonic_query_result_plot[1] | safe}}
+                {{ edb_components['mnemonic_query_result_plot'][1] | safe}}
                 <span class='plot-container px-1'>
-                    {{  mnemonic_query_result_plot[0] | safe }}
+                    {{  edb_components['mnemonic_query_result_plot'][0] | safe }}
                 </span>
             {% endif %}
         </div>

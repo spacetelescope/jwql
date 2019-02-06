@@ -37,11 +37,10 @@ Dependencies
 
 import os
 
-from astropy.time import Time
 from django.http import JsonResponse
 from django.shortcuts import render
 
-from .data_containers import get_acknowledgements
+from .data_containers import get_acknowledgements, get_edb_components
 from .data_containers import get_dashboard_components
 from .data_containers import get_filenames_by_instrument
 from .data_containers import get_header_info
@@ -49,13 +48,13 @@ from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
-from .forms import FileSearchForm, MnemonicSearchForm, MnemonicQueryForm
+from .forms import FileSearchForm
 from .oauth import auth_info
-from jwql.utils.engineering_database import query_mnemonic_info, query_single_mnemonic
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
+
 
 @auth_info
 def about(request, user):
@@ -236,6 +235,33 @@ def dashboard(request, user):
 
 
 @auth_info
+def engineering_database(request, user):
+    """Generate the EDB page.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    user : dict
+        A dictionary of user credentials.
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+
+    """
+    edb_components = get_edb_components(request)
+
+    template = 'engineering_database.html'
+    context = {'user': user,
+               'tools': MONITORS,
+               'edb_components': edb_components}
+
+    return render(request, template, context)
+
+
+@auth_info
 def home(request, user):
     """Generate the home page
 
@@ -270,73 +296,9 @@ def home(request, user):
     return render(request, template, context)
 
 
-def engineering_database(request):
-    """Generate the EDB page.
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-
-    mnemonic_result = {}
-    mnemonic_query_result = {}
-    mnemonic_query_result_plot = None
-
-    # If this is a POST request, we need to process the form data
-    if request.method == 'POST':
-
-        if 'mnemonic_name_search' in request.POST.keys():
-            mnemonic_name_search_form = MnemonicSearchForm(request.POST,
-                                                           prefix='mnemonic_name_search')
-
-            if mnemonic_name_search_form.is_valid():
-                mnemonic_identifier = mnemonic_name_search_form['search'].value()
-                if mnemonic_identifier is not None:
-                    mnemonic_result = query_mnemonic_info(mnemonic_identifier)
-
-            # create forms for search fields not clicked
-            mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
-
-        elif 'mnemonic_query' in request.POST.keys():
-            mnemonic_query_form = MnemonicQueryForm(request.POST, prefix='mnemonic_query')
-
-            # proceed only if entries make sense
-            if mnemonic_query_form.is_valid():
-                mnemonic_identifier = mnemonic_query_form['search'].value()
-                start_time = Time(mnemonic_query_form['start_time'].value(), format='iso')
-                end_time = Time(mnemonic_query_form['end_time'].value(), format='iso')
-
-                if mnemonic_identifier is not None:
-                    mnemonic_query_result = query_single_mnemonic(mnemonic_identifier, start_time,
-                                                                  end_time)
-                    mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
-
-            # create forms for search fields not clicked
-            mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
-
-    else:
-        mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
-        mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
-
-    template = 'engineering_database.html'
-    context = {'mnemonic_query_form': mnemonic_query_form,
-               'mnemonic_query_result': mnemonic_query_result,
-               'mnemonic_query_result_plot': mnemonic_query_result_plot,
-               'mnemonic_name_search_form': mnemonic_name_search_form,
-               'mnemonic_result': mnemonic_result}
-
-    return render(request, template, context)
-
-
 @auth_info
 def instrument(request, user, inst):
-    """Generate the instrument tool index page
+    """Generate the instrument tool index page.
 
     Parameters
     ----------

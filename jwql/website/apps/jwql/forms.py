@@ -228,7 +228,7 @@ class MnemonicQueryForm(forms.Form):
                                  initial=default_start_time.iso, help_text="Start time")
 
     end_time = forms.CharField(label='end', max_length=500, required=False,
-                               initial=default_end_time, help_text="End time")
+                               initial=default_end_time.iso, help_text="End time")
 
     # Initialize attributes
     search_type = None
@@ -268,8 +268,8 @@ class MnemonicQueryForm(forms.Form):
         try:
             Time(start_time, format='iso')
         except ValueError:
-            raise forms.ValidationError('Invalid time {}. Please enter a time in iso format, e.g.'
-                                        '{}'.format(start_time, self.default_start_time))
+            raise forms.ValidationError('Invalid start time {}. Please enter a time in iso format, '
+                                        'e.g. {}'.format(start_time, self.default_start_time))
         return self.cleaned_data['start_time']
 
     def clean_end_time(self):
@@ -285,11 +285,13 @@ class MnemonicQueryForm(forms.Form):
         try:
             Time(end_time, format='iso')
         except ValueError:
-            raise forms.ValidationError('Invalid time {}. Please enter a time in iso format, e.g.'
-                                        '{}.'.format(end_time, self.default_end_time))
+            raise forms.ValidationError('Invalid end time {}. Please enter a time in iso format, '
+                                        'e.g. {}.'.format(end_time, self.default_end_time))
 
-        # verify that end_time is later than start_time
-        if self.cleaned_data['end_time'] < self.cleaned_data['start_time']:
-            raise forms.ValidationError('Invalid time inputs. End time has to be after Start time.')
+        if 'start_time' in self.cleaned_data.keys():
+            # verify that end_time is later than start_time
+            if self.cleaned_data['end_time'] <= self.cleaned_data['start_time']:
+                raise forms.ValidationError('Invalid time inputs. End time is required to be after'
+                                            ' Start time.')
 
         return self.cleaned_data['end_time']
