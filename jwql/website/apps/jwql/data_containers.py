@@ -530,7 +530,6 @@ def get_thumbnails_by_instrument(inst):
     # Get subset of preview images that match the filenames
     thumbnails = [item for item in thumbnails if os.path.basename(item).split('_integ')[0] in filenames]
 
-
     return thumbnails
 
 

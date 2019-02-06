@@ -37,20 +37,26 @@ for instrument in JWST_INSTRUMENT_NAMES:
     urls.append('api/{}/thumbnails/'.format(instrument))  # thumbnails_by_instrument
 
 # Proposal-specific URLs
-proposals = ['86700'  # FGS
-            ]
+proposals = ['86700',  # FGS
+             '98012',  # MIRI
+             '93025',  # NIRCam
+             '00308',  # NIRISS
+             '96213']  # NIRSpec
 for proposal in proposals:
     urls.append('api/{}/filenames/'.format(proposal))  # filenames_by_proposal
     urls.append('api/{}/preview_images/'.format(proposal))  # preview_images_by_proposal
     urls.append('api/{}/thumbnails/'.format(proposal))  # thumbnails_by_proposal
 
 # Filename-specific URLs
-rootnames = ['jw86700005001_02101_00001_guider1'  # FGS
-]
+rootnames = ['jw86600007001_02101_00001_guider2',  # FGS
+             'jw98012001001_02102_00001_mirimage',  # MIRI
+             'jw93025001001_02102_00001_nrca2',  # NIRCam
+             'jw00308001001_02101_00001_nis',  # NIRISS
+             'jw96213001001_02101_00001_nrs1']  # NIRSpec
 for rootname in rootnames:
     urls.append('api/{}/filenames/'.format(rootname))  # filenames_by_rootname
     urls.append('api/{}/preview_images/'.format(rootname))  # preview_images_by_rootname
-    urls.append('api/{}/thumbnails'.format(rootname))  # thumbnails_by_rootname
+    urls.append('api/{}/thumbnails/'.format(rootname))  # thumbnails_by_rootname
 
 
 @pytest.mark.parametrize('url', urls)
