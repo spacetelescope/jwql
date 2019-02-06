@@ -254,7 +254,9 @@ def engineering_database(request, user):
     edb_components = get_edb_components(request)
 
     template = 'engineering_database.html'
-    context = {'user': user,
+    context = {'inst': '',
+               'inst_list': JWST_INSTRUMENT_NAMES,
+               'user': user,
                'tools': MONITORS,
                'edb_components': edb_components}
 
