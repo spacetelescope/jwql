@@ -10,6 +10,8 @@ Authors
 -------
 
     - Lauren Chambers
+    - Matthew Bourque
+    - Johannes Sahlmann
 
 Use
 ---
