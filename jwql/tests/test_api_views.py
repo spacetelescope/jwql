@@ -59,6 +59,7 @@ for rootname in rootnames:
     urls.append('api/{}/thumbnails/'.format(rootname))  # thumbnails_by_rootname
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize('url', urls)
 def test_api_views(url):
     """Test to see if the given ``url`` returns a populated JSON object
