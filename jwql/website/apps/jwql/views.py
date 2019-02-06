@@ -37,7 +37,6 @@ Dependencies
 
 import os
 
-from astropy.io import ascii
 from astropy.time import Time
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -278,7 +277,6 @@ def engineering_database(request):
 
     mnemonic_result = {}
     mnemonic_query_result = {}
-    mnemonic_query_result_table_html = {}
     mnemonic_query_result_plot = None
 
     # If this is a POST request, we need to process the form data
@@ -294,7 +292,6 @@ def engineering_database(request):
                     mnemonic_result = query_mnemonic_info(mnemonic_identifier)
 
             # create forms for search fields not clicked
-            form = FileSearchForm(prefix='file_search')
             mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
 
         elif 'mnemonic_query' in request.POST.keys():
@@ -309,46 +306,18 @@ def engineering_database(request):
                 if mnemonic_identifier is not None:
                     mnemonic_query_result = query_single_mnemonic(mnemonic_identifier, start_time,
                                                                   end_time)
-                    import tempfile
-                    import sys
-                    tmpdir = tempfile.mkdtemp()
-                    mnemonic_query_result_table_html = os.path.join(tmpdir, 'mnemonic_query_result_table.html')
-                    print(mnemonic_query_result_table_html)
-                    # with open(mnemonic_query_result_table_html, 'w') as tmp:
-                    #     mnemonic_query_result.data.write(tmp, format='jsviewer')
-                    mnemonic_query_result.data[0:2].write(mnemonic_query_result_table_html, format='html')
-                    mnemonic_query_result.data[0:2].write(sys.stdout, format='html')
-                    # mnemonic_query_result.data.write(mnemonic_query_result_table_html, format='jsviewer')
                     mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
-                    print(mnemonic_query_result_table_html)
-
-            # create forms for search fields not clicked
-            form = FileSearchForm(prefix='file_search')
-            mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
-
-        elif 'filesearch' in request.POST.keys():
-            # Create a form instance and populate it with data from the request
-            form = FileSearchForm(request.POST, prefix='file_search')
-            if form.is_valid():
-                return form.redirect_to_files()
 
             # create forms for search fields not clicked
             mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
-            mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
 
     else:
-        form = FileSearchForm(prefix='file_search')
         mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
         mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
 
     template = 'engineering_database.html'
-    context = {'inst': '',
-               'inst_list': JWST_INSTRUMENT_NAMES,
-               'tools': MONITORS,
-               'form': form,
-               'mnemonic_query_form': mnemonic_query_form,
+    context = {'mnemonic_query_form': mnemonic_query_form,
                'mnemonic_query_result': mnemonic_query_result,
-               'mnemonic_query_result_table_html': mnemonic_query_result_table_html,
                'mnemonic_query_result_plot': mnemonic_query_result_plot,
                'mnemonic_name_search_form': mnemonic_name_search_form,
                'mnemonic_result': mnemonic_result}

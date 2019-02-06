@@ -165,6 +165,8 @@ def process_mast_service_request_result(result, data_as_table=True):
     ----------
     result : list of requests.models.Response instances
         The object returned by a call to ``Mast.service_request_async``
+    data_as_table : bool
+        If True, return data as astropy table, else return as json
 
     Returns
     -------
