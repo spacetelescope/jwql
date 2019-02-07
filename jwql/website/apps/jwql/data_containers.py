@@ -421,13 +421,11 @@ def get_instrument_proposals(instrument):
     """
 
     service = "Mast.Jwst.Filtered.{}".format(instrument)
-    params = {"columns": "filename",
+    params = {"columns": "program",
               "filters": []}
     response = Mast.service_request_async(service, params)
     results = response[0].json()['data']
-
-    filenames = [result['filename'] for result in results]
-    proposals = list(set(filename_parser(filename)['program_id'] for filename in filenames))
+    proposals = list(set(result['program'] for result in results))
 
     return proposals
 
@@ -461,17 +459,11 @@ def get_preview_images_by_instrument(inst):
     # Parse the results to get the rootnames
     filenames = [result['filename'].split('.')[0] for result in results]
 
-    # Build list of available preview images
-    preview_images = []
-    for filename in filenames:
-        proposal = filename_parser(filename)['program_id']
-        preview_images.extend(glob.glob(os.path.join(
-            PREVIEW_IMAGE_FILESYSTEM,
-            'jw{}'.format(proposal),
-            '{}*.jpg'.format(filename))))
+    # Get list of all preview_images
+    preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, '*', '*.jpg'))
 
-    # Only return the filenames
-    preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
+    # Get subset of preview images that match the filenames
+    preview_images = [item for item in preview_images if os.path.basename(item).split('_integ')[0] in filenames]
 
     return preview_images
 
@@ -598,17 +590,11 @@ def get_thumbnails_by_instrument(inst):
     # Parse the results to get the rootnames
     filenames = [result['filename'].split('.')[0] for result in results]
 
-    # Build list of available preview images
-    thumbnails = []
-    for filename in filenames:
-        proposal = filename_parser(filename)['program_id']
-        thumbnails.extend(glob.glob(os.path.join(
-            THUMBNAIL_FILESYSTEM,
-            'jw{}'.format(proposal),
-            '{}*.thumb'.format(filename))))
+    # Get list of all thumbnails
+    thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
 
-    # Only return the filenames
-    thumbnails = [os.path.basename(thumbnail) for thumbnail in thumbnails]
+    # Get subset of preview images that match the filenames
+    thumbnails = [item for item in thumbnails if os.path.basename(item).split('_integ')[0] in filenames]
 
     return thumbnails
 
