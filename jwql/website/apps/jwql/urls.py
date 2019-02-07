@@ -10,6 +10,8 @@ Authors
 -------
 
     - Lauren Chambers
+    - Matthew Bourque
+    - Johannes Sahlmann
 
 Use
 ---
@@ -61,6 +63,7 @@ urlpatterns = [
     # Main site views
     path('about/', views.about, name='about'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('edb/', views.engineering_database, name='edb'),
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
     re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),
