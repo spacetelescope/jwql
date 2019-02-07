@@ -11,6 +11,7 @@ Authors
 -------
 
     - Lauren Chambers
+    - Johannes Sahlmann
 
 Use
 ---
@@ -39,7 +40,7 @@ import os
 from django.http import JsonResponse
 from django.shortcuts import render
 
-from .data_containers import get_acknowledgements
+from .data_containers import get_acknowledgements, get_edb_components
 from .data_containers import get_dashboard_components
 from .data_containers import get_filenames_by_instrument
 from .data_containers import get_header_info
@@ -53,6 +54,7 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMEN
 from jwql.utils.utils import get_base_url, get_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
+
 
 @auth_info
 def about(request, user):
@@ -233,6 +235,35 @@ def dashboard(request, user):
 
 
 @auth_info
+def engineering_database(request, user):
+    """Generate the EDB page.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    user : dict
+        A dictionary of user credentials.
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+
+    """
+    edb_components = get_edb_components(request)
+
+    template = 'engineering_database.html'
+    context = {'inst': '',
+               'inst_list': JWST_INSTRUMENT_NAMES,
+               'user': user,
+               'tools': MONITORS,
+               'edb_components': edb_components}
+
+    return render(request, template, context)
+
+
+@auth_info
 def home(request, user):
     """Generate the home page
 
@@ -269,7 +300,7 @@ def home(request, user):
 
 @auth_info
 def instrument(request, user, inst):
-    """Generate the instrument tool index page
+    """Generate the instrument tool index page.
 
     Parameters
     ----------
