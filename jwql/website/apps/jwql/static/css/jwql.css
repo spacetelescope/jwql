@@ -111,6 +111,50 @@
     padding: 0px;
 }
 
+/* START structures for engineering_database page
+*/
+
+#mnemonic_name_search {
+    width: 100%;
+    height: 100%;
+    padding: 0px;
+}
+
+.mnemonic_name_search_row {
+    display: flex;
+    width: 100%;
+}
+
+.mnemonic_name_search_col {
+  padding: 1em;
+  border: 1px solid #F2CE3A;
+  width: 100%;
+}
+
+.mnemonic_name_search_col1 {
+  padding: 1em;
+  border: 1px solid #F2CE3A;
+  width: 40%;
+}
+
+.mnemonic_query_section {
+    width: 100%;
+    height: 100%;
+    padding: 1em;
+    /*border:solid #000000;*/
+    border: 1px solid #F2CE3A;
+}
+
+.mnemonic_query_field {
+float:left;
+width:300px;
+list-style-type: none;
+display : inline;
+}
+
+/* END structures for engineering_database page */
+
+
 #homepage_filesearch #id_search:focus {
     box-shadow: none;
     border-color: #cfd4da;
