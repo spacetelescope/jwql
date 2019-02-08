@@ -9,6 +9,7 @@ Authors
 -------
 
     - Lauren Chambers
+    - Johannes Sahlmann
 
 Use
 ---
@@ -37,24 +38,25 @@ Dependencies
 ------------
     The user must have a configuration file named ``config.json``
     placed in the ``jwql/utils/`` directory.
-"""
 
+"""
 import glob
 import os
 
+from astropy.time import Time, TimeDelta
 from django import forms
 from django.shortcuts import redirect
 
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.engineering_database import is_valid_mnemonic
 from jwql.utils.utils import get_config, filename_parser
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
 class FileSearchForm(forms.Form):
-    """A form that contains a single field for users to search for a proposal
-    or fileroot in the JWQL filesystem.
-    """
+    """Single-field form to search for a proposal or fileroot."""
+
     # Define search field
     search = forms.CharField(label='', max_length=500, required=True,
                              empty_value='Search')
@@ -65,14 +67,16 @@ class FileSearchForm(forms.Form):
     instrument = None
 
     def clean_search(self):
-        """Validate the "search" field by checking to ensure the input
-        is either a proposal or fileroot, and one that matches files
-        in the filesystem.
+        """Validate the "search" field.
+
+        Check that the input is either a proposal or fileroot, and one
+        that matches files in the filesystem.
 
         Returns
         -------
         str
             The cleaned data input into the "search" field
+
         """
         # Get the cleaned search data
         search = self.cleaned_data['search']
@@ -83,7 +87,8 @@ class FileSearchForm(forms.Form):
         elif self._search_is_fileroot(search):
             self.search_type = 'fileroot'
         else:
-            raise forms.ValidationError('Invalid search term {}. Please provide proposal number or file root.'.format(search))
+            raise forms.ValidationError('Invalid search term {}. Please provide proposal number '
+                                        'or file root.'.format(search))
 
         # If they searched for a proposal...
         if self.search_type == 'proposal':
@@ -98,7 +103,8 @@ class FileSearchForm(forms.Form):
                     instrument = filename_parser(file)['detector']
                     all_instruments.append(instrument[:3])
                 if len(set(all_instruments)) > 1:
-                    raise forms.ValidationError('Cannot return result for proposal with multiple instruments.')
+                    raise forms.ValidationError('Cannot return result for proposal with multiple '
+                                                'instruments.')
 
                 self.instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[all_instruments[0]]
             else:
@@ -131,6 +137,7 @@ class FileSearchForm(forms.Form):
         -------
         bool
             Is the search term formatted like a fileroot?
+
         """
         try:
             self.fileroot_dict = filename_parser(search)
@@ -139,14 +146,14 @@ class FileSearchForm(forms.Form):
             return False
 
     def redirect_to_files(self):
-        """Determine where to redirect the web app based on user search input.
+        """Determine where to redirect the web app based on user input.
 
         Returns
         -------
         HttpResponseRedirect object
             Outgoing redirect response sent to the webpage
-        """
 
+        """
         # Process the data in form.cleaned_data as required
         search = self.cleaned_data['search']
 
@@ -157,3 +164,134 @@ class FileSearchForm(forms.Form):
         # If they searched for a file root
         elif self.search_type == 'fileroot':
             return redirect('/{}/{}'.format(self.instrument, search))
+
+
+class MnemonicSearchForm(forms.Form):
+    """A single-field form to search for a mnemonic in the DMS EDB."""
+
+    # Define search field
+    search = forms.CharField(label='', max_length=500, required=True,
+                             empty_value='Search', initial='SA_ZFGOUTFOV')
+
+    # Initialize attributes
+    search_type = None
+
+    def clean_search(self):
+        """Validate the "search" field.
+
+        Check that the input is a valid mnemonic identifier.
+
+        Returns
+        -------
+        str
+            The cleaned data input into the "search" field
+
+        """
+        # Get the cleaned search data
+        search = self.cleaned_data['search']
+
+        # Make sure the search is a valid mnemonic identifier
+        if is_valid_mnemonic(search):
+            self.search_type = 'mnemonic'
+        else:
+            raise forms.ValidationError('Invalid search term {}. Please enter a valid DMS EDB '
+                                        'mnemonic.'.format(search))
+
+        return self.cleaned_data['search']
+
+
+class MnemonicQueryForm(forms.Form):
+    """A triple-field form to query mnemonic records in the DMS EDB."""
+
+    production_mode = False
+
+    if production_mode:
+        # times for default query (one day one week ago)
+        now = Time.now()
+        delta_day = -7.
+        range_day = 1.
+        default_start_time = now + TimeDelta(delta_day, format='jd')
+        default_end_time = now + TimeDelta(delta_day+range_day, format='jd')
+    else:
+        # example for testing
+        default_start_time = Time('2019-01-16 00:00:00.000', format='iso')
+        default_end_time = Time('2019-01-16 00:01:00.000', format='iso')
+
+    default_mnemonic_identifier = 'IMIR_HK_ICE_SEC_VOLT4'
+
+    # Define search fields
+    search = forms.CharField(label='mnemonic', max_length=500, required=True,
+                             initial=default_mnemonic_identifier, empty_value='Search',
+                             help_text="Mnemonic identifier")
+
+    start_time = forms.CharField(label='start', max_length=500, required=False,
+                                 initial=default_start_time.iso, help_text="Start time")
+
+    end_time = forms.CharField(label='end', max_length=500, required=False,
+                               initial=default_end_time.iso, help_text="End time")
+
+    # Initialize attributes
+    search_type = None
+
+    def clean_search(self):
+        """Validate the "search" field.
+
+        Check that the input is a valid mnemonic identifier.
+
+        Returns
+        -------
+        str
+            The cleaned data input into the "search" field
+
+        """
+        # Get the cleaned search data
+        search = self.cleaned_data['search']
+
+        if is_valid_mnemonic(search):
+            self.search_type = 'mnemonic'
+        else:
+            raise forms.ValidationError('Invalid search term {}. Please enter a valid DMS EDB '
+                                        'mnemonic.'.format(search))
+
+        return self.cleaned_data['search']
+
+    def clean_start_time(self):
+        """Validate the start time.
+
+        Returns
+        -------
+        str
+           The cleaned data input into the start_time field
+
+        """
+        start_time = self.cleaned_data['start_time']
+        try:
+            Time(start_time, format='iso')
+        except ValueError:
+            raise forms.ValidationError('Invalid start time {}. Please enter a time in iso format, '
+                                        'e.g. {}'.format(start_time, self.default_start_time))
+        return self.cleaned_data['start_time']
+
+    def clean_end_time(self):
+        """Validate the end time.
+
+        Returns
+        -------
+        str
+           The cleaned data input into the end_time field
+
+        """
+        end_time = self.cleaned_data['end_time']
+        try:
+            Time(end_time, format='iso')
+        except ValueError:
+            raise forms.ValidationError('Invalid end time {}. Please enter a time in iso format, '
+                                        'e.g. {}.'.format(end_time, self.default_end_time))
+
+        if 'start_time' in self.cleaned_data.keys():
+            # verify that end_time is later than start_time
+            if self.cleaned_data['end_time'] <= self.cleaned_data['start_time']:
+                raise forms.ValidationError('Invalid time inputs. End time is required to be after'
+                                            ' Start time.')
+
+        return self.cleaned_data['end_time']

@@ -25,13 +25,16 @@ import glob
 import os
 
 from astropy.io import fits
+from astropy.time import Time
 from astroquery.mast import Mast
 import numpy as np
 
+from .forms import MnemonicSearchForm, MnemonicQueryForm
 from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.constants import MONITORS
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser
+from jwql.utils.engineering_database import query_mnemonic_info, query_single_mnemonic
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -99,7 +102,7 @@ def get_dashboard_components():
     -------
     dashboard_components : dict
         A dictionary containing components needed for the dashboard.
-    dashboard_components : dict
+    dashboard_html : dict
         A dictionary containing full HTML needed for the dashboard.
     """
 
@@ -149,6 +152,69 @@ def get_dashboard_components():
     dashboard_html['Cron Job Monitor'] = cron_status_table_html
 
     return dashboard_components, dashboard_html
+
+
+def get_edb_components(request):
+    """Return dictionary with content needed for the EDB page.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    edb_components : dict
+        Dictionary with the required components
+
+    """
+    mnemonic_name_search_result = {}
+    mnemonic_query_result = {}
+    mnemonic_query_result_plot = None
+
+    # If this is a POST request, we need to process the form data
+    if request.method == 'POST':
+
+        if 'mnemonic_name_search' in request.POST.keys():
+            mnemonic_name_search_form = MnemonicSearchForm(request.POST,
+                                                           prefix='mnemonic_name_search')
+
+            if mnemonic_name_search_form.is_valid():
+                mnemonic_identifier = mnemonic_name_search_form['search'].value()
+                if mnemonic_identifier is not None:
+                    mnemonic_name_search_result = query_mnemonic_info(mnemonic_identifier)
+
+            # create forms for search fields not clicked
+            mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
+
+        elif 'mnemonic_query' in request.POST.keys():
+            mnemonic_query_form = MnemonicQueryForm(request.POST, prefix='mnemonic_query')
+
+            # proceed only if entries make sense
+            if mnemonic_query_form.is_valid():
+                mnemonic_identifier = mnemonic_query_form['search'].value()
+                start_time = Time(mnemonic_query_form['start_time'].value(), format='iso')
+                end_time = Time(mnemonic_query_form['end_time'].value(), format='iso')
+
+                if mnemonic_identifier is not None:
+                    mnemonic_query_result = query_single_mnemonic(mnemonic_identifier, start_time,
+                                                                  end_time)
+                    mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
+
+            # create forms for search fields not clicked
+            mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
+
+    else:
+        mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
+        mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
+
+    edb_components = {'mnemonic_query_form' : mnemonic_query_form,
+                      'mnemonic_query_result' : mnemonic_query_result,
+                      'mnemonic_query_result_plot' : mnemonic_query_result_plot,
+                      'mnemonic_name_search_form' : mnemonic_name_search_form,
+                      'mnemonic_name_search_result': mnemonic_name_search_result}
+
+    return edb_components
 
 
 def get_expstart(rootname):
@@ -355,13 +421,11 @@ def get_instrument_proposals(instrument):
     """
 
     service = "Mast.Jwst.Filtered.{}".format(instrument)
-    params = {"columns": "filename",
+    params = {"columns": "program",
               "filters": []}
     response = Mast.service_request_async(service, params)
     results = response[0].json()['data']
-
-    filenames = [result['filename'] for result in results]
-    proposals = list(set(filename_parser(filename)['program_id'] for filename in filenames))
+    proposals = list(set(result['program'] for result in results))
 
     return proposals
 
@@ -395,17 +459,11 @@ def get_preview_images_by_instrument(inst):
     # Parse the results to get the rootnames
     filenames = [result['filename'].split('.')[0] for result in results]
 
-    # Build list of available preview images
-    preview_images = []
-    for filename in filenames:
-        proposal = filename_parser(filename)['program_id']
-        preview_images.extend(glob.glob(os.path.join(
-            PREVIEW_IMAGE_FILESYSTEM,
-            'jw{}'.format(proposal),
-            '{}*.jpg'.format(filename))))
+    # Get list of all preview_images
+    preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, '*', '*.jpg'))
 
-    # Only return the filenames
-    preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
+    # Get subset of preview images that match the filenames
+    preview_images = [item for item in preview_images if os.path.basename(item).split('_integ')[0] in filenames]
 
     return preview_images
 
@@ -532,17 +590,11 @@ def get_thumbnails_by_instrument(inst):
     # Parse the results to get the rootnames
     filenames = [result['filename'].split('.')[0] for result in results]
 
-    # Build list of available preview images
-    thumbnails = []
-    for filename in filenames:
-        proposal = filename_parser(filename)['program_id']
-        thumbnails.extend(glob.glob(os.path.join(
-            THUMBNAIL_FILESYSTEM,
-            'jw{}'.format(proposal),
-            '{}*.thumb'.format(filename))))
+    # Get list of all thumbnails
+    thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
 
-    # Only return the filenames
-    thumbnails = [os.path.basename(thumbnail) for thumbnail in thumbnails]
+    # Get subset of preview images that match the filenames
+    thumbnails = [item for item in thumbnails if os.path.basename(item).split('_integ')[0] in filenames]
 
     return thumbnails
 
