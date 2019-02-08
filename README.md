@@ -21,7 +21,7 @@ Official API documentation can be found on [ReadTheDocs](https://jwql.readthedoc
 
 The `jwql` application is currently under heavy development.  The `1.0` release is expected in 2019.  Currently, a development version of the web application can be found at [https://dljwql.stsci.edu](https://dljwql.stsci.edu).
 
-# Installation
+## Installation
 
 ### Prerequisites
 
