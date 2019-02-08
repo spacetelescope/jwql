@@ -265,7 +265,6 @@ display : inline;
 .navbar {
     background-color: black;
 }
-
 .navbar-brand {
     color: white;
     text-transform: uppercase;
@@ -283,6 +282,13 @@ display : inline;
     text-transform: uppercase;
 }
 
+/* Get rid of padding around GitHub logo */
+#github-link {
+    padding-bottom: 0px;
+    padding-top: 0px;
+}
+
+/* Set username to be orange */
 #oauth_user {
   color: #c85108;
 }
@@ -439,7 +445,6 @@ h1 {
     letter-spacing: 0.05em;
 }
 
-
 /* Change color of dropdown links on hover */
 li:hover .nav-link, .navbar-brand:hover {
     color: #fff;
@@ -449,3 +454,4 @@ li:hover .nav-link, .navbar-brand:hover {
 li.dropdown:hover .dropdown-menu {
     display: block;
 }
+

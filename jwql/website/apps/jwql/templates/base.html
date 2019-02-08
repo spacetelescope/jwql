@@ -57,20 +57,20 @@
 	            		<a class="nav-link" href={{ url('jwql:dashboard') }}>Dashboard<span class="sr-only">(current)</span></a>
 	          		</li>
 	          		{% for inst_key, inst_tools in tools.items() %}
-		          	<li class="dropdown">
-		            	<a class="nav-link dropdown-toggle disabled" href={{ url('jwql:instrument', args=[inst_key]) }} id="dropdown"{{ inst_key }} aria-haspopup="true" aria-expanded="false">{{ inst_key }}</a>
-		            	<div class="dropdown-menu" aria-labelledby="dropdown01">
-			            	<a class='dropdown-heading mx-3'>Images</a>
-			            	<a class="dropdown-item" href={{ url('jwql:unlooked', args=[inst_key]) }}>Unlooked Images</a>
-			            	<a class="dropdown-item" href="#">Image Anomalies</a>
-			            	<a class="dropdown-item" href={{ url('jwql:archive', args=[inst_key]) }}>Archived Images</a>
-			            	<div class="dropdown-divider"></div>
-			            	<a class='dropdown-heading mx-3'>Monitors</a>
-			            	{% for tool in inst_tools %}
-			              		<a class="dropdown-item" href="#">{{ tool }}</a>
-			              	{% endfor %}
-		            	</div>
-		          	</li>
+						<li class="dropdown">
+							<a class="nav-link dropdown-toggle disabled" href={{ url('jwql:instrument', args=[inst_key]) }} id="dropdown"{{ inst_key }} aria-haspopup="true" aria-expanded="false">{{ inst_key }}</a>
+							<div class="dropdown-menu" aria-labelledby="dropdown01">
+								<a class='dropdown-heading mx-3'>Images</a>
+								<a class="dropdown-item" href={{ url('jwql:unlooked', args=[inst_key]) }}>Unlooked Images</a>
+								<a class="dropdown-item" href="#">Image Anomalies</a>
+								<a class="dropdown-item" href={{ url('jwql:archive', args=[inst_key]) }}>Archived Images</a>
+								<div class="dropdown-divider"></div>
+								<a class='dropdown-heading mx-3'>Monitors</a>
+									{% for tool in inst_tools %}
+										<a class="dropdown-item" href="#">{{ tool }}</a>
+									{% endfor %}
+							</div>
+						</li>
 		      		{% endfor %}
 		      		<li class="nav-item active">
 	            		<a class="nav-link" href={{ url('jwql:edb') }}>EDB<span class="sr-only">(current)</span></a>
@@ -86,18 +86,18 @@
 	            <ul class="navbar-nav mr-auto">
 	            	{% if user.ezid %}
 	            		<li>
-	            			<a class="nav-link" href="https://auth.mastdev.stsci.edu/tokens" id="oauth_user" style="transform:translateY(20%);">{{ user.ezid }}</a>
+	            			<a class="nav-link" href="https://auth.mastdev.stsci.edu/tokens" id="oauth_user">{{ user.ezid }}</a>
 	            		</li>
 	            		<li>
-	            			<a role="button" class="btn btn-primary my-2" href={{ url('jwql:logout') }}>logout</a>
+	            			<a role="button" class="btn btn-primary" href={{ url('jwql:logout') }}>logout</a>
 	            		</li>
 	            	{% else %}
 	            		<li class="nav-item active">
-	            			<a role="button" class="btn btn-primary my-2" href={{ url('jwql:login') }}>login</a>
+	            			<a role="button" class="btn btn-primary" href={{ url('jwql:login') }}>login</a>
 	            		</li>
 	            	{% endif %}
 	            	<li class="nav-item active">
-						<a class="nav-link" href="https://github.com/spacetelescope/jwql" target="_blank"><img src={{ static('img/githublogo.svg') }} height=35 width=35></a>
+						<a id="github-link" class="nav-link" href="https://github.com/spacetelescope/jwql" target="_blank"><img src={{ static('img/githublogo.svg') }} height=35 width=35></a>
 					</li>
 	    		</ul>
 	    	</div>
