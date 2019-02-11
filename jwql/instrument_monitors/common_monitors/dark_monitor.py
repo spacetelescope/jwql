@@ -142,7 +142,6 @@ class Dark():
         #    self.sample_time = 0
         #    self.frame_time = 0
 
-
     def get_metadata(self, filename):
         """Collect basic metadata from filename that will be needed later
 
