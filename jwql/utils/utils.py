@@ -38,10 +38,25 @@ AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 0), (512, 2048)], '2': [(512, 0), (
                         }
 
 
-def copy_from_filesystem(files, out_dir):
-    """Copy a given file from the filesystem to a given directory.
-    Only try to copy the file if it is not already present in the
-    output directory.
+def copy_files(files, out_dir):
+    """Copy a given file to a given directory. Only try to copy the file
+    if it is not already present in the output directory.
+
+    Parameters
+    ----------
+    files : list
+        List of files to be copied
+
+    out_dir : str
+        Destination directory
+
+    Returns
+    -------
+    success : list
+        Files successfully copied (or that already existed in out_dir)
+
+    failed : list
+        Files that were not copied
     """
     # Copy files if they do not already exist
     success = []
@@ -57,6 +72,11 @@ def copy_from_filesystem(files, out_dir):
             except:
                 failed.append(input_file)
     return success, failed
+
+
+def download_mast_data_via_astroquery(query_results, output_dir):
+    """TEST"""
+    pass
 
 
 def download_mast_data(query_results, output_dir):
@@ -76,16 +96,25 @@ def download_mast_data(query_results, output_dir):
     conn = httplib.HTTPSConnection(server)
 
     # Dowload the products
+    print('Number of query results: {}'.format(len(query_results)))
+
     for i in range(len(query_results)):
 
         # Make full output file path
         output_file = os.path.join(output_dir, query_results[i]['filename'])
 
+        print('Output file is {}'.format(output_file))
+
         # Download the data
         uri = query_results[i]['dataURI']
+
+        print('uri is {}'.format(uri))
+
         conn.request("GET", "/api/v0/download/file?uri="+uri)
         resp = conn.getresponse()
         file_content = resp.read()
+
+
 
         # Save to file
         with open(output_file, 'wb') as file_obj:
@@ -93,9 +122,13 @@ def download_mast_data(query_results, output_dir):
 
         # Check for file
         if not os.path.isfile(output_file):
-            print("ERROR: " + output_file + " failed to download.")
+            print("ERROR: {} failed to download.".format(output_file))
         else:
-            print("DOWNLOAD COMPLETE: ", output_file)
+            statinfo = os.stat(output_file)
+            if statinfo.st_size > 0:
+                print("DOWNLOAD COMPLETE: ", output_file)
+            else:
+                print("ERROR: {} file is empty.".format(output_file))
     conn.close()
 
 

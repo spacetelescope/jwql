@@ -50,9 +50,17 @@ def double_gaussian_fit(x_values, y_values, input_params):
     y_values : numpy.ndarray
         1D array of y values to be fit
 
-    params : list
+    input_params : list
         Initial guesses for Gaussian coefficients
         [amplitude1, peak1, stdev1, amplitude2, peak2, stdev2]
+
+    Returns
+    -------
+    params : list
+        Fitted parameter values
+
+    sigma : numpy.ndarray
+        Uncertainties on the parameters
     """
     params, cov = curve_fit(double_gaussian, x_values, y_values, input_params)
     sigma = np.sqrt(np.diag(cov))

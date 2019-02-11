@@ -58,12 +58,12 @@ from jwst import datamodels
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils import maths, instrument_properties
-from jwql.utils.utils import copy_from_filesystem, download_mast_data, ensure_dir_exists, get_config, \
+from jwql.utils.utils import copy_files, download_mast_data, ensure_dir_exists, get_config, \
                              filesystem_path, AMPLIFIER_BOUNDARIES, JWST_INSTRUMENTS, JWST_DATAPRODUCTS
 
 
 class Dark():
-    def __init__(self, new_dark_threshold=10):
+    def __init__(self, new_dark_threshold=10, testing=False):
         """
         Parameters
         ----------
@@ -72,62 +72,76 @@ class Dark():
             run the dark current monitor. This means that this class needs
             to be instantiated for each instrument/detector/subarray
             combination
+
+        testing : bool
+            For pytest. If True, an instance of Dark is created, but no
+            other code is executed.
         """
-        # Get the output directory
-        #self.output_dir = os.path.join(get_config()['outputs'], 'monitor_darks')
-        print('Use the real outptut directory above before merging')
-        self.output_dir = '~/python_repos/test_jwql/test_dark_monitor'
-        history_file = os.path.join(self.output_dir, 'mast_query_history.txt')
+        if not testing:
+            # Get the output directory
+            #self.output_dir = os.path.join(get_config()['outputs'], 'monitor_darks')
+            print('Use the real outptut directory above before merging')
+            self.output_dir = '~/python_repos/test_jwql/test_dark_monitor'
+            history_file = os.path.join(self.output_dir, 'mast_query_history.txt')
 
-        # Use the current time as the end time for MAST query
-        current_time = Time.now()
-        current_time_mjd = current_time.mjd
+            # Use the current time as the end time for MAST query
+            current_time = Time.now()
+            current_time_mjd = current_time.mjd
 
-        # Open file containing history of queries
-        past_queries = ascii.read(history_file)
+            # Open file containing history of queries
+            past_queries = ascii.read(history_file)
 
-        # Loop over instrument/aperture combinations, and query MAST for new files
-        for row in past_queries:
-            starting_time = Time(row['Last_Query']).mjd
-            new_entries = mast_query_darks(row['Instrument'], row['Aperture'], starting_time, current_time_mjd)
+            # Loop over instrument/aperture combinations, and query MAST for new files
+            for row in past_queries:
+                starting_time = Time(row['Last_Query']).mjd
+                new_entries = mast_query_darks(row['Instrument'], row['Aperture'], starting_time, current_time_mjd)
 
-            # Check to see if there are enough for
-            # the monitor's signal-to-noise requirements
-            if len(new_entries) >= new_dark_threshold:
-                # Get full paths to the files
-                new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
+                # Check to see if there are enough for
+                # the monitor's signal-to-noise requirements
+                if len(new_entries) >= new_dark_threshold:
+                    # Get full paths to the files
+                    new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
 
-                # Set up directories for the copied data
-                ensure_dir_exists(os.path.join(self.output_dir, 'data'))
-                self.data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(row['Instrument'].lower(),
+                    # Set up directories for the copied data
+                    ensure_dir_exists(os.path.join(self.output_dir, 'data'))
+                    self.data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(row['Instrument'].lower(),
                                                                                   row['Aperture'].lower()))
-                ensure_dir_exists(self.data_dir)
+                    ensure_dir_exists(self.data_dir)
 
-                # Copy files from filesystem
-                copied, not_copied = copy_from_filesystem(new_filenames, self.data_dir)
+                    # Copy files from filesystem
+                    copied, not_copied = copy_files(new_filenames, self.data_dir)
 
-                # Short-term fix: if some of the files from the query are not
-                # in the filesystem, try downloading them from MAST
-                if len(not_copied) > 0:
-                    uncopied_basenames = [os.path.basename(infile) for infile in not_copied]
-                    uncopied_results = [entry for entry in new_entries if entry['filename'] in uncopied_basenames]
-                    download_mast_data(uncopied_results, self.output_dir)
+                    # Short-term fix: if some of the files from the query are not
+                    # in the filesystem, try downloading them from MAST
+                    if len(not_copied) > 0:
+                        uncopied_basenames = [os.path.basename(infile) for infile in not_copied]
+                        uncopied_results = [entry for entry in new_entries if entry['filename'] in uncopied_basenames]
+                        download_mast_data(uncopied_results, self.output_dir)
 
-                # Run the dark monitor
-                #dark_files = [os.path.join(self.output_dir, filename) for filename in new_filenames]
-                dark_files = copied
-                print('later add MAST results to this list')
-                self.run(dark_files, row['Instrument'], row['Aperture'])
+                    # Run the dark monitor
+                    #dark_files = [os.path.join(self.output_dir, filename) for filename in new_filenames]
+                    dark_files = copied
+                    print('later add MAST results to this list')
+                    self.run(dark_files, row['Instrument'], row['Aperture'])
 
-                # Update the query history for the next call
-                row['Last_Query'] = current_time.strftime("%Y-%m-%dT%H:%M:%S")
-            else:
-                print(("Dark monitor skipped. {} new dark files for {}, {}. {} new files are "
-                       "required to run dark current monitor.").format(len(new_entries),
-                                                                       row['Instrument'],
-                                                                       row['Aperture'],
-                                                                       new_dark_threshold))
-        logging.info('Dark Monitor completed successfully.')
+                    # Update the query history for the next call
+                    row['Last_Query'] = current_time.strftime("%Y-%m-%dT%H:%M:%S")
+                else:
+                    print(("Dark monitor skipped. {} new dark files for {}, {}. {} new files are "
+                           "required to run dark current monitor.").format(len(new_entries),
+                                                                           row['Instrument'],
+                                                                           row['Aperture'],
+                                                                           new_dark_threshold))
+            logging.info('Dark Monitor completed successfully.')
+        #else:
+        #    self.instrument == ''
+        #    self.x0 = 0
+        #    self.y0 = 0
+        #    self.xsize = 0
+        #    self.ysize = 0
+        #    self.sample_time = 0
+        #    self.frame_time = 0
+
 
     def get_metadata(self, filename):
         """Collect basic metadata from filename that will be needed later
@@ -138,13 +152,16 @@ class Dark():
             Name of fits file to examine
         """
         header = fits.getheader(filename)
-        self.instrument = header['INSTRUME']
-        self.x0 = header['SUBSTRT1']
-        self.y0 = header['SUBSTRT2']
-        self.xsize = header['SUBSIZE1']
-        self.ysize = header['SUBSIZE2']
-        self.sample_time = header['TSAMPLE']
-        self.frame_time = header['TFRAME']
+        try:
+            self.instrument = header['INSTRUME']
+            self.x0 = header['SUBSTRT1']
+            self.y0 = header['SUBSTRT2']
+            self.xsize = header['SUBSIZE1']
+            self.ysize = header['SUBSIZE2']
+            self.sample_time = header['TSAMPLE']
+            self.frame_time = header['TFRAME']
+        except KeyError as e:
+            print(e)
 
     def hot_dead_pixel_check(self, mean_image, comparison_image, hot_threshold=2., dead_threshold=0.1):
         """Get the ratio of the slope image to a baseline slope image.
