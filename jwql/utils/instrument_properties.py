@@ -60,9 +60,9 @@ def amplifier_info(filename, omit_reference_pixels=True):
             # can handle any subarray orientation relative to any amp
             # orientation
             amp4_time = calc_frame_time(instrument, aperture, x_dim, y_dim,
-                                        sample_time, 4)
+                                        4, sample_time=sample_time)
             amp1_time = calc_frame_time(instrument, aperture, x_dim, y_dim,
-                                        sample_time, 1)
+                                        1, sample_time=sample_time)
             if amp4_time == frame_time:
                 num_amps = 4
                 # In this case, keep the full frame amp boundaries in
@@ -125,7 +125,7 @@ def amplifier_info(filename, omit_reference_pixels=True):
     return num_amps, amp_bounds
 
 
-def calc_frame_time(instrument, aperture, xdim, ydim, sample_time, amps):
+def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
     """Calculate the readout time for a single frame
     of a given size and number of amplifiers. Note that for
     NIRISS and FGS, the fast readout direction is opposite to
@@ -149,12 +149,12 @@ def calc_frame_time(instrument, aperture, xdim, ydim, sample_time, amps):
     ydim : int
         Number of rows in the frame
 
+    amps : int
+        Number of amplifiers used to read out the frame
+
     sample_time : float
         Time to sample a pixel, in seconds. For NIRCam/NIRISS/FGS
         this is 10 microseconds = 1e-5 seconds
-
-    amps : int
-        Number of amplifiers used to read out the frame
 
     Returns:
     --------

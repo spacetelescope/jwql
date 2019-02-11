@@ -151,8 +151,11 @@ def image_stack(file_list):
         3D stack of the 2D images
     """
     for i, input_file in enumerate(file_list):
-        model = datamodels.open(input_file)
-        image = model.data
+        #model = datamodels.open(input_file)
+        #image = model.data
+
+        with fits.open(input_file) as hdu:
+            image = hdu[1].data
 
         # Stack all inputs together into a single 3D image cube
         if i == 0:
@@ -161,20 +164,20 @@ def image_stack(file_list):
                 cube = copy.deepcopy(image)
             elif len(ndim_base) == 2:
                 cube = np.expand_dims(image, 0)
-
-        ndim = image.shape
-        if ndim_base[-2:] == ndim[-2:]:
-            if len(ndim) == 2:
-                image = np.expand_dims(image, 0)
-            elif len(ndim) > 3:
-                #raise ValueError("4-dimensional input images not supported.")
-                print('')
-                print('using the initial frame for early testing!!!!!')
-                print('remove line below before merging!!')
-                image = np.expand_dims(image[0, :, :], 0)
-            cube = np.vstack((cube, image))
         else:
-            raise ValueError("Input images are of inconsistent size in x/y dimension.")
+            ndim = image.shape
+            if ndim_base[-2:] == ndim[-2:]:
+                if len(ndim) == 2:
+                    image = np.expand_dims(image, 0)
+                elif len(ndim) > 3:
+                    #raise ValueError("4-dimensional input images not supported.")
+                    print('')
+                    print('using the initial frame for early testing!!!!!')
+                    print('remove line below before merging!!')
+                    image = np.expand_dims(image[0, :, :], 0)
+                cube = np.vstack((cube, image))
+            else:
+                raise ValueError("Input images are of inconsistent size in x/y dimension.")
     return cube
 
 
