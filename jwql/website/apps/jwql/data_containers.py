@@ -23,18 +23,20 @@ Use
 
 import glob
 import os
+import re
 
 from astropy.io import fits
 from astropy.time import Time
 from astroquery.mast import Mast
 import numpy as np
 
-from .forms import MnemonicSearchForm, MnemonicQueryForm
+from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
 from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.constants import MONITORS
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser
 from jwql.utils.engineering_database import query_mnemonic_info, query_single_mnemonic
+from jwql.utils.engineering_database import mnemonic_inventory
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -171,6 +173,7 @@ def get_edb_components(request):
     mnemonic_name_search_result = {}
     mnemonic_query_result = {}
     mnemonic_query_result_plot = None
+    mnemonic_exploration_result = None
 
     # If this is a POST request, we need to process the form data
     if request.method == 'POST':
@@ -186,6 +189,7 @@ def get_edb_components(request):
 
             # create forms for search fields not clicked
             mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
+            mnemonic_exploration_form = MnemonicExplorationForm(prefix='mnemonic_exploration')
 
         elif 'mnemonic_query' in request.POST.keys():
             mnemonic_query_form = MnemonicQueryForm(request.POST, prefix='mnemonic_query')
@@ -203,16 +207,41 @@ def get_edb_components(request):
 
             # create forms for search fields not clicked
             mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
+            mnemonic_exploration_form = MnemonicExplorationForm(prefix='mnemonic_exploration')
+
+        elif 'mnemonic_exploration' in request.POST.keys():
+            mnemonic_exploration_form = MnemonicExplorationForm(request.POST,
+                                                                prefix='mnemonic_exploration')
+            if mnemonic_exploration_form.is_valid():
+                # print(MnemonicExplorationForm['description'])
+                description_string = mnemonic_exploration_form['description'].value()
+
+                inventory, meta = mnemonic_inventory()
+
+
+                # indices in table for which a match is found (cas-insensitive)
+                index = [i for i, item in enumerate(inventory['description']) if
+                         re.search(description_string, item, re.IGNORECASE)]
+                mnemonic_exploration_result = inventory[index]
+                mnemonic_exploration_result.n_rows = len(mnemonic_exploration_result)
+
+            # create forms for search fields not clicked
+            mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
+            mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
+
 
     else:
         mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
         mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
+        mnemonic_exploration_form = MnemonicExplorationForm(prefix='mnemonic_exploration')
 
     edb_components = {'mnemonic_query_form' : mnemonic_query_form,
                       'mnemonic_query_result' : mnemonic_query_result,
                       'mnemonic_query_result_plot' : mnemonic_query_result_plot,
                       'mnemonic_name_search_form' : mnemonic_name_search_form,
-                      'mnemonic_name_search_result': mnemonic_name_search_result}
+                      'mnemonic_name_search_result': mnemonic_name_search_result,
+                      'mnemonic_exploration_form' : mnemonic_exploration_form,
+                      'mnemonic_exploration_result': mnemonic_exploration_result}
 
     return edb_components
 
