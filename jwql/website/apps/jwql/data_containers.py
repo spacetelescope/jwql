@@ -225,6 +225,26 @@ def get_edb_components(request):
                 mnemonic_exploration_result = inventory[index]
                 mnemonic_exploration_result.n_rows = len(mnemonic_exploration_result)
 
+                import tempfile
+                import copy
+                display_table = copy.deepcopy(mnemonic_exploration_result)
+                tmpdir = tempfile.mkdtemp()
+                path = os.path.join(tmpdir, 'mnemonic_exploration_result_table.html')
+
+                with open(path, 'w') as tmp:
+                    # if jsviewer:
+                    #     if show_row_index:
+                    #         display_table = self._make_index_row_display_table(show_row_index)
+                    #     else:
+                    #         display_table = self
+                    display_table.write(tmp, format='jsviewer')
+                        # , css=css, max_lines=max_lines,
+                        #                 jskwargs=jskwargs, table_id=tableid,
+                        #                 table_class=table_class)
+                mnemonic_exploration_result.html_file = path
+                mnemonic_exploration_result.html_file_content = open(path, 'r').read()
+                print(mnemonic_exploration_result.html_file_content)
+
             # create forms for search fields not clicked
             mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
             mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
