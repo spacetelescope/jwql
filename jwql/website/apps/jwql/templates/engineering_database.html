@@ -164,14 +164,12 @@
                 <br />
                 Query returned {{ edb_components['mnemonic_exploration_result'].n_rows }} records:
                 <br />
+                {{ edb_components['mnemonic_exploration_result'].html_file }}
+                <br />
+                <!--{{ edb_components['mnemonic_exploration_result'].html_file_content | replace("\n", "<br/>") }}-->
+                <!--{{ edb_components['mnemonic_exploration_result'].html_file_content | replace("\n", "<br/>") }}-->
 
-                {{ edb_components['mnemonic_exploration_result'].write('test.html', format='html') }}
-                <!--&lt;!&ndash; Add bokeh files &ndash;&gt;-->
-                <!--<link href="https://cdn.pydata.org/bokeh/release/bokeh-1.0.1.min.css" rel="stylesheet" type="text/css">-->
-                <!--{{ edb_components['mnemonic_query_result_plot'][1] | safe}}-->
-                <!--<span class='plot-container px-1'>-->
-                    <!--{{  edb_components['mnemonic_query_result_plot'][0] | safe }}-->
-                <!--</span>-->
+
             {% endif %}
         </div>
 
