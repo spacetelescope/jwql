@@ -298,98 +298,20 @@ class MnemonicQueryForm(forms.Form):
 
 
 class MnemonicExplorationForm(forms.Form):
-    """A triple-field form to query mnemonic records in the DMS EDB."""
+    """A sextuple-field form to explore the DMS EDB mnemonic inventory."""
 
-    # production_mode = False
-    #
-    # if production_mode:
-    #     # times for default query (one day one week ago)
-    #     now = Time.now()
-    #     delta_day = -7.
-    #     range_day = 1.
-    #     default_start_time = now + TimeDelta(delta_day, format='jd')
-    #     default_end_time = now + TimeDelta(delta_day+range_day, format='jd')
-    # else:
-    #     # example for testing
-    #     default_start_time = Time('2019-01-16 00:00:00.000', format='iso')
-    #     default_end_time = Time('2019-01-16 00:01:00.000', format='iso')
-
-    # default_description = 'Centroid Packet'
-    default_description = 'Centroid'
+    default_description = 'centroid data'
 
     # Define search fields
     description = forms.CharField(label='description', max_length=500, required=False,
-                             initial=default_description, help_text="EDB description")
-
-
-    # start_time = forms.CharField(label='start', max_length=500, required=False,
-    #                              initial=default_start_time.iso, help_text="Start time")
-    #
-    # end_time = forms.CharField(label='end', max_length=500, required=False,
-    #                            initial=default_end_time.iso, help_text="End time")
-
-    # Initialize attributes
-    search_type = None
-    #
-    def clean_description(self):
-        """Validate the "search" field.
-
-        Check that the input is a valid mnemonic identifier.
-
-        Returns
-        -------
-        str
-            The cleaned data input into the "search" field
-
-        """
-        # Get the cleaned search data
-        description = self.cleaned_data['description']
-
-        # if is_valid_mnemonic(search):
-        #     self.search_type = 'mnemonic'
-        # else:
-        #     raise forms.ValidationError('Invalid search term {}. Please enter a valid DMS EDB '
-        #                                 'mnemonic.'.format(search))
-
-        return self.cleaned_data['description']
-    #
-    # def clean_start_time(self):
-    #     """Validate the start time.
-    #
-    #     Returns
-    #     -------
-    #     str
-    #        The cleaned data input into the start_time field
-    #
-    #     """
-    #     start_time = self.cleaned_data['start_time']
-    #     try:
-    #         Time(start_time, format='iso')
-    #     except ValueError:
-    #         raise forms.ValidationError('Invalid start time {}. Please enter a time in iso format, '
-    #                                     'e.g. {}'.format(start_time, self.default_start_time))
-    #     return self.cleaned_data['start_time']
-    #
-    # def clean_end_time(self):
-    #     """Validate the end time.
-    #
-    #     Returns
-    #     -------
-    #     str
-    #        The cleaned data input into the end_time field
-    #
-    #     """
-    #     end_time = self.cleaned_data['end_time']
-    #     try:
-    #         Time(end_time, format='iso')
-    #     except ValueError:
-    #         raise forms.ValidationError('Invalid end time {}. Please enter a time in iso format, '
-    #                                     'e.g. {}.'.format(end_time, self.default_end_time))
-    #
-    #     if 'start_time' in self.cleaned_data.keys():
-    #         # verify that end_time is later than start_time
-    #         if self.cleaned_data['end_time'] <= self.cleaned_data['start_time']:
-    #             raise forms.ValidationError('Invalid time inputs. End time is required to be after'
-    #                                         ' Start time.')
-    #
-    #     return self.cleaned_data['end_time']
+                             initial=default_description, help_text="Description")
+    sql_data_type = forms.CharField(label='sqlDataType', max_length=500, required=False,
+                             help_text="sqlDataType")
+    subsystem = forms.CharField(label='subsystem', max_length=500, required=False,
+                             help_text="subsystem")
+    tlm_identifier = forms.CharField(label='tlmIdentifier', max_length=500, required=False,
+                             help_text="Numerical ID (tlmIdentifier)")
+    tlm_mnemonic = forms.CharField(label='tlmMnemonic', max_length=500, required=False,
+                             help_text="String ID (tlmMnemonic)")
+    unit = forms.CharField(label='unit', max_length=500, required=False,
+                             help_text="unit")
