@@ -21,7 +21,9 @@ Official API documentation can be found on [ReadTheDocs](https://jwql.readthedoc
 
 The `jwql` application is currently under heavy development.  The `1.0` release is expected in 2019.  Currently, a development version of the web application can be found at [https://dljwql.stsci.edu](https://dljwql.stsci.edu).
 
-## Prerequisites
+## Installation
+
+### Prerequisites
 
 It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.6.  Downloads and installation instructions are  available here:
 
@@ -30,7 +32,7 @@ It is highly suggested that contributors have a working installation of `anacond
 
 Requirements for contributing to the `jwql` package will be included in the `jwql` `conda` environment, which is included in our installation instructions below. Further package requirements will be provided for `jwql` by a `setup.py` script included in the repository.
 
-## Package Installation
+### Package Installation
 
 You first need to install the current version of `jwql`. The simplest way to do this is to go to the directory you want your copy of the repository to be in and clone the repoistory there. Once you are in the directory you can do the following:
 
@@ -48,7 +50,7 @@ python setup.py develop
 ```
 instead, and then proceed as stated.
 
-## Environment Installation
+### Environment Installation
 
 Following the download of the `jwql` package, contributors can then install the `jwql` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project.  First, one should ensure that their version of `conda` is up to date:
 
@@ -67,6 +69,10 @@ Lastly, one can create the `jwql` environment via the `environment.yml` file:
 ```
 conda env create -f environment.yml
 ```
+
+### Configuration File
+
+Much of the `jwql` software depends on the existence of a `config.json` file within the `utils` directory.  This file contains data that may be unique to users and/or contain sensitive information.  Please see the [Config File wiki page](https://github.com/spacetelescope/jwql/wiki/Config-file) for instructions on how to provide this file.
 
 
 ## Software Contributions
