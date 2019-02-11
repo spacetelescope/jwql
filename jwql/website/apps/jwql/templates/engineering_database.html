@@ -126,9 +126,12 @@
         <br>
         <h4>Explore the EDB mnemonic inventory</h4>
 
-        <div class="mnemonic_query_section">
+        <div class="mnemonic_exploration_section">
 
-            <b>Submit a string in one of the fields below and matching inventory elements will be returned.</b>
+            <b>
+                Fill one or several fields below and a table of matching inventory elements will be returned.<br />
+                The search is case insensitive and fields are combined with simple AND logic.
+            </b>
 
             <p></p>
             <!--Load the EDB mnemonic search form from the view-->
@@ -157,12 +160,19 @@
                     </div>
                 {% endfor %}
                 <button name=mnemonic_exploration class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
-
             </form>
+            <br />
             {% if edb_components['mnemonic_exploration_result'] %}
                 <br />
                 <br />
-                Query returned {{ edb_components['mnemonic_exploration_result'].n_rows }} records:
+                <br />
+                <br />
+                <b>
+                Query returned {{ edb_components['mnemonic_exploration_result'].n_rows }} matching rows
+            in the EDB inventory containing {{ edb_components['mnemonic_exploration_result'].meta['paging']['rows']}} mnemonics.
+                </b>
+
+                <br />
                 <br />
                 <!--show html version of astropy table with results-->
                 {% autoescape off %}

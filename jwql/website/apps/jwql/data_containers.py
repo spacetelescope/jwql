@@ -215,20 +215,24 @@ def get_edb_components(request):
             mnemonic_exploration_form = MnemonicExplorationForm(request.POST,
                                                                 prefix='mnemonic_exploration')
             if mnemonic_exploration_form.is_valid():
-                # print(MnemonicExplorationForm['description'])
-                description_string = mnemonic_exploration_form['description'].value()
 
-                inventory, meta = mnemonic_inventory()
+                mnemonic_exploration_result, meta = mnemonic_inventory()
 
+                # loop over filled fields and implement simple AND logic
+                for field in mnemonic_exploration_form.fields:
+                    field_value = mnemonic_exploration_form[field].value()
+                    if field_value != '':
+                        column_name = mnemonic_exploration_form[field].label
 
-                # indices in table for which a match is found (cas-insensitive)
-                index = [i for i, item in enumerate(inventory['description']) if
-                         re.search(description_string, item, re.IGNORECASE)]
-                mnemonic_exploration_result = inventory[index]
+                        # indices in table for which a match is found (cas-insensitive)
+                        index = [i for i, item in enumerate(mnemonic_exploration_result[column_name]) if
+                                 re.search(field_value, item, re.IGNORECASE)]
+                        mnemonic_exploration_result = mnemonic_exploration_result[index]
+
                 mnemonic_exploration_result.n_rows = len(mnemonic_exploration_result)
 
                 display_table = copy.deepcopy(mnemonic_exploration_result)
-                # temporary htm file, see http://docs.astropy.org/en/stable/_modules/astropy/table/
+                # temporary html file, see http://docs.astropy.org/en/stable/_modules/astropy/table/
                 # table.html#Table.show_in_browser
                 tmpdir = tempfile.mkdtemp()
                 path = os.path.join(tmpdir, 'mnemonic_exploration_result_table.html')
@@ -236,12 +240,12 @@ def get_edb_components(request):
                     display_table.write(tmp, format='jsviewer')
                 mnemonic_exploration_result.html_file = path
                 mnemonic_exploration_result.html_file_content = open(path, 'r').read()
-                print(mnemonic_exploration_result.html_file_content)
+                # pass on meta data to have access to total number of mnemonics
+                mnemonic_exploration_result.meta = meta
 
             # create forms for search fields not clicked
             mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
             mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
-
 
     else:
         mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
