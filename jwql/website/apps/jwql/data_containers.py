@@ -21,9 +21,11 @@ Use
         from .data_containers import get_proposal_info
 """
 
+import copy
 import glob
 import os
 import re
+import tempfile
 
 from astropy.io import fits
 from astropy.time import Time
@@ -225,22 +227,13 @@ def get_edb_components(request):
                 mnemonic_exploration_result = inventory[index]
                 mnemonic_exploration_result.n_rows = len(mnemonic_exploration_result)
 
-                import tempfile
-                import copy
                 display_table = copy.deepcopy(mnemonic_exploration_result)
+                # temporary htm file, see http://docs.astropy.org/en/stable/_modules/astropy/table/
+                # table.html#Table.show_in_browser
                 tmpdir = tempfile.mkdtemp()
                 path = os.path.join(tmpdir, 'mnemonic_exploration_result_table.html')
-
                 with open(path, 'w') as tmp:
-                    # if jsviewer:
-                    #     if show_row_index:
-                    #         display_table = self._make_index_row_display_table(show_row_index)
-                    #     else:
-                    #         display_table = self
                     display_table.write(tmp, format='jsviewer')
-                        # , css=css, max_lines=max_lines,
-                        #                 jskwargs=jskwargs, table_id=tableid,
-                        #                 table_class=table_class)
                 mnemonic_exploration_result.html_file = path
                 mnemonic_exploration_result.html_file_content = open(path, 'r').read()
                 print(mnemonic_exploration_result.html_file_content)

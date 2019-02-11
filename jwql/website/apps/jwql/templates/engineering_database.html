@@ -164,10 +164,11 @@
                 <br />
                 Query returned {{ edb_components['mnemonic_exploration_result'].n_rows }} records:
                 <br />
-                {{ edb_components['mnemonic_exploration_result'].html_file }}
+                <!--show html version of astropy table with results-->
+                {% autoescape off %}
+                    {{ edb_components['mnemonic_exploration_result'].html_file_content }}
+                {% endautoescape %}
                 <br />
-                <!--{{ edb_components['mnemonic_exploration_result'].html_file_content | replace("\n", "<br/>") }}-->
-                <!--{{ edb_components['mnemonic_exploration_result'].html_file_content | replace("\n", "<br/>") }}-->
 
 
             {% endif %}

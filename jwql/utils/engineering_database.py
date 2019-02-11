@@ -43,7 +43,10 @@ from astropy.time import Time
 from astroquery.mast import Mast
 from bokeh.embed import components
 from bokeh.plotting import figure
+from collections import OrderedDict
 from functools import lru_cache
+
+import numpy as np
 
 from .utils import get_config
 
@@ -219,6 +222,52 @@ def query_mnemonic_info(mnemonic_identifier):
     result = Mast.service_request_async(mast_edb_dictionary_service, parameters)
     info = process_mast_service_request_result(result, data_as_table=False)[0]
     return info
+
+
+def query_mnemonics(mnemonics, start_time, end_time):
+    """Query DMS EDB with a list of mnemonics and a time interval.
+
+    Parameters
+    ----------
+    mnemonics : list or numpy.ndarray
+        Telemetry mnemonic identifiers, e.g. ['SA_ZFGOUTFOV', 'IMIR_HK_ICE_SEC_VOLT4']
+    start_time : astropy.time.Time instance
+        Start time
+    end_time : astropy.time.Time instance
+        End time
+
+    Returns
+    -------
+    mnemonic_dict : dict
+        Dictionary. keys are the queried mnemonics, values are instances of EdbMnemonic
+
+    """
+    if not isinstance(start_time, astropy.time.core.Time):
+        raise RuntimeError('Please specify a valid start time (instance of astropy.time.core.Time)')
+
+    if not isinstance(end_time, astropy.time.core.Time):
+        raise RuntimeError('Please specify a valid end time (instance of astropy.time.core.Time)')
+
+    if not isinstance(mnemonics, (list, np.ndarray)):
+        raise RuntimeError('Please provide a list/array of mnemonic_identifiers')
+
+    mnemonic_dict = OrderedDict()
+    for mnemonic_identifier in mnemonics:
+        if not isinstance(mnemonic_identifier, str):
+            raise RuntimeError('Please provide mnemonic_identifier of type string')
+
+        parameters = {'mnemonic': mnemonic_identifier, 'start': start_time.iso, 'end': end_time.iso}
+        result = Mast.service_request_async(mast_edb_timeseries_service, parameters)
+        data, meta = process_mast_service_request_result(result)
+
+        # get auxiliary information (description, subsystem, ...)
+        info = query_mnemonic_info(mnemonic_identifier)
+
+        # create and return instance
+        mnemonic_dict[mnemonic_identifier] = EdbMnemonic(mnemonic_identifier, start_time, end_time,
+                                                         data, meta, info)
+
+    return mnemonic_dict
 
 
 def query_single_mnemonic(mnemonic_identifier, start_time, end_time):

@@ -40,3 +40,16 @@ def test_query_single_mnemonic():
 
     mnemonic = query_single_mnemonic(mnemonic_identifier, start_time, end_time)
     assert len(mnemonic.data) == mnemonic.meta['paging']['rows']
+
+
+# @pytest.mark.xfail
+def test_query_mnemonics():
+    """Test the query of a mnemonic over a given time range."""
+    from ..utils.engineering_database import query_mnemonics
+
+    mnemonics = ['SA_ZFGOUTFOV', 'SA_ZFGBADCNT']
+    start_time = Time(2016.0, format='decimalyear')
+    end_time = Time(2018.1, format='decimalyear')
+
+    mnemonic_dict = query_mnemonics(mnemonics, start_time, end_time)
+    assert len(mnemonic_dict) == len(mnemonics)
