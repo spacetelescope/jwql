@@ -224,7 +224,7 @@ def get_edb_components(request):
                     if field_value != '':
                         column_name = mnemonic_exploration_form[field].label
 
-                        # indices in table for which a match is found (cas-insensitive)
+                        # indices in table for which a match is found (case-insensitive)
                         index = [i for i, item in enumerate(mnemonic_exploration_result[column_name]) if
                                  re.search(field_value, item, re.IGNORECASE)]
                         mnemonic_exploration_result = mnemonic_exploration_result[index]
@@ -252,12 +252,12 @@ def get_edb_components(request):
         mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
         mnemonic_exploration_form = MnemonicExplorationForm(prefix='mnemonic_exploration')
 
-    edb_components = {'mnemonic_query_form' : mnemonic_query_form,
-                      'mnemonic_query_result' : mnemonic_query_result,
-                      'mnemonic_query_result_plot' : mnemonic_query_result_plot,
-                      'mnemonic_name_search_form' : mnemonic_name_search_form,
+    edb_components = {'mnemonic_query_form': mnemonic_query_form,
+                      'mnemonic_query_result': mnemonic_query_result,
+                      'mnemonic_query_result_plot': mnemonic_query_result_plot,
+                      'mnemonic_name_search_form': mnemonic_name_search_form,
                       'mnemonic_name_search_result': mnemonic_name_search_result,
-                      'mnemonic_exploration_form' : mnemonic_exploration_form,
+                      'mnemonic_exploration_form': mnemonic_exploration_form,
                       'mnemonic_exploration_result': mnemonic_exploration_result}
 
     return edb_components
