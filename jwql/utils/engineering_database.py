@@ -43,6 +43,7 @@ from astropy.time import Time
 from astroquery.mast import Mast
 from bokeh.embed import components
 from bokeh.plotting import figure
+from functools import lru_cache
 
 from .utils import get_config
 
@@ -142,6 +143,7 @@ def is_valid_mnemonic(mnemonic_identifier):
         return False
 
 
+@lru_cache()
 def mnemonic_inventory():
     """Return all mnemonics in the DMS engineering database.
 
