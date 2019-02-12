@@ -162,13 +162,14 @@
                 <button name=mnemonic_exploration class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
             </form>
             <br />
-            {% if edb_components['mnemonic_exploration_result'] %}
-                <br /><br /><br /><br />
-                {% if edb_components['mnemonic_exploration_result'].n_rows == 0 %}
+            <br /><br /><br /><br />
+            {% if edb_components['mnemonic_exploration_result'] == 'empty' %}
                 <b>
                 Query returned zero matches. Please refine and repeat.
                 </b>
-                {% endif %}
+            {% endif %}
+            {% if edb_components['mnemonic_exploration_result'] %}
+                {% if edb_components['mnemonic_exploration_result'] != 'empty' %}
                 <b>
                 Query returned {{ edb_components['mnemonic_exploration_result'].n_rows }} matching rows
             in the EDB inventory containing {{ edb_components['mnemonic_exploration_result'].meta['paging']['rows']}} mnemonics.
@@ -181,7 +182,11 @@
                     {{ edb_components['mnemonic_exploration_result'].html_file_content }}
                 {% endautoescape %}
                 <br />
+                {% endif %}
+
             {% endif %}
+
+
         </div>
 	</main>
 
