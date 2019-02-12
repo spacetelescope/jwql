@@ -243,8 +243,9 @@ def get_edb_components(request):
                 # pass on meta data to have access to total number of mnemonics
                 mnemonic_exploration_result.meta = meta
 
-                # if mnemonic_exploration_result.n_rows == 0:
-                #     mnemonic_exploration_result = 'empy'
+                if mnemonic_exploration_result.n_rows == 0:
+                    # print('ATTENTION')
+                    mnemonic_exploration_result = 'empty'
                 #     mnemonic_exploration_result.n_rows = 0
 
 
