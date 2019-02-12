@@ -164,6 +164,11 @@
             <br />
             {% if edb_components['mnemonic_exploration_result'] %}
                 <br /><br /><br /><br />
+                {% if edb_components['mnemonic_exploration_result'].n_rows == 0 %}
+                <b>
+                Query returned zero matches. Please refine and repeat.
+                </b>
+                {% endif %}
                 <b>
                 Query returned {{ edb_components['mnemonic_exploration_result'].n_rows }} matching rows
             in the EDB inventory containing {{ edb_components['mnemonic_exploration_result'].meta['paging']['rows']}} mnemonics.

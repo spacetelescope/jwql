@@ -160,6 +160,8 @@ def mnemonic_inventory():
 
     out = Mast.service_request_async(mast_edb_mnemonic_service, {})
     data, meta = process_mast_service_request_result(out)
+    # convert numerical ID to str for homogenity (all columns are str)
+    data['tlmIdentifier'] = data['tlmIdentifier'].astype(str)
     return data, meta
 
 
