@@ -243,6 +243,11 @@ def get_edb_components(request):
                 # pass on meta data to have access to total number of mnemonics
                 mnemonic_exploration_result.meta = meta
 
+                # if mnemonic_exploration_result.n_rows == 0:
+                #     mnemonic_exploration_result = 'empy'
+                #     mnemonic_exploration_result.n_rows = 0
+
+
             # create forms for search fields not clicked
             mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
             mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
