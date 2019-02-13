@@ -259,8 +259,3 @@ function version_url(version_string) {
     a_line += '">JWQL v' + version_string + '</a>';
     return a_line;
 };
-
-function version_text(version_string) {
-    var a_line = 'JWQL v' + version_string;
-    return a_line
-};
