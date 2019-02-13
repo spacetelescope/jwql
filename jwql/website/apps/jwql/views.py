@@ -56,6 +56,7 @@ import jwql
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
+
 @auth_info
 def about(request, user):
     """Generate the ``about`` page
