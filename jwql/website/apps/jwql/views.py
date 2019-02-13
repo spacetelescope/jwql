@@ -54,7 +54,7 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMEN
 from jwql.utils.utils import get_base_url, get_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
-
+print('version is {}'.format(__version__))
 
 @auth_info
 def about(request, user):
