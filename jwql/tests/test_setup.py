@@ -17,7 +17,6 @@ Use
 
         pytest -s test_setup_info.py
 """
-import pytest
 
 
 def test_version_number():
