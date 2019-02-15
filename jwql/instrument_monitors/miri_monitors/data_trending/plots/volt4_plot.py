@@ -1,15 +1,15 @@
 
-import data_trending.sql_interface as sql
+import jwql.instrument_monitors.miri_monitors.data_trending.sql_interface as sql
 from bokeh.plotting import figure, output_file, show
 from bokeh.models import BoxAnnotation
 
-import plot_functions
+import plot_functions as pf
 import numpy as np
 
 from astropy.time import Time
 
 
-def plot_power_ice(conn, filename):
+def plot_volt4(conn, filename):
 
     #query data from database
     columns = ('start_time, average, deviation')
@@ -18,18 +18,18 @@ def plot_power_ice(conn, filename):
     voltage = 30
     #append data from query to numpy arrays
 
-    volt4_idle_time, volt4_idle_val = split_data(volt4_idle)
-    volt4_hv_time, volt4_hv_val = split_data(volt4_hv)
+    volt4_idle_time, volt4_idle_val = pf.split_data(volt4_idle)
+    volt4_hv_time, volt4_hv_val = pf.split_data(volt4_hv)
 
-    volt4_hv_reg = pol_regression(volt4_hv_time, volt4_hv_val, 3)
-    volt4_idle_reg = pol_regression(volt4_idle_time, volt4_idle_val, 3)
+    volt4_hv_reg = pf.pol_regression(volt4_hv_time, volt4_hv_val, 3)
+    volt4_idle_reg = pf.pol_regression(volt4_idle_time, volt4_idle_val, 3)
 
     # output to static HTML file
-    output_file("lines.html")
+    output_file(filename)
 
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,box_zoom,reset,save",                  \
-                title = "Volt 4",                                   \
+                title = "IMIR_HK_ICE_SEC_VOLT4",                                   \
                 y_range = [4,5],
                 x_axis_label = 'DOY (mjd)', y_axis_label= 'Voltage (V)')
 
@@ -53,7 +53,7 @@ def main():
     db_file = "miri_database.db"
     conn = sql.create_connection(db_file)
 
-    plot_power_ice(conn, "volt4.html")
+    plot_volt4(conn, "output/volt4.html")
 
     sql.close_connection(conn)
     print('end')
