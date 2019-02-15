@@ -1,6 +1,6 @@
 import sqlite3
 from sqlite3 import Error
-import mnemonics as m
+import jwql.instrument_monitors.miri_monitors.data_trending.mnemonics as m
 
 
 
@@ -9,7 +9,7 @@ def create_connection(db_file):
     Parameters
     ----------
     db_file : string
-        represents filename of database 
+        represents filename of database
     Return
     ------
     conn : DBobject or None
@@ -29,22 +29,22 @@ def close_connection(conn):
     '''Closes connection to database
     Parameters
     ----------
-    conn : DBobject 
+    conn : DBobject
         Connection object to be closed
-    ''' 
+    '''
     conn.close()
     print('Connection closed')
 
 
 
-# data schould have following format: 
-# data = (  float : start_time, 
-#           float : end_time, 
-#           int : value_count, 
-#           float : average, 
+# data schould have following format:
+# data = (  float : start_time,
+#           float : end_time,
+#           int : value_count,
+#           float : average,
 #           float : deviation   )
 def add_data(conn, mnemonic, data):
-    
+
     c = conn.cursor()
 
     #check if data already exists (start_time)
@@ -60,7 +60,7 @@ def add_data(conn, mnemonic, data):
 
 
 def add_wheel_data(conn, mnemonic, data):
-    
+
     c = conn.cursor()
 
     #check if data already exists (start_time)
@@ -76,19 +76,19 @@ def add_wheel_data(conn, mnemonic, data):
 
 
 
-def query_data(conn, mnemonic, column): 
-    """Requests the database for given column 
+def query_data(conn, mnemonic, column):
+    """Requests the database for given column
     Parameters
     ----------
-    conn : database object 
-        represents link to database 
+    conn : database object
+        represents link to database
     mnemonic : str
         Contains the name of the requested mnemonic
-    column : list 
+    column : list
         contains names of columns which are requested
     Returns
     -------
-    list 
+    list
         contains queried data
     """
     c = conn.cursor()
@@ -101,19 +101,19 @@ def query_data(conn, mnemonic, column):
 
     return data
 
-def query_pos(conn, mnemonic, column): 
-    """Requests the database for given column 
+def query_pos(conn, mnemonic, column):
+    """Requests the database for given column
     Parameters
     ----------
-    conn : database object 
-        represents link to database 
+    conn : database object
+        represents link to database
     mnemonic : str
         Contains the name of the requested mnemonic
-    column : list 
+    column : list
         contains names of columns which are requested
     Returns
     -------
-    list 
+    list
         contains queried data
     """
     c = conn.cursor()
@@ -127,22 +127,22 @@ def query_pos(conn, mnemonic, column):
     return data
 
 def main():
-    ''' Creates SQLite database with tables.... 
+    ''' Creates SQLite database with tables....
     '''
 
     while True:
         name = input("choose name and location of database:")
         conn = create_connection(name)
 
-        if conn != None: 
+        if conn != None:
             break
-        else: 
-            pass 
+        else:
+            pass
 
     c=conn.cursor()
 
-    for mnemonic in m.mnemonic_set_database: 
-        try:   
+    for mnemonic in m.mnemonic_set_database:
+        try:
             c.execute('CREATE TABLE IF NOT EXISTS {} (         \
                                         id INTEGER,                     \
                                         start_time REAL,                \
@@ -155,8 +155,8 @@ def main():
         except Error as e:
             print('e')
 
-    for mnemonic in m.mnemonic_wheelpositions: 
-        try:   
+    for mnemonic in m.mnemonic_wheelpositions:
+        try:
             c.execute('CREATE TABLE IF NOT EXISTS {} (         \
                                         id INTEGER,            \
                                         timestamp REAL,        \
@@ -165,7 +165,7 @@ def main():
                                         PRIMARY KEY (id));'.format(mnemonic))
         except Error as e:
             print('e')
-        
+
     print("Database initial setup complete")
 
     conn.commit()
@@ -175,12 +175,6 @@ def main():
 #
 #
 #
-if __name__ == "__main__": 
+if __name__ == "__main__":
     main()
     print("sql_interface.py done")
-
-
-
-
-
-
