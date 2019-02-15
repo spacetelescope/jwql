@@ -1,7 +1,7 @@
-"""Module lists all neccessary mnemonics for MIRI data trending 
+"""Module lists all neccessary mnemonics for MIRI data trending
 
-The module includes several lists to import to MIRI data trending monitor program. 
-The lists are used for data aquisation and to set up the initial database.   
+The module includes several lists to import to MIRI data trending monitor program.
+The lists are used for data aquisation and to set up the initial database.
 
 Authors
 -------
@@ -9,7 +9,7 @@ Authors
 
 Use
 ---
-prefered import: 
+prefered import:
     import 00_mnemoncis as mn
 
 Dependencies
@@ -18,10 +18,10 @@ Dependencies
 
 References
 ----------
-    
+
 Notes
 -----
-The lists are for developement purpose only. 
+The lists are for developement purpose only.
 
 """
 
@@ -144,7 +144,7 @@ fw_positions = [
 #grating weel positions
 gw_positions = [
 "SHORT",
-"MEDUIM",
+"MEDIUM",
 "LONG"]
 
 #contamination control clap positions
@@ -180,20 +180,20 @@ gw23_nominals = {
 "LONG" : 441.4}
 
 gw14_nominals = {
-"SHORT" : 627.49, 
+"SHORT" : 627.49,
 "MEDIUM" : 342.71,
 "LONG" : 408.75 }
 
 ccc_nominals = {
-"LOCKED" : 577.23, 
+"LOCKED" : 577.23,
 "OPEN" : 507.86,
-"CLOSED" : 399.90 }
+"CLOSED" : 399.90}
 
 
-#mnemonic set for basic query 
-#"SE_ZBUSVLT",
+#mnemonic set for basic query
 mnemonic_set_base = [
 "SE_ZIMIRICEA",
+"SE_ZBUSVLT",
 
 "IMIR_HK_ICE_SEC_VOLT1",
 "IMIR_HK_ICE_SEC_VOLT2",
@@ -283,7 +283,7 @@ mnemonic_set_base = [
 "IGDP_IT_MIR_LW_STATUS",
 "IGDP_IT_MIR_SW_STATUS",
 
-"IMIR_HK_FW_POS_VOLT", 
+"IMIR_HK_FW_POS_VOLT",
 "IMIR_HK_FW_POS_RATIO",
 "IMIR_HK_FW_CUR_POS",
 
@@ -291,7 +291,7 @@ mnemonic_set_base = [
 "IMIR_HK_GW14_POS_RATIO",
 "IMIR_HK_GW14_CUR_POS",
 
-"IMIR_HK_GW23_POS_VOLT", 
+"IMIR_HK_GW23_POS_VOLT",
 "IMIR_HK_GW23_POS_RATIO",
 "IMIR_HK_GW23_CUR_POS",
 
@@ -388,7 +388,7 @@ mnemonic_set_database = [
 "IGDP_MIR_LW_DET_TEMP",
 "IGDP_MIR_SW_DET_TEMP",
 
-"IMIR_HK_FW_POS_VOLT", 
+"IMIR_HK_FW_POS_VOLT",
 "IMIR_HK_GW14_POS_VOLT",
 "IMIR_HK_GW23_POS_VOLT",
 "IMIR_HK_CCC_POS_VOLT"]
@@ -418,7 +418,7 @@ mnemonic_wheelpositions = [
 "IMIR_HK_GW14_POS_RATIO_MEDIUM",
 "IMIR_HK_GW14_POS_RATIO_LONG",
 
- 
+
 "IMIR_HK_GW23_POS_RATIO_SHORT",
 "IMIR_HK_GW23_POS_RATIO_MEDIUM",
 "IMIR_HK_GW23_POS_RATIO_LONG",

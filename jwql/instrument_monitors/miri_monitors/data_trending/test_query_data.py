@@ -1,6 +1,6 @@
-import sql_interface as sql 
+import sql_interface as sql
 from bokeh.plotting import figure, output_file, show
-from bokeh.models import BoxAnnotation 
+from bokeh.models import BoxAnnotation
 
 import numpy as np
 
@@ -17,7 +17,7 @@ db_file = "miri_database.db"
 conn = sql.create_connection(db_file)
 
 
-query_name = 'IGDP_MIR_LW_V_VDDUC'
+query_name = 'IMIR_IC_SCE_DIG_TEMP'
 
 columns = ('start_time, average, deviation')
 queried_data = sql.query_data(conn,query_name, columns)
@@ -25,7 +25,7 @@ queried_data = sql.query_data(conn,query_name, columns)
 x=[]
 y=[]
 
-for item in queried_data: 
+for item in queried_data:
     x.append(item[0])
     y.append(item[1])
 ####################################################
@@ -56,24 +56,17 @@ p.xgrid.grid_line_color = None
 # add a line renderer with legend and line thickness
 p.scatter(x, y, color='red', legend = "Data points")
 p.line(x, y_, color='green', legend= "Isotonic regression")
-p.line(X, y_pred, color='blue', legend= "Lin. regression")
+#p.line(X, y_pred, color='blue', legend= "Lin. regression")
 
-print('Mean Absolute Error:', metrics.mean_absolute_error(Y, y_pred))  
-print('Mean Squared Error:', metrics.mean_squared_error(Y, y_pred))  
-print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(Y, y_pred)))  
+print('Mean Absolute Error:', metrics.mean_absolute_error(Y, y_pred))
+print('Mean Squared Error:', metrics.mean_squared_error(Y, y_pred))
+print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(Y, y_pred)))
 #p.line(x, y1, legend="deviation", line_color="orange", line_dash="4 4")
 
-p.legend.location = "bottom_right"
-p.legend.click_policy="hide"
+p.legend.location = "top_right"
+p.legend.click_policy = "hide"
 
 # show the results
 show(p)
 
 print('end')
-
-
-
-
-
-
-
