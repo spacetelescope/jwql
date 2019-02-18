@@ -426,6 +426,14 @@ display : inline;
     font-size: 0.75rem;
 }
 
+/*Format the version identifier text in bottom corner*/
+#version-div {
+  float: right;
+  width: 120px;
+  text-align: right;
+  color: white;
+  font-size: 12px
+}
 
 body {
   padding-top: 8rem;
