@@ -1,8 +1,10 @@
 # Using the `webpage-template` branch to develop a webpage
 
-The `webpage-template` branch includes a number of template files and functions. These are designed to make it easier for a contributor who is unfamiliar with web development to write a new page for the web application.
+The `webpage-template` branch includes template code - files and functions - that are designed to make it easier for a contributor who is unfamiliar with web development to write a new page for the JWQL web application.
 
-The files and functions that you can edit are the following:
+These template resources both 1) make up a kind of webpage-skeleton that can be used as a foundation and built upon and 2) contain example code that is hopefully useful.
+
+The files and functions on the `webpage-template` branch that are designed to be edited are the following:
 
 | Template File/Function | Description | Location |
 | ---------------------- | ----------- | -------- |
