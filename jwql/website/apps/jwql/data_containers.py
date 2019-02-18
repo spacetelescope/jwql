@@ -85,6 +85,12 @@ def webpage_template_data():
 
     return jwst_launch_date, plot_data
 
+def data_trending():
+
+    irgendwas = 10
+
+    return irgendwas
+
 
 def get_acknowledgements():
     """Returns a list of individuals who are acknowledged on the
