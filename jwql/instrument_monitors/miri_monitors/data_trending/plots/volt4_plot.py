@@ -29,7 +29,7 @@ def plot_volt4(conn, filename):
 
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,box_zoom,reset,save",                  \
-                title = "IMIR_HK_ICE_SEC_VOLT4",                                   \
+                title = "IMIR_HK_ICE_SEC_VOLT4",                    \
                 y_range = [4,5],
                 x_axis_label = 'DOY (mjd)', y_axis_label= 'Voltage (V)')
 
