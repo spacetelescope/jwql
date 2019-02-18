@@ -1,21 +1,19 @@
 # Using the `webpage-template` branch to develop a webpage
 
-The `webpage-template` branch includes a number of template files and functions. These are designed to make it easier for a contributor who is unfamiliar with web development to write a new page for the web application. They includes the following:
+The `webpage-template` branch includes a number of template files and functions. These are designed to make it easier for a contributor who is unfamiliar with web development to write a new page for the web application.
+
+The files and functions that you can edit are the following:
 
 | Template File/Function | Description | Location |
 | ---------------------- | ----------- | -------- |
-| HTML template   | file containing HTML used to render web page content (text, links, photos, tables, etc.) | `jwql/website/apps/jwql/templates/WEBPAGE_TEMPLATE.html` |
-| view function template | python function that passes data to an HTML template | `WEBSITE_TEMPLATE()` in `jwql/website/apps/jwql/views.py` |
-| URL entry template  | list item that maps a URL to a view | `jwql/website/apps/jwql/urls.py` |
-| data container function  | python function that manipulates data for the view function | `website_template_data()` in `jwql/website/apps/jwql/data_containers.py` |
-
-* Interfaces to the existing `monitor_template` to demonstrate how the web app and package connect
-
-
+| **HTML template**   | file containing HTML used to render web page content (text, links, photos, tables, etc.) | `jwql/website/apps/jwql/templates/WEBPAGE_TEMPLATE.html` |
+| **view function template** | python function that passes data to an HTML template | `website_template()` in `jwql/website/apps/jwql/views.py` |
+| **URL entry template**  | list item that maps a URL to a view | `jwql/website/apps/jwql/urls.py` |
+| **data container function**  | python function that manipulates data for the view function | `website_template_data()` in `jwql/website/apps/jwql/data_containers.py` |
 
 *To learn more about topics like HTML templates, views, and URLs, see the [JWQL intro to web apps](https://github.com/spacetelescope/jwql/blob/master/presentations/JWQL_web_app.pdf).*
 
------------------
+
 
 ## How to view the template content
 
@@ -23,7 +21,7 @@ The `webpage-template` branch includes a number of template files and functions.
 
 1. Create a copy of the `webpage-template` branch and set it up to push to your fork:
 
-    ```bash
+    ```
     git checkout -b <your_desired_branch_name> upstream/webpage-template
     git push -u origin <your_desired_branch_name>
     ```
@@ -42,7 +40,6 @@ The `webpage-template` branch includes a number of template files and functions.
 
 1. Open the template web page in your browser: http://127.0.0.1:8000/webpage_template
 
------------------
 
 ## How to customize the template content
 
@@ -74,7 +71,7 @@ The `webpage-template` branch includes a number of template files and functions.
 ### 4. Share your work!
 - When you are ready to share your new page to the JWQL team for review, follow the directions on our [Contribution Guide](https://github.com/spacetelescope/jwql/wiki/git-&-GitHub-workflow-for-contributing) to submit a pull request.
 
------------------
+
 
 ## Helpful Resources for Web Development
 - HTML Documentation and Examples: https://www.w3schools.com/html/default.asp
@@ -82,6 +79,6 @@ The `webpage-template` branch includes a number of template files and functions.
 - Bootstrap Documentation: https://getbootstrap.com/docs/4.3/getting-started/introduction/
 - Jinja2 HTML Template Documentation: http://jinja.pocoo.org/docs/2.10/templates/
 
------------------
+
 
 *If you have questions about any part of this guide, please contact lchambers@stsci.edu and bourque@stsci.edu.*
