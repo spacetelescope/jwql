@@ -10,13 +10,10 @@ Authors
 
 Use
 ---
-    import the module as follow:
-    >>>jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
-
 
 Dependencies
 ------------
-    no external files needed
+    import mnemonics as m
 
 References
 ----------
@@ -26,15 +23,12 @@ Notes
 
 """
 
-
 import sqlite3
 from sqlite3 import Error
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as m
 
-
-
 def create_connection(db_file):
-    """Sets up a connection or builds database
+    '''Sets up a connection or builds database
     Parameters
     ----------
     db_file : string
@@ -43,7 +37,7 @@ def create_connection(db_file):
     ------
     conn : DBobject or None
         Connection object or None
-    """
+    '''
     try:
         conn = sqlite3.connect(db_file)
         print('Connected to database "{}"'.format(db_file))
@@ -65,6 +59,16 @@ def close_connection(conn):
 
 
 def add_data(conn, mnemonic, data):
+    '''Add data of a specific mnemonic to database if it not exists
+    Parameters
+    ----------
+    conn : DBobject
+        connection object to access database
+    mnemonic : string
+        identifies the table
+    data : list
+        specifies the data
+    '''
 
     c = conn.cursor()
 
@@ -81,6 +85,16 @@ def add_data(conn, mnemonic, data):
 
 
 def add_wheel_data(conn, mnemonic, data):
+    '''Add data of a specific wheel position to database if it not exists
+    Parameters
+    ----------
+    conn : DBobject
+        connection object to access database
+    mnemonic : string
+        identifies the table
+    data : list
+        specifies the data
+    '''
 
     c = conn.cursor()
 
@@ -113,12 +127,9 @@ def query_data(conn, mnemonic, column):
         contains queried data
     """
     c = conn.cursor()
-
     data = []
-
     c.execute(' SELECT start_time, average, deviation  FROM {} ORDER BY start_time'.format(mnemonic, column))
-
-    data=c.fetchall()
+    data = c.fetchall()
 
     return data
 
@@ -138,11 +149,8 @@ def query_pos(conn, mnemonic, column):
         contains queried data
     """
     c = conn.cursor()
-
     data = []
-
     c.execute(' SELECT timestamp, value  FROM {} ORDER BY timestamp'.format(mnemonic, column))
-
     data=c.fetchall()
 
     return data
