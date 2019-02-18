@@ -1,5 +1,5 @@
 
-import jwql.instrument_monitors.miri_monitors.data_trending.sql_interface as sql
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
 from bokeh.plotting import figure, output_file, show
 from bokeh.models import BoxAnnotation
 

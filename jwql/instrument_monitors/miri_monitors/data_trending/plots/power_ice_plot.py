@@ -1,7 +1,7 @@
-import sql_interface as sql
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
 from bokeh.plotting import figure, output_file, show
 from bokeh.models import BoxAnnotation
-import plot_functions
+import plot_functions as pf
 
 import numpy as np
 
@@ -11,7 +11,6 @@ from sklearn.utils import check_random_state
 from sklearn import metrics
 
 from astropy.time import Time
-
 
 
 def plot_power_ice(conn, filename):
@@ -24,17 +23,17 @@ def plot_power_ice(conn, filename):
     voltage = 30
 
     #append data from query to numpy arrays
-    curr_idle_time, curr_idle_val = split_data(curr_idle)
+    curr_idle_time, curr_idle_val = pf.split_data(curr_idle)
     power_idle = curr_idle_val * voltage
 
-    curr_hv_time, curr_hv_val = split_data(curr_hv)
+    curr_hv_time, curr_hv_val = pf.split_data(curr_hv)
     power_hv = curr_hv_val * voltage
 
-    power_hv_reg = pol_regression(curr_hv_time, power_hv, 3)
-    power_idle_reg = pol_regression(curr_idle_time, power_idle, 3)
+    power_hv_reg = pf.pol_regression(curr_hv_time, power_hv, 3)
+    power_idle_reg = pf.pol_regression(curr_idle_time, power_idle, 3)
 
     # output to static HTML file
-    output_file("lines.html")
+    output_file(filename)
 
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,box_zoom,reset,save",                  \
@@ -62,7 +61,7 @@ def main():
     db_file = "miri_database.db"
     conn = sql.create_connection(db_file)
 
-    plot_power_ice(conn, "power_ice.html")
+    plot_power_ice(conn, "output/power_ice.html")
 
     sql.close_connection(conn)
     print('end')
