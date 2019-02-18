@@ -16,5 +16,5 @@ python-dateutil==2.8.0
 pytest==4.2.1
 sphinx==1.8.4
 sphinx-automodapi==0.10
-sqlalchemy==1.2.17
+sqlalchemy==1.2.18
 stsci_rtd_theme==0.0.2
