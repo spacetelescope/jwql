@@ -1,6 +1,6 @@
 import sqlite3
 from sqlite3 import Error
-import jwql.instrument_monitors.miri_monitors.data_trending.mnemonics as m
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as m
 
 
 

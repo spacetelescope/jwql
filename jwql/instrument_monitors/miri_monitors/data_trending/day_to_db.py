@@ -2,13 +2,11 @@
 import statistics
 import sqlite3
 
-import mnemonics as mn
-import sql_interface as sql
-import condition as cond
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.csv_to_AstropyTable as apt
 
-import csv_to_AstropyTable as apt
-
-from data_extract import whole_day_routine, wheelpos_routine
+from jwql.instrument_monitors.miri_monitors.data_trending.utils.process_data import whole_day_routine, wheelpos_routine
 
 
 

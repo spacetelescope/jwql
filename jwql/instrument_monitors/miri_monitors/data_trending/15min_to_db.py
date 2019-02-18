@@ -1,12 +1,10 @@
 
 import statistics
-import mnemonics as mn
-import sql_interface as sql
-import csv_to_AstropyTable as apt
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.csv_to_AstropyTable as apt
 
-from data_extract import once_a_day_routine
-
-
+from jwql.instrument_monitors.miri_monitors.data_trending.utils.process_data import once_a_day_routine
 
 #create filename string
 directory = '/home/daniel/STScI/trainigData/set_1_15min/'

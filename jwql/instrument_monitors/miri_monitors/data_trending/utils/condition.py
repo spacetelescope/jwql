@@ -1,14 +1,14 @@
 #! /usr/bin/env python
-"""Module for generating conditions for mnemonics
+"""Module generates conditions over one or more mnemonics
 
-The modules purpose is to return True/False for several times by reference of
+The modules purpose is to return True/False for any times by reference of
 certain conditions. If for instance the condition "x>1" over a defined period of
 time is needed, the module looks for all elements where the condition applies
 and where it does not apply. This generates two lists, which contain the "start"
 and "end" times of the condition.
-A futher function combines the start- and endtimes to timetouples between which
-the condition applies. A "state" function returns True/False for an exact time
-attribute, whereby the condition is represented in binary form.
+A futher function combines the start- and endtimes to time-tuples between which
+the condition is known as TRUE. A "state" function returns True/False for an
+exact time attribute, whereby the condition is represented in binary form.
 
 Authors
 -------
