@@ -10,6 +10,8 @@ Authors
 -------
 
     - Lauren Chambers
+    - Matthew Bourque
+    - Johannes Sahlmann
 
 Use
 ---
@@ -53,6 +55,10 @@ urlpatterns = [
     # Home
     path('', views.home, name='home'),
 
+    # WEBPAGE TEMPLATE
+    path('webpage_template', views.webpage_template, name='webpage_template'),
+    path('miri_data_trending', views.miri_data_trending, name='miri_data_trending'),
+
     # Authentication
     path('login/', oauth.login, name='login'),
     path('logout/', oauth.logout, name='logout'),
@@ -61,6 +67,7 @@ urlpatterns = [
     # Main site views
     path('about/', views.about, name='about'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('edb/', views.engineering_database, name='edb'),
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
     re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),

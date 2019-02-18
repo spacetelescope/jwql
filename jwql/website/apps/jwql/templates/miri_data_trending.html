@@ -1,0 +1,31 @@
+<!--This line tells the HTML file to read the contents of base.html before
+loading the contents of WEBPAGE_TEMPLATE.html-->
+{% extends "base.html" %}
+
+
+<!--The "preamble" block below contains content that goes in the page <head> tag-->
+{% block preamble %}
+
+    <!--Put the webpage title here:-->
+    <title>Webpage Title - JWQL</title>
+
+{% endblock %}
+
+<!--The "content" block below contains content that goes in the page <body> tag-->
+{% block content %}
+
+    <main role="main" class="container">
+
+        <!--Add a heading-->
+        <h1>MIRI data-trending monitors</h1>
+
+        <!--Horizontal line-->
+        <hr>
+
+        <!--Include an image located at jwql/website/apps/jwql/static/img/-->
+        <div style="text-align: center"><img src={{ static('img/jwql_logo_full_transparent.png') }} width=20%></div><br>
+
+
+    </main>
+
+{% endblock %}
