@@ -115,6 +115,7 @@ def process_mast_service_request_result(result):
     json_data = result[0].json()
     if json_data['status'] != 'COMPLETE':
         print(json_data['status'])
+        print(json_data)
         raise RuntimeError('mnemonic query did not complete.')
 
     try:
