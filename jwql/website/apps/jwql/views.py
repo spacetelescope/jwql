@@ -56,6 +56,7 @@ from jwql.utils.utils import get_base_url, get_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
+
 def webpage_template(request):
     """Generate the ``WEBPAGE_TEMPLATE`` page
 
@@ -79,10 +80,10 @@ def webpage_template(request):
     context = {
         'launch_date': launch,
         'plot_data': plot_data,
-        'inst': '', # Leave as empty string or instrument name; Required for navigation bar
-        'inst_list': JWST_INSTRUMENT_NAMES, # Do not edit; Required for navigation bar
-        'tools': MONITORS, # Do not edit; Required for navigation bar
-        'user': None # Do not edit; Required for authentication
+        'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
+        'inst_list': JWST_INSTRUMENT_NAMES,  # Do not edit; Required for navigation bar
+        'tools': MONITORS,  # Do not edit; Required for navigation bar
+        'user': None  # Do not edit; Required for authentication
     }
 
     # Return a HTTP response with the template and dictionary of variables
