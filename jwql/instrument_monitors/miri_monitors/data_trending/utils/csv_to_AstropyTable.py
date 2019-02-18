@@ -1,13 +1,14 @@
 #! /usr/bin/env python
-"""
+"""Module for importing and sorting mnemonics
 
-Module for retrieving and evaluating mnemonic data.
-The module contais...
-
+This module imports a whole set of mnemonics from a .CSV sheet and converts it
+to an astropy table. In a second step the table is sorted by its mnemoncis
+and for each mnemmonic another astropy table with reduced content is created.
+The last step is to append the data (time and engineering value) with its
+mnemonic identifier as key to a dictionary.
 
 Authors
 -------
-
     - Daniel Kühbacher
 
 Use
@@ -16,12 +17,10 @@ Use
 
 Dependencies
 ------------
-
     mnemonics.py -> includes a list of mnemonics to be evaluated
 
 References
 ----------
-
 
 Notes
 -----
@@ -30,7 +29,7 @@ Notes
 from astropy.table import Table
 from astropy.time import Time
 import warnings
-import mnemonics as mn
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
 
 
 class mnemonics:
