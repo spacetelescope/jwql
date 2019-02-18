@@ -48,6 +48,7 @@ from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
+from .data_containers import webpage_template_data
 from .forms import FileSearchForm
 from .oauth import auth_info
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
@@ -71,12 +72,13 @@ def webpage_template(request):
     # Define which HTML template to render
     template = 'WEBPAGE_TEMPLATE.html'
 
-    # Define any variables to pass to the web page
-    acknowledgements = get_acknowledgements()
+    # Define variables with data from data_containers.py
+    launch, plot_data = webpage_template_data()
 
-    # Wrap all needed variables into a Python dictionary
+    # Pack all needed variables into a Python dictionary
     context = {
-        'acknowledgements': acknowledgements,
+        'launch_date': launch,
+        'plot_data': plot_data,
         'inst': '', # Leave as empty string or instrument name; Required for navigation bar
         'inst_list': JWST_INSTRUMENT_NAMES, # Do not edit; Required for navigation bar
         'tools': MONITORS, # Do not edit; Required for navigation bar

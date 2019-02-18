@@ -27,6 +27,8 @@ import os
 from astropy.io import fits
 from astropy.time import Time
 from astroquery.mast import Mast
+from bokeh.embed import components
+from bokeh.plotting import figure
 import numpy as np
 
 from .forms import MnemonicSearchForm, MnemonicQueryForm
@@ -42,6 +44,46 @@ PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_image
 THUMBNAIL_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'thumbnails')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
+
+
+def webpage_template_data():
+    """An example data container function for the webpage template.
+
+    Define variables to pass to the webpage_template view, including
+    the output of a Bokeh plot to embed.
+
+    Returns
+    -------
+    jwst_launch_date : int
+        The current expected JWST launch date
+    plot_data : list
+        A list containing the JavaScript and HTML content for the
+        Bokeh plot
+    """
+    # Define a single variable to pass
+    jwst_launch_date = 2021
+
+    # Define a basic bokeh plot showing value as a function of time.
+    # Start by defining the data for the plot.
+    list_of_dates = ['2018-02-11 00:00:00.000', '2018-02-12 00:00:00.000',
+                     '2018-02-13 00:00:00.000', '2018-02-14 00:00:00.000',
+                     '2018-02-15 00:00:00.000', '2018-02-16 00:00:00.000',
+                     '2018-02-17 00:00:00.000']
+    date = Time(list_of_dates, format='iso').datetime
+    avg_temp = [33, 36, 42, 43, 56, 44, 34]
+
+    # Build the plot with Bokeh
+    p1 = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
+                title='Baltimore Winter Temperatures', x_axis_label='Date',
+                y_axis_label='Average Temperature (Degrees F)')
+    p1.line(date, avg_temp, line_width=1, line_color='blue', line_dash='dashed')
+    p1.circle(date, avg_temp, color='blue')
+
+    # Save out the JavaScript and HTML
+    script, div = components(p1)
+    plot_data = [div, script]
+
+    return jwst_launch_date, plot_data
 
 
 def get_acknowledgements():
