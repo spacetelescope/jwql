@@ -1,0 +1,66 @@
+<!--This line tells the HTML file to read the contents of base.html before
+loading the contents of WEBPAGE_TEMPLATE.html-->
+{% extends "base.html" %}
+
+
+<!--The "preamble" block below contains content that goes in the page <head> tag-->
+{% block preamble %}
+
+    <!--Put the webpage title here:-->
+    <title>Webpage Title - JWQL</title>
+
+{% endblock %}
+
+<!--The "content" block below contains content that goes in the page <body> tag-->
+{% block content %}
+
+    <main role="main" class="container">
+
+        <!--Add a heading-->
+        <h1>This is a level 1 heading</h1>
+
+        <!--Horizontal line-->
+        <hr>
+
+        <!--Include an image located at jwql/website/apps/jwql/static/img/-->
+        <div style="text-align: center"><img src={{ static('img/jwql_logo_full_transparent.png') }} width=20%></div><br>
+
+        Some text under the h1 tag.<br>
+        More text after a line break.
+
+        <br>
+        <br>
+
+        <!--Add another heading (you can go up to h5)-->
+        <h2>A level 2 heading</h2>
+
+        <!--An inline link-->
+        Include a <a href="https://www.w3schools.com/tags/tag_a.asp" target="_blank">link</a>.
+
+        <br>
+        <br>
+
+        <!--Add a bulleted list-->
+        <h3>A hard-coded list</h3>
+        <ul>
+            <li>First</li>
+            <li>Second</li>
+            <li>Last</li>
+        </ul>
+
+        <br>
+
+
+        <!--Add another list using Jinja template for loop and Django variables-->
+        <h3>A dynamically-coded list</h3>
+        <ul>
+        {% for person in acknowledgements %}
+            <li>{{ person }}</li>
+        {% endfor %}
+        </ul>
+
+        <!--Include a bokeh plot-->
+
+    </main>
+
+{% endblock %}

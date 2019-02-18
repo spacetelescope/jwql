@@ -55,6 +55,9 @@ urlpatterns = [
     # Home
     path('', views.home, name='home'),
 
+    # WEBPAGE TEMPLATE
+    path('webpage_template', views.webpage_template, name='webpage_template'),
+
     # Authentication
     path('login/', oauth.login, name='login'),
     path('logout/', oauth.logout, name='logout'),
