@@ -26,7 +26,10 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
         <div style="text-align: center"><img src={{ static('img/jwql_logo_full_transparent.png') }} width=20%></div><br>
 
         Some text under the h1 tag.<br>
-        More text after a line break.
+        More text after a line break.<br>
+
+        <!--Use a Django variable passed from views.webpage_template-->
+        JWST is scheduled to launch in {{ launch_date }}... 🤞
 
         <br>
         <br>
@@ -36,6 +39,10 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
 
         <!--An inline link-->
         Include a <a href="https://www.w3schools.com/tags/tag_a.asp" target="_blank">link</a>.
+        <br>
+
+        <!--Or a Bootstrap button to download an image at jwql/website/apps/jwql/static/img!-->
+        <a id="download_example" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("img/hubble_image.jpg") }}' download>Download Hubble Image</a>
 
         <br>
         <br>
@@ -51,15 +58,21 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
         <br>
 
 
-        <!--Add another list using Jinja template for loop and Django variables-->
         <h3>A dynamically-coded list</h3>
+        <!--Add another list using Jinja for loop and Django variables-->
         <ul>
-        {% for person in acknowledgements %}
-            <li>{{ person }}</li>
+        {% for instrument in inst_list %}
+            <li>{{ instrument }}</li>
         {% endfor %}
         </ul>
 
         <!--Include a bokeh plot-->
+        <h3>A Bokeh Plot</h3>
+        <!--Import Bokeh package-->
+        <link href="https://cdn.pydata.org/bokeh/release/bokeh-1.0.1.min.css" rel="stylesheet" type="text/css">
+        <!--Import Bokeh JavaScript and HTML-->
+        {{ plot_data[1] | safe }}
+        {{ plot_data[0] | safe }}
 
     </main>
 
