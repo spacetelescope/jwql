@@ -1,3 +1,32 @@
+"""Module holds functions to generate and access sqlite databases
+
+The module is tailored for use in miri data trending. It holds functions to
+create and close connections to a sqlite database. Calling the module itself
+creates a sqlite database with specific tables used at miri data trending.
+
+Authors
+-------
+    - Daniel Kühbacher
+
+Use
+---
+    import the module as follow:
+    >>>jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
+
+
+Dependencies
+------------
+    no external files needed
+
+References
+----------
+
+Notes
+-----
+
+"""
+
+
 import sqlite3
 from sqlite3 import Error
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as m
@@ -24,7 +53,6 @@ def create_connection(db_file):
     return None
 
 
-
 def close_connection(conn):
     '''Closes connection to database
     Parameters
@@ -36,22 +64,15 @@ def close_connection(conn):
     print('Connection closed')
 
 
-
-# data schould have following format:
-# data = (  float : start_time,
-#           float : end_time,
-#           int : value_count,
-#           float : average,
-#           float : deviation   )
 def add_data(conn, mnemonic, data):
 
     c = conn.cursor()
 
-    #check if data already exists (start_time)
+    #check if data already exists (start_time as identifier)
     c.execute('SELECT id from {} WHERE start_time= {}'.format(mnemonic, data[0]))
     temp = c.fetchall()
 
-    if len(temp)==0:
+    if len(temp) == 0:
         c.execute('INSERT INTO {} (start_time,end_time,data_points,average,deviation) \
                 VALUES (?,?,?,?,?)'.format(mnemonic),data)
         conn.commit()
@@ -64,10 +85,10 @@ def add_wheel_data(conn, mnemonic, data):
     c = conn.cursor()
 
     #check if data already exists (start_time)
-    c.execute('SELECT id from {} WHERE timestamp= {}'.format(mnemonic, data[0]))
+    c.execute('SELECT id from {} WHERE timestamp = {}'.format(mnemonic, data[0]))
     temp = c.fetchall()
 
-    if len(temp)==0:
+    if len(temp) == 0:
         c.execute('INSERT INTO {} (timestamp, value) \
                 VALUES (?,?)'.format(mnemonic),data)
         conn.commit()
@@ -127,12 +148,11 @@ def query_pos(conn, mnemonic, column):
     return data
 
 def main():
-    ''' Creates SQLite database with tables....
-    '''
+    ''' Creates SQLite database with tables proposed in mnemonics.py'''
 
     while True:
         name = input("choose name and location of database:")
-        conn = create_connection(name)
+        conn = create_connection(path)
 
         if conn != None:
             break
@@ -167,13 +187,9 @@ def main():
             print('e')
 
     print("Database initial setup complete")
-
     conn.commit()
     close_connection(conn)
 
-#
-#
-#
 #
 if __name__ == "__main__":
     main()
