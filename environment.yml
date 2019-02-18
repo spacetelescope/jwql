@@ -19,12 +19,12 @@ dependencies:
 - psycopg2=2.7.5
 - python=3.6.4
 - python-dateutil=2.7.5
-- pytest=4.1.1
+- pytest=4.2.1
 - pytest-cov=2.6.1
 - pytest-html=1.19.0
 - sphinx=1.8.2
 - sphinx_rtd_theme=0.1.9
-- sqlalchemy=1.2.0
+- sqlalchemy=1.2.18
 - stsci_rtd_theme=0.0.2
 - pip:
   - authlib==0.10
