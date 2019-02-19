@@ -249,3 +249,13 @@ function update_thumbnails_page(inst, proposal, base_url) {
             document.getElementById("thumbnail-array").style.display = "block";
         }});
 };
+
+/* JS function to construct the URL corresponding to a specific GitHub release
+* @param {String} version_string - The x.y.z version number
+*/
+function version_url(version_string) {
+    var a_line = 'Running <a href="https://github.com/spacetelescope/jwql/releases/tag/';
+    a_line += version_string;
+    a_line += '">JWQL v' + version_string + '</a>';
+    return a_line;
+};
