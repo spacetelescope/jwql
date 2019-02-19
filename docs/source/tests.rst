@@ -26,6 +26,12 @@ test_preview_images.py
     :members:
     :undoc-members:
 
+test_setup.py
+-------------
+.. automodule:: jwql.tests.test_setup
+    :members:
+    :undoc-members:
+
 test_utils.py
 -------------
 .. automodule:: jwql.tests.test_utils
