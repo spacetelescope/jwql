@@ -77,7 +77,7 @@ conda env create -f environment.yml
 
 ### Package Installation
 
-Next, you need to install the `jwql` package. While still in the directory with the `jwql` clone, you can do the following:
+Next, you need to install the `jwql` package. While still in the `jwql/` directory, run the following command to set up the package:
 
 ```
 python setup.py develop
