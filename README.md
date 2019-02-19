@@ -24,6 +24,12 @@ The `jwql` application is currently under heavy development.  The `1.0` release 
 
 ## Installation
 
+Getting `jwql` up and running on your own computer requires four steps, detailed below:
+1. Cloning the GitHub repository
+1. Installing the `conda`environment
+1. Installing the python package
+1. Setting up the configuration file
+
 ### Prerequisites
 
 It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.6.  Downloads and installation instructions are  available here:
@@ -33,27 +39,25 @@ It is highly suggested that contributors have a working installation of `anacond
 
 Requirements for contributing to the `jwql` package will be included in the `jwql` `conda` environment, which is included in our installation instructions below. Further package requirements will be provided for `jwql` by a `setup.py` script included in the repository.
 
-### Package Installation
+### Clone the `jwql` repo
 
-You first need to install the current version of `jwql`. The simplest way to do this is to go to the directory you want your copy of the repository to be in and clone the repoistory there. Once you are in the directory you can do the following:
+You first need to clone the current version of `jwql`. The simplest way to do this is to go to the directory you want your copy of the repository to be in and clone the repository there. Once you are in the directory you can do the following:
 
 ```
 git clone https://github.com/spacetelescope/jwql.git
 cd jwql
-python setup.py develop
 ```
 
 or, if you would rather use `SSH` instead of `https`, type
 ```
 git clone git@github.com:spacetelescope/jwql.git
 cd jwql
-python setup.py develop
 ```
 instead, and then proceed as stated.
 
 ### Environment Installation
 
-Following the download of the `jwql` package, contributors can then install the `jwql` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project.  First, one should ensure that their version of `conda` is up to date:
+Following the download of the `jwql` repository, contributors can then install the `jwql` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project.  First, one should ensure that their version of `conda` is up to date:
 
 ```
 conda update conda
@@ -70,6 +74,15 @@ Lastly, one can create the `jwql` environment via the `environment.yml` file:
 ```
 conda env create -f environment.yml
 ```
+
+### Package Installation
+
+Next, you need to install the `jwql` package. While still in the directory with the `jwql` clone, you can do the following:
+
+```
+python setup.py develop
+```
+The package should now appear if you run `conda list jwql`.
 
 ### Configuration File
 
