@@ -158,14 +158,11 @@ def query_pos(conn, mnemonic, column):
 def main():
     ''' Creates SQLite database with tables proposed in mnemonics.py'''
 
-    while True:
-        name = input("choose name and location of database:")
-        conn = create_connection(path)
 
-        if conn != None:
-            break
-        else:
-            pass
+    path = '/home/daniel/STScI/jwql/jwql/database/miri_database.db'
+    conn = create_connection(path)
+
+
 
     c=conn.cursor()
 
