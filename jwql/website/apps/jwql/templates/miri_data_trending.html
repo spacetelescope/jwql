@@ -25,7 +25,27 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
         <!--Include an image located at jwql/website/apps/jwql/static/img/-->
         <div style="text-align: center"><img src={{ static('img/jwql_logo_full_transparent.png') }} width=20%></div><br>
 
+        <head>
+          <title>Bokeh Scatter Plots</title>
+          <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-1.0.1.min.css" type="text/css"/>
+          <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.0.1.min.css" type="text/css"/>
+        </head>
 
-    </main>
+        <body>
+        <div id="plot1">
+            {{ dashboard[0] | safe }}
+        </div>
+        </body>
+
+
+        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-1.0.1.min.js"></script>
+        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.0.1.min.js"></script>
+
+
+        <div id="script1">
+          {{ dashboard[1] | safe }}
+        </div>
+
+     </main>
 
 {% endblock %}

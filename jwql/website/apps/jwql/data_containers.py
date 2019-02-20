@@ -86,10 +86,27 @@ def webpage_template_data():
     return jwst_launch_date, plot_data
 
 def data_trending():
+    """Container for Miri datatrending dashboard and components
 
-    irgendwas = 10
+    Returns
+    -------
+    variables : int
+        nonsense
+    dashboard : list
+        A list containing the JavaScript and HTML content for the
+        dashboard
+    """
 
-    return irgendwas
+    import jwql.instrument_monitors.miri_monitors.data_trending.dashboard as dash
+
+    dashboard = dash.data_trending_dashboard()
+
+    variables = {
+        "var1": 10,
+        "var2": 20
+    }
+
+    return variables, dashboard
 
 
 def get_acknowledgements():

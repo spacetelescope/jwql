@@ -94,19 +94,32 @@ def webpage_template(request):
 
 
 def miri_data_trending(request):
+    """Generate the ``MIRI DATA-TRENDING`` page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
 
     template = "miri_data_trending.html"
 
-    irgendwas = data_trending()
+    variables, dash = data_trending()
 
     context = {
-        'irg': irgendwas,
+        'dashboard' : dash,
         'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
         'inst_list': JWST_INSTRUMENT_NAMES,  # Do not edit; Required for navigation bar
         'tools': MONITORS,  # Do not edit; Required for navigation bar
         'user': None  # Do not edit; Required for authentication
     }
 
+    # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
 
 @auth_info

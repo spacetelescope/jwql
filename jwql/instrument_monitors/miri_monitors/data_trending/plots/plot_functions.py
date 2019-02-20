@@ -2,13 +2,16 @@ import numpy as np
 
 def split_data(value):
     x = []
-    y = []
+    y1 = []
+    y2 = []
     for item in value:
         x.append(item[0])
-        y.append(item[1])
+        y1.append(item[1])
+        y2.append(item[2])
     X = np.array(x)
-    Y = np.array(y)
-    return X,Y
+    Y1 = np.array(y1)
+    Y2 = np.array(y2)
+    return X,Y1,Y2
 
 
 def pol_regression(x, y, rank):
