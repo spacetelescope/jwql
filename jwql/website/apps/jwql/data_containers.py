@@ -27,18 +27,18 @@ import os
 import re
 import tempfile
 
+import numpy as np
 from astropy.io import fits
 from astropy.time import Time
 from astroquery.mast import Mast
-import numpy as np
 
-from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
+from jwql.edb.edb_interface import mnemonic_inventory
+from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.constants import MONITORS
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser
-from jwql.utils.engineering_database import query_mnemonic_info, query_single_mnemonic
-from jwql.utils.engineering_database import mnemonic_inventory
+from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -187,7 +187,7 @@ def get_edb_components(request):
             if mnemonic_name_search_form.is_valid():
                 mnemonic_identifier = mnemonic_name_search_form['search'].value()
                 if mnemonic_identifier is not None:
-                    mnemonic_name_search_result = query_mnemonic_info(mnemonic_identifier)
+                    mnemonic_name_search_result = get_mnemonic_info(mnemonic_identifier)
 
             # create forms for search fields not clicked
             mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
@@ -203,7 +203,7 @@ def get_edb_components(request):
                 end_time = Time(mnemonic_query_form['end_time'].value(), format='iso')
 
                 if mnemonic_identifier is not None:
-                    mnemonic_query_result = query_single_mnemonic(mnemonic_identifier, start_time,
+                    mnemonic_query_result = get_mnemonic(mnemonic_identifier, start_time,
                                                                   end_time)
                     mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
 
@@ -215,7 +215,6 @@ def get_edb_components(request):
             mnemonic_exploration_form = MnemonicExplorationForm(request.POST,
                                                                 prefix='mnemonic_exploration')
             if mnemonic_exploration_form.is_valid():
-
                 mnemonic_exploration_result, meta = mnemonic_inventory()
 
                 # loop over filled fields and implement simple AND logic
@@ -244,10 +243,7 @@ def get_edb_components(request):
                 mnemonic_exploration_result.meta = meta
 
                 if mnemonic_exploration_result.n_rows == 0:
-                    # print('ATTENTION')
                     mnemonic_exploration_result = 'empty'
-                #     mnemonic_exploration_result.n_rows = 0
-
 
             # create forms for search fields not clicked
             mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
