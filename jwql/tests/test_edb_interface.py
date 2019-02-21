@@ -25,7 +25,7 @@ from jwql.edb.edb_interface import mnemonic_inventory, query_single_mnemonic
 from jwql.utils.utils import get_config
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(raises=(RuntimeError, FileNotFoundError))
 def test_get_mnemonic():
     """Test the query of a single mnemonic."""
     from jwql.edb.engineering_database import get_mnemonic
@@ -38,7 +38,7 @@ def test_get_mnemonic():
     assert len(mnemonic.data) == mnemonic.meta['paging']['rows']
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(raises=(RuntimeError, FileNotFoundError))
 def test_get_mnemonics():
     """Test the query of a list of mnemonics."""
     from jwql.edb.engineering_database import get_mnemonics
@@ -57,7 +57,7 @@ def test_mnemonic_inventory():
     assert len(all_mnemonics) > 1000
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(raises=(RuntimeError, FileNotFoundError))
 def test_query_single_mnemonic():
     """Test the query of a mnemonic over a given time range."""
     settings = get_config()
