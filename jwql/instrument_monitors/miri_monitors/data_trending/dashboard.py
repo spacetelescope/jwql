@@ -17,18 +17,15 @@ from bokeh.models.widgets import Tabs
 
 from astropy.time import Time
 
-#import plot functions
+#import plot functionsS
 
 
 
 def data_trending_dashboard():
 
     from .plots.power_tab import power_plots
-
-    from .plots.power_ice_plot import power_ice
-    from .plots.volt4_plot import volt4
-    from .plots.volt1_3_plot import volt1_3
-
+    from .plots.voltage_tab import volt_plots
+    from .plots.temperature_tab import temperature_plots
 
     #connect to database
     db_file = "/home/daniel/STScI/jwql/jwql/database/miri_database.db"
@@ -36,14 +33,11 @@ def data_trending_dashboard():
 
     #add tabs to dashboard
     tab1 = power_plots(conn)
-
-
+    tab2 = volt_plots(conn)
+    tab3 = temperature_plots(conn)
 
     #connect tabs
-    tabs = Tabs( tabs=[ tab1 ] )
-
-
-
+    tabs = Tabs( tabs=[ tab1, tab2, tab3 ] )
 
     #return dasboard to webapp
     script, div = components(tabs)

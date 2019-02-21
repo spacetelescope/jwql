@@ -159,7 +159,7 @@ def main():
     ''' Creates SQLite database with tables proposed in mnemonics.py'''
 
 
-    path = '/home/daniel/STScI/jwql/jwql/database/miri_database.db'
+    path = '/home/daniel/STScI/jwql/jwql/database/miri_database_new.db'
     conn = create_connection(path)
 
 
