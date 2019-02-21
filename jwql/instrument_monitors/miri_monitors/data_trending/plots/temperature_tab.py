@@ -43,10 +43,10 @@ def cryo(conn):
                 plot_height = 700,                                  \
                 y_range = [5.8,6.4],
                 x_axis_type = 'datetime',                           \
-                x_axis_label = 'Date', y_axis_label='Power (W)')
+                x_axis_label = 'Date', y_axis_label = 'Temperature (K)')
 
     p.grid.visible = True
-    p.title.text = "POWER ICE"
+    p.title.text = "Cryo Temperatures"
     p.title.align = "left"
     p.title.text_color = "#c85108"
     p.title.text_font_size = "25px"
@@ -74,13 +74,89 @@ def cryo(conn):
 
     return p
 
+def temp(conn):
+
+    temp = pd.read_sql_query("SELECT * FROM IGDP_MIR_ICE_INTER_TEMP ORDER BY start_time", conn)
+    temp['average']+= 273
+    reg = pd.DataFrame({'reg' : pol_regression(temp['start_time'], temp['average'],3)})
+    temp = pd.concat([temp, reg], axis=1)
+
+    temp['start_time'] = pd.to_datetime( Time(temp['start_time'], format = "mjd").datetime )
+    plot_data = ColumnDataSource(temp)
+
+    # create a new plot with a title and axis labels
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
+                toolbar_location = "above",                         \
+                plot_width = 1120,                                   \
+                plot_height = 700,                                  \
+                y_range = [275,295],                             \
+                x_axis_type = 'datetime',                           \
+                x_axis_label = 'Date', y_axis_label = 'Temperature')
+
+    p.grid.visible = True
+    p.title.text = "TEMP"
+    p.title.align = "left"
+    p.title.text_color = "#c85108"
+    p.title.text_font_size = "25px"
+    p.background_fill_color = "#efefef"
+
+    p.line(x = "start_time", y = "reg", color = "brown", legend = "Internal Temp.", source = plot_data)
+    p.scatter(x = "start_time", y = "average", color = "brown", legend = "Internal Temp.", source = plot_data)
+
+    add_to_plot(p, "ICE IEC", "ST_ZTC1MIRIA", conn, color = "burlywood")
+    add_to_plot(p, "FPE IEC", "ST_ZTC2MIRIA", conn, color = "cadetblue")
+    add_to_plot(p, "FPE PDU", "IMIR_PDU_TEMP", conn, color = "chartreuse")
+    add_to_plot(p, "Analog IC", "IMIR_IC_SCE_ANA_TEMP1", conn, color = "chocolate")
+    add_to_plot(p, "Analog SW", "IMIR_SW_SCE_ANA_TEMP1", conn, color = "coral")
+    add_to_plot(p, "Analog LW", "IMIR_LW_SCE_ANA_TEMP1", conn, color = "darkorange")
+    add_to_plot(p, "Digital IC", "IMIR_IC_SCE_DIG_TEMP", conn, color = "crimson")
+    add_to_plot(p, "Digital SW", "IMIR_SW_SCE_DIG_TEMP", conn, color = "cyan")
+    add_to_plot(p, "Digital LW", "IMIR_LW_SCE_DIG_TEMP", conn, color = "darkblue")
+
+    p.legend.location = "bottom_right"
+    p.legend.orientation = "horizontal"
+    p.legend.click_policy = "hide"
+
+    return p
+
+def det(conn):
+
+    # create a new plot with a title and axis labels
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
+                toolbar_location = "above",                         \
+                plot_width = 1120,                                   \
+                plot_height = 400,                                  \
+                y_range = [6.395,6.41],                             \
+                x_axis_type = 'datetime',                           \
+                x_axis_label = 'Date', y_axis_label = 'Temperature (K)')
+
+    p.grid.visible = True
+    p.title.text = "Detector Temperature"
+    p.title.align = "left"
+    p.title.text_color = "#c85108"
+    p.title.text_font_size = "25px"
+    p.background_fill_color = "#efefef"
+
+    add_to_plot(p, "Det. Temp. IC", "IGDP_MIR_IC_DET_TEMP", conn, color = "red")
+    add_to_plot(p, "Det. Temp. LW", "IGDP_MIR_LW_DET_TEMP", conn, color = "green")
+    add_to_plot(p, "Det. Temp. SW", "IGDP_MIR_SW_DET_TEMP", conn, color = "blue")
+
+    p.legend.location = "bottom_right"
+    p.legend.orientation = "horizontal"
+    p.legend.click_policy = "hide"
+
+    return p
+
 def temperature_plots(conn):
 
     plot1 = cryo(conn)
+    plot2 = temp(conn)
+    plot3 = det(conn)
 
-    #layout = row(plot1)
+
+    layout = column(plot1, plot2, plot3)
 
     #layout_volt = row(volt4, volt1_3)
-    tab = Panel(child = plot1, title = "Temperature")
+    tab = Panel(child = layout, title = "TEMPERATURE")
 
     return tab
