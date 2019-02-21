@@ -141,7 +141,7 @@ def process_file(conn, path):
 
 
 def main():
-    db_file = "/home/daniel/STScI/jwql/jwql/database/miri_database.db"
+    db_file = "/home/daniel/STScI/jwql/jwql/database/miri_database_new.db"
     conn = sql.create_connection(db_file)
 
     for name in filenames:
