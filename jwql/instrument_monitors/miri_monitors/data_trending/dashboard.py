@@ -24,20 +24,28 @@ from astropy.time import Time
 def data_trending_dashboard():
 
     from .plots.power_tab import power_plots
-    from .plots.voltage_tab import volt_plots
+    from .plots.ice_voltage_tab import volt_plots
+    from .plots.fpe_voltage_tab import fpe_plots
     from .plots.temperature_tab import temperature_plots
+    from .plots.bias_tab import bias_plots
+    #from .plots.overview_tab import overview_settings
+    from .plots.wheel_ratio_tab import wheel_ratios
 
     #connect to database
     db_file = "/home/daniel/STScI/jwql/jwql/database/miri_database.db"
     conn = sql.create_connection(db_file)
 
     #add tabs to dashboard
+    #tab0 = overview_settings(conn)
     tab1 = power_plots(conn)
     tab2 = volt_plots(conn)
-    tab3 = temperature_plots(conn)
+    tab3 = fpe_plots(conn)
+    tab4 = temperature_plots(conn)
+    tab5 = bias_plots(conn)
+    tab6 = wheel_ratios(conn)
 
     #connect tabs
-    tabs = Tabs( tabs=[ tab1, tab2, tab3 ] )
+    tabs = Tabs( tabs=[ tab1, tab2, tab3, tab4, tab5, tab6 ] )
 
     #return dasboard to webapp
     script, div = components(tabs)
