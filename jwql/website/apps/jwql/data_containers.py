@@ -29,6 +29,7 @@ from astropy.time import Time
 from astroquery.mast import Mast
 from bokeh.embed import components
 from bokeh.plotting import figure
+
 import numpy as np
 
 from .forms import MnemonicSearchForm, MnemonicQueryForm
@@ -96,15 +97,9 @@ def data_trending():
         A list containing the JavaScript and HTML content for the
         dashboard
     """
-
     import jwql.instrument_monitors.miri_monitors.data_trending.dashboard as dash
 
-    dashboard = dash.data_trending_dashboard()
-
-    variables = {
-        "var1": 10,
-        "var2": 20
-    }
+    dashboard, variables = dash.data_trending_dashboard()
 
     return variables, dashboard
 

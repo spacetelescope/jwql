@@ -18,12 +18,6 @@ from datetime import date
 from random import randint
 
 
-def button_handler(new):
-    print (new)
-
-
-
-
 
 def overview_settings(conn):
 
@@ -32,26 +26,31 @@ def overview_settings(conn):
     slider_min= datetime.date(2017, 2, 11)
     time_range= ({'start': default_start, 'end': now })
 
-    tr = pd.DataFrame.from_dict(time_range, orient='index')
+    ds_astropy = Time(default_start)
+    now_astropy = Time(now)
+
+    source = ColumnDataSource(data=dict(start=[ds_astropy.mjd,], end=[now_astropy.mjd,]))
 
     slider1 = DateRangeSlider(value = (time_range['start'], time_range['end']), start=slider_min, end=now, title= "Time range")
+
     button = Button(label = "UPDATE PLOTS", button_type="success")
 
     button.js_on_event(events.ButtonClick, button_handler(time_range))
 
-    date_slider_callback = CustomJS(args = dict(source=tr), code =
+    callback = CustomJS(args = dict(source=source), code =
     """
-        var data = source.time_range
-        var start = cb_obj.start
-        var end = cb_obj.end
 
-        data['start'] = start
-        data['end'] = end
+        var data = source.data
+        var range = cb_obj.value
+        data['start'] = range[0]
+        data['end'] = range[1]
+        source.change.emit();
 
-        data.change.emit();
     """)
 
-    slider1.js_on_change('value', date_slider_callback)
+    slider1.js_on_change('value', callback)
+
+
 
     slider = WidgetBox(slider1, width=800)
 
