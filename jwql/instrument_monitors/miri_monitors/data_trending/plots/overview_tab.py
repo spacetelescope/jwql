@@ -40,11 +40,18 @@ def overview_settings(conn):
     callback = CustomJS(args = dict(source=source), code =
     """
 
-        var data = source.data
-        var range = cb_obj.value
+        var data = source.get('data')
+        var start = cb_obj.value
         data['start'] = range[0]
         data['end'] = range[1]
         source.change.emit();
+
+        var data = source.get('data');
+        var start = range.get('start');
+        var end = range.get('end');
+        data['%s'] = [start + (end - start) / 2];
+        data['%s'] = [end - start];
+        source.trigger('change');
 
     """)
 

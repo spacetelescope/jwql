@@ -87,10 +87,7 @@ def vdetcom(conn, start, end):
 
     p.grid.visible = True
     p.title.text = "Det.Bias VDETCOM"
-    p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
+    pf.add_basic_layout(p)
 
     pf.add_to_plot(p, "VDETCOM IC", "IGDP_MIR_IC_V_VDETCOM", start, end, conn, color = "red")
     pf.add_to_plot(p, "VDETCOM SW", "IGDP_MIR_SW_V_VDETCOM", start, end, conn, color = "orange")
@@ -128,10 +125,7 @@ def vssout(conn, start, end):
 
     p.grid.visible = True
     p.title.text = "Det.Bias VSSOUT"
-    p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
+    pf.add_basic_layout(p)
 
     pf.add_to_plot(p, "VSSOUT IC", "IGDP_MIR_IC_V_VSSOUT", start, end, conn, color = "red")
     pf.add_to_plot(p, "VSSOUT SW", "IGDP_MIR_SW_V_VSSOUT", start, end, conn, color = "orange")
@@ -169,10 +163,7 @@ def vrstoff(conn, start, end):
 
     p.grid.visible = True
     p.title.text = "Det.Bias VRSTOFF"
-    p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
+    pf.add_basic_layout(p)
 
     pf.add_to_plot(p, "VRSTOFF IC", "IGDP_MIR_IC_V_VRSTOFF", start, end, conn, color = "red")
     pf.add_to_plot(p, "VRSTOFF SW", "IGDP_MIR_SW_V_VRSTOFF", start, end, conn, color = "orange")
@@ -210,10 +201,7 @@ def vp(conn, start, end):
 
     p.grid.visible = True
     p.title.text = "Det.Bias VP"
-    p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
+    pf.add_basic_layout(p)
 
     pf.add_to_plot(p, "VP IC", "IGDP_MIR_IC_V_VP", start, end, conn, color = "red")
     pf.add_to_plot(p, "VP SW", "IGDP_MIR_SW_V_VP", start, end, conn, color = "orange")
@@ -251,10 +239,7 @@ def vdduc(conn, start, end):
 
     p.grid.visible = True
     p.title.text = "Det.Bias VDDUC"
-    p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
+    pf.add_basic_layout(p)
 
     pf.add_to_plot(p, "VDDUC IC", "IGDP_MIR_IC_V_VDDUC", start, end, conn, color = "red")
     pf.add_to_plot(p, "VDDUC SW", "IGDP_MIR_SW_V_VDDUC", start, end, conn, color = "orange")

@@ -3,10 +3,9 @@ from bokeh.plotting import figure
 from bokeh.models import BoxAnnotation, LinearAxis, Range1d
 from bokeh.embed import components
 from bokeh.models.widgets import Panel, Tabs
-from bokeh.models import ColumnDataSource
+from bokeh.models import ColumnDataSource, HoverTool
 
 import pandas as pd
-
 import numpy as np
 
 from astropy.time import Time
@@ -35,3 +34,14 @@ def add_to_plot(p, legend, mnemonic, start, end, conn, y_axis= "default", color=
 
     p.line(x = "start_time", y = "reg", color = color, y_range_name=y_axis, legend = legend, source = plot_data)
     p.scatter(x = "start_time", y = "average", color = color, y_range_name=y_axis, legend = legend, source = plot_data)
+
+def add_basic_layout(p):
+    p.title.align = "left"
+    p.title.text_color = "#c85108"
+    p.title.text_font_size = "25px"
+    p.background_fill_color = "#efefef"
+
+    p.xaxis.axis_label_text_font_size = "14pt"
+    p.xaxis.axis_label_text_color='#2D353C'
+    p.yaxis.axis_label_text_font_size = "14pt"
+    p.yaxis.axis_label_text_color='#2D353C'

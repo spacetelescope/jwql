@@ -1,4 +1,5 @@
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
+import jwql.instrument_monitors.miri_monitors.data_trending.plots.plot_functions as pf
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
 from bokeh.plotting import figure
 from bokeh.models import BoxAnnotation, LinearAxis, Range1d
@@ -43,9 +44,7 @@ def gw14(conn, start, end):
     p.grid.visible = True
     p.title.text = "GW14 Ratio"
     p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
+    pf.add_basic_layout(p)
 
     add_to_wplot(p, "SHORT", "IMIR_HK_GW14_POS_RATIO_SHORT", start, end, conn, mn.gw14_nominals['SHORT'], color = "green")
     add_to_wplot(p, "MEDIUM", "IMIR_HK_GW14_POS_RATIO_MEDIUM", start, end, conn, mn.gw14_nominals['MEDIUM'], color = "red")
@@ -70,9 +69,7 @@ def gw23(conn, start, end):
     p.grid.visible = True
     p.title.text = "GW23 Ratio"
     p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
+    pf.add_basic_layout(p)
 
     add_to_wplot(p, "SHORT", "IMIR_HK_GW23_POS_RATIO_SHORT", start, end, conn, mn.gw23_nominals['SHORT'], color = "green")
     add_to_wplot(p, "MEDIUM", "IMIR_HK_GW23_POS_RATIO_MEDIUM", start, end, conn, mn.gw23_nominals['MEDIUM'], color = "red")
@@ -97,9 +94,7 @@ def ccc(conn, start, end):
     p.grid.visible = True
     p.title.text = "CCC Ratio"
     p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
+    pf.add_basic_layout(p)
 
     #add_to_wplot(p, "LOCKED", "IMIR_HK_CCC_POS_RATIO_LOCKED", start, end, conn, mn.ccc_nominals['LOCKED'], color = "green")
     add_to_wplot(p, "OPEN", "IMIR_HK_CCC_POS_RATIO_OPEN", start, end, conn, mn.ccc_nominals['OPEN'], color = "red")
@@ -124,9 +119,7 @@ def fw(conn, start, end):
     p.grid.visible = True
     p.title.text = "Filterwheel Ratio"
     p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
+    pf.add_basic_layout(p)
 
     add_to_wplot(p, "FND", "IMIR_HK_FW_POS_RATIO_FND", start, end, conn, mn.fw_nominals['FND'], color = "green")
     add_to_wplot(p, "OPAQUE", "IMIR_HK_FW_POS_RATIO_OPAQUE", start, end, conn, mn.fw_nominals['OPAQUE'], color = "red")
