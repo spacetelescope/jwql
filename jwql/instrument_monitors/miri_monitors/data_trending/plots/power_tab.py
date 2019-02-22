@@ -51,10 +51,7 @@ def power_ice(conn, start, end):
 
     p.grid.visible = True
     p.title.text = "POWER ICE"
-    p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
+    pf.add_basic_layout(p)
 
     # add a line renderer with legend and line thickness
     p.scatter(x = "start_time", y = "average", color = 'orange', legend = "Power idle", source = idle)
@@ -97,10 +94,7 @@ def power_fpea(conn, start, end):
 
     p.grid.visible = True
     p.title.text = "POWER FPEA"
-    p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
+    pf.add_basic_layout(p)
 
     # add a line renderer with legend and line thickness
     p.scatter(x = "start_time", y = "average", color = 'orange', legend = "Power FPEA", source = fpea)

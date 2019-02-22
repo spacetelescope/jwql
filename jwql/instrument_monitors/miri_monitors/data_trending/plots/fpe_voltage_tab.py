@@ -88,11 +88,7 @@ def dig5(conn, start, end):
 
     p.grid.visible = True
     p.title.text = "FPE Dig. 5V"
-    p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
-    p.yaxis.axis_label_text_color = "red"
+    pf.add_basic_layout(p)
 
     p.extra_y_ranges = {"current": Range1d(start=2100, end=2500)}
     pf.add_to_plot(p, "FPE Dig. 5V", "IMIR_PDU_V_DIG_5V", start, end, conn, color = "red")
@@ -131,10 +127,7 @@ def refdig(conn, start, end):
 
     p.grid.visible = True
     p.title.text = "2.5V Ref and FPE Dig."
-    p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
+    pf.add_basic_layout(p)
 
     pf.add_to_plot(p, "FPE Dig. 2.5V", "IMIR_SPW_V_DIG_2R5V", start, end, conn, color = "orange")
     pf.add_to_plot(p, "FPE PDU 2.5V REF", "IMIR_PDU_V_REF_2R5V", start, end, conn, color = "red")
@@ -171,11 +164,7 @@ def ana5(conn, start, end):
 
     p.grid.visible = True
     p.title.text = "FPE Ana. 5V"
-    p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
-    p.yaxis.axis_label_text_color = "red"
+    pf.add_basic_layout(p)
 
     p.extra_y_ranges = {"current": Range1d(start=100, end=300)}
     pf.add_to_plot(p, "FPE Ana. 5V", "IMIR_PDU_V_ANA_5V",start, end, conn, color = "red")
@@ -214,11 +203,7 @@ def ana5n(conn, start, end):
 
     p.grid.visible = True
     p.title.text = "FPE Ana. N5V"
-    p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
-    p.yaxis.axis_label_text_color = "red"
+    pf.add_basic_layout(p)
 
     p.extra_y_ranges = {"current": Range1d(start=100, end=300)}
     pf.add_to_plot(p, "FPE Ana. N5", "IMIR_PDU_V_ANA_N5V",start, end, conn, color = "red")
@@ -257,11 +242,7 @@ def ana7(conn, start, end):
 
     p.grid.visible = True
     p.title.text = "FPE Ana. 7V"
-    p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
-    p.yaxis.axis_label_text_color = "red"
+    pf.add_basic_layout(p)
 
     p.extra_y_ranges = {"current": Range1d(start=300, end=500)}
     pf.add_to_plot(p, "FPE Ana. 7V", "IMIR_PDU_V_ANA_7V",start, end, conn, color = "red")
@@ -300,11 +281,7 @@ def ana7n(conn, start, end):
 
     p.grid.visible = True
     p.title.text = "FPE Ana. N7V"
-    p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
-    p.yaxis.axis_label_text_color = "red"
+    pf.add_basic_layout(p)
 
     p.extra_y_ranges = {"current": Range1d(start=350, end=400)}
     pf.add_to_plot(p, "FPE Dig. N7V", "IMIR_PDU_V_ANA_N7V",start, end, conn, color = "red")

@@ -8,7 +8,6 @@ from bokeh.models import ColumnDataSource
 from bokeh.layouts import column, row, WidgetBox
 
 import pandas as pd
-
 import numpy as np
 
 from astropy.time import Time
@@ -27,10 +26,7 @@ def cryo(conn, start, end):
 
     p.grid.visible = True
     p.title.text = "Cryo Temperatures"
-    p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
+    pf.add_basic_layout(p)
 
     pf.add_to_plot(p, "T1P", "IGDP_MIR_ICE_T1P_CRYO", start, end, conn, color = "brown")
     pf.add_to_plot(p, "T2R", "IGDP_MIR_ICE_T2R_CRYO", start, end, conn, color = "burlywood")
@@ -80,10 +76,7 @@ def temp(conn, start, end):
 
     p.grid.visible = True
     p.title.text = "TEMP"
-    p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
+    pf.add_basic_layout(p)
 
     p.line(x = "start_time", y = "reg", color = "brown", legend = "Internal Temp.", source = plot_data)
     p.scatter(x = "start_time", y = "average", color = "brown", legend = "Internal Temp.", source = plot_data)
@@ -117,10 +110,7 @@ def det(conn, start, end):
 
     p.grid.visible = True
     p.title.text = "Detector Temperature"
-    p.title.align = "left"
-    p.title.text_color = "#c85108"
-    p.title.text_font_size = "25px"
-    p.background_fill_color = "#efefef"
+    pf.add_basic_layout(p)
 
     pf.add_to_plot(p, "Det. Temp. IC", "IGDP_MIR_IC_DET_TEMP", start, end, conn, color = "red")
     pf.add_to_plot(p, "Det. Temp. LW", "IGDP_MIR_LW_DET_TEMP", start, end, conn, color = "green")
