@@ -1,8 +1,55 @@
+#! /usr/bin/env python
+"""Prepares plots for FPE VOLTAGE tab
+
+    Module prepares plots for mnemonics below. Combines plots in a grid and
+    returns tab object.
+
+    Plot 1:
+    IMIR_PDU_V_DIG_5V
+    IMIR_PDU_I_DIG_5V
+
+    Plot 2:
+    IMIR_PDU_V_ANA_5V
+    IMIR_PDU_I_ANA_5V
+
+    Plot 3:
+    IMIR_PDU_V_ANA_N5V
+    IMIR_PDU_I_ANA_N5V
+
+    Plot 4:
+    IMIR_PDU_V_ANA_7V
+    IMIR_PDU_I_ANA_7V
+
+    Plot 5:
+    IMIR_PDU_V_ANA_N7V
+    IMIR_PDU_I_ANA_N7V
+
+    Plot 6:
+    IMIR_SPW_V_DIG_2R5V
+    IMIR_PDU_V_REF_2R5V
+
+Authors
+-------
+    - Daniel Kühbacher
+
+Use
+---
+    The functions within this module are intended to be imported and
+    used by ``dashborad.py``, e.g.:
+
+    ::
+        from .plots.fpe_voltage_tab import fpe_plots
+        tab = fpe_plots(conn, start, end)
+
+Dependencies
+------------
+    User must provide database "miri_database.db"
+
+"""
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
 import jwql.instrument_monitors.miri_monitors.data_trending.plots.plot_functions as pf
+from bokeh.models import LinearAxis, Range1d
 from bokeh.plotting import figure
-from bokeh.models import BoxAnnotation, LinearAxis, Range1d
-from bokeh.embed import components
 from bokeh.models.widgets import Panel, Tabs
 from bokeh.models import ColumnDataSource
 from bokeh.layouts import WidgetBox, gridplot
@@ -15,6 +62,20 @@ from astropy.time import Time
 
 
 def dig5(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
 
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
@@ -34,11 +95,8 @@ def dig5(conn, start, end):
     p.yaxis.axis_label_text_color = "red"
 
     p.extra_y_ranges = {"current": Range1d(start=2100, end=2500)}
-    # add a line renderer with legend and line thickness
-
     pf.add_to_plot(p, "FPE Dig. 5V", "IMIR_PDU_V_DIG_5V", start, end, conn, color = "red")
     pf.add_to_plot(p, "FPE Dig. 5V Current", "IMIR_PDU_I_DIG_5V", start, end, conn, y_axis = "current", color = "blue")
-
     p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
 
     p.legend.location = "bottom_right"
@@ -47,6 +105,20 @@ def dig5(conn, start, end):
     return p
 
 def refdig(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
 
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
@@ -73,6 +145,20 @@ def refdig(conn, start, end):
     return p
 
 def ana5(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
 
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
@@ -92,11 +178,8 @@ def ana5(conn, start, end):
     p.yaxis.axis_label_text_color = "red"
 
     p.extra_y_ranges = {"current": Range1d(start=100, end=300)}
-    # add a line renderer with legend and line thickness
-
     pf.add_to_plot(p, "FPE Ana. 5V", "IMIR_PDU_V_ANA_5V",start, end, conn, color = "red")
     pf.add_to_plot(p, "FPE Ana. 5V Current", "IMIR_PDU_I_ANA_5V",start, end, conn, y_axis = "current", color = "blue")
-
     p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
 
     p.legend.location = "bottom_right"
@@ -105,6 +188,20 @@ def ana5(conn, start, end):
     return p
 
 def ana5n(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
 
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
@@ -124,11 +221,8 @@ def ana5n(conn, start, end):
     p.yaxis.axis_label_text_color = "red"
 
     p.extra_y_ranges = {"current": Range1d(start=100, end=300)}
-    # add a line renderer with legend and line thickness
-
     pf.add_to_plot(p, "FPE Ana. N5", "IMIR_PDU_V_ANA_N5V",start, end, conn, color = "red")
     pf.add_to_plot(p, "FPE Ana. N5 Current", "IMIR_PDU_I_ANA_N5V",start, end, conn, y_axis = "current", color = "blue")
-
     p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
 
     p.legend.location = "bottom_right"
@@ -137,6 +231,20 @@ def ana5n(conn, start, end):
     return p
 
 def ana7(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
 
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
@@ -156,11 +264,8 @@ def ana7(conn, start, end):
     p.yaxis.axis_label_text_color = "red"
 
     p.extra_y_ranges = {"current": Range1d(start=300, end=500)}
-    # add a line renderer with legend and line thickness
-
     pf.add_to_plot(p, "FPE Ana. 7V", "IMIR_PDU_V_ANA_7V",start, end, conn, color = "red")
     pf.add_to_plot(p, "FPE Ana. 7V Current", "IMIR_PDU_I_ANA_7V",start, end, conn, y_axis = "current", color = "blue")
-
     p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
 
     p.legend.location = "bottom_right"
@@ -169,6 +274,20 @@ def ana7(conn, start, end):
     return p
 
 def ana7n(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
 
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
@@ -188,11 +307,8 @@ def ana7n(conn, start, end):
     p.yaxis.axis_label_text_color = "red"
 
     p.extra_y_ranges = {"current": Range1d(start=350, end=400)}
-    # add a line renderer with legend and line thickness
-
     pf.add_to_plot(p, "FPE Dig. N7V", "IMIR_PDU_V_ANA_N7V",start, end, conn, color = "red")
     pf.add_to_plot(p, "FPE Ana. N7V Current", "IMIR_PDU_I_ANA_N7V",start, end, conn, y_axis = "current", color = "blue")
-
     p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
 
     p.legend.location = "bottom_right"
@@ -202,6 +318,20 @@ def ana7n(conn, start, end):
 
 
 def fpe_plots(conn, start, end):
+    '''Combines plots to a tab
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : tab object
+        used by dashboard.py to set up dashboard
+    '''
 
     plot1 = dig5(conn, start, end)
     plot2 = refdig(conn, start, end)

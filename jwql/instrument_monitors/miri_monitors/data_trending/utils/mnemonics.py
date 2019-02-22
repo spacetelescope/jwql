@@ -152,7 +152,6 @@ ccc_positions = [
 "OPEN",
 "CLOSED"]
 
-
 fw_nominals = {
 "FND" : -164.46,
 "OPAQUE" : 380.42,

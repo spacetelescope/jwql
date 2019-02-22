@@ -108,7 +108,6 @@ def miri_data_trending(request):
     """
 
     template = "miri_data_trending.html"
-
     variables, dash = data_trending()
 
     context = {
@@ -118,6 +117,8 @@ def miri_data_trending(request):
         'tools': MONITORS,  # Do not edit; Required for navigation bar
         'user': None  # Do not edit; Required for authentication
     }
+    #append variables to context
+    context.update(variables)
 
     # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)

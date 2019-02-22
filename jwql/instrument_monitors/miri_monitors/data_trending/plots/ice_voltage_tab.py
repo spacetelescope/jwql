@@ -1,18 +1,64 @@
+#! /usr/bin/env python
+"""Prepares plots for FPE VOLTAGE tab
+
+    Module prepares plots for mnemonics below. Combines plots in a grid and
+    returns tab object.
+
+    Plot 1:
+    IMIR_PDU_V_DIG_5V
+    IMIR_PDU_I_DIG_5V
+
+    Plot 2:
+    IMIR_PDU_V_ANA_5V
+    IMIR_PDU_I_ANA_5V
+
+    Plot 3:
+    IMIR_PDU_V_ANA_N5V
+    IMIR_PDU_I_ANA_N5V
+
+    Plot 4:
+    IMIR_PDU_V_ANA_7V
+    IMIR_PDU_I_ANA_7V
+
+    Plot 5:
+    IMIR_PDU_V_ANA_N7V
+    IMIR_PDU_I_ANA_N7V
+
+    Plot 6:
+    IMIR_SPW_V_DIG_2R5V
+    IMIR_PDU_V_REF_2R5V
+
+Authors
+-------
+    - Daniel Kühbacher
+
+Use
+---
+    The functions within this module are intended to be imported and
+    used by ``dashborad.py``, e.g.:
+
+    ::
+        from .plots.fpe_voltage_tab import fpe_plots
+        tab = fpe_plots(conn, start, end)
+
+Dependencies
+------------
+    User must provide database "miri_database.db"
+
+"""
+
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
 import jwql.instrument_monitors.miri_monitors.data_trending.plots.plot_functions as pf
+from bokeh.models import LinearAxis, Range1d
 from bokeh.plotting import figure
-from bokeh.models import BoxAnnotation, LinearAxis, Range1d
-from bokeh.embed import components
 from bokeh.models.widgets import Panel, Tabs
 from bokeh.models import ColumnDataSource
-from bokeh.layouts import WidgetBox, gridplot
+from bokeh.layouts import gridplot
 
 import pandas as pd
-
 import numpy as np
 
 from astropy.time import Time
-
 
 def volt4(conn, start, end):
 

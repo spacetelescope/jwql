@@ -1,45 +1,14 @@
-
-import statistics
-import sqlite3
-
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.csv_to_AstropyTable as apt
 
 from jwql.instrument_monitors.miri_monitors.data_trending.utils.process_data import whole_day_routine, wheelpos_routine
 
+import statistics
+import sqlite3
 
 
-#create filename string
-directory='/home/daniel/STScI/trainigData/set_1_day/'
-
-filenames = [
-'imir_190204_DoY2292017FOFTLM2019035182609402.CSV',
-'imir_190204_DoY2402017FOFTLM2019035180907145.CSV',
-'imir_190204_DoY2412017FOFTLM2019035181004311.CSV',
-'imir_190204_DoY2312017FOFTLM2019035184159965.CSV',
-'imir_190204_DoY2422017FOFTLM2019035181027504.CSV',
-'imir_190204_DoY2322017FOFTLM2019035184236985.CSV',
-'imir_190204_DoY2432017FOFTLM2019035181100606.CSV',
-'imir_190204_DoY2332017FOFTLM2019035184306076.CSV',
-'imir_190204_DoY2442017FOFTLM2019035181126853.CSV',
-'imir_190204_DoY2342017FOFTLM2019035184347174.CSV',
-'imir_190204_DoY2452017FOFTLM2019035181155234.CSV',
-'imir_190204_DoY2352017FOFTLM2019035184708935.CSV',
-'imir_190204_DoY2462017FOFTLM2019035181230871.CSV',
-'imir_190204_DoY2362017FOFTLM2019035184737246.CSV',
-'imir_190204_DoY2472017FOFTLM2019035181252890.CSV',
-'imir_190204_DoY2372017FOFTLM2019035184806338.CSV',
-'imir_190204_DoY2482017FOFTLM2019035181322838.CSV',
-'imir_190204_DoY2382017FOFTLM2019035184832737.CSV',
-'imir_190204_DoY2492017FOFTLM2019035181406861.CSV',
-'imir_190204_DoY2392017FOFTLM2019035180833486.CSV',
-'imir_190204_DoY2502017FOFTLM2019035181519288.CSV']
-
-
-def process_file(conn, path):
-    m_raw_data = apt.mnemonics(path)
-
+def add_day_to_db(conn, m_raw_data):
 
     cond3, FW_volt, GW14_volt, GW23_volt, CCC_volt = whole_day_routine(m_raw_data)
     FW, GW14, GW23, CCC= wheelpos_routine(m_raw_data)
@@ -139,17 +108,67 @@ def process_file(conn, path):
             pass
 
 
+def add_15min_to_db(conn, m_raw_data):
+
+    cond1, cond2 = once_a_day_routine(m_raw_data)
+
+    for key, value in cond1.items():
+
+        m = m_raw_data.mnemonic(key)
+
+        if key == "SE_ZIMIRICEA":
+            length = len(value)
+            mean = statistics.mean(value)
+            deviation = statistics.stdev(value)
+
+            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
+            sql.add_data(conn, "SE_ZIMIRICEA_IDLE", dataset)
+
+        elif key == "IMIR_HK_ICE_SEC_VOLT4":
+            length = len(value)
+            mean = statistics.mean(value)
+            deviation = statistics.stdev(value)
+
+            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
+            sql.add_data(conn, "IMIR_HK_ICE_SEC_VOLT4_IDLE", dataset)
+
+        else:
+            length = len(value)
+            mean = statistics.mean(value)
+            deviation = statistics.stdev(value)
+
+            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
+            sql.add_data(conn, key, dataset)
+
+    for key, value in cond2.items():
+        length = len(value)
+        mean = statistics.mean(value)
+        deviation = statistics.stdev(value)
+
+        dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
+        sql.add_data(conn, key, dataset)
+
 
 def main():
+
+    #configure start and end time for query
+    #
+    #
+    #
+    #
+
+    #query table start and end from engineering_database
+    #
+    #
+    #
+    #
+    #return table_day, table_15min
+
+    #open temporary database and write data!
     db_file = "/home/daniel/STScI/jwql/jwql/database/miri_database_new.db"
     conn = sql.create_connection(db_file)
 
-    for name in filenames:
-        path = directory + name
-        process_file(conn, path)
+    add_day_to_db(conn, table_day)
+    add_15min_to_db(conn, table_15min)
 
     sql.close_connection(conn)
-    print("done")
-
-if __name__ == "__main__":
-    main()

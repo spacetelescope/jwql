@@ -45,6 +45,7 @@ def power_ice(conn, start, end):
                 toolbar_location = "above",                         \
                 plot_width = 1120,                                   \
                 plot_height = 500,                                  \
+                y_range=[5,14],                                     \
                 x_axis_type = 'datetime',                           \
                 x_axis_label = 'Date', y_axis_label='Power (W)')
 
@@ -90,6 +91,7 @@ def power_fpea(conn, start, end):
                 toolbar_location = "above",                         \
                 plot_width = 1120,                                   \
                 plot_height = 500,                                  \
+                y_range=[28.0, 28.5],                               \
                 x_axis_type = 'datetime',                           \
                 x_axis_label = 'Date', y_axis_label='Power (W)')
 
