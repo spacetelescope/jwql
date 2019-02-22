@@ -35,7 +35,7 @@ def overview_settings(conn):
 
     button = Button(label = "UPDATE PLOTS", button_type="success")
 
-    button.js_on_event(events.ButtonClick, button_handler(time_range))
+
 
     callback = CustomJS(args = dict(source=source), code =
     """

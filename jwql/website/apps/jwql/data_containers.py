@@ -98,7 +98,6 @@ def data_trending():
         dashboard
     """
     import jwql.instrument_monitors.miri_monitors.data_trending.dashboard as dash
-
     dashboard, variables = dash.data_trending_dashboard()
 
     return variables, dashboard

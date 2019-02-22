@@ -76,7 +76,7 @@ def temp(conn, start, end):
                 plot_height = 700,                                  \
                 y_range = [275,295],                             \
                 x_axis_type = 'datetime',                           \
-                x_axis_label = 'Date', y_axis_label = 'Temperature')
+                x_axis_label = 'Date', y_axis_label = 'Temperature (K)')
 
     p.grid.visible = True
     p.title.text = "TEMP"

@@ -22,8 +22,8 @@ def add_to_wplot(p, legend, mnemonic, start, end, conn, nominal, color = "red"):
     temp = pd.read_sql_query(sql_c, conn)
 
     #normalize values
-    temp['value'] /= nominal
-    temp['value'] -= 1
+    temp['value'] -= nominal
+    #temp['value'] -= 1
 
     temp['timestamp'] = pd.to_datetime( Time(temp['timestamp'], format = "mjd").datetime )
     plot_data = ColumnDataSource(temp)
@@ -119,7 +119,7 @@ def fw(conn, start, end):
                 plot_width = 1120,                                   \
                 plot_height = 1000,                                  \
                 x_axis_type = 'datetime',                           \
-                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+                x_axis_label = 'Date', y_axis_label='ratio (normalized)')
 
     p.grid.visible = True
     p.title.text = "Filterwheel Ratio"

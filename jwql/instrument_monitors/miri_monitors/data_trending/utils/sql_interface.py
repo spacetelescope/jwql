@@ -110,51 +110,6 @@ def add_wheel_data(conn, mnemonic, data):
         print('data already exists')
 
 
-
-def query_data(conn, mnemonic, column):
-    """Requests the database for given column
-    Parameters
-    ----------
-    conn : database object
-        represents link to database
-    mnemonic : str
-        Contains the name of the requested mnemonic
-    column : list
-        contains names of columns which are requested
-    Returns
-    -------
-    list
-        contains queried data
-    """
-    c = conn.cursor()
-    data = []
-    c.execute(' SELECT start_time, average, deviation  FROM {} ORDER BY start_time'.format(mnemonic, column))
-    data = c.fetchall()
-
-    return data
-
-def query_pos(conn, mnemonic, column):
-    """Requests the database for given column
-    Parameters
-    ----------
-    conn : database object
-        represents link to database
-    mnemonic : str
-        Contains the name of the requested mnemonic
-    column : list
-        contains names of columns which are requested
-    Returns
-    -------
-    list
-        contains queried data
-    """
-    c = conn.cursor()
-    data = []
-    c.execute(' SELECT timestamp, value  FROM {} ORDER BY timestamp'.format(mnemonic, column))
-    data=c.fetchall()
-
-    return data
-
 def main():
     ''' Creates SQLite database with tables proposed in mnemonics.py'''
 
@@ -195,7 +150,7 @@ def main():
     conn.commit()
     close_connection(conn)
 
-#
+#sets up database if called as main
 if __name__ == "__main__":
     main()
     print("sql_interface.py done")
