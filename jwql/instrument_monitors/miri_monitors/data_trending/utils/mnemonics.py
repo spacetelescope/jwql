@@ -9,8 +9,7 @@ Authors
 
 Use
 ---
-prefered import:
-    import 00_mnemoncis as mn
+    import mnemoncis as mn
 
 Dependencies
 ------------
@@ -21,7 +20,6 @@ References
 
 Notes
 -----
-The lists are for developement purpose only.
 
 """
 
@@ -110,6 +108,9 @@ mnemonic_cond_2=[
 "IGDP_MIR_LW_DET_TEMP",
 "IGDP_MIR_SW_DET_TEMP"]
 
+#mnemonics for 15 min evaluation
+mnemonic_set_15min = mnemonic_cond_1 + mnemonic_cond_2
+
 #ICE secondary voltages -> apply to condition3
 mnemonic_cond_3 = [
 "IMIR_HK_ICE_SEC_VOLT1",
@@ -188,7 +189,25 @@ ccc_nominals = {
 "CLOSED" : 399.90}
 
 
-#mnemonic set for basic query
+#mnemonic set whole day routine
+mnemonic_set_day = mnemonic_cond_3 +
+["IMIR_HK_FW_POS_VOLT",
+"IMIR_HK_FW_POS_RATIO",
+"IMIR_HK_FW_CUR_POS",
+
+"IMIR_HK_GW14_POS_VOLT",
+"IMIR_HK_GW14_POS_RATIO",
+"IMIR_HK_GW14_CUR_POS",
+
+"IMIR_HK_GW23_POS_VOLT",
+"IMIR_HK_GW23_POS_RATIO",
+"IMIR_HK_GW23_CUR_POS",
+
+"IMIR_HK_CCC_POS_RATIO",
+"IMIR_HK_CCC_CUR_POS",
+"IMIR_HK_CCC_POS_VOLT" ]
+
+#comprises all mnemonics used throughout he programm
 mnemonic_set_base = [
 "SE_ZIMIRICEA",
 "SE_ZBUSVLT",
@@ -297,7 +316,7 @@ mnemonic_set_base = [
 "IMIR_HK_CCC_CUR_POS",
 "IMIR_HK_CCC_POS_VOLT" ]
 
-#mnemonic set for setting up databank
+#mnemonic set for setting up database
 mnemonic_set_database = [
 "SE_ZIMIRICEA_IDLE",
 "SE_ZIMIRICEA_HV_ON",
@@ -415,7 +434,6 @@ mnemonic_wheelpositions = [
 "IMIR_HK_GW14_POS_RATIO_SHORT",
 "IMIR_HK_GW14_POS_RATIO_MEDIUM",
 "IMIR_HK_GW14_POS_RATIO_LONG",
-
 
 "IMIR_HK_GW23_POS_RATIO_SHORT",
 "IMIR_HK_GW23_POS_RATIO_MEDIUM",

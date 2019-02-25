@@ -1,9 +1,24 @@
 #! /usr/bin/env python
-"""Prepares plots for FPE VOLTAGE tab
+"""Prepares plots for ICE/WHEEL VOLTAGE tab
 
-    Module prepares plots for mnemonics below. Combines plots in a grid and
+    Module prepares plots for mnemonics below, combines plots in a grid and
     returns tab object.
 
+    Plot 1:
+    IMIR_HK_ICE_SEC_VOLT1
+    IMIR_HK_ICE_SEC_VOLT3
+
+    Plot 2:
+    IMIR_HK_ICE_SEC_VOLT2
+
+    Plot 3:
+    IMIR_HK_ICE_SEC_VOLT4 : IDLE and HV_ON
+
+    Plot 4:
+    IMIR_HK_FW_POS_VOLT
+    IMIR_HK_GW14_POS_VOLT
+    IMIR_HK_GW23_POS_VOLT
+    IMIR_HK_CCC_POS_VOLT
 
 Authors
 -------
@@ -15,8 +30,8 @@ Use
     used by ``dashborad.py``, e.g.:
 
     ::
-        from .plots.fpe_voltage_tab import fpe_plots
-        tab = fpe_plots(conn, start, end)
+        from .plots.ice_voltage_tab import ice_plots
+        tab = ice_plots(conn, start, end)
 
 Dependencies
 ------------
@@ -38,6 +53,20 @@ import numpy as np
 from astropy.time import Time
 
 def volt4(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
 
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
@@ -54,8 +83,10 @@ def volt4(conn, start, end):
 
     # add a line renderer with legend and line thickness
 
-    pf.add_to_plot(p, "Volt4 Idle", "IMIR_HK_ICE_SEC_VOLT4_IDLE", start, end, conn, color = "orange")
-    pf.add_to_plot(p, "Volt4 Hv on", "IMIR_HK_ICE_SEC_VOLT4_HV_ON" ,start, end, conn, color = "red")
+    a = pf.add_to_plot(p, "Volt4 Idle", "IMIR_HK_ICE_SEC_VOLT4_IDLE", start, end, conn, color = "orange")
+    b = pf.add_to_plot(p, "Volt4 Hv on", "IMIR_HK_ICE_SEC_VOLT4_HV_ON" ,start, end, conn, color = "red")
+
+    pf.add_hover_tool(p,[a,b])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -63,6 +94,20 @@ def volt4(conn, start, end):
     return p
 
 def volt1_3(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
 
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
@@ -78,8 +123,10 @@ def volt1_3(conn, start, end):
     pf.add_basic_layout(p)
 
     # add a line renderer with legend and line thickness
-    pf.add_to_plot(p, "Volt1", "IMIR_HK_ICE_SEC_VOLT1" ,start, end, conn, color = "red")
-    pf.add_to_plot(p, "Volt3", "IMIR_HK_ICE_SEC_VOLT3" ,start, end, conn, color = "purple")
+    a = pf.add_to_plot(p, "Volt1", "IMIR_HK_ICE_SEC_VOLT1" ,start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "Volt3", "IMIR_HK_ICE_SEC_VOLT3" ,start, end, conn, color = "purple")
+
+    pf.add_hover_tool(p,[a,b])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -87,6 +134,20 @@ def volt1_3(conn, start, end):
     return p
 
 def volt2(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
 
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
@@ -101,7 +162,9 @@ def volt2(conn, start, end):
     pf.add_basic_layout(p)
 
     # add a line renderer with legend and line thickness
-    pf.add_to_plot(p, "Volt2", "IMIR_HK_ICE_SEC_VOLT2", start, end, conn, color = "red")
+    a = pf.add_to_plot(p, "Volt2", "IMIR_HK_ICE_SEC_VOLT2", start, end, conn, color = "red")
+
+    pf.add_hover_tool(p,[a])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -109,9 +172,23 @@ def volt2(conn, start, end):
     return p
 
 def pos_volt(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save,hover",       \
                 toolbar_location = "above",                         \
                 plot_width = 560,                                   \
                 plot_height = 500,                                  \
@@ -123,10 +200,12 @@ def pos_volt(conn, start, end):
     p.title.text = "Wheel Sensor Voltage"
     pf.add_basic_layout(p)
 
-    pf.add_to_plot(p, "FW", "IMIR_HK_FW_POS_VOLT" ,start, end, conn, color = "red")
-    pf.add_to_plot(p, "GW14", "IMIR_HK_GW14_POS_VOLT" ,start, end, conn, color = "purple")
-    pf.add_to_plot(p, "GW23", "IMIR_HK_GW23_POS_VOLT" ,start, end, conn, color = "orange")
-    pf.add_to_plot(p, "CCC", "IMIR_HK_CCC_POS_VOLT" ,start, end, conn, color = "firebrick")
+    a = pf.add_to_plot(p, "FW", "IMIR_HK_FW_POS_VOLT" ,start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "GW14", "IMIR_HK_GW14_POS_VOLT" ,start, end, conn, color = "purple")
+    c = pf.add_to_plot(p, "GW23", "IMIR_HK_GW23_POS_VOLT" ,start, end, conn, color = "orange")
+    d = pf.add_to_plot(p, "CCC", "IMIR_HK_CCC_POS_VOLT" ,start, end, conn, color = "firebrick")
+
+    pf.add_hover_tool(p,[a,b,c,d])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -134,6 +213,20 @@ def pos_volt(conn, start, end):
     return p
 
 def volt_plots(conn, start, end):
+    '''Combines plots to a tab
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : tab object
+        used by dashboard.py to set up dashboard
+    '''
 
     plot1 = volt1_3(conn, start, end)
     plot2 = volt2(conn, start, end)
@@ -142,7 +235,6 @@ def volt_plots(conn, start, end):
 
     layout = gridplot([[plot1, plot2], [plot3, plot4]], merge_tools = False)
 
-    #layout_volt = row(volt4, volt1_3)
     tab = Panel(child = layout, title = "ICE/WHEEL VOLTAGE")
 
     return tab

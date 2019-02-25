@@ -52,7 +52,7 @@ import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface 
 import jwql.instrument_monitors.miri_monitors.data_trending.plots.plot_functions as pf
 from bokeh.plotting import figure
 from bokeh.models.widgets import Panel, Tabs
-from bokeh.models import ColumnDataSource
+from bokeh.models import ColumnDataSource, HoverTool
 from bokeh.layouts import gridplot
 
 import pandas as pd
@@ -89,9 +89,11 @@ def vdetcom(conn, start, end):
     p.title.text = "Det.Bias VDETCOM"
     pf.add_basic_layout(p)
 
-    pf.add_to_plot(p, "VDETCOM IC", "IGDP_MIR_IC_V_VDETCOM", start, end, conn, color = "red")
-    pf.add_to_plot(p, "VDETCOM SW", "IGDP_MIR_SW_V_VDETCOM", start, end, conn, color = "orange")
-    pf.add_to_plot(p, "VDETCOM LW", "IGDP_MIR_LW_V_VDETCOM", start, end, conn, color = "green")
+    a = pf.add_to_plot(p, "VDETCOM IC", "IGDP_MIR_IC_V_VDETCOM", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "VDETCOM SW", "IGDP_MIR_SW_V_VDETCOM", start, end, conn, color = "orange")
+    c = pf.add_to_plot(p, "VDETCOM LW", "IGDP_MIR_LW_V_VDETCOM", start, end, conn, color = "green")
+
+    pf.add_hover_tool(p,[a,b,c])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -127,9 +129,11 @@ def vssout(conn, start, end):
     p.title.text = "Det.Bias VSSOUT"
     pf.add_basic_layout(p)
 
-    pf.add_to_plot(p, "VSSOUT IC", "IGDP_MIR_IC_V_VSSOUT", start, end, conn, color = "red")
-    pf.add_to_plot(p, "VSSOUT SW", "IGDP_MIR_SW_V_VSSOUT", start, end, conn, color = "orange")
-    pf.add_to_plot(p, "VSSOUT LW", "IGDP_MIR_LW_V_VSSOUT", start, end, conn, color = "green")
+    a = pf.add_to_plot(p, "VSSOUT IC", "IGDP_MIR_IC_V_VSSOUT", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "VSSOUT SW", "IGDP_MIR_SW_V_VSSOUT", start, end, conn, color = "orange")
+    c = pf.add_to_plot(p, "VSSOUT LW", "IGDP_MIR_LW_V_VSSOUT", start, end, conn, color = "green")
+
+    pf.add_hover_tool(p,[a,b,c])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -165,9 +169,11 @@ def vrstoff(conn, start, end):
     p.title.text = "Det.Bias VRSTOFF"
     pf.add_basic_layout(p)
 
-    pf.add_to_plot(p, "VRSTOFF IC", "IGDP_MIR_IC_V_VRSTOFF", start, end, conn, color = "red")
-    pf.add_to_plot(p, "VRSTOFF SW", "IGDP_MIR_SW_V_VRSTOFF", start, end, conn, color = "orange")
-    pf.add_to_plot(p, "VRSTOFF LW", "IGDP_MIR_LW_V_VRSTOFF", start, end, conn, color = "green")
+    a = pf.add_to_plot(p, "VRSTOFF IC", "IGDP_MIR_IC_V_VRSTOFF", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "VRSTOFF SW", "IGDP_MIR_SW_V_VRSTOFF", start, end, conn, color = "orange")
+    c = pf.add_to_plot(p, "VRSTOFF LW", "IGDP_MIR_LW_V_VRSTOFF", start, end, conn, color = "green")
+
+    pf.add_hover_tool(p,[a,b,c])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -203,9 +209,11 @@ def vp(conn, start, end):
     p.title.text = "Det.Bias VP"
     pf.add_basic_layout(p)
 
-    pf.add_to_plot(p, "VP IC", "IGDP_MIR_IC_V_VP", start, end, conn, color = "red")
-    pf.add_to_plot(p, "VP SW", "IGDP_MIR_SW_V_VP", start, end, conn, color = "orange")
-    pf.add_to_plot(p, "VP LW", "IGDP_MIR_LW_V_VP", start, end, conn, color = "green")
+    a = pf.add_to_plot(p, "VP IC", "IGDP_MIR_IC_V_VP", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "VP SW", "IGDP_MIR_SW_V_VP", start, end, conn, color = "orange")
+    c = pf.add_to_plot(p, "VP LW", "IGDP_MIR_LW_V_VP", start, end, conn, color = "green")
+
+    pf.add_hover_tool(p,[a,b,c])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -241,9 +249,11 @@ def vdduc(conn, start, end):
     p.title.text = "Det.Bias VDDUC"
     pf.add_basic_layout(p)
 
-    pf.add_to_plot(p, "VDDUC IC", "IGDP_MIR_IC_V_VDDUC", start, end, conn, color = "red")
-    pf.add_to_plot(p, "VDDUC SW", "IGDP_MIR_SW_V_VDDUC", start, end, conn, color = "orange")
-    pf.add_to_plot(p, "VDDUC LW", "IGDP_MIR_LW_V_VDDUC", start, end, conn, color = "green")
+    a = pf.add_to_plot(p, "VDDUC IC", "IGDP_MIR_IC_V_VDDUC", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "VDDUC SW", "IGDP_MIR_SW_V_VDDUC", start, end, conn, color = "orange")
+    c = pf.add_to_plot(p, "VDDUC LW", "IGDP_MIR_LW_V_VDDUC", start, end, conn, color = "green")
+
+    pf.add_hover_tool(p,[a,b,c])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"

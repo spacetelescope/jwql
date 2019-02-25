@@ -51,11 +51,10 @@ import jwql.instrument_monitors.miri_monitors.data_trending.plots.plot_functions
 from bokeh.models import LinearAxis, Range1d
 from bokeh.plotting import figure
 from bokeh.models.widgets import Panel, Tabs
-from bokeh.models import ColumnDataSource
+from bokeh.models import ColumnDataSource, HoverTool
 from bokeh.layouts import WidgetBox, gridplot
 
 import pandas as pd
-
 import numpy as np
 
 from astropy.time import Time
@@ -91,9 +90,11 @@ def dig5(conn, start, end):
     pf.add_basic_layout(p)
 
     p.extra_y_ranges = {"current": Range1d(start=2100, end=2500)}
-    pf.add_to_plot(p, "FPE Dig. 5V", "IMIR_PDU_V_DIG_5V", start, end, conn, color = "red")
-    pf.add_to_plot(p, "FPE Dig. 5V Current", "IMIR_PDU_I_DIG_5V", start, end, conn, y_axis = "current", color = "blue")
+    a = pf.add_to_plot(p, "FPE Dig. 5V", "IMIR_PDU_V_DIG_5V", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "FPE Dig. 5V Current", "IMIR_PDU_I_DIG_5V", start, end, conn, y_axis = "current", color = "blue")
     p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
+
+    pf.add_hover_tool(p,[a,b])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -129,8 +130,10 @@ def refdig(conn, start, end):
     p.title.text = "2.5V Ref and FPE Dig."
     pf.add_basic_layout(p)
 
-    pf.add_to_plot(p, "FPE Dig. 2.5V", "IMIR_SPW_V_DIG_2R5V", start, end, conn, color = "orange")
-    pf.add_to_plot(p, "FPE PDU 2.5V REF", "IMIR_PDU_V_REF_2R5V", start, end, conn, color = "red")
+    a = pf.add_to_plot(p, "FPE Dig. 2.5V", "IMIR_SPW_V_DIG_2R5V", start, end, conn, color = "orange")
+    b = pf.add_to_plot(p, "FPE PDU 2.5V REF", "IMIR_PDU_V_REF_2R5V", start, end, conn, color = "red")
+
+    pf.add_hover_tool(p,[a,b])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -167,9 +170,11 @@ def ana5(conn, start, end):
     pf.add_basic_layout(p)
 
     p.extra_y_ranges = {"current": Range1d(start=100, end=300)}
-    pf.add_to_plot(p, "FPE Ana. 5V", "IMIR_PDU_V_ANA_5V",start, end, conn, color = "red")
-    pf.add_to_plot(p, "FPE Ana. 5V Current", "IMIR_PDU_I_ANA_5V",start, end, conn, y_axis = "current", color = "blue")
+    a = pf.add_to_plot(p, "FPE Ana. 5V", "IMIR_PDU_V_ANA_5V",start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "FPE Ana. 5V Current", "IMIR_PDU_I_ANA_5V",start, end, conn, y_axis = "current", color = "blue")
     p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
+
+    pf.add_hover_tool(p,[a,b])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -206,9 +211,11 @@ def ana5n(conn, start, end):
     pf.add_basic_layout(p)
 
     p.extra_y_ranges = {"current": Range1d(start=100, end=300)}
-    pf.add_to_plot(p, "FPE Ana. N5", "IMIR_PDU_V_ANA_N5V",start, end, conn, color = "red")
-    pf.add_to_plot(p, "FPE Ana. N5 Current", "IMIR_PDU_I_ANA_N5V",start, end, conn, y_axis = "current", color = "blue")
+    a = pf.add_to_plot(p, "FPE Ana. N5", "IMIR_PDU_V_ANA_N5V",start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "FPE Ana. N5 Current", "IMIR_PDU_I_ANA_N5V",start, end, conn, y_axis = "current", color = "blue")
     p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
+
+    pf.add_hover_tool(p,[a,b])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -245,9 +252,11 @@ def ana7(conn, start, end):
     pf.add_basic_layout(p)
 
     p.extra_y_ranges = {"current": Range1d(start=300, end=500)}
-    pf.add_to_plot(p, "FPE Ana. 7V", "IMIR_PDU_V_ANA_7V",start, end, conn, color = "red")
-    pf.add_to_plot(p, "FPE Ana. 7V Current", "IMIR_PDU_I_ANA_7V",start, end, conn, y_axis = "current", color = "blue")
+    a = pf.add_to_plot(p, "FPE Ana. 7V", "IMIR_PDU_V_ANA_7V",start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "FPE Ana. 7V Current", "IMIR_PDU_I_ANA_7V",start, end, conn, y_axis = "current", color = "blue")
     p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
+
+    pf.add_hover_tool(p,[a,b])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -284,9 +293,11 @@ def ana7n(conn, start, end):
     pf.add_basic_layout(p)
 
     p.extra_y_ranges = {"current": Range1d(start=350, end=400)}
-    pf.add_to_plot(p, "FPE Dig. N7V", "IMIR_PDU_V_ANA_N7V",start, end, conn, color = "red")
-    pf.add_to_plot(p, "FPE Ana. N7V Current", "IMIR_PDU_I_ANA_N7V",start, end, conn, y_axis = "current", color = "blue")
+    a = pf.add_to_plot(p, "FPE Dig. N7V", "IMIR_PDU_V_ANA_N7V",start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "FPE Ana. N7V Current", "IMIR_PDU_I_ANA_N7V",start, end, conn, y_axis = "current", color = "blue")
     p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
+
+    pf.add_hover_tool(p,[a,b])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -321,6 +332,6 @@ def fpe_plots(conn, start, end):
                         [plot3, plot4],        \
                         [plot5, plot6]], merge_tools=False)
 
-    tab = Panel(child = layout, title = "FPE VOLTAGE")
+    tab = Panel(child = layout, title = "FPE VOLTAGE/CURRENT")
 
     return tab

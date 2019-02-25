@@ -79,7 +79,7 @@ def data_trending_dashboard(start = default_start, end = now):
     tab6 = wheel_ratios(conn, start, end)
 
     #build dashboard
-    tabs = Tabs( tabs=[ tab0, tab1, tab2, tab3, tab5, tab4, tab6 ] )
+    tabs = Tabs( tabs=[ tab1, tab2, tab3, tab5, tab4, tab6 ] )
 
     #return dasboard to webapp
     script, div = components(tabs)

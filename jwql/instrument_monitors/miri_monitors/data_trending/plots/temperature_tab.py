@@ -1,3 +1,60 @@
+#! /usr/bin/env python
+"""Prepares plots for TEMPERATURE tab
+
+    Module prepares plots for mnemonics below. Combines plots in a grid and
+    returns tab object.
+
+    Plot 1:
+    IGDP_MIR_ICE_T1P_CRYO
+    IGDP_MIR_ICE_T2R_CRYO
+    IGDP_MIR_ICE_T3LW_CRYO
+    IGDP_MIR_ICE_T4SW_CRYO
+    IGDP_MIR_ICE_T5IMG_CRYO
+    IGDP_MIR_ICE_T6DECKCRYO
+    IGDP_MIR_ICE_T7IOC_CRYO
+    IGDP_MIR_ICE_FW_CRYO
+    IGDP_MIR_ICE_CCC_CRYO
+    IGDP_MIR_ICE_GW14_CRYO
+    IGDP_MIR_ICE_GW23_CRYO
+    IGDP_MIR_ICE_POMP_CRYO
+    IGDP_MIR_ICE_POMR_CRYO
+    IGDP_MIR_ICE_IFU_CRYO
+    IGDP_MIR_ICE_IMG_CRYO
+
+    Plot 2:
+    ST_ZTC1MIRIA
+    ST_ZTC2MIRIA
+    IMIR_PDU_TEMP
+    IMIR_IC_SCE_ANA_TEMP1
+    IMIR_SW_SCE_ANA_TEMP1
+    IMIR_LW_SCE_ANA_TEMP1
+    IMIR_IC_SCE_DIG_TEMP
+    IMIR_SW_SCE_DIG_TEMP
+    IMIR_LW_SCE_DIG_TEMP
+
+    Plot 3:
+    IGDP_MIR_IC_DET_TEMP
+    IGDP_MIR_LW_DET_TEMP
+    IGDP_MIR_SW_DET_TEMP
+
+Authors
+-------
+    - Daniel Kühbacher
+
+Use
+---
+    The functions within this module are intended to be imported and
+    used by ``dashborad.py``, e.g.:
+
+    ::
+        from .plots.temperature_tab import temperature_plots
+        tab = temperature_plots(conn, start, end)
+
+Dependencies
+------------
+    User must provide database "miri_database.db"
+
+"""
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
 import jwql.instrument_monitors.miri_monitors.data_trending.plots.plot_functions as pf
 from bokeh.plotting import figure
@@ -5,7 +62,7 @@ from bokeh.models import BoxAnnotation, LinearAxis, Range1d
 from bokeh.embed import components
 from bokeh.models.widgets import Panel, Tabs
 from bokeh.models import ColumnDataSource
-from bokeh.layouts import column, row, WidgetBox
+from bokeh.layouts import column
 
 import pandas as pd
 import numpy as np
@@ -14,6 +71,20 @@ from astropy.time import Time
 
 
 def cryo(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
 
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
@@ -28,21 +99,23 @@ def cryo(conn, start, end):
     p.title.text = "Cryo Temperatures"
     pf.add_basic_layout(p)
 
-    pf.add_to_plot(p, "T1P", "IGDP_MIR_ICE_T1P_CRYO", start, end, conn, color = "brown")
-    pf.add_to_plot(p, "T2R", "IGDP_MIR_ICE_T2R_CRYO", start, end, conn, color = "burlywood")
-    pf.add_to_plot(p, "T3LW", "IGDP_MIR_ICE_T3LW_CRYO", start, end, conn, color = "cadetblue")
-    pf.add_to_plot(p, "T4SW", "IGDP_MIR_ICE_T4SW_CRYO", start, end, conn, color = "chartreuse")
-    pf.add_to_plot(p, "T5IMG", "IGDP_MIR_ICE_T5IMG_CRYO", start, end, conn, color = "chocolate")
-    pf.add_to_plot(p, "T6DECK", "IGDP_MIR_ICE_T6DECKCRYO", start, end, conn, color = "coral")
-    pf.add_to_plot(p, "T7IOC", "IGDP_MIR_ICE_T7IOC_CRYO", start, end, conn, color = "darkorange")
-    pf.add_to_plot(p, "FW", "IGDP_MIR_ICE_FW_CRYO", start, end, conn, color = "crimson")
-    pf.add_to_plot(p, "CCC", "IGDP_MIR_ICE_CCC_CRYO", start, end, conn, color = "cyan")
-    pf.add_to_plot(p, "GW14", "IGDP_MIR_ICE_GW14_CRYO", start, end, conn, color = "darkblue")
-    pf.add_to_plot(p, "GW23", "IGDP_MIR_ICE_GW23_CRYO", start, end, conn, color = "darkgreen")
-    pf.add_to_plot(p, "POMP", "IGDP_MIR_ICE_POMP_CRYO", start, end, conn, color = "darkmagenta")
-    pf.add_to_plot(p, "POMR", "IGDP_MIR_ICE_POMR_CRYO", start, end, conn, color = "darkcyan")
-    pf.add_to_plot(p, "IFU", "IGDP_MIR_ICE_IFU_CRYO", start, end, conn, color = "cornflowerblue")
-    pf.add_to_plot(p, "IMG", "IGDP_MIR_ICE_IMG_CRYO", start, end, conn, color = "orange")
+    a = pf.add_to_plot(p, "T1P", "IGDP_MIR_ICE_T1P_CRYO", start, end, conn, color = "brown")
+    b = pf.add_to_plot(p, "T2R", "IGDP_MIR_ICE_T2R_CRYO", start, end, conn, color = "burlywood")
+    c = pf.add_to_plot(p, "T3LW", "IGDP_MIR_ICE_T3LW_CRYO", start, end, conn, color = "cadetblue")
+    d = pf.add_to_plot(p, "T4SW", "IGDP_MIR_ICE_T4SW_CRYO", start, end, conn, color = "chartreuse")
+    e = pf.add_to_plot(p, "T5IMG", "IGDP_MIR_ICE_T5IMG_CRYO", start, end, conn, color = "chocolate")
+    f = pf.add_to_plot(p, "T6DECK", "IGDP_MIR_ICE_T6DECKCRYO", start, end, conn, color = "coral")
+    g = pf.add_to_plot(p, "T7IOC", "IGDP_MIR_ICE_T7IOC_CRYO", start, end, conn, color = "darkorange")
+    h = pf.add_to_plot(p, "FW", "IGDP_MIR_ICE_FW_CRYO", start, end, conn, color = "crimson")
+    i = pf.add_to_plot(p, "CCC", "IGDP_MIR_ICE_CCC_CRYO", start, end, conn, color = "cyan")
+    j = pf.add_to_plot(p, "GW14", "IGDP_MIR_ICE_GW14_CRYO", start, end, conn, color = "darkblue")
+    k = pf.add_to_plot(p, "GW23", "IGDP_MIR_ICE_GW23_CRYO", start, end, conn, color = "darkgreen")
+    l = pf.add_to_plot(p, "POMP", "IGDP_MIR_ICE_POMP_CRYO", start, end, conn, color = "darkmagenta")
+    m = pf.add_to_plot(p, "POMR", "IGDP_MIR_ICE_POMR_CRYO", start, end, conn, color = "darkcyan")
+    n = pf.add_to_plot(p, "IFU", "IGDP_MIR_ICE_IFU_CRYO", start, end, conn, color = "cornflowerblue")
+    o = pf.add_to_plot(p, "IMG", "IGDP_MIR_ICE_IMG_CRYO", start, end, conn, color = "orange")
+
+    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j,k,l,m,n,o])
 
     p.legend.location = "bottom_right"
     p.legend.orientation = "horizontal"
@@ -51,6 +124,20 @@ def cryo(conn, start, end):
     return p
 
 def temp(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
 
     start_str = str(Time(start).mjd)
     end_str = str(Time(end).mjd)
@@ -81,15 +168,17 @@ def temp(conn, start, end):
     p.line(x = "start_time", y = "reg", color = "brown", legend = "Internal Temp.", source = plot_data)
     p.scatter(x = "start_time", y = "average", color = "brown", legend = "Internal Temp.", source = plot_data)
 
-    pf.add_to_plot(p, "ICE IEC", "ST_ZTC1MIRIA", start, end, conn, color = "burlywood")
-    pf.add_to_plot(p, "FPE IEC", "ST_ZTC2MIRIA", start, end, conn, color = "cadetblue")
-    pf.add_to_plot(p, "FPE PDU", "IMIR_PDU_TEMP", start, end, conn, color = "chartreuse")
-    pf.add_to_plot(p, "Analog IC", "IMIR_IC_SCE_ANA_TEMP1", start, end, conn, color = "chocolate")
-    pf.add_to_plot(p, "Analog SW", "IMIR_SW_SCE_ANA_TEMP1", start, end, conn, color = "coral")
-    pf.add_to_plot(p, "Analog LW", "IMIR_LW_SCE_ANA_TEMP1", start, end, conn, color = "darkorange")
-    pf.add_to_plot(p, "Digital IC", "IMIR_IC_SCE_DIG_TEMP", start, end, conn, color = "crimson")
-    pf.add_to_plot(p, "Digital SW", "IMIR_SW_SCE_DIG_TEMP", start, end, conn, color = "cyan")
-    pf.add_to_plot(p, "Digital LW", "IMIR_LW_SCE_DIG_TEMP", start, end, conn, color = "darkblue")
+    a = pf.add_to_plot(p, "ICE IEC", "ST_ZTC1MIRIA", start, end, conn, color = "burlywood")
+    b = pf.add_to_plot(p, "FPE IEC", "ST_ZTC2MIRIA", start, end, conn, color = "cadetblue")
+    c = pf.add_to_plot(p, "FPE PDU", "IMIR_PDU_TEMP", start, end, conn, color = "chartreuse")
+    d = pf.add_to_plot(p, "Analog IC", "IMIR_IC_SCE_ANA_TEMP1", start, end, conn, color = "chocolate")
+    e = pf.add_to_plot(p, "Analog SW", "IMIR_SW_SCE_ANA_TEMP1", start, end, conn, color = "coral")
+    f = pf.add_to_plot(p, "Analog LW", "IMIR_LW_SCE_ANA_TEMP1", start, end, conn, color = "darkorange")
+    g = pf.add_to_plot(p, "Digital IC", "IMIR_IC_SCE_DIG_TEMP", start, end, conn, color = "crimson")
+    h = pf.add_to_plot(p, "Digital SW", "IMIR_SW_SCE_DIG_TEMP", start, end, conn, color = "cyan")
+    i = pf.add_to_plot(p, "Digital LW", "IMIR_LW_SCE_DIG_TEMP", start, end, conn, color = "darkblue")
+
+    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i])
 
     p.legend.location = "bottom_right"
     p.legend.orientation = "horizontal"
@@ -98,6 +187,20 @@ def temp(conn, start, end):
     return p
 
 def det(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
 
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
@@ -112,9 +215,11 @@ def det(conn, start, end):
     p.title.text = "Detector Temperature"
     pf.add_basic_layout(p)
 
-    pf.add_to_plot(p, "Det. Temp. IC", "IGDP_MIR_IC_DET_TEMP", start, end, conn, color = "red")
-    pf.add_to_plot(p, "Det. Temp. LW", "IGDP_MIR_LW_DET_TEMP", start, end, conn, color = "green")
-    pf.add_to_plot(p, "Det. Temp. SW", "IGDP_MIR_SW_DET_TEMP", start, end, conn, color = "blue")
+    a = pf.add_to_plot(p, "Det. Temp. IC", "IGDP_MIR_IC_DET_TEMP", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "Det. Temp. LW", "IGDP_MIR_LW_DET_TEMP", start, end, conn, color = "green")
+    c = pf.add_to_plot(p, "Det. Temp. SW", "IGDP_MIR_SW_DET_TEMP", start, end, conn, color = "blue")
+
+    pf.add_hover_tool(p,[a,b,c])
 
     p.legend.location = "bottom_right"
     p.legend.orientation = "horizontal"
@@ -123,6 +228,20 @@ def det(conn, start, end):
     return p
 
 def temperature_plots(conn, start, end):
+    '''Combines plots to a tab
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : tab object
+        used by dashboard.py to set up dashboard
+    '''
 
     plot1 = cryo(conn, start, end)
     plot2 = temp(conn, start, end)

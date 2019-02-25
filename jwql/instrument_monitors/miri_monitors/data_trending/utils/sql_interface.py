@@ -127,7 +127,7 @@ def main():
                                         id INTEGER,                     \
                                         start_time REAL,                \
                                         end_time REAL,                  \
-                                        data_points REAL,               \
+                                        data_points INTEGER,               \
                                         average REAL,                   \
                                         deviation REAL,                 \
                                         performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
