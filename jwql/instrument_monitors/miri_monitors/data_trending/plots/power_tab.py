@@ -4,7 +4,7 @@ from bokeh.plotting import figure
 from bokeh.models import BoxAnnotation, LinearAxis, Range1d
 from bokeh.embed import components
 from bokeh.models.widgets import Panel, Tabs
-from bokeh.models import ColumnDataSource
+from bokeh.models import ColumnDataSource, HoverTool
 from bokeh.layouts import column, row, WidgetBox
 
 import pandas as pd
@@ -54,10 +54,20 @@ def power_ice(conn, start, end):
     pf.add_basic_layout(p)
 
     # add a line renderer with legend and line thickness
-    p.scatter(x = "start_time", y = "average", color = 'orange', legend = "Power idle", source = idle)
-    p.scatter(x = "start_time", y = "average", color = 'red', legend = "Power hv on", source = hv)
+    scat1=p.scatter(x = "start_time", y = "average", color = 'orange', legend = "Power idle", source = idle)
+    scat2=p.scatter(x = "start_time", y = "average", color = 'red', legend = "Power hv on", source = hv)
     p.line(x = "start_time", y = "reg", color = 'orange', legend = "Power idle", source = idle)
     p.line(x = "start_time", y = "reg", color = 'red', legend = "Power hv on", source = hv)
+
+    #activate HoverTool for scatter plot
+    hover_tool = HoverTool( tooltips =
+    [
+        ('count', '@data_points'),
+        ('mean', '@average'),
+        ('deviation', '@deviation'),
+
+    ], renderers=[scat1,scat2])
+    p.tools.append(hover_tool)
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -93,12 +103,22 @@ def power_fpea(conn, start, end):
                 x_axis_label = 'Date', y_axis_label='Power (W)')
 
     p.grid.visible = True
-    p.title.text = "POWER FPEA"
+    p.title.text = "POWER FPE"
     pf.add_basic_layout(p)
 
     # add a line renderer with legend and line thickness
-    p.scatter(x = "start_time", y = "average", color = 'orange', legend = "Power FPEA", source = fpea)
+    scat1=p.scatter(x = "start_time", y = "average", color = 'orange', legend = "Power FPEA", source = fpea)
     p.line(x = "start_time", y = "reg", color = 'orange', legend = "Power FPEA", source = fpea)
+
+    #activate HoverTool for scatter plot
+    hover_tool = HoverTool( tooltips =
+    [
+        ('count', '@data_points'),
+        ('mean', '@average'),
+        ('deviation', '@deviation'),
+
+    ], renderers=[scat1])
+    p.tools.append(hover_tool)
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
