@@ -65,6 +65,7 @@ from sqlalchemy import Column
 from sqlalchemy import create_engine
 from sqlalchemy import Date
 from sqlalchemy import DateTime
+from sqlalchemy import Enum
 from sqlalchemy import Float
 from sqlalchemy import Integer
 from sqlalchemy import MetaData
@@ -205,7 +206,7 @@ class Monitor(base):
     monitor_name = Column(String(), nullable=False)
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=True)
-    status = Column(String(), nullable=True)
+    status = Column(Enum('SUCESS', 'FAILURE'), nullable=True)
     affected_tables = Column(Array, nullable=True)
     log_file(Column(String(), nullable=False))
 
@@ -315,11 +316,10 @@ def monitor_orm_factory(class_name):
 
     return type(class_name, (base,), data_dict)
 
-
 # Create tables from ORM factory
-NIRCamDarkQueries = monitor_orm_factory('nircam_dark_queries')
-NIRCamDarkPixelStats = monitor_orm_factory('nircam_dark_pixel_stats')
-NIRCamDarkDarkCurrent = monitor_orm_factory('nircam_dark_dark_current')
+# NIRCamDarkQueries = monitor_orm_factory('nircam_dark_queries')
+# NIRCamDarkPixelStats = monitor_orm_factory('nircam_dark_pixel_stats')
+# NIRCamDarkDarkCurrent = monitor_orm_factory('nircam_dark_dark_current')
 
 
 if __name__ == '__main__':
