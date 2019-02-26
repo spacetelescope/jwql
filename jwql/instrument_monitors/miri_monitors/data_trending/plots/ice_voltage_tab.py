@@ -43,9 +43,9 @@ import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface 
 import jwql.instrument_monitors.miri_monitors.data_trending.plots.plot_functions as pf
 from bokeh.models import LinearAxis, Range1d
 from bokeh.plotting import figure
-from bokeh.models.widgets import Panel, Tabs
+from bokeh.models.widgets import Panel, Tabs, Div
 from bokeh.models import ColumnDataSource
-from bokeh.layouts import gridplot
+from bokeh.layouts import gridplot, Column
 
 import pandas as pd
 import numpy as np
@@ -75,6 +75,7 @@ def volt4(conn, start, end):
                 plot_height = 500,                                  \
                 y_range = [4.2,5],                                  \
                 x_axis_type = 'datetime',                           \
+                output_backend="webgl",                             \
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
@@ -116,6 +117,7 @@ def volt1_3(conn, start, end):
                 plot_height = 500,                                  \
                 y_range = [30,50],                                  \
                 x_axis_type = 'datetime',                           \
+                output_backend="webgl",                             \
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
@@ -155,6 +157,7 @@ def volt2(conn, start, end):
                 plot_width = 560,                                   \
                 plot_height = 500,                                  \
                 x_axis_type = 'datetime',                           \
+                output_backend="webgl",                             \
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
@@ -188,16 +191,17 @@ def pos_volt(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save,hover",       \
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
                 toolbar_location = "above",                         \
                 plot_width = 560,                                   \
                 plot_height = 500,                                  \
                 y_range = [280,300],                                \
                 x_axis_type = 'datetime',                           \
+                output_backend="webgl",                             \
                 x_axis_label = 'Date', y_axis_label='Voltage (mV)')
 
     p.grid.visible = True
-    p.title.text = "Wheel Sensor Voltage"
+    p.title.text = "Wheel Sensor Supply"
     pf.add_basic_layout(p)
 
     a = pf.add_to_plot(p, "FW", "IMIR_HK_FW_POS_VOLT" ,start, end, conn, color = "red")
@@ -228,12 +232,62 @@ def volt_plots(conn, start, end):
         used by dashboard.py to set up dashboard
     '''
 
+    descr = Div(text=
+    """
+    <style>
+    table, th, td {
+      border: 1px solid black;
+      background-color: #efefef;
+      border-collapse: collapse;
+      padding: 5px
+    }
+    table {
+      border-spacing: 15px;
+    }
+    </style>
+
+    <body>
+    <table style="width:100%">
+      <tr>
+        <th><h6>Plotname</h6></th>
+        <th><h6>Mnemonic</h6></th>
+        <th><h6>Description</h6></th>
+      </tr>
+      <tr>
+        <td>ICE_SEC_VOLT1/3</td>
+        <td>IMIR_HK_ICE_SEC_VOLT1 <br>
+            IMIT_HK_SEC_VOLT3 <br> </td>
+        <td>ICE Secondary Voltage (HV) V1 and V3</td>
+      </tr>
+      <tr>
+        <td>ICE_SEC_VOLT2</td>
+        <td>IMIR_HK_SEC_VOLT2</td>
+        <td>ICE secondary voltage (HV) V2</td>
+      </tr>
+      <tr>
+        <td>ICE_SEC_VOLT4</td>
+        <td>IMIR_HK_SEC_VOLT2</td>
+        <td>ICE secondary voltage (HV) V4 - HV on and IDLE</td>
+      </tr>
+      <tr>
+        <td>Wheel Sensor Supply</td>
+        <td>IMIR_HK_FW_POS_VOLT<br>
+            IMIR_HK_GW14_POS_VOLT<br>
+            IMIR_HK_GW23_POS_VOLT<br>
+            IMIR_HK_CCC_POS_VOLT</td>
+        <td>Wheel Sensor supply voltages </td>
+      </tr>
+    </table>
+    </body>
+    """, width=1100)
+
     plot1 = volt1_3(conn, start, end)
     plot2 = volt2(conn, start, end)
     plot3 = volt4(conn, start, end)
     plot4 = pos_volt(conn, start, end)
 
-    layout = gridplot([[plot1, plot2], [plot3, plot4]], merge_tools = False)
+    l = gridplot([[plot1, plot2], [plot3, plot4]], merge_tools = False)
+    layout = Column(descr, l)
 
     tab = Panel(child = layout, title = "ICE/WHEEL VOLTAGE")
 

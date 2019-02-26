@@ -64,7 +64,7 @@ import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as m
 from bokeh.plotting import figure
 from bokeh.models import BoxAnnotation, LinearAxis, Range1d
 from bokeh.embed import components
-from bokeh.models.widgets import Panel, Tabs
+from bokeh.models.widgets import Panel, Tabs, Div
 from bokeh.models import ColumnDataSource
 from bokeh.layouts import column, row, WidgetBox
 
@@ -259,12 +259,58 @@ def wheel_ratios(conn, start, end):
         used by dashboard.py to set up dashboard
     '''
 
+    descr = Div(text=
+    """
+    <style>
+    table, th, td {
+      border: 1px solid black;
+      background-color: #efefef;
+      border-collapse: collapse;
+      padding: 5px
+    }
+    </style>
+
+    <body>
+    <table style="width:100%">
+      <tr>
+        <th><h6>Plotname</h6></th>
+        <th><h6>Mnemonic</h6></th>
+        <th><h6>Description</h6></th>
+      </tr>
+      <tr>
+        <td>Filterwheel Ratio</td>
+        <td>IMIR_HK_FW_POS_RATIO<br>
+            IMIR_HK_FW_CUR_POS<br></td>
+        <td>FW position sensor ratio and commanded position</td>
+      </tr>
+      <tr>
+        <td>GW14 Ratio</td>
+        <td>IMIR_HK_GW14_POS_RATIO<br>
+            IMIR_HK_GW14_CUR_POS<br></td>
+        <td>GW14 position sensor ratio and commanded position</td>
+      </tr>
+      <tr>
+        <td>GW23 Ratio</td>
+        <td>IMIR_HK_GW23_POS_RATIO<br>
+            IMIR_HK_GW23_CUR_POS<br></td>
+        <td>GW23 position sensor ratio and commanded position</td>
+      </tr>
+      <tr>
+        <td>CCC Ratio</td>
+        <td>IMIR_HK_CCC_POS_RATIO<br>
+            IMIR_HK_CCC_CUR_POS<br></td>
+        <td>Contamination control cover position sensor ratio and commanded position</td>
+      </tr>
+    </table>
+    </body>
+    """, width=1100)
+
     plot1 = fw(conn, start, end)
     plot2 = gw14(conn, start, end)
     plot3 = gw23(conn,  start, end)
     plot4 = ccc(conn, start, end)
 
-    layout = column(plot1,plot2,plot3, plot4)
+    layout = column(descr, plot1, plot2, plot3, plot4)
     tab = Panel(child = layout, title = "WHEEL RATIO")
 
     return tab

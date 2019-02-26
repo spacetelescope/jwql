@@ -3,7 +3,7 @@ import jwql.instrument_monitors.miri_monitors.data_trending.plots.plot_functions
 from bokeh.plotting import figure
 from bokeh.models import BoxAnnotation, LinearAxis, Range1d
 from bokeh.embed import components
-from bokeh.models.widgets import Panel, Tabs
+from bokeh.models.widgets import Panel, Tabs, Div
 from bokeh.models import ColumnDataSource, HoverTool
 from bokeh.layouts import column, row, WidgetBox
 
@@ -47,17 +47,36 @@ def power_ice(conn, start, end):
                 plot_height = 500,                                  \
                 y_range=[5,14],                                     \
                 x_axis_type = 'datetime',                           \
+                output_backend="webgl",                             \
                 x_axis_label = 'Date', y_axis_label='Power (W)')
 
     p.grid.visible = True
     p.title.text = "POWER ICE"
     pf.add_basic_layout(p)
 
+
     # add a line renderer with legend and line thickness
     scat1=p.scatter(x = "start_time", y = "average", color = 'orange', legend = "Power idle", source = idle)
     scat2=p.scatter(x = "start_time", y = "average", color = 'red', legend = "Power hv on", source = hv)
     p.line(x = "start_time", y = "reg", color = 'orange', legend = "Power idle", source = idle)
     p.line(x = "start_time", y = "reg", color = 'red', legend = "Power hv on", source = hv)
+
+    #generate error bars
+    err_xs_hv = []
+    err_ys_hv = []
+    err_xs_idle = []
+    err_ys_idle = []
+
+    for index, item in _hv.iterrows():
+        err_xs_hv.append((item['start_time'],item['start_time']))
+        err_ys_hv.append((item['average'] - item['deviation'], item['average'] + item['deviation']))
+
+    for index, item in _idle.iterrows():
+        err_xs_idle.append((item['start_time'],item['start_time']))
+        err_ys_idle.append((item['average'] - item['deviation'], item['average'] + item['deviation']))
+    # plot them
+    p.multi_line(err_xs_hv, err_ys_hv, color='red', legend='Power hv on')
+    p.multi_line(err_xs_idle, err_ys_idle, color='orange', legend='Power idle')
 
     #activate HoverTool for scatter plot
     hover_tool = HoverTool( tooltips =
@@ -66,7 +85,8 @@ def power_ice(conn, start, end):
         ('mean', '@average'),
         ('deviation', '@deviation'),
 
-    ], renderers=[scat1,scat2])
+    ], mode='mouse', renderers=[scat1,scat2])
+
     p.tools.append(hover_tool)
 
     p.legend.location = "bottom_right"
@@ -100,6 +120,7 @@ def power_fpea(conn, start, end):
                 plot_height = 500,                                  \
                 y_range=[28.0, 28.5],                               \
                 x_axis_type = 'datetime',                           \
+                output_backend="webgl",                             \
                 x_axis_label = 'Date', y_axis_label='Power (W)')
 
     p.grid.visible = True
@@ -109,6 +130,16 @@ def power_fpea(conn, start, end):
     # add a line renderer with legend and line thickness
     scat1=p.scatter(x = "start_time", y = "average", color = 'orange', legend = "Power FPEA", source = fpea)
     p.line(x = "start_time", y = "reg", color = 'orange', legend = "Power FPEA", source = fpea)
+
+    err_xs = []
+    err_ys = []
+
+    for index, item in _fpea.iterrows():
+        err_xs.append((item['start_time'],item['start_time']))
+        err_ys.append((item['average'] - item['deviation'], item['average'] + item['deviation']))
+
+    # plot them
+    p.multi_line(err_xs, err_ys, color='orange', legend='Power FPEA')
 
     #activate HoverTool for scatter plot
     hover_tool = HoverTool( tooltips =
@@ -127,10 +158,46 @@ def power_fpea(conn, start, end):
 
 def power_plots(conn, start, end):
 
+
+    descr = Div(text=
+    """
+    <style>
+    table, th, td {
+      border: 1px solid black;
+      background-color: #efefef;
+      border-collapse: collapse;
+      padding: 5px
+    }
+    table {
+      border-spacing: 15px;
+    }
+    </style>
+
+    <body>
+    <table style="width:100%">
+      <tr>
+        <th><h6>Plotname</h6></th>
+        <th><h6>Mnemonic</h6></th>
+        <th><h6>Description</h6></th>
+      </tr>
+      <tr>
+        <td>POWER ICE</td>
+        <td>SE_ZIMIRICEA</td>
+        <td>Primary power consumption ICE side A - HV on and IDLE</td>
+      </tr>
+      <tr>
+        <td>POWER FPE</td>
+        <td>SE_ZIMIRFPEA</td>
+        <td>Primary power consumption FPE side A</td>
+      </tr>
+    </table>
+    </body>
+    """, width=1100)
+
     plot1 = power_ice(conn, start, end)
     plot2 = power_fpea(conn, start, end)
 
-    layout = column(plot1, plot2)
+    layout = column(descr, plot1, plot2)
 
     #layout_volt = row(volt4, volt1_3)
     tab = Panel(child = layout, title = "POWER")

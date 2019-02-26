@@ -51,9 +51,9 @@ Dependencies
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
 import jwql.instrument_monitors.miri_monitors.data_trending.plots.plot_functions as pf
 from bokeh.plotting import figure
-from bokeh.models.widgets import Panel, Tabs
+from bokeh.models.widgets import Panel, Tabs, Div
 from bokeh.models import ColumnDataSource, HoverTool
-from bokeh.layouts import gridplot
+from bokeh.layouts import gridplot, Column
 
 import pandas as pd
 import numpy as np
@@ -83,10 +83,11 @@ def vdetcom(conn, start, end):
                 plot_width = 560,                                   \
                 plot_height = 500,                                  \
                 x_axis_type = 'datetime',                           \
+                output_backend="webgl",                             \
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
-    p.title.text = "Det.Bias VDETCOM"
+    p.title.text = "VDETCOM"
     pf.add_basic_layout(p)
 
     a = pf.add_to_plot(p, "VDETCOM IC", "IGDP_MIR_IC_V_VDETCOM", start, end, conn, color = "red")
@@ -123,10 +124,11 @@ def vssout(conn, start, end):
                 plot_width = 560,                                   \
                 plot_height = 500,                                  \
                 x_axis_type = 'datetime',                           \
+                output_backend="webgl",                             \
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
-    p.title.text = "Det.Bias VSSOUT"
+    p.title.text = "VSSOUT"
     pf.add_basic_layout(p)
 
     a = pf.add_to_plot(p, "VSSOUT IC", "IGDP_MIR_IC_V_VSSOUT", start, end, conn, color = "red")
@@ -163,10 +165,11 @@ def vrstoff(conn, start, end):
                 plot_width = 560,                                   \
                 plot_height = 500,                                  \
                 x_axis_type = 'datetime',                           \
+                output_backend="webgl",                             \
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
-    p.title.text = "Det.Bias VRSTOFF"
+    p.title.text = "VRSTOFF"
     pf.add_basic_layout(p)
 
     a = pf.add_to_plot(p, "VRSTOFF IC", "IGDP_MIR_IC_V_VRSTOFF", start, end, conn, color = "red")
@@ -203,10 +206,11 @@ def vp(conn, start, end):
                 plot_width = 560,                                   \
                 plot_height = 500,                                  \
                 x_axis_type = 'datetime',                           \
+                output_backend="webgl",                             \
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
-    p.title.text = "Det.Bias VP"
+    p.title.text = "VP"
     pf.add_basic_layout(p)
 
     a = pf.add_to_plot(p, "VP IC", "IGDP_MIR_IC_V_VP", start, end, conn, color = "red")
@@ -243,10 +247,11 @@ def vdduc(conn, start, end):
                 plot_width = 560,                                   \
                 plot_height = 500,                                  \
                 x_axis_type = 'datetime',                           \
+                output_backend="webgl",                             \
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
-    p.title.text = "Det.Bias VDDUC"
+    p.title.text = "VDDUC"
     pf.add_basic_layout(p)
 
     a = pf.add_to_plot(p, "VDDUC IC", "IGDP_MIR_IC_V_VDDUC", start, end, conn, color = "red")
@@ -277,15 +282,78 @@ def bias_plots(conn, start, end):
         used by dashboard.py to set up dashboard
     '''
 
+    descr = Div(text=
+    """
+    <style>
+    table, th, td {
+      border: 1px solid black;
+      background-color: #efefef;
+      border-collapse: collapse;
+      padding: 5px
+    }
+    table {
+      border-spacing: 15px;
+    }
+    </style>
+
+    <body>
+    <table style="width:100%">
+      <tr>
+        <th><h6>Plotname</h6></th>
+        <th><h6>Mnemonic</h6></th>
+        <th><h6>Description</h6></th>
+      </tr>
+      <tr>
+        <td>VSSOUT</td>
+        <td>IGDP_MIR_IC_V_VSSOUT<br>
+            IGDP_MIR_SW_V_VSSOUT<br>
+            IGDP_MIR_LW_V_VSSOUT<br> </td>
+        <td>Detector Bias VSSOUT (IC,SW, & LW)</td>
+      </tr>
+      <tr>
+        <td>VDETCOM</td>
+        <td>IGDP_MIR_IC_V_VDETCOM<br>
+            IGDP_MIR_SW_V_VDETCOM<br>
+            IGDP_MIR_LW_V_VDETCOM<br> </td>
+        <td>Detector Bias VDETCOM (IC,SW, & LW)</td>
+      </tr>
+      <tr>
+        <td>VRSTOFF</td>
+        <td>IGDP_MIR_IC_V_VRSTOFF<br>
+            IGDP_MIR_SW_V_VRSTOFF<br>
+            IGDP_MIR_LW_V_VRSTOFF<br> </td>
+        <td>Detector Bias VRSTOFF (IC,SW, & LW)</td>
+      </tr>
+      <tr>
+        <td>VP</td>
+        <td>IGDP_MIR_IC_V_VP<br>
+            IGDP_MIR_SW_V_VP<br>
+            IGDP_MIR_LW_V_VP<br> </td>
+        <td>Detector Bias VP (IC,SW, & LW)</td>
+      </tr>
+      <tr>
+        <td>VDDUC</td>
+        <td>IGDP_MIR_IC_V_VDDUC<br>
+            IGDP_MIR_SW_V_VDDUC<br>
+            IGDP_MIR_LW_V_VDDUC<br> </td>
+        <td>Detector Bias VDDUC (IC,SW, & LW)</td>
+      </tr>
+
+    </table>
+    </body>
+    """, width=1100)
+
     plot1 = vdetcom(conn, start, end)
     plot2 = vssout(conn, start, end)
     plot3 = vrstoff(conn, start, end)
     plot4 = vp(conn, start, end)
     plot5 = vdduc(conn, start, end)
 
-    layout = gridplot([ [plot2, plot1],         \
+    l = gridplot([ [plot2, plot1],         \
                         [plot3, plot4],         \
                         [plot5, None]], merge_tools=False)
+
+    layout = Column(descr, l)
 
     tab = Panel(child = layout, title = "BIAS")
 
