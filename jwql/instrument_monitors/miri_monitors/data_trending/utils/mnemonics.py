@@ -190,7 +190,7 @@ ccc_nominals = {
 
 
 #mnemonic set whole day routine
-mnemonic_set_day = mnemonic_cond_3 +
+mnemonic_set_day = mnemonic_cond_3.append(
 ["IMIR_HK_FW_POS_VOLT",
 "IMIR_HK_FW_POS_RATIO",
 "IMIR_HK_FW_CUR_POS",
@@ -205,7 +205,7 @@ mnemonic_set_day = mnemonic_cond_3 +
 
 "IMIR_HK_CCC_POS_RATIO",
 "IMIR_HK_CCC_CUR_POS",
-"IMIR_HK_CCC_POS_VOLT" ]
+"IMIR_HK_CCC_POS_VOLT" ])
 
 #comprises all mnemonics used throughout he programm
 mnemonic_set_base = [

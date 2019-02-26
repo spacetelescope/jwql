@@ -27,6 +27,8 @@ import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface 
 
 from bokeh.embed import components
 from bokeh.models.widgets import Tabs
+from bokeh.resources import Resources
+from bokeh.io.state import curstate
 
 from astropy.time import Time
 import datetime
@@ -40,6 +42,7 @@ from .plots.temperature_tab import temperature_plots
 from .plots.bias_tab import bias_plots
 from .plots.overview_tab import overview_settings
 from .plots.wheel_ratio_tab import wheel_ratios
+
 
 #configure actual datetime in order to implement range function
 now = datetime.datetime.now()
@@ -77,6 +80,17 @@ def data_trending_dashboard(start = default_start, end = now):
     tab4 = temperature_plots(conn, start, end)
     tab5 = bias_plots(conn, start, end)
     tab6 = wheel_ratios(conn, start, end)
+
+    class MyResources(Resources):
+        @property
+        def css_raw(self):
+            return super().css_raw + [
+                """.bk-bs-nav {
+                    background-color: red;
+                }"""
+            ]
+
+    #curstate().file['resources'] = MyResources(mode='cdn')
 
     #build dashboard
     tabs = Tabs( tabs=[ tab1, tab2, tab3, tab5, tab4, tab6 ] )

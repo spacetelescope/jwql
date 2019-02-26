@@ -74,9 +74,25 @@ def add_hover_tool(p,rend):
     #append hover tool
     p.tools.append(hover_tool)
 
+def add_limit_box(p, lower, upper, alpha=0.1, color="green"):
+    ''' Adds box to plot
+    Parameters
+    ----------
+    p : bokeh figure
+        declares where to append hover tool
+    lower : float
+        lower limit of box
+    upper : float
+        upper limit of box
+    alpha : float
+        transperency of box
+    color : str
+        filling color
+    '''
+    box = BoxAnnotation(bottom=lower, top=upper, fill_alpha=alpha, fill_color=color)
+    p.add_layout(box)
 
-
-def add_to_plot(p, legend, mnemonic, start, end, conn, y_axis= "default", color="red"):
+def add_to_plot(p, legend, mnemonic, start, end, conn, y_axis= "default", color="red", err='n'):
     '''Add scatter and line to certain plot and activates hoover tool
     Parameters
     ----------
@@ -119,6 +135,18 @@ def add_to_plot(p, legend, mnemonic, start, end, conn, y_axis= "default", color=
     #plot data
     p.line(x = "start_time", y = "reg", color = color, y_range_name=y_axis, legend = legend, source = plot_data)
     scat = p.scatter(x = "start_time", y = "average", color = color, y_range_name=y_axis, legend = legend, source = plot_data)
+
+    if err!='n':
+        #generate error bars
+        err_xs = []
+        err_ys = []
+
+        for index, item in temp.iterrows():
+            err_xs.append((item['start_time'],item['start_time']))
+            err_ys.append((item['average'] - item['deviation'], item['average'] + item['deviation']))
+
+        # plot them
+        p.multi_line(err_xs, err_ys, color=color, legend=legend)
 
     return scat
 

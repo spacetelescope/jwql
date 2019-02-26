@@ -60,7 +60,7 @@ import jwql.instrument_monitors.miri_monitors.data_trending.plots.plot_functions
 from bokeh.plotting import figure
 from bokeh.models import BoxAnnotation, LinearAxis, Range1d
 from bokeh.embed import components
-from bokeh.models.widgets import Panel, Tabs
+from bokeh.models.widgets import Panel, Tabs, Div
 from bokeh.models import ColumnDataSource
 from bokeh.layouts import column
 
@@ -91,8 +91,9 @@ def cryo(conn, start, end):
                 toolbar_location = "above",                         \
                 plot_width = 1120,                                   \
                 plot_height = 700,                                  \
-                y_range = [5.8,6.4],
+                y_range = [5.8,6.4],                                \
                 x_axis_type = 'datetime',                           \
+                output_backend="webgl",                             \
                 x_axis_label = 'Date', y_axis_label = 'Temperature (K)')
 
     p.grid.visible = True
@@ -159,10 +160,11 @@ def temp(conn, start, end):
                 plot_height = 700,                                  \
                 y_range = [275,295],                             \
                 x_axis_type = 'datetime',                           \
+                output_backend="webgl",                             \
                 x_axis_label = 'Date', y_axis_label = 'Temperature (K)')
 
     p.grid.visible = True
-    p.title.text = "TEMP"
+    p.title.text = "Board Temperatures"
     pf.add_basic_layout(p)
 
     p.line(x = "start_time", y = "reg", color = "brown", legend = "Internal Temp.", source = plot_data)
@@ -209,6 +211,7 @@ def det(conn, start, end):
                 plot_height = 400,                                  \
                 y_range = [6.395,6.41],                             \
                 x_axis_type = 'datetime',                           \
+                output_backend="webgl",                             \
                 x_axis_label = 'Date', y_axis_label = 'Temperature (K)')
 
     p.grid.visible = True
@@ -243,14 +246,91 @@ def temperature_plots(conn, start, end):
         used by dashboard.py to set up dashboard
     '''
 
+    descr = Div(text=
+    """
+    <style>
+    table, th, td {
+      border: 1px solid black;
+      background-color: #efefef;
+      border-collapse: collapse;
+      padding: 5px
+    }
+    </style>
+    
+    <body>
+    <table style="width:100%">
+      <tr>
+        <th><h6>Plotname</h6></th>
+        <th><h6>Mnemonic</h6></th>
+        <th><h6>Description</h6></th>
+      </tr>
+      <tr>
+        <td>CRYO Temperatures</td>
+        <td>IGDP_MIR_ICE_T1P_CRYO<br>
+            IGDP_MIR_ICE_T2R_CRYO<br>
+            IGDP_MIR_ICE_T3LW_CRYO<br>
+            IGDP_MIR_ICE_T4SW_CRYO<br>
+            IGDP_MIR_ICE_T5IMG_CRYO<br>
+            IGDP_MIR_ICE_T6DECKCRYO<br>
+            IGDP_MIR_ICE_T7IOC_CRYO<br>
+            IGDP_MIR_ICE_FW_CRYO<br>
+            IGDP_MIR_ICE_CCC_CRYO<br>
+            IGDP_MIR_ICE_GW14_CRYO<br>
+            IGDP_MIR_ICE_GW23_CRYO<br>
+            IGDP_MIR_ICE_POMP_CRYO<br>
+            IGDP_MIR_ICE_POMR_CRYO<br>
+            IGDP_MIR_ICE_IFU_CRYO<br>
+            IGDP_MIR_ICE_IMG_CRYO<br></td>
+        <td>Deck Nominal Temperature (T1)<br>
+            Deck Redundant Temperature (T2)<br>
+            LW FPM I/F Temperature (T3)<br>
+            SW FPM I/F Temperature (T4)<br>
+            IM FPM I/F Temperature (T5)<br>
+            Deck Opp. Nom. Temperature (T6)<br>
+            Deck Opp. Red. Temperature (T7)<br>
+            FWA Temperature<br>
+            CCC Temperature<br>
+            DGA-A (GW14) Temperature<br>
+            DGA-B (GW23) Temperature<br>
+            POMH Nominal Temperature<br>
+            POMH Redundant Temperature<br>
+            MRS (CF) Cal. Source Temperature<br>
+            Imager (CI) Cal. Source Temperature<br></td>
+      </tr>
+      <tr>
+        <td>Board Temperatures</td>
+        <td>ST_ZTC1MIRIA<br>
+            ST_ZTC2MIRIA<br>
+            IMIR_PDU_TEMP<br>
+            IMIR_IC_SCE_ANA_TEMP1<br>
+            IMIR_SW_SCE_ANA_TEMP1<br>
+            IMIR_LW_SCE_ANA_TEMP1<br>
+            IMIR_IC_SCE_DIG_TEMP<br>
+            IMIR_SW_SCE_DIG_TEMP<br>
+            IMIR_LW_SCE_DIG_TEMP<br></td>
+        <td>ICE A IEC panel Temp<br>
+            FPE A IEC panel Temp<br>
+            FPE PDU Temperature<br>
+            FPE SCE Analogue board Temperature (IC, SW & LW) <br>
+            FPE SCE Digital board Temperature (IC, SW & LW)<br></td>
+      </tr>
+       <tr>
+         <td>Detector Temperatures</td>
+         <td>IGDP_MIR_IC_DET_TEMP<br>
+            IGDP_MIR_lW_DET_TEMP<br>
+            IGDP_MIR_SW_DET_TEMP<br></td>
+         <td>Detector Temperature (IC,SW&LW)<br></td>
+       </tr>
+    </table>
+    </body>
+    """, width=1100)
+
+
     plot1 = cryo(conn, start, end)
     plot2 = temp(conn, start, end)
     plot3 = det(conn, start, end)
 
-
-    layout = column(plot1, plot2, plot3)
-
-    #layout_volt = row(volt4, volt1_3)
+    layout = column(descr, plot1, plot2, plot3)
     tab = Panel(child = layout, title = "TEMPERATURE")
 
     return tab
