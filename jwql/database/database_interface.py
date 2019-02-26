@@ -24,6 +24,8 @@ Authors
     - Joe Filippazzo
     - Johannes Sahlmann
     - Matthew Bourque
+    - Lauren Chambers
+    - Bryan Hilbert
 
 Use
 ---
@@ -193,6 +195,21 @@ class Anomaly(base):
         return a_list
 
 
+class Monitor(base):
+    """ORM for the ``monitor`` table"""
+
+    # Name the table
+    __tablename__ = 'monitor'
+
+    id = Column(Integer, primary_key=True)
+    monitor_name = Column(String(), nullable=False)
+    start_time = Column(DateTime, nullable=False)
+    end_time = Column(DateTime, nullable=True)
+    status = Column(String(), nullable=True)
+    affected_tables = Column(Array, nullable=True)
+    log_file(Column(String(), nullable=False))
+
+
 def get_monitor_columns(data_dict, table_name):
     """Read in the corresponding table definition text file to
     generate ``SQLAlchemy`` columns for the table.
@@ -288,7 +305,7 @@ def monitor_orm_factory(class_name):
     # Columns specific to all monitor ORMs
     data_dict['id'] = Column(Integer, primary_key=True, nullable=False)
     data_dict['entry_date'] = Column(DateTime, unique=True, nullable=False, default=datetime.now())
-    data_dict['__table_args'] = (UniqueConstraint('id', 'entry_date', name='monitor_uc'),)
+    data_dict['__table_args__'] = (UniqueConstraint('id', 'entry_date', name='monitor_uc'),)
 
     # Get monitor-specific columns
     data_dict = get_monitor_columns(data_dict, data_dict['__tablename__'])
