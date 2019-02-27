@@ -145,6 +145,16 @@
     border: 1px solid #F2CE3A;
 }
 
+.mnemonic_exploration_section {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    padding: 1em;
+    /*border:solid #000000;*/
+    border: 1px solid #F2CE3A;
+    line-height: 15px
+}
+
 .mnemonic_query_field {
 float:left;
 width:300px;
