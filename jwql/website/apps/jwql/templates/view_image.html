@@ -9,6 +9,10 @@
 {% block content %}
 
 	<script>
+        /**
+         * Change the filetype of the displayed image
+         * @param {String} type - The image type (e.g. "rate", "uncal", etc.)
+         */
     	function change_filetype(type) {
     		// Change the radio button to check the right filetype
     		document.getElementById(type).checked = true;
@@ -51,6 +55,11 @@
 
     	};
 
+
+        /**
+         * Change the integration number of the displayed image
+         * @param {String} direction - The direction to switch to, either "left" (descrease) or "right" (increase).
+         */
     	function change_int(direction) {
     		// Figure out the current image and integration
     		var suffix = document.getElementById("jpg_filename").innerHTML.split('_');
