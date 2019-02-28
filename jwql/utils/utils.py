@@ -75,6 +75,21 @@ def filename_parser(filename):
         r"_(?P<exposure_id>\d+)"\
         r"_(?P<detector>((?!_)[\w])+)"
 
+    # Stage 2c outlier detection filenames, e.g. "jw94015002002_02108_00001_mirimage_o002_crf.fits"
+    # (See: https://jwst-docs.stsci.edu/display/JDAT/Understanding+Associations?q=association%20candidate)
+    stage_2c = \
+        r"jw" \
+        r"(?P<program_id>\d{5})" \
+        r"(?P<observation>\d{3})" \
+        r"(?P<visit>\d{3})" \
+        r"_(?P<visit_group>\d{2})" \
+        r"(?P<parallel_seq_id>\d{1})" \
+        r"(?P<activity>\w{2})" \
+        r"_(?P<exposure_id>\d+)" \
+        r"_(?P<detector>((?!_)[\w])+)"\
+        r"_(?P<ac_id>(o\d{3}|(c|a|r)\d{4}))"
+
+
     # Stage 3 filenames with target ID, e.g. "jw80600-o009_t001_miri_f1130w_i2d.fits"
     stage_3_target_id = \
         r"jw" \
@@ -137,7 +152,7 @@ def filename_parser(filename):
         r"_((?P<date_time>\d{13})|(?P<guide_star_attempt_id>\d{1}))"
 
     # Build list of filename types
-    filename_types = [stage_1_and_2, stage_3_target_id, stage_3_source_id,
+    filename_types = [stage_1_and_2, stage_2c, stage_3_target_id, stage_3_source_id,
                       stage_3_target_id_epoch, stage_3_source_id_epoch,
                       time_series, guider]
 
