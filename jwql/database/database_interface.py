@@ -210,7 +210,7 @@ class Monitor(base):
     end_time = Column(DateTime, nullable=True)
     status = Column(Enum('SUCESS', 'FAILURE'), nullable=True)
     affected_tables = Column(postgresql.ARRAY(String, dimensions=1), nullable=True)
-    log_file(Column(String(), nullable=False))
+    log_file = Column(String(), nullable=False)
 
 
 def get_monitor_columns(data_dict, table_name):
