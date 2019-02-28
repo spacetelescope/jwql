@@ -76,7 +76,7 @@
 	            		<a class="nav-link" href={{ url('jwql:edb') }}>EDB<span class="sr-only">(current)</span></a>
 	          		</li>
 		      		<li class="nav-item active">
-	            		<a class="nav-link" href="https://jwql.readthedocs.io/en/latest/">Documentation<span class="sr-only">(current)</span></a>
+	            		<a class="nav-link" href="https://jwql.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer">Documentation<span class="sr-only">(current)</span></a>
 	          		</li>
 	        	</ul>
 	        </div>
@@ -86,7 +86,7 @@
 	            <ul class="navbar-nav mr-auto">
 	            	{% if user.ezid %}
 	            		<li>
-	            			<a class="nav-link" href="https://auth.mastdev.stsci.edu/tokens" id="oauth_user">{{ user.ezid }}</a>
+	            			<a class="nav-link" id="oauth_user" href="https://auth.mastdev.stsci.edu/tokens" target="_blank" rel="noopener noreferrer">{{ user.ezid }}</a>
 	            		</li>
 	            		<li>
 	            			<a role="button" class="btn btn-primary" href={{ url('jwql:logout') }}>logout</a>
