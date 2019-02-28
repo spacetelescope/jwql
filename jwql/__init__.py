@@ -14,3 +14,4 @@ try:
 
 except:
     print('Could not determine jwql version')
+    __version__ = 'N/A'
