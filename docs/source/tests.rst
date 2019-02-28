@@ -8,6 +8,12 @@ test_api_views.py
     :members:
     :undoc-members:
 
+test_edb_interface.py
+---------------------
+.. automodule:: jwql.tests.test_edb_interface
+    :members:
+    :undoc-members:
+
 test_monitor_mast.py
 --------------------
 .. automodule:: jwql.tests.test_monitor_mast
@@ -20,8 +26,14 @@ test_permissions.py
     :members:
     :undoc-members:
 
-test_preview_images.py
-----------------------
+test_plotting.py
+----------------
+.. automodule:: jwql.tests.test_plotting
+    :members:
+    :undoc-members:
+
+test_preview_image.py
+---------------------
 .. automodule:: jwql.tests.test_preview_image
     :members:
     :undoc-members:
