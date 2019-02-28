@@ -47,8 +47,8 @@ FILE_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'i
 # Add usual DMS suffixes (see https://jwst-pipeline.readthedocs.io/en/
 # stable/jwst/introduction.html#pipeline-step-suffix-definitions)
 FILE_SUFFIX_TYPES += ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',
-                     'x1dints', 'x1d', 's2d', 's3d', 'dark', 'crfints',
-                     'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat']
+                      'x1dints', 'x1d', 's2d', 's3d', 'dark', 'crfints',
+                      'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat']
 # Add Time Series suffixes
 FILE_SUFFIX_TYPES += ['phot', 'whtlt']
 # Add Coronagraphic suffixes
