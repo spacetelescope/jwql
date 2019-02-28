@@ -42,8 +42,19 @@ JWST_INSTRUMENT_NAMES_UPPERCASE = {key: value.upper() for key, value in
 JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
                       JWST_INSTRUMENT_NAMES]
 
-FILE_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled',
-                     'i2d', 'x1d', 's2d', 's3d', 'dark', 'ami', 'crf']
+# Add guider suffixes (see JWST-STScI-004800, SM-12)
+FILE_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
+# Add usual DMS suffixes (see https://jwst-pipeline.readthedocs.io/en/
+# stable/jwst/introduction.html#pipeline-step-suffix-definitions)
+FILE_SUFFIX_TYPES += ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',
+                     'x1dints', 'x1d', 's2d', 's3d', 'dark', 'crfints',
+                     'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat']
+# Add Time Series suffixes
+FILE_SUFFIX_TYPES += ['phot', 'whtlt']
+# Add Coronagraphic suffixes
+FILE_SUFFIX_TYPES += ['psfstack', 'psfalign', 'psfsub']
+# Add AMI suffixes
+FILE_SUFFIX_TYPES += ['amiavg', 'aminorm', 'ami']
 
 MONITORS = {
     'fgs': ['Bad Pixel Monitor'],
