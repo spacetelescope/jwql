@@ -72,6 +72,7 @@ from sqlalchemy import MetaData
 from sqlalchemy import String
 from sqlalchemy import Time
 from sqlalchemy import UniqueConstraint
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
@@ -208,7 +209,7 @@ class Monitor(base):
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=True)
     status = Column(Enum('SUCESS', 'FAILURE'), nullable=True)
-    affected_tables = Column(ARRAY, nullable=True)
+    affected_tables = Column(postgresql.ARRAY(String, dimensions=1), nullable=True)
     log_file(Column(String(), nullable=False))
 
 
