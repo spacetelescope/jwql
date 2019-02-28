@@ -12,6 +12,6 @@ try:
         if 'VERSION =' in line:
             __version__ = line.split(' ')[-1].replace("'", "").strip()
 
-except:
+except FileNotFoundError:
     print('Could not determine jwql version')
     __version__ = '0.0.0'
