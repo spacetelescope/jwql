@@ -14,4 +14,4 @@ try:
 
 except:
     print('Could not determine jwql version')
-    __version__ = 'N/A'
+    __version__ = '0.0.0'
