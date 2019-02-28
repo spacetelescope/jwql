@@ -1,3 +1,5 @@
+DETECTOR, string
 X_COORD, integer
 Y_COORD, integer
 TYPE, string
+SOURCE_FILES, array

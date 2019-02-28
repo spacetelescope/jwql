@@ -1,3 +1,7 @@
-START_TIME, datetime
 DETECTOR, string
 APERTURE, string
+START_TIME, datetime
+END_TIME, datetime
+FILES_FOUND, integer
+RUN_MONITOR, boolean
+
