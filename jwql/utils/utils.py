@@ -79,7 +79,7 @@ def filename_parser(filename):
     stage_3_target_id = \
         r"jw" \
         r"(?P<program_id>\d{5})"\
-        r"-(?P<ac_id>(o|c|a|r)\d{3,4})"\
+        r"-(?P<ac_id>(o\d{3}|(c|a|r)\d{4}))"\
         r"_(?P<target_id>(t)\d{3})"\
         r"_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
         r"_(?P<optical_elements>((?!_)[\w-])+)"
@@ -88,7 +88,7 @@ def filename_parser(filename):
     stage_3_source_id = \
         r"jw" \
         r"(?P<program_id>\d{5})"\
-        r"-(?P<ac_id>(o|c|a|r)\d{3,4})"\
+        r"-(?P<ac_id>(o\d{3}|(c|a|r)\d{4}))"\
         r"_(?P<source_id>(s)\d{5})"\
         r"_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
         r"_(?P<optical_elements>((?!_)[\w-])+)"
@@ -97,7 +97,7 @@ def filename_parser(filename):
     stage_3_target_id_epoch = \
         r"jw" \
         r"(?P<program_id>\d{5})"\
-        r"-(?P<ac_id>(o|c|a|r)\d{3,4})"\
+        r"-(?P<ac_id>(o\d{3}|(c|a|r)\d{4}))"\
         r"_(?P<target_id>(t)\d{3})"\
         r"-epoch(?P<epoch>\d{1})"\
         r"_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
@@ -107,7 +107,7 @@ def filename_parser(filename):
     stage_3_source_id_epoch = \
         r"jw" \
         r"(?P<program_id>\d{5})"\
-        r"-(?P<ac_id>(o|c|a|r)\d{3,4})"\
+        r"-(?P<ac_id>(o\d{3}|(c|a|r)\d{4}))"\
         r"_(?P<source_id>(s)\d{5})"\
         r"-epoch(?P<epoch>\d{1})"\
         r"_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
