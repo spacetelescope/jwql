@@ -167,12 +167,29 @@ def filename_parser(filename):
         r"_((?P<date_time>\d{13})|(?P<guide_star_attempt_id>\d{1}))"
 
     # Build list of filename types
-    filename_types = [stage_1_and_2, stage_2c, stage_3_target_id, stage_3_source_id,
-                      stage_3_target_id_epoch, stage_3_source_id_epoch,
-                      time_series, guider]
+    filename_types = [
+        stage_1_and_2,
+        stage_2c,
+        stage_3_target_id,
+        stage_3_source_id,
+        stage_3_target_id_epoch,
+        stage_3_source_id_epoch,
+        time_series,
+        guider]
+
+    filename_type_names = [
+        'stage_1_and_2',
+        'stage_2c',
+        'stage_3_target_id',
+        'stage_3_source_id',
+        'stage_3_target_id_epoch',
+        'stage_3_source_id_epoch',
+        'time_series',
+        'guider'
+    ]
 
     # Try to parse the filename
-    for filename_type in filename_types:
+    for filename_type, filename_type_name in zip(filename_types, filename_type_names):
 
         # If full filename, try using suffix
         if not file_root_name:
@@ -184,11 +201,13 @@ def filename_parser(filename):
         elements = re.compile(filename_type)
         jwst_file = elements.match(filename)
         if jwst_file is not None:
+            name_match = filename_type_name
             break
 
     # Raise error if unable to parse the filename
     try:
         filename_dict = jwst_file.groupdict()
+        filename_dict['filename_type'] = name_match
     except AttributeError:
         jdox_url = 'https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products'
         raise ValueError('Provided file {} does not follow JWST naming conventions.  See {} for further information.'.format(filename, jdox_url))
