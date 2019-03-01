@@ -7,7 +7,7 @@
 
 /**
  * Determine what filetype to use for a thumbnail
- * @param {String} thumnail_dir - The path to the thumbnail directory
+ * @param {String} thumbnail_dir - The path to the thumbnail directory
  * @param {List} suffixes - A list of available suffixes for the file of interest
  * @param {Integer} i - The index of the thumbnail
  * @param {String} file_root - The rootname of the file corresponding to the thumbnail
@@ -96,7 +96,7 @@ function search() {
 
 
 /**
- * Limit the displayed thumbails based on filter criteria
+ * Limit the displayed thumbnails based on filter criteria
  * @param {String} filter_type - The filter type.  Currently only "sort" is supported.
  * @param {Integer} value - The filter value
  * @param {List} dropdown_keys - A list of dropdown menu keys
