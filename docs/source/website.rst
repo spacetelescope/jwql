@@ -2,6 +2,12 @@
 website
 *******
 
+api_views.py
+------------
+.. automodule:: jwql.website.apps.jwql.api_views
+    :members:
+    :undoc-members:
+
 context_processors.py
 ---------------------
 .. automodule:: jwql.website.apps.jwql.context_processors
@@ -20,15 +26,21 @@ db.py
     :members:
     :undoc-members:
 
-oauth.py
+forms.py
 --------
-.. automodule:: jwql.website.apps.jwql.oauth
+.. automodule:: jwql.website.apps.jwql.forms
     :members:
     :undoc-members:
 
 manage.py
 ---------
 .. automodule:: jwql.website.manage
+    :members:
+    :undoc-members:
+
+oauth.py
+--------
+.. automodule:: jwql.website.apps.jwql.oauth
     :members:
     :undoc-members:
 

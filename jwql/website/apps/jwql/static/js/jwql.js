@@ -5,7 +5,13 @@
  * @author Matthew Bourque
  */
 
-// JS function to determine what filetype to use for the thumbnail
+/**
+ * Determine what filetype to use for a thumbnail
+ * @param {String} thumbnail_dir - The path to the thumbnail directory
+ * @param {List} suffixes - A list of available suffixes for the file of interest
+ * @param {Integer} i - The index of the thumbnail
+ * @param {String} file_root - The rootname of the file corresponding to the thumbnail
+ */
 function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root) {
 
     // Update the thumbnail to show the most processed filetype
@@ -23,7 +29,11 @@ function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root)
 };
 
 
-// JS function to determine whether the page is archived or unlooked
+/**
+ * Determine whether the page is archive or unlooked
+ * @param {String} instrument - The instrument of interest
+ * @param {Integer} proposal - The proposal of interest
+ */
 function determine_page_title(instrument, proposal) {
     // Determine if the URL is 'archive' or 'unlooked'
     var url = document.URL;
@@ -45,6 +55,9 @@ function determine_page_title(instrument, proposal) {
 };
 
 
+/**
+ * Perform a search of images and display the resulting thumbnails
+ */
 function search() {
 
     // Find all proposal elements
@@ -82,6 +95,13 @@ function search() {
 };
 
 
+/**
+ * Limit the displayed thumbnails based on filter criteria
+ * @param {String} filter_type - The filter type.  Currently only "sort" is supported.
+ * @param {Integer} value - The filter value
+ * @param {List} dropdown_keys - A list of dropdown menu keys
+ * @param {Integer} num_fileids - The number of files that are available to display
+ */
 function show_only(filter_type, value, dropdown_keys, num_fileids) {
 
     // Get all filter options from {{dropdown_menus}} variable
@@ -131,6 +151,10 @@ function show_only(filter_type, value, dropdown_keys, num_fileids) {
 };
 
 
+/**
+ * Sort thumbnail display by proposal number
+ * @param {String} sort_type - The sort type (e.g. "asc", "desc")
+ */
 function sort_by_proposals(sort_type) {
     // Update dropdown menu text
     document.getElementById('sort_dropdownMenuButton').innerHTML = sort_type;
@@ -145,6 +169,10 @@ function sort_by_proposals(sort_type) {
 };
 
 
+/**
+ * Sort thumbnail display by a given sort type
+ * @param {String} sort_type - The sort type (e.g. file_root", "exp_start")
+ */
 function sort_by_thumbnails(sort_type) {
 
     // Update dropdown menu text
@@ -250,9 +278,10 @@ function update_thumbnails_page(inst, proposal, base_url) {
         }});
 };
 
-/* JS function to construct the URL corresponding to a specific GitHub release
-* @param {String} version_string - The x.y.z version number
-*/
+/**
+ * Construct the URL corresponding to a specific GitHub release
+ * @param {String} version_string - The x.y.z version number
+ */
 function version_url(version_string) {
     var a_line = 'Running <a href="https://github.com/spacetelescope/jwql/releases/tag/';
     a_line += version_string;
