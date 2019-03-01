@@ -26,8 +26,11 @@ Use
 import jwql
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS
 
+from .oauth import auth_info
 
-def base_context(request):
+
+@auth_info
+def base_context(request, user):
     """Provide the context needed for the ``base.html`` template.
 
     Parameters
@@ -45,6 +48,7 @@ def base_context(request):
     context = {}
     context['inst_list'] = JWST_INSTRUMENT_NAMES
     context['tools'] = MONITORS
+    context['user'] = user
     context['version'] = jwql.__version__
 
     return context

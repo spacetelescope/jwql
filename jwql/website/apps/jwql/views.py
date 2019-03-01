@@ -50,15 +50,13 @@ from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
 from .forms import FileSearchForm
-from .oauth import auth_info
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
-@auth_info
-def about(request, user):
+def about(request):
     """Generate the ``about`` page
 
     Parameters
@@ -74,14 +72,12 @@ def about(request, user):
     template = 'about.html'
     acknowledgements = get_acknowledgements()
     context = {'acknowledgements': acknowledgements,
-               'inst': '',
-               'user': user}
+               'inst': ''}
 
     return render(request, template, context)
 
 
-@auth_info
-def archived_proposals(request, user, inst):
+def archived_proposals(request, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -101,7 +97,6 @@ def archived_proposals(request, user, inst):
 
     template = 'archive.html'
     context = {'inst': inst,
-               'user': user,
                'base_url': get_base_url()}
 
     return render(request, template, context)
@@ -141,8 +136,7 @@ def archived_proposals_ajax(request, inst):
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-@auth_info
-def archive_thumbnails(request, user, inst, proposal):
+def archive_thumbnails(request, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -166,7 +160,6 @@ def archive_thumbnails(request, user, inst, proposal):
     template = 'thumbnails.html'
     context = {'inst': inst,
                'prop': proposal,
-               'user': user,
                'base_url': get_base_url()}
 
     return render(request, template, context)
@@ -199,8 +192,7 @@ def archive_thumbnails_ajax(request, inst, proposal):
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
-@auth_info
-def dashboard(request, user):
+def dashboard(request):
     """Generate the dashbaord page
 
     Parameters
@@ -218,7 +210,6 @@ def dashboard(request, user):
     dashboard_components, dashboard_html = get_dashboard_components()
 
     context = {'inst': '',
-               'user': user,
                'outputs': output_dir,
                'filesystem_html': os.path.join(output_dir, 'monitor_filesystem',
                                                'filesystem_monitor.html'),
@@ -228,8 +219,7 @@ def dashboard(request, user):
     return render(request, template, context)
 
 
-@auth_info
-def engineering_database(request, user):
+def engineering_database(request):
     """Generate the EDB page.
 
     Parameters
@@ -249,14 +239,12 @@ def engineering_database(request, user):
 
     template = 'engineering_database.html'
     context = {'inst': '',
-               'user': user,
                'edb_components': edb_components}
 
     return render(request, template, context)
 
 
-@auth_info
-def home(request, user):
+def home(request):
     """Generate the home page
 
     Parameters
@@ -282,14 +270,12 @@ def home(request, user):
 
     template = 'home.html'
     context = {'inst': '',
-               'form': form,
-               'user': user}
+               'form': form}
 
     return render(request, template, context)
 
 
-@auth_info
-def instrument(request, user, inst):
+def instrument(request, inst):
     """Generate the instrument tool index page.
 
     Parameters
@@ -317,14 +303,12 @@ def instrument(request, user, inst):
     doc_url = url_dict[inst.lower()]
 
     context = {'inst': inst,
-               'user': user,
                'doc_url': doc_url}
 
     return render(request, template, context)
 
 
-@auth_info
-def unlooked_images(request, user, inst):
+def unlooked_images(request, inst):
     """Generate the page listing all unlooked images in the database
 
     Parameters
@@ -344,13 +328,11 @@ def unlooked_images(request, user, inst):
 
     template = 'thumbnails.html'
     context = thumbnails(inst)
-    context['user'] = user
 
     return render(request, template, context)
 
 
-@auth_info
-def view_header(request, user, inst, file):
+def view_header(request, inst, file):
     """Generate the header view page
 
     Parameters
@@ -376,15 +358,13 @@ def view_header(request, user, inst, file):
 
     context = {'inst': inst,
                'file': file,
-               'user': user,
                'header': header,
                'file_root': file_root}
 
     return render(request, template, context)
 
 
-@auth_info
-def view_image(request, user, inst, file_root, rewrite=False):
+def view_image(request, inst, file_root, rewrite=False):
     """Generate the image view page
 
     Parameters
@@ -410,7 +390,6 @@ def view_image(request, user, inst, file_root, rewrite=False):
     image_info = get_image_info(file_root, rewrite)
     context = {'inst': inst,
                'file_root': file_root,
-               'user': user,
                'jpg_files': image_info['all_jpegs'],
                'fits_files': image_info['all_files'],
                'suffixes': image_info['suffixes'],
