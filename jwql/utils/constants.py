@@ -45,8 +45,8 @@ JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
 
 GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',
-                       'x1dints', 'x1d', 's2d', 's3d', 'dark', 'crfints',
-                       'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat']
+                        'x1dints', 'x1d', 's2d', 's3d', 'dark', 'crfints',
+                        'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat']
 
 TIME_SERIES_SUFFIX_TYPES = ['phot', 'whtlt']
 
