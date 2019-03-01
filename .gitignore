@@ -10,3 +10,4 @@ docs/source/api/
 .cache
 *.pytest_cache
 htmlcov/
+*.sqlite3
