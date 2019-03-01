@@ -177,6 +177,9 @@ def filename_parser(filename):
         # If full filename, try using suffix
         if not file_root_name:
             filename_type += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
+        # If not, make sure the provided regex matches the entire filename root
+        else:
+            filename_type += r"$"
 
         elements = re.compile(filename_type)
         jwst_file = elements.match(filename)
