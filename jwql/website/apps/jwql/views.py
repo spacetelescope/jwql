@@ -39,7 +39,6 @@ import os
 
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.template import RequestContext
 
 from .data_containers import get_acknowledgements, get_edb_components
 from .data_containers import get_dashboard_components
