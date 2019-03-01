@@ -38,7 +38,8 @@ Dependencies
 import os
 
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, render_to_response
+from django.template import RequestContext
 
 from .data_containers import get_acknowledgements, get_edb_components
 from .data_containers import get_dashboard_components
@@ -50,9 +51,8 @@ from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
 from .forms import FileSearchForm
 from .oauth import auth_info
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
-import jwql
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
@@ -75,10 +75,7 @@ def about(request, user):
     acknowledgements = get_acknowledgements()
     context = {'acknowledgements': acknowledgements,
                'inst': '',
-               'inst_list': JWST_INSTRUMENT_NAMES,
-               'tools': MONITORS,
-               'user': user,
-               'version': jwql.__version__}
+               'user': user}
 
     return render(request, template, context)
 
@@ -104,10 +101,8 @@ def archived_proposals(request, user, inst):
 
     template = 'archive.html'
     context = {'inst': inst,
-               'tools': MONITORS,
                'user': user,
-               'base_url': get_base_url(),
-               'version': jwql.__version__}
+               'base_url': get_base_url()}
 
     return render(request, template, context)
 
@@ -138,12 +133,10 @@ def archived_proposals_ajax(request, inst):
 
     context = {'inst': inst,
                'all_filenames': all_filenames,
-               'tools': MONITORS,
                'num_proposals': proposal_info['num_proposals'],
                'thumbnails': {'proposals': proposal_info['proposals'],
                               'thumbnail_paths': proposal_info['thumbnail_paths'],
-                              'num_files': proposal_info['num_files']},
-               'version': jwql.__version__}
+                              'num_files': proposal_info['num_files']}}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
@@ -173,10 +166,8 @@ def archive_thumbnails(request, user, inst, proposal):
     template = 'thumbnails.html'
     context = {'inst': inst,
                'prop': proposal,
-               'tools': MONITORS,
                'user': user,
-               'base_url': get_base_url(),
-               'version': jwql.__version__}
+               'base_url': get_base_url()}
 
     return render(request, template, context)
 
@@ -227,15 +218,12 @@ def dashboard(request, user):
     dashboard_components, dashboard_html = get_dashboard_components()
 
     context = {'inst': '',
-               'inst_list': JWST_INSTRUMENT_NAMES,
-               'tools': MONITORS,
                'user': user,
                'outputs': output_dir,
                'filesystem_html': os.path.join(output_dir, 'monitor_filesystem',
                                                'filesystem_monitor.html'),
                'dashboard_components': dashboard_components,
-               'dashboard_html': dashboard_html,
-               'version': jwql.__version__}
+               'dashboard_html': dashboard_html}
 
     return render(request, template, context)
 
@@ -261,11 +249,8 @@ def engineering_database(request, user):
 
     template = 'engineering_database.html'
     context = {'inst': '',
-               'inst_list': JWST_INSTRUMENT_NAMES,
                'user': user,
-               'tools': MONITORS,
-               'edb_components': edb_components,
-               'version': jwql.__version__}
+               'edb_components': edb_components}
 
     return render(request, template, context)
 
@@ -297,11 +282,8 @@ def home(request, user):
 
     template = 'home.html'
     context = {'inst': '',
-               'inst_list': JWST_INSTRUMENT_NAMES,
-               'tools': MONITORS,
                'form': form,
-               'user': user,
-               'version': jwql.__version__}
+               'user': user}
 
     return render(request, template, context)
 
@@ -335,10 +317,8 @@ def instrument(request, user, inst):
     doc_url = url_dict[inst.lower()]
 
     context = {'inst': inst,
-               'tools': MONITORS,
                'user': user,
-               'doc_url': doc_url,
-               'version': jwql.__version__}
+               'doc_url': doc_url}
 
     return render(request, template, context)
 
@@ -394,14 +374,13 @@ def view_header(request, user, inst, file):
     header = get_header_info(file)
     file_root = '_'.join(file.split('_')[:-1])
 
-    return render(request, template,
-                  {'inst': inst,
-                   'file': file,
-                   'tools': MONITORS,
-                   'user': user,
-                   'header': header,
-                   'file_root': file_root,
-                   'version': jwql.__version__})
+    context = {'inst': inst,
+               'file': file,
+               'user': user,
+               'header': header,
+               'file_root': file_root}
+
+    return render(request, template, context)
 
 
 @auth_info
@@ -431,12 +410,10 @@ def view_image(request, user, inst, file_root, rewrite=False):
     image_info = get_image_info(file_root, rewrite)
     context = {'inst': inst,
                'file_root': file_root,
-               'tools': MONITORS,
                'user': user,
                'jpg_files': image_info['all_jpegs'],
                'fits_files': image_info['all_files'],
                'suffixes': image_info['suffixes'],
-               'num_ints': image_info['num_ints'],
-               'version': jwql.__version__}
+               'num_ints': image_info['num_ints']}
 
     return render(request, template, context)
