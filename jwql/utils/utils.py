@@ -86,7 +86,6 @@ def filename_parser(filename):
 
     # Stage 2c outlier detection filenames
     # e.g. "jw94015002002_02108_00001_mirimage_o002_crf.fits"
-    # (See: https://jwst-docs.stsci.edu/display/JDAT/Understanding+Associations?q=association%20candidate)
     stage_2c = \
         r"jw" \
         r"(?P<program_id>\d{5})" \

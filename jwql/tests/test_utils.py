@@ -32,6 +32,7 @@ FILENAME_PARSER_TEST_DATA = [
     {'activity': '02',
      'detector': 'nis',
      'exposure_id': '00001',
+     'filename_type': 'stage_1_and_2',
      'observation': '001',
      'parallel_seq_id': '1',
      'program_id': '90002',
@@ -44,6 +45,7 @@ FILENAME_PARSER_TEST_DATA = [
     {'activity': '01',
      'detector': 'nrca1',
      'exposure_id': '00002',
+     'filename_type': 'stage_1_and_2',
      'observation': '001',
      'parallel_seq_id': '1',
      'program_id': '00327',
@@ -56,15 +58,44 @@ FILENAME_PARSER_TEST_DATA = [
     {'activity': '01',
      'detector': 'nrca1',
      'exposure_id': '00002',
+     'filename_type': 'stage_1_and_2',
      'observation': '001',
      'parallel_seq_id': '1',
      'program_id': '00327',
      'visit': '001',
      'visit_group': '02'}),
 
+# Test full stage 2c filename
+('jw94015002002_02108_00001_mirimage_o002_crf.fits',
+    {'ac_id': 'o002',
+     'activity': '08',
+     'detector': 'mirimage',
+     'exposure_id': '00001',
+     'filename_type': 'stage_2c',
+     'observation': '002',
+     'parallel_seq_id': '1',
+     'program_id': '94015',
+     'suffix': 'crf',
+     'visit': '002',
+     'visit_group': '02'}),
+
+# Test root stage 2c filename
+('jw90001001003_02101_00001_nis_o001',
+    {'ac_id': 'o001',
+     'activity': '01',
+     'detector': 'nis',
+     'exposure_id': '00001',
+     'filename_type': 'stage_2c',
+     'observation': '001',
+     'parallel_seq_id': '1',
+     'program_id': '90001',
+     'visit': '003',
+     'visit_group': '02'}),
+
 # Test full stage 3 filename with target_id
 ('jw80600-o009_t001_miri_f1130w_i2d.fits',
     {'ac_id': 'o009',
+     'filename_type': 'stage_3_target_id',
      'instrument': 'miri',
      'optical_elements': 'f1130w',
      'program_id': '80600',
@@ -74,6 +105,7 @@ FILENAME_PARSER_TEST_DATA = [
 # Test full stage 3 filename with target_id and different ac_id
 ('jw80600-c0001_t001_miri_f1130w_i2d.fits',
     {'ac_id': 'c0001',
+     'filename_type': 'stage_3_target_id',
      'instrument': 'miri',
      'optical_elements': 'f1130w',
      'program_id': '80600',
@@ -83,6 +115,7 @@ FILENAME_PARSER_TEST_DATA = [
 # Test full stage 3 filename with source_id
 ('jw80600-o009_s00001_miri_f1130w_i2d.fits',
     {'ac_id': 'o009',
+     'filename_type': 'stage_3_source_id',
      'instrument': 'miri',
      'optical_elements': 'f1130w',
      'program_id': '80600',
@@ -92,6 +125,7 @@ FILENAME_PARSER_TEST_DATA = [
 # Test stage 3 filename with target_id and epoch
 ('jw80600-o009_t001-epoch1_miri_f1130w_i2d.fits',
     {'ac_id': 'o009',
+     'filename_type': 'stage_3_target_id_epoch',
      'instrument': 'miri',
      'epoch': '1',
      'optical_elements': 'f1130w',
@@ -102,6 +136,7 @@ FILENAME_PARSER_TEST_DATA = [
 # Test stage 3 filename with source_id and epoch
 ('jw80600-o009_s00001-epoch1_miri_f1130w_i2d.fits',
     {'ac_id': 'o009',
+     'filename_type': 'stage_3_source_id_epoch',
      'instrument': 'miri',
      'epoch': '1',
      'optical_elements': 'f1130w',
@@ -112,6 +147,7 @@ FILENAME_PARSER_TEST_DATA = [
 # Test root stage 3 filename with target_id
 ('jw80600-o009_t001_miri_f1130w',
     {'ac_id': 'o009',
+     'filename_type': 'stage_3_target_id',
      'instrument': 'miri',
      'optical_elements': 'f1130w',
      'program_id': '80600',
@@ -120,6 +156,7 @@ FILENAME_PARSER_TEST_DATA = [
 # Test root stage 3 filename with source_id
 ('jw80600-o009_s00001_miri_f1130w',
     {'ac_id': 'o009',
+     'filename_type': 'stage_3_source_id',
      'instrument': 'miri',
      'optical_elements': 'f1130w',
      'program_id': '80600',
@@ -128,31 +165,77 @@ FILENAME_PARSER_TEST_DATA = [
 # Test full time series filename
 ('jw00733003001_02101_00002-seg001_nrs1_rate.fits',
     {'activity': '01',
-    'detector': 'nrs1',
-    'exposure_id': '00002',
-    'observation': '003',
-    'parallel_seq_id': '1',
-    'program_id': '00733',
-    'segment': '001',
-    'suffix': 'rate',
-    'visit': '001',
-    'visit_group': '02'}),
+     'detector': 'nrs1',
+     'exposure_id': '00002',
+     'filename_type': 'time_series',
+     'observation': '003',
+     'parallel_seq_id': '1',
+     'program_id': '00733',
+     'segment': '001',
+     'suffix': 'rate',
+     'visit': '001',
+     'visit_group': '02'}),
 
 # Test root time series filename
 ('jw00733003001_02101_00002-seg001_nrs1',
     {'activity': '01',
-    'detector': 'nrs1',
-    'exposure_id': '00002',
-    'observation': '003',
-    'parallel_seq_id': '1',
-    'program_id': '00733',
-    'segment': '001',
-    'visit': '001',
-    'visit_group': '02'})
+     'detector': 'nrs1',
+     'exposure_id': '00002',
+     'filename_type': 'time_series',
+     'observation': '003',
+     'parallel_seq_id': '1',
+     'program_id': '00733',
+     'segment': '001',
+     'visit': '001',
+     'visit_group': '02'}),
+
+# Test full guider ID filename
+('jw00729011001_gs-id_1_image_cal.fits',
+    {'date_time': None,
+     'filename_type': 'guider',
+     'guide_star_attempt_id': '1',
+     'guider_mode': 'id',
+     'observation': '011',
+     'program_id': '00729',
+     'suffix': 'image_cal',
+     'visit': '001'}),
+
+# Test root guider ID filename
+('jw00327001001_gs-id_2',
+    {'date_time': None,
+     'filename_type': 'guider',
+     'guide_star_attempt_id': '2',
+     'guider_mode': 'id',
+     'observation': '001',
+     'program_id': '00327',
+     'visit': '001'}),
+
+# Test full guider non-ID filename
+('jw86600048001_gs-fg_2016018175411_stream.fits',
+    {'date_time': '2016018175411',
+     'filename_type': 'guider',
+     'guide_star_attempt_id': None,
+     'guider_mode': 'fg',
+     'observation': '048',
+     'program_id': '86600',
+     'suffix': 'stream',
+     'visit': '001'}),
+
+# Test root guider non-ID filename
+('jw00729011001_gs-acq2_2019155024808',
+    {'date_time': '2019155024808',
+     'filename_type': 'guider',
+     'guide_star_attempt_id': None,
+     'guider_mode': 'acq2',
+     'observation': '011',
+     'program_id': '00729',
+     'visit': '001'})
+
 ]
 
 
-@pytest.mark.xfail(reason='User must manually supply config file.')
+@pytest.mark.xfail(raises=FileNotFoundError,
+                   reason='User must manually supply config file.')
 def test_get_config():
     """Assert that the ``get_config`` function successfully creates a
     dictionary.
@@ -177,7 +260,7 @@ def test_filename_parser(filename, solution):
     assert filename_parser(filename) == solution
 
 
-@pytest.mark.xfail(reason='Known non-compliant files in filesystem')
+@pytest.mark.xfail(raises=ValueError, reason='Known non-compliant files in filesystem')
 def test_filename_parser_whole_filesystem():
     """Test the filename_parser on all files currently in the filesystem.
     """
