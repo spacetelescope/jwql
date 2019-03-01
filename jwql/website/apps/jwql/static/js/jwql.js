@@ -278,7 +278,8 @@ function update_thumbnails_page(inst, proposal, base_url) {
         }});
 };
 
-/* Construct the URL corresponding to a specific GitHub release
+/**
+ * Construct the URL corresponding to a specific GitHub release
  * @param {String} version_string - The x.y.z version number
  */
 function version_url(version_string) {
