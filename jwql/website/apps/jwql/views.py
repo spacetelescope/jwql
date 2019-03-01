@@ -38,7 +38,7 @@ Dependencies
 import os
 
 from django.http import JsonResponse
-from django.shortcuts import render, render_to_response
+from django.shortcuts import render
 from django.template import RequestContext
 
 from .data_containers import get_acknowledgements, get_edb_components
