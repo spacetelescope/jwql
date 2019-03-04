@@ -170,15 +170,25 @@ def archive_thumbnails(request, user, inst, proposal):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    template = 'thumbnails.html'
-    context = {'inst': inst,
-               'prop': proposal,
-               'tools': MONITORS,
-               'user': user,
-               'base_url': get_base_url(),
-               'version': jwql.__version__}
+    if user['ezid']:
+        template = 'thumbnails.html'
+        context = {'inst': inst,
+                   'prop': proposal,
+                   'tools': MONITORS,
+                   'user': user,
+                   'base_url': get_base_url(),
+                   'version': jwql.__version__}
 
-    return render(request, template, context)
+        return render(request, template, context)
+
+    else:
+        template = 'not_authenticated.html'
+        context = {'inst': '',
+                   'tools': MONITORS,
+                   'user': user,
+                   'version': jwql.__version__}
+
+        return render(request, template, context)
 
 
 def archive_thumbnails_ajax(request, inst, proposal):
@@ -427,16 +437,26 @@ def view_image(request, user, inst, file_root, rewrite=False):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    template = 'view_image.html'
-    image_info = get_image_info(file_root, rewrite)
-    context = {'inst': inst,
-               'file_root': file_root,
-               'tools': MONITORS,
-               'user': user,
-               'jpg_files': image_info['all_jpegs'],
-               'fits_files': image_info['all_files'],
-               'suffixes': image_info['suffixes'],
-               'num_ints': image_info['num_ints'],
-               'version': jwql.__version__}
+    if user['ezid']:
+        template = 'view_image.html'
+        image_info = get_image_info(file_root, rewrite)
+        context = {'inst': inst,
+                   'file_root': file_root,
+                   'tools': MONITORS,
+                   'user': user,
+                   'jpg_files': image_info['all_jpegs'],
+                   'fits_files': image_info['all_files'],
+                   'suffixes': image_info['suffixes'],
+                   'num_ints': image_info['num_ints'],
+                   'version': jwql.__version__}
 
-    return render(request, template, context)
+        return render(request, template, context)
+
+    else:
+        template = 'not_authenticated.html'
+        context = {'inst': '',
+                   'tools': MONITORS,
+                   'user': user,
+                   'version': jwql.__version__}
+
+        return render(request, template, context)
