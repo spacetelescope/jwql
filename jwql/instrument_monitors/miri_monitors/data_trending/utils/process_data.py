@@ -224,9 +224,12 @@ def once_a_day_routine(mnemonic_data):
     del condition_1
 
     ##########################################################################
+    #under normal use following line should be added:
+    #cond.equal(m.mnemonic('IGDP_IT_MIR_SW_STATUS'), 'DETECTOR_READY'),      \
+    #SW was missing in the trainigs data so I could not use it for a condition.
     con_set_2 = [                                                           \
-    cond.greater(m.mnemonic('SE_ZIMIRFPEA'), 0.5),                           \
-    cond.equal(m.mnemonic('IGDP_IT_MIR_IC_STATUS'), 'DETECTOR_READY'),       \
+    cond.greater(m.mnemonic('SE_ZIMIRFPEA'), 0.5),                          \
+    cond.equal(m.mnemonic('IGDP_IT_MIR_IC_STATUS'), 'DETECTOR_READY'),      \
     cond.equal(m.mnemonic('IGDP_IT_MIR_LW_STATUS'), 'DETECTOR_READY')]
     #setup condition
     condition_2 = cond.condition(con_set_2)

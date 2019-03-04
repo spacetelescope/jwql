@@ -47,7 +47,7 @@ def power_ice(conn, start, end):
     p.grid.visible = True
     p.title.text = "POWER ICE"
     pf.add_basic_layout(p)
-    #pf.add_limit_box(p, 6, 8, alpha = 0.1, color = "green")
+    pf.add_limit_box(p, 6, 8, alpha = 0.1, color = "green")
 
 
     # add a line renderer with legend and line thickness
@@ -147,7 +147,7 @@ def power_fpea(conn, start, end):
     p.legend.click_policy = "hide"
 
     return p
-    
+
 def power_plots(conn, start, end):
 
 
