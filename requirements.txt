@@ -7,7 +7,7 @@ django==2.1.7
 ipython==7.3.0
 jinja2==2.10
 jwst==0.0.0
-matplotlib==3.0.2
+matplotlib==3.0.3
 numpy==1.16.1
 numpydoc==0.8.0
 pandas==0.24.1
