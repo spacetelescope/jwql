@@ -5,6 +5,121 @@
  * @author Matthew Bourque
  */
 
+ /**
+ * Change the filetype of the displayed image
+ * @param {String} type - The image type (e.g. "rate", "uncal", etc.)
+ * @param {String} file_root - The rootname of the file
+ * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
+ *                          values are the number of integrations for that suffix
+ * @param {String} inst - The instrument for the given file
+ */
+function change_filetype(type, file_root, num_ints, inst) {
+
+    // Change the radio button to check the right filetype
+    document.getElementById(type).checked = true;
+
+    // Clean the input parameters
+    var num_ints = num_ints.replace(/&#39;/g, '"');
+    var num_ints = num_ints.replace(/'/g, '"');
+    var num_ints = JSON.parse(num_ints);
+
+    // Propogate the text fields showing the filename and APT parameters
+    var fits_filename = file_root + '_' + type + '.fits'
+    document.getElementById("jpg_filename").innerHTML = file_root + '_' + type + '_integ0.jpg';
+    document.getElementById("fits_filename").innerHTML = fits_filename;
+    document.getElementById("proposal").innerHTML = file_root.slice(2,7);
+    document.getElementById("obs_id").innerHTML = file_root.slice(7,10);
+    document.getElementById("visit_id").innerHTML = file_root.slice(10,13);
+    document.getElementById("detector").innerHTML = file_root.split('_')[3];
+
+    // Show the appropriate image
+    var img = document.getElementById("image_viewer")
+    var jpg_filepath = '/static/preview_images/' + file_root.slice(0,7) + '/' + file_root + '_' + type + '_integ0.jpg';
+    img.src = jpg_filepath;
+    img.alt = jpg_filepath;
+
+    // Update the number of integrations
+    var int_counter = document.getElementById("int_count");
+    int_counter.innerHTML = 'Displaying integration 1/' + num_ints[type];
+
+    // Update the integration changing buttons
+    if (num_ints[type] > 1) {
+        document.getElementById("int_after").disabled = false;
+    } else {
+        document.getElementById("int_after").disabled = true;
+    }
+
+    // Update the image download and header links
+    document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename;
+    document.getElementById("download_jpg").href = jpg_filepath;
+    document.getElementById("view_header").href = '/' + inst + '/' + fits_filename + '/hdr/';
+
+    // Disable the "left" button, since this will be showing integ0
+    document.getElementById("int_before").disabled = true;
+
+};
+
+ /**
+ * Change the integration number of the displayed image
+ * @param {String} direction - The direction to switch to, either "left" (decrease) or "right" (increase).
+ * @param {String} file_root - The rootname of the file
+ * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
+ *                          values are the number of integrations for that suffix
+ */
+function change_int(direction, file_root, num_ints) {
+
+    // Figure out the current image and integration
+    var suffix = document.getElementById("jpg_filename").innerHTML.split('_');
+    var integration = Number(suffix[suffix.length - 1][5]);
+    var suffix = suffix[suffix.length - 2];
+    var program = file_root.slice(0,7);
+
+    var num_ints = num_ints.replace(/'/g, '"');
+    var num_ints = JSON.parse(num_ints)[suffix];
+
+
+    if ((integration == num_ints - 1 && direction == 'right')||
+        (integration == 0 && direction == 'left')) {
+        return;
+    } else if (direction == 'right') {
+        // Update integration number
+        var new_integration = integration + 1
+
+        // Don't let them go further if they're at the last integration
+        if (new_integration == num_ints - 1) {
+            document.getElementById("int_after").disabled = true;
+        }
+        document.getElementById("int_before").disabled = false;
+    } else if (direction == 'left') {
+        // Update integration number
+        var new_integration = integration - 1
+
+        // Don't let them go further if they're at the first integration
+        if (new_integration == 0) {
+            document.getElementById("int_before").disabled = true;
+        }
+        document.getElementById("int_after").disabled = false;
+    }
+
+    // Update the JPG filename
+    var jpg_filename = file_root + '_' + suffix + '_integ' + new_integration + '.jpg'
+    var jpg_filepath = '/static/preview_images/' + program + '/' + jpg_filename
+    document.getElementById("jpg_filename").innerHTML = jpg_filename;
+
+    // Show the appropriate image
+    var img = document.getElementById("image_viewer")
+    img.src = jpg_filepath;
+    img.alt = jpg_filepath;
+
+    // Update the number of integrations
+    var int_counter = document.getElementById("int_count");
+    var int_display = new_integration + 1;
+    int_counter.innerHTML = 'Displaying integration ' + int_display + '/' + num_ints;
+
+    // Update the jpg download link
+    document.getElementById("download_jpg").href = jpg_filepath;
+};
+
 /**
  * Determine what filetype to use for a thumbnail
  * @param {String} thumbnail_dir - The path to the thumbnail directory
