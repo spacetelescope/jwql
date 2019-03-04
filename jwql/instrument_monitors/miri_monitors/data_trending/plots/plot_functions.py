@@ -51,7 +51,7 @@ def pol_regression(x, y, rank):
     y_poly = f(x)
     return y_poly
 
-def add_hover_tool(p,rend):
+def add_hover_tool(p, rend):
     ''' Append hover tool to plot
     parameters
     ----------
@@ -70,11 +70,11 @@ def add_hover_tool(p,rend):
         ('mean', '@average'),
         ('deviation', '@deviation'),
 
-    ], renderers=rend)
+    ], renderers = rend)
     #append hover tool
     p.tools.append(hover_tool)
 
-def add_limit_box(p, lower, upper, alpha=0.1, color="green"):
+def add_limit_box(p, lower, upper, alpha = 0.1, color="green"):
     ''' Adds box to plot
     Parameters
     ----------
@@ -89,7 +89,7 @@ def add_limit_box(p, lower, upper, alpha=0.1, color="green"):
     color : str
         filling color
     '''
-    box = BoxAnnotation(bottom=lower, top=upper, fill_alpha=alpha, fill_color=color)
+    box = BoxAnnotation(bottom = lower, top = upper, fill_alpha = alpha, fill_color = color)
     p.add_layout(box)
 
 def add_to_plot(p, legend, mnemonic, start, end, conn, y_axis= "default", color="red", err='n'):
@@ -128,25 +128,26 @@ def add_to_plot(p, legend, mnemonic, start, end, conn, y_axis= "default", color=
 
     #put data into Dataframe and define ColumnDataSource for each plot
     reg = pd.DataFrame({'reg' : pol_regression(temp['start_time'], temp['average'],3)})
-    temp = pd.concat([temp, reg], axis=1)
+    temp = pd.concat([temp, reg], axis = 1)
     temp['start_time'] = pd.to_datetime( Time(temp['start_time'], format = "mjd").datetime )
     plot_data = ColumnDataSource(temp)
 
     #plot data
-    p.line(x = "start_time", y = "reg", color = color, y_range_name=y_axis, legend = legend, source = plot_data)
+    p.line(x = "start_time", y = "average", color = color, y_range_name=y_axis, legend = legend, source = plot_data)
     scat = p.scatter(x = "start_time", y = "average", color = color, y_range_name=y_axis, legend = legend, source = plot_data)
 
-    if err!='n':
+    #generate error lines if wished
+    if err != 'n':
         #generate error bars
         err_xs = []
         err_ys = []
 
         for index, item in temp.iterrows():
-            err_xs.append((item['start_time'],item['start_time']))
+            err_xs.append((item['start_time'], item['start_time']))
             err_ys.append((item['average'] - item['deviation'], item['average'] + item['deviation']))
 
         # plot them
-        p.multi_line(err_xs, err_ys, color=color, legend=legend)
+        p.multi_line(err_xs, err_ys, color = color, legend = legend)
 
     return scat
 
@@ -184,6 +185,7 @@ def add_to_wplot(p, legend, mnemonic, start, end, conn, nominal, color = "red"):
     plot_data = ColumnDataSource(temp)
 
     p.line(x = "timestamp", y = "value", color = color, legend = legend, source = plot_data)
+    p.scatter(x = "timestamp", y = "value", color = color, legend = legend, source = plot_data)
 
 def add_basic_layout(p):
     '''Add basic layout to certain plot
@@ -198,41 +200,10 @@ def add_basic_layout(p):
     p.background_fill_color = "#efefef"
 
     p.xaxis.axis_label_text_font_size = "14pt"
-    p.xaxis.axis_label_text_color='#2D353C'
+    p.xaxis.axis_label_text_color ='#2D353C'
     p.yaxis.axis_label_text_font_size = "14pt"
-    p.yaxis.axis_label_text_color='#2D353C'
+    p.yaxis.axis_label_text_color = '#2D353C'
 
     p.xaxis.major_tick_line_color = "firebrick"
     p.xaxis.major_tick_line_width = 2
     p.xaxis.minor_tick_line_color = "#c85108"
-
-    #obsolete code
-    '''
-    p.xaxis[0].formatter = DatetimeTickFormatter(days=['%m/%d' , '%a%d'], months=['%m/%Y' , '%b %Y'])
-    p.axis.major_tick_out = 10
-    p.axis.minor_tick_in = -3
-    p.axis.minor_tick_out = 8
-
-    p.xaxis = DatetimeAxis(
-    formatter=DatetimeTickFormatter( "months= ["%B %Y"], "days": ["%B %Y"]}),**AXIS_FORMATS)
-
-    months=['%m/%Y' , '%b %Y']
-    '''
-
-    #obsolete code
-    '''
-    p.xaxis[0].formatter = DatetimeTickFormatter(
-        hours=["%Y-%m-%d"],
-        days=["%Y-%m-%d"],
-        months=["%Y-%m-%d"],
-        years=["%Y-%m-%d"],
-    )
-    p.xaxis[0].ticker = DatetimeTicker()
-    p.xgrid[0].ticker = DatetimeTicker()
-
-
-    ticker = SingleIntervalTicker(interval=5, num_minor_ticks=10)
-
-    xaxis = LinearAxis(ticker=ticker)
-    p.add_layout(xaxis, 'below')
-    '''

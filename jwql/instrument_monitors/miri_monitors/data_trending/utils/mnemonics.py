@@ -27,6 +27,7 @@ Notes
 #"SE_ZBUSVLT",
 mnemonic_cond_1 = [
 "SE_ZIMIRICEA",
+"SE_ZIMIRICEB",
 
 "IMIR_HK_ICE_SEC_VOLT4",
 "IGDP_MIR_ICE_INTER_TEMP",
@@ -53,6 +54,7 @@ mnemonic_cond_1 = [
 #all mnemonics used for condition 2 (see: draft)
 mnemonic_cond_2=[
 "SE_ZIMIRFPEA",
+"SE_ZIMIRFPEB",
 
 "IMIR_PDU_V_DIG_5V",
 "IMIR_PDU_I_DIG_5V",
@@ -117,8 +119,8 @@ mnemonic_cond_3 = [
 "IMIR_HK_ICE_SEC_VOLT2",
 "IMIR_HK_ICE_SEC_VOLT3",
 "IMIR_HK_ICE_SEC_VOLT4",
-
-"SE_ZIMIRICEA"]
+"SE_ZIMIRICEA",
+"SE_ZIMIRICEB" ]
 
 #filter weel positions
 fw_positions = [
@@ -189,27 +191,10 @@ ccc_nominals = {
 "CLOSED" : 399.90}
 
 
-#mnemonic set whole day routine
-mnemonic_set_day = mnemonic_cond_3.append(
-["IMIR_HK_FW_POS_VOLT",
-"IMIR_HK_FW_POS_RATIO",
-"IMIR_HK_FW_CUR_POS",
-
-"IMIR_HK_GW14_POS_VOLT",
-"IMIR_HK_GW14_POS_RATIO",
-"IMIR_HK_GW14_CUR_POS",
-
-"IMIR_HK_GW23_POS_VOLT",
-"IMIR_HK_GW23_POS_RATIO",
-"IMIR_HK_GW23_CUR_POS",
-
-"IMIR_HK_CCC_POS_RATIO",
-"IMIR_HK_CCC_CUR_POS",
-"IMIR_HK_CCC_POS_VOLT" ])
-
 #comprises all mnemonics used throughout he programm
 mnemonic_set_base = [
 "SE_ZIMIRICEA",
+"SE_ZIMIRICEB",
 "SE_ZBUSVLT",
 
 "IMIR_HK_ICE_SEC_VOLT1",
@@ -241,6 +226,7 @@ mnemonic_set_base = [
 "IGDP_MIR_ICE_IMG_CRYO",
 
 "SE_ZIMIRFPEA",
+"SE_ZIMIRFPEB",
 
 "IMIR_PDU_V_DIG_5V",
 "IMIR_PDU_I_DIG_5V",
@@ -320,6 +306,17 @@ mnemonic_set_base = [
 mnemonic_set_database = [
 "SE_ZIMIRICEA_IDLE",
 "SE_ZIMIRICEA_HV_ON",
+"SE_ZIMIRICEB_IDLE",
+"SE_ZIMIRICEB_HV_ON",
+
+"ICE_POWER_IDLE_A",
+"ICE_POWER_HV_ON_A",
+
+"ICE_POWER_IDLE_B",
+"ICE_POWER_HV_ON_B",
+
+"FPE_POWER_A",
+"FPE_POWER_B",
 
 "SE_ZBUSVLT",
 

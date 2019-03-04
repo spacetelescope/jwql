@@ -27,12 +27,6 @@ def power_ice(conn, start, end):
     _idle['average'] *= voltage
     _hv['average'] *= voltage
 
-    idle_reg = pd.DataFrame({'reg' : pf.pol_regression(_idle['start_time'],_idle['average'],3)})
-    hv_reg = pd.DataFrame({'reg' : pf.pol_regression(_hv['start_time'],_hv['average'],3)})
-
-    _idle = pd.concat([_idle, idle_reg], axis=1)
-    _hv = pd.concat([_hv, hv_reg], axis=1)
-
     _idle['start_time'] = pd.to_datetime( Time(_idle['start_time'], format = "mjd").datetime )
     _hv['start_time'] = pd.to_datetime( Time(_hv['start_time'], format = "mjd").datetime )
 
@@ -43,23 +37,24 @@ def power_ice(conn, start, end):
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
                 toolbar_location = "above",                         \
-                plot_width = 1120,                                   \
+                plot_width = 1120,                                  \
                 plot_height = 500,                                  \
-                y_range=[5,14],                                     \
+                y_range = [5,14],                                   \
                 x_axis_type = 'datetime',                           \
-                output_backend="webgl",                             \
+                output_backend = "webgl",                           \
                 x_axis_label = 'Date', y_axis_label='Power (W)')
 
     p.grid.visible = True
     p.title.text = "POWER ICE"
     pf.add_basic_layout(p)
+    #pf.add_limit_box(p, 6, 8, alpha = 0.1, color = "green")
 
 
     # add a line renderer with legend and line thickness
     scat1=p.scatter(x = "start_time", y = "average", color = 'orange', legend = "Power idle", source = idle)
     scat2=p.scatter(x = "start_time", y = "average", color = 'red', legend = "Power hv on", source = hv)
-    p.line(x = "start_time", y = "reg", color = 'orange', legend = "Power idle", source = idle)
-    p.line(x = "start_time", y = "reg", color = 'red', legend = "Power hv on", source = hv)
+    p.line(x = "start_time", y = "average", color = 'orange', legend = "Power idle", source = idle)
+    p.line(x = "start_time", y = "average", color = 'red', legend = "Power hv on", source = hv)
 
     #generate error bars
     err_xs_hv = []
@@ -105,9 +100,6 @@ def power_fpea(conn, start, end):
     voltage = 30
     _fpea['average'] *= voltage
 
-    fpea_reg = pd.DataFrame({'reg' : pf.pol_regression(_fpea['start_time'],_fpea['average'],3)})
-    _fpea = pd.concat([_fpea, fpea_reg], axis=1)
-
     _fpea['start_time'] = pd.to_datetime( Time(_fpea['start_time'], format = "mjd").datetime )
 
     #set column data source
@@ -118,9 +110,9 @@ def power_fpea(conn, start, end):
                 toolbar_location = "above",                         \
                 plot_width = 1120,                                   \
                 plot_height = 500,                                  \
-                y_range=[28.0, 28.5],                               \
+                y_range = [28.0, 28.5],                               \
                 x_axis_type = 'datetime',                           \
-                output_backend="webgl",                             \
+                output_backend = "webgl",                             \
                 x_axis_label = 'Date', y_axis_label='Power (W)')
 
     p.grid.visible = True
@@ -128,14 +120,14 @@ def power_fpea(conn, start, end):
     pf.add_basic_layout(p)
 
     # add a line renderer with legend and line thickness
-    scat1=p.scatter(x = "start_time", y = "average", color = 'orange', legend = "Power FPEA", source = fpea)
-    p.line(x = "start_time", y = "reg", color = 'orange', legend = "Power FPEA", source = fpea)
+    scat1 = p.scatter(x = "start_time", y = "average", color = 'orange', legend = "Power FPEA", source = fpea)
+    p.line(x = "start_time", y = "average", color = 'orange', legend = "Power FPEA", source = fpea)
 
     err_xs = []
     err_ys = []
 
     for index, item in _fpea.iterrows():
-        err_xs.append((item['start_time'],item['start_time']))
+        err_xs.append((item['start_time'], item['start_time']))
         err_ys.append((item['average'] - item['deviation'], item['average'] + item['deviation']))
 
     # plot them
@@ -148,14 +140,14 @@ def power_fpea(conn, start, end):
         ('mean', '@average'),
         ('deviation', '@deviation'),
 
-    ], renderers=[scat1])
+    ], renderers = [scat1])
     p.tools.append(hover_tool)
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
 
     return p
-
+    
 def power_plots(conn, start, end):
 
 
@@ -197,7 +189,7 @@ def power_plots(conn, start, end):
     plot1 = power_ice(conn, start, end)
     plot2 = power_fpea(conn, start, end)
 
-    layout = column(descr, plot1, plot2)
+    layout = column(descr, plot1, plot2 )
 
     #layout_volt = row(volt4, volt1_3)
     tab = Panel(child = layout, title = "POWER")

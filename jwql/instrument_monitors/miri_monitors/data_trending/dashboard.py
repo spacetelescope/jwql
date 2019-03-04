@@ -72,6 +72,9 @@ def data_trending_dashboard(start = default_start, end = now):
     #some variables can be passed to the template via following
     variables = dict(init = 1)
 
+    #some variables can be passed to the template via following
+    variables = dict(init = 1)
+
     #add tabs to dashboard
     tab0 = overview_settings(conn)
     tab1 = power_plots(conn, start, end)
@@ -81,19 +84,8 @@ def data_trending_dashboard(start = default_start, end = now):
     tab5 = bias_plots(conn, start, end)
     tab6 = wheel_ratios(conn, start, end)
 
-    class MyResources(Resources):
-        @property
-        def css_raw(self):
-            return super().css_raw + [
-                """.bk-bs-nav {
-                    background-color: red;
-                }"""
-            ]
-
-    #curstate().file['resources'] = MyResources(mode='cdn')
-
     #build dashboard
-    tabs = Tabs( tabs=[ tab1, tab2, tab3, tab5, tab4, tab6 ] )
+    tabs = Tabs( tabs=[ tab1, tab2, tab3, tab5, tab4, tab6, tab0 ] )
 
     #return dasboard to webapp
     script, div = components(tabs)

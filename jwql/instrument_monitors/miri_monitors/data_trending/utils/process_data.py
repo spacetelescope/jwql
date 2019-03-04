@@ -57,7 +57,7 @@ def extract_data(condition, mnemonic):
     else:
         return None
 
-def extract_filterpos(condition, nominals, ratio_mnem, pos_mnem):
+def extract_filterpos1(condition, nominals, ratio_mnem, pos_mnem):
     '''Extracts ratio values which correspond to given position values and their
        proposed nominals
     Parameters
@@ -85,8 +85,12 @@ def extract_filterpos(condition, nominals, ratio_mnem, pos_mnem):
         #raise warning if position is UNKNOWN
         if pos['value'] != "UNKNOWN":
 
-            #request time interval that applies to the current positon
+            #request time interval where the current positon is in between
             interval = condition.get_interval(pos['time'])
+
+            #get all ratio values in the interval
+
+
 
             #check if condition attribute for current positon is true
             if interval is not None:
@@ -96,17 +100,86 @@ def extract_filterpos(condition, nominals, ratio_mnem, pos_mnem):
                 for ratio in ratio_mnem:
 
                     #look for ratio values which are in the same time interval
-                    #and differ a certain value (here 10mV) from the nominal
+                    #and differ a certain value (here 5mV) from the nominal
                     if (ratio['time'] >= cur_pos_time) and \
-                        (abs(float(ratio['value']) - nominals.get(pos['value'])) < 10):
+                        (abs(float(ratio['value']) - nominals.get(pos['value'])) < 5):
 
                         if (ratio['time'] > interval[0]) and (ratio['time'] < interval[1]):
                             pos_values[pos['value']].append(( ratio['time'], ratio['value']))
-                        break
+
+
+
         else:
             warnings.warn("UNKNOWN Position")
     return pos_values
 
+def extract_filterpos(condition, nominals, ratio_mnem, pos_mnem):
+    '''Extracts ratio values which correspond to given position values and their
+       proposed nominals
+    Parameters
+    ----------
+    condition : object
+        conditon object that holds one or more subconditions
+    nominals : dict
+        holds nominal values for all wheel positions
+    ratio_mem : AstropyTable
+        holds ratio values of one specific mnemonic
+    pos_mem : AstropyTable
+        holds pos values of one specific mnemonic
+    Return
+    ------
+    pos_values : dict
+        holds ratio values and times with corresponding positionlabel as key
+    '''
+
+    #initilize empty dict for assigned ratio values
+    pos_values = defaultdict(list)
+
+    for index, pos in enumerate(pos_mnem):
+
+        #raise warning if position is UNKNOWN
+        if pos['value'] != "UNKNOWN":
+
+            #set up interval beween where the pos value was timed and the supply
+            interval = condition.get_interval(pos['time'])
+
+            if interval is None:
+                continue
+            else:
+                interval[0] = pos['time']
+                if pos_mnem[index+1]['time'] < interval[1]:
+                    interval[1] = pos_mnem[index+1]['time']
+
+            #empty list for pos values
+            interval_ratios = []
+
+            #get all ratio values in the interval
+            for ratio in ratio_mnem:
+                if (ratio['time'] >= interval[0]) and (ratio['time'] < interval[1]):
+                    interval_ratios.append(ratio)
+                elif ratio['time']>= interval[1]:
+                        break
+
+            #check wheather pos values are in range of these checkvals
+            window = 1
+            found_value = False
+
+            while found_value == False:
+                for ratio in interval_ratios:
+                    if (abs(float(ratio['value']) - nominals.get(pos['value'])) < window):
+                        found_value = True
+                        pos_values[pos['value']].append(( ratio['time'], ratio['value']))
+                        break
+
+                window +=2
+
+                if window > 10:
+                    print('ratio error')
+                    break
+
+        else:
+            warnings.warn("UNKNOWN Position")
+    return pos_values
 
 def once_a_day_routine(mnemonic_data):
     '''Proposed routine for processing a 15min data file once a day
@@ -132,6 +205,7 @@ def once_a_day_routine(mnemonic_data):
     cond.equal(m.mnemonic('IMIR_HK_POM_LOOP'),'OFF'),           \
     cond.smaller(m.mnemonic('IMIR_HK_ICE_SEC_VOLT1'),1.0),      \
     cond.greater(m.mnemonic('SE_ZIMIRICEA'),0.2)]
+
     #setup condition
     condition_1 = cond.condition(con_set_1)
 
@@ -297,7 +371,7 @@ def wheelpos_routine(mnemonic_data):
     del condition_GW14
 
     con_set_GW23 = [                                               \
-    cond.greater(m.mnemonic('IMIR_HK_FW_POS_VOLT'),250.0)]
+    cond.greater(m.mnemonic('IMIR_HK_GW23_POS_VOLT'),250.0)]
     #setup condition
     condition_GW23 = cond.condition(con_set_GW23)
     GW23 = extract_filterpos(condition_GW23, mn.gw23_nominals, \

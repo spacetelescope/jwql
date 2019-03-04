@@ -349,7 +349,7 @@ def bias_plots(conn, start, end):
     plot4 = vp(conn, start, end)
     plot5 = vdduc(conn, start, end)
 
-    l = gridplot([ [plot2, plot1],         \
+    l = gridplot([ [plot2, plot1],              \
                         [plot3, plot4],         \
                         [plot5, None]], merge_tools=False)
 
