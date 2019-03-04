@@ -272,6 +272,41 @@ function update_sort_options(data) {
 };
 
 /**
+ * Updates the thumbnail-array div with interactive images of thumbnails
+ * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ */
+function update_thumbnail_array(data) {
+
+      // Add content to the thumbail array div
+    for (var i = 0; i < Object.keys(data.file_data).length; i++) {
+
+        // Parse out useful variables
+        rootname = Object.keys(data.file_data)[i];
+        file = data.file_data[rootname];
+        filename_dict = file.filename_dict;
+
+        // Build div content
+        content = '<div class="thumbnail" detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
+        content += '<a href="/' + data.inst + '/' + rootname + '/">';
+        content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="this.src=/static/img/imagenotfound.png">';
+        content += '<div class="thumbnail-color-fill" ></div>';
+        content += '<div class="thumbnail-info">';
+        content += 'Proposal: ' + filename_dict.program_id + '<br>';
+        content += 'Observation: ' + filename_dict.observation + '<br>';
+        content += 'Visit: ' + filename_dict.visit + '<br>';
+        content += 'Detector: ' + filename_dict.detector + '<br>';
+        content += 'Exp_Start: ' + file.expstart.toFixed(2) + '<br>';
+        content += '</div></a></div>';
+
+        // Add the content to the div
+        $("#thumbnail-array")[0].innerHTML += content;
+
+        // Add the appropriate image to the thumbnail
+        determine_filetype_for_thumbnail('/static/thumbnails/' , file.suffixes, i, rootname);
+    };
+};
+
+/**
  * Updates various compnents on the thumbnails page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} proposal - The proposal number of interest (e.g. "88660")
