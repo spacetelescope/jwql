@@ -1,18 +1,18 @@
-
+import os
 import statistics
 import sqlite3
+
+from jwql.utils.utils import get_config, filename_parser
 
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.csv_to_AstropyTable as apt
-
 from jwql.instrument_monitors.miri_monitors.data_trending.utils.process_data import whole_day_routine, wheelpos_routine
 
 
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-#create filename string
-directory='/home/daniel/STScI/trainigData/set_1_day/'
-
+#files with data to initially fill the database
 filenames = [
 'imir_190204_DoY2292017FOFTLM2019035182609402.CSV',
 'imir_190204_DoY2402017FOFTLM2019035180907145.CSV',
@@ -38,8 +38,16 @@ filenames = [
 
 
 def process_file(conn, path):
-    m_raw_data = apt.mnemonics(path)
+    '''Parse CSV file, process data within and put to DB
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object to temporary database
+    path : str
+        defines path to the files
+    '''
 
+    m_raw_data = apt.mnemonics(path)
 
     cond3, FW_volt, GW14_volt, GW23_volt, CCC_volt = whole_day_routine(m_raw_data)
     FW, GW14, GW23, CCC= wheelpos_routine(m_raw_data)
@@ -139,11 +147,15 @@ def process_file(conn, path):
             pass
 
 
-
 def main():
-    db_file = "/home/daniel/STScI/jwql/jwql/database/miri_database_new.db"
-    conn = sql.create_connection(db_file)
+    #point to database
+    DATABASE_LOCATION = os.path.join(get_config()['jwql_dir'], 'database')
+    DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'miri_database.db')
 
+    #connect to temporary database
+    conn = sql.create_connection(DATABASE_FILE)
+
+    #process all files in filenames
     for name in filenames:
         path = directory + name
         process_file(conn, path)

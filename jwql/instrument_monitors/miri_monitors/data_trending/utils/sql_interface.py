@@ -22,10 +22,12 @@ Notes
 -----
 
 """
-
+import os
 import sqlite3
 from sqlite3 import Error
+
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as m
+from jwql.utils.utils import get_config, filename_parser
 
 def create_connection(db_file):
     '''Sets up a connection or builds database
@@ -113,11 +115,13 @@ def add_wheel_data(conn, mnemonic, data):
 def main():
     ''' Creates SQLite database with tables proposed in mnemonics.py'''
 
+    __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-    path = '/home/daniel/STScI/jwql/jwql/database/miri_database_new.db'
-    conn = create_connection(path)
+    #generate paths
+    DATABASE_LOCATION = os.path.join(get_config()['jwql_dir'], 'database')
+    DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'miri_database.db')
 
-
+    conn = create_connection(DATABASE_FILE)
 
     c=conn.cursor()
 
