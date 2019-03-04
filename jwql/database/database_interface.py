@@ -208,7 +208,7 @@ class Monitor(base):
     monitor_name = Column(String(), nullable=False)
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=True)
-    status = Column(Enum('SUCESS', 'FAILURE'), nullable=True)
+    status = Column(Enum('SUCESS', 'FAILURE', name='monitor_status'), nullable=True)
     affected_tables = Column(postgresql.ARRAY(String, dimensions=1), nullable=True)
     log_file = Column(String(), nullable=False)
 
