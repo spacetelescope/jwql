@@ -69,13 +69,13 @@ def volt4(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
-                toolbar_location = "above",                         \
-                plot_width = 560,                                   \
-                plot_height = 500,                                  \
-                y_range = [4.2,5],                                  \
-                x_axis_type = 'datetime',                           \
-                output_backend="webgl",                             \
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 560,
+                plot_height = 500,
+                y_range = [4.2,5],
+                x_axis_type = 'datetime',
+                output_backend="webgl",
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
@@ -85,9 +85,9 @@ def volt4(conn, start, end):
     # add a line renderer with legend and line thickness
 
     a = pf.add_to_plot(p, "Volt4 Idle", "IMIR_HK_ICE_SEC_VOLT4_IDLE", start, end, conn, color = "orange")
-    b = pf.add_to_plot(p, "Volt4 Hv on", "IMIR_HK_ICE_SEC_VOLT4_HV_ON" ,start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "Volt4 Hv on", "IMIR_HK_ICE_SEC_VOLT4_HV_ON", start, end, conn, color = "red")
 
-    pf.add_hover_tool(p,[a,b])
+    pf.add_hover_tool(p, [a,b])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -111,13 +111,13 @@ def volt1_3(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
-                toolbar_location = "above",                         \
-                plot_width = 560,                                   \
-                plot_height = 500,                                  \
-                y_range = [30,50],                                  \
-                x_axis_type = 'datetime',                           \
-                output_backend="webgl",                             \
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 560,
+                plot_height = 500,
+                y_range = [30,50],
+                x_axis_type = 'datetime',
+                output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
@@ -125,10 +125,10 @@ def volt1_3(conn, start, end):
     pf.add_basic_layout(p)
 
     # add a line renderer with legend and line thickness
-    a = pf.add_to_plot(p, "Volt1", "IMIR_HK_ICE_SEC_VOLT1" ,start, end, conn, color = "red")
-    b = pf.add_to_plot(p, "Volt3", "IMIR_HK_ICE_SEC_VOLT3" ,start, end, conn, color = "purple")
+    a = pf.add_to_plot(p, "Volt1", "IMIR_HK_ICE_SEC_VOLT1", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "Volt3", "IMIR_HK_ICE_SEC_VOLT3", start, end, conn, color = "purple")
 
-    pf.add_hover_tool(p,[a,b])
+    pf.add_hover_tool(p, [a,b])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -152,12 +152,12 @@ def volt2(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
-                toolbar_location = "above",                         \
-                plot_width = 560,                                   \
-                plot_height = 500,                                  \
-                x_axis_type = 'datetime',                           \
-                output_backend="webgl",                             \
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 560,
+                plot_height = 500,
+                x_axis_type = 'datetime',
+                output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
@@ -191,25 +191,25 @@ def pos_volt(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
-                toolbar_location = "above",                         \
-                plot_width = 560,                                   \
-                plot_height = 500,                                  \
-                y_range = [280,300],                                \
-                x_axis_type = 'datetime',                           \
-                output_backend="webgl",                             \
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 560,
+                plot_height = 500,
+                y_range = [280,300],
+                x_axis_type = 'datetime',
+                output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Voltage (mV)')
 
     p.grid.visible = True
     p.title.text = "Wheel Sensor Supply"
     pf.add_basic_layout(p)
 
-    a = pf.add_to_plot(p, "FW", "IMIR_HK_FW_POS_VOLT" ,start, end, conn, color = "red")
-    b = pf.add_to_plot(p, "GW14", "IMIR_HK_GW14_POS_VOLT" ,start, end, conn, color = "purple")
-    c = pf.add_to_plot(p, "GW23", "IMIR_HK_GW23_POS_VOLT" ,start, end, conn, color = "orange")
-    d = pf.add_to_plot(p, "CCC", "IMIR_HK_CCC_POS_VOLT" ,start, end, conn, color = "firebrick")
+    a = pf.add_to_plot(p, "FW", "IMIR_HK_FW_POS_VOLT", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "GW14", "IMIR_HK_GW14_POS_VOLT", start, end, conn, color = "purple")
+    c = pf.add_to_plot(p, "GW23", "IMIR_HK_GW23_POS_VOLT", start, end, conn, color = "orange")
+    d = pf.add_to_plot(p, "CCC", "IMIR_HK_CCC_POS_VOLT", start, end, conn, color = "firebrick")
 
-    pf.add_hover_tool(p,[a,b,c,d])
+    pf.add_hover_tool(p, [a,b,c,d])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -256,7 +256,7 @@ def volt_plots(conn, start, end):
       <tr>
         <td>ICE_SEC_VOLT1/3</td>
         <td>IMIR_HK_ICE_SEC_VOLT1 <br>
-            IMIT_HK_SEC_VOLT3 <br> </td>
+            IMIR_HK_ICE_SEC_VOLT3 <br> </td>
         <td>ICE Secondary Voltage (HV) V1 and V3</td>
       </tr>
       <tr>
@@ -279,7 +279,7 @@ def volt_plots(conn, start, end):
       </tr>
     </table>
     </body>
-    """, width=1100)
+    """, width = 1100)
 
     plot1 = volt1_3(conn, start, end)
     plot2 = volt2(conn, start, end)

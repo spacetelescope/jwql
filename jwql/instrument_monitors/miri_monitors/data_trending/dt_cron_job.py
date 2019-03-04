@@ -217,7 +217,7 @@ def main():
 
 
     for mnemonic in mn.mnemonic_set_15min:
-        whole_day.update(mnemonic=query_single_mnemonic(mnemonic, start, end))
+        whole_day.update(mnemonic = query_single_mnemonic(mnemonic, start, end))
 
 
     #configure start and end time for query

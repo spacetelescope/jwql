@@ -164,23 +164,25 @@ def temp(conn, start, end):
                 x_axis_label = 'Date', y_axis_label = 'Temperature (K)')
 
     p.grid.visible = True
-    p.title.text = "Board Temperatures"
+    p.title.text = "IEC Temperatures"
     pf.add_basic_layout(p)
 
-    p.line(x = "start_time", y = "reg", color = "brown", legend = "Internal Temp.", source = plot_data)
+    p.line(x = "start_time", y = "average", color = "brown", legend = "Internal Temp.", source = plot_data)
     p.scatter(x = "start_time", y = "average", color = "brown", legend = "Internal Temp.", source = plot_data)
 
-    a = pf.add_to_plot(p, "ICE IEC", "ST_ZTC1MIRIA", start, end, conn, color = "burlywood")
-    b = pf.add_to_plot(p, "FPE IEC", "ST_ZTC2MIRIA", start, end, conn, color = "cadetblue")
+    a = pf.add_to_plot(p, "ICE IEC A", "ST_ZTC1MIRIA", start, end, conn, color = "burlywood")
+    b = pf.add_to_plot(p, "FPE IEC A", "ST_ZTC2MIRIA", start, end, conn, color = "cadetblue")
+    j = pf.add_to_plot(p, "ICE IEC B", "ST_ZTC1MIRIB", start, end, conn, color = "blue")
+    k = pf.add_to_plot(p, "FPE IEC B.", "ST_ZTC2MIRIB", start, end, conn, color = "brown")
     c = pf.add_to_plot(p, "FPE PDU", "IMIR_PDU_TEMP", start, end, conn, color = "chartreuse")
-    d = pf.add_to_plot(p, "Analog IC", "IMIR_IC_SCE_ANA_TEMP1", start, end, conn, color = "chocolate")
-    e = pf.add_to_plot(p, "Analog SW", "IMIR_SW_SCE_ANA_TEMP1", start, end, conn, color = "coral")
-    f = pf.add_to_plot(p, "Analog LW", "IMIR_LW_SCE_ANA_TEMP1", start, end, conn, color = "darkorange")
-    g = pf.add_to_plot(p, "Digital IC", "IMIR_IC_SCE_DIG_TEMP", start, end, conn, color = "crimson")
-    h = pf.add_to_plot(p, "Digital SW", "IMIR_SW_SCE_DIG_TEMP", start, end, conn, color = "cyan")
-    i = pf.add_to_plot(p, "Digital LW", "IMIR_LW_SCE_DIG_TEMP", start, end, conn, color = "darkblue")
+    d = pf.add_to_plot(p, "ANA IC", "IMIR_IC_SCE_ANA_TEMP1", start, end, conn, color = "chocolate")
+    e = pf.add_to_plot(p, "ANA SW", "IMIR_SW_SCE_ANA_TEMP1", start, end, conn, color = "coral")
+    f = pf.add_to_plot(p, "ANA LW", "IMIR_LW_SCE_ANA_TEMP1", start, end, conn, color = "darkorange")
+    g = pf.add_to_plot(p, "DIG IC", "IMIR_IC_SCE_DIG_TEMP", start, end, conn, color = "crimson")
+    h = pf.add_to_plot(p, "DIG SW", "IMIR_SW_SCE_DIG_TEMP", start, end, conn, color = "cyan")
+    i = pf.add_to_plot(p, "DIG LW", "IMIR_LW_SCE_DIG_TEMP", start, end, conn, color = "darkblue")
 
-    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i])
+    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j,k])
 
     p.legend.location = "bottom_right"
     p.legend.orientation = "horizontal"
@@ -256,7 +258,7 @@ def temperature_plots(conn, start, end):
       padding: 5px
     }
     </style>
-    
+
     <body>
     <table style="width:100%">
       <tr>
@@ -298,9 +300,11 @@ def temperature_plots(conn, start, end):
             Imager (CI) Cal. Source Temperature<br></td>
       </tr>
       <tr>
-        <td>Board Temperatures</td>
+        <td>IEC Temperatures</td>
         <td>ST_ZTC1MIRIA<br>
             ST_ZTC2MIRIA<br>
+            ST_ZTC1MIRIB<br>
+            ST_ZTC2MIRIB<br>
             IMIR_PDU_TEMP<br>
             IMIR_IC_SCE_ANA_TEMP1<br>
             IMIR_SW_SCE_ANA_TEMP1<br>
@@ -310,6 +314,8 @@ def temperature_plots(conn, start, end):
             IMIR_LW_SCE_DIG_TEMP<br></td>
         <td>ICE A IEC panel Temp<br>
             FPE A IEC panel Temp<br>
+            ICE B IEC panel (Redundant) Temp<br>
+            FPE B IEC panel (Redundant) Temp<br>
             FPE PDU Temperature<br>
             FPE SCE Analogue board Temperature (IC, SW & LW) <br>
             FPE SCE Digital board Temperature (IC, SW & LW)<br></td>

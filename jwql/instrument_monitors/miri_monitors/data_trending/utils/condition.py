@@ -109,7 +109,7 @@ class condition:
                         break
 
         if (end_time != 10000000) and (start_time != 0):
-            return (start_time, end_time)
+            return [start_time, end_time]
         else:
             return None
 

@@ -95,11 +95,12 @@ def gw14(conn, start, end):
                 toolbar_location = "above",                         \
                 plot_width = 1120,                                   \
                 plot_height = 500,                                  \
+                y_range = [-2,2],                                   \
                 x_axis_type = 'datetime',                           \
                 x_axis_label = 'Date', y_axis_label = 'ratio (normalized)')
 
     p.grid.visible = True
-    p.title.text = "GW14 Ratio"
+    p.title.text = "DGA-A Ratio"
     p.title.align = "left"
     pf.add_basic_layout(p)
 
@@ -134,11 +135,12 @@ def gw23(conn, start, end):
                 toolbar_location = "above",                         \
                 plot_width = 1120,                                   \
                 plot_height = 500,                                  \
+                y_range = [-2,2],                                   \
                 x_axis_type = 'datetime',                           \
                 x_axis_label = 'Date', y_axis_label = 'ratio (normalized)')
 
     p.grid.visible = True
-    p.title.text = "GW23 Ratio"
+    p.title.text = "DGA-B Ratio"
     p.title.align = "left"
     pf.add_basic_layout(p)
 
@@ -173,6 +175,7 @@ def ccc(conn, start, end):
                 toolbar_location = "above",                         \
                 plot_width = 1120,                                   \
                 plot_height = 500,                                  \
+                y_range = [-2,2],                                   \
                 x_axis_type = 'datetime',                           \
                 x_axis_label = 'Date', y_axis_label = 'ratio (normalized)')
 
@@ -210,7 +213,8 @@ def fw(conn, start, end):
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
                 toolbar_location = "above",                         \
                 plot_width = 1120,                                   \
-                plot_height = 1000,                                  \
+                plot_height = 800,                                  \
+                y_range = [-6,4],                                   \
                 x_axis_type = 'datetime',                           \
                 x_axis_label = 'Date', y_axis_label='ratio (normalized)')
 
@@ -284,16 +288,16 @@ def wheel_ratios(conn, start, end):
         <td>FW position sensor ratio and commanded position</td>
       </tr>
       <tr>
-        <td>GW14 Ratio</td>
+        <td>DGA-A Ratio</td>
         <td>IMIR_HK_GW14_POS_RATIO<br>
             IMIR_HK_GW14_CUR_POS<br></td>
-        <td>GW14 position sensor ratio and commanded position</td>
+        <td>DGA-A position sensor ratio and commanded position</td>
       </tr>
       <tr>
-        <td>GW23 Ratio</td>
+        <td>DGA-B Ratio</td>
         <td>IMIR_HK_GW23_POS_RATIO<br>
             IMIR_HK_GW23_CUR_POS<br></td>
-        <td>GW23 position sensor ratio and commanded position</td>
+        <td>DGA-B position sensor ratio and commanded position</td>
       </tr>
       <tr>
         <td>CCC Ratio</td>

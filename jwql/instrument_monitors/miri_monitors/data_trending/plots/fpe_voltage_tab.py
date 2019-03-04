@@ -77,13 +77,13 @@ def dig5(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",       \
-                toolbar_location = "above",                         \
-                plot_width = 560,                                   \
-                plot_height = 500,                                  \
-                y_range = [4.9,5.1],                                \
-                x_axis_type = 'datetime',                           \
-                output_backend="webgl",                             \
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 560,
+                plot_height = 500,
+                y_range = [4.9,5.1],
+                x_axis_type = 'datetime',
+                output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
