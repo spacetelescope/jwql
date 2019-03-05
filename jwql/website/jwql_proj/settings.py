@@ -73,6 +73,7 @@ TEMPLATES = [
         'OPTIONS': {
             'environment': 'jwql.website.jwql_proj.jinja2.environment',
             'extensions': ['jwql.website.jwql_proj.jinja2.DjangoNow'],
+            'context_processors': ['jwql.website.apps.jwql.context_processors.base_context'],
         },
     }
 ]
