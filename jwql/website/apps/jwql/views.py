@@ -48,6 +48,7 @@ from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
+from .data_containers import webpage_template_data, data_trending
 from .forms import FileSearchForm
 from .oauth import auth_info
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
@@ -56,6 +57,72 @@ import jwql
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
+
+def webpage_template(request):
+    """Generate the ``WEBPAGE_TEMPLATE`` page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    # Define which HTML template to render
+    template = 'WEBPAGE_TEMPLATE.html'
+
+    # Define variables with data from data_containers.py
+    launch, plot_data = webpage_template_data()
+
+    # Pack all needed variables into a Python dictionary
+    context = {
+        'launch_date': launch,
+        'plot_data': plot_data,
+        'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
+        'inst_list': JWST_INSTRUMENT_NAMES,  # Do not edit; Required for navigation bar
+        'tools': MONITORS,  # Do not edit; Required for navigation bar
+        'user': None  # Do not edit; Required for authentication
+    }
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
+
+
+
+
+
+def miri_data_trending(request):
+    """Generate the ``MIRI DATA-TRENDING`` page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    template = "miri_data_trending.html"
+    variables, dash = data_trending()
+
+    context = {
+        'dashboard' : dash,
+        'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
+        'inst_list': JWST_INSTRUMENT_NAMES,  # Do not edit; Required for navigation bar
+        'tools': MONITORS,  # Do not edit; Required for navigation bar
+        'user': None  # Do not edit; Required for authentication
+    }
+    #append variables to context
+    context.update(variables)
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
 
 @auth_info
 def about(request, user):
