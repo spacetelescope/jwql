@@ -48,7 +48,8 @@ from django import forms
 from django.shortcuts import redirect
 
 from jwql.edb.edb_interface import is_valid_mnemonic
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.constants import (JWST_INSTRUMENT_NAMES_FROM_SHORTHAND,
+                                  JWST_INSTRUMENT_NAMES_TO_SHORTHAND)
 from jwql.utils.utils import get_config, filename_parser
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -100,13 +101,22 @@ class FileSearchForm(forms.Form):
             if len(all_files) > 0:
                 all_instruments = []
                 for file in all_files:
-                    instrument = filename_parser(file)['detector']
-                    all_instruments.append(instrument[:3])
+                    filename_dict = filename_parser(file)
+
+                    # Extract the instrument name for a range of name formats
+                    if 'detector' in filename_dict.keys():
+                        instrument = filename_dict['detector'][:3]
+                    elif 'instrument' in filename_dict.keys():
+                        instrument = JWST_INSTRUMENT_NAMES_TO_SHORTHAND[filename_dict['instrument']]
+                    elif filename_dict['filename_type'] == 'guider':
+                        instrument = 'gui'
+
+                    all_instruments.append(instrument)
                 if len(set(all_instruments)) > 1:
                     raise forms.ValidationError('Cannot return result for proposal with multiple '
                                                 'instruments.')
 
-                self.instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[all_instruments[0]]
+                self.instrument = JWST_INSTRUMENT_NAMES_FROM_SHORTHAND[all_instruments[0]]
             else:
                 raise forms.ValidationError('Proposal {} not in the filesystem.'.format(search))
 
@@ -121,7 +131,7 @@ class FileSearchForm(forms.Form):
                 raise forms.ValidationError('Fileroot {} not in the filesystem.'.format(search))
 
             instrument = search.split('_')[-1][:3]
-            self.instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[instrument]
+            self.instrument = JWST_INSTRUMENT_NAMES_FROM_SHORTHAND[instrument]
 
         return self.cleaned_data['search']
 

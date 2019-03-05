@@ -24,11 +24,17 @@ JWST_INSTRUMENT_NAMES = sorted(['niriss', 'nircam', 'nirspec', 'miri', 'fgs'])
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
                      'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
 
-JWST_INSTRUMENT_NAMES_SHORTHAND = {'gui': 'fgs',
-                                   'mir': 'miri',
-                                   'nis': 'niriss',
-                                   'nrc': 'nircam',
-                                   'nrs': 'nirspec'}
+JWST_INSTRUMENT_NAMES_FROM_SHORTHAND = {'gui': 'fgs',
+                                        'mir': 'miri',
+                                        'nis': 'niriss',
+                                        'nrc': 'nircam',
+                                        'nrs': 'nirspec'}
+
+JWST_INSTRUMENT_NAMES_TO_SHORTHAND = {'fgs': 'gui',
+                                      'miri': 'mir',
+                                      'niriss': 'nis',
+                                      'nircam': 'nrc',
+                                      'nirspec': 'nrs'}
 
 JWST_INSTRUMENT_NAMES_MIXEDCASE = {'fgs': 'FGS',
                                    'miri': 'MIRI',
