@@ -1,15 +1,20 @@
-
 import statistics
+import os
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.csv_to_AstropyTable as apt
+from jwql.utils.utils import get_config, filename_parser
 
 from jwql.instrument_monitors.miri_monitors.data_trending.utils.process_data import once_a_day_routine
 
-#create filename string
-directory = '/home/daniel/STScI/trainigData/set_1_15min/'
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-filenames1 = [
+#point to the directory where your files are located!
+directory = '/home/daniel/STScI/trainigData/set_15_min/'
+
+#here some some files contain the same data but they are all incomplete
+#in order to generate a full database we have to import all of them
+filenames = [
 'imir_190218_229_15mFOFTLM2019049190357389.CSV',
 'imir_190218_242_15mFOFTLM2019049190828360.CSV',
 'imir_190218_230_15mFOFTLM2019049190418712.CSV',
@@ -35,10 +40,7 @@ filenames1 = [
 'imir_190218_240_15mFOFTLM2019049190750440.CSV',
 'imir_190218_253_15mFOFTLM2019049191156202.CSV',
 'imir_190218_241_15mFOFTLM2019049190811168.CSV',
-'imir_190218_254_15mFOFTLM2019049191211341.CSV']
-
-#old files
-filenames = [
+'imir_190218_254_15mFOFTLM2019049191211341.CSV',
 'imir_190130_otis229FOFTLM2019030204146194.CSV',
 'imir_190130_otis240FOFTLM2019030210631185.CSV',
 'imir_190130_otis230FOFTLM2019030204240886.CSV',
@@ -63,12 +65,25 @@ filenames = [
 'imir_190130_otis250FOFTLM2019030211032094.CSV']
 
 def process_file(conn, path):
+    '''Parse CSV file, process data within and put to DB
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object to temporary database
+    path : str
+        defines path to the files
+    '''
+
+    #import mnemonic data and append dict to variable below
     m_raw_data = apt.mnemonics(path)
 
+    #process raw data with once a day routine
     cond1, cond2 = once_a_day_routine(m_raw_data)
 
+    #push extracted and filtered data to temporary database
     for key, value in cond1.items():
 
+        #abbreviate data table
         m = m_raw_data.mnemonic(key)
 
         if key == "SE_ZIMIRICEA":
@@ -78,14 +93,6 @@ def process_file(conn, path):
 
             dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
             sql.add_data(conn, "SE_ZIMIRICEA_IDLE", dataset)
-
-        elif key == "SE_ZIMIRICEB":
-            length = len(value)
-            mean = statistics.mean(value)
-            deviation = statistics.stdev(value)
-
-            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-            sql.add_data(conn, "SE_ZIMIRICEB_IDLE", dataset)
 
         elif key == "IMIR_HK_ICE_SEC_VOLT4":
             length = len(value)
@@ -114,13 +121,19 @@ def process_file(conn, path):
 
 
 def main():
-    db_file = "/home/daniel/STScI/jwql/jwql/database/miri_database_new.db"
-    conn = sql.create_connection(db_file)
+    #generate paths
+    DATABASE_LOCATION = os.path.join(get_config()['jwql_dir'], 'database')
+    DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'miri_database.db')
 
+    #connect to temporary database
+    conn = sql.create_connection(DATABASE_FILE)
+
+    #do for every file in list above
     for name in filenames:
         path = directory + name
         process_file(conn, path)
 
+    #close connection
     sql.close_connection(conn)
     print("done")
 

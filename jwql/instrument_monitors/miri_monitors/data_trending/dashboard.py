@@ -20,10 +20,12 @@ Use
 
 Dependencies
 ------------
-    User must provide "miri_database.db"
+    User must provide "miri_database.db" in folder jwql/database
 
 """
+import os
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
+from jwql.utils.utils import get_config, filename_parser
 
 from bokeh.embed import components
 from bokeh.models.widgets import Tabs
@@ -49,6 +51,8 @@ now = datetime.datetime.now()
 #default_start = now - datetime.timedelta(1000)
 default_start = datetime.date(2017, 8, 15).isoformat()
 
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
 def data_trending_dashboard(start = default_start, end = now):
     """Bulilds dashboard
     Parameters
@@ -66,8 +70,10 @@ def data_trending_dashboard(start = default_start, end = now):
     """
 
     #connect to database
-    db_file = "/home/daniel/STScI/jwql/jwql/database/miri_database.db"
-    conn = sql.create_connection(db_file)
+    DATABASE_LOCATION = os.path.join(get_config()['jwql_dir'], 'database')
+    DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'miri_database.db')
+
+    conn = sql.create_connection(DATABASE_FILE)
 
     #some variables can be passed to the template via following
     variables = dict(init = 1)

@@ -272,7 +272,7 @@ class greater(condition):
         value : str
             coparison value for equal statement
         """
-        self.mnemonic=mnemonic
+        self.mnemonic= mnemonic
         self.value=value
         condition.cond_time_pairs.append((self.cond_true_time()))
 
