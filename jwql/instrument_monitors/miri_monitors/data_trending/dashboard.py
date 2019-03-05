@@ -42,7 +42,6 @@ from .plots.ice_voltage_tab import volt_plots
 from .plots.fpe_voltage_tab import fpe_plots
 from .plots.temperature_tab import temperature_plots
 from .plots.bias_tab import bias_plots
-from .plots.overview_tab import overview_settings
 from .plots.wheel_ratio_tab import wheel_ratios
 
 
@@ -82,7 +81,6 @@ def data_trending_dashboard(start = default_start, end = now):
     variables = dict(init = 1)
 
     #add tabs to dashboard
-    tab0 = overview_settings(conn)
     tab1 = power_plots(conn, start, end)
     tab2 = volt_plots(conn, start, end)
     tab3 = fpe_plots(conn, start, end)
@@ -91,7 +89,7 @@ def data_trending_dashboard(start = default_start, end = now):
     tab6 = wheel_ratios(conn, start, end)
 
     #build dashboard
-    tabs = Tabs( tabs=[ tab1, tab2, tab3, tab5, tab4, tab6, tab0 ] )
+    tabs = Tabs( tabs=[ tab1, tab2, tab3, tab5, tab4, tab6 ] )
 
     #return dasboard to webapp
     script, div = components(tabs)
