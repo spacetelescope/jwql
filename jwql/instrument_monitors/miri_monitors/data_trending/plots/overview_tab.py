@@ -57,8 +57,6 @@ def overview_settings(conn):
 
     slider1.js_on_change('value', callback)
 
-
-
     slider = WidgetBox(slider1, width=800)
 
     layout = row(slider, button)
