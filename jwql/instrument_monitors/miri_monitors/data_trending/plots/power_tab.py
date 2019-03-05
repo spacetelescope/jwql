@@ -148,6 +148,49 @@ def power_fpea(conn, start, end):
 
     return p
 
+def currents(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
+
+    # create a new plot with a title and axis labels
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 1120,
+                plot_height = 500,
+                y_range = [0,1.1],
+                x_axis_type = 'datetime',
+                output_backend = "webgl",
+                x_axis_label = 'Date', y_axis_label = 'Current (A)')
+
+    p.grid.visible = True
+    p.title.text = "FPE & ICE Currents"
+    pf.add_basic_layout(p)
+
+    a = pf.add_to_plot(p, "ICE Current idle", "SE_ZIMIRICEA_IDLE", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "ICE Current HV on", "SE_ZIMIRICEA_HV_ON", start, end, conn, color = "orange")
+    c = pf.add_to_plot(p, "FPE Current", "SE_ZIMIRFPEA", start, end, conn, color = "brown")
+
+    pf.add_hover_tool(p,[a,b,c])
+
+    p.legend.location = "bottom_right"
+    p.legend.click_policy = "hide"
+    p.legend.orientation = "horizontal"
+
+    return p
+
+
 def power_plots(conn, start, end):
 
 
@@ -174,13 +217,21 @@ def power_plots(conn, start, end):
       </tr>
       <tr>
         <td>POWER ICE</td>
-        <td>SE_ZIMIRICEA</td>
+        <td>SE_ZIMIRICEA<br>
+            Voltage = 30V static</td>
         <td>Primary power consumption ICE side A - HV on and IDLE</td>
       </tr>
       <tr>
         <td>POWER FPE</td>
-        <td>SE_ZIMIRFPEA</td>
+        <td>SE_ZIMIRFPEA<br>
+            Voltage = 30V static</td>
         <td>Primary power consumption FPE side A</td>
+      </tr>
+      <tr>
+        <td>FPE & ICE currents</td>
+        <td>SE_ZIMIRFPEA<br>
+            SE_ZIMIRCEA</td>
+        <td>Current consumption ICE and FPE</td>
       </tr>
     </table>
     </body>
@@ -188,8 +239,9 @@ def power_plots(conn, start, end):
 
     plot1 = power_ice(conn, start, end)
     plot2 = power_fpea(conn, start, end)
+    plot3 = currents(conn, start, end)
 
-    layout = column(descr, plot1, plot2 )
+    layout = column(descr, plot1, plot2, plot3)
 
     #layout_volt = row(volt4, volt1_3)
     tab = Panel(child = layout, title = "POWER")
