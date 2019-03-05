@@ -25,10 +25,10 @@ JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
                      'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
 
 JWST_INSTRUMENT_NAMES_SHORTHAND = {'gui': 'fgs',
-                                        'mir': 'miri',
-                                        'nis': 'niriss',
-                                        'nrc': 'nircam',
-                                        'nrs': 'nirspec'}
+                                   'mir': 'miri',
+                                   'nis': 'niriss',
+                                   'nrc': 'nircam',
+                                   'nrs': 'nirspec'}
 
 JWST_INSTRUMENT_NAMES_MIXEDCASE = {'fgs': 'FGS',
                                    'miri': 'MIRI',

@@ -211,7 +211,7 @@ class MnemonicQueryForm(forms.Form):
         delta_day = -7.
         range_day = 1.
         default_start_time = now + TimeDelta(delta_day, format='jd')
-        default_end_time = now + TimeDelta(delta_day+range_day, format='jd')
+        default_end_time = now + TimeDelta(delta_day + range_day, format='jd')
     else:
         # example for testing
         default_start_time = Time('2019-01-16 00:00:00.000', format='iso')
