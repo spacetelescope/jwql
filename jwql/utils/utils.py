@@ -217,11 +217,14 @@ def filename_parser(filename):
             if name_match == 'guider':
                 filename_dict['instrument'] = 'fgs'
             elif 'detector' in filename_dict.keys():
-                filename_dict['instrument'] = JWST_INSTRUMENT_NAMES_SHORTHAND[filename_dict['detector'][:3]]
+                filename_dict['instrument'] = JWST_INSTRUMENT_NAMES_SHORTHAND[
+                    filename_dict['detector'][:3]
+                ]
 
     # Raise error if unable to parse the filename
     except AttributeError:
-        jdox_url = 'https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products'
+        jdox_url = 'https://jwst-docs.stsci.edu/display/JDAT/' \
+                   'File+Naming+Conventions+and+Data+Products'
         raise ValueError('Provided file {} does not follow JWST naming conventions.  See {} for further information.'.format(filename, jdox_url))
 
     return filename_dict
