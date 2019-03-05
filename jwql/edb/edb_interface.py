@@ -132,7 +132,7 @@ def process_mast_service_request_result(result, data_as_table=True):
     json_data = result[0].json()
     if json_data['status'] != 'COMPLETE':
         raise RuntimeError('Mnemonic query did not complete.\nquery status: {}\nmessage: {}'.format(
-            json_data['status'], json_data['msg']))
+            json_data['status'], json_data['msg']))\
 
     try:
         # timestamp-value pairs in the form of an astropy table
