@@ -71,7 +71,6 @@ from jwql.utils.utils import get_config, ensure_dir_exists
 LOG_FILE_LOC = ''
 PRODUCTION_BOOL = ''
 
-
 def configure_logging(module, production_mode=True, path='./'):
     """Configure the log file with a standard logging format.
 
@@ -243,3 +242,38 @@ def log_fail(func):
             logging.critical('CRASHED')
 
     return wrapped
+
+def log_timing(func):
+    """Decorator to time a module or function within a code.
+
+    Parameters
+    ----------
+    func : func
+        The function to time.
+
+    Returns
+    -------
+    wrapped : func
+        The wrapped function. Will log the time."""
+
+    def wrapped():
+        # Call the function and time it
+        t1_cpu = time.process_time()
+        t1_time = time.time()
+        func()
+        t2_cpu = time.process_time()
+        t2_time = time.time()
+
+        # Log execution time
+        hours_cpu, remainder_cpu = divmod(t2_cpu - t1_cpu, 60 * 60)
+        minutes_cpu, seconds_cpu = divmod(remainder_cpu, 60)
+        hours_time, remainder_time = divmod(t2_time - t1_time, 60 * 60)
+        minutes_time, seconds_time = divmod(remainder_time, 60)
+        logging.info('Elapsed Real Time of function: {0:.0f}:{1:.0f}:{2:f}'.format(hours_time, minutes_time, seconds_time))
+        logging.info('Elapsed CPU Time of function: {0:.0f}:{1:.0f}:{2:f}'.format(hours_cpu, minutes_cpu, seconds_cpu))
+    return wrapped
+
+
+
+    
+
