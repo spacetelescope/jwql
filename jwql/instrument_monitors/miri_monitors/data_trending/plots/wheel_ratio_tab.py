@@ -285,25 +285,25 @@ def wheel_ratios(conn, start, end):
         <td>Filterwheel Ratio</td>
         <td>IMIR_HK_FW_POS_RATIO<br>
             IMIR_HK_FW_CUR_POS<br></td>
-        <td>FW position sensor ratio and commanded position</td>
+        <td>FW position sensor ratio (normalised) and commanded position</td>
       </tr>
       <tr>
         <td>DGA-A Ratio</td>
         <td>IMIR_HK_GW14_POS_RATIO<br>
             IMIR_HK_GW14_CUR_POS<br></td>
-        <td>DGA-A position sensor ratio and commanded position</td>
+        <td>DGA-A position sensor ratio (normalised) and commanded position</td>
       </tr>
       <tr>
         <td>DGA-B Ratio</td>
         <td>IMIR_HK_GW23_POS_RATIO<br>
             IMIR_HK_GW23_CUR_POS<br></td>
-        <td>DGA-B position sensor ratio and commanded position</td>
+        <td>DGA-B position sensor ratio (normalised) and commanded position</td>
       </tr>
       <tr>
         <td>CCC Ratio</td>
         <td>IMIR_HK_CCC_POS_RATIO<br>
             IMIR_HK_CCC_CUR_POS<br></td>
-        <td>Contamination control cover position sensor ratio and commanded position</td>
+        <td>Contamination Control Cover position sensor ratio (normalised) and commanded position</td>
       </tr>
     </table>
     </body>
