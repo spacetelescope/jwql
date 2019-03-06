@@ -241,8 +241,10 @@ def get_monitor_columns(data_dict, table_name):
                       'bool': Boolean}
 
     # Get the data from the table definition file
+    instrument = table_name.split('_')[0]
     table_definition_file = os.path.join(os.path.split(__file__)[0],
                                          'monitor_table_definitions',
+                                         instrument.lower(),
                                          '{}.txt'.format(table_name))
     with open(table_definition_file, 'r') as f:
         data = f.readlines()
@@ -317,7 +319,8 @@ def monitor_orm_factory(class_name):
     return type(class_name, (base,), data_dict)
 
 # Create tables from ORM factory
-# NIRCamDarkQueries = monitor_orm_factory('nircam_dark_queries')
+# # NIRCamDarkQueries = monitor_orm_factory('nircam_dark_queries')
+# NIRCamDarkQueries = monitor_orm_factory('nircam_dark_query_history.txt')
 # NIRCamDarkPixelStats = monitor_orm_factory('nircam_dark_pixel_stats')
 # NIRCamDarkDarkCurrent = monitor_orm_factory('nircam_dark_dark_current')
 
