@@ -25,10 +25,12 @@
 				<!-- Monitors -->
     			<h3>Monitors</h3>
     			{% for key, inst_tools in tools.items() %}
-					{% if key == inst %}
-						{% for tool in inst_tools %}
-							{% if "Monitor" in tool %}
-								<a role="button" class="btn btn-primary my-2 disabled" href="#">{{ tool }}</a></br>
+					{% if key == inst.lower() %}
+						{% for monitor_name, monitor_url in inst_tools %}
+							{% if monitor_url == '#' %}
+								<a role="button" class="btn btn-primary my-2 disabled" href="#">{{ monitor_name }}</a></br>
+							{% else %}
+								<a role="button" class="btn btn-primary my-2" href="{{ monitor_url }}">{{ monitor_name }}</a></br>
 							{% endif %}
 						{% endfor %}
 					{% endif %}
