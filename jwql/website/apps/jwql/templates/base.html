@@ -66,11 +66,13 @@
 								<a class="dropdown-item" href={{ url('jwql:archive', args=[inst_key]) }}>Archived Images</a>
 								<div class="dropdown-divider"></div>
 								<a class='dropdown-heading mx-3'>Monitors</a>
-									{% for tool in inst_tools %}
-										<a class="dropdown-item" href="#">{{ tool }}</a>
+									{% for monitor_name, monitor_url in inst_tools %}
+										{% if monitor_url == '#' %}
+											<a class="dropdown-item" href="{{ monitor_url }}" style="color: #bec4d4;">{{ monitor_name }}</a>
+										{% else %}
+											<a class="dropdown-item" href="{{ monitor_url }}">{{ monitor_name }}</a>
+										{% endif %}
 									{% endfor %}
-									<!-- Data trending -> for developement only -->
-									<a class="dropdown-item" href="http://127.0.0.1:8000/miri_data_trending">Data Trending</a>
 							</div>
 						</li>
 		      		{% endfor %}
@@ -78,7 +80,7 @@
 	            		<a class="nav-link" href={{ url('jwql:edb') }}>EDB<span class="sr-only">(current)</span></a>
 	          		</li>
 		      		<li class="nav-item active">
-	            		<a class="nav-link" href="https://jwql.readthedocs.io/en/latest/">Documentation<span class="sr-only">(current)</span></a>
+	            		<a class="nav-link" href="https://jwql.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer">Documentation<span class="sr-only">(current)</span></a>
 	          		</li>
 	        	</ul>
 	        </div>
@@ -88,7 +90,7 @@
 	            <ul class="navbar-nav mr-auto">
 	            	{% if user.ezid %}
 	            		<li>
-	            			<a class="nav-link" href="https://auth.mastdev.stsci.edu/tokens" id="oauth_user">{{ user.ezid }}</a>
+	            			<a class="nav-link" id="oauth_user" href="https://auth.mastdev.stsci.edu/tokens" target="_blank" rel="noopener noreferrer">{{ user.ezid }}</a>
 	            		</li>
 	            		<li>
 	            			<a role="button" class="btn btn-primary" href={{ url('jwql:logout') }}>logout</a>
@@ -117,6 +119,11 @@
 	        		<img src={{ static('img/STScIlogo_dark.png') }}   height=36>
 	        		<img src={{ static('img/JWSTlogo.png') }}   height=36>
 	        	</a>
+     	      	<div id='version-div'>
+	        		<p id="version_number"></p>
+	        		   <script>document.getElementById("version_number").innerHTML = version_url('{{version}}');</script>
+	      	     	</p>
+	      	    </div>
 	      	</div>
 	    </footer>
 

@@ -18,11 +18,13 @@
 
         Its use requires access privileges to the EDB (see <a href="https://outerspace.stsci.edu/pages/viewpage.action?spaceKey=JARI&title=JWST+Archive+Rehearsal+Instructions" target="_blank">here</a>)
         Functionality is built on top of the module <a href="https://astroquery.readthedocs.io/en/latest/mast/mast.html" target="_blank">astroquery.mast</a>.
-        Example programmatic code for EDB queries is available in this <a href="https://github.com/spacetelescope/jwql/tree/master/notebooks" target="_blank">notebook</a>.<br>
+        Example programmatic code for EDB queries is available in this <a href="https://github.com/spacetelescope/jwql/tree/master/notebooks/edb_mnemonic_query.ipynb" target="_blank">notebook</a>.
+        <br>
+        <br />
 
-        <p></p>
+        <!--EDB Mnemonic Search-->
         <h4>Search for an EDB mnemonic</h4>
-        <p></p>
+        <div class="row">
         <div class="mnemonic_name_search_row">
 
             <div class="mnemonic_name_search_col1">
@@ -69,57 +71,131 @@
                 </table>
             </div>
         </div>
+        </div>
 
-        <p></p>
+        <br />
 
+        <!--EDB Mnemonic Query-->
         <h4>Query for records of an EDB mnemonic</h4>
-
+        <div class="row">
         <div class="mnemonic_query_section">
+            <div class="row mx-2">
+                <b>Submit a mnemonic identifier with a time range to view the corresponding EDB records.</b>
 
-            <b>Submit a mnemonic identifier with a time range to view the corresponding EDB records.</b>
+                <!--Load the EDB mnemonic search form from the view-->
+                <form action="" method="post" id="mnemonic_name_search">
+                    <!--Show any errors from a previous form submission-->
+                    {% if edb_components['mnemonic_query_form'].errors %}
+                        {% for field in edb_components['mnemonic_query_form'] %}
+                            {% for error in field.errors %}
+                                <div class="alert alert-danger">
+                                    <strong>{{ error|escape }}</strong>
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                    {% endif %}
 
-            <p></p>
-            <!--Load the EDB mnemonic search form from the view-->
-            <form action="" method="post" id="mnemonic_name_search">
-                <!--Show any errors from a previous form submission-->
-                {% if edb_components['mnemonic_query_form'].errors %}
+                    <!--Django Cross-Site Request Forgery magic-->
+                    {{ csrf_input }}
+
+                    <!--Show the field forms-->
                     {% for field in edb_components['mnemonic_query_form'] %}
-                        {% for error in field.errors %}
-                            <div class="alert alert-danger">
-                                <strong>{{ error|escape }}</strong>
+                        <div class="mnemonic_query_field">
+                            {{ field }}
+                            {% if field.help_text %}
+                                <p class="help">{{ field.help_text|safe }}</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    <button name=mnemonic_query class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
+                </form>
+            </div>
+
+            <div class="row mx-2">
+                {% if edb_components['mnemonic_query_result'] %}
+                    Query returned {{ edb_components['mnemonic_query_result'].meta['paging']['rows'] }} records:
+                    <br />
+
+                    <!-- Add bokeh files -->
+                    <link href="https://cdn.pydata.org/bokeh/release/bokeh-1.0.1.min.css" rel="stylesheet" type="text/css">
+                    {{ edb_components['mnemonic_query_result_plot'][1] | safe}}
+                    <span class='plot-container px-1'>
+                        {{  edb_components['mnemonic_query_result_plot'][0] | safe }}
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+        </div>
+
+        <br />
+        <br>
+
+        <!--EDB Mnemonic Explorer-->
+        <h4>Explore the EDB mnemonic inventory</h4>
+        <div class="row">
+            <div class="mnemonic_exploration_section">
+
+                <b>
+                    Fill one or several fields below and a table of matching inventory elements will be returned. For the complete list, leave all fields blank.<br />
+                    The search is case insensitive and fields are combined with simple AND logic.
+                </b>
+
+
+                <!--Load the EDB mnemonic search form from the view-->
+                <div class="row mx-2">
+                    <form action="" method="post" id="mnemonic_exploration">
+                        <!--Show any errors from a previous form submission-->
+                        {% if edb_components['mnemonic_exploration_form'].errors %}
+                            {% for field in edb_components['mnemonic_exploration_form'] %}
+                                {% for error in field.errors %}
+                                    <div class="alert alert-danger">
+                                        <strong>{{ error|escape }}</strong>
+                                    </div>
+                                {% endfor %}
+                            {% endfor %}
+                        {% endif %}
+
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+
+                        <!--Show the field forms-->
+                        {% for field in edb_components['mnemonic_exploration_form'] %}
+                            <div class="mnemonic_query_field">
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <p class="help">{{ field.help_text|safe }}</p>
+                                {% endif %}
                             </div>
                         {% endfor %}
-                    {% endfor %}
+                        <button name=mnemonic_exploration class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
+                    </form>
+                </div>
+
+                <div class="row mx-2">
+                {% if edb_components['mnemonic_exploration_result'] == 'empty' %}
+                    <b>
+                    Query returned zero matches. Please refine and repeat.
+                    </b></div>
+                {% endif %}
+                {% if edb_components['mnemonic_exploration_result'] %}
+                    {% if edb_components['mnemonic_exploration_result'] != 'empty' %}
+                    <b>
+                    Query returned {{ edb_components['mnemonic_exploration_result'].n_rows }} matching rows
+                in the EDB inventory containing {{ edb_components['mnemonic_exploration_result'].meta['paging']['rows']}} mnemonics.
+                    </b></div>
+
+                    <br />
+                    <br />
+                    <!--show html version of astropy table with results-->
+                    {% autoescape off %}
+                        {{ edb_components['mnemonic_exploration_result'].html_file_content }}
+                    {% endautoescape %}
+                    <br />
+                    {% endif %}
+
                 {% endif %}
 
-                <!--Django Cross-Site Request Forgery magic-->
-                {{ csrf_input }}
-
-                <!--Show the field forms-->
-                {% for field in edb_components['mnemonic_query_form'] %}
-                    <div class="mnemonic_query_field">
-                        {{ field }}
-                        {% if field.help_text %}
-                            <p class="help">{{ field.help_text|safe }}</p>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-                <button name=mnemonic_query class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
-
-            </form>
-            {% if edb_components['mnemonic_query_result'] %}
-                <br />
-                <br />
-                Query returned {{ edb_components['mnemonic_query_result'].meta['paging']['rows'] }} records:
-                <br />
-
-                <!-- Add bokeh files -->
-                <link href="https://cdn.pydata.org/bokeh/release/bokeh-1.0.1.min.css" rel="stylesheet" type="text/css">
-                {{ edb_components['mnemonic_query_result_plot'][1] | safe}}
-                <span class='plot-container px-1'>
-                    {{  edb_components['mnemonic_query_result_plot'][0] | safe }}
-                </span>
-            {% endif %}
+            </div>
         </div>
 	</main>
 
