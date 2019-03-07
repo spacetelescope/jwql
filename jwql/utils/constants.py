@@ -48,7 +48,7 @@ FILE_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled',
 MONITORS = {
     'fgs': [('Bad Pixel Monitor', '#')],
     'miri': [('Dark Current Monitor', '#'),
-             ('Data Trending', '/miri_data_trending'),
+             ('Data Trending', '/miri/miri_data_trending'),
              ('Bad Pixel Monitor', '#'),
              ('Cosmic Ray Monitor', '#'),
              ('Photometry Monitor', '#'),
