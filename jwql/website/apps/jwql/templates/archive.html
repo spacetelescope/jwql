@@ -7,50 +7,6 @@
         div#proposal-array { display: none; }
     </style>
 
-    <script type="text/javascript">
-    /**
-     * Updates various compnents on the archive page
-     * @param {String} inst - The instrument of interest (e.g. "FGS")
-     * @param {String} base_url - The base URL for gathering data from the AJAX view.
-     */
-    function update_archive_page(inst, base_url) {
-        $.ajax({
-            url: base_url + '/ajax/' + inst + '/archive/',
-            success: function(data){
-
-                // Update the number of proposals displayed
-                num_proposals = data.thumbnails.proposals.length;
-                update_show_count(num_proposals, 'proposals')
-
-                // Add content to the proposal array div
-                for (var i = 0; i < data.thumbnails.proposals.length; i++) {
-
-                    // Parse out useful variables
-                    prop = data.thumbnails.proposals[i];
-                    thumb = data.thumbnails.thumbnail_paths[i];
-                    n = data.thumbnails.num_files[i];
-
-                    // Build div content
-                    content = '<div class="proposal text-center">';
-                    content += '<a href="/' + inst + '/archive/' + prop + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
-                    content += '<span class="helper"></span><img src="{{ static("thumbnails/") }}' + thumb + '" alt="" width=100%>';
-                    content += '<div class="proposal-color-fill" ></div>';
-                    content += '<div class="proposal-info">';
-                    content += '<h3>' + prop + '</h3>';
-                    content += '<h6>' + n + ' Files</h6>';
-                    content += '</div></a></div>';
-
-                    // Add the content to the div
-                    $("#proposal-array")[0].innerHTML += content;
-
-                // Replace loading screen with the proposal array div
-                document.getElementById("loading").style.display = "none";
-                document.getElementById("proposal-array").style.display = "block";
-                };
-        }});
-    };
-    </script>
-
     <title>Archived {{ inst }} Images - JWQL</title>
 
 

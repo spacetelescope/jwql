@@ -10,4 +10,4 @@ docs/source/api/
 .cache
 *.pytest_cache
 htmlcov/
-jwql/instrument_monitors/miri_monitors/data_trending/miri_database.db
+*.sqlite3
