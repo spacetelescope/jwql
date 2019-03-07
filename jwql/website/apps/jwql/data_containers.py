@@ -31,6 +31,7 @@ from astroquery.mast import Mast
 import numpy as np
 
 from .forms import MnemonicSearchForm, MnemonicQueryForm
+from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.constants import MONITORS
 from jwql.utils.preview_image import PreviewImage
@@ -56,8 +57,7 @@ def data_trending():
         A list containing the JavaScript and HTML content for the
         dashboard
     """
-    import jwql.instrument_monitors.miri_monitors.data_trending.dashboard as dash
-    dashboard, variables = dash.data_trending_dashboard()
+    dashboard, variables = miri_dash.data_trending_dashboard()
 
     return variables, dashboard
 

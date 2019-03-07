@@ -23,18 +23,11 @@ Dependencies
     User must provide "miri_database.db" in folder jwql/database
 
 """
+import datetime
 import os
-import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
-from jwql.utils.utils import get_config, filename_parser
 
 from bokeh.embed import components
 from bokeh.models.widgets import Tabs
-from bokeh.resources import Resources
-from bokeh.io.state import curstate
-
-from astropy.time import Time
-import datetime
-from datetime import date
 
 #import plot functions
 from .plots.power_tab import power_plots
@@ -43,6 +36,8 @@ from .plots.fpe_voltage_tab import fpe_plots
 from .plots.temperature_tab import temperature_plots
 from .plots.bias_tab import bias_plots
 from .plots.wheel_ratio_tab import wheel_ratios
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
+from jwql.utils.utils import get_config
 
 
 #configure actual datetime in order to implement range function
@@ -51,9 +46,10 @@ now = datetime.datetime.now()
 default_start = datetime.date(2017, 8, 15).isoformat()
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+PACKAGE_DIR = __location__.split('instrument_monitors')[0]
 
 def data_trending_dashboard(start = default_start, end = now):
-    """Bulilds dashboard
+    """Builds dashboard
     Parameters
     ----------
     start : time
@@ -69,7 +65,8 @@ def data_trending_dashboard(start = default_start, end = now):
     """
 
     #connect to database
-    DATABASE_LOCATION = os.path.join(get_config()['jwql_dir'], 'database')
+    # DATABASE_LOCATION = os.path.join(get_config()['jwql_dir'], 'database')
+    DATABASE_LOCATION = os.path.join(PACKAGE_DIR, 'database')
     DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'miri_database.db')
 
     conn = sql.create_connection(DATABASE_FILE)
@@ -91,7 +88,7 @@ def data_trending_dashboard(start = default_start, end = now):
     #build dashboard
     tabs = Tabs( tabs=[ tab1, tab2, tab3, tab5, tab4, tab6 ] )
 
-    #return dasboard to webapp
+    #return dashboard to web app
     script, div = components(tabs)
     plot_data = [div, script]
 
