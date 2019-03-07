@@ -136,7 +136,8 @@ def get_dashboard_components():
                  'system_stats': 'System Statistics'}
 
     # Exclude monitors that can't be saved as components
-    exclude_list = ['monitor_cron_jobs']
+    exclude_list = ['monitor_cron_jobs', 'miri_data_trending',
+                    'trainings_data_15min', 'trainings_data_day']
 
     # Run the cron job monitor to produce an updated table
     monitor_cron_jobs.status(production_mode=True)
