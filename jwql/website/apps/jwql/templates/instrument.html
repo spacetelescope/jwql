@@ -9,7 +9,7 @@
 {% block content %}
 
     <main role="main" class="container">
-    	<h1 style="text-align: center"><img src="{{ static('') }}/img/{{inst}}logo.png" width=40 style="vertical-align: middle; max-width: 40; max-height: 40"> {{ inst }}</h1></br>
+    	<h1 style="text-align: center"><img src="{{ static('') }}/img/{{inst.lower()}}logo.png" width=40 style="vertical-align: middle; max-width: 40; max-height: 40"> {{ inst }}</h1></br>
         <hr>
 
     	<!-- List all possible tools -->
@@ -39,7 +39,7 @@
 			<div class="col-md-6 text-center">
 					<!-- Documentation -->
 					<h3>Documentation</h3>
-					<a class="btn btn-primary my-2" role="button" href= {{doc_url}}> {{ inst }} Documentation</a></br>
+					<a class="btn btn-primary my-2" role="button" href= {{doc_url}} target="_blank" rel="noopener noreferrer"> {{ inst }} Documentation</a></br>
 				</div>
 		</div>
 

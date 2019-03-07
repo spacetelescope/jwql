@@ -47,8 +47,8 @@ from astropy.time import Time, TimeDelta
 from django import forms
 from django.shortcuts import redirect
 
+from jwql.edb.edb_interface import is_valid_mnemonic
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
-from jwql.utils.engineering_database import is_valid_mnemonic
 from jwql.utils.utils import get_config, filename_parser
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -100,13 +100,13 @@ class FileSearchForm(forms.Form):
             if len(all_files) > 0:
                 all_instruments = []
                 for file in all_files:
-                    instrument = filename_parser(file)['detector']
-                    all_instruments.append(instrument[:3])
+                    instrument = filename_parser(file)['instrument']
+                    all_instruments.append(instrument)
                 if len(set(all_instruments)) > 1:
                     raise forms.ValidationError('Cannot return result for proposal with multiple '
                                                 'instruments.')
 
-                self.instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[all_instruments[0]]
+                self.instrument = all_instruments[0]
             else:
                 raise forms.ValidationError('Proposal {} not in the filesystem.'.format(search))
 
@@ -211,7 +211,7 @@ class MnemonicQueryForm(forms.Form):
         delta_day = -7.
         range_day = 1.
         default_start_time = now + TimeDelta(delta_day, format='jd')
-        default_end_time = now + TimeDelta(delta_day+range_day, format='jd')
+        default_end_time = now + TimeDelta(delta_day + range_day, format='jd')
     else:
         # example for testing
         default_start_time = Time('2019-01-16 00:00:00.000', format='iso')
@@ -295,3 +295,23 @@ class MnemonicQueryForm(forms.Form):
                                             ' Start time.')
 
         return self.cleaned_data['end_time']
+
+
+class MnemonicExplorationForm(forms.Form):
+    """A sextuple-field form to explore the EDB mnemonic inventory."""
+
+    default_description = 'centroid data'
+
+    # Define search fields
+    description = forms.CharField(label='description', max_length=500, required=False,
+                                  initial=default_description, help_text="Description")
+    sql_data_type = forms.CharField(label='sqlDataType', max_length=500, required=False,
+                                    help_text="sqlDataType")
+    subsystem = forms.CharField(label='subsystem', max_length=500, required=False,
+                                help_text="subsystem")
+    tlm_identifier = forms.CharField(label='tlmIdentifier', max_length=500, required=False,
+                                     help_text="Numerical ID (tlmIdentifier)")
+    tlm_mnemonic = forms.CharField(label='tlmMnemonic', max_length=500, required=False,
+                                   help_text="String ID (tlmMnemonic)")
+    unit = forms.CharField(label='unit', max_length=500, required=False,
+                           help_text="unit")

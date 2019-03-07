@@ -24,6 +24,7 @@ API documentation
    :caption: Contents:
 
    database.rst
+   edb.rst
    jwql_monitors.rst
    tests.rst
    utils.rst
