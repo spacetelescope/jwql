@@ -42,8 +42,22 @@ JWST_INSTRUMENT_NAMES_UPPERCASE = {key: value.upper() for key, value in
 JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
                       JWST_INSTRUMENT_NAMES]
 
-FILE_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled',
-                     'i2d', 'x1d', 's2d', 's3d', 'dark', 'ami', 'crf']
+GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
+
+GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',
+                        'x1dints', 'x1d', 's2d', 's3d', 'dark', 'crfints',
+                        'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat']
+
+TIME_SERIES_SUFFIX_TYPES = ['phot', 'whtlt']
+
+CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']
+
+AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami']
+
+# Concatenate all suffix types (ordered to ensure successful matching)
+FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
+                    TIME_SERIES_SUFFIX_TYPES + CORONAGRAPHY_SUFFIX_TYPES + \
+                    AMI_SUFFIX_TYPES
 
 MONITORS = {
     'fgs': [('Bad Pixel Monitor', '#')],
