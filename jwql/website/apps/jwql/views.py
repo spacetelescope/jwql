@@ -55,6 +55,7 @@ from jwql.utils.utils import get_base_url, get_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
+@staticmethod
 def miri_data_trending(request):
     """Generate the ``MIRI DATA-TRENDING`` page
 
@@ -85,6 +86,7 @@ def miri_data_trending(request):
     # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
 
+@staticmethod
 def nirspec_data_trending(request):
     """Generate the ``MIRI DATA-TRENDING`` page
 
