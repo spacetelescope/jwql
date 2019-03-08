@@ -1,0 +1,74 @@
+<!--This line tells the HTML file to read the contents of base.html before
+loading the contents of WEBPAGE_TEMPLATE.html-->
+{% extends "base.html" %}
+
+
+<!--The "preamble" block below contains content that goes in the page <head> tag-->
+{% block preamble %}
+
+    <!--Put the webpage title here:-->
+    <title>Webpage Title - JWQL</title>
+
+{% endblock %}
+
+<!--The "content" block below contains content that goes in the page <body> tag-->
+{% block content %}
+
+    <main role="main" class="container">
+
+      <div id="header">
+        <!--Add a heading-->
+        <h1>NIRSpec data-trending monitors</h1>
+        <!--Horizontal line-->
+        <hr>
+        <!--Include an image located at jwql/website/apps/jwql/static/img/-->
+        <div style="text-align: center"><img src={{ static('img/jwql_logo_full_transparent.png') }} width=20%></div><br>
+      </div>
+
+      <div id= "description">
+        <h4>How it works</h4>
+        The NIRSpec data-trending dashboard is prepared for instrument engineers to keep
+        tracking the trend of relevant parameters. A software behind processes a daily chunk of data and
+        calculates average and deviation of all engineering values that correspond to specific
+        mnemonic identifiers. The outcome is stored in a seperate database and shown on
+        the dashboard below. Since a cron job populates the database over time, the app
+        allows to keep track of the general value trend caused by degadiation and radiation.
+        <br>
+        <br>
+
+        <h4>References</h4>
+        A general descrition of the instrument can be found here:
+        <a href="https://jwst-docs.stsci.edu/display/JTI/Mid-Infrared+Instrument%2C+MIRI" target="_blank">link</a>
+        <br>
+        <br>
+
+        <a role="button" class="btn btn-primary my-2" href="https://groups.google.com/forum/#!forum/miri-data-trending" target="_blank">Comment</a></br>
+
+      </div>
+
+      <hr>
+      <div id="bokeh">
+        <head>
+          <title>Bokeh Scatter Plots</title>
+          <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-1.0.1.min.css" type="text/css"/>
+          <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.0.1.min.css" type="text/css"/>
+        </head>
+
+        <body>
+        <div id="plot1">
+            {{ dashboard[0] | safe }}
+        </div>
+        </body>
+
+        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-1.0.1.min.js"></script>
+        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.0.1.min.js"></script>
+        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-gl-1.0.1.min.js"></script>
+
+        <div id="script1">
+          {{ dashboard[1] | safe }}
+        </div>
+      </div>
+
+     </main>
+
+{% endblock %}
