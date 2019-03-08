@@ -217,21 +217,20 @@ def power_plots(conn, start, end):
       </tr>
       <tr>
         <td>POWER ICE</td>
-        <td>SE_ZIMIRICEA<br>
-            Voltage = 30V static</td>
+        <td>SE_ZIMIRICEA * 30V (static)</td>
         <td>Primary power consumption ICE side A - HV on and IDLE</td>
       </tr>
       <tr>
         <td>POWER FPE</td>
-        <td>SE_ZIMIRFPEA<br>
-            Voltage = 30V static</td>
+        <td>SE_ZIMIRIFPEA * 30V (static)</td>
         <td>Primary power consumption FPE side A</td>
       </tr>
       <tr>
-        <td>FPE & ICE currents</td>
+        <td>FPE & ICE Voltages/Currents</td>
         <td>SE_ZIMIRFPEA<br>
-            SE_ZIMIRCEA</td>
-        <td>Current consumption ICE and FPE</td>
+            SE_ZIMIRCEA
+            *INPUT VOLTAGE* (missing)</td>
+        <td>Supply voltage and current ICE/FPE</td>
       </tr>
     </table>
     </body>

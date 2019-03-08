@@ -35,7 +35,7 @@ import os
 import re
 
 from jwql.utils import permissions
-from jwql.utils.constants import FILE_SUFFIX_TYPES
+from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES_SHORTHAND
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -199,16 +199,32 @@ def filename_parser(filename):
 
         elements = re.compile(filename_type)
         jwst_file = elements.match(filename)
+
+        # Stop when you find a format that matches
         if jwst_file is not None:
             name_match = filename_type_name
             break
 
-    # Raise error if unable to parse the filename
     try:
+        # Convert the regex match to a dictionary
         filename_dict = jwst_file.groupdict()
+
+        # Add the filename type to that dict
         filename_dict['filename_type'] = name_match
+
+        # Also, add the instrument if not already there
+        if 'instrument' not in filename_dict.keys():
+            if name_match == 'guider':
+                filename_dict['instrument'] = 'fgs'
+            elif 'detector' in filename_dict.keys():
+                filename_dict['instrument'] = JWST_INSTRUMENT_NAMES_SHORTHAND[
+                    filename_dict['detector'][:3]
+                ]
+
+    # Raise error if unable to parse the filename
     except AttributeError:
-        jdox_url = 'https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products'
+        jdox_url = 'https://jwst-docs.stsci.edu/display/JDAT/' \
+                   'File+Naming+Conventions+and+Data+Products'
         raise ValueError('Provided file {} does not follow JWST naming conventions.  See {} for further information.'.format(filename, jdox_url))
 
     return filename_dict

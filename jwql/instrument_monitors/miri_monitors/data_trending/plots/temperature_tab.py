@@ -167,8 +167,8 @@ def temp(conn, start, end):
     p.title.text = "IEC Temperatures"
     pf.add_basic_layout(p)
 
-    p.line(x = "start_time", y = "average", color = "brown", legend = "Internal Temp.", source = plot_data)
-    p.scatter(x = "start_time", y = "average", color = "brown", legend = "Internal Temp.", source = plot_data)
+    p.line(x = "start_time", y = "average", color = "brown", legend = "ICE Internal", source = plot_data)
+    p.scatter(x = "start_time", y = "average", color = "brown", legend = "ICE Internal", source = plot_data)
 
     a = pf.add_to_plot(p, "ICE IEC A", "ST_ZTC1MIRIA", start, end, conn, color = "burlywood")
     b = pf.add_to_plot(p, "FPE IEC A", "ST_ZTC2MIRIA", start, end, conn, color = "cadetblue")
@@ -288,8 +288,8 @@ def temperature_plots(conn, start, end):
             LW FPM I/F Temperature (T3)<br>
             SW FPM I/F Temperature (T4)<br>
             IM FPM I/F Temperature (T5)<br>
-            Deck Opp. Nom. Temperature (T6)<br>
-            Deck Opp. Red. Temperature (T7)<br>
+            A-B Strut Apex Temperature (T6)<br>
+            IOC Temperature (T7)<br>
             FWA Temperature<br>
             CCC Temperature<br>
             DGA-A (GW14) Temperature<br>
@@ -305,6 +305,7 @@ def temperature_plots(conn, start, end):
             ST_ZTC2MIRIA<br>
             ST_ZTC1MIRIB<br>
             ST_ZTC2MIRIB<br>
+            IGDP_MIR_ICE_INTER_TEMP<br>
             IMIR_PDU_TEMP<br>
             IMIR_IC_SCE_ANA_TEMP1<br>
             IMIR_SW_SCE_ANA_TEMP1<br>
@@ -312,13 +313,18 @@ def temperature_plots(conn, start, end):
             IMIR_IC_SCE_DIG_TEMP<br>
             IMIR_SW_SCE_DIG_TEMP<br>
             IMIR_LW_SCE_DIG_TEMP<br></td>
-        <td>ICE A IEC panel Temp<br>
-            FPE A IEC panel Temp<br>
-            ICE B IEC panel (Redundant) Temp<br>
-            FPE B IEC panel (Redundant) Temp<br>
+        <td>ICE IEC Panel Temp A<br>
+            FPE IEC Panel Temp A<br>
+            ICE IEC Panel Temp B<br>
+            FPE IEC Panel Temp B<br>
+            ICE internal Temperature<br>
             FPE PDU Temperature<br>
-            FPE SCE Analogue board Temperature (IC, SW & LW) <br>
-            FPE SCE Digital board Temperature (IC, SW & LW)<br></td>
+            FPE SCE Analogue board Temperature IC<br>
+            FPE SCE Analogue board Temperature SW<br>
+            FPE SCE Analogue board Temperature LW<br>
+            FPE SCE Digital board Temperature IC<br>
+            FPE SCE Digital board Temperature SW<br>
+            FPE SCE Digital board Temperature LW<br></td>
       </tr>
        <tr>
          <td>Detector Temperatures</td>

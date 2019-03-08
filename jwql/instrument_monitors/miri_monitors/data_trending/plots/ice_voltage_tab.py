@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""Prepares plots for ICE/WHEEL VOLTAGE tab
+"""Prepares plots for ICE VOLTAGE tab
 
     Module prepares plots for mnemonics below, combines plots in a grid and
     returns tab object.
@@ -289,6 +289,6 @@ def volt_plots(conn, start, end):
     l = gridplot([[plot1, plot2], [plot3, plot4]], merge_tools = False)
     layout = Column(descr, l)
 
-    tab = Panel(child = layout, title = "ICE/WHEEL VOLTAGE")
+    tab = Panel(child = layout, title = "ICE VOLTAGE")
 
     return tab
