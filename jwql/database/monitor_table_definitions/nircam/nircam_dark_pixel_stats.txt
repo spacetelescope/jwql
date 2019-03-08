@@ -3,3 +3,5 @@ X_COORD, integer
 Y_COORD, integer
 TYPE, string
 SOURCE_FILES, array
+MEAN_DARK_IMAGE_FILE, string
+BASELINE_FILE, string

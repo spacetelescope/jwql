@@ -319,10 +319,23 @@ def monitor_orm_factory(class_name):
     return type(class_name, (base,), data_dict)
 
 # Create tables from ORM factory
-# # NIRCamDarkQueries = monitor_orm_factory('nircam_dark_queries')
 # NIRCamDarkQueries = monitor_orm_factory('nircam_dark_query_history.txt')
 # NIRCamDarkPixelStats = monitor_orm_factory('nircam_dark_pixel_stats')
 # NIRCamDarkDarkCurrent = monitor_orm_factory('nircam_dark_dark_current')
+# NIRISSDarkQueries = monitor_orm_factory('niriss_dark_query_history.txt')
+# NIRISSDarkPixelStats = monitor_orm_factory('niriss_dark_pixel_stats')
+# NIRISSDarkDarkCurrent = monitor_orm_factory('niriss_dark_dark_current')
+# NIRSpecDarkQueries = monitor_orm_factory('nirspec_dark_query_history.txt')
+# NIRSpecDarkPixelStats = monitor_orm_factory('nirspec_dark_pixel_stats')
+# NIRSpecDarkDarkCurrent = monitor_orm_factory('nirspec_dark_dark_current')
+# MIRIDarkQueries = monitor_orm_factory('miri_dark_query_history.txt')
+# MIRIDarkPixelStats = monitor_orm_factory('miri_dark_pixel_stats')
+# MIRIDarkDarkCurrent = monitor_orm_factory('miri_dark_dark_current')
+# FGSDarkQueries = monitor_orm_factory('fgs_dark_query_history.txt')
+# FGSDarkPixelStats = monitor_orm_factory('fgs_dark_pixel_stats')
+# FGSDarkDarkCurrent = monitor_orm_factory('fgs_dark_dark_current')
+
+
 
 
 if __name__ == '__main__':
