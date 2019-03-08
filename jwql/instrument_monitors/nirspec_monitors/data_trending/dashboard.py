@@ -38,7 +38,7 @@ from datetime import date
 
 #import plot functions
 from .plots.power_tab import power_plots
-from .plots.volt_tab import volt_plots
+from .plots.voltage_tab import volt_plots
 from .plots.temperature_tab import temperature_plots
 from .plots.msa_mce_tab import msa_mce_plots
 from .plots.fpa_fpe_tab import fpa_fpe_plots

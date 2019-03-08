@@ -133,7 +133,7 @@ def ice_power(conn, start, end):
     return p
 
 
-def power_plots(conn, start, end):
+def msa_mce_plots(conn, start, end):
     '''Combines plots to a tab
     Parameters
     ----------
