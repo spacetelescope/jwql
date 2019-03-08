@@ -8,6 +8,12 @@ api_views.py
     :members:
     :undoc-members:
 
+context_processors.py
+---------------------
+.. automodule:: jwql.website.apps.jwql.context_processors
+    :members:
+    :undoc-members:
+
 data_containers.py
 ------------------
 .. automodule:: jwql.website.apps.jwql.data_containers
