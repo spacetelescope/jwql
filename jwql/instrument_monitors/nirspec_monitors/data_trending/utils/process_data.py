@@ -67,6 +67,43 @@ def once_a_day_routine(mnemonic_data):
     ------
     data_cond_1 : dict
         holds extracted data with condition 1 applied
+    '''
+
+    #abbreviate attribute
+    m = mnemonic_data
+
+    ###########################################################################
+    con_set_1 = [                                                           \
+    cond.equal(m.mnemonic('INRSH_WHEEL_MOT_SVREF'), 'REF_ON')]
+    #setup condition
+    condition_1 = cond.condition(con_set_1)
+
+    data_cond_1 = dict()
+
+    #add filtered engineering values of mnemonics given in list mnemonic_cond_2
+    #to dictitonary
+    for identifier in mn.mnemonic_cond_4:
+        data = extract_data(condition_1, m.mnemonic(identifier))
+
+        if data != None:
+            data_cond_1.update( {identifier:data} )
+        else:
+            print("no data for {}".format(identifier))
+
+    del condition_1
+
+    return data_cond_1
+
+def whole_day_routine(mnemonic_data):
+    '''Proposed routine for processing a 15min data file once a day
+    Parameters
+    ----------
+    mnemonic_data : dict
+        dict holds time and value in a astropy table with correspining identifier as key
+    Return
+    ------
+    data_cond_1 : dict
+        holds extracted data with condition 1 applied
     data_cond_1 : dict
         holds extracted data with condition 2 applied
     '''
@@ -74,7 +111,7 @@ def once_a_day_routine(mnemonic_data):
     #abbreviate attribute
     m = mnemonic_data
 
-    #########################################################################
+    ###########################################################################
     con_set_1 = [                                               \
     cond.unequal(m.mnemonic('INRSD_EXP_STAT'),'STARTED')]
 
@@ -116,54 +153,7 @@ def once_a_day_routine(mnemonic_data):
     del condition_2
 
     ##########################################################################
-    con_set_4 = [                                                           \
-    cond.equal(m.mnemonic('INRSH_WHEEL_MOT_SVREF'), 'REF_ON')]
-    #setup condition
-    condition_4 = cond.condition(con_set_4)
 
-    data_cond_4 = dict()
-
-    #add filtered engineering values of mnemonics given in list mnemonic_cond_2
-    #to dictitonary
-    for identifier in mn.mnemonic_cond_4:
-        data = extract_data(condition_4, m.mnemonic(identifier))
-
-        if data != None:
-            data_cond_4.update( {identifier:data} )
-        else:
-            print("no data for {}".format(identifier))
-
-    del condition_4
-
-    ##########################################################################
-    con_set_5 = [                                                           \
-    cond.unequal(m.mnemonic('INRSM_MOVE_STAT'), 'STARTED')]
-    #setup condition
-    condition_5 = cond.condition(con_set_5)
-
-    data_cond_5 = dict()
-
-    #add filtered engineering values of mnemonics given in list mnemonic_cond_2
-    #to dictitonary
-    for identifier in mn.mnemonic_cond_5:
-        data = extract_data(condition_5, m.mnemonic(identifier))
-
-        if data != None:
-            data_cond_5.update( {identifier:data} )
-        else:
-            print("no data for {}".format(identifier))
-
-    del condition_5
-
-
-    return data_cond_1, data_cond_2, data_cond_4, data_cond_5
-
-
-if __name__ =='__main__':
-    pass
-
-
-''' for whole day routine:
     con_set_3 = [                                                           \
     cond.equal(m.mnemonic('INRSI_CAA_ON_FLAG'), 'ON'),                      \
     cond.unequal(m.mnemonic('INRSH_LAMP_SEL'), 'NO_LAMP')]
@@ -184,4 +174,31 @@ if __name__ =='__main__':
 
     del condition_3
 
-'''
+    ############################################################################
+    con_set_5 = [                                                           \
+    cond.unequal(m.mnemonic('INRSM_MOVE_STAT'), 'STARTED')]
+    #setup condition
+    condition_5 = cond.condition(con_set_5)
+
+    data_cond_5 = dict()
+
+    #add filtered engineering values of mnemonics given in list mnemonic_cond_2
+    #to dictitonary
+    for identifier in mn.mnemonic_cond_5:
+        data = extract_data(condition_3, m.mnemonic(identifier))
+
+        if data != None:
+            data_cond_5.update( {identifier:data} )
+        else:
+            print("no data for {}".format(identifier))
+
+    del condition_5
+
+
+    return data_cond_1, data_cond_2, data_cond_3, data_cond_5
+
+
+
+
+if __name__ =='__main__':
+    pass
