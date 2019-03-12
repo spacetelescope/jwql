@@ -12,41 +12,11 @@ from jwql.instrument_monitors.nirspec_monitors.data_trending.utils.process_data 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 #point to the directory where your files are located!
-directory = '/home/daniel/STScI/trainigData/nirspec_15min/'
+directory = '/home/daniel/STScI/trainigData/nirspec_5min_full/'
 
 #here some some files contain the same data but they are all incomplete
 #in order to generate a full database we have to import all of them
-filenames = [
-"FOFTLM2019067164301300_15min_day234.CSV",
-"FOFTLM2019067164828534_15min_day244.CSV",
-"FOFTLM2019067165013302_15min_day254.CSV",
-"FOFTLM2019067164416045_15min_day235.CSV",
-"FOFTLM2019067164837365_15min_day245.CSV",
-"FOFTLM2019067165022368_15min_day255.CSV",
-"FOFTLM2019067164555966_15min_day236.CSV",
-"FOFTLM2019067164851969_15min_day246.CSV",
-"FOFTLM2019067165033636_15min_day256.CSC",
-"FOFTLM2019067164712315_15min_day237.CSV",
-"FOFTLM2019067164859479_15min_day247.CSV",
-"FOFTLM2019067165046387_15min_day257.CSV",
-"FOFTLM2019067164721495_15min_day238.CSV",
-"FOFTLM2019067164908225_15min_day248.CSV",
-"FOFTLM2019067165053256_15min_day258.CSV",
-"FOFTLM2019067164731039_15min_day239.CSV",
-"FOFTLM2019067164918458_15min_day249.CSV",
-"FOFTLM2019067165107118_15min_day259.CSV",
-"FOFTLM2019067164744470_15min_day240.CSV",
-"FOFTLM2019067164932178_15min_day250.CSV",
-"FOFTLM2019067165118696_15min_day260.CSV",
-"FOFTLM2019067164755086_15min_day241.CSV",
-"FOFTLM2019067164941354_15min_day251.CSV",
-"FOFTLM2019067165124648_15min_day261.CSV",
-"FOFTLM2019067164808149_15min_day242.CSV",
-"FOFTLM2019067164952300_15min_day252.CSV",
-"FOFTLM2019067165135284_15min_day262.CSV",
-"FOFTLM2019067164820344_15min_day243.CSV",
-"FOFTLM2019067165001624_15min_day253.CSV",
-"FOFTLM2019067165144927_15min_day263.CSV"]
+filenames = glob.glob(os.path.join(directory, '*.CSV'))
 
 def process_file(conn, path):
     '''Parse CSV file, process data within and put to DB
@@ -95,8 +65,12 @@ def process_file(conn, path):
 
             dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
             sql.add_data(conn, identifier, dataset)
+        elif len(temp) == 2:
+            dataset = (float(element['time']), float(element['time']), 1, temp[0], 0)
+            sql.add_data(conn, identifier, dataset)
         else:
             print('No data for {}'.format(identifier))
+            print(temp)
 
         del temp
 
@@ -110,8 +84,7 @@ def main():
     conn = sql.create_connection(DATABASE_FILE)
 
     #do for every file in list above
-    for name in filenames:
-        path = directory + name
+    for path in filenames:
         process_file(conn, path)
 
     #close connection

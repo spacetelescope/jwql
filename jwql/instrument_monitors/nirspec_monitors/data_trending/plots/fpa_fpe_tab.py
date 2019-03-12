@@ -78,7 +78,112 @@ import numpy as np
 from astropy.time import Time
 
 
-def ice_power(conn, start, end):
+def asic_1_voltages(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
+
+    # create a new plot with a title and axis labels
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 560,
+                plot_height = 1000,
+                x_axis_type = 'datetime',
+                output_backend = "webgl",
+                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+
+    p.grid.visible = True
+    p.title.text = "ASIC 1 Voltages"
+    pf.add_basic_layout(p)
+
+    a = pf.add_to_plot(p, "VDDA", "IGDP_NRSD_ALG_A1_VDDA", start, end, conn, color = "burlywood")
+    b = pf.add_to_plot(p, "A1GND4VDA", "IGDP_NRSD_ALG_A1GND4VDA", start, end, conn, color = "cadetblue")
+    c = pf.add_to_plot(p, "A1GND5VRF", "IGDP_NRSD_ALG_A1GND5VRF", start, end, conn, color = "chartreuse")
+    d = pf.add_to_plot(p, "A1VDD3P3", "INRSD_ALG_A1_VDD3P3", start, end, conn, color = "chocolate")
+    e = pf.add_to_plot(p, "VDD", "INRSD_ALG_A1_VDD", start, end, conn, color = "coral")
+    f = pf.add_to_plot(p, "REF", "INRSD_ALG_A1_REF", start, end, conn, color = "darkorange")
+    g = pf.add_to_plot(p, "DSUB_V", "INRSD_A1_DSUB_V", start, end, conn, color = "crimson")
+    h = pf.add_to_plot(p, "VRESET_V", "INRSD_A1_VRESET_V", start, end, conn, color = "cyan")
+    i = pf.add_to_plot(p, "CELLDRN_V", "INRSD_A1_CELLDRN_V", start, end, conn, color = "darkblue")
+    j = pf.add_to_plot(p, "DRAIN_V", "INRSD_A1_DRAIN_V", start, end, conn, color = "darkgreen")
+    k = pf.add_to_plot(p, "VBIASGATE_V", "INRSD_A1_VBIASGATE_V", start, end, conn, color = "darkmagenta")
+    l = pf.add_to_plot(p, "VBIASPWR_V", "INRSD_A1_VBIASPWR_V", start, end, conn, color = "cornflowerblue")
+    m = pf.add_to_plot(p, "TEMPSENS_V", "INRSD_A1_TMPSENS_V", start, end, conn, color = "orange")
+
+    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j,k,l,m])
+
+    p.legend.location = "bottom_right"
+    p.legend.click_policy = "hide"
+
+    return p
+
+def asic_2_voltes(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
+
+    # create a new plot with a title and axis labels
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 560,
+                plot_height = 1000,
+                x_axis_type = 'datetime',
+                output_backend = "webgl",
+                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+
+    p.grid.visible = True
+    p.title.text = "ASIC 2 Voltages"
+    pf.add_basic_layout(p)
+
+    a = pf.add_to_plot(p, "VDDA", "IGDP_NRSD_ALG_A2_VDDA", start, end, conn, color = "burlywood")
+    b = pf.add_to_plot(p, "A2GND4VDA", "IGDP_NRSD_ALG_A2GND4VDA", start, end, conn, color = "cadetblue")
+    c = pf.add_to_plot(p, "A2GND5VRF", "IGDP_NRSD_ALG_A2GND5VRF", start, end, conn, color = "chartreuse")
+    d = pf.add_to_plot(p, "A2VDD3P3", "INRSD_ALG_A2_VDD3P3", start, end, conn, color = "chocolate")
+    e = pf.add_to_plot(p, "VDD", "INRSD_ALG_A2_VDD", start, end, conn, color = "coral")
+    f = pf.add_to_plot(p, "REF", "INRSD_ALG_A2_REF", start, end, conn, color = "darkorange")
+    g = pf.add_to_plot(p, "DSUB_V", "INRSD_A2_DSUB_V", start, end, conn, color = "crimson")
+    h = pf.add_to_plot(p, "VRESET_V", "INRSD_A2_VRESET_V", start, end, conn, color = "cyan")
+    i = pf.add_to_plot(p, "CELLDRN_V", "INRSD_A2_CELLDRN_V", start, end, conn, color = "darkblue")
+    j = pf.add_to_plot(p, "DRAIN_V", "INRSD_A2_DRAIN_V", start, end, conn, color = "darkgreen")
+    k = pf.add_to_plot(p, "VBIASGATE_V", "INRSD_A2_VBIASGATE_V", start, end, conn, color = "darkmagenta")
+    l = pf.add_to_plot(p, "VBIASPWR_V", "INRSD_A2_VBIASPWR_V", start, end, conn, color = "cornflowerblue")
+    m = pf.add_to_plot(p, "TEMPSENS_V", "INRSD_A2_TMPSENS_V", start, end, conn, color = "orange")
+
+    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j,k,l,m])
+
+    p.legend.location = "bottom_right"
+    p.legend.click_policy = "hide"
+
+    return p
+
+        IGDP_NRSD_ALG_A1_VDD_C
+        IGDP_NRSD_ALG_A1VDAP12C
+        IGDP_NRSD_ALG_A1VDAN12C
+        INRSD_A1_VDDA_I
+
+def asic_1_currents(conn, start, end):
     '''Create specific plot and return plot object
     Parameters
     ----------
@@ -99,29 +204,68 @@ def ice_power(conn, start, end):
                 toolbar_location = "above",
                 plot_width = 560,
                 plot_height = 500,
-                y_range = [4.9,5.1],
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
-    p.title.text = "FPE Dig. 5V"
+    p.title.text = "ASIC 1 Currents"
     pf.add_basic_layout(p)
 
-    p.extra_y_ranges = {"current": Range1d(start=2100, end=2500)}
-    a = pf.add_to_plot(p, "FPE Dig. 5V", "IMIR_PDU_V_DIG_5V", start, end, conn, color = "red")
-    b = pf.add_to_plot(p, "FPE Dig. 5V Current", "IMIR_PDU_I_DIG_5V", start, end, conn, y_axis = "current", color = "blue")
-    p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
+    a = pf.add_to_plot(p, "VDD_C", "IGDP_NRSD_ALG_A1_VDD_C", start, end, conn, color = "burlywood")
+    b = pf.add_to_plot(p, "A1VDAP12C", "IGDP_NRSD_ALG_A1VDAP12C", start, end, conn, color = "cadetblue")
+    c = pf.add_to_plot(p, "A1VDAN12C", "IGDP_NRSD_ALG_A1VDAN12C", start, end, conn, color = "chartreuse")
+    d = pf.add_to_plot(p, "VDDA_I", "INRSD_A1_VDDA_I", start, end, conn, color = "chocolate")
 
-    pf.add_hover_tool(p,[a,b])
+    pf.add_hover_tool(p,[a,b,c,d])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
 
     return p
 
+def asic_2_currents(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
 
-def fpa_fpe_plots(conn, start, end):
+    # create a new plot with a title and axis labels
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 560,
+                plot_height = 500,
+                x_axis_type = 'datetime',
+                output_backend = "webgl",
+                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+
+    p.grid.visible = True
+    p.title.text = "ASIC 2 Currents"
+    pf.add_basic_layout(p)
+
+    a = pf.add_to_plot(p, "VDD_C", "IGDP_NRSD_ALG_A2_VDD_C", start, end, conn, color = "burlywood")
+    b = pf.add_to_plot(p, "A2VDAP12C", "IGDP_NRSD_ALG_A2VDAP12C", start, end, conn, color = "cadetblue")
+    c = pf.add_to_plot(p, "A2VDAN12C", "IGDP_NRSD_ALG_A2VDAN12C", start, end, conn, color = "chartreuse")
+    d = pf.add_to_plot(p, "VDDA_I", "INRSD_A2_VDDA_I", start, end, conn, color = "chocolate")
+
+    pf.add_hover_tool(p,[a,b,c,d])
+
+    p.legend.location = "bottom_right"
+    p.legend.click_policy = "hide"
+
+    return p
+
+def fpe_fpa_plot(conn, start, end):
     '''Combines plots to a tab
     Parameters
     ----------
@@ -163,45 +307,19 @@ def fpa_fpe_plots(conn, start, end):
             IMIR_PDU_V_REF_2R5V<br> </td>
         <td>FPE 2.5V Digital and FPE 2.5V PDU Reference Voltage</td>
       </tr>
-      <tr>
-        <td>FPE Dig. 5V</td>
-        <td>IMIR_PDU_V_DIG_5V<br>
-            IMIR_PDU_I_DIG_5V</td>
-        <td>FPE 5V Digital Voltage and Current</td>
-      </tr>
-      <tr>
-        <td>FPE Ana. 5V</td>
-        <td>IMIR_PDU_V_ANA_5V<br>
-            IMIR_PDU_I_ANA_5V</td>
-        <td>FPE +5V Analog Voltage and Current</td>
-      </tr>
-      <tr>
-        <td>FPE Ana. N5V</td>
-        <td>IMIR_PDU_V_ANA_N5V<br>
-            IMIR_PDU_I_ANA_N5V</td>
-        <td>FPE -5V Analog Voltage and Current</td>
-      </tr>
-      <tr>
-        <td>FPE Ana. 7V</td>
-        <td>IMIR_PDU_V_ANA_7V<br>
-            IMIR_PDU_I_ANA_7V</td>
-        <td>FPE +7V Analog Voltage and Current</td>
-      </tr>
-       <tr>
-         <td>FPE Ana. N7V</td>
-         <td>IMIR_PDU_V_ANA_N7V<br>
-             IMIR_PDU_I_ANA_N7V</td>
-         <td>FPE -7V Analog Voltage and Current</td>
        </tr>
     </table>
     </body>
     """, width=1100)
 
-    plot1 = ice_power(conn, start, end)
-    plot2 = mce_power(conn, start, end)
-    plot3 = fpe_power(conn, start, end)
+    plot1 = asic_1_voltages(conn, start, end)
+    plot2 = asic_2_voltages(conn, start, end)
+    plot3 = asic_1_currents(conn, start, end)
+    plot4 = asic_2_currents(conn, start, end)
 
-    layout = Column(descr, plot1, plot2, plot3)
+    plots= gridplot([asic_1_votlages, asic_2_voltages],
+                    [asic_1_currents, asic_2_currents])
+    layout = Column(descr, plots)
 
     tab = Panel(child = layout, title = "POWER")
 

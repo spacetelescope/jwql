@@ -127,8 +127,8 @@ def add_to_plot(p, legend, mnemonic, start, end, conn, y_axis= "default", color=
     temp = pd.read_sql_query(sql_c, conn)
 
     #put data into Dataframe and define ColumnDataSource for each plot
-    reg = pd.DataFrame({'reg' : pol_regression(temp['start_time'], temp['average'],3)})
-    temp = pd.concat([temp, reg], axis = 1)
+    #reg = pd.DataFrame({'reg' : pol_regression(temp['start_time'], temp['average'],3)})
+    #temp = pd.concat([temp, reg], axis = 1)
     temp['start_time'] = pd.to_datetime( Time(temp['start_time'], format = "mjd").datetime )
     plot_data = ColumnDataSource(temp)
 

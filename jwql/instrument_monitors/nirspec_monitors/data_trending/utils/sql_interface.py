@@ -83,7 +83,7 @@ def add_data(conn, mnemonic, data):
                 VALUES (?,?,?,?,?)'.format(mnemonic),data)
         conn.commit()
     else:
-        print('data already exists')
+        print('data for {} already exists'.format(mnemonic))
 
 
 def add_wheel_data(conn, mnemonic, data):

@@ -194,10 +194,7 @@ def whole_day_routine(mnemonic_data):
 
     del condition_5
 
-
     return data_cond_1, data_cond_2, data_cond_3, data_cond_5
-
-
 
 
 if __name__ =='__main__':
