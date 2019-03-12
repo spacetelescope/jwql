@@ -90,7 +90,7 @@ import numpy as np
 from astropy.time import Time
 
 
-def ice_power(conn, start, end):
+def aic_parametes(conn, start, end):
     '''Create specific plot and return plot object
     Parameters
     ----------
@@ -106,23 +106,40 @@ def ice_power(conn, start, end):
         Bokeh plot
     '''
 
+        INRSM_MCE_AIC_1R5_V
+        INRSM_MCE_AIC_3R3_V
+        INRSM_MCE_AIC_5_V
+        INRSM_MCE_AIC_P12_V
+        INRSM_MCE_AIC_N12_V
+        INRSM_MCE_AIC_3R3_I
+        INRSM_MCE_AIC_5_I
+        INRSM_MCE_AIC_P12_I
+        INRSM_MCE_AIC_N12_I
+
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
-                plot_width = 560,
+                plot_width = 1020,
                 plot_height = 500,
-                y_range = [4.9,5.1],
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
-    p.title.text = "FPE Dig. 5V"
+    p.title.text = "MCE Board 1 (AIC)"
     pf.add_basic_layout(p)
 
-    p.extra_y_ranges = {"current": Range1d(start=2100, end=2500)}
-    a = pf.add_to_plot(p, "FPE Dig. 5V", "IMIR_PDU_V_DIG_5V", start, end, conn, color = "red")
-    b = pf.add_to_plot(p, "FPE Dig. 5V Current", "IMIR_PDU_I_DIG_5V", start, end, conn, y_axis = "current", color = "blue")
+    p.extra_y_ranges = {"current": Range1d(start=0, end=2500)}
+    a = pf.add_to_plot(p, "1R5_V", "INRSM_MCE_AIC_1R5_V", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "3R3_V", "INRSM_MCE_AIC_3R3_V", start, end, conn, color = "orange")
+    c = pf.add_to_plot(p, "5_V", "INRSM_MCE_AIC_5_V", start, end, conn, color = "brown)
+    d = pf.add_to_plot(p, "P12_V", "INRSM_MCE_AIC_P12_V", start, end, conn, color = "curlywood")
+    e = pf.add_to_plot(p, "N12_V", "INRSM_MCE_AIC_N12_V", start, end, conn, color = "darkmagenta")
+    f = pf.add_to_plot(p, "3R3_I", "INRSM_MCE_AIC_3R3_I", start, end, conn, y_axis = "current", color = "blue")
+    f = pf.add_to_plot(p, "5_I", "INRSM_MCE_AIC_3R3_I", start, end, conn, y_axis = "current", color = "cyan")
+    g = pf.add_to_plot(p, "P12_I", "INRSM_MCE_AIC_P12_I", start, end, conn, y_axis = "current", color = "green")
+    h = pf.add_to_plot(p, "N12_I", "INRSM_MCE_AIC_N12_I", start, end, conn, y_axis = "current", color = "darkgreen")
+
     p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
 
     pf.add_hover_tool(p,[a,b])
