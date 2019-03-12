@@ -338,12 +338,12 @@ def volt_plots(conn, start, end):
     """, width=1100)
 
     plot1 = ref_volt(conn, start, end)
-    plot2 = caa_volt(conn, start, end)
+    #plot2 = caa_volt(conn, start, end)
     plot3 = fwa_volt(conn, start, end)
     plot4 = gwa_volt(conn, start, end)
     plot5 = rma_volt(conn, start, end)
 
-    layout = Column(descr, plot1, plot2, plot3, plot4, plot5)
+    layout = Column(descr, plot1, plot3, plot4, plot5)
 
     tab = Panel(child = layout, title = "REF VOLT/CURR")
 

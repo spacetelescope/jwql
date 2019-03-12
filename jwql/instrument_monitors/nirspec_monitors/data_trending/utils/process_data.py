@@ -185,7 +185,7 @@ def whole_day_routine(mnemonic_data):
     #add filtered engineering values of mnemonics given in list mnemonic_cond_2
     #to dictitonary
     for identifier in mn.mnemonic_cond_5:
-        data = extract_data(condition_3, m.mnemonic(identifier))
+        data = extract_data(condition_5, m.mnemonic(identifier))
 
         if data != None:
             data_cond_5.update( {identifier:data} )

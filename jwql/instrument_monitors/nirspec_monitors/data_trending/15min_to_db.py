@@ -1,5 +1,6 @@
 import statistics
 import os
+import glob
 import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.mnemonics as mn
 import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.sql_interface as sql
 import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.csv_to_AstropyTable as apt

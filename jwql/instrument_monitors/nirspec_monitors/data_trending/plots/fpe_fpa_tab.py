@@ -119,16 +119,15 @@ def asic_1_voltages(conn, start, end):
     j = pf.add_to_plot(p, "DRAIN_V", "INRSD_A1_DRAIN_V", start, end, conn, color = "darkgreen")
     k = pf.add_to_plot(p, "VBIASGATE_V", "INRSD_A1_VBIASGATE_V", start, end, conn, color = "darkmagenta")
     l = pf.add_to_plot(p, "VBIASPWR_V", "INRSD_A1_VBIASPWR_V", start, end, conn, color = "cornflowerblue")
-    m = pf.add_to_plot(p, "TEMPSENS_V", "INRSD_A1_TMPSENS_V", start, end, conn, color = "orange")
 
-    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j,k,l,m])
+    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j,k,l])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
 
     return p
 
-def asic_2_voltes(conn, start, end):
+def asic_2_voltages(conn, start, end):
     '''Create specific plot and return plot object
     Parameters
     ----------
@@ -169,19 +168,13 @@ def asic_2_voltes(conn, start, end):
     j = pf.add_to_plot(p, "DRAIN_V", "INRSD_A2_DRAIN_V", start, end, conn, color = "darkgreen")
     k = pf.add_to_plot(p, "VBIASGATE_V", "INRSD_A2_VBIASGATE_V", start, end, conn, color = "darkmagenta")
     l = pf.add_to_plot(p, "VBIASPWR_V", "INRSD_A2_VBIASPWR_V", start, end, conn, color = "cornflowerblue")
-    m = pf.add_to_plot(p, "TEMPSENS_V", "INRSD_A2_TMPSENS_V", start, end, conn, color = "orange")
 
-    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j,k,l,m])
+    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j,k,l])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
 
     return p
-
-        IGDP_NRSD_ALG_A1_VDD_C
-        IGDP_NRSD_ALG_A1VDAP12C
-        IGDP_NRSD_ALG_A1VDAN12C
-        INRSD_A1_VDDA_I
 
 def asic_1_currents(conn, start, end):
     '''Create specific plot and return plot object
@@ -265,7 +258,8 @@ def asic_2_currents(conn, start, end):
 
     return p
 
-def fpe_fpa_plot(conn, start, end):
+
+def fpe_fpa_plots(conn, start, end):
     '''Combines plots to a tab
     Parameters
     ----------
@@ -317,8 +311,8 @@ def fpe_fpa_plot(conn, start, end):
     plot3 = asic_1_currents(conn, start, end)
     plot4 = asic_2_currents(conn, start, end)
 
-    plots= gridplot([asic_1_votlages, asic_2_voltages],
-                    [asic_1_currents, asic_2_currents])
+    plots= gridplot([[plot1, plot2],
+                    [plot3, plot4]], merge_tools=False)
     layout = Column(descr, plots)
 
     tab = Panel(child = layout, title = "POWER")

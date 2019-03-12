@@ -90,7 +90,7 @@ import numpy as np
 from astropy.time import Time
 
 
-def aic_parametes(conn, start, end):
+def aic_parameters(conn, start, end):
     '''Create specific plot and return plot object
     Parameters
     ----------
@@ -105,16 +105,6 @@ def aic_parametes(conn, start, end):
     p : Plot object
         Bokeh plot
     '''
-
-        INRSM_MCE_AIC_1R5_V
-        INRSM_MCE_AIC_3R3_V
-        INRSM_MCE_AIC_5_V
-        INRSM_MCE_AIC_P12_V
-        INRSM_MCE_AIC_N12_V
-        INRSM_MCE_AIC_3R3_I
-        INRSM_MCE_AIC_5_I
-        INRSM_MCE_AIC_P12_I
-        INRSM_MCE_AIC_N12_I
 
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
@@ -132,23 +122,241 @@ def aic_parametes(conn, start, end):
     p.extra_y_ranges = {"current": Range1d(start=0, end=2500)}
     a = pf.add_to_plot(p, "1R5_V", "INRSM_MCE_AIC_1R5_V", start, end, conn, color = "red")
     b = pf.add_to_plot(p, "3R3_V", "INRSM_MCE_AIC_3R3_V", start, end, conn, color = "orange")
-    c = pf.add_to_plot(p, "5_V", "INRSM_MCE_AIC_5_V", start, end, conn, color = "brown)
-    d = pf.add_to_plot(p, "P12_V", "INRSM_MCE_AIC_P12_V", start, end, conn, color = "curlywood")
+    c = pf.add_to_plot(p, "5_V", "INRSM_MCE_AIC_5_V", start, end, conn, color = "brown")
+    d = pf.add_to_plot(p, "P12_V", "INRSM_MCE_AIC_P12_V", start, end, conn, color = "burlywood")
     e = pf.add_to_plot(p, "N12_V", "INRSM_MCE_AIC_N12_V", start, end, conn, color = "darkmagenta")
     f = pf.add_to_plot(p, "3R3_I", "INRSM_MCE_AIC_3R3_I", start, end, conn, y_axis = "current", color = "blue")
     f = pf.add_to_plot(p, "5_I", "INRSM_MCE_AIC_3R3_I", start, end, conn, y_axis = "current", color = "cyan")
     g = pf.add_to_plot(p, "P12_I", "INRSM_MCE_AIC_P12_I", start, end, conn, y_axis = "current", color = "green")
     h = pf.add_to_plot(p, "N12_I", "INRSM_MCE_AIC_N12_I", start, end, conn, y_axis = "current", color = "darkgreen")
-
     p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
 
-    pf.add_hover_tool(p,[a,b])
+    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
 
     return p
 
+def mdac_parameters(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
+
+    # create a new plot with a title and axis labels
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 1020,
+                plot_height = 500,
+                x_axis_type = 'datetime',
+                output_backend = "webgl",
+                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+
+    p.grid.visible = True
+    p.title.text = "MCE Board 2 (MDAC)"
+    pf.add_basic_layout(p)
+
+    p.extra_y_ranges = {"current": Range1d(start=0, end=2500)}
+    a = pf.add_to_plot(p, "1R5_V", "INRSM_MCE_MDAC_1R5_V", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "3R3_V", "INRSM_MCE_MDAC_3R3_V", start, end, conn, color = "orange")
+    c = pf.add_to_plot(p, "5_V", "INRSM_MCE_MDAC_5_V", start, end, conn, color = "brown")
+    d = pf.add_to_plot(p, "P12_V", "INRSM_MCE_MDAC_P12_V", start, end, conn, color = "burlywood")
+    e = pf.add_to_plot(p, "N12_V", "INRSM_MCE_MDAC_N12_V", start, end, conn, color = "darkmagenta")
+    f = pf.add_to_plot(p, "3R3_I", "INRSM_MCE_MDAC_3R3_I", start, end, conn, y_axis = "current", color = "blue")
+    f = pf.add_to_plot(p, "5_I", "INRSM_MCE_MDAC_3R3_I", start, end, conn, y_axis = "current", color = "cyan")
+    g = pf.add_to_plot(p, "P12_I", "INRSM_MCE_MDAC_P12_I", start, end, conn, y_axis = "current", color = "green")
+    h = pf.add_to_plot(p, "N12_I", "INRSM_MCE_MDAC_N12_I", start, end, conn, y_axis = "current", color = "darkgreen")
+    p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
+
+    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h])
+
+    p.legend.location = "bottom_right"
+    p.legend.click_policy = "hide"
+
+    return p
+
+def quad1_volt(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
+
+    # create a new plot with a title and axis labels
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 560,
+                plot_height = 500,
+                x_axis_type = 'datetime',
+                output_backend = "webgl",
+                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+
+    p.grid.visible = True
+    p.title.text = "Quad 1"
+    pf.add_basic_layout(p)
+
+    a = pf.add_to_plot(p, "365VDD", "INRSM_MSA_Q1_365VDD", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "365VPP", "INRSM_MSA_Q1_365VPP", start, end, conn, color = "orange")
+    c = pf.add_to_plot(p, "171VPP", "INRSM_MSA_Q1_171VPP", start, end, conn, color = "brown")
+    d = pf.add_to_plot(p, "365IDD", "IGDPM_MSA_Q1_365IDD", start, end, conn, color = "burlywood")
+    e = pf.add_to_plot(p, "365IPP", "IGDPM_MSA_Q1_365IPP", start, end, conn, color = "darkmagenta")
+    f = pf.add_to_plot(p, "171RTN", "IGDPM_MSA_Q1_171RTN", start, end, conn, color = "blue")
+
+    pf.add_hover_tool(p,[a,b,c,d,e,f])
+
+    p.legend.location = "bottom_right"
+    p.legend.click_policy = "hide"
+
+    return p
+
+def quad2_volt(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
+
+    # create a new plot with a title and axis labels
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 560,
+                plot_height = 500,
+                x_axis_type = 'datetime',
+                output_backend = "webgl",
+                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+
+    p.grid.visible = True
+    p.title.text = "Quad 2"
+    pf.add_basic_layout(p)
+
+    a = pf.add_to_plot(p, "365VDD", "INRSM_MSA_Q2_365VDD", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "365VPP", "INRSM_MSA_Q2_365VPP", start, end, conn, color = "orange")
+    c = pf.add_to_plot(p, "171VPP", "INRSM_MSA_Q2_171VPP", start, end, conn, color = "brown")
+    d = pf.add_to_plot(p, "365IDD", "IGDPM_MSA_Q2_365IDD", start, end, conn, color = "burlywood")
+    e = pf.add_to_plot(p, "365IPP", "IGDPM_MSA_Q2_365IPP", start, end, conn, color = "darkmagenta")
+    f = pf.add_to_plot(p, "171RTN", "IGDPM_MSA_Q2_171RTN", start, end, conn, color = "blue")
+
+    pf.add_hover_tool(p,[a,b,c,d,e,f])
+
+    p.legend.location = "bottom_right"
+    p.legend.click_policy = "hide"
+
+    return p
+
+def quad3_volt(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
+
+    # create a new plot with a title and axis labels
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 560,
+                plot_height = 500,
+                x_axis_type = 'datetime',
+                output_backend = "webgl",
+                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+
+    p.grid.visible = True
+    p.title.text = "Quad 3"
+    pf.add_basic_layout(p)
+
+    a = pf.add_to_plot(p, "365VDD", "INRSM_MSA_Q3_365VDD", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "365VPP", "INRSM_MSA_Q3_365VPP", start, end, conn, color = "orange")
+    c = pf.add_to_plot(p, "171VPP", "INRSM_MSA_Q3_171VPP", start, end, conn, color = "brown")
+    d = pf.add_to_plot(p, "365IDD", "IGDPM_MSA_Q3_365IDD", start, end, conn, color = "burlywood")
+    e = pf.add_to_plot(p, "365IPP", "IGDPM_MSA_Q3_365IPP", start, end, conn, color = "darkmagenta")
+    f = pf.add_to_plot(p, "171RTN", "IGDPM_MSA_Q3_171RTN", start, end, conn, color = "blue")
+
+    pf.add_hover_tool(p,[a,b,c,d,e,f])
+
+    p.legend.location = "bottom_right"
+    p.legend.click_policy = "hide"
+
+    return p
+
+def quad4_volt(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
+
+    # create a new plot with a title and axis labels
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 560,
+                plot_height = 500,
+                x_axis_type = 'datetime',
+                output_backend = "webgl",
+                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+
+    p.grid.visible = True
+    p.title.text = "Quad 4"
+    pf.add_basic_layout(p)
+
+    a = pf.add_to_plot(p, "365VDD", "INRSM_MSA_Q4_365VDD", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "365VPP", "INRSM_MSA_Q4_365VPP", start, end, conn, color = "orange")
+    c = pf.add_to_plot(p, "171VPP", "INRSM_MSA_Q4_171VPP", start, end, conn, color = "brown")
+    d = pf.add_to_plot(p, "365IDD", "IGDPM_MSA_Q4_365IDD", start, end, conn, color = "burlywood")
+    e = pf.add_to_plot(p, "365IPP", "IGDPM_MSA_Q4_365IPP", start, end, conn, color = "darkmagenta")
+    f = pf.add_to_plot(p, "171RTN", "IGDPM_MSA_Q4_171RTN", start, end, conn, color = "blue")
+
+    pf.add_hover_tool(p,[a,b,c,d,e,f])
+
+    p.legend.location = "bottom_right"
+    p.legend.click_policy = "hide"
+
+    return p
 
 def msa_mce_plots(conn, start, end):
     '''Combines plots to a tab
@@ -226,12 +434,16 @@ def msa_mce_plots(conn, start, end):
     </body>
     """, width=1100)
 
-    plot1 = ice_power(conn, start, end)
-    plot2 = mce_power(conn, start, end)
-    plot3 = fpe_power(conn, start, end)
+    plot1 = aic_parameters(conn, start, end)
+    plot2 = mdac_parameters(conn, start, end)
+    plot3 = quad1_volt(conn, start, end)
+    plot4 = quad2_volt(conn, start, end)
+    plot5 = quad3_volt(conn, start, end)
+    plot6 = quad4_volt(conn, start, end)
 
-    layout = Column(descr, plot1, plot2, plot3)
+    grid = gridplot([[plot3, plot4], [plot5, plot6]],merge_tools=False)
+    layout = Column(descr, plot1, plot2, grid)
 
-    tab = Panel(child = layout, title = "POWER")
+    tab = Panel(child = layout, title = "MSA/MCE")
 
     return tab
