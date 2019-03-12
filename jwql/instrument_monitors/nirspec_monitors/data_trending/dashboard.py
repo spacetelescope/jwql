@@ -39,9 +39,9 @@ from datetime import date
 #import plot functions
 from .plots.power_tab import power_plots
 from .plots.voltage_tab import volt_plots
-from .plots.temperature_tab import temperature_plots
+#from .plots.temperature_tab import temperature_plots
 from .plots.msa_mce_tab import msa_mce_plots
-from .plots.fpa_fpe_tab import fpa_fpe_plots
+from .plots.fpe_fpa_tab import fpe_fpa_plots
 
 #configure actual datetime in order to implement range function
 now = datetime.datetime.now()
@@ -80,14 +80,14 @@ def data_trending_dashboard(start = default_start, end = now):
 
     #add tabs to dashboard
     #tab1 = power_plots(conn, start, end)
-    tab2 = volt_plots(conn, start, end)
+    #tab2 = volt_plots(conn, start, end)
     #tab3 = temperature_plots(conn, start, end)
-    #tab5 = msa_mce_plots(conn, start, end)
-    #tab6 = fpa_fpe_plots(conn, start, end)
+    tab5 = msa_mce_plots(conn, start, end)
+    tab6 = fpe_fpa_plots(conn, start, end)
 
     #build dashboard
     #tabs = Tabs( tabs=[ tab1, tab2, tab3, tab5, tab4, tab6 ] )
-    tabs = Tabs( tabs=[  tab2])
+    tabs = Tabs( tabs=[ tab5, tab6])
     #return dasboard to webapp
     script, div = components(tabs)
     plot_data = [div, script]

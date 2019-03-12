@@ -22,8 +22,8 @@ Notes
 
 #mnemonics underlaying certain conditions (whole day)
 mnemonic_cond_1 = [
-"SE_ZINRSICEA",
-"SE_ZINRSICEB"]
+"SE_ZINRSFPEA",
+"SE_ZINRSFPEB"]
 
 #mnemonics underlaying condition 2 (whole day)
 mnemonic_cond_2 = [
@@ -31,7 +31,7 @@ mnemonic_cond_2 = [
 "SE_ZINRSICEB"]
 
 #CHECK CONDITION FOR THESE!!! (whole day!?)
-menmonic_cond_3 = [
+mnemonic_cond_3 = [
 "INRSH_LAMP_SEL",
 "INRSI_C_CAA_CURRENT",
 "INRSI_C_CAA_VOLTAGE"]
