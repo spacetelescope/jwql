@@ -83,7 +83,7 @@ def about(request, user):
     return render(request, template, context)
 
 
-@auth_info
+@auth_required
 def archived_proposals(request, user, inst):
     """Generate the page listing all archived proposals in the database
 
@@ -112,7 +112,8 @@ def archived_proposals(request, user, inst):
     return render(request, template, context)
 
 
-def archived_proposals_ajax(request, inst):
+@auth_required
+def archived_proposals_ajax(request, user, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -182,7 +183,8 @@ def archive_thumbnails(request, user, inst, proposal):
     return render(request, template, context)
 
 
-def archive_thumbnails_ajax(request, inst, proposal):
+@auth_required
+def archive_thumbnails_ajax(request, user, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
