@@ -70,7 +70,7 @@ from bokeh.models import LinearAxis, Range1d
 from bokeh.plotting import figure
 from bokeh.models.widgets import Panel, Tabs, Div
 from bokeh.models import ColumnDataSource, HoverTool
-from bokeh.layouts import WidgetBox, gridplot, Column
+from bokeh.layouts import WidgetBox, gridplot, Column, Row
 
 import pandas as pd
 import numpy as np
@@ -97,8 +97,8 @@ def asic_1_voltages(conn, start, end):
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
-                plot_width = 560,
-                plot_height = 1000,
+                plot_width = 1020,
+                plot_height = 800,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
@@ -106,7 +106,6 @@ def asic_1_voltages(conn, start, end):
     p.grid.visible = True
     p.title.text = "ASIC 1 Voltages"
     pf.add_basic_layout(p)
-
     a = pf.add_to_plot(p, "VDDA", "IGDP_NRSD_ALG_A1_VDDA", start, end, conn, color = "burlywood")
     b = pf.add_to_plot(p, "A1GND4VDA", "IGDP_NRSD_ALG_A1GND4VDA", start, end, conn, color = "cadetblue")
     c = pf.add_to_plot(p, "A1GND5VRF", "IGDP_NRSD_ALG_A1GND5VRF", start, end, conn, color = "chartreuse")
@@ -119,9 +118,7 @@ def asic_1_voltages(conn, start, end):
     j = pf.add_to_plot(p, "DRAIN_V", "INRSD_A1_DRAIN_V", start, end, conn, color = "darkgreen")
     k = pf.add_to_plot(p, "VBIASGATE_V", "INRSD_A1_VBIASGATE_V", start, end, conn, color = "darkmagenta")
     l = pf.add_to_plot(p, "VBIASPWR_V", "INRSD_A1_VBIASPWR_V", start, end, conn, color = "cornflowerblue")
-
     pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j,k,l])
-
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
 
@@ -146,8 +143,8 @@ def asic_2_voltages(conn, start, end):
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
-                plot_width = 560,
-                plot_height = 1000,
+                plot_width = 1020,
+                plot_height = 800,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
@@ -155,7 +152,6 @@ def asic_2_voltages(conn, start, end):
     p.grid.visible = True
     p.title.text = "ASIC 2 Voltages"
     pf.add_basic_layout(p)
-
     a = pf.add_to_plot(p, "VDDA", "IGDP_NRSD_ALG_A2_VDDA", start, end, conn, color = "burlywood")
     b = pf.add_to_plot(p, "A2GND4VDA", "IGDP_NRSD_ALG_A2GND4VDA", start, end, conn, color = "cadetblue")
     c = pf.add_to_plot(p, "A2GND5VRF", "IGDP_NRSD_ALG_A2GND5VRF", start, end, conn, color = "chartreuse")
@@ -168,9 +164,7 @@ def asic_2_voltages(conn, start, end):
     j = pf.add_to_plot(p, "DRAIN_V", "INRSD_A2_DRAIN_V", start, end, conn, color = "darkgreen")
     k = pf.add_to_plot(p, "VBIASGATE_V", "INRSD_A2_VBIASGATE_V", start, end, conn, color = "darkmagenta")
     l = pf.add_to_plot(p, "VBIASPWR_V", "INRSD_A2_VBIASPWR_V", start, end, conn, color = "cornflowerblue")
-
     pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j,k,l])
-
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
 
@@ -199,7 +193,7 @@ def asic_1_currents(conn, start, end):
                 plot_height = 500,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+                x_axis_label = 'Date', y_axis_label='Current (mA)')
 
     p.grid.visible = True
     p.title.text = "ASIC 1 Currents"
@@ -214,6 +208,7 @@ def asic_1_currents(conn, start, end):
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
+    p.legend.orientation = "horizontal"
 
     return p
 
@@ -240,7 +235,7 @@ def asic_2_currents(conn, start, end):
                 plot_height = 500,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+                x_axis_label = 'Date', y_axis_label='Current (mA)')
 
     p.grid.visible = True
     p.title.text = "ASIC 2 Currents"
@@ -255,7 +250,7 @@ def asic_2_currents(conn, start, end):
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
-
+    p.legend.orientation = "horizontal"
     return p
 
 
@@ -311,10 +306,9 @@ def fpe_fpa_plots(conn, start, end):
     plot3 = asic_1_currents(conn, start, end)
     plot4 = asic_2_currents(conn, start, end)
 
-    plots= gridplot([[plot1, plot2],
-                    [plot3, plot4]], merge_tools=False)
-    layout = Column(descr, plots)
+    currents = Row(plot3, plot4)
+    layout = Column(descr, plot1, plot2, currents)
 
-    tab = Panel(child = layout, title = "POWER")
+    tab = Panel(child = layout, title = "FPE/FPA")
 
     return tab

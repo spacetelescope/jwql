@@ -193,7 +193,7 @@ def fpe_temp(conn, start, end):
     o = pf.add_to_plot(p, "FWA", "IGDP_NRSI_C_FWA_TEMP", start, end, conn, color = "darkseagreen")
     p = pf.add_to_plot(p, "GWA", "IGDP_NRSI_C_GWA_TEMP", start, end, conn, color = "darkkhaki")
 
-    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p])
+    #pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -334,11 +334,6 @@ def msa_temp(conn, start, end):
 
     return p
 
-        Plot 6 - FPA Temp
-        IGDP_NRSD_ALG_FPA_TEMP
-        IGDP_NRSD_ALG_A1_TEMP
-        IGDP_NRSD_ALG_A2_TEMP
-
 def fpa_temp(conn, start, end):
     '''Create specific plot and return plot object
     Parameters
@@ -378,6 +373,48 @@ def fpa_temp(conn, start, end):
     p.legend.click_policy = "hide"
 
     return p
+
+
+def heat_strap_temp(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
+
+    # create a new plot with a title and axis labels
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 1020,
+                plot_height = 500,
+                x_axis_type = 'datetime',
+                output_backend = "webgl",
+                x_axis_label = 'Date', y_axis_label='Temperature (K)')
+
+    p.grid.visible = True
+    p.title.text = "Heat Strap Temps (Trim heaters)"
+    pf.add_basic_layout(p)
+
+    a = pf.add_to_plot(p, "74AA", "SI_GZCTS74A", start, end, conn, color = "green")
+    b = pf.add_to_plot(p, "67A", "SI_GZCTS67A", start, end, conn, color = "red")
+
+    pf.add_hover_tool(p,[a,b,c])
+
+    p.legend.location = "bottom_right"
+    p.legend.click_policy = "hide"
+
+    return p
+
+
 def temperature_plots(conn, start, end):
     '''Combines plots to a tab
     Parameters
@@ -425,41 +462,22 @@ def temperature_plots(conn, start, end):
         <td>IMIR_PDU_V_DIG_5V<br>
             IMIR_PDU_I_DIG_5V</td>
         <td>FPE 5V Digital Voltage and Current</td>
-      </tr>
-      <tr>
-        <td>FPE Ana. 5V</td>
-        <td>IMIR_PDU_V_ANA_5V<br>
-            IMIR_PDU_I_ANA_5V</td>
-        <td>FPE +5V Analog Voltage and Current</td>
-      </tr>
-      <tr>
-        <td>FPE Ana. N5V</td>
-        <td>IMIR_PDU_V_ANA_N5V<br>
-            IMIR_PDU_I_ANA_N5V</td>
-        <td>FPE -5V Analog Voltage and Current</td>
-      </tr>
-      <tr>
-        <td>FPE Ana. 7V</td>
-        <td>IMIR_PDU_V_ANA_7V<br>
-            IMIR_PDU_I_ANA_7V</td>
-        <td>FPE +7V Analog Voltage and Current</td>
-      </tr>
-       <tr>
-         <td>FPE Ana. N7V</td>
-         <td>IMIR_PDU_V_ANA_N7V<br>
-             IMIR_PDU_I_ANA_N7V</td>
-         <td>FPE -7V Analog Voltage and Current</td>
        </tr>
     </table>
     </body>
     """, width=1100)
 
-    plot1 = ice_power(conn, start, end)
-    plot2 = mce_power(conn, start, end)
-    plot3 = fpe_power(conn, start, end)
+    plot1 = irsu_temp(conn, start, end)
+    #plot2 = fpe_temp(conn, start, end)
+    plot3 = box_temp(conn, start, end)
+    plot4 = mce_internal_temp(conn, start, end)
+    plot5 = msa_temp(conn, start, end)
+    plot6 = fpa_temp(conn, start, end)
+    #plot7 = heat_strap_temp(conn, start, end)
 
-    layout = Column(descr, plot1, plot2, plot3)
 
-    tab = Panel(child = layout, title = "POWER")
+    layout = Column(descr, plot1, plot3, plot4, plot5, plot6)
+
+    tab = Panel(child = layout, title = "TEMPERATURE")
 
     return tab

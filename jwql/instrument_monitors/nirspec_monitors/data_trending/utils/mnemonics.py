@@ -20,12 +20,14 @@ Notes
 
 """
 
-#mnemonics underlaying certain conditions (whole day)
+#mnemonics underlaying certain conditions 15min
+# INRSD_EXP_STAT != STARTED
 mnemonic_cond_1 = [
 "SE_ZINRSFPEA",
 "SE_ZINRSFPEB"]
 
-#mnemonics underlaying condition 2 (whole day)
+#mnemonics underlaying condition 15min
+# INRSH_LAMP_SEL = NO_LAMP
 mnemonic_cond_2 = [
 "SE_ZINRSICEA",
 "SE_ZINRSICEB"]
@@ -36,19 +38,44 @@ mnemonic_cond_3 = [
 "INRSI_C_CAA_CURRENT",
 "INRSI_C_CAA_VOLTAGE"]
 
-#mnemonics underly conditions 4 (15min)
-mnemonic_cond_4 = [
-"INRSH_FWA_ADCMGAIN",
-"INRSH_FWA_ADCMOFFSET",
-"INRSH_FWA_MOTOR_VREF",
-"INRSH_GWA_ADCMGAIN",
-"INRSH_GWA_ADCMOFFSET",
-"INRSH_GWA_MOTOR_VREF"]
+#INRSI_MANUALRPT_ST = STARTED
+#INRSI_FWA_MOVE_ST = STARTED
+mnemonic_cond_4 =[
+"IGDP_NRSI_C_FWA_TEMP",
+"IGDP_NRSI_C_GWA_TEMP"]
+
+#menmonics applicable when CAA is powered
+#INRS_CAA_PWRF_ST = ON
+mnemonic_caa_powered= [
+"IGDP_NRSI_C_CAAL1_TEMP",
+"IGDP_NRSI_C_CAAL2_TEMP",
+"IGDP_NRSI_C_CAAL3_TEMP",
+"IGDP_NRSI_C_CAAL4_TEMP"]
 
 #mnemonics underlaying condition 5 (whole day)
 mnemonic_cond_5 = [
 "SE_ZINRSMCEA",
 "SE_ZINRSMCEB"]
+
+#only applicalble when Filter table 10 is set
+mnemonic_ft10 = [
+"INRSH_OA_VREFOFF",
+"INRSH_OA_VREF",
+
+"INRSH_CAA_VREFOFF",
+"INRSH_CAA_VREF",
+
+"INRSH_FWA_ADCMGAIN",
+"INRSH_FWA_ADCMOFFSET",
+"INRSH_FWA_MOTOR_VREF",
+
+"INRSH_GWA_ADCMGAIN",
+"INRSH_GWA_ADCMOFFSET",
+"INRSH_GWA_MOTOR_VREF",
+
+"INRSH_RMA_ADCMGAIN",
+"INRSH_RMA_ADCMOFFSET",
+]
 
 #all mnemonics used for conditions
 mnemonic_for_conditions = [
@@ -150,9 +177,6 @@ mnemSet_15min = [
 "INRSH_HK_ADCTGAIN",
 "INRSH_HK_ADCTOFFSET",
 
-"INRSH_OA_VREFOFF",
-"INRSH_OA_VREF",
-
 "IGDP_NRSI_C_CAM_TEMP",
 "IGDP_NRSI_C_COL_TEMP",
 "IGDP_NRSI_C_COM1_TEMP",
@@ -164,23 +188,7 @@ mnemSet_15min = [
 "IGDP_NRSI_C_BP4_TEMP",
 "IGDP_NRSI_C_RMA_TEMP",
 
-"INRSH_CAA_VREFOFF",
-"INRSH_CAA_VREF",
 
-"IGDP_NRSI_C_CAAL1_TEMP",
-"IGDP_NRSI_C_CAAL2_TEMP",
-"IGDP_NRSI_C_CAAL3_TEMP",
-"IGDP_NRSI_C_CAAL4_TEMP",
-
-"INRSH_FWA_ADCMGAIN",
-"INRSH_FWA_ADCMOFFSET",
-
-"IGDP_NRSI_C_FWA_TEMP",
-
-"INRSH_GWA_ADCMGAIN",
-"INRSH_GWA_ADCMOFFSET",
-
-"IGDP_NRSI_C_GWA_TEMP",
 
 "INRSH_RMA_ADCMGAIN",
 "INRSH_RMA_ADCMOFFSET",
