@@ -49,10 +49,10 @@ from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
 from .forms import FileSearchForm
-from .oauth import auth_info
+from .oauth import auth_info, auth_required
+import jwql
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
-import jwql
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
@@ -148,7 +148,7 @@ def archived_proposals_ajax(request, inst):
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-@auth_info
+@auth_required
 def archive_thumbnails(request, user, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
@@ -167,28 +167,19 @@ def archive_thumbnails(request, user, inst, proposal):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    if user['ezid']:
-        template = 'thumbnails.html'
-        context = {'inst': inst,
-                   'prop': proposal,
-                   'tools': MONITORS,
-                   'user': user,
-                   'base_url': get_base_url(),
-                   'version': jwql.__version__}
+    template = 'thumbnails.html'
+    context = {'inst': inst,
+               'prop': proposal,
+               'tools': MONITORS,
+               'user': user,
+               'base_url': get_base_url(),
+               'version': jwql.__version__}
 
-        return render(request, template, context)
-
-    else:
-        template = 'not_authenticated.html'
-        context = {'inst': '',
-                   'tools': MONITORS,
-                   'user': user,
-                   'version': jwql.__version__}
-
-        return render(request, template, context)
+    return render(request, template, context)
 
 
 def archive_thumbnails_ajax(request, inst, proposal):
@@ -414,7 +405,7 @@ def view_header(request, user, inst, file):
                    'version': jwql.__version__})
 
 
-@auth_info
+@auth_required
 def view_image(request, user, inst, file_root, rewrite=False):
     """Generate the image view page
 
@@ -437,26 +428,16 @@ def view_image(request, user, inst, file_root, rewrite=False):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    if user['ezid']:
-        template = 'view_image.html'
-        image_info = get_image_info(file_root, rewrite)
-        context = {'inst': inst,
-                   'file_root': file_root,
-                   'tools': MONITORS,
-                   'user': user,
-                   'jpg_files': image_info['all_jpegs'],
-                   'fits_files': image_info['all_files'],
-                   'suffixes': image_info['suffixes'],
-                   'num_ints': image_info['num_ints'],
-                   'version': jwql.__version__}
+    template = 'view_image.html'
+    image_info = get_image_info(file_root, rewrite)
+    context = {'inst': inst,
+               'file_root': file_root,
+               'tools': MONITORS,
+               'user': user,
+               'jpg_files': image_info['all_jpegs'],
+               'fits_files': image_info['all_files'],
+               'suffixes': image_info['suffixes'],
+               'num_ints': image_info['num_ints'],
+               'version': jwql.__version__}
 
-        return render(request, template, context)
-
-    else:
-        template = 'not_authenticated.html'
-        context = {'inst': '',
-                   'tools': MONITORS,
-                   'user': user,
-                   'version': jwql.__version__}
-
-        return render(request, template, context)
+    return render(request, template, context)

@@ -56,9 +56,11 @@ from .data_containers import get_preview_images_by_rootname
 from .data_containers import get_thumbnails_by_instrument
 from .data_containers import get_thumbnails_by_proposal
 from .data_containers import get_thumbnails_by_rootname
+from .oauth import auth_required
 
 
-def all_proposals(request):
+@auth_required
+def all_proposals(request, user):
     """Return a list of proposals for the mission
 
     Parameters
@@ -76,7 +78,8 @@ def all_proposals(request):
     return JsonResponse({'proposals': proposals}, json_dumps_params={'indent': 2})
 
 
-def filenames_by_proposal(request, proposal):
+@auth_required
+def filenames_by_proposal(request, user, proposal):
     """Return a list of filenames for the given ``proposal``
 
     Parameters
@@ -96,7 +99,8 @@ def filenames_by_proposal(request, proposal):
     return JsonResponse({'filenames': filenames}, json_dumps_params={'indent': 2})
 
 
-def filenames_by_rootname(request, rootname):
+@auth_required
+def filenames_by_rootname(request, user, rootname):
     """Return a list of filenames for the given ``rootname``
 
     Parameters
@@ -116,7 +120,8 @@ def filenames_by_rootname(request, rootname):
     return JsonResponse({'filenames': filenames}, json_dumps_params={'indent': 2})
 
 
-def instrument_proposals(request, inst):
+@auth_required
+def instrument_proposals(request, user, inst):
     """Return a list of proposals for the given instrument
 
     Parameters
@@ -139,7 +144,8 @@ def instrument_proposals(request, inst):
     return JsonResponse({'proposals': proposals}, json_dumps_params={'indent': 2})
 
 
-def preview_images_by_instrument(request, inst):
+@auth_required
+def preview_images_by_instrument(request, user, inst):
     """Return a list of available preview images in the filesystem for
     the given instrument.
 
@@ -163,7 +169,8 @@ def preview_images_by_instrument(request, inst):
     return JsonResponse({'preview_images': preview_images}, json_dumps_params={'indent': 2})
 
 
-def preview_images_by_proposal(request, proposal):
+@auth_required
+def preview_images_by_proposal(request, user, proposal):
     """Return a list of available preview images in the filesystem for
     the given ``proposal``.
 
@@ -184,7 +191,8 @@ def preview_images_by_proposal(request, proposal):
     return JsonResponse({'preview_images': preview_images}, json_dumps_params={'indent': 2})
 
 
-def preview_images_by_rootname(request, rootname):
+@auth_required
+def preview_images_by_rootname(request, user, rootname):
     """Return a list of available preview images in the filesystem for
     the given ``rootname``.
 
@@ -205,7 +213,8 @@ def preview_images_by_rootname(request, rootname):
     return JsonResponse({'preview_images': preview_images}, json_dumps_params={'indent': 2})
 
 
-def thumbnails_by_instrument(request, inst):
+@auth_required
+def thumbnails_by_instrument(request, user, inst):
     """Return a list of available thumbnails in the filesystem for the
     given instrument.
 
@@ -229,7 +238,8 @@ def thumbnails_by_instrument(request, inst):
     return JsonResponse({'thumbnails': thumbnails}, json_dumps_params={'indent': 2})
 
 
-def thumbnails_by_proposal(request, proposal):
+@auth_required
+def thumbnails_by_proposal(request, user, proposal):
     """Return a list of available thumbnails in the filesystem for the
     given ``proposal``.
 
@@ -250,7 +260,8 @@ def thumbnails_by_proposal(request, proposal):
     return JsonResponse({'thumbnails': thumbnails}, json_dumps_params={'indent': 2})
 
 
-def thumbnails_by_rootname(request, rootname):
+@auth_required
+def thumbnails_by_rootname(request, user, rootname):
     """Return a list of available thumbnails in the filesystem for the
     given ``rootname``.
 
