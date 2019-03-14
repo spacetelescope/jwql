@@ -1,3 +1,55 @@
+0.18.0 (2019-03-14)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Added instructions in ``README`` that details how to supply the required ``config.json`` configuration file
+- Updated installation instructions in ``README`` to be more comprehensive
+- Updated API docs for JavaScript functions in web app
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Added a webpage for interacting with the JWST Engineering Database (EDB), including searching for available mneumonics and plotting mneumonic time series data
+- Added ``context_processors`` module that provides functions that define context inherent to all views
+- Added display of package version in footer
+- Moved all JavaScript functions in HTML templates into the ``jwql.js`` module
+- Modified links to external webpages to open in new tab
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Added ``__version__`` package attribute
+- Updated ``install_requires`` in ``setup.py`` to adhere to best practices
+- Added template branch and supporting documentation for how to contribute a new webpage in the ``jwql`` web application
+- Added custom error message if required ``config.json`` configuration file is missing
+- Updated ``database_interface`` module to dynamically create tables to store instrument monitoring data from user-supplied table definition files
+- Added Jupyter notebook that describes how to integrate ``auth.mast`` service in a ``djang``` web application
+- Updated ``utils.filename_parser`` function to handle stage 2C and guider filenames
+- Updated ``utils.filename_parser`` function to always provide an ``instrument`` key, as needed by several webpages within the web app
+- Added separate file suffix type lists in ``constants.py`` module
+- Added ``reset_database`` module that resets and rebuilds a database provided by the ``connection_string`` key in the ``config.json`` configuration file
+- Added ``pytest`` results file in order to fix Jenkins CI builds
+
+Bug Fixes
+---------
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Fixed navbar padding
+- Fixed broken instrument logos on homepage
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Fixed ``monitor_mast`` module to actually be command-line executable
+
+
 0.17.0 (2019-02-05)
 ===================
 
