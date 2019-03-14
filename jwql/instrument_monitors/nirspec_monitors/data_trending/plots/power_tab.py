@@ -81,8 +81,9 @@ def ice_power(conn, start, end):
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
                 plot_width = 1020,
-                plot_height = 1000,
+                plot_height = 700,
                 x_axis_type = 'datetime',
+                y_range = [-20, 20],
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
@@ -90,8 +91,7 @@ def ice_power(conn, start, end):
     p.title.text = "ICE Power Parameters"
     pf.add_basic_layout(p)
 
-
-    p.extra_y_ranges = {"current": Range1d(start = 0, end=2500)}
+    p.extra_y_ranges = {"current": Range1d(start = 0, end=0.8)}
     #a = pf.add_to_plot(p, "In_VOlt", "GP_ZPSVOLT", start, end, conn, color = "red")
     b = pf.add_to_plot(p, "ICE A current", "SE_ZINRSICEA", start, end, conn, color = "blue", y_axis="current")
     c = pf.add_to_plot(p, "P15V", "INRSH_HK_P15V", start, end, conn, color = "red")
@@ -103,15 +103,56 @@ def ice_power(conn, start, end):
     i = pf.add_to_plot(p, "", "INRSH_HK_ADCTOFFSET", start, end, conn, color = "navy")
     j = pf.add_to_plot(p, "", "INRSH_OA_VREFOFF", start, end, conn, color = "purple")
     k = pf.add_to_plot(p, "", "INRSH_OA_VREF", start, end, conn, color = "darkmagenta")
-    p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
+    p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (A)", axis_label_text_color = "blue"), 'right')
 
     pf.add_hover_tool(p,[b,c,d,e,g,f,h,i,j,k])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
+    p.legend.orientation = "horizontal"
 
     return p
 
+def mce_power(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
+
+    # create a new plot with a title and axis labels
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 1020,
+                plot_height = 700,
+                x_axis_type = 'datetime',
+                output_backend = "webgl",
+                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+
+    p.grid.visible = True
+    p.title.text = "MCE Power Data"
+    pf.add_basic_layout(p)
+
+    p.extra_y_ranges = {"current": Range1d(start = 0, end=1)}
+    #a = pf.add_to_plot(p, "In_VOlt", "GP_ZPSVOLT", start, end, conn, color = "red")
+    b = pf.add_to_plot(p, "MCE A current", "SE_ZINRSMCEA", start, end, conn, color = "blue", y_axis="current")
+    p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
+
+    pf.add_hover_tool(p,[b])
+
+    p.legend.location = "bottom_right"
+    p.legend.click_policy = "hide"
+
+    return p
 
 def fpe_power(conn, start, end):
     '''Create specific plot and return plot object
@@ -133,17 +174,18 @@ def fpe_power(conn, start, end):
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
                 plot_width = 1020,
-                plot_height = 1000,
+                plot_height = 700,
+                y_range = [-30,280],
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
-    p.title.text = "MCE Power Data"
+    p.title.text = "FPE Power Data"
     pf.add_basic_layout(p)
 
 
-    p.extra_y_ranges = {"current": Range1d(start = 0, end=2500)}
+    p.extra_y_ranges = {"current": Range1d(start = 0, end=0.8)}
     #a = pf.add_to_plot(p, "In_VOlt", "GP_ZPSVOLT", start, end, conn, color = "red")
     b = pf.add_to_plot(p, "FPE A current", "SE_ZINRSFPEA", start, end, conn, color = "blue", y_axis="current")
     c = pf.add_to_plot(p, "P12C", "INRSD_ALG_ACC_P12C", start, end, conn, color = "red")
@@ -151,15 +193,17 @@ def fpe_power(conn, start, end):
     e = pf.add_to_plot(p, "N12C", "INRSD_ALG_ACC_N12C", start, end, conn, color = "burlywood")
     f = pf.add_to_plot(p, "1D5", "INRSD_ALG_ACC_3D3_1D5_C", start, end, conn, color = "green")
     g = pf.add_to_plot(p, "Chassis", "INRSD_ALG_CHASSIS", start, end, conn, color = "darkgreen")
+    p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (A)", axis_label_text_color = "blue"), 'right')
 
-    p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
-
-    pf.add_hover_tool(p,[b,c,d,e,g,f,h,i,j,k])
+    pf.add_hover_tool(p,[b,c,d,e,g])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
 
     return p
+
+
+
 def power_plots(conn, start, end):
     '''Combines plots to a tab
     Parameters
@@ -202,45 +246,15 @@ def power_plots(conn, start, end):
             IMIR_PDU_V_REF_2R5V<br> </td>
         <td>FPE 2.5V Digital and FPE 2.5V PDU Reference Voltage</td>
       </tr>
-      <tr>
-        <td>FPE Dig. 5V</td>
-        <td>IMIR_PDU_V_DIG_5V<br>
-            IMIR_PDU_I_DIG_5V</td>
-        <td>FPE 5V Digital Voltage and Current</td>
-      </tr>
-      <tr>
-        <td>FPE Ana. 5V</td>
-        <td>IMIR_PDU_V_ANA_5V<br>
-            IMIR_PDU_I_ANA_5V</td>
-        <td>FPE +5V Analog Voltage and Current</td>
-      </tr>
-      <tr>
-        <td>FPE Ana. N5V</td>
-        <td>IMIR_PDU_V_ANA_N5V<br>
-            IMIR_PDU_I_ANA_N5V</td>
-        <td>FPE -5V Analog Voltage and Current</td>
-      </tr>
-      <tr>
-        <td>FPE Ana. 7V</td>
-        <td>IMIR_PDU_V_ANA_7V<br>
-            IMIR_PDU_I_ANA_7V</td>
-        <td>FPE +7V Analog Voltage and Current</td>
-      </tr>
-       <tr>
-         <td>FPE Ana. N7V</td>
-         <td>IMIR_PDU_V_ANA_N7V<br>
-             IMIR_PDU_I_ANA_N7V</td>
-         <td>FPE -7V Analog Voltage and Current</td>
-       </tr>
     </table>
     </body>
     """, width=1100)
 
     plot1 = ice_power(conn, start, end)
-    plot2 = mce_power(conn, start, end)
+    #plot2 = mce_power(conn, start, end)
     plot3 = fpe_power(conn, start, end)
 
-    layout = Column(descr, plot1, plot2, plot3)
+    layout = Column(descr, plot1, plot3)
 
     tab = Panel(child = layout, title = "POWER")
 

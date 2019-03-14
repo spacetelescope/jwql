@@ -303,48 +303,18 @@ def volt_plots(conn, start, end):
             IMIR_PDU_V_REF_2R5V<br> </td>
         <td>FPE 2.5V Digital and FPE 2.5V PDU Reference Voltage</td>
       </tr>
-      <tr>
-        <td>FPE Dig. 5V</td>
-        <td>IMIR_PDU_V_DIG_5V<br>
-            IMIR_PDU_I_DIG_5V</td>
-        <td>FPE 5V Digital Voltage and Current</td>
-      </tr>
-      <tr>
-        <td>FPE Ana. 5V</td>
-        <td>IMIR_PDU_V_ANA_5V<br>
-            IMIR_PDU_I_ANA_5V</td>
-        <td>FPE +5V Analog Voltage and Current</td>
-      </tr>
-      <tr>
-        <td>FPE Ana. N5V</td>
-        <td>IMIR_PDU_V_ANA_N5V<br>
-            IMIR_PDU_I_ANA_N5V</td>
-        <td>FPE -5V Analog Voltage and Current</td>
-      </tr>
-      <tr>
-        <td>FPE Ana. 7V</td>
-        <td>IMIR_PDU_V_ANA_7V<br>
-            IMIR_PDU_I_ANA_7V</td>
-        <td>FPE +7V Analog Voltage and Current</td>
-      </tr>
-       <tr>
-         <td>FPE Ana. N7V</td>
-         <td>IMIR_PDU_V_ANA_N7V<br>
-             IMIR_PDU_I_ANA_N7V</td>
-         <td>FPE -7V Analog Voltage and Current</td>
-       </tr>
     </table>
     </body>
     """, width=1100)
 
     plot1 = ref_volt(conn, start, end)
     #plot2 = caa_volt(conn, start, end)
-    plot3 = fwa_volt(conn, start, end)
-    plot4 = gwa_volt(conn, start, end)
+    #plot3 = fwa_volt(conn, start, end)
+    #plot4 = gwa_volt(conn, start, end)
     plot5 = rma_volt(conn, start, end)
 
-    layout = Column(descr, plot1, plot3, plot4, plot5)
+    layout = Column(descr, plot1, plot5)
 
-    tab = Panel(child = layout, title = "REF VOLT/CURR")
+    tab = Panel(child = layout, title = "Ref. VOLTAGES and CURRENTS")
 
     return tab
