@@ -225,6 +225,53 @@ def plot_system_stats():
     Read in the file of saved stats over time and plot them.
     """
 
+
+    # Total file counts vs. date
+    results = session.query(FilesystemGeneral.date, FilesystemGeneral.total_file_count).all()
+    dates, file_counts = zip(*results)
+    p1 = figure(
+       tools='pan,box_zoom,reset,wheel_zoom,save',
+       x_axis_type='datetime',
+       title="Total File Counts",
+       x_axis_label='Date',
+       y_axis_label='Count')
+    p1.line(dates, file_counts, line_width=2, line_color='blue')
+    p1.circle(dates, file_counts, color='blue')
+
+    # Plot system stats vs. date
+    results = session.query(FilsystemGeneral.date, FilesystemGeneral.total_file_size,
+                            FilesystemGeneral.used, FilesystemGeneral.available).all()
+    dates, total_sizes, useds, availables = zip(*results)
+    p2 = figure(
+      tools='pan,box_zoom,wheel_zoom,reset,save',
+      x_axis_type='datetime',
+      title='System stats',
+      x_axis_label='Date',
+      y_axis_label='GB')
+    p2.line(dates, total_sizes, legend='Total size', line_color='red')
+    p2.circle(dates, total_sizes, color='red')
+    p2.line(dates, useds, legend='Used bytes', line_color='green')
+    p2.circle(dates, useds, color='green')
+    p2.line(dates, availables, legend='Free bytes', line_color='blue')
+    p2.circle(dates, availables, color='blue')
+
+    # Plot fits file counts by type vs. date
+    for filetype in FILE_SUFFIX_TYPES:
+        results = session.query(FilesystemInstrument.date, FilesystemInstrument.count)\
+                                .filter(FilesystemInstrument.filetype == filetype).all()
+        if results:
+            dates, counts = zip(*results)
+
+            p3 = figure(
+               tools='pan,box_zoom,wheel_zoom,reset,save',
+               x_axis_type='datetime',
+               title="Total File Counts by Type",
+               x_axis_label='Date',
+               y_axis_label='Count')
+            p3.line(dates, counts, legend='{} files'.format(filetype), line_color='black')
+            p3.circle(dates, counts, color='black')
+
+
     # get path for files
     settings = get_config()
     outputs_dir = os.path.join(settings['outputs'], 'monitor_filesystem')
@@ -422,52 +469,7 @@ def plot_system_stats():
                                         label("mir_size")).all()
     fgs_size = np.array([row[0] for row in fgs_size_results]) / (1024.**3)
 
-    # plot the data
-    # Plot filecount vs. date
-    p1 = figure(
-       tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
-       title="Total File Counts", x_axis_label='Date', y_axis_label='Count')
-    p1.line(dates, file_count, line_width=2, line_color='blue')
-    p1.circle(dates, file_count, color='blue')
 
-    # Plot system stats vs. date
-    p2 = figure(
-      tools='pan,box_zoom,wheel_zoom,reset,save', x_axis_type='datetime',
-      title='System stats', x_axis_label='Date', y_axis_label='GB')
-    p2.line(dates, systemsize, legend='Total size', line_color='red')
-    p2.circle(dates, systemsize, color='red')
-    p2.line(dates, freesize, legend='Free bytes', line_color='blue')
-    p2.circle(dates, freesize, color='blue')
-    p2.line(dates, usedsize, legend='Used bytes', line_color='green')
-    p2.circle(dates, usedsize, color='green')
-
-    # Plot fits files by type vs. date
-    p3 = figure(
-       tools='pan,box_zoom,wheel_zoom,reset,save', x_axis_type='datetime',
-       title="Total File Counts by Type", x_axis_label='Date', y_axis_label='Count')
-    p3.line(dates, fits, legend='Total fits files', line_color='black')
-    p3.circle(dates, fits, color='black')
-    p3.line(dates, uncal, legend='uncalibrated fits files', line_color='red')
-    p3.diamond(dates, uncal, color='red')
-    p3.line(dates, cal, legend='calibrated fits files', line_color='blue')
-    # This was original "date", what did we want here?
-    p3.square(dates, cal, color='blue')
-    p3.line(dates, rate, legend='rate fits files', line_color='green')
-    p3.triangle(dates, rate, color='green')
-    p3.line(dates, rateints, legend='rateints fits files', line_color='orange')
-    p3.asterisk(dates, rateints, color='orange')
-    p3.line(dates, i2d, legend='i2d fits files', line_color='purple')
-    p3.x(dates, i2d, color='purple')
-    p3.line(dates, nircam, legend='nircam fits files', line_color='midnightblue')
-    p3.x(dates, nircam, color='midnightblue')
-    p3.line(dates, nirspec, legend='nirspec fits files', line_color='springgreen')
-    p3.x(dates, nirspec, color='springgreen')
-    p3.line(dates, niriss, legend='niriss fits files', line_color='darkcyan')
-    p3.x(dates, niriss, color='darkcyan')
-    p3.line(dates, miri, legend='miri fits files', line_color='dodgerblue')
-    p3.x(dates, miri, color='dodgerblue')
-    p3.line(dates, fgs, legend='fgs fits files', line_color='darkred')
-    p3.x(dates, fgs, color='darkred')
 
     # plot size of total fits files by type
     p4 = figure(
