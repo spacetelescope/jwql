@@ -14,6 +14,7 @@ from jwql.instrument_monitors.miri_monitors.data_trending.utils.process_data imp
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 #files with data to initially fill the database
+directory = '/home/daniel/STScI/trainigData/set_day/'
 paths = glob.glob(os.path.join(directory, '*.CSV'))
 
 
