@@ -79,11 +79,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
 from sqlalchemy.types import ARRAY
 
-from jwql.utils import utils
-
-
-# Define Enum objects
-INSTRUMENTS = Enum('fgs', 'nircam', 'niriss', 'nirspec', 'miri', name='instruments',)
+from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
+from jwql.utils.utils import get_config
 
 
 # Monkey patch Query with data_frame method
@@ -143,7 +140,7 @@ if 'build' and 'project' and 'jwql' in socket.gethostname():
     dummy_connection_string = 'postgresql+psycopg2://account:password@hostname:0000/db_name'
     session, base, engine, meta = load_connection(dummy_connection_string)
 else:
-    SETTINGS = utils.get_config()
+    SETTINGS = get_config()
     session, base, engine, meta = load_connection(SETTINGS['connection_string'])
 
 
@@ -231,8 +228,8 @@ class FilesystemInstrument(base):
     # Define the columns
     id = Column(Integer, primary_key=True, nullable=False)
     date = Column(DateTime, nullable=False)
-    instrument = Column(INSTRUMENTS, nullable=False)
-    filetype = Column(String(20), nullable=False)
+    instrument = Column(Enum(*JWST_INSTRUMENT_NAMES, name='instrument_enum'), nullable=False)
+    filetype = Column(Enum(*FILE_SUFFIX_TYPES, name='filetype_enum'), nullable=False)
     count = Column(Integer, nullable=False)
     size = Column(Float, nullable=False)
 
