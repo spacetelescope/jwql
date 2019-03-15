@@ -1,0 +1,2 @@
+MEAN, float
+STDEV, float
