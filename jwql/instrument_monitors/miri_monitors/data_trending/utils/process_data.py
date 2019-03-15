@@ -197,6 +197,8 @@ def once_a_day_routine(mnemonic_data):
 
     #abbreviate attribute
     m = mnemonic_data
+    returndata = dict()
+
 
     #########################################################################
     con_set_1 = [                                               \
@@ -205,11 +207,9 @@ def once_a_day_routine(mnemonic_data):
     cond.equal(m.mnemonic('IMIR_HK_POM_LOOP'),'OFF'),           \
     cond.smaller(m.mnemonic('IMIR_HK_ICE_SEC_VOLT1'),1.0),      \
     cond.greater(m.mnemonic('SE_ZIMIRICEA'),0.2)]
-
     #setup condition
     condition_1 = cond.condition(con_set_1)
 
-    data_cond_1 = dict()
 
     #add filtered engineering values of mnemonics given in list mnemonic_cond_1
     #to dictitonary
@@ -217,7 +217,7 @@ def once_a_day_routine(mnemonic_data):
         data = extract_data(condition_1, m.mnemonic(identifier))
 
         if data != None:
-            data_cond_1.update( {identifier:data} )
+            returndata.update( {identifier:data} )
         else:
             print("no data for {}".format(identifier))
 
@@ -234,21 +234,19 @@ def once_a_day_routine(mnemonic_data):
     #setup condition
     condition_2 = cond.condition(con_set_2)
 
-    data_cond_2 = dict()
-
     #add filtered engineering values of mnemonics given in list mnemonic_cond_2
     #to dictitonary
     for identifier in mn.mnemonic_cond_2:
         data = extract_data(condition_2, m.mnemonic(identifier))
 
         if data != None:
-            data_cond_2.update( {identifier:data} )
+            returndata.update( {identifier:data} )
         else:
             print("no data for {}".format(identifier))
 
     del condition_2
 
-    return data_cond_1, data_cond_2
+    return returndata
 
 
 def whole_day_routine(mnemonic_data):
@@ -273,6 +271,7 @@ def whole_day_routine(mnemonic_data):
 
     #abbreviate attribute
     m = mnemonic_data
+    returndata = dict()
 
     #########################################################################
     con_set_3 = [                                               \
@@ -280,15 +279,13 @@ def whole_day_routine(mnemonic_data):
     #setup condition
     condition_3 = cond.condition(con_set_3)
 
-    data_cond_3 = dict()
-
     #add filtered engineering values of mnemonics given in list mnemonic_cond_3
     #to dictitonary
     for identifier in mn.mnemonic_cond_3:
         data = extract_data(condition_3, m.mnemonic(identifier))
 
         if data != None:
-            data_cond_3.update({identifier:data})
+            returndata.update({identifier:data})
         else:
             print("no data for {}".format(identifier))
 
@@ -301,7 +298,7 @@ def whole_day_routine(mnemonic_data):
     #setup condition
     condition_FW = cond.condition(con_set_FW)
     FW_volt = extract_data(condition_FW, m.mnemonic('IMIR_HK_FW_POS_VOLT'))
-
+    returndata.update({'IMIR_HK_FW_POS_VOLT':FW_volt})
     del condition_FW
 
     #extract data for IMIR_HK_GW14_POS_VOLT under given condition
@@ -310,7 +307,7 @@ def whole_day_routine(mnemonic_data):
     #setup condition
     condition_GW14 = cond.condition(con_set_GW14)
     GW14_volt = extract_data(condition_GW14, m.mnemonic('IMIR_HK_GW14_POS_VOLT'))
-
+    returndata.update({'IMIR_HK_GW14_POS_VOLT':GW14_volt})
     del condition_GW14
 
     #extract data for IMIR_HK_GW23_POS_VOLT under given condition
@@ -319,7 +316,7 @@ def whole_day_routine(mnemonic_data):
     #setup condition
     condition_GW23 = cond.condition(con_set_GW23)
     GW23_volt = extract_data(condition_GW23, m.mnemonic('IMIR_HK_GW23_POS_VOLT'))
-
+    returndata.update({'IMIR_HK_GW23_POS_VOLT':GW23_volt})
     del condition_GW23
 
     #extract data for IMIR_HK_CCC_POS_VOLT under given condition
@@ -328,10 +325,10 @@ def whole_day_routine(mnemonic_data):
     #setup condition
     condition_CCC = cond.condition(con_set_CCC)
     CCC_volt = extract_data(condition_CCC, m.mnemonic('IMIR_HK_CCC_POS_VOLT'))
-
+    returndata.update({'IMIR_HK_CCC_POS_VOLT':CCC_volt})
     del condition_CCC
 
-    return data_cond_3, FW_volt , GW14_volt, GW23_volt, CCC_volt
+    return returndata
 
 
 def wheelpos_routine(mnemonic_data):
@@ -392,7 +389,6 @@ def wheelpos_routine(mnemonic_data):
     del condition_CCC
 
     return FW, GW14, GW23, CCC
-
 
 if __name__ =='__main__':
     pass
