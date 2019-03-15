@@ -15,7 +15,7 @@ import numpy as np
 
 from jwst.datamodels import dqflags
 
-from jwql.utils.utils import AMPLIFIER_BOUNDARIES
+from jwql.utils.constants import AMPLIFIER_BOUNDARIES
 
 
 def amplifier_info(filename, omit_reference_pixels=True):
