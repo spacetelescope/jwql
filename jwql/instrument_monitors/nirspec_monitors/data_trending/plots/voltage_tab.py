@@ -298,16 +298,15 @@ def volt_plots(conn, start, end):
         <th><h6>Description</h6></th>
       </tr>
       <tr>
-        <td>2.5V Ref and FPE Digg</td>
-        <td>IMIR_SPW_V_DIG_2R5V<br>
-            IMIR_PDU_V_REF_2R5V<br> </td>
-        <td>FPE 2.5V Digital and FPE 2.5V PDU Reference Voltage</td>
+        <td>DEFAULT</td>
+        <td>DEFAULT</td>
+        <td>DEAULT</td>
       </tr>
     </table>
     </body>
     """, width=1100)
 
-    plot1 = ref_volt(conn, start, end)
+    #plot1 = ref_volt(conn, start, end)
     #plot2 = caa_volt(conn, start, end)
     #plot3 = fwa_volt(conn, start, end)
     #plot4 = gwa_volt(conn, start, end)

@@ -32,30 +32,29 @@ mnemonic_cond_2 = [
 "SE_ZINRSICEA",
 "SE_ZINRSICEB"]
 
-#CHECK CONDITION FOR THESE!!! (whole day!?)
 mnemonic_cond_3 = [
+"SE_ZINRSMCEA",
+"SE_ZINRSMCEB"]
+
+#CHECK CONDITION FOR THESE!!! (whole day!?)
+mnemonic_cond_4 = [
 "INRSH_LAMP_SEL",
 "INRSI_C_CAA_CURRENT",
 "INRSI_C_CAA_VOLTAGE"]
 
 #INRSI_MANUALRPT_ST = STARTED
 #INRSI_FWA_MOVE_ST = STARTED
-mnemonic_cond_4 =[
+mnemonic_cond_5 =[
 "IGDP_NRSI_C_FWA_TEMP",
 "IGDP_NRSI_C_GWA_TEMP"]
 
 #menmonics applicable when CAA is powered
 #INRS_CAA_PWRF_ST = ON
-mnemonic_caa_powered= [
+mnemonic_caa= [
 "IGDP_NRSI_C_CAAL1_TEMP",
 "IGDP_NRSI_C_CAAL2_TEMP",
 "IGDP_NRSI_C_CAAL3_TEMP",
 "IGDP_NRSI_C_CAAL4_TEMP"]
-
-#mnemonics underlaying condition 5 (whole day)
-mnemonic_cond_5 = [
-"SE_ZINRSMCEA",
-"SE_ZINRSMCEB"]
 
 #only applicalble when Filter table 10 is set
 mnemonic_ft10 = [
@@ -74,7 +73,21 @@ mnemonic_ft10 = [
 "INRSH_GWA_MOTOR_VREF",
 
 "INRSH_RMA_ADCMGAIN",
-"INRSH_RMA_ADCMOFFSET",
+"INRSH_RMA_ADCMOFFSET"]
+
+mnemonics_lamps = [
+"LAMP_FLAT1_CURR",
+"LAMP_FLAT2_CURR",
+"LAMP_FLAT3_CURR",
+"LAMP_FLAT4_CURR",
+"LAMP_FLAT5_CURR",
+"LAMP_LINE1_CURR",
+"LAMP_LINE2_CURR",
+"LAMP_LINE3_CURR",
+"LAMP_LINE4_CURR",
+"LAMP_REF_CURR",
+"LAMP_TEST_CURR",
+"LAMP_DUMMY_CURR"
 ]
 
 #all mnemonics used for conditions
@@ -83,7 +96,11 @@ mnemonic_for_conditions = [
 "INRSH_WHEEL_MOT_SVREF",
 "INRSI_CAA_ON_FLAG",
 "INRSH_LAMP_SEL",
-"INRSD_EXP_STAT"]
+"INRSD_EXP_STAT",
+"INRS_CAA_PWRF_ST",
+"INRSI_FWA_MOVE_ST",
+"INRSI_MANUALRPT_ST",
+"ICTM_RT_FILTER" ]
 
 #these mnemonic are used by the day routine
 mnemSet_day = [
@@ -187,11 +204,6 @@ mnemSet_15min = [
 "IGDP_NRSI_C_BP3_TEMP",
 "IGDP_NRSI_C_BP4_TEMP",
 "IGDP_NRSI_C_RMA_TEMP",
-
-
-
-"INRSH_RMA_ADCMGAIN",
-"INRSH_RMA_ADCMOFFSET",
 
 "SI_GZCTS75A",
 "SI_GZCTS68A",
@@ -450,7 +462,21 @@ mnemonic_set_database = [
 "INRSM_MSA_Q4_171VPP",
 "IGDPM_MSA_Q4_365IDD",
 "IGDPM_MSA_Q4_365IPP",
-"IGDPM_MSA_Q4_171RTN"]
+"IGDPM_MSA_Q4_171RTN",
+
+"LAMP_FLAT1_CURR",
+"LAMP_FLAT2_CURR",
+"LAMP_FLAT3_CURR",
+"LAMP_FLAT4_CURR",
+"LAMP_FLAT5_CURR",
+"LAMP_LINE1_CURR",
+"LAMP_LINE2_CURR",
+"LAMP_LINE3_CURR",
+"LAMP_LINE4_CURR",
+"LAMP_REF_CURR",
+"LAMP_TEST_CURR",
+"LAMP_DUMMY_CURR"
+]
 
 #use this list for query
 mnemonic_set_query = mnemonic_set_database + mnemonic_for_conditions
