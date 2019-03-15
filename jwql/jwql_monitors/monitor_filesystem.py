@@ -1,15 +1,16 @@
 #! /usr/bin/env python
 
 """
-This module is meant to monitor and gather statistics of the filesystem
-that hosts data for the ``jwql`` application. This will answer
-questions such as the total number of files, how much disk space is
-being used, and then plot these values over time.
+This module monitors and gather statistics of the filesystem that hosts
+data for the ``jwql`` application. This will answer questions such as
+the total number of files, how much disk space is being used, and then
+plot these values over time.
 
 Authors
 -------
 
-    - Misty Cracraft, Sara Ogaz
+    - Misty Cracraft
+    - Sara Ogaz
 
 Use
 ---
@@ -94,30 +95,52 @@ def monitor_filesystem():
     settings = get_config()
     filesystem = settings['filesystem']
 
-    # set up dictionaries for output
-    results_dict = {}
-    size_dict = {}
+    # Initialize dictionaries for database input
+    now = datetime.datetime.now()
+    general_results_dict = {}
+    general_results_dict['date'] = now
+    general_results_dict['total_file_count'] = 0
+    general_results_dict['fits_file_count'] = 0
+    general_results_dict['total_file_size'] = 0
+    general_results_dict['fits_file_size'] = 0
+    instrument_results_dict = {}
+    instrument_results_dict['date'] = now
 
-    # Walk through all directories recursively and count files
+
+    # Walk through filesystem recursively and count files
     logging.info('Searching filesystem...')
-    for dirpath, dirs, files in os.walk(filesystem):
-        results_dict['file_count'] += len(files)  # find number of all files
+    for dirpath, _, files in os.walk(filesystem):
+        general_results_dict['total_file_count'] += len(files)
         for filename in files:
+
             file_path = os.path.join(dirpath, filename)
-            if filename.endswith(".fits"):  # find total number of fits files
-                suffix = filename_parser(filename)['suffix']  # define suffix
-                detector = filename_parser(filename)['detector']
-                # first three characters of detector specify instrument
-                instrument = detector[0:3]
-                key_count = instrument+'_'+suffix+'_count'
-                key_size = instrument+'_'+suffix+'_size'
-                results_dict['fits_files'] += 1
-                size_dict['size_fits'] += os.path.getsize(file_path)
-                results_dict[key_count] += 1
-                size_dict[key_size] += os.path.getsize(file_path)
-                # size_dict[instrument] += os.path.getsize(file_path)
-    logging.info('{} files found in filesystem'.format(
-        results_dict['fits_files']))
+            general_results_dict['total_file_size'] = os.path.getsize(file_path)
+
+            if filename.endswith(".fits"):
+
+                # Parse out filename information
+                filename_dict = filename_parser(filename)
+                print(filename_dict)
+                filetype = filename_dict['suffix']
+
+                # Populate general stats
+                general_results_dict['fits_file_count'] += 1
+                general_results_dict['fits_file_size'] += os.path.getsize(file_path)
+
+                # Populate instrument specific stats
+                instrument_results_dict['instrument'] = filename_dict['instrument']
+                if not instrument_results_dict[filetype]:
+                    instrument_results_dict[filetype] = {}
+                    instrument_results_dict[filetype]['count'] = 0
+                    instrument_results_dict[filetype]['size'] = 0
+                instrument_results_dict[filetype]['count'] += 1
+                instrument_results_dict[filetype]['size'] += os.path.getsize(file_path)
+
+    logging.info('{} files found in filesystem'.format(general_results_dict['fits_files']))
+
+    # Convert file sizes to terabytes
+
+    # Add data to database
 
     # Get df style stats on file system
     out = subprocess.check_output('df {}'.format(filesystem), shell=True)
