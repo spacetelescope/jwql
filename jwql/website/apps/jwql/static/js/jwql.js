@@ -5,7 +5,128 @@
  * @author Matthew Bourque
  */
 
-// JS function to determine what filetype to use for the thumbnail
+ /**
+ * Change the filetype of the displayed image
+ * @param {String} type - The image type (e.g. "rate", "uncal", etc.)
+ * @param {String} file_root - The rootname of the file
+ * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
+ *                          values are the number of integrations for that suffix
+ * @param {String} inst - The instrument for the given file
+ */
+function change_filetype(type, file_root, num_ints, inst) {
+
+    // Change the radio button to check the right filetype
+    document.getElementById(type).checked = true;
+
+    // Clean the input parameters
+    var num_ints = num_ints.replace(/&#39;/g, '"');
+    var num_ints = num_ints.replace(/'/g, '"');
+    var num_ints = JSON.parse(num_ints);
+
+    // Propogate the text fields showing the filename and APT parameters
+    var fits_filename = file_root + '_' + type + '.fits'
+    document.getElementById("jpg_filename").innerHTML = file_root + '_' + type + '_integ0.jpg';
+    document.getElementById("fits_filename").innerHTML = fits_filename;
+    document.getElementById("proposal").innerHTML = file_root.slice(2,7);
+    document.getElementById("obs_id").innerHTML = file_root.slice(7,10);
+    document.getElementById("visit_id").innerHTML = file_root.slice(10,13);
+    document.getElementById("detector").innerHTML = file_root.split('_')[3];
+
+    // Show the appropriate image
+    var img = document.getElementById("image_viewer")
+    var jpg_filepath = '/static/preview_images/' + file_root.slice(0,7) + '/' + file_root + '_' + type + '_integ0.jpg';
+    img.src = jpg_filepath;
+    img.alt = jpg_filepath;
+
+    // Update the number of integrations
+    var int_counter = document.getElementById("int_count");
+    int_counter.innerHTML = 'Displaying integration 1/' + num_ints[type];
+
+    // Update the integration changing buttons
+    if (num_ints[type] > 1) {
+        document.getElementById("int_after").disabled = false;
+    } else {
+        document.getElementById("int_after").disabled = true;
+    }
+
+    // Update the image download and header links
+    document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename;
+    document.getElementById("download_jpg").href = jpg_filepath;
+    document.getElementById("view_header").href = '/' + inst + '/' + fits_filename + '/hdr/';
+
+    // Disable the "left" button, since this will be showing integ0
+    document.getElementById("int_before").disabled = true;
+
+};
+
+ /**
+ * Change the integration number of the displayed image
+ * @param {String} direction - The direction to switch to, either "left" (decrease) or "right" (increase).
+ * @param {String} file_root - The rootname of the file
+ * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
+ *                          values are the number of integrations for that suffix
+ */
+function change_int(direction, file_root, num_ints) {
+
+    // Figure out the current image and integration
+    var suffix = document.getElementById("jpg_filename").innerHTML.split('_');
+    var integration = Number(suffix[suffix.length - 1][5]);
+    var suffix = suffix[suffix.length - 2];
+    var program = file_root.slice(0,7);
+
+    var num_ints = num_ints.replace(/'/g, '"');
+    var num_ints = JSON.parse(num_ints)[suffix];
+
+
+    if ((integration == num_ints - 1 && direction == 'right')||
+        (integration == 0 && direction == 'left')) {
+        return;
+    } else if (direction == 'right') {
+        // Update integration number
+        var new_integration = integration + 1
+
+        // Don't let them go further if they're at the last integration
+        if (new_integration == num_ints - 1) {
+            document.getElementById("int_after").disabled = true;
+        }
+        document.getElementById("int_before").disabled = false;
+    } else if (direction == 'left') {
+        // Update integration number
+        var new_integration = integration - 1
+
+        // Don't let them go further if they're at the first integration
+        if (new_integration == 0) {
+            document.getElementById("int_before").disabled = true;
+        }
+        document.getElementById("int_after").disabled = false;
+    }
+
+    // Update the JPG filename
+    var jpg_filename = file_root + '_' + suffix + '_integ' + new_integration + '.jpg'
+    var jpg_filepath = '/static/preview_images/' + program + '/' + jpg_filename
+    document.getElementById("jpg_filename").innerHTML = jpg_filename;
+
+    // Show the appropriate image
+    var img = document.getElementById("image_viewer")
+    img.src = jpg_filepath;
+    img.alt = jpg_filepath;
+
+    // Update the number of integrations
+    var int_counter = document.getElementById("int_count");
+    var int_display = new_integration + 1;
+    int_counter.innerHTML = 'Displaying integration ' + int_display + '/' + num_ints;
+
+    // Update the jpg download link
+    document.getElementById("download_jpg").href = jpg_filepath;
+};
+
+/**
+ * Determine what filetype to use for a thumbnail
+ * @param {String} thumbnail_dir - The path to the thumbnail directory
+ * @param {List} suffixes - A list of available suffixes for the file of interest
+ * @param {Integer} i - The index of the thumbnail
+ * @param {String} file_root - The rootname of the file corresponding to the thumbnail
+ */
 function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root) {
 
     // Update the thumbnail to show the most processed filetype
@@ -23,7 +144,11 @@ function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root)
 };
 
 
-// JS function to determine whether the page is archived or unlooked
+/**
+ * Determine whether the page is archive or unlooked
+ * @param {String} instrument - The instrument of interest
+ * @param {Integer} proposal - The proposal of interest
+ */
 function determine_page_title(instrument, proposal) {
     // Determine if the URL is 'archive' or 'unlooked'
     var url = document.URL;
@@ -45,6 +170,9 @@ function determine_page_title(instrument, proposal) {
 };
 
 
+/**
+ * Perform a search of images and display the resulting thumbnails
+ */
 function search() {
 
     // Find all proposal elements
@@ -82,6 +210,13 @@ function search() {
 };
 
 
+/**
+ * Limit the displayed thumbnails based on filter criteria
+ * @param {String} filter_type - The filter type.  Currently only "sort" is supported.
+ * @param {Integer} value - The filter value
+ * @param {List} dropdown_keys - A list of dropdown menu keys
+ * @param {Integer} num_fileids - The number of files that are available to display
+ */
 function show_only(filter_type, value, dropdown_keys, num_fileids) {
 
     // Get all filter options from {{dropdown_menus}} variable
@@ -131,6 +266,10 @@ function show_only(filter_type, value, dropdown_keys, num_fileids) {
 };
 
 
+/**
+ * Sort thumbnail display by proposal number
+ * @param {String} sort_type - The sort type (e.g. "asc", "desc")
+ */
 function sort_by_proposals(sort_type) {
     // Update dropdown menu text
     document.getElementById('sort_dropdownMenuButton').innerHTML = sort_type;
@@ -145,6 +284,10 @@ function sort_by_proposals(sort_type) {
 };
 
 
+/**
+ * Sort thumbnail display by a given sort type
+ * @param {String} sort_type - The sort type (e.g. file_root", "exp_start")
+ */
 function sort_by_thumbnails(sort_type) {
 
     // Update dropdown menu text
@@ -160,6 +303,50 @@ function sort_by_thumbnails(sort_type) {
         tinysort(thumbs, {attr:'exp_start'});
     }
 };
+
+
+/**
+ * Updates various compnents on the archive page
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function update_archive_page(inst, base_url) {
+    $.ajax({
+        url: base_url + '/ajax/' + inst + '/archive/',
+        success: function(data){
+
+            // Update the number of proposals displayed
+            num_proposals = data.thumbnails.proposals.length;
+            update_show_count(num_proposals, 'proposals')
+
+            // Add content to the proposal array div
+            for (var i = 0; i < data.thumbnails.proposals.length; i++) {
+
+                // Parse out useful variables
+                prop = data.thumbnails.proposals[i];
+                thumb = data.thumbnails.thumbnail_paths[i];
+                n = data.thumbnails.num_files[i];
+
+                // Build div content
+                content = '<div class="proposal text-center">';
+                content += '<a href="/' + inst + '/archive/' + prop + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
+                content += '<span class="helper"></span><img src="/static/thumbnails/' + thumb + '" alt="" width=100%>';
+                content += '<div class="proposal-color-fill" ></div>';
+                content += '<div class="proposal-info">';
+                content += '<h3>' + prop + '</h3>';
+                content += '<h6>' + n + ' Files</h6>';
+                content += '</div></a></div>';
+
+                // Add the content to the div
+                $("#proposal-array")[0].innerHTML += content;
+
+            // Replace loading screen with the proposal array div
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("proposal-array").style.display = "block";
+            };
+    }});
+};
+
 
 /**
  * Updates the thumbnail-filter div with filter options
@@ -228,6 +415,41 @@ function update_sort_options(data) {
 };
 
 /**
+ * Updates the thumbnail-array div with interactive images of thumbnails
+ * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ */
+function update_thumbnail_array(data) {
+
+      // Add content to the thumbail array div
+    for (var i = 0; i < Object.keys(data.file_data).length; i++) {
+
+        // Parse out useful variables
+        rootname = Object.keys(data.file_data)[i];
+        file = data.file_data[rootname];
+        filename_dict = file.filename_dict;
+
+        // Build div content
+        content = '<div class="thumbnail" detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
+        content += '<a href="/' + data.inst + '/' + rootname + '/">';
+        content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="this.src=/static/img/imagenotfound.png">';
+        content += '<div class="thumbnail-color-fill" ></div>';
+        content += '<div class="thumbnail-info">';
+        content += 'Proposal: ' + filename_dict.program_id + '<br>';
+        content += 'Observation: ' + filename_dict.observation + '<br>';
+        content += 'Visit: ' + filename_dict.visit + '<br>';
+        content += 'Detector: ' + filename_dict.detector + '<br>';
+        content += 'Exp_Start: ' + file.expstart.toFixed(2) + '<br>';
+        content += '</div></a></div>';
+
+        // Add the content to the div
+        $("#thumbnail-array")[0].innerHTML += content;
+
+        // Add the appropriate image to the thumbnail
+        determine_filetype_for_thumbnail('/static/thumbnails/' , file.suffixes, i, rootname);
+    };
+};
+
+/**
  * Updates various compnents on the thumbnails page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} proposal - The proposal number of interest (e.g. "88660")
@@ -250,9 +472,10 @@ function update_thumbnails_page(inst, proposal, base_url) {
         }});
 };
 
-/* JS function to construct the URL corresponding to a specific GitHub release
-* @param {String} version_string - The x.y.z version number
-*/
+/**
+ * Construct the URL corresponding to a specific GitHub release
+ * @param {String} version_string - The x.y.z version number
+ */
 function version_url(version_string) {
     var a_line = 'Running <a href="https://github.com/spacetelescope/jwql/releases/tag/';
     a_line += version_string;
