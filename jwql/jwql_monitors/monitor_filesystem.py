@@ -83,35 +83,30 @@ from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 
 
-@log_fail
-@log_info
-def monitor_filesystem():
+FILESYSTEM = get_config()['filesystem']
+
+def gather_statistics(general_results_dict, instrument_results_dict):
+    """Walks the filesytem to gather various statistics to eventually
+    store in the database
+
+    Parameters
+    ----------
+    general_results_dict : dict
+        A dictionary for the ``filesystem_general`` database table
+    instrument_results_dict : dict
+        A dictionary for the ``filesystem_instrument`` database table
+
+    Returns
+    -------
+    general_results_dict : dict
+        A dictionary for the ``filesystem_general`` database table
+    instrument_results_dict : dict
+        A dictionary for the ``filesystem_instrument`` database table
     """
-    Tabulates the inventory of the JWST filesystem, saving
-    statistics to files, and generates plots.
-    """
 
-    # Begin logging
-    logging.info('Beginning filesystem monitoring.')
-
-    # Get path, dirs and files in system and count files in all directories
-    settings = get_config()
-    filesystem = settings['filesystem']
-
-    # Initialize dictionaries for database input
-    now = datetime.datetime.now()
-    general_results_dict = {}
-    general_results_dict['date'] = now
-    general_results_dict['total_file_count'] = 0
-    general_results_dict['fits_file_count'] = 0
-    general_results_dict['total_file_size'] = 0
-    general_results_dict['fits_file_size'] = 0
-    instrument_results_dict = {}
-    instrument_results_dict['date'] = now
-
-    # Walk through filesystem recursively and count files
     logging.info('Searching filesystem...')
-    for dirpath, _, files in os.walk(filesystem):
+
+    for dirpath, _, files in os.walk(FILESYSTEM):
         general_results_dict['total_file_count'] += len(files)
         for filename in files:
 
@@ -139,35 +134,87 @@ def monitor_filesystem():
                 instrument_results_dict[instrument][filetype]['count'] += 1
                 instrument_results_dict[instrument][filetype]['size'] += os.path.getsize(file_path) / (2**40)
 
-    logging.info('{} files found in filesystem'.format(general_results_dict['fits_file_count']))
-
     # Convert file sizes to terabytes
     general_results_dict['total_file_size'] = general_results_dict['total_file_size'] / (2**40)
     general_results_dict['fits_file_size'] = general_results_dict['fits_file_size'] / (2**40)
 
-    # Get df style stats on file system
-    command = "df {}".format(filesystem)
+    logging.info('{} files found in filesystem'.format(general_results_dict['fits_file_count']))
+
+    return general_results_dict, instrument_results_dict
+
+
+def get_global_filesystem_stats(general_results_dict):
+    """Gathers ``used`` and ``available`` ``df``-style stats on the
+    entire filesystem.
+
+    Parameters
+    ----------
+    general_results_dict : dict
+        A dictionary for the ``filesystem_general`` database table
+
+    Returns
+    -------
+    general_results_dict : dict
+        A dictionary for the ``filesystem_general`` database table
+    """
+
+    command = "df {}".format(FILESYSTEM)
     command += " | awk '{print $3, $4}' | tail -n 1"
     stats = subprocess.check_output(command, shell=True).split()
     general_results_dict['used'] = int(stats[0])  / (2**40)
     general_results_dict['available'] = int(stats[1])  / (2**40)
 
-    # Add data to filesystem_general table
-    engine.execute(FilesystemGeneral.__table__.insert(), general_results_dict)
-    session.commit()
+    return general_results_dict
 
-    # Add data to filesystem_instrument table
-    for instrument in JWST_INSTRUMENT_NAMES:
-        for filetype in instrument_results_dict[instrument]:
-            new_record = {}
-            new_record['date'] = instrument_results_dict['date']
-            new_record['instrument'] = instrument
-            new_record['filetype'] = filetype
-            new_record['count'] = instrument_results_dict[instrument][filetype]['count']
-            new_record['size'] = instrument_results_dict[instrument][filetype]['size']
 
-            engine.execute(FilesystemInstrument.__table__.insert(), new_record)
-            session.commit()
+def initialize_results_dicts():
+    """Initializes dictionaries that will hold filesystem statistics
+
+    Returns
+    -------
+    general_results_dict : dict
+        A dictionary for the ``filesystem_general`` database table
+    instrument_results_dict : dict
+        A dictionary for the ``filesystem_instrument`` database table
+    """
+
+    now = datetime.datetime.now()
+
+    general_results_dict = {}
+    general_results_dict['date'] = now
+    general_results_dict['total_file_count'] = 0
+    general_results_dict['fits_file_count'] = 0
+    general_results_dict['total_file_size'] = 0
+    general_results_dict['fits_file_size'] = 0
+
+    instrument_results_dict = {}
+    instrument_results_dict['date'] = now
+
+    return general_results_dict, instrument_results_dict
+
+
+@log_fail
+@log_info
+def monitor_filesystem():
+    """
+    Tabulates the inventory of the JWST filesystem, saving statistics
+    to database tables, and generates plots.
+    """
+
+    # Begin logging
+    logging.info('Beginning filesystem monitoring.')
+
+    # Initialize dictionaries for database input
+    general_results_dict, instrument_results_dict = initialize_results_dicts()
+
+    # Walk through filesystem recursively to gather statistics
+    general_results_dict, instrument_results_dict = gather_statistics(general_results_dict, instrument_results_dict)
+
+    # Get df style stats on file system
+    general_results_dict = get_global_filesystem_stats(general_results_dict)
+
+    # Add data to database tables
+    update_database(general_results_dict, instrument_results_dict)
 
     # Create the plots
     plot_system_stats()
@@ -483,6 +530,35 @@ def plot_system_stats():
 
     # Begin logging:
     logging.info("Completed.")
+
+
+def update_database(general_results_dict, instrument_results_dict):
+    """Updates the ``filesystem_general`` and ``filesystem_instrument``
+    database tables.
+
+    Parameters
+    ----------
+    general_results_dict : dict
+        A dictionary for the ``filesystem_general`` database table
+    instrument_results_dict : dict
+        A dictionary for the ``filesystem_instrument`` database table
+    """
+
+    engine.execute(FilesystemGeneral.__table__.insert(), general_results_dict)
+    session.commit()
+
+    # Add data to filesystem_instrument table
+    for instrument in JWST_INSTRUMENT_NAMES:
+        for filetype in instrument_results_dict[instrument]:
+            new_record = {}
+            new_record['date'] = instrument_results_dict['date']
+            new_record['instrument'] = instrument
+            new_record['filetype'] = filetype
+            new_record['count'] = instrument_results_dict[instrument][filetype]['count']
+            new_record['size'] = instrument_results_dict[instrument][filetype]['size']
+
+            engine.execute(FilesystemInstrument.__table__.insert(), new_record)
+            session.commit()
 
 
 if __name__ == '__main__':
