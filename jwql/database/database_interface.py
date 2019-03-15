@@ -83,8 +83,7 @@ from jwql.utils import utils
 
 
 # Define Enum objects
-INSTRUMENTS = Enum('fgs', 'nircam', 'niriss', 'nirspec', 'miri', name='instruments')
-FILETYPES = Enum()
+INSTRUMENTS = Enum('fgs', 'nircam', 'niriss', 'nirspec', 'miri', name='instruments',)
 
 
 # Monkey patch Query with data_frame method
@@ -230,7 +229,7 @@ class FilesystemInstrument(base):
     # Define the columns
     date = Column(DateTime, primary_key=True, nullable=False)
     instrument = Column(INSTRUMENTS, nullable=False)
-    filetype = Column(FILETYPES, nullable=False)
+    filetype = Column(String(20), nullable=False)
     count = Column(Integer, nullable=False)
     size = Column(Float, nullable=False)
 
