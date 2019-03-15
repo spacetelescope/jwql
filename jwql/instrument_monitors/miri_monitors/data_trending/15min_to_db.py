@@ -29,10 +29,10 @@ def process_file(conn, path):
     m_raw_data = apt.mnemonics(path)
 
     #process raw data with once a day routine
-    cond1, cond2 = once_a_day_routine(m_raw_data)
+    processed_data = once_a_day_routine(m_raw_data)
 
     #push extracted and filtered data to temporary database
-    for key, value in cond1.items():
+    for key, value in processed_data.items():
 
         #abbreviate data table
         m = m_raw_data.mnemonic(key)
@@ -41,7 +41,6 @@ def process_file(conn, path):
             length = len(value)
             mean = statistics.mean(value)
             deviation = statistics.stdev(value)
-
             dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
             sql.add_data(conn, "SE_ZIMIRICEA_IDLE", dataset)
 
@@ -49,7 +48,6 @@ def process_file(conn, path):
             length = len(value)
             mean = statistics.mean(value)
             deviation = statistics.stdev(value)
-
             dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
             sql.add_data(conn, "IMIR_HK_ICE_SEC_VOLT4_IDLE", dataset)
 
@@ -57,19 +55,8 @@ def process_file(conn, path):
             length = len(value)
             mean = statistics.mean(value)
             deviation = statistics.stdev(value)
-
             dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
             sql.add_data(conn, key, dataset)
-
-    for key, value in cond2.items():
-        length = len(value)
-        mean = statistics.mean(value)
-        deviation = statistics.stdev(value)
-
-        dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-        sql.add_data(conn, key, dataset)
-
-
 
 def main():
     #generate paths
