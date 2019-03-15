@@ -78,6 +78,7 @@ from jwql.database.database_interface import FilesystemGeneral
 from jwql.database.database_interface import FilesystemInstrument
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 
@@ -156,7 +157,7 @@ def monitor_filesystem():
     session.commit()
 
     # Add data to filesystem_instrument table
-    for instrument in ['nircam', 'niriss', 'nirspec', 'miri', 'fgs']:
+    for instrument in JWST_INSTRUMENT_NAMES:
         for filetype in instrument_results_dict[instrument]:
             new_record = {}
             new_record['date'] = instrument_results_dict['date']
