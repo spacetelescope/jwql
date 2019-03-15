@@ -72,6 +72,11 @@ from sqlalchemy.orm.query import Query
 from jwql.utils import utils
 
 
+# Define Enum objects
+INSTRUMENTS = Enum('fgs', 'nircam', 'niriss', 'nirspec', 'miri', name='instruments')
+FILETYPES = Enum()
+
+
 # Monkey patch Query with data_frame method
 @property
 def data_frame(self):
@@ -189,86 +194,45 @@ class Anomaly(base):
         return a_list
 
 
-class Filesystem_general(base):
-    """ORM for the general (non instrument specific) filesystem monitor table"""
+class FilesystemGeneral(base):
+    """ORM for the general (non instrument specific) filesystem monitor
+    table"""
+
     # Name the table
     __tablename__ = 'filesystem_general'
+
     # Define the columns
     date = Column(DateTime, primary_key=True, nullable=False)
-    file_count = Column(Integer, nullable=False)  # all files, not just fits
-    total_size = Column(Float, nullable=False)
-    used_size = Column(Float, nullable=False)
-    available_size = Column(Float, nullable=False)
-    fits_files = Column(Integer, nullable=False)
-    size_fits = Column(Float, nullable=False)
+    total_file_count = Column(Integer, nullable=False)
+    total_file_size = Column(Float, nullable=False)
+    fits_file_count = Column(Integer, nullable=False)
+    fits_file_size = Column(Float, nullable=False)
+    used = Column(Float, nullable=False)
+    available = Column(Float, nullable=False)
 
 
-class Filesystem_instrument(base):
+class FilesystemInstrument(base):
     """ORM for the instrument specific filesystem monitor table"""
+
     # Name the table
     __tablename__ = 'filesystem_instrument'
 
     # Define the columns
     date = Column(DateTime, primary_key=True, nullable=False)
-    nrc_uncal_count = Column(Integer, nullable=False)
-    nrc_cal_count = Column(Integer, nullable=False)
-    nrc_rate_count = Column(Integer, nullable=False)
-    nrc_rateints_count = Column(Integer, nullable=False)
-    nrc_i2d_count = Column(Integer, nullable=False)
-    nrs_uncal_count = Column(Integer, nullable=False)
-    nrs_cal_count = Column(Integer, nullable=False)
-    nrs_rate_count = Column(Integer, nullable=False)
-    nrs_rateints_count = Column(Integer, nullable=False)
-    nrs_i2d_count = Column(Integer, nullable=False)
-    nis_uncal_count = Column(Integer, nullable=False)
-    nis_cal_count = Column(Integer, nullable=False)
-    nis_rate_count = Column(Integer, nullable=False)
-    nis_rateints_count = Column(Integer, nullable=False)
-    nis_i2d_count = Column(Integer, nullable=False)
-    mir_uncal_count = Column(Integer, nullable=False)
-    mir_cal_count = Column(Integer, nullable=False)
-    mir_rate_count = Column(Integer, nullable=False)
-    mir_rateints_count = Column(Integer, nullable=False)
-    mir_i2d_count = Column(Integer, nullable=False)
-    gui_uncal_count = Column(Integer, nullable=False)
-    gui_cal_count = Column(Integer, nullable=False)
-    gui_rate_count = Column(Integer, nullable=False)
-    gui_rateints_count = Column(Integer, nullable=False)
-    gui_i2d_count = Column(Integer, nullable=False)
-    nrc_uncal_size = Column(Float, nullable=False)
-    nrc_cal_size = Column(Float, nullable=False)
-    nrc_rate_size = Column(Float, nullable=False)
-    nrc_rateints_size = Column(Float, nullable=False)
-    nrc_i2d_size = Column(Float, nullable=False)
-    nrs_uncal_size = Column(Float, nullable=False)
-    nrs_cal_size = Column(Float, nullable=False)
-    nrs_rate_size = Column(Float, nullable=False)
-    nrs_rateints_size = Column(Float, nullable=False)
-    nrs_i2d_size = Column(Float, nullable=False)
-    nis_uncal_size = Column(Float, nullable=False)
-    nis_cal_size = Column(Float, nullable=False)
-    nis_rate_size = Column(Float, nullable=False)
-    nis_rateints_size = Column(Float, nullable=False)
-    nis_i2d_size = Column(Float, nullable=False)
-    mir_uncal_size = Column(Float, nullable=False)
-    mir_cal_size = Column(Float, nullable=False)
-    mir_rate_size = Column(Float, nullable=False)
-    mir_rateints_size = Column(Float, nullable=False)
-    mir_i2d_size = Column(Float, nullable=False)
-    gui_uncal_size = Column(Float, nullable=False)
-    gui_cal_size = Column(Float, nullable=False)
-    gui_rate_size = Column(Float, nullable=False)
-    gui_rateints_size = Column(Float, nullable=False)
-    gui_i2d_size = Column(Float, nullable=False)
+    instrument = Column(INSTRUMENTS, nullable=False)
+    filetype = Column(FILETYPES, nullable=False)
+    count = Column(Integer, nullable=False)
+    size = Column(Float, nullable=False)
 
     @property
-    def inscolnames(self):
+    def colnames(self):
         """A list of all the column names in this table EXCEPT the date column"""
         # Get the columns
         a_list = [col for col, val in self.__dict__.items()
                   if not isinstance(val, datetime)]
 
         return a_list
+
 
 if __name__ == '__main__':
 
