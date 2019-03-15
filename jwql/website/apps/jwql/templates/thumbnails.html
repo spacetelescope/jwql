@@ -2,6 +2,11 @@
 
 {% block preamble %}
 
+    <!-- Custom styles and scripts for this template -->
+    <style type="text/css">
+        div#thumbnail-array { display: none; }
+    </style>
+
 	<title>Unlooked {{ inst }} Images - JWQL</title>
 
 {% endblock %}
@@ -10,111 +15,45 @@
 
     <main role="main" class="container">
 
+    	<!-- Page title -->
     	<h3 id='title'>{{ inst }} Images</h3>
     	<script>determine_page_title('{{ inst }}','{{ prop }}');</script>
 
-    	<p id='img_show_count'>Showing {{ n_fileids }}/{{ n_fileids }} activities
-    		<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">
-    			<span class="help-tip mx-2">i</span>
-    		</a>
-    	</p>
-
-    	<!-- <a id='demo'>test</a> -->
+    	<!-- Show Count -->
+    	<p id='img_show_count'></p>
     	<hr>
 
     	<!-- Filter and sort options -->
 		<div class="d-flex flex-row">
-			<!-- Filter Options -->
-			{% for filter_type, filter_options in dropdown_menus.items() %}
-    			<div class="mr-4">
-			    	Show only {{filter_type}}:
-			    	<div class="dropdown">
-					  <button class="btn btn-primary dropdown-toggle" type="button" id="{{filter_type}}_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">All {{filter_type}}s</button>
-					  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-					  	{% set dropdown_keys_list = dropdown_menus.keys() | replace("'", '"') %}
-					  	<a class="dropdown-item" href="#" onclick="show_only('{{filter_type}}', 'All {{filter_type}}s', '{{dropdown_keys_list}}', '{{ n_fileids }}');">All {{filter_type}}s</a>
-					  	{% for option in filter_options %}
-					    	<a class="dropdown-item" href="#" onclick="show_only('{{filter_type}}', '{{option}}', '{{dropdown_keys_list}}', '{{ n_fileids }}' );">{{option}}</a>
-					    {% endfor %}
-					  </div>
-					</div>
-				</div>
-			{% endfor %}
-
-			<!-- Sort Options -->
-			<div class="mx-4 mr-5 ml-auto">
-		    	Sort by:
-		    	<div class="dropdown">
-				  <button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Default</button>
-				  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-				  	<a class="dropdown-item" href="#" onclick="sort_by_thumbnails('Default');">Default</a>
-			    	<a class="dropdown-item" href="#" onclick="sort_by_thumbnails('Name');">Name</a>
-			    	<a class="dropdown-item" href="#" onclick="sort_by_thumbnails('Exposure Start Time');">Exposure Start Time</a>
-				  </div>
-				</div>
-			</div>
+			<div class="mr-4" id="thumbnail-filter"></div>
+			<div class="mx-4 mr-5 ml-auto" id="thumbnail-sort"></div>
 		</div>
 
 		<hr>
 
-		<!-- Add an animated "loader" while the images load -->
-		<!-- <div id="loading" class='text-center'>
-	        <div class="cssload-container">
-				<div class="cssload-circle-1">
-					<div class="cssload-circle-2">
-						<div class="cssload-circle-3">
-							<div class="cssload-circle-4">
-								<div class="cssload-circle-5">
-									<div class="cssload-circle-6">
-										<div class="cssload-circle-7">
-											<div class="cssload-circle-8">
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-	        <br>
-	        Loading thumbnails...
-	    </div> -->
+        <!-- Loading animation -->
+        <div id="loading">
+            <div class="lds-css ng-scope">
+                <div style="width:100%;height:100%" class="lds-magnify">
+                    <div>
+                        <div>
+                            <div>
+                            </div>
+                            <div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                Loading ...
+            </div>
+        </div>
 
-		<!-- Display the data -->
-		<div id='thumbnail-array'>
-		{% for i, file in thumbnail_zipped_list %}
-			<div class="thumbnail" detector="{{file.detector}}" proposal="{{file.program_id}}" file_root="{{file.file_root}}", exp_start="{{file.exp_start}}">
-				<a href={{ url('jwql:view_image', args=[inst, file.file_root]) }}>
-					<span class="helper"></span><img id='thumbnail{{i}}' onerror="this.src={{ static('img/imagenotfound.png') }}">
-					<script>determine_filetype_for_thumbnail('{{ static("thumbnails/") }}' , "{{file.suffixes}}", "{{i}}", "{{file.file_root}}");</script>
-
-					<div class='thumbnail-color-fill' ></div>
-					<div class='thumbnail-info'>
-						Proposal: {{file.program_id}}<br>
-						Observation: {{file.observation}}<br>
-						Visit: {{file.visit}}<br>
-						Detector: {{file.detector}}<br>
-						Exp_Start: {{'%0.2f' | format(file.exp_start|float) }}<br>
-						<!-- Suffixes: {{file.3}}<br> -->
-						<!-- ID: {{file.file_root}}<br> -->
-					</div>
-				</a>
-			</div>
-		{% endfor %}
-		</div>
-		<a id="no_thumbnails_msg" style='display: none'>No data match the selected criteria.</a>
+        <!-- Display the data -->
+        <div id='thumbnail-array'></div>
+        <a id="no_thumbnails_msg" style='display: none'>No data match the selected criteria.</a>
 
 	</main>
 
-	<!-- <script type="text/javascript">
-    function preloader(){
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("thumbnail-array").style.display = "block";
-        // $(".thumb img").attr('src', '/../static/img/wow.png');
-    }
-    window.onload = preloader;
-    // document.getElementById("thumbnail-array").onload = preloader;
-	</script> -->
+	<script>update_thumbnails_page('{{inst}}', '{{prop}}', '{{base_url}}');</script>
 
 {% endblock %}

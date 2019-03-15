@@ -8,102 +8,6 @@
 
 {% block content %}
 
-	<script>
-    	function change_filetype(type) {
-    		// Change the radio button to check the right filetype
-    		document.getElementById(type).checked = true;
-
-    		// Propogate the text fields showing the filename and APT parameters
-    		var fits_filename = '{{ file_root }}_' + type + '.fits'
-    		document.getElementById("jpg_filename").innerHTML = '{{ file_root }}_' + type + '_integ0.jpg';
-    		document.getElementById("fits_filename").innerHTML = fits_filename;
-    		document.getElementById("proposal").innerHTML = '{{ file_root[2:7] }}';
-    		document.getElementById("obs_id").innerHTML = '{{ file_root[7:10] }}';
-    		document.getElementById("visit_id").innerHTML = '{{ file_root[10:13] }}';
-    		document.getElementById("detector").innerHTML = '{{ file_root}}'.split('_')[3];
-
-    		// Show the appropriate image
-    		var img = document.getElementById("image_viewer")
-    		var jpg_filepath = '{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}_' + type + '_integ0.jpg';
-    		img.src = jpg_filepath;
-    		img.alt = jpg_filepath;
-
-    		// Update the number of integrations
-    		var int_counter = document.getElementById("int_count");
-    		var num_ints = '{{num_ints}}'.replace(/&#39;/g, '"');
-    		var num_ints = JSON.parse(num_ints)
-    		int_counter.innerHTML = 'Displaying integration 1/' + num_ints[type];
-
-    		// Update the integration changing buttons
-    		if (num_ints[type] > 1) {
-    			document.getElementById("int_after").disabled = false;
-    		} else {
-    			document.getElementById("int_after").disabled = true;
-    		}
-
-    		// Update the image download and header links
-    		document.getElementById("download_fits").href = '{{ static("") }}filesystem/{{ file_root[:7] }}/' + fits_filename;
-    		document.getElementById("download_jpg").href = jpg_filepath;
-    		document.getElementById("view_header").href = "/jwql/{{ inst }}/" + fits_filename + "/hdr/";
-
-    		// Disable the "left" button, since this will be showing integ0
-    		document.getElementById("int_before").disabled = true;
-
-    	};
-
-    	function change_int(direction) {
-    		// Figure out the current image and integration
-    		var suffix = document.getElementById("jpg_filename").innerHTML.split('_');
-    		var integration = Number(suffix[suffix.length - 1][5]);
-    		var suffix = suffix[suffix.length - 2];
-
-    		var num_ints = '{{num_ints}}'.replace(/&#39;/g, '"');
-    		var num_ints = JSON.parse(num_ints)[suffix];
-
-
-    		if ((integration == num_ints - 1 && direction == 'right')||
-    		    (integration == 0 && direction == 'left')) {
-    			return;
-    		} else if (direction == 'right') {
-    			// Update integration number
-    			var new_integration = integration + 1
-
-	    		// Don't let them go further if they're at the last integration
-	    		if (new_integration == num_ints - 1) {
-	    			document.getElementById("int_after").disabled = true;
-	    		}
-	    		document.getElementById("int_before").disabled = false;
-    		} else if (direction == 'left') {
-    			// Update integration number
-    			var new_integration = integration - 1
-
-	    		// Don't let them go further if they're at the first integration
-	    		if (new_integration == 0) {
-	    			document.getElementById("int_before").disabled = true;
-	    		}
-	    		document.getElementById("int_after").disabled = false;
-    		}
-
-    		// Update the JPG filename
-			var jpg_filename = '{{ file_root }}_' + suffix + '_integ' + new_integration + '.jpg'
-			var jpg_filepath = '{{ static("") }}preview_images/{{ file_root[:7] }}/' + jpg_filename
-			document.getElementById("jpg_filename").innerHTML = jpg_filename;
-
-			// Show the appropriate image
-    		var img = document.getElementById("image_viewer")
-    		img.src = jpg_filepath;
-    		img.alt = jpg_filepath;
-
-    		// Update the number of integrations
-    		var int_counter = document.getElementById("int_count");
-    		var int_display = new_integration + 1;
-    		int_counter.innerHTML = 'Displaying integration ' + int_display + '/' + num_ints;
-
-    		// Update the jpg download link
-    		document.getElementById("download_jpg").href = jpg_filepath;
-    	};
-    </script>
-
     <main role="main" class="container">
     	<!-- Show image group name -->
     	<h3>{{ file_root }}</h3>
@@ -123,9 +27,9 @@
     	<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank">
 	      	<span class="help-tip mx-1">i</span>
 	    </a><br>
-	    <form class="my-2" action="change_filetype(value)">
+	    <form class="my-2" action="change_filetype(value, {{file_root}}, {{num_ints}}, {{inst}})">
 	    	{% for suffix in suffixes %}
-	    		<input type="radio" name="filetype" value="{{ suffix }}" id="{{ suffix }}" onclick="change_filetype('{{ suffix }}');"> {{ suffix }} &nbsp;&nbsp;&nbsp;&nbsp;
+	    		<input type="radio" name="filetype" value="{{ suffix }}" id="{{ suffix }}" onclick='change_filetype("{{suffix}}", "{{file_root}}", "{{num_ints}}", "{{inst}}");'> {{ suffix }} &nbsp;&nbsp;&nbsp;&nbsp;
 	    	{% endfor %}
 		</form>
 		<br>
@@ -138,12 +42,12 @@
 
 	    <!-- Display the image -->
 	    <div class='text-center'>
-		    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("left");' disabled>&#9664;</button>
+		    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("left", "{{file_root}}", "{{num_ints}}");' disabled>&#9664;</button>
 		    <span class="image_preview">
 		    	<a id="int_count">Displaying integration 1/1</a><br>
 		    	<img id="image_viewer" src='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}_cal_integ0.jpg' alt='{{ file_root }}_cal_integ0.jpg'>
 		    </span>
-		    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("right");' disabled>&#9658;</button>
+		    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("right", "{{file_root}}", "{{num_ints}}");' disabled>&#9658;</button>
 		</div>
 
 		<!-- Download the images? -->
@@ -155,13 +59,13 @@
 
 	    <!-- Determine which filetype should be shown on load -->
 	    {% if 'cal' in suffixes %}
-	    	<script>change_filetype('cal');</script>
+	    	<script>change_filetype('cal', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
 	    {% elif 'rate' in suffixes %}
-	    	<script>change_filetype('rate');</script>
+	    	<script>change_filetype('rate', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
 	    {% elif 'uncal' in suffixes %}
-	    	<script>change_filetype('uncal');</script>
+	    	<script>change_filetype('uncal', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
 	    {% elif suffixes|length == 1 %}
-	    	<script>change_filetype("{{ suffixes.0 }}");</script>
+	    	<script>change_filetype('{{suffixes.0}}', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
 	    {% else %}
 	    	<a>Lauren needs to figure out what to do with these: {{suffixes}}</a>
 	    {% endif %}

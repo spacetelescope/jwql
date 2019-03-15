@@ -1,5 +1,7 @@
-"""This module is home to a suite of MAST queries that gather bulk properties
-of available JWST data for JWQL
+#! /usr/bin/env python
+
+"""This module is home to a suite of MAST queries that gather bulk
+properties of available JWST data for JWQL.
 
 Authors
 -------
@@ -24,9 +26,10 @@ from bokeh.embed import components
 from bokeh.io import save, output_file
 import pandas as pd
 
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import get_config, JWST_DATAPRODUCTS, JWST_INSTRUMENTS
+from jwql.utils.utils import get_config
 from jwql.utils.plotting import bar_chart
 
 
@@ -38,12 +41,13 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
     Parameters
     ----------
     instrument: str
-        The instrument name, i.e. ['NIRISS','NIRCam','NIRSpec','MIRI','FGS']
+        The instrument name, i.e. one of ['niriss','nircam','nirspec',
+        'miri','fgs']
     dataproduct: sequence, str
         The type of data product to search
     add_filters: dict
-        The ('paramName':'values') pairs to include in the 'filters' argument
-        of the request e.g. add_filters = {'filter':'GR150R'}
+        The ('paramName':'values') pairs to include in the 'filters'
+        argument of the request e.g. add_filters = {'filter':'GR150R'}
     add_requests: dict
         The ('request':'value') pairs to include in the request
         e.g. add_requests = {'pagesize':1, 'page':1}
@@ -65,8 +69,8 @@ def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
         dataproduct = [dataproduct]
 
     # Make sure the instrument is supported
-    if instrument.lower() not in [ins.lower() for ins in JWST_INSTRUMENTS]:
-        raise TypeError('Supported instruments include:', JWST_INSTRUMENTS)
+    if instrument.lower() not in [ins.lower() for ins in JWST_INSTRUMENT_NAMES]:
+        raise TypeError('Supported instruments include:', JWST_INSTRUMENT_NAMES)
 
     # CAOM service
     if caom:
@@ -121,7 +125,8 @@ def instrument_keywords(instrument, caom=False):
     Parameters
     ----------
     instrument: str
-        The instrument name, i.e. ['NIRISS','NIRCam','NIRSpec','MIRI','FGS']
+        The instrument name, i.e. one of ['niriss','nircam','nirspec',
+        'miri','fgs']
     caom: bool
         Query CAOM service
 
@@ -139,7 +144,7 @@ def instrument_keywords(instrument, caom=False):
     return keywords
 
 
-def jwst_inventory(instruments=JWST_INSTRUMENTS,
+def jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
                    dataproducts=['image', 'spectrum', 'cube'],
                    caom=False, plot=False):
     """Gather a full inventory of all JWST data in each instrument
@@ -183,7 +188,7 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
                  format(instruments, dataproducts))
 
     # Make the table
-    all_cols = ['instrument']+dataproducts+['total']
+    all_cols = ['instrument'] + dataproducts + ['total']
     table = pd.DataFrame(inventory, columns=all_cols)
 
     # Plot it
@@ -225,7 +230,8 @@ def jwst_inventory(instruments=JWST_INSTRUMENTS,
             f.close()
         set_permissions(script_outfile)
 
-        logging.info('Saved Bokeh components files: {}_component.html and {}_component.js'.format(output_filename, output_filename))
+        logging.info('Saved Bokeh components files: {}_component.html and {}_component.js'.format(
+            output_filename, output_filename))
 
     # Melt the table
     table = pd.melt(table, id_vars=['instrument'],
@@ -244,12 +250,12 @@ def monitor_mast():
     logging.info('Beginning database monitoring.')
 
     # Perform inventory of the JWST service
-    jwst_inventory(instruments=JWST_INSTRUMENTS,
+    jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
                    dataproducts=['image', 'spectrum', 'cube'],
                    caom=False, plot=True)
 
     # Perform inventory of the CAOM service
-    jwst_inventory(instruments=JWST_INSTRUMENTS,
+    jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
                    dataproducts=['image', 'spectrum', 'cube'],
                    caom=True, plot=True)
 

@@ -1,0 +1,3 @@
+START_TIME, datetime
+DETECTOR, string
+APERTURE, string

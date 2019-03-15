@@ -1,9 +1,10 @@
 <p align="center">
-  <img src="https://i.imgur.com/MwnjFVM.png" width="400"/>
+  <img src="logos/jwql_logo_full_transparent.png" width="400"/>
 </p>
 
 # The JWST Quicklook Application (`JWQL`)
 
+[![Current Release](https://img.shields.io/github/release/spacetelescope/jwql.svg)](https://github.com/spacetelescope/jwql/releases/latest/)
 [![PyPI - License](https://img.shields.io/pypi/l/Django.svg)](https://github.com/spacetelescope/jwql/blob/master/LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.6-blue.svg)](https://www.python.org/)
 [![Build Status](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/badge/icon)](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/)
@@ -21,7 +22,15 @@ Official API documentation can be found on [ReadTheDocs](https://jwql.readthedoc
 
 The `jwql` application is currently under heavy development.  The `1.0` release is expected in 2019.  Currently, a development version of the web application can be found at [https://dljwql.stsci.edu](https://dljwql.stsci.edu).
 
-## Prerequisites
+## Installation
+
+Getting `jwql` up and running on your own computer requires four steps, detailed below:
+1. Cloning the GitHub repository
+1. Installing the `conda`environment
+1. Installing the python package
+1. Setting up the configuration file
+
+### Prerequisites
 
 It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.6.  Downloads and installation instructions are  available here:
 
@@ -30,27 +39,25 @@ It is highly suggested that contributors have a working installation of `anacond
 
 Requirements for contributing to the `jwql` package will be included in the `jwql` `conda` environment, which is included in our installation instructions below. Further package requirements will be provided for `jwql` by a `setup.py` script included in the repository.
 
-## Package Installation
+### Clone the `jwql` repo
 
-You first need to install the current version of `jwql`. The simplest way to do this is to go to the directory you want your copy of the repository to be in and clone the repoistory there. Once you are in the directory you can do the following:
+You first need to clone the current version of `jwql`. The simplest way to do this is to go to the directory you want your copy of the repository to be in and clone the repository there. Once you are in the directory you can do the following:
 
 ```
 git clone https://github.com/spacetelescope/jwql.git
 cd jwql
-python setup.py develop
 ```
 
 or, if you would rather use `SSH` instead of `https`, type
 ```
 git clone git@github.com:spacetelescope/jwql.git
 cd jwql
-python setup.py develop
 ```
 instead, and then proceed as stated.
 
-## Environment Installation
+### Environment Installation
 
-Following the download of the `jwql` package, contributors can then install the `jwql` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project.  First, one should ensure that their version of `conda` is up to date:
+Following the download of the `jwql` repository, contributors can then install the `jwql` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project.  First, one should ensure that their version of `conda` is up to date:
 
 ```
 conda update conda
@@ -68,12 +75,27 @@ Lastly, one can create the `jwql` environment via the `environment.yml` file:
 conda env create -f environment.yml
 ```
 
+### Package Installation
+
+Next, you need to install the `jwql` package. While still in the `jwql/` directory, run the following command to set up the package:
+
+```
+python setup.py develop
+```
+The package should now appear if you run `conda list jwql`.
+
+### Configuration File
+
+Much of the `jwql` software depends on the existence of a `config.json` file within the `utils` directory.  This file contains data that may be unique to users and/or contain sensitive information.  Please see the [Config File wiki page](https://github.com/spacetelescope/jwql/wiki/Config-file) for instructions on how to provide this file.
+
 
 ## Software Contributions
 
 There are two current pages to review before you begin contributing to the `jwql` development. The first is our [style guide](https://github.com/spacetelescope/jwql/blob/master/style_guide/style_guide.md) and the second is our [suggested git workflow page](https://github.com/spacetelescope/jwql/wiki/git-&-GitHub-workflow-for-contributing), which contains an in-depth explanation of the workflow.
 
-The following is a bare bones example of a best work flow for contributing to the project:
+Contributors are also encouraged to check out the [Checklist for Contributors Guide](https://github.com/spacetelescope/jwql/wiki/Checklist-for-Contributors-and-Reviewers-of-Pull-Requests) to ensure the pull request contains all of the necessary changes.
+
+The following is a bare-bones example of a best work flow for contributing to the project:
 
 1. Create a fork off of the `spacetelescope` `jwql` repository.
 2. Make a local clone of your fork.
@@ -116,44 +138,51 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Johannes Sahlmann (INS) [@Johannes-Sahlmann](https://github.com/johannes-sahlmann)
 
 ## Acknowledgments:
-- Faith Abney (OED)
-- Anastasia Alexov (OED)
-- Sara Anderson (OED)
+- Faith Abney (DMD)
+- Anastasia Alexov (DMD)
+- Sara Anderson (DMD)
 - Tracy Beck (INS)
 - Francesca Boffi (INS) [@frboffi](https://github.com/frboffi)
-- Clara Brasseur (OED) [@ceb8](https://github.com/ceb8)
-- Matthew Burger (OED)
-- Steven Crawford (OED) [@stscicrawford](https://github.com/stscicrawford)
-- James Davies (OED) [@jdavies-st](https://github.com/jdavies-st)
+- Clara Brasseur (DMD) [@ceb8](https://github.com/ceb8)
+- Matthew Burger (DMD)
+- Steven Crawford (DMD) [@stscicrawford](https://github.com/stscicrawford)
+- James Davies (DMD) [@jdavies-st](https://github.com/jdavies-st)
 - Rosa Diaz (INS) [@rizeladiaz](https://github.com/rizeladiaz)
 - Van Dixon (INS)
-- Tom Donaldson (OED) [@tomdonaldson](https://github.com/tomdonaldson)
+- Tom Donaldson (DMD) [@tomdonaldson](https://github.com/tomdonaldson)
+- Kim DuPrie (DMD)
+- Jonathan Eisenhamer (DMD) [@stscieisenhamer](https://githublcom/stscieisenhamer)
+- Ann Feild (OPO)
 - Mike Fox (DSMO) [@mfox22](https://github.com/mfox22)
 - Scott Friedman (INS)
 - Alex Fullerton (INS) [@awfullerton](https://github.com/awfullerton)
-- Lisa Gardner (OED)
+- Lisa Gardner (DMD)
 - Vera Gibbs (ITSD)
 - Catherine Gosmeyer (INS) [@cgosmeyer](https://github.com/cgosmeyer)
 - Phil Grant (ITSD)
 - Dean Hines (INS)
 - Sherie Holfeltz (INS) [@stholfeltz](https://github.com/stholfeltz)
-- Joe Hunkeler (OED) [@jhunkeler](https://github.com/jhunkeler)
-- Catherine Kaleida (OED)
-- Mark Kyprianou (OED) [@mkyp](https://github.com/mkyp)
-- Karen Levay (OED)
-- Crystal Mannfolk (OED) [@cmannfolk](https://github.com/cmannfolk)
+- Joe Hunkeler (DMD) [@jhunkeler](https://github.com/jhunkeler)
+- Catherine Kaleida (DMD) [@ckaleida](https://github.com/ckaleida)
+- Jenn Kotler (DMD) [@jenneh](https://github.com/jenneh)
+- Daniel Kühbacher (Goddard) [@DanielKuebi](https://github.com/DanielKuebi)
+- Mark Kyprianou (DMD) [@mkyp](https://github.com/mkyp)
+- Karen Levay (DMD)
+- Crystal Mannfolk (SCOPE) [@cmannfolk](https://github.com/cmannfolk)
 - Greg Masci (ITSD)
 - Margaret Meixner (INS)
+- Christain Mesh (DMD) [@cam72cam](https://github.com/cam72cam)
 - Prem Mishra (ITSD)
 - Don Mueller (ITSD)
-- Maria Antonia Nieto-Santisteban (OED)
+- Maria Antonia Nieto-Santisteban (SEITO)
+- Brian O'Sullivan (INS)
 - Joe Pollizzi (JWSTMO)
-- Lee Quick (OED)
+- Lee Quick (DMD)
 - Anupinder Rai (ITSD)
-- Matt Rendina (OED) [@rendinam](https://github.com/rendinam)
+- Matt Rendina (DMD) [@rendinam](https://github.com/rendinam)
 - Massimo Robberto (INS) [@mrobberto](https://github.com/mrobberto)
-- Mary Romelfanger (OED)
-- Bernie Shiao (OED)
+- Mary Romelfanger (DMD)
+- Bernie Shiao (DMD)
 - Matthew Sienkiewicz (ITSD)
 - Arfon Smith (DSMO) [@arfon](https://github.com/arfon)
 - Linda Smith (INS)
@@ -161,7 +190,7 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Dave Unger (ITSD)
 - Jeff Valenti (JWSTMO) [@JeffValenti](https://github.com/JeffValenti)
 - Thomas Walker (ITSD)
-- Geoff Wallace (OED)
+- Geoff Wallace (DMD)
 - Lara Wilkinson (OPO)
-- Alex Yermolaev (ITSD)
+- Alex Yermolaev (ITSD) [@alexyermolaev](https://github.com/alexyermolaev)
 - Joe Zahn (ITSD)
