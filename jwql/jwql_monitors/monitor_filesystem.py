@@ -65,15 +65,17 @@ import datetime
 import logging
 import numpy as np
 import os
+import platform
 import subprocess
 
 from bokeh.embed import components
 from bokeh.layouts import gridplot
 from bokeh.plotting import figure, output_file, save
 
-from jwql.database import database_interface as di
-from jwql.database.database_interface import Filesystem_general
-from jwql.database.database_interface import Filesystem_instrument as InsDb
+from jwql.database.database_interface import engine
+from jwql.database.database_interface import session
+from jwql.database.database_interface import FilesystemGeneral
+from jwql.database.database_interface import FilesystemInstrument
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import filename_parser
@@ -106,7 +108,6 @@ def monitor_filesystem():
     instrument_results_dict = {}
     instrument_results_dict['date'] = now
 
-
     # Walk through filesystem recursively and count files
     logging.info('Searching filesystem...')
     for dirpath, _, files in os.walk(filesystem):
@@ -114,70 +115,47 @@ def monitor_filesystem():
         for filename in files:
 
             file_path = os.path.join(dirpath, filename)
-            general_results_dict['total_file_size'] = os.path.getsize(file_path)
+            general_results_dict['total_file_size'] += os.path.getsize(file_path)
 
             if filename.endswith(".fits"):
 
                 # Parse out filename information
                 filename_dict = filename_parser(filename)
-                print(filename_dict)
                 filetype = filename_dict['suffix']
+                instrument = filename_dict['instrument']
 
                 # Populate general stats
                 general_results_dict['fits_file_count'] += 1
                 general_results_dict['fits_file_size'] += os.path.getsize(file_path)
 
                 # Populate instrument specific stats
-                instrument_results_dict['instrument'] = filename_dict['instrument']
-                if not instrument_results_dict[filetype]:
-                    instrument_results_dict[filetype] = {}
-                    instrument_results_dict[filetype]['count'] = 0
-                    instrument_results_dict[filetype]['size'] = 0
-                instrument_results_dict[filetype]['count'] += 1
-                instrument_results_dict[filetype]['size'] += os.path.getsize(file_path)
+                if instrument not in instrument_results_dict:
+                    instrument_results_dict[instrument] = {}
+                if filetype not in instrument_results_dict[instrument]:
+                    instrument_results_dict[instrument][filetype] = {}
+                    instrument_results_dict[instrument][filetype]['count'] = 0
+                    instrument_results_dict[instrument][filetype]['size'] = 0
+                instrument_results_dict[instrument][filetype]['count'] += 1
+                instrument_results_dict[instrument][filetype]['size'] += os.path.getsize(file_path) / (2**40)
 
-    logging.info('{} files found in filesystem'.format(general_results_dict['fits_files']))
+    logging.info('{} files found in filesystem'.format(general_results_dict['fits_file_count']))
 
     # Convert file sizes to terabytes
-
-    # Add data to database
+    general_results_dict['total_file_size'] = general_results_dict['total_file_size'] / (2**40)
+    general_results_dict['fits_file_size'] = general_results_dict['fits_file_size'] / (2**40)
 
     # Get df style stats on file system
-    out = subprocess.check_output('df {}'.format(filesystem), shell=True)
-    # put into string for parsing from byte format
-    outstring = out.decode("utf-8")
-    parsed = outstring.split(sep=None)
+    command = "df {}".format(filesystem)
+    command += " | awk '{print $3, $4}' | tail -n 1"
+    stats = subprocess.check_output(command, shell=True).split()
+    general_results_dict['used'] = int(stats[0])  / (2**40)
+    general_results_dict['available'] = int(stats[1])  / (2**40)
 
-    # Select desired elements from parsed string, put these in dictionary, too?
-    total_size = int(parsed[8])  # in blocks of 512 bytes
-    used_size = int(parsed[9])
-    available_size = int(parsed[10])
+    # Add data to filesystem_general table
+    engine.execute(FilesystemGeneral.__table__.insert(), general_results_dict)
+    session.commit()
 
-    # Save stats for plotting over time  # also define this as part of database
-    # get date of stats
-    now = datetime.datetime.now().isoformat(sep='T')
-
-    # add row to filesystem_general table
-    di.session.add(di.Filesystem_general(date=now, total_size=total_size,
-                                         used_size=used_size,
-                                         available_size=available_size,
-                                         file_count=results_dict['file_count'],
-                                         fits_files=results_dict['fits_files'],
-                                         size_fits=size_dict['size_fits']))
-
-    # Add row to filesystem_instrument table
-    current_columns = [t.name for t in
-                       di.Filesystem_instrument.metadata.sorted_tables[2].columns]
-    current_columns.remove('date')
-
-    # fancy dictionary stuff
-    combo_dict = {**results_dict, **size_dict}
-    # more fancy dict stuff
-    filtered_dict = {k: combo_dict.get(k, 0) for k in current_columns}
-    di.session.add(di.Filesystem_instrument(date=now, **filtered_dict))
-
-    # Commit new rows to database
-    di.session.commit()
+    # Add data to filesystem_instrument table
 
     # Create the plots
     plot_system_stats()
