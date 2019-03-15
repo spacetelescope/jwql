@@ -35,7 +35,7 @@ from jwst.rscd import RSCD_Step
 from jwst.saturation import SaturationStep
 from jwst.superbias import SuperBiasStep
 
-from jwql.utils.utils import JWST_INSTRUMENTS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_UPPERCASE
 
 
 # Define the fits header keyword that accompanies each step
@@ -51,9 +51,6 @@ PIPELINE_STEP_MAPPING = {'dq_init': DQInitStep, 'dark_current': DarkCurrentStep,
                          'linearity': LinearityStep, 'persistence': PersistenceStep,
                          'rate': RampFitStep, 'refpix': RefPixStep, 'rscd': RSCD_Step,
                          'saturation': SaturationStep, 'superbias': SuperBiasStep}
-
-print('Remove line below before merging. Uppercase list of inst. is in a PR already')
-JWST_INSTRUMENTS = [entry.upper() for entry in JWST_INSTRUMENTS]
 
 
 def completed_pipeline_steps(filename):
@@ -103,7 +100,7 @@ def get_pipeline_steps(instrument):
         Dictionary of step names (and modules? do we care?)
     """
     instrument = instrument.upper()
-    if instrument not in JWST_INSTRUMENTS:
+    if instrument not in JWST_INSTRUMENT_NAMES_UPPERCASE:
         raise ValueError("WARNING: {} is not a valid instrument name.".format(instrument))
     # all_steps = Detector1Pipeline.step_defs
 

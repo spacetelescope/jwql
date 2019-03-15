@@ -44,11 +44,12 @@ Maybe compare to a baseline noise image and flag pixels that are different by th
 import argparse
 from copy import copy
 import glob  # only during testing
+import logging
 import matplotlib.pyplot as plt  # only for testing
 import numpy as np
 import os
 
-from astropy.io import fits
+from astropy.io import ascii, fits
 from astropy.modeling import models
 from astropy.stats import sigma_clip
 from astropy.time import Time
@@ -58,22 +59,27 @@ from sqlalchemy import Table
 
 from jwql.database.database_interface import base
 from jwql.database.database_interface import session
-from jwql.database.database_interface import NIRCamDarkQueries, NIRISSDarkQueries, NIRSpecDarkQueries, \
-                                             MIRIDarkQueries, FGSDarkQueries
-from jwql.database.database_interface import NIRCamDarkPixelStats, NIRISSDarkPixelStats, MIRIDarkPixelStats \
-                                             NIRSpecDarkPixelStats, FGSPixelStats
-from jwql.database.database_interface import NIRCamDarkDarkCurrent, NIRISSDarkDarkCurrent, MIRIDarkDarkCurrent \
-                                             NIRSpecDarkDarkCurrent, FGSDarkDarkCurrent
+#from jwql.database.database_interface import NIRCamDarkQueries, NIRISSDarkQueries, NIRSpecDarkQueries, \
+#                                             MIRIDarkQueries, FGSDarkQueries
+#from jwql.database.database_interface import NIRCamDarkPixelStats, NIRISSDarkPixelStats, MIRIDarkPixelStats \
+#                                             NIRSpecDarkPixelStats, FGSPixelStats
+#from jwql.database.database_interface import NIRCamDarkDarkCurrent, NIRISSDarkDarkCurrent, MIRIDarkDarkCurrent \
+#                                             NIRSpecDarkDarkCurrent, FGSDarkDarkCurrent
+from jwql.database.database_interface import NIRCamDarkQueries, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils import maths, instrument_properties, permissions
 from jwql.utils.constants import AMPLIFIER_BOUNDARIES, JWST_INSTRUMENT_NAMES, JWST_DATAPRODUCTS
+from jwql.utils.logging_functions import configure_logging, log_info, log_fail
+from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, download_mast_data, ensure_dir_exists, get_config, \
                              filesystem_path
 
+THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
+
 
 class Dark():
-    def __init__(self, new_dark_threshold=10, testing=False):
+    def __init__(self, testing=False):
         """
         Parameters
         ----------
@@ -97,6 +103,11 @@ class Dark():
             self.output_dir = '~/python_repos/test_jwql/test_dark_monitor'
             #history_file = os.path.join(self.output_dir, 'mast_query_history.txt')
 
+            # Read in config file that defines the thresholds for the
+            # number of dark files that must be present in order for
+            # the monitor to run
+            limits = ascii.read(THRESHOLDS_FILE)
+
             # Use the current time as the end time for MAST query
             current_time_mjd = Time.now().mjd
 
@@ -110,8 +121,13 @@ class Dark():
                 # Get a list of all possible apertures from pysiaf
                 possible_apertures = Siaf(instrument).apernames
 
-                # Locate the record of the most recent MAST search
                 for aperture in possible_apertures:
+                    # Find the appropriate threshold for the number of
+                    # new files needed
+                    match = aperture == limits['Aperture']
+                    new_dark_threshold = limits['Threshold'][match]
+
+                    # Locate the record of the most recent MAST search
                     most_recent_queries = self.most_recent_search()
                     self.aperture = aperture
                     self.query_start = most_recent_queries['end_time']
@@ -328,7 +344,7 @@ class Dark():
         )
 
         count = query.count()
-        if not query count:
+        if not count:
             filename = None
         else:
             filename = db_entry['baseline_file']
@@ -550,9 +566,8 @@ class Dark():
 
         # Calculate mean and stdev values, and fit a Gaussian to the
         # histogram of the pixels in each amp
-        (amp_mean, amp_stdev, gauss_param, gauss_chisquared, double_gauss_params, double_gauss_chisquared
-            histogram, bins) = \
-            self.stats_by_amp(slope_image, amp_bounds)
+        (amp_mean, amp_stdev, gauss_param, gauss_chisquared, double_gauss_params, double_gauss_chisquared,
+            histogram, bins) = self.stats_by_amp(slope_image, amp_bounds)
 
         print('Maybe move this to a separate function')
         for key in amp_mean:
@@ -789,9 +804,9 @@ class Dark():
 
 
 if __name__ == '__main__':
-    #logging.configure_logging()
-    usagestring = 'USAGE: dark_monitor.py 10 False'
-    monitor = Dark(new_dark_threshold=sys.argv[1], testing=sys.argv[2])
+    module = os.path.basename(__file__).strip('.py')
+    configure_logging(module, production_mode=False)
+    monitor = Dark()
 
 
 def mast_query_darks(instrument, aperture, start_date, end_date):

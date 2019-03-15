@@ -60,6 +60,7 @@ import os
 import socket
 
 import pandas as pd
+from sqlalchemy import ARRAY
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import create_engine
@@ -240,7 +241,8 @@ def get_monitor_columns(data_dict, table_name):
                       'date': Date(),
                       'time': Time(),
                       'datetime': DateTime,
-                      'bool': Boolean}
+                      'bool': Boolean
+                      }
 
     # Get the data from the table definition file
     instrument = table_name.split('_')[0]
@@ -257,9 +259,20 @@ def get_monitor_columns(data_dict, table_name):
         column_name = column_definition[0]
         data_type = column_definition[1]
 
+        if 'array' in data_type:
+            dtype, _a, dimension = data_type.split('_')
+            dimension = dimension[0]
+            array = True
+        else:
+            dtype = data_type
+            array = False
+
         # Create a new column
-        if data_type in list(data_type_dict.keys()):
-            data_dict[column_name.lower()] = Column(data_type_dict[data_type])
+        if dtype in list(data_type_dict.keys()):
+            if array:
+                data_dict[column_name.lower()] = Column(ARRAY(data_type_dict[dtype], dimensions=dimension))
+            else:
+                data_dict[column_name.lower()] = Column(data_type_dict[dtype])
         else:
             raise ValueError('Unrecognized column type: {}:{}'.format(column_name, data_type))
 
@@ -320,10 +333,12 @@ def monitor_orm_factory(class_name):
 
     return type(class_name, (base,), data_dict)
 
+
 # Create tables from ORM factory
-# NIRCamDarkQueries = monitor_orm_factory('nircam_dark_query_history.txt')
-# NIRCamDarkPixelStats = monitor_orm_factory('nircam_dark_pixel_stats')
-# NIRCamDarkDarkCurrent = monitor_orm_factory('nircam_dark_dark_current')
+definitions_dir = os.path.join(os.path.split(__file__)[0], 'monitor_table_definitions')
+NIRCamDarkQueries = monitor_orm_factory('nircam_dark_query_history')
+NIRCamDarkPixelStats = monitor_orm_factory('nircam_dark_pixel_stats')
+NIRCamDarkDarkCurrent = monitor_orm_factory('nircam_dark_dark_current')
 # NIRISSDarkQueries = monitor_orm_factory('niriss_dark_query_history.txt')
 # NIRISSDarkPixelStats = monitor_orm_factory('niriss_dark_pixel_stats')
 # NIRISSDarkDarkCurrent = monitor_orm_factory('niriss_dark_dark_current')
