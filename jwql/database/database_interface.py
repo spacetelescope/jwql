@@ -211,7 +211,8 @@ class FilesystemGeneral(base):
     __tablename__ = 'filesystem_general'
 
     # Define the columns
-    date = Column(DateTime, primary_key=True, nullable=False)
+    id = Column(Integer, primary_key=True, nullable=False)
+    date = Column(DateTime, unique=True, nullable=False)
     total_file_count = Column(Integer, nullable=False)
     total_file_size = Column(Float, nullable=False)
     fits_file_count = Column(Integer, nullable=False)
@@ -225,9 +226,11 @@ class FilesystemInstrument(base):
 
     # Name the table
     __tablename__ = 'filesystem_instrument'
+    __table_args__ = (UniqueConstraint('date', 'instrument', 'filetype', name='filesystem_instrument_uc'),)
 
     # Define the columns
-    date = Column(DateTime, primary_key=True, nullable=False)
+    id = Column(Integer, primary_key=True, nullable=False)
+    date = Column(DateTime, nullable=False)
     instrument = Column(INSTRUMENTS, nullable=False)
     filetype = Column(String(20), nullable=False)
     count = Column(Integer, nullable=False)

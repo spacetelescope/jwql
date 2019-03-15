@@ -156,6 +156,17 @@ def monitor_filesystem():
     session.commit()
 
     # Add data to filesystem_instrument table
+    for instrument in ['nircam', 'niriss', 'nirspec', 'miri', 'fgs']:
+        for filetype in instrument_results_dict[instrument]:
+            new_record = {}
+            new_record['date'] = instrument_results_dict['date']
+            new_record['instrument'] = instrument
+            new_record['filetype'] = filetype
+            new_record['count'] = instrument_results_dict[instrument][filetype]['count']
+            new_record['size'] = instrument_results_dict[instrument][filetype]['size']
+
+            engine.execute(FilesystemInstrument.__table__.insert(), new_record)
+            session.commit()
 
     # Create the plots
     plot_system_stats()
