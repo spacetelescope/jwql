@@ -1,4 +1,5 @@
 import os
+import glob
 import statistics
 import sqlite3
 
@@ -13,28 +14,7 @@ from jwql.instrument_monitors.miri_monitors.data_trending.utils.process_data imp
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 #files with data to initially fill the database
-filenames = [
-'imir_190204_DoY2292017FOFTLM2019035182609402.CSV',
-'imir_190204_DoY2402017FOFTLM2019035180907145.CSV',
-'imir_190204_DoY2412017FOFTLM2019035181004311.CSV',
-'imir_190204_DoY2312017FOFTLM2019035184159965.CSV',
-'imir_190204_DoY2422017FOFTLM2019035181027504.CSV',
-'imir_190204_DoY2322017FOFTLM2019035184236985.CSV',
-'imir_190204_DoY2432017FOFTLM2019035181100606.CSV',
-'imir_190204_DoY2332017FOFTLM2019035184306076.CSV',
-'imir_190204_DoY2442017FOFTLM2019035181126853.CSV',
-'imir_190204_DoY2342017FOFTLM2019035184347174.CSV',
-'imir_190204_DoY2452017FOFTLM2019035181155234.CSV',
-'imir_190204_DoY2352017FOFTLM2019035184708935.CSV',
-'imir_190204_DoY2462017FOFTLM2019035181230871.CSV',
-'imir_190204_DoY2362017FOFTLM2019035184737246.CSV',
-'imir_190204_DoY2472017FOFTLM2019035181252890.CSV',
-'imir_190204_DoY2372017FOFTLM2019035184806338.CSV',
-'imir_190204_DoY2482017FOFTLM2019035181322838.CSV',
-'imir_190204_DoY2382017FOFTLM2019035184832737.CSV',
-'imir_190204_DoY2492017FOFTLM2019035181406861.CSV',
-'imir_190204_DoY2392017FOFTLM2019035180833486.CSV',
-'imir_190204_DoY2502017FOFTLM2019035181519288.CSV']
+paths = glob.glob(os.path.join(directory, '*.CSV'))
 
 
 def process_file(conn, path):
@@ -156,8 +136,7 @@ def main():
     conn = sql.create_connection(DATABASE_FILE)
 
     #process all files in filenames
-    for name in filenames:
-        path = directory + name
+    for path in paths:
         process_file(conn, path)
 
     sql.close_connection(conn)
