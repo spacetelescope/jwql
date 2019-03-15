@@ -101,11 +101,9 @@ def ice_power(conn, start, end):
     g = pf.add_to_plot(p, "2P5V", "INRSH_HK_2P5V", start, end, conn, color = "darkgreen")
     h = pf.add_to_plot(p, "", "INRSH_HK_ADCTGAIN", start, end, conn, color = "brown")
     i = pf.add_to_plot(p, "", "INRSH_HK_ADCTOFFSET", start, end, conn, color = "navy")
-    j = pf.add_to_plot(p, "", "INRSH_OA_VREFOFF", start, end, conn, color = "purple")
-    k = pf.add_to_plot(p, "", "INRSH_OA_VREF", start, end, conn, color = "darkmagenta")
     p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (A)", axis_label_text_color = "blue"), 'right')
 
-    pf.add_hover_tool(p,[b,c,d,e,g,f,h,i,j,k])
+    pf.add_hover_tool(p,[b,c,d,e,g,f,h,i])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -133,7 +131,7 @@ def mce_power(conn, start, end):
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
                 plot_width = 1020,
-                plot_height = 700,
+                plot_height = 400,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
@@ -241,20 +239,19 @@ def power_plots(conn, start, end):
         <th><h6>Description</h6></th>
       </tr>
       <tr>
-        <td>2.5V Ref and FPE Digg</td>
-        <td>IMIR_SPW_V_DIG_2R5V<br>
-            IMIR_PDU_V_REF_2R5V<br> </td>
-        <td>FPE 2.5V Digital and FPE 2.5V PDU Reference Voltage</td>
+        <td>DEFAULT</td>
+        <td>DEFAULT</td>
+        <td>DEAULT</td>
       </tr>
     </table>
     </body>
     """, width=1100)
 
     plot1 = ice_power(conn, start, end)
-    #plot2 = mce_power(conn, start, end)
+    plot2 = mce_power(conn, start, end)
     plot3 = fpe_power(conn, start, end)
 
-    layout = Column(descr, plot1, plot3)
+    layout = Column(descr, plot1, plot2, plot3)
 
     tab = Panel(child = layout, title = "POWER")
 

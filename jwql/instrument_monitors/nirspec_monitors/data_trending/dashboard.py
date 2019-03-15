@@ -80,13 +80,14 @@ def data_trending_dashboard(start = default_start, end = now):
 
     #add tabs to dashboard
     tab1 = power_plots(conn, start, end)
-    tab2 = volt_plots(conn, start, end)
+    #tab2 = volt_plots(conn, start, end)
     tab3 = temperature_plots(conn, start, end)
     tab4 = msa_mce_plots(conn, start, end)
     tab5 = fpe_fpa_plots(conn, start, end)
 
     #build dashboard
-    tabs = Tabs( tabs=[ tab1, tab2, tab3, tab4, tab5] )
+    #tabs = Tabs( tabs=[ tab1, tab2, tab3, tab4, tab5] )
+    tabs = Tabs( tabs=[ tab1, tab3, tab4, tab5] )
     #tabs = Tabs( tabs=[ tab5, tab6])
     #return dasboard to webapp
     script, div = components(tabs)

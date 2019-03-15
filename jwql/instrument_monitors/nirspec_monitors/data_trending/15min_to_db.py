@@ -13,7 +13,7 @@ from jwql.instrument_monitors.nirspec_monitors.data_trending.utils.process_data 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 #point to the directory where your files are located!
-directory = '/home/daniel/STScI/trainigData/nirspec_5min_full/'
+directory = '/home/daniel/STScI/trainigData/nirspec_new_15min/'
 
 #here some some files contain the same data but they are all incomplete
 #in order to generate a full database we have to import all of them
@@ -33,17 +33,14 @@ def process_file(conn, path):
     m_raw_data = apt.mnemonics(path)
 
     #process raw data with once a day routine
-    cond1 = once_a_day_routine(m_raw_data)
+    returndata = once_a_day_routine(m_raw_data)
 
     #put all data in a database that uses a condition
-    for key, value in cond1.items():
-
+    for key, value in returndata.items():
         m = m_raw_data.mnemonic(key)
-
         length = len(value)
         mean = statistics.mean(value)
         deviation = statistics.stdev(value)
-
         dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
         sql.add_data(conn, key, dataset)
 

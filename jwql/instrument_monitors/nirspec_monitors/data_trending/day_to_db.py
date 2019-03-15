@@ -13,11 +13,12 @@ from jwql.instrument_monitors.nirspec_monitors.data_trending.utils.process_data 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 #point to the directory where your files are located!
-directory = '/home/daniel/STScI/trainigData/nirspec_day/'
+directory = '/home/daniel/STScI/trainigData/nirspec_new_day/'
 
 #here some some files contain the same data but they are all incomplete
 #in order to generate a full database we have to import all of them
 filenames = glob.glob(os.path.join(directory, '*.CSV'))
+#test = "FOFTLM2019073163734099.CSV"
 
 def process_file(conn, path):
     '''Parse CSV file, process data within and put to DB
@@ -99,6 +100,10 @@ def main():
     #connect to temporary database
     conn = sql.create_connection(DATABASE_FILE)
 
+    '''
+    path = directory + test
+    process_file(conn, path)
+    '''
     #do for every file in list above
     for path in filenames:
         process_file(conn, path)

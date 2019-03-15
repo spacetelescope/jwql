@@ -291,12 +291,10 @@ def fpe_fpa_plots(conn, start, end):
         <th><h6>Description</h6></th>
       </tr>
       <tr>
-        <td>2.5V Ref and FPE Digg</td>
-        <td>IMIR_SPW_V_DIG_2R5V<br>
-            IMIR_PDU_V_REF_2R5V<br> </td>
-        <td>FPE 2.5V Digital and FPE 2.5V PDU Reference Voltage</td>
+        <td>DEFAULT</td>
+        <td>DEFAULT</td>
+        <td>DEAULT</td>
       </tr>
-       </tr>
     </table>
     </body>
     """, width=1100)

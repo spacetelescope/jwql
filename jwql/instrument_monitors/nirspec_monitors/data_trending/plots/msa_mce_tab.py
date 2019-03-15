@@ -395,41 +395,10 @@ def msa_mce_plots(conn, start, end):
         <th><h6>Description</h6></th>
       </tr>
       <tr>
-        <td>2.5V Ref and FPE Digg</td>
-        <td>IMIR_SPW_V_DIG_2R5V<br>
-            IMIR_PDU_V_REF_2R5V<br> </td>
-        <td>FPE 2.5V Digital and FPE 2.5V PDU Reference Voltage</td>
+        <td>DEFAULT</td>
+        <td>DEFAULT</td>
+        <td>DEAULT</td>
       </tr>
-      <tr>
-        <td>FPE Dig. 5V</td>
-        <td>IMIR_PDU_V_DIG_5V<br>
-            IMIR_PDU_I_DIG_5V</td>
-        <td>FPE 5V Digital Voltage and Current</td>
-      </tr>
-      <tr>
-        <td>FPE Ana. 5V</td>
-        <td>IMIR_PDU_V_ANA_5V<br>
-            IMIR_PDU_I_ANA_5V</td>
-        <td>FPE +5V Analog Voltage and Current</td>
-      </tr>
-      <tr>
-        <td>FPE Ana. N5V</td>
-        <td>IMIR_PDU_V_ANA_N5V<br>
-            IMIR_PDU_I_ANA_N5V</td>
-        <td>FPE -5V Analog Voltage and Current</td>
-      </tr>
-      <tr>
-        <td>FPE Ana. 7V</td>
-        <td>IMIR_PDU_V_ANA_7V<br>
-            IMIR_PDU_I_ANA_7V</td>
-        <td>FPE +7V Analog Voltage and Current</td>
-      </tr>
-       <tr>
-         <td>FPE Ana. N7V</td>
-         <td>IMIR_PDU_V_ANA_N7V<br>
-             IMIR_PDU_I_ANA_N7V</td>
-         <td>FPE -7V Analog Voltage and Current</td>
-       </tr>
     </table>
     </body>
     """, width=1100)
