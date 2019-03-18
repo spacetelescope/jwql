@@ -11,63 +11,35 @@ Authors
 
     - Misty Cracraft
     - Sara Ogaz
+    - Matthew Bourque
 
 Use
 ---
 
-    This module can be executed from the command line:
+    This module is intended to be executed from the command line:
 
     ::
 
         python monitor_filesystem.py
 
-    Alternatively, it can be called from scripts with the following
-    import statements:
-
-    ::
-
-        from monitor_filesystem import filesystem_monitor
-        from monitor_filesystem import plot_system_stats
-
-
-    Required arguments (in a ``config.json`` file):
-    ``filepath`` - The path to the input file needs to be in a
-    ``config.json`` file in the ``utils`` directory
-    ``outputs`` - The path to the output files needs to be in a
-    ``config.json`` file in the ``utils`` directory.
-
-    Required arguments for plotting:
-    ``inputfile`` - The name of the file to save all of the system
-    statistics to
-    ``filebytype`` - The name of the file to save stats on fits type
-    files to
-
+    The user must have a ``config.json`` file in the ``utils``
+    directory with the following keys:
+      - ``filesystem`` - The path to the filesystem
+      - ``outputs`` - The path to where the output plots will be
+                      written
 
 Dependencies
 ------------
 
     The user must have a configuration file named ``config.json``
     placed in the ``utils`` directory.
-
-Notes
------
-
-    The ``monitor_filesystem`` function queries the filesystem,
-    calculates the statistics and saves the output file(s) in the
-    directory specified in the ``config.json`` file.
-
-    The ``plot_system_stats`` function reads in the two specified files
-    of statistics and plots the figures to an html output page as well
-    as saving them to an output html file.
 """
 
 from collections import defaultdict
 import datetime
 import itertools
 import logging
-import numpy as np
 import os
-import platform
 import subprocess
 
 from bokeh.embed import components
@@ -85,8 +57,8 @@ from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES, JWST_
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 
-
 FILESYSTEM = get_config()['filesystem']
+
 
 def gather_statistics(general_results_dict, instrument_results_dict):
     """Walks the filesytem to gather various statistics to eventually
@@ -164,8 +136,8 @@ def get_global_filesystem_stats(general_results_dict):
     command = "df {}".format(FILESYSTEM)
     command += " | awk '{print $3, $4}' | tail -n 1"
     stats = subprocess.check_output(command, shell=True).split()
-    general_results_dict['used'] = int(stats[0])  / (2**40)
-    general_results_dict['available'] = int(stats[1])  / (2**40)
+    general_results_dict['used'] = int(stats[0]) / (2**40)
+    general_results_dict['available'] = int(stats[1]) / (2**40)
 
     return general_results_dict
 
@@ -313,6 +285,7 @@ def plot_filesystem_size():
     plot.circle(dates, availables, color='blue')
 
     return plot
+
 
 def plot_filesystem_stats():
     """
