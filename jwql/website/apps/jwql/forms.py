@@ -100,13 +100,13 @@ class FileSearchForm(forms.Form):
             if len(all_files) > 0:
                 all_instruments = []
                 for file in all_files:
-                    instrument = filename_parser(file)['detector']
-                    all_instruments.append(instrument[:3])
+                    instrument = filename_parser(file)['instrument']
+                    all_instruments.append(instrument)
                 if len(set(all_instruments)) > 1:
                     raise forms.ValidationError('Cannot return result for proposal with multiple '
                                                 'instruments.')
 
-                self.instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[all_instruments[0]]
+                self.instrument = all_instruments[0]
             else:
                 raise forms.ValidationError('Proposal {} not in the filesystem.'.format(search))
 
@@ -211,7 +211,7 @@ class MnemonicQueryForm(forms.Form):
         delta_day = -7.
         range_day = 1.
         default_start_time = now + TimeDelta(delta_day, format='jd')
-        default_end_time = now + TimeDelta(delta_day+range_day, format='jd')
+        default_end_time = now + TimeDelta(delta_day + range_day, format='jd')
     else:
         # example for testing
         default_start_time = Time('2019-01-16 00:00:00.000', format='iso')
