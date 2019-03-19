@@ -10,7 +10,7 @@ storage area, named by module name and timestamp, e.g.
 Authors
 -------
 
-    - Catherine Martlin 2018
+    - Catherine Martlin 2018, 2019
     - Alex Viana, 2013 (WFC3 QL Version)
 
 Use
