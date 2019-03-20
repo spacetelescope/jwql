@@ -301,7 +301,7 @@ def plot_filesystem_stats():
 
     for instrument in JWST_INSTRUMENT_NAMES:
         plot_list.append(plot_by_filetype('count', instrument))
-        plot_list.append(plot_by_filetype('count', instrument))
+        plot_list.append(plot_by_filetype('size', instrument))
 
     # Create a layout with a grid pattern
     grid_chunks = [plot_list[i:i+2] for i in range(0, len(plot_list), 2)]
