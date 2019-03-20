@@ -1,16 +1,42 @@
-import os
-import glob
-import statistics
-import sqlite3
+#! /usr/bin/env python
+''' Auxiliary module to populate database
 
-from jwql.utils.utils import get_config, filename_parser
+    This module was used throughout development to populate the database. Since
+    the EDB had no valid data during implementation we had to download data elsewhere.
+    The downloaded data is in .CSV format and can easily be read by the program.
+    After import and sorting the process_file function extracts the useful part and
+    pushes it to the auxiliary database. This function can be implemented in the
+    final cron job.
+
+Authors
+-------
+
+    - Daniel Kühbacher
+
+Use
+---
+    make sure "directory" points to a folder where useable day-samples are stored.
+    make sure you already ran .utils/sql_interface.py in order to create a empty database
+    with prepared tables.
+    Run the module form the command line.
+
+Notes
+-----
+    For developement only
+'''
 
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.csv_to_AstropyTable as apt
 from jwql.instrument_monitors.miri_monitors.data_trending.utils.process_data import whole_day_routine, wheelpos_routine
+from jwql.utils.utils import get_config, filename_parser
 
+import os
+import glob
+import statistics
+import sqlite3
 
+#set _location_ variable
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 #files with data to initially fill the database
@@ -20,12 +46,13 @@ paths = glob.glob(os.path.join(directory, '*.CSV'))
 
 def process_file(conn, path):
     '''Parse CSV file, process data within and put to DB
+
     Parameters
     ----------
     conn : DBobject
         Connection object to temporary database
     path : str
-        defines path to the files
+        defines file to read
     '''
 
     m_raw_data = apt.mnemonics(path)
@@ -100,7 +127,7 @@ def main():
     #connect to temporary database
     conn = sql.create_connection(DATABASE_FILE)
 
-    #process all files in filenames
+    #process all files found ind folder "directory"
     for path in paths:
         process_file(conn, path)
 
