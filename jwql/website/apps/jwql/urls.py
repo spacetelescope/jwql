@@ -87,9 +87,6 @@ urlpatterns = [
     re_path(r'^api/(?P<rootname>[\w]+)/preview_images/$', api_views.preview_images_by_rootname, name='preview_images_by_rootname'),
     re_path(r'^api/(?P<rootname>[\w]+)/thumbnails/$', api_views.thumbnails_by_rootname, name='thumbnails_by_rootname'),
 
-    # MIRI views
-    path('miri/miri_data_trending', views.miri_data_trending, name='miri_data_trending'),
-
     # NIRSpec views
     path('nirspec/nirspec_data_trending', views.nirspec_data_trending, name='nirspec_data_trending'),
 ]
