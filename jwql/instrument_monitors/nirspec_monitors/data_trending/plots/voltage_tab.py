@@ -257,13 +257,13 @@ def volt_plots(conn, start, end):
     </body>
     """, width=1100)
 
-    #plot1 = ref_volt(conn, start, end)
-    #plot3 = fwa_volt(conn, start, end)
-    #plot4 = gwa_volt(conn, start, end)
-    plot5 = rma_volt(conn, start, end)
+    plot1 = ref_volt(conn, start, end)
+    plot2 = fwa_volt(conn, start, end)
+    plot3 = gwa_volt(conn, start, end)
+    plot4 = rma_volt(conn, start, end)
 
-    layout = Column(descr, plot1, plot5)
+    layout = Column(descr, plot1, plot2, plot3, plot4)
 
-    tab = Panel(child = layout, title = "Ref. VOLTAGES")
+    tab = Panel(child = layout, title = "REF VOLTAGES")
 
     return tab

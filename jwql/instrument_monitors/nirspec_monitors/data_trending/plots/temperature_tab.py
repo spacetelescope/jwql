@@ -119,7 +119,7 @@ def irsu_temp(conn, start, end):
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
-                plot_width = 1020,
+                plot_width = 1120,
                 plot_height = 500,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
@@ -166,7 +166,7 @@ def fpe_temp(conn, start, end):
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
-                plot_width = 1020,
+                plot_width = 1120,
                 plot_height = 1000,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
@@ -190,8 +190,8 @@ def fpe_temp(conn, start, end):
     l = pf.add_to_plot(p, "CAAL2", "IGDP_NRSI_C_CAAL2_TEMP", start, end, conn, color = "magenta")
     m = pf.add_to_plot(p, "CAAL3", "IGDP_NRSI_C_CAAL3_TEMP", start, end, conn, color = "mediumaquamarine")
     n = pf.add_to_plot(p, "CAAL4", "IGDP_NRSI_C_CAAL4_TEMP", start, end, conn, color = "goldenrod")
-    o = pf.add_to_plot(p, "FWA", "IGDP_NRSI_C_FWA_TEMP", start, end, conn, color = "darkseagreen")
-    p = pf.add_to_plot(p, "GWA", "IGDP_NRSI_C_GWA_TEMP", start, end, conn, color = "darkkhaki")
+    #o = pf.add_to_plot(p, "FWA", "IGDP_NRSI_C_FWA_TEMP", start, end, conn, color = "darkseagreen")
+    #p = pf.add_to_plot(p, "GWA", "IGDP_NRSI_C_GWA_TEMP", start, end, conn, color = "darkkhaki")
 
     #pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p])
 
@@ -220,7 +220,7 @@ def box_temp(conn, start, end):
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
-                plot_width = 1020,
+                plot_width = 1120,
                 plot_height = 500,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
@@ -261,7 +261,7 @@ def mce_internal_temp(conn, start, end):
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
-                plot_width = 1020,
+                plot_width = 1120,
                 plot_height = 500,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
@@ -309,7 +309,7 @@ def msa_temp(conn, start, end):
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
-                plot_width = 1020,
+                plot_width = 1120,
                 plot_height = 500,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
@@ -353,7 +353,7 @@ def fpa_temp(conn, start, end):
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
-                plot_width = 1020,
+                plot_width = 1120,
                 plot_height = 500,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
@@ -394,7 +394,7 @@ def heat_strap_temp(conn, start, end):
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
-                plot_width = 1020,
+                plot_width = 1120,
                 plot_height = 500,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
@@ -407,7 +407,7 @@ def heat_strap_temp(conn, start, end):
     a = pf.add_to_plot(p, "74AA", "SI_GZCTS74A", start, end, conn, color = "green")
     b = pf.add_to_plot(p, "67A", "SI_GZCTS67A", start, end, conn, color = "red")
 
-    pf.add_hover_tool(p,[a,b,c])
+    pf.add_hover_tool(p,[a,b])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -461,15 +461,15 @@ def temperature_plots(conn, start, end):
     """, width=1100)
 
     plot1 = irsu_temp(conn, start, end)
-    #plot2 = fpe_temp(conn, start, end)
+    plot2 = fpe_temp(conn, start, end)
     plot3 = box_temp(conn, start, end)
     plot4 = mce_internal_temp(conn, start, end)
     plot5 = msa_temp(conn, start, end)
     plot6 = fpa_temp(conn, start, end)
-    #plot7 = heat_strap_temp(conn, start, end)
+    plot7 = heat_strap_temp(conn, start, end)
 
 
-    layout = Column(descr, plot1, plot3, plot4, plot5, plot6)
+    layout = Column(descr, plot1, plot2, plot3, plot4, plot5, plot6, plot7)
 
     tab = Panel(child = layout, title = "TEMPERATURE")
 

@@ -34,10 +34,10 @@ def process_file(conn, path):
     m_raw_data = apt.mnemonics(path)
 
     #process raw data with once a day routine
-    cond1, cond2, cond3, lamp_data = whole_day_routine(m_raw_data)
+    return_data, lamp_data = whole_day_routine(m_raw_data)
 
-    #put all data in a database that uses a condition
-    for key, value in cond1.items():
+    #put all data to a database that uses a condition
+    for key, value in return_data.items():
         m = m_raw_data.mnemonic(key)
         length = len(value)
         mean = statistics.mean(value)
@@ -46,24 +46,7 @@ def process_file(conn, path):
         sql.add_data(conn, key, dataset)
 
 
-    for key, value in cond2.items():
-        m = m_raw_data.mnemonic(key)
-        length = len(value)
-        mean = statistics.mean(value)
-        deviation = statistics.stdev(value)
-        dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-        sql.add_data(conn, key, dataset)
-
-
-    for key, value in cond3.items():
-        m = m_raw_data.mnemonic(key)
-        length = len(value)
-        mean = statistics.mean(value)
-        deviation = statistics.stdev(value)
-        dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-        sql.add_data(conn, key, dataset)
-
-    #add rest of the data to database
+    #add rest of the data to database -> no conditions applied
     for identifier in mn.mnemSet_day:
         m = m_raw_data.mnemonic(identifier)
         temp = []
@@ -75,11 +58,11 @@ def process_file(conn, path):
             length = len(temp)
             mean = statistics.mean(temp)
             deviation = statistics.stdev(temp)
-
         else:
             print('No data for {}'.format(identifier))
         del temp
 
+    #add lamp data to database -> distiction over lamps
     for key, values in lamp_data.items():
         for data in values:
             dataset_volt = (data[0], data[1], data[5], data[6], data[7])

@@ -151,7 +151,7 @@ def add_to_plot(p, legend, mnemonic, start, end, conn, y_axis= "default", color=
 
     return scat
 
-def add_to_wplot(p, legend, mnemonic, start, end, conn, nominal, color = "red"):
+def add_to_plot_normalized(p, legend, mnemonic, start, end, conn, nominal, color = "red"):
     '''Add line plot to figure (for wheelpositions)
     Parameters
     ----------

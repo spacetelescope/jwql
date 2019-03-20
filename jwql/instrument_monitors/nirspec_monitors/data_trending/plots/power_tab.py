@@ -80,7 +80,7 @@ def ice_power(conn, start, end):
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
-                plot_width = 1020,
+                plot_width = 1120,
                 plot_height = 700,
                 x_axis_type = 'datetime',
                 y_range = [-20, 20],
@@ -130,7 +130,7 @@ def mce_power(conn, start, end):
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
-                plot_width = 1020,
+                plot_width = 1120,
                 plot_height = 400,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
@@ -171,7 +171,7 @@ def fpe_power(conn, start, end):
     # create a new plot with a title and axis labels
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
-                plot_width = 1020,
+                plot_width = 1120,
                 plot_height = 700,
                 y_range = [-30,280],
                 x_axis_type = 'datetime',

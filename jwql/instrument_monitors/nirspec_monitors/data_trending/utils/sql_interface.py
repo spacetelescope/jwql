@@ -139,6 +139,17 @@ def main():
         except Error as e:
             print('e')
 
+    for mnemonic in m.mnemonic_wheelpositions:
+        try:
+            c.execute('CREATE TABLE IF NOT EXISTS {} (         \
+                                        id INTEGER,            \
+                                        timestamp REAL,        \
+                                        value REAL,            \
+                                        performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
+                                        PRIMARY KEY (id));'.format(mnemonic))
+        except Error as e:
+            print('e')
+
     print("Database initial setup complete")
     conn.commit()
     close_connection(conn)
