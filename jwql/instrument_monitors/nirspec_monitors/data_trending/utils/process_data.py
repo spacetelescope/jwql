@@ -79,10 +79,11 @@ def lamp_distinction(caa_flag, lamp_sel, lamp_curr, lamp_volt):
                 if lamp['time'] <= flag['time']:
                     current_lamp = lamp['value']
 
+            #go to next Value if dummy lamps are activated
             if (current_lamp == 'NO_LAMP') or (current_lamp == 'DUMMY'):
                 continue
 
-            #define interval of retrieval:
+            #define on_time of current lamp
             try:
                 start_time = flag['time']
 
@@ -99,13 +100,14 @@ def lamp_distinction(caa_flag, lamp_sel, lamp_curr, lamp_volt):
             temp_curr = []
             temp_volt = []
 
+            #append current values to list
             for curr in lamp_curr:
                 if curr['time'] >= start_time:
                     if curr['time'] < end_time:
                         temp_curr.append(float(curr['value']))
                     else:
                         break
-
+            #append voltage values to list
             for volt in lamp_volt:
                 if volt['time'] >= start_time :
                     if volt['time'] < end_time:
@@ -124,25 +126,77 @@ def lamp_distinction(caa_flag, lamp_sel, lamp_curr, lamp_volt):
             lamp_data.append(len(temp_volt))
             lamp_data.append(statistics.mean(temp_volt))
             lamp_data.append(statistics.stdev(temp_volt))
-
             lamp_values[current_lamp].append(( lamp_data ))
 
     return lamp_values
 
+def extract_filterpos(move_stat, wheel_pos, wheel_val):
+    '''Extracts ratio values which correspond to given position values and their
+       proposed nominals
+    Parameters
+    ----------
+    condition : object
+        conditon object that holds one or more subconditions
+    nominals : dict
+        holds nominal values for all wheel positions
+    ratio_mem : AstropyTable
+        holds ratio values of one specific mnemonic
+    pos_mem : AstropyTable
+        holds pos values of one specific mnemonic
+    Return
+    ------
+    pos_values : dict
+        holds ratio values and times with corresponding positionlabel as key
+    '''
+
+    #initilize empty dict for assigned ratio values
+    pos_values = defaultdict(list)
+
+    for index, stat in enumerate(move_stat):
+
+        #raise warning if position is UNKNOWN
+        if stat['value'] == "SUCCESS":
+
+            #initialize lamp value to default
+            current_pos = "default"
+            pos_val = 0
+            pos_time = 0
+
+
+            #Evaluate current position
+            for pos in wheel_pos:
+                if pos['time'] <= stat['time']:
+                    current_pos = pos['value']
+                if pos['time'] > stat['time']:
+                    break
+
+            #Evaluate corresponding value
+            for val in wheel_val:
+                if val['time'] <= stat['time']:
+                    pos_val = val['value']
+                    pos_time = val['time']
+                if val['time'] > stat['time']:
+                    break
+
+            print (current_pos, pos_val, pos_time)
+
+            if current_pos != 'default':
+                pos_values[current_pos].append((pos_time, pos_val))
+        else:
+            continue
+
+    return pos_values
+
 def once_a_day_routine(mnemonic_data):
-    '''Proposed routine for processing a 15min data file once a day
+    '''Routine for processing a 15min data file once a day
     Parameters
     ----------
     mnemonic_data : dict
         dict holds time and value in a astropy table with correspining identifier as key
     Return
     ------
-    data_cond_1 : dict
-        holds extracted data with condition 1 applied
-    data_cond_2 : dict
-        holds extracted data with condition 1 applied
-    data_cond_3 : dict
-        holds extracted data with condition 1 applied
+    return_data : dict
+        Holds extracted data with applied conditions
     '''
 
     #abbreviate attribute
@@ -154,10 +208,7 @@ def once_a_day_routine(mnemonic_data):
     cond.unequal(m.mnemonic('INRSD_EXP_STAT'),'STARTED')]
     #setup condition
     condition_1 = cond.condition(con_set_1)
-    data_cond_1 = dict()
 
-    #add filtered engineering values of mnemonics given in list mnemonic_cond_2
-    #to dictitonary
     for identifier in mn.mnemonic_cond_1:
         data = extract_data(condition_1, m.mnemonic(identifier))
         if data != None:
@@ -171,10 +222,7 @@ def once_a_day_routine(mnemonic_data):
     cond.equal(m.mnemonic('INRSH_LAMP_SEL'), 'NO_LAMP')]
     #setup condition
     condition_2 = cond.condition(con_set_2)
-    data_cond_2 = dict()
 
-    #add filtered engineering values of mnemonics given in list mnemonic_cond_2
-    #to dictitonary
     for identifier in mn.mnemonic_cond_2:
         data = extract_data(condition_2, m.mnemonic(identifier))
         if data != None:
@@ -188,10 +236,7 @@ def once_a_day_routine(mnemonic_data):
     cond.unequal(m.mnemonic('INRSM_MOVE_STAT'), 'STARTED')]
     #setup condition
     condition_3 = cond.condition(con_set_3)
-    data_cond_3 = dict()
 
-    #add filtered engineering values of mnemonics given in list mnemonic_cond_2
-    #to dictitonary
     for identifier in mn.mnemonic_cond_3:
         data = extract_data(condition_3, m.mnemonic(identifier))
         if data != None:
@@ -221,20 +266,18 @@ def whole_day_routine(mnemonic_data):
 
     #abbreviate attribute
     m = mnemonic_data
+    return_data = dict()
 
     ###########################################################################
     con_set_ft_10 = [
-    cond.equal(m.mnemonic('ICTM_RT_FILTER'), 10, stringval=False)]
+    cond.equal(m.mnemonic('ICTM_RT_FILTER'), 10, stringval = False)]
     #setup condition
     condition_ft_10 = cond.condition(con_set_ft_10)
-    data_cond_ft_10 = dict()
 
-    #add filtered engineering values of mnemonics given in list mnemonic_cond_1
-    #to dictitonary
     for identifier in mn.mnemonic_ft10:
         data = extract_data(condition_ft_10, m.mnemonic(identifier))
         if data != None:
-            data_cond_ft_10.update( {identifier:data} )
+            return_data.update( {identifier:data} )
         else:
             print("no data for {}".format(identifier))
     del condition_ft_10
@@ -245,62 +288,58 @@ def whole_day_routine(mnemonic_data):
     #setup condition
     condition_caa = cond.condition(con_set_caa)
 
-    data_cond_caa = dict()
-
-    #add filtered engineering values of mnemonics given in list mnemonic_cond_2
-    #to dictitonary
     for identifier in mn.mnemonic_caa:
         data = extract_data(condition_caa, m.mnemonic(identifier))
 
         if data != None:
-            data_cond_caa.update( {identifier:data} )
+            return_data.update( {identifier:data} )
         else:
             print("no data for {}".format(identifier))
 
     del condition_caa
 
-    ##########################################################################
-    '''
-    data_cond_5 = defaultdict(list)
-
-    con_manualrpt = [
-    cond.equal(m.mnemonic('INRSI_MANUALRPT_ST'), 'STARTED')]
-    #setup condition
-    condition_manualrpt = cond.condition(con_manualrpt)
-
-    for identifier in mn.mnemonic_cond_5:
-        data = extract_data(condition_manualrpt, m.mnemonic(identifier))
-
-        if data != None:
-            data_cond_5[identifier].append(data)
-        else:
-            print("no data for {}, MANUALRPT".format(identifier))
-    del condition_manualrpt
-
-    con_move = [
-    cond.equal(m.mnemonic('INRSI_FWA_MOVE_ST'), 'STARTED')]
-    #setup condition
-    condition_move = cond.condition(con_move)
-
-    for identifier in mn.mnemonic_cond_5:
-        data = extract_data(condition_move, m.mnemonic(identifier))
-
-        if data != None:
-            data_cond_5[identifier].append(data)
-        else:
-            print("no data for {}, FWA/GWA MOVE".format(identifier))
-
-    print(data_cond_5)
-    del condition_move
-    '''
     ###########################################################################
     data_lamps = lamp_distinction(  m.mnemonic('INRSI_CAA_ON_FLAG'),
                                     m.mnemonic('INRSH_LAMP_SEL'),
                                     m.mnemonic('INRSI_C_CAA_CURRENT'),
                                     m.mnemonic('INRSI_C_CAA_VOLTAGE') )
-    print(data_lamps)
 
-    return data_cond_ft_10, data_cond_caa, data_cond_5, data_lamps
+    return return_data, data_lamps
+
+def wheelpos_routine(mnemonic_data):
+    '''Proposed routine for positionsensors each day
+    Parameters
+    ----------
+    mnemonic_data : dict
+        dict holds time and value in a astropy table with correspining identifier as key
+    Return
+    ------
+    FW : dict
+        holds FW ratio values and times with corresponding positionlabel as key
+    GW14 : dict
+        holds GW14 ratio values and times with corresponding positionlabel as key
+    GW23 : dict
+        holds GW23 ratio values and times with corresponding positionlabel as key
+    CCC : dict
+        holds CCC ratio values and times with corresponding positionlabel as key
+    '''
+
+    #abbreviate attribute
+    m = mnemonic_data
+
+    FW = extract_filterpos( m.mnemonic('INRSI_FWA_MOVE_ST'),
+                            m.mnemonic('INRSI_FWA_MECH_POS'),
+                            m.mnemonic('INRSI_C_FWA_POSITION'))
+
+    GWX = extract_filterpos(m.mnemonic('INRSI_GWA_MOVE_ST'),
+                            m.mnemonic('INRSI_GWA_MECH_POS'),
+                            m.mnemonic('INRSI_C_GWA_X_POSITION'))
+
+    GWY = extract_filterpos(m.mnemonic('INRSI_GWA_MOVE_ST'),
+                            m.mnemonic('INRSI_GWA_MECH_POS'),
+                            m.mnemonic('INRSI_C_GWA_Y_POSITION'))
+
+    return FW, GWX, GWY
 
 if __name__ =='__main__':
     pass

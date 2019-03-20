@@ -66,6 +66,7 @@ def lamp_volt(conn, start, end):
                 toolbar_location = "above",
                 plot_width = 1120,
                 plot_height = 800,
+                y_range = [1.2,2.3],
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
@@ -90,6 +91,7 @@ def lamp_volt(conn, start, end):
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
+    p.legend.orientation = "horizontal"
 
     return p
 
@@ -114,6 +116,7 @@ def lamp_current(conn, start, end):
                 toolbar_location = "above",
                 plot_width = 1120,
                 plot_height = 600,
+                y_range = [10.5,14.5],
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
@@ -226,10 +229,10 @@ def caa_plots(conn, start, end):
 
     plot1 = lamp_volt(conn, start, end)
     plot2 = lamp_current(conn, start, end)
-    plot3 = caa_plots(conn, start, end)
+    #plot3 = caa_plots(conn, start, end)
 
-    layout = Column(descr, plot1, plot2, plot3)
+    layout = Column(descr, plot1, plot2)
 
-    tab = Panel(child = layout, title = "CAA")
+    tab = Panel(child = layout, title = "CAA/LAMPS")
 
     return tab
