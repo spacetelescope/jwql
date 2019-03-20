@@ -216,8 +216,10 @@ class condition:
 class equal(condition):
     """Class to hold single "is equal" subcondition"""
 
+    stringval = True
+
     #add attributes to function - start function "cond_time_pairs()"
-    def __init__(self, mnemonic, value):
+    def __init__(self, mnemonic, value, stringval=True):
         """Initializes subconditon
         Parameters
         ----------
@@ -228,6 +230,7 @@ class equal(condition):
         """
         self.mnemonic = mnemonic
         self.value = value
+        self.stringval = stringval
         condition.cond_time_pairs.append((self.cond_true_time()))
 
 
@@ -248,12 +251,21 @@ class equal(condition):
         for key in self.mnemonic:
 
             #find all times whoses Raw values equal the given value
-            if key['value'] == self.value:
-                temp_start.append(key["time"])
+            if self.stringval:
+                if key['value'] == self.value:
+                    temp_start.append(key["time"])
 
-            #find all end values
+                #find all end values
+                else:
+                    temp_end.append(key["time"])
             else:
-                temp_end.append(key["time"])
+                # just another option to compare float values
+                if float(key['value']) == self.value:
+                    temp_start.append(key["time"])
+
+                #find all end values
+                else:
+                    temp_end.append(key["time"])
 
         time_p = condition.generate_time_pairs(temp_start, temp_end)
         return time_p

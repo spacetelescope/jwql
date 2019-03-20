@@ -13,12 +13,12 @@ from jwql.instrument_monitors.nirspec_monitors.data_trending.utils.process_data 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 #point to the directory where your files are located!
-directory = '/home/daniel/STScI/trainigData/nirspec_new_day/'
+directory = '/home/daniel/STScI/trainigData/nirspec_ft10/'
 
 #here some some files contain the same data but they are all incomplete
 #in order to generate a full database we have to import all of them
 filenames = glob.glob(os.path.join(directory, '*.CSV'))
-#test = "FOFTLM2019073163734099.CSV"
+test = "FOFTLM2019073163845064.CSV"
 
 def process_file(conn, path):
     '''Parse CSV file, process data within and put to DB
@@ -34,7 +34,7 @@ def process_file(conn, path):
     m_raw_data = apt.mnemonics(path)
 
     #process raw data with once a day routine
-    cond1, cond2, cond3, cond4 = whole_day_routine(m_raw_data)
+    cond1, cond2, cond3, lamp_data = whole_day_routine(m_raw_data)
 
     #put all data in a database that uses a condition
     for key, value in cond1.items():
@@ -63,16 +63,6 @@ def process_file(conn, path):
         dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
         sql.add_data(conn, key, dataset)
 
-
-    for key, value in cond4.items():
-        m = m_raw_data.mnemonic(key)
-        length = len(value)
-        mean = statistics.mean(value)
-        deviation = statistics.stdev(value)
-        dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-        sql.add_data(conn, key, dataset)
-
-
     #add rest of the data to database
     for identifier in mn.mnemSet_day:
         m = m_raw_data.mnemonic(identifier)
@@ -85,12 +75,17 @@ def process_file(conn, path):
             length = len(temp)
             mean = statistics.mean(temp)
             deviation = statistics.stdev(temp)
-            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-            sql.add_data(conn, identifier, dataset)
+
         else:
             print('No data for {}'.format(identifier))
         del temp
 
+    for key, values in lamp_data.items():
+        for data in values:
+            dataset_volt = (data[0], data[1], data[5], data[6], data[7])
+            dataset_curr = (data[0], data[1], data[2], data[3], data[4])
+            sql.add_data(conn, 'LAMP_{}_VOLT'.format(key), dataset_volt)
+            sql.add_data(conn, 'LAMP_{}_CURR'.format(key), dataset_curr)
 
 def main():
     #generate paths

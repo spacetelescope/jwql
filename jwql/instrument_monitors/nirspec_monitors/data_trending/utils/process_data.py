@@ -57,6 +57,78 @@ def extract_data(condition, mnemonic):
     else:
         return None
 
+def lamp_distinction(caa_flag, lamp_sel, lamp_curr, lamp_volt):
+    """Distincts over all calibration lamps and returns representative current means
+        each
+    Parameters
+    ----------
+    """
+
+    #initilize empty dict
+    lamp_values = defaultdict(list)
+
+    for index, flag in enumerate(caa_flag):
+
+        if flag['value'] == 'ON':
+
+            #initialize lamp value to default
+            current_lamp = "default"
+
+            #find current lamp value
+            for lamp in lamp_sel:
+                if lamp['time'] <= flag['time']:
+                    current_lamp = lamp['value']
+
+            if (current_lamp == 'NO_LAMP') or (current_lamp == 'DUMMY'):
+                continue
+
+            #define interval of retrieval:
+            try:
+                start_time = flag['time']
+
+                i = 1
+                if caa_flag[index+i]['value'] == 'OFF':
+                    end_time = caa_flag[index+1]['time']
+                else:
+                    i += 1
+
+            except IndexError:
+                break
+
+            #append and evaluate current and voltage values
+            temp_curr = []
+            temp_volt = []
+
+            for curr in lamp_curr:
+                if curr['time'] >= start_time:
+                    if curr['time'] < end_time:
+                        temp_curr.append(float(curr['value']))
+                    else:
+                        break
+
+            for volt in lamp_volt:
+                if volt['time'] >= start_time :
+                    if volt['time'] < end_time:
+                        temp_volt.append(float(volt['value']))
+                    else:
+                        break
+
+            lamp_data = []
+            #append current values
+            lamp_data.append(start_time)
+            lamp_data.append(end_time)
+            lamp_data.append(len(temp_curr))
+            lamp_data.append(statistics.mean(temp_curr))
+            lamp_data.append(statistics.stdev(temp_curr))
+            #append voltage values
+            lamp_data.append(len(temp_volt))
+            lamp_data.append(statistics.mean(temp_volt))
+            lamp_data.append(statistics.stdev(temp_volt))
+
+            lamp_values[current_lamp].append(( lamp_data ))
+
+    return lamp_values
+
 def once_a_day_routine(mnemonic_data):
     '''Proposed routine for processing a 15min data file once a day
     Parameters
@@ -133,10 +205,12 @@ def once_a_day_routine(mnemonic_data):
 
 def whole_day_routine(mnemonic_data):
     '''Proposed routine for processing a 15min data file once a day
+
     Parameters
     ----------
     mnemonic_data : dict
         dict holds time and value in a astropy table with correspining identifier as key
+
     Return
     ------
     data_cond_1 : dict
@@ -148,28 +222,9 @@ def whole_day_routine(mnemonic_data):
     #abbreviate attribute
     m = mnemonic_data
 
-    ##########################################################################
-    con_set_4 = [                                                           \
-    cond.equal(m.mnemonic('INRSI_CAA_ON_FLAG'), 'ON'),                      \
-    cond.unequal(m.mnemonic('INRSH_LAMP_SEL'), 'NO_LAMP')]
-    #setup condition
-    condition_4 = cond.condition(con_set_4)
-    data_cond_4 = dict()
-
-    #add filtered engineering values of mnemonics given in list mnemonic_cond_2
-    #to dictitonary
-    for identifier in mn.mnemonic_cond_4:
-        data = extract_data(condition_4, m.mnemonic(identifier))
-        if data != None:
-            data_cond_4.update( {identifier:data} )
-        else:
-            print("no data for {}".format(identifier))
-
-    del condition_4
-
     ###########################################################################
     con_set_ft_10 = [
-    cond.equal(m.mnemonic('ICTM_RT_FILTER'),'10')]
+    cond.equal(m.mnemonic('ICTM_RT_FILTER'), 10, stringval=False)]
     #setup condition
     condition_ft_10 = cond.condition(con_set_ft_10)
     data_cond_ft_10 = dict()
@@ -186,7 +241,7 @@ def whole_day_routine(mnemonic_data):
 
     ##########################################################################
     con_set_caa = [                                                           \
-    cond.equal(m.mnemonic('INRS_CAA_PWRF_ST'), 'ON')]
+    cond.equal(m.mnemonic('INRSH_CAA_PWRF_ST'), 'ON')]
     #setup condition
     condition_caa = cond.condition(con_set_caa)
 
@@ -205,35 +260,47 @@ def whole_day_routine(mnemonic_data):
     del condition_caa
 
     ##########################################################################
+    '''
+    data_cond_5 = defaultdict(list)
+
     con_manualrpt = [
     cond.equal(m.mnemonic('INRSI_MANUALRPT_ST'), 'STARTED')]
     #setup condition
     condition_manualrpt = cond.condition(con_manualrpt)
+
+    for identifier in mn.mnemonic_cond_5:
+        data = extract_data(condition_manualrpt, m.mnemonic(identifier))
+
+        if data != None:
+            data_cond_5[identifier].append(data)
+        else:
+            print("no data for {}, MANUALRPT".format(identifier))
+    del condition_manualrpt
 
     con_move = [
     cond.equal(m.mnemonic('INRSI_FWA_MOVE_ST'), 'STARTED')]
     #setup condition
     condition_move = cond.condition(con_move)
 
-    data_cond_5 = dict()
-
-    #add filtered engineering values of mnemonics given in list mnemonic_cond_2
-    #to dictitonary
     for identifier in mn.mnemonic_cond_5:
-        data1 = extract_data(condition_manualrpt, m.mnemonic(identifier))
-        data2 = extract_data(condition_move, m.mnemonic(identifier))
+        data = extract_data(condition_move, m.mnemonic(identifier))
 
-        if data1 != None:
-            data_cond_5.update( {identifier:data1} )
-        elif data2 != None:
-            data_cond_5.update( {identifier:data2} )
+        if data != None:
+            data_cond_5[identifier].append(data)
         else:
-            print("no data for {}".format(identifier))
+            print("no data for {}, FWA/GWA MOVE".format(identifier))
 
-    del condition_manualrpt
+    print(data_cond_5)
     del condition_move
+    '''
+    ###########################################################################
+    data_lamps = lamp_distinction(  m.mnemonic('INRSI_CAA_ON_FLAG'),
+                                    m.mnemonic('INRSH_LAMP_SEL'),
+                                    m.mnemonic('INRSI_C_CAA_CURRENT'),
+                                    m.mnemonic('INRSI_C_CAA_VOLTAGE') )
+    print(data_lamps)
 
-    return data_cond_4, data_cond_ft_10, data_cond_caa, data_cond_5
+    return data_cond_ft_10, data_cond_caa, data_cond_5, data_lamps
 
 if __name__ =='__main__':
     pass
