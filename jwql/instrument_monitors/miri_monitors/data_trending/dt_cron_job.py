@@ -1,28 +1,23 @@
 #! /usr/bin/env python
-''' Main module for miri datatrending -> fills database
+''' Cron Job for miri datatrending -> populates database
 
     This module holds functions to connect with the engineering database in order
     to grab and process data for the specific miri database. The scrips queries
     a daily 15 min chunk and a whole day dataset. These contain several mnemonics
     defined in ''mnemonics.py''. The queried data gets processed and stored in
-    a prepared database.
+    an auxiliary database.
 
 Authors
 -------
-
     - Daniel Kühbacher
-
-Use
----
 
 Dependencies
 ------------
+    For further information please contact Brian O'Sullivan
 
 References
 ----------
 
-Notes
------
 '''
 import .utils.mnemonics as mn
 import .utils.sql_interface as sql
@@ -41,7 +36,7 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 PACKAGE_DIR = __location__.split('instrument_monitors')[0]
 
 
-def add_day_to_db(conn, m_raw_data):
+def process_day_sample(conn, m_raw_data):
     '''Parse CSV file, process data within and put to DB
     Parameters
     ----------
@@ -115,7 +110,7 @@ def add_day_to_db(conn, m_raw_data):
             pass
 
 
-def add_15min_to_db(conn, m_raw_data):
+def process_15min_sample(conn, m_raw_data):
     '''Parse CSV file, process data within and put to DB
     Parameters
     ----------
@@ -195,7 +190,7 @@ def main():
 
     conn = sql.create_connection(DATABASE_FILE)
 
-    add_day_to_db(conn, table_day)
-    add_15min_to_db(conn, table_15min)
+    process_day_sample(conn, table_day)
+    process_15process_15min_sample(conn, table_15min)
 
     sql.close_connection(conn)
