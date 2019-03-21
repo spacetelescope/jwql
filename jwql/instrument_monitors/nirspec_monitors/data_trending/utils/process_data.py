@@ -162,7 +162,6 @@ def extract_filterpos(move_stat, wheel_pos, wheel_val):
             pos_val = 0
             pos_time = 0
 
-
             #Evaluate current position
             for pos in wheel_pos:
                 if pos['time'] <= stat['time']:

@@ -120,7 +120,7 @@ def irsu_temp(conn, start, end):
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
                 plot_width = 1120,
-                plot_height = 500,
+                plot_height = 700,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Temperature (K)')
@@ -167,13 +167,13 @@ def fpe_temp(conn, start, end):
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
                 plot_width = 1120,
-                plot_height = 1000,
+                plot_height = 700,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Temperature (K)')
 
     p.grid.visible = True
-    p.title.text = "FPE Power Data"
+    p.title.text = "FPE Temperatures"
     pf.add_basic_layout(p)
 
     a = pf.add_to_plot(p, "CAM", "IGDP_NRSI_C_CAM_TEMP", start, end, conn, color = "red")
@@ -186,14 +186,52 @@ def fpe_temp(conn, start, end):
     h = pf.add_to_plot(p, "BP3", "IGDP_NRSI_C_BP3_TEMP", start, end, conn, color = "brown")
     i = pf.add_to_plot(p, "BP4", "IGDP_NRSI_C_BP4_TEMP", start, end, conn, color = "chocolate")
     j = pf.add_to_plot(p, "RMA", "IGDP_NRSI_C_RMA_TEMP", start, end, conn, color = "darkgreen")
-    k = pf.add_to_plot(p, "CAAL1", "IGDP_NRSI_C_CAAL1_TEMP", start, end, conn, color = "darkblue")
-    l = pf.add_to_plot(p, "CAAL2", "IGDP_NRSI_C_CAAL2_TEMP", start, end, conn, color = "magenta")
-    m = pf.add_to_plot(p, "CAAL3", "IGDP_NRSI_C_CAAL3_TEMP", start, end, conn, color = "mediumaquamarine")
-    n = pf.add_to_plot(p, "CAAL4", "IGDP_NRSI_C_CAAL4_TEMP", start, end, conn, color = "goldenrod")
-    #o = pf.add_to_plot(p, "FWA", "IGDP_NRSI_C_FWA_TEMP", start, end, conn, color = "darkseagreen")
-    #p = pf.add_to_plot(p, "GWA", "IGDP_NRSI_C_GWA_TEMP", start, end, conn, color = "darkkhaki")
 
-    #pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p])
+    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j])
+
+    p.legend.location = "bottom_right"
+    p.legend.click_policy = "hide"
+    p.legend.orientation = "horizontal"
+
+    return p
+
+def caal_temp(conn, start, end):
+    '''Create specific plot and return plot object
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object that represents database
+    start : time
+        Startlimit for x-axis and query (typ. datetime.now()- 4Months)
+    end : time
+        Endlimit for x-axis and query (typ. datetime.now())
+    Return
+    ------
+    p : Plot object
+        Bokeh plot
+    '''
+
+    # create a new plot with a title and axis labels
+    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
+                toolbar_location = "above",
+                plot_width = 1120,
+                plot_height = 700,
+                x_axis_type = 'datetime',
+                output_backend = "webgl",
+                x_axis_label = 'Date', y_axis_label='Temperature (K)')
+
+    p.grid.visible = True
+    p.title.text = "CAA Lamps / FWA, GWA"
+    pf.add_basic_layout(p)
+
+    a = pf.add_to_plot(p, "CAAL1", "IGDP_NRSI_C_CAAL1_TEMP", start, end, conn, color = "darkblue")
+    b = pf.add_to_plot(p, "CAAL2", "IGDP_NRSI_C_CAAL2_TEMP", start, end, conn, color = "magenta")
+    c = pf.add_to_plot(p, "CAAL3", "IGDP_NRSI_C_CAAL3_TEMP", start, end, conn, color = "mediumaquamarine")
+    d = pf.add_to_plot(p, "CAAL4", "IGDP_NRSI_C_CAAL4_TEMP", start, end, conn, color = "goldenrod")
+    e = pf.add_to_plot(p, "FWA", "IGDP_NRSI_C_FWA_TEMP", start, end, conn, color = "darkseagreen")
+    f = pf.add_to_plot(p, "GWA", "IGDP_NRSI_C_GWA_TEMP", start, end, conn, color = "darkkhaki")
+
+    pf.add_hover_tool(p,[a,b,c,d,e,f])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -221,7 +259,7 @@ def box_temp(conn, start, end):
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
                 plot_width = 1120,
-                plot_height = 500,
+                plot_height = 700,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Temperature (K)')
@@ -262,7 +300,7 @@ def mce_internal_temp(conn, start, end):
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
                 plot_width = 1120,
-                plot_height = 500,
+                plot_height = 700,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Temperature (K)')
@@ -310,7 +348,7 @@ def msa_temp(conn, start, end):
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
                 plot_width = 1120,
-                plot_height = 500,
+                plot_height = 700,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Temperature (K)')
@@ -354,7 +392,7 @@ def fpa_temp(conn, start, end):
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
                 plot_width = 1120,
-                plot_height = 500,
+                plot_height = 700,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Temperature (K)')
@@ -395,7 +433,7 @@ def heat_strap_temp(conn, start, end):
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
                 plot_width = 1120,
-                plot_height = 500,
+                plot_height = 700,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Temperature (K)')
@@ -404,7 +442,7 @@ def heat_strap_temp(conn, start, end):
     p.title.text = "Heat Strap Temps (Trim heaters)"
     pf.add_basic_layout(p)
 
-    a = pf.add_to_plot(p, "74AA", "SI_GZCTS74A", start, end, conn, color = "green")
+    a = pf.add_to_plot(p, "74A", "SI_GZCTS74A", start, end, conn, color = "green")
     b = pf.add_to_plot(p, "67A", "SI_GZCTS67A", start, end, conn, color = "red")
 
     pf.add_hover_tool(p,[a,b])
@@ -467,9 +505,9 @@ def temperature_plots(conn, start, end):
     plot5 = msa_temp(conn, start, end)
     plot6 = fpa_temp(conn, start, end)
     plot7 = heat_strap_temp(conn, start, end)
+    plot8 = caal_temp(conn, start, end)
 
-
-    layout = Column(descr, plot1, plot2, plot3, plot4, plot5, plot6, plot7)
+    layout = Column(descr, plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8)
 
     tab = Panel(child = layout, title = "TEMPERATURE")
 
