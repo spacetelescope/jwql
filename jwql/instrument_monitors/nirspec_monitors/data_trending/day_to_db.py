@@ -8,12 +8,12 @@ from jwql.utils.utils import get_config, filename_parser
 
 from astropy.table import Table, Column
 
-from jwql.instrument_monitors.nirspec_monitors.data_trending.utils.process_data import whole_day_routine
+from jwql.instrument_monitors.nirspec_monitors.data_trending.utils.process_data import whole_day_routine, wheelpos_routine
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 #point to the directory where your files are located!
-directory = '/home/daniel/STScI/trainigData/nirspec_ft10/'
+directory = '/home/daniel/STScI/trainigData/nirspec_more/'
 
 #here some some files contain the same data but they are all incomplete
 #in order to generate a full database we have to import all of them
@@ -35,15 +35,29 @@ def process_file(conn, path):
 
     #process raw data with once a day routine
     return_data, lamp_data = whole_day_routine(m_raw_data)
+    FW, GWX, GWY = wheelpos_routine(m_raw_data)
+
+    for key, values in FW.items():
+        for data in values:
+            sql.add_wheel_data(conn, 'INRSI_C_FWA_POSITION_{}'.format(key), data)
+
+    for key, values in GWX.items():
+        for data in values:
+            sql.add_wheel_data(conn, 'INRSI_C_GWA_X_POSITION_{}'.format(key), data)
+
+    for key, values in GWY.items():
+        for data in values:
+            sql.add_wheel_data(conn, 'INRSI_C_GWA_Y_POSITION_{}'.format(key), data)
 
     #put all data to a database that uses a condition
     for key, value in return_data.items():
         m = m_raw_data.mnemonic(key)
         length = len(value)
-        mean = statistics.mean(value)
-        deviation = statistics.stdev(value)
-        dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-        sql.add_data(conn, key, dataset)
+        if length > 2:
+            mean = statistics.mean(value)
+            deviation = statistics.stdev(value)
+            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
+            sql.add_data(conn, key, dataset)
 
 
     #add rest of the data to database -> no conditions applied

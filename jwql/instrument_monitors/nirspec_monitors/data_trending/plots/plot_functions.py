@@ -92,7 +92,7 @@ def add_limit_box(p, lower, upper, alpha = 0.1, color="green"):
     box = BoxAnnotation(bottom = lower, top = upper, fill_alpha = alpha, fill_color = color)
     p.add_layout(box)
 
-def add_to_plot(p, legend, mnemonic, start, end, conn, y_axis= "default", color="red", err='n'):
+def add_to_plot(p, legend, mnemonic, start, end, conn, y_axis= "default", color="red", err='y'):
     '''Add scatter and line to certain plot and activates hoover tool
     Parameters
     ----------
