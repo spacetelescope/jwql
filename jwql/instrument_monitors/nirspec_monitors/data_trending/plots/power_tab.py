@@ -99,8 +99,8 @@ def ice_power(conn, start, end):
     e = pf.add_to_plot(p, "VMOTOR", "INRSH_HK_VMOTOR", start, end, conn, color = "burlywood")
     f = pf.add_to_plot(p, "P5V", "INRSH_HK_P5V", start, end, conn, color = "green")
     g = pf.add_to_plot(p, "2P5V", "INRSH_HK_2P5V", start, end, conn, color = "darkgreen")
-    h = pf.add_to_plot(p, "", "INRSH_HK_ADCTGAIN", start, end, conn, color = "brown")
-    i = pf.add_to_plot(p, "", "INRSH_HK_ADCTOFFSET", start, end, conn, color = "navy")
+    h = pf.add_to_plot(p, "ADCTGAIN", "INRSH_HK_ADCTGAIN", start, end, conn, color = "brown")
+    i = pf.add_to_plot(p, "ADCOFFSET", "INRSH_HK_ADCTOFFSET", start, end, conn, color = "navy")
     p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (A)", axis_label_text_color = "blue"), 'right')
 
     pf.add_hover_tool(p,[b,c,d,e,g,f,h,i])
@@ -134,16 +134,13 @@ def mce_power(conn, start, end):
                 plot_height = 400,
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+                x_axis_label = 'Date', y_axis_label='Current (A)')
 
     p.grid.visible = True
     p.title.text = "MCE Power Data"
     pf.add_basic_layout(p)
 
-    p.extra_y_ranges = {"current": Range1d(start = 0, end=1)}
-    #a = pf.add_to_plot(p, "In_VOlt", "GP_ZPSVOLT", start, end, conn, color = "red")
-    b = pf.add_to_plot(p, "MCE A current", "SE_ZINRSMCEA", start, end, conn, color = "blue", y_axis="current")
-    p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (mA)", axis_label_text_color = "blue"), 'right')
+    b = pf.add_to_plot(p, "MCE A current", "SE_ZINRSMCEA", start, end, conn, color = "blue")
 
     pf.add_hover_tool(p,[b])
 
@@ -190,10 +187,10 @@ def fpe_power(conn, start, end):
     d = pf.add_to_plot(p, "N15V", "INRSH_HK_N15V", start, end, conn, color = "orange")
     e = pf.add_to_plot(p, "N12C", "INRSD_ALG_ACC_N12C", start, end, conn, color = "burlywood")
     f = pf.add_to_plot(p, "1D5", "INRSD_ALG_ACC_3D3_1D5_C", start, end, conn, color = "green")
-    g = pf.add_to_plot(p, "Chassis", "INRSD_ALG_CHASSIS", start, end, conn, color = "darkgreen")
+    g = pf.add_to_plot(p, "Chassis", "INRSD_ALG_CHASSIS", start, end, conn, color = "purple")
     p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (A)", axis_label_text_color = "blue"), 'right')
 
-    pf.add_hover_tool(p,[b,c,d,e,g])
+    pf.add_hover_tool(p,[b,c,d,e,f,g])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"

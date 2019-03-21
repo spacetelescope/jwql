@@ -119,7 +119,7 @@ def lamp_current(conn, start, end):
                 y_range = [10.5,14.5],
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+                x_axis_label = 'Date', y_axis_label='Current (mA)')
 
     p.grid.visible = True
     p.title.text = "CAA Lamp currents"

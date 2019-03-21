@@ -62,20 +62,28 @@ def process_file(conn, path):
 
     #add rest of the data to database -> no conditions applied
     for identifier in mn.mnemSet_day:
+
         m = m_raw_data.mnemonic(identifier)
+
         temp = []
+
         #look for all values that fit to the given conditions
         for element in m:
             temp.append(float(element['value']))
+
         #return None if no applicable data was found
         if len(temp) > 2:
             length = len(temp)
             mean = statistics.mean(temp)
             deviation = statistics.stdev(temp)
+
+            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
+            sql.add_data(conn, identifier, dataset)
         else:
             print('No data for {}'.format(identifier))
-        del temp
+            print(temp)
 
+        del temp
     #add lamp data to database -> distiction over lamps
     for key, values in lamp_data.items():
         for data in values:

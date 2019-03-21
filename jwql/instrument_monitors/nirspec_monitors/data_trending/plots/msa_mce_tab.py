@@ -110,8 +110,8 @@ def aic_parameters(conn, start, end):
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
                 plot_width = 1120,
-                plot_height = 500,
-                y_range = [-15,15],
+                plot_height = 700,
+                y_range = [-18,15],
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
@@ -159,8 +159,8 @@ def mdac_parameters(conn, start, end):
     p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
                 toolbar_location = "above",
                 plot_width = 1120,
-                plot_height = 500,
-                y_range = [-15,15],
+                plot_height = 700,
+                y_range = [-18,15],
                 x_axis_type = 'datetime',
                 output_backend = "webgl",
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
