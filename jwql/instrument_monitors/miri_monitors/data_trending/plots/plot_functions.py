@@ -66,7 +66,7 @@ def add_hover_tool(p, rend):
     #activate HoverTool for scatter plot
     hover_tool = HoverTool( tooltips =
     [
-        ('Name', '$name')
+        ('Name', '$name'),
         ('Count', '@data_points'),
         ('Mean', '@average'),
         ('Deviation', '@deviation'),

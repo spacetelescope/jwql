@@ -60,6 +60,9 @@ urlpatterns = [
     path('logout/', oauth.logout, name='logout'),
     path('authorize/', oauth.authorize, name='authorize'),
 
+    # MIRI views
+    path('miri/miri_data_trending/', views.miri_data_trending, name='miri_data_trending'),
+
     # Main site views
     path('about/', views.about, name='about'),
     path('dashboard/', views.dashboard, name='dashboard'),
@@ -87,7 +90,6 @@ urlpatterns = [
     re_path(r'^api/(?P<rootname>[\w]+)/preview_images/$', api_views.preview_images_by_rootname, name='preview_images_by_rootname'),
     re_path(r'^api/(?P<rootname>[\w]+)/thumbnails/$', api_views.thumbnails_by_rootname, name='thumbnails_by_rootname'),
 
-    # MIRI views
-    path('miri/miri_data_trending', views.miri_data_trending, name='miri_data_trending'),
+
 
 ]
