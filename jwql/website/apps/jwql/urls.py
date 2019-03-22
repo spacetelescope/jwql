@@ -60,6 +60,9 @@ urlpatterns = [
     path('logout/', oauth.logout, name='logout'),
     path('authorize/', oauth.authorize, name='authorize'),
 
+    # NIRSpec views
+    path('nirspec/nirspec_data_trending/', views.nirspec_data_trending, name='nirspec_data_trending'),
+
     # Main site views
     path('about/', views.about, name='about'),
     path('dashboard/', views.dashboard, name='dashboard'),
@@ -87,6 +90,4 @@ urlpatterns = [
     re_path(r'^api/(?P<rootname>[\w]+)/preview_images/$', api_views.preview_images_by_rootname, name='preview_images_by_rootname'),
     re_path(r'^api/(?P<rootname>[\w]+)/thumbnails/$', api_views.thumbnails_by_rootname, name='thumbnails_by_rootname'),
 
-    # NIRSpec views
-    path('nirspec/nirspec_data_trending', views.nirspec_data_trending, name='nirspec_data_trending'),
 ]
