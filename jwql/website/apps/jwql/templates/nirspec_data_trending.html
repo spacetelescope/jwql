@@ -27,8 +27,18 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
 
       <div id= "description">
         <h4>How it works</h4>
-        The NIRSpec data-trending dashboard is a web based application that allows engineers and general users to keep track of a subset of key NIRSpec performance parameters (“mnemonics”) such as voltages, currents, sensor signals and temperatures. In total 200+ mnemonics are tracked for NIRSpec. This telemetry data is retrieved from the engineering data base (EDB) on the Mikulski Archive for Space Telescopes (MAST) at STScI and some statistical analysis is performed (number of samples considered, mean, standard deviation). The processed data is stored in a separate database and also presented by a series of plots in the dashboard below. Each point on a specific graph represents the data collected for one specific day. As such, the application allows the user to perform (long term) trending on key NIRSpec performance parameters and identify potential changes in instrument behaviour in case these would appear.
-        In total there are 7 different tabs: 1) Power 2) Reference Voltages 3) Temperatures 4) MSA and MCE 5) FPA and FPE 6) CAA Lamps and 7) Filter and Grating Wheel. Each of these tabs has its own specific set of plots. One can hover over the data points and detailed statistics will appear. Also, there are various zoom and pan tools implemented allowing the user to manipulate the graphs. Curves can be activated and muted by clicking on the legend.
+        The NIRSpec data-trending dashboard is a web based application that allows engineers and general users to keep track of a subset of key
+        NIRSpec performance parameters (“mnemonics”) such as voltages, currents, sensor signals and temperatures. In total 200+ mnemonics are
+        tracked for NIRSpec. This telemetry data is retrieved from the engineering data base (EDB) on the Mikulski Archive for Space Telescopes
+        (MAST) at STScI and some statistical analysis is performed (number of samples considered, mean, standard deviation).<br>
+        The processed data is stored in a separate database and also presented by a series of plots in the dashboard below.
+        Each point on a specific graph represents the data collected for one specific day. As such, the application allows the user
+        to perform (long term) trending on key NIRSpec performance parameters and identify potential changes in instrument behaviour
+        in case these would appear.<br>
+        In total there are 7 different tabs: 1) Power 2) Reference Voltages 3) Temperatures 4) MSA and MCE 5) FPA and FPE 6) CAA Lamps and 7)
+        Filter and Grating Wheel. Each of these tabs has its own specific set of plots. One can hover over the data points and detailed
+        statistics will appear. Also, there are various zoom and pan tools implemented allowing the user to manipulate the graphs. 
+        Curves can be activated and muted by clicking on the legend.<br>
         In the future, a cron job referring to the EDB will populate the database over time.
         <br>
         <br>
