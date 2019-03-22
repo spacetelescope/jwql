@@ -126,7 +126,7 @@ def irsu_temp(conn, start, end):
                 x_axis_label = 'Date', y_axis_label='Temperature (K)')
 
     p.grid.visible = True
-    p.title.text = "IRSU monitored temps"
+    p.title.text = "IRSU monitored Temperatures"
     pf.add_basic_layout(p)
 
     a = pf.add_to_plot(p, "75A", "SI_GZCTS75A", start, end, conn, color = "red")
@@ -306,7 +306,7 @@ def mce_internal_temp(conn, start, end):
                 x_axis_label = 'Date', y_axis_label='Temperature (K)')
 
     p.grid.visible = True
-    p.title.text = "MCE Internal Temp"
+    p.title.text = "MCE internal Temperatures"
     pf.add_basic_layout(p)
 
     a = pf.add_to_plot(p, "PCA_TMP1", "INRSM_MCE_PCA_TMP1", start, end, conn, color = "green")
@@ -354,7 +354,7 @@ def msa_temp(conn, start, end):
                 x_axis_label = 'Date', y_axis_label='Temperature (K)')
 
     p.grid.visible = True
-    p.title.text = "MSA Temp"
+    p.title.text = "MSA Temperatures"
     pf.add_basic_layout(p)
 
     a = pf.add_to_plot(p, "Q1_TEMP", "INRSM_Q1_TMP_A", start, end, conn, color = "green")
@@ -398,7 +398,7 @@ def fpa_temp(conn, start, end):
                 x_axis_label = 'Date', y_axis_label='Temperature (K)')
 
     p.grid.visible = True
-    p.title.text = "FPA Temp"
+    p.title.text = "FPA Temperatures"
     pf.add_basic_layout(p)
 
     a = pf.add_to_plot(p, "ALG_FPA", "IGDP_NRSD_ALG_FPA_TEMP", start, end, conn, color = "green")
@@ -439,7 +439,7 @@ def heat_strap_temp(conn, start, end):
                 x_axis_label = 'Date', y_axis_label='Temperature (K)')
 
     p.grid.visible = True
-    p.title.text = "Heat Strap Temps (Trim heaters)"
+    p.title.text = "Heat Strap Temperatures (Trim heaters)"
     pf.add_basic_layout(p)
 
     a = pf.add_to_plot(p, "74A", "SI_GZCTS74A", start, end, conn, color = "green")
@@ -490,10 +490,138 @@ def temperature_plots(conn, start, end):
         <th><h6>Description</h6></th>
       </tr>
       <tr>
-        <td>DEFAULT</td>
-        <td>DEFAULT</td>
-        <td>DEAULT</td>
+        <td>IRSU monitored Temperatures</td>
+        <td>SI_GZCTS75A<br>
+            SI_GZCTS68A<br>
+            SI_GZCTS81A<br>
+            SI_GZCTS80A<br>
+            SI_GZCTS76A<br>
+            SI_GZCTS79A<br>
+            SI_GZCTS77A<br>
+            SI_GZCTS78A<br>
+            SI_GZCTS69A</td>
+        <td>CAA IRSU Temperature<br>
+            CAM IRSU Temperature<br>
+            COM1 Nominal IRSU Temperature<br>
+            COM1 Redundant IRSU Temperature<br>
+            FWA IRSU Temperature<br>
+            GWA IRSU Temperature<br>
+            Thermal Strap Nominal IRSU Temperature<br>
+            Thermal Strap Redundant IRSU Temperature<br>
+            MSA Nominal IRSU Temperature<br>
+            MSA Redundant IRSU Temperature</td>
       </tr>
+
+      <tr>
+        <td>FPE Temperatures/td>
+        <td>IGDP_NRSI_C_CAM_TEMP<br>
+            IGDP_NRSI_C_COL_TEMP<br>
+            IGDP_NRSI_C_COM1_TEMP<br>
+            IGDP_NRSI_C_FOR_TEMP<br>
+            IGDP_NRSI_C_IFU_TEMP<br>
+            IGDP_NRSI_C_BP1_TEMP<br>
+            IGDP_NRSI_C_BP2_TEMP<br>
+            IGDP_NRSI_C_BP3_TEMP<br>
+            IGDP_NRSI_C_BP4_TEMP<br>
+            IGDP_NRSI_C_RMA_TEMP</td>
+        <td>OA CAM Temperature<br>
+            OA COL Temperature<br>
+            OA COM1 Temperature<br>
+            OA FOR Temperature<br>
+            OA IFU Temperature<br>
+            OA BP1 Temperature<br>
+            OA BP2 Temperature<br>
+            OA BP3 Temperature<br>
+            OA BP4 Temperature<br>
+            OA RMA Temperature</td>
+      </tr>
+
+      <tr>
+        <td>Box Temperatures</td>
+        <td>IGDP_NRSD_ALG_TEMP<br>
+            INRSH_HK_TEMP1<br>
+            INRSH_HK_TEMP2</td>
+        <td>ICE Internal Temperature 1<br>
+            ICE Internal Temperature 2</td>
+      </tr>
+
+      <tr>
+        <td>MCE internal Temperatures</td>
+        <td>INRSM_MCE_PCA_TMP1<br>
+            INRSM_MCE_PCA_TMP2<br>
+            INRSM_MCE_AIC_TMP_FPGA<br>
+            INRSM_MCE_AIC_TMP_ADC<br>
+            INRSM_MCE_AIC_TMP_VREG<br>
+            INRSM_MCE_MDAC_TMP_FPGA<br>
+            INRSM_MCE_MDAC_TMP_OSC<br>
+            INRSM_MCE_MDAC_TMP_BRD<br>
+            INRSM_MCE_MDAC_TMP_PHA<br>
+            INRSM_MCE_MDAC_TMP_PHB</td>
+        <td>MCE PCA Board Temperature 1<br>
+            MCE PCA Board Temperature 2<br>
+            MCE AIC Board FPGA Temperature<br>
+            MCE AIC Board Analog/Digital Converter Temperature<br>
+            MCE AIC Board Voltage Regulator Temperature<br>
+            MCE MDAC Board FPGA Temperature<br>
+            MCE MDAC Board Oscillator Temperature<br>
+            MCE MDAC Board Temperature<br>
+            MCE MDAC Board Phase A PA10 Temperature<br>
+            MCE MDAC Board Phase B PA10 Temperature</td>
+      </tr>
+
+      <tr>
+        <td>MSA Temperatures</td>
+        <td>INRSM_Q1_TMP_A<br>
+            INRSM_Q2_TMP_A<br>
+            INRSM_Q3_TMP_A<br>
+            INRSM_Q4_TMP_A<br>
+            INRSM_MECH_MTR_TMP_A<br>
+            INRSM_LL_MTR_TMP_A<br>
+            INRSM_MSA_TMP_A</td>
+        <td>MSA Quad 1 Temperature<br>
+            MSA Quad 2 Temperature<br>
+            MSA Quad 3 Temperature<br>
+            MSA Quad 4 Temperature<br>
+            MSA Magnetic Arm Motor Temperature<br>
+            MSA Launch Lock Motor Temperature<br>
+            MSA Frame Temperature</td>
+      </tr>
+
+      <tr>
+        <td>FPA Temperatures</td>
+        <td>IGDP_NRSD_ALG_FPA_TEMP<br>
+            IGDP_NRSD_ALG_A1_TEMP<br>
+            IGDP_NRSD_ALG_A2_TEMP</td>
+        <td>FPE Temperature<br>
+            FPA Temperature<br>
+            ASIC 1 Temperature<br>
+            ASIC 2 Temperature</td>
+      </tr>
+
+      <tr>
+        <td>Heat Strap Temperatures (Trim Heaters)</td>
+        <td>SI_GZCTS74A<br>
+            SI_GZCTS67A</td>
+        <td>FPA TH-Strap A Temperature from IRSU A<br>
+            FPA TH-Strap B Temperature from IRSU A</td>
+      </tr>
+
+      <tr>
+        <td>CAA Lamps / FWA,GWA</td>
+        <td>IGDP_NRSI_C_CAAL1_TEMP<br>
+            IGDP_NRSI_C_CAAL2_TEMP<br>
+            IGDP_NRSI_C_CAAL3_TEMP<br>
+            IGDP_NRSI_C_CAAL4_TEMP<br>
+            IGDP_NRSI_C_FWA_TEMP<br>
+            IGDP_NRSI_C_GWA_TEMP</td>
+        <td>CAA Temperature LINE1<br>
+            CAA Temperature LINE2<br>
+            CAA Temperature LINE3<br>
+            CAA Temperature LINE4<br>
+            FWA Temperature Sensor Value<br>
+            GWA Temperature Sensor Value</td>
+      </tr>
+
     </table>
     </body>
     """, width=1100)

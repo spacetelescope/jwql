@@ -137,7 +137,7 @@ def mce_power(conn, start, end):
                 x_axis_label = 'Date', y_axis_label='Current (A)')
 
     p.grid.visible = True
-    p.title.text = "MCE Power Data"
+    p.title.text = "MCE Power Parameters"
     pf.add_basic_layout(p)
 
     b = pf.add_to_plot(p, "MCE A current", "SE_ZINRSMCEA", start, end, conn, color = "blue")
@@ -176,7 +176,7 @@ def fpe_power(conn, start, end):
                 x_axis_label = 'Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
-    p.title.text = "FPE Power Data"
+    p.title.text = "FPE Power Parameters"
     pf.add_basic_layout(p)
 
 
@@ -236,10 +236,59 @@ def power_plots(conn, start, end):
         <th><h6>Description</h6></th>
       </tr>
       <tr>
-        <td>DEFAULT</td>
-        <td>DEFAULT</td>
-        <td>DEAULT</td>
+        <td>ICE Power Parameters</td>
+        <td>GP_ZPSVOLT (missing)<br>
+            SE_ZINRSICEA<br>
+            INRSH_HK_P15V<br>
+            INRSH_HK_N15V<br>
+            INRSH_HK_VMOTOR<br>
+            INRSH_HK_P5V<br>
+            INRSH_HK_2P5V<br>
+            INRSH_HK_ADCTGAIN<br>
+            INRSH_HK_ADCTOFFSET<br>
+            INRSH_OA_VREFOFF<br>
+            INRSH_OA_VREF<br>
+        </td>
+        <td>ICE Input Voltage<br>
+            ICE Input Current (A side)<br>
+            ICE +15V Voltage<br>
+            ICE -15V Voltage<br>
+            ICE Motor Voltage<br>
+            ICE +5V FPGA Voltage<br>
+            ICE +2V5 FPGA Voltage<br>
+            ICE ADC TM Chain Gain for Calibration<br>
+            ICE ADC TM Chain Offset for Calibration<br>
+        </td>
       </tr>
+
+      <tr>
+        <td>MCE Power Parameters</td>
+        <td>GP_ZPSVOLT (missing)<br>
+            SE_ZINRSMCEA
+        </td>
+        <td>ICE Input Voltage<br>
+            MCE Input Current (A side)<br>
+        </td>
+      </tr>
+
+      <tr>
+        <td>FPE Power Parameters</td>
+        <td>GP_ZPSVOLT (missing)<br>
+            SE_ZINRSFPEA<br>
+            INRSD_ALG_ACC_P12C<br>
+            INRSD_ALG_ACC_N12C<br>
+            INRSD_ALG_ACC_3D3_1D5_C<br>
+            INRSD_ALG_CHASSIS<br>
+        </td>
+        <td>ICE Input Voltage<br>
+            MCE Input Current (A side)<br>
+            ACC +12V Current<br>
+            ACC -12V Current<br>
+            ACC 3.3/1.5 Supply Current<br>
+            Chassis Voltage<br>
+        </td>
+      </tr>
+
     </table>
     </body>
     """, width=1100)

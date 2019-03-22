@@ -17,7 +17,6 @@
     INRSD_A1_DRAIN_V
     INRSD_A1_VBIASGATE_V
     INRSD_A1_VBIASPWR_V
-    INRSD_A1_TMPSENS_V
 
     Plot 2 - ASIC 1 Currents
     IGDP_NRSD_ALG_A1_VDD_C
@@ -38,7 +37,6 @@
     INRSD_A2_DRAIN_V
     INRSD_A2_VBIASGATE_V
     INRSD_A2_VBIASPWR_V
-    INRSD_A2_TMPSENS_V
 
     Plot 4 - ASIC 2 Currents
     IGDP_NRSD_ALG_A2_VDD_C
@@ -291,10 +289,50 @@ def fpe_fpa_plots(conn, start, end):
         <th><h6>Description</h6></th>
       </tr>
       <tr>
-        <td>DEFAULT</td>
-        <td>DEFAULT</td>
-        <td>DEAULT</td>
+        <td>ASIC (1,2) Voltages</td>
+        <td>IGDP_NRSD_ALG_A(1,2)_VDDA<br>
+            IGDP_NRSD_ALG_A(1,2)GND4VDA<br>
+            IGDP_NRSD_ALG_A(1,2)GND5VRF<br>
+            INRSD_ALG_A(1,2)_VDD3P3<br>
+            INRSD_ALG_A(1,2)_VDD<br>
+            INRSD_ALG_A(1,2)_REF<br>
+            INRSD_A(1,2)_DSUB_V<br>
+            INRSD_A(1,2)_VRESET_V<br>
+            INRSD_A(1,2)_CELLDRN_V<br>
+            INRSD_A(1,2)_DRAIN_V<br>
+            INRSD_A(1,2)_VBIASGATE_V<br>
+            INRSD_A(1,2)_VBIASPWR_V<br>
+        </td>
+        <td>
+            ASIC (1,2) VDDA Voltage<br>
+            ASIC (1,2) VDDA/Ground Voltage<br>
+            ASIC (1,2) Ref/Ground Voltage<br>
+            ASIC (1,2) VDD 3.3 Supply Voltage<br>
+            ASIC (1,2) VDD Voltage<br>
+            ASIC (1,2) Reference Voltage<br>
+            ASIC (1,2) Dsub Voltage<br>
+            ASIC (1,2) Reset Voltage<br>
+            ASIC (1,2) Cell Drain Voltage<br>
+            ASIC (1,2) Drain Voltage<br>
+            ASIC (1,2) Bias Gate Voltage<br>
+            ASIC (1,2) Bias Power Voltage<br>
+        </td>
       </tr>
+
+      <tr>
+        <td>ASIC (1,2) Currents</td>
+        <td>IGDP_NRSD_ALG_A(1,2)_VDD_C<br>
+            IGDP_NRSD_ALG_A(1,2)VDAP12C<br>
+            IGDP_NRSD_ALG_A(1,2)VDAN12C<br>
+            INRSD_A(1,2)_VDDA_I<br>
+        </td>
+        <td>ASIC (1,2) VDD Current<br>
+            ASIC (1,2) VDDA +12V Current<br>
+            ASIC (1,2) VDDA -12V Current<br>
+            ASIC (1,2) VDDA Current<br>
+        </td>
+      </tr>
+      
     </table>
     </body>
     """, width=1100)

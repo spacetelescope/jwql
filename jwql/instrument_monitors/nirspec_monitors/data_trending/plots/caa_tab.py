@@ -219,10 +219,19 @@ def caa_plots(conn, start, end):
         <th><h6>Description</h6></th>
       </tr>
       <tr>
-        <td>DEFAULT</td>
-        <td>DEFAULT</td>
-        <td>DEAULT</td>
+        <td>CAA Lamp Voltages</td>
+        <td>INRSH_LAMP_SEL<br>
+            INRSI_C_CAA_VOLTAGE</td>
+        <td>Lamp Voltage for each CAA Lamp</td>
       </tr>
+
+      <tr>
+        <td>CAA Lamp Currents</td>
+        <td>INRSH_LAMP_SEL<br>
+            INRSI_C_CAA_CURRENT</td>
+        <td>Lamp Currents for each CAA Lamp</td>
+      </tr>
+
     </table>
     </body>
     """, width=1100)
