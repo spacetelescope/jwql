@@ -1,14 +1,20 @@
 #! /usr/bin/env python
-"""Prepares plots for FPE VOLTAGE tab
+"""Prepares plots for WHEEL tab
 
     Module prepares plots for mnemonics below. Combines plots in a grid and
     returns tab object.
 
-    Plot 1:
+    Plot 1 - Filterwheel
+    INRSI_FWA_MECH_POS
+    INRSI_C_FWA_POSITION
 
+    Plot 2 - Gratingwheel X
+    INRSI_GWA_MECH_POS
+    INRSI_C_GWA_X_POSITION
 
-    Plot 2:
-
+    Plot 3 - Gratingwheel Y
+    INRSI_GWA_MECH_POS
+    INRSI_C_GWA_Y_POSITION
 
 Authors
 -------
@@ -215,11 +221,31 @@ def wheel_pos(conn, start, end):
         <th><h6>Mnemonic</h6></th>
         <th><h6>Description</h6></th>
       </tr>
+
       <tr>
-        <td>DEFAULT</td>
-        <td>DEFAULT</td>
-        <td>DEAULT</td>
+        <td>Filterwheel</td>
+        <td>INRSI_FWA_MECH_POS<br>
+            INRSI_C_FWA_POSITION</td>
+        <td>Position Sensor Value<br>
+            Current Position</td>
       </tr>
+
+      <tr>
+        <td>Gratingwheel X</td>
+        <td>INRSI_GWA_MECH_POS<br>
+            INRSI_C_GWA_X_POSITION</td>
+        <td>Position X Sensor Value<br>
+            Current Position</td>
+      </tr>
+
+      <tr>
+        <td>Gratingwheel Y</td>
+        <td>INRSI_GWA_MECH_POS<br>
+            INRSI_C_GWA_Y_POSITION</td>
+        <td>Position Y Sensor Value<br>
+            Current Position</td>
+      </tr>
+
     </table>
     </body>
     """, width=1100)

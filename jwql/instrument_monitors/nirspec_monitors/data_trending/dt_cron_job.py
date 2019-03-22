@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-''' Main module for miri datatrending -> fills database
+''' Main module for nirspec datatrending -> fills database
 
     This module holds functions to connect with the engineering database in order
     to grab and process data for the specific miri database. The scrips queries
