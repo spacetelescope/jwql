@@ -66,10 +66,10 @@ def add_hover_tool(p, rend):
     #activate HoverTool for scatter plot
     hover_tool = HoverTool( tooltips =
     [
-        ('count', '@data_points'),
-        ('mean', '@average'),
-        ('deviation', '@deviation'),
-
+        ('Name', '$name')
+        ('Count', '@data_points'),
+        ('Mean', '@average'),
+        ('Deviation', '@deviation'),
     ], renderers = rend)
     #append hover tool
     p.tools.append(hover_tool)
@@ -133,8 +133,8 @@ def add_to_plot(p, legend, mnemonic, start, end, conn, y_axis= "default", color=
     plot_data = ColumnDataSource(temp)
 
     #plot data
-    p.line(x = "start_time", y = "average", color = color, y_range_name=y_axis, legend = legend, source = plot_data)
-    scat = p.scatter(x = "start_time", y = "average", color = color, y_range_name=y_axis, legend = legend, source = plot_data)
+    p.line(x = "start_time", y = "average", color = color, y_range_name = y_axis, legend = legend, source = plot_data)
+    scat = p.scatter(x = "start_time", y = "average", color = color, name = mnemonic, y_range_name = y_axis, legend = legend, source = plot_data)
 
     #generate error lines if wished
     if err != 'n':
