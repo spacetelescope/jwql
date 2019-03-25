@@ -147,7 +147,7 @@ def load_connection(connection_string):
                           Column('id', Integer, primary_key=True, nullable=False),
                           Column('filename', String, nullable=False),
                           Column('flag_date', DateTime, nullable=False, server_default=str(datetime.now())),
-                          *[Column(name, String, nullable=False, server_default="False") for name in columns])
+                          *[Column(name, String, nullable=True, server_default=False) for name in columns])
 
         # Implement it
         meta.create_all()
