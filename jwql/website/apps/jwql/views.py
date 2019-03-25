@@ -35,6 +35,7 @@ Dependencies
     placed in the ``jwql/utils/`` directory.
 """
 
+import datetime
 import os
 
 from django.http import JsonResponse
@@ -50,7 +51,7 @@ from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
 from .forms import FileSearchForm
 from jwql.database import database_interface as di
-from jwql.utils.constants import JWST_INSTRUMENTS, JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS
 from jwql.utils.utils import get_base_url, get_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -389,9 +390,18 @@ def view_image(request, inst, file_root, rewrite=False):
     template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
 
+
+    # Fake insert a record
+    data_dict = {}
+    data_dict['filename'] = 'jw00327001001_06101_00001_guider1'
+    data_dict['flag_date'] = datetime.datetime.now()
+    data_dict['bowtie'] = True
+    di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
+
     # Get a list of previously flagged anomalies
     prev_anom = None
     query = di.session.query(di.Anomaly).filter(di.Anomaly.filename == file_root)
+    print(query)
     all_records = query.data_frame()
     if not all_records.empty:
         prev_anom = ', '.join([col for col, val in np.sum(all_records, axis=0).items() if val])
