@@ -70,8 +70,7 @@ from jwql.utils.utils import filename_parser
 
 # Objects for hard-coded information
 from jwql.utils.utils import get_config
-from jwql.utils.utils import JWST_DATAPRODUCTS
-from jwql.utils.utils import JWST_INSTRUMENTS
+from jwql.utils.constants import JWST_DATAPRODUCTS, JWST_INSTRUMENT_NAMES
 
 
 @log_fail
@@ -81,7 +80,7 @@ def monitor_template_main():
 
     # Example of logging
     my_variable = 'foo'
-    logging.info(f"Some useful information: {my_variable}")
+    logging.info('Some useful information: {}'.format(my_variable))
 
     # Example of querying for a dataset via MAST API
     service = "Mast.Jwst.Filtered.Niriss"
@@ -107,7 +106,8 @@ def monitor_template_main():
 
     # Example of locating a dataset in the filesystem
     filesystem = get_config()['filesystem']
-    dataset = os.path.join(filesystem, f"jw{filename_dict['program_id']}", filename_of_interest)
+    dataset = os.path.join(filesystem, 'jw{}'.format(filename_dict['program_id']),
+                           filename_of_interest)
 
     # Example of reading in dataset using jwst.datamodels
     im = datamodels.open(dataset)
@@ -126,8 +126,10 @@ def monitor_template_main():
     script, div = components(plt)
 
     plot_output_dir = get_config()['outputs']
-    div_outfile = os.path.join(plot_output_dir, 'monitor_name', filename_of_interest + "_component.html")
-    script_outfile = os.path.join(plot_output_dir, 'monitor_name', filename_of_interest + "_component.js")
+    div_outfile = os.path.join(plot_output_dir, 'monitor_name',
+                               filename_of_interest + "_component.html")
+    script_outfile = os.path.join(plot_output_dir, 'monitor_name',
+                                  filename_of_interest + "_component.js")
 
     for outfile, component in zip([div_outfile, script_outfile], [div, script]):
         with open(outfile, 'w') as f:

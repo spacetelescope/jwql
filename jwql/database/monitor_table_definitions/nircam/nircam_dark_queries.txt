@@ -1,0 +1,3 @@
+LAST_RUN, datetime
+DETECTOR, string
+APERTURE, string

@@ -2,25 +2,27 @@
 
 {% block preamble %}
 
-    <title>About - JWST Quicklook</title>
+    <title>About - JWQL</title>
 
 {% endblock %}
 
 {% block content %}
 
     <main role="main" class="container">
-        <div style="text-align: center"><img src={{ static('img/JWQLlogo.png') }} width=350px></div><br>
+        <div style="text-align: center"><img src={{ static('img/jwql_logo_full_transparent.png') }} width=350px></div><br>
         <hr>
 
         <h4>About the project</h4>
 
-        The James Webb Quicklook Application (JWQL) is a database-driven web application and automation framework for use by the JWST instrument teams to monitor the health and stability of the JWST instruments. Developed in Python, it exists within a private <a href="https://github.com/spacetelescope/jwql" target="_blank">GitHub repository</a>. The team actively strives to adhere to software engineering best practices, strictly following defined workflows and Python style guides.<br><br>
+        The JWST Quicklook Application (JWQL) is a database-driven web application and automation framework for use by the JWST instrument teams to monitor the health and stability of the JWST instruments. Developed in Python, it exists within a private <a href="https://github.com/spacetelescope/jwql" target="_blank">GitHub repository</a>. The team actively strives to adhere to software engineering best practices, strictly following defined workflows and Python style guides.<br><br>
 
         The project consists of the following components:<br><br>
 
         <div style='text-align: center'><img src={{ static('img/jwql_project.png') }} width=80%></div><br>
 
         The JWQL application is currently under heavy development. The 1.0 release is expected in 2019.<br><br>
+
+        Documentation can be found on <a href="https://jwql.readthedocs.io/en/latest/" target="_blank">readthedocs</a>.<br><br>
 
         The list of automated monitors that the JWQL team is currently planning to develop, in collaboration with each instrument team, can be found on <a href="https://innerspace.stsci.edu/display/JWQLPROJ/Instrument+Monitor+Overview" target="_blank">Innerspace</a>.
 
@@ -43,7 +45,7 @@
 
         <br>
         <h4>Contact</h4>
-        If you have discovered an issue with the functionality of the JWST Quicklook project, we ask that you please <a href="https://github.com/spacetelescope/jwql/issues" target="_blank">submit an issue</a> on our GitHub repository. Any other questions, comments, or concerns can be directed to <a href='jwql@stsci.edu'>jwql@stsci.edu</a>.<br><br>
+        If you have discovered an issue with the functionality of the JWQL application, we ask that you please <a href="https://github.com/spacetelescope/jwql/issues" target="_blank">submit an issue</a> on our GitHub repository. Any other questions, comments, or concerns can be directed to <a href='jwql@stsci.edu'>jwql@stsci.edu</a>.<br><br>
 
         <h4>Acknowledgements</h4>
 
@@ -54,6 +56,9 @@
             <li>{{ person }}</li>
         {% endfor %}
         </ul>
+
+        <h4>Other attributions:</h4>
+        The loading animation 'magnify' is provided by <a href="https://loading.io">loading.io</a>
 
     </main>
 

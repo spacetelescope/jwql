@@ -2,14 +2,14 @@
 
 {% block preamble %}
 
-	<title>{{ inst }} - JWST Quicklook</title>
+	<title>{{ inst }} - JWQL</title>
 
 {% endblock %}
 
 {% block content %}
 
     <main role="main" class="container">
-    	<h1 style="text-align: center"><img src="{{ static('') }}/img/{{inst}}logo.png" width=40 style="vertical-align: middle; max-width: 40; max-height: 40"> {{ inst }}</h1></br>
+    	<h1 style="text-align: center"><img src="{{ static('') }}/img/{{inst.lower()}}logo.png" width=40 style="vertical-align: middle; max-width: 40; max-height: 40"> {{ inst }}</h1></br>
         <hr>
 
     	<!-- List all possible tools -->
@@ -17,7 +17,7 @@
     		<div class="col-md-6 text-center">
     			<!-- Images -->
     			<h3>Images</h3>
-    			<a class="btn btn-primary my-2" role="button" href={{ url('jwql:unlooked', args=[inst]) }}>Unlooked Images</a></br>
+    			<a role="button" class="btn btn-primary my-2 disabled" href={{ url('jwql:unlooked', args=[inst]) }}>Unlooked Images</a></br>
     			<a role="button" class="btn btn-primary my-2 disabled" href="#">Image Anomalies</a></br>
     			<a role="button" class="btn btn-primary my-2" href={{ url('jwql:archive', args=[inst]) }}>Archived Images</a></br>
 			</div>
@@ -34,6 +34,11 @@
 					{% endif %}
 				{% endfor %}
 			</div>
+			<div class="col-md-6 text-center">
+					<!-- Documentation -->
+					<h3>Documentation</h3>
+					<a class="btn btn-primary my-2" role="button" href= {{doc_url}} target="_blank" rel="noopener noreferrer"> {{ inst }} Documentation</a></br>
+				</div>
 		</div>
 
 	</main>
