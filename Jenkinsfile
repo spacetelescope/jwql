@@ -12,7 +12,6 @@ bc0.failedUnstableThresh = 1
 bc0.failedFailureThresh = 1
 
 
-
 // bc1 = utils.copy(bc0)
 // bc1.build_cmds[0] = "conda install -q -y python=3.5"
 

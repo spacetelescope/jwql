@@ -36,9 +36,9 @@ Use:
 
 import logging
 import os
+import socket
 
 from astropy.io import fits
-from jwst.datamodels import dqflags
 import numpy as np
 
 from jwql.utils import permissions
@@ -48,6 +48,10 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+
+# Only import jwst if not running from readthedocs
+if 'build' and 'project' and 'jwql' not in socket.gethostname():
+    from jwst.datamodels import dqflags
 
 
 class PreviewImage():
@@ -201,6 +205,7 @@ class PreviewImage():
                         data = hdulist[ext].data.astype(np.float)
                 else:
                     raise ValueError('WARNING: no {} extension in {}!'.format(ext, filename))
+
                 if 'PIXELDQ' in extnames:
                     dq = hdulist['PIXELDQ'].data
                     dq = (dq & dqflags.pixel['NON_SCIENCE'] == 0)
