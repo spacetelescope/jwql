@@ -1,6 +1,6 @@
 DETECTOR, string
-X_COORD, integer
-Y_COORD, integer
+X_COORD, integer_array_1d
+Y_COORD, integer_array_1d
 TYPE, string
 SOURCE_FILES, string_array_1d
 MEAN_DARK_IMAGE_FILE, string

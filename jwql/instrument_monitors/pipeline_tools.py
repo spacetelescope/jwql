@@ -100,7 +100,7 @@ def get_pipeline_steps(instrument):
         Dictionary of step names (and modules? do we care?)
     """
     instrument = instrument.upper()
-    if instrument not in JWST_INSTRUMENT_NAMES_UPPERCASE:
+    if instrument not in JWST_INSTRUMENT_NAMES_UPPERCASE.values():
         raise ValueError("WARNING: {} is not a valid instrument name.".format(instrument))
     # all_steps = Detector1Pipeline.step_defs
 
@@ -147,12 +147,15 @@ def image_stack(file_list):
     cube : numpy.ndarray
         3D stack of the 2D images
     """
+    exptimes = []
     for i, input_file in enumerate(file_list):
         #model = datamodels.open(input_file)
         #image = model.data
 
         with fits.open(input_file) as hdu:
             image = hdu[1].data
+            exptime = hdu[0].header['EFFINTTM']
+            num_ints = hdu[0].header['NINTS']
 
         # Stack all inputs together into a single 3D image cube
         if i == 0:
@@ -167,15 +170,12 @@ def image_stack(file_list):
                 if len(ndim) == 2:
                     image = np.expand_dims(image, 0)
                 elif len(ndim) > 3:
-                    #raise ValueError("4-dimensional input images not supported.")
-                    print('')
-                    print('using the initial frame for early testing!!!!!')
-                    print('remove line below before merging!!')
-                    image = np.expand_dims(image[0, :, :], 0)
+                    raise ValueError("4-dimensional input slope images not supported.")
                 cube = np.vstack((cube, image))
             else:
                 raise ValueError("Input images are of inconsistent size in x/y dimension.")
-    return cube
+        exptimes.append([exptime] * num_ints)
+    return cube, exptimes
 
 
 def run_calwebb_detector1_steps(input_file, steps):
@@ -193,6 +193,7 @@ def run_calwebb_detector1_steps(input_file, steps):
         whether a step should be run or not. Steps are run in the
         official calwebb_detector1 order.
     """
+    print('Beginning pipeline run')
     first_step_to_be_run = True
     for step_name in steps.keys():
         if steps[step_name]:
@@ -211,6 +212,7 @@ def run_calwebb_detector1_steps(input_file, steps):
         model.save(output_filename)
     else:
         model[0].save(output_filename)
+    return output_filename
 
 
 def steps_to_run(input_file, all_steps, finished_steps):

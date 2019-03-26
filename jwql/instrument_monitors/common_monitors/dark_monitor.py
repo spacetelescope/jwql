@@ -41,8 +41,11 @@ THESE ARE READNOISE CHECKS:
 In stdev image, flag pixels with values above threshold (as noisy).
 Maybe compare to a baseline noise image and flag pixels that are different by threshold as newly noisy.
 """
+import datetime  # remove before merging
+import time  # remove before merging
+
 import argparse
-from copy import copy
+from copy import copy, deepcopy
 import glob  # only during testing
 import logging
 import matplotlib.pyplot as plt  # only for testing
@@ -55,7 +58,8 @@ from astropy.stats import sigma_clip
 from astropy.time import Time
 from jwst import datamodels
 from pysiaf import Siaf
-from sqlalchemy import Table
+from sqlalchemy import func, Table
+from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import base
 from jwql.database.database_interface import session
@@ -69,13 +73,72 @@ from jwql.database.database_interface import NIRCamDarkQueries, NIRCamDarkPixelS
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils import maths, instrument_properties, permissions
-from jwql.utils.constants import AMPLIFIER_BOUNDARIES, JWST_INSTRUMENT_NAMES, JWST_DATAPRODUCTS
+from jwql.utils.constants import AMPLIFIER_BOUNDARIES, JWST_INSTRUMENT_NAMES, \
+                                 JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, download_mast_data, ensure_dir_exists, get_config, \
                              filesystem_path
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
+
+
+def mast_query_darks(instrument, aperture, start_date, end_date):
+    """Use astroquery to search MAST for dark current data
+
+    Parameters
+    ----------
+    instrument : str
+        Instrument name
+
+    aperture : str
+        Detector aperture to search for (e.g. NRCA1_FULL)
+
+    start_date : float
+        Starting date for the search in MJD
+
+    end_date : float
+        Ending date for the search in MJD
+
+    Returns
+    -------
+    query_results : list
+        List of dictionaries containing the query results
+    """
+    # Make sure instrument is correct case
+    if instrument.lower() == 'nircam':
+        instrument = 'NIRCam'
+        dark_template = ['NRC_DARK']
+    elif instrument.lower() == 'niriss':
+        instrument = 'NIRISS'
+        dark_template = ['NIS_DARK']
+    elif instrument.lower() == 'nirspec':
+        instrument = 'NIRSpec'
+        dark_template = 'NRS_DARK'
+    elif instrument.lower() == 'fgs':
+        instrument = 'FGS'
+        dark_template = 'FGS_DARK'
+    elif instrument.lower() == 'miri':
+        instrument = 'MIRI'
+        dark_template = ['MIR_DARKALL', 'MIR_DARKIMG', 'MIR_DARKMRS']
+
+    # monitor_mast.instrument_inventory does not allow list inputs to
+    # the added_filters input (or at least if you do provide a list, then
+    # it becomes a nested list when it sends the query to MAST. The
+    # nested list is subsequently ignored by MAST.)
+    # So query once for each dark template, and combine outputs into a
+    # single list.
+    query_results = []
+    for template_name in dark_template:
+        # Create dictionary of parameters to add
+        parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
+                      "apername": aperture, "exp_type": template_name}
+
+        query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
+                                                  add_filters=parameters, return_data=True, caom=False)
+        if len(query['data']) > 0:
+            query_results.extend(query['data'])
+    return query_results
 
 
 class Dark():
@@ -94,13 +157,14 @@ class Dark():
             other code is executed.
         """
         # Begin logging
-        logging.info("Beginning dark monitor")
+        # logging.info("Beginning dark monitor")
+        apertures_to_skip = ['NRCALL_FULL', 'NRCAS_FULL', 'NRCBS_FULL']
 
         if not testing:
             # Get the output directory
             #self.output_dir = os.path.join(get_config()['outputs'], 'monitor_darks')
             print('Use the real outptut directory above before merging')
-            self.output_dir = '~/python_repos/test_jwql/test_dark_monitor'
+            self.output_dir = os.path.expandvars('Users/hilbert/python_repos/test_jwql/test_dark_monitor')
             #history_file = os.path.join(self.output_dir, 'mast_query_history.txt')
 
             # Read in config file that defines the thresholds for the
@@ -112,36 +176,44 @@ class Dark():
             current_time_mjd = Time.now().mjd
 
             # Loop over all instruments
-            for instrument in JWST_INSTRUMENT_NAMES:
+            #for instrument in JWST_INSTRUMENT_NAMES:
+            print('specify all instruments before merging')
+            for instrument in ['nircam']:
                 self.instrument = instrument
 
                 # Identify which database tables to use
                 self.identify_tables()
 
                 # Get a list of all possible apertures from pysiaf
-                possible_apertures = Siaf(instrument).apernames
+                possible_apertures = list(Siaf(instrument).apernames)
+                possible_apertures = [ap for ap in possible_apertures if ap not in apertures_to_skip]
 
-                for aperture in possible_apertures:
+                #for aperture in possible_apertures:
+                print('specify all apertures before merging')
+                for aperture in ['NRCA1_FULL']:
                     # Find the appropriate threshold for the number of
                     # new files needed
                     match = aperture == limits['Aperture']
                     new_dark_threshold = limits['Threshold'][match]
 
                     # Locate the record of the most recent MAST search
-                    most_recent_queries = self.most_recent_search()
                     self.aperture = aperture
-                    self.query_start = most_recent_queries['end_time']
+                    self.query_start = self.most_recent_search()
                     self.query_end = current_time_mjd
+
+                    print('Query times: {} {}'.format(self.query_start, self.query_end))
 
                     # Query MAST using the aperture and the time of the
                     # most recent previous search as the starting time
                     new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
 
+                    print('Aperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
+
                     # Check to see if there are enough new files to meet
                     # the monitor's signal-to-noise requirements
                     if len(new_entries) >= new_dark_threshold:
-                        logging.info("Sufficient new dark files found for {}, {} to run the dark monitor."
-                                     .format(self.instrument, self.aperture))
+                        # logging.info("Sufficient new dark files found for {}, {} to run the dark monitor."
+                        #             .format(self.instrument, self.aperture))
 
                         # Get full paths to the files
                         new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
@@ -167,23 +239,26 @@ class Dark():
                         #dark_files = [os.path.join(self.output_dir, filename) for filename in new_filenames]
                         dark_files = copied
                         print('later add MAST results to this list')
-                        self.run(dark_files, instrument, aperture)
+                        self.run(dark_files)  # , instrument, aperture)
                         monitor_run = True
                     else:
-                        logging.info(("Dark monitor skipped. {} new dark files for {}, {}. {} new files are "
-                                      "required to run dark current monitor.").format(len(new_entries),
-                                                                                      row['Instrument'],
-                                                                                      row['Aperture'],
-                                                                                      new_dark_threshold))
+                        # logging.info(("Dark monitor skipped. {} new dark files for {}, {}. {} new files are "
+                        #              "required to run dark current monitor.").format(len(new_entries),
+                        #                                                              row['Instrument'],
+                        #                                                              row['Aperture'],
+                        #                                                              new_dark_threshold))
                         monitor_run = False
 
                     # Update the query history
+                    print('Updating the query history table!')
+                    print(self.query_start, current_time_mjd)
                     new_entry = {'instrument': instrument, 'aperture': aperture,
-                                 'start_time_mjd': self.query_start, 'end_time_mjd': current_time,
-                                 'files_found': len(new_entries), 'run_monitor': monitor_run}
-                    self.query_table.insert().execute(new_entry)
+                                 'start_time_mjd': self.query_start, 'end_time_mjd': current_time_mjd,
+                                 'files_found': len(new_entries), 'run_monitor': monitor_run,
+                                 'entry_date': datetime.datetime.now()}
+                    self.query_table.__table__.insert().execute(new_entry)
 
-            logging.info('Dark Monitor completed successfully.')
+            # logging.info('Dark Monitor completed successfully.')
 
     def add_bad_pix(self, coordinates, pixel_type, files, mean_filename, baseline_filename):
         """
@@ -209,13 +284,20 @@ class Dark():
             Name of fits file containing the baseline dark rate image used
             to find these bad pixels
         """
-        entries = []
-        for x, y in zip(coordinates[0], coordinates[1]):
-            entry = {'detector': self.detector, 'x_coord': x, 'y_coord': y, 'type': pixel_type,
-                     'source_files': files, 'mean_dark_image_file': mean_filename,
-                     'baseline_file': baseline_filename}
-            entries.append(entry)
-        self.pixel_table.insert().execute(entries)
+        #entries = []
+        #for x, y in zip(coordinates[0], coordinates[1]):
+        #    entry = {'detector': self.detector, 'x_coord': x, 'y_coord': y, 'type': pixel_type,
+        #             'source_files': files, 'mean_dark_image_file': mean_filename,
+        #             'baseline_file': baseline_filename, 'entry_date': datetime.datetime.now()}
+        #    entries.append(entry)
+
+        print('Adding {} {} pixels to database.'.format(len(coordinates[0]), pixel_type))
+
+
+        entry = {'detector': self.detector, 'x_coord': coordinates[0], 'y_coord': coordinates[1],
+                 'type': pixel_type, 'source_files': files, 'mean_dark_image_file': mean_filename,
+                 'baseline_file': baseline_filename, 'entry_date': datetime.datetime.now()}
+        self.pixel_table.__table__.insert().execute(entry)
 
     def get_metadata(self, filename):
         """Collect basic metadata from filename that will be needed later
@@ -269,9 +351,19 @@ class Dark():
             .filter(self.pixel_table.detector == self.detector) \
             .all()
 
+        print('DB entries:')
+        print(db_entries)
+        print(len(db_entries))
+
         already_found = []
-        for foundx, foundy in zip(db_entries['x_coord'], db_entries['y_coord']):
-            already_found.append((foundx, foundy))
+        if len(db_entries) != 0:
+            for _row in db_entries:
+                print('row:', _row)
+                print(type(_row))
+                x_coords = _row.x_coord
+                y_coords = _row.y_coord
+                for x, y in zip(x_coords, y_coords):
+                    already_found.append((x, y))
 
         # Check to see if each pixel already appears in teh database for
         # the given bad pixel type
@@ -332,14 +424,14 @@ class Dark():
             Name of fits file containing the baseline image
         """
         subq = session.query(self.pixel_table.detector,
-                             func.max(self.pixel_table.date_mjd).label('maxdate')
+                             func.max(self.pixel_table.entry_date).label('maxdate')
                              ).group_by(self.pixel_table.detector).subquery('t2')
 
         query = session.query(self.pixel_table).join(
             subq,
             and_(
                 self.pixel_table.detector == self.detector,
-                self.pixel_table.data_mjd == subq.c.maxdate
+                self.pixel_table.entry_date == subq.c.maxdate
             )
         )
 
@@ -347,7 +439,8 @@ class Dark():
         if not count:
             filename = None
         else:
-            filename = db_entry['baseline_file']
+            filename = query.all()[0].baseline_file
+            print('Baseline filename: {}'.format(filename))
         return filename
 
     def identify_tables(self):
@@ -360,6 +453,8 @@ class Dark():
         self.pixel_table = eval('{}DarkPixelStats'.format(mixed_case_name))
         self.stats_table = eval('{}DarkDarkCurrent'.format(mixed_case_name))
 
+        print('self.query_table is', self.query_table)
+
     def most_recent_search(self):
         """Query the query history database and return the information on
         the most recent query for the given ``aperture_name`` where the
@@ -370,23 +465,36 @@ class Dark():
         query : dict
             Information on the most recent query
         """
-        subq = session.query(self.query_table.aperture_name,
+        subq = session.query(self.query_table.aperture,
                              func.max(self.query_table.end_time_mjd).label('maxdate')
-                             ).group_by(self.query_table.aperture_name).subquery('t2')
+                             ).group_by(self.query_table.aperture).subquery('t2')
 
         query = session.query(self.query_table).join(
             subq,
             and_(
-                self.query_table.aperture_name == self.aperture,
+                self.query_table.aperture == self.aperture,
                 self.query_table.end_time_mjd == subq.c.maxdate,
                 self.query_table.run_monitor is True
             )
         )
 
+        print('query length: ', query.count())
+
+        if query.count() > 0:
+            for row in query:
+                print(row.start_time_mjd, row.end_time_mjd)
+
         query_count = query.count()
         if not query_count:
-            query = {'end_time': 57357.0}  # Dec 1, 2015 == CV3
-        return query
+            query_result = 57357.0  # Dec 1, 2015 == CV3
+        elif query_count > 1:
+            raise ValueError('More than one "most recent" query?')
+        else:
+            query_result = query.all()[0].end_time_mjd
+
+        print('query_result: ', query_result)
+
+        return query_result
 
     def noise_check(self, new_noise_image, baseline_noise_image, threshold=1.5):
         """Get the ratio of the stdev (noise) image to a baseline noise
@@ -438,11 +546,12 @@ class Dark():
                 stdev_image = hdu['STDEV'].data
             return mean_image, stdev_image
         except (FileNotFoundError, KeyError) as e:
-            logging.warning('Trying to read {}: {}'.format(filename, e))
+            # logging.warning('Trying to read {}: {}'.format(filename, e))
+            pass
 
     @log_fail
     @log_info
-    def run(self, file_list, instrument, aperture):
+    def run(self, file_list):  # , instrument, aperture):
         """MAIN FUNCTION
 
         Parameters
@@ -458,9 +567,9 @@ class Dark():
             Aperture name of the files (e.g. 'NRCA1_FULL') From
             'apername' field in the MAST query results
         """
-        required_steps = pipeline_tools.get_pipeline_steps(instrument)
-        logging.info('Required calwebb1_detector pipeline steps to have the data in the correct format: {}'
-                     .format(required_steps))
+        required_steps = pipeline_tools.get_pipeline_steps(self.instrument)
+        # logging.info('Required calwebb1_detector pipeline steps to have the data in the correct format: {}'
+        #             .format(required_steps))
 
         print('REQUIRED STEPS:', required_steps)
 
@@ -489,25 +598,33 @@ class Dark():
             if any(steps_to_run.values()) is False:
                 slope_files.append(filename)
             else:
-                processed_file = pipeline_tools.run_calwebb_detector1_steps(filename, steps_to_run)
+                print('do we need a less hacky solution to skipping the pipeline call')
+                print('on files that already exist?')
+                processed_file = filename.replace('.fits', '_{}.fits'.format('rate'))
+                if not os.path.isfile(processed_file):
+                    print('')
+                    print("Running pipeline on {}".format(filename))
+                    processed_file = pipeline_tools.run_calwebb_detector1_steps(os.path.abspath(filename), steps_to_run)
                 slope_files.append(processed_file)
+                print('Finished creating {}'.format(processed_file))
 
         # Basic metadata that will be needed later
         self.get_metadata(slope_files[0])
 
-        logging.info('Slope images to use in the dark monitor for {}, {}: {}'.format(self.instrument,
-                                                                                     self.aperture,
-                                                                                     slope_files))
+        # logging.info('Slope images to use in the dark monitor for {}, {}: {}'.format(self.instrument,
+        #                                                                             self.aperture,
+        #                                                                             slope_files))
         print('slope files are: ', slope_files)
 
         # Read in all slope images and place into a list
-        slope_image_stack = pipeline_tools.image_stack(slope_files)
+        slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files)
 
         # Calculate a mean slope image from the inputs
         slope_image, stdev_image = maths.mean_image(slope_image_stack, sigma_threshold=3)
         mean_slope_file = self.save_mean_slope_image(slope_image, stdev_image, slope_files)
-        dark_db_entry['mean_dark_image_file'] = mean_slope_file
-        logging.info('Sigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
+        print('Mean slope image saved in: {}'.format(mean_slope_file))
+        #dark_db_entry['mean_dark_image_file'] = mean_slope_file
+        # logging.info('Sigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
 
         # Search for new hot/dead/noisy pixels----------------------------
         # Read in baseline mean slope image and stdev image
@@ -516,16 +633,19 @@ class Dark():
         # the baseline cane be minimal.
 
         # Limit checks for hot/dead/noisy pixels to full frame data
+        print('check other instrument specs for full frame aperture names')
         if 'FULL' in self.aperture:
             baseline_file = self.get_baseline_filename()
+            print('Baseline file is {}'.format(baseline_file))
             if baseline_file is None:
-                logging.warning(('No baseline dark current countrate image for {} {}. Setting the '
-                                 'current mean slope image to be the new baseline.'.format(self.instrument,
-                                                                                           self.aperture)))
-                baseline_mean = copy.deepcopy(slope_image)
-                baseline_stdev = copy.deepcopy(stdev_image)
+                # logging.warning(('No baseline dark current countrate image for {} {}. Setting the '
+                #                 'current mean slope image to be the new baseline.'.format(self.instrument,
+                #                                                                           self.aperture)))
+                baseline_file = mean_slope_file
+                baseline_mean = deepcopy(slope_image)
+                baseline_stdev = deepcopy(stdev_image)
             else:
-                baseline_mean, baseline_stev = self.read_baseline_slope_image(baseline_file)
+                baseline_mean, baseline_stdev = self.read_baseline_slope_image(baseline_file)
 
             # Check the hot/dead pixel population for changes
             new_hot_pix, new_dead_pix = self.find_hot_dead_pixels(slope_image, baseline_mean)
@@ -539,10 +659,10 @@ class Dark():
             new_dead_pix = self.exclude_existing_badpix(new_dead_pix, 'dead')
 
             # Add new hot and dead pixels to the database
-            self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file)
-            self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file)
-            logging.info('Found {} new hot pixels'.format(len(new_hot_pix)))
-            logging.info('Found {} new dead pixels'.format(len(new_dead_pix)))
+            self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file)
+            self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file)
+            # logging.info('Found {} new hot pixels'.format(len(new_hot_pix)))
+            # logging.info('Found {} new dead pixels'.format(len(new_dead_pix)))
 
             # Check for any pixels that are significanly more noisy than
             # in the baseline stdev image
@@ -555,14 +675,14 @@ class Dark():
             new_noisy_pixels = self.exclude_existing_badpix(new_noisy_pixels, 'noisy')
 
             # Add new noisy pixels to the database
-            self.add_bad_pix(new_noisy_pix, 'noisy', file_list, mean_slope_file)
-            logging.info('Found {} new noisy pixels'.format(len(new_noisy_pix)))
+            self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file)
+            # logging.info('Found {} new noisy pixels'.format(len(new_noisy_pix)))
 
         # Calculate image statistics--------------------------------------
 
         # Find amplifier boundaries so per-amp statistics can be calculated
         number_of_amps, amp_bounds = instrument_properties.amplifier_info(slope_files[0])
-        logging.info('amplifier boundaries: {}'.format(amp_bounds))
+        # logging.info('amplifier boundaries: {}'.format(amp_bounds))
 
         # Calculate mean and stdev values, and fit a Gaussian to the
         # histogram of the pixels in each amp
@@ -570,26 +690,52 @@ class Dark():
             histogram, bins) = self.stats_by_amp(slope_image, amp_bounds)
 
         print('Maybe move this to a separate function')
-        for key in amp_mean:
-            dark_db_entry = {'aperture': aperture, 'amplifier': key, 'mean': amp_mean[key],
+        for key in amp_mean.keys():
+
+            print('aperture', type(self.aperture))
+            print('amplifier', type(key))
+            print('amp mean', type(amp_mean[key]))
+            print('amp stdev', type(amp_stdev[key]))
+            print('file list', type(file_list))
+            print('gauss amp', type(gauss_param[key][0]))
+            print('gauss peak', type(gauss_param[key][1]))
+            print('gauss width', type(gauss_param[key][2]))
+            print('gauss chisq', type(gauss_chisquared[key]))
+            print('double gauss amp1', type(double_gauss_params[key][0]))
+            print('double gauss peak1', type(double_gauss_params[key][1]))
+            print('double gauss width1', type(double_gauss_params[key][2]))
+            print('double gauss amp2', type(double_gauss_params[key][3]))
+            print('double gauss peak2', type(double_gauss_params[key][4]))
+            print('double gauss width2', type(double_gauss_params[key][5]))
+            print('double gauss chisq', type(double_gauss_chisquared[key]))
+            print('mean slope file', type(mean_slope_file))
+            print('hist', type(histogram))
+            print('bins', type(bins))
+
+
+
+
+
+            dark_db_entry = {'aperture': self.aperture, 'amplifier': key, 'mean': amp_mean[key],
                              'stdev': amp_stdev[key],
                              'source_files': file_list,
-                             'gauss_amplitude': gauss_param[key][0],
-                             'gauss_peak': gauss_param[key][1],
-                             'gauss_width': gauss_param[key][2],
+                             'gauss_amplitude': list(gauss_param[key][0]),
+                             'gauss_peak': list(gauss_param[key][1]),
+                             'gauss_width': list(gauss_param[key][2]),
                              'gauss_chisq': gauss_chisquared[key],
-                             'double_gauss_amplitide1': double_gauss_params[key][0],
+                             'double_gauss_amplitude1': double_gauss_params[key][0],
                              'double_gauss_peak1': double_gauss_params[key][1],
                              'double_gauss_width1': double_gauss_params[key][2],
-                             'double_gauss_amplitide2': double_gauss_params[key][3],
+                             'double_gauss_amplitude2': double_gauss_params[key][3],
                              'double_gauss_peak2': double_gauss_params[key][4],
                              'double_gauss_width2': double_gauss_params[key][5],
                              'double_gauss_chisq': double_gauss_chisquared[key],
                              'mean_dark_image_file': mean_slope_file,
-                             'hist_dark_values': histogram,
-                             'hist_amplitudes': bins
+                             'hist_dark_values': bins,
+                             'hist_amplitudes': histogram,
+                             'entry_date': datetime.datetime.now()
                              }
-            self.stats_table.insert().execute(dark_db_entry)
+            self.stats_table.__table__.insert().execute(dark_db_entry)
 
         print(('what about updating the baseline dark slope image? Should that be done after'
                'each run of the monitor where the dark current is found to be ok?'))
@@ -627,7 +773,12 @@ class Dark():
         primary_hdu.header['APERTURE'] = (self.aperture, 'Aperture name')
         primary_hdu.header['QRY_STRT'] = (self.query_start, 'MAST Query start time (MJD)')
         primary_hdu.header['QRY_END'] = (self.query_end, 'MAST Query end time (MJD)')
-        primary_hdu.header['FILES'] = (files, 'File used to construct the mean slope image')
+
+        files_string = 'FILES USED: '
+        for filename in files:
+            files_string += '{}, '.format(filename)
+        primary_hdu.header.add_history(files_string)
+        # primary_hdu.header['FILES'] = (files, 'File used to construct the mean slope image')
         mean_img_hdu = fits.ImageHDU(slope_img, name='MEAN')
         stdev_img_hdu = fits.ImageHDU(stdev_img, name='STDEV')
         hdu_list = fits.HDUList([primary_hdu, mean_img_hdu, stdev_img_hdu])
@@ -727,36 +878,53 @@ class Dark():
                 if mxy > maxy:
                     maxy = copy(mxy)
             amps['5'] = [(0, 0), (maxx, maxy)]
-            logging.info(('Full frame exposure detected. Adding the full frame to the list of amplifiers '
-                          'upon which to calculate statistics.'))
+            # logging.info(('Full frame exposure detected. Adding the full frame to the list of amplifiers '
+            #              'upon which to calculate statistics.'))
 
         for key in amps:
             x_start, y_start = amps[key][0]
             x_end, y_end = amps[key][1]
+
+            print('x and y starting and ending values:')
+            print(x_start, x_end, y_start, y_end)
 
             # Basic statistics, sigma clipped areal mean and stdev
             amp_mean, amp_stdev = maths.mean_stdev(image[y_start: y_end, x_start: x_end])
             amp_means[key] = amp_mean
             amp_stdevs[key] = amp_stdev
 
+            print('amp mean and stdev:', amp_mean, amp_stdev)
+
+
             # Create a histogram
             lower_bound = (amp_mean - 7 * amp_stdev)
             upper_bound = (amp_mean + 7 * amp_stdev)
+
+            print('lower and upper bounds for hist:')
+            print(lower_bound, upper_bound)
+            print('histogram on array of shape:', image[y_start: y_end, x_start: x_end].shape)
+
+
             print('remove_refpix_before_making_histograms, maybe by adjusting amp boundaries?')
             hist, bin_edges = np.histogram(image[y_start: y_end, x_start: x_end], bins='auto',
                                            range=(lower_bound, upper_bound))
             bin_centers = (bin_edges[1:] + bin_edges[0: -1]) / 2.
             initial_params = [np.max(hist), amp_mean, amp_stdev]
 
+            print('histogram length:')
+            print(len(bin_centers), len(hist))
+
+
             # Fit a Gaussian to the histogram. Save best-fit params and
             # uncertainties, as well as reduced chi squared
             amplitude, peak, width = maths.gaussian1d_fit(bin_centers, hist, initial_params)
             gaussian_params[key] = [amplitude, peak, width]
+
             gauss_fit_model = models.Gaussian1D(amplitude=amplitude[0], mean=peak[0], stddev=width[0])
             gauss_fit = gauss_fit_model(bin_centers)
 
             positive = hist > 0
-            degrees_of_freedom = len(hist) - 3
+            degrees_of_freedom = len(hist) - 3.
             total_pix = np.sum(hist[positive])
             p_i = gauss_fit[positive] / total_pix
             # gaussian_chi_squared[key] = np.sum((hist[positive] - gauss_fit[positive])**2 / gauss_fit[positive]) / degrees_of_freedom
@@ -766,6 +934,7 @@ class Dark():
             f, a = plt.subplots()
             a.plot(bin_centers, hist, color='black')
             a.plot(bin_centers, gauss_fit, color='red')
+            a.set_title('Gaussian fit, amp {}'.format(key))
             plt.show()
 
             # Double Gaussian fit only for full frame data (and only for
@@ -776,10 +945,18 @@ class Dark():
                                       np.max(hist) / 7., amp_mean / 2., amp_stdev * 0.9)
                     double_gauss_params, double_gauss_sigma = maths.double_gaussian_fit(bin_centers, hist,
                                                                                         initial_params)
+
                     double_gaussian_params[key] = [[param, sig] for param, sig in zip(double_gauss_params,
                                                                                       double_gauss_sigma)]
                     double_gauss_fit = maths.double_gaussian(bin_centers, *double_gauss_params)
-                    degrees_of_freedom = len(bin_centers) - 6
+
+                    f, a = plt.subplots()
+                    a.plot(bin_centers, hist, color='black')
+                    a.plot(bin_centers, double_gauss_fit, color='red')
+                    a.set_title('Double Gauss fit, amp {}'.format(key))
+                    plt.show()
+
+                    degrees_of_freedom = len(bin_centers) - 6.
                     #double_gaussian_chi_squared[key] = np.sum((double_gauss_fit[positive] - hist[positive])**2
                     #                                          / hist[positive]) / degrees_of_freedom
                     dp_i = double_gauss_fit[positive] / total_pix
@@ -787,81 +964,27 @@ class Dark():
                                                               (total_pix*dp_i)) / degrees_of_freedom
 
                 else:
-                    double_gaussian_params[key] = [(0, 0, 0, 0, 0, 0)]
-                    double_gaussian_chi_squared[key] = 0
+                    double_gaussian_params[key] = [[0., 0.] for i in range(6)]
+                    double_gaussian_chi_squared[key] = 0.
+            else:
+                double_gaussian_params[key] = [[0., 0.] for i in range(6)]
+                double_gaussian_chi_squared[key] = 0.
 
-        logging.info('Mean dark rate by amplifier: {}'.format(amp_means))
-        logging.info('Standard deviation of dark rate by amplifier: {}'.format(amp_means))
-        logging.info('Best-fit Gaussian parameters [amplitde, peak, width]'.format(gaussian_params))
-        logging.info('Reduced chi-squared associated with Gaussian fit: {}'.format(gaussian_chi_squared))
-        logging.info('Best-fit double Gaussian parameters [amplitde1, peak1, width1, amplitde2, peak2, '
-                     'width2]'.format(double_gaussian_params))
-        logging.info('Reduced chi-squared associated with double Gaussian fit: {}'
-                     .format(double_gaussian_chi_squared))
+
+        # logging.info('Mean dark rate by amplifier: {}'.format(amp_means))
+        # logging.info('Standard deviation of dark rate by amplifier: {}'.format(amp_means))
+        # logging.info('Best-fit Gaussian parameters [amplitde, peak, width]'.format(gaussian_params))
+        # logging.info('Reduced chi-squared associated with Gaussian fit: {}'.format(gaussian_chi_squared))
+        # logging.info('Best-fit double Gaussian parameters [amplitde1, peak1, width1, amplitde2, peak2, '
+        #             'width2]'.format(double_gaussian_params))
+        # logging.info('Reduced chi-squared associated with double Gaussian fit: {}'
+        #             .format(double_gaussian_chi_squared))
 
         return (amp_means, amp_stdevs, gaussian_params, gaussian_chi_squared, double_gaussian_params,
-                double_gaussian_chi_squared, hist, bin_centers)
+                double_gaussian_chi_squared, hist.astype(np.float), bin_centers)
 
 
 if __name__ == '__main__':
     module = os.path.basename(__file__).strip('.py')
-    configure_logging(module, production_mode=False)
+    #configure_logging(module, production_mode=True)
     monitor = Dark()
-
-
-def mast_query_darks(instrument, aperture, start_date, end_date):
-    """Use astroquery to search MAST for dark current data
-
-    Parameters
-    ----------
-    instrument : str
-        Instrument name
-
-    aperture : str
-        Detector aperture to search for (e.g. NRCA1_FULL)
-
-    start_date : float
-        Starting date for the search in MJD
-
-    end_date : float
-        Ending date for the search in MJD
-
-    Returns
-    -------
-    query_results : list
-        List of dictionaries containing the query results
-    """
-    # Make sure instrument is correct case
-    if instrument.lower() == 'nircam':
-        instrument = 'NIRCam'
-        dark_template = ['NRC_DARK']
-    elif instrument.lower() == 'niriss':
-        instrument = 'NIRISS'
-        dark_template = ['NIS_DARK']
-    elif instrument.lower() == 'nirspec':
-        instrument = 'NIRSpec'
-        dark_template = 'NRS_DARK'
-    elif instrument.lower() == 'fgs':
-        instrument = 'FGS'
-        dark_template = 'FGS_DARK'
-    elif instrument.lower() == 'miri':
-        instrument = 'MIRI'
-        dark_template = ['MIR_DARKALL', 'MIR_DARKIMG', 'MIR_DARKMRS']
-
-    # monitor_mast.instrument_inventory does not allow list inputs to
-    # the added_filters input (or at least if you do provide a list, then
-    # it becomes a nested list when it sends the query to MAST. The
-    # nested list is subsequently ignored by MAST.)
-    # So query once for each dark template, and combine outputs into a
-    # single list.
-    query_results = []
-    for template_name in dark_template:
-        # Create dictionary of parameters to add
-        parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
-                      "apername": aperture, "exp_type": template_name}
-
-        query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
-                                                  add_filters=parameters, return_data=True, caom=False)
-        if len(query['data']) > 0:
-            query_results.extend(query['data'])
-    return query_results
