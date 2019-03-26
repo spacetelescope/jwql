@@ -85,6 +85,7 @@ from jwql.utils import utils
 @property
 def data_frame(self):
     """Method to return a ``pandas.DataFrame`` of the results"""
+    print(pd.read_sql(self.statement, self.session.bind))
     return pd.read_sql(self.statement, self.session.bind)
 
 Query.data_frame = data_frame
@@ -130,28 +131,6 @@ def load_connection(connection_string):
     session = Session()
     meta = MetaData(engine)
 
-    # Make sure it has an anomalies table
-    if not engine.has_table('anomalies'):
-        print("No 'anomalies' table. Generating one now...")
-
-        # Define anomaly table column names
-        columns = ['bowtie', 'snowball', 'cosmic_ray_shower', 'crosstalk',
-                   'cte_correction_error', 'data_transfer_error', 'detector_ghost',
-                   'diamond', 'diffraction_spike', 'dragon_breath', 'earth_limb',
-                   'excessive_saturation', 'figure8_ghost', 'filter_ghost',
-                   'fringing', 'guidestar_failure', 'banding', 'persistence',
-                   'prominent_blobs', 'trail', 'scattered_light', 'other']
-
-        # Create a table with the appropriate Columns
-        anomalies = Table('anomalies', meta,
-                          Column('id', Integer, primary_key=True, nullable=False),
-                          Column('filename', String, nullable=False),
-                          Column('flag_date', DateTime, nullable=False, server_default=str(datetime.now())),
-                          *[Column(name, String, nullable=True, server_default=False) for name in columns])
-
-        # Implement it
-        meta.create_all()
-
     return session, base, engine, meta
 
 # Import a global session.  If running from readthedocs, pass a dummy connection string
@@ -161,33 +140,6 @@ if 'build' and 'project' and 'jwql' in socket.gethostname():
 else:
     SETTINGS = utils.get_config()
     session, base, engine, meta = load_connection(SETTINGS['connection_string'])
-
-# Make convenience methods for Base class
-@property
-def colnames(self):
-    """A list of all the column names in this table"""
-    # Get the columns
-    a_list = sorted([col for col, val in self._sa_instance_state.attrs.items()
-              if col not in ['id', 'filename', 'flag_date']])
-
-    return a_list
-
-
-@property
-def names(self):
-    """A list of human readable names for all the columns in this table"""
-    return [name.replace('_', ' ') for name in self.colnames]
-
-
-# Generate Base class and add methods
-Base = automap_base()
-Base.colnames = colnames
-Base.names = names
-Base.prepare(engine, reflect=True)
-
-
-# Automap Anomaly class from Base class for anomalies table
-Anomaly = Base.classes.anomalies
 
 
 class Monitor(base):
@@ -203,6 +155,43 @@ class Monitor(base):
     status = Column(Enum('SUCESS', 'FAILURE', name='monitor_status'), nullable=True)
     affected_tables = Column(postgresql.ARRAY(String, dimensions=1), nullable=True)
     log_file = Column(String(), nullable=False)
+
+
+def anomaly_orm_factory(class_name):
+    """Create a ``SQLAlchemy`` ORM Class for an anomaly table.
+
+    Parameters
+    ----------
+    class_name : str
+        The name of the class to be created
+
+    Returns
+    -------
+    class : obj
+        The ``SQLAlchemy`` ORM
+    """
+
+    # Initialize a dictionary to hold the column metadata
+    data_dict = {}
+    data_dict['__tablename__'] = class_name.lower()
+
+    # Define anomaly table column names
+    data_dict['columns'] = ['bowtie', 'snowball', 'cosmic_ray_shower', 'crosstalk',
+       'cte_correction_error', 'data_transfer_error', 'detector_ghost',
+       'diamond', 'diffraction_spike', 'dragon_breath', 'earth_limb',
+       'excessive_saturation', 'figure8_ghost', 'filter_ghost',
+       'fringing', 'guidestar_failure', 'banding', 'persistence',
+       'prominent_blobs', 'trail', 'scattered_light', 'other']
+    data_dict['names'] = [name.replace('_', ' ') for name in data_dict['columns']]
+
+    # Create a table with the appropriate Columns
+    data_dict['id'] = Column(Integer, primary_key=True, nullable=False)
+    data_dict['filename'] = Column(String(), nullable=False)
+    data_dict['flag_date'] = Column(DateTime, nullable=False)
+    for column in data_dict['columns']:
+        data_dict[column] = Column(Boolean, nullable=False, default=False)
+
+    return type(class_name, (base,), data_dict)
 
 
 def get_monitor_columns(data_dict, table_name):
@@ -311,6 +300,7 @@ def monitor_orm_factory(class_name):
     return type(class_name, (base,), data_dict)
 
 # Create tables from ORM factory
+Anomaly = anomaly_orm_factory('anomaly')
 # NIRCamDarkQueries = monitor_orm_factory('nircam_dark_queries')
 # NIRCamDarkPixelStats = monitor_orm_factory('nircam_dark_pixel_stats')
 # NIRCamDarkDarkCurrent = monitor_orm_factory('nircam_dark_dark_current')

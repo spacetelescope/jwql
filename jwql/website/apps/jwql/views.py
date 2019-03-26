@@ -40,6 +40,7 @@ import os
 
 from django.http import JsonResponse
 from django.shortcuts import render
+import numpy as np
 
 from .data_containers import get_acknowledgements, get_edb_components
 from .data_containers import get_dashboard_components
@@ -384,28 +385,25 @@ def view_image(request, inst, file_root, rewrite=False):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
 
-
     # Fake insert a record
     data_dict = {}
     data_dict['filename'] = 'jw00327001001_06101_00001_guider1'
     data_dict['flag_date'] = datetime.datetime.now()
-    data_dict['bowtie'] = True
+    data_dict['fringing'] = True
     di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
 
-    # Get a list of previously flagged anomalies
-    prev_anom = None
-    query = di.session.query(di.Anomaly).filter(di.Anomaly.filename == file_root)
-    print(query)
-    all_records = query.data_frame()
+    # Get most previously flagged anomalies
+    query = di.session.query(di.Anomaly).filter(di.Anomaly.filename == file_root).order_by(di.Anomaly.flag_date.desc()).limit(1)
+    all_records = query.data_frame
     if not all_records.empty:
         prev_anom = ', '.join([col for col, val in np.sum(all_records, axis=0).items() if val])
-    # prev_anom = ', '.join(['bowtie', 'snowball'])
 
     # Build the context
     anom = di.Anomaly()
@@ -415,7 +413,7 @@ def view_image(request, inst, file_root, rewrite=False):
                'fits_files': image_info['all_files'],
                'suffixes': image_info['suffixes'],
                'num_ints': image_info['num_ints'],
-               'anomalies': zip(anom.colnames, anom.names),
+               'anomalies': zip(anom.columns, anom.names),
                'prev_anom': prev_anom}
 
     return render(request, template, context)
