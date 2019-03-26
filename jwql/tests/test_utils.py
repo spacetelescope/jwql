@@ -271,7 +271,8 @@ def test_filename_parser(filename, solution):
     assert filename_parser(filename) == solution
 
 
-@pytest.mark.xfail(raises=ValueError, reason='Known non-compliant files in filesystem')
+@pytest.mark.xfail(raises=(FileNotFoundError, ValueError), 
+                   reason='Known non-compliant files in filesystem; User must manually supply config file.')
 def test_filename_parser_whole_filesystem():
     """Test the filename_parser on all files currently in the filesystem.
     """
