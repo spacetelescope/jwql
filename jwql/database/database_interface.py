@@ -136,7 +136,7 @@ def load_connection(connection_string):
 
 
 # Import a global session.  If running from readthedocs, pass a dummy connection string
-if 'build' and 'project' and 'jwql' in socket.gethostname():
+if 'build' and 'project' in socket.gethostname():
     dummy_connection_string = 'postgresql+psycopg2://account:password@hostname:0000/db_name'
     session, base, engine, meta = load_connection(dummy_connection_string)
 else:
