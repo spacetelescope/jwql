@@ -261,7 +261,7 @@ def get_monitor_columns(data_dict, table_name):
 
         if 'array' in data_type:
             dtype, _a, dimension = data_type.split('_')
-            dimension = dimension[0]
+            dimension = int(dimension[0])
             array = True
         else:
             dtype = data_type
@@ -323,7 +323,7 @@ def monitor_orm_factory(class_name):
     # Columns specific to all monitor ORMs
     data_dict['id'] = Column(Integer, primary_key=True, nullable=False)
     data_dict['entry_date'] = Column(DateTime, unique=True, nullable=False, default=datetime.now())
-    data_dict['__table_args__'] = (UniqueConstraint('id', 'entry_date', name='monitor_uc'),)
+    data_dict['__table_args__'] = (UniqueConstraint('id', 'entry_date', name='{}_uc'.format(data_dict['__tablename__'])),)
 
     # Get monitor-specific columns
     data_dict = get_monitor_columns(data_dict, data_dict['__tablename__'])
