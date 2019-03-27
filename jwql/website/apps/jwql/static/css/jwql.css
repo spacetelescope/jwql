@@ -104,6 +104,77 @@
     display: inline-block;
 }
 
+/*Stop the search box from glowing blue*/
+#homepage_filesearch #id_search {
+    width: 500px;
+    height: 100%;
+    padding: 0px;
+}
+
+/* START structures for engineering_database page
+*/
+
+#mnemonic_name_search {
+    width: 100%;
+    height: 100%;
+    padding: 0px;
+}
+
+.mnemonic_name_search_row {
+    display: flex;
+    width: 100%;
+}
+
+.mnemonic_name_search_col {
+  padding: 1em;
+  border: 1px solid #F2CE3A;
+  width: 100%;
+}
+
+.mnemonic_name_search_col1 {
+  padding: 1em;
+  border: 1px solid #F2CE3A;
+  width: 40%;
+}
+
+.mnemonic_query_section {
+    width: 100%;
+    height: 100%;
+    padding: 1em;
+    /*border:solid #000000;*/
+    border: 1px solid #F2CE3A;
+}
+
+.mnemonic_exploration_section {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    padding: 1em;
+    /*border:solid #000000;*/
+    border: 1px solid #F2CE3A;
+    line-height: 15px
+}
+
+.mnemonic_query_field {
+float:left;
+width:300px;
+list-style-type: none;
+display : inline;
+}
+
+/* END structures for engineering_database page */
+
+
+#homepage_filesearch #id_search:focus {
+    box-shadow: none;
+    border-color: #cfd4da;
+}
+
+/*Make the form fields be inline*/
+.homepage_form_fieldWrapper {
+    display: inline;
+}
+
 /*Don't let the search bar be super long*/
 .input-group {
     width: 250px;
@@ -186,6 +257,13 @@
     display: inline-block;
 }
 
+#loading {
+  text-align:center;
+  margin: 0 auto;
+  width: 200px;
+  z-index: 1000;
+}
+
 .monitor-name {
     background-color: #c85108;
     color: white;
@@ -197,7 +275,6 @@
 .navbar {
     background-color: black;
 }
-
 .navbar-brand {
     color: white;
     text-transform: uppercase;
@@ -213,6 +290,21 @@
 .nav-link, .nav-link.disabled {
     color: #bec4d4;
     text-transform: uppercase;
+}
+
+/* Get rid of padding around GitHub logo */
+#github-link {
+    padding-bottom: 0px;
+    padding-top: 0px;
+}
+
+/* Set username to be orange */
+#oauth_user {
+  color: #c85108;
+}
+
+#oauth_user:hover {
+  color: white;
 }
 
 .plot-container {
@@ -344,6 +436,14 @@
     font-size: 0.75rem;
 }
 
+/*Format the version identifier text in bottom corner*/
+#version-div {
+  float: right;
+  width: 120px;
+  text-align: right;
+  color: white;
+  font-size: 12px
+}
 
 body {
   padding-top: 8rem;
@@ -363,7 +463,6 @@ h1 {
     letter-spacing: 0.05em;
 }
 
-
 /* Change color of dropdown links on hover */
 li:hover .nav-link, .navbar-brand:hover {
     color: #fff;
@@ -373,3 +472,4 @@ li:hover .nav-link, .navbar-brand:hover {
 li.dropdown:hover .dropdown-menu {
     display: block;
 }
+
