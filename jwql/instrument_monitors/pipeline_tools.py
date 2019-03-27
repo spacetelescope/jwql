@@ -1,4 +1,4 @@
-"""Various utility functions for the ``jwql`` project.
+"""Various utility functions related to the JWST calibration pipeline
 
 Authors
 -------
@@ -52,6 +52,10 @@ PIPELINE_STEP_MAPPING = {'dq_init': DQInitStep, 'dark_current': DarkCurrentStep,
                          'rate': RampFitStep, 'refpix': RefPixStep, 'rscd': RSCD_Step,
                          'saturation': SaturationStep, 'superbias': SuperBiasStep}
 
+# Readout patterns that have nframes != a power of 2. These readout patterns
+# require the group_scale pipeline step to be run.
+GROUPSCALE_READOUT_PATTERNS = ['NRSIRS2']
+
 
 def completed_pipeline_steps(filename):
     """
@@ -89,13 +93,11 @@ def get_pipeline_steps(instrument):
 
     Parameters
     ----------
-
     instrument : str
         Name of JWST instrument
 
     Returns
     -------
-
     steps : collections.OrderedDict
         Dictionary of step names (and modules? do we care?)
     """
@@ -110,6 +112,8 @@ def get_pipeline_steps(instrument):
                  'linearity', 'rscd', 'dark_current', 'refpix', 'persistence', 'jump', 'rate']
         # No persistence correction for MIRI
         steps.remove('persistence')
+        # MIRI is limited to one frame per group
+        steps.remove('group_scale')
     else:
         steps = ['group_scale', 'dq_init', 'saturation', 'ipc', 'superbias', 'refpix', 'linearity',
                  'persistence', 'dark_current', 'jump', 'rate']
@@ -117,6 +121,10 @@ def get_pipeline_steps(instrument):
         # No persistence correction for NIRSpec
         if instrument == 'NIRSPEC':
             steps.remove('persistence')
+        else:
+            # NIRCam, NISISS, FGS all do not need group scale as nframes is
+            # always a multiple of 2
+            steps.remove('group_scale')
 
     # IPC correction currently not done for any instrument
     steps.remove('ipc')
@@ -149,9 +157,6 @@ def image_stack(file_list):
     """
     exptimes = []
     for i, input_file in enumerate(file_list):
-        #model = datamodels.open(input_file)
-        #image = model.data
-
         with fits.open(input_file) as hdu:
             image = hdu[1].data
             exptime = hdu[0].header['EFFINTTM']
@@ -193,7 +198,6 @@ def run_calwebb_detector1_steps(input_file, steps):
         whether a step should be run or not. Steps are run in the
         official calwebb_detector1 order.
     """
-    print('Beginning pipeline run')
     first_step_to_be_run = True
     for step_name in steps.keys():
         if steps[step_name]:
@@ -204,10 +208,6 @@ def run_calwebb_detector1_steps(input_file, steps):
                 model = PIPELINE_STEP_MAPPING[step_name].call(model)
             suffix = step_name
     output_filename = input_file.replace('.fits', '_{}.fits'.format(suffix))
-    print('in run_calwebb_detector1_steps, input and output filenames are:')
-    print(input_file)
-    print(output_filename)
-    print('STEPS RUN:', steps)
     if suffix != 'rate':
         model.save(output_filename)
     else:
