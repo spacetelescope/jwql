@@ -26,6 +26,8 @@ Authors
     - Matthew Bourque
     - Lauren Chambers
     - Bryan Hilbert
+    - Misty Cracraft
+    - Sara Ogaz
 
 Use
 ---
