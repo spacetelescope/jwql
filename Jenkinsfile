@@ -9,8 +9,7 @@ withCredentials([string(
 bc0 = new BuildConfig()
 bc0.nodetype = "linux-stable"
 bc0.name = "debug"
-bc0.build_cmds = ["conda env update --file=environment.yml",
-	       	  "with_env -n jwql python setup.py install"]
+bc0.build_cmds = ["conda env update --file=environment.yml", "pip install codecov pytest-cov", "with_env -n jwql python setup.py install"]
 bc0.test_cmds = ["with_env -n jwql pytest -s --junitxml=results.xml --cov=./ --cov-report xml", "codecov --token=${codecov_token}"]
 bc0.failedUnstableThresh = 1
 bc0.failedFailureThresh = 1
