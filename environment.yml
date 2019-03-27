@@ -28,4 +28,5 @@ dependencies:
 - stsci_rtd_theme=0.0.2
 - pip:
   - authlib==0.10
+  - codecov==2.0.15
   - sphinx-automodapi==0.10
