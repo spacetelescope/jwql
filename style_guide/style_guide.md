@@ -69,7 +69,7 @@ Additionally, developers of this project should be mindful of application securi
 
 `jwql`-Specific Logging Standards
 ---------------------------------------
-`jwql` logging shall adhere to conventions we plan to update shortly.  The following points will be further recommendations and also updated shortly. 
+`jwql` employs standards for logging monitoring scripts.  See the [`logging guide`](https://github.com/spacetelescope/jwql/tree/develop/logging_guide) for further details.
 
 
 Tools and Library Recommendations

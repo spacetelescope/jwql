@@ -57,6 +57,7 @@ Notes
 
 import argparse
 import glob
+import logging
 import os
 import sys
 from typing import List, Union, Tuple, Optional, Any, Dict
@@ -67,12 +68,16 @@ import numpy as np
 import scipy
 from sqlalchemy import Float, Integer, String
 
+from jwql.utils.logging_functions import configure_logging, log_info, log_fail
+
 
 # Global variables should be avoided, but if used should be named with
 # all-caps
 A_GLOBAL_VARIABLE = 'foo' # type: str
 
 
+@log_fail
+@log_info
 def my_main_function(path: str, filter: str) -> None:
     """The main function of the ``example`` module.
 
@@ -87,7 +92,8 @@ def my_main_function(path: str, filter: str) -> None:
         The filter to process (e.g. "F606W").
     """
 
-    print('Using {} as an input file'.format(path))
+    logging.info('Using {} as an input file'.format(path))
+
     an_int = 1 # type: int
     a_float = 3.14 # type: float
     a_bool = True # type: bool
@@ -98,7 +104,7 @@ def my_main_function(path: str, filter: str) -> None:
 
     result = some_other_function(an_int, a_float, a_bool, a_list, a_tuple, a_dict, an_obj) # type: Optional[int]
 
-    print(result)
+    logging.info(result)
 
 
 def parse_args() -> argparse.Namespace:
@@ -133,7 +139,7 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-def some_other_function(an_int: int, a_float: float, a_bool: bool, a_list: List[Any], 
+def some_other_function(an_int: int, a_float: float, a_bool: bool, a_list: List[Any],
                         a_tuple: Tuple[Any], a_dict: Dict[Any, Any], an_obj: object) -> int:
     """This function just does a bunch of nonsense.
 
@@ -167,13 +173,16 @@ def some_other_function(an_int: int, a_float: float, a_bool: bool, a_list: List[
         f.write('My favorite integer is {}'.format(an_int))
 
     # Operators should be separated by spaces
-    print(a_float + a_float)
-    
+    logging.info(a_float + a_float)
+
     return an_int
 
 
-
 if __name__ == '__main__':
+
+    # Configure logging
+    module = os.path.basename(__file__).strip('.py')
+    configure_logging(module)
 
     args = parse_args() # type: argparse.Namespace
 
