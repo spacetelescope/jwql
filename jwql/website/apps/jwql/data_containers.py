@@ -203,8 +203,7 @@ def get_edb_components(request):
                 end_time = Time(mnemonic_query_form['end_time'].value(), format='iso')
 
                 if mnemonic_identifier is not None:
-                    mnemonic_query_result = get_mnemonic(mnemonic_identifier, start_time,
-                                                                  end_time)
+                    mnemonic_query_result = get_mnemonic(mnemonic_identifier, start_time, end_time)
                     mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
 
             # create forms for search fields not clicked
