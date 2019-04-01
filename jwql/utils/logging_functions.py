@@ -186,7 +186,7 @@ def log_info(func):
                 begin = i + 1
             elif 'setup(' in line:
                 end = i - 2
-            required_modules = data[begin:end]
+        required_modules = data[begin:end]
 
         # Clean up the module list
         module_list = [item.strip().replace("'", "").replace(",", "").split("=")[0].split(">")[0].split("<")[0] for item in required_modules]
@@ -197,7 +197,7 @@ def log_info(func):
                 mod = importlib.import_module(module)
                 logging.info(module + ' Version: ' + mod.__version__)
                 logging.info(module + ' Path: ' + mod.__path__[0])
-            except ImportError as err:
+            except (ImportError, AttributeError) as err:
                 logging.warning(err)
 
         # Call the function and time it
