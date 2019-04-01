@@ -178,17 +178,18 @@ def log_info(func):
         logging.info('Python Executable Path: ' + sys.executable)
 
         # Read in setup.py file to build list of required modules
-        settings = get_config()
-        setup_file_name = settings['setup_file']
-        with open(setup_file_name) as setup:
-            for line in setup:
-                if line[0:8] == "REQUIRES":
-                    module_required = line[12:-2]
-                    module_list = module_required.split(',')
+        with open(get_config()['setup_file']) as f:
+            data = f.readlines()
+
+        for i, line in enumerate(data):
+            if 'REQUIRES = [' in line:
+                begin = i + 1
+            elif 'setup(' in line:
+                end = i - 2
+            required_modules = data[begin:end]
 
         # Clean up the module list
-        module_list = [module.replace('"', '').replace("'", '').replace(' ', '') for module in module_list]
-        module_list = [module.split('=')[0] for module in module_list]
+        module_list = [item.strip().replace("'","").replace(",","").split("=")[0].split(">")[0].split("<")[0] for item in required_modules]
 
         # Log common module version information
         for module in module_list:
