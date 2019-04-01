@@ -26,6 +26,8 @@ Authors
     - Matthew Bourque
     - Lauren Chambers
     - Bryan Hilbert
+    - Misty Cracraft
+    - Sara Ogaz
 
 Use
 ---
@@ -69,6 +71,7 @@ from sqlalchemy import DateTime
 from sqlalchemy import Enum
 from sqlalchemy import Float
 from sqlalchemy import Integer
+from sqlalchemy import Float
 from sqlalchemy import MetaData
 from sqlalchemy import String
 from sqlalchemy import Time
@@ -79,7 +82,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
 from sqlalchemy.types import ARRAY
 
-from jwql.utils import utils
+from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
+from jwql.utils.utils import get_config
 
 
 # Monkey patch Query with data_frame method
@@ -135,11 +139,11 @@ def load_connection(connection_string):
 
 
 # Import a global session.  If running from readthedocs, pass a dummy connection string
-if 'build' and 'project' and 'jwql' in socket.gethostname():
+if 'build' and 'project' in socket.gethostname():
     dummy_connection_string = 'postgresql+psycopg2://account:password@hostname:0000/db_name'
     session, base, engine, meta = load_connection(dummy_connection_string)
 else:
-    SETTINGS = utils.get_config()
+    SETTINGS = get_config()
     session, base, engine, meta = load_connection(SETTINGS['connection_string'])
 
 
@@ -198,6 +202,48 @@ class Anomaly(base):
 
         return a_list
 
+
+class FilesystemGeneral(base):
+    """ORM for the general (non instrument specific) filesystem monitor
+    table"""
+
+    # Name the table
+    __tablename__ = 'filesystem_general'
+
+    # Define the columns
+    id = Column(Integer, primary_key=True, nullable=False)
+    date = Column(DateTime, unique=True, nullable=False)
+    total_file_count = Column(Integer, nullable=False)
+    total_file_size = Column(Float, nullable=False)
+    fits_file_count = Column(Integer, nullable=False)
+    fits_file_size = Column(Float, nullable=False)
+    used = Column(Float, nullable=False)
+    available = Column(Float, nullable=False)
+
+
+class FilesystemInstrument(base):
+    """ORM for the instrument specific filesystem monitor table"""
+
+    # Name the table
+    __tablename__ = 'filesystem_instrument'
+    __table_args__ = (UniqueConstraint('date', 'instrument', 'filetype', name='filesystem_instrument_uc'),)
+
+    # Define the columns
+    id = Column(Integer, primary_key=True, nullable=False)
+    date = Column(DateTime, nullable=False)
+    instrument = Column(Enum(*JWST_INSTRUMENT_NAMES, name='instrument_enum'), nullable=False)
+    filetype = Column(Enum(*FILE_SUFFIX_TYPES, name='filetype_enum'), nullable=False)
+    count = Column(Integer, nullable=False)
+    size = Column(Float, nullable=False)
+
+    @property
+    def colnames(self):
+        """A list of all the column names in this table EXCEPT the date column"""
+        # Get the columns
+        a_list = [col for col, val in self.__dict__.items()
+                  if not isinstance(val, datetime)]
+
+        return a_list
 
 class Monitor(base):
     """ORM for the ``monitor`` table"""
