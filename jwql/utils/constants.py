@@ -81,6 +81,7 @@ MONITORS = {
                ('TSO RMS Monitor', '#')],
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Target Acquisition Monitor', '#'),
+                ('Data Trending', '/nirspec/nirspec_data_trending'),
                 ('Detector Health Monitor', '#'),
                 ('Ref Pix Monitor', '#'),
                 ('Internal Lamp Monitor', '#'),
