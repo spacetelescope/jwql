@@ -244,7 +244,9 @@ def status(production_mode=True):
 
     # If we are in development mode, the log files are in a slightly
     # different location than in production mode
-    if not production_mode:
+    if production_mode:
+        log_path = os.path.join(log_path, 'prod')
+    else:
         log_path = os.path.join(log_path, 'dev')
 
     # Set up a dictionary to keep track of results
@@ -321,6 +323,6 @@ def success_check(filename):
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    configure_logging(module, production_mode=True)
+    configure_logging(module)
 
     status()

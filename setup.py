@@ -7,22 +7,24 @@ VERSION = '0.18.0'
 AUTHORS = 'Matthew Bourque, Sara Ogaz, Joe Filippazzo, Bryan Hilbert, Misty Cracraft, '
 AUTHORS += 'Graham Kanarek, Johannes Sahlmann, Lauren Chambers, Catherine Martlin'
 
-REQUIRES = ['astropy',
-            'astroquery>=0.3.9',
-            'authlib',
-            'bokeh>=1.0',
-            'django>=2.0',
-            'jinja2',
-            'jwst',
-            'matplotlib',
-            'numpy',
-            'numpydoc',
-            'pandas',
-            'psycopg2',
-            'pytest',
-            'sphinx',
-            'sqlalchemy',
-            'stsci_rtd_theme']
+REQUIRES = [
+    'astropy',
+    'astroquery>=0.3.9',
+    'authlib',
+    'bokeh>=1.0',
+    'django>=2.0',
+    'jinja2',
+    'jwst',
+    'matplotlib',
+    'numpy',
+    'numpydoc',
+    'pandas',
+    'psycopg2',
+    'pytest',
+    'sphinx',
+    'sqlalchemy',
+    'stsci_rtd_theme'
+]
 
 setup(
     name='jwql',
