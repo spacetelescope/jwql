@@ -39,8 +39,8 @@ import glob
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 #point to the directory where your files are located!
-directory = '/home/daniel/STScI/trainigData/set_15_min/'
-paths = glob.glob(os.path.join(directory, '*.CSV'))
+directory = os.path.join(get_config()['outputs'], 'miri_data_trending', 'trainings_data_15min', '*.CSV')
+paths = glob.glob(directory)
 
 def process_file(conn, path):
     '''Parse CSV file, process data within and put to DB
