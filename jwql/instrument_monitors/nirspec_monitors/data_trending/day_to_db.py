@@ -13,11 +13,11 @@ from jwql.instrument_monitors.nirspec_monitors.data_trending.utils.process_data 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 #point to the directory where your files are located!
-directory = '/home/daniel/STScI/trainigData/nirspec_more/'
+directory = os.path.join(get_config()['outputs'], 'nirspec_data_trending', 'nirspec_more', '*.CSV')
 
 #here some some files contain the same data but they are all incomplete
 #in order to generate a full database we have to import all of them
-filenames = glob.glob(os.path.join(directory, '*.CSV'))
+filenames = glob.glob(directory)
 test = "FOFTLM2019073163845064.CSV"
 
 def process_file(conn, path):
