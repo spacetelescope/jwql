@@ -640,9 +640,11 @@ class Dark():
         # but not for comparing mean dark rates. Therefore, updates to
         # the baseline cane be minimal.
 
-        # Limit checks for hot/dead/noisy pixels to full frame data
-        print('check other instrument specs for full frame aperture names')
-        if 'FULL' in self.aperture:
+        # Limit checks for hot/dead/noisy pixels to full frame data since
+        # subarray data have much shorter exposure times and therefore lower
+        # signal-to-noise
+        aperture_type = Siaf(self.instrument)[self.aperture].AperType
+        if aperture_type == 'FULLSCA':
             baseline_file = self.get_baseline_filename()
             if baseline_file is None:
                 #logging.warning(('No baseline dark current countrate image for {} {}. Setting the '
@@ -948,5 +950,5 @@ class Dark():
 
 if __name__ == '__main__':
     module = os.path.basename(__file__).strip('.py')
-    #configure_logging(module, production_mode=True)
+    configure_logging(module, production_mode=True)
     monitor = Dark()
