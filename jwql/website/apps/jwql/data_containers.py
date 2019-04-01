@@ -27,13 +27,14 @@ import os
 import re
 import tempfile
 
-import numpy as np
 from astropy.io import fits
 from astropy.time import Time
 from astroquery.mast import Mast
+import numpy as np
 
 from jwql.edb.edb_interface import mnemonic_inventory
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
+from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.constants import MONITORS
 from jwql.utils.preview_image import PreviewImage
@@ -46,6 +47,22 @@ PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_image
 THUMBNAIL_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'thumbnails')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
+
+
+def data_trending():
+    """Container for Miri datatrending dashboard and components
+
+    Returns
+    -------
+    variables : int
+        nonsense
+    dashboard : list
+        A list containing the JavaScript and HTML content for the
+        dashboard
+    """
+    dashboard, variables = miri_dash.data_trending_dashboard()
+
+    return variables, dashboard
 
 
 def get_acknowledgements():
@@ -122,7 +139,8 @@ def get_dashboard_components():
                  'system_stats': 'System Statistics'}
 
     # Exclude monitors that can't be saved as components
-    exclude_list = ['monitor_cron_jobs']
+    exclude_list = ['monitor_cron_jobs', 'miri_data_trending',
+                    'trainings_data_15min', 'trainings_data_day']
 
     # Run the cron job monitor to produce an updated table
     monitor_cron_jobs.status(production_mode=True)

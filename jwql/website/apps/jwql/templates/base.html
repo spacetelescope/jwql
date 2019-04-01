@@ -66,8 +66,12 @@
 								<a class="dropdown-item" href={{ url('jwql:archive', args=[inst_key]) }}>Archived Images</a>
 								<div class="dropdown-divider"></div>
 								<a class='dropdown-heading mx-3'>Monitors</a>
-									{% for tool in inst_tools %}
-										<a class="dropdown-item" href="#">{{ tool }}</a>
+									{% for monitor_name, monitor_url in inst_tools %}
+										{% if monitor_url == '#' %}
+											<a class="dropdown-item" href="{{ monitor_url }}" style="color: #bec4d4;">{{ monitor_name }}</a>
+										{% else %}
+											<a class="dropdown-item" href="{{ monitor_url }}">{{ monitor_name }}</a>
+										{% endif %}
 									{% endfor %}
 							</div>
 						</li>
