@@ -189,7 +189,7 @@ def log_info(func):
             required_modules = data[begin:end]
 
         # Clean up the module list
-        module_list = [item.strip().replace("'","").replace(",","").split("=")[0].split(">")[0].split("<")[0] for item in required_modules]
+        module_list = [item.strip().replace("'", "").replace(",", "").split("=")[0].split(">")[0].split("<")[0] for item in required_modules]
 
         # Log common module version information
         for module in module_list:
