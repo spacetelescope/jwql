@@ -62,7 +62,7 @@ FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
 MONITORS = {
     'fgs': [('Bad Pixel Monitor', '#')],
     'miri': [('Dark Current Monitor', '#'),
-             ('Data Trending', '#'),
+             ('Data Trending', '/miri/miri_data_trending'),
              ('Bad Pixel Monitor', '#'),
              ('Cosmic Ray Monitor', '#'),
              ('Photometry Monitor', '#'),

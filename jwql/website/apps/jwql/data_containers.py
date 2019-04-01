@@ -34,6 +34,7 @@ import numpy as np
 
 from jwql.edb.edb_interface import mnemonic_inventory
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
+from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.constants import MONITORS
@@ -47,6 +48,22 @@ PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_image
 THUMBNAIL_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'thumbnails')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
+
+
+def data_trending():
+    """Container for Miri datatrending dashboard and components
+
+    Returns
+    -------
+    variables : int
+        nonsense
+    dashboard : list
+        A list containing the JavaScript and HTML content for the
+        dashboard
+    """
+    dashboard, variables = miri_dash.data_trending_dashboard()
+
+    return variables, dashboard
 
 
 def nirspec_trending():
