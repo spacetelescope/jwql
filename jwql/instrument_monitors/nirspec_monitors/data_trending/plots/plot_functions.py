@@ -70,7 +70,6 @@ def add_hover_tool(p, rend):
         ('Count', '@data_points'),
         ('Mean', '@average'),
         ('Deviation', '@deviation'),
-
     ], renderers = rend)
     #append hover tool
     p.tools.append(hover_tool)
