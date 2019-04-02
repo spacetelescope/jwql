@@ -51,6 +51,7 @@ from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
 from .forms import FileSearchForm
+from .oauth import auth_info
 from jwql.database import database_interface as di
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS
 from jwql.utils.utils import get_base_url, get_config
@@ -365,8 +366,8 @@ def view_header(request, inst, file):
 
     return render(request, template, context)
 
-
-def view_image(request, inst, file_root, rewrite=False):
+@auth_info
+def view_image(request, user, inst, file_root, rewrite=False):
     """Generate the image view page
 
     Parameters
@@ -392,11 +393,14 @@ def view_image(request, inst, file_root, rewrite=False):
     template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
 
+    print(user)
+
     # Fake insert a record
     data_dict = {}
     data_dict['filename'] = 'jw00327001001_06101_00001_guider1'
     data_dict['flag_date'] = datetime.datetime.now()
-    data_dict['fringing'] = True
+    data_dict['bowtie'] = False
+    data_dict['user'] = user['ezid']
     di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
 
     # Get most previously flagged anomalies
