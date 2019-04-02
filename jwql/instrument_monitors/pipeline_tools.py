@@ -215,7 +215,7 @@ def run_calwebb_detector1_steps(input_file, steps):
     return output_filename
 
 
-def steps_to_run(input_file, all_steps, finished_steps):
+def steps_to_run(all_steps, finished_steps):
     """Given a list of pipeline steps that need to be completed as
     well as a list of steps that have already been completed, return
     a list of steps remaining to be done.
@@ -243,7 +243,7 @@ def steps_to_run(input_file, all_steps, finished_steps):
         elif ((all_steps[key] is True) & (finished_steps[key] is False)):
             torun[key] = True
         elif ((all_steps[key] is False) & (finished_steps[key] is True)):
-            print(("WARNING: Input file {} has had {} step run, "
+            print(("WARNING: {} step has been run "
                    "but the requirements say that it should not "
-                   "be. Need a new input file.".format(input_file, key)))
+                   "be. Need a new input file.".format(key)))
     return torun

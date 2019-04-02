@@ -572,7 +572,7 @@ class Dark():
         slope_files = []
         for filename in file_list:
             completed_steps = pipeline_tools.completed_pipeline_steps(filename)
-            steps_to_run = pipeline_tools.steps_to_run(filename, required_steps, completed_steps)
+            steps_to_run = pipeline_tools.steps_to_run(required_steps, completed_steps)
 
             #logging.info('Working on file: {}'.format(filename))
             #logging.info('Required pipeline steps: {}'.format(required_steps))

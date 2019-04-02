@@ -96,3 +96,7 @@ NIRCAM_LONGWAVE_DETECTORS = ['NRCA5', 'NRCB5']
 AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 0), (512, 2048)], '2': [(512, 0), (1024, 2048)],
                                    '3': [(1024, 0), (1536, 2048)], '4': [(1536, 0), (2048, 2048)]}
                         }
+
+FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
+
+SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']

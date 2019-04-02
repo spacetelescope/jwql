@@ -29,4 +29,5 @@ dependencies:
 - pip:
   - authlib==0.10
   - codecov==2.0.15
+  - pysiaf==0.2.5
   - sphinx-automodapi==0.10

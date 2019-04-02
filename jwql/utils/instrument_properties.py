@@ -8,14 +8,21 @@ Authors
 
 Uses
 ----
-stuff
+
+    This module can be imported and used as such:
+
+    ::
+
+        from jwql.utils import instrument_properties as inst
+        amps = inst.amplifier_info('my_files.fits')
 """
+from copy import deepcopy
+
 from astropy.io import fits
 import numpy as np
-
 from jwst.datamodels import dqflags
 
-from jwql.utils.constants import AMPLIFIER_BOUNDARIES
+from jwql.utils.constants import AMPLIFIER_BOUNDARIES, FOUR_AMP_SUBARRAYS, SUBARRAYS_ONE_OR_FOUR_AMPS
 
 
 def amplifier_info(filename, omit_reference_pixels=True):
@@ -23,6 +30,26 @@ def amplifier_info(filename, omit_reference_pixels=True):
     given file using the array size and exposure time of a single frame
     (This is needed because there is no header keyword specifying
     how many amps were used.)
+
+    Parameters
+    ----------
+    filename : str
+        Name of fits file to investigate
+
+    omit_reference_pixels : bool
+        If true, return the amp boundary coordinates excluding reference
+        pixels
+
+    Returns
+    -------
+    num_amps : int
+        Number of amplifiers used to read out the data
+
+    amp_bounds : dict
+        Dictionary of amplifier boundary coordinates. Keys are strings of
+        the amp number (1-4). Each value is a list composed of two tuples.
+        The first tuple give the (x, y) starting location, and the second
+        tuple gives the (x, y) ending location.
     """
     # First get necessary metadata
     header = fits.getheader(filename)
@@ -32,20 +59,17 @@ def amplifier_info(filename, omit_reference_pixels=True):
     y0 = header['SUBSTRT2']
     x_dim = header['SUBSIZE1']
     y_dim = header['SUBSIZE2']
-    sample_time = header['TSAMPLE']
+    sample_time = header['TSAMPLE'] * 1.e-6
     frame_time = header['TFRAME']
     subarray_name = header['SUBARRAY']
     aperture = "{}_{}".format(detector, subarray_name)
 
-    # Special cases: subarrays taken using all 4 amps
-    four_amp_subarrays = ['WFSS128R', 'WFSS64R']
-
     # Full frame data will be 2048x2048 for all instruments
-    if ((x_dim == 2048) and (y_dim == 2048)) or subarray_name in four_amp_subarrays:
+    if ((x_dim == 2048) and (y_dim == 2048)) or subarray_name in FOUR_AMP_SUBARRAYS:
         num_amps = 4
-        amp_bounds = AMPLIFIER_BOUNDARIES[instrument]
+        amp_bounds = deepcopy(AMPLIFIER_BOUNDARIES[instrument])
     else:
-        if subarray_name not in ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']:
+        if subarray_name not in SUBARRAYS_ONE_OR_FOUR_AMPS:
             num_amps = 1
             amp_bounds = {'1': [(0, 0), (x_dim, y_dim)]}
         else:
@@ -63,16 +87,17 @@ def amplifier_info(filename, omit_reference_pixels=True):
                                         4, sample_time=sample_time)
             amp1_time = calc_frame_time(instrument, aperture, x_dim, y_dim,
                                         1, sample_time=sample_time)
-            if amp4_time == frame_time:
+
+            if np.isclose(amp4_time, frame_time, atol=0.001, rtol=0):
                 num_amps = 4
                 # In this case, keep the full frame amp boundaries in
                 # the x direction, and set  the boundaries in the y
                 # direction equal to the hight of the subarray
-                amp_bounds = AMPLIFIER_BOUNDARIES[instrument]
+                amp_bounds = deepcopy(AMPLIFIER_BOUNDARIES[instrument])
                 for amp_num in ['1', '2', '3', '4']:
-                    amp_bounds[amp_num][0][1] = y_dim
-                    amp_bounds[amp_num][1][1] = y_dim
-            elif amp1_time == frame_time:
+                    newdims = (amp_bounds[amp_num][1][0], y_dim)
+                    amp_bounds[amp_num][1] = newdims
+            elif np.isclose(amp1_time, frame_time, atol=0.001, rtol=0):
                 num_amps = 1
                 amp_bounds = {'1': [(0, 0), (x_dim, y_dim)]}
             else:
@@ -84,25 +109,23 @@ def amplifier_info(filename, omit_reference_pixels=True):
         # If requested, ignore reference pixels by adjusting the indexes of
         # the amp boundaries.
         with fits.open(filename) as hdu:
-            data_quality = hdu['DQ'].data
+            data_quality = hdu['PIXELDQ'].data
 
         # Reference pixels should be flagged in the DQ array with the
         # REFERENCE_PIXEL flag. Find the science pixels by looping for
         # pixels that don't have that bit set.
         scipix = np.where(data_quality & dqflags.pixel['REFERENCE_PIXEL'] == 0)
-        xmin = np.min(scipix[0])
-        ymin = np.min(scipix[1])
-        xmax = np.max(scipix[0]) + 1
-        ymax = np.max(scipix[1]) + 1
+        ymin = np.min(scipix[0])
+        xmin = np.min(scipix[1])
+        ymax = np.max(scipix[0]) + 1
+        xmax = np.max(scipix[1]) + 1
 
         # Adjust the minimum and maximum x and y values if they are within
         # the reference pixels
-        print('BEFORE: ', amp_bounds)
         for key in amp_bounds:
             bounds = amp_bounds[key]
             prev_xmin, prev_ymin = bounds[0]
             prev_xmax, prev_ymax = bounds[1]
-            print(prev_xmin, xmin)
             if prev_xmin < xmin:
                 new_xmin = xmin
             else:
@@ -120,8 +143,6 @@ def amplifier_info(filename, omit_reference_pixels=True):
             else:
                 new_ymax = prev_ymax
             amp_bounds[key] = [(new_xmin, new_ymin), (new_xmax, new_ymax)]
-
-        print("AFTER: ", amp_bounds)
     return num_amps, amp_bounds
 
 
