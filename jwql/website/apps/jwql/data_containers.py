@@ -21,17 +21,26 @@ Use
         from .data_containers import get_proposal_info
 """
 
+import copy
 import glob
 import os
+import re
+import tempfile
 
 from astropy.io import fits
+from astropy.time import Time
 from astroquery.mast import Mast
 import numpy as np
 
+from jwql.edb.edb_interface import mnemonic_inventory
+from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
+from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
+from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.constants import MONITORS
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser
+from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -39,6 +48,38 @@ PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_image
 THUMBNAIL_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'thumbnails')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
+
+
+def data_trending():
+    """Container for Miri datatrending dashboard and components
+
+    Returns
+    -------
+    variables : int
+        nonsense
+    dashboard : list
+        A list containing the JavaScript and HTML content for the
+        dashboard
+    """
+    dashboard, variables = miri_dash.data_trending_dashboard()
+
+    return variables, dashboard
+
+
+def nirspec_trending():
+    """Container for Miri datatrending dashboard and components
+
+    Returns
+    -------
+    variables : int
+        nonsense
+    dashboard : list
+        A list containing the JavaScript and HTML content for the
+        dashboard
+    """
+    dashboard, variables = nirspec_dash.data_trending_dashboard()
+
+    return variables, dashboard
 
 
 def get_acknowledgements():
@@ -99,7 +140,7 @@ def get_dashboard_components():
     -------
     dashboard_components : dict
         A dictionary containing components needed for the dashboard.
-    dashboard_components : dict
+    dashboard_html : dict
         A dictionary containing full HTML needed for the dashboard.
     """
 
@@ -115,7 +156,8 @@ def get_dashboard_components():
                  'system_stats': 'System Statistics'}
 
     # Exclude monitors that can't be saved as components
-    exclude_list = ['monitor_cron_jobs']
+    exclude_list = ['monitor_cron_jobs', 'miri_data_trending',
+                    'trainings_data_15min', 'trainings_data_day']
 
     # Run the cron job monitor to produce an updated table
     monitor_cron_jobs.status(production_mode=True)
@@ -149,6 +191,113 @@ def get_dashboard_components():
     dashboard_html['Cron Job Monitor'] = cron_status_table_html
 
     return dashboard_components, dashboard_html
+
+
+def get_edb_components(request):
+    """Return dictionary with content needed for the EDB page.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    edb_components : dict
+        Dictionary with the required components
+
+    """
+    mnemonic_name_search_result = {}
+    mnemonic_query_result = {}
+    mnemonic_query_result_plot = None
+    mnemonic_exploration_result = None
+
+    # If this is a POST request, we need to process the form data
+    if request.method == 'POST':
+
+        if 'mnemonic_name_search' in request.POST.keys():
+            mnemonic_name_search_form = MnemonicSearchForm(request.POST,
+                                                           prefix='mnemonic_name_search')
+
+            if mnemonic_name_search_form.is_valid():
+                mnemonic_identifier = mnemonic_name_search_form['search'].value()
+                if mnemonic_identifier is not None:
+                    mnemonic_name_search_result = get_mnemonic_info(mnemonic_identifier)
+
+            # create forms for search fields not clicked
+            mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
+            mnemonic_exploration_form = MnemonicExplorationForm(prefix='mnemonic_exploration')
+
+        elif 'mnemonic_query' in request.POST.keys():
+            mnemonic_query_form = MnemonicQueryForm(request.POST, prefix='mnemonic_query')
+
+            # proceed only if entries make sense
+            if mnemonic_query_form.is_valid():
+                mnemonic_identifier = mnemonic_query_form['search'].value()
+                start_time = Time(mnemonic_query_form['start_time'].value(), format='iso')
+                end_time = Time(mnemonic_query_form['end_time'].value(), format='iso')
+
+                if mnemonic_identifier is not None:
+                    mnemonic_query_result = get_mnemonic(mnemonic_identifier, start_time,
+                                                                  end_time)
+                    mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
+
+            # create forms for search fields not clicked
+            mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
+            mnemonic_exploration_form = MnemonicExplorationForm(prefix='mnemonic_exploration')
+
+        elif 'mnemonic_exploration' in request.POST.keys():
+            mnemonic_exploration_form = MnemonicExplorationForm(request.POST,
+                                                                prefix='mnemonic_exploration')
+            if mnemonic_exploration_form.is_valid():
+                mnemonic_exploration_result, meta = mnemonic_inventory()
+
+                # loop over filled fields and implement simple AND logic
+                for field in mnemonic_exploration_form.fields:
+                    field_value = mnemonic_exploration_form[field].value()
+                    if field_value != '':
+                        column_name = mnemonic_exploration_form[field].label
+
+                        # indices in table for which a match is found (case-insensitive)
+                        index = [i for i, item in enumerate(mnemonic_exploration_result[column_name]) if
+                                 re.search(field_value, item, re.IGNORECASE)]
+                        mnemonic_exploration_result = mnemonic_exploration_result[index]
+
+                mnemonic_exploration_result.n_rows = len(mnemonic_exploration_result)
+
+                display_table = copy.deepcopy(mnemonic_exploration_result)
+                # temporary html file, see http://docs.astropy.org/en/stable/_modules/astropy/table/
+                # table.html#Table.show_in_browser
+                tmpdir = tempfile.mkdtemp()
+                path = os.path.join(tmpdir, 'mnemonic_exploration_result_table.html')
+                with open(path, 'w') as tmp:
+                    display_table.write(tmp, format='jsviewer')
+                mnemonic_exploration_result.html_file = path
+                mnemonic_exploration_result.html_file_content = open(path, 'r').read()
+                # pass on meta data to have access to total number of mnemonics
+                mnemonic_exploration_result.meta = meta
+
+                if mnemonic_exploration_result.n_rows == 0:
+                    mnemonic_exploration_result = 'empty'
+
+            # create forms for search fields not clicked
+            mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
+            mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
+
+    else:
+        mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
+        mnemonic_query_form = MnemonicQueryForm(prefix='mnemonic_query')
+        mnemonic_exploration_form = MnemonicExplorationForm(prefix='mnemonic_exploration')
+
+    edb_components = {'mnemonic_query_form': mnemonic_query_form,
+                      'mnemonic_query_result': mnemonic_query_result,
+                      'mnemonic_query_result_plot': mnemonic_query_result_plot,
+                      'mnemonic_name_search_form': mnemonic_name_search_form,
+                      'mnemonic_name_search_result': mnemonic_name_search_result,
+                      'mnemonic_exploration_form': mnemonic_exploration_form,
+                      'mnemonic_exploration_result': mnemonic_exploration_result}
+
+    return edb_components
 
 
 def get_expstart(rootname):
@@ -355,13 +504,11 @@ def get_instrument_proposals(instrument):
     """
 
     service = "Mast.Jwst.Filtered.{}".format(instrument)
-    params = {"columns": "filename",
+    params = {"columns": "program",
               "filters": []}
     response = Mast.service_request_async(service, params)
     results = response[0].json()['data']
-
-    filenames = [result['filename'] for result in results]
-    proposals = list(set(filename_parser(filename)['program_id'] for filename in filenames))
+    proposals = list(set(result['program'] for result in results))
 
     return proposals
 
@@ -395,17 +542,11 @@ def get_preview_images_by_instrument(inst):
     # Parse the results to get the rootnames
     filenames = [result['filename'].split('.')[0] for result in results]
 
-    # Build list of available preview images
-    preview_images = []
-    for filename in filenames:
-        proposal = filename_parser(filename)['program_id']
-        preview_images.extend(glob.glob(os.path.join(
-            PREVIEW_IMAGE_FILESYSTEM,
-            'jw{}'.format(proposal),
-            '{}*.jpg'.format(filename))))
+    # Get list of all preview_images
+    preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, '*', '*.jpg'))
 
-    # Only return the filenames
-    preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
+    # Get subset of preview images that match the filenames
+    preview_images = [item for item in preview_images if os.path.basename(item).split('_integ')[0] in filenames]
 
     return preview_images
 
@@ -532,17 +673,11 @@ def get_thumbnails_by_instrument(inst):
     # Parse the results to get the rootnames
     filenames = [result['filename'].split('.')[0] for result in results]
 
-    # Build list of available preview images
-    thumbnails = []
-    for filename in filenames:
-        proposal = filename_parser(filename)['program_id']
-        thumbnails.extend(glob.glob(os.path.join(
-            THUMBNAIL_FILESYSTEM,
-            'jw{}'.format(proposal),
-            '{}*.thumb'.format(filename))))
+    # Get list of all thumbnails
+    thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
 
-    # Only return the filenames
-    thumbnails = [os.path.basename(thumbnail) for thumbnail in thumbnails]
+    # Get subset of preview images that match the filenames
+    thumbnails = [item for item in thumbnails if os.path.basename(item).split('_integ')[0] in filenames]
 
     return thumbnails
 
