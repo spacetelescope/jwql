@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. image:: https://i.imgur.com/MwnjFVM.png
+.. image:: ../../logos/jwql_logo_full_transparent.png
    :align: center
 
 Welcome to the ``jwql`` API documentation!
@@ -24,6 +24,7 @@ API documentation
    :caption: Contents:
 
    database.rst
+   edb.rst
    jwql_monitors.rst
    tests.rst
    utils.rst

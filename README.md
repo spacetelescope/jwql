@@ -1,9 +1,10 @@
 <p align="center">
-  <img src="https://i.imgur.com/MwnjFVM.png" width="400"/>
+  <img src="logos/jwql_logo_full_transparent.png" width="400"/>
 </p>
 
 # The JWST Quicklook Application (`JWQL`)
 
+[![Current Release](https://img.shields.io/github/release/spacetelescope/jwql.svg)](https://github.com/spacetelescope/jwql/releases/latest/)
 [![PyPI - License](https://img.shields.io/pypi/l/Django.svg)](https://github.com/spacetelescope/jwql/blob/master/LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.6-blue.svg)](https://www.python.org/)
 [![Build Status](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/badge/icon)](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/)
@@ -21,7 +22,15 @@ Official API documentation can be found on [ReadTheDocs](https://jwql.readthedoc
 
 The `jwql` application is currently under heavy development.  The `1.0` release is expected in 2019.  Currently, a development version of the web application can be found at [https://dljwql.stsci.edu](https://dljwql.stsci.edu).
 
-## Prerequisites
+## Installation
+
+Getting `jwql` up and running on your own computer requires four steps, detailed below:
+1. Cloning the GitHub repository
+1. Installing the `conda`environment
+1. Installing the python package
+1. Setting up the configuration file
+
+### Prerequisites
 
 It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.6.  Downloads and installation instructions are  available here:
 
@@ -30,27 +39,25 @@ It is highly suggested that contributors have a working installation of `anacond
 
 Requirements for contributing to the `jwql` package will be included in the `jwql` `conda` environment, which is included in our installation instructions below. Further package requirements will be provided for `jwql` by a `setup.py` script included in the repository.
 
-## Package Installation
+### Clone the `jwql` repo
 
-You first need to install the current version of `jwql`. The simplest way to do this is to go to the directory you want your copy of the repository to be in and clone the repoistory there. Once you are in the directory you can do the following:
+You first need to clone the current version of `jwql`. The simplest way to do this is to go to the directory you want your copy of the repository to be in and clone the repository there. Once you are in the directory you can do the following:
 
 ```
 git clone https://github.com/spacetelescope/jwql.git
 cd jwql
-python setup.py develop
 ```
 
 or, if you would rather use `SSH` instead of `https`, type
 ```
 git clone git@github.com:spacetelescope/jwql.git
 cd jwql
-python setup.py develop
 ```
 instead, and then proceed as stated.
 
-## Environment Installation
+### Environment Installation
 
-Following the download of the `jwql` package, contributors can then install the `jwql` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project.  First, one should ensure that their version of `conda` is up to date:
+Following the download of the `jwql` repository, contributors can then install the `jwql` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project.  First, one should ensure that their version of `conda` is up to date:
 
 ```
 conda update conda
@@ -68,6 +75,19 @@ Lastly, one can create the `jwql` environment via the `environment.yml` file:
 conda env create -f environment.yml
 ```
 
+### Package Installation
+
+Next, you need to install the `jwql` package. While still in the `jwql/` directory, run the following command to set up the package:
+
+```
+python setup.py develop
+```
+The package should now appear if you run `conda list jwql`.
+
+### Configuration File
+
+Much of the `jwql` software depends on the existence of a `config.json` file within the `utils` directory.  This file contains data that may be unique to users and/or contain sensitive information.  Please see the [Config File wiki page](https://github.com/spacetelescope/jwql/wiki/Config-file) for instructions on how to provide this file.
+
 
 ## Software Contributions
 
@@ -83,7 +103,7 @@ The following is a bare-bones example of a best work flow for contributing to th
 4. Create a branch on that personal fork.
 5. Make your software changes.
 6. Push that branch to your personal GitHub repository (i.e. `origin`).
-7. On the `spacetelescope` `jwql` repository, create a pull request that merges the branch into `spacetelescope:master`.
+7. On the `spacetelescope` `jwql` repository, create a pull request that merges the branch into `spacetelescope:develop`.
 8. Assign a reviewer from the team for the pull request.
 9. Iterate with the reviewer over any needed changes until the reviewer accepts and merges your branch.
 10. Delete your local copy of your branch.
@@ -145,6 +165,7 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Joe Hunkeler (DMD) [@jhunkeler](https://github.com/jhunkeler)
 - Catherine Kaleida (DMD) [@ckaleida](https://github.com/ckaleida)
 - Jenn Kotler (DMD) [@jenneh](https://github.com/jenneh)
+- Daniel Kühbacher (Goddard) [@DanielKuebi](https://github.com/DanielKuebi)
 - Mark Kyprianou (DMD) [@mkyp](https://github.com/mkyp)
 - Karen Levay (DMD)
 - Crystal Mannfolk (SCOPE) [@cmannfolk](https://github.com/cmannfolk)
@@ -154,6 +175,7 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Prem Mishra (ITSD)
 - Don Mueller (ITSD)
 - Maria Antonia Nieto-Santisteban (SEITO)
+- Brian O'Sullivan (INS)
 - Joe Pollizzi (JWSTMO)
 - Lee Quick (DMD)
 - Anupinder Rai (ITSD)
