@@ -48,12 +48,74 @@ from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
+from .data_containers import data_trending
+from .data_containers import nirspec_trending
 from .forms import FileSearchForm
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS
 from jwql.utils.utils import get_base_url, get_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
+
+def miri_data_trending(request):
+    """Generate the ``MIRI DATA-TRENDING`` page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    template = "miri_data_trending.html"
+    variables, dash = data_trending()
+
+    context = {
+        'dashboard' : dash,
+        'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
+        'inst_list': JWST_INSTRUMENT_NAMES_MIXEDCASE,  # Do not edit; Required for navigation bar
+        'tools': MONITORS,  # Do not edit; Required for navigation bar
+        'user': None  # Do not edit; Required for authentication
+    }
+    #append variables to context
+    context.update(variables)
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
+
+def nirspec_data_trending(request):
+    """Generate the ``MIRI DATA-TRENDING`` page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    template = "nirspec_data_trending.html"
+    variables, dash = nirspec_trending()
+
+    context = {
+        'dashboard' : dash,
+        'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
+        'inst_list': JWST_INSTRUMENT_NAMES_MIXEDCASE,  # Do not edit; Required for navigation bar
+        'tools': MONITORS,  # Do not edit; Required for navigation bar
+        'user': None  # Do not edit; Required for authentication
+    }
+    #append variables to context
+    context.update(variables)
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
 
 def about(request):
     """Generate the ``about`` page

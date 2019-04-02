@@ -7,7 +7,7 @@ dependencies:
 - astropy
 - astroquery=0.3.9
 - bokeh=1.0.4
-- django=2.1.5
+- django=2.1.7
 - ipython=7.3.0
 - jinja2=2.10
 - jwst
@@ -28,4 +28,5 @@ dependencies:
 - stsci_rtd_theme=0.0.2
 - pip:
   - authlib==0.10
+  - codecov==2.0.15
   - sphinx-automodapi==0.10

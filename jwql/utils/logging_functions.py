@@ -1,4 +1,3 @@
-
 """ Logging functions for the ``jwql`` automation platform.
 
 This module provides decorators to log the execution of modules.  Log
@@ -10,8 +9,9 @@ storage area, named by module name and timestamp, e.g.
 Authors
 -------
 
-    - Catherine Martlin 2018, 2019
+    - Catherine Martlin 2018
     - Alex Viana, 2013 (WFC3 QL Version)
+    - Matthew Bourque
 
 Use
 ---
@@ -42,8 +42,8 @@ Dependencies
 ------------
 
     The user must have a configuration file named ``config.json``
-    placed in the ``utils`` directory.
-
+    placed in the ``utils`` directory and it must contain keys for
+    ``log_dir`` and ``admin_account``.
 
 References
 ----------
@@ -68,11 +68,8 @@ from functools import wraps
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_config, ensure_dir_exists
 
-LOG_FILE_LOC = ''
-PRODUCTION_BOOL = ''
 
-
-def configure_logging(module, production_mode=True, path='./'):
+def configure_logging(module):
     """Configure the log file with a standard logging format.
 
     Parameters
@@ -87,24 +84,18 @@ def configure_logging(module, production_mode=True, path='./'):
     """
 
     # Determine log file location
-    if production_mode:
-        log_file = make_log_file(module)
-    else:
-        log_file = make_log_file(module, production_mode=False, path=path)
-    global LOG_FILE_LOC
-    global PRODUCTION_BOOL
-    LOG_FILE_LOC = log_file
-    PRODUCTION_BOOL = production_mode
+    log_file = make_log_file(module)
 
     # Create the log file and set the permissions
     logging.basicConfig(filename=log_file,
                         format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%m/%d/%Y %H:%M:%S %p',
                         level=logging.INFO)
+    print('Log file initialized to {}'.format(log_file))
     set_permissions(log_file)
 
 
-def make_log_file(module, production_mode=True, path='./'):
+def make_log_file(module):
     """Create the log file name based on the module name.
 
     The name of the ``log_file`` is a combination of the name of the
@@ -127,22 +118,32 @@ def make_log_file(module, production_mode=True, path='./'):
         The full path to where the log file will be written to.
     """
 
+    # Build filename
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M')
     filename = '{0}_{1}.log'.format(module, timestamp)
+
+    # Determine save location
     user = pwd.getpwuid(os.getuid()).pw_name
+    admin_account = get_config()['admin_account']
+    log_path = get_config()['log_dir']
 
-    settings = get_config()
-    admin_account = settings['admin_account']
-    log_path = settings['log_dir']
+    # For production
+    if user == admin_account and socket.gethosename()[0] == 'p':
+        log_file = os.path.join(log_path, 'prod', module, filename)
 
-    if user != admin_account or not production_mode:
-        module = os.path.join('dev', module)
+    # For test
+    elif user == admin_account and socket.gethostname()[0] == 't':
+        log_file = os.path.join(log_path, 'test', module, filename)
 
-    if production_mode:
-        log_file = os.path.join(log_path, module, filename)
+    # For dev
+    elif user == admin_account and socket.gethostname()[0] == 'd':
+        log_file = os.path.join(log_path, 'dev', module, filename)
+
+    # For local (also write to dev)
     else:
-        log_file = os.path.join(path, filename)
+        log_file = os.path.join(log_path, 'dev', module, filename)
 
+    # Make sure parent directory exists
     ensure_dir_exists(os.path.dirname(log_file))
 
     return log_file
@@ -176,17 +177,18 @@ def log_info(func):
         logging.info('Python Executable Path: ' + sys.executable)
 
         # Read in setup.py file to build list of required modules
-        settings = get_config()
-        setup_file_name = settings['setup_file']
-        with open(setup_file_name) as setup:
-            for line in setup:
-                if line[0:8] == "REQUIRES":
-                    module_required = line[12:-2]
-                    module_list = module_required.split(',')
+        with open(get_config()['setup_file']) as f:
+            data = f.readlines()
+
+        for i, line in enumerate(data):
+            if 'REQUIRES = [' in line:
+                begin = i + 1
+            elif 'setup(' in line:
+                end = i - 2
+        required_modules = data[begin:end]
 
         # Clean up the module list
-        module_list = [module.replace('"', '').replace("'", '').replace(' ', '') for module in module_list]
-        module_list = [module.split('=')[0] for module in module_list]
+        module_list = [item.strip().replace("'", "").replace(",", "").split("=")[0].split(">")[0].split("<")[0] for item in required_modules]
 
         # Log common module version information
         for module in module_list:
@@ -194,7 +196,7 @@ def log_info(func):
                 mod = importlib.import_module(module)
                 logging.info(module + ' Version: ' + mod.__version__)
                 logging.info(module + ' Path: ' + mod.__path__[0])
-            except ImportError as err:
+            except (ImportError, AttributeError) as err:
                 logging.warning(err)
 
         # Call the function and time it
