@@ -24,6 +24,10 @@ Authors
     - Joe Filippazzo
     - Johannes Sahlmann
     - Matthew Bourque
+    - Lauren Chambers
+    - Bryan Hilbert
+    - Misty Cracraft
+    - Sara Ogaz
 
 Use
 ---
@@ -54,21 +58,31 @@ Dependencies
 """
 
 from datetime import datetime
+import os
 import socket
 
 import pandas as pd
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import create_engine
+from sqlalchemy import Date
 from sqlalchemy import DateTime
+from sqlalchemy import Enum
+from sqlalchemy import Float
 from sqlalchemy import Integer
+from sqlalchemy import Float
 from sqlalchemy import MetaData
 from sqlalchemy import String
+from sqlalchemy import Time
+from sqlalchemy import UniqueConstraint
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
+from sqlalchemy.types import ARRAY
 
-from jwql.utils import utils
+from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
+from jwql.utils.utils import get_config
 
 
 # Monkey patch Query with data_frame method
@@ -124,11 +138,11 @@ def load_connection(connection_string):
 
 
 # Import a global session.  If running from readthedocs, pass a dummy connection string
-if 'build' and 'project' and 'jwql' in socket.gethostname():
+if 'build' and 'project' in socket.gethostname():
     dummy_connection_string = 'postgresql+psycopg2://account:password@hostname:0000/db_name'
     session, base, engine, meta = load_connection(dummy_connection_string)
 else:
-    SETTINGS = utils.get_config()
+    SETTINGS = get_config()
     session, base, engine, meta = load_connection(SETTINGS['connection_string'])
 
 
@@ -186,6 +200,174 @@ class Anomaly(base):
                   if isinstance(val, bool)]
 
         return a_list
+
+
+class FilesystemGeneral(base):
+    """ORM for the general (non instrument specific) filesystem monitor
+    table"""
+
+    # Name the table
+    __tablename__ = 'filesystem_general'
+
+    # Define the columns
+    id = Column(Integer, primary_key=True, nullable=False)
+    date = Column(DateTime, unique=True, nullable=False)
+    total_file_count = Column(Integer, nullable=False)
+    total_file_size = Column(Float, nullable=False)
+    fits_file_count = Column(Integer, nullable=False)
+    fits_file_size = Column(Float, nullable=False)
+    used = Column(Float, nullable=False)
+    available = Column(Float, nullable=False)
+
+
+class FilesystemInstrument(base):
+    """ORM for the instrument specific filesystem monitor table"""
+
+    # Name the table
+    __tablename__ = 'filesystem_instrument'
+    __table_args__ = (UniqueConstraint('date', 'instrument', 'filetype', name='filesystem_instrument_uc'),)
+
+    # Define the columns
+    id = Column(Integer, primary_key=True, nullable=False)
+    date = Column(DateTime, nullable=False)
+    instrument = Column(Enum(*JWST_INSTRUMENT_NAMES, name='instrument_enum'), nullable=False)
+    filetype = Column(Enum(*FILE_SUFFIX_TYPES, name='filetype_enum'), nullable=False)
+    count = Column(Integer, nullable=False)
+    size = Column(Float, nullable=False)
+
+    @property
+    def colnames(self):
+        """A list of all the column names in this table EXCEPT the date column"""
+        # Get the columns
+        a_list = [col for col, val in self.__dict__.items()
+                  if not isinstance(val, datetime)]
+
+        return a_list
+
+class Monitor(base):
+    """ORM for the ``monitor`` table"""
+
+    # Name the table
+    __tablename__ = 'monitor'
+
+    id = Column(Integer, primary_key=True)
+    monitor_name = Column(String(), nullable=False)
+    start_time = Column(DateTime, nullable=False)
+    end_time = Column(DateTime, nullable=True)
+    status = Column(Enum('SUCESS', 'FAILURE', name='monitor_status'), nullable=True)
+    affected_tables = Column(postgresql.ARRAY(String, dimensions=1), nullable=True)
+    log_file = Column(String(), nullable=False)
+
+
+def get_monitor_columns(data_dict, table_name):
+    """Read in the corresponding table definition text file to
+    generate ``SQLAlchemy`` columns for the table.
+
+    Parameters
+    ----------
+    data_dict : dict
+        A dictionary whose keys are column names and whose values
+        are column definitions.
+    table_name : str
+        The name of the database table
+
+    Returns
+    -------
+    data_dict : dict
+        An updated ``data_dict`` with the approriate columns for
+        the monitor added.
+    """
+
+    # Define column types
+    data_type_dict = {'integer': Integer(),
+                      'string': String(),
+                      'float': Float(precision=32),
+                      'decimal': Float(precision='13,8'),
+                      'date': Date(),
+                      'time': Time(),
+                      'datetime': DateTime,
+                      'bool': Boolean}
+
+    # Get the data from the table definition file
+    table_definition_file = os.path.join(os.path.split(__file__)[0],
+                                         'monitor_table_definitions',
+                                         '{}.txt'.format(table_name))
+    with open(table_definition_file, 'r') as f:
+        data = f.readlines()
+
+    # Parse out the column names from the data types
+    column_definitions = [item.strip().split(', ') for item in data]
+    for column_definition in column_definitions:
+        column_name = column_definition[0]
+        data_type = column_definition[1]
+
+        # Create a new column
+        if data_type in list(data_type_dict.keys()):
+            data_dict[column_name.lower()] = Column(data_type_dict[data_type])
+        else:
+            raise ValueError('Unrecognized column type: {}:{}'.format(column_name, data_type))
+
+    return data_dict
+
+
+def get_monitor_table_constraints(data_dict, table_name):
+    """Add any necessary table constrains to the given table via the
+    ``data_dict``.
+
+    Parameters
+    ----------
+    data_dict : dict
+        A dictionary whose keys are column names and whose values
+        are column definitions.
+    table_name : str
+        The name of the database table
+
+    Returns
+    -------
+    data_dict : dict
+        An updated ``data_dict`` with the approriate table constraints
+        for the monitor added.
+    """
+
+    return data_dict
+
+
+def monitor_orm_factory(class_name):
+    """Create a ``SQLAlchemy`` ORM Class for a ``jwql`` instrument
+    monitor.
+
+    Parameters
+    ----------
+    class_name : str
+        The name of the class to be created
+
+    Returns
+    -------
+    class : obj
+        The ``SQLAlchemy`` ORM
+    """
+
+    # Initialize a dictionary to hold the column metadata
+    data_dict = {}
+    data_dict['__tablename__'] = class_name.lower()
+
+    # Columns specific to all monitor ORMs
+    data_dict['id'] = Column(Integer, primary_key=True, nullable=False)
+    data_dict['entry_date'] = Column(DateTime, unique=True, nullable=False, default=datetime.now())
+    data_dict['__table_args__'] = (UniqueConstraint('id', 'entry_date', name='monitor_uc'),)
+
+    # Get monitor-specific columns
+    data_dict = get_monitor_columns(data_dict, data_dict['__tablename__'])
+
+    # Get monitor-specific table constrains
+    data_dict = get_monitor_table_constraints(data_dict, data_dict['__tablename__'])
+
+    return type(class_name, (base,), data_dict)
+
+# Create tables from ORM factory
+# NIRCamDarkQueries = monitor_orm_factory('nircam_dark_queries')
+# NIRCamDarkPixelStats = monitor_orm_factory('nircam_dark_pixel_stats')
+# NIRCamDarkDarkCurrent = monitor_orm_factory('nircam_dark_dark_current')
 
 
 if __name__ == '__main__':

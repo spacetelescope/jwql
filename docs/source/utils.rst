@@ -2,15 +2,33 @@
 utils
 *****
 
+constants.py
+------------
+.. automodule:: jwql.utils.constants
+    :members:
+    :undoc-members:
+
 logging_functions.py
 --------------------
 .. automodule:: jwql.utils.logging_functions
     :members:
     :undoc-members:
 
+monitor_template.py
+-------------------
+.. automodule:: jwql.utils.monitor_template
+    :members:
+    :undoc-members:
+
 permissions.py
 --------------
 .. automodule:: jwql.utils.permissions
+    :members:
+    :undoc-members:
+
+plotting.py
+-----------
+.. automodule:: jwql.utils.plotting
     :members:
     :undoc-members:
 

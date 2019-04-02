@@ -2,6 +2,7 @@
 <html lang="en">
 
 	<head>
+
 		<!-- JWQL Icon as website image -->
 		<link rel="shortcut icon" href="{{ static('img/favicon.ico') }}?{% now 'U' %}" />
 
@@ -11,9 +12,11 @@
 		<!-- Custom styles for this template -->
 		<link href="{{ static('css/jwql.css') }}?{% now 'U' %}" rel="stylesheet">
 		<link href="{{ static('css/sticky-footer.css') }}?{% now 'U' %}" rel="stylesheet">
+		<link href="{{ static('css/loader-magnify.css') }}?{% now 'U' %}" rel="stylesheet">
 
 		<!-- Import fonts -->
 		<link href="https://fonts.googleapis.com/css?family=Oswald:700|Overpass" rel="stylesheet">
+		<link href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" rel="stylesheet" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
 
 		<!-- Needed javascript -->
 		<!-- IMPORTANT: jQuery first, then popper, then Bootstrap -->
@@ -32,6 +35,8 @@
 	<body>
 		<!-- Navigation Bar -->
 		<nav class="navbar navbar-expand-md fixed-top">
+
+			<!-- Logo and Project Name -->
 		    <a class="navbar-left" href={{ url('jwql:home') }}><img src={{ static('img/jwql_logo_short_transparent.png') }} height=35 width=35></a>
 	        <a class="navbar-brand" href={{ url('jwql:home') }}>JWQL</a>
 	        <a class="navbar-brand" href="#"><font color='#f2ce3a'>{{ inst }}</font></a>
@@ -39,6 +44,7 @@
 	          <span class="navbar-toggler-icon"></span>
 	        </button>
 
+			<!-- Various pages -->
 	        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
 	        	<ul class="navbar-nav mr-auto">
 	          		<li class="nav-item active">
@@ -51,28 +57,54 @@
 	            		<a class="nav-link" href={{ url('jwql:dashboard') }}>Dashboard<span class="sr-only">(current)</span></a>
 	          		</li>
 	          		{% for inst_key, inst_tools in tools.items() %}
-		          	<li class="dropdown">
-		            	<a class="nav-link dropdown-toggle disabled" href={{ url('jwql:instrument', args=[inst_key]) }} id="dropdown"{{ inst_key }} aria-haspopup="true" aria-expanded="false">{{ inst_key }}</a>
-		            	<div class="dropdown-menu" aria-labelledby="dropdown01">
-			            	<a class='dropdown-heading mx-3'>Images</a>
-			            	<a class="dropdown-item" href={{ url('jwql:unlooked', args=[inst_key]) }}>Unlooked Images</a>
-			            	<a class="dropdown-item" href="#">Image Anomalies</a>
-			            	<a class="dropdown-item" href={{ url('jwql:archive', args=[inst_key]) }}>Archived Images</a>
-			            	<div class="dropdown-divider"></div>
-			            	<a class='dropdown-heading mx-3'>Monitors</a>
-			            	{% for tool in inst_tools %}
-			              		<a class="dropdown-item" href="#">{{ tool }}</a>
-			              	{% endfor %}
-		            	</div>
-		          	</li>
+						<li class="dropdown">
+							<a class="nav-link dropdown-toggle disabled" href={{ url('jwql:instrument', args=[inst_key]) }} id="dropdown"{{ inst_key }} aria-haspopup="true" aria-expanded="false">{{ inst_key }}</a>
+							<div class="dropdown-menu" aria-labelledby="dropdown01">
+								<a class='dropdown-heading mx-3'>Images</a>
+								<a class="dropdown-item" href={{ url('jwql:unlooked', args=[inst_key]) }}>Unlooked Images</a>
+								<a class="dropdown-item" href="#">Image Anomalies</a>
+								<a class="dropdown-item" href={{ url('jwql:archive', args=[inst_key]) }}>Archived Images</a>
+								<div class="dropdown-divider"></div>
+								<a class='dropdown-heading mx-3'>Monitors</a>
+									{% for monitor_name, monitor_url in inst_tools %}
+										{% if monitor_url == '#' %}
+											<a class="dropdown-item" href="{{ monitor_url }}" style="color: #bec4d4;">{{ monitor_name }}</a>
+										{% else %}
+											<a class="dropdown-item" href="{{ monitor_url }}">{{ monitor_name }}</a>
+										{% endif %}
+									{% endfor %}
+							</div>
+						</li>
 		      		{% endfor %}
 		      		<li class="nav-item active">
-	            		<a class="nav-link" href="https://jwql.readthedocs.io/en/latest/">Documentation<span class="sr-only">(current)</span></a>
+	            		<a class="nav-link" href={{ url('jwql:edb') }}>EDB<span class="sr-only">(current)</span></a>
+	          		</li>
+		      		<li class="nav-item active">
+	            		<a class="nav-link" href="https://jwql.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer">Documentation<span class="sr-only">(current)</span></a>
 	          		</li>
 	        	</ul>
 	        </div>
 
-	    	<a class="navbar-right" href="https://github.com/spacetelescope/jwql" target="_blank"><img src={{ static('img/githublogo.svg') }} height=25 width=25></a>
+	        <!-- Oauth login and GitHub -->
+	        <div class="navbar-right">
+	            <ul class="navbar-nav mr-auto">
+	            	{% if user.ezid %}
+	            		<li>
+	            			<a class="nav-link" id="oauth_user" href="https://auth.mastdev.stsci.edu/tokens" target="_blank" rel="noopener noreferrer">{{ user.ezid }}</a>
+	            		</li>
+	            		<li>
+	            			<a role="button" class="btn btn-primary" href={{ url('jwql:logout') }}>logout</a>
+	            		</li>
+	            	{% else %}
+	            		<li class="nav-item active">
+	            			<a role="button" class="btn btn-primary" href={{ url('jwql:login') }}>login</a>
+	            		</li>
+	            	{% endif %}
+	            	<li class="nav-item active">
+						<a id="github-link" class="nav-link" href="https://github.com/spacetelescope/jwql" target="_blank"><img src={{ static('img/githublogo.svg') }} height=35 width=35></a>
+					</li>
+	    		</ul>
+	    	</div>
 	    </nav>
 	    <div class="banner">
 	    	<img src={{ static('img/hubble_image.jpg') }}>
@@ -87,6 +119,11 @@
 	        		<img src={{ static('img/STScIlogo_dark.png') }}   height=36>
 	        		<img src={{ static('img/JWSTlogo.png') }}   height=36>
 	        	</a>
+     	      	<div id='version-div'>
+	        		<p id="version_number"></p>
+	        		   <script>document.getElementById("version_number").innerHTML = version_url('{{version}}');</script>
+	      	     	</p>
+	      	    </div>
 	      	</div>
 	    </footer>
 
