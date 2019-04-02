@@ -188,6 +188,8 @@ def anomaly_orm_factory(class_name):
     data_dict['id'] = Column(Integer, primary_key=True, nullable=False)
     data_dict['filename'] = Column(String(), nullable=False)
     data_dict['flag_date'] = Column(DateTime, nullable=False)
+    data_dict['user'] = Column(String(), nullable=False)
+
     for column in data_dict['columns']:
         data_dict[column] = Column(Boolean, nullable=False, default=False)
 
