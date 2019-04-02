@@ -402,13 +402,14 @@ def get_filenames_by_rootname(rootname):
     return filenames
 
 
-def get_header_info(file):
+def get_header_info(filename):
     """Return the header information for a given ``file``.
 
     Parameters
     ----------
-    file : str
-        The name of the file of interest.
+    filename : str
+        The name of the file of interest (e.g.
+        ``'jw86600008001_02101_00007_guider2_uncal.fits'``).
 
     Returns
     -------
@@ -416,8 +417,8 @@ def get_header_info(file):
         The primary FITS header for the given ``file``.
     """
 
-    dirname = file[:7]
-    fits_filepath = os.path.join(FILESYSTEM_DIR, dirname, file)
+    dirname = filename[:7]
+    fits_filepath = os.path.join(FILESYSTEM_DIR, dirname, filename)
     header = fits.getheader(fits_filepath, ext=0).tostring(sep='\n')
 
     return header
@@ -430,7 +431,8 @@ def get_image_info(file_root, rewrite):
     Parameters
     ----------
     file_root : str
-        The rootname of the file of interest.
+        The rootname of the file of interest (e.g.
+        ``jw86600008001_02101_00007_guider2``).
     rewrite : bool
         ``True`` if the corresponding JPEG needs to be rewritten,
         ``False`` if not.
@@ -495,7 +497,8 @@ def get_instrument_proposals(instrument):
     Parameters
     ----------
     instrument : str
-        Name of the JWST instrument
+        Name of the JWST instrument, with first letter capitalized
+        (e.g. ``Fgs``)
 
     Returns
     -------
