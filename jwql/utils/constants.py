@@ -60,20 +60,33 @@ FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
                     AMI_SUFFIX_TYPES
 
 MONITORS = {
-    'fgs': ['Bad Pixel Monitor'],
-    'miri': ['Dark Current Monitor',
-             'Bad Pixel Monitor', 'Cosmic Ray Monitor', 'Photometry Monitor',
-             'TA Failure Monitor', 'Blind Pointing Accuracy Monitor',
-             'Filter and Calibration Lamp Monitor', 'Thermal Emission Monitor'],
-    'nircam': ['Bias Monitor',
-               'Readnoise Monitor', 'Gain Level Monitor',
-               'Mean Dark Current Rate Monitor', 'Photometric Stability Monitor'],
-    'niriss': ['Bad Pixel Monitor',
-               'Readnoise Monitor', 'AMI Calibrator Monitor', 'TSO RMS Monitor'],
-    'nirspec': ['Optical Short Monitor', 'Target Acquisition Monitor',
-                'Detector Health Monitor', 'Ref Pix Monitor',
-                'Internal Lamp Monitor', 'Instrument Model Updates',
-                'Failed-open Shutter Monitor']}
+    'fgs': [('Bad Pixel Monitor', '#')],
+    'miri': [('Dark Current Monitor', '#'),
+             ('Data Trending', '/miri/miri_data_trending'),
+             ('Bad Pixel Monitor', '#'),
+             ('Cosmic Ray Monitor', '#'),
+             ('Photometry Monitor', '#'),
+             ('TA Failure Monitor', '#'),
+             ('Blind Pointing Accuracy Monitor', '#'),
+             ('Filter and Calibration Lamp Monitor', '#'),
+             ('Thermal Emission Monitor', '#')],
+    'nircam': [('Bias Monitor', '#'),
+               ('Readnoise Monitor', '#'),
+               ('Gain Level Monitor', '#'),
+               ('Mean Dark Current Rate Monitor', '#'),
+               ('Photometric Stability Monitor', '#')],
+    'niriss': [('Bad Pixel Monitor', '#'),
+               ('Readnoise Monitor', '#'),
+               ('AMI Calibrator Monitor', '#'),
+               ('TSO RMS Monitor', '#')],
+    'nirspec': [('Optical Short Monitor', '#'),
+                ('Target Acquisition Monitor', '#'),
+                ('Data Trending', '/nirspec/nirspec_data_trending'),
+                ('Detector Health Monitor', '#'),
+                ('Ref Pix Monitor', '#'),
+                ('Internal Lamp Monitor', '#'),
+                ('Instrument Model Updates', '#'),
+                ('Failed-open Shutter Monitor', '#')]}
 
 NIRCAM_SHORTWAVE_DETECTORS = ['NRCA1', 'NRCA2', 'NRCA3', 'NRCA4',
                               'NRCB1', 'NRCB2', 'NRCB3', 'NRCB4']
@@ -83,3 +96,7 @@ NIRCAM_LONGWAVE_DETECTORS = ['NRCA5', 'NRCB5']
 AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 0), (512, 2048)], '2': [(512, 0), (1024, 2048)],
                                    '3': [(1024, 0), (1536, 2048)], '4': [(1536, 0), (2048, 2048)]}
                         }
+
+FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
+
+SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']

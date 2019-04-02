@@ -63,7 +63,7 @@ def completed_steps_check(filename):
     return completed_steps
 
 
-def required_steps_to_do_check(filename, required, already_done):
+def required_steps_to_do_check(required, already_done):
     """Test that the dictionaries for steps required and steps completed
     are correctly combined to create a dictionary of pipeline steps to
     be done
@@ -98,10 +98,43 @@ def required_steps_to_do_check(filename, required, already_done):
     assert steps_to_run == true_steps_to_run
 
 
+@pytest.mark.xfail
 def test_amplifier_info():
     """Test that the correct number of amplifiers are found for a
     given file"""
-    pass
+    data_dir = os.path.join(os.path.dirname(__file__), 'test_data/dark_monitor/')
+
+    fullframe = instrument_properties.amplifier_info(os.path.join(data_dir, 'test_image_ff.fits'))
+    fullframe_truth = (4, {'1': [(4, 4), (512, 2044)],
+                           '2': [(512, 4), (1024, 2044)],
+                           '3': [(1024, 4), (1536, 2044)],
+                           '4': [(1536, 4), (2044, 2044)]})
+    assert fullframe == fullframe_truth
+
+    fullframe = instrument_properties.amplifier_info(os.path.join(data_dir, 'test_image_ff.fits'),
+                                                     omit_reference_pixels=False)
+    fullframe_truth = (4, {'1': [(0, 0), (512, 2048)],
+                           '2': [(512, 0), (1024, 2048)],
+                           '3': [(1024, 0), (1536, 2048)],
+                           '4': [(1536, 0), (2048, 2048)]})
+    assert fullframe == fullframe_truth
+
+    subarray = instrument_properties.amplifier_info(os.path.join(data_dir, 'test_image_1.fits'))
+    subarray_truth = (1, {'1': [(0, 0), (10, 10)]})
+    assert subarray == subarray_truth
+
+    subarray_one = instrument_properties.amplifier_info(os.path.join(data_dir,
+                                                                     'test_image_grismstripe_one_amp.fits'))
+    subarray_one_truth = (1, {'1': [(4, 4), (2044, 64)]})
+    assert subarray_one == subarray_one_truth
+
+    subarray_four = instrument_properties.amplifier_info(os.path.join(data_dir,
+                                                                      'test_image_grismstripe_four_amp.fits'))
+    subarray_four_truth = (4, {'1': [(4, 4), (512, 64)],
+                               '2': [(512, 4), (1024, 64)],
+                               '3': [(1024, 4), (1536, 64)],
+                               '4': [(1536, 4), (2044, 64)]})
+    assert subarray_four == subarray_four_truth
 
 
 def test_calc_frame_time():
@@ -121,6 +154,7 @@ def test_calc_frame_time():
     assert np.isclose(nrs_fullframe, nearir_fullframe, atol=0.001, rtol=0)
 
 
+@pytest.mark.xfail
 def test_copy_files():
     """Test basic function to copy file from one place to another"""
     file_to_copy = [os.path.join(os.path.dirname(__file__), 'test_data/dark_monitor/test_image_2.fits')]
@@ -136,7 +170,6 @@ def test_copy_files():
 
     # Remove copied file
     os.remove(copied_file)
-    os.rmdir(destination)
 
 
 def test_double_gaussian_fit():
@@ -163,34 +196,6 @@ def test_double_gaussian_fit():
                        atol=0, rtol=0.000001)
 
 
-def test_download_mast_data():
-    """Test that fits files are downloaded from MAST"""
-    # Create temporary directory
-    destination = os.path.join(os.path.dirname(__file__), 'temp')
-    ensure_dir_exists(destination)
-
-    # Small query. Should return only one filename
-    instrument = 'NIRCAM'
-    aperture = 'NRCA1_FULL'
-    query = dm.mast_query_darks(instrument, aperture, 57410.917, 57410.919)
-
-    download_mast_data(query, destination)
-
-    downloaded_file = os.path.join(destination, query[0]['filename'])
-    assert os.path.isfile(downloaded_file)
-
-    required_steps = pipeline_tools.get_pipeline_steps(instrument)
-    print('DOWNLOADED FILE:', downloaded_file)
-    finished_steps = completed_steps_check(downloaded_file)
-    required_steps_to_do_check(downloaded_file, required_steps, finished_steps)
-
-    # Remove downloaded file
-    print('REMOVE: {}'.format(downloaded_file))
-    print('REMOVE: {}'.format(destination))
-    #os.remove(downloaded_file)
-    #os.rmdir(destination)
-
-
 @pytest.mark.xfail
 def test_filesystem_path():
     """Test  that a file's location in the filesystem is returned"""
@@ -198,74 +203,13 @@ def test_filesystem_path():
     check = filesystem_path(filename)
 
     filesystem_base = get_config()["filesystem"]
+
+    print(check)
+    print(os.path.join(filesystem_base, 'jw96003/{}'.format(filename)))
     assert check == os.path.join(filesystem_base, 'jw96003/{}'.format(filename))
 
 
-def test_gaussian1d_fit():
-    """Test histogram fitting function"""
-    mean_value = 0.5
-    sigma_value = 0.05
-    image = np.random.normal(loc=mean_value, scale=sigma_value, size=(100, 100))
-    hist, bin_edges = np.histogram(image, bins='auto')
-    bin_centers = (bin_edges[1:] + bin_edges[0: -1]) / 2.
-    initial_params = [np.max(hist), 0.55, 0.1]
-    amplitude, peak, width = maths.gaussian1d_fit(bin_centers, hist, initial_params)
-
-    assert (((peak[0] - peak[1]) <= mean_value) and ((peak[0] + peak[1]) >= mean_value))
-    assert (((width[0] - width[1]) <= sigma_value) and ((width[0] + width[1]) >= sigma_value))
-
-
-def test_get_metadata():
-    """Test retrieval of metadata from input file"""
-    monitor = dm.Dark(testing=True)
-    filename = os.path.join(os.path.dirname(__file__), 'test_data/dark_monitor/test_image_1.fits')
-    monitor.get_metadata(filename)
-    assert monitor.instrument == 'NIRCAM'
-    assert monitor.x0 == 0
-    assert monitor.y0 == 0
-    assert monitor.xsize == 10
-    assert monitor.ysize == 10
-    assert monitor.sample_time == 10
-    assert monitor.frame_time == 10.5
-
-
-def test_get_pipeline_steps():
-    """Test that the proper pipeline steps are returned for an instrument"""
-    nrc_req_steps = pipeline_tools.get_pipeline_steps('nircam')
-    nrc_steps = ['group_scale', 'dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
-                 'persistence', 'dark_current', 'jump', 'rate']
-    not_required = ['ipc', 'firstframe', 'lastframe', 'rscd']
-    nrc_dict = OrderedDict({})
-    for step in nrc_steps:
-        nrc_dict[step] = True
-    for step in not_required:
-        nrc_dict[step] = False
-    assert nrc_req_steps == nrc_dict
-
-    nrs_req_steps = pipeline_tools.get_pipeline_steps('nirspec')
-    nrs_steps = ['group_scale', 'dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
-                 'dark_current', 'jump', 'rate']
-    not_required = ['ipc', 'persistence', 'firstframe', 'lastframe', 'rscd']
-    nrs_dict = OrderedDict({})
-    for step in nrs_steps:
-        nrs_dict[step] = True
-    for step in not_required:
-        nrs_dict[step] = False
-    assert nrs_req_steps == nrs_dict
-
-    miri_req_steps = pipeline_tools.get_pipeline_steps('miri')
-    miri_steps = ['group_scale', 'dq_init', 'saturation', 'firstframe', 'lastframe',
-                  'linearity', 'rscd', 'dark_current', 'refpix', 'jump', 'rate']
-    not_required = ['ipc', 'superbias', 'persistence']
-    miri_dict = OrderedDict({})
-    for step in miri_steps:
-        miri_dict[step] = True
-    for step in not_required:
-        miri_dict[step] = False
-    assert miri_req_steps == miri_dict
-
-
-def test_hot_dead_pixel_check():
+def test_find_hot_dead_pixels():
     """Test hot and dead pixel searches"""
     monitor = dm.Dark(testing=True)
 
@@ -281,7 +225,7 @@ def test_hot_dead_pixel_check():
     mean_image[6, 6] = 0.06
     mean_image[7, 3] = 0.09
 
-    hot, dead = monitor.hot_dead_pixel_check(mean_image, comparison_image, hot_threshold=2.,
+    hot, dead = monitor.find_hot_dead_pixels(mean_image, comparison_image, hot_threshold=2.,
                                              dead_threshold=0.1)
     assert len(hot) == 2
     assert np.all(hot[0] == np.array([1, 7]))
@@ -291,22 +235,93 @@ def test_hot_dead_pixel_check():
     assert np.all(dead[1] == np.array([6, 3]))
 
 
+def test_gaussian1d_fit():
+    """Test histogram fitting function"""
+    mean_value = 0.5
+    sigma_value = 0.05
+    image = np.random.normal(loc=mean_value, scale=sigma_value, size=(100, 100))
+    hist, bin_edges = np.histogram(image, bins='auto')
+    bin_centers = (bin_edges[1:] + bin_edges[0: -1]) / 2.
+    initial_params = [np.max(hist), 0.55, 0.1]
+    amplitude, peak, width = maths.gaussian1d_fit(bin_centers, hist, initial_params)
+
+    print(width)
+    print(sigma_value)
+
+    assert np.isclose(peak[0], mean_value, atol=0.0015, rtol=0.)
+    assert np.isclose(width[0], sigma_value, atol=0.0015, rtol=0.)
+    assert ((mean_value <= peak[0]+3*peak[1]) & (mean_value >= peak[0]-3*peak[1]))
+    assert ((sigma_value <= width[0]+3*width[1]) & (sigma_value >= width[0]-3*width[1]))
+
+
+@pytest.mark.xfail
+def test_get_metadata():
+    """Test retrieval of metadata from input file"""
+    monitor = dm.Dark(testing=True)
+    filename = os.path.join(os.path.dirname(__file__), 'test_data/dark_monitor/test_image_1.fits')
+    monitor.get_metadata(filename)
+    assert monitor.detector == 'NRCA1'
+    assert monitor.x0 == 0
+    assert monitor.y0 == 0
+    assert monitor.xsize == 10
+    assert monitor.ysize == 10
+    assert monitor.sample_time == 10
+    assert monitor.frame_time == 10.5
+
+
+def test_get_pipeline_steps():
+    """Test that the proper pipeline steps are returned for an instrument"""
+    nrc_req_steps = pipeline_tools.get_pipeline_steps('nircam')
+    nrc_steps = ['dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
+                 'persistence', 'dark_current', 'jump', 'rate']
+    not_required = ['group_scale', 'ipc', 'firstframe', 'lastframe', 'rscd']
+    nrc_dict = OrderedDict({})
+    for step in nrc_steps:
+        nrc_dict[step] = True
+    for step in not_required:
+        nrc_dict[step] = False
+    print('nircam:', nrc_req_steps)
+    assert nrc_req_steps == nrc_dict
+
+    nrs_req_steps = pipeline_tools.get_pipeline_steps('nirspec')
+    nrs_steps = ['group_scale', 'dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
+                 'dark_current', 'jump', 'rate']
+    not_required = ['ipc', 'persistence', 'firstframe', 'lastframe', 'rscd']
+    nrs_dict = OrderedDict({})
+    for step in nrs_steps:
+        nrs_dict[step] = True
+    for step in not_required:
+        nrs_dict[step] = False
+    print('nirspec:', nrs_req_steps)
+    assert nrs_req_steps == nrs_dict
+
+    miri_req_steps = pipeline_tools.get_pipeline_steps('miri')
+    miri_steps = ['dq_init', 'saturation', 'firstframe', 'lastframe',
+                  'linearity', 'rscd', 'dark_current', 'refpix', 'jump', 'rate']
+    not_required = ['group_scale', 'ipc', 'superbias', 'persistence']
+    miri_dict = OrderedDict({})
+    for step in miri_steps:
+        miri_dict[step] = True
+    for step in not_required:
+        miri_dict[step] = False
+    print('mirio:', miri_req_steps)
+    assert miri_req_steps == miri_dict
+
+
+@pytest.mark.xfail
 def test_image_stack():
     """Test stacking of slope images"""
     directory = os.path.join(os.path.dirname(__file__), 'test_data/dark_monitor')
     files = [os.path.join(directory, 'test_image_{}.fits'.format(str(i+1))) for i in range(3)]
 
-    image_stack = pipeline_tools.image_stack(files)
+    image_stack, exptimes = pipeline_tools.image_stack(files)
     truth = np.zeros((3, 10, 10))
     truth[0, :, :] = 5.
     truth[1, :, :] = 10.
     truth[2, :, :] = 15.
 
-    print(image_stack)
-    print('')
-    print(truth)
-
     assert np.all(image_stack == truth)
+    assert exptimes == [[10.5], [10.5], [10.5]]
 
 
 def test_mast_query_darks():
@@ -420,11 +435,3 @@ def test_shift_to_full_frame():
 
     assert np.all(new_coords[0] == np.array([518, 519]))
     assert np.all(new_coords[1] == np.array([518, 515]))
-
-
-
-
-
-
-
-
