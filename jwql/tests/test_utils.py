@@ -244,7 +244,7 @@ FILENAME_PARSER_TEST_DATA = [
 
 ]
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins/',
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
                     reason='Requires access to central storage.')
 def test_get_config():
     """Assert that the ``get_config`` function successfully creates a
@@ -270,7 +270,7 @@ def test_filename_parser(filename, solution):
     assert filename_parser(filename) == solution
 
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins/',
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
                     reason='Requires access to central storage.')
 @pytest.mark.xfail(raises=(FileNotFoundError, ValueError),
                    reason='Known non-compliant files in filesystem; User must manually supply config file.')
