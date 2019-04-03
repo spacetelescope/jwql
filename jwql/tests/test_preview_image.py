@@ -26,12 +26,10 @@ import pytest
 from astropy.io import fits
 
 from jwql.utils.preview_image import PreviewImage
+from jwql.utils.utils import get_config
 
 # directory to be created and populated during tests running
 TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'preview_image_test')
-
-# directory that contains sample images
-TEST_DATA_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_data')
 
 
 @pytest.fixture(scope="module")
@@ -55,21 +53,23 @@ def test_directory(test_dir=TEST_DIRECTORY):
         os.rmdir(test_dir)
 
 
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+                    reason='Requires access to central storage.')
 def test_make_image(test_directory):
-    """Use PreviewImage.make_image to create preview images of a sample JWST exposure.
+    """Use PreviewImage.make_image to create preview images of a sample
+    JWST exposure.
 
-    Assert that the number of JPGs created corresponds to the number of integrations.
+    Assert that the number of JPGs created corresponds to the number of
+    integrations.
 
     Parameters
     ----------
     test_directory : str
         Path of directory used for testing
-
     """
-    filenames = glob.glob(os.path.join(TEST_DATA_DIRECTORY, '*.fits'))
-    print('\nGenerating preview images for {}.'.format(filenames))
 
-    output_directory = test_directory
+    filenames = glob.glob(os.path.join(get_config()['test_dir'], '*.fits'))
+    assert len(filenames) > 0
 
     for filename in filenames:
 
@@ -86,9 +86,9 @@ def test_make_image(test_directory):
                 image.thumbnail = create_thumbnail
 
                 if create_thumbnail:
-                    image.thumbnail_output_directory = output_directory
+                    image.thumbnail_output_directory = test_directory
                 else:
-                    image.preview_output_directory = output_directory
+                    image.preview_output_directory = test_directory
 
                 image.make_image()
             except ValueError as error:
