@@ -17,13 +17,18 @@ Use
 
         pytest -s test_edb_interface.py
 """
-import pytest
+
 from astropy.time import Time
 from astroquery.mast import Mast
+import pytest
+
+import socket
 
 from jwql.edb.edb_interface import mnemonic_inventory, query_single_mnemonic
-from jwql.utils.utils import get_config
 
+get_config = pytest.importorskip('jwql.utils.utils.get_config')
+
+print(socket.gethostname())
 
 @pytest.mark.xfail(raises=(RuntimeError, FileNotFoundError))
 def test_get_mnemonic():
