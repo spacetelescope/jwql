@@ -23,10 +23,6 @@ import pytest
 from jwql.jwql_monitors import monitor_mast as mm
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 
-import socket
-print(socket.gethostname())
-import os
-print(os.path.expanduser('~'))
 
 def test_astroquery_mast():
     """Test if the astroquery.mast service can complete a request"""

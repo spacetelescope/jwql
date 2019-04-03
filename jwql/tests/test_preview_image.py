@@ -51,7 +51,6 @@ def test_directory(test_dir=TEST_DIRECTORY):
     """
     os.mkdir(test_dir)  # creates directory
     yield test_dir
-    print("teardown test directory")
     if os.path.isdir(test_dir):
         os.rmdir(test_dir)
 
