@@ -9,8 +9,8 @@ storage area, named by module name and timestamp, e.g.
 Authors
 -------
 
-    - Catherine Martlin 2018
-    - Alex Viana, 2013 (WFC3 QL Version)
+    - Catherine Martlin 
+    - Alex Viana (WFC3 QL Version)
     - Matthew Bourque
 
 Use
@@ -273,6 +273,6 @@ def log_timing(func):
         minutes_cpu, seconds_cpu = divmod(remainder_cpu, 60)
         hours_time, remainder_time = divmod(t2_time - t1_time, 60 * 60)
         minutes_time, seconds_time = divmod(remainder_time, 60)
-        logging.info('Elapsed Real Time of function: {0:.0f}:{1:.0f}:{2:f}'.format(hours_time, minutes_time, seconds_time))
-        logging.info('Elapsed CPU Time of function: {0:.0f}:{1:.0f}:{2:f}'.format(hours_cpu, minutes_cpu, seconds_cpu))
+        logging.info('Elapsed Real Time of {}: {0:.0f}:{1:.0f}:{2:f}'.format(func.fun_name, hours_time, minutes_time, seconds_time))
+        logging.info('Elapsed CPU Time of {}: {0:.0f}:{1:.0f}:{2:f}'.format(func.fun_name, hours_cpu, minutes_cpu, seconds_cpu))
     return wrapped
