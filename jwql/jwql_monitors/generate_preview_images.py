@@ -26,7 +26,7 @@ Use
         python generate_preview_images.py
 """
 
-from glob import glob
+import glob
 import logging
 import os
 import re
@@ -215,7 +215,7 @@ def check_existence(file_list, outdir):
                         file_parts['parallel_seq_id'], file_parts['activity'],
                         file_parts['exposure_id'], mosaic_str, file_parts['suffix'])
 
-    current_files = glob(os.path.join(outdir, search_string))
+    current_files = glob.glob(os.path.join(outdir, search_string))
     if len(current_files) > 0:
         return True
     else:
@@ -496,6 +496,31 @@ def find_data_channel(detectors):
     return channel
 
 
+def get_base_output_name(filename_dict):
+    """Returns the base output name used for preview images and
+    thumbnails.
+
+    Parameters
+    ----------
+    filename_dict : dict
+        A dictionary containing parsed filename parts via
+        ``filename_parser``
+
+    Returns
+    -------
+    base_output_name : str
+        The base output name, e.g. ``jw96090001002_03101_00001_nrca2_rate``
+    """
+
+    base_output_name = 'jw{}{}{}_{}{}{}_{}_'.format(
+        filename_dict['program_id'], filename_dict['observation'],
+        filename_dict['visit'], filename_dict['visit_group'],
+        filename_dict['parallel_seq_id'], filename_dict['activity'],
+        filename_dict['exposure_id'])
+
+    return base_output_name
+
+
 @log_fail
 @log_info
 def generate_preview_images():
@@ -508,84 +533,88 @@ def generate_preview_images():
     preview_image_filesystem = get_config()['preview_image_filesystem']
     thumbnail_filesystem = get_config()['thumbnail_filesystem']
 
-    filenames = glob(os.path.join(filesystem, '*/*.fits'))
-    grouped_filenames = group_filenames(filenames)
-    logging.info('Found {} filenames'.format(len(filenames)))
+    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(filesystem, '*'))]
+    for program in program_list:
 
-    for file_list in grouped_filenames:
-        filename = file_list[0]
-        # Determine the save location
-        try:
-            identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
-        except ValueError as error:
-            identifier = os.path.basename(filename).split('.fits')[0]
+        filenames = glob.glob(os.path.join(filesystem, program, '*.fits'))
+        grouped_filenames = group_filenames(filenames)
+        logging.info('Found {} filenames'.format(len(filenames)))
 
-        preview_output_directory = os.path.join(preview_image_filesystem, identifier)
-        thumbnail_output_directory = os.path.join(thumbnail_filesystem, identifier)
+        for file_list in grouped_filenames:
 
-        # Check to see if the preview images already exist and skip
-        # if they do
-        file_exists = check_existence(file_list, preview_output_directory)
-        if file_exists:
-            logging.info("JPG already exists for {}, skipping.".format(filename))
-            continue
+            filename = file_list[0]
 
-        # Create the output directories if necessary
-        if not os.path.exists(preview_output_directory):
-            os.makedirs(preview_output_directory)
-            permissions.set_permissions(preview_output_directory)
-            logging.info('Created directory {}'.format(preview_output_directory))
-        if not os.path.exists(thumbnail_output_directory):
-            os.makedirs(thumbnail_output_directory)
-            permissions.set_permissions(thumbnail_output_directory)
-            logging.info('Created directory {}'.format(thumbnail_output_directory))
-
-        # If the exposure contains more than one file (because more
-        # than one detector was used), then create a mosaic
-        max_size = 8
-        numfiles = len(file_list)
-        if numfiles != 1:
+            # Determine the save location
             try:
-                mosaic_image, mosaic_dq = create_mosaic(file_list)
-                logging.info('Created mosiac for:')
-                for item in file_list:
-                    logging.info('\t{}'.format(item))
-            except (ValueError, FileNotFoundError) as error:
-                logging.error(error)
-            dummy_file = create_dummy_filename(file_list)
-            if numfiles in [2, 4]:
-                max_size = 16
-            elif numfiles in [8]:
-                max_size = 32
+                identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
+            except ValueError as error:
+                identifier = os.path.basename(filename).split('.fits')[0]
+            preview_output_directory = os.path.join(preview_image_filesystem, identifier)
+            thumbnail_output_directory = os.path.join(thumbnail_filesystem, identifier)
 
-        # Create the nominal preview image and thumbnail
-        try:
-            im = PreviewImage(filename, "SCI")
-            im.clip_percent = 0.01
-            im.scaling = 'log'
-            im.cmap = 'viridis'
-            im.output_format = 'jpg'
-            im.preview_output_directory = preview_output_directory
-            im.thumbnail_output_directory = thumbnail_output_directory
+            # Check to see if the preview images already exist and skip if they do
+            file_exists = check_existence(file_list, preview_output_directory)
+            if file_exists:
+                logging.info("JPG already exists for {}, skipping.".format(filename))
+                continue
 
-            # If a mosaic was made from more than one file
-            # insert it and it's associated DQ array into the
-            # instance of PreviewImage. Also set the input
-            # filename to indicate that we have mosaicked data
-            if numfiles != 1:
-                im.data = mosaic_image
-                im.dq = mosaic_dq
-                im.file = dummy_file
+            # Create the output directories if necessary
+            if not os.path.exists(preview_output_directory):
+                os.makedirs(preview_output_directory)
+                permissions.set_permissions(preview_output_directory)
+                logging.info('Created directory {}'.format(preview_output_directory))
+            if not os.path.exists(thumbnail_output_directory):
+                os.makedirs(thumbnail_output_directory)
+                permissions.set_permissions(thumbnail_output_directory)
+                logging.info('Created directory {}'.format(thumbnail_output_directory))
 
-            im.make_image(max_img_size=max_size)
-        except ValueError as error:
-            logging.warning(error)
+            # If the exposure contains more than one file (because more
+            # than one detector was used), then create a mosaic
+            max_size = 8
+            numfiles = len(file_list)
+            if numfiles > 1:
+                try:
+                    mosaic_image, mosaic_dq = create_mosaic(file_list)
+                    logging.info('Created mosiac for:')
+                    for item in file_list:
+                        logging.info('\t{}'.format(item))
+                except (ValueError, FileNotFoundError) as error:
+                    logging.error(error)
+                dummy_file = create_dummy_filename(file_list)
+                if numfiles in [2, 4]:
+                    max_size = 16
+                elif numfiles in [8]:
+                    max_size = 32
+
+            # Create the nominal preview image and thumbnail
+            try:
+                im = PreviewImage(filename, "SCI")
+                im.clip_percent = 0.01
+                im.scaling = 'log'
+                im.cmap = 'viridis'
+                im.output_format = 'jpg'
+                im.preview_output_directory = preview_output_directory
+                im.thumbnail_output_directory = thumbnail_output_directory
+
+                # If a mosaic was made from more than one file
+                # insert it and it's associated DQ array into the
+                # instance of PreviewImage. Also set the input
+                # filename to indicate that we have mosaicked data
+                if numfiles != 1:
+                    im.data = mosaic_image
+                    im.dq = mosaic_dq
+                    im.file = dummy_file
+
+                im.make_image(max_img_size=max_size)
+                logging.info('Created preview image and thumbnail for: {}'.format(filename))
+            except ValueError as error:
+                logging.warning(error)
 
     # Complete logging:
     logging.info("Completed.")
 
 
-def group_filenames(input_files):
+def group_filenames(filenames):
     """Given a list of JWST filenames, group together files from the
     same exposure. These files will share the same ``program_id``,
     ``observation``, ``visit``, ``visit_group``, ``parallel_seq_id``,
@@ -593,11 +622,12 @@ def group_filenames(input_files):
     will be different. Currently only NIRCam files for a given exposure
     will be grouped together. For other instruments multiple files for
     a given exposure will be kept separate from one another and no
-    mosaic will be made.
+    mosaic will be made.  Stage 3 files will remain as individual
+    files, and will not be grouped together with any other files.
 
     Parameters
     ----------
-    input_files : list
+    filenames : list
         list of filenames
 
     Returns
@@ -608,67 +638,52 @@ def group_filenames(input_files):
         information.
     """
 
-    grouped = []
-
-    # Sort files first
-    input_files.sort()
-
-    goodindex = np.arange(len(input_files))
-    input_files = np.array(input_files)
+    # Some initializations
+    grouped, matched_names = [], []
+    filenames.sort()
 
     # Loop over each file in the list of good files
-    for index, full_filename in enumerate(input_files[goodindex]):
-        file_directory, filename = os.path.split(full_filename)
+    for filename in filenames:
+
+        # Holds list of matching files for exposure
+        subgroup = []
 
         # Generate string to be matched with other filenames
-        filename_parts = filename_parser(filename)
-        program = filename_parts['program_id']
-        observation = filename_parts['observation']
-        visit = filename_parts['visit']
-        visit_group = filename_parts['visit_group']
-        parallel = filename_parts['parallel_seq_id']
-        activity = filename_parts['activity']
-        exposure = filename_parts['exposure_id']
-        detector = filename_parts['detector'].upper()
-        suffix = filename_parts['suffix']
+        filename_dict = filename_parser(os.path.basename(filename))
 
-        observation_base = 'jw{}{}{}_{}{}{}_{}_'.format(
-            program, observation, visit, visit_group,
-            parallel, activity, exposure)
+        # If the filename was already involved in a match, then skip
+        if filename not in matched_names:
 
-        if detector in NIRCAM_SHORTWAVE_DETECTORS:
-            detector_str = 'NRC[AB][1234]'
-        elif detector in NIRCAM_LONGWAVE_DETECTORS:
-            detector_str = 'NRC[AB]5'
-        else:  # non-NIRCam detectors - should never be used I think??
-            detector_str = detector
-        match_str = '{}{}_{}.fits'.format(observation_base, detector_str, suffix)
-        match_str = os.path.join(file_directory, match_str)
-        pattern = re.compile(match_str, re.IGNORECASE)
+            # For stage 3 filenames, treat individually
+            if 'stage_3' in filename_dict['filename_type']:
+                matched_names.append(filename)
+                subgroup.append(filename)
 
-        # Try to match the substring to each good file
-        matches = []
-        matched_name = []
-        for index2, file2match in enumerate(input_files[goodindex]):
-            match = pattern.match(file2match)
+            # Group together stage 1 and 2 filenames
+            elif filename_dict['filename_type'] == 'stage_1_and_2':
 
-            # Add any files that match the string
-            if match is not None:
-                matched_name.append(file2match)
-                matches.append(goodindex[index2])
-        # For any matched files, remove from goodindex so we don't
-        # use them as a basis for matching later
-        all_locs = []
-        for num in matches:
-            loc = np.where(goodindex == num)
-            all_locs.append(loc[0][0])
-        if len(all_locs) != 0:
-            # Delete matched file indexes from the list of
-            # files to search
-            goodindex = np.delete(goodindex, all_locs)
+                # Determine detector naming convention
+                if filename_dict['detector'].upper() in NIRCAM_SHORTWAVE_DETECTORS:
+                    detector_str = 'NRC[AB][1234]'
+                elif filename_dict['detector'].upper() in NIRCAM_LONGWAVE_DETECTORS:
+                    detector_str = 'NRC[AB]5'
+                else:  # non-NIRCam detectors
+                    detector_str = filename_dict['detector'].upper()
 
-            # Add the list of matched files to the overall list of files
-            grouped.append(matched_name)
+                # Build pattern to match against
+                base_output_name = get_base_output_name(filename_dict)
+                match_str = '{}{}_{}.fits'.format(base_output_name, detector_str, filename_dict['suffix'])
+                match_str = os.path.join(os.path.dirname(filename), match_str)
+                pattern = re.compile(match_str, re.IGNORECASE)
+
+                # Try to match the substring to each good file
+                for file_to_match in filenames:
+                    if pattern.match(file_to_match) is not None:
+                        matched_names.append(file_to_match)
+                        subgroup.append(file_to_match)
+
+        if len(subgroup) > 0:
+            grouped.append(subgroup)
 
     return grouped
 

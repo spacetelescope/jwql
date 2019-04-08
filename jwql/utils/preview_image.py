@@ -212,13 +212,6 @@ class PreviewImage():
                     yd, xd = data.shape[-2:]
                     dq = np.ones((yd, xd), dtype="bool")
 
-                # Collect information on aperture location within the
-                # full detector. This is needed for mosaicking NIRCam
-                # detectors later.
-                self.xstart = hdulist[0].header['SUBSTRT1']
-                self.ystart = hdulist[0].header['SUBSTRT2']
-                self.xlen = hdulist[0].header['SUBSIZE1']
-                self.ylen = hdulist[0].header['SUBSIZE2']
         else:
             raise FileNotFoundError(('WARNING: {} does not exist!'.format(filename)))
 
