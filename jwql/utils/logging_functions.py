@@ -211,8 +211,8 @@ def log_info(func):
         minutes_cpu, seconds_cpu = divmod(remainder_cpu, 60)
         hours_time, remainder_time = divmod(t2_time - t1_time, 60 * 60)
         minutes_time, seconds_time = divmod(remainder_time, 60)
-        logging.info('Elapsed Real Time: {0:.0f}:{1:.0f}:{2:f}'.format(int(hours_time), int(minutes_time), int(seconds_time)))
-        logging.info('Elapsed CPU Time: {0:.0f}:{1:.0f}:{2:f}'.format(int(hours_cpu), int(minutes_cpu), int(seconds_cpu)))
+        logging.info('Elapsed Real Time: {}:{}:{}'.format(int(hours_time), int(minutes_time), int(seconds_time)))
+        logging.info('Elapsed CPU Time: {}:{}:{}'.format(int(hours_cpu), int(minutes_cpu), int(seconds_cpu)))
 
     return wrapped
 
