@@ -9,7 +9,7 @@ storage area, named by module name and timestamp, e.g.
 Authors
 -------
 
-    - Catherine Martlin 
+    - Catherine Martlin
     - Alex Viana (WFC3 QL Version)
     - Matthew Bourque
 
@@ -168,7 +168,7 @@ def log_info(func):
     """
 
     @wraps(func)
-    def wrapped(*a, **kw):
+    def wrapped(*args, **kwargs):
 
         # Log environment information
         logging.info('User: ' + getpass.getuser())
@@ -202,7 +202,7 @@ def log_info(func):
         # Call the function and time it
         t1_cpu = time.clock()
         t1_time = time.time()
-        func(*a, **kw)
+        func(*args, **kwargs)
         t2_cpu = time.clock()
         t2_time = time.time()
 
@@ -211,8 +211,8 @@ def log_info(func):
         minutes_cpu, seconds_cpu = divmod(remainder_cpu, 60)
         hours_time, remainder_time = divmod(t2_time - t1_time, 60 * 60)
         minutes_time, seconds_time = divmod(remainder_time, 60)
-        logging.info('Elapsed Real Time: {0:.0f}:{1:.0f}:{2:f}'.format(hours_time, minutes_time, seconds_time))
-        logging.info('Elapsed CPU Time: {0:.0f}:{1:.0f}:{2:f}'.format(hours_cpu, minutes_cpu, seconds_cpu))
+        logging.info('Elapsed Real Time: {0:.0f}:{1:.0f}:{2:f}'.format(int(hours_time), int(minutes_time), int(seconds_time)))
+        logging.info('Elapsed CPU Time: {0:.0f}:{1:.0f}:{2:f}'.format(int(hours_cpu), int(minutes_cpu), int(seconds_cpu)))
 
     return wrapped
 
@@ -232,12 +232,12 @@ def log_fail(func):
     """
 
     @wraps(func)
-    def wrapped(*a, **kw):
+    def wrapped(*args, **kwargs):
 
         try:
 
             # Run the function
-            func(*a, **kw)
+            func(*args, **kwargs)
             logging.info('Completed Successfully')
 
         except Exception:
@@ -260,11 +260,12 @@ def log_timing(func):
     wrapped : func
         The wrapped function. Will log the time."""
 
-    def wrapped():
+    def wrapped(*args, **kwargs):
+
         # Call the function and time it
         t1_cpu = time.process_time()
         t1_time = time.time()
-        func()
+        func(*args, **kwargs)
         t2_cpu = time.process_time()
         t2_time = time.time()
 
@@ -273,6 +274,7 @@ def log_timing(func):
         minutes_cpu, seconds_cpu = divmod(remainder_cpu, 60)
         hours_time, remainder_time = divmod(t2_time - t1_time, 60 * 60)
         minutes_time, seconds_time = divmod(remainder_time, 60)
-        logging.info('Elapsed Real Time of {}: {0:.0f}:{1:.0f}:{2:f}'.format(func.fun_name, hours_time, minutes_time, seconds_time))
-        logging.info('Elapsed CPU Time of {}: {0:.0f}:{1:.0f}:{2:f}'.format(func.fun_name, hours_cpu, minutes_cpu, seconds_cpu))
+        logging.info('Elapsed Real Time of {}: {}:{}:{}'.format(func.__name__, int(hours_time), int(minutes_time), int(seconds_time)))
+        logging.info('Elapsed CPU Time of {}: {}:{}:{}'.format(func.__name__, int(hours_cpu), int(minutes_cpu), int(seconds_cpu)))
+
     return wrapped
