@@ -165,7 +165,7 @@ class PreviewImage():
         numclip = np.int(clipperc * nelem)
         sorted = np.sort(data[pixmap], axis=None)
         minval = sorted[numclip]
-        maxval = sorted[-numclip-1]
+        maxval = sorted[-numclip - 1]
         return (minval, maxval)
 
     def get_data(self, filename, ext):
@@ -315,16 +315,15 @@ class PreviewImage():
                 tlabelstr = [format_string % number for number in tlabelflt]
                 cbar = fig.colorbar(cax, ticks=tickvals)
                 cbar.ax.set_yticklabels(tlabelstr)
-                cbar.ax.tick_params(labelsize=maxsize * 5./4)
-                # cbar.ax.set_ylabel('Signal', rotation=270, fontsize=maxsize*5./4)
-                ax.set_xlabel('Pixels', fontsize=maxsize * 5./4)
-                ax.set_ylabel('Pixels', fontsize=maxsize * 5./4)
+                cbar.ax.tick_params(labelsize=maxsize * 5. / 4)
+                ax.set_xlabel('Pixels', fontsize=maxsize * 5. / 4)
+                ax.set_ylabel('Pixels', fontsize=maxsize * 5. / 4)
                 ax.tick_params(labelsize=maxsize)
                 plt.rcParams.update({'axes.titlesize': 'small'})
-                plt.rcParams.update({'font.size': maxsize * 5./4})
-                plt.rcParams.update({'axes.labelsize': maxsize * 5./4})
-                plt.rcParams.update({'ytick.labelsize': maxsize * 5./4})
-                plt.rcParams.update({'xtick.labelsize': maxsize * 5./4})
+                plt.rcParams.update({'font.size': maxsize * 5. / 4})
+                plt.rcParams.update({'axes.labelsize': maxsize * 5. / 4})
+                plt.rcParams.update({'ytick.labelsize': maxsize * 5. / 4})
+                plt.rcParams.update({'xtick.labelsize': maxsize * 5. / 4})
 
         elif scale == 'linear':
             fig, ax = plt.subplots(figsize=(xsize, ysize))
