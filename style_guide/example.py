@@ -68,7 +68,7 @@ import numpy as np
 import scipy
 from sqlalchemy import Float, Integer, String
 
-from jwql.utils.logging_functions import configure_logging, log_info, log_fail
+from jwql.utils.logging_functions import configure_logging, log_info, log_fail, log_timing
 
 
 # Global variables should be avoided, but if used should be named with
@@ -139,6 +139,7 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
+@log_timing
 def some_other_function(an_int: int, a_float: float, a_bool: bool, a_list: List[Any],
                         a_tuple: Tuple[Any], a_dict: Dict[Any, Any], an_obj: object) -> int:
     """This function just does a bunch of nonsense.

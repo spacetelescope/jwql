@@ -21,7 +21,7 @@ First, ensure that the monitoring script imports the following libraries:
 import os
 import logging
 
-from jwql.utils.logging_functions import configure_logging, log_info, log_fail
+from jwql.utils.logging_functions import configure_logging, log_info, log_fail, log_timing
 ```
 
 Next, under the `if __name__ == '__main__'` portion of the monitoring script, add these lines of code in order to configure the logging.  This creates and initializes a corresponding log file (stored in the `jwql` central storage area):
@@ -45,10 +45,10 @@ def my_monitor_main():
 Convenience Decorators
 ----------------------
 
-The `logging_functions` module also provides a convenience  decorator, `log_func_time` for logging the time required to execute a given function:
+The `logging_functions` module also provides a convenience  decorator, `log_timing` for logging the time required to execute a given function:
 
 ```python
-@log_func_time
+@log_timing
 def my_function():
     """Some function"""
 ```
@@ -82,7 +82,7 @@ The following is what a completed log file may look like:
 03/28/2019 02:30:11 AM INFO: astroquery.mast query returned 77 files
 03/28/2019 02:30:11 AM INFO: Saved Bokeh plot to: /some/location/plot.html
 03/28/2019 02:30:11 AM INFO: <instrument_monitor> completed successfully.
-03/28/2019 02:30:11 AM INFO: Elapsed Real Time: 0:0:0.243441
-03/28/2019 02:30:11 AM INFO: Elapsed CPU Time: 0:0:0.030000
+03/28/2019 02:30:11 AM INFO: Elapsed Real Time: 0:2:48
+03/28/2019 02:30:11 AM INFO: Elapsed CPU Time: 0:1:15
 03/28/2019 02:30:11 AM INFO: Completed Successfully
 ```
