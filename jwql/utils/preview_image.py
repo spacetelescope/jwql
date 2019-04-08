@@ -50,7 +50,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
 # Only import jwst if not running from readthedocs
-if 'build' and 'project' and 'jwql' not in socket.gethostname():
+if 'build' and 'project' not in socket.gethostname():
     from jwst.datamodels import dqflags
 
 
