@@ -129,7 +129,7 @@ def make_log_file(module):
     log_path = get_config()['log_dir']
 
     # For production
-    if user == admin_account and socket.gethosename()[0] == 'p':
+    if user == admin_account and socket.gethostname()[0] == 'p':
         log_file = os.path.join(log_path, 'prod', module, filename)
 
     # For test
