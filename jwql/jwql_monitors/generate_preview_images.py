@@ -28,6 +28,7 @@ Use
 
 import glob
 import logging
+import multiprocessing
 import os
 import re
 
@@ -524,91 +525,18 @@ def get_base_output_name(filename_dict):
 @log_fail
 @log_info
 def generate_preview_images():
-    """The main function of the ``generate_preview_image`` module."""
+    """The main function of the ``generate_preview_image`` module.
+    See module docstring for further details."""
 
     # Begin logging
     logging.info("Beginning the script run")
 
-    filesystem = get_config()['filesystem']
-    preview_image_filesystem = get_config()['preview_image_filesystem']
-    thumbnail_filesystem = get_config()['thumbnail_filesystem']
-
-    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(filesystem, '*'))]
-    for program in program_list:
-
-        filenames = glob.glob(os.path.join(filesystem, program, '*.fits'))
-        grouped_filenames = group_filenames(filenames)
-        logging.info('Found {} filenames'.format(len(filenames)))
-
-        for file_list in grouped_filenames:
-
-            filename = file_list[0]
-
-            # Determine the save location
-            try:
-                identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
-            except ValueError as error:
-                identifier = os.path.basename(filename).split('.fits')[0]
-            preview_output_directory = os.path.join(preview_image_filesystem, identifier)
-            thumbnail_output_directory = os.path.join(thumbnail_filesystem, identifier)
-
-            # Check to see if the preview images already exist and skip if they do
-            file_exists = check_existence(file_list, preview_output_directory)
-            if file_exists:
-                logging.info("JPG already exists for {}, skipping.".format(filename))
-                continue
-
-            # Create the output directories if necessary
-            if not os.path.exists(preview_output_directory):
-                os.makedirs(preview_output_directory)
-                permissions.set_permissions(preview_output_directory)
-                logging.info('Created directory {}'.format(preview_output_directory))
-            if not os.path.exists(thumbnail_output_directory):
-                os.makedirs(thumbnail_output_directory)
-                permissions.set_permissions(thumbnail_output_directory)
-                logging.info('Created directory {}'.format(thumbnail_output_directory))
-
-            # If the exposure contains more than one file (because more
-            # than one detector was used), then create a mosaic
-            max_size = 8
-            numfiles = len(file_list)
-            if numfiles > 1:
-                try:
-                    mosaic_image, mosaic_dq = create_mosaic(file_list)
-                    logging.info('Created mosiac for:')
-                    for item in file_list:
-                        logging.info('\t{}'.format(item))
-                except (ValueError, FileNotFoundError) as error:
-                    logging.error(error)
-                dummy_file = create_dummy_filename(file_list)
-                if numfiles in [2, 4]:
-                    max_size = 16
-                elif numfiles in [8]:
-                    max_size = 32
-
-            # Create the nominal preview image and thumbnail
-            try:
-                im = PreviewImage(filename, "SCI")
-                im.clip_percent = 0.01
-                im.scaling = 'log'
-                im.cmap = 'viridis'
-                im.output_format = 'jpg'
-                im.preview_output_directory = preview_output_directory
-                im.thumbnail_output_directory = thumbnail_output_directory
-
-                # If a mosaic was made from more than one file
-                # insert it and it's associated DQ array into the
-                # instance of PreviewImage. Also set the input
-                # filename to indicate that we have mosaicked data
-                if numfiles != 1:
-                    im.data = mosaic_image
-                    im.dq = mosaic_dq
-                    im.file = dummy_file
-
-                im.make_image(max_img_size=max_size)
-                logging.info('Created preview image and thumbnail for: {}'.format(filename))
-            except ValueError as error:
-                logging.warning(error)
+    # Process programs in parallel
+    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], '*'))]
+    pool = multiprocessing.Pool(processes=int(get_config()['cores']))
+    pool.map(process_program, program_list)
+    pool.close()
+    pool.join()
 
     # Complete logging:
     logging.info("Completed.")
@@ -686,6 +614,90 @@ def group_filenames(filenames):
             grouped.append(subgroup)
 
     return grouped
+
+
+def process_program(program):
+    """Generate preview images and thumbnails for the given program.
+
+    Parameters
+    ----------
+    program : str
+        The program identifier (e.g. ``88600``)
+    """
+
+    # Group together common exposures
+    filenames = glob.glob(os.path.join(get_config()['filesystem'], program, '*.fits'))
+    grouped_filenames = group_filenames(filenames)
+    logging.info('Found {} filenames'.format(len(filenames)))
+
+    for file_list in grouped_filenames:
+        filename = file_list[0]
+
+        # Determine the save location
+        try:
+            identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
+        except ValueError:
+            identifier = os.path.basename(filename).split('.fits')[0]
+        preview_output_directory = os.path.join(get_config()['preview_image_filesystem'], identifier)
+        thumbnail_output_directory = os.path.join(get_config()['thumbnail_filesystem'], identifier)
+
+        # Check to see if the preview images already exist and skip if they do
+        file_exists = check_existence(file_list, preview_output_directory)
+        if file_exists:
+            logging.info("JPG already exists for {}, skipping.".format(filename))
+            continue
+
+        # Create the output directories if necessary
+        if not os.path.exists(preview_output_directory):
+            os.makedirs(preview_output_directory)
+            permissions.set_permissions(preview_output_directory)
+            logging.info('Created directory {}'.format(preview_output_directory))
+        if not os.path.exists(thumbnail_output_directory):
+            os.makedirs(thumbnail_output_directory)
+            permissions.set_permissions(thumbnail_output_directory)
+            logging.info('Created directory {}'.format(thumbnail_output_directory))
+
+        # If the exposure contains more than one file (because more
+        # than one detector was used), then create a mosaic
+        max_size = 8
+        numfiles = len(file_list)
+        if numfiles > 1:
+            try:
+                mosaic_image, mosaic_dq = create_mosaic(file_list)
+                logging.info('Created mosiac for:')
+                for item in file_list:
+                    logging.info('\t{}'.format(item))
+            except (ValueError, FileNotFoundError) as error:
+                logging.error(error)
+            dummy_file = create_dummy_filename(file_list)
+            if numfiles in [2, 4]:
+                max_size = 16
+            elif numfiles in [8]:
+                max_size = 32
+
+        # Create the nominal preview image and thumbnail
+        try:
+            im = PreviewImage(filename, "SCI")
+            im.clip_percent = 0.01
+            im.scaling = 'log'
+            im.cmap = 'viridis'
+            im.output_format = 'jpg'
+            im.preview_output_directory = preview_output_directory
+            im.thumbnail_output_directory = thumbnail_output_directory
+
+            # If a mosaic was made from more than one file
+            # insert it and it's associated DQ array into the
+            # instance of PreviewImage. Also set the input
+            # filename to indicate that we have mosaicked data
+            if numfiles != 1:
+                im.data = mosaic_image
+                im.dq = mosaic_dq
+                im.file = dummy_file
+
+            im.make_image(max_img_size=max_size)
+            logging.info('Created preview image and thumbnail for: {}'.format(filename))
+        except ValueError as error:
+            logging.warning(error)
 
 
 if __name__ == '__main__':
