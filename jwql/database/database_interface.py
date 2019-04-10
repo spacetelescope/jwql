@@ -244,6 +244,7 @@ class FilesystemInstrument(base):
 
         return a_list
 
+
 class Monitor(base):
     """ORM for the ``monitor`` table"""
 
