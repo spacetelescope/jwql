@@ -67,6 +67,11 @@ Additionally, developers of this project should be mindful of application securi
 - Each function/method should have at minimum a description, `Parameters` (if necessary), and `Returns` (if necessary) sections
 
 
+`jwql`-Specific Logging Standards
+---------------------------------
+`jwql` employs standards for logging monitoring scripts.  See the [`logging guide`](https://github.com/spacetelescope/jwql/tree/develop/logging_guide) for further details.
+
+
 `jwql`-Specific Variable Value/Type Standards
 ---------------------------------------------
 
