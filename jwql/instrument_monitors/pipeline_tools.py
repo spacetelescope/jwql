@@ -19,7 +19,6 @@ import copy
 import numpy as np
 
 from astropy.io import fits
-from jwst import datamodels
 from jwst.dq_init import DQInitStep
 from jwst.dark_current import DarkCurrentStep
 from jwst.firstframe import FirstFrameStep
@@ -58,8 +57,7 @@ GROUPSCALE_READOUT_PATTERNS = ['NRSIRS2']
 
 
 def completed_pipeline_steps(filename):
-    """
-    Return a list of the completed pipeline steps for a given file.
+    """Return a list of the completed pipeline steps for a given file.
 
     Parameters
     ----------
@@ -80,7 +78,10 @@ def completed_pipeline_steps(filename):
 
     header = fits.getheader(filename)
     for key in PIPE_KEYWORDS.keys():
-        value = header.get(key)
+        try:
+            value = header.get(key)
+        except KeyError:
+            value == 'NOT DONE'
         if value == 'COMPLETE':
             completed[PIPE_KEYWORDS[key]] = True
     return completed
@@ -88,8 +89,8 @@ def completed_pipeline_steps(filename):
 
 def get_pipeline_steps(instrument):
     """Get the names and order of the calwebb_detector1
-    pipeline steps for a given instrument. Use values that match up with the values in the
-    PIPE_STEP defintion in definitions.py
+    pipeline steps for a given instrument. Use values that match up
+    with the values in the PIPE_STEP defintion in definitions.py
 
     Parameters
     ----------
@@ -131,14 +132,14 @@ def get_pipeline_steps(instrument):
 
     # Initialize using PIPE_KEYWORDS so the steps will be in the right
     # order
-    req = OrderedDict({})
+    required_steps = OrderedDict({})
     for key in steps:
-        req[key] = True
+        required_steps[key] = True
     for key in PIPE_KEYWORDS.values():
-        if key not in req.keys():
-            req[key] = False
+        if key not in required_steps.keys():
+            required_steps[key] = False
 
-    return req
+    return required_steps
 
 
 def image_stack(file_list):
@@ -194,12 +195,12 @@ def run_calwebb_detector1_steps(input_file, steps):
 
     steps : collections.OrderedDict
         Keys are the individual pipeline steps (as seen in the
-        PIPE_KEYWORDS values above). Boolean values indicate
-        whether a step should be run or not. Steps are run in the
-        official calwebb_detector1 order.
+        PIPE_KEYWORDS values above). Boolean values indicate whether a
+        step should be run or not. Steps are run in the official
+        calwebb_detector1 order.
     """
     first_step_to_be_run = True
-    for step_name in steps.keys():
+    for step_name in steps:
         if steps[step_name]:
             if first_step_to_be_run:
                 model = PIPELINE_STEP_MAPPING[step_name].call(input_file)

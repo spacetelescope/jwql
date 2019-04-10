@@ -381,7 +381,6 @@ def monitor_orm_factory(class_name):
 
 
 # Create tables from ORM factory
-definitions_dir = os.path.join(os.path.split(__file__)[0], 'monitor_table_definitions')
 NIRCamDarkQueries = monitor_orm_factory('nircam_dark_query_history')
 NIRCamDarkPixelStats = monitor_orm_factory('nircam_dark_pixel_stats')
 NIRCamDarkDarkCurrent = monitor_orm_factory('nircam_dark_dark_current')
@@ -397,8 +396,6 @@ MIRIDarkDarkCurrent = monitor_orm_factory('miri_dark_dark_current')
 FGSDarkQueries = monitor_orm_factory('fgs_dark_query_history')
 FGSDarkPixelStats = monitor_orm_factory('fgs_dark_pixel_stats')
 FGSDarkDarkCurrent = monitor_orm_factory('fgs_dark_dark_current')
-
-
 
 
 if __name__ == '__main__':
