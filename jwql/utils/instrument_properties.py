@@ -19,8 +19,8 @@ Uses
 from copy import deepcopy
 
 from astropy.io import fits
-import numpy as np
 from jwst.datamodels import dqflags
+import numpy as np
 
 from jwql.utils.constants import AMPLIFIER_BOUNDARIES, FOUR_AMP_SUBARRAYS, SUBARRAYS_ONE_OR_FOUR_AMPS
 
@@ -184,8 +184,6 @@ def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
     """
     instrument = instrument.lower()
     if instrument == "nircam":
-        xs = xdim
-        ys = ydim
         colpad = 12
 
         # Fullframe
@@ -201,8 +199,6 @@ def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
                 rowpad = 3
 
     elif instrument == "niriss":
-        xs = ydim
-        ys = xdim
         colpad = 12
 
         # Fullframe
@@ -214,8 +210,6 @@ def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
             fullpad = 0
 
     elif instrument == 'fgs':
-        xs = ydim
-        ys = xdim
         colpad = 6
         if 'acq1' in aperture.lower():
             colpad = 12
@@ -225,4 +219,4 @@ def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
         else:
             fullpad = 0
 
-    return ((1.0 * xs / amps + colpad) * (ys + rowpad) + fullpad) * sample_time
+    return ((1.0 * xdim / amps + colpad) * (ydim + rowpad) + fullpad) * sample_time

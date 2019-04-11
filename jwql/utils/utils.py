@@ -72,14 +72,10 @@ def copy_files(files, out_dir):
             try:
                 shutil.copy2(input_file, out_dir)
                 success.append(input_new_path)
+                permissions.set_permissions(input_new_path)
             except:
                 failed.append(input_file)
     return success, failed
-
-
-def download_mast_data_via_astroquery(query_results, output_dir):
-    """TEST"""
-    pass
 
 
 def download_mast_data(query_results, output_dir):
@@ -99,25 +95,23 @@ def download_mast_data(query_results, output_dir):
     conn = httplib.HTTPSConnection(server)
 
     # Dowload the products
-    print('Number of query results: {}'.format(len(query_results)))
+    logging.info('Number of query results: {}'.format(len(query_results)))
 
     for i in range(len(query_results)):
 
         # Make full output file path
         output_file = os.path.join(output_dir, query_results[i]['filename'])
 
-        print('Output file is {}'.format(output_file))
+        logging.info('Output file is {}'.format(output_file))
 
         # Download the data
         uri = query_results[i]['dataURI']
 
-        print('uri is {}'.format(uri))
+        logging.info('uri is {}'.format(uri))
 
         conn.request("GET", "/api/v0/download/file?uri="+uri)
         resp = conn.getresponse()
         file_content = resp.read()
-
-
 
         # Save to file
         with open(output_file, 'wb') as file_obj:
@@ -125,13 +119,13 @@ def download_mast_data(query_results, output_dir):
 
         # Check for file
         if not os.path.isfile(output_file):
-            print("ERROR: {} failed to download.".format(output_file))
+            logging.warning("ERROR: {} failed to download.".format(output_file))
         else:
             statinfo = os.stat(output_file)
             if statinfo.st_size > 0:
-                print("DOWNLOAD COMPLETE: ", output_file)
+                logging.info("DOWNLOAD COMPLETE: ", output_file)
             else:
-                print("ERROR: {} file is empty.".format(output_file))
+                logging.warning("ERROR: {} file is empty.".format(output_file))
     conn.close()
 
 
@@ -325,6 +319,33 @@ def filename_parser(filename):
     return filename_dict
 
 
+def filesystem_path(filename):
+    """Return the full path to a given file in the filesystem
+
+    Parameters
+    ----------
+    filename : str
+        File to locate (e.g. jw86600006001_02101_00008_guider1_cal.fits)
+
+    Returns
+    -------
+    full_path : str
+        Full path to the given file, including filename
+    """
+    filesystem_base = get_config()["filesystem"]
+
+    # Subdirectory name is based on the proposal ID
+    subdir = 'jw{}'.format(filename_parser(filename)['program_id'])
+    full_path = os.path.join(filesystem_base, subdir, filename)
+
+    # Check to see if the file exists
+    if os.path.isfile(full_path):
+        return full_path
+    else:
+        raise FileNotFoundError(('{} is not in the predicted location: {}'
+                                 .format(filename, full_path)))
+
+
 def get_base_url():
     """Return the beginning part of the URL to the ``jwql`` web app
     based on which user is running the software.
@@ -370,30 +391,3 @@ def get_config():
         settings = json.load(config_file)
 
     return settings
-
-
-def filesystem_path(filename):
-    """Return the full path to a given file in the filesystem
-
-    Parameters
-    ----------
-    filename : str
-        File to locate (e.g. jw86600006001_02101_00008_guider1_cal.fits)
-
-    Returns
-    -------
-    full_path : str
-        Full path to the given file, including filename
-    """
-    filesystem_base = get_config()["filesystem"]
-
-    # Subdirectory name is based on the proposal ID
-    subdir = filename[0:7]
-    full_path = os.path.join(filesystem_base, subdir, filename)
-
-    # Check to see if the file exists
-    if os.path.isfile(full_path):
-        return full_path
-    else:
-        raise FileNotFoundError(('{} is not in the predicted location: {}'
-                                 .format(filename, full_path)))

@@ -22,7 +22,7 @@ import os
 
 import pytest
 
-from jwql.utils.utils import get_config, filename_parser
+from jwql.utils.utils import copy_files, get_config, filename_parser
 
 
 FILENAME_PARSER_TEST_DATA = [
@@ -245,6 +245,26 @@ FILENAME_PARSER_TEST_DATA = [
 ]
 
 
+def test_copy_files():
+    """Test that files are copied successfully
+    """
+    # Get an example file to be copied
+    data_dir = os.path.join(os.path.dirname(__file__), 'test_data/dark_monitor/')
+    file_to_copy = os.path.join(data_dir, 'test_image_ff.fits')
+
+    # Make a copy one level up
+    new_location = os.path.abspath(os.path.join(data_dir, '../'))
+    copied_file = os.path.join(new_location, file_to_copy)
+
+    # Copy the file
+    sucess, failure = copy_files([file_to_copy], new_location)
+    assert success == [file_to_copy]
+    assert os.path.isfile(copied_file)
+
+    # Remove the copy
+    os.remove(copied_file)
+
+
 @pytest.mark.xfail(raises=FileNotFoundError,
                    reason='User must manually supply config file.')
 def test_get_config():
@@ -271,7 +291,7 @@ def test_filename_parser(filename, solution):
     assert filename_parser(filename) == solution
 
 
-@pytest.mark.xfail(raises=(FileNotFoundError, ValueError), 
+@pytest.mark.xfail(raises=(FileNotFoundError, ValueError),
                    reason='Known non-compliant files in filesystem; User must manually supply config file.')
 def test_filename_parser_whole_filesystem():
     """Test the filename_parser on all files currently in the filesystem.
