@@ -264,6 +264,7 @@ def test_copy_files():
     assert os.path.isfile(copied_file)
 
     # Remove the copy
+    os.remove(original_file)
     os.remove(copied_file)
 
 
