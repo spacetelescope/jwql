@@ -19,7 +19,7 @@ Use
 """
 
 import os
-
+from pathlib import Path
 import pytest
 
 from jwql.utils.utils import copy_files, get_config, filename_parser
@@ -248,17 +248,19 @@ FILENAME_PARSER_TEST_DATA = [
 def test_copy_files():
     """Test that files are copied successfully
     """
-    # Get an example file to be copied
-    data_dir = os.path.join(os.path.dirname(__file__), 'test_data/dark_monitor/')
-    file_to_copy = os.path.join(data_dir, 'test_image_ff.fits')
+    # Create an example file to be copied
+    data_dir = os.path.dirname(__file__)
+    file_to_copy = 'file.txt'
+    original_file = os.path.join(data_dir, file_to_copy)
+    Path(original_file).touch()
 
     # Make a copy one level up
     new_location = os.path.abspath(os.path.join(data_dir, '../'))
     copied_file = os.path.join(new_location, file_to_copy)
 
     # Copy the file
-    sucess, failure = copy_files([file_to_copy], new_location)
-    assert success == [file_to_copy]
+    success, failure = copy_files([file_to_copy], new_location)
+    assert success == [copied_file]
     assert os.path.isfile(copied_file)
 
     # Remove the copy
