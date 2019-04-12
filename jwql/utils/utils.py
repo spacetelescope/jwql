@@ -30,7 +30,6 @@ References
  """
 
 import getpass
-import httplib
 import json
 import os
 import re

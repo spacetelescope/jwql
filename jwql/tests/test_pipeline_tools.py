@@ -103,7 +103,7 @@ def test_get_pipeline_steps():
 def test_image_stack():
     """Test stacking of slope images"""
 
-    directory = os.path.join(os.path.dirname(__file__), 'test_data/dark_monitor')
+    directory = os.path.join(get_config()['test_dir'], 'dark_monitor')
     files = [os.path.join(directory, 'test_image_{}.fits'.format(str(i+1))) for i in range(3)]
 
     image_stack, exptimes = pipeline_tools.image_stack(files)

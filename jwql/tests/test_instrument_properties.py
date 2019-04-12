@@ -23,6 +23,7 @@ import pytest
 import numpy as np
 
 from jwql.utils import instrument_properties
+from jwql.utils.utils import get_config
 
 
 @pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
@@ -32,7 +33,7 @@ def test_amplifier_info():
     file
     """
 
-    data_dir = os.path.join(os.path.dirname(__file__), 'test_data/dark_monitor/')
+    data_dir = os.path.join(get_config()['test_dir'], 'dark_monitor')
 
     fullframe = instrument_properties.amplifier_info(os.path.join(data_dir, 'test_image_ff.fits'))
     fullframe_truth = (4, {'1': [(4, 4), (512, 2044)],

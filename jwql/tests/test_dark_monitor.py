@@ -24,6 +24,7 @@ from astropy.time import Time
 import numpy as np
 
 from jwql.instrument_monitors.common_monitors import dark_monitor
+from jwql.utils.utils import get_config
 
 
 def test_find_hot_dead_pixels():
@@ -57,7 +58,7 @@ def test_get_metadata():
     """Test retrieval of metadata from input file"""
 
     monitor = dark_monitor.Dark(testing=True)
-    filename = os.path.join(os.path.dirname(__file__), 'test_data/dark_monitor/test_image_1.fits')
+    filename = os.path.join(get_config()['test_dir'], 'dark_monitor', 'test_image_1.fits')
     monitor.get_metadata(filename)
 
     assert monitor.detector == 'NRCA1'
