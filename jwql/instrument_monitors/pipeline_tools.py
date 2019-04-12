@@ -9,9 +9,10 @@ Use
 ---
 
     This module can be imported as such:
+    ::
 
-    >>> from jwql.instrument_monitors import pipeline_tools
-    pipeline_steps = pipeline_tools.completed_pipeline_steps(filename)
+        from jwql.instrument_monitors import pipeline_tools
+        pipeline_steps = pipeline_tools.completed_pipeline_steps(filename)
  """
 
 from collections import OrderedDict
@@ -35,7 +36,6 @@ from jwst.saturation import SaturationStep
 from jwst.superbias import SuperBiasStep
 
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_UPPERCASE
-
 
 # Define the fits header keyword that accompanies each step
 PIPE_KEYWORDS = {'S_GRPSCL': 'group_scale', 'S_DQINIT': 'dq_init', 'S_SATURA': 'saturation',
@@ -70,6 +70,7 @@ def completed_pipeline_steps(filename):
         Dictionary with boolean entry for each pipeline step,
         indicating which pipeline steps have been run on filename
     """
+
     # Initialize using PIPE_KEYWORDS so that entries are guaranteed to
     # be in the correct order
     completed = OrderedDict({})
@@ -84,13 +85,14 @@ def completed_pipeline_steps(filename):
             value == 'NOT DONE'
         if value == 'COMPLETE':
             completed[PIPE_KEYWORDS[key]] = True
+
     return completed
 
 
 def get_pipeline_steps(instrument):
-    """Get the names and order of the calwebb_detector1
-    pipeline steps for a given instrument. Use values that match up
-    with the values in the PIPE_STEP defintion in definitions.py
+    """Get the names and order of the ``calwebb_detector1`` pipeline
+    steps for a given instrument. Use values that match up with the
+    values in the ``PIPE_STEP`` defintion in ``definitions.py``
 
     Parameters
     ----------
@@ -100,12 +102,13 @@ def get_pipeline_steps(instrument):
     Returns
     -------
     steps : collections.OrderedDict
-        Dictionary of step names (and modules? do we care?)
+        Dictionary of step names
     """
+
+    # Ensure instrument name is valid
     instrument = instrument.upper()
     if instrument not in JWST_INSTRUMENT_NAMES_UPPERCASE.values():
         raise ValueError("WARNING: {} is not a valid instrument name.".format(instrument))
-    # all_steps = Detector1Pipeline.step_defs
 
     # Order is important in 'steps' lists below!!
     if instrument == 'MIRI':
@@ -130,8 +133,7 @@ def get_pipeline_steps(instrument):
     # IPC correction currently not done for any instrument
     steps.remove('ipc')
 
-    # Initialize using PIPE_KEYWORDS so the steps will be in the right
-    # order
+    # Initialize using PIPE_KEYWORDS so the steps will be in the right order
     required_steps = OrderedDict({})
     for key in steps:
         required_steps[key] = True
@@ -156,6 +158,7 @@ def image_stack(file_list):
     cube : numpy.ndarray
         3D stack of the 2D images
     """
+
     exptimes = []
     for i, input_file in enumerate(file_list):
         with fits.open(input_file) as hdu:
@@ -181,11 +184,12 @@ def image_stack(file_list):
             else:
                 raise ValueError("Input images are of inconsistent size in x/y dimension.")
         exptimes.append([exptime] * num_ints)
+
     return cube, exptimes
 
 
 def run_calwebb_detector1_steps(input_file, steps):
-    """Run the steps of calwebb_detector1 specified in the steps
+    """Run the steps of ``calwebb_detector1`` specified in the steps
     dictionary on the input file
 
     Parameters
@@ -195,10 +199,11 @@ def run_calwebb_detector1_steps(input_file, steps):
 
     steps : collections.OrderedDict
         Keys are the individual pipeline steps (as seen in the
-        PIPE_KEYWORDS values above). Boolean values indicate whether a
-        step should be run or not. Steps are run in the official
-        calwebb_detector1 order.
+        ``PIPE_KEYWORDS`` values above). Boolean values indicate whether
+        a step should be run or not. Steps are run in the official
+        ``calwebb_detector1`` order.
     """
+
     first_step_to_be_run = True
     for step_name in steps:
         if steps[step_name]:
@@ -213,13 +218,14 @@ def run_calwebb_detector1_steps(input_file, steps):
         model.save(output_filename)
     else:
         model[0].save(output_filename)
+
     return output_filename
 
 
 def steps_to_run(all_steps, finished_steps):
-    """Given a list of pipeline steps that need to be completed as
-    well as a list of steps that have already been completed, return
-    a list of steps remaining to be done.
+    """Given a list of pipeline steps that need to be completed as well
+    as a list of steps that have already been completed, return a list
+    of steps remaining to be done.
 
     Parameters
     ----------
@@ -229,7 +235,7 @@ def steps_to_run(all_steps, finished_steps):
     finished_steps : collections.OrderedDict
         A dictionary with keys equal to the pipeline steps and boolean
         values indicating whether a particular step has been completed
-        or not (i.e. output from completed_pipeline_steps)
+        or not (i.e. output from ``completed_pipeline_steps``)
 
     Returns
     -------
@@ -237,7 +243,9 @@ def steps_to_run(all_steps, finished_steps):
         A dictionaru with keys equal to the pipeline steps and boolean
         values indicating whether a particular step has yet to be run.
     """
+
     torun = copy.deepcopy(finished_steps)
+
     for key in all_steps:
         if all_steps[key] == finished_steps[key]:
             torun[key] = False
@@ -247,4 +255,5 @@ def steps_to_run(all_steps, finished_steps):
             print(("WARNING: {} step has been run "
                    "but the requirements say that it should not "
                    "be. Need a new input file.".format(key)))
+
     return torun

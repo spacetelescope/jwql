@@ -30,6 +30,7 @@ References
  """
 
 import getpass
+import httplib
 import json
 import os
 import re
@@ -61,6 +62,7 @@ def copy_files(files, out_dir):
     failed : list
         Files that were not copied
     """
+
     # Copy files if they do not already exist
     success = []
     failed = []
@@ -79,8 +81,8 @@ def copy_files(files, out_dir):
 
 
 def download_mast_data(query_results, output_dir):
-    """Example function for downloading MAST query results. From MAST website
-    https://mast.stsci.edu/api/v0/pyex.html
+    """Example function for downloading MAST query results. From MAST
+    website (``https://mast.stsci.edu/api/v0/pyex.html``)
 
     Parameters
     ----------
@@ -90,24 +92,25 @@ def download_mast_data(query_results, output_dir):
     output_dir : str
         Directory into which the files will be downlaoded
     """
+
     # Set up the https connection
     server = 'mast.stsci.edu'
     conn = httplib.HTTPSConnection(server)
 
     # Dowload the products
-    logging.info('Number of query results: {}'.format(len(query_results)))
+    print('Number of query results: {}'.format(len(query_results)))
 
     for i in range(len(query_results)):
 
         # Make full output file path
         output_file = os.path.join(output_dir, query_results[i]['filename'])
 
-        logging.info('Output file is {}'.format(output_file))
+        print('Output file is {}'.format(output_file))
 
         # Download the data
         uri = query_results[i]['dataURI']
 
-        logging.info('uri is {}'.format(uri))
+        print('uri is {}'.format(uri))
 
         conn.request("GET", "/api/v0/download/file?uri="+uri)
         resp = conn.getresponse()
@@ -119,19 +122,18 @@ def download_mast_data(query_results, output_dir):
 
         # Check for file
         if not os.path.isfile(output_file):
-            logging.warning("ERROR: {} failed to download.".format(output_file))
+            print("ERROR: {} failed to download.".format(output_file))
         else:
             statinfo = os.stat(output_file)
             if statinfo.st_size > 0:
-                logging.info("DOWNLOAD COMPLETE: ", output_file)
+                print("DOWNLOAD COMPLETE: ", output_file)
             else:
-                logging.warning("ERROR: {} file is empty.".format(output_file))
+                print("ERROR: {} file is empty.".format(output_file))
     conn.close()
 
 
 def ensure_dir_exists(fullpath):
-    """Creates dirs from ``fullpath`` if they do not already exist.
-    """
+    """Creates dirs from ``fullpath`` if they do not already exist."""
     if not os.path.exists(fullpath):
         os.makedirs(fullpath)
         permissions.set_permissions(fullpath)
@@ -325,13 +327,14 @@ def filesystem_path(filename):
     Parameters
     ----------
     filename : str
-        File to locate (e.g. jw86600006001_02101_00008_guider1_cal.fits)
+        File to locate (e.g. ``jw86600006001_02101_00008_guider1_cal.fits``)
 
     Returns
     -------
     full_path : str
         Full path to the given file, including filename
     """
+
     filesystem_base = get_config()["filesystem"]
 
     # Subdirectory name is based on the proposal ID
@@ -342,8 +345,7 @@ def filesystem_path(filename):
     if os.path.isfile(full_path):
         return full_path
     else:
-        raise FileNotFoundError(('{} is not in the predicted location: {}'
-                                 .format(filename, full_path)))
+        raise FileNotFoundError(('{} is not in the predicted location: {}'.format(filename, full_path)))
 
 
 def get_base_url():

@@ -16,6 +16,7 @@ Uses
         from jwql.utils import instrument_properties as inst
         amps = inst.amplifier_info('my_files.fits')
 """
+
 from copy import deepcopy
 
 from astropy.io import fits
@@ -37,8 +38,8 @@ def amplifier_info(filename, omit_reference_pixels=True):
         Name of fits file to investigate
 
     omit_reference_pixels : bool
-        If true, return the amp boundary coordinates excluding reference
-        pixels
+        If ``True``, return the amp boundary coordinates excluding
+        reference pixels
 
     Returns
     -------
@@ -51,12 +52,11 @@ def amplifier_info(filename, omit_reference_pixels=True):
         The first tuple give the (x, y) starting location, and the second
         tuple gives the (x, y) ending location.
     """
+
     # First get necessary metadata
     header = fits.getheader(filename)
     instrument = header['INSTRUME'].lower()
     detector = header['DETECTOR']
-    x0 = header['SUBSTRT1']
-    y0 = header['SUBSTRT2']
     x_dim = header['SUBSIZE1']
     y_dim = header['SUBSIZE2']
     sample_time = header['TSAMPLE'] * 1.e-6
@@ -68,11 +68,15 @@ def amplifier_info(filename, omit_reference_pixels=True):
     if ((x_dim == 2048) and (y_dim == 2048)) or subarray_name in FOUR_AMP_SUBARRAYS:
         num_amps = 4
         amp_bounds = deepcopy(AMPLIFIER_BOUNDARIES[instrument])
+
     else:
+
         if subarray_name not in SUBARRAYS_ONE_OR_FOUR_AMPS:
             num_amps = 1
             amp_bounds = {'1': [(0, 0), (x_dim, y_dim)]}
+
         else:
+
             # These are the tougher cases. Subarrays that can be
             # used with multiple amp combinations
 
@@ -97,15 +101,18 @@ def amplifier_info(filename, omit_reference_pixels=True):
                 for amp_num in ['1', '2', '3', '4']:
                     newdims = (amp_bounds[amp_num][1][0], y_dim)
                     amp_bounds[amp_num][1] = newdims
+
             elif np.isclose(amp1_time, frame_time, atol=0.001, rtol=0):
                 num_amps = 1
                 amp_bounds = {'1': [(0, 0), (x_dim, y_dim)]}
+
             else:
                 raise ValueError(("Unable to determine number of amps used for exposure. 4-amp frametime"
                                   "is {}. 1-amp frametime is {}. Reported frametime is {}.")
                                  .format(amp4_time, amp1_time, frame_time))
 
     if omit_reference_pixels:
+
         # If requested, ignore reference pixels by adjusting the indexes of
         # the amp boundaries.
         with fits.open(filename) as hdu:
@@ -143,15 +150,15 @@ def amplifier_info(filename, omit_reference_pixels=True):
             else:
                 new_ymax = prev_ymax
             amp_bounds[key] = [(new_xmin, new_ymin), (new_xmax, new_ymax)]
+
     return num_amps, amp_bounds
 
 
 def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
-    """Calculate the readout time for a single frame
-    of a given size and number of amplifiers. Note that for
-    NIRISS and FGS, the fast readout direction is opposite to
-    that in NIRCam, so we switch xdim and ydim so that we can
-    keep a single equation.
+    """Calculate the readout time for a single frame of a given size and
+    number of amplifiers. Note that for NIRISS and FGS, the fast readout
+    direction is opposite to that in NIRCam, so we switch ``xdim`` and
+    ``ydim`` so that we can keep a single equation.
 
     Parameters:
     -----------
@@ -159,10 +166,9 @@ def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
         Name of the instrument being simulated
 
     aperture : str
-        Name of aperture being simulated (e.g "NRCA1_FULL")
-        Currently this is only used to check for the FGS
-        ACQ1 aperture, which uses a unique value of colpad
-        below.
+        Name of aperture being simulated (e.g ``NRCA1_FULL``).
+        Currently this is only used to check for the FGS ``ACQ1``
+        aperture, which uses a unique value of ``colpad`` below.
 
     xdim : int
         Number of columns in the frame
@@ -182,6 +188,7 @@ def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
     frametime : float
         Readout time in seconds for the frame
     """
+
     instrument = instrument.lower()
     if instrument == "nircam":
         colpad = 12
