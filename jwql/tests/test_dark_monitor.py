@@ -51,7 +51,8 @@ def test_find_hot_dead_pixels():
     assert np.all(dead[1] == np.array([6, 3]))
 
 
-@pytest.mark.xfail
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+                    reason='Requires access to central storage.')
 def test_get_metadata():
     """Test retrieval of metadata from input file"""
 

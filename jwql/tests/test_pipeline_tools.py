@@ -17,10 +17,11 @@ Use
         pytest -s test_pipeline_tools.py
 """
 
+from collections import OrderedDict
 import os
 import pytest
 
-from collections import OrderedDict
+import numpy as np
 
 from jwql.instrument_monitors import pipeline_tools
 from jwql.utils.utils import get_config
@@ -97,7 +98,8 @@ def test_get_pipeline_steps():
     assert miri_req_steps == miri_dict
 
 
-@pytest.mark.xfail
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+                    reason='Requires access to central storage.')
 def test_image_stack():
     """Test stacking of slope images"""
 

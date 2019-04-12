@@ -25,7 +25,8 @@ import numpy as np
 from jwql.utils import instrument_properties
 
 
-@pytest.mark.xfail
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+                    reason='Requires access to central storage.')
 def test_amplifier_info():
     """Test that the correct number of amplifiers are found for a given
     file
