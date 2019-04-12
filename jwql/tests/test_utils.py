@@ -267,9 +267,9 @@ def test_copy_files():
     os.remove(original_file)
     os.remove(copied_file)
 
-
-@pytest.mark.xfail(raises=FileNotFoundError,
-                   reason='User must manually supply config file.')
+    
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+                    reason='Requires access to central storage.')
 def test_get_config():
     """Assert that the ``get_config`` function successfully creates a
     dictionary.
@@ -294,11 +294,10 @@ def test_filename_parser(filename, solution):
     assert filename_parser(filename) == solution
 
 
-@pytest.mark.xfail(raises=(FileNotFoundError, ValueError),
-                   reason='Known non-compliant files in filesystem; User must manually supply config file.')
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+                    reason='Requires access to central storage.')
 def test_filename_parser_whole_filesystem():
-    """Test the filename_parser on all files currently in the filesystem.
-    """
+    """Test the filename_parser on all files currently in the filesystem."""
     # Get all files
     filesystem_dir = get_config()['filesystem']
     all_files = []
