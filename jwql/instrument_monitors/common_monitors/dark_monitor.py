@@ -213,7 +213,7 @@ class Dark():
 
     def __init__(self, testing=False):
         # Begin logging
-        #logging.info("Beginning dark monitor")
+        logging.info("Beginning dark monitor")
         apertures_to_skip = ['NRCALL_FULL', 'NRCAS_FULL', 'NRCBS_FULL']
 
         if not testing:
@@ -249,20 +249,20 @@ class Dark():
                     self.aperture = aperture
                     self.query_start = self.most_recent_search()
 
-                    #logging.info('Working on aperture {} in {}'.format(aperture, instrument))
-                    #logging.info('Query times: {} {}'.format(self.query_start, self.query_end))
+                    logging.info('Working on aperture {} in {}'.format(aperture, instrument))
+                    logging.info('Query times: {} {}'.format(self.query_start, self.query_end))
 
                     # Query MAST using the aperture and the time of the
                     # most recent previous search as the starting time
                     new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
 
-                    #logging.info('Aperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
+                    logging.info('Aperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
                     # Check to see if there are enough new files to meet
                     # the monitor's signal-to-noise requirements
                     if len(new_entries) >= file_count_threshold:
-                        #logging.info("Sufficient new dark files found for {}, {} to run the dark monitor."
-                        #             .format(self.instrument, self.aperture))
+                        logging.info("Sufficient new dark files found for {}, {} to run the dark monitor."
+                                     .format(self.instrument, self.aperture))
 
                         # Get full paths to the files
                         new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
@@ -281,24 +281,24 @@ class Dark():
                         self.run(dark_files)
                         monitor_run = True
                     else:
-                        #logging.info(("Dark monitor skipped. {} new dark files for {}, {}. {} new files are "
-                        #             "required to run dark current monitor.").format(len(new_entries),
-                        #                                                             row['Instrument'],
-                        #                                                             row['Aperture'],
-                        #                                                             file_count_threshold))
+                        logging.info(("Dark monitor skipped. {} new dark files for {}, {}. {} new files are "
+                                     "required to run dark current monitor.").format(len(new_entries),
+                                                                                     row['Instrument'],
+                                                                                     row['Aperture'],
+                                                                                     file_count_threshold))
                         monitor_run = False
 
                     # Update the query history
-                    #logging.info('Updating the query history table!')
+                    logging.info('Updating the query history table!')
                     new_entry = {'instrument': instrument, 'aperture': aperture,
                                  'start_time_mjd': self.query_start, 'end_time_mjd': self.query_end,
                                  'files_found': len(new_entries), 'run_monitor': monitor_run,
                                  'entry_date': datetime.datetime.now()}
-                    #logging.info('new entry:')
-                    #logging.info(new_entry)
+                    logging.info('new entry:')
+                    logging.info(new_entry)
                     self.query_table.__table__.insert().execute(new_entry)
 
-            #logging.info('Dark Monitor completed successfully.')
+            logging.info('Dark Monitor completed successfully.')
 
     def add_bad_pix(self, coordinates, pixel_type, files, mean_filename, baseline_filename):
         """
@@ -324,7 +324,7 @@ class Dark():
             Name of fits file containing the baseline dark rate image used
             to find these bad pixels
         """
-        #logging.info('Adding {} {} pixels to database.'.format(len(coordinates[0]), pixel_type))
+        logging.info('Adding {} {} pixels to database.'.format(len(coordinates[0]), pixel_type))
 
         entry = {'detector': self.detector, 'x_coord': coordinates[0], 'y_coord': coordinates[1],
                  'type': pixel_type, 'source_files': files, 'mean_dark_image_file': mean_filename,
@@ -350,7 +350,7 @@ class Dark():
             self.frame_time = header['TFRAME']
             self.read_pattern = header['READPATT']
         except KeyError as e:
-            print(e)
+            logging.error(e)
 
     def exclude_existing_badpix(self, badpix, pixel_type):
         """Given a set of coordinates of bad pixels, determine which of
@@ -387,8 +387,6 @@ class Dark():
         already_found = []
         if len(db_entries) != 0:
             for _row in db_entries:
-                print('row:', _row)
-                print(type(_row))
                 x_coords = _row.x_coord
                 y_coords = _row.y_coord
                 for x, y in zip(x_coords, y_coords):
@@ -474,7 +472,7 @@ class Dark():
             filename = None
         else:
             filename = query.all()[0].baseline_file
-            print('Baseline filename: {}'.format(filename))
+            logging.info('Baseline filename: {}'.format(filename))
         return filename
 
     def identify_tables(self):
@@ -516,8 +514,8 @@ class Dark():
         query_count = len(query)
         if query_count == 0:
             query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
-            #logging.info(("No query history for {}. Beginning search date will be set to {}."
-            #             .format(self.aperture, query_result)))
+            logging.info(("No query history for {}. Beginning search date will be set to {}."
+                         .format(self.aperture, query_result)))
         elif query_count > 1:
             raise ValueError('More than one "most recent" query?')
         else:
@@ -580,8 +578,7 @@ class Dark():
                 stdev_image = hdu['STDEV'].data
             return mean_image, stdev_image
         except (FileNotFoundError, KeyError) as e:
-            #logging.warning('Trying to read {}: {}'.format(filename, e))
-            print(e)
+            logging.warning('Trying to read {}: {}'.format(filename, e))
 
     @log_fail
     @log_info
@@ -598,8 +595,8 @@ class Dark():
         self.get_metadata(file_list[0])
 
         required_steps = pipeline_tools.get_pipeline_steps(self.instrument)
-        #logging.info(('Required calwebb1_detector pipeline steps to have the data in the '
-        #              'correct format: {}').format(required_steps))
+        logging.info(('Required calwebb1_detector pipeline steps to have the data in the '
+                      'correct format: {}').format(required_steps))
 
         # Modify the list of pipeline steps to skip those not needed for the
         # preparation of dark current data
@@ -616,10 +613,10 @@ class Dark():
             completed_steps = pipeline_tools.completed_pipeline_steps(filename)
             steps_to_run = pipeline_tools.steps_to_run(required_steps, completed_steps)
 
-            #logging.info('Working on file: {}'.format(filename))
-            #logging.info('Required pipeline steps: {}'.format(required_steps))
-            #logging.info('Completed pipeline steps: {}'.format(completed_steps))
-            #logging.info('Pipeline steps that remain to be run: {}'.format(steps_to_run))
+            logging.info('Working on file: {}'.format(filename))
+            logging.info('Required pipeline steps: {}'.format(required_steps))
+            logging.info('Completed pipeline steps: {}'.format(completed_steps))
+            logging.info('Pipeline steps that remain to be run: {}'.format(steps_to_run))
 
             # Run any remaining required pipeline steps
             if any(steps_to_run.values()) is False:
@@ -628,35 +625,35 @@ class Dark():
                 processed_file = filename.replace('.fits', '_{}.fits'.format('rate'))
                 # If the slope file already exists, skip the pipeline call
                 if not os.path.isfile(processed_file):
-                    #logging.info("Running pipeline on {}".format(filename))
+                    logging.info("Running pipeline on {}".format(filename))
                     processed_file = pipeline_tools.run_calwebb_detector1_steps(os.path.abspath(filename),
                                                                                 steps_to_run)
-                    #logging.info("Pipeline complete. Output: {}".format(processed_file))
+                    logging.info("Pipeline complete. Output: {}".format(processed_file))
                 else:
-                    #logging.info("Slope file {} already exists. Skipping call to pipeline."
-                    #             .format(processed_file))
+                    logging.info("Slope file {} already exists. Skipping call to pipeline."
+                                 .format(processed_file))
                     pass
                 slope_files.append(processed_file)
 
                 # Delete the original dark ramp file to save disk space
                 os.remove(filename)
 
-        #logging.info('Slope images to use in the dark monitor for {}, {}: {}'.format(self.instrument,
-        #                                                                             self.aperture,
-        #                                                                             slope_files))
+        logging.info('Slope images to use in the dark monitor for {}, {}: {}'.format(self.instrument,
+                                                                                     self.aperture,
+                                                                                     slope_files))
         # Read in all slope images and place into a list
         slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files)
 
         # Calculate a mean slope image from the inputs
         slope_image, stdev_image = calculations.mean_image(slope_image_stack, sigma_threshold=3)
         mean_slope_file = self.save_mean_slope_image(slope_image, stdev_image, slope_files)
-        #logging.info('Sigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
+        logging.info('Sigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
 
         # Search for new hot/dead/noisy pixels----------------------------
         # Read in baseline mean slope image and stdev image
         # The baseline image is used to look for hot/dead/noisy pixels,
         # but not for comparing mean dark rates. Therefore, updates to
-        # the baseline cane be minimal.
+        # the baseline can be minimal.
 
         # Limit checks for hot/dead/noisy pixels to full frame data since
         # subarray data have much shorter exposure times and therefore lower
@@ -665,14 +662,14 @@ class Dark():
         if aperture_type == 'FULLSCA':
             baseline_file = self.get_baseline_filename()
             if baseline_file is None:
-                #logging.warning(('No baseline dark current countrate image for {} {}. Setting the '
-                #                 'current mean slope image to be the new baseline.'.format(self.instrument,
-                #                                                                           self.aperture)))
+                logging.warning(('No baseline dark current countrate image for {} {}. Setting the '
+                                 'current mean slope image to be the new baseline.'.format(self.instrument,
+                                                                                           self.aperture)))
                 baseline_file = mean_slope_file
                 baseline_mean = deepcopy(slope_image)
                 baseline_stdev = deepcopy(stdev_image)
             else:
-                #logging.info('Baseline file is {}'.format(baseline_file))
+                logging.info('Baseline file is {}'.format(baseline_file))
                 baseline_mean, baseline_stdev = self.read_baseline_slope_image(baseline_file)
 
             # Check the hot/dead pixel population for changes
@@ -687,8 +684,8 @@ class Dark():
             new_dead_pix = self.exclude_existing_badpix(new_dead_pix, 'dead')
 
             # Add new hot and dead pixels to the database
-            #logging.info('Found {} new hot pixels'.format(len(new_hot_pix)))
-            #logging.info('Found {} new dead pixels'.format(len(new_dead_pix)))
+            logging.info('Found {} new hot pixels'.format(len(new_hot_pix)))
+            logging.info('Found {} new dead pixels'.format(len(new_dead_pix)))
             self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file)
             self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file)
 
@@ -703,14 +700,14 @@ class Dark():
             new_noisy_pixels = self.exclude_existing_badpix(new_noisy_pixels, 'noisy')
 
             # Add new noisy pixels to the database
-            #logging.info('Found {} new noisy pixels'.format(len(new_noisy_pix)))
+            logging.info('Found {} new noisy pixels'.format(len(new_noisy_pix)))
             self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file)
 
         # Calculate image statistics--------------------------------------
 
         # Find amplifier boundaries so per-amp statistics can be calculated
         number_of_amps, amp_bounds = instrument_properties.amplifier_info(slope_files[0])
-        #logging.info('Amplifier boundaries: {}'.format(amp_bounds))
+        logging.info('Amplifier boundaries: {}'.format(amp_bounds))
 
         # Calculate mean and stdev values, and fit a Gaussian to the
         # histogram of the pixels in each amp
@@ -763,7 +760,7 @@ class Dark():
         output_filename = '{}_{}_{}_to_{}_mean_slope_image.fits'.format(self.instrument.lower(),
                                                                         self.aperture.lower(),
                                                                         self.query_start, self.query_end)
-        mean_slope_dir = os.path.join(get_config()['outputs'], 'monitor_darks/mean_slope_images/')
+        mean_slope_dir = os.path.join(get_config()['outputs'], 'monitor_darks', 'mean_slope_images')
         ensure_dir_exists(mean_slope_dir)
         output_filename = os.path.join(mean_slope_dir, output_filename)
         primary_hdu = fits.PrimaryHDU()
@@ -875,8 +872,8 @@ class Dark():
                 if mxy > maxy:
                     maxy = copy(mxy)
             amps['5'] = [(0, 0), (maxx, maxy)]
-            #logging.info(('Full frame exposure detected. Adding the full frame to the list '
-            #              'of amplifiers upon which to calculate statistics.'))
+            logging.info(('Full frame exposure detected. Adding the full frame to the list '
+                          'of amplifiers upon which to calculate statistics.'))
 
         for key in amps:
             x_start, y_start = amps[key][0]
@@ -936,14 +933,14 @@ class Dark():
                 double_gaussian_params[key] = [[0., 0.] for i in range(6)]
                 double_gaussian_chi_squared[key] = 0.
 
-        #logging.info('Mean dark rate by amplifier: {}'.format(amp_means))
-        #logging.info('Standard deviation of dark rate by amplifier: {}'.format(amp_means))
-        #logging.info('Best-fit Gaussian parameters [amplitde, peak, width]'.format(gaussian_params))
-        #logging.info('Reduced chi-squared associated with Gaussian fit: {}'.format(gaussian_chi_squared))
-        #logging.info('Best-fit double Gaussian parameters [amplitde1, peak1, width1, amplitde2, peak2, '
-        #             'width2]'.format(double_gaussian_params))
-        #logging.info('Reduced chi-squared associated with double Gaussian fit: {}'
-        #             .format(double_gaussian_chi_squared))
+        logging.info('Mean dark rate by amplifier: {}'.format(amp_means))
+        logging.info('Standard deviation of dark rate by amplifier: {}'.format(amp_means))
+        logging.info('Best-fit Gaussian parameters [amplitde, peak, width]'.format(gaussian_params))
+        logging.info('Reduced chi-squared associated with Gaussian fit: {}'.format(gaussian_chi_squared))
+        logging.info('Best-fit double Gaussian parameters [amplitde1, peak1, width1, amplitde2, peak2, '
+                     'width2]'.format(double_gaussian_params))
+        logging.info('Reduced chi-squared associated with double Gaussian fit: {}'
+                     .format(double_gaussian_chi_squared))
 
         return (amp_means, amp_stdevs, gaussian_params, gaussian_chi_squared, double_gaussian_params,
                 double_gaussian_chi_squared, hist.astype(np.float), bin_centers)
@@ -951,5 +948,5 @@ class Dark():
 
 if __name__ == '__main__':
     module = os.path.basename(__file__).strip('.py')
-    #configure_logging(module)
+    configure_logging(module)
     monitor = Dark()
