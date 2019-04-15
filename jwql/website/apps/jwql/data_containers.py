@@ -238,8 +238,7 @@ def get_edb_components(request):
                 end_time = Time(mnemonic_query_form['end_time'].value(), format='iso')
 
                 if mnemonic_identifier is not None:
-                    mnemonic_query_result = get_mnemonic(mnemonic_identifier, start_time,
-                                                                  end_time)
+                    mnemonic_query_result = get_mnemonic(mnemonic_identifier, start_time, end_time)
                     mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
 
             # create forms for search fields not clicked
@@ -546,7 +545,9 @@ def get_preview_images_by_instrument(inst):
     preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, '*', '*.jpg'))
 
     # Get subset of preview images that match the filenames
-    preview_images = [item for item in preview_images if os.path.basename(item).split('_integ')[0] in filenames]
+    preview_images = [os.path.basename(item) for item in preview_images if os.path.basename(item).split('_integ')[0] in filenames]
+
+    # Return only
 
     return preview_images
 
@@ -677,7 +678,7 @@ def get_thumbnails_by_instrument(inst):
     thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
 
     # Get subset of preview images that match the filenames
-    thumbnails = [item for item in thumbnails if os.path.basename(item).split('_integ')[0] in filenames]
+    thumbnails = [os.path.basename(item) for item in thumbnails if os.path.basename(item).split('_integ')[0] in filenames]
 
     return thumbnails
 
