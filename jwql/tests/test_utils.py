@@ -245,6 +245,8 @@ FILENAME_PARSER_TEST_DATA = [
 ]
 
 
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+                    reason='Requires access to central storage.')
 def test_copy_files():
     """Test that files are copied successfully"""
 
