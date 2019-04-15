@@ -74,7 +74,6 @@ def test_api_views(url):
     # Build full URL
     base_url = get_base_url()
     url = '{}/{}'.format(base_url, url)
-    print('Testing {}'.format(url))
 
     # Determine the type of data to check for based on the url
     data_type = url.split('/')[-2]
