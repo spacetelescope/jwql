@@ -64,10 +64,10 @@ from astropy.modeling import models
 from astropy.time import Time
 import numpy as np
 from pysiaf import Siaf
-from sqlalchemy import func, Table
+from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
-from jwql.database.database_interface import base, session
+from jwql.database.database_interface import session
 from jwql.database.database_interface import NIRCamDarkQueries, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
 from jwql.database.database_interface import NIRISSDarkQueries, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
 from jwql.database.database_interface import MIRIDarkQueries, MIRIDarkPixelStats, MIRIDarkDarkCurrent
@@ -76,10 +76,10 @@ from jwql.database.database_interface import FGSDarkQueries, FGSDarkPixelStats, 
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils import calculations, instrument_properties, permissions
-from jwql.utils.constants import AMPLIFIER_BOUNDARIES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import copy_files, download_mast_data, ensure_dir_exists, get_config, filesystem_path
+from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
 
