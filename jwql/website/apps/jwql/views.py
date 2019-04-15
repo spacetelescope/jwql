@@ -306,6 +306,26 @@ def instrument(request, inst):
 
     return render(request, template, context)
 
+def logging_display(request, inst):
+    """Generate the logging files page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------,
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+
+    template = 'logging_display.html'
+    context = {'inst': inst}
+
+    return render(request, template, context)
+
 
 def unlooked_images(request, inst):
     """Generate the page listing all unlooked images in the database
