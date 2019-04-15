@@ -76,10 +76,15 @@ def get_test_fits_files():
     filenames : list
         List of filepaths to FITS files
     """
+    # Get the files from central store
     if not ON_JENKINS:
         filenames = glob.glob(os.path.join(get_config()['test_dir'], '*.fits'))
         assert len(filenames) > 0
         return filenames
+
+    # Or return an empty list
+    else:
+        return []
 
 
 @pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
