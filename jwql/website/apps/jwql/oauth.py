@@ -214,10 +214,7 @@ def auth_required(fn):
 
         else:
             template = 'not_authenticated.html'
-            context = {'inst': '',
-                       'tools': MONITORS,
-                       'user': user,
-                       'version': jwql.__version__}
+            context = {'inst': ''}
 
             return render(request, template, context)
 
