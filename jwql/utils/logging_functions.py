@@ -86,6 +86,10 @@ def configure_logging(module):
     # Determine log file location
     log_file = make_log_file(module)
 
+    # Make sure no other root lhandlers exist before configuring the logger
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+
     # Create the log file and set the permissions
     logging.basicConfig(filename=log_file,
                         format='%(asctime)s %(levelname)s: %(message)s',
