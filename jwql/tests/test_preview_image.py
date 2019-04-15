@@ -6,6 +6,7 @@ Authors
 -------
 
     - Johannes Sahlmann
+    - Lauren Chambers
 
 
 Use
@@ -22,6 +23,7 @@ Use
 import glob
 import os
 import pytest
+import shutil
 
 from astropy.io import fits
 
@@ -47,10 +49,20 @@ def test_directory(test_dir=TEST_DIRECTORY):
         Path to directory used for testing
 
     """
-    os.mkdir(test_dir)  # creates directory
+    # Set up local test directory
+    if not os.path.isdir(test_dir):
+        os.mkdir(test_dir)  # creates directory
     yield test_dir
+
+    # Tear down local test directory and any files within
     if os.path.isdir(test_dir):
-        os.rmdir(test_dir)
+        shutil.rmtree(test_dir)
+
+    # Empty test directory on central storage
+    jpgs = glob.glob(os.path.join(get_config()['test_dir'], '*.jpg'))
+    thumbs = glob.glob(os.path.join(get_config()['test_dir'], '*.thumbs'))
+    for file in jpgs + thumbs:
+        os.remove(file)
 
 
 @pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
