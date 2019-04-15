@@ -255,13 +255,14 @@ def test_copy_files():
     file_to_copy = 'file.txt'
     original_file = os.path.join(data_dir, file_to_copy)
     Path(original_file).touch()
+    assert os.path.exists(original_file), 'Failed to create original test file.'
 
     # Make a copy one level up
     new_location = os.path.abspath(os.path.join(data_dir, '../'))
     copied_file = os.path.join(new_location, file_to_copy)
 
     # Copy the file
-    success, failure = copy_files([file_to_copy], new_location)
+    success, failure = copy_files([original_file], new_location)
     assert success == [copied_file]
     assert os.path.isfile(copied_file)
 
