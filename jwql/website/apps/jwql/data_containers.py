@@ -732,32 +732,6 @@ def get_thumbnails_by_rootname(rootname):
     return thumbnails
 
 
-def split_files(file_list, page_type):
-    """JUST FOR USE DURING DEVELOPMENT WITH FILESYSTEM
-
-    Splits the files in the filesystem into "unlooked" and "archived",
-    with the "unlooked" images being the most recent 10% of files.
-    """
-    exp_times = []
-    for file in file_list:
-        hdr = fits.getheader(file, ext=0)
-        exp_start = hdr['EXPSTART']
-        exp_times.append(exp_start)
-
-    exp_times_sorted = sorted(exp_times)
-    i_cutoff = int(len(exp_times) * .1)
-    t_cutoff = exp_times_sorted[i_cutoff]
-
-    mask_unlooked = np.array([t < t_cutoff for t in exp_times])
-
-    if page_type == 'unlooked':
-        print('ONLY RETURNING {} "UNLOOKED" FILES OF {} ORIGINAL FILES'.format(len([m for m in mask_unlooked if m]), len(file_list)))
-        return [f for i, f in enumerate(file_list) if mask_unlooked[i]]
-    elif page_type == 'archive':
-        print('ONLY RETURNING {} "ARCHIVED" FILES OF {} ORIGINAL FILES'.format(len([m for m in mask_unlooked if not m]), len(file_list)))
-        return [f for i, f in enumerate(file_list) if not mask_unlooked[i]]
-
-
 def thumbnails(inst, proposal=None):
     """Generate a page showing thumbnail images corresponding to
     activities, from a given ``proposal``
@@ -851,10 +825,6 @@ def thumbnails_ajax(inst, proposal=None):
 
     # Get the available files for the instrument
     filepaths = get_filenames_by_instrument(inst)
-    if proposal is not None:
-        filepaths = split_files(filepaths, 'archive')
-    else:
-        filepaths = split_files(filepaths, 'unlooked')
 
     # Get set of unique rootnames
     rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filepaths])
