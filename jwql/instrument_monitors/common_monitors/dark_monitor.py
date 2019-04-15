@@ -281,7 +281,7 @@ class Dark():
                     else:
                         logging.info(("Dark monitor skipped. {} new dark files for {}, {}. {} new files are "
                                      "required to run dark current monitor.").format(
-                            len(new_entries), row['Instrument'], row['Aperture'], file_count_threshold))
+                            len(new_entries), instrument, aperture, file_count_threshold[0]))
                         monitor_run = False
 
                     # Update the query history
@@ -523,7 +523,7 @@ class Dark():
             sub_query,
             and_(
                 self.query_table.aperture == self.aperture,
-                self.query_table.end_time_mjd == subq.c.maxdate,
+                self.query_table.end_time_mjd == sub_query.c.maxdate,
                 self.query_table.run_monitor == True
             )
         ).all()
