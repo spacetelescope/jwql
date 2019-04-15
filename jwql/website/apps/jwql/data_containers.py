@@ -27,13 +27,15 @@ import os
 import re
 import tempfile
 
-import numpy as np
 from astropy.io import fits
 from astropy.time import Time
 from astroquery.mast import Mast
+import numpy as np
 
 from jwql.edb.edb_interface import mnemonic_inventory
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
+from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
+from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.constants import MONITORS
 from jwql.utils.preview_image import PreviewImage
@@ -46,6 +48,38 @@ PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_image
 THUMBNAIL_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'thumbnails')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
+
+
+def data_trending():
+    """Container for Miri datatrending dashboard and components
+
+    Returns
+    -------
+    variables : int
+        nonsense
+    dashboard : list
+        A list containing the JavaScript and HTML content for the
+        dashboard
+    """
+    dashboard, variables = miri_dash.data_trending_dashboard()
+
+    return variables, dashboard
+
+
+def nirspec_trending():
+    """Container for Miri datatrending dashboard and components
+
+    Returns
+    -------
+    variables : int
+        nonsense
+    dashboard : list
+        A list containing the JavaScript and HTML content for the
+        dashboard
+    """
+    dashboard, variables = nirspec_dash.data_trending_dashboard()
+
+    return variables, dashboard
 
 
 def get_acknowledgements():
@@ -122,7 +156,8 @@ def get_dashboard_components():
                  'system_stats': 'System Statistics'}
 
     # Exclude monitors that can't be saved as components
-    exclude_list = ['monitor_cron_jobs']
+    exclude_list = ['monitor_cron_jobs', 'miri_data_trending',
+                    'trainings_data_15min', 'trainings_data_day']
 
     # Run the cron job monitor to produce an updated table
     monitor_cron_jobs.status(production_mode=True)
@@ -510,7 +545,9 @@ def get_preview_images_by_instrument(inst):
     preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, '*', '*.jpg'))
 
     # Get subset of preview images that match the filenames
-    preview_images = [item for item in preview_images if os.path.basename(item).split('_integ')[0] in filenames]
+    preview_images = [os.path.basename(item) for item in preview_images if os.path.basename(item).split('_integ')[0] in filenames]
+
+    # Return only
 
     return preview_images
 
@@ -641,7 +678,7 @@ def get_thumbnails_by_instrument(inst):
     thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
 
     # Get subset of preview images that match the filenames
-    thumbnails = [item for item in thumbnails if os.path.basename(item).split('_integ')[0] in filenames]
+    thumbnails = [os.path.basename(item) for item in thumbnails if os.path.basename(item).split('_integ')[0] in filenames]
 
     return thumbnails
 
