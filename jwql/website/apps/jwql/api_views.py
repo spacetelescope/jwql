@@ -56,6 +56,7 @@ from .data_containers import get_preview_images_by_rootname
 from .data_containers import get_thumbnails_by_instrument
 from .data_containers import get_thumbnails_by_proposal
 from .data_containers import get_thumbnails_by_rootname
+from .oauth import auth_required
 
 
 def all_proposals(request):
