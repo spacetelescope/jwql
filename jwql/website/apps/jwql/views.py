@@ -391,13 +391,8 @@ def unlooked_images(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    template = 'thumbnails.html'
-    context = thumbnails(inst)
-
-    return render(request, template, context)
+    pass
 
 
 def view_header(request, inst, file):

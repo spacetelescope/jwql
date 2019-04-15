@@ -14,6 +14,12 @@ test_edb_interface.py
     :members:
     :undoc-members:
 
+test_loading_times.py
+--------------------
+.. automodule:: jwql.tests.test_loading_times
+    :members:
+    :undoc-members:
+
 test_monitor_mast.py
 --------------------
 .. automodule:: jwql.tests.test_monitor_mast
