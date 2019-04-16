@@ -64,10 +64,10 @@ from astropy.modeling import models
 from astropy.time import Time
 import numpy as np
 from pysiaf import Siaf
-from sqlalchemy import func, Table
+from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
-from jwql.database.database_interface import base, session
+from jwql.database.database_interface import session
 from jwql.database.database_interface import NIRCamDarkQueries, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
 from jwql.database.database_interface import NIRISSDarkQueries, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
 from jwql.database.database_interface import MIRIDarkQueries, MIRIDarkPixelStats, MIRIDarkDarkCurrent
@@ -76,8 +76,8 @@ from jwql.database.database_interface import FGSDarkQueries, FGSDarkPixelStats, 
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils import calculations, instrument_properties, permissions
-from jwql.utils.constants import AMPLIFIER_BOUNDARIES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
-from jwql.utils.logging_functions import log_info, log_fail
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
+from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, download_mast_data, ensure_dir_exists, get_config, filesystem_path, initilize_instrument_monitor, update_monitor_table
 
@@ -165,7 +165,7 @@ class Dark():
     ----------
     testing : bool
         For pytest. If ``True``, an instance of ``Dark`` is created, but
-        noother code is executed.
+        no other code is executed.
 
     Attributes
     ----------
@@ -193,12 +193,12 @@ class Dark():
         for each instrument/aperture combination
 
     pixel_table : sqlalchemy table
-        Table contianing lists of hot/dead/noisy pixels found for each
+        Table containing lists of hot/dead/noisy pixels found for each
         instrument/detector
 
     stats_table : sqlalchemy table
         Table containing dark current analysis results. Mean/stdev
-        values, historgram information, Gaussian fitting results, etc.
+        values, histogram information, Gaussian fitting results, etc.
 
     Raises
     ------
@@ -283,7 +283,7 @@ class Dark():
                     else:
                         logging.info(("Dark monitor skipped. {} new dark files for {}, {}. {} new files are "
                                      "required to run dark current monitor.").format(
-                            len(new_entries), instrument, aperture, file_count_threshold))
+                            len(new_entries), instrument, aperture, file_count_threshold[0]))
                         monitor_run = False
 
                     # Update the query history
@@ -578,7 +578,7 @@ class Dark():
 
     def read_baseline_slope_image(self, filename):
         """Read in a baseline mean slope image and associated standard
-        deviation image from the give fits file
+        deviation image from the given fits file
 
         Parameters
         ----------
@@ -970,9 +970,9 @@ class Dark():
 
         logging.info('Mean dark rate by amplifier: {}'.format(amp_means))
         logging.info('Standard deviation of dark rate by amplifier: {}'.format(amp_means))
-        logging.info('Best-fit Gaussian parameters [amplitde, peak, width]'.format(gaussian_params))
+        logging.info('Best-fit Gaussian parameters [amplitude, peak, width]'.format(gaussian_params))
         logging.info('Reduced chi-squared associated with Gaussian fit: {}'.format(gaussian_chi_squared))
-        logging.info('Best-fit double Gaussian parameters [amplitde1, peak1, width1, amplitde2, peak2, '
+        logging.info('Best-fit double Gaussian parameters [amplitude1, peak1, width1, amplitude2, peak2, '
                      'width2]'.format(double_gaussian_params))
         logging.info('Reduced chi-squared associated with double Gaussian fit: {}'
                      .format(double_gaussian_chi_squared))
