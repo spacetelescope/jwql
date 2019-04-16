@@ -28,7 +28,7 @@ import shutil
 from astropy.io import fits
 
 from jwql.utils.preview_image import PreviewImage
-from jwql.utils.utils import get_config
+from jwql.utils.utils import get_config, ensure_dir_exists
 
 # directory to be created and populated during tests running
 TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'preview_image_test')
@@ -53,8 +53,7 @@ def test_directory(test_dir=TEST_DIRECTORY):
 
     """
     # Set up local test directory
-    if not os.path.isdir(test_dir):
-        os.mkdir(test_dir)  # creates directory
+    ensure_dir_exists(test_dir)
     yield test_dir
 
     # Tear down local test directory and any files within
