@@ -29,6 +29,7 @@ References
     - JWST TR JWST-STScI-004800, SM-12
  """
 
+import datetime
 import getpass
 import json
 import os
@@ -37,6 +38,7 @@ import shutil
 
 from jwql.utils import permissions
 from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.logging_functions import configure_logging
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -392,3 +394,51 @@ def get_config():
         settings = json.load(config_file)
 
     return settings
+
+
+def initialize_instrument_monitor(module):
+    """Configures a log file for the instrument monitor run and
+    captures the start time of the monitor
+
+    Parameters
+    ----------
+    module : str
+        The module name (e.g. ``dark_monitor``)
+
+    Returns
+    -------
+    start_time : datetime object
+        The start time of the monitor
+    log_file : str
+        The path to where the log file is stored
+    """
+
+    start_time = datetime.datetime.now()
+    log_file = configure_logging(module)
+
+    return start_time, log_file
+
+
+def update_monitor_table(module, start_time, log_file):
+    """Update the ``monitor`` database table with information about
+    the instrument monitor run
+
+    Parameters
+    ----------
+    module : str
+        The module name (e.g. ``dark_monitor``)
+    start_time : datetime object
+        The start time of the monitor
+    log_file : str
+        The path to where the log file is stored
+    """
+
+    from jwql.database.database_interface import Monitor
+
+    new_entry = {}
+    new_entry['monitor_name'] = module
+    new_entry['start_time'] = start_time
+    new_entry['end_time'] = datetime.datetime.now()
+    new_entry['log_file'] = log_file
+
+    Monitor.__table__.insert().execute(new_entry)

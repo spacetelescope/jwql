@@ -79,7 +79,7 @@ from jwql.utils import calculations, instrument_properties, permissions
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
+from jwql.utils.utils import copy_files, download_mast_data, ensure_dir_exists, get_config, filesystem_path, initilize_instrument_monitor, update_monitor_table
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
 
@@ -145,6 +145,8 @@ def mast_query_darks(instrument, aperture, start_date, end_date):
     return query_results
 
 
+@log_fail
+@log_info
 class Dark():
     """Class for executing the dark current monitor.
 
@@ -600,8 +602,7 @@ class Dark():
         except (FileNotFoundError, KeyError) as e:
             logging.warning('Trying to read {}: {}'.format(filename, e))
 
-    @log_fail
-    @log_info
+
     def run(self, file_list):
         """The main method.  See module docstrings for further details
 
@@ -982,7 +983,10 @@ class Dark():
 
 if __name__ == '__main__':
 
+
     module = os.path.basename(__file__).strip('.py')
-    configure_logging(module)
+    start_time, log_file = initialize_instrument_monitor(module)
 
     monitor = Dark()
+
+    update_monitor_table(module, start_time, log_file)
