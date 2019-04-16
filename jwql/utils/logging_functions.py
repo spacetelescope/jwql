@@ -81,6 +81,11 @@ def configure_logging(module):
         environement.
     path : str
         Where to write the log if user-supplied path; default to working dir.
+
+    Returns
+    -------
+    log_file : str
+        The path to the file where the log is written to.
     """
 
     # Determine log file location
@@ -97,6 +102,8 @@ def configure_logging(module):
                         level=logging.INFO)
     print('Log file initialized to {}'.format(log_file))
     set_permissions(log_file)
+
+    return log_file
 
 
 def make_log_file(module):
