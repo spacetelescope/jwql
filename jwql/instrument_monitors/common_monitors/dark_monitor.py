@@ -79,7 +79,7 @@ from jwql.utils import calculations, instrument_properties, permissions
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import copy_files, download_mast_data, ensure_dir_exists, get_config, filesystem_path, initilize_instrument_monitor, update_monitor_table
+from jwql.utils.utils import copy_files, download_mast_data, ensure_dir_exists, get_config, filesystem_path, initialize_instrument_monitor, update_monitor_table
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
 
@@ -211,8 +211,7 @@ class Dark():
 
     def __init__(self, testing=False):
 
-        # Begin logging
-        logging.info("Beginning dark monitor")
+        logging.info('Begin logging for dark_monitor')
 
         apertures_to_skip = ['NRCALL_FULL', 'NRCAS_FULL', 'NRCBS_FULL']
 
@@ -241,6 +240,7 @@ class Dark():
 
                 for aperture in possible_apertures:
 
+                    logging.info('')
                     logging.info('Working on aperture {} in {}'.format(aperture, instrument))
 
                     # Find the appropriate threshold for the number of new files needed
@@ -250,17 +250,17 @@ class Dark():
                     # Locate the record of the most recent MAST search
                     self.aperture = aperture
                     self.query_start = self.most_recent_search()
-                    logging.info('Query times: {} {}'.format(self.query_start, self.query_end))
+                    logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
 
                     # Query MAST using the aperture and the time of the
                     # most recent previous search as the starting time
                     new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
-                    logging.info('Aperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
+                    logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
                     # Check to see if there are enough new files to meet the monitor's signal-to-noise requirements
                     if len(new_entries) >= file_count_threshold:
 
-                        logging.info("Sufficient new dark files found for {}, {} to run the dark monitor."
+                        logging.info('\tSufficient new dark files found for {}, {} to run the dark monitor.'
                                      .format(self.instrument, self.aperture))
 
                         # Get full paths to the files
@@ -281,13 +281,12 @@ class Dark():
                         monitor_run = True
 
                     else:
-                        logging.info(("Dark monitor skipped. {} new dark files for {}, {}. {} new files are "
-                                     "required to run dark current monitor.").format(
+                        logging.info(('\tDark monitor skipped. {} new dark files for {}, {}. {} new files are '
+                                      'required to run dark current monitor.').format(
                             len(new_entries), instrument, aperture, file_count_threshold[0]))
                         monitor_run = False
 
                     # Update the query history
-                    logging.info('Updating the query history table!')
                     new_entry = {'instrument': instrument,
                                  'aperture': aperture,
                                  'start_time_mjd': self.query_start,
@@ -295,9 +294,8 @@ class Dark():
                                  'files_found': len(new_entries),
                                  'run_monitor': monitor_run,
                                  'entry_date': datetime.datetime.now()}
-                    logging.info('new entry:')
-                    logging.info(new_entry)
                     self.query_table.__table__.insert().execute(new_entry)
+                    logging.info('\tUpdated the query history table')
 
             logging.info('Dark Monitor completed successfully.')
 
@@ -533,7 +531,7 @@ class Dark():
         query_count = len(query)
         if query_count == 0:
             query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
-            logging.info(("No query history for {}. Beginning search date will be set to {}."
+            logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
                          .format(self.aperture, query_result)))
         elif query_count > 1:
             raise ValueError('More than one "most recent" query?')
@@ -618,7 +616,7 @@ class Dark():
 
         # Determine which pipeline steps need to be executed
         required_steps = pipeline_tools.get_pipeline_steps(self.instrument)
-        logging.info(('Required calwebb1_detector pipeline steps to have the data in the '
+        logging.info(('\tRequired calwebb1_detector pipeline steps to have the data in the '
                       'correct format: {}').format(required_steps))
 
         # Modify the list of pipeline steps to skip those not needed for the
@@ -639,10 +637,10 @@ class Dark():
             completed_steps = pipeline_tools.completed_pipeline_steps(filename)
             steps_to_run = pipeline_tools.steps_to_run(required_steps, completed_steps)
 
-            logging.info('Working on file: {}'.format(filename))
-            logging.info('Required pipeline steps: {}'.format(required_steps))
-            logging.info('Completed pipeline steps: {}'.format(completed_steps))
-            logging.info('Pipeline steps that remain to be run: {}'.format(steps_to_run))
+            logging.info('\tWorking on file: {}'.format(filename))
+            logging.info('\tRequired pipeline steps: {}'.format(required_steps))
+            logging.info('\tCompleted pipeline steps: {}'.format(completed_steps))
+            logging.info('\tPipeline steps that remain to be run: {}'.format(steps_to_run))
 
             # Run any remaining required pipeline steps
             if any(steps_to_run.values()) is False:
@@ -653,9 +651,9 @@ class Dark():
                 # If the slope file already exists, skip the pipeline call
                 if not os.path.isfile(processed_file):
                     logging.info("Running pipeline on {}".format(filename))
-                    processed_file = pipeline_tools.run_calwebb_detector1_steps(os.path.abspath(filename),
-                                                                                steps_to_run)
+                    processed_file = pipeline_tools.run_calwebb_detector1_steps(os.path.abspath(filename), steps_to_run)
                     logging.info("Pipeline complete. Output: {}".format(processed_file))
+
                 else:
                     logging.info("Slope file {} already exists. Skipping call to pipeline."
                                  .format(processed_file))
@@ -726,7 +724,7 @@ class Dark():
             new_noisy_pixels = self.exclude_existing_badpix(new_noisy_pixels, 'noisy')
 
             # Add new noisy pixels to the database
-            logging.info('Found {} new noisy pixels'.format(len(new_noisy_pix)))
+            logging.info('Found {} new noisy pixels'.format(len(new_noisy_pixels)))
             self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file)
 
         # ----- Calculate image statistics -----

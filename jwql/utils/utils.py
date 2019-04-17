@@ -32,13 +32,13 @@ References
 import datetime
 import getpass
 import json
+import logging
 import os
 import re
 import shutil
 
 from jwql.utils import permissions
 from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES_SHORTHAND
-from jwql.utils.logging_functions import configure_logging
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -412,6 +412,8 @@ def initialize_instrument_monitor(module):
     log_file : str
         The path to where the log file is stored
     """
+
+    from jwql.utils.logging_functions import configure_logging
 
     start_time = datetime.datetime.now()
     log_file = configure_logging(module)

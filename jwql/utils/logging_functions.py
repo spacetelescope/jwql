@@ -210,6 +210,8 @@ def log_info(func):
             except (ImportError, AttributeError) as err:
                 logging.warning(err)
 
+        logging.info('')
+
         # Call the function and time it
         t1_cpu = time.clock()
         t1_time = time.time()
