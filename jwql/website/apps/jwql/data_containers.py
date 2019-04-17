@@ -238,8 +238,7 @@ def get_edb_components(request):
                 end_time = Time(mnemonic_query_form['end_time'].value(), format='iso')
 
                 if mnemonic_identifier is not None:
-                    mnemonic_query_result = get_mnemonic(mnemonic_identifier, start_time,
-                                                                  end_time)
+                    mnemonic_query_result = get_mnemonic(mnemonic_identifier, start_time, end_time)
                     mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
 
             # create forms for search fields not clicked
@@ -546,7 +545,9 @@ def get_preview_images_by_instrument(inst):
     preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, '*', '*.jpg'))
 
     # Get subset of preview images that match the filenames
-    preview_images = [item for item in preview_images if os.path.basename(item).split('_integ')[0] in filenames]
+    preview_images = [os.path.basename(item) for item in preview_images if os.path.basename(item).split('_integ')[0] in filenames]
+
+    # Return only
 
     return preview_images
 
@@ -677,7 +678,7 @@ def get_thumbnails_by_instrument(inst):
     thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
 
     # Get subset of preview images that match the filenames
-    thumbnails = [item for item in thumbnails if os.path.basename(item).split('_integ')[0] in filenames]
+    thumbnails = [os.path.basename(item) for item in thumbnails if os.path.basename(item).split('_integ')[0] in filenames]
 
     return thumbnails
 
@@ -729,32 +730,6 @@ def get_thumbnails_by_rootname(rootname):
     thumbnails = [os.path.basename(thumbnail) for thumbnail in thumbnails]
 
     return thumbnails
-
-
-def split_files(file_list, page_type):
-    """JUST FOR USE DURING DEVELOPMENT WITH FILESYSTEM
-
-    Splits the files in the filesystem into "unlooked" and "archived",
-    with the "unlooked" images being the most recent 10% of files.
-    """
-    exp_times = []
-    for file in file_list:
-        hdr = fits.getheader(file, ext=0)
-        exp_start = hdr['EXPSTART']
-        exp_times.append(exp_start)
-
-    exp_times_sorted = sorted(exp_times)
-    i_cutoff = int(len(exp_times) * .1)
-    t_cutoff = exp_times_sorted[i_cutoff]
-
-    mask_unlooked = np.array([t < t_cutoff for t in exp_times])
-
-    if page_type == 'unlooked':
-        print('ONLY RETURNING {} "UNLOOKED" FILES OF {} ORIGINAL FILES'.format(len([m for m in mask_unlooked if m]), len(file_list)))
-        return [f for i, f in enumerate(file_list) if mask_unlooked[i]]
-    elif page_type == 'archive':
-        print('ONLY RETURNING {} "ARCHIVED" FILES OF {} ORIGINAL FILES'.format(len([m for m in mask_unlooked if not m]), len(file_list)))
-        return [f for i, f in enumerate(file_list) if not mask_unlooked[i]]
 
 
 def thumbnails(inst, proposal=None):
@@ -850,10 +825,6 @@ def thumbnails_ajax(inst, proposal=None):
 
     # Get the available files for the instrument
     filepaths = get_filenames_by_instrument(inst)
-    if proposal is not None:
-        filepaths = split_files(filepaths, 'archive')
-    else:
-        filepaths = split_files(filepaths, 'unlooked')
 
     # Get set of unique rootnames
     rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filepaths])

@@ -42,8 +42,10 @@ import os
 import requests
 
 from authlib.django.client import OAuth
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 
+import jwql
+from jwql.utils.constants import MONITORS
 from jwql.utils.utils import get_base_url, get_config
 
 
@@ -122,50 +124,6 @@ def authorize(request):
     return response
 
 
-def auth_required(fn):
-    """A decorator function that requires the given function to have
-    authentication through ``auth.mast`` set up.
-
-    Parameters
-    ----------
-    fn : function
-        The function to decorate
-
-    Returns
-    -------
-    check_auth : function
-        The decorated function
-    """
-
-    @auth_info
-    def check_auth(request, user):
-        """Check if the user is authenticated through ``auth.mast``.
-        If not, perform the authorization.
-
-        Parameters
-        ----------
-        request : HttpRequest object
-            Incoming request from the webpage
-        user : dict
-            A dictionary of user credentials
-
-        Returns
-        -------
-        fn : function
-            The decorated function
-        """
-
-        # If user is currently anonymous, require a login
-        if user["anon"]:
-            # Redirect to oauth login
-            redirect_uri = os.path.join(get_base_url(), 'authorize')
-            return JWQL_OAUTH.mast_auth.authorize_redirect(request, redirect_uri)
-
-        return fn(request, user)
-
-    return check_auth
-
-
 def auth_info(fn):
     """A decorator function that will return user credentials along
     with what is returned by the original function.
@@ -209,14 +167,61 @@ def auth_info(fn):
 
         # If user is not authenticated, return no credentials
         else:
-            response = {'ezid' : None, "anon": True}
+            response = {'ezid': None, "anon": True}
 
         return fn(request, response, **kwargs)
 
     return user_info
 
 
-@auth_required
+def auth_required(fn):
+    """A decorator function that requires the given function to have
+    authentication through ``auth.mast`` set up.
+
+    Parameters
+    ----------
+    fn : function
+        The function to decorate
+
+    Returns
+    -------
+    check_auth : function
+        The decorated function
+    """
+
+    @auth_info
+    def check_auth(request, user, **kwargs):
+        """Check if the user is authenticated through ``auth.mast``.
+        If not, perform the authorization.
+
+        Parameters
+        ----------
+        request : HttpRequest object
+            Incoming request from the webpage
+        user : dict
+            A dictionary of user credentials
+
+        Returns
+        -------
+        fn : function
+            The decorated function
+        """
+
+        # If user is currently anonymous, require a login
+        if user['ezid']:
+
+            return fn(request, user, **kwargs)
+
+        else:
+            template = 'not_authenticated.html'
+            context = {'inst': ''}
+
+            return render(request, template, context)
+
+    return check_auth
+
+
+@auth_info
 def login(request, user):
     """Spawn a login process for the user
 
@@ -237,7 +242,9 @@ def login(request, user):
         Outgoing response sent to the webpage
     """
 
-    return redirect("/")
+    # Redirect to oauth login
+    redirect_uri = os.path.join(get_base_url(), 'authorize')
+    return JWQL_OAUTH.mast_auth.authorize_redirect(request, redirect_uri)
 
 
 def logout(request):

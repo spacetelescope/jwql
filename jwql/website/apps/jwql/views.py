@@ -51,7 +51,9 @@ from .data_containers import thumbnails_ajax
 from .data_containers import data_trending
 from .data_containers import nirspec_trending
 from .forms import FileSearchForm
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS
+from .oauth import auth_info, auth_required
+import jwql
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -138,7 +140,8 @@ def about(request):
     return render(request, template, context)
 
 
-def archived_proposals(request, inst):
+@auth_required
+def archived_proposals(request, user, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -163,7 +166,8 @@ def archived_proposals(request, inst):
     return render(request, template, context)
 
 
-def archived_proposals_ajax(request, inst):
+@auth_required
+def archived_proposals_ajax(request, user, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -197,7 +201,8 @@ def archived_proposals_ajax(request, inst):
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-def archive_thumbnails(request, inst, proposal):
+@auth_required
+def archive_thumbnails(request, user, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -215,6 +220,7 @@ def archive_thumbnails(request, inst, proposal):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
@@ -226,7 +232,8 @@ def archive_thumbnails(request, inst, proposal):
     return render(request, template, context)
 
 
-def archive_thumbnails_ajax(request, inst, proposal):
+@auth_required
+def archive_thumbnails_ajax(request, user, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -384,13 +391,8 @@ def unlooked_images(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    template = 'thumbnails.html'
-    context = thumbnails(inst)
-
-    return render(request, template, context)
+    pass
 
 
 def view_header(request, inst, file):
@@ -425,7 +427,8 @@ def view_header(request, inst, file):
     return render(request, template, context)
 
 
-def view_image(request, inst, file_root, rewrite=False):
+@auth_required
+def view_image(request, user, inst, file_root, rewrite=False):
     """Generate the image view page
 
     Parameters
