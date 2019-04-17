@@ -116,10 +116,10 @@ def mast_query_darks(instrument, aperture, start_date, end_date):
         dark_template = ['NIS_DARK']
     elif instrument.lower() == 'nirspec':
         instrument = 'NIRSpec'
-        dark_template = 'NRS_DARK'
+        dark_template = ['NRS_DARK']
     elif instrument.lower() == 'fgs':
         instrument = 'FGS'
-        dark_template = 'FGS_DARK'
+        dark_template = ['FGS_DARK']
     elif instrument.lower() == 'miri':
         instrument = 'MIRI'
         dark_template = ['MIR_DARKALL', 'MIR_DARKIMG', 'MIR_DARKMRS']
@@ -228,7 +228,7 @@ class Dark():
             self.query_end = Time.now().mjd
 
             # Loop over all instruments
-            for instrument in JWST_INSTRUMENT_NAMES:
+            for instrument in ['nircam']:
                 self.instrument = instrument
 
                 # Identify which database tables to use
@@ -713,7 +713,7 @@ class Dark():
             self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file)
             self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file)
 
-            # Check for any pixels that are significanly more noisy than
+            # Check for any pixels that are significantly more noisy than
             # in the baseline stdev image
             new_noisy_pixels = self.noise_check(stdev_image, baseline_stdev)
 
