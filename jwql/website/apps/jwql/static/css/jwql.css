@@ -57,6 +57,13 @@
     margin-right: 2%;
 }
 
+/* Make disabled dropdown items grey and unclickable */
+.disabled-dropdown {
+    color: #bec4d4 !important;
+    pointer-events: none;
+    cursor: default;
+}
+
 /*Define dropdown menu colors*/
 .dropdown-item:hover{
     color: #c85108;
