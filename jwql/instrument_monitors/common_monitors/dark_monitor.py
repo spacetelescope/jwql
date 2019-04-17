@@ -75,11 +75,11 @@ from jwql.database.database_interface import NIRSpecDarkQueries, NIRSpecDarkPixe
 from jwql.database.database_interface import FGSDarkQueries, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
-from jwql.utils import calculations, instrument_properties, permissions
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
-from jwql.utils.logging_functions import configure_logging, log_info, log_fail
+from jwql.utils import calculations, instrument_properties
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
+from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import copy_files, download_mast_data, ensure_dir_exists, get_config, filesystem_path, initialize_instrument_monitor, update_monitor_table
+from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path, initialize_instrument_monitor, update_monitor_table
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
 
@@ -600,7 +600,6 @@ class Dark():
         except (FileNotFoundError, KeyError) as e:
             logging.warning('Trying to read {}: {}'.format(filename, e))
 
-
     def run(self, file_list):
         """The main method.  See module docstrings for further details
 
@@ -628,7 +627,6 @@ class Dark():
         # nframes not a power of 2
         if self.read_pattern not in pipeline_tools.GROUPSCALE_READOUT_PATTERNS:
             required_steps['group_scale'] = False
-
 
         # Run pipeline steps on files, generating slope files
         slope_files = []
@@ -688,7 +686,7 @@ class Dark():
             baseline_file = self.get_baseline_filename()
             if baseline_file is None:
                 logging.warning(('No baseline dark current countrate image for {} {}. Setting the '
-                                 'current mean slope image to be the new baseline.'.format(self.instrument,self.aperture)))
+                                 'current mean slope image to be the new baseline.'.format(self.instrument, self.aperture)))
                 baseline_file = mean_slope_file
                 baseline_mean = deepcopy(slope_image)
                 baseline_stdev = deepcopy(stdev_image)
@@ -947,17 +945,12 @@ class Dark():
                 if self.instrument.upper() in ['NIRISS', 'NIRCAM']:
                     initial_params = (np.max(hist), amp_mean, amp_stdev * 0.8,
                                       np.max(hist) / 7., amp_mean / 2., amp_stdev * 0.9)
-                    double_gauss_params, double_gauss_sigma = calculations.double_gaussian_fit(bin_centers, hist,
-                                                                                        initial_params)
-
-                    double_gaussian_params[key] = [[param, sig] for param, sig in zip(double_gauss_params,
-                                                                                      double_gauss_sigma)]
+                    double_gauss_params, double_gauss_sigma = calculations.double_gaussian_fit(bin_centers, hist, initial_params)
+                    double_gaussian_params[key] = [[param, sig] for param, sig in zip(double_gauss_params, double_gauss_sigma)]
                     double_gauss_fit = calculations.double_gaussian(bin_centers, *double_gauss_params)
-
                     degrees_of_freedom = len(bin_centers) - 6.
                     dp_i = double_gauss_fit[positive] / total_pix
-                    double_gaussian_chi_squared[key] = np.sum((hist[positive] - (total_pix*dp_i)**2) /
-                                                              (total_pix*dp_i)) / degrees_of_freedom
+                    double_gaussian_chi_squared[key] = np.sum((hist[positive] - (total_pix*dp_i)**2) / (total_pix*dp_i)) / degrees_of_freedom
 
                 else:
                     double_gaussian_params[key] = [[0., 0.] for i in range(6)]
@@ -980,7 +973,6 @@ class Dark():
 
 
 if __name__ == '__main__':
-
 
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = initialize_instrument_monitor(module)

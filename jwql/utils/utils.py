@@ -32,7 +32,6 @@ References
 import datetime
 import getpass
 import json
-import logging
 import os
 import re
 import shutil
