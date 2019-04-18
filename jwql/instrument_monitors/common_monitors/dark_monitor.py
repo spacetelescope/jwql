@@ -650,12 +650,12 @@ class Dark():
 
                 # If the slope file already exists, skip the pipeline call
                 if not os.path.isfile(processed_file):
-                    logging.info("Running pipeline on {}".format(filename))
+                    logging.info('\tRunning pipeline on {}'.format(filename))
                     processed_file = pipeline_tools.run_calwebb_detector1_steps(os.path.abspath(filename), steps_to_run)
-                    logging.info("Pipeline complete. Output: {}".format(processed_file))
+                    logging.info('\tPipeline complete. Output: {}'.format(processed_file))
 
                 else:
-                    logging.info("Slope file {} already exists. Skipping call to pipeline."
+                    logging.info('\tSlope file {} already exists. Skipping call to pipeline.'
                                  .format(processed_file))
                     pass
 
@@ -674,7 +674,7 @@ class Dark():
         # Calculate a mean slope image from the inputs
         slope_image, stdev_image = calculations.mean_image(slope_image_stack, sigma_threshold=3)
         mean_slope_file = self.save_mean_slope_image(slope_image, stdev_image, slope_files)
-        logging.info('Sigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
+        logging.info('\tSigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
 
         # ----- Search for new hot/dead/noisy pixels -----
         # Read in baseline mean slope image and stdev image
@@ -689,13 +689,13 @@ class Dark():
         if aperture_type == 'FULLSCA':
             baseline_file = self.get_baseline_filename()
             if baseline_file is None:
-                logging.warning(('No baseline dark current countrate image for {} {}. Setting the '
+                logging.warning(('\tNo baseline dark current countrate image for {} {}. Setting the '
                                  'current mean slope image to be the new baseline.'.format(self.instrument, self.aperture)))
                 baseline_file = mean_slope_file
                 baseline_mean = deepcopy(slope_image)
                 baseline_stdev = deepcopy(stdev_image)
             else:
-                logging.info('Baseline file is {}'.format(baseline_file))
+                logging.info('\tBaseline file is {}'.format(baseline_file))
                 baseline_mean, baseline_stdev = self.read_baseline_slope_image(baseline_file)
 
             # Check the hot/dead pixel population for changes
@@ -710,8 +710,8 @@ class Dark():
             new_dead_pix = self.exclude_existing_badpix(new_dead_pix, 'dead')
 
             # Add new hot and dead pixels to the database
-            logging.info('Found {} new hot pixels'.format(len(new_hot_pix)))
-            logging.info('Found {} new dead pixels'.format(len(new_dead_pix)))
+            logging.info('\tFound {} new hot pixels'.format(len(new_hot_pix)))
+            logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix)))
             self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file)
             self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file)
 
@@ -726,14 +726,14 @@ class Dark():
             new_noisy_pixels = self.exclude_existing_badpix(new_noisy_pixels, 'noisy')
 
             # Add new noisy pixels to the database
-            logging.info('Found {} new noisy pixels'.format(len(new_noisy_pixels)))
+            logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels)))
             self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file)
 
         # ----- Calculate image statistics -----
 
         # Find amplifier boundaries so per-amp statistics can be calculated
         number_of_amps, amp_bounds = instrument_properties.amplifier_info(slope_files[0])
-        logging.info('Amplifier boundaries: {}'.format(amp_bounds))
+        logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
 
         # Calculate mean and stdev values, and fit a Gaussian to the
         # histogram of the pixels in each amp
@@ -907,7 +907,7 @@ class Dark():
                 if mxy > maxy:
                     maxy = copy(mxy)
             amps['5'] = [(0, 0), (maxx, maxy)]
-            logging.info(('Full frame exposure detected. Adding the full frame to the list '
+            logging.info(('\tFull frame exposure detected. Adding the full frame to the list '
                           'of amplifiers upon which to calculate statistics.'))
 
         for key in amps:
@@ -963,13 +963,13 @@ class Dark():
                 double_gaussian_params[key] = [[0., 0.] for i in range(6)]
                 double_gaussian_chi_squared[key] = 0.
 
-        logging.info('Mean dark rate by amplifier: {}'.format(amp_means))
-        logging.info('Standard deviation of dark rate by amplifier: {}'.format(amp_means))
-        logging.info('Best-fit Gaussian parameters [amplitude, peak, width]'.format(gaussian_params))
-        logging.info('Reduced chi-squared associated with Gaussian fit: {}'.format(gaussian_chi_squared))
-        logging.info('Best-fit double Gaussian parameters [amplitude1, peak1, width1, amplitude2, peak2, '
+        logging.info('\tMean dark rate by amplifier: {}'.format(amp_means))
+        logging.info('\tStandard deviation of dark rate by amplifier: {}'.format(amp_means))
+        logging.info('\tBest-fit Gaussian parameters [amplitude, peak, width]'.format(gaussian_params))
+        logging.info('\tReduced chi-squared associated with Gaussian fit: {}'.format(gaussian_chi_squared))
+        logging.info('\tBest-fit double Gaussian parameters [amplitude1, peak1, width1, amplitude2, peak2, '
                      'width2]'.format(double_gaussian_params))
-        logging.info('Reduced chi-squared associated with double Gaussian fit: {}'
+        logging.info('\tReduced chi-squared associated with double Gaussian fit: {}'
                      .format(double_gaussian_chi_squared))
 
         return (amp_means, amp_stdevs, gaussian_params, gaussian_chi_squared, double_gaussian_params,
