@@ -218,7 +218,7 @@ class Dark():
         if not testing:
 
             # Get the output directory
-            self.output_dir = os.path.join(get_config()['outputs'], 'monitor_darks')
+            self.output_dir = os.path.join(get_config()['outputs'], 'dark_monitor')
 
             # Read in config file that defines the thresholds for the number
             # of dark files that must be present in order for the monitor to run
@@ -615,8 +615,10 @@ class Dark():
 
         # Determine which pipeline steps need to be executed
         required_steps = pipeline_tools.get_pipeline_steps(self.instrument)
-        logging.info(('\tRequired calwebb1_detector pipeline steps to have the data in the '
-                      'correct format: {}').format(required_steps))
+        logging.info('\tRequired calwebb1_detector pipeline steps to have the data in the '
+                      'correct format:')
+        for item in required_steps:
+            logging.info('\t\t{}: {}'.format(item, required_steps[item]))
 
         # Modify the list of pipeline steps to skip those not needed for the
         # preparation of dark current data
@@ -636,9 +638,9 @@ class Dark():
             steps_to_run = pipeline_tools.steps_to_run(required_steps, completed_steps)
 
             logging.info('\tWorking on file: {}'.format(filename))
-            logging.info('\tRequired pipeline steps: {}'.format(required_steps))
-            logging.info('\tCompleted pipeline steps: {}'.format(completed_steps))
-            logging.info('\tPipeline steps that remain to be run: {}'.format(steps_to_run))
+            logging.info('\tPipeline steps that remain to be run:')
+            for item in steps_to_run:
+                logging.info('\t\t{}: {}'.format(item, steps_to_run[item]))
 
             # Run any remaining required pipeline steps
             if any(steps_to_run.values()) is False:
@@ -662,7 +664,9 @@ class Dark():
                 # Delete the original dark ramp file to save disk space
                 os.remove(filename)
 
-        logging.info('Slope images to use in the dark monitor for {}, {}: {}'.format(self.instrument, self.aperture, slope_files))
+        logging.info('\tSlope images to use in the dark monitor for {}, {}:'.format(self.instrument, self.aperture))
+        for item in slope_files:
+            logging.info('\t\t{}'.format(item))
 
         # Read in all slope images and place into a list
         slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files)
@@ -784,7 +788,7 @@ class Dark():
         output_filename = '{}_{}_{}_to_{}_mean_slope_image.fits'.format(self.instrument.lower(),
                                                                         self.aperture.lower(),
                                                                         self.query_start, self.query_end)
-        mean_slope_dir = os.path.join(get_config()['outputs'], 'monitor_darks', 'mean_slope_images')
+        mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
         ensure_dir_exists(mean_slope_dir)
         output_filename = os.path.join(mean_slope_dir, output_filename)
 

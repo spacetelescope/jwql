@@ -132,7 +132,7 @@ def mean_image(cube, sigma_threshold=3):
         2D sigma-clipped standard deviation image
     """
 
-    clipped_cube = sigma_clip(cube, sigma=sigma_threshold, axis=0, masked=False)
+    clipped_cube = sigma_clip(cube, sigma=sigma_threshold, axis=0)
     mean_image = np.nanmean(clipped_cube, axis=0)
     std_image = np.nanstd(clipped_cube, axis=0)
 
