@@ -376,6 +376,25 @@ def instrument(request, inst):
     return render(request, template, context)
 
 
+def not_found(request):
+    """Generate the ``not_found`` page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    template = '404_space.html'
+    context = {'inst': ''}
+
+    return render(request, template, context)
+
+
 def unlooked_images(request, inst):
     """Generate the page listing all unlooked images in the database
 
