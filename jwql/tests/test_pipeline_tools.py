@@ -64,17 +64,21 @@ def test_get_pipeline_steps():
     instrument
     """
 
-    nrc_req_steps = pipeline_tools.get_pipeline_steps('nircam')
-    nrc_steps = ['dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
-                 'persistence', 'dark_current', 'jump', 'rate']
-    not_required = ['group_scale', 'ipc', 'firstframe', 'lastframe', 'rscd']
-    nrc_dict = OrderedDict({})
-    for step in nrc_steps:
-        nrc_dict[step] = True
-    for step in not_required:
-        nrc_dict[step] = False
-    assert nrc_req_steps == nrc_dict
+    # FGS, NIRCam, and NIRISS have the same required steps
+    instruments = ['fgs', 'nircam', 'niriss']
+    for instrument in instruments:
+      req_steps = pipeline_tools.get_pipeline_steps(instrument)
+      steps = ['dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
+               'persistence', 'dark_current', 'jump', 'rate']
+      not_required = ['group_scale', 'ipc', 'firstframe', 'lastframe', 'rscd']
+      steps_dict = OrderedDict({})
+      for step in steps:
+          steps_dict[step] = True
+      for step in not_required:
+          steps_dict[step] = False
+      assert req_steps == steps_dict
 
+    # NIRSpec and MIRI have different required steps
     nrs_req_steps = pipeline_tools.get_pipeline_steps('nirspec')
     nrs_steps = ['group_scale', 'dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
                  'dark_current', 'jump', 'rate']
