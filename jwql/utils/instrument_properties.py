@@ -116,7 +116,7 @@ def amplifier_info(filename, omit_reference_pixels=True):
         # If requested, ignore reference pixels by adjusting the indexes of
         # the amp boundaries.
         with fits.open(filename) as hdu:
-            data_quality = hdu['PIXELDQ'].data
+            data_quality = hdu['DQ'].data
 
         # Reference pixels should be flagged in the DQ array with the
         # REFERENCE_PIXEL flag. Find the science pixels by looping for
