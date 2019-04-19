@@ -404,6 +404,7 @@ display : inline;
     z-index: 100;
     align: center;
     padding: 2rem;
+    display: none;
 }
 
 .thumbnail {
