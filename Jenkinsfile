@@ -13,9 +13,9 @@ bc0.build_cmds = [
     "conda env update --file=environment.yml",
     "pip install codecov pytest-cov",
     "with_env -n jwql python setup.py install",
-    "rm -fr results.xml coverage.xml cov.xml"]
+    "rm -frv results.xml coverage.xml cov.xml"]
 bc0.test_cmds = [
-    "with_env -n jwql pytest -s --junitxml=results.xml --cov=./jwql/ --cov-report xml:coverage/coverage.xml",
+    "with_env -n jwql pytest -s --junitxml=results.xml --cov=./jwql/ tests/ --cov-report xml:coverage/coverage.xml",
     "codecov --token=${codecov_token}"]
 
 // bc1 = utils.copy(bc0)
