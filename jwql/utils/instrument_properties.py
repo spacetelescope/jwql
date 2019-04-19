@@ -107,8 +107,8 @@ def amplifier_info(filename, omit_reference_pixels=True):
                 amp_bounds = {'1': [(0, 0), (x_dim, y_dim)]}
 
             else:
-                raise ValueError(("Unable to determine number of amps used for exposure. 4-amp frametime"
-                                  "is {}. 1-amp frametime is {}. Reported frametime is {}.")
+                raise ValueError(('Unable to determine number of amps used for exposure. 4-amp frametime'
+                                  'is {}. 1-amp frametime is {}. Reported frametime is {}.')
                                  .format(amp4_time, amp1_time, frame_time))
 
     if omit_reference_pixels:
@@ -116,7 +116,11 @@ def amplifier_info(filename, omit_reference_pixels=True):
         # If requested, ignore reference pixels by adjusting the indexes of
         # the amp boundaries.
         with fits.open(filename) as hdu:
-            data_quality = hdu['DQ'].data
+            try:
+                data_quality = hdu['DQ'].data
+            except KeyError:
+                raise KeyError('DQ extension not found.')
+
 
         # Reference pixels should be flagged in the DQ array with the
         # REFERENCE_PIXEL flag. Find the science pixels by looping for
