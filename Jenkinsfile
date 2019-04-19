@@ -16,8 +16,10 @@ bc0.build_cmds = [
     "rm -vfr results.xml",
     "rm -vfr coverage.xml"]
 bc0.test_cmds = [
-    "with_env -n jwql pytest -s --junitxml=results.xml --cov=./jwql/ --cov-report=xml:reports/coverage.xml",
-    "codecov --token=${codecov_token}"]
+    "with_env -n jwql pytest -s --junitxml=results.xml --cov=./jwql/ --cov-report=xml:coverage.xml",
+    "codecov --token=${codecov_token}",
+    "mkdir -v reports",
+    "mv -v coverage.xml reports/coverage.xml"]
 
 // bc1 = utils.copy(bc0)
 // bc1.build_cmds[0] = "conda install -q -y python=3.5"
