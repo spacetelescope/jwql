@@ -12,9 +12,7 @@ bc0.name = "debug"
 bc0.build_cmds = [
     "conda env update --file=environment.yml",
     "pip install codecov pytest-cov",
-    "with_env -n jwql python setup.py install",
-    "rm -vfr results.xml",
-    "rm -vfr coverage.xml"]
+    "with_env -n jwql python setup.py install"]
 bc0.test_cmds = [
     "with_env -n jwql pytest -s --junitxml=results.xml --cov=./jwql/ --cov-report=xml:coverage.xml",
     "codecov --token=${codecov_token}",
