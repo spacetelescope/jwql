@@ -48,6 +48,8 @@ for mapping in test_mappings:
     urls.append('{}/{}/'.format(instrument, rootname))
 
 
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+                    reason='Requires access to central storage.')
 @pytest.mark.parametrize('url', urls)
 def test_loading_times(url):
     """Test to see if the given ``url`` returns a webpage sucessfully
