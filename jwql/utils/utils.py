@@ -440,6 +440,6 @@ def update_monitor_table(module, start_time, log_file):
     new_entry['monitor_name'] = module
     new_entry['start_time'] = start_time
     new_entry['end_time'] = datetime.datetime.now()
-    new_entry['log_file'] = log_file
+    new_entry['log_file'] = os.path.basename(log_file)
 
     Monitor.__table__.insert().execute(new_entry)

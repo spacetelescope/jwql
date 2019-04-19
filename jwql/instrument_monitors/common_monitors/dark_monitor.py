@@ -68,11 +68,11 @@ from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
-from jwql.database.database_interface import NIRCamDarkQueries, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
-from jwql.database.database_interface import NIRISSDarkQueries, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
-from jwql.database.database_interface import MIRIDarkQueries, MIRIDarkPixelStats, MIRIDarkDarkCurrent
-from jwql.database.database_interface import NIRSpecDarkQueries, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
-from jwql.database.database_interface import FGSDarkQueries, FGSDarkPixelStats, FGSDarkDarkCurrent
+from jwql.database.database_interface import NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
+from jwql.database.database_interface import NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
+from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent
+from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
+from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils import calculations, instrument_properties
@@ -327,13 +327,14 @@ class Dark():
 
         logging.info('Adding {} {} pixels to database.'.format(len(coordinates[0]), pixel_type))
 
+        source_files = [os.path.basename(item) for item in files]
         entry = {'detector': self.detector,
                  'x_coord': coordinates[0],
                  'y_coord': coordinates[1],
                  'type': pixel_type,
-                 'source_files': files,
-                 'mean_dark_image_file': mean_filename,
-                 'baseline_file': baseline_filename,
+                 'source_files': source_files,
+                 'mean_dark_image_file': os.path.basename(mean_filename),
+                 'baseline_file': os.path.basename(baseline_filename),
                  'entry_date': datetime.datetime.now()}
         self.pixel_table.__table__.insert().execute(entry)
 
@@ -497,7 +498,7 @@ class Dark():
         """
 
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
-        self.query_table = eval('{}DarkQueries'.format(mixed_case_name))
+        self.query_table = eval('{}DarkQueryHistory'.format(mixed_case_name))
         self.pixel_table = eval('{}DarkPixelStats'.format(mixed_case_name))
         self.stats_table = eval('{}DarkDarkCurrent'.format(mixed_case_name))
 
@@ -741,10 +742,11 @@ class Dark():
             histogram, bins) = self.stats_by_amp(slope_image, amp_bounds)
 
         # Construct new entry for dark database table
+        source_files = [os.path.basename(item) for item in file_list]
         for key in amp_mean.keys():
             dark_db_entry = {'aperture': self.aperture, 'amplifier': key, 'mean': amp_mean[key],
                              'stdev': amp_stdev[key],
-                             'source_files': file_list,
+                             'source_files': source_files,
                              'gauss_amplitude': list(gauss_param[key][0]),
                              'gauss_peak': list(gauss_param[key][1]),
                              'gauss_width': list(gauss_param[key][2]),
@@ -756,7 +758,7 @@ class Dark():
                              'double_gauss_peak2': double_gauss_params[key][4],
                              'double_gauss_width2': double_gauss_params[key][5],
                              'double_gauss_chisq': double_gauss_chisquared[key],
-                             'mean_dark_image_file': mean_slope_file,
+                             'mean_dark_image_file': os.path.basename(mean_slope_file),
                              'hist_dark_values': bins,
                              'hist_amplitudes': histogram,
                              'entry_date': datetime.datetime.now()
