@@ -19,6 +19,7 @@ Use
         pytest -s test_loading_times.py
 """
 
+import os
 import pytest
 import time
 import urllib.request
