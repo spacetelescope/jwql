@@ -20,6 +20,7 @@ REQUIRES = [
     'numpydoc',
     'pandas',
     'psycopg2',
+    'pysiaf',
     'pytest',
     'sphinx',
     'sqlalchemy',

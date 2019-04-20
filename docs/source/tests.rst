@@ -8,9 +8,27 @@ test_api_views.py
     :members:
     :undoc-members:
 
+test_calculations.py
+--------------------
+.. automodule:: jwql.tests.test_calculations
+    :members:
+    :undoc-members:
+
+test_dark_monitor.py
+--------------------
+.. automodule:: jwql.tests.test_dark_monitor
+    :members:
+    :undoc-members:
+
 test_edb_interface.py
 ---------------------
 .. automodule:: jwql.tests.test_edb_interface
+    :members:
+    :undoc-members:
+
+test_instrument_properties.py
+-----------------------------
+.. automodule:: jwql.tests.test_instrument_properties
     :members:
     :undoc-members:
 
@@ -29,6 +47,12 @@ test_monitor_mast.py
 test_permissions.py
 -------------------
 .. automodule:: jwql.tests.test_permissions
+    :members:
+    :undoc-members:
+
+test_pipeline_tools.py
+----------------------
+.. automodule:: jwql.tests.test_pipeline_tools
     :members:
     :undoc-members:
 
