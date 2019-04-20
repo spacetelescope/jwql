@@ -3,14 +3,15 @@ channels:
 - http://ssb.stsci.edu/astroconda-dev
 - defaults
 dependencies:
-- asdf>=2.3.0
-- astropy
+- asdf=2.3.1
+- astropy>=3.1.2
 - astroquery=0.3.9
 - bokeh=1.1.0
+- crds>=7.2.7
 - django=2.1.7
 - ipython=7.3.0
 - jinja2=2.10
-- jwst
+- jwst=0.13.1
 - matplotlib=3.0.2
 - numpy=1.16.2
 - numpydoc=0.8.0
@@ -29,4 +30,5 @@ dependencies:
 - pip:
   - authlib==0.10
   - codecov==2.0.15
+  - pysiaf==0.2.5
   - sphinx-automodapi==0.10
