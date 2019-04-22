@@ -23,9 +23,11 @@ API documentation
    :maxdepth: 1
    :caption: Contents:
 
+   common_monitors.rst
    database.rst
    edb.rst
    jwql_monitors.rst
+   instrument_monitors.rst
    tests.rst
    utils.rst
    website.rst
