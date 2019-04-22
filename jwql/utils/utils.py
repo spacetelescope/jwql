@@ -112,7 +112,7 @@ def download_mast_data(query_results, output_dir):
 
         print('uri is {}'.format(uri))
 
-        conn.request("GET", "/api/v0/download/file?uri="+uri)
+        conn.request("GET", "/api/v0/download/file?uri=" + uri)
         resp = conn.getresponse()
         file_content = resp.read()
 

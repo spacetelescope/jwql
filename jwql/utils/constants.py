@@ -102,5 +102,5 @@ FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
-    'dark_monitor' : ['nircam_dark_dark_current', 'nircam_dark_pixel_stats', 'nircam_dark_query_history']
-    }
+    'dark_monitor': ['nircam_dark_dark_current', 'nircam_dark_pixel_stats', 'nircam_dark_query_history']
+                                     }
