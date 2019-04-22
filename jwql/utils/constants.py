@@ -7,22 +7,39 @@ Authors
 
 Use
 ---
-    To print the JWST instrument names do:
+    This variables within this module are inteded to be directly
+    imported, e.g.:
     ::
 
-        from jwql.utils import constants
-        print(constants.JWST_INSTRUMENT_NAMES)
-        inventory, keywords = monitor_mast.jwst_inventory()
+        from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 
 References
 ----------
-    Many variables were transferred from an earlier version of utils.py
 
+    Many variables were transferred from an earlier version of
+    ``utils.py``
 """
-JWST_INSTRUMENT_NAMES = sorted(['niriss', 'nircam', 'nirspec', 'miri', 'fgs'])
+
+AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami']
+
+AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 0), (512, 2048)], '2': [(512, 0), (1024, 2048)],
+                                   '3': [(1024, 0), (1536, 2048)], '4': [(1536, 0), (2048, 2048)]}
+                        }
+
+CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']
+
+FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
+
+GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',
+                        'x1dints', 'x1d', 's2d', 's3d', 'dark', 'crfints',
+                        'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat']
+
+GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
 
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
                      'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']
+
+JWST_INSTRUMENT_NAMES = sorted(['niriss', 'nircam', 'nirspec', 'miri', 'fgs'])
 
 JWST_INSTRUMENT_NAMES_SHORTHAND = {'gui': 'fgs',
                                    'mir': 'miri',
@@ -41,23 +58,6 @@ JWST_INSTRUMENT_NAMES_UPPERCASE = {key: value.upper() for key, value in
 
 JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
                       JWST_INSTRUMENT_NAMES]
-
-GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
-
-GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',
-                        'x1dints', 'x1d', 's2d', 's3d', 'dark', 'crfints',
-                        'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat']
-
-TIME_SERIES_SUFFIX_TYPES = ['phot', 'whtlt']
-
-CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']
-
-AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami']
-
-# Concatenate all suffix types (ordered to ensure successful matching)
-FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
-                    TIME_SERIES_SUFFIX_TYPES + CORONAGRAPHY_SUFFIX_TYPES + \
-                    AMI_SUFFIX_TYPES
 
 MONITORS = {
     'fgs': [('Bad Pixel Monitor', '#')],
@@ -88,15 +88,16 @@ MONITORS = {
                 ('Instrument Model Updates', '#'),
                 ('Failed-open Shutter Monitor', '#')]}
 
+NIRCAM_LONGWAVE_DETECTORS = ['NRCA5', 'NRCB5']
+
 NIRCAM_SHORTWAVE_DETECTORS = ['NRCA1', 'NRCA2', 'NRCA3', 'NRCA4',
                               'NRCB1', 'NRCB2', 'NRCB3', 'NRCB4']
 
-NIRCAM_LONGWAVE_DETECTORS = ['NRCA5', 'NRCB5']
-
-AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 0), (512, 2048)], '2': [(512, 0), (1024, 2048)],
-                                   '3': [(1024, 0), (1536, 2048)], '4': [(1536, 0), (2048, 2048)]}
-                        }
-
-FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
-
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
+
+TIME_SERIES_SUFFIX_TYPES = ['phot', 'whtlt']
+
+# Concatenate all suffix types (ordered to ensure successful matching)
+FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
+                    TIME_SERIES_SUFFIX_TYPES + CORONAGRAPHY_SUFFIX_TYPES + \
+                    AMI_SUFFIX_TYPES
