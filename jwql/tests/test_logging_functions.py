@@ -38,6 +38,8 @@ def perform_basic_logging():
     logging.critical('This is a critical warning')
 
 
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+                    reason='Requires access to central storage.')
 def test_configure_logging():
     """Assert that the ``configure_logging`` function successfully
     creates a log file"""
@@ -66,6 +68,8 @@ def test_make_log_file():
     assert log_file in correct_locations
 
 
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+                    reason='Requires access to central storage.')
 def test_logging_functions():
     """A generic end-to-end test that creates a log file, does some
     basic logging, then asserts that some logging content exists"""
