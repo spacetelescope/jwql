@@ -55,10 +55,6 @@ urlpatterns = [
     # Home
     path('', views.home, name='home'),
 
-    # 404
-    path('not_found/', views.not_found, name='not_found'),
-
-
     # Authentication
     path('login/', oauth.login, name='login'),
     path('logout/', oauth.logout, name='logout'),
