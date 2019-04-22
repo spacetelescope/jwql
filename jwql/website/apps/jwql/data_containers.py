@@ -145,44 +145,60 @@ def get_dashboard_components():
     """
 
     output_dir = get_config()['outputs']
-    name_dict = {'': '',
-                 'monitor_mast': 'Database Monitor',
-                 'database_monitor_jwst': 'JWST',
-                 'database_monitor_caom': 'JWST (CAOM)',
-                 'monitor_filesystem': 'Filesystem Monitor',
-                 'filecount_type': 'Total File Counts by Type',
-                 'size_type': 'Total File Sizes by Type',
-                 'filecount': 'Total File Counts',
-                 'system_stats': 'System Statistics'}
-
-    # Exclude monitors that can't be saved as components
-    exclude_list = ['monitor_cron_jobs', 'miri_data_trending',
-                    'trainings_data_15min', 'trainings_data_day']
+    name_dict = {
+        '': {
+            'name': '',
+            'plots': {}
+        },
+        'monitor_mast': {
+            'name': 'Database Monitor',
+            'plots': {'database_monitor_jwst': 'JWST',
+                      'database_monitor_caom': 'JWST (CAOM)'},
+         },
+        'monitor_filesystem': {
+            'name': 'Filesystem Monitor',
+            'plots': {'filecount_type': 'Total File Counts by Type',
+                      'size_type': 'Total File Sizes by Type',
+                      'filecount': 'Total File Counts',
+                      'system_stats': 'System Statistics'},
+        }
+    }
 
     # Run the cron job monitor to produce an updated table
     monitor_cron_jobs.status(production_mode=True)
 
-    # Build dictionary of components
+    # Build dictionary of Bokeh components from files in the output directory
     dashboard_components = {}
-    for dir_name, subdir_list, file_list in os.walk(output_dir):
+    for dir_name, _, file_list in os.walk(output_dir):
         monitor_name = os.path.basename(dir_name)
-        if monitor_name not in exclude_list:
-            dashboard_components[name_dict[monitor_name]] = {}
+
+        # Only continue if the dashboard knows how to build that monitor
+        if monitor_name in name_dict.keys():
+            formatted_monitor_name = name_dict[monitor_name]['name']
+            dashboard_components[formatted_monitor_name] = {}
             for fname in file_list:
                 if 'component' in fname:
                     full_fname = '{}/{}'.format(monitor_name, fname)
                     plot_name = fname.split('_component')[0]
 
-                    # Get the div
-                    html_file = full_fname.split('.')[0] + '.html'
-                    with open(os.path.join(output_dir, html_file)) as f:
-                        div = f.read()
+                    # Only continue if the dashboard knows how to build that plot
+                    if plot_name in name_dict[monitor_name]['plots'].keys():
+                        formatted_plot_name = name_dict[monitor_name]['plots'][plot_name]
 
-                    # Get the script
-                    js_file = full_fname.split('.')[0] + '.js'
-                    with open(os.path.join(output_dir, js_file)) as f:
-                        script = f.read()
-                    dashboard_components[name_dict[monitor_name]][name_dict[plot_name]] = [div, script]
+                        # Get the div
+                        html_file = full_fname.split('.')[0] + '.html'
+                        with open(os.path.join(output_dir, html_file)) as f:
+                            div = f.read()
+
+                        # Get the script
+                        js_file = full_fname.split('.')[0] + '.js'
+                        with open(os.path.join(output_dir, js_file)) as f:
+                            script = f.read()
+
+                        print('FORMATTED MONITOR NAME:', formatted_monitor_name)
+                        print('PLOT NAME:', plot_name)
+                        # Save to dictionary
+                        dashboard_components[formatted_monitor_name][formatted_plot_name] = [div, script]
 
     # Add HTML that cannot be saved as components to the dictionary
     with open(os.path.join(output_dir, 'monitor_cron_jobs', 'cron_status_table.html')) as f:
