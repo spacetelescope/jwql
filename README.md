@@ -103,7 +103,7 @@ The following is a bare-bones example of a best work flow for contributing to th
 4. Create a branch on that personal fork.
 5. Make your software changes.
 6. Push that branch to your personal GitHub repository (i.e. `origin`).
-7. On the `spacetelescope` `jwql` repository, create a pull request that merges the branch into `spacetelescope:master`.
+7. On the `spacetelescope` `jwql` repository, create a pull request that merges the branch into `spacetelescope:develop`.
 8. Assign a reviewer from the team for the pull request.
 9. Iterate with the reviewer over any needed changes until the reviewer accepts and merges your branch.
 10. Delete your local copy of your branch.

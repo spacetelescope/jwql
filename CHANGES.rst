@@ -1,3 +1,49 @@
+0.19.0 (2019-04-19)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Added guidelines to the style guide for logging the execution of instrument monitors
+- Added example useage of logging in the ``example.py`` module
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Modified various web app views to enable faster loading times
+- Modified archive and preview image views to only display data for an authenticated user
+- Added views for MIRI and NIRSpec Data Trending Monitors, which monitors the behavior of select MIRI and NIRSpec Engineering Database mnemonics over time
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Added Dark Monitor module, which monitors the dark current and hot pixel populations for each JWST instrument
+- Added software for producing MIRI and NIRSpec Data Trending Monitors (described above)
+- Modified ``generate_preview_images`` module to support the creation of preview images for stage 3 data products
+- Refactored ``monitor_filesystem`` to utilize PostgreSQL database tables to store archive filesystem statistics
+- Configured ``codecov`` for the project.  The project homepage can be found at https://codecov.io/gh/spacetelescope/jwql
+- Modified ``logging_functions`` module to enable dev, test, and production logging environments
+- Added convenience decorator to ``logging_functions`` module to time the execution of a function or method
+- Modified ``monitor_cron_jobs`` module to make use of updated ``logging_functions``
+
+Bug Fixes
+---------
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Fixed API views to only return the basenames of file paths, instead of full directory names
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Fixed ``logging_functions`` module to properly parse new format of ``INSTALL_REQUIRES`` dependency in ``setup.py`` for logging system dependencies and their versions
+- Fixed ``Jenkinsfile`` to not allow for one failed unit test in Jenkins builds
+
+
 0.18.0 (2019-03-14)
 ===================
 

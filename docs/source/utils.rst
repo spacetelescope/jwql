@@ -2,9 +2,21 @@
 utils
 *****
 
+calculations.py
+---------------
+.. automodule:: jwql.utils.calculations
+    :members:
+    :undoc-members:
+
 constants.py
 ------------
 .. automodule:: jwql.utils.constants
+    :members:
+    :undoc-members:
+
+instrument_properties.py
+------------------------
+.. automodule:: jwql.utils.instrument_properties
     :members:
     :undoc-members:
 
