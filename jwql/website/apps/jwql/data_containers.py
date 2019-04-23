@@ -732,6 +732,21 @@ def get_thumbnails_by_rootname(rootname):
     return thumbnails
 
 
+def random_404_page():
+    """Randomly select one of the various 404 templates for JWQL
+
+    Returns
+    -------
+    random_template : str
+        Filename of the selected template
+    """
+    templates = ['404_space.html']
+    choose_page = np.random.choice(len(templates))
+    random_template = templates[choose_page]
+
+    return random_template
+
+
 def thumbnails(inst, proposal=None):
     """Generate a page showing thumbnail images corresponding to
     activities, from a given ``proposal``
