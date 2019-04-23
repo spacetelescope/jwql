@@ -46,6 +46,7 @@ from .data_containers import get_filenames_by_instrument
 from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_proposal_info
+from .data_containers import random_404_page
 from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
 from .data_containers import data_trending
@@ -374,6 +375,26 @@ def instrument(request, inst):
                'doc_url': doc_url}
 
     return render(request, template, context)
+
+
+def not_found(request):
+    """Generate a ``not_found`` page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    template = random_404_page()
+    status_code = 404  # Note that this will show 400, 403, 404, and 500 as 404 status
+    context = {'inst': ''}
+
+    return render(request, template, context, status=status_code)
 
 
 def unlooked_images(request, inst):
