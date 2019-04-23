@@ -48,6 +48,8 @@ import jwql
 from jwql.utils.constants import MONITORS
 from jwql.utils.utils import get_base_url, get_config
 
+PREV_PAGE = ''
+
 
 def register_oauth():
     """Register the ``jwql`` application with the ``auth.mast``
@@ -118,7 +120,7 @@ def authorize(request):
     cookie_args['httponly'] = True
 
     # Set the cookie
-    response = redirect("/")
+    response = redirect(PREV_PAGE)
     response.set_cookie("ASB-AUTH", token["access_token"], **cookie_args)
 
     return response
@@ -243,7 +245,10 @@ def login(request, user):
     """
 
     # Redirect to oauth login
+    global PREV_PAGE
+    PREV_PAGE = request.META.get('HTTP_REFERER')
     redirect_uri = os.path.join(get_base_url(), 'authorize')
+
     return JWQL_OAUTH.mast_auth.authorize_redirect(request, redirect_uri)
 
 
@@ -266,7 +271,9 @@ def logout(request):
         Outgoing response sent to the webpage
     """
 
-    response = redirect("/")
+    global PREV_PAGE
+    PREV_PAGE = request.META.get('HTTP_REFERER')
+    response = redirect(PREV_PAGE)
     response.delete_cookie("ASB-AUTH")
 
     return response
