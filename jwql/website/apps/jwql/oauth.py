@@ -271,6 +271,8 @@ def logout(request):
         Outgoing response sent to the webpage
     """
 
+    global PREV_PAGE
+    PREV_PAGE = request.META.get('HTTP_REFERER')
     response = redirect(PREV_PAGE)
     response.delete_cookie("ASB-AUTH")
 
