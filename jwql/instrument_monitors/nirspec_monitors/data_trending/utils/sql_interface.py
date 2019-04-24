@@ -29,8 +29,9 @@ from sqlite3 import Error
 import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.mnemonics as m
 from jwql.utils.utils import get_config, filename_parser
 
+
 def create_connection(db_file):
-    '''Sets up a connection or builds database
+    """Sets up a connection or builds database
     Parameters
     ----------
     db_file : string
@@ -39,7 +40,7 @@ def create_connection(db_file):
     ------
     conn : DBobject or None
         Connection object or None
-    '''
+    """
     try:
         conn = sqlite3.connect(db_file)
         print('Connected to database "{}"'.format(db_file))
@@ -50,18 +51,18 @@ def create_connection(db_file):
 
 
 def close_connection(conn):
-    '''Closes connection to database
+    """Closes connection to database
     Parameters
     ----------
     conn : DBobject
         Connection object to be closed
-    '''
+    """
     conn.close()
-    print('Connection closed')
+    print("Connection closed")
 
 
 def add_data(conn, mnemonic, data):
-    '''Add data of a specific mnemonic to database if it not exists
+    """Add data of a specific mnemonic to database if it not exists
     Parameters
     ----------
     conn : DBobject
@@ -70,24 +71,29 @@ def add_data(conn, mnemonic, data):
         identifies the table
     data : list
         specifies the data
-    '''
+    """
 
     c = conn.cursor()
 
-    #check if data already exists (start_time as identifier)
-    c.execute('SELECT id from {} WHERE start_time= {}'.format(mnemonic, data[0]))
+    # check if data already exists (start_time as identifier)
+    c.execute("SELECT id from {} WHERE start_time= {}".format(mnemonic, data[0]))
     temp = c.fetchall()
 
     if len(temp) == 0:
-        c.execute('INSERT INTO {} (start_time,end_time,data_points,average,deviation) \
-                VALUES (?,?,?,?,?)'.format(mnemonic),data)
+        c.execute(
+            "INSERT INTO {} (start_time,end_time,data_points,average,deviation) \
+                VALUES (?,?,?,?,?)".format(
+                mnemonic
+            ),
+            data,
+        )
         conn.commit()
     else:
-        print('data for {} already exists'.format(mnemonic))
+        print("data for {} already exists".format(mnemonic))
 
 
 def add_wheel_data(conn, mnemonic, data):
-    '''Add data of a specific wheel position to database if it not exists
+    """Add data of a specific wheel position to database if it not exists
     Parameters
     ----------
     conn : DBobject
@@ -96,38 +102,46 @@ def add_wheel_data(conn, mnemonic, data):
         identifies the table
     data : list
         specifies the data
-    '''
+    """
 
     c = conn.cursor()
 
-    #check if data already exists (start_time)
-    c.execute('SELECT id from {} WHERE timestamp = {}'.format(mnemonic, data[0]))
+    # check if data already exists (start_time)
+    c.execute("SELECT id from {} WHERE timestamp = {}".format(mnemonic, data[0]))
     temp = c.fetchall()
 
     if len(temp) == 0:
-        c.execute('INSERT INTO {} (timestamp, value) \
-                VALUES (?,?)'.format(mnemonic),data)
+        c.execute(
+            "INSERT INTO {} (timestamp, value) \
+                VALUES (?,?)".format(
+                mnemonic
+            ),
+            data,
+        )
         conn.commit()
     else:
-        print('data already exists')
+        print("data already exists")
 
 
 def main():
-    ''' Creates SQLite database with tables proposed in mnemonics.py'''
+    """ Creates SQLite database with tables proposed in mnemonics.py"""
 
-    __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+    __location__ = os.path.realpath(
+        os.path.join(os.getcwd(), os.path.dirname(__file__))
+    )
 
-    #generate paths
-    DATABASE_LOCATION = os.path.join(get_config()['jwql_dir'], 'database')
-    DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'nirspec_database.db')
+    # generate paths
+    DATABASE_LOCATION = os.path.join(get_config()["jwql_dir"], "database")
+    DATABASE_FILE = os.path.join(DATABASE_LOCATION, "nirspec_database.db")
 
     conn = create_connection(DATABASE_FILE)
 
-    c=conn.cursor()
+    c = conn.cursor()
 
     for mnemonic in m.mnemonic_set_database:
         try:
-            c.execute('CREATE TABLE IF NOT EXISTS {} (         \
+            c.execute(
+                "CREATE TABLE IF NOT EXISTS {} (         \
                                         id INTEGER,                     \
                                         start_time REAL,                \
                                         end_time REAL,                  \
@@ -135,26 +149,34 @@ def main():
                                         average REAL,                   \
                                         deviation REAL,                 \
                                         performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
-                                        PRIMARY KEY (id));'.format(mnemonic))
+                                        PRIMARY KEY (id));".format(
+                    mnemonic
+                )
+            )
         except Error as e:
-            print('e')
+            print("e")
 
     for mnemonic in m.mnemonic_wheelpositions:
         try:
-            c.execute('CREATE TABLE IF NOT EXISTS {} (         \
+            c.execute(
+                "CREATE TABLE IF NOT EXISTS {} (         \
                                         id INTEGER,            \
                                         timestamp REAL,        \
                                         value REAL,            \
                                         performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
-                                        PRIMARY KEY (id));'.format(mnemonic))
+                                        PRIMARY KEY (id));".format(
+                    mnemonic
+                )
+            )
         except Error as e:
-            print('e')
+            print("e")
 
     print("Database initial setup complete")
     conn.commit()
     close_connection(conn)
 
-#sets up database if called as main
+
+# sets up database if called as main
 if __name__ == "__main__":
     main()
     print("sql_interface.py done")

@@ -54,10 +54,14 @@ from .data_containers import nirspec_trending
 from .forms import FileSearchForm
 from .oauth import auth_info, auth_required
 import jwql
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import (
+    JWST_INSTRUMENT_NAMES,
+    MONITORS,
+    JWST_INSTRUMENT_NAMES_MIXEDCASE,
+)
 from jwql.utils.utils import get_base_url, get_config
 
-FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
+FILESYSTEM_DIR = os.path.join(get_config()["jwql_dir"], "filesystem")
 
 
 def miri_data_trending(request):
@@ -78,17 +82,18 @@ def miri_data_trending(request):
     variables, dash = data_trending()
 
     context = {
-        'dashboard' : dash,
-        'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
-        'inst_list': JWST_INSTRUMENT_NAMES_MIXEDCASE,  # Do not edit; Required for navigation bar
-        'tools': MONITORS,  # Do not edit; Required for navigation bar
-        'user': None  # Do not edit; Required for authentication
+        "dashboard": dash,
+        "inst": "",  # Leave as empty string or instrument name; Required for navigation bar
+        "inst_list": JWST_INSTRUMENT_NAMES_MIXEDCASE,  # Do not edit; Required for navigation bar
+        "tools": MONITORS,  # Do not edit; Required for navigation bar
+        "user": None,  # Do not edit; Required for authentication
     }
-    #append variables to context
+    # append variables to context
     context.update(variables)
 
     # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
+
 
 def nirspec_data_trending(request):
     """Generate the ``MIRI DATA-TRENDING`` page
@@ -108,17 +113,18 @@ def nirspec_data_trending(request):
     variables, dash = nirspec_trending()
 
     context = {
-        'dashboard' : dash,
-        'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
-        'inst_list': JWST_INSTRUMENT_NAMES_MIXEDCASE,  # Do not edit; Required for navigation bar
-        'tools': MONITORS,  # Do not edit; Required for navigation bar
-        'user': None  # Do not edit; Required for authentication
+        "dashboard": dash,
+        "inst": "",  # Leave as empty string or instrument name; Required for navigation bar
+        "inst_list": JWST_INSTRUMENT_NAMES_MIXEDCASE,  # Do not edit; Required for navigation bar
+        "tools": MONITORS,  # Do not edit; Required for navigation bar
+        "user": None,  # Do not edit; Required for authentication
     }
-    #append variables to context
+    # append variables to context
     context.update(variables)
 
     # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
+
 
 def about(request):
     """Generate the ``about`` page
@@ -133,10 +139,9 @@ def about(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'about.html'
+    template = "about.html"
     acknowledgements = get_acknowledgements()
-    context = {'acknowledgements': acknowledgements,
-               'inst': ''}
+    context = {"acknowledgements": acknowledgements, "inst": ""}
 
     return render(request, template, context)
 
@@ -160,9 +165,8 @@ def archived_proposals(request, user, inst):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    template = 'archive.html'
-    context = {'inst': inst,
-               'base_url': get_base_url()}
+    template = "archive.html"
+    context = {"inst": inst, "base_url": get_base_url()}
 
     return render(request, template, context)
 
@@ -192,14 +196,18 @@ def archived_proposals_ajax(request, user, inst):
     all_filenames = [os.path.basename(f) for f in filepaths]
     proposal_info = get_proposal_info(filepaths)
 
-    context = {'inst': inst,
-               'all_filenames': all_filenames,
-               'num_proposals': proposal_info['num_proposals'],
-               'thumbnails': {'proposals': proposal_info['proposals'],
-                              'thumbnail_paths': proposal_info['thumbnail_paths'],
-                              'num_files': proposal_info['num_files']}}
+    context = {
+        "inst": inst,
+        "all_filenames": all_filenames,
+        "num_proposals": proposal_info["num_proposals"],
+        "thumbnails": {
+            "proposals": proposal_info["proposals"],
+            "thumbnail_paths": proposal_info["thumbnail_paths"],
+            "num_files": proposal_info["num_files"],
+        },
+    }
 
-    return JsonResponse(context, json_dumps_params={'indent': 2})
+    return JsonResponse(context, json_dumps_params={"indent": 2})
 
 
 @auth_required
@@ -225,10 +233,8 @@ def archive_thumbnails(request, user, inst, proposal):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    template = 'thumbnails.html'
-    context = {'inst': inst,
-               'prop': proposal,
-               'base_url': get_base_url()}
+    template = "thumbnails.html"
+    context = {"inst": inst, "prop": proposal, "base_url": get_base_url()}
 
     return render(request, template, context)
 
@@ -258,7 +264,7 @@ def archive_thumbnails_ajax(request, user, inst, proposal):
 
     data = thumbnails_ajax(inst, proposal)
 
-    return JsonResponse(data, json_dumps_params={'indent': 2})
+    return JsonResponse(data, json_dumps_params={"indent": 2})
 
 
 def dashboard(request):
@@ -274,16 +280,19 @@ def dashboard(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    template = 'dashboard.html'
-    output_dir = get_config()['outputs']
+    template = "dashboard.html"
+    output_dir = get_config()["outputs"]
     dashboard_components, dashboard_html = get_dashboard_components()
 
-    context = {'inst': '',
-               'outputs': output_dir,
-               'filesystem_html': os.path.join(output_dir, 'monitor_filesystem',
-                                               'filesystem_monitor.html'),
-               'dashboard_components': dashboard_components,
-               'dashboard_html': dashboard_html}
+    context = {
+        "inst": "",
+        "outputs": output_dir,
+        "filesystem_html": os.path.join(
+            output_dir, "monitor_filesystem", "filesystem_monitor.html"
+        ),
+        "dashboard_components": dashboard_components,
+        "dashboard_html": dashboard_html,
+    }
 
     return render(request, template, context)
 
@@ -306,9 +315,8 @@ def engineering_database(request):
     """
     edb_components = get_edb_components(request)
 
-    template = 'engineering_database.html'
-    context = {'inst': '',
-               'edb_components': edb_components}
+    template = "engineering_database.html"
+    context = {"inst": "", "edb_components": edb_components}
 
     return render(request, template, context)
 
@@ -333,13 +341,12 @@ def home(request):
     form = FileSearchForm(request.POST or None)
 
     # If this is a POST request, we need to process the form data
-    if request.method == 'POST':
+    if request.method == "POST":
         if form.is_valid():
             return form.redirect_to_files()
 
-    template = 'home.html'
-    context = {'inst': '',
-               'form': form}
+    template = "home.html"
+    context = {"inst": "", "form": form}
 
     return render(request, template, context)
 
@@ -362,17 +369,18 @@ def instrument(request, inst):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    template = 'instrument.html'
-    url_dict = {'fgs': 'http://jwst-docs.stsci.edu/display/JTI/Fine+Guidance+Sensor%2C+FGS?q=fgs',
-                'miri': 'http://jwst-docs.stsci.edu/display/JTI/Mid+Infrared+Instrument',
-                'niriss': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Imager+and+Slitless+Spectrograph',
-                'nirspec': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Spectrograph',
-                'nircam': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Camera'}
+    template = "instrument.html"
+    url_dict = {
+        "fgs": "http://jwst-docs.stsci.edu/display/JTI/Fine+Guidance+Sensor%2C+FGS?q=fgs",
+        "miri": "http://jwst-docs.stsci.edu/display/JTI/Mid+Infrared+Instrument",
+        "niriss": "http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Imager+and+Slitless+Spectrograph",
+        "nirspec": "http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Spectrograph",
+        "nircam": "http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Camera",
+    }
 
     doc_url = url_dict[inst.lower()]
 
-    context = {'inst': inst,
-               'doc_url': doc_url}
+    context = {"inst": inst, "doc_url": doc_url}
 
     return render(request, template, context)
 
@@ -392,7 +400,7 @@ def not_found(request):
     """
     template = random_404_page()
     status_code = 404  # Note that this will show 400, 403, 404, and 500 as 404 status
-    context = {'inst': ''}
+    context = {"inst": ""}
 
     return render(request, template, context, status=status_code)
 
@@ -436,14 +444,11 @@ def view_header(request, inst, file):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    template = 'view_header.html'
+    template = "view_header.html"
     header = get_header_info(file)
-    file_root = '_'.join(file.split('_')[:-1])
+    file_root = "_".join(file.split("_")[:-1])
 
-    context = {'inst': inst,
-               'file': file,
-               'header': header,
-               'file_root': file_root}
+    context = {"inst": inst, "file": file, "header": header, "file_root": file_root}
 
     return render(request, template, context)
 
@@ -471,13 +476,15 @@ def view_image(request, user, inst, file_root, rewrite=False):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    template = 'view_image.html'
+    template = "view_image.html"
     image_info = get_image_info(file_root, rewrite)
-    context = {'inst': inst,
-               'file_root': file_root,
-               'jpg_files': image_info['all_jpegs'],
-               'fits_files': image_info['all_files'],
-               'suffixes': image_info['suffixes'],
-               'num_ints': image_info['num_ints']}
+    context = {
+        "inst": inst,
+        "file_root": file_root,
+        "jpg_files": image_info["all_jpegs"],
+        "fits_files": image_info["all_files"],
+        "suffixes": image_info["suffixes"],
+        "num_ints": image_info["num_ints"],
+    }
 
     return render(request, template, context)

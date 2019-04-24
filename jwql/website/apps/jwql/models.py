@@ -34,11 +34,14 @@ import os
 from django.db import models
 
 
-INSTRUMENT_LIST = (('FGS', 'FGS'),
-                   ('MIRI', 'MIRI'),
-                   ('NIRCam', 'NIRCam'),
-                   ('NIRISS', 'NIRISS'),
-                   ('NIRSpec', 'NIRSpec'))
+INSTRUMENT_LIST = (
+    ("FGS", "FGS"),
+    ("MIRI", "MIRI"),
+    ("NIRCam", "NIRCam"),
+    ("NIRISS", "NIRISS"),
+    ("NIRSpec", "NIRSpec"),
+)
+
 
 class BaseModel(models.Model):
     """A base model that other classes will inherit. Created to avoid
@@ -47,7 +50,7 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True  # specify this model as an Abstract Model
-        app_label = 'jwql'
+        app_label = "jwql"
 
 
 class ImageData(BaseModel):
@@ -64,9 +67,13 @@ class ImageData(BaseModel):
         Date and time when datum was added to the database.
     """
 
-    inst = models.CharField('instrument', max_length=6, choices=INSTRUMENT_LIST, default=None)
-    pub_date = models.DateTimeField('date published')
-    filepath = models.FilePathField(path='/user/lchambers/jwql/')  #upload_to=str(inst))
+    inst = models.CharField(
+        "instrument", max_length=6, choices=INSTRUMENT_LIST, default=None
+    )
+    pub_date = models.DateTimeField("date published")
+    filepath = models.FilePathField(
+        path="/user/lchambers/jwql/"
+    )  # upload_to=str(inst))
 
     def filename(self):
         return os.path.basename(self.filepath)
@@ -76,4 +83,4 @@ class ImageData(BaseModel):
 
     class Meta:
         verbose_name_plural = "image data"
-        db_table = 'imagedata'
+        db_table = "imagedata"

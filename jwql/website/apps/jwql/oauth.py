@@ -48,7 +48,7 @@ import jwql
 from jwql.utils.constants import MONITORS
 from jwql.utils.utils import get_base_url, get_config
 
-PREV_PAGE = ''
+PREV_PAGE = ""
 
 
 def register_oauth():
@@ -63,25 +63,29 @@ def register_oauth():
     """
 
     # Get configuration parameters
-    client_id = get_config()['client_id']
-    client_secret = get_config()['client_secret']
-    auth_mast = get_config()['auth_mast']
+    client_id = get_config()["client_id"]
+    client_secret = get_config()["client_secret"]
+    auth_mast = get_config()["auth_mast"]
 
     # Register with auth.mast
     oauth = OAuth()
-    client_kwargs = {'scope': 'mast:user:info'}
+    client_kwargs = {"scope": "mast:user:info"}
     oauth.register(
-        'mast_auth',
-        client_id='{}'.format(client_id),
-        client_secret='{}'.format(client_secret),
-        access_token_url='https://{}/oauth/access_token?client_secret={}'.format(auth_mast, client_secret),
+        "mast_auth",
+        client_id="{}".format(client_id),
+        client_secret="{}".format(client_secret),
+        access_token_url="https://{}/oauth/access_token?client_secret={}".format(
+            auth_mast, client_secret
+        ),
         access_token_params=None,
         refresh_token_url=None,
-        authorize_url='https://{}/oauth/authorize'.format(auth_mast),
-        api_base_url='https://{}/1.1/'.format(auth_mast),
-        client_kwargs=client_kwargs)
+        authorize_url="https://{}/oauth/authorize".format(auth_mast),
+        api_base_url="https://{}/1.1/".format(auth_mast),
+        client_kwargs=client_kwargs,
+    )
 
     return oauth
+
 
 JWQL_OAUTH = register_oauth()
 
@@ -104,20 +108,22 @@ def authorize(request):
     """
 
     # Get auth.mast token
-    token = JWQL_OAUTH.mast_auth.authorize_access_token(request, headers={'Accept': 'application/json'})
+    token = JWQL_OAUTH.mast_auth.authorize_access_token(
+        request, headers={"Accept": "application/json"}
+    )
 
     # Determine domain
     base_url = get_base_url()
-    if '127' in base_url:
-        domain = '127.0.0.1'
+    if "127" in base_url:
+        domain = "127.0.0.1"
     else:
-        domain = base_url.split('//')[-1]
+        domain = base_url.split("//")[-1]
 
     # Set secure cookie parameters
     cookie_args = {}
     # cookie_args['domain'] = domain  # Currently broken
     # cookie_args['secure'] = True  # Currently broken
-    cookie_args['httponly'] = True
+    cookie_args["httponly"] = True
 
     # Set the cookie
     response = redirect(PREV_PAGE)
@@ -162,14 +168,17 @@ def auth_info(fn):
         # If user is authenticated, return user credentials
         if cookie is not None:
             response = requests.get(
-                'https://{}/info'.format(get_config()['auth_mast']),
-                headers={'Accept': 'application/json',
-                         'Authorization': 'token {}'.format(cookie)})
+                "https://{}/info".format(get_config()["auth_mast"]),
+                headers={
+                    "Accept": "application/json",
+                    "Authorization": "token {}".format(cookie),
+                },
+            )
             response = response.json()
 
         # If user is not authenticated, return no credentials
         else:
-            response = {'ezid': None, "anon": True}
+            response = {"ezid": None, "anon": True}
 
         return fn(request, response, **kwargs)
 
@@ -210,13 +219,13 @@ def auth_required(fn):
         """
 
         # If user is currently anonymous, require a login
-        if user['ezid']:
+        if user["ezid"]:
 
             return fn(request, user, **kwargs)
 
         else:
-            template = 'not_authenticated.html'
-            context = {'inst': ''}
+            template = "not_authenticated.html"
+            context = {"inst": ""}
 
             return render(request, template, context)
 
@@ -246,8 +255,8 @@ def login(request, user):
 
     # Redirect to oauth login
     global PREV_PAGE
-    PREV_PAGE = request.META.get('HTTP_REFERER')
-    redirect_uri = os.path.join(get_base_url(), 'authorize')
+    PREV_PAGE = request.META.get("HTTP_REFERER")
+    redirect_uri = os.path.join(get_base_url(), "authorize")
 
     return JWQL_OAUTH.mast_auth.authorize_redirect(request, redirect_uri)
 
@@ -272,7 +281,7 @@ def logout(request):
     """
 
     global PREV_PAGE
-    PREV_PAGE = request.META.get('HTTP_REFERER')
+    PREV_PAGE = request.META.get("HTTP_REFERER")
     response = redirect(PREV_PAGE)
     response.delete_cookie("ASB-AUTH")
 

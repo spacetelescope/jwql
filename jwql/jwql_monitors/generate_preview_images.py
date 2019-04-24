@@ -99,25 +99,27 @@ def array_coordinates(channelmod, detector_list, lowerleft_list):
     # tuples are (x,y), NOT (y,x)
     ashort = ["NRCA1", "NRCA2", "NRCA3", "NRCA4"]
     bshort = ["NRCB1", "NRCB2", "NRCB3", "NRCB4"]
-    module_lowerlefts = {"NRCA1": (0, 0),
-                         "NRCA2": (0, FULLY + SW_DET_GAP),
-                         "NRCA3": (FULLX + SW_DET_GAP, 0),
-                         "NRCA4": (FULLX + SW_DET_GAP, FULLY + SW_DET_GAP),
-                         "NRCB1": (FULLX + SW_DET_GAP, FULLY + SW_DET_GAP),
-                         "NRCB2": (FULLX + SW_DET_GAP, 0),
-                         "NRCB3": (0, FULLY + SW_DET_GAP),
-                         "NRCB4": (0, 0),
-                         "NRCA5": (0, 0),
-                         "NRCB5": (FULLX + LW_MOD_GAP, 0)}
+    module_lowerlefts = {
+        "NRCA1": (0, 0),
+        "NRCA2": (0, FULLY + SW_DET_GAP),
+        "NRCA3": (FULLX + SW_DET_GAP, 0),
+        "NRCA4": (FULLX + SW_DET_GAP, FULLY + SW_DET_GAP),
+        "NRCB1": (FULLX + SW_DET_GAP, FULLY + SW_DET_GAP),
+        "NRCB2": (FULLX + SW_DET_GAP, 0),
+        "NRCB3": (0, FULLY + SW_DET_GAP),
+        "NRCB4": (0, 0),
+        "NRCA5": (0, 0),
+        "NRCB5": (FULLX + LW_MOD_GAP, 0),
+    }
 
     # If both module A and B are used, then shift the B module
     # coordinates to account for the intermodule gap
     if channelmod == "SW":
         mod_delta = (FULLX * 2 + SW_DET_GAP + SW_MOD_GAP, 0)
         for b_detector in bshort:
-            module_lowerlefts[b_detector] = tuple([sum(x) for x in
-                                                  zip(module_lowerlefts[b_detector],
-                                                      mod_delta)])
+            module_lowerlefts[b_detector] = tuple(
+                [sum(x) for x in zip(module_lowerlefts[b_detector], mod_delta)]
+            )
 
     # The only subarrays we need to worry about are the SW SUBXXX
     # All other subarrays are on a single detector.
@@ -127,10 +129,10 @@ def array_coordinates(channelmod, detector_list, lowerleft_list):
     # subarrays in both modules simultaneously.
     subx = 1
     suby = 1
-    if 'SW' in channelmod:
+    if "SW" in channelmod:
         detector_list = np.array(detector_list)
-        a1 = detector_list == 'NRCA1'
-        b4 = detector_list == 'NRCB4'
+        a1 = detector_list == "NRCA1"
+        b4 = detector_list == "NRCB4"
 
         lowerleft_list = np.array(lowerleft_list)
         if np.sum(a1) == 1:
@@ -144,19 +146,22 @@ def array_coordinates(channelmod, detector_list, lowerleft_list):
 
     # Adjust the lower left positions of the apertures within
     # the module(s) in the case of subarrays
-    if ((subx != 1) | (suby != 1)):
-        subarr_delta = {"NRCA1": (0, 0),
-                        "NRCA2": (0, 0 - suby),
-                        "NRCA3": (0 - subx, 0),
-                        "NRCA4": (0 - subx, 0 - suby),
-                        "NRCB1": (0 - subx, 0 - suby),
-                        "NRCB2": (0 - subx, 0),
-                        "NRCB3": (0, 0 - suby),
-                        "NRCB4": (0, 0)}
+    if (subx != 1) | (suby != 1):
+        subarr_delta = {
+            "NRCA1": (0, 0),
+            "NRCA2": (0, 0 - suby),
+            "NRCA3": (0 - subx, 0),
+            "NRCA4": (0 - subx, 0 - suby),
+            "NRCB1": (0 - subx, 0 - suby),
+            "NRCB2": (0 - subx, 0),
+            "NRCB3": (0, 0 - suby),
+            "NRCB4": (0, 0),
+        }
 
         for det in ashort + bshort:
-            module_lowerlefts[det] = tuple([sum(x) for x in zip(module_lowerlefts[det],
-                                                                subarr_delta[det])])
+            module_lowerlefts[det] = tuple(
+                [sum(x) for x in zip(module_lowerlefts[det], subarr_delta[det])]
+            )
 
     # Dimensions of array to hold all data
     # Adjust dimensions of individual detector for subarray if necessary
@@ -164,13 +169,13 @@ def array_coordinates(channelmod, detector_list, lowerleft_list):
     aperturey = FULLY - (suby - 1)
 
     # Full module(s) dimensions
-    if channelmod in ['SWA', 'SWB']:
+    if channelmod in ["SWA", "SWB"]:
         xdim = 2 * aperturex + SW_DET_GAP
         ydim = 2 * aperturey + SW_DET_GAP
-    elif channelmod == 'SW':
+    elif channelmod == "SW":
         xdim = 4 * aperturex + 2 * SW_DET_GAP + SW_MOD_GAP
         ydim = 2 * aperturey + SW_DET_GAP
-    elif channelmod == 'LW':
+    elif channelmod == "LW":
         xdim = 2 * aperturex + LW_MOD_GAP
         ydim = aperturey
 
@@ -200,21 +205,27 @@ def check_existence(file_list, outdir):
     # for a preview image name that contains the detector name
     if len(file_list) == 1:
         filename = os.path.split(file_list[0])[1]
-        search_string = filename.split('.fits')[0] + '_*.jpg'
+        search_string = filename.split(".fits")[0] + "_*.jpg"
     else:
         # If file_list contains multiple files, then we need to search
         # for the appropriately named jpg of the mosaic, which depends
         # on the specific detectors in the file_list
         file_parts = filename_parser(file_list[0])
-        if file_parts['detector'].upper() in NIRCAM_SHORTWAVE_DETECTORS:
+        if file_parts["detector"].upper() in NIRCAM_SHORTWAVE_DETECTORS:
             mosaic_str = "NRC_SW*_MOSAIC_"
-        elif file_parts['detector'].upper() in NIRCAM_LONGWAVE_DETECTORS:
+        elif file_parts["detector"].upper() in NIRCAM_LONGWAVE_DETECTORS:
             mosaic_str = "NRC_LW*_MOSAIC_"
-        search_string = 'jw{}{}{}_{}{}{}_{}_{}{}*.jpg'.format(
-                        file_parts['program_id'], file_parts['observation'],
-                        file_parts['visit'], file_parts['visit_group'],
-                        file_parts['parallel_seq_id'], file_parts['activity'],
-                        file_parts['exposure_id'], mosaic_str, file_parts['suffix'])
+        search_string = "jw{}{}{}_{}{}{}_{}_{}{}*.jpg".format(
+            file_parts["program_id"],
+            file_parts["observation"],
+            file_parts["visit"],
+            file_parts["visit_group"],
+            file_parts["parallel_seq_id"],
+            file_parts["activity"],
+            file_parts["exposure_id"],
+            mosaic_str,
+            file_parts["suffix"],
+        )
 
     current_files = glob.glob(os.path.join(outdir, search_string))
     if len(current_files) > 0:
@@ -247,18 +258,18 @@ def create_dummy_filename(filelist):
     modules = []
     for filename in filelist:
         indir, infile = os.path.split(filename)
-        det_string = filename_parser(infile)['detector']
+        det_string = filename_parser(infile)["detector"]
         det_string_list.append(det_string)
         modules.append(det_string[3].upper())
 
     # Previous sorting means that either all of the
     # input files are LW, or all are SW. So we can check any
     # file to determine LW vs SW
-    if '5' in det_string_list[0]:
+    if "5" in det_string_list[0]:
         suffix = "NRC_LW_MOSAIC"
     else:
-        moda = modules.count('A')
-        modb = modules.count('B')
+        moda = modules.count("A")
+        modb = modules.count("B")
         if moda > 0:
             if modb > 0:
                 suffix = "NRC_SWALL_MOSAIC"
@@ -301,15 +312,16 @@ def create_mosaic(filenames):
         else:
             diff_im = image.data
         data.append(diff_im)
-        detector.append(filename_parser(filename)['detector'].upper())
+        detector.append(filename_parser(filename)["detector"].upper())
         data_lower_left.append((image.xstart, image.ystart))
 
     # Make sure SW and LW data are not being mixed. Create the
     # appropriately sized numpy array to hold all the data based
     # on the channel, module, and subarray size
     mosaic_channel = find_data_channel(detector)
-    full_xdim, full_ydim, full_lower_left = array_coordinates(mosaic_channel, detector,
-                                                              data_lower_left)
+    full_xdim, full_ydim, full_lower_left = array_coordinates(
+        mosaic_channel, detector, data_lower_left
+    )
 
     # Create the array to hold all the data
     datashape = data[0].shape
@@ -319,7 +331,9 @@ def create_mosaic(filenames):
     elif datadim == 3:
         full_array = np.zeros((datashape[0], full_ydim, full_xdim)) * np.nan
     else:
-        raise ValueError(('Difference image for {} must be either 2D or 3D.'.format(filenames[0])))
+        raise ValueError(
+            ("Difference image for {} must be either 2D or 3D.".format(filenames[0]))
+        )
 
     # Place the data from the individual detectors in the appropriate
     # places in the final image
@@ -327,10 +341,10 @@ def create_mosaic(filenames):
         x0, y0 = full_lower_left[detect]
         if datadim == 2:
             yd, xd = pixdata.shape
-            full_array[0, y0: y0 + yd, x0: x0 + xd] = pixdata
+            full_array[0, y0 : y0 + yd, x0 : x0 + xd] = pixdata
         elif datadim == 3:
             ints, yd, xd = pixdata.shape
-            full_array[:, y0: y0 + yd, x0: x0 + xd] = pixdata
+            full_array[:, y0 : y0 + yd, x0 : x0 + xd] = pixdata
 
     # Create associated DQ array and set unpopulated pixels to be skipped
     # in preview image scaling
@@ -385,25 +399,25 @@ def create_dq_array(xd, yd, mosaic, module):
 
         if module == "LW":
             lwb_lower = FULLX + LW_MOD_GAP
-            dq[:, lwb_lower:lwb_lower + 4] = 0
-            dq[:, lwb_lower + 2044:lwb_lower + 2048] = 0
+            dq[:, lwb_lower : lwb_lower + 4] = 0
+            dq[:, lwb_lower + 2044 : lwb_lower + 2048] = 0
 
         if module in ["SWA", "SWB", "SW"]:
             # Present for full frame single module or both modules
             lowerval = FULLX + SW_DET_GAP
-            dq[lowerval: lowerval + 4, :] = 0
-            dq[(lowerval + 2044):, :] = 0
-            dq[:, lowerval: lowerval + 4] = 0
-            dq[:, (lowerval + 2044):(lowerval + 2048)] = 0
+            dq[lowerval : lowerval + 4, :] = 0
+            dq[(lowerval + 2044) :, :] = 0
+            dq[:, lowerval : lowerval + 4] = 0
+            dq[:, (lowerval + 2044) : (lowerval + 2048)] = 0
 
         if module == "SW":
             # Present only if both modules are used (full frame)
             modb_lower = lowerval + FULLX + SW_MOD_GAP
-            dq[:, modb_lower:(modb_lower + 4)] = 0
-            dq[:, (modb_lower + 2044):(modb_lower + 2048)] = 0
+            dq[:, modb_lower : (modb_lower + 4)] = 0
+            dq[:, (modb_lower + 2044) : (modb_lower + 2048)] = 0
             modb_upper = modb_lower + FULLX + SW_DET_GAP
-            dq[:, modb_upper:(modb_upper + 4)] = 0
-            dq[:, (modb_upper + 2044):(modb_upper + 2048)] = 0
+            dq[:, modb_upper : (modb_upper + 4)] = 0
+            dq[:, (modb_upper + 2044) : (modb_upper + 2048)] = 0
 
     else:
         # Subarrays: expand the pixels flagged due to chip gaps
@@ -417,10 +431,10 @@ def create_dq_array(xd, yd, mosaic, module):
         horiz_ymin = np.min(nan_indexes[0][match2])
         horiz_ymax = horiz_ymin + SW_DET_GAP - 1
 
-        dq[:, vert_xmin - 4:vert_xmin] = 0
-        dq[:, vert_xmax + 1:vert_xmax + 5] = 0
-        dq[horiz_ymin - 4:horiz_ymin, :] = 0
-        dq[horiz_ymax + 1:horiz_ymax + 5, :] = 0
+        dq[:, vert_xmin - 4 : vert_xmin] = 0
+        dq[:, vert_xmax + 1 : vert_xmax + 5] = 0
+        dq[horiz_ymin - 4 : horiz_ymin, :] = 0
+        dq[horiz_ymax + 1 : horiz_ymax + 5, :] = 0
 
     return dq
 
@@ -513,11 +527,15 @@ def get_base_output_name(filename_dict):
         The base output name, e.g. ``jw96090001002_03101_00001_nrca2_rate``
     """
 
-    base_output_name = 'jw{}{}{}_{}{}{}_{}_'.format(
-        filename_dict['program_id'], filename_dict['observation'],
-        filename_dict['visit'], filename_dict['visit_group'],
-        filename_dict['parallel_seq_id'], filename_dict['activity'],
-        filename_dict['exposure_id'])
+    base_output_name = "jw{}{}{}_{}{}{}_{}_".format(
+        filename_dict["program_id"],
+        filename_dict["observation"],
+        filename_dict["visit"],
+        filename_dict["visit_group"],
+        filename_dict["parallel_seq_id"],
+        filename_dict["activity"],
+        filename_dict["exposure_id"],
+    )
 
     return base_output_name
 
@@ -532,8 +550,11 @@ def generate_preview_images():
     logging.info("Beginning the script run")
 
     # Process programs in parallel
-    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], '*'))]
-    pool = multiprocessing.Pool(processes=int(get_config()['cores']))
+    program_list = [
+        os.path.basename(item)
+        for item in glob.glob(os.path.join(get_config()["filesystem"], "*"))
+    ]
+    pool = multiprocessing.Pool(processes=int(get_config()["cores"]))
     pool.map(process_program, program_list)
     pool.close()
     pool.join()
@@ -583,24 +604,26 @@ def group_filenames(filenames):
         if filename not in matched_names:
 
             # For stage 3 filenames, treat individually
-            if 'stage_3' in filename_dict['filename_type']:
+            if "stage_3" in filename_dict["filename_type"]:
                 matched_names.append(filename)
                 subgroup.append(filename)
 
             # Group together stage 1 and 2 filenames
-            elif filename_dict['filename_type'] == 'stage_1_and_2':
+            elif filename_dict["filename_type"] == "stage_1_and_2":
 
                 # Determine detector naming convention
-                if filename_dict['detector'].upper() in NIRCAM_SHORTWAVE_DETECTORS:
-                    detector_str = 'NRC[AB][1234]'
-                elif filename_dict['detector'].upper() in NIRCAM_LONGWAVE_DETECTORS:
-                    detector_str = 'NRC[AB]5'
+                if filename_dict["detector"].upper() in NIRCAM_SHORTWAVE_DETECTORS:
+                    detector_str = "NRC[AB][1234]"
+                elif filename_dict["detector"].upper() in NIRCAM_LONGWAVE_DETECTORS:
+                    detector_str = "NRC[AB]5"
                 else:  # non-NIRCam detectors
-                    detector_str = filename_dict['detector'].upper()
+                    detector_str = filename_dict["detector"].upper()
 
                 # Build pattern to match against
                 base_output_name = get_base_output_name(filename_dict)
-                match_str = '{}{}_{}.fits'.format(base_output_name, detector_str, filename_dict['suffix'])
+                match_str = "{}{}_{}.fits".format(
+                    base_output_name, detector_str, filename_dict["suffix"]
+                )
                 match_str = os.path.join(os.path.dirname(filename), match_str)
                 pattern = re.compile(match_str, re.IGNORECASE)
 
@@ -626,20 +649,24 @@ def process_program(program):
     """
 
     # Group together common exposures
-    filenames = glob.glob(os.path.join(get_config()['filesystem'], program, '*.fits'))
+    filenames = glob.glob(os.path.join(get_config()["filesystem"], program, "*.fits"))
     grouped_filenames = group_filenames(filenames)
-    logging.info('Found {} filenames'.format(len(filenames)))
+    logging.info("Found {} filenames".format(len(filenames)))
 
     for file_list in grouped_filenames:
         filename = file_list[0]
 
         # Determine the save location
         try:
-            identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
+            identifier = "jw{}".format(filename_parser(filename)["program_id"])
         except ValueError:
-            identifier = os.path.basename(filename).split('.fits')[0]
-        preview_output_directory = os.path.join(get_config()['preview_image_filesystem'], identifier)
-        thumbnail_output_directory = os.path.join(get_config()['thumbnail_filesystem'], identifier)
+            identifier = os.path.basename(filename).split(".fits")[0]
+        preview_output_directory = os.path.join(
+            get_config()["preview_image_filesystem"], identifier
+        )
+        thumbnail_output_directory = os.path.join(
+            get_config()["thumbnail_filesystem"], identifier
+        )
 
         # Check to see if the preview images already exist and skip if they do
         file_exists = check_existence(file_list, preview_output_directory)
@@ -651,11 +678,11 @@ def process_program(program):
         if not os.path.exists(preview_output_directory):
             os.makedirs(preview_output_directory)
             permissions.set_permissions(preview_output_directory)
-            logging.info('Created directory {}'.format(preview_output_directory))
+            logging.info("Created directory {}".format(preview_output_directory))
         if not os.path.exists(thumbnail_output_directory):
             os.makedirs(thumbnail_output_directory)
             permissions.set_permissions(thumbnail_output_directory)
-            logging.info('Created directory {}'.format(thumbnail_output_directory))
+            logging.info("Created directory {}".format(thumbnail_output_directory))
 
         # If the exposure contains more than one file (because more
         # than one detector was used), then create a mosaic
@@ -664,9 +691,9 @@ def process_program(program):
         if numfiles > 1:
             try:
                 mosaic_image, mosaic_dq = create_mosaic(file_list)
-                logging.info('Created mosiac for:')
+                logging.info("Created mosiac for:")
                 for item in file_list:
-                    logging.info('\t{}'.format(item))
+                    logging.info("\t{}".format(item))
             except (ValueError, FileNotFoundError) as error:
                 logging.error(error)
             dummy_file = create_dummy_filename(file_list)
@@ -679,9 +706,9 @@ def process_program(program):
         try:
             im = PreviewImage(filename, "SCI")
             im.clip_percent = 0.01
-            im.scaling = 'log'
-            im.cmap = 'viridis'
-            im.output_format = 'jpg'
+            im.scaling = "log"
+            im.cmap = "viridis"
+            im.output_format = "jpg"
             im.preview_output_directory = preview_output_directory
             im.thumbnail_output_directory = thumbnail_output_directory
 
@@ -695,14 +722,14 @@ def process_program(program):
                 im.file = dummy_file
 
             im.make_image(max_img_size=max_size)
-            logging.info('Created preview image and thumbnail for: {}'.format(filename))
+            logging.info("Created preview image and thumbnail for: {}".format(filename))
         except ValueError as error:
             logging.warning(error)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    module = os.path.basename(__file__).strip('.py')
+    module = os.path.basename(__file__).strip(".py")
     configure_logging(module)
 
     generate_preview_images()

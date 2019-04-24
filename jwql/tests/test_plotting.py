@@ -25,14 +25,18 @@ from jwql.utils.plotting import bar_chart
 
 def test_bar_chart():
     """Make sure some dummy data generates a ``bokeh`` plot"""
-    
+
     # Make a toy dataframe
-    data = DataFrame({'meow': {'foo': 12, 'bar': 23, 'baz': 2},
-                      'mix': {'foo': 45, 'bar': 31, 'baz': 23},
-                      'deliver': {'foo': 62, 'bar': 20, 'baz': 9}})
+    data = DataFrame(
+        {
+            "meow": {"foo": 12, "bar": 23, "baz": 2},
+            "mix": {"foo": 45, "bar": 31, "baz": 23},
+            "deliver": {"foo": 62, "bar": 20, "baz": 9},
+        }
+    )
     data = data.reset_index()
 
     # And generate a figure
-    plt = bar_chart(data, 'index')
+    plt = bar_chart(data, "index")
 
     assert str(type(plt)) == "<class 'bokeh.plotting.figure.Figure'>"

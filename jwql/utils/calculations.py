@@ -37,8 +37,9 @@ def double_gaussian(x, amp1, peak1, sigma1, amp2, peak2, sigma2):
         ``[amplitude1, peak1, stdev1, amplitude2, peak2, stdev2]``
     """
 
-    y_values = amp1 * np.exp(-(x - peak1)**2.0 / (2.0 * sigma1**2.0)) \
-        + amp2 * np.exp(-(x - peak2)**2.0 / (2.0 * sigma2**2.0))
+    y_values = amp1 * np.exp(
+        -(x - peak1) ** 2.0 / (2.0 * sigma1 ** 2.0)
+    ) + amp2 * np.exp(-(x - peak2) ** 2.0 / (2.0 * sigma2 ** 2.0))
 
     return y_values
 
@@ -97,10 +98,12 @@ def gaussian1d_fit(x_values, y_values, params):
         Tuple of the best fit Gaussian width and uncertainty
     """
 
-    model_gauss = models.Gaussian1D(amplitude=params[0], mean=params[1], stddev=params[2])
+    model_gauss = models.Gaussian1D(
+        amplitude=params[0], mean=params[1], stddev=params[2]
+    )
     fitter_gauss = fitting.LevMarLSQFitter()
     best_fit = fitter_gauss(model_gauss, x_values, y_values)
-    cov_diag = np.diag(fitter_gauss.fit_info['param_cov'])
+    cov_diag = np.diag(fitter_gauss.fit_info["param_cov"])
 
     # Arrange each parameter into (best_fit_value, uncertainty) tuple
     amplitude = (best_fit.amplitude.value, np.sqrt(cov_diag[0]))

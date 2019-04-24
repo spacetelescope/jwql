@@ -31,10 +31,10 @@ from jwql.utils.preview_image import PreviewImage
 from jwql.utils.utils import get_config, ensure_dir_exists
 
 # directory to be created and populated during tests running
-TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'preview_image_test')
+TEST_DIRECTORY = os.path.join(os.environ["HOME"], "preview_image_test")
 
 # Determine if tests are being run on jenkins
-ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
+ON_JENKINS = os.path.expanduser("~") == "/home/jenkins"
 
 
 @pytest.fixture(scope="module")
@@ -61,8 +61,8 @@ def test_directory(test_dir=TEST_DIRECTORY):
         shutil.rmtree(test_dir)
 
     # Empty test directory on central storage
-    jpgs = glob.glob(os.path.join(get_config()['test_dir'], '*.jpg'))
-    thumbs = glob.glob(os.path.join(get_config()['test_dir'], '*.thumbs'))
+    jpgs = glob.glob(os.path.join(get_config()["test_dir"], "*.jpg"))
+    thumbs = glob.glob(os.path.join(get_config()["test_dir"], "*.thumbs"))
     for file in jpgs + thumbs:
         os.remove(file)
 
@@ -77,7 +77,7 @@ def get_test_fits_files():
     """
     # Get the files from central store
     if not ON_JENKINS:
-        filenames = glob.glob(os.path.join(get_config()['test_dir'], '*.fits'))
+        filenames = glob.glob(os.path.join(get_config()["test_dir"], "*.fits"))
         assert len(filenames) > 0
         return filenames
 
@@ -86,8 +86,8 @@ def get_test_fits_files():
         return []
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
-@pytest.mark.parametrize('filename', get_test_fits_files())
+@pytest.mark.skipif(ON_JENKINS, reason="Requires access to central storage.")
+@pytest.mark.parametrize("filename", get_test_fits_files())
 def test_make_image(test_directory, filename):
     """Use PreviewImage.make_image to create preview images of a sample
     JWST exposure.
@@ -110,9 +110,9 @@ def test_make_image(test_directory, filename):
         try:
             image = PreviewImage(filename, "SCI")
             image.clip_percent = 0.01
-            image.scaling = 'log'
-            image.cmap = 'viridis'
-            image.output_format = 'jpg'
+            image.scaling = "log"
+            image.cmap = "viridis"
+            image.output_format = "jpg"
             image.thumbnail = create_thumbnail
 
             if create_thumbnail:
@@ -125,14 +125,15 @@ def test_make_image(test_directory, filename):
             print(error)
 
         if create_thumbnail:
-            extension = 'thumb'
+            extension = "thumb"
         else:
-            extension = 'jpg'
+            extension = "jpg"
 
         # list of preview images
-        preview_image_filenames = glob.glob(os.path.join(test_directory, '*.{}'.format(
-            extension)))
-        assert len(preview_image_filenames) == header['NINTS']
+        preview_image_filenames = glob.glob(
+            os.path.join(test_directory, "*.{}".format(extension))
+        )
+        assert len(preview_image_filenames) == header["NINTS"]
 
         # clean up: delete preview images
         for file in preview_image_filenames:

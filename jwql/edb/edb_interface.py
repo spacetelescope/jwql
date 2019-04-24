@@ -51,16 +51,18 @@ from astropy.table import Table
 from astropy.time import Time
 from astroquery.mast import Mast
 
-mast_edb_timeseries_service = 'Mast.JwstEdb.GetTimeseries.All'
-mast_edb_dictionary_service = 'Mast.JwstEdb.Dictionary'
-mast_edb_mnemonic_service = 'Mast.JwstEdb.Mnemonics'
+mast_edb_timeseries_service = "Mast.JwstEdb.GetTimeseries.All"
+mast_edb_dictionary_service = "Mast.JwstEdb.Dictionary"
+mast_edb_mnemonic_service = "Mast.JwstEdb.Mnemonics"
 
 
 def mast_authenticate(token=None):
     """Verify MAST authentication status, login if needed."""
     if Mast.authenticated() is False:
         if token is None:
-            raise ValueError('You are not authenticated in MAST. Please provide a valid token.')
+            raise ValueError(
+                "You are not authenticated in MAST. Please provide a valid token."
+            )
         else:
             Mast.login(token=token)
 
@@ -80,7 +82,7 @@ def is_valid_mnemonic(mnemonic_identifier):
 
     """
     inventory = mnemonic_inventory()[0]
-    if mnemonic_identifier in inventory['tlmMnemonic']:
+    if mnemonic_identifier in inventory["tlmMnemonic"]:
         return True
     else:
         return False
@@ -106,7 +108,7 @@ def mnemonic_inventory():
     data, meta = process_mast_service_request_result(out)
 
     # convert numerical ID to str for homogenity (all columns are str)
-    data['tlmIdentifier'] = data['tlmIdentifier'].astype(str)
+    data["tlmIdentifier"] = data["tlmIdentifier"].astype(str)
 
     return data, meta
 
@@ -130,23 +132,26 @@ def process_mast_service_request_result(result, data_as_table=True):
 
     """
     json_data = result[0].json()
-    if json_data['status'] != 'COMPLETE':
-        raise RuntimeError('Mnemonic query did not complete.\nquery status: {}\nmessage: {}'.format(
-            json_data['status'], json_data['msg']))
+    if json_data["status"] != "COMPLETE":
+        raise RuntimeError(
+            "Mnemonic query did not complete.\nquery status: {}\nmessage: {}".format(
+                json_data["status"], json_data["msg"]
+            )
+        )
 
     try:
         # timestamp-value pairs in the form of an astropy table
         if data_as_table:
-            data = Table(json_data['data'])
+            data = Table(json_data["data"])
         else:
-            data = json_data['data'][0]
+            data = json_data["data"][0]
     except KeyError:
-        raise RuntimeError('Query did not return any data.')
+        raise RuntimeError("Query did not return any data.")
 
     # collect meta data
     meta = {}
     for key in json_data.keys():
-        if key.lower() != 'data':
+        if key.lower() != "data":
             meta[key] = json_data[key]
 
     return data, meta
@@ -199,15 +204,23 @@ def query_single_mnemonic(mnemonic_identifier, start_time, end_time, token=None)
     mast_authenticate(token=token)
 
     if not is_valid_mnemonic(mnemonic_identifier):
-        raise RuntimeError('Mnemonic identifier is invalid!')
+        raise RuntimeError("Mnemonic identifier is invalid!")
 
     if not isinstance(start_time, Time):
-        raise RuntimeError('Please specify a valid start time (instance of astropy.time.core.Time)')
+        raise RuntimeError(
+            "Please specify a valid start time (instance of astropy.time.core.Time)"
+        )
 
     if not isinstance(end_time, Time):
-        raise RuntimeError('Please specify a valid end time (instance of astropy.time.core.Time)')
+        raise RuntimeError(
+            "Please specify a valid end time (instance of astropy.time.core.Time)"
+        )
 
-    parameters = {'mnemonic': mnemonic_identifier, 'start': start_time.iso, 'end': end_time.iso}
+    parameters = {
+        "mnemonic": mnemonic_identifier,
+        "start": start_time.iso,
+        "end": end_time.iso,
+    }
     result = Mast.service_request_async(mast_edb_timeseries_service, parameters)
     data, meta = process_mast_service_request_result(result)
 

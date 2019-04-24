@@ -58,6 +58,6 @@ handler403 = views.not_found  # Permission denied
 handler400 = views.not_found  # Bad request
 
 urlpatterns = [
-    path('', include('jwql.website.apps.jwql.urls')),
-    path('admin/', admin.site.urls),
+    path("", include("jwql.website.apps.jwql.urls")),
+    path("admin/", admin.site.urls),
 ]

@@ -53,11 +53,15 @@ from jwql.database.database_interface import FilesystemGeneral
 from jwql.database.database_interface import FilesystemInstrument
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
-from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import (
+    FILE_SUFFIX_TYPES,
+    JWST_INSTRUMENT_NAMES,
+    JWST_INSTRUMENT_NAMES_MIXEDCASE,
+)
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 
-FILESYSTEM = get_config()['filesystem']
+FILESYSTEM = get_config()["filesystem"]
 
 
 def gather_statistics(general_results_dict, instrument_results_dict):
@@ -79,41 +83,49 @@ def gather_statistics(general_results_dict, instrument_results_dict):
         A dictionary for the ``filesystem_instrument`` database table
     """
 
-    logging.info('Searching filesystem...')
+    logging.info("Searching filesystem...")
 
     for dirpath, _, files in os.walk(FILESYSTEM):
-        general_results_dict['total_file_count'] += len(files)
+        general_results_dict["total_file_count"] += len(files)
         for filename in files:
 
             file_path = os.path.join(dirpath, filename)
-            general_results_dict['total_file_size'] += os.path.getsize(file_path)
+            general_results_dict["total_file_size"] += os.path.getsize(file_path)
 
             if filename.endswith(".fits"):
 
                 # Parse out filename information
                 filename_dict = filename_parser(filename)
-                filetype = filename_dict['suffix']
-                instrument = filename_dict['instrument']
+                filetype = filename_dict["suffix"]
+                instrument = filename_dict["instrument"]
 
                 # Populate general stats
-                general_results_dict['fits_file_count'] += 1
-                general_results_dict['fits_file_size'] += os.path.getsize(file_path)
+                general_results_dict["fits_file_count"] += 1
+                general_results_dict["fits_file_size"] += os.path.getsize(file_path)
 
                 # Populate instrument specific stats
                 if instrument not in instrument_results_dict:
                     instrument_results_dict[instrument] = {}
                 if filetype not in instrument_results_dict[instrument]:
                     instrument_results_dict[instrument][filetype] = {}
-                    instrument_results_dict[instrument][filetype]['count'] = 0
-                    instrument_results_dict[instrument][filetype]['size'] = 0
-                instrument_results_dict[instrument][filetype]['count'] += 1
-                instrument_results_dict[instrument][filetype]['size'] += os.path.getsize(file_path) / (2**40)
+                    instrument_results_dict[instrument][filetype]["count"] = 0
+                    instrument_results_dict[instrument][filetype]["size"] = 0
+                instrument_results_dict[instrument][filetype]["count"] += 1
+                instrument_results_dict[instrument][filetype][
+                    "size"
+                ] += os.path.getsize(file_path) / (2 ** 40)
 
     # Convert file sizes to terabytes
-    general_results_dict['total_file_size'] = general_results_dict['total_file_size'] / (2**40)
-    general_results_dict['fits_file_size'] = general_results_dict['fits_file_size'] / (2**40)
+    general_results_dict["total_file_size"] = general_results_dict[
+        "total_file_size"
+    ] / (2 ** 40)
+    general_results_dict["fits_file_size"] = general_results_dict["fits_file_size"] / (
+        2 ** 40
+    )
 
-    logging.info('{} files found in filesystem'.format(general_results_dict['fits_file_count']))
+    logging.info(
+        "{} files found in filesystem".format(general_results_dict["fits_file_count"])
+    )
 
     return general_results_dict, instrument_results_dict
 
@@ -136,8 +148,8 @@ def get_global_filesystem_stats(general_results_dict):
     command = "df {}".format(FILESYSTEM)
     command += " | awk '{print $3, $4}' | tail -n 1"
     stats = subprocess.check_output(command, shell=True).split()
-    general_results_dict['used'] = int(stats[0]) / (2**40)
-    general_results_dict['available'] = int(stats[1]) / (2**40)
+    general_results_dict["used"] = int(stats[0]) / (2 ** 40)
+    general_results_dict["available"] = int(stats[1]) / (2 ** 40)
 
     return general_results_dict
 
@@ -156,14 +168,14 @@ def initialize_results_dicts():
     now = datetime.datetime.now()
 
     general_results_dict = {}
-    general_results_dict['date'] = now
-    general_results_dict['total_file_count'] = 0
-    general_results_dict['fits_file_count'] = 0
-    general_results_dict['total_file_size'] = 0
-    general_results_dict['fits_file_size'] = 0
+    general_results_dict["date"] = now
+    general_results_dict["total_file_count"] = 0
+    general_results_dict["fits_file_count"] = 0
+    general_results_dict["total_file_size"] = 0
+    general_results_dict["fits_file_size"] = 0
 
     instrument_results_dict = {}
-    instrument_results_dict['date'] = now
+    instrument_results_dict["date"] = now
 
     return general_results_dict, instrument_results_dict
 
@@ -176,13 +188,15 @@ def monitor_filesystem():
     to database tables, and generates plots.
     """
 
-    logging.info('Beginning filesystem monitoring.')
+    logging.info("Beginning filesystem monitoring.")
 
     # Initialize dictionaries for database input
     general_results_dict, instrument_results_dict = initialize_results_dicts()
 
     # Walk through filesystem recursively to gather statistics
-    general_results_dict, instrument_results_dict = gather_statistics(general_results_dict, instrument_results_dict)
+    general_results_dict, instrument_results_dict = gather_statistics(
+        general_results_dict, instrument_results_dict
+    )
 
     # Get df style stats on file system
     general_results_dict = get_global_filesystem_stats(general_results_dict)
@@ -215,31 +229,37 @@ def plot_by_filetype(plot_type, instrument):
     """
 
     # Determine plot title
-    if instrument == 'all':
-        title = 'Total File {} by Type'.format(plot_type.capitalize())
+    if instrument == "all":
+        title = "Total File {} by Type".format(plot_type.capitalize())
     else:
         instrument_title = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument]
-        title = '{} Total File {} by Type'.format(instrument_title, plot_type.capitalize())
+        title = "{} Total File {} by Type".format(
+            instrument_title, plot_type.capitalize()
+        )
 
     # Initialize plot
     plot = figure(
-       tools='pan,box_zoom,wheel_zoom,reset,save',
-       x_axis_type='datetime',
-       title=title,
-       x_axis_label='Date',
-       y_axis_label='Count')
+        tools="pan,box_zoom,wheel_zoom,reset,save",
+        x_axis_type="datetime",
+        title=title,
+        x_axis_label="Date",
+        y_axis_label="Count",
+    )
     colors = itertools.cycle(palette)
 
     for filetype, color in zip(FILE_SUFFIX_TYPES, colors):
 
         # Query for counts
-        results = session.query(FilesystemInstrument.date, getattr(FilesystemInstrument, plot_type))\
-                                .filter(FilesystemInstrument.filetype == filetype)
+        results = session.query(
+            FilesystemInstrument.date, getattr(FilesystemInstrument, plot_type)
+        ).filter(FilesystemInstrument.filetype == filetype)
 
-        if instrument == 'all':
+        if instrument == "all":
             results = results.all()
         else:
-            results = results.filter(FilesystemInstrument.instrument == instrument).all()
+            results = results.filter(
+                FilesystemInstrument.instrument == instrument
+            ).all()
 
         # Group by date
         if results:
@@ -252,7 +272,9 @@ def plot_by_filetype(plot_type, instrument):
             values = list(results_dict.values())
 
             # Plot the results
-            plot.line(dates, values, legend='{} files'.format(filetype), line_color=color)
+            plot.line(
+                dates, values, legend="{} files".format(filetype), line_color=color
+            )
             plot.circle(dates, values, color=color)
 
     return plot
@@ -268,21 +290,26 @@ def plot_filesystem_size():
     """
 
     # Plot system stats vs. date
-    results = session.query(FilesystemGeneral.date, FilesystemGeneral.total_file_size,
-                            FilesystemGeneral.used, FilesystemGeneral.available).all()
+    results = session.query(
+        FilesystemGeneral.date,
+        FilesystemGeneral.total_file_size,
+        FilesystemGeneral.used,
+        FilesystemGeneral.available,
+    ).all()
     dates, total_sizes, useds, availables = zip(*results)
     plot = figure(
-      tools='pan,box_zoom,wheel_zoom,reset,save',
-      x_axis_type='datetime',
-      title='System stats',
-      x_axis_label='Date',
-      y_axis_label='GB')
-    plot.line(dates, total_sizes, legend='Total size', line_color='red')
-    plot.circle(dates, total_sizes, color='red')
-    plot.line(dates, useds, legend='Used bytes', line_color='green')
-    plot.circle(dates, useds, color='green')
-    plot.line(dates, availables, legend='Free bytes', line_color='blue')
-    plot.circle(dates, availables, color='blue')
+        tools="pan,box_zoom,wheel_zoom,reset,save",
+        x_axis_type="datetime",
+        title="System stats",
+        x_axis_label="Date",
+        y_axis_label="GB",
+    )
+    plot.line(dates, total_sizes, legend="Total size", line_color="red")
+    plot.circle(dates, total_sizes, color="red")
+    plot.line(dates, useds, legend="Used bytes", line_color="green")
+    plot.circle(dates, useds, color="green")
+    plot.line(dates, availables, legend="Free bytes", line_color="blue")
+    plot.circle(dates, availables, color="blue")
 
     return plot
 
@@ -295,47 +322,51 @@ def plot_filesystem_stats():
 
     p1 = plot_total_file_counts()
     p2 = plot_filesystem_size()
-    p3 = plot_by_filetype('count', 'all')
-    p4 = plot_by_filetype('size', 'all')
+    p3 = plot_by_filetype("count", "all")
+    p4 = plot_by_filetype("size", "all")
     plot_list = [p1, p2, p3, p4]
 
     for instrument in JWST_INSTRUMENT_NAMES:
-        plot_list.append(plot_by_filetype('count', instrument))
-        plot_list.append(plot_by_filetype('size', instrument))
+        plot_list.append(plot_by_filetype("count", instrument))
+        plot_list.append(plot_by_filetype("size", instrument))
 
     # Create a layout with a grid pattern
-    grid_chunks = [plot_list[i:i+2] for i in range(0, len(plot_list), 2)]
+    grid_chunks = [plot_list[i : i + 2] for i in range(0, len(plot_list), 2)]
     grid = gridplot(grid_chunks)
 
     # Save all of the plots in one file
-    outputs_dir = os.path.join(get_config()['outputs'], 'monitor_filesystem')
-    outfile = os.path.join(outputs_dir, 'filesystem_monitor.html')
+    outputs_dir = os.path.join(get_config()["outputs"], "monitor_filesystem")
+    outfile = os.path.join(outputs_dir, "filesystem_monitor.html")
     output_file(outfile)
     save(grid)
     set_permissions(outfile)
-    logging.info('Saved plot of all statistics to {}'.format(outfile))
+    logging.info("Saved plot of all statistics to {}".format(outfile))
 
     # Save each plot's components
     for plot in plot_list:
-        plot_name = plot.title.text.lower().replace(' ', '_')
-        plot.sizing_mode = 'stretch_both'
+        plot_name = plot.title.text.lower().replace(" ", "_")
+        plot.sizing_mode = "stretch_both"
         script, div = components(plot)
 
         div_outfile = os.path.join(outputs_dir, "{}_component.html".format(plot_name))
-        with open(div_outfile, 'w') as f:
+        with open(div_outfile, "w") as f:
             f.write(div)
             f.close()
         set_permissions(div_outfile)
 
         script_outfile = os.path.join(outputs_dir, "{}_component.js".format(plot_name))
-        with open(script_outfile, 'w') as f:
+        with open(script_outfile, "w") as f:
             f.write(script)
             f.close()
         set_permissions(script_outfile)
 
-        logging.info('Saved components files: {}_component.html and {}_component.js'.format(plot_name, plot_name))
+        logging.info(
+            "Saved components files: {}_component.html and {}_component.js".format(
+                plot_name, plot_name
+            )
+        )
 
-    logging.info('Filesystem statistics plotting complete.')
+    logging.info("Filesystem statistics plotting complete.")
 
 
 def plot_total_file_counts():
@@ -348,16 +379,19 @@ def plot_total_file_counts():
     """
 
     # Total file counts vs. date
-    results = session.query(FilesystemGeneral.date, FilesystemGeneral.total_file_count).all()
+    results = session.query(
+        FilesystemGeneral.date, FilesystemGeneral.total_file_count
+    ).all()
     dates, file_counts = zip(*results)
     plot = figure(
-       tools='pan,box_zoom,reset,wheel_zoom,save',
-       x_axis_type='datetime',
-       title="Total File Counts",
-       x_axis_label='Date',
-       y_axis_label='Count')
-    plot.line(dates, file_counts, line_width=2, line_color='blue')
-    plot.circle(dates, file_counts, color='blue')
+        tools="pan,box_zoom,reset,wheel_zoom,save",
+        x_axis_type="datetime",
+        title="Total File Counts",
+        x_axis_label="Date",
+        y_axis_label="Count",
+    )
+    plot.line(dates, file_counts, line_width=2, line_color="blue")
+    plot.circle(dates, file_counts, color="blue")
 
     return plot
 
@@ -381,20 +415,20 @@ def update_database(general_results_dict, instrument_results_dict):
     for instrument in JWST_INSTRUMENT_NAMES:
         for filetype in instrument_results_dict[instrument]:
             new_record = {}
-            new_record['date'] = instrument_results_dict['date']
-            new_record['instrument'] = instrument
-            new_record['filetype'] = filetype
-            new_record['count'] = instrument_results_dict[instrument][filetype]['count']
-            new_record['size'] = instrument_results_dict[instrument][filetype]['size']
+            new_record["date"] = instrument_results_dict["date"]
+            new_record["instrument"] = instrument
+            new_record["filetype"] = filetype
+            new_record["count"] = instrument_results_dict[instrument][filetype]["count"]
+            new_record["size"] = instrument_results_dict[instrument][filetype]["size"]
 
             engine.execute(FilesystemInstrument.__table__.insert(), new_record)
             session.commit()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # Configure logging
-    module = os.path.basename(__file__).strip('.py')
+    module = os.path.basename(__file__).strip(".py")
     configure_logging(module)
 
     monitor_filesystem()

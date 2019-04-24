@@ -34,60 +34,62 @@ from jwql.utils.utils import get_config
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'nx4xai#69@7pfb@l182z9aa#h8dfoms0$eitcrt5!77en*8(y4'
+SECRET_KEY = "nx4xai#69@7pfb@l182z9aa#h8dfoms0$eitcrt5!77en*8(y4"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 INSTALLED_APPS = [
-    'jwql.website.apps.jwql',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    "jwql.website.apps.jwql",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'jwql.website.jwql_proj.urls'
+ROOT_URLCONF = "jwql.website.jwql_proj.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.jinja2.Jinja2',
-        'DIRS': [os.path.join(BASE_DIR, 'apps', 'jwql', 'templates')],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'environment': 'jwql.website.jwql_proj.jinja2.environment',
-            'extensions': ['jwql.website.jwql_proj.jinja2.DjangoNow'],
-            'context_processors': ['jwql.website.apps.jwql.context_processors.base_context'],
+        "BACKEND": "django.template.backends.jinja2.Jinja2",
+        "DIRS": [os.path.join(BASE_DIR, "apps", "jwql", "templates")],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "environment": "jwql.website.jwql_proj.jinja2.environment",
+            "extensions": ["jwql.website.jwql_proj.jinja2.DjangoNow"],
+            "context_processors": [
+                "jwql.website.apps.jwql.context_processors.base_context"
+            ],
         },
     }
 ]
 
-WSGI_APPLICATION = 'jwql.website.jwql_proj.wsgi.application'
+WSGI_APPLICATION = "jwql.website.jwql_proj.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    },
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+    }
 }
 
 # Password validation
@@ -95,26 +97,20 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
     },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'EST'
+TIME_ZONE = "EST"
 
 USE_I18N = True
 
@@ -126,9 +122,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = "/static/"
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static/"),
-    get_config()['jwql_dir']
-]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static/"), get_config()["jwql_dir"]]

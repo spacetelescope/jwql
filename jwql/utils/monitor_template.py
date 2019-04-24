@@ -79,17 +79,20 @@ def monitor_template_main():
     """ The main function of the ``monitor_template`` module."""
 
     # Example of logging
-    my_variable = 'foo'
-    logging.info('Some useful information: {}'.format(my_variable))
+    my_variable = "foo"
+    logging.info("Some useful information: {}".format(my_variable))
 
     # Example of querying for a dataset via MAST API
     service = "Mast.Jwst.Filtered.Niriss"
-    params = {"columns": "filename",
-              "filters": [{"paramName": "filter",
-                          "values": ['F430M']}]}
+    params = {
+        "columns": "filename",
+        "filters": [{"paramName": "filter", "values": ["F430M"]}],
+    }
     response = Mast.service_request_async(service, params)
-    result = response[0].json()['data']
-    filename_of_interest = result[0]['filename']  # jw00304002001_02102_00001_nis_uncal.fits
+    result = response[0].json()["data"]
+    filename_of_interest = result[0][
+        "filename"
+    ]  # jw00304002001_02102_00001_nis_uncal.fits
 
     # Example of parsing a filename
     filename_dict = filename_parser(filename_of_interest)
@@ -105,9 +108,10 @@ def monitor_template_main():
     #      'suffix': 'uncal'}
 
     # Example of locating a dataset in the filesystem
-    filesystem = get_config()['filesystem']
-    dataset = os.path.join(filesystem, 'jw{}'.format(filename_dict['program_id']),
-                           filename_of_interest)
+    filesystem = get_config()["filesystem"]
+    dataset = os.path.join(
+        filesystem, "jw{}".format(filename_dict["program_id"]), filename_of_interest
+    )
 
     # Example of reading in dataset using jwst.datamodels
     im = datamodels.open(dataset)
@@ -117,22 +121,24 @@ def monitor_template_main():
     #     im.meta  # Metadata such as header keywords
 
     # Example of saving a file and setting permissions
-    im.save('some_filename.fits')
-    set_permissions('some_filename.fits')
+    im.save("some_filename.fits")
+    set_permissions("some_filename.fits")
 
     # Example of creating and exporting a Bokeh plot
     plt = Donut(im.data, plot_width=600, plot_height=600)
-    plt.sizing_mode = 'stretch_both'  # Necessary for responsive sizing on web app
+    plt.sizing_mode = "stretch_both"  # Necessary for responsive sizing on web app
     script, div = components(plt)
 
-    plot_output_dir = get_config()['outputs']
-    div_outfile = os.path.join(plot_output_dir, 'monitor_name',
-                               filename_of_interest + "_component.html")
-    script_outfile = os.path.join(plot_output_dir, 'monitor_name',
-                                  filename_of_interest + "_component.js")
+    plot_output_dir = get_config()["outputs"]
+    div_outfile = os.path.join(
+        plot_output_dir, "monitor_name", filename_of_interest + "_component.html"
+    )
+    script_outfile = os.path.join(
+        plot_output_dir, "monitor_name", filename_of_interest + "_component.js"
+    )
 
     for outfile, component in zip([div_outfile, script_outfile], [div, script]):
-        with open(outfile, 'w') as f:
+        with open(outfile, "w") as f:
             f.write(component)
             f.close()
         set_permissions(outfile)
@@ -170,10 +176,10 @@ def second_function(input_value):
     return useful_result
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # Configure logging
-    module = os.path.basename(__file__).strip('.py')
+    module = os.path.basename(__file__).strip(".py")
     configure_logging(module)
 
     # Call the main function

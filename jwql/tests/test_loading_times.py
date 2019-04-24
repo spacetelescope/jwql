@@ -30,25 +30,27 @@ TIME_CONSTRAINT = 30  # seconds
 urls = []
 
 # Generic URLs
-urls.append('')
-urls.append('about/')
-urls.append('edb/')
+urls.append("")
+urls.append("about/")
+urls.append("edb/")
 
 # Speicif URLs
-test_mappings = [('fgs', '86700', 'jw86600007001_02101_00001_guider2'),
-                 ('miri', '98012', 'jw98012001001_02102_00001_mirimage'),
-                 ('nircam', '93025', 'jw93065002001_02101_00001_nrcb2'),
-                 ('niriss', '00308', 'jw00308001001_02101_00001_nis'),
-                 ('nirspec', '96213', 'jw96213001001_02101_00001_nrs1')]
+test_mappings = [
+    ("fgs", "86700", "jw86600007001_02101_00001_guider2"),
+    ("miri", "98012", "jw98012001001_02102_00001_mirimage"),
+    ("nircam", "93025", "jw93065002001_02101_00001_nrcb2"),
+    ("niriss", "00308", "jw00308001001_02101_00001_nis"),
+    ("nirspec", "96213", "jw96213001001_02101_00001_nrs1"),
+]
 for mapping in test_mappings:
     (instrument, proposal, rootname) = mapping
-    urls.append('{}/'.format(instrument))
-    urls.append('{}/archive/'.format(instrument))
-    urls.append('{}/archive/{}/'.format(instrument, proposal))
-    urls.append('{}/{}/'.format(instrument, rootname))
+    urls.append("{}/".format(instrument))
+    urls.append("{}/archive/".format(instrument))
+    urls.append("{}/archive/{}/".format(instrument, proposal))
+    urls.append("{}/{}/".format(instrument, rootname))
 
 
-@pytest.mark.parametrize('url', urls)
+@pytest.mark.parametrize("url", urls)
 def test_loading_times(url):
     """Test to see if the given ``url`` returns a webpage sucessfully
     within a reasonable time.
@@ -62,8 +64,8 @@ def test_loading_times(url):
 
     # Build full URL
     base_url = get_base_url()
-    url = '{}/{}'.format(base_url, url)
-    print('Testing {}'.format(url))
+    url = "{}/{}".format(base_url, url)
+    print("Testing {}".format(url))
 
     t1 = time.time()
     url = urllib.request.urlopen(url)

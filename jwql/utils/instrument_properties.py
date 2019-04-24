@@ -23,7 +23,11 @@ from astropy.io import fits
 from jwst.datamodels import dqflags
 import numpy as np
 
-from jwql.utils.constants import AMPLIFIER_BOUNDARIES, FOUR_AMP_SUBARRAYS, SUBARRAYS_ONE_OR_FOUR_AMPS
+from jwql.utils.constants import (
+    AMPLIFIER_BOUNDARIES,
+    FOUR_AMP_SUBARRAYS,
+    SUBARRAYS_ONE_OR_FOUR_AMPS,
+)
 
 
 def amplifier_info(filename, omit_reference_pixels=True):
@@ -55,13 +59,13 @@ def amplifier_info(filename, omit_reference_pixels=True):
 
     # First get necessary metadata
     header = fits.getheader(filename)
-    instrument = header['INSTRUME'].lower()
-    detector = header['DETECTOR']
-    x_dim = header['SUBSIZE1']
-    y_dim = header['SUBSIZE2']
-    sample_time = header['TSAMPLE'] * 1.e-6
-    frame_time = header['TFRAME']
-    subarray_name = header['SUBARRAY']
+    instrument = header["INSTRUME"].lower()
+    detector = header["DETECTOR"]
+    x_dim = header["SUBSIZE1"]
+    y_dim = header["SUBSIZE2"]
+    sample_time = header["TSAMPLE"] * 1.0e-6
+    frame_time = header["TFRAME"]
+    subarray_name = header["SUBARRAY"]
     aperture = "{}_{}".format(detector, subarray_name)
 
     # Full frame data will be 2048x2048 for all instruments
@@ -73,7 +77,7 @@ def amplifier_info(filename, omit_reference_pixels=True):
 
         if subarray_name not in SUBARRAYS_ONE_OR_FOUR_AMPS:
             num_amps = 1
-            amp_bounds = {'1': [(0, 0), (x_dim, y_dim)]}
+            amp_bounds = {"1": [(0, 0), (x_dim, y_dim)]}
 
         else:
 
@@ -87,10 +91,12 @@ def amplifier_info(filename, omit_reference_pixels=True):
             # subarrays, so we don't need this to be a general case that
             # can handle any subarray orientation relative to any amp
             # orientation
-            amp4_time = calc_frame_time(instrument, aperture, x_dim, y_dim,
-                                        4, sample_time=sample_time)
-            amp1_time = calc_frame_time(instrument, aperture, x_dim, y_dim,
-                                        1, sample_time=sample_time)
+            amp4_time = calc_frame_time(
+                instrument, aperture, x_dim, y_dim, 4, sample_time=sample_time
+            )
+            amp1_time = calc_frame_time(
+                instrument, aperture, x_dim, y_dim, 1, sample_time=sample_time
+            )
 
             if np.isclose(amp4_time, frame_time, atol=0.001, rtol=0):
                 num_amps = 4
@@ -98,18 +104,21 @@ def amplifier_info(filename, omit_reference_pixels=True):
                 # the x direction, and set  the boundaries in the y
                 # direction equal to the hight of the subarray
                 amp_bounds = deepcopy(AMPLIFIER_BOUNDARIES[instrument])
-                for amp_num in ['1', '2', '3', '4']:
+                for amp_num in ["1", "2", "3", "4"]:
                     newdims = (amp_bounds[amp_num][1][0], y_dim)
                     amp_bounds[amp_num][1] = newdims
 
             elif np.isclose(amp1_time, frame_time, atol=0.001, rtol=0):
                 num_amps = 1
-                amp_bounds = {'1': [(0, 0), (x_dim, y_dim)]}
+                amp_bounds = {"1": [(0, 0), (x_dim, y_dim)]}
 
             else:
-                raise ValueError(('Unable to determine number of amps used for exposure. 4-amp frametime'
-                                  'is {}. 1-amp frametime is {}. Reported frametime is {}.')
-                                 .format(amp4_time, amp1_time, frame_time))
+                raise ValueError(
+                    (
+                        "Unable to determine number of amps used for exposure. 4-amp frametime"
+                        "is {}. 1-amp frametime is {}. Reported frametime is {}."
+                    ).format(amp4_time, amp1_time, frame_time)
+                )
 
     if omit_reference_pixels:
 
@@ -117,15 +126,14 @@ def amplifier_info(filename, omit_reference_pixels=True):
         # the amp boundaries.
         with fits.open(filename) as hdu:
             try:
-                data_quality = hdu['DQ'].data
+                data_quality = hdu["DQ"].data
             except KeyError:
-                raise KeyError('DQ extension not found.')
-
+                raise KeyError("DQ extension not found.")
 
         # Reference pixels should be flagged in the DQ array with the
         # REFERENCE_PIXEL flag. Find the science pixels by looping for
         # pixels that don't have that bit set.
-        scipix = np.where(data_quality & dqflags.pixel['REFERENCE_PIXEL'] == 0)
+        scipix = np.where(data_quality & dqflags.pixel["REFERENCE_PIXEL"] == 0)
         ymin = np.min(scipix[0])
         xmin = np.min(scipix[1])
         ymax = np.max(scipix[0]) + 1
@@ -158,7 +166,7 @@ def amplifier_info(filename, omit_reference_pixels=True):
     return num_amps, amp_bounds
 
 
-def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
+def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.0e-5):
     """Calculate the readout time for a single frame of a given size and
     number of amplifiers. Note that for NIRISS and FGS, the fast readout
     direction is opposite to that in NIRCam, so we switch ``xdim`` and
@@ -205,7 +213,7 @@ def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
             # All subarrays
             rowpad = 2
             fullpad = 0
-            if ((xdim <= 8) & (ydim <= 8)):
+            if (xdim <= 8) & (ydim <= 8):
                 # The smallest subarray
                 rowpad = 3
 
@@ -220,9 +228,9 @@ def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
             rowpad = 2
             fullpad = 0
 
-    elif instrument == 'fgs':
+    elif instrument == "fgs":
         colpad = 6
-        if 'acq1' in aperture.lower():
+        if "acq1" in aperture.lower():
             colpad = 12
         rowpad = 1
         if amps == 4:

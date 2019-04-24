@@ -34,7 +34,12 @@ import time
 
 from bokeh.io import save, output_file
 from bokeh.models import ColumnDataSource
-from bokeh.models.widgets import DataTable, DateFormatter, HTMLTemplateFormatter, TableColumn
+from bokeh.models.widgets import (
+    DataTable,
+    DateFormatter,
+    HTMLTemplateFormatter,
+    TableColumn,
+)
 
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
@@ -56,10 +61,10 @@ def create_table(status_dict):
     missings = []
     results = []
     for key in status_dict:
-        filenames.append(status_dict[key]['logname'])
-        dates.append(datetime.fromtimestamp(status_dict[key]['latest_time']))
-        missings.append(str(status_dict[key]['missing_file']))
-        results.append(status_dict[key]['status'])
+        filenames.append(status_dict[key]["logname"])
+        dates.append(datetime.fromtimestamp(status_dict[key]["latest_time"]))
+        missings.append(str(status_dict[key]["missing_file"]))
+        results.append(status_dict[key]["status"])
 
     # div to color the boxes in the status column
     success_template = """
@@ -87,33 +92,51 @@ def create_table(status_dict):
     success_formatter = HTMLTemplateFormatter(template=success_template)
     missing_formatter = HTMLTemplateFormatter(template=missing_template)
 
-    data = dict(name=list(status_dict.keys()), filename=filenames, date=dates, missing=missings,
-                result=results)
+    data = dict(
+        name=list(status_dict.keys()),
+        filename=filenames,
+        date=dates,
+        missing=missings,
+        result=results,
+    )
     source = ColumnDataSource(data)
 
     datefmt = DateFormatter(format="RFC-2822")
     columns = [
         TableColumn(field="name", title="Monitor Name", width=200),
         TableColumn(field="filename", title="Most Recent File", width=350),
-        TableColumn(field="date", title="Most Recent Time", width=200, formatter=datefmt),
-        TableColumn(field="missing", title="Possible Missing File", width=200, formatter=missing_formatter),
-        TableColumn(field="result", title="Status", width=100, formatter=success_formatter),
+        TableColumn(
+            field="date", title="Most Recent Time", width=200, formatter=datefmt
+        ),
+        TableColumn(
+            field="missing",
+            title="Possible Missing File",
+            width=200,
+            formatter=missing_formatter,
+        ),
+        TableColumn(
+            field="result", title="Status", width=100, formatter=success_formatter
+        ),
     ]
-    data_table = DataTable(source=source, columns=columns, width=800, height=280, index_position=None)
+    data_table = DataTable(
+        source=source, columns=columns, width=800, height=280, index_position=None
+    )
 
     # Get output directory for saving the table files
-    output_dir = get_config()['outputs']
-    output_filename = 'cron_status_table'
+    output_dir = get_config()["outputs"]
+    output_filename = "cron_status_table"
 
     # Save full html
-    html_outfile = os.path.join(output_dir, 'monitor_cron_jobs', '{}.html'.format(output_filename))
+    html_outfile = os.path.join(
+        output_dir, "monitor_cron_jobs", "{}.html".format(output_filename)
+    )
     output_file(html_outfile)
     save(data_table)
     try:
         set_permissions(html_outfile)
     except PermissionError:
-        logging.warning('Unable to set permissions for {}'.format(html_outfile))
-    logging.info('Saved Bokeh full HTML file: {}'.format(html_outfile))
+        logging.warning("Unable to set permissions for {}".format(html_outfile))
+    logging.info("Saved Bokeh full HTML file: {}".format(html_outfile))
 
 
 def find_latest(logfiles):
@@ -240,14 +263,14 @@ def status(production_mode=True):
     logging.info("Beginning cron job status monitor")
 
     # Get main logfile path
-    log_path = get_config()['log_dir']
+    log_path = get_config()["log_dir"]
 
     # If we are in development mode, the log files are in a slightly
     # different location than in production mode
     if production_mode:
-        log_path = os.path.join(log_path, 'prod')
+        log_path = os.path.join(log_path, "prod")
     else:
-        log_path = os.path.join(log_path, 'dev')
+        log_path = os.path.join(log_path, "dev")
 
     # Set up a dictionary to keep track of results
     logfile_status = {}
@@ -260,15 +283,17 @@ def status(production_mode=True):
         # When running in production mode, skip the 'dev' subdirectory,
         # as it contains the development version of the monitor logs
         if production_mode:
-            subsubdir[:] = [dirname for dirname in subsubdir if dirname != 'dev']
+            subsubdir[:] = [dirname for dirname in subsubdir if dirname != "dev"]
 
         if len(filenames) > 0:
-            monitor_name = subdir.split('/')[-1]
+            monitor_name = subdir.split("/")[-1]
 
             # Avoid monitor_cron_jobs itseft
-            if monitor_name != 'monitor_cron_jobs':
+            if monitor_name != "monitor_cron_jobs":
 
-                log_file_list = [os.path.join(subdir, filename) for filename in filenames]
+                log_file_list = [
+                    os.path.join(subdir, filename) for filename in filenames
+                ]
 
                 # Find the cadence of the monitor
                 delta_time, stdev_time = get_cadence(log_file_list)
@@ -279,21 +304,29 @@ def status(production_mode=True):
                 # Check to see if we expect a file more recent than the latest
                 missing_file = missing_file_check(delta_time, stdev_time, latest_log)
                 if missing_file:
-                    logging.warning('Expected a more recent {} logfile than {}'
-                                    .format(monitor_name, os.path.basename(latest_log)))
+                    logging.warning(
+                        "Expected a more recent {} logfile than {}".format(
+                            monitor_name, os.path.basename(latest_log)
+                        )
+                    )
 
                 # Check the file for success/failure
                 result = success_check(latest_log)
-                logging.info('{}: Latest log file indicates {}'.format(monitor_name, result))
+                logging.info(
+                    "{}: Latest log file indicates {}".format(monitor_name, result)
+                )
 
                 # Add results to the dictionary
-                logfile_status[monitor_name] = {'logname': os.path.basename(latest_log),
-                                                'latest_time': latest_log_time,
-                                                'missing_file': missing_file, 'status': result}
+                logfile_status[monitor_name] = {
+                    "logname": os.path.basename(latest_log),
+                    "latest_time": latest_log_time,
+                    "missing_file": missing_file,
+                    "status": result,
+                }
 
     # Create table of results using Bokeh
     create_table(logfile_status)
-    logging.info('Cron job status monitor completed successfully.')
+    logging.info("Cron job status monitor completed successfully.")
 
 
 def success_check(filename):
@@ -310,19 +343,19 @@ def success_check(filename):
     execution : str
         ``success`` or ``failure``
     """
-    with open(filename, 'r') as file_obj:
+    with open(filename, "r") as file_obj:
         all_lines = file_obj.readlines()
     final_line = all_lines[-1]
-    if 'complete' in final_line.lower():
-        execution = 'success'
+    if "complete" in final_line.lower():
+        execution = "success"
     else:
-        execution = 'failure'
+        execution = "failure"
     return execution
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    module = os.path.basename(__file__).strip('.py')
+    module = os.path.basename(__file__).strip(".py")
     configure_logging(module)
 
     status()

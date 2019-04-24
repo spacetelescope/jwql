@@ -49,7 +49,7 @@ def bar_chart(dataframe, groupcol, datacols=None, **kwargs):
     plt : obj
         The generated bokeh.figure object
     """
-    
+
     # Get the groups
     groups = list(dataframe[groupcol])
 
@@ -58,7 +58,7 @@ def bar_chart(dataframe, groupcol, datacols=None, **kwargs):
         datacols = [col for col in list(dataframe.columns) if col != groupcol]
 
     # Make a dictionary of the groups and data
-    data = {'groups': groups}
+    data = {"groups": groups}
     for col in datacols:
         data.update({col: list(dataframe[col])})
 
@@ -69,12 +69,18 @@ def bar_chart(dataframe, groupcol, datacols=None, **kwargs):
     source = ColumnDataSource(data=dict(x=x, counts=counts))
 
     # Make the figure
-    hover = HoverTool(tooltips=[('count', '@counts')])
-    plt = figure(x_range=FactorRange(*x), plot_height=250, tools=[hover],
-                 **kwargs)
-    plt.vbar(x='x', top='counts', width=0.9, source=source, line_color="white",
-             fill_color=factor_cmap('x', palette=Category20c[colors],
-                                    factors=datacols, start=1, end=2))
+    hover = HoverTool(tooltips=[("count", "@counts")])
+    plt = figure(x_range=FactorRange(*x), plot_height=250, tools=[hover], **kwargs)
+    plt.vbar(
+        x="x",
+        top="counts",
+        width=0.9,
+        source=source,
+        line_color="white",
+        fill_color=factor_cmap(
+            "x", palette=Category20c[colors], factors=datacols, start=1, end=2
+        ),
+    )
 
     # Formatting
     plt.y_range.start = 0

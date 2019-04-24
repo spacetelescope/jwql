@@ -23,11 +23,15 @@ import grp
 import os
 import pytest
 
-from jwql.utils.permissions import set_permissions, has_permissions, \
-    get_owner_string, get_group_string
+from jwql.utils.permissions import (
+    set_permissions,
+    has_permissions,
+    get_owner_string,
+    get_group_string,
+)
 
 # directory to be created and populated during tests running
-TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'permission_test')
+TEST_DIRECTORY = os.path.join(os.environ["HOME"], "permission_test")
 
 
 @pytest.fixture(scope="module")
@@ -89,9 +93,9 @@ def test_file(test_dir=TEST_DIRECTORY):
     if not os.path.isdir(test_dir):
         os.mkdir(test_dir)
 
-    filename = os.path.join(test_dir, 'permission_test.txt')
-    with open(filename, 'w') as filestream:
-        filestream.write('jwql permission test')
+    filename = os.path.join(test_dir, "permission_test.txt")
+    with open(filename, "w") as filestream:
+        filestream.write("jwql permission test")
     yield filename
     if os.path.isfile(filename):
         os.remove(filename)

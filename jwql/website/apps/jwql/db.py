@@ -55,19 +55,21 @@ class DatabaseConnection:
 
         self.db_type = db_type
 
-        assert self.db_type in ['MAST', 'SQL'], \
-            'Unrecognized database type: {}. Must be SQL or MAST.'.format(db_type)
+        assert self.db_type in [
+            "MAST",
+            "SQL",
+        ], "Unrecognized database type: {}. Must be SQL or MAST.".format(db_type)
 
-        if self.db_type == 'MAST':
+        if self.db_type == "MAST":
             self.init_MAST(instrument)
-        elif self.db_type == 'SQL':
+        elif self.db_type == "SQL":
             self.init_SQL()
 
     def init_SQL(self):
         """Start SQLAlchemy session with the ``jwql`` database"""
 
         # Get database credentials from config file
-        connection_string = get_config()['database']['connection_string']
+        connection_string = get_config()["database"]["connection_string"]
 
         # Connect to the database
         engine = create_engine(connection_string)
@@ -93,12 +95,11 @@ class DatabaseConnection:
         if instrument:
             instrument = instrument[0].upper() + instrument[1:].lower()
         else:
-            raise TypeError('Must provide instrument to initialize MAST database.')
+            raise TypeError("Must provide instrument to initialize MAST database.")
 
         # Define the service name for the given instrument
         self.service = "Mast.Jwst.Filtered." + instrument
         print(self.service)
-
 
     def get_files_for_instrument(self, instrument):
         """Given an instrument, query the database for all filenames
@@ -121,24 +122,24 @@ class DatabaseConnection:
 
         instrument = instrument.upper()
 
-        if self.db_type == 'SQL':
-            results = self.session.query(self.ObservationWebtest)\
-                .filter(self.ObservationWebtest.instrument == instrument)
-        elif self.db_type == 'MAST':
-            params = {"columns": "*",
-                      "filters": []}
+        if self.db_type == "SQL":
+            results = self.session.query(self.ObservationWebtest).filter(
+                self.ObservationWebtest.instrument == instrument
+            )
+        elif self.db_type == "MAST":
+            params = {"columns": "*", "filters": []}
             response = Mast.service_request_async(self.service, params)
-            results = response[0].json()['data']
+            results = response[0].json()["data"]
 
         filepaths = []
         filenames = []
         for i in results:
-            if self.db_type == 'SQL':
+            if self.db_type == "SQL":
                 filename = i.filename
-            elif self.db_type == 'MAST':
-                filename = i['filename']
+            elif self.db_type == "MAST":
+                filename = i["filename"]
             prog_id = filename[2:7]
-            file_path = os.path.join('jw' + prog_id, filename)
+            file_path = os.path.join("jw" + prog_id, filename)
             filepaths.append(file_path)
             filenames.append(filename)
 

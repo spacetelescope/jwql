@@ -28,18 +28,20 @@ from jwql.database.database_interface import base
 from jwql.utils.utils import get_config
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    connection_string = get_config()['connection_string']
-    server_type = connection_string.split('@')[-1][0]
+    connection_string = get_config()["connection_string"]
+    server_type = connection_string.split("@")[-1][0]
 
-    assert server_type != 'p', 'Cannot reset production database!'
+    assert server_type != "p", "Cannot reset production database!"
 
-    prompt = ('About to reset all tables for database instance {}. Do you '
-              'wish to proceed? (y/n)\n'.format(connection_string))
+    prompt = (
+        "About to reset all tables for database instance {}. Do you "
+        "wish to proceed? (y/n)\n".format(connection_string)
+    )
     response = input(prompt)
 
-    if response.lower() == 'y':
+    if response.lower() == "y":
         base.metadata.drop_all()
         base.metadata.create_all()
-        print('\nDatabase instance {} has been reset'.format(connection_string))
+        print("\nDatabase instance {} has been reset".format(connection_string))

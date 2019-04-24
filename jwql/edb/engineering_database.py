@@ -45,7 +45,7 @@ from .edb_interface import query_single_mnemonic, query_mnemonic_info
 
 # should use oauth.register_oauth()?
 settings = get_config()
-MAST_TOKEN = settings['mast_token']
+MAST_TOKEN = settings["mast_token"]
 
 
 class EdbMnemonic:
@@ -80,9 +80,12 @@ class EdbMnemonic:
 
     def __str__(self):
         """Return string describing the instance."""
-        return 'EdbMnemonic {} with {} records between {} and {}'.format(
-            self.mnemonic_identifier, len(self.data), self.start_time.isot,
-            self.end_time.isot)
+        return "EdbMnemonic {} with {} records between {} and {}".format(
+            self.mnemonic_identifier,
+            len(self.data),
+            self.start_time.isot,
+            self.end_time.isot,
+        )
 
     def interpolate(self, times, **kwargs):
         """Interpolate value at specified times."""
@@ -97,14 +100,18 @@ class EdbMnemonic:
             List containing the div and js representations of figure.
 
         """
-        abscissa = Time(self.data['MJD'], format='mjd').datetime
-        ordinate = self.data['euvalue']
+        abscissa = Time(self.data["MJD"], format="mjd").datetime
+        ordinate = self.data["euvalue"]
 
-        p1 = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
-                    title=self.mnemonic_identifier, x_axis_label='Time',
-                    y_axis_label='Value ({})'.format(self.info['unit']))
-        p1.line(abscissa, ordinate, line_width=1, line_color='blue', line_dash='dashed')
-        p1.circle(abscissa, ordinate, color='blue')
+        p1 = figure(
+            tools="pan,box_zoom,reset,wheel_zoom,save",
+            x_axis_type="datetime",
+            title=self.mnemonic_identifier,
+            x_axis_label="Time",
+            y_axis_label="Value ({})".format(self.info["unit"]),
+        )
+        p1.line(abscissa, ordinate, line_width=1, line_color="blue", line_dash="dashed")
+        p1.circle(abscissa, ordinate, color="blue")
 
         script, div = components(p1)
 
@@ -113,8 +120,9 @@ class EdbMnemonic:
 
 def get_mnemonic(mnemonic_identifier, start_time, end_time):
     """Execute query and return a EdbMnemonic instance."""
-    data, meta, info = query_single_mnemonic(mnemonic_identifier, start_time, end_time,
-                                             token=MAST_TOKEN)
+    data, meta, info = query_single_mnemonic(
+        mnemonic_identifier, start_time, end_time, token=MAST_TOKEN
+    )
 
     # create and return instance
     mnemonic = EdbMnemonic(mnemonic_identifier, start_time, end_time, data, meta, info)
@@ -142,12 +150,14 @@ def get_mnemonics(mnemonics, start_time, end_time):
 
     """
     if not isinstance(mnemonics, (list, np.ndarray)):
-        raise RuntimeError('Please provide a list/array of mnemonic_identifiers')
+        raise RuntimeError("Please provide a list/array of mnemonic_identifiers")
 
     mnemonic_dict = OrderedDict()
     for mnemonic_identifier in mnemonics:
         # fill in dictionary
-        mnemonic_dict[mnemonic_identifier] = get_mnemonic(mnemonic_identifier, start_time, end_time)
+        mnemonic_dict[mnemonic_identifier] = get_mnemonic(
+            mnemonic_identifier, start_time, end_time
+        )
 
     return mnemonic_dict
 

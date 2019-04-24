@@ -78,11 +78,12 @@ import pwd
 import stat
 
 # owner and group names for JWQL project
-DEFAULT_OWNER = 'jwqladm'
-DEFAULT_GROUP = 'jwql_dev'
+DEFAULT_OWNER = "jwqladm"
+DEFAULT_GROUP = "jwql_dev"
 
 # set the default mode for DEFAULT_OWNER
-DEFAULT_MODE = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP # equivalent to '?rwxr-x---'
+DEFAULT_MODE = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP  # equivalent to '?rwxr-x---'
+
 
 def get_group_string(pathname):
     """Return the group of ``pathname`` in string representation.
@@ -122,7 +123,9 @@ def get_owner_string(pathname):
     return owner_name
 
 
-def has_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFAULT_GROUP):
+def has_permissions(
+    pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFAULT_GROUP
+):
     """Return boolean indicating whether ``pathname`` has the specified
     owner, permission, and group scheme.
 
@@ -152,14 +155,19 @@ def has_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFA
     elif os.path.isdir(pathname):
         mode = mode | stat.S_IFDIR
 
-    if (get_owner_string(pathname) != owner) or (file_statinfo.st_mode != mode)\
-            or (groupinfo.gr_name != group):
+    if (
+        (get_owner_string(pathname) != owner)
+        or (file_statinfo.st_mode != mode)
+        or (groupinfo.gr_name != group)
+    ):
         return False
 
     return True
 
 
-def set_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFAULT_GROUP, verbose=False):
+def set_permissions(
+    pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFAULT_GROUP, verbose=False
+):
     """Set mode and group of the file/directory identfied by
     ``pathname``, if and only if it is owned by ``owner``.
 
@@ -178,7 +186,7 @@ def set_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFA
         Boolean indicating whether verbose output is requested
     """
     if verbose:
-        print('\nBefore:')
+        print("\nBefore:")
         show_permissions(pathname)
 
     if not has_permissions(pathname):
@@ -188,7 +196,7 @@ def set_permissions(pathname, owner=DEFAULT_OWNER, mode=DEFAULT_MODE, group=DEFA
             os.chown(pathname, -1, grp.getgrnam(group).gr_gid)
 
     if verbose:
-        print('After:')
+        print("After:")
         show_permissions(pathname)
 
 
@@ -207,15 +215,19 @@ def show_permissions(pathname):
     groupinfo = grp.getgrgid(file_statinfo.st_gid)
 
     if os.path.isdir(pathname):
-        info_string = 'directory'
+        info_string = "directory"
     elif os.path.isfile(pathname):
-        info_string = 'file'
+        info_string = "file"
 
-    print('Inspecting {}: {}'.format(info_string, pathname))
-    print('group {} = {}'.format(file_statinfo.st_gid, groupinfo.gr_name))
-    print('owner {} = {}'.format(file_statinfo.st_uid, ownerinfo.pw_name))
-    print('mode {} = {}'.format(file_statinfo.st_mode, stat.filemode(file_statinfo.st_mode)))
-    print('')
+    print("Inspecting {}: {}".format(info_string, pathname))
+    print("group {} = {}".format(file_statinfo.st_gid, groupinfo.gr_name))
+    print("owner {} = {}".format(file_statinfo.st_uid, ownerinfo.pw_name))
+    print(
+        "mode {} = {}".format(
+            file_statinfo.st_mode, stat.filemode(file_statinfo.st_mode)
+        )
+    )
+    print("")
 
 
 def verify_path(pathname):
@@ -228,4 +240,4 @@ def verify_path(pathname):
         Directory or file to be inspected
     """
     if (not os.path.isdir(pathname)) and (not os.path.isfile(pathname)):
-        raise NotImplementedError('{} is not a valid path or filename'.format(pathname))
+        raise NotImplementedError("{} is not a valid path or filename".format(pathname))

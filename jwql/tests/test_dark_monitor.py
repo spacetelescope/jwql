@@ -32,10 +32,10 @@ def test_find_hot_dead_pixels():
     monitor = dark_monitor.Dark(testing=True)
 
     # Create "baseline" image
-    comparison_image = np.zeros((10, 10)) + 1.
+    comparison_image = np.zeros((10, 10)) + 1.0
 
     # Create mean slope image to compare
-    mean_image = np.zeros((10, 10)) + 1.
+    mean_image = np.zeros((10, 10)) + 1.0
     mean_image[0, 0] = 1.7
     mean_image[1, 1] = 2.2
     mean_image[7, 7] = 4.5
@@ -43,7 +43,9 @@ def test_find_hot_dead_pixels():
     mean_image[6, 6] = 0.06
     mean_image[7, 3] = 0.09
 
-    hot, dead = monitor.find_hot_dead_pixels(mean_image, comparison_image, hot_threshold=2., dead_threshold=0.1)
+    hot, dead = monitor.find_hot_dead_pixels(
+        mean_image, comparison_image, hot_threshold=2.0, dead_threshold=0.1
+    )
     assert len(hot) == 2
     assert np.all(hot[0] == np.array([1, 7]))
     assert np.all(hot[1] == np.array([1, 7]))
@@ -52,16 +54,20 @@ def test_find_hot_dead_pixels():
     assert np.all(dead[1] == np.array([6, 3]))
 
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
-                    reason='Requires access to central storage.')
+@pytest.mark.skipif(
+    os.path.expanduser("~") == "/home/jenkins",
+    reason="Requires access to central storage.",
+)
 def test_get_metadata():
     """Test retrieval of metadata from input file"""
 
     monitor = dark_monitor.Dark(testing=True)
-    filename = os.path.join(get_config()['test_dir'], 'dark_monitor', 'test_image_1.fits')
+    filename = os.path.join(
+        get_config()["test_dir"], "dark_monitor", "test_image_1.fits"
+    )
     monitor.get_metadata(filename)
 
-    assert monitor.detector == 'NRCA1'
+    assert monitor.detector == "NRCA1"
     assert monitor.x0 == 0
     assert monitor.y0 == 0
     assert monitor.xsize == 10
@@ -73,31 +79,33 @@ def test_get_metadata():
 def test_mast_query_darks():
     """Test that the MAST query for darks is functional"""
 
-    instrument = 'NIRCAM'
-    aperture = 'NRCA1_FULL'
+    instrument = "NIRCAM"
+    aperture = "NRCA1_FULL"
     start_date = Time("2016-01-01T00:00:00").mjd
     end_date = Time("2018-01-01T00:00:00").mjd
     query = dark_monitor.mast_query_darks(instrument, aperture, start_date, end_date)
-    apernames = [entry['apername'] for entry in query]
-    filenames = [entry['filename'] for entry in query]
+    apernames = [entry["apername"] for entry in query]
+    filenames = [entry["filename"] for entry in query]
 
-    truth_filenames = ['jw96003001001_02201_00001_nrca1_dark.fits',
-                       'jw82600013001_02102_00002_nrca1_dark.fits',
-                       'jw82600013001_02101_00001_nrca1_dark.fits',
-                       'jw82600013001_02103_00003_nrca1_dark.fits',
-                       'jw82600013001_02103_00001_nrca1_dark.fits',
-                       'jw82600013001_02103_00002_nrca1_dark.fits',
-                       'jw82600016001_02101_00002_nrca1_dark.fits',
-                       'jw82600016001_02101_00001_nrca1_dark.fits',
-                       'jw82600013001_02102_00001_nrca1_dark.fits',
-                       'jw82600016001_02103_00002_nrca1_dark.fits',
-                       'jw82600016001_02103_00001_nrca1_dark.fits',
-                       'jw82600016001_02103_00004_nrca1_dark.fits',
-                       'jw82600016001_02103_00003_nrca1_dark.fits',
-                       'jw82600016001_02102_00001_nrca1_dark.fits']
+    truth_filenames = [
+        "jw96003001001_02201_00001_nrca1_dark.fits",
+        "jw82600013001_02102_00002_nrca1_dark.fits",
+        "jw82600013001_02101_00001_nrca1_dark.fits",
+        "jw82600013001_02103_00003_nrca1_dark.fits",
+        "jw82600013001_02103_00001_nrca1_dark.fits",
+        "jw82600013001_02103_00002_nrca1_dark.fits",
+        "jw82600016001_02101_00002_nrca1_dark.fits",
+        "jw82600016001_02101_00001_nrca1_dark.fits",
+        "jw82600013001_02102_00001_nrca1_dark.fits",
+        "jw82600016001_02103_00002_nrca1_dark.fits",
+        "jw82600016001_02103_00001_nrca1_dark.fits",
+        "jw82600016001_02103_00004_nrca1_dark.fits",
+        "jw82600016001_02103_00003_nrca1_dark.fits",
+        "jw82600016001_02102_00001_nrca1_dark.fits",
+    ]
 
     assert len(query) == 14
-    assert apernames == [aperture]*len(query)
+    assert apernames == [aperture] * len(query)
     assert filenames == truth_filenames
 
 

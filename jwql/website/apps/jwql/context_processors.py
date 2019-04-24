@@ -46,9 +46,9 @@ def base_context(request, user):
     """
 
     context = {}
-    context['inst_list'] = JWST_INSTRUMENT_NAMES
-    context['tools'] = MONITORS
-    context['user'] = user
-    context['version'] = jwql.__version__
+    context["inst_list"] = JWST_INSTRUMENT_NAMES
+    context["tools"] = MONITORS
+    context["user"] = user
+    context["version"] = jwql.__version__
 
     return context
