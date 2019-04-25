@@ -43,7 +43,7 @@ def test_find_hot_dead_pixels():
     mean_image[6, 6] = 0.06
     mean_image[7, 3] = 0.09
 
-    hot, dead = Dark.find_hot_dead_pixels(mean_image, comparison_image, hot_threshold=2., dead_threshold=0.1)
+    hot, dead = Dark.find_hot_dead_pixels(mean_image=mean_image, comparison_image=comparison_image, hot_threshold=2., dead_threshold=0.1)
     assert len(hot) == 2
     assert np.all(hot[0] == np.array([1, 7]))
     assert np.all(hot[1] == np.array([1, 7]))
@@ -52,6 +52,8 @@ def test_find_hot_dead_pixels():
     assert np.all(dead[1] == np.array([6, 3]))
 
 
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+                    reason='Requires access to central storage.')
 def test_get_metadata():
     """Test retrieval of metadata from input file"""
 
@@ -111,7 +113,7 @@ def test_noise_check():
     baseline[5, 5] = 1.0
     noise_image[5, 5] = 1.25
 
-    noisy = Dark.noise_check(noise_image, baseline, threshold=1.5)
+    noisy = Dark.noise_check(new_noise_image=noise_image, baseline_noise_image=baseline, threshold=1.5)
 
     assert len(noisy[0]) == 2
     assert np.all(noisy[0] == np.array([3, 9]))
@@ -125,7 +127,7 @@ def test_shift_to_full_frame():
     Dark.y0 = 512
 
     coordinates = (np.array([6, 7]), np.array([6, 3]))
-    new_coords = Dark.shift_to_full_frame(coordinates)
+    new_coords = Dark.shift_to_full_frame(coords=coordinates)
 
     assert np.all(new_coords[0] == np.array([518, 519]))
     assert np.all(new_coords[1] == np.array([518, 515]))
