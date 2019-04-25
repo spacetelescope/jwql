@@ -27,8 +27,6 @@ from jwql.instrument_monitors.common_monitors import dark_monitor
 from jwql.utils.utils import get_config
 
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
-                    reason='Requires access to central storage.')
 def test_find_hot_dead_pixels():
     """Test hot and dead pixel searches"""
     monitor = dark_monitor.Dark(testing=True)
@@ -54,8 +52,6 @@ def test_find_hot_dead_pixels():
     assert np.all(dead[1] == np.array([6, 3]))
 
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
-                    reason='Requires access to central storage.')
 def test_get_metadata():
     """Test retrieval of metadata from input file"""
 
@@ -72,8 +68,6 @@ def test_get_metadata():
     assert monitor.frame_time == 10.5
 
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
-                    reason='Requires access to central storage.')
 def test_mast_query_darks():
     """Test that the MAST query for darks is functional"""
 
@@ -105,8 +99,6 @@ def test_mast_query_darks():
     assert filenames == truth_filenames
 
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
-                    reason='Requires access to central storage.')
 def test_noise_check():
     """Test the search for noisier than average pixels"""
 
@@ -128,8 +120,6 @@ def test_noise_check():
     assert np.all(noisy[1] == np.array([3, 9]))
 
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
-                    reason='Requires access to central storage.')
 def test_shift_to_full_frame():
     """Test pixel coordinate shifting to be in full frame coords"""
 
