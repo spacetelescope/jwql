@@ -145,8 +145,6 @@ def mast_query_darks(instrument, aperture, start_date, end_date):
     return query_results
 
 
-@log_fail
-@log_info
 class Dark():
     """Class for executing the dark current monitor.
 
@@ -209,95 +207,8 @@ class Dark():
         If the most recent query search returns more than one entry
     """
 
-    def __init__(self, testing=False):
-
-        logging.info('Begin logging for dark_monitor')
-
-        apertures_to_skip = ['NRCALL_FULL', 'NRCAS_FULL', 'NRCBS_FULL']
-
-        if not testing:
-
-            # Get the output directory
-            self.output_dir = os.path.join(get_config()['outputs'], 'dark_monitor')
-
-            # Read in config file that defines the thresholds for the number
-            # of dark files that must be present in order for the monitor to run
-            limits = ascii.read(THRESHOLDS_FILE)
-
-            # Use the current time as the end time for MAST query
-            self.query_end = Time.now().mjd
-
-            # Loop over all instruments
-            for instrument in ['nircam']:
-                self.instrument = instrument
-
-                # Identify which database tables to use
-                self.identify_tables()
-
-                # Get a list of all possible apertures from pysiaf
-                possible_apertures = list(Siaf(instrument).apernames)
-                possible_apertures = [ap for ap in possible_apertures if ap not in apertures_to_skip]
-
-                for aperture in possible_apertures:
-
-                    logging.info('')
-                    logging.info('Working on aperture {} in {}'.format(aperture, instrument))
-
-                    # Find the appropriate threshold for the number of new files needed
-                    match = aperture == limits['Aperture']
-                    file_count_threshold = limits['Threshold'][match]
-
-                    # Locate the record of the most recent MAST search
-                    self.aperture = aperture
-                    self.query_start = self.most_recent_search()
-                    logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
-
-                    # Query MAST using the aperture and the time of the
-                    # most recent previous search as the starting time
-                    new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
-                    logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
-
-                    # Check to see if there are enough new files to meet the monitor's signal-to-noise requirements
-                    if len(new_entries) >= file_count_threshold:
-
-                        logging.info('\tSufficient new dark files found for {}, {} to run the dark monitor.'
-                                     .format(self.instrument, self.aperture))
-
-                        # Get full paths to the files
-                        new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
-
-                        # Set up directories for the copied data
-                        ensure_dir_exists(os.path.join(self.output_dir, 'data'))
-                        self.data_dir = os.path.join(self.output_dir,
-                                                     'data/{}_{}'.format(self.instrument.lower(),
-                                                                         self.aperture.lower()))
-                        ensure_dir_exists(self.data_dir)
-
-                        # Copy files from filesystem
-                        dark_files, not_copied = copy_files(new_filenames, self.data_dir)
-
-                        # Run the dark monitor
-                        self.run(dark_files)
-                        monitor_run = True
-
-                    else:
-                        logging.info(('\tDark monitor skipped. {} new dark files for {}, {}. {} new files are '
-                                      'required to run dark current monitor.').format(
-                            len(new_entries), instrument, aperture, file_count_threshold[0]))
-                        monitor_run = False
-
-                    # Update the query history
-                    new_entry = {'instrument': instrument,
-                                 'aperture': aperture,
-                                 'start_time_mjd': self.query_start,
-                                 'end_time_mjd': self.query_end,
-                                 'files_found': len(new_entries),
-                                 'run_monitor': monitor_run,
-                                 'entry_date': datetime.datetime.now()}
-                    self.query_table.__table__.insert().execute(new_entry)
-                    logging.info('\tUpdated the query history table')
-
-            logging.info('Dark Monitor completed successfully.')
+    def __init__(self):
+        """Initialize an instance of the ``Dark`` class."""
 
     def add_bad_pix(self, coordinates, pixel_type, files, mean_filename, baseline_filename):
         """Add a set of bad pixels to the bad pixel database table
@@ -601,8 +512,102 @@ class Dark():
         except (FileNotFoundError, KeyError) as e:
             logging.warning('Trying to read {}: {}'.format(filename, e))
 
-    def run(self, file_list):
-        """The main method.  See module docstrings for further details
+    @log_fail
+    @log_info
+    def run(self):
+        """The main method.  See module docstrings for further
+        details.
+        """
+
+        logging.info('Begin logging for dark_monitor')
+
+        apertures_to_skip = ['NRCALL_FULL', 'NRCAS_FULL', 'NRCBS_FULL']
+
+        # Get the output directory
+        self.output_dir = os.path.join(get_config()['outputs'], 'dark_monitor')
+
+        # Read in config file that defines the thresholds for the number
+        # of dark files that must be present in order for the monitor to run
+        limits = ascii.read(THRESHOLDS_FILE)
+
+        # Use the current time as the end time for MAST query
+        self.query_end = Time.now().mjd
+
+        # Loop over all instruments
+        for instrument in ['nircam']:
+            self.instrument = instrument
+
+            # Identify which database tables to use
+            self.identify_tables()
+
+            # Get a list of all possible apertures from pysiaf
+            possible_apertures = list(Siaf(instrument).apernames)
+            possible_apertures = [ap for ap in possible_apertures if ap not in apertures_to_skip]
+
+            for aperture in possible_apertures:
+
+                logging.info('')
+                logging.info('Working on aperture {} in {}'.format(aperture, instrument))
+
+                # Find the appropriate threshold for the number of new files needed
+                match = aperture == limits['Aperture']
+                file_count_threshold = limits['Threshold'][match]
+
+                # Locate the record of the most recent MAST search
+                self.aperture = aperture
+                self.query_start = self.most_recent_search()
+                logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
+
+                # Query MAST using the aperture and the time of the
+                # most recent previous search as the starting time
+                new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
+                logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
+
+                # Check to see if there are enough new files to meet the monitor's signal-to-noise requirements
+                if len(new_entries) >= file_count_threshold:
+
+                    logging.info('\tSufficient new dark files found for {}, {} to run the dark monitor.'
+                                 .format(self.instrument, self.aperture))
+
+                    # Get full paths to the files
+                    new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
+
+                    # Set up directories for the copied data
+                    ensure_dir_exists(os.path.join(self.output_dir, 'data'))
+                    self.data_dir = os.path.join(self.output_dir,
+                                                 'data/{}_{}'.format(self.instrument.lower(),
+                                                                     self.aperture.lower()))
+                    ensure_dir_exists(self.data_dir)
+
+                    # Copy files from filesystem
+                    dark_files, not_copied = copy_files(new_filenames, self.data_dir)
+
+                    # Run the dark monitor
+                    self.process(dark_files)
+                    monitor_run = True
+
+                else:
+                    logging.info(('\tDark monitor skipped. {} new dark files for {}, {}. {} new files are '
+                                  'required to run dark current monitor.').format(
+                        len(new_entries), instrument, aperture, file_count_threshold[0]))
+                    monitor_run = False
+
+                # Update the query history
+                new_entry = {'instrument': instrument,
+                             'aperture': aperture,
+                             'start_time_mjd': self.query_start,
+                             'end_time_mjd': self.query_end,
+                             'files_found': len(new_entries),
+                             'run_monitor': monitor_run,
+                             'entry_date': datetime.datetime.now()}
+                self.query_table.__table__.insert().execute(new_entry)
+                logging.info('\tUpdated the query history table')
+
+        logging.info('Dark Monitor completed successfully.')
+
+    def process(self, file_list):
+        """The main method for processing darks.  See module docstrings
+        for further details.
 
         Parameters
         ----------
@@ -984,5 +989,6 @@ if __name__ == '__main__':
     start_time, log_file = initialize_instrument_monitor(module)
 
     monitor = Dark()
+    monitor.run()
 
     update_monitor_table(module, start_time, log_file)
