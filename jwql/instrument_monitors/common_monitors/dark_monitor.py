@@ -338,7 +338,6 @@ class Dark():
                  'entry_date': datetime.datetime.now()}
         self.pixel_table.__table__.insert().execute(entry)
 
-    @classmethod
     def get_metadata(self, filename):
         """Collect basic metadata from a fits file
 
@@ -415,7 +414,6 @@ class Dark():
 
         return (new_pixels_x, new_pixels_y)
 
-    @classmethod
     def find_hot_dead_pixels(self, mean_image, comparison_image, hot_threshold=2., dead_threshold=0.1):
         """Create the ratio of the slope image to a baseline slope
         image. Pixels in the ratio image with values above
@@ -543,7 +541,6 @@ class Dark():
 
         return query_result
 
-    @classmethod
     def noise_check(self, new_noise_image, baseline_noise_image, threshold=1.5):
         """Create the ratio of the stdev (noise) image to a baseline
         noise image. Pixels in the ratio image with values above
@@ -816,7 +813,6 @@ class Dark():
 
         return output_filename
 
-    @classmethod
     def shift_to_full_frame(self, coords):
         """Shift the input list of pixels from the subarray coordinate
         system to the full frame coordinate system
