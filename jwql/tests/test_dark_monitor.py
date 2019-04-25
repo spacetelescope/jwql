@@ -24,7 +24,7 @@ from astropy.time import Time
 import numpy as np
 
 from jwql.instrument_monitors.common_monitors import dark_monitor
-from jwql.instrument_monitors.common_monitors.dark_mointor import Dark
+from jwql.instrument_monitors.common_monitors.dark_monitor import Dark
 from jwql.utils.utils import get_config
 
 
