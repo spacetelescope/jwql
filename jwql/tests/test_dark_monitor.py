@@ -24,6 +24,7 @@ from astropy.time import Time
 import numpy as np
 
 from jwql.instrument_monitors.common_monitors import dark_monitor
+from jwql.instrument_monitors.common_monitors.dark_mointor import Dark
 from jwql.utils.utils import get_config
 
 
@@ -42,7 +43,7 @@ def test_find_hot_dead_pixels():
     mean_image[6, 6] = 0.06
     mean_image[7, 3] = 0.09
 
-    hot, dead = dark_monitor.Dark.find_hot_dead_pixels(mean_image, comparison_image, hot_threshold=2., dead_threshold=0.1)
+    hot, dead = Dark.find_hot_dead_pixels(mean_image, comparison_image, hot_threshold=2., dead_threshold=0.1)
     assert len(hot) == 2
     assert np.all(hot[0] == np.array([1, 7]))
     assert np.all(hot[1] == np.array([1, 7]))
@@ -55,15 +56,15 @@ def test_get_metadata():
     """Test retrieval of metadata from input file"""
 
     filename = os.path.join(get_config()['test_dir'], 'dark_monitor', 'test_image_1.fits')
-    dark_monitor.Dark.get_metadata(filename)
+    Dark.get_metadata(filename)
 
-    assert dark_monitor.Dark.detector == 'NRCA1'
-    assert dark_monitor.Dark.x0 == 0
-    assert dark_monitor.Dark.y0 == 0
-    assert dark_monitor.Dark.xsize == 10
-    assert dark_monitor.Dark.ysize == 10
-    assert dark_monitor.Dark.sample_time == 10
-    assert dark_monitor.Dark.frame_time == 10.5
+    assert Dark.detector == 'NRCA1'
+    assert Dark.x0 == 0
+    assert Dark.y0 == 0
+    assert Dark.xsize == 10
+    assert Dark.ysize == 10
+    assert Dark.sample_time == 10
+    assert Dark.frame_time == 10.5
 
 
 def test_mast_query_darks():
@@ -93,7 +94,7 @@ def test_mast_query_darks():
                        'jw82600016001_02102_00001_nrca1_dark.fits']
 
     assert len(query) == 14
-    assert apernames == [aperture]*len(query)
+    assert apernames == [aperture] * len(query)
     assert filenames == truth_filenames
 
 
@@ -110,7 +111,7 @@ def test_noise_check():
     baseline[5, 5] = 1.0
     noise_image[5, 5] = 1.25
 
-    noisy = dark_monitor.Dark.noise_check(noise_image, baseline, threshold=1.5)
+    noisy = Dark.noise_check(noise_image, baseline, threshold=1.5)
 
     assert len(noisy[0]) == 2
     assert np.all(noisy[0] == np.array([3, 9]))
@@ -120,11 +121,11 @@ def test_noise_check():
 def test_shift_to_full_frame():
     """Test pixel coordinate shifting to be in full frame coords"""
 
-    monitor.x0 = 512
-    monitor.y0 = 512
+    Dark.x0 = 512
+    Dark.y0 = 512
 
     coordinates = (np.array([6, 7]), np.array([6, 3]))
-    new_coords = dark_monitor.Dark.shift_to_full_frame(coordinates)
+    new_coords = Dark.shift_to_full_frame(coordinates)
 
     assert np.all(new_coords[0] == np.array([518, 519]))
     assert np.all(new_coords[1] == np.array([518, 515]))
