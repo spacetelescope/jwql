@@ -17,7 +17,7 @@ withCredentials([string(
       // Define each build configuration, copying and overriding values as necessary.
       bc = new BuildConfig()
       bc.nodetype = os
-      bc.name = "debug-os${os}-py${python_ver}"
+      bc.name = "debug-${os}-py${python_ver}"
       bc.build_cmds = [
           "conda env update --file=environment.yml",
           "pip install codecov pytest-cov",
