@@ -12,7 +12,7 @@ withCredentials([string(
     credentialsId: 'jwql-codecov',
     variable: 'codecov_token')]) {
 
-  for (os on matrix_os) {
+  for (os in matrix_os) {
     for (python_ver in matrix_python) {
       // Define each build configuration, copying and overriding values as necessary.
       bc = new BuildConfig()
