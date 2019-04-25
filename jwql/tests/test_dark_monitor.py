@@ -24,12 +24,14 @@ from astropy.time import Time
 import numpy as np
 
 from jwql.instrument_monitors.common_monitors import dark_monitor
-from jwql.instrument_monitors.common_monitors.dark_monitor import Dark
 from jwql.utils.utils import get_config
 
 
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+                    reason='Requires access to central storage.')
 def test_find_hot_dead_pixels():
     """Test hot and dead pixel searches"""
+    monitor = dark_monitor.Dark(testing=True)
 
     # Create "baseline" image
     comparison_image = np.zeros((10, 10)) + 1.
@@ -43,7 +45,7 @@ def test_find_hot_dead_pixels():
     mean_image[6, 6] = 0.06
     mean_image[7, 3] = 0.09
 
-    hot, dead = Dark.find_hot_dead_pixels(mean_image=mean_image, comparison_image=comparison_image, hot_threshold=2., dead_threshold=0.1)
+    hot, dead = monitor.find_hot_dead_pixels(mean_image, comparison_image, hot_threshold=2., dead_threshold=0.1)
     assert len(hot) == 2
     assert np.all(hot[0] == np.array([1, 7]))
     assert np.all(hot[1] == np.array([1, 7]))
@@ -57,18 +59,21 @@ def test_find_hot_dead_pixels():
 def test_get_metadata():
     """Test retrieval of metadata from input file"""
 
+    monitor = dark_monitor.Dark(testing=True)
     filename = os.path.join(get_config()['test_dir'], 'dark_monitor', 'test_image_1.fits')
-    Dark.get_metadata(filename)
+    monitor.get_metadata(filename)
 
-    assert Dark.detector == 'NRCA1'
-    assert Dark.x0 == 0
-    assert Dark.y0 == 0
-    assert Dark.xsize == 10
-    assert Dark.ysize == 10
-    assert Dark.sample_time == 10
-    assert Dark.frame_time == 10.5
+    assert monitor.detector == 'NRCA1'
+    assert monitor.x0 == 0
+    assert monitor.y0 == 0
+    assert monitor.xsize == 10
+    assert monitor.ysize == 10
+    assert monitor.sample_time == 10
+    assert monitor.frame_time == 10.5
 
 
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+                    reason='Requires access to central storage.')
 def test_mast_query_darks():
     """Test that the MAST query for darks is functional"""
 
@@ -96,10 +101,12 @@ def test_mast_query_darks():
                        'jw82600016001_02102_00001_nrca1_dark.fits']
 
     assert len(query) == 14
-    assert apernames == [aperture] * len(query)
+    assert apernames == [aperture]*len(query)
     assert filenames == truth_filenames
 
 
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+                    reason='Requires access to central storage.')
 def test_noise_check():
     """Test the search for noisier than average pixels"""
 
@@ -113,21 +120,25 @@ def test_noise_check():
     baseline[5, 5] = 1.0
     noise_image[5, 5] = 1.25
 
-    noisy = Dark.noise_check(new_noise_image=noise_image, baseline_noise_image=baseline, threshold=1.5)
+    monitor = dark_monitor.Dark(testing=True)
+    noisy = monitor.noise_check(noise_image, baseline, threshold=1.5)
 
     assert len(noisy[0]) == 2
     assert np.all(noisy[0] == np.array([3, 9]))
     assert np.all(noisy[1] == np.array([3, 9]))
 
 
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+                    reason='Requires access to central storage.')
 def test_shift_to_full_frame():
     """Test pixel coordinate shifting to be in full frame coords"""
 
-    Dark.x0 = 512
-    Dark.y0 = 512
+    monitor = dark_monitor.Dark(testing=True)
+    monitor.x0 = 512
+    monitor.y0 = 512
 
     coordinates = (np.array([6, 7]), np.array([6, 3]))
-    new_coords = Dark.shift_to_full_frame(coords=coordinates)
+    new_coords = monitor.shift_to_full_frame(coordinates)
 
     assert np.all(new_coords[0] == np.array([518, 519]))
     assert np.all(new_coords[1] == np.array([518, 515]))
