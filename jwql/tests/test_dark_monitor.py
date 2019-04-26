@@ -29,7 +29,7 @@ from jwql.utils.utils import get_config
 
 def test_find_hot_dead_pixels():
     """Test hot and dead pixel searches"""
-    monitor = dark_monitor.Dark(testing=True)
+    monitor = dark_monitor.Dark()
 
     # Create "baseline" image
     comparison_image = np.zeros((10, 10)) + 1.
@@ -57,7 +57,7 @@ def test_find_hot_dead_pixels():
 def test_get_metadata():
     """Test retrieval of metadata from input file"""
 
-    monitor = dark_monitor.Dark(testing=True)
+    monitor = dark_monitor.Dark()
     filename = os.path.join(get_config()['test_dir'], 'dark_monitor', 'test_image_1.fits')
     monitor.get_metadata(filename)
 
@@ -114,7 +114,7 @@ def test_noise_check():
     baseline[5, 5] = 1.0
     noise_image[5, 5] = 1.25
 
-    monitor = dark_monitor.Dark(testing=True)
+    monitor = dark_monitor.Dark()
     noisy = monitor.noise_check(noise_image, baseline, threshold=1.5)
 
     assert len(noisy[0]) == 2
@@ -125,7 +125,7 @@ def test_noise_check():
 def test_shift_to_full_frame():
     """Test pixel coordinate shifting to be in full frame coords"""
 
-    monitor = dark_monitor.Dark(testing=True)
+    monitor = dark_monitor.Dark()
     monitor.x0 = 512
     monitor.y0 = 512
 
