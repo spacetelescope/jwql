@@ -44,7 +44,7 @@ import subprocess
 
 from bokeh.embed import components
 from bokeh.layouts import gridplot
-from bokeh.palettes import Dark2_5 as palette
+from bokeh.palettes import Category20_20 as palette
 from bokeh.plotting import figure, output_file, save
 
 from jwql.database.database_interface import engine
@@ -221,13 +221,18 @@ def plot_by_filetype(plot_type, instrument):
         instrument_title = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument]
         title = '{} Total File {} by Type'.format(instrument_title, plot_type.capitalize())
 
+    if plot_type == 'count':
+        ytitle = 'Counts'
+    else:
+        ytitle = 'Size (TB)'
+
     # Initialize plot
     plot = figure(
        tools='pan,box_zoom,wheel_zoom,reset,save',
        x_axis_type='datetime',
        title=title,
        x_axis_label='Date',
-       y_axis_label='Count')
+       y_axis_label=ytitle)
     colors = itertools.cycle(palette)
 
     for filetype, color in zip(FILE_SUFFIX_TYPES, colors):
@@ -276,7 +281,7 @@ def plot_filesystem_size():
       x_axis_type='datetime',
       title='System stats',
       x_axis_label='Date',
-      y_axis_label='GB')
+      y_axis_label='Size TB')
     plot.line(dates, total_sizes, legend='Total size', line_color='red')
     plot.circle(dates, total_sizes, color='red')
     plot.line(dates, useds, legend='Used bytes', line_color='green')
