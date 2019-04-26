@@ -486,125 +486,6 @@ class Dark():
 
         return noisy
 
-    def read_baseline_slope_image(self, filename):
-        """Read in a baseline mean slope image and associated standard
-        deviation image from the given fits file
-
-        Parameters
-        ----------
-        filename : str
-            Name of fits file to be read in
-
-        Returns
-        -------
-        mean_image : numpy.ndarray
-            2D mean slope image
-
-        stdev_image : numpy.ndarray
-            2D stdev image
-        """
-
-        try:
-            with fits.open(filename) as hdu:
-                mean_image = hdu['MEAN'].data
-                stdev_image = hdu['STDEV'].data
-            return mean_image, stdev_image
-        except (FileNotFoundError, KeyError) as e:
-            logging.warning('Trying to read {}: {}'.format(filename, e))
-
-    @log_fail
-    @log_info
-    def run(self):
-        """The main method.  See module docstrings for further
-        details.
-        """
-
-        logging.info('Begin logging for dark_monitor')
-
-        apertures_to_skip = ['NRCALL_FULL', 'NRCAS_FULL', 'NRCBS_FULL']
-
-        # Get the output directory
-        self.output_dir = os.path.join(get_config()['outputs'], 'dark_monitor')
-
-        # Read in config file that defines the thresholds for the number
-        # of dark files that must be present in order for the monitor to run
-        limits = ascii.read(THRESHOLDS_FILE)
-
-        # Use the current time as the end time for MAST query
-        self.query_end = Time.now().mjd
-
-        # Loop over all instruments
-        for instrument in ['nircam']:
-            self.instrument = instrument
-
-            # Identify which database tables to use
-            self.identify_tables()
-
-            # Get a list of all possible apertures from pysiaf
-            possible_apertures = list(Siaf(instrument).apernames)
-            possible_apertures = [ap for ap in possible_apertures if ap not in apertures_to_skip]
-
-            for aperture in possible_apertures:
-
-                logging.info('')
-                logging.info('Working on aperture {} in {}'.format(aperture, instrument))
-
-                # Find the appropriate threshold for the number of new files needed
-                match = aperture == limits['Aperture']
-                file_count_threshold = limits['Threshold'][match]
-
-                # Locate the record of the most recent MAST search
-                self.aperture = aperture
-                self.query_start = self.most_recent_search()
-                logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
-
-                # Query MAST using the aperture and the time of the
-                # most recent previous search as the starting time
-                new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
-                logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
-
-                # Check to see if there are enough new files to meet the monitor's signal-to-noise requirements
-                if len(new_entries) >= file_count_threshold:
-
-                    logging.info('\tSufficient new dark files found for {}, {} to run the dark monitor.'
-                                 .format(self.instrument, self.aperture))
-
-                    # Get full paths to the files
-                    new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
-
-                    # Set up directories for the copied data
-                    ensure_dir_exists(os.path.join(self.output_dir, 'data'))
-                    self.data_dir = os.path.join(self.output_dir,
-                                                 'data/{}_{}'.format(self.instrument.lower(),
-                                                                     self.aperture.lower()))
-                    ensure_dir_exists(self.data_dir)
-
-                    # Copy files from filesystem
-                    dark_files, not_copied = copy_files(new_filenames, self.data_dir)
-
-                    # Run the dark monitor
-                    self.process(dark_files)
-                    monitor_run = True
-
-                else:
-                    logging.info(('\tDark monitor skipped. {} new dark files for {}, {}. {} new files are '
-                                  'required to run dark current monitor.').format(
-                        len(new_entries), instrument, aperture, file_count_threshold[0]))
-                    monitor_run = False
-
-                # Update the query history
-                new_entry = {'instrument': instrument,
-                             'aperture': aperture,
-                             'start_time_mjd': self.query_start,
-                             'end_time_mjd': self.query_end,
-                             'files_found': len(new_entries),
-                             'run_monitor': monitor_run,
-                             'entry_date': datetime.datetime.now()}
-                self.query_table.__table__.insert().execute(new_entry)
-                logging.info('\tUpdated the query history table')
-
-        logging.info('Dark Monitor completed successfully.')
-
     def process(self, file_list):
         """The main method for processing darks.  See module docstrings
         for further details.
@@ -769,6 +650,125 @@ class Dark():
                              'entry_date': datetime.datetime.now()
                              }
             self.stats_table.__table__.insert().execute(dark_db_entry)
+
+    def read_baseline_slope_image(self, filename):
+        """Read in a baseline mean slope image and associated standard
+        deviation image from the given fits file
+
+        Parameters
+        ----------
+        filename : str
+            Name of fits file to be read in
+
+        Returns
+        -------
+        mean_image : numpy.ndarray
+            2D mean slope image
+
+        stdev_image : numpy.ndarray
+            2D stdev image
+        """
+
+        try:
+            with fits.open(filename) as hdu:
+                mean_image = hdu['MEAN'].data
+                stdev_image = hdu['STDEV'].data
+            return mean_image, stdev_image
+        except (FileNotFoundError, KeyError) as e:
+            logging.warning('Trying to read {}: {}'.format(filename, e))
+
+    @log_fail
+    @log_info
+    def run(self):
+        """The main method.  See module docstrings for further
+        details.
+        """
+
+        logging.info('Begin logging for dark_monitor')
+
+        apertures_to_skip = ['NRCALL_FULL', 'NRCAS_FULL', 'NRCBS_FULL']
+
+        # Get the output directory
+        self.output_dir = os.path.join(get_config()['outputs'], 'dark_monitor')
+
+        # Read in config file that defines the thresholds for the number
+        # of dark files that must be present in order for the monitor to run
+        limits = ascii.read(THRESHOLDS_FILE)
+
+        # Use the current time as the end time for MAST query
+        self.query_end = Time.now().mjd
+
+        # Loop over all instruments
+        for instrument in ['nircam']:
+            self.instrument = instrument
+
+            # Identify which database tables to use
+            self.identify_tables()
+
+            # Get a list of all possible apertures from pysiaf
+            possible_apertures = list(Siaf(instrument).apernames)
+            possible_apertures = [ap for ap in possible_apertures if ap not in apertures_to_skip]
+
+            for aperture in possible_apertures:
+
+                logging.info('')
+                logging.info('Working on aperture {} in {}'.format(aperture, instrument))
+
+                # Find the appropriate threshold for the number of new files needed
+                match = aperture == limits['Aperture']
+                file_count_threshold = limits['Threshold'][match]
+
+                # Locate the record of the most recent MAST search
+                self.aperture = aperture
+                self.query_start = self.most_recent_search()
+                logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
+
+                # Query MAST using the aperture and the time of the
+                # most recent previous search as the starting time
+                new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
+                logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
+
+                # Check to see if there are enough new files to meet the monitor's signal-to-noise requirements
+                if len(new_entries) >= file_count_threshold:
+
+                    logging.info('\tSufficient new dark files found for {}, {} to run the dark monitor.'
+                                 .format(self.instrument, self.aperture))
+
+                    # Get full paths to the files
+                    new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
+
+                    # Set up directories for the copied data
+                    ensure_dir_exists(os.path.join(self.output_dir, 'data'))
+                    self.data_dir = os.path.join(self.output_dir,
+                                                 'data/{}_{}'.format(self.instrument.lower(),
+                                                                     self.aperture.lower()))
+                    ensure_dir_exists(self.data_dir)
+
+                    # Copy files from filesystem
+                    dark_files, not_copied = copy_files(new_filenames, self.data_dir)
+
+                    # Run the dark monitor
+                    self.process(dark_files)
+                    monitor_run = True
+
+                else:
+                    logging.info(('\tDark monitor skipped. {} new dark files for {}, {}. {} new files are '
+                                  'required to run dark current monitor.').format(
+                        len(new_entries), instrument, aperture, file_count_threshold[0]))
+                    monitor_run = False
+
+                # Update the query history
+                new_entry = {'instrument': instrument,
+                             'aperture': aperture,
+                             'start_time_mjd': self.query_start,
+                             'end_time_mjd': self.query_end,
+                             'files_found': len(new_entries),
+                             'run_monitor': monitor_run,
+                             'entry_date': datetime.datetime.now()}
+                self.query_table.__table__.insert().execute(new_entry)
+                logging.info('\tUpdated the query history table')
+
+        logging.info('Dark Monitor completed successfully.')
 
     def save_mean_slope_image(self, slope_img, stdev_img, files):
         """Save the mean slope image and associated stdev image to a
