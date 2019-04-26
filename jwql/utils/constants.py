@@ -20,19 +20,10 @@ References
     ``utils.py``
 """
 
-# Possible suffix types for AMI files
-AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami']
-
 # Defines the x and y coordinates of amplifier boundaries
 AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 0), (512, 2048)], '2': [(512, 0), (1024, 2048)],
                                    '3': [(1024, 0), (1536, 2048)], '4': [(1536, 0), (2048, 2048)]}
                         }
-
-# Possible suffix types for coronograph exposures
-CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']
-
-# NIRCam subarrays that use four amps for readout
-FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
 
 # Possible suffix types for nominal files
 GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',
@@ -101,6 +92,12 @@ MONITORS = {
                 ('Instrument Model Updates', '#'),
                 ('Failed-open Shutter Monitor', '#')]}
 
+# Possible suffix types for coronograph exposures
+NIRCAM_CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']
+
+# NIRCam subarrays that use four amps for readout
+NIRCAM_FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
+
 # NIRCam long wavelength detector names
 NIRCAM_LONGWAVE_DETECTORS = ['NRCA5', 'NRCB5']
 
@@ -109,12 +106,15 @@ NIRCAM_SHORTWAVE_DETECTORS = ['NRCA1', 'NRCA2', 'NRCA3', 'NRCA4',
                               'NRCB1', 'NRCB2', 'NRCB3', 'NRCB4']
 
 # NIRCam subarrays that use either one or four amps
-SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
+NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
+
+# Possible suffix types for AMI files
+NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami']
 
 # Possible suffix types for time-series exposures
 TIME_SERIES_SUFFIX_TYPES = ['phot', 'whtlt']
 
 # Concatenate all suffix types (ordered to ensure successful matching)
 FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
-                    TIME_SERIES_SUFFIX_TYPES + CORONAGRAPHY_SUFFIX_TYPES + \
-                    AMI_SUFFIX_TYPES
+                    TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
+                    NIRISS_AMI_SUFFIX_TYPES
