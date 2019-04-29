@@ -1,15 +1,25 @@
 #! /usr/bin/env python
-""" Cron Job for miri datatrending -> populates database
+""" Populate the JWQL DB with engineering telemetry trending data for MIRI and NIRSpec.
 
-    This module holds functions to connect with the engineering database in order
-    to grab and process data for the specific miri database. The scrips queries
-    a daily 15 min chunk and a whole day dataset. These contain several mnemonics
-    defined in ''miri_telemetry.py''. The queried data gets processed and stored in
-    an auxiliary database.
+This module holds functions to connect with the engineering database in order
+to grab and process data for the specific miri database. The scrips queries
+a daily 15 min chunk and a whole day dataset. These contain several mnemonics
+defined in ``miri_telemetry.py``. The queried data gets processed and stored in
+an auxiliary database.
+
+Use
+---
+
+    This module can be used from the command line as such:
+
+    ::
+
+        python dark_monitor.py
 
 Authors
 -------
     - Daniel Kühbacher
+    - Lauren Chambers
 
 Dependencies
 ------------
@@ -39,6 +49,7 @@ from jwql.utils.utils import get_config
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 PACKAGE_DIR = __location__.split('instrument_monitors')[0]
 
+
 def telemetry_trending(use_csvs=True, write_to_jwqldb=True):
     """Update the database with engineering telemetry trends
 
@@ -47,12 +58,12 @@ def telemetry_trending(use_csvs=True, write_to_jwqldb=True):
     use_csvs : boolean
         Should the telemetry data be loaded from the CSV files on central
         storage? If not, they will be loaded via an EDB query (not yet
-        implemented)
+        completely implemented)
 
     write_to_jwqldb : boolean
         Should the telemetry data be written to the main JWQL database on
-        central storage? If not, they will be written to the local
-        SQLite databases.
+        central storage? If not, they will be written to local
+        SQLite database files.
     """
     if not write_to_jwqldb:
         database_file = os.path.join(PACKAGE_DIR, 'database', 'miri_database.db')
@@ -294,13 +305,17 @@ def populate_db_from_edb(conn, write_to_jwqldb, start_date=None, end_date=None):
         The last date to query telemetry from the EDB
     """
 
-    # TODO: Check to see when the query was last performed
+    # Check to see when the query was last performed
+    if write_to_jwqldb:
+        start_date = _get_latest_query()
+        print('Starting query on {}'.format(start_date.strftime('%D')))
 
-    # Define start and end dates
+    # Define default start and end dates
     if start_date is None:
         start_date = datetime.datetime(2017, 8, 15)
     if end_date is None:
         end_date = datetime.datetime.now()
+
     # Determine how many days need to be queried
     if isinstance(start_date, datetime.datetime) and isinstance(end_date, datetime.datetime):
         dates_to_query = [
@@ -385,6 +400,29 @@ def _create_mnemonic_table(mnemonic, query_time, query_value):
                            dtype=('f8', 'str'), meta=info)
 
     return mnemonic_table
+
+
+def _get_latest_query():
+    """Get the date of the most recent trending data added to the JWQL DB.
+
+    Returns
+    -------
+    last_telem : Astropy.time.Time
+        Date & time of most recent trending data entry in JWQL DB
+    """
+
+    eng_entries = session.query(MIRIEngineeringTelemetry).all()
+    last_eng_telem = np.max([e.start_time_mjd for e in eng_entries])
+
+    filter_wheel_entries = session.query(MIRIFilterWheelTelemetry).all()
+    last_filter_wheel_telem = np.max(
+        [f.timestamp_mjd for f in filter_wheel_entries if f.timestamp_mjd is not None]
+    )
+
+    last_telem = max(last_eng_telem, last_filter_wheel_telem)
+
+    return Time(last_telem, format='mjd').datetime
+
 
 
 def _write_telemetry_to_jwqldb(mnemonic_id, entry):

@@ -98,19 +98,54 @@ class mnemonics:
         query_value = []
 
         #appends present mnemonic data to query_time and query_value
-        for item in table:
+        for row in table:
             try:
-                if item['Telemetry Mnemonic'] == mnemonic:
+                if row['Telemetry Mnemonic'] == mnemonic:
                     #convert time string to mjd format
-                    time_string = item['Secondary Time'].replace('/','-').replace(' ','T')
+                    time_string = row['Secondary Time'].replace('/','-').replace(' ','T')
                     t = Time(time_string, format='isot')
 
                     query_time.append(t.mjd)
-                    query_value.append(item['EU Value'])
+                    query_value.append(row['EU Value'])
             except KeyError:
                 warnings.warn("{} is not in mnemonic table".format(mnemonic))
 
         return create_mnemonic_table(mnemonic, query_time, query_value)
+
+
+def create_mnemonic_table(mnemonic, query_time, query_value):
+    """Create an Astropy table with the times, values, and some metadata
+    for a given mnemonic identifier.
+
+    Parameters
+    ----------
+    mnemonic : str
+        Mnemonic identifier
+
+    query_time : list
+        List of timestamps for mnemonic data
+
+    query_value : list
+        List of values for mnemonic data
+    """
+    # Include metadata
+    if len(query_time) > 0:
+        date_start = query_time[0]
+        date_end = query_time[len(query_time) - 1]
+        info = {'start': date_start, 'end': date_end}
+    else:
+        info = {"n": "n"}
+
+    # add name of mnemonic to metadata of list
+    info['mnemonic'] = mnemonic
+    info['len'] = len(query_time)
+
+    # table to return
+    mnemonic_table = Table([query_time, query_value], names=('time','value'),
+                           dtype=('f8', 'str'), meta=info)
+
+    return mnemonic_table
+
 
 if __name__ =='__main__':
     pass
