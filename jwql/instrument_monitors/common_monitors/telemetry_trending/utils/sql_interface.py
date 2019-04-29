@@ -26,8 +26,7 @@ import os
 import sqlite3
 from sqlite3 import Error
 
-from . import mnemonics as m
-from jwql.utils.utils import get_config, filename_parser
+from . import miri_telemetry
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 PACKAGE_DIR = __location__.split('instrument_monitors')[0]
@@ -112,6 +111,36 @@ def add_wheel_data(conn, mnemonic, data):
     else:
         print('data already exists')
 
+def create_table(c, inst):
+    telem = eval('{}_telemetry'.format(inst.lower()))
+
+    for mnemonic in telem.mnemonic_set_database:
+        try:
+            c.execute('CREATE TABLE IF NOT EXISTS {} (         \
+                                        id INTEGER,                     \
+                                        start_time REAL,                \
+                                        end_time REAL,                  \
+                                        data_points INTEGER,               \
+                                        average REAL,                   \
+                                        deviation REAL,                 \
+                                        performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
+                                        PRIMARY KEY (id));'.format(mnemonic))
+        except Error as e:
+            print('e')
+
+    for mnemonic in telem.mnemonic_wheelpositions:
+        try:
+            c.execute('CREATE TABLE IF NOT EXISTS {} (         \
+                                        id INTEGER,            \
+                                        timestamp REAL,        \
+                                        value REAL,            \
+                                        performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
+                                        PRIMARY KEY (id));'.format(mnemonic))
+        except Error as e:
+            print('e')
+
+    print("Database initial setup complete")
+
 
 def main():
     ''' Creates SQLite database with tables proposed in miri_telemetry.py'''
@@ -126,30 +155,7 @@ def main():
 
     c=conn.cursor()
 
-    for mnemonic in m.mnemonic_set_database:
-        try:
-            c.execute('CREATE TABLE IF NOT EXISTS {} (         \
-                                        id INTEGER,                     \
-                                        start_time REAL,                \
-                                        end_time REAL,                  \
-                                        data_points INTEGER,               \
-                                        average REAL,                   \
-                                        deviation REAL,                 \
-                                        performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
-                                        PRIMARY KEY (id));'.format(mnemonic))
-        except Error as e:
-            print('e')
-
-    for mnemonic in m.mnemonic_wheelpositions:
-        try:
-            c.execute('CREATE TABLE IF NOT EXISTS {} (         \
-                                        id INTEGER,            \
-                                        timestamp REAL,        \
-                                        value REAL,            \
-                                        performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
-                                        PRIMARY KEY (id));'.format(mnemonic))
-        except Error as e:
-            print('e')
+    create_table(c, 'miri')
 
     print("Database initial setup complete")
     conn.commit()

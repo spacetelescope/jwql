@@ -5,6 +5,7 @@ Detailed descriptions are given for every function individually.
 
 -------
     - Daniel Kühbacher
+    - Lauren Chambers
 
 Use
 ---
@@ -26,34 +27,6 @@ import warnings
 
 from . import miri_telemetry
 from . import condition as cond
-
-
-def extract_data(condition, mnemonic_table):
-    '''Function extracts data from given mnemmonic at a given condition
-    Parameters
-    ----------
-    condition : object
-        conditon object that holds one or more subconditions
-    mnemonic_table : AstropyTable
-        holds single table with mnemonic data
-    Return
-    ------
-    temp : list  or None
-        holds data that applies to given condition
-    '''
-    mnemonic_values_for_cond = []
-
-    # look for all values that fit to the given conditions
-    for row in mnemonic_table:
-        if condition.state(float(row['time'])):
-            mnemonic_values_for_cond.append(float(row['value']))
-
-    # return temp is one ore more values fit to the condition
-    # return None if no applicable data was found
-    if len(mnemonic_values_for_cond) > 0:
-        return mnemonic_values_for_cond
-    else:
-        return None
 
 
 def extract_filterpos(condition, nominals, ratio_mnem, pos_mnem):
@@ -158,7 +131,7 @@ def once_a_day_routine(mnemonic_data_dict):
     # to dictionary
     for mnemonic_id in miri_telemetry.mnemonic_cond_1:
         if mnemonic_id not in miri_telemetry.not_in_edb:
-            data = extract_data(condition_1, mnemonic_data_dict[mnemonic_id])
+            data = _extract_data(condition_1, mnemonic_data_dict[mnemonic_id])
     
             if data != None:
                 returndata.update( {mnemonic_id:data} )
@@ -182,7 +155,7 @@ def once_a_day_routine(mnemonic_data_dict):
     # to dictionary
     for mnemonic_id in miri_telemetry.mnemonic_cond_2:
         if mnemonic_id not in miri_telemetry.not_in_edb:
-            data = extract_data(condition_2, mnemonic_data_dict[mnemonic_id])
+            data = _extract_data(condition_2, mnemonic_data_dict[mnemonic_id])
     
             if data != None:
                 returndata.update( {mnemonic_id:data} )
@@ -220,7 +193,7 @@ def whole_day_routine(mnemonic_data_dict):
     # values that have ICE voltage above 25 V
     for mnemonic_id in miri_telemetry.mnemonic_cond_3:
         if mnemonic_id not in miri_telemetry.not_in_edb:
-            data_matching_cond3 = extract_data(
+            data_matching_cond3 = _extract_data(
                 condition_3, mnemonic_data_dict[mnemonic_id]
             )
 
@@ -244,7 +217,7 @@ def whole_day_routine(mnemonic_data_dict):
 
             # setup condition
             condition = cond.condition(con_set)
-            data_matching_pos_volt = extract_data(condition, mnemonic_data_dict[mnemonic_id])
+            data_matching_pos_volt = _extract_data(condition, mnemonic_data_dict[mnemonic_id])
             whole_day_data_dict.update({mnemonic_id: data_matching_pos_volt})
 
 
@@ -310,6 +283,35 @@ def wheelpos_routine(mnemonic_data_dict):
     )
 
     return FW, GW14, GW23, CCC
+
+
+def _extract_data(condition, mnemonic_table):
+    '''Function extracts data from given mnemmonic at a given condition
+    Parameters
+    ----------
+    condition : object
+        conditon object that holds one or more subconditions
+    mnemonic_table : AstropyTable
+        holds single table with mnemonic data
+    Return
+    ------
+    temp : list  or None
+        holds data that applies to given condition
+    '''
+    mnemonic_values_for_cond = []
+
+    # look for all values that fit to the given conditions
+    for row in mnemonic_table:
+        if condition.state(float(row['time'])):
+            mnemonic_values_for_cond.append(float(row['value']))
+
+    # return temp is one ore more values fit to the condition
+    # return None if no applicable data was found
+    if len(mnemonic_values_for_cond) > 0:
+        return mnemonic_values_for_cond
+    else:
+        return None
+
 
 if __name__ =='__main__':
     pass
