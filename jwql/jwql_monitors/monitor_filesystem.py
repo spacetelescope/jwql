@@ -228,11 +228,11 @@ def plot_by_filetype(plot_type, instrument):
 
     # Initialize plot
     plot = figure(
-       tools='pan,box_zoom,wheel_zoom,reset,save',
-       x_axis_type='datetime',
-       title=title,
-       x_axis_label='Date',
-       y_axis_label=ytitle)
+        tools='pan,box_zoom,wheel_zoom,reset,save',
+        x_axis_type='datetime',
+        title=title,
+        x_axis_label='Date',
+        y_axis_label=ytitle)
     colors = itertools.cycle(palette)
 
     for filetype, color in zip(FILE_SUFFIX_TYPES, colors):
@@ -277,11 +277,11 @@ def plot_filesystem_size():
                             FilesystemGeneral.used, FilesystemGeneral.available).all()
     dates, total_sizes, useds, availables = zip(*results)
     plot = figure(
-      tools='pan,box_zoom,wheel_zoom,reset,save',
-      x_axis_type='datetime',
-      title='System stats',
-      x_axis_label='Date',
-      y_axis_label='Size TB')
+        tools='pan,box_zoom,wheel_zoom,reset,save',
+        x_axis_type='datetime',
+        title='System stats',
+        x_axis_label='Date',
+        y_axis_label='Size TB')
     plot.line(dates, total_sizes, legend='Total size', line_color='red')
     plot.circle(dates, total_sizes, color='red')
     plot.line(dates, useds, legend='Used bytes', line_color='green')
@@ -356,11 +356,11 @@ def plot_total_file_counts():
     results = session.query(FilesystemGeneral.date, FilesystemGeneral.total_file_count).all()
     dates, file_counts = zip(*results)
     plot = figure(
-       tools='pan,box_zoom,reset,wheel_zoom,save',
-       x_axis_type='datetime',
-       title="Total File Counts",
-       x_axis_label='Date',
-       y_axis_label='Count')
+        tools='pan,box_zoom,reset,wheel_zoom,save',
+        x_axis_type='datetime',
+        title="Total File Counts",
+        x_axis_label='Date',
+        y_axis_label='Count')
     plot.line(dates, file_counts, line_width=2, line_color='blue')
     plot.circle(dates, file_counts, color='blue')
 
