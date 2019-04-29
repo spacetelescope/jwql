@@ -32,26 +32,6 @@ import warnings
 
 from . import miri_telemetry
 
-def create_mnemonic_table(mnemonic, query_time, query_value):
-    # add some metadata
-    if len(query_time) > 0:
-        date_start = query_time[0]
-        date_end = query_time[len(query_time) - 1]
-        info = {'start': date_start, 'end': date_end}
-    else:
-        info = {"n": "n"}
-
-    # add name of mnemonic to metadata of list
-    info['mnemonic'] = mnemonic
-    info['len'] = len(query_time)
-
-    # table to return
-    mnemonic_table = Table([query_time, query_value], names=('time','value'), \
-                           dtype=('f8', 'str'), meta=info)
-
-    return mnemonic_table
-
-
 class mnemonics:
     """class to hold a set of mnemonics"""
 
@@ -94,23 +74,6 @@ class mnemonics:
         imported_data = Table.read(path, format='ascii.basic', delimiter=',')
         return imported_data
 
-
-    #returns table of single mnemonic
-    def get_mnemonic_table(self, name):
-        """Returns table of one single mnemonic
-        Parameters
-        ----------
-        name : str
-            name of mnemonic
-        Return
-        ------
-        mnemonic_dict[name] : AstropyTable
-            corresponding table to mnemonic name
-        """
-        try:
-            return self.mnemonic_dict[name]
-        except KeyError:
-            print('{} not in list'.format(name))
 
 
     #looks for given mnemonic in given table

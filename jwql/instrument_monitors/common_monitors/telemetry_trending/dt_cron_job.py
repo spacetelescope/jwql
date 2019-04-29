@@ -23,6 +23,7 @@ import datetime
 import glob
 import os
 
+from astropy.table import Table
 from astropy.time import Time
 import numpy as np
 
@@ -37,6 +38,35 @@ from jwql.utils.utils import get_config
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 PACKAGE_DIR = __location__.split('instrument_monitors')[0]
+
+def telemetry_trending(use_csvs=True, write_to_jwqldb=True):
+    """Update the database with engineering telemetry trends
+
+    Parameters
+    ----------
+    use_csvs : boolean
+        Should the telemetry data be loaded from the CSV files on central
+        storage? If not, they will be loaded via an EDB query (not yet
+        implemented)
+
+    write_to_jwqldb : boolean
+        Should the telemetry data be written to the main JWQL database on
+        central storage? If not, they will be written to the local
+        SQLite databases.
+    """
+    if not write_to_jwqldb:
+        database_file = os.path.join(PACKAGE_DIR, 'database', 'miri_database.db')
+        conn = sql.create_connection(database_file)
+    else:
+        conn = None
+
+    if use_csvs:
+        populate_db_from_csv(conn, write_to_jwqldb)
+    else:
+        populate_db_from_edb(conn, write_to_jwqldb)
+
+    if not write_to_jwqldb:
+        sql.close_connection(conn)
 
 
 def process_day_sample(conn, mnemonic_data_dict, write_to_jwqldb):
@@ -86,19 +116,19 @@ def process_day_sample(conn, mnemonic_data_dict, write_to_jwqldb):
                     if not write_to_jwqldb:
                         sql.add_data(conn, "SE_ZIMIRICEA_HV_ON", dataset)
                     else:
-                        write_telemetry_to_jwqldb("SE_ZIMIRICEA_HV_ON", entry)
+                        _write_telemetry_to_jwqldb("SE_ZIMIRICEA_HV_ON", entry)
 
                 elif mnemonic_id == "IMIR_HK_ICE_SEC_VOLT4":
                     if not write_to_jwqldb:
                         sql.add_data(conn, "IMIR_HK_ICE_SEC_VOLT4_HV_ON", dataset)
                     else:
-                        write_telemetry_to_jwqldb("IMIR_HK_ICE_SEC_VOLT4_HV_ON", entry)
+                        _write_telemetry_to_jwqldb("IMIR_HK_ICE_SEC_VOLT4_HV_ON", entry)
 
                 else:
                     if not write_to_jwqldb:
                         sql.add_data(conn, mnemonic_id, dataset)
                     else:
-                        write_telemetry_to_jwqldb(mnemonic_id, entry)
+                        _write_telemetry_to_jwqldb(mnemonic_id, entry)
 
 
     #########################################################################################
@@ -110,7 +140,7 @@ def process_day_sample(conn, mnemonic_data_dict, write_to_jwqldb):
                 if not write_to_jwqldb:
                     sql.add_wheel_data(conn, mnemonic_id, element)
                 else:
-                    write_filter_wheel_telemetry_to_jwqldb(mnemonic_id, element)
+                    _write_filter_wheel_telemetry_to_jwqldb(mnemonic_id, element)
 
         except KeyError:
             pass
@@ -125,14 +155,14 @@ def process_day_sample(conn, mnemonic_data_dict, write_to_jwqldb):
                 if not write_to_jwqldb:
                     sql.add_wheel_data(conn, mnemonic_id, element)
                 else:
-                    write_filter_wheel_telemetry_to_jwqldb(mnemonic_id, element)
+                    _write_filter_wheel_telemetry_to_jwqldb(mnemonic_id, element)
 
             for element in data_GW23:
                 mnemonic_id = 'IMIR_HK_GW23_POS_RATIO_{}'.format(pos)
                 if not write_to_jwqldb:
                     sql.add_wheel_data(conn, mnemonic_id, element)
                 else:
-                    write_filter_wheel_telemetry_to_jwqldb(mnemonic_id, element)
+                    _write_filter_wheel_telemetry_to_jwqldb(mnemonic_id, element)
 
         except KeyError:
             pass
@@ -145,7 +175,7 @@ def process_day_sample(conn, mnemonic_data_dict, write_to_jwqldb):
                 if not write_to_jwqldb:
                     sql.add_wheel_data(conn, mnemonic_id, element)
                 else:
-                    write_filter_wheel_telemetry_to_jwqldb(mnemonic_id, element)
+                    _write_filter_wheel_telemetry_to_jwqldb(mnemonic_id, element)
 
         except KeyError:
             pass
@@ -193,20 +223,20 @@ def process_15min_sample(conn, mnemonic_data_dict, write_to_jwqldb):
             if not write_to_jwqldb:
                 sql.add_data(conn, "SE_ZIMIRICEA_IDLE", dataset)
             else:
-                write_telemetry_to_jwqldb("SE_ZIMIRICEA_IDLE", entry)
+                _write_telemetry_to_jwqldb("SE_ZIMIRICEA_IDLE", entry)
 
         elif mnemonic_id == "IMIR_HK_ICE_SEC_VOLT4":
             if not write_to_jwqldb:
                 sql.add_data(conn, "IMIR_HK_ICE_SEC_VOLT4_IDLE", dataset)
             else:
-                write_telemetry_to_jwqldb("IMIR_HK_ICE_SEC_VOLT4_IDLE", entry)
+                _write_telemetry_to_jwqldb("IMIR_HK_ICE_SEC_VOLT4_IDLE", entry)
 
 
         else:
             if not write_to_jwqldb:
                 sql.add_data(conn, mnemonic_id, dataset)
             else:
-                write_telemetry_to_jwqldb(mnemonic_id, entry)
+                _write_telemetry_to_jwqldb(mnemonic_id, entry)
 
 
 def populate_db_from_csv(conn, write_to_jwqldb):
@@ -295,7 +325,7 @@ def populate_db_from_edb(conn, write_to_jwqldb, start_date=None, end_date=None):
                 # Turn EDB queries into Astropy tables
                 query_time = query_results['MJD']
                 query_value = query_results['euvalue']
-                mnemonic_dict[mnemonic_id] = apt.create_mnemonic_table(
+                mnemonic_dict[mnemonic_id] = _create_mnemonic_table(
                     mnemonic_id, query_time, query_value
                 )
 
@@ -313,7 +343,7 @@ def populate_db_from_edb(conn, write_to_jwqldb, start_date=None, end_date=None):
                 # Turn EDB queries into Astropy tables
                 query_time = query_results['MJD']
                 query_value = query_results['euvalue']
-                mnemonic_dict[mnemonic_id] = apt.create_mnemonic_table(
+                mnemonic_dict[mnemonic_id] = _create_mnemonic_table(
                     mnemonic_id, query_time, query_value
                 )
 
@@ -321,10 +351,43 @@ def populate_db_from_edb(conn, write_to_jwqldb, start_date=None, end_date=None):
         process_day_sample(conn, mnemonic_dict, write_to_jwqldb)
 
         print('Added telemetry from {} to database.'.format(date.strftime('%D')))
-        
 
 
-def write_telemetry_to_jwqldb(mnemonic_id, entry):
+def _create_mnemonic_table(mnemonic, query_time, query_value):
+    """Create an Astropy table with the times, values, and some metadata
+    for a given mnemonic identifier.
+
+    Parameters
+    ----------
+    mnemonic : str
+        Mnemonic identifier
+
+    query_time : list
+        List of timestamps for mnemonic data
+
+    query_value : list
+        List of values for mnemonic data
+    """
+    # Include metadata
+    if len(query_time) > 0:
+        date_start = query_time[0]
+        date_end = query_time[len(query_time) - 1]
+        info = {'start': date_start, 'end': date_end}
+    else:
+        info = {"n": "n"}
+
+    # add name of mnemonic to metadata of list
+    info['mnemonic'] = mnemonic
+    info['len'] = len(query_time)
+
+    # table to return
+    mnemonic_table = Table([query_time, query_value], names=('time','value'),
+                           dtype=('f8', 'str'), meta=info)
+
+    return mnemonic_table
+
+
+def _write_telemetry_to_jwqldb(mnemonic_id, entry):
     """Write the engineering telemetry information for a given
     mnemonic to the JWQL database.
 
@@ -355,7 +418,7 @@ def write_telemetry_to_jwqldb(mnemonic_id, entry):
     MIRIEngineeringTelemetry.__table__.insert().execute(entry)
 
 
-def write_filter_wheel_telemetry_to_jwqldb(mnemonic_id, element):
+def _write_filter_wheel_telemetry_to_jwqldb(mnemonic_id, element):
     """Write the filter wheel telemetry value and timestamp for a given
     mnemonic to the JWQL database.
 
@@ -382,36 +445,6 @@ def write_filter_wheel_telemetry_to_jwqldb(mnemonic_id, element):
              'value': float(value),
              'entry_date': datetime.datetime.now()}
     MIRIFilterWheelTelemetry.__table__.insert().execute(entry)
-    
-
-def telemetry_trending(use_csvs=True, write_to_jwqldb=True):
-    """Update the database with engineering telemetry trends
-
-    Parameters
-    ----------
-    use_csvs : boolean
-        Should the telemetry data be loaded from the CSV files on central
-        storage? If not, they will be loaded via an EDB query (not yet
-        implemented)
-
-    write_to_jwqldb : boolean
-        Should the telemetry data be written to the main JWQL database on
-        central storage? If not, they will be written to the local
-        SQLite databases.
-    """
-    if not write_to_jwqldb:
-        database_file = os.path.join(PACKAGE_DIR, 'database', 'miri_database.db')
-        conn = sql.create_connection(database_file)
-    else:
-        conn = None
-
-    if use_csvs:
-        populate_db_from_csv(conn, write_to_jwqldb)
-    else:
-        populate_db_from_edb(conn, write_to_jwqldb)
-
-    if not write_to_jwqldb:
-        sql.close_connection(conn)
 
 
 if __name__ == "__main__":
