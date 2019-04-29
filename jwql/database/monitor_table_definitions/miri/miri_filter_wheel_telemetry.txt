@@ -1,0 +1,3 @@
+MNEMONIC_ID, string
+TIMESTAMP_MJD, float
+VALUE, float

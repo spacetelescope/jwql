@@ -1,0 +1,6 @@
+MNEMONIC_ID, string
+START_TIME_MJD, float
+END_TIME_MJD, float
+N_DATA_POINTS, integer
+AVERAGE, float
+DEVIATION, float

@@ -29,10 +29,11 @@ Notes
 from astropy.table import Table
 from astropy.time import Time
 import warnings
-from . import mnemonics as m
 
-def mnemonic_table(mnemonic, query_time, query_value):
-    # add some meta data
+from . import miri_telemetry
+
+def create_mnemonic_table(mnemonic, query_time, query_value):
+    # add some metadata
     if len(query_time) > 0:
         date_start = query_time[0]
         date_end = query_time[len(query_time) - 1]
@@ -40,7 +41,7 @@ def mnemonic_table(mnemonic, query_time, query_value):
     else:
         info = {"n": "n"}
 
-    # add name of mnemonic to meta data of list
+    # add name of mnemonic to metadata of list
     info['mnemonic'] = mnemonic
     info['len'] = len(query_time)
 
@@ -54,7 +55,7 @@ def mnemonic_table(mnemonic, query_time, query_value):
 class mnemonics:
     """class to hold a set of mnemonics"""
 
-    __mnemonic_dict = {}
+    mnemonic_dict = {}
 
     def __init__(self, import_path):
         """main function of this class
@@ -69,11 +70,11 @@ class mnemonics:
         print('{} was imported - {} lines'.format(import_path, length))
 
         #look for every mnmonic given in mnemonic.py
-        for mnemonic_name in mn.mnemonic_set_base:
+        for mnemonic_name in miri_telemetry.mnemonic_set_base:
             query_table = self.sort_mnemonic(mnemonic_name, imported_data)
             #append query_table to dict with related mnemonic
             if query_table != None:
-                self.__mnemonic_dict[mnemonic_name] = query_table
+                self.mnemonic_dict[mnemonic_name] = query_table
             else:
                 warnings.warn("fatal error")
 
@@ -103,11 +104,11 @@ class mnemonics:
             name of mnemonic
         Return
         ------
-        __mnemonic_dict[name] : AstropyTable
+        mnemonic_dict[name] : AstropyTable
             corresponding table to mnemonic name
         """
         try:
-            return self.__mnemonic_dict[name]
+            return self.mnemonic_dict[name]
         except KeyError:
             print('{} not in list'.format(name))
 
@@ -146,7 +147,7 @@ class mnemonics:
             except KeyError:
                 warnings.warn("{} is not in mnemonic table".format(mnemonic))
 
-        return mnemonic_table(mnemonic, query_time, query_value)
+        return create_mnemonic_table(mnemonic, query_time, query_value)
 
 if __name__ =='__main__':
     pass

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-''' Cron Job for miri datatrending -> populates database
+""" Cron Job for miri datatrending -> populates database
 
     This module holds functions to connect with the engineering database in order
     to grab and process data for the specific miri database. The scrips queries
@@ -18,7 +18,7 @@ Dependencies
 References
 ----------
 
-'''
+"""
 import datetime
 import glob
 import os
@@ -30,6 +30,8 @@ from .utils import miri_telemetry
 from .utils import sql_interface as sql
 from .utils import csv_to_AstropyTable as apt
 from .utils.process_data import whole_day_routine, wheelpos_routine, once_a_day_routine
+from jwql.database.database_interface import session
+from jwql.database.database_interface import MIRIEngineeringTelemetry, MIRIFilterWheelTelemetry
 from jwql.edb import engineering_database
 from jwql.utils.utils import get_config
 
@@ -37,18 +39,22 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 PACKAGE_DIR = __location__.split('instrument_monitors')[0]
 
 
-def process_day_sample(conn, mnemonic_data_dict):
-    '''Parse CSV file, process data within and put to DB
+def process_day_sample(conn, mnemonic_data_dict, write_to_jwqldb):
+    """Process ~24 hour chunks of telemetry data and write to DB
 
     Parameters
     ----------
-    conn : DBobject
-        Connection object to temporary database
-    path : str
-        defines path to the files
-    '''
+    conn : SQLite connection or None
+        Connection to the local SQLite databases
 
-    # m_raw_data = apt.mnemonics(path)
+    mnemonic_data_dict : dict
+        Dictionary containing an Astropy table for each mnemonic identifier
+
+    write_to_jwqldb : boolean
+        Should the telemetry data be written to the main JWQL database on
+        central storage? If not, they will be written to the local
+        SQLite databases.
+    """
 
     whole_day_dict = whole_day_routine(mnemonic_data_dict)
 
@@ -63,17 +69,36 @@ def process_day_sample(conn, mnemonic_data_dict):
             if len(mnemonic_table) > 2:
                 length = len(mnemonic_table)
                 mean = np.mean(mnemonic_table)
-                deviation = np.stdev(mnemonic_table)
-                dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
+                deviation = np.std(mnemonic_table)
 
+                # Define new database entry
+                if write_to_jwqldb:
+                    entry = {'start_time_mjd': float(m.meta['start']),
+                             'end_time_mjd': float(m.meta['end']),
+                             'n_data_points': length,
+                             'average': mean,
+                             'deviation': deviation}
+                else:
+                    dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
+
+                # Add entries to database
                 if mnemonic_id == "SE_ZIMIRICEA":
-                    sql.add_data(conn, "SE_ZIMIRICEA_HV_ON", dataset)
+                    if not write_to_jwqldb:
+                        sql.add_data(conn, "SE_ZIMIRICEA_HV_ON", dataset)
+                    else:
+                        write_telemetry_to_jwqldb("SE_ZIMIRICEA_HV_ON", entry)
 
                 elif mnemonic_id == "IMIR_HK_ICE_SEC_VOLT4":
-                    sql.add_data(conn, "IMIR_HK_ICE_SEC_VOLT4_HV_ON", dataset)
+                    if not write_to_jwqldb:
+                        sql.add_data(conn, "IMIR_HK_ICE_SEC_VOLT4_HV_ON", dataset)
+                    else:
+                        write_telemetry_to_jwqldb("IMIR_HK_ICE_SEC_VOLT4_HV_ON", entry)
 
                 else:
-                    sql.add_data(conn, mnemonic_id, dataset)
+                    if not write_to_jwqldb:
+                        sql.add_data(conn, mnemonic_id, dataset)
+                    else:
+                        write_telemetry_to_jwqldb(mnemonic_id, entry)
 
 
     #########################################################################################
@@ -81,7 +106,12 @@ def process_day_sample(conn, mnemonic_data_dict):
         try:
             data = FW[pos]
             for element in data:
-                sql.add_wheel_data(conn, 'IMIR_HK_FW_POS_RATIO_{}'.format(pos), element)
+                mnemonic_id = 'IMIR_HK_FW_POS_RATIO_{}'.format(pos)
+                if not write_to_jwqldb:
+                    sql.add_wheel_data(conn, mnemonic_id, element)
+                else:
+                    write_filter_wheel_telemetry_to_jwqldb(mnemonic_id, element)
+
         except KeyError:
             pass
 
@@ -91,9 +121,19 @@ def process_day_sample(conn, mnemonic_data_dict):
             data_GW23 = GW23[pos]
 
             for element in data_GW14:
-                sql.add_wheel_data(conn, 'IMIR_HK_GW14_POS_RATIO_{}'.format(pos), element)
+                mnemonic_id = 'IMIR_HK_GW14_POS_RATIO_{}'.format(pos)
+                if not write_to_jwqldb:
+                    sql.add_wheel_data(conn, mnemonic_id, element)
+                else:
+                    write_filter_wheel_telemetry_to_jwqldb(mnemonic_id, element)
+
             for element in data_GW23:
-                sql.add_wheel_data(conn, 'IMIR_HK_GW23_POS_RATIO_{}'.format(pos), element)
+                mnemonic_id = 'IMIR_HK_GW23_POS_RATIO_{}'.format(pos)
+                if not write_to_jwqldb:
+                    sql.add_wheel_data(conn, mnemonic_id, element)
+                else:
+                    write_filter_wheel_telemetry_to_jwqldb(mnemonic_id, element)
+
         except KeyError:
             pass
 
@@ -101,80 +141,127 @@ def process_day_sample(conn, mnemonic_data_dict):
         try:
             data = CCC[pos]
             for element in data:
-                sql.add_wheel_data(conn, 'IMIR_HK_CCC_POS_RATIO_{}'.format(pos), element)
+                mnemonic_id = 'IMIR_HK_CCC_POS_RATIO_{}'.format(pos)
+                if not write_to_jwqldb:
+                    sql.add_wheel_data(conn, mnemonic_id, element)
+                else:
+                    write_filter_wheel_telemetry_to_jwqldb(mnemonic_id, element)
+
         except KeyError:
             pass
 
 
-def process_15min_sample(conn, mnemonic_data_dict):
-    '''Parse CSV file, process data within and put to DB
+def process_15min_sample(conn, mnemonic_data_dict, write_to_jwqldb):
+    """Process 15 minute chunks of telemetry data and write to DB
 
     Parameters
     ----------
-    conn : DBobject
-        Connection object to temporary database
-    path : str
-        defines path to the files
-    '''
+    conn : SQLite connection or None
+        Connection to the local SQLite databases
 
-    #import mnemonic data and append dict to variable below
-    # m_raw_data = apt.mnemonics(path)
+    mnemonic_data_dict : dict
+        Dictionary containing an Astropy table for each mnemonic identifier
+
+    write_to_jwqldb : boolean
+        Should the telemetry data be written to the main JWQL database on
+        central storage? If not, they will be written to the local
+        SQLite databases.
+    """
 
     #process raw data with once a day routine
     processed_data = once_a_day_routine(mnemonic_data_dict)
 
     #push extracted and filtered data to temporary database
-    for key, value in processed_data.items():
+    for mnemonic_id, value in processed_data.items():
 
-        #abbreviate data table
-        m = mnemonic_data_dict[key]
+        mnemonic_table = mnemonic_data_dict[mnemonic_id]
+        length = len(value)
+        mean = np.mean(value)
+        deviation = np.std(value)
 
-        if key == "SE_ZIMIRICEA":
-            length = len(value)
-            mean = np.mean(value)
-            deviation = np.stdev(value)
-            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-            sql.add_data(conn, "SE_ZIMIRICEA_IDLE", dataset)
+        # Define new database entry
+        if write_to_jwqldb:
+            entry = {'start_time_mjd': float(mnemonic_table.meta['start']),
+                     'end_time_mjd': float(mnemonic_table.meta['end']),
+                     'n_data_points': length,
+                     'average': mean,
+                     'deviation': deviation}
+        else:
+            dataset = (float(mnemonic_table.meta['start']), float(mnemonic_table.meta['end']), length, mean, deviation)
 
-        elif key == "IMIR_HK_ICE_SEC_VOLT4":
-            length = len(value)
-            mean = np.mean(value)
-            deviation = np.stdev(value)
-            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-            sql.add_data(conn, "IMIR_HK_ICE_SEC_VOLT4_IDLE", dataset)
+        if mnemonic_id == "SE_ZIMIRICEA":
+            if not write_to_jwqldb:
+                sql.add_data(conn, "SE_ZIMIRICEA_IDLE", dataset)
+            else:
+                write_telemetry_to_jwqldb("SE_ZIMIRICEA_IDLE", entry)
+
+        elif mnemonic_id == "IMIR_HK_ICE_SEC_VOLT4":
+            if not write_to_jwqldb:
+                sql.add_data(conn, "IMIR_HK_ICE_SEC_VOLT4_IDLE", dataset)
+            else:
+                write_telemetry_to_jwqldb("IMIR_HK_ICE_SEC_VOLT4_IDLE", entry)
+
 
         else:
-            length = len(value)
-            mean = np.mean(value)
-            deviation = np.stdev(value)
-            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-            sql.add_data(conn, key, dataset)
+            if not write_to_jwqldb:
+                sql.add_data(conn, mnemonic_id, dataset)
+            else:
+                write_telemetry_to_jwqldb(mnemonic_id, entry)
 
 
-def populate_db_from_csv(conn):
-    """Populate the miri_database.db by parsing CSV files.
+def populate_db_from_csv(conn, write_to_jwqldb):
+    """Populate the MIRI telemetry database by parsing CSV files.
+
+    Parameters
+    ----------
+    conn : SQLite connection or None
+        Connection to the local SQLite databases
+
+    write_to_jwqldb : boolean
+        Should the telemetry data be written to the main JWQL database on
+        central storage? If not, they will be written to the local
+        SQLite databases.
     """
     csvs_day = glob.glob(
-        os.path.join(get_config()['jwql_dir'], 'pending_outputs', 'miri_data_trending', 'trainings_data_day', '*.CSV'))
+        os.path.join(get_config()['jwql_dir'], 'pending_outputs',
+                     'miri_data_trending', 'trainings_data_day', '*.CSV')
+    )
     csvs_15min = glob.glob(
-        os.path.join(get_config()['jwql_dir'], 'pending_outputs', 'miri_data_trending', 'trainings_data_15min',
-                     '*.CSV'))
+        os.path.join(get_config()['jwql_dir'], 'pending_outputs',
+                     'miri_data_trending', 'trainings_data_15min', '*.CSV')
+    )
 
     for csv in csvs_day:
         # import mnemonic data and append dict to variable below
         m_raw_data = apt.mnemonics(csv)
-        mnemonic_data_dict = m_raw_data.__mnemonic_dict
-        process_day_sample(conn, mnemonic_data_dict)
+        mnemonic_data_dict = m_raw_data.mnemonic_dict
+        process_day_sample(conn, mnemonic_data_dict, write_to_jwqldb)
 
     for csv in csvs_15min:
         # import mnemonic data and append dict to variable below
         m_raw_data = apt.mnemonics(csv)
-        mnemonic_data_dict = m_raw_data.__mnemonic_dict
-        process_15min_sample(conn, mnemonic_data_dict)
+        mnemonic_data_dict = m_raw_data.mnemonic_dict
+        process_15min_sample(conn, mnemonic_data_dict, write_to_jwqldb)
 
 
-def populate_db_from_edb(conn, start_date=None, end_date=None):
-    """Populate the miri_database.db by querying the EDB
+def populate_db_from_edb(conn, write_to_jwqldb, start_date=None, end_date=None):
+    """Populate the MIRI telemetry database by querying the EDB
+
+    Parameters
+    ----------
+    conn : SQLite connection or None
+        Connection to the local SQLite databases
+
+    write_to_jwqldb : boolean
+        Should the telemetry data be written to the main JWQL database on
+        central storage? If not, they will be written to the local
+        SQLite databases.
+
+    start_date : datetime.datetime object
+        The first date to query telemetry from the EDB
+
+    end_date : datetime.datetime object
+        The last date to query telemetry from the EDB
     """
 
     # TODO: Check to see when the query was last performed
@@ -208,12 +295,12 @@ def populate_db_from_edb(conn, start_date=None, end_date=None):
                 # Turn EDB queries into Astropy tables
                 query_time = query_results['MJD']
                 query_value = query_results['euvalue']
-                mnemonic_dict[mnemonic_id] = apt.mnemonic_table(
+                mnemonic_dict[mnemonic_id] = apt.create_mnemonic_table(
                     mnemonic_id, query_time, query_value
                 )
 
         # Process, evaluate, and save data to DB
-        process_15min_sample(conn, mnemonic_dict)
+        process_15min_sample(conn, mnemonic_dict, write_to_jwqldb)
 
         # Query the EDB for day-long batches of data
         end_time = Time(date + datetime.timedelta(days=1))
@@ -226,17 +313,78 @@ def populate_db_from_edb(conn, start_date=None, end_date=None):
                 # Turn EDB queries into Astropy tables
                 query_time = query_results['MJD']
                 query_value = query_results['euvalue']
-                mnemonic_dict[mnemonic_id] = apt.mnemonic_table(
+                mnemonic_dict[mnemonic_id] = apt.create_mnemonic_table(
                     mnemonic_id, query_time, query_value
                 )
 
         # Process, evaluate, and save data to DB
-        process_day_sample(conn, mnemonic_dict)
+        process_day_sample(conn, mnemonic_dict, write_to_jwqldb)
 
         print('Added telemetry from {} to database.'.format(date.strftime('%D')))
+        
 
 
-def telemetry_trending(use_csvs=True):
+def write_telemetry_to_jwqldb(mnemonic_id, entry):
+    """Write the engineering telemetry information for a given
+    mnemonic to the JWQL database.
+
+    Parameters
+    ----------
+    mnemonic_id : str
+        Mnemonic identifier
+
+    entry : dict
+        Dictionary containing the following keys to be written to the DB:
+            'start_time_mjd'
+            'end_time_mjd'
+            'n_data_points'
+            'average'
+            'deviation'
+    """
+
+    existing_entries = session.query(MIRIEngineeringTelemetry) \
+        .filter(MIRIEngineeringTelemetry.start_time_mjd == entry['start_time_mjd']) \
+        .filter(MIRIEngineeringTelemetry.mnemonic_id == mnemonic_id) \
+        .all()
+    if len(existing_entries) != 0:
+        print('Entry already exists.')
+        return
+
+    entry['mnemonic_id'] = mnemonic_id
+    entry['entry_date'] = datetime.datetime.now()
+    MIRIEngineeringTelemetry.__table__.insert().execute(entry)
+
+
+def write_filter_wheel_telemetry_to_jwqldb(mnemonic_id, element):
+    """Write the filter wheel telemetry value and timestamp for a given
+    mnemonic to the JWQL database.
+
+    Parameters
+    ----------
+    mnemonic_id : str
+        Mnemonic identifier
+
+    element : tuple
+        Data pair of the mnemonic value at the given timestamp
+    """
+    timestamp_mjd, value = element
+
+    existing_entries = session.query(MIRIFilterWheelTelemetry) \
+        .filter(MIRIFilterWheelTelemetry.timestamp_mjd == timestamp_mjd) \
+        .filter(MIRIFilterWheelTelemetry.mnemonic_id == mnemonic_id) \
+        .all()
+    if len(existing_entries) != 0:
+        print('Entry already exists.')
+        return
+
+    entry = {'mnemonic_id': mnemonic_id,
+             'timestamp_mjd': timestamp_mjd,
+             'value': float(value),
+             'entry_date': datetime.datetime.now()}
+    MIRIFilterWheelTelemetry.__table__.insert().execute(entry)
+    
+
+def telemetry_trending(use_csvs=True, write_to_jwqldb=True):
     """Update the database with engineering telemetry trends
 
     Parameters
@@ -245,19 +393,25 @@ def telemetry_trending(use_csvs=True):
         Should the telemetry data be loaded from the CSV files on central
         storage? If not, they will be loaded via an EDB query (not yet
         implemented)
+
+    write_to_jwqldb : boolean
+        Should the telemetry data be written to the main JWQL database on
+        central storage? If not, they will be written to the local
+        SQLite databases.
     """
-
-    DATABASE_LOCATION = os.path.join(PACKAGE_DIR, 'database')
-    DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'miri_database.db')
-
-    conn = sql.create_connection(DATABASE_FILE)
+    if not write_to_jwqldb:
+        database_file = os.path.join(PACKAGE_DIR, 'database', 'miri_database.db')
+        conn = sql.create_connection(database_file)
+    else:
+        conn = None
 
     if use_csvs:
-        populate_db_from_csv(conn)
+        populate_db_from_csv(conn, write_to_jwqldb)
     else:
-        populate_db_from_edb(conn)
+        populate_db_from_edb(conn, write_to_jwqldb)
 
-    sql.close_connection(conn)
+    if not write_to_jwqldb:
+        sql.close_connection(conn)
 
 
 if __name__ == "__main__":

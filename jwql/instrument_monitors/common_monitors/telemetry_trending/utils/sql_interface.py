@@ -61,6 +61,7 @@ def close_connection(conn):
 
 def add_data(conn, mnemonic, data):
     '''Add data of a specific mnemonic to database if it not exists
+
     Parameters
     ----------
     conn : DBobject
@@ -75,9 +76,9 @@ def add_data(conn, mnemonic, data):
 
     #check if data already exists (start_time as identifier)
     c.execute('SELECT id from {} WHERE start_time= {}'.format(mnemonic, data[0]))
-    temp = c.fetchall()
+    existing_entries = c.fetchall()
 
-    if len(temp) == 0:
+    if len(existing_entries) == 0:
         c.execute('INSERT INTO {} (start_time,end_time,data_points,average,deviation) \
                 VALUES (?,?,?,?,?)'.format(mnemonic),data)
         conn.commit()
@@ -87,6 +88,7 @@ def add_data(conn, mnemonic, data):
 
 def add_wheel_data(conn, mnemonic, data):
     '''Add data of a specific wheel position to database if it not exists
+
     Parameters
     ----------
     conn : DBobject

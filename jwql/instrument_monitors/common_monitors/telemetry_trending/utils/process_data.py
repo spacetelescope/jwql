@@ -162,6 +162,7 @@ def once_a_day_routine(mnemonic_data_dict):
     
             if data != None:
                 returndata.update( {mnemonic_id:data} )
+                print('{} data points for {}'.format(len(data), mnemonic_id))
             else:
                 print("no data for {}".format(mnemonic_id))
 
@@ -185,6 +186,7 @@ def once_a_day_routine(mnemonic_data_dict):
     
             if data != None:
                 returndata.update( {mnemonic_id:data} )
+                print('{} data points for {}'.format(len(data), mnemonic_id))
             else:
                 print("no data for {}".format(mnemonic_id))
 
@@ -224,6 +226,7 @@ def whole_day_routine(mnemonic_data_dict):
 
             if data_matching_cond3 != None:
                 whole_day_data_dict[mnemonic_id] = data_matching_cond3
+                print('{} data points for {}'.format(len(data_matching_cond3), mnemonic_id))
             else:
                 print("no data for {}".format(mnemonic_id))
 
@@ -276,8 +279,6 @@ def wheelpos_routine(mnemonic_data_dict):
         mnemonic_data_dict['IMIR_HK_FW_CUR_POS']
     )
 
-    del condition_FW
-
     con_set_GW14 = [
         cond.greater(mnemonic_data_dict['IMIR_HK_GW14_POS_VOLT'],250.0)
     ]
@@ -287,8 +288,6 @@ def wheelpos_routine(mnemonic_data_dict):
         condition_GW14, miri_telemetry.gw14_nominals, mnemonic_data_dict['IMIR_HK_GW14_POS_RATIO'],
         mnemonic_data_dict['IMIR_HK_GW14_CUR_POS']
     )
-
-    del condition_GW14
 
     con_set_GW23 = [
         cond.greater(mnemonic_data_dict['IMIR_HK_GW23_POS_VOLT'], 250.0)
@@ -300,8 +299,6 @@ def wheelpos_routine(mnemonic_data_dict):
         mnemonic_data_dict['IMIR_HK_GW23_CUR_POS']
     )
 
-    del condition_GW23
-
     con_set_CCC = [
         cond.greater(mnemonic_data_dict['IMIR_HK_CCC_POS_VOLT'], 250.0)
     ]
@@ -311,8 +308,6 @@ def wheelpos_routine(mnemonic_data_dict):
         condition_CCC, miri_telemetry.ccc_nominals, mnemonic_data_dict['IMIR_HK_CCC_POS_RATIO'],
         mnemonic_data_dict['IMIR_HK_CCC_CUR_POS']
     )
-
-    del condition_CCC
 
     return FW, GW14, GW23, CCC
 

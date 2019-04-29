@@ -338,7 +338,7 @@ def get_monitor_table_constraints(data_dict, table_name):
     Returns
     -------
     data_dict : dict
-        An updated ``data_dict`` with the approriate table constraints
+        An updated ``data_dict`` with the appropriate table constraints
         for the monitor added.
     """
 
@@ -378,7 +378,7 @@ def monitor_orm_factory(class_name):
     return type(class_name, (base,), data_dict)
 
 
-# Create tables from ORM factory
+# Create dark monitor tables from ORM factory
 NIRCamDarkQueryHistory = monitor_orm_factory('nircam_dark_query_history')
 NIRCamDarkPixelStats = monitor_orm_factory('nircam_dark_pixel_stats')
 NIRCamDarkDarkCurrent = monitor_orm_factory('nircam_dark_dark_current')
@@ -394,6 +394,10 @@ MIRIDarkDarkCurrent = monitor_orm_factory('miri_dark_dark_current')
 FGSDarkQueryHistory = monitor_orm_factory('fgs_dark_query_history')
 FGSDarkPixelStats = monitor_orm_factory('fgs_dark_pixel_stats')
 FGSDarkDarkCurrent = monitor_orm_factory('fgs_dark_dark_current')
+
+# Create telemetry trending tables from ORM factory
+MIRIEngineeringTelemetry = monitor_orm_factory('miri_engineering_telemetry')
+MIRIFilterWheelTelemetry = monitor_orm_factory('miri_filter_wheel_telemetry')
 
 
 if __name__ == '__main__':
