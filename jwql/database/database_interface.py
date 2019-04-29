@@ -398,6 +398,8 @@ FGSDarkDarkCurrent = monitor_orm_factory('fgs_dark_dark_current')
 # Create telemetry trending tables from ORM factory
 MIRIEngineeringTelemetry = monitor_orm_factory('miri_engineering_telemetry')
 MIRIFilterWheelTelemetry = monitor_orm_factory('miri_filter_wheel_telemetry')
+NIRSpecEngineeringTelemetry = monitor_orm_factory('nirspec_engineering_telemetry')
+NIRSpecFilterWheelTelemetry = monitor_orm_factory('nirspec_filter_wheel_telemetry')
 
 
 if __name__ == '__main__':

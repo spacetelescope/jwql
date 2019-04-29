@@ -85,7 +85,7 @@ mnemonic_for_conditions = [
 "ICTM_RT_FILTER" ]
 
 #these mnemonic are used by the day routine
-mnemSet_day = [
+mnemonic_set_day_no_condition = [
 "INRSM_MSA_Q1_365VDD",
 "INRSM_MSA_Q1_365VPP",
 "INRSM_MSA_Q1_171VPP",
@@ -125,8 +125,13 @@ mnemSet_day = [
 "SI_GZCTS67A",
 "SI_GZCTS67B"]
 
+mnemonic_set_day = mnemonic_caa + mnemonic_ft10 + mnemonic_set_day_no_condition +  [
+    'ICTM_RT_FILTER',
+    'INRSH_CAA_PWRF_ST'
+]
+
 #these mnemonic are used by the 15min routine
-mnemSet_15min = [
+mnemonic_set_15min_no_condition = [
 "IGDP_NRSD_ALG_TEMP",
 
 "INRSD_ALG_ACC_P12C",
@@ -239,6 +244,12 @@ mnemSet_15min = [
 "INRSM_MECH_MTR_TMP_A",
 "INRSM_LL_MTR_TMP_A",
 "INRSM_MSA_TMP_A"]
+
+mnemonic_set_15min = mnemonic_cond_1 + mnemonic_cond_2 + mnemonic_cond_3 + mnemonic_set_15min_no_condition + [
+    'INRSD_EXP_STAT',
+    'INRSH_LAMP_SEL',
+    'INRSM_MOVE_STAT'
+]
 
 #mnemonic set for setting up database
 mnemonic_set_database = [
