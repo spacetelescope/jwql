@@ -74,12 +74,12 @@ from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixel
 from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
 from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
+from jwql.instrument_monitors.monitor import Monitor
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils import calculations, instrument_properties
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
-from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path, initialize_instrument_monitor, update_monitor_table
+from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
 
@@ -145,7 +145,7 @@ def mast_query_darks(instrument, aperture, start_date, end_date):
     return query_results
 
 
-class Dark():
+class DarkMonitor(Monitor):
     """Class for executing the dark current monitor.
 
     This class will search for new (since the previous instance of the
@@ -167,7 +167,7 @@ class Dark():
 
     Attributes
     ----------
-    output_dir : str
+    output_location : str
         Path into which outputs will be placed
 
     data_dir : str
@@ -206,9 +206,6 @@ class Dark():
     ValueError
         If the most recent query search returns more than one entry
     """
-
-    def __init__(self):
-        """Initialize an instance of the ``Dark`` class."""
 
     def add_bad_pix(self, coordinates, pixel_type, files, mean_filename, baseline_filename):
         """Add a set of bad pixels to the bad pixel database table
@@ -677,19 +674,12 @@ class Dark():
         except (FileNotFoundError, KeyError) as e:
             logging.warning('Trying to read {}: {}'.format(filename, e))
 
-    @log_fail
-    @log_info
     def run(self):
         """The main method.  See module docstrings for further
         details.
         """
 
-        logging.info('Begin logging for dark_monitor')
-
         apertures_to_skip = ['NRCALL_FULL', 'NRCAS_FULL', 'NRCBS_FULL']
-
-        # Get the output directory
-        self.output_dir = os.path.join(get_config()['outputs'], 'dark_monitor')
 
         # Read in config file that defines the thresholds for the number
         # of dark files that must be present in order for the monitor to run
@@ -738,8 +728,8 @@ class Dark():
                     new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
 
                     # Set up directories for the copied data
-                    ensure_dir_exists(os.path.join(self.output_dir, 'data'))
-                    self.data_dir = os.path.join(self.output_dir,
+                    ensure_dir_exists(os.path.join(self.output_location, 'data'))
+                    self.data_dir = os.path.join(self.output_location,
                                                  'data/{}_{}'.format(self.instrument.lower(),
                                                                      self.aperture.lower()))
                     ensure_dir_exists(self.data_dir)
@@ -985,10 +975,6 @@ class Dark():
 
 if __name__ == '__main__':
 
-    module = os.path.basename(__file__).strip('.py')
-    start_time, log_file = initialize_instrument_monitor(module)
+    monitor = DarkMonitor('dark_monitor')
 
-    monitor = Dark()
-    monitor.run()
-
-    update_monitor_table(module, start_time, log_file)
+    #monitor.run()
