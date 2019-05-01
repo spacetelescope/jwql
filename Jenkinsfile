@@ -15,11 +15,12 @@ withCredentials([string(
   for (os in matrix_os) {
     for (python_ver in matrix_python) {
       // Define each build configuration, copying and overriding values as necessary.
+      env_py = "py${python_ver}".replace(".", "")
       bc = new BuildConfig()
       bc.nodetype = os
-      bc.name = "debug-${os}-py${python_ver}"
+      bc.name = "debug-${os}-${env_py}"
       bc.build_cmds = [
-          "conda env update --file=environment.yml",
+          "conda env update --file=environment${env_py}.yml",
           "pip install codecov pytest-cov",
           "with_env -n jwql ${CONDA_INST} python=${python_ver}",
           "with_env -n jwql python setup.py install"]
