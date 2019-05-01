@@ -38,6 +38,12 @@ test_loading_times.py
     :members:
     :undoc-members:
 
+test_logging_functions.py
+-------------------------
+.. automodule:: jwql.tests.test_logging_functions
+    :members:
+    :undoc-members:
+
 test_monitor_mast.py
 --------------------
 .. automodule:: jwql.tests.test_monitor_mast

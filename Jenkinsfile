@@ -20,9 +20,11 @@ withCredentials([string(
           "conda env update --file=environment${env_py}.yml",
           "pip install codecov pytest-cov",
           "with_env -n jwql python setup.py install"]
-      bc.test_cmds = [
-          "with_env -n jwql pytest -s --junitxml=results.xml --cov=./jwql/ --cov-report xml",
-          "codecov --token=${codecov_token}"]
+      bc0.test_cmds = [
+          "with_env -n jwql pytest -s --junitxml=results.xml --cov=./jwql/ --cov-report=xml:coverage.xml",
+          "codecov --token=${codecov_token}",
+          "mkdir -v reports",
+          "mv -v coverage.xml reports/coverage.xml"]
       matrix += bc
     }
   }

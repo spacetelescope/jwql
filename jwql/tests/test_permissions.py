@@ -99,6 +99,8 @@ def test_file(test_dir=TEST_DIRECTORY):
         os.rmdir(test_dir)
 
 
+@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+                    reason='Requires access to central storage.')
 def test_file_group(test_file):
     """Create a file with the standard permissions ``('-rw-r--r--')``
     and default group.
