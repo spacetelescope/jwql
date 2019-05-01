@@ -9,7 +9,7 @@ dependencies:
 - bokeh=1.1.0
 - crds>=7.2.7
 - django=2.1.7
-- ipython=7.3.0
+- ipython=7.5.0
 - jinja2=2.10
 - jwst=0.13.1
 - matplotlib=3.0.2

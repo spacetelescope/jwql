@@ -30,6 +30,7 @@ import tempfile
 from astropy.io import fits
 from astropy.time import Time
 from astroquery.mast import Mast
+import numpy as np
 
 from jwql.edb.edb_interface import mnemonic_inventory
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
@@ -741,7 +742,7 @@ def random_404_page():
     random_template : str
         Filename of the selected template
     """
-    templates = ['404_space.html']
+    templates = ['404_space.html', '404_spacecat.html']
     choose_page = np.random.choice(len(templates))
     random_template = templates[choose_page]
 
