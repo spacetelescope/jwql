@@ -2,7 +2,7 @@
 if (utils.scm_checkout()) return
 
 CONDA_CHANNEL = "http://ssb.stsci.edu/astroconda-dev"
-CONDA_INST = "conda install --update-all -y -q -c ${CONDA_CHANNEL}"
+CONDA_INST = "conda install -y -q -c ${CONDA_CHANNEL}"
 
 matrix_os = ["linux-stable"]
 matrix_python = ["3.5", "3.6"]
