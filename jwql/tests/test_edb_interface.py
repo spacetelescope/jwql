@@ -24,9 +24,12 @@ import pytest
 
 from jwql.edb.edb_interface import mnemonic_inventory, query_single_mnemonic
 from jwql.utils.utils import get_config
+#
+# # Determine if tests are being run on jenkins
+# ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
 
 
-@pytest.mark.xfail(raises=(RuntimeError, FileNotFoundError))
+# @pytest.mark.xfail(raises=(RuntimeError, FileNotFoundError))
 def test_get_mnemonic():
     """Test the query of a single mnemonic."""
     from jwql.edb.engineering_database import get_mnemonic
