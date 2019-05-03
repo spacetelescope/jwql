@@ -99,7 +99,7 @@ def test_api_views(url):
     try:
         url = request.urlopen(url)
     except error.HTTPError as e:
-        if "Bad Gateway" in e:
+        if e.code == 502:
             pytest.skip("Dev server problem")
         raise(e)
 
