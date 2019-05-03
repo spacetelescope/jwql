@@ -76,8 +76,7 @@ def test_query_single_mnemonic():
                                              token=MAST_TOKEN)
     assert len(data) == meta['paging']['rows']
 
-    
-# @pytest.mark.xfail
+
 def test_invalid_query():
     """Test that the mnemonic query for an unauthorized user fails."""
 
@@ -86,7 +85,7 @@ def test_invalid_query():
     mnemonic_identifier = 'IMIR_HK_ICE_SEC_VOLT4'
     start_time = Time('2019-01-16 00:00:00.000', format='iso')
     end_time = Time('2019-01-16 00:01:00.000', format='iso')
-    try:
+
+    with pytest.raises(RuntimeError) as excinfo:
         query_single_mnemonic(mnemonic_identifier, start_time, end_time, token='1234')
-    except RuntimeError:
-        pass
+    assert 'You are not authenticated in MAST.' in str(excinfo)
