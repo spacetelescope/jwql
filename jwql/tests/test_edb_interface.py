@@ -17,6 +17,7 @@ Use
 
         pytest -s test_edb_interface.py
 """
+import os
 
 from astropy.time import Time
 from astroquery.mast import Mast
@@ -25,11 +26,11 @@ import pytest
 from jwql.edb.edb_interface import mnemonic_inventory, query_single_mnemonic
 from jwql.utils.utils import get_config
 #
-# # Determine if tests are being run on jenkins
-# ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
+# Determine if tests are being run on jenkins
+ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
 
 
-# @pytest.mark.xfail(raises=(RuntimeError, FileNotFoundError))
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_get_mnemonic():
     """Test the query of a single mnemonic."""
     from jwql.edb.engineering_database import get_mnemonic
@@ -42,7 +43,7 @@ def test_get_mnemonic():
     assert len(mnemonic.data) == mnemonic.meta['paging']['rows']
 
 
-@pytest.mark.xfail(raises=(RuntimeError, FileNotFoundError))
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_get_mnemonics():
     """Test the query of a list of mnemonics."""
     from jwql.edb.engineering_database import get_mnemonics
@@ -61,7 +62,7 @@ def test_mnemonic_inventory():
     assert len(all_mnemonics) > 1000
 
 
-@pytest.mark.xfail(raises=(RuntimeError, FileNotFoundError))
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_query_single_mnemonic():
     """Test the query of a mnemonic over a given time range."""
     settings = get_config()
