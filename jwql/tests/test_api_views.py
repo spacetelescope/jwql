@@ -86,7 +86,7 @@ def test_api_views(url):
     if not ON_JENKINS:
         base_url = get_base_url()
     else:
-        base_url = 'http://127.0.0.1:8000'
+        base_url = 'https://dljwql.stsci.edu'
     print('base_url', base_url)
 
     if base_url == 'http://127.0.0.1:8000' and not LOCAL_SERVER:
