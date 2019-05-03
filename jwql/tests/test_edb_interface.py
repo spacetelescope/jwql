@@ -86,6 +86,6 @@ def test_invalid_query():
     start_time = Time('2019-01-16 00:00:00.000', format='iso')
     end_time = Time('2019-01-16 00:01:00.000', format='iso')
 
-    with pytest.raises(RuntimeError) as excinfo:
+    with pytest.raises(ValueError) as excinfo:
         query_single_mnemonic(mnemonic_identifier, start_time, end_time, token='1234')
     assert 'You are not authenticated in MAST.' in str(excinfo)

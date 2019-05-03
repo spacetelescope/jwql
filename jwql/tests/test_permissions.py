@@ -45,7 +45,7 @@ def test_directory(test_dir=TEST_DIRECTORY):
     Yields
     -------
     test_dir : str
-        Path to directory usesd for testing
+        Path to directory used for testing
     """
     os.mkdir(test_dir)  # creates directory with default mode=511
 

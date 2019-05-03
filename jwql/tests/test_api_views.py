@@ -87,7 +87,6 @@ def test_api_views(url):
         base_url = get_base_url()
     else:
         base_url = 'https://dljwql.stsci.edu'
-    print('base_url', base_url)
 
     if base_url == 'http://127.0.0.1:8000' and not LOCAL_SERVER:
         pytest.skip("Local server not running")
@@ -97,7 +96,13 @@ def test_api_views(url):
     # Determine the type of data to check for based on the url
     data_type = url.split('/')[-2]
 
-    url = request.urlopen(url)
+    try:
+        url = request.urlopen(url)
+    except error.HTTPError as e:
+        if "Bad Gateway" in e:
+            pytest.skip("Dev server problem")
+        raise(e)
+
     data = json.loads(url.read().decode())
 
     assert len(data[data_type]) > 0

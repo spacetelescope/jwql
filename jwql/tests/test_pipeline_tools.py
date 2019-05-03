@@ -72,13 +72,13 @@ def test_get_pipeline_steps():
     for instrument in instruments:
         req_steps = pipeline_tools.get_pipeline_steps(instrument)
         steps = ['dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
-               'persistence', 'dark_current', 'jump', 'rate']
+                 'persistence', 'dark_current', 'jump', 'rate']
         not_required = ['group_scale', 'ipc', 'firstframe', 'lastframe', 'rscd']
         steps_dict = OrderedDict({})
         for step in steps:
-          steps_dict[step] = True
+            steps_dict[step] = True
         for step in not_required:
-          steps_dict[step] = False
+            steps_dict[step] = False
         assert req_steps == steps_dict
 
     # NIRSpec and MIRI have different required steps
