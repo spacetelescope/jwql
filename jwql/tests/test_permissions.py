@@ -32,6 +32,7 @@ TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'permission_test')
 # Determine if tests are being run on jenkins
 ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
 
+
 @pytest.fixture(scope="module")
 def test_directory(test_dir=TEST_DIRECTORY):
     """Create a test directory for permission management.

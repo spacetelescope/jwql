@@ -30,6 +30,7 @@ from jwql.utils.utils import get_config
 # Determine if tests are being run on jenkins
 ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
 
+
 @log_fail
 @log_info
 def perform_basic_logging():
@@ -80,7 +81,8 @@ def test_logging_functions():
     with open(log_file, 'r') as f:
         data = f.readlines()
     data = str([line.strip() for line in data])
-    testable_content = ['User:', 'System:', 'Python Executable Path:', 'INFO:', 'WARNING:', 'CRITICAL:',
-                        'Elapsed Real Time:', 'Elapsed CPU Time:', 'Completed Successfully']
+    testable_content = ['User:', 'System:', 'Python Executable Path:', 'INFO:',
+                        'WARNING:', 'CRITICAL:', 'Elapsed Real Time:',
+                        'Elapsed CPU Time:', 'Completed Successfully']
     for item in testable_content:
         assert item in data

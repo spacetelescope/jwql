@@ -29,6 +29,7 @@ from jwql.utils.utils import get_config
 # Determine if tests are being run on jenkins
 ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
 
+
 @pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_completed_pipeline_steps():
     """Test that the list of completed pipeline steps for a file is
@@ -40,7 +41,8 @@ def test_completed_pipeline_steps():
         File to be checked
     """
 
-    filename = os.path.join(get_config()['filesystem'], 'jw00312', 'jw00312002001_02102_00001_nrcb4_rateints.fits')
+    filename = os.path.join(get_config()['filesystem'], 'jw00312',
+                            'jw00312002001_02102_00001_nrcb4_rateints.fits')
     completed_steps = pipeline_tools.completed_pipeline_steps(filename)
     true_completed = OrderedDict([('group_scale', False),
                                   ('dq_init', True),
@@ -68,16 +70,16 @@ def test_get_pipeline_steps():
     # FGS, NIRCam, and NIRISS have the same required steps
     instruments = ['fgs', 'nircam', 'niriss']
     for instrument in instruments:
-      req_steps = pipeline_tools.get_pipeline_steps(instrument)
-      steps = ['dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
+        req_steps = pipeline_tools.get_pipeline_steps(instrument)
+        steps = ['dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
                'persistence', 'dark_current', 'jump', 'rate']
-      not_required = ['group_scale', 'ipc', 'firstframe', 'lastframe', 'rscd']
-      steps_dict = OrderedDict({})
-      for step in steps:
+        not_required = ['group_scale', 'ipc', 'firstframe', 'lastframe', 'rscd']
+        steps_dict = OrderedDict({})
+        for step in steps:
           steps_dict[step] = True
-      for step in not_required:
+        for step in not_required:
           steps_dict[step] = False
-      assert req_steps == steps_dict
+        assert req_steps == steps_dict
 
     # NIRSpec and MIRI have different required steps
     nrs_req_steps = pipeline_tools.get_pipeline_steps('nirspec')
@@ -108,7 +110,7 @@ def test_image_stack():
     """Test stacking of slope images"""
 
     directory = os.path.join(get_config()['test_dir'], 'dark_monitor')
-    files = [os.path.join(directory, 'test_image_{}.fits'.format(str(i+1))) for i in range(3)]
+    files = [os.path.join(directory, 'test_image_{}.fits'.format(str(i + 1))) for i in range(3)]
 
     image_stack, exptimes = pipeline_tools.image_stack(files)
     truth = np.zeros((3, 10, 10))
