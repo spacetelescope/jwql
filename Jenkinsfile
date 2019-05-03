@@ -12,7 +12,7 @@ withCredentials([string(
   for (os in matrix_os) {
     for (python_ver in matrix_python) {
       // Define each build configuration, copying and overriding values as necessary.
-      env_py = "py${python_ver}".replace(".", "")
+      env_py = "_python_${python_ver}".replace(".", "_")
       bc = new BuildConfig()
       bc.nodetype = os
       bc.name = "debug-${os}-${env_py}"
