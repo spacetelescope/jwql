@@ -17,6 +17,7 @@ Use
 
         pytest -s test_api_views.py
 """
+import os
 
 import json
 import pytest
