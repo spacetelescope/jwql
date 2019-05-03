@@ -70,7 +70,7 @@ Next, activate the `base` environment:
 source activate base
 ```
 
-Lastly, create the `jwql` environment with either Python 3.5 or 3.6, via the `environment_python_3_5.yml` or `environment_python_3_6.yml` file, respectively. We recommending installing with the 3.6 version:
+Lastly, create the `jwql` environment with either Python 3.5 or 3.6, via the `environment_python_3_5.yml` or `environment_python_3_6.yml` file, respectively. We recommend installing with the 3.6 version:
 
 ```
 conda env create -f environment_python_3_6.yml
