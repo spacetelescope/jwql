@@ -28,6 +28,9 @@ from jwql.utils.utils import get_base_url
 
 TIME_CONSTRAINT = 30  # seconds
 
+# Determine if tests are being run on jenkins
+ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
+
 urls = []
 
 # Generic URLs
@@ -49,8 +52,7 @@ for mapping in test_mappings:
     urls.append('{}/{}/'.format(instrument, rootname))
 
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
-                    reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 @pytest.mark.parametrize('url', urls)
 def test_loading_times(url):
     """Test to see if the given ``url`` returns a webpage sucessfully

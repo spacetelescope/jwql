@@ -27,6 +27,8 @@ from jwql.utils import logging_functions
 from jwql.utils.logging_functions import configure_logging, log_fail, log_info, make_log_file
 from jwql.utils.utils import get_config
 
+# Determine if tests are being run on jenkins
+ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
 
 @log_fail
 @log_info
@@ -38,8 +40,7 @@ def perform_basic_logging():
     logging.critical('This is a critical warning')
 
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
-                    reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_configure_logging():
     """Assert that the ``configure_logging`` function successfully
     creates a log file"""
@@ -51,8 +52,7 @@ def test_configure_logging():
     shutil.rmtree(os.path.dirname(log_file), ignore_errors=True)
 
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
-                    reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_make_log_file():
     """Assert that ``make_log_file`` function returns the appropriate
     path for a log file"""
@@ -68,8 +68,7 @@ def test_make_log_file():
     assert log_file in correct_locations
 
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
-                    reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_logging_functions():
     """A generic end-to-end test that creates a log file, does some
     basic logging, then asserts that some logging content exists"""
