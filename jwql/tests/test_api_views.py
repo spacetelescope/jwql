@@ -25,8 +25,8 @@ from urllib import request, error
 from jwql.utils.utils import get_base_url
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 
-# # Determine if tests are being run on jenkins
-# ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
+# Determine if tests are being run on jenkins
+ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
 
 # Determine if the local server is running
 try:
@@ -82,7 +82,10 @@ def test_api_views(url):
     """
 
     # Build full URL
-    base_url = get_base_url()
+    if not ON_JENKINS:
+        base_url = get_base_url()
+    else:
+        base_url = 'http://127.0.0.1:8000'
     print('base_url', base_url)
 
     if base_url == 'http://127.0.0.1:8000' and not LOCAL_SERVER:

@@ -77,7 +77,7 @@ def test_query_single_mnemonic():
     assert len(data) == meta['paging']['rows']
 
     
-@pytest.mark.xfail
+# @pytest.mark.xfail
 def test_invalid_query():
     """Test that the mnemonic query for an unauthorized user fails."""
 
