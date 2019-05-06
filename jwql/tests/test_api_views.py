@@ -62,7 +62,7 @@ for proposal in proposals:
 rootnames = ['jw86600007001_02101_00001_guider2',  # FGS
              'jw98012001001_02102_00001_mirimage',  # MIRI
              'jw93025001001_02102_00001_nrca2',  # NIRCam
-             'jw00308001001_02101_00001_nis',  # NIRISS
+             'jw00308001001_02103_00001_nis',  # NIRISS
              'jw96213001001_02101_00001_nrs1']  # NIRSpec
 for rootname in rootnames:
     urls.append('api/{}/filenames/'.format(rootname))  # filenames_by_rootname
