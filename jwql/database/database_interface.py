@@ -243,6 +243,22 @@ class FilesystemInstrument(base):
         return a_list
 
 
+class CentralStore(base):
+    """ORM for the central storage area filesystem monitor
+    table"""
+
+    # Name the table
+    __tablename__ = 'central_storage'
+
+    # Define the columns
+    id = Column(Integer, primary_key=True, nullable=False)
+    date = Column(DateTime, unique=True, nullable=False)
+    area = Column(String(), nullable=False)
+    size = Column(Float, nullable=False)
+    used = Column(Float, nullable=False)
+    available = Column(Float, nullable=False)
+
+
 class Monitor(base):
     """ORM for the ``monitor`` table"""
 
