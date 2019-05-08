@@ -10,6 +10,7 @@
 [![Build Status](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/badge/icon)](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/)
 [![Documentation Status](https://readthedocs.org/projects/jwql/badge/?version=latest)](https://jwql.readthedocs.io/en/latest/?badge=latest)
 [![STScI](https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat)](http://www.stsci.edu)
+[![codecov](https://codecov.io/gh/spacetelescope/jwql/branch/develop/graph/badge.svg)](https://codecov.io/gh/spacetelescope/jwql)
 
 
 The JWST Quicklook Application (`JWQL`) is a database-driven web application and automation framework for use by the JWST instrument teams to monitor and trend the health, stability, and performance of the JWST instruments.  The system is comprised of the following:
@@ -57,22 +58,22 @@ instead, and then proceed as stated.
 
 ### Environment Installation
 
-Following the download of the `jwql` repository, contributors can then install the `jwql` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project.  First, one should ensure that their version of `conda` is up to date:
+Following the download of the `jwql` repository, contributors can then install the `jwql` `conda` environment via the environment yaml file, which contains all of the dependencies for the project.  First, ensure that your version of `conda` is up to date:
 
 ```
 conda update conda
 ```
 
-Next, one should activate the `base` environment:
+Next, activate the `base` environment:
 
 ```
 source activate base
 ```
 
-Lastly, one can create the `jwql` environment via the `environment.yml` file:
+Lastly, create the `jwql` environment with either Python 3.5 or 3.6, via the `environment_python_3_5.yml` or `environment_python_3_6.yml` file, respectively. We recommend installing with the 3.6 version:
 
 ```
-conda env create -f environment.yml
+conda env create -f environment_python_3_6.yml
 ```
 
 ### Package Installation

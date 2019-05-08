@@ -37,7 +37,7 @@ from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.jwql_monitors import monitor_cron_jobs
-from jwql.utils.constants import MONITORS
+from jwql.utils.constants import MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser
 from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
@@ -147,45 +147,47 @@ def get_dashboard_components():
     output_dir = get_config()['outputs']
     name_dict = {'': '',
                  'monitor_mast': 'Database Monitor',
-                 'database_monitor_jwst': 'JWST',
-                 'database_monitor_caom': 'JWST (CAOM)',
-                 'monitor_filesystem': 'Filesystem Monitor',
-                 'filecount_type': 'Total File Counts by Type',
-                 'size_type': 'Total File Sizes by Type',
-                 'filecount': 'Total File Counts',
-                 'system_stats': 'System Statistics'}
-
-    # Exclude monitors that can't be saved as components
-    exclude_list = ['monitor_cron_jobs', 'miri_data_trending',
-                    'trainings_data_15min', 'trainings_data_day']
+                 'monitor_filesystem': 'Filesystem Monitor'}
 
     # Run the cron job monitor to produce an updated table
     monitor_cron_jobs.status(production_mode=True)
 
-    # Build dictionary of components
+    # Build dictionary of Bokeh components from files in the output directory
     dashboard_components = {}
-    for dir_name, subdir_list, file_list in os.walk(output_dir):
+    for dir_name, _, file_list in os.walk(output_dir):
         monitor_name = os.path.basename(dir_name)
-        if monitor_name not in exclude_list:
-            dashboard_components[name_dict[monitor_name]] = {}
+
+        # Only continue if the dashboard knows how to build that monitor
+        if monitor_name in name_dict.keys():
+            formatted_monitor_name = name_dict[monitor_name]
+            dashboard_components[formatted_monitor_name] = {}
             for fname in file_list:
                 if 'component' in fname:
                     full_fname = '{}/{}'.format(monitor_name, fname)
                     plot_name = fname.split('_component')[0]
 
+                    # Generate formatted plot name
+                    formatted_plot_name = plot_name.title().replace('_', ' ')
+                    for lowercase, mixed_case in JWST_INSTRUMENT_NAMES_MIXEDCASE.items():
+                        formatted_plot_name = formatted_plot_name.replace(lowercase.capitalize(), mixed_case)
+                    formatted_plot_name = formatted_plot_name.replace('Jwst', 'JWST')
+                    formatted_plot_name = formatted_plot_name.replace('Caom', 'CAOM')
+
                     # Get the div
                     html_file = full_fname.split('.')[0] + '.html'
-                    with open(os.path.join(output_dir, html_file)) as f:
+                    with open(os.path.join(output_dir, html_file), 'r') as f:
                         div = f.read()
 
                     # Get the script
                     js_file = full_fname.split('.')[0] + '.js'
-                    with open(os.path.join(output_dir, js_file)) as f:
+                    with open(os.path.join(output_dir, js_file), 'r') as f:
                         script = f.read()
-                    dashboard_components[name_dict[monitor_name]][name_dict[plot_name]] = [div, script]
+
+                    # Save to dictionary
+                    dashboard_components[formatted_monitor_name][formatted_plot_name] = [div, script]
 
     # Add HTML that cannot be saved as components to the dictionary
-    with open(os.path.join(output_dir, 'monitor_cron_jobs', 'cron_status_table.html')) as f:
+    with open(os.path.join(output_dir, 'monitor_cron_jobs', 'cron_status_table.html'), 'r') as f:
         cron_status_table_html = f.read()
     dashboard_html = {}
     dashboard_html['Cron Job Monitor'] = cron_status_table_html
@@ -730,6 +732,21 @@ def get_thumbnails_by_rootname(rootname):
     thumbnails = [os.path.basename(thumbnail) for thumbnail in thumbnails]
 
     return thumbnails
+
+
+def random_404_page():
+    """Randomly select one of the various 404 templates for JWQL
+
+    Returns
+    -------
+    random_template : str
+        Filename of the selected template
+    """
+    templates = ['404_space.html', '404_spacecat.html']
+    choose_page = np.random.choice(len(templates))
+    random_template = templates[choose_page]
+
+    return random_template
 
 
 def thumbnails(inst, proposal=None):

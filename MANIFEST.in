@@ -1,6 +1,7 @@
 include README.md
 include LICENSE
-include environment.yml
+include environment_python_3_5.yml
+include environment_python_3_6.yml
 include setup.py
 
 recursive-include notebooks *
