@@ -37,7 +37,7 @@ import re
 import shutil
 
 from jwql.utils import permissions
-from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.constants import FILE_SUFFIX_TYPES, INSTRUMENT_MONITOR_DATABASE_TABLES, JWST_INSTRUMENT_NAMES_SHORTHAND
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -112,7 +112,7 @@ def download_mast_data(query_results, output_dir):
 
         print('uri is {}'.format(uri))
 
-        conn.request("GET", "/api/v0/download/file?uri="+uri)
+        conn.request("GET", "/api/v0/download/file?uri=" + uri)
         resp = conn.getresponse()
         file_content = resp.read()
 
@@ -440,6 +440,8 @@ def update_monitor_table(module, start_time, log_file):
     new_entry['monitor_name'] = module
     new_entry['start_time'] = start_time
     new_entry['end_time'] = datetime.datetime.now()
+    new_entry['status'] = get_log_status(log_file)
+    new_entry['affected_tables'] = INSTRUMENT_MONITOR_DATABASE_TABLES[module]
     new_entry['log_file'] = os.path.basename(log_file)
 
     Monitor.__table__.insert().execute(new_entry)
