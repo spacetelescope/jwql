@@ -22,7 +22,7 @@ from astropy.time import Time
 from astroquery.mast import Mast
 import pytest
 
-from jwql.edb.edb_interface import mnemonic_inventory, query_single_mnemonic
+from jwedb.edb_interface import mnemonic_inventory, query_single_mnemonic
 from jwql.utils.utils import get_config
 
 

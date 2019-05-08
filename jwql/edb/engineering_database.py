@@ -41,7 +41,7 @@ from bokeh.plotting import figure
 import numpy as np
 
 from jwql.utils.utils import get_config
-from .edb_interface import query_single_mnemonic, query_mnemonic_info
+from jwedb.edb_interface import query_single_mnemonic, query_mnemonic_info
 
 # should use oauth.register_oauth()?
 settings = get_config()
