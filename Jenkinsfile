@@ -16,12 +16,13 @@ withCredentials([string(
       bc = new BuildConfig()
       bc.nodetype = os
       bc.name = "debug-${os}-${env_py}"
+      bc.conda_packages = ["python=${python_ver}"]
       bc.build_cmds = [
           "conda env update --file=environment${env_py}.yml",
           "pip install codecov pytest-cov",
-          "with_env -n jwql python setup.py install"]
+          "python setup.py install"]
       bc.test_cmds = [
-          "with_env -n jwql pytest -s --junitxml=results.xml --cov=./jwql/ --cov-report=xml:coverage.xml",
+          "pytest -s --junitxml=results.xml --cov=./jwql/ --cov-report=xml:coverage.xml",
           "codecov --token=${codecov_token}",
           "mkdir -v reports",
           "mv -v coverage.xml reports/coverage.xml"]
