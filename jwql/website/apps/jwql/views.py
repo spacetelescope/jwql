@@ -287,8 +287,8 @@ def dashboard(request):
 
     return render(request, template, context)
 
-
-def engineering_database(request):
+@auth_info
+def engineering_database(request, user):
     """Generate the EDB page.
 
     Parameters

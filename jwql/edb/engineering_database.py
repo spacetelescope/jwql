@@ -48,8 +48,11 @@ from jwql.utils.utils import get_config
 from jwedb.edb_interface import query_single_mnemonic, query_mnemonic_info
 
 # should use oauth.register_oauth()?
-settings = get_config()
-MAST_TOKEN = settings['mast_token']
+try:
+    settings = get_config()
+    MAST_TOKEN = settings['mast_token']
+except KeyError:
+    MAST_TOKEN = None
 
 
 class EdbMnemonic:
