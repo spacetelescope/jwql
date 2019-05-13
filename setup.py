@@ -14,6 +14,7 @@ REQUIRES = [
     'bokeh>=1.0',
     'django>=2.0',
     'jinja2',
+    'jwedb',
     'jwst',
     'matplotlib',
     'numpy',

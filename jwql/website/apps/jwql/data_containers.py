@@ -32,7 +32,7 @@ from astropy.time import Time
 from astroquery.mast import Mast
 import numpy as np
 
-from jwql.edb.edb_interface import mnemonic_inventory
+from jwedb.edb_interface import mnemonic_inventory
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
