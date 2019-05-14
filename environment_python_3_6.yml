@@ -19,7 +19,7 @@ dependencies:
 - psycopg2=2.7.5
 - python=3.6.4
 - python-dateutil=2.7.5
-- pytest=4.4.0
+- pytest=4.4.2
 - pytest-cov=2.6.1
 - pytest-html=1.19.0
 - sphinx=1.8.5
