@@ -56,7 +56,7 @@ def test_completed_pipeline_steps():
                                   ('jump', True),
                                   ('rate', True)])
 
-    assert completed_steps == true_completed
+    assert dict(completed_steps) == dict(true_completed)
 
 
 def test_get_pipeline_steps():
@@ -67,16 +67,16 @@ def test_get_pipeline_steps():
     # FGS, NIRCam, and NIRISS have the same required steps
     instruments = ['fgs', 'nircam', 'niriss']
     for instrument in instruments:
-      req_steps = pipeline_tools.get_pipeline_steps(instrument)
-      steps = ['dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
-               'persistence', 'dark_current', 'jump', 'rate']
-      not_required = ['group_scale', 'ipc', 'firstframe', 'lastframe', 'rscd']
-      steps_dict = OrderedDict({})
-      for step in steps:
-          steps_dict[step] = True
-      for step in not_required:
-          steps_dict[step] = False
-      assert req_steps == steps_dict
+        req_steps = pipeline_tools.get_pipeline_steps(instrument)
+        steps = ['dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
+                 'persistence', 'dark_current', 'jump', 'rate']
+        not_required = ['group_scale', 'ipc', 'firstframe', 'lastframe', 'rscd']
+        steps_dict = OrderedDict({})
+        for step in steps:
+            steps_dict[step] = True
+        for step in not_required:
+            steps_dict[step] = False
+        assert dict(req_steps) == dict(steps_dict)
 
     # NIRSpec and MIRI have different required steps
     nrs_req_steps = pipeline_tools.get_pipeline_steps('nirspec')
@@ -88,7 +88,7 @@ def test_get_pipeline_steps():
         nrs_dict[step] = True
     for step in not_required:
         nrs_dict[step] = False
-    assert nrs_req_steps == nrs_dict
+    assert dict(nrs_req_steps) == dict(nrs_dict)
 
     miri_req_steps = pipeline_tools.get_pipeline_steps('miri')
     miri_steps = ['dq_init', 'saturation', 'firstframe', 'lastframe',
@@ -99,7 +99,7 @@ def test_get_pipeline_steps():
         miri_dict[step] = True
     for step in not_required:
         miri_dict[step] = False
-    assert miri_req_steps == miri_dict
+    assert dict(miri_req_steps) == dict(miri_dict)
 
 
 @pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
