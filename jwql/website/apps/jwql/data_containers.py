@@ -195,13 +195,15 @@ def get_dashboard_components():
     return dashboard_components, dashboard_html
 
 
-def get_edb_components(request):
+def get_edb_components(request, settings):
     """Return dictionary with content needed for the EDB page.
 
     Parameters
     ----------
     request : HttpRequest object
         Incoming request from the webpage
+    settings : django settings
+        Object holding the django settings
 
     Returns
     -------
@@ -266,17 +268,27 @@ def get_edb_components(request):
 
                 mnemonic_exploration_result.n_rows = len(mnemonic_exploration_result)
 
+                # generate tables for display and download in web app
                 display_table = copy.deepcopy(mnemonic_exploration_result)
                 # temporary html file, see http://docs.astropy.org/en/stable/_modules/astropy/table/
-                # table.html#Table.show_in_browser
                 tmpdir = tempfile.mkdtemp()
-                path = os.path.join(tmpdir, 'mnemonic_exploration_result_table.html')
-                with open(path, 'w') as tmp:
+                file_name_root = 'mnemonic_exploration_result_table'
+                path_for_html = os.path.join(tmpdir, '{}.html'.format(file_name_root))
+                with open(path_for_html, 'w') as tmp:
                     display_table.write(tmp, format='jsviewer')
-                mnemonic_exploration_result.html_file = path
-                mnemonic_exploration_result.html_file_content = open(path, 'r').read()
+                mnemonic_exploration_result.html_file_content = open(path_for_html, 'r').read()
+
                 # pass on meta data to have access to total number of mnemonics
                 mnemonic_exploration_result.meta = meta
+
+                # save file locally to be available for download
+                STATIC_DIR = os.path.join(settings.BASE_DIR, 'static')
+                if not os.path.isdir(STATIC_DIR):
+                    os.makedirs(STATIC_DIR)
+                file_for_download = '{}.csv'.format(file_name_root)
+                path_for_download = os.path.join(STATIC_DIR, file_for_download)
+                display_table.write(path_for_download, format='csv', overwrite=True)
+                mnemonic_exploration_result.file_for_download = file_for_download
 
                 if mnemonic_exploration_result.n_rows == 0:
                     mnemonic_exploration_result = 'empty'
