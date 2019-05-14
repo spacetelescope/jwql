@@ -245,6 +245,19 @@ def get_edb_components(request, settings):
                     mnemonic_query_result = get_mnemonic(mnemonic_identifier, start_time, end_time)
                     mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
 
+                    # generate table download in web app
+                    result_table = mnemonic_query_result.data
+
+                    # save file locally to be available for download
+                    static_dir = os.path.join(settings.BASE_DIR, 'static')
+                    if not os.path.isdir(static_dir):
+                        os.makedirs(static_dir)
+                    file_name_root = 'mnemonic_query_result_table'
+                    file_for_download = '{}.csv'.format(file_name_root)
+                    path_for_download = os.path.join(static_dir, file_for_download)
+                    result_table.write(path_for_download, format='csv', overwrite=True)
+                    mnemonic_query_result.file_for_download = file_for_download
+
             # create forms for search fields not clicked
             mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
             mnemonic_exploration_form = MnemonicExplorationForm(prefix='mnemonic_exploration')
@@ -282,11 +295,11 @@ def get_edb_components(request, settings):
                 mnemonic_exploration_result.meta = meta
 
                 # save file locally to be available for download
-                STATIC_DIR = os.path.join(settings.BASE_DIR, 'static')
-                if not os.path.isdir(STATIC_DIR):
-                    os.makedirs(STATIC_DIR)
+                static_dir = os.path.join(settings.BASE_DIR, 'static')
+                if not os.path.isdir(static_dir):
+                    os.makedirs(static_dir)
                 file_for_download = '{}.csv'.format(file_name_root)
-                path_for_download = os.path.join(STATIC_DIR, file_for_download)
+                path_for_download = os.path.join(static_dir, file_for_download)
                 display_table.write(path_for_download, format='csv', overwrite=True)
                 mnemonic_exploration_result.file_for_download = file_for_download
 
