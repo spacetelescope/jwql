@@ -56,10 +56,10 @@ def test_gaussian1d_fit():
     initial_params = [np.max(hist), 0.55, 0.1]
     amplitude, peak, width = calculations.gaussian1d_fit(bin_centers, hist, initial_params)
 
-    assert np.isclose(peak[0], mean_value, atol=0.0015, rtol=0.)
-    assert np.isclose(width[0], sigma_value, atol=0.0015, rtol=0.)
-    assert ((mean_value <= peak[0]+3*peak[1]) & (mean_value >= peak[0]-3*peak[1]))
-    assert ((sigma_value <= width[0]+3*width[1]) & (sigma_value >= width[0]-3*width[1]))
+    assert np.isclose(peak[0], mean_value, atol=0.0035, rtol=0.)
+    assert np.isclose(width[0], sigma_value, atol=0.0035, rtol=0.)
+    assert ((mean_value <= peak[0]+7*peak[1]) & (mean_value >= peak[0]-7*peak[1]))
+    assert ((sigma_value <= width[0]+7*width[1]) & (sigma_value >= width[0]-7*width[1]))
 
 
 def test_mean_image():
