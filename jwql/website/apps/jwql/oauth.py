@@ -48,7 +48,7 @@ import jwql
 from jwql.utils.constants import MONITORS
 from jwql.utils.utils import get_base_url, get_config
 
-PREV_PAGE = ''
+PREV_PAGE = '/'
 
 
 def register_oauth():
@@ -121,8 +121,7 @@ def authorize(request):
     cookie_args['httponly'] = True
 
     # Set the cookie
-    if PREV_PAGE is not '':
-        response = redirect(PREV_PAGE)
+    response = redirect(PREV_PAGE)
     response.set_cookie("ASB-AUTH", token["access_token"], **cookie_args)
 
     return response
