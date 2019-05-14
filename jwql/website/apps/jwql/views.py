@@ -79,17 +79,18 @@ def miri_data_trending(request):
     variables, dash = data_trending()
 
     context = {
-        'dashboard' : dash,
+        'dashboard': dash,
         'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
         'inst_list': JWST_INSTRUMENT_NAMES_MIXEDCASE,  # Do not edit; Required for navigation bar
         'tools': MONITORS,  # Do not edit; Required for navigation bar
         'user': None  # Do not edit; Required for authentication
     }
-    #append variables to context
+    # append variables to context
     context.update(variables)
 
     # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
+
 
 def nirspec_data_trending(request):
     """Generate the ``MIRI DATA-TRENDING`` page
@@ -109,17 +110,18 @@ def nirspec_data_trending(request):
     variables, dash = nirspec_trending()
 
     context = {
-        'dashboard' : dash,
+        'dashboard': dash,
         'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
         'inst_list': JWST_INSTRUMENT_NAMES_MIXEDCASE,  # Do not edit; Required for navigation bar
         'tools': MONITORS,  # Do not edit; Required for navigation bar
         'user': None  # Do not edit; Required for authentication
     }
-    #append variables to context
+    # append variables to context
     context.update(variables)
 
     # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
+
 
 def about(request):
     """Generate the ``about`` page
