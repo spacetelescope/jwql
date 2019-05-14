@@ -121,7 +121,8 @@ def authorize(request):
     cookie_args['httponly'] = True
 
     # Set the cookie
-    response = redirect(PREV_PAGE)
+    if PREV_PAGE is not '':
+        response = redirect(PREV_PAGE)
     response.set_cookie("ASB-AUTH", token["access_token"], **cookie_args)
 
     return response
