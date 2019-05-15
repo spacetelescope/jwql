@@ -255,7 +255,19 @@ def get_edb_components(request, settings):
                     file_name_root = 'mnemonic_query_result_table'
                     file_for_download = '{}.csv'.format(file_name_root)
                     path_for_download = os.path.join(static_dir, file_for_download)
-                    result_table.write(path_for_download, format='csv', overwrite=True)
+
+                    # add meta data to saved table
+                    comments = []
+                    comments.append('DMS EDB query of {}:'.format(mnemonic_identifier))
+                    for key, value in mnemonic_query_result.info.items():
+                        comments.append('{} = {}'.format(key, str(value)))
+                    result_table.meta['comments'] = comments
+                    comments.append(' ')
+                    comments.append('Start time {}'.format(start_time.isot))
+                    comments.append('End time   {}'.format(end_time.isot))
+                    comments.append('Number of rows {}'.format(len(result_table)))
+                    comments.append(' ')
+                    result_table.write(path_for_download, format='ascii.fixed_width', overwrite=True, delimiter=',', bookend=False)
                     mnemonic_query_result.file_for_download = file_for_download
 
             # create forms for search fields not clicked
