@@ -26,6 +26,7 @@ dependencies:
 - sphinx_rtd_theme=0.1.9
 - sqlalchemy=1.2.11
 - stsci_rtd_theme=0.0.2
+- twine=1.13.0
 - pip:
   - authlib==0.10
   - codecov==2.0.15

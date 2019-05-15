@@ -4,8 +4,10 @@ from setuptools import find_packages
 
 VERSION = '0.19.0'
 
-AUTHORS = 'Matthew Bourque, Sara Ogaz, Joe Filippazzo, Bryan Hilbert, Misty Cracraft, '
-AUTHORS += 'Graham Kanarek, Johannes Sahlmann, Lauren Chambers, Catherine Martlin'
+AUTHORS = 'Matthew Bourque, Lauren Chambers, Misty Cracraft, Joe Filippazzo, Bryan Hilbert, '
+AUTHORS += 'Graham Kanarek, Catherine Martlin, Johannes Sahlmann'
+
+DESCRIPTION = 'The James Webb Space Telescope Quicklook Project'
 
 REQUIRES = [
     'astropy',
@@ -31,7 +33,7 @@ REQUIRES = [
 setup(
     name='jwql',
     version=VERSION,
-    description='The JWST Quicklook Project',
+    description=DESCRIPTION,
     url='https://github.com/spacetelescope/jwql.git',
     author=AUTHORS,
     author_email='jwql@stsci.edu',
