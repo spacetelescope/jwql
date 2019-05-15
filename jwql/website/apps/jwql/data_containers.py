@@ -29,8 +29,17 @@ import tempfile
 
 from astropy.io import fits
 from astropy.time import Time
-from astroquery.mast import Mast
+
 import numpy as np
+
+# astroquery.mast import that depends on value of auth_mast
+# this import has to be made before any other import of astroquery.mast
+from jwql.utils.utils import get_config, filename_parser
+mast_flavour = '.'.join(get_config()['auth_mast'].split('.')[1:])
+from astropy import config
+conf = config.get_config('astroquery')
+conf['mast'] = {'server': 'https://{}'.format(mast_flavour)}
+from astroquery.mast import Mast
 
 from jwedb.edb_interface import mnemonic_inventory
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
@@ -39,8 +48,8 @@ from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as
 from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.constants import MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.preview_image import PreviewImage
-from jwql.utils.utils import get_config, filename_parser
 from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
+
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -223,6 +232,9 @@ def get_edb_components(request, settings):
             mnemonic_name_search_form = MnemonicSearchForm(request.POST,
                                                            prefix='mnemonic_name_search')
 
+            # authenticate with astroquery.mast if necessary
+            log_into_mast(request)
+
             if mnemonic_name_search_form.is_valid():
                 mnemonic_identifier = mnemonic_name_search_form['search'].value()
                 if mnemonic_identifier is not None:
@@ -234,6 +246,9 @@ def get_edb_components(request, settings):
 
         elif 'mnemonic_query' in request.POST.keys():
             mnemonic_query_form = MnemonicQueryForm(request.POST, prefix='mnemonic_query')
+
+            # authenticate with astroquery.mast if necessary
+            log_into_mast(request)
 
             # proceed only if entries make sense
             if mnemonic_query_form.is_valid():
@@ -286,7 +301,7 @@ def get_edb_components(request, settings):
                     if field_value != '':
                         column_name = mnemonic_exploration_form[field].label
 
-                        # indices in table for which a match is found (case-insensitive)
+                        # matching indices in table (case-insensitive)
                         index = [i for i, item in enumerate(mnemonic_exploration_result[column_name]) if
                                  re.search(field_value, item, re.IGNORECASE)]
                         mnemonic_exploration_result = mnemonic_exploration_result[index]
@@ -295,7 +310,9 @@ def get_edb_components(request, settings):
 
                 # generate tables for display and download in web app
                 display_table = copy.deepcopy(mnemonic_exploration_result)
-                # temporary html file, see http://docs.astropy.org/en/stable/_modules/astropy/table/
+
+                # temporary html file,
+                # see http://docs.astropy.org/en/stable/_modules/astropy/table/
                 tmpdir = tempfile.mkdtemp()
                 file_name_root = 'mnemonic_exploration_result_table'
                 path_for_html = os.path.join(tmpdir, '{}.html'.format(file_name_root))
@@ -769,6 +786,23 @@ def get_thumbnails_by_rootname(rootname):
     thumbnails = [os.path.basename(thumbnail) for thumbnail in thumbnails]
 
     return thumbnails
+
+
+def log_into_mast(request):
+    """Login via astroquery.mast if user authenticated in web app.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    """
+    # get the MAST access token if present
+    access_token = request.POST.get('access_token')
+
+    # authenticate with astroquery.mast if necessary
+    if (access_token is not None) & (Mast.authenticated() is False):
+        Mast.login(token=str(access_token))
 
 
 def random_404_page():

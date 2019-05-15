@@ -85,6 +85,7 @@ def miri_data_trending(request):
         'tools': MONITORS,  # Do not edit; Required for navigation bar
         'user': None  # Do not edit; Required for authentication
     }
+
     # append variables to context
     context.update(variables)
 
@@ -116,6 +117,7 @@ def nirspec_data_trending(request):
         'tools': MONITORS,  # Do not edit; Required for navigation bar
         'user': None  # Do not edit; Required for authentication
     }
+
     # append variables to context
     context.update(variables)
 
@@ -291,7 +293,8 @@ def dashboard(request):
     return render(request, template, context)
 
 
-def engineering_database(request):
+@auth_info
+def engineering_database(request, user):
     """Generate the EDB page.
 
     Parameters

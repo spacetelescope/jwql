@@ -23,6 +23,7 @@ withCredentials([string(
           "python setup.py install"]
       bc.test_cmds = [
           "pytest -s --junitxml=results.xml --cov=./jwql/ --cov-report=xml:coverage.xml",
+          "sed -i 's/file=\"[^\"]*\"//g;s/line=\"[^\"]*\"//g;s/skips=\"[^\"]*\"//g' results.xml",
           "codecov --token=${codecov_token}",
           "mkdir -v reports",
           "mv -v coverage.xml reports/coverage.xml"]
