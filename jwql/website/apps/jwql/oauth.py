@@ -48,7 +48,7 @@ import jwql
 from jwql.utils.constants import MONITORS
 from jwql.utils.utils import get_base_url, get_config
 
-PREV_PAGE = ''
+PREV_PAGE = '/'
 
 
 def register_oauth():
