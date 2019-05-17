@@ -67,6 +67,16 @@ def register_oauth():
     client_secret = get_config()['client_secret']
     auth_mast = get_config()['auth_mast']
 
+    # Check parameters are valid
+    if client_id == "" or client_secret == "":
+        raise ValueError('Please complete the client fields in your config.json. See '
+                         'the relevant wiki page (https://github.com/spacetelescope/'
+                         'jwql/wiki/Config-file) for more information.')
+    if auth_mast == "":
+        raise ValueError('Please complete the auth_mast field in your config.json. See '
+                         'the relevant wiki page (https://github.com/spacetelescope/'
+                         'jwql/wiki/Config-file) for more information.')
+
     # Register with auth.mast
     oauth = OAuth()
     client_kwargs = {'scope': 'mast:user:info'}
@@ -162,8 +172,16 @@ def auth_info(fn):
 
         # If user is authenticated, return user credentials
         if cookie is not None:
+            auth_mast = get_config()['auth_mast']
+            if auth_mast == "":
+                raise ValueError(
+                    'Please complete the auth_mast field in your config.json. See the '
+                    'relevant wiki page (https://github.com/spacetelescope/jwql/wiki/'
+                    'Config-file) for more information.'
+                )
+
             response = requests.get(
-                'https://{}/info'.format(get_config()['auth_mast']),
+                'https://{}/info'.format(auth_mast),
                 headers={'Accept': 'application/json',
                          'Authorization': 'token {}'.format(cookie)})
             response = response.json()
