@@ -29,7 +29,6 @@ import tempfile
 
 from astropy.io import fits
 from astropy.time import Time
-
 import numpy as np
 
 # astroquery.mast import that depends on value of auth_mast
@@ -55,6 +54,7 @@ from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as
 from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.constants import MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.preview_image import PreviewImage
+from jwql.utils.utils import get_mast_token
 from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
 
 
@@ -234,11 +234,11 @@ def get_edb_components(request):
     if request.method == 'POST':
 
         if 'mnemonic_name_search' in request.POST.keys():
-            mnemonic_name_search_form = MnemonicSearchForm(request.POST,
-                                                           prefix='mnemonic_name_search')
-
             # authenticate with astroquery.mast if necessary
-            log_into_mast(request)
+            logged_in = log_into_mast(request)
+
+            mnemonic_name_search_form = MnemonicSearchForm(request.POST,  logged_in=logged_in,
+                                                           prefix='mnemonic_name_search')
 
             if mnemonic_name_search_form.is_valid():
                 mnemonic_identifier = mnemonic_name_search_form['search'].value()
@@ -250,10 +250,11 @@ def get_edb_components(request):
             mnemonic_exploration_form = MnemonicExplorationForm(prefix='mnemonic_exploration')
 
         elif 'mnemonic_query' in request.POST.keys():
-            mnemonic_query_form = MnemonicQueryForm(request.POST, prefix='mnemonic_query')
-
             # authenticate with astroquery.mast if necessary
-            log_into_mast(request)
+            logged_in = log_into_mast(request)
+
+            mnemonic_query_form = MnemonicQueryForm(request.POST, logged_in=logged_in,
+                                                    prefix='mnemonic_query')
 
             # proceed only if entries make sense
             if mnemonic_query_form.is_valid():
@@ -765,12 +766,18 @@ def log_into_mast(request):
         Incoming request from the webpage
 
     """
+    if Mast.authenticated():
+        return True
+
     # get the MAST access token if present
-    access_token = request.POST.get('access_token')
+    access_token = str(get_mast_token(request))
 
     # authenticate with astroquery.mast if necessary
-    if (access_token is not None) & (Mast.authenticated() is False):
-        Mast.login(token=str(access_token))
+    if access_token != 'None':
+        Mast.login(token=access_token)
+        return Mast.authenticated()
+    else:
+        return False
 
 
 def random_404_page():

@@ -176,6 +176,14 @@ class MnemonicSearchForm(forms.Form):
     # Initialize attributes
     search_type = None
 
+    def __init__(self, *args, **kwargs):
+        try:
+            self.logged_in = kwargs.pop('logged_in')
+        except KeyError:
+            self.logged_in = True
+
+        super(MnemonicSearchForm, self).__init__(*args, **kwargs)
+
     def clean_search(self):
         """Validate the "search" field.
 
@@ -187,6 +195,10 @@ class MnemonicSearchForm(forms.Form):
             The cleaned data input into the "search" field
 
         """
+        # Stop now if not logged in
+        if not self.logged_in:
+            raise forms.ValidationError('Could not log into MAST.')
+
         # Get the cleaned search data
         search = self.cleaned_data['search']
 
@@ -233,6 +245,14 @@ class MnemonicQueryForm(forms.Form):
     # Initialize attributes
     search_type = None
 
+    def __init__(self, *args, **kwargs):
+        try:
+            self.logged_in = kwargs.pop('logged_in')
+        except KeyError:
+            self.logged_in = True
+
+        super(MnemonicQueryForm, self).__init__(*args, **kwargs)
+
     def clean_search(self):
         """Validate the "search" field.
 
@@ -244,6 +264,10 @@ class MnemonicQueryForm(forms.Form):
             The cleaned data input into the "search" field
 
         """
+        # Stop now if not logged in
+        if not self.logged_in:
+            raise forms.ValidationError('Could not log into MAST.')
+
         # Get the cleaned search data
         search = self.cleaned_data['search']
 
