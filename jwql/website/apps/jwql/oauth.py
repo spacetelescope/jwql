@@ -48,7 +48,7 @@ import jwql
 from jwql.utils.constants import MONITORS
 from jwql.utils.utils import get_base_url, get_config
 
-PREV_PAGE = ''
+PREV_PAGE = '/'
 
 
 def register_oauth():
@@ -82,6 +82,7 @@ def register_oauth():
         client_kwargs=client_kwargs)
 
     return oauth
+
 
 JWQL_OAUTH = register_oauth()
 
@@ -166,10 +167,11 @@ def auth_info(fn):
                 headers={'Accept': 'application/json',
                          'Authorization': 'token {}'.format(cookie)})
             response = response.json()
+            response['access_token'] = cookie
 
         # If user is not authenticated, return no credentials
         else:
-            response = {'ezid': None, "anon": True}
+            response = {'ezid': None, "anon": True, 'access_token': None}
 
         return fn(request, response, **kwargs)
 

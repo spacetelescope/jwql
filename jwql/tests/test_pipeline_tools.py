@@ -56,6 +56,10 @@ def test_completed_pipeline_steps():
                                   ('jump', True),
                                   ('rate', True)])
 
+    # Only test steps that have a value of True
+    completed_steps = OrderedDict((k, v) for k, v in completed_steps.items() if v is True)
+    true_completed = OrderedDict((k, v) for k, v in true_completed.items() if v is True)
+
     assert completed_steps == true_completed
 
 
@@ -64,21 +68,24 @@ def test_get_pipeline_steps():
     instrument
     """
 
-    # FGS, NIRCam, and NIRISS have the same required steps
+    # FGS, NIRCam, and NIRISS
     instruments = ['fgs', 'nircam', 'niriss']
     for instrument in instruments:
-      req_steps = pipeline_tools.get_pipeline_steps(instrument)
-      steps = ['dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
-               'persistence', 'dark_current', 'jump', 'rate']
-      not_required = ['group_scale', 'ipc', 'firstframe', 'lastframe', 'rscd']
-      steps_dict = OrderedDict({})
-      for step in steps:
-          steps_dict[step] = True
-      for step in not_required:
-          steps_dict[step] = False
-      assert req_steps == steps_dict
+        req_steps = pipeline_tools.get_pipeline_steps(instrument)
+        steps = ['dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
+                 'persistence', 'dark_current', 'jump', 'rate']
+        not_required = ['group_scale', 'ipc', 'firstframe', 'lastframe', 'rscd']
+        steps_dict = OrderedDict({})
+        for step in steps:
+            steps_dict[step] = True
+        for step in not_required:
+            steps_dict[step] = False
+        # Only test steps that have a value of True
+        req_steps = OrderedDict((k, v) for k, v in req_steps.items() if v is True)
+        steps_dict = OrderedDict((k, v) for k, v in steps_dict.items() if v is True)
+        assert req_steps == steps_dict
 
-    # NIRSpec and MIRI have different required steps
+    # NIRSpec
     nrs_req_steps = pipeline_tools.get_pipeline_steps('nirspec')
     nrs_steps = ['group_scale', 'dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
                  'dark_current', 'jump', 'rate']
@@ -88,8 +95,12 @@ def test_get_pipeline_steps():
         nrs_dict[step] = True
     for step in not_required:
         nrs_dict[step] = False
+    # Only test steps that have a value of True
+    nrs_req_steps = OrderedDict((k, v) for k, v in nrs_req_steps.items() if v is True)
+    nrs_dict = OrderedDict((k, v) for k, v in nrs_dict.items() if v is True)
     assert nrs_req_steps == nrs_dict
 
+    # MIRI
     miri_req_steps = pipeline_tools.get_pipeline_steps('miri')
     miri_steps = ['dq_init', 'saturation', 'firstframe', 'lastframe',
                   'linearity', 'rscd', 'dark_current', 'refpix', 'jump', 'rate']
@@ -99,6 +110,9 @@ def test_get_pipeline_steps():
         miri_dict[step] = True
     for step in not_required:
         miri_dict[step] = False
+    # Only test steps that have a value of True
+    miri_req_steps = OrderedDict((k, v) for k, v in miri_req_steps.items() if v is True)
+    miri_dict = OrderedDict((k, v) for k, v in miri_dict.items() if v is True)
     assert miri_req_steps == miri_dict
 
 

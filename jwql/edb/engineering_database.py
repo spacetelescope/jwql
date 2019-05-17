@@ -28,24 +28,48 @@ Use
 
 Notes
 -----
-    A valid MAST authentication token has to be present in the local
+    There are three possibilities for MAST authentication:
+
+    1. A valid MAST authentication token is present in the local
     ``jwql`` configuration file (config.json).
+    2. The MAST_API_TOKEN environment variable is set to a valid
+    MAST authentication token.
+    3. The user has logged into the ``jwql`` web app, in which
+    case they are authenticated via auth.mast.
+
+    When querying mnemonic values, the underlying MAST service returns
+    data that include the datapoint preceding the requested start time
+    and the datapoint that follows the requested end time.
 
 """
 
 from collections import OrderedDict
+import os
 
 from astropy.time import Time
+from astroquery.mast import Mast
 from bokeh.embed import components
 from bokeh.plotting import figure
 import numpy as np
 
 from jwql.utils.utils import get_config
-from .edb_interface import query_single_mnemonic, query_mnemonic_info
+from jwedb.edb_interface import query_single_mnemonic, query_mnemonic_info
 
-# should use oauth.register_oauth()?
-settings = get_config()
-MAST_TOKEN = settings['mast_token']
+
+if Mast.authenticated():
+    MAST_TOKEN = None
+else:
+    try:
+        # check if token is available via config file
+        settings = get_config()
+        MAST_TOKEN = settings['mast_token']
+    except KeyError:
+        # check if token is available via environment variable
+        # see https://auth.mast.stsci.edu/info
+        try:
+            MAST_TOKEN = os.environ['MAST_API_TOKEN']
+        except KeyError:
+            MAST_TOKEN = None
 
 
 class EdbMnemonic:
@@ -72,17 +96,19 @@ class EdbMnemonic:
 
         """
         self.mnemonic_identifier = mnemonic_identifier
-        self.start_time = start_time
-        self.end_time = end_time
+        self.requested_start_time = start_time
+        self.requested_end_time = end_time
         self.data = data
+        self.data_start_time = Time(np.min(np.array(self.data['MJD'])), format='mjd')
+        self.data_end_time = Time(np.max(np.array(self.data['MJD'])), format='mjd')
         self.meta = meta
         self.info = info
 
     def __str__(self):
         """Return string describing the instance."""
         return 'EdbMnemonic {} with {} records between {} and {}'.format(
-            self.mnemonic_identifier, len(self.data), self.start_time.isot,
-            self.end_time.isot)
+            self.mnemonic_identifier, len(self.data), self.data_start_time.isot,
+            self.data_end_time.isot)
 
     def interpolate(self, times, **kwargs):
         """Interpolate value at specified times."""
@@ -112,7 +138,27 @@ class EdbMnemonic:
 
 
 def get_mnemonic(mnemonic_identifier, start_time, end_time):
-    """Execute query and return a EdbMnemonic instance."""
+    """Execute query and return a EdbMnemonic instance.
+
+    The underlying MAST service returns data that include the
+    datapoint preceding the requested start time and the datapoint
+    that follows the requested end time.
+
+    Parameters
+    ----------
+    mnemonic_identifier : str
+        Telemetry mnemonic identifiers, e.g. 'SA_ZFGOUTFOV'
+    start_time : astropy.time.Time instance
+        Start time
+    end_time : astropy.time.Time instance
+        End time
+
+    Returns
+    -------
+    mnemonic : instance of EdbMnemonic
+        EdbMnemonic object containing query results
+
+    """
     data, meta, info = query_single_mnemonic(mnemonic_identifier, start_time, end_time,
                                              token=MAST_TOKEN)
 
