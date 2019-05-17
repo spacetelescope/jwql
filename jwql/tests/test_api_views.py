@@ -41,6 +41,7 @@ proposals = ['86700',  # FGS
              '98012',  # MIRI
              '93025',  # NIRCam
              '00308',  # NIRISS
+             '308',  # NIRISS
              '96213']  # NIRSpec
 for proposal in proposals:
     urls.append('api/{}/filenames/'.format(proposal))  # filenames_by_proposal
