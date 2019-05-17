@@ -47,7 +47,7 @@ from astropy.time import Time, TimeDelta
 from django import forms
 from django.shortcuts import redirect
 
-from jwql.edb.edb_interface import is_valid_mnemonic
+from jwedb.edb_interface import is_valid_mnemonic
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.utils import get_config, filename_parser
 
