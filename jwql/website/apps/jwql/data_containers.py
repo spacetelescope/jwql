@@ -29,7 +29,7 @@ import tempfile
 
 from astropy.io import fits
 from astropy.time import Time
-
+from django.conf import settings
 import numpy as np
 
 # astroquery.mast import that depends on value of auth_mast
@@ -46,6 +46,7 @@ from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.jwql_monitors import monitor_cron_jobs
+from jwql.utils.utils import ensure_dir_exists
 from jwql.utils.constants import MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.preview_image import PreviewImage
 from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
@@ -204,15 +205,13 @@ def get_dashboard_components():
     return dashboard_components, dashboard_html
 
 
-def get_edb_components(request, settings):
+def get_edb_components(request):
     """Return dictionary with content needed for the EDB page.
 
     Parameters
     ----------
     request : HttpRequest object
         Incoming request from the webpage
-    settings : django settings
-        Object holding the django settings
 
     Returns
     -------
@@ -265,8 +264,7 @@ def get_edb_components(request, settings):
 
                     # save file locally to be available for download
                     static_dir = os.path.join(settings.BASE_DIR, 'static')
-                    if not os.path.isdir(static_dir):
-                        os.makedirs(static_dir)
+                    ensure_dir_exists(static_dir)
                     file_name_root = 'mnemonic_query_result_table'
                     file_for_download = '{}.csv'.format(file_name_root)
                     path_for_download = os.path.join(static_dir, file_for_download)
@@ -325,11 +323,10 @@ def get_edb_components(request, settings):
 
                 # save file locally to be available for download
                 static_dir = os.path.join(settings.BASE_DIR, 'static')
-                if not os.path.isdir(static_dir):
-                    os.makedirs(static_dir)
+                ensure_dir_exists(static_dir)
                 file_for_download = '{}.csv'.format(file_name_root)
                 path_for_download = os.path.join(static_dir, file_for_download)
-                display_table.write(path_for_download, format='csv', overwrite=True)
+                display_table.write(path_for_download, format='ascii.fixed_width', overwrite=True, delimiter=',', bookend=False)
                 mnemonic_exploration_result.file_for_download = file_for_download
 
                 if mnemonic_exploration_result.n_rows == 0:

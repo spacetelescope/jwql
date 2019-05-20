@@ -37,7 +37,6 @@ Dependencies
 
 import os
 
-from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
 
@@ -310,7 +309,7 @@ def engineering_database(request, user):
         Outgoing response sent to the webpage
 
     """
-    edb_components = get_edb_components(request, settings)
+    edb_components = get_edb_components(request)
 
     template = 'engineering_database.html'
     context = {'inst': '',
