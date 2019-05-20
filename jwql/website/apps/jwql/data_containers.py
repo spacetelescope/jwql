@@ -34,7 +34,10 @@ import numpy as np
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
 from jwql.utils.utils import get_config, filename_parser
-auth_mast = get_config()['auth_mast']
+try:
+    auth_mast = get_config()['auth_mast']
+except KeyError:
+    raise KeyError('the key `auth_mast` is not present in config.json. Please add it.')
 if auth_mast == "":
     raise ValueError(
         'Please complete the auth_mast field in your config.json. See the '
@@ -252,6 +255,9 @@ def get_edb_components(request):
         elif 'mnemonic_query' in request.POST.keys():
             # authenticate with astroquery.mast if necessary
             logged_in = log_into_mast(request)
+            print(logged_in)
+            if logged_in is False:
+                print('NOT LOGGED IN')
 
             mnemonic_query_form = MnemonicQueryForm(request.POST, logged_in=logged_in,
                                                     prefix='mnemonic_query')
