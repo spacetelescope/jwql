@@ -27,18 +27,30 @@ import os
 import re
 import tempfile
 
-import numpy as np
 from astropy.io import fits
 from astropy.time import Time
+from django.conf import settings
+import numpy as np
+
+# astroquery.mast import that depends on value of auth_mast
+# this import has to be made before any other import of astroquery.mast
+from jwql.utils.utils import get_config, filename_parser
+mast_flavour = '.'.join(get_config()['auth_mast'].split('.')[1:])
+from astropy import config
+conf = config.get_config('astroquery')
+conf['mast'] = {'server': 'https://{}'.format(mast_flavour)}
 from astroquery.mast import Mast
 
-from jwql.edb.edb_interface import mnemonic_inventory
+from jwedb.edb_interface import mnemonic_inventory
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
+from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
+from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.jwql_monitors import monitor_cron_jobs
-from jwql.utils.constants import MONITORS
+from jwql.utils.utils import ensure_dir_exists
+from jwql.utils.constants import MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.preview_image import PreviewImage
-from jwql.utils.utils import get_config, filename_parser
 from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
+
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -46,6 +58,38 @@ PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_image
 THUMBNAIL_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'thumbnails')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
+
+
+def data_trending():
+    """Container for Miri datatrending dashboard and components
+
+    Returns
+    -------
+    variables : int
+        nonsense
+    dashboard : list
+        A list containing the JavaScript and HTML content for the
+        dashboard
+    """
+    dashboard, variables = miri_dash.data_trending_dashboard()
+
+    return variables, dashboard
+
+
+def nirspec_trending():
+    """Container for Miri datatrending dashboard and components
+
+    Returns
+    -------
+    variables : int
+        nonsense
+    dashboard : list
+        A list containing the JavaScript and HTML content for the
+        dashboard
+    """
+    dashboard, variables = nirspec_dash.data_trending_dashboard()
+
+    return variables, dashboard
 
 
 def get_acknowledgements():
@@ -113,44 +157,47 @@ def get_dashboard_components():
     output_dir = get_config()['outputs']
     name_dict = {'': '',
                  'monitor_mast': 'Database Monitor',
-                 'database_monitor_jwst': 'JWST',
-                 'database_monitor_caom': 'JWST (CAOM)',
-                 'monitor_filesystem': 'Filesystem Monitor',
-                 'filecount_type': 'Total File Counts by Type',
-                 'size_type': 'Total File Sizes by Type',
-                 'filecount': 'Total File Counts',
-                 'system_stats': 'System Statistics'}
-
-    # Exclude monitors that can't be saved as components
-    exclude_list = ['monitor_cron_jobs']
+                 'monitor_filesystem': 'Filesystem Monitor'}
 
     # Run the cron job monitor to produce an updated table
     monitor_cron_jobs.status(production_mode=True)
 
-    # Build dictionary of components
+    # Build dictionary of Bokeh components from files in the output directory
     dashboard_components = {}
-    for dir_name, subdir_list, file_list in os.walk(output_dir):
+    for dir_name, _, file_list in os.walk(output_dir):
         monitor_name = os.path.basename(dir_name)
-        if monitor_name not in exclude_list:
-            dashboard_components[name_dict[monitor_name]] = {}
+
+        # Only continue if the dashboard knows how to build that monitor
+        if monitor_name in name_dict.keys():
+            formatted_monitor_name = name_dict[monitor_name]
+            dashboard_components[formatted_monitor_name] = {}
             for fname in file_list:
                 if 'component' in fname:
                     full_fname = '{}/{}'.format(monitor_name, fname)
                     plot_name = fname.split('_component')[0]
 
+                    # Generate formatted plot name
+                    formatted_plot_name = plot_name.title().replace('_', ' ')
+                    for lowercase, mixed_case in JWST_INSTRUMENT_NAMES_MIXEDCASE.items():
+                        formatted_plot_name = formatted_plot_name.replace(lowercase.capitalize(), mixed_case)
+                    formatted_plot_name = formatted_plot_name.replace('Jwst', 'JWST')
+                    formatted_plot_name = formatted_plot_name.replace('Caom', 'CAOM')
+
                     # Get the div
                     html_file = full_fname.split('.')[0] + '.html'
-                    with open(os.path.join(output_dir, html_file)) as f:
+                    with open(os.path.join(output_dir, html_file), 'r') as f:
                         div = f.read()
 
                     # Get the script
                     js_file = full_fname.split('.')[0] + '.js'
-                    with open(os.path.join(output_dir, js_file)) as f:
+                    with open(os.path.join(output_dir, js_file), 'r') as f:
                         script = f.read()
-                    dashboard_components[name_dict[monitor_name]][name_dict[plot_name]] = [div, script]
+
+                    # Save to dictionary
+                    dashboard_components[formatted_monitor_name][formatted_plot_name] = [div, script]
 
     # Add HTML that cannot be saved as components to the dictionary
-    with open(os.path.join(output_dir, 'monitor_cron_jobs', 'cron_status_table.html')) as f:
+    with open(os.path.join(output_dir, 'monitor_cron_jobs', 'cron_status_table.html'), 'r') as f:
         cron_status_table_html = f.read()
     dashboard_html = {}
     dashboard_html['Cron Job Monitor'] = cron_status_table_html
@@ -184,6 +231,9 @@ def get_edb_components(request):
             mnemonic_name_search_form = MnemonicSearchForm(request.POST,
                                                            prefix='mnemonic_name_search')
 
+            # authenticate with astroquery.mast if necessary
+            log_into_mast(request)
+
             if mnemonic_name_search_form.is_valid():
                 mnemonic_identifier = mnemonic_name_search_form['search'].value()
                 if mnemonic_identifier is not None:
@@ -196,6 +246,9 @@ def get_edb_components(request):
         elif 'mnemonic_query' in request.POST.keys():
             mnemonic_query_form = MnemonicQueryForm(request.POST, prefix='mnemonic_query')
 
+            # authenticate with astroquery.mast if necessary
+            log_into_mast(request)
+
             # proceed only if entries make sense
             if mnemonic_query_form.is_valid():
                 mnemonic_identifier = mnemonic_query_form['search'].value()
@@ -203,9 +256,32 @@ def get_edb_components(request):
                 end_time = Time(mnemonic_query_form['end_time'].value(), format='iso')
 
                 if mnemonic_identifier is not None:
-                    mnemonic_query_result = get_mnemonic(mnemonic_identifier, start_time,
-                                                                  end_time)
+                    mnemonic_query_result = get_mnemonic(mnemonic_identifier, start_time, end_time)
                     mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
+
+                    # generate table download in web app
+                    result_table = mnemonic_query_result.data
+
+                    # save file locally to be available for download
+                    static_dir = os.path.join(settings.BASE_DIR, 'static')
+                    ensure_dir_exists(static_dir)
+                    file_name_root = 'mnemonic_query_result_table'
+                    file_for_download = '{}.csv'.format(file_name_root)
+                    path_for_download = os.path.join(static_dir, file_for_download)
+
+                    # add meta data to saved table
+                    comments = []
+                    comments.append('DMS EDB query of {}:'.format(mnemonic_identifier))
+                    for key, value in mnemonic_query_result.info.items():
+                        comments.append('{} = {}'.format(key, str(value)))
+                    result_table.meta['comments'] = comments
+                    comments.append(' ')
+                    comments.append('Start time {}'.format(start_time.isot))
+                    comments.append('End time   {}'.format(end_time.isot))
+                    comments.append('Number of rows {}'.format(len(result_table)))
+                    comments.append(' ')
+                    result_table.write(path_for_download, format='ascii.fixed_width', overwrite=True, delimiter=',', bookend=False)
+                    mnemonic_query_result.file_for_download = file_for_download
 
             # create forms for search fields not clicked
             mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
@@ -223,24 +299,35 @@ def get_edb_components(request):
                     if field_value != '':
                         column_name = mnemonic_exploration_form[field].label
 
-                        # indices in table for which a match is found (case-insensitive)
+                        # matching indices in table (case-insensitive)
                         index = [i for i, item in enumerate(mnemonic_exploration_result[column_name]) if
                                  re.search(field_value, item, re.IGNORECASE)]
                         mnemonic_exploration_result = mnemonic_exploration_result[index]
 
                 mnemonic_exploration_result.n_rows = len(mnemonic_exploration_result)
 
+                # generate tables for display and download in web app
                 display_table = copy.deepcopy(mnemonic_exploration_result)
-                # temporary html file, see http://docs.astropy.org/en/stable/_modules/astropy/table/
-                # table.html#Table.show_in_browser
+
+                # temporary html file,
+                # see http://docs.astropy.org/en/stable/_modules/astropy/table/
                 tmpdir = tempfile.mkdtemp()
-                path = os.path.join(tmpdir, 'mnemonic_exploration_result_table.html')
-                with open(path, 'w') as tmp:
+                file_name_root = 'mnemonic_exploration_result_table'
+                path_for_html = os.path.join(tmpdir, '{}.html'.format(file_name_root))
+                with open(path_for_html, 'w') as tmp:
                     display_table.write(tmp, format='jsviewer')
-                mnemonic_exploration_result.html_file = path
-                mnemonic_exploration_result.html_file_content = open(path, 'r').read()
+                mnemonic_exploration_result.html_file_content = open(path_for_html, 'r').read()
+
                 # pass on meta data to have access to total number of mnemonics
                 mnemonic_exploration_result.meta = meta
+
+                # save file locally to be available for download
+                static_dir = os.path.join(settings.BASE_DIR, 'static')
+                ensure_dir_exists(static_dir)
+                file_for_download = '{}.csv'.format(file_name_root)
+                path_for_download = os.path.join(static_dir, file_for_download)
+                display_table.write(path_for_download, format='ascii.fixed_width', overwrite=True, delimiter=',', bookend=False)
+                mnemonic_exploration_result.file_for_download = file_for_download
 
                 if mnemonic_exploration_result.n_rows == 0:
                     mnemonic_exploration_result = 'empty'
@@ -511,7 +598,9 @@ def get_preview_images_by_instrument(inst):
     preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, '*', '*.jpg'))
 
     # Get subset of preview images that match the filenames
-    preview_images = [item for item in preview_images if os.path.basename(item).split('_integ')[0] in filenames]
+    preview_images = [os.path.basename(item) for item in preview_images if os.path.basename(item).split('_integ')[0] in filenames]
+
+    # Return only
 
     return preview_images
 
@@ -642,7 +731,7 @@ def get_thumbnails_by_instrument(inst):
     thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
 
     # Get subset of preview images that match the filenames
-    thumbnails = [item for item in thumbnails if os.path.basename(item).split('_integ')[0] in filenames]
+    thumbnails = [os.path.basename(item) for item in thumbnails if os.path.basename(item).split('_integ')[0] in filenames]
 
     return thumbnails
 
@@ -696,30 +785,36 @@ def get_thumbnails_by_rootname(rootname):
     return thumbnails
 
 
-def split_files(file_list, page_type):
-    """JUST FOR USE DURING DEVELOPMENT WITH FILESYSTEM
+def log_into_mast(request):
+    """Login via astroquery.mast if user authenticated in web app.
 
-    Splits the files in the filesystem into "unlooked" and "archived",
-    with the "unlooked" images being the most recent 10% of files.
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
     """
-    exp_times = []
-    for file in file_list:
-        hdr = fits.getheader(file, ext=0)
-        exp_start = hdr['EXPSTART']
-        exp_times.append(exp_start)
+    # get the MAST access token if present
+    access_token = request.POST.get('access_token')
 
-    exp_times_sorted = sorted(exp_times)
-    i_cutoff = int(len(exp_times) * .1)
-    t_cutoff = exp_times_sorted[i_cutoff]
+    # authenticate with astroquery.mast if necessary
+    if (access_token is not None) & (Mast.authenticated() is False):
+        Mast.login(token=str(access_token))
 
-    mask_unlooked = np.array([t < t_cutoff for t in exp_times])
 
-    if page_type == 'unlooked':
-        print('ONLY RETURNING {} "UNLOOKED" FILES OF {} ORIGINAL FILES'.format(len([m for m in mask_unlooked if m]), len(file_list)))
-        return [f for i, f in enumerate(file_list) if mask_unlooked[i]]
-    elif page_type == 'archive':
-        print('ONLY RETURNING {} "ARCHIVED" FILES OF {} ORIGINAL FILES'.format(len([m for m in mask_unlooked if not m]), len(file_list)))
-        return [f for i, f in enumerate(file_list) if not mask_unlooked[i]]
+def random_404_page():
+    """Randomly select one of the various 404 templates for JWQL
+
+    Returns
+    -------
+    random_template : str
+        Filename of the selected template
+    """
+    templates = ['404_space.html', '404_spacecat.html']
+    choose_page = np.random.choice(len(templates))
+    random_template = templates[choose_page]
+
+    return random_template
 
 
 def thumbnails(inst, proposal=None):
@@ -815,10 +910,6 @@ def thumbnails_ajax(inst, proposal=None):
 
     # Get the available files for the instrument
     filepaths = get_filenames_by_instrument(inst)
-    if proposal is not None:
-        filepaths = split_files(filepaths, 'archive')
-    else:
-        filepaths = split_files(filepaths, 'unlooked')
 
     # Get set of unique rootnames
     rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filepaths])

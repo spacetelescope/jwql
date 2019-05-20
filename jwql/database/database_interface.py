@@ -26,6 +26,8 @@ Authors
     - Matthew Bourque
     - Lauren Chambers
     - Bryan Hilbert
+    - Misty Cracraft
+    - Sara Ogaz
 
 Use
 ---
@@ -71,14 +73,14 @@ from sqlalchemy import MetaData
 from sqlalchemy import String
 from sqlalchemy import Time
 from sqlalchemy import UniqueConstraint
-from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
 from sqlalchemy.types import ARRAY
 
-from jwql.utils import utils
+from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
+from jwql.utils.utils import get_config
 
 
 # Monkey patch Query with data_frame method
@@ -133,13 +135,112 @@ def load_connection(connection_string):
 
     return session, base, engine, meta
 
-# Import a global session.  If running from readthedocs, pass a dummy connection string
-if 'build' and 'project' and 'jwql' in socket.gethostname():
+# Import a global session.  If running from readthedocs or Jenkins, pass a dummy connection string
+if 'build' and 'project' in socket.gethostname() or os.path.expanduser('~') == '/home/jenkins':
     dummy_connection_string = 'postgresql+psycopg2://account:password@hostname:0000/db_name'
     session, base, engine, meta = load_connection(dummy_connection_string)
 else:
-    SETTINGS = utils.get_config()
+    SETTINGS = get_config()
     session, base, engine, meta = load_connection(SETTINGS['connection_string'])
+
+
+class Anomaly(base):
+    """ORM for the ``anomalies`` table"""
+
+    # Name the table
+    __tablename__ = 'anomalies'
+
+    # Define the columns
+    id = Column(Integer, primary_key=True, nullable=False)
+    filename = Column(String, nullable=False)
+    flag_date = Column(DateTime, nullable=False, default=datetime.now())
+    bowtie = Column(Boolean, nullable=False, default=False)
+    snowball = Column(Boolean, nullable=False, default=False)
+    cosmic_ray_shower = Column(Boolean, nullable=False, default=False)
+    crosstalk = Column(Boolean, nullable=False, default=False)
+    cte_correction_error = Column(Boolean, nullable=False, default=False)
+    data_transfer_error = Column(Boolean, nullable=False, default=False)
+    detector_ghost = Column(Boolean, nullable=False, default=False)
+    diamond = Column(Boolean, nullable=False, default=False)
+    diffraction_spike = Column(Boolean, nullable=False, default=False)
+    dragon_breath = Column(Boolean, nullable=False, default=False)
+    earth_limb = Column(Boolean, nullable=False, default=False)
+    excessive_saturation = Column(Boolean, nullable=False, default=False)
+    figure8_ghost = Column(Boolean, nullable=False, default=False)
+    filter_ghost = Column(Boolean, nullable=False, default=False)
+    fringing = Column(Boolean, nullable=False, default=False)
+    guidestar_failure = Column(Boolean, nullable=False, default=False)
+    banding = Column(Boolean, nullable=False, default=False)
+    persistence = Column(Boolean, nullable=False, default=False)
+    prominent_blobs = Column(Boolean, nullable=False, default=False)
+    trail = Column(Boolean, nullable=False, default=False)
+    scattered_light = Column(Boolean, nullable=False, default=False)
+    other = Column(Boolean, nullable=False, default=False)
+
+    def __repr__(self):
+        """Return the canonical string representation of the object"""
+
+        # Get the columns that are True
+        a_list = [col for col, val in self.__dict__.items()
+                  if val is True and isinstance(val, bool)]
+
+        txt = ('Anomaly {0.id}: {0.filename} flagged at '
+               '{0.flag_date} for {1}').format(self, a_list)
+
+        return txt
+
+    @property
+    def colnames(self):
+        """A list of all the column names in this table"""
+
+        # Get the columns
+        a_list = [col for col, val in self.__dict__.items()
+                  if isinstance(val, bool)]
+
+        return a_list
+
+
+class FilesystemGeneral(base):
+    """ORM for the general (non instrument specific) filesystem monitor
+    table"""
+
+    # Name the table
+    __tablename__ = 'filesystem_general'
+
+    # Define the columns
+    id = Column(Integer, primary_key=True, nullable=False)
+    date = Column(DateTime, unique=True, nullable=False)
+    total_file_count = Column(Integer, nullable=False)
+    total_file_size = Column(Float, nullable=False)
+    fits_file_count = Column(Integer, nullable=False)
+    fits_file_size = Column(Float, nullable=False)
+    used = Column(Float, nullable=False)
+    available = Column(Float, nullable=False)
+
+
+class FilesystemInstrument(base):
+    """ORM for the instrument specific filesystem monitor table"""
+
+    # Name the table
+    __tablename__ = 'filesystem_instrument'
+    __table_args__ = (UniqueConstraint('date', 'instrument', 'filetype', name='filesystem_instrument_uc'),)
+
+    # Define the columns
+    id = Column(Integer, primary_key=True, nullable=False)
+    date = Column(DateTime, nullable=False)
+    instrument = Column(Enum(*JWST_INSTRUMENT_NAMES, name='instrument_enum'), nullable=False)
+    filetype = Column(Enum(*FILE_SUFFIX_TYPES, name='filetype_enum'), nullable=False)
+    count = Column(Integer, nullable=False)
+    size = Column(Float, nullable=False)
+
+    @property
+    def colnames(self):
+        """A list of all the column names in this table EXCEPT the date column"""
+        # Get the columns
+        a_list = [col for col, val in self.__dict__.items()
+                  if not isinstance(val, datetime)]
+
+        return a_list
 
 
 class Monitor(base):
@@ -153,7 +254,7 @@ class Monitor(base):
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=True)
     status = Column(Enum('SUCESS', 'FAILURE', name='monitor_status'), nullable=True)
-    affected_tables = Column(postgresql.ARRAY(String, dimensions=1), nullable=True)
+    affected_tables = Column(ARRAY(String, dimensions=1), nullable=True)
     log_file = Column(String(), nullable=False)
 
 
@@ -223,11 +324,14 @@ def get_monitor_columns(data_dict, table_name):
                       'date': Date(),
                       'time': Time(),
                       'datetime': DateTime,
-                      'bool': Boolean}
+                      'bool': Boolean
+                      }
 
     # Get the data from the table definition file
+    instrument = table_name.split('_')[0]
     table_definition_file = os.path.join(os.path.split(__file__)[0],
                                          'monitor_table_definitions',
+                                         instrument.lower(),
                                          '{}.txt'.format(table_name))
     with open(table_definition_file, 'r') as f:
         data = f.readlines()
@@ -238,9 +342,20 @@ def get_monitor_columns(data_dict, table_name):
         column_name = column_definition[0]
         data_type = column_definition[1]
 
+        if 'array' in data_type:
+            dtype, _a, dimension = data_type.split('_')
+            dimension = int(dimension[0])
+            array = True
+        else:
+            dtype = data_type
+            array = False
+
         # Create a new column
-        if data_type in list(data_type_dict.keys()):
-            data_dict[column_name.lower()] = Column(data_type_dict[data_type])
+        if dtype in list(data_type_dict.keys()):
+            if array:
+                data_dict[column_name.lower()] = Column(ARRAY(data_type_dict[dtype], dimensions=dimension))
+            else:
+                data_dict[column_name.lower()] = Column(data_type_dict[dtype])
         else:
             raise ValueError('Unrecognized column type: {}:{}'.format(column_name, data_type))
 
@@ -291,7 +406,7 @@ def monitor_orm_factory(class_name):
     # Columns specific to all monitor ORMs
     data_dict['id'] = Column(Integer, primary_key=True, nullable=False)
     data_dict['entry_date'] = Column(DateTime, unique=True, nullable=False, default=datetime.now())
-    data_dict['__table_args__'] = (UniqueConstraint('id', 'entry_date', name='monitor_uc'),)
+    data_dict['__table_args__'] = (UniqueConstraint('id', 'entry_date', name='{}_uc'.format(data_dict['__tablename__'])),)
 
     # Get monitor-specific columns
     data_dict = get_monitor_columns(data_dict, data_dict['__tablename__'])
@@ -301,11 +416,24 @@ def monitor_orm_factory(class_name):
 
     return type(class_name, (base,), data_dict)
 
+
 # Create tables from ORM factory
 Anomaly = anomaly_orm_factory('anomaly')
-# NIRCamDarkQueries = monitor_orm_factory('nircam_dark_queries')
-# NIRCamDarkPixelStats = monitor_orm_factory('nircam_dark_pixel_stats')
-# NIRCamDarkDarkCurrent = monitor_orm_factory('nircam_dark_dark_current')
+NIRCamDarkQueryHistory = monitor_orm_factory('nircam_dark_query_history')
+NIRCamDarkPixelStats = monitor_orm_factory('nircam_dark_pixel_stats')
+NIRCamDarkDarkCurrent = monitor_orm_factory('nircam_dark_dark_current')
+NIRISSDarkQueryHistory = monitor_orm_factory('niriss_dark_query_history')
+NIRISSDarkPixelStats = monitor_orm_factory('niriss_dark_pixel_stats')
+NIRISSDarkDarkCurrent = monitor_orm_factory('niriss_dark_dark_current')
+NIRSpecDarkQueryHistory = monitor_orm_factory('nirspec_dark_query_history')
+NIRSpecDarkPixelStats = monitor_orm_factory('nirspec_dark_pixel_stats')
+NIRSpecDarkDarkCurrent = monitor_orm_factory('nirspec_dark_dark_current')
+MIRIDarkQueryHistory = monitor_orm_factory('miri_dark_query_history')
+MIRIDarkPixelStats = monitor_orm_factory('miri_dark_pixel_stats')
+MIRIDarkDarkCurrent = monitor_orm_factory('miri_dark_dark_current')
+FGSDarkQueryHistory = monitor_orm_factory('fgs_dark_query_history')
+FGSDarkPixelStats = monitor_orm_factory('fgs_dark_pixel_stats')
+FGSDarkDarkCurrent = monitor_orm_factory('fgs_dark_dark_current')
 
 
 if __name__ == '__main__':

@@ -50,7 +50,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
 # Only import jwst if not running from readthedocs
-if 'build' and 'project' and 'jwql' not in socket.gethostname():
+if 'build' and 'project' not in socket.gethostname():
     from jwst.datamodels import dqflags
 
 
@@ -165,7 +165,7 @@ class PreviewImage():
         numclip = np.int(clipperc * nelem)
         sorted = np.sort(data[pixmap], axis=None)
         minval = sorted[numclip]
-        maxval = sorted[-numclip-1]
+        maxval = sorted[-numclip - 1]
         return (minval, maxval)
 
     def get_data(self, filename, ext):
@@ -213,13 +213,18 @@ class PreviewImage():
                     yd, xd = data.shape[-2:]
                     dq = np.ones((yd, xd), dtype="bool")
 
+
                 # Collect information on aperture location within the
                 # full detector. This is needed for mosaicking NIRCam
                 # detectors later.
-                self.xstart = hdulist[0].header['SUBSTRT1']
-                self.ystart = hdulist[0].header['SUBSTRT2']
-                self.xlen = hdulist[0].header['SUBSIZE1']
-                self.ylen = hdulist[0].header['SUBSIZE2']
+                try:
+                    self.xstart = hdulist[0].header['SUBSTRT1']
+                    self.ystart = hdulist[0].header['SUBSTRT2']
+                    self.xlen = hdulist[0].header['SUBSIZE1']
+                    self.ylen = hdulist[0].header['SUBSIZE2']
+                except KeyError:
+                    logging.warning('SUBSTR and SUBSIZE header keywords not found')
+
         else:
             raise FileNotFoundError('WARNING: {} does not exist!'.format(filename))
 
@@ -323,16 +328,15 @@ class PreviewImage():
                 tlabelstr = [format_string % number for number in tlabelflt]
                 cbar = fig.colorbar(cax, ticks=tickvals)
                 cbar.ax.set_yticklabels(tlabelstr)
-                cbar.ax.tick_params(labelsize=maxsize * 5./4)
-                # cbar.ax.set_ylabel('Signal', rotation=270, fontsize=maxsize*5./4)
-                ax.set_xlabel('Pixels', fontsize=maxsize * 5./4)
-                ax.set_ylabel('Pixels', fontsize=maxsize * 5./4)
+                cbar.ax.tick_params(labelsize=maxsize * 5. / 4)
+                ax.set_xlabel('Pixels', fontsize=maxsize * 5. / 4)
+                ax.set_ylabel('Pixels', fontsize=maxsize * 5. / 4)
                 ax.tick_params(labelsize=maxsize)
                 plt.rcParams.update({'axes.titlesize': 'small'})
-                plt.rcParams.update({'font.size': maxsize * 5./4})
-                plt.rcParams.update({'axes.labelsize': maxsize * 5./4})
-                plt.rcParams.update({'ytick.labelsize': maxsize * 5./4})
-                plt.rcParams.update({'xtick.labelsize': maxsize * 5./4})
+                plt.rcParams.update({'font.size': maxsize * 5. / 4})
+                plt.rcParams.update({'axes.labelsize': maxsize * 5. / 4})
+                plt.rcParams.update({'ytick.labelsize': maxsize * 5. / 4})
+                plt.rcParams.update({'xtick.labelsize': maxsize * 5. / 4})
 
         elif scale == 'linear':
             fig, ax = plt.subplots(figsize=(xsize, ysize))
