@@ -26,9 +26,11 @@ import numpy as np
 from jwql.instrument_monitors import pipeline_tools
 from jwql.utils.utils import get_config
 
+# Determine if tests are being run on jenkins
+ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
-                    reason='Requires access to central storage.')
+
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_completed_pipeline_steps():
     """Test that the list of completed pipeline steps for a file is
     correct
@@ -39,7 +41,8 @@ def test_completed_pipeline_steps():
         File to be checked
     """
 
-    filename = os.path.join(get_config()['filesystem'], 'jw00312', 'jw00312002001_02102_00001_nrcb4_rateints.fits')
+    filename = os.path.join(get_config()['filesystem'], 'jw00312',
+                            'jw00312002001_02102_00001_nrcb4_rateints.fits')
     completed_steps = pipeline_tools.completed_pipeline_steps(filename)
     true_completed = OrderedDict([('group_scale', False),
                                   ('dq_init', True),
@@ -80,6 +83,7 @@ def test_get_pipeline_steps():
             steps_dict[step] = True
         for step in not_required:
             steps_dict[step] = False
+
         # Only test steps that have a value of True
         req_steps = OrderedDict((k, v) for k, v in req_steps.items() if v is True)
         steps_dict = OrderedDict((k, v) for k, v in steps_dict.items() if v is True)
@@ -116,13 +120,12 @@ def test_get_pipeline_steps():
     assert miri_req_steps == miri_dict
 
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
-                    reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_image_stack():
     """Test stacking of slope images"""
 
     directory = os.path.join(get_config()['test_dir'], 'dark_monitor')
-    files = [os.path.join(directory, 'test_image_{}.fits'.format(str(i+1))) for i in range(3)]
+    files = [os.path.join(directory, 'test_image_{}.fits'.format(str(i + 1))) for i in range(3)]
 
     image_stack, exptimes = pipeline_tools.image_stack(files)
     truth = np.zeros((3, 10, 10))

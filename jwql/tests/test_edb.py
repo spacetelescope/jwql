@@ -18,11 +18,16 @@ Use
         pytest -s test_edb.py
 """
 
+import os
+
 from astropy.time import Time
 import pytest
 
+# Determine if tests are being run on jenkins
+ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
 
-@pytest.mark.xfail(raises=(RuntimeError, FileNotFoundError))
+
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_get_mnemonic():
     """Test the query of a single mnemonic."""
     from jwql.edb.engineering_database import get_mnemonic
@@ -35,7 +40,7 @@ def test_get_mnemonic():
     assert len(mnemonic.data) == mnemonic.meta['paging']['rows']
 
 
-@pytest.mark.xfail(raises=(RuntimeError, FileNotFoundError))
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_get_mnemonic_info():
     """Test retrieval of mnemonic info."""
     from jwql.edb.engineering_database import get_mnemonic_info
@@ -45,7 +50,7 @@ def test_get_mnemonic_info():
     assert 'subsystem' in info.keys()
 
 
-@pytest.mark.xfail(raises=(RuntimeError, FileNotFoundError))
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_get_mnemonics():
     """Test the query of a list of mnemonics."""
     from jwql.edb.engineering_database import get_mnemonics
