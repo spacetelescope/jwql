@@ -29,7 +29,7 @@ import tempfile
 
 from astropy.io import fits
 from astropy.time import Time
-
+from django.conf import settings
 import numpy as np
 
 # astroquery.mast import that depends on value of auth_mast
@@ -46,6 +46,7 @@ from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.jwql_monitors import monitor_cron_jobs
+from jwql.utils.utils import ensure_dir_exists
 from jwql.utils.constants import MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.preview_image import PreviewImage
 from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
@@ -258,6 +259,30 @@ def get_edb_components(request):
                     mnemonic_query_result = get_mnemonic(mnemonic_identifier, start_time, end_time)
                     mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
 
+                    # generate table download in web app
+                    result_table = mnemonic_query_result.data
+
+                    # save file locally to be available for download
+                    static_dir = os.path.join(settings.BASE_DIR, 'static')
+                    ensure_dir_exists(static_dir)
+                    file_name_root = 'mnemonic_query_result_table'
+                    file_for_download = '{}.csv'.format(file_name_root)
+                    path_for_download = os.path.join(static_dir, file_for_download)
+
+                    # add meta data to saved table
+                    comments = []
+                    comments.append('DMS EDB query of {}:'.format(mnemonic_identifier))
+                    for key, value in mnemonic_query_result.info.items():
+                        comments.append('{} = {}'.format(key, str(value)))
+                    result_table.meta['comments'] = comments
+                    comments.append(' ')
+                    comments.append('Start time {}'.format(start_time.isot))
+                    comments.append('End time   {}'.format(end_time.isot))
+                    comments.append('Number of rows {}'.format(len(result_table)))
+                    comments.append(' ')
+                    result_table.write(path_for_download, format='ascii.fixed_width', overwrite=True, delimiter=',', bookend=False)
+                    mnemonic_query_result.file_for_download = file_for_download
+
             # create forms for search fields not clicked
             mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
             mnemonic_exploration_form = MnemonicExplorationForm(prefix='mnemonic_exploration')
@@ -281,17 +306,28 @@ def get_edb_components(request):
 
                 mnemonic_exploration_result.n_rows = len(mnemonic_exploration_result)
 
+                # generate tables for display and download in web app
                 display_table = copy.deepcopy(mnemonic_exploration_result)
+
                 # temporary html file,
                 # see http://docs.astropy.org/en/stable/_modules/astropy/table/
                 tmpdir = tempfile.mkdtemp()
-                path = os.path.join(tmpdir, 'mnemonic_exploration_result_table.html')
-                with open(path, 'w') as tmp:
+                file_name_root = 'mnemonic_exploration_result_table'
+                path_for_html = os.path.join(tmpdir, '{}.html'.format(file_name_root))
+                with open(path_for_html, 'w') as tmp:
                     display_table.write(tmp, format='jsviewer')
-                mnemonic_exploration_result.html_file = path
-                mnemonic_exploration_result.html_file_content = open(path, 'r').read()
-                # pass meta data to have access to number of mnemonics
+                mnemonic_exploration_result.html_file_content = open(path_for_html, 'r').read()
+
+                # pass on meta data to have access to total number of mnemonics
                 mnemonic_exploration_result.meta = meta
+
+                # save file locally to be available for download
+                static_dir = os.path.join(settings.BASE_DIR, 'static')
+                ensure_dir_exists(static_dir)
+                file_for_download = '{}.csv'.format(file_name_root)
+                path_for_download = os.path.join(static_dir, file_for_download)
+                display_table.write(path_for_download, format='ascii.fixed_width', overwrite=True, delimiter=',', bookend=False)
+                mnemonic_exploration_result.file_for_download = file_for_download
 
                 if mnemonic_exploration_result.n_rows == 0:
                     mnemonic_exploration_result = 'empty'
