@@ -56,7 +56,11 @@ def test_completed_pipeline_steps():
                                   ('jump', True),
                                   ('rate', True)])
 
-    assert dict(completed_steps) == dict(true_completed)
+    # Only test steps that have a value of True
+    completed_steps = OrderedDict((k, v) for k, v in completed_steps.items() if v is True)
+    true_completed = OrderedDict((k, v) for k, v in true_completed.items() if v is True)
+
+    assert completed_steps == true_completed
 
 
 def test_get_pipeline_steps():
