@@ -450,11 +450,12 @@ def update_monitor_table(module, start_time, log_file):
 def get_mast_token(request=None):
     if Mast.authenticated():
         print('Authenticated with Astroquery MAST magic')
-        return None
+        return Mast.get_token()
+        # return None
     else:
         if request is not None:
-            token = request.POST.get('access_token')
-            if str(token) != 'None':
+            token = str(request.POST.get('access_token'))
+            if token != 'None':
                 print('Authenticated with cached MAST token.')
                 return token
         try:
