@@ -40,13 +40,13 @@ import os
 
 from django.http import JsonResponse
 from django.shortcuts import render
-import numpy as np
 
 from .data_containers import get_acknowledgements, get_edb_components
 from .data_containers import get_dashboard_components
 from .data_containers import get_filenames_by_instrument
 from .data_containers import get_header_info
 from .data_containers import get_image_info
+from .data_containers import get_current_flagged_anomalies
 from .data_containers import get_proposal_info
 from .data_containers import random_404_page
 from .data_containers import thumbnails
@@ -55,7 +55,6 @@ from .data_containers import data_trending
 from .data_containers import nirspec_trending
 from .forms import AnomalySubmitForm, FileSearchForm
 from .oauth import auth_info, auth_required
-from jwql.database import database_interface as di
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
 
@@ -484,10 +483,13 @@ def view_image(request, user, inst, file_root, rewrite=False):
     template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
 
-    # Create a form instance and populate it with data from the request
-    form = AnomalySubmitForm(request.POST or None)
+    # Determine current flagged anomalies
+    current_anomalies = get_current_flagged_anomalies(file_root)
 
-    # If this is a POST request, we need to process the form data
+    # Create a form instance
+    form = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+
+    # If this is a POST request, process the form data
     if request.method == 'POST':
         anomaly_choices = dict(request.POST)['anomaly_choices']
         if form.is_valid():

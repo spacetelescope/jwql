@@ -58,14 +58,26 @@ FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
 class AnomalySubmitForm(forms.Form):
-    """
-    """
+    """A multiple choice field for specifying flagged anomalies."""
 
-    # Define search field
-    anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, initial='', widget=forms.CheckboxSelectMultiple(), required=True)
+    # Define anomaly choice field
+    anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())
 
     def update_anomaly_table(self, rootname, user, anomaly_choices):
-        """
+        """Updated the ``anomaly`` table of the database with flagged
+        anomaly information
+
+        Parameters
+        ----------
+        rootname : str
+            The rootname of the image to flag (e.g.
+            ``jw86600008001_02101_00001_guider2``)
+        user : str
+            The ``ezid`` of the authenticated user that is flagging the
+            anomaly
+        anomaly_choices : list
+            A list of anomalies that are to be flagged (e.g.
+            ``['snowball', 'crosstalk']``)
         """
 
         data_dict = {}
@@ -75,14 +87,6 @@ class AnomalySubmitForm(forms.Form):
         for choice in anomaly_choices:
             data_dict[choice] = True
         di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
-
-        # # Get most previously flagged anomalies
-        # query = di.session.query(di.Anomaly).filter(di.Anomaly.rootname == rootname).order_by(di.Anomaly.flag_date.desc()).limit(1)
-        # all_records = query.data_frame
-        # if not all_records.empty:
-        #     prev_anom = ', '.join([col for col, val in np.sum(all_records, axis=0).items() if val])
-        # else:
-        #     prev_anom = ''
 
 
 class FileSearchForm(forms.Form):

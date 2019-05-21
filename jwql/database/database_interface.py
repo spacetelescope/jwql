@@ -87,7 +87,7 @@ from jwql.utils.utils import get_config
 @property
 def data_frame(self):
     """Method to return a ``pandas.DataFrame`` of the results"""
-    print(pd.read_sql(self.statement, self.session.bind))
+
     return pd.read_sql(self.statement, self.session.bind)
 
 Query.data_frame = data_frame
