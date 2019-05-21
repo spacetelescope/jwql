@@ -463,9 +463,11 @@ def view_image(request, user, inst, file_root, rewrite=False):
     ----------
     request : HttpRequest object
         Incoming request from the webpage
+    user : dict
+        A dictionary of user credentials.
     inst : str
         Name of JWST instrument
-    file : str
+    file_root : str
         FITS filename of selected image in filesystem
     rewrite : bool, optional
         Regenerate the jpg preview of `file` if it already exists?
@@ -482,38 +484,22 @@ def view_image(request, user, inst, file_root, rewrite=False):
     template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
 
-    print(user)
-
-    # Fake insert a record
-    data_dict = {}
-    data_dict['filename'] = 'jw00327001001_06101_00001_guider1'
-    data_dict['flag_date'] = datetime.datetime.now()
-    data_dict['bowtie'] = False
-    data_dict['user'] = user['ezid']
-    di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
-
-    # Get most previously flagged anomalies
-    query = di.session.query(di.Anomaly).filter(di.Anomaly.filename == file_root).order_by(di.Anomaly.flag_date.desc()).limit(1)
-    all_records = query.data_frame
-    if not all_records.empty:
-        prev_anom = ', '.join([col for col, val in np.sum(all_records, axis=0).items() if val])
-    else:
-        prev_anom = ''
-
-
     # Create a form instance and populate it with data from the request
     form = AnomalySubmitForm(request.POST or None)
 
+    # If this is a POST request, we need to process the form data
+    if request.method == 'POST':
+        anomaly_choices = dict(request.POST)['anomaly_choices']
+        if form.is_valid():
+            form.update_anomaly_table(file_root, user['ezid'], anomaly_choices)
+
     # Build the context
-    anom = di.Anomaly()
     context = {'inst': inst,
                'file_root': file_root,
                'jpg_files': image_info['all_jpegs'],
                'fits_files': image_info['all_files'],
                'suffixes': image_info['suffixes'],
                'num_ints': image_info['num_ints'],
-               'anomalies': zip(anom.columns, anom.names),
-               'prev_anom': prev_anom,
                'form': form}
 
     return render(request, template, context)

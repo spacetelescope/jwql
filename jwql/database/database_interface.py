@@ -226,7 +226,7 @@ def anomaly_orm_factory(class_name):
 
     # Create a table with the appropriate Columns
     data_dict['id'] = Column(Integer, primary_key=True, nullable=False)
-    data_dict['filename'] = Column(String(), nullable=False)
+    data_dict['rootname'] = Column(String(), nullable=False)
     data_dict['flag_date'] = Column(DateTime, nullable=False)
     data_dict['user'] = Column(String(), nullable=False)
 

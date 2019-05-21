@@ -40,14 +40,17 @@ Dependencies
     placed in the ``jwql/utils/`` directory.
 
 """
+
+import datetime
 import glob
 import os
 
 from astropy.time import Time, TimeDelta
 from django import forms
 from django.shortcuts import redirect
-
 from jwedb.edb_interface import is_valid_mnemonic
+
+from jwql.database import database_interface as di
 from jwql.utils.constants import ANOMALY_CHOICES, JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.utils import get_config, filename_parser
 
@@ -60,6 +63,26 @@ class AnomalySubmitForm(forms.Form):
 
     # Define search field
     anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, initial='', widget=forms.CheckboxSelectMultiple(), required=True)
+
+    def update_anomaly_table(self, rootname, user, anomaly_choices):
+        """
+        """
+
+        data_dict = {}
+        data_dict['rootname'] = rootname
+        data_dict['flag_date'] = datetime.datetime.now()
+        data_dict['user'] = user
+        for choice in anomaly_choices:
+            data_dict[choice] = True
+        di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
+
+        # # Get most previously flagged anomalies
+        # query = di.session.query(di.Anomaly).filter(di.Anomaly.rootname == rootname).order_by(di.Anomaly.flag_date.desc()).limit(1)
+        # all_records = query.data_frame
+        # if not all_records.empty:
+        #     prev_anom = ', '.join([col for col, val in np.sum(all_records, axis=0).items() if val])
+        # else:
+        #     prev_anom = ''
 
 
 class FileSearchForm(forms.Form):
