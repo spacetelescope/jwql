@@ -18,7 +18,7 @@ import os
 
 from astroquery.mast import Mast
 
-from jwql.utils.utils import get_config
+from jwql.utils.utils import get_config, check_config
 
 
 def get_mast_token(request=None):
@@ -34,11 +34,11 @@ def get_mast_token(request=None):
                 return token
         try:
             # check if token is available via config file
-            settings = get_config()
-            token = settings['mast_token']
+            check_config('mast_token')
+            token = get_config()['mast_token']
             print('Authenticated with config.json MAST token.')
             return token
-        except KeyError:
+        except (KeyError, ValueError):
             # check if token is available via environment variable
             # see https://auth.mast.stsci.edu/info
             try:

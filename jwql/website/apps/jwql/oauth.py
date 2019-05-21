@@ -46,7 +46,7 @@ from django.shortcuts import redirect, render
 
 import jwql
 from jwql.utils.constants import MONITORS
-from jwql.utils.utils import get_base_url, get_config
+from jwql.utils.utils import get_base_url, get_config, check_config
 
 PREV_PAGE = '/'
 
@@ -64,24 +64,10 @@ def register_oauth():
 
     # Get configuration parameters
     for key in 'client_id client_secret auth_mast'.split():
-        try:
-            get_config()[key]
-        except KeyError:
-            raise KeyError('the key `{}` is not present in config.json. Please add it.'.format(key))
-
+        check_config(key)
     client_id = get_config()['client_id']
     client_secret = get_config()['client_secret']
     auth_mast = get_config()['auth_mast']
-
-    # Check parameters are valid
-    if client_id == "" or client_secret == "":
-        raise ValueError('Please complete the client fields in your config.json. See '
-                         'the relevant wiki page (https://github.com/spacetelescope/'
-                         'jwql/wiki/Config-file) for more information.')
-    if auth_mast == "":
-        raise ValueError('Please complete the auth_mast field in your config.json. See '
-                         'the relevant wiki page (https://github.com/spacetelescope/'
-                         'jwql/wiki/Config-file) for more information.')
 
     # Register with auth.mast
     oauth = OAuth()
@@ -178,13 +164,8 @@ def auth_info(fn):
 
         # If user is authenticated, return user credentials
         if cookie is not None:
+            check_config('auth_mast')
             auth_mast = get_config()['auth_mast']
-            if auth_mast == "":
-                raise ValueError(
-                    'Please complete the auth_mast field in your config.json. See the '
-                    'relevant wiki page (https://github.com/spacetelescope/jwql/wiki/'
-                    'Config-file) for more information.'
-                )
 
             response = requests.get(
                 'https://{}/info'.format(auth_mast),

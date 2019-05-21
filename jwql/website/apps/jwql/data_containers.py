@@ -33,17 +33,9 @@ import numpy as np
 
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
-from jwql.utils.utils import get_config, filename_parser
-try:
-    auth_mast = get_config()['auth_mast']
-except KeyError:
-    raise KeyError('the key `auth_mast` is not present in config.json. Please add it.')
-if auth_mast == "":
-    raise ValueError(
-        'Please complete the auth_mast field in your config.json. See the '
-        'relevant wiki page (https://github.com/spacetelescope/jwql/wiki/'
-        'Config-file) for more information.'
-    )
+from jwql.utils.utils import get_config, filename_parser, check_config
+check_config('auth_mast')
+auth_mast = get_config()['auth_mast']
 mast_flavour = '.'.join(auth_mast.split('.')[1:])
 from astropy import config
 conf = config.get_config('astroquery')

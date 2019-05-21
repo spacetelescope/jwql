@@ -395,6 +395,32 @@ def get_config():
     return settings
 
 
+def check_config(key):
+    """Check that the config.json file contains the specified key
+    and that the entry is not empty
+
+    Returns
+    -------
+    key : str
+        The configuration file key to verify
+    """
+    try:
+        get_config()[key]
+    except KeyError:
+        raise KeyError(
+            'The key `{}` is not present in config.json. Please add it.'.format(key) +
+            'See the relevant wiki page (https://github.com/spacetelescope/'
+            'jwql/wiki/Config-file) for more information.'
+        )
+
+    if get_config()[key] == "":
+        raise ValueError(
+            'Please complete the `{}` field in your config.json. '.format(key) +
+            'See the relevant wiki page (https://github.com/spacetelescope/'
+            'jwql/wiki/Config-file) for more information.'
+        )
+
+
 def initialize_instrument_monitor(module):
     """Configures a log file for the instrument monitor run and
     captures the start time of the monitor
