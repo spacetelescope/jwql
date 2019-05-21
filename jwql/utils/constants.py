@@ -25,6 +25,26 @@ AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 0), (512, 2048)], '2': [(512, 0), (
                                    '3': [(1024, 0), (1536, 2048)], '4': [(1536, 0), (2048, 2048)]}
                         }
 
+# Defines the possible anomalies to flag through the web app
+ANOMALIES = ['bowtie', 'snowball', 'cosmic_ray_shower', 'crosstalk',
+             'cte_correction_error', 'data_transfer_error', 'detector_ghost',
+             'diamond', 'diffraction_spike', 'dragon_breath', 'earth_limb',
+             'excessive_saturation', 'figure8_ghost', 'filter_ghost',
+             'fringing', 'guidestar_failure', 'banding', 'persistence',
+             'prominent_blobs', 'trail', 'scattered_light', 'other']
+
+# Defines the possible anomalies (with rendered name) to flag through the web app
+ANOMALY_CHOICES = [
+    ('bowtie', 'Bowtie'), ('snowball', 'Snowball'), ('cosmic_ray_shower', 'Cosmic Ray Shower'),
+    ('crosstalk', 'Crosstalk'), ('cte_correction_error', 'CTE Correction Error'),
+    ('data_transfer_error', 'Data Transfer Error'), ('detector_ghost', 'Detector Ghost'),
+    ('diamond', 'Diamond Feature'), ('diffraction_spike', 'Diffraction Spike'),
+    ('dragon_breath', 'Dragons Breath'), ('earth_limb', 'Earth Limb'),
+    ('excessive_saturation', 'Excessive Saturation'), ('figure8_ghost', 'Figure 8 Ghost'),
+    ('filter_ghost', 'Filter Ghost'), ('fringing', 'Fringing'), ('guidestar_failure', 'Guidestar Failure'),
+    ('banding', 'Banding'), ('persistence', 'Persistence'), ('prominent_blobs', 'Prominent Blobs'),
+    ('trail', 'Trail'), ('scattered_light', 'Scattered Light'), ('other', 'Other')]
+
 # Possible suffix types for nominal files
 GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',
                         'x1dints', 'x1d', 's2d', 's3d', 'dark', 'crfints',

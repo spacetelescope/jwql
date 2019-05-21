@@ -79,7 +79,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
 from sqlalchemy.types import ARRAY
 
-from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import ANOMALIES, FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
 from jwql.utils.utils import get_config
 
 
@@ -142,62 +142,6 @@ if 'build' and 'project' in socket.gethostname() or os.path.expanduser('~') == '
 else:
     SETTINGS = get_config()
     session, base, engine, meta = load_connection(SETTINGS['connection_string'])
-
-
-class Anomaly(base):
-    """ORM for the ``anomalies`` table"""
-
-    # Name the table
-    __tablename__ = 'anomalies'
-
-    # Define the columns
-    id = Column(Integer, primary_key=True, nullable=False)
-    filename = Column(String, nullable=False)
-    flag_date = Column(DateTime, nullable=False, default=datetime.now())
-    bowtie = Column(Boolean, nullable=False, default=False)
-    snowball = Column(Boolean, nullable=False, default=False)
-    cosmic_ray_shower = Column(Boolean, nullable=False, default=False)
-    crosstalk = Column(Boolean, nullable=False, default=False)
-    cte_correction_error = Column(Boolean, nullable=False, default=False)
-    data_transfer_error = Column(Boolean, nullable=False, default=False)
-    detector_ghost = Column(Boolean, nullable=False, default=False)
-    diamond = Column(Boolean, nullable=False, default=False)
-    diffraction_spike = Column(Boolean, nullable=False, default=False)
-    dragon_breath = Column(Boolean, nullable=False, default=False)
-    earth_limb = Column(Boolean, nullable=False, default=False)
-    excessive_saturation = Column(Boolean, nullable=False, default=False)
-    figure8_ghost = Column(Boolean, nullable=False, default=False)
-    filter_ghost = Column(Boolean, nullable=False, default=False)
-    fringing = Column(Boolean, nullable=False, default=False)
-    guidestar_failure = Column(Boolean, nullable=False, default=False)
-    banding = Column(Boolean, nullable=False, default=False)
-    persistence = Column(Boolean, nullable=False, default=False)
-    prominent_blobs = Column(Boolean, nullable=False, default=False)
-    trail = Column(Boolean, nullable=False, default=False)
-    scattered_light = Column(Boolean, nullable=False, default=False)
-    other = Column(Boolean, nullable=False, default=False)
-
-    def __repr__(self):
-        """Return the canonical string representation of the object"""
-
-        # Get the columns that are True
-        a_list = [col for col, val in self.__dict__.items()
-                  if val is True and isinstance(val, bool)]
-
-        txt = ('Anomaly {0.id}: {0.filename} flagged at '
-               '{0.flag_date} for {1}').format(self, a_list)
-
-        return txt
-
-    @property
-    def colnames(self):
-        """A list of all the column names in this table"""
-
-        # Get the columns
-        a_list = [col for col, val in self.__dict__.items()
-                  if isinstance(val, bool)]
-
-        return a_list
 
 
 class FilesystemGeneral(base):
@@ -277,12 +221,7 @@ def anomaly_orm_factory(class_name):
     data_dict['__tablename__'] = class_name.lower()
 
     # Define anomaly table column names
-    data_dict['columns'] = ['bowtie', 'snowball', 'cosmic_ray_shower', 'crosstalk',
-       'cte_correction_error', 'data_transfer_error', 'detector_ghost',
-       'diamond', 'diffraction_spike', 'dragon_breath', 'earth_limb',
-       'excessive_saturation', 'figure8_ghost', 'filter_ghost',
-       'fringing', 'guidestar_failure', 'banding', 'persistence',
-       'prominent_blobs', 'trail', 'scattered_light', 'other']
+    data_dict['columns'] = ANOMALIES
     data_dict['names'] = [name.replace('_', ' ') for name in data_dict['columns']]
 
     # Create a table with the appropriate Columns
