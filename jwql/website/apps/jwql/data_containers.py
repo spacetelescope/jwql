@@ -57,7 +57,7 @@ from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as
 from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.constants import MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.preview_image import PreviewImage
-from jwql.utils.utils import get_mast_token
+from jwql.utils.credentials import get_mast_token
 from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
 
 
@@ -255,9 +255,6 @@ def get_edb_components(request):
         elif 'mnemonic_query' in request.POST.keys():
             # authenticate with astroquery.mast if necessary
             logged_in = log_into_mast(request)
-            print(logged_in)
-            if logged_in is False:
-                print('NOT LOGGED IN')
 
             mnemonic_query_form = MnemonicQueryForm(request.POST, logged_in=logged_in,
                                                     prefix='mnemonic_query')
@@ -780,7 +777,6 @@ def log_into_mast(request):
 
     # authenticate with astroquery.mast if necessary
     if access_token != 'None':
-        print(access_token)
         Mast.login(token=access_token)
         return Mast.authenticated()
     else:
