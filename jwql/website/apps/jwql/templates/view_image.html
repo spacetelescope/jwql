@@ -50,20 +50,33 @@
 		    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("right", "{{file_root}}", "{{num_ints}}");' disabled>&#9658;</button>
 		</div>
 
-            <!-- Add Anomoly form -->
-            <div class='col-3'>
-                <h6>Anomalies in this image:</h6>
-                <ul class='no-bullets'>
-                    {% for anom, name in anomalies %}
-                        {% if anom in prev_anom %}
-                            <li><input type="checkbox" name="anomaly" value="{{ anom }}" id="{{ anom }}" checked>&nbsp;&nbsp;{{ name }}</li>
-                        {% else %}
-                            <li><input type="checkbox" name="anomaly" value="{{ anom }}" id="{{ anom }}">&nbsp;&nbsp;{{ name }}</li>
-                        {% endif %}
+            <!--Load the file search form from the view-->
+            <form action="" method="post" id="anomaly_form">
+                <!--Show any errors from a previous form submission-->
+                {% if form.errors %}
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <div class="alert alert-danger">
+                                <strong>{{ error|escape }}</strong>
+                            </div>
+                        {% endfor %}
                     {% endfor %}
-                </ul>
-                <a class="btn btn-primary my-2" role="button" href="#">Submit Anomalies</a>
-            </div>
+                {% endif %}
+
+                <!--Django Cross-Site Request Forgery magic-->
+                {{ csrf_input }}
+
+                <!--Show the field forms-->
+                {% for field in form %}
+                    <div class="anomaly_form" id="anomaly_form">
+                        {{ field }}
+                        {% if field.help_text %}
+                            <p class="help">{{ field.help_text|safe }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                <button class="btn btn-primary" type="submit">Submit</button>
+            </form>
 
 		<!-- Download the images? -->
 	    <p>
@@ -84,42 +97,6 @@
 	    	<a>Lauren needs to figure out what to do with these: {{suffixes}}</a>
 	    {% endif %}
 
-
-
-		<!-- Try the arrow-to-navigate thing -->
-		<!-- {% if imdat %}
-			<div class="container">
-			    <div id="slideshow">
-			        <img alt="{{ imdat.0 }}" src="{{ staticURL }}/{{ imdat.0 }}" width=800 id="imgClickAndChange" onclick="changeImage()" />
-			    </div>
-			</div>
-
-			<div id="demo"></div>
-			<script>
-			document.getElementById("demo").innerHTML = "Hello JavaScript!";
-			</script>
-
-
-			<script>
-			    var imgs = {{ imdat }};
-
-			    function changeImage(dir) {
-			    	document.getElementById("imgClickAndChange").innerHTML = 5 + 6;
-			        var img = document.getElementById("imgClickAndChange");
-			        img.src = imgs[(imgs.indexOf(img.src) + 1) % imgs.length];
-			    }
-
-			    document.onkeydown = function(e) {
-			        e = e || window.event;
-			        if (e.keyCode == '37') {
-			            changeImage(-1) //left <- show Prev image
-			        } else if (e.keyCode == '39') {
-			            // right -> show next image
-			            changeImage()
-			        }
-			    }
-			</script>
-		{% endif %} -->
 	</main>
 
 {% endblock %}

@@ -48,10 +48,18 @@ from django import forms
 from django.shortcuts import redirect
 
 from jwedb.edb_interface import is_valid_mnemonic
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.constants import ANOMALY_CHOICES, JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.utils import get_config, filename_parser
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
+
+
+class AnomalySubmitForm(forms.Form):
+    """
+    """
+
+    # Define search field
+    anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, initial='', widget=forms.CheckboxSelectMultiple(), required=True)
 
 
 class FileSearchForm(forms.Form):

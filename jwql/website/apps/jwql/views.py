@@ -53,7 +53,7 @@ from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
 from .data_containers import data_trending
 from .data_containers import nirspec_trending
-from .forms import FileSearchForm
+from .forms import AnomalySubmitForm, FileSearchForm
 from .oauth import auth_info, auth_required
 from jwql.database import database_interface as di
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
@@ -497,6 +497,12 @@ def view_image(request, user, inst, file_root, rewrite=False):
     all_records = query.data_frame
     if not all_records.empty:
         prev_anom = ', '.join([col for col, val in np.sum(all_records, axis=0).items() if val])
+    else:
+        prev_anom = ''
+
+
+    # Create a form instance and populate it with data from the request
+    form = AnomalySubmitForm(request.POST or None)
 
     # Build the context
     anom = di.Anomaly()
@@ -507,6 +513,7 @@ def view_image(request, user, inst, file_root, rewrite=False):
                'suffixes': image_info['suffixes'],
                'num_ints': image_info['num_ints'],
                'anomalies': zip(anom.columns, anom.names),
-               'prev_anom': prev_anom}
+               'prev_anom': prev_anom,
+               'form': form}
 
     return render(request, template, context)
