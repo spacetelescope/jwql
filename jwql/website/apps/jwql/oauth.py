@@ -63,6 +63,12 @@ def register_oauth():
     """
 
     # Get configuration parameters
+    for key in 'client_id client_secret auth_mast'.split():
+        try:
+            get_config()[key]
+        except KeyError:
+            raise KeyError('the key `{}` is not present in config.json. Please add it.'.format(key))
+
     client_id = get_config()['client_id']
     client_secret = get_config()['client_secret']
     auth_mast = get_config()['auth_mast']

@@ -34,7 +34,10 @@ import numpy as np
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
 from jwql.utils.utils import get_config, filename_parser
-auth_mast = get_config()['auth_mast']
+try:
+    auth_mast = get_config()['auth_mast']
+except KeyError:
+    raise KeyError('the key `auth_mast` is not present in config.json. Please add it.')
 if auth_mast == "":
     raise ValueError(
         'Please complete the auth_mast field in your config.json. See the '
@@ -54,7 +57,7 @@ from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as
 from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.constants import MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.preview_image import PreviewImage
-from jwql.utils.utils import get_mast_token
+from jwql.utils.credentials import get_mast_token
 from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
 
 

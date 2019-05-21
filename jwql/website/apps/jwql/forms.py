@@ -197,7 +197,8 @@ class MnemonicSearchForm(forms.Form):
         """
         # Stop now if not logged in
         if not self.logged_in:
-            raise forms.ValidationError('Could not log into MAST.')
+            raise forms.ValidationError('Could not log into MAST. Please login or provide MAST '
+                                        'token in environment variable or config.json.')
 
         # Get the cleaned search data
         search = self.cleaned_data['search']
@@ -266,7 +267,8 @@ class MnemonicQueryForm(forms.Form):
         """
         # Stop now if not logged in
         if not self.logged_in:
-            raise forms.ValidationError('Could not log into MAST.')
+            raise forms.ValidationError('Could not log into MAST. Please login or provide MAST '
+                                        'token in environment variable or config.json.')
 
         # Get the cleaned search data
         search = self.cleaned_data['search']

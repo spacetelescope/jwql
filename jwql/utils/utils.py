@@ -36,8 +36,6 @@ import os
 import re
 import shutil
 
-from astroquery.mast import Mast
-
 from jwql.utils import permissions
 from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES_SHORTHAND
 
@@ -445,30 +443,3 @@ def update_monitor_table(module, start_time, log_file):
     new_entry['log_file'] = os.path.basename(log_file)
 
     Monitor.__table__.insert().execute(new_entry)
-
-
-def get_mast_token(request=None):
-    if Mast.authenticated():
-        print('Authenticated with Astroquery MAST magic')
-        return None
-    else:
-        if request is not None:
-            token = request.POST.get('access_token')
-            if str(token) != 'None':
-                print('Authenticated with cached MAST token.')
-                return token
-        try:
-            # check if token is available via config file
-            settings = get_config()
-            token = settings['mast_token']
-            print('Authenticated with config.json MAST token.')
-            return token
-        except KeyError:
-            # check if token is available via environment variable
-            # see https://auth.mast.stsci.edu/info
-            try:
-                token = os.environ['MAST_API_TOKEN']
-                print('Authenticated with MAST token environment variable.')
-                return token
-            except KeyError:
-                return None
