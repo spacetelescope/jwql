@@ -117,7 +117,7 @@ def nirspec_data_trending(request):
         'user': None  # Do not edit; Required for authentication
     }
 
-    #append variables to context
+    # append variables to context
     context.update(variables)
 
     # Return a HTTP response with the template and dictionary of variables
