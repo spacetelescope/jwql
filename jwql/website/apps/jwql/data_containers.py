@@ -414,7 +414,7 @@ def get_filenames_by_proposal(proposal):
     Parameters
     ----------
     proposal : str
-        The five-digit proposal number (e.g. ``88600``).
+        The one- to five-digit proposal number (e.g. ``88600``).
 
     Returns
     -------
@@ -422,8 +422,9 @@ def get_filenames_by_proposal(proposal):
         A list of filenames associated with the given ``proposal``.
     """
 
+    proposal_string = '{:05d}'.format(int(proposal))
     filenames = sorted(glob.glob(os.path.join(
-        FILESYSTEM_DIR, 'jw{}'.format(proposal), '*')))
+        FILESYSTEM_DIR, 'jw{}'.format(proposal_string), '*')))
     filenames = [os.path.basename(filename) for filename in filenames]
 
     return filenames
@@ -612,7 +613,7 @@ def get_preview_images_by_proposal(proposal):
     Parameters
     ----------
     proposal : str
-        The five-digit proposal number (e.g. ``88600``).
+        The one- to five-digit proposal number (e.g. ``88600``).
 
     Returns
     -------
@@ -621,7 +622,8 @@ def get_preview_images_by_proposal(proposal):
         given ``proposal``.
     """
 
-    preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, 'jw{}'.format(proposal), '*'))
+    proposal_string = '{:05d}'.format(int(proposal))
+    preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, 'jw{}'.format(proposal_string), '*'))
     preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
 
     return preview_images
@@ -743,7 +745,7 @@ def get_thumbnails_by_proposal(proposal):
     Parameters
     ----------
     proposal : str
-        The five-digit proposal number (e.g. ``88600``).
+        The one- to five-digit proposal number (e.g. ``88600``).
 
     Returns
     -------
@@ -752,7 +754,8 @@ def get_thumbnails_by_proposal(proposal):
         ``proposal``.
     """
 
-    thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, 'jw{}'.format(proposal), '*'))
+    proposal_string = '{:05d}'.format(int(proposal))
+    thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, 'jw{}'.format(proposal_string), '*'))
     thumbnails = [os.path.basename(thumbnail) for thumbnail in thumbnails]
 
     return thumbnails
@@ -851,7 +854,8 @@ def thumbnails(inst, proposal=None):
     # If the proposal is specified (i.e. if the page being loaded is
     # an archive page), only collect data for given proposal
     if proposal is not None:
-        full_ids = [f for f in full_ids if f[2:7] == proposal]
+        proposal_string = '{:05d}'.format(int(proposal))
+        full_ids = [f for f in full_ids if f[2:7] == proposal_string]
 
     detectors = []
     proposals = []
@@ -917,7 +921,8 @@ def thumbnails_ajax(inst, proposal=None):
     # If the proposal is specified (i.e. if the page being loaded is
     # an archive page), only collect data for given proposal
     if proposal is not None:
-        rootnames = [rootname for rootname in rootnames if rootname[2:7] == proposal]
+        proposal_string = '{:05d}'.format(int(proposal))
+        rootnames = [rootname for rootname in rootnames if rootname[2:7] == proposal_string]
 
     # Initialize dictionary that will contain all needed data
     data_dict = {}
@@ -932,14 +937,14 @@ def thumbnails_ajax(inst, proposal=None):
             filename_dict = filename_parser(rootname)
         except ValueError:
             # Temporary workaround for noncompliant files in filesystem
-            filename_dict = {'activity': file_id[17:19],
-                             'detector': file_id[26:],
-                             'exposure_id': file_id[20:25],
-                             'observation': file_id[7:10],
-                             'parallel_seq_id': file_id[16],
-                             'program_id': file_id[2:7],
-                             'visit': file_id[10:13],
-                             'visit_group': file_id[14:16]}
+            filename_dict = {'activity': rootname[17:19],
+                             'detector': rootname[26:],
+                             'exposure_id': rootname[20:25],
+                             'observation': rootname[7:10],
+                             'parallel_seq_id': rootname[16],
+                             'program_id': rootname[2:7],
+                             'visit': rootname[10:13],
+                             'visit_group': rootname[14:16]}
 
         # Get list of available filenames
         available_files = get_filenames_by_rootname(rootname)
