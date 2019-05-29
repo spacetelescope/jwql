@@ -4,14 +4,16 @@ Authors
 -------
 
     - Johannes Sahlmann
+    - Lauren Chambers
 
 Use
 ---
 
     This module can be imported as such:
+    ::
 
-    >>> import credentials
-    token = get_mast_token()
+        import credentials
+        token = credentials.get_mast_token()
 
  """
 import os
@@ -22,7 +24,19 @@ from jwql.utils.utils import get_config, check_config
 
 
 def get_mast_token(request=None):
-    """Return MAST token."""
+    """Return MAST token from either Astroquery.Mast, webpage cookies, the
+    JWQL configuration file, or an environment variable.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    token : str or None
+        User-specific MAST token string, if available
+    """
     if Mast.authenticated():
         print('Authenticated with Astroquery MAST magic')
         return None
