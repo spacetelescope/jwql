@@ -105,7 +105,8 @@ class FileSearchForm(forms.Form):
                     all_instruments.append(instrument)
                 if len(set(all_instruments)) > 1:
                     raise forms.ValidationError('Cannot return result for proposal with multiple '
-                                                'instruments ({}).'.format(', '.join(set(all_instruments))))
+                                                'instruments ({}).'
+                                                .format(', '.join(set(all_instruments))))
 
                 self.instrument = all_instruments[0]
             else:
