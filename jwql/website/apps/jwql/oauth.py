@@ -46,7 +46,7 @@ from django.shortcuts import redirect, render
 
 import jwql
 from jwql.utils.constants import MONITORS
-from jwql.utils.utils import get_base_url, get_config
+from jwql.utils.utils import get_base_url, get_config, check_config
 
 PREV_PAGE = '/'
 
@@ -63,6 +63,8 @@ def register_oauth():
     """
 
     # Get configuration parameters
+    for key in ['client_id', 'client_secret', 'auth_mast']:
+        check_config(key)
     client_id = get_config()['client_id']
     client_secret = get_config()['client_secret']
     auth_mast = get_config()['auth_mast']
@@ -74,7 +76,9 @@ def register_oauth():
         'mast_auth',
         client_id='{}'.format(client_id),
         client_secret='{}'.format(client_secret),
-        access_token_url='https://{}/oauth/access_token?client_secret={}'.format(auth_mast, client_secret),
+        access_token_url='https://{}/oauth/access_token?client_secret={}'.format(
+            auth_mast, client_secret
+        ),
         access_token_params=None,
         refresh_token_url=None,
         authorize_url='https://{}/oauth/authorize'.format(auth_mast),
@@ -105,7 +109,9 @@ def authorize(request):
     """
 
     # Get auth.mast token
-    token = JWQL_OAUTH.mast_auth.authorize_access_token(request, headers={'Accept': 'application/json'})
+    token = JWQL_OAUTH.mast_auth.authorize_access_token(
+        request, headers={'Accept': 'application/json'}
+    )
 
     # Determine domain
     base_url = get_base_url()
@@ -162,8 +168,12 @@ def auth_info(fn):
 
         # If user is authenticated, return user credentials
         if cookie is not None:
+            check_config('auth_mast')
+            # Note: for now, this must be the development version
+            auth_mast = get_config()['auth_mast']
+
             response = requests.get(
-                'https://{}/info'.format(get_config()['auth_mast']),
+                'https://{}/info'.format(auth_mast),
                 headers={'Accept': 'application/json',
                          'Authorization': 'token {}'.format(cookie)})
             response = response.json()

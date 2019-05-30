@@ -44,32 +44,14 @@ Notes
 """
 
 from collections import OrderedDict
-import os
 
 from astropy.time import Time
-from astroquery.mast import Mast
 from bokeh.embed import components
 from bokeh.plotting import figure
 import numpy as np
 
-from jwql.utils.utils import get_config
+from jwql.utils.credentials import get_mast_token
 from jwedb.edb_interface import query_single_mnemonic, query_mnemonic_info
-
-
-if Mast.authenticated():
-    MAST_TOKEN = None
-else:
-    try:
-        # check if token is available via config file
-        settings = get_config()
-        MAST_TOKEN = settings['mast_token']
-    except KeyError:
-        # check if token is available via environment variable
-        # see https://auth.mast.stsci.edu/info
-        try:
-            MAST_TOKEN = os.environ['MAST_API_TOKEN']
-        except KeyError:
-            MAST_TOKEN = None
 
 
 class EdbMnemonic:
@@ -159,8 +141,9 @@ def get_mnemonic(mnemonic_identifier, start_time, end_time):
         EdbMnemonic object containing query results
 
     """
+    mast_token = get_mast_token()
     data, meta, info = query_single_mnemonic(mnemonic_identifier, start_time, end_time,
-                                             token=MAST_TOKEN)
+                                             token=mast_token)
 
     # create and return instance
     mnemonic = EdbMnemonic(mnemonic_identifier, start_time, end_time, data, meta, info)
@@ -212,4 +195,5 @@ def get_mnemonic_info(mnemonic_identifier):
         Object that contains the returned data
 
     """
-    return query_mnemonic_info(mnemonic_identifier, token=MAST_TOKEN)
+    mast_token = get_mast_token()
+    return query_mnemonic_info(mnemonic_identifier, token=mast_token)
