@@ -414,14 +414,14 @@ def check_config(key):
     except KeyError:
         raise KeyError(
             'The key `{}` is not present in config.json. Please add it.'.format(key)
-            + 'See the relevant wiki page (https://github.com/spacetelescope/'
+            + ' See the relevant wiki page (https://github.com/spacetelescope/'
             'jwql/wiki/Config-file) for more information.'
         )
 
     if get_config()[key] == "":
         raise ValueError(
             'Please complete the `{}` field in your config.json. '.format(key)
-            + 'See the relevant wiki page (https://github.com/spacetelescope/'
+            + ' See the relevant wiki page (https://github.com/spacetelescope/'
             'jwql/wiki/Config-file) for more information.'
         )
 
