@@ -112,7 +112,7 @@ def download_mast_data(query_results, output_dir):
 
         print('uri is {}'.format(uri))
 
-        conn.request("GET", "/api/v0/download/file?uri="+uri)
+        conn.request("GET", "/api/v0/download/file?uri=" + uri)
         resp = conn.getresponse()
         file_content = resp.read()
 
@@ -316,7 +316,10 @@ def filename_parser(filename):
     except AttributeError:
         jdox_url = 'https://jwst-docs.stsci.edu/display/JDAT/' \
                    'File+Naming+Conventions+and+Data+Products'
-        raise ValueError('Provided file {} does not follow JWST naming conventions.  See {} for further information.'.format(filename, jdox_url))
+        raise ValueError(
+            'Provided file {} does not follow JWST naming conventions.  '
+            'See {} for further information.'.format(filename, jdox_url)
+        )
 
     return filename_dict
 
@@ -345,7 +348,9 @@ def filesystem_path(filename):
     if os.path.isfile(full_path):
         return full_path
     else:
-        raise FileNotFoundError(('{} is not in the predicted location: {}'.format(filename, full_path)))
+        raise FileNotFoundError(
+            '{} is not in the predicted location: {}'.format(filename, full_path)
+        )
 
 
 def get_base_url():
@@ -393,6 +398,32 @@ def get_config():
         settings = json.load(config_file)
 
     return settings
+
+
+def check_config(key):
+    """Check that the config.json file contains the specified key
+    and that the entry is not empty
+
+    Parameters
+    -------
+    key : str
+        The configuration file key to verify
+    """
+    try:
+        get_config()[key]
+    except KeyError:
+        raise KeyError(
+            'The key `{}` is not present in config.json. Please add it.'.format(key)
+            + ' See the relevant wiki page (https://github.com/spacetelescope/'
+            'jwql/wiki/Config-file) for more information.'
+        )
+
+    if get_config()[key] == "":
+        raise ValueError(
+            'Please complete the `{}` field in your config.json. '.format(key)
+            + ' See the relevant wiki page (https://github.com/spacetelescope/'
+            'jwql/wiki/Config-file) for more information.'
+        )
 
 
 def initialize_instrument_monitor(module):

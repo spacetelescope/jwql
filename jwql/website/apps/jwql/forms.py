@@ -117,7 +117,7 @@ class FileSearchForm(forms.Form):
         search = self.cleaned_data['search']
 
         # Make sure the search is either a proposal or fileroot
-        if len(search) == 5 and search.isnumeric():
+        if search.isnumeric() and 1 < int(search) < 99999:
             self.search_type = 'proposal'
         elif self._search_is_fileroot(search):
             self.search_type = 'fileroot'
@@ -129,8 +129,9 @@ class FileSearchForm(forms.Form):
         if self.search_type == 'proposal':
             # See if there are any matching proposals and, if so, what
             # instrument they are for
-            search_string = os.path.join(FILESYSTEM_DIR, 'jw{}'.format(search),
-                                         '*{}*.fits'.format(search))
+            proposal_string = '{:05d}'.format(int(search))
+            search_string = os.path.join(FILESYSTEM_DIR, 'jw{}'.format(proposal_string),
+                                         '*{}*.fits'.format(proposal_string))
             all_files = glob.glob(search_string)
             if len(all_files) > 0:
                 all_instruments = []
@@ -139,7 +140,8 @@ class FileSearchForm(forms.Form):
                     all_instruments.append(instrument)
                 if len(set(all_instruments)) > 1:
                     raise forms.ValidationError('Cannot return result for proposal with multiple '
-                                                'instruments.')
+                                                'instruments ({}).'
+                                                .format(', '.join(set(all_instruments))))
 
                 self.instrument = all_instruments[0]
             else:
@@ -191,10 +193,11 @@ class FileSearchForm(forms.Form):
         """
         # Process the data in form.cleaned_data as required
         search = self.cleaned_data['search']
+        proposal_string = '{:05d}'.format(int(search))
 
         # If they searched for a proposal
         if self.search_type == 'proposal':
-            return redirect('/{}/archive/{}'.format(self.instrument, search))
+            return redirect('/{}/archive/{}'.format(self.instrument, proposal_string))
 
         # If they searched for a file root
         elif self.search_type == 'fileroot':
@@ -211,6 +214,14 @@ class MnemonicSearchForm(forms.Form):
     # Initialize attributes
     search_type = None
 
+    def __init__(self, *args, **kwargs):
+        try:
+            self.logged_in = kwargs.pop('logged_in')
+        except KeyError:
+            self.logged_in = True
+
+        super(MnemonicSearchForm, self).__init__(*args, **kwargs)
+
     def clean_search(self):
         """Validate the "search" field.
 
@@ -222,6 +233,11 @@ class MnemonicSearchForm(forms.Form):
             The cleaned data input into the "search" field
 
         """
+        # Stop now if not logged in
+        if not self.logged_in:
+            raise forms.ValidationError('Could not log into MAST. Please login or provide MAST '
+                                        'token in environment variable or config.json.')
+
         # Get the cleaned search data
         search = self.cleaned_data['search']
 
@@ -268,6 +284,14 @@ class MnemonicQueryForm(forms.Form):
     # Initialize attributes
     search_type = None
 
+    def __init__(self, *args, **kwargs):
+        try:
+            self.logged_in = kwargs.pop('logged_in')
+        except KeyError:
+            self.logged_in = True
+
+        super(MnemonicQueryForm, self).__init__(*args, **kwargs)
+
     def clean_search(self):
         """Validate the "search" field.
 
@@ -279,6 +303,11 @@ class MnemonicQueryForm(forms.Form):
             The cleaned data input into the "search" field
 
         """
+        # Stop now if not logged in
+        if not self.logged_in:
+            raise forms.ValidationError('Could not log into MAST. Please login or provide MAST '
+                                        'token in environment variable or config.json.')
+
         # Get the cleaned search data
         search = self.cleaned_data['search']
 
