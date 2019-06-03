@@ -74,10 +74,9 @@
 
                         <!--Show the field forms-->
                         {% for field in form %}
-                                {{ field }}
-                                {% if field.help_text %}
-                                    <p class="help">{{ field.help_text|safe }}</p>
-                                {% endif %}
+                            {% for subwidget in field.subwidgets %}
+                                <li class="anomaly_choice">{{subwidget}}</li>
+                            {% endfor %}
                         {% endfor %}
                         <button class="btn btn-primary" type="submit" style="float: right;">Submit</button>
                     </form>

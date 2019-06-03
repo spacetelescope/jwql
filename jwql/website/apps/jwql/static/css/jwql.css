@@ -1,3 +1,7 @@
+.anomaly_choice {
+  list-style: none;
+}
+
 .anomaly_form {
   position: absolute;
   top: 50%;
