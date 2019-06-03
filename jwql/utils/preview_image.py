@@ -213,7 +213,6 @@ class PreviewImage():
                     yd, xd = data.shape[-2:]
                     dq = np.ones((yd, xd), dtype="bool")
 
-
                 # Collect information on aperture location within the
                 # full detector. This is needed for mosaicking NIRCam
                 # detectors later.
