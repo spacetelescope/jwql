@@ -18,6 +18,7 @@ Use
 """
 
 import datetime
+import os
 
 from jwql.database import database_interface as di
 
