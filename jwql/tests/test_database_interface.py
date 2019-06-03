@@ -19,6 +19,7 @@ Use
 
 import datetime
 import os
+import pytest
 
 from jwql.database import database_interface as di
 
