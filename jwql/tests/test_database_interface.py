@@ -21,13 +21,18 @@ import datetime
 
 from jwql.database import database_interface as di
 
+# Determine if tests are being run on jenkins
+ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
 
+
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to development database server.')
 def test_anomaly_table():
     """Test to see that the database has an anomalies table"""
 
     assert 'anomaly' in di.engine.table_names()
 
 
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to development database server.')
 def test_anomaly_records():
     """Test to see that new records can be entered"""
 
