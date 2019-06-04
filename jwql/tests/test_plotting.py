@@ -18,9 +18,17 @@ Use
         pytest -s test_plotting.py
 """
 
+import glob
+import os
+import re
+
+import bokeh
 from pandas import DataFrame
 
 from jwql.utils.plotting import bar_chart
+
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+JWQL_DIR = __location__.split('tests')[0]
 
 
 def test_bar_chart():
@@ -36,3 +44,26 @@ def test_bar_chart():
     plt = bar_chart(data, 'index')
 
     assert str(type(plt)) == "<class 'bokeh.plotting.figure.Figure'>"
+
+
+def test_bokeh_version():
+    """Make sure that the current version of Bokeh matches the version being
+    used in all the web app HTML templates.
+    """
+    env_version = bokeh.__version__
+
+    template_paths = os.path.join(JWQL_DIR, 'website/apps/jwql/templates', '*.html')
+    all_web_html_files = glob.glob(template_paths)
+
+    for file in all_web_html_files:
+        with open(file) as f:
+            content = f.read()
+
+        # Find all of the times "bokeh-#.#.#' appears in a template
+        html_versions = re.findall(r'(?<=bokeh-)\d+\.\d+\.\d+', content)
+
+        # Make sure they all match the environment version
+        for version in html_versions:
+            assert version == env_version, \
+                'Bokeh version ({}) in HTML template {} '.format(version, os.path.basename(file)) + \
+                'does not match current environment version ({}).'.format(env_version)
