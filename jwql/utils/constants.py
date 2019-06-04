@@ -20,6 +20,9 @@ References
     ``utils.py``
 """
 
+import inflection
+
+
 # Defines the x and y coordinates of amplifier boundaries
 AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 0), (512, 2048)], '2': [(512, 0), (1024, 2048)],
                                    '3': [(1024, 0), (1536, 2048)], '4': [(1536, 0), (2048, 2048)]}
@@ -30,11 +33,7 @@ ANOMALIES = ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error'
              'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail', 'other']
 
 # Defines the possible anomalies (with rendered name) to flag through the web app
-ANOMALY_CHOICES = [
-    ('snowball', 'Snowball'), ('cosmic_ray_shower', 'Cosmic Ray Shower'), ('crosstalk', 'Crosstalk'),
-    ('data_transfer_error', 'Data Transfer Error'), ('diffraction_spike', 'Diffraction Spike'),
-    ('excessive_saturation', 'Excessive Saturation'), ('ghost', 'Ghost'), ('guidestar_failure', 'Guidestar Failure'),
-    ('persistence', 'Persistence'), ('satellite_trail', 'Satellite Trail'), ('other', 'Other')]
+ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES]
 
 # Possible suffix types for nominal files
 GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',

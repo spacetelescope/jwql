@@ -6,6 +6,7 @@ Authors
 -------
 
     - Joe Filippazzo
+    - Matthew Bourque
 
 Use
 ---
@@ -20,6 +21,8 @@ Use
 import datetime
 import os
 import pytest
+import random
+import string
 
 from jwql.database import database_interface as di
 
@@ -39,7 +42,8 @@ def test_anomaly_records():
     """Test to see that new records can be entered"""
 
     # Add some data
-    di.session.add(di.Anomaly(rootname='foo1', flag_date=datetime.datetime.today(), user='test', ghost=True))
+    random_string = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.ascii_uppercase + string.digits) for _ in range(10))
+    di.session.add(di.Anomaly(rootname=random_string, flag_date=datetime.datetime.today(), user='test', ghost=True))
     di.session.commit()
 
     # Test the ghosts column
