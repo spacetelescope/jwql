@@ -2,7 +2,7 @@ import numpy as np
 from setuptools import setup
 from setuptools import find_packages
 
-VERSION = '0.19.0'
+VERSION = '0.20.0'
 
 AUTHORS = 'Matthew Bourque, Sara Ogaz, Joe Filippazzo, Bryan Hilbert, Misty Cracraft, '
 AUTHORS += 'Graham Kanarek, Johannes Sahlmann, Lauren Chambers, Catherine Martlin'
