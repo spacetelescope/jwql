@@ -44,6 +44,7 @@ conf['mast'] = {'server': 'https://{}'.format(mast_flavour)}
 from astroquery.mast import Mast
 from jwedb.edb_interface import mnemonic_inventory
 
+from jwql.database import database_interface as di
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
@@ -144,6 +145,33 @@ def get_all_proposals():
     proposals = [proposal for proposal in proposals if len(proposal) == 5]
 
     return proposals
+
+
+def get_current_flagged_anomalies(rootname):
+    """Return a list of currently flagged anomalies for the given
+    ``rootname``
+
+    Parameters
+    ----------
+    rootname : str
+        The rootname of interest (e.g.
+        ``jw86600008001_02101_00001_guider2/``)
+
+    Returns
+    -------
+    current_anomalies : list
+        A list of currently flagged anomalies for the given ``rootname``
+        (e.g. ``['snowball', 'crosstalk']``)
+    """
+
+    query = di.session.query(di.Anomaly).filter(di.Anomaly.rootname == rootname).order_by(di.Anomaly.flag_date.desc()).limit(1)
+    all_records = query.data_frame
+    if not all_records.empty:
+        current_anomalies = [col for col, val in np.sum(all_records, axis=0).items() if val]
+    else:
+        current_anomalies = []
+
+    return current_anomalies
 
 
 def get_dashboard_components():
