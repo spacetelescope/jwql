@@ -13,6 +13,7 @@ Project & API Documentation
 Web Application
 ~~~~~~~~~~~~~~~
 
+- Added form on preview image pages to allow users to submit image anomalies.
 - Added buttons for users to download the results of EDB telemetry queries as CSV files.
 - Enabled users to search for or navigate to program numbers without requiring leading zeros (i.e. "756" is now treated equivalently to "00756").
 - Enabled authentication for EDB queries via the web login (rather than requiring authentication information to be present in the configuration file).
