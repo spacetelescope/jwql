@@ -1,5 +1,15 @@
+.anomaly_choice {
+  list-style: none;
+}
+
+.anomaly_form {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 .APT_parameters {
-    width: 20%
+  width: 20%
 }
 
 .banner {
@@ -180,6 +190,11 @@ display : inline;
 /*Make the form fields be inline*/
 .homepage_form_fieldWrapper {
     display: inline;
+}
+
+#id_anomaly_choices {
+  list-style: none;
+  padding-left: 0;
 }
 
 /*Don't let the search bar be super long*/
@@ -501,3 +516,8 @@ li.dropdown:hover .dropdown-menu {
     display: block;
 }
 
+ul.no-bullets {
+    list-style: none;
+    padding-left:10px;
+    line-height:25px;
+}
