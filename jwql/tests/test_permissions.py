@@ -29,6 +29,9 @@ from jwql.utils.permissions import set_permissions, has_permissions, \
 # directory to be created and populated during tests running
 TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'permission_test')
 
+# Determine if tests are being run on jenkins
+ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
+
 
 @pytest.fixture(scope="module")
 def test_directory(test_dir=TEST_DIRECTORY):
@@ -99,6 +102,7 @@ def test_file(test_dir=TEST_DIRECTORY):
         os.rmdir(test_dir)
 
 
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_file_group(test_file):
     """Create a file with the standard permissions ``('-rw-r--r--')``
     and default group.

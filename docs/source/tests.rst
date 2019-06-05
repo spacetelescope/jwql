@@ -22,7 +22,7 @@ test_dark_monitor.py
 
 test_edb_interface.py
 ---------------------
-.. automodule:: jwql.tests.test_edb_interface
+.. automodule:: jwql.tests.test_edb
     :members:
     :undoc-members:
 
@@ -35,6 +35,12 @@ test_instrument_properties.py
 test_loading_times.py
 --------------------
 .. automodule:: jwql.tests.test_loading_times
+    :members:
+    :undoc-members:
+
+test_logging_functions.py
+-------------------------
+.. automodule:: jwql.tests.test_logging_functions
     :members:
     :undoc-members:
 

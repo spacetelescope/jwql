@@ -75,20 +75,20 @@ urlpatterns = [
     re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),
     re_path(r'^(?P<inst>({}))/(?P<file_root>[\w]+)/$'.format(instruments), views.view_image, name='view_image'),
     re_path(r'^(?P<inst>({}))/(?P<file>.+)/hdr/$'.format(instruments), views.view_header, name='view_header'),
-    re_path(r'^(?P<inst>({}))/archive/(?P<proposal>[\d]{{5}})/$'.format(instruments), views.archive_thumbnails, name='archive_thumb'),
+    re_path(r'^(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/$'.format(instruments), views.archive_thumbnails, name='archive_thumb'),
 
     # AJAX views
     re_path(r'^ajax/(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals_ajax, name='archive_ajax'),
-    re_path(r'^ajax/(?P<inst>({}))/archive/(?P<proposal>[\d]{{5}})/$'.format(instruments), views.archive_thumbnails_ajax, name='archive_thumb_ajax'),
+    re_path(r'^ajax/(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/$'.format(instruments), views.archive_thumbnails_ajax, name='archive_thumb_ajax'),
 
     # REST API views
     path('api/proposals/', api_views.all_proposals, name='all_proposals'),
     re_path(r'^api/(?P<inst>({}))/proposals/$'.format(instruments), api_views.instrument_proposals, name='instrument_proposals'),
     re_path(r'^api/(?P<inst>({}))/preview_images/$'.format(instruments), api_views.preview_images_by_instrument, name='preview_images_by_instrument'),
     re_path(r'^api/(?P<inst>({}))/thumbnails/$'.format(instruments), api_views.thumbnails_by_instrument, name='thumbnails_by_instrument'),
-    re_path(r'^api/(?P<proposal>[\d]{5})/filenames/$', api_views.filenames_by_proposal, name='filenames_by_proposal'),
-    re_path(r'^api/(?P<proposal>[\d]{5})/preview_images/$', api_views.preview_images_by_proposal, name='preview_images_by_proposal'),
-    re_path(r'^api/(?P<proposal>[\d]{5})/thumbnails/$', api_views.thumbnails_by_proposal, name='preview_images_by_proposal'),
+    re_path(r'^api/(?P<proposal>[\d]{1,5})/filenames/$', api_views.filenames_by_proposal, name='filenames_by_proposal'),
+    re_path(r'^api/(?P<proposal>[\d]{1,5})/preview_images/$', api_views.preview_images_by_proposal, name='preview_images_by_proposal'),
+    re_path(r'^api/(?P<proposal>[\d]{1,5})/thumbnails/$', api_views.thumbnails_by_proposal, name='preview_images_by_proposal'),
     re_path(r'^api/(?P<rootname>[\w]+)/filenames/$', api_views.filenames_by_rootname, name='filenames_by_rootname'),
     re_path(r'^api/(?P<rootname>[\w]+)/preview_images/$', api_views.preview_images_by_rootname, name='preview_images_by_rootname'),
     re_path(r'^api/(?P<rootname>[\w]+)/thumbnails/$', api_views.thumbnails_by_rootname, name='thumbnails_by_rootname'),

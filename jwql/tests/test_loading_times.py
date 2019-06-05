@@ -19,6 +19,7 @@ Use
         pytest -s test_loading_times.py
 """
 
+import os
 import pytest
 import time
 import urllib.request
@@ -27,6 +28,9 @@ from jwql.utils.utils import get_base_url
 
 TIME_CONSTRAINT = 30  # seconds
 
+# Determine if tests are being run on jenkins
+ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
+
 urls = []
 
 # Generic URLs
@@ -34,7 +38,7 @@ urls.append('')
 urls.append('about/')
 urls.append('edb/')
 
-# Speicif URLs
+# Specific URLs
 test_mappings = [('fgs', '86700', 'jw86600007001_02101_00001_guider2'),
                  ('miri', '98012', 'jw98012001001_02102_00001_mirimage'),
                  ('nircam', '93025', 'jw93065002001_02101_00001_nrcb2'),
@@ -48,9 +52,10 @@ for mapping in test_mappings:
     urls.append('{}/{}/'.format(instrument, rootname))
 
 
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 @pytest.mark.parametrize('url', urls)
 def test_loading_times(url):
-    """Test to see if the given ``url`` returns a webpage sucessfully
+    """Test to see if the given ``url`` returns a webpage successfully
     within a reasonable time.
 
     Parameters
