@@ -21,9 +21,11 @@ Use
 import glob
 import os
 import re
+import sys
 
 import bokeh
 from pandas import DataFrame
+import pytest
 
 from jwql.utils.plotting import bar_chart
 
@@ -46,6 +48,8 @@ def test_bar_chart():
     assert str(type(plt)) == "<class 'bokeh.plotting.figure.Figure'>"
 
 
+@pytest.mark.skipif(sys.version_info[:2] != (3, 6),
+                    reason="Web server run on Python 3.6")
 def test_bokeh_version():
     """Make sure that the current version of Bokeh matches the version being
     used in all the web app HTML templates.
