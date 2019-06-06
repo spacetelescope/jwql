@@ -40,21 +40,55 @@
 	    	<a class="btn btn-primary mx-2 disabled" role="button" href="#"> View Proposal {{ file_root[2:7] }}</a>
 	    </p>
 
-	    <!-- Display the image -->
-	    <div class='text-center'>
-		    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("left", "{{file_root}}", "{{num_ints}}");' disabled>&#9664;</button>
-		    <span class="image_preview">
-		    	<a id="int_count">Displaying integration 1/1</a><br>
-		    	<img id="image_viewer" src='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}_cal_integ0.jpg' alt='{{ file_root }}_cal_integ0.jpg'>
-		    </span>
-		    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("right", "{{file_root}}", "{{num_ints}}");' disabled>&#9658;</button>
-		</div>
+        <div class="row">
+
+            <!-- Display the image -->
+    	    <div class="col-md-9 text-center">
+    		    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("left", "{{file_root}}", "{{num_ints}}");' disabled>&#9664;</button>
+    		    <span class="image_preview">
+    		    	<a id="int_count">Displaying integration 1/1</a><br>
+    		    	<img id="image_viewer" src='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}_cal_integ0.jpg' alt='{{ file_root }}_cal_integ0.jpg'>
+    		    </span>
+    		    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("right", "{{file_root}}", "{{num_ints}}");' disabled>&#9658;</button>
+            </div>
+
+            <!-- Display the anomaly form -->
+            <div class="col-md-3 text-left">
+                <!--Load the file search form from the view-->
+                <div class="anomaly_form">
+                    <h5>Submit Anomaly</h5>
+                    <form action="" method="post">
+                        <!--Show any errors from a previous form submission-->
+                        {% if form.errors %}
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <div class="alert alert-danger">
+                                        <strong>{{ error|escape }}</strong>
+                                    </div>
+                                {% endfor %}
+                            {% endfor %}
+                        {% endif %}
+
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+
+                        <!--Show the field forms-->
+                        {% for field in form %}
+                            {% for subwidget in field.subwidgets %}
+                                <li class="anomaly_choice">{{subwidget}}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        <button class="btn btn-primary" type="submit" style="float: right;">Submit</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
 
 		<!-- Download the images? -->
 	    <p>
 	    	<a id="download_fits" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}' download>Download FITS</a>
 	    	<a id="download_jpg" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ jpg }}' download>Download JPEG</a>
-	    	<a class="btn btn-primary my-2 mx-2 disabled" role="button" href="#">Submit Anomaly</a>
 	    </p>
 
 	    <!-- Determine which filetype should be shown on load -->
@@ -70,42 +104,6 @@
 	    	<a>Lauren needs to figure out what to do with these: {{suffixes}}</a>
 	    {% endif %}
 
-
-
-		<!-- Try the arrow-to-navigate thing -->
-		<!-- {% if imdat %}
-			<div class="container">
-			    <div id="slideshow">
-			        <img alt="{{ imdat.0 }}" src="{{ staticURL }}/{{ imdat.0 }}" width=800 id="imgClickAndChange" onclick="changeImage()" />
-			    </div>
-			</div>
-
-			<div id="demo"></div>
-			<script>
-			document.getElementById("demo").innerHTML = "Hello JavaScript!";
-			</script>
-
-
-			<script>
-			    var imgs = {{ imdat }};
-
-			    function changeImage(dir) {
-			    	document.getElementById("imgClickAndChange").innerHTML = 5 + 6;
-			        var img = document.getElementById("imgClickAndChange");
-			        img.src = imgs[(imgs.indexOf(img.src) + 1) % imgs.length];
-			    }
-
-			    document.onkeydown = function(e) {
-			        e = e || window.event;
-			        if (e.keyCode == '37') {
-			            changeImage(-1) //left <- show Prev image
-			        } else if (e.keyCode == '39') {
-			            // right -> show next image
-			            changeImage()
-			        }
-			    }
-			</script>
-		{% endif %} -->
 	</main>
 
 {% endblock %}

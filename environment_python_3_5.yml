@@ -8,6 +8,7 @@ dependencies:
 - bokeh=0.13.0
 - crds>=7.2.7
 - django=2.1.1
+- inflection=0.3.1
 - ipython=6.5.0
 - jinja2=2.10
 - jwst=0.13.0

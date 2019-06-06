@@ -17,13 +17,24 @@ Use
 
         pytest -s test_api_views.py
 """
+import os
 
 import json
 import pytest
-import urllib.request
+from urllib import request, error
 
 from jwql.utils.utils import get_base_url
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
+
+# Determine if tests are being run on jenkins
+ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
+
+# Determine if the local server is running
+try:
+    url = request.urlopen('http://127.0.0.1:8000')
+    LOCAL_SERVER = True
+except error.URLError:
+    LOCAL_SERVER = False
 
 urls = []
 
@@ -41,6 +52,7 @@ proposals = ['86700',  # FGS
              '98012',  # MIRI
              '93025',  # NIRCam
              '00308',  # NIRISS
+             '308',  # NIRISS
              '96213']  # NIRSpec
 for proposal in proposals:
     urls.append('api/{}/filenames/'.format(proposal))  # filenames_by_proposal
@@ -51,7 +63,7 @@ for proposal in proposals:
 rootnames = ['jw86600007001_02101_00001_guider2',  # FGS
              'jw98012001001_02102_00001_mirimage',  # MIRI
              'jw93025001001_02102_00001_nrca2',  # NIRCam
-             'jw00308001001_02101_00001_nis',  # NIRISS
+             'jw00308001001_02103_00001_nis',  # NIRISS
              'jw96213001001_02101_00001_nrs1']  # NIRSpec
 for rootname in rootnames:
     urls.append('api/{}/filenames/'.format(rootname))  # filenames_by_rootname
@@ -59,7 +71,7 @@ for rootname in rootnames:
     urls.append('api/{}/thumbnails/'.format(rootname))  # thumbnails_by_rootname
 
 
-@pytest.mark.xfail
+# @pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 @pytest.mark.parametrize('url', urls)
 def test_api_views(url):
     """Test to see if the given ``url`` returns a populated JSON object
@@ -72,13 +84,26 @@ def test_api_views(url):
     """
 
     # Build full URL
-    base_url = get_base_url()
+    if not ON_JENKINS:
+        base_url = get_base_url()
+    else:
+        base_url = 'https://dljwql.stsci.edu'
+
+    if base_url == 'http://127.0.0.1:8000' and not LOCAL_SERVER:
+        pytest.skip("Local server not running")
+
     url = '{}/{}'.format(base_url, url)
 
     # Determine the type of data to check for based on the url
     data_type = url.split('/')[-2]
 
-    url = urllib.request.urlopen(url)
+    try:
+        url = request.urlopen(url)
+    except error.HTTPError as e:
+        if e.code == 502:
+            pytest.skip("Dev server problem")
+        raise(e)
+
     data = json.loads(url.read().decode())
 
     assert len(data[data_type]) > 0
