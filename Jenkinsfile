@@ -29,7 +29,7 @@ withCredentials([
           "codecov --token=${codecov_token}",
           "mkdir -v reports",
           "mv -v coverage.xml reports/coverage.xml",
-          "twine upload -u {pypi_username} -p {pypi_password} --repository-url https://upload.pypi.org/legacy/ dist/*"]
+          "twine upload -u ${pypi_username} -p ${pypi_password} --repository-url https://upload.pypi.org/legacy/ dist/*"]
       matrix += bc
     }
   }
