@@ -32,6 +32,7 @@ from jwql.utils.utils import get_config
 ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
 
 
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to development database server.')
 def test_all_tables_exist():
     """Test that the table ORMs defined in ``database_interface``
     actually exist as tables in the database"""
@@ -67,13 +68,6 @@ def test_anomaly_orm_factory():
 
     for anomaly in ANOMALIES:
         assert anomaly in table_attributes
-
-
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to development database server.')
-def test_anomaly_table():
-    """Test to see that the database has an anomalies table"""
-
-    assert 'anomaly' in di.engine.table_names()
 
 
 @pytest.mark.skipif(ON_JENKINS, reason='Requires access to development database server.')
