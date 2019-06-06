@@ -36,8 +36,3 @@ withCredentials([
 
   utils.run(matrix)
 }
-
-
-withCredentials([usernamePassword(credentialsId:'jwql-pypi',
-usernameVariable: 'USERNAME',
-passwordVariable: 'PASSWORD')]) {  <use vars here>    }
