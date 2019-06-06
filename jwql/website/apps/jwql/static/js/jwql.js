@@ -188,9 +188,10 @@ function search() {
         // Evaluate if the proposal number matches the search
         var j = i + 1
         var prop_name = document.getElementById("proposal" + j).getAttribute('proposal')
+        var prop_num = Number(prop_name)
 
 
-        if (prop_name.startsWith(search_value)) {
+        if (prop_name.startsWith(search_value) || prop_num.toString().startsWith(search_value)) {
             proposals[i].style.display = "inline-block";
             num_proposals_displayed++;
         } else {
