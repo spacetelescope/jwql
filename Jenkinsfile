@@ -7,8 +7,7 @@ matrix = []
 
 withCredentials([
   string(credentialsId: 'jwql-codecov', variable: 'codecov_token'),
-  string(credentialsId: 'jwql-pypi-username', variable: 'pypi_username_token'),
-  string(credentialsId: 'jwql-pypi-password', variable: 'pypi_password_token')])
+  usernamePassword(credentialsId:'jwql-pypi', usernameVariable: 'pypi_username', passwordVariable: 'pypi_password')])
 
 {
   for (os in matrix_os) {
@@ -30,10 +29,15 @@ withCredentials([
           "codecov --token=${codecov_token}",
           "mkdir -v reports",
           "mv -v coverage.xml reports/coverage.xml",
-          "twine upload -u {pypi_username_token} -p {pypi_password_token} --repository-url https://upload.pypi.org/legacy/ dist/*"]
+          "twine upload -u {pypi_username} -p {pypi_password} --repository-url https://upload.pypi.org/legacy/ dist/*"]
       matrix += bc
     }
   }
 
   utils.run(matrix)
 }
+
+
+withCredentials([usernamePassword(credentialsId:'jwql-pypi',
+usernameVariable: 'USERNAME',
+passwordVariable: 'PASSWORD')]) {  <use vars here>    }
