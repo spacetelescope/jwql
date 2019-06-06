@@ -42,10 +42,10 @@ def test_anomaly_records():
     """Test to see that new records can be entered"""
 
     # Add some data
-    random_string = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.ascii_uppercase + string.digits) for _ in range(10))
-    di.session.add(di.Anomaly(rootname=random_string, flag_date=datetime.datetime.today(), user='test', ghost=True))
+    random_rootname = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.ascii_uppercase + string.digits) for _ in range(10))
+    di.session.add(di.Anomaly(rootname=random_rootname, flag_date=datetime.datetime.today(), user='test', ghost=True))
     di.session.commit()
 
     # Test the ghosts column
-    ghosts = di.session.query(di.Anomaly).filter(di.Anomaly.ghost == "True")
+    ghosts = di.session.query(di.Anomaly).filter(di.Anomaly.rootname == random_rootname).filter(di.Anomaly.ghost == "True")
     assert ghosts.data_frame.iloc[0]['ghost'] == True
