@@ -65,6 +65,7 @@ def test_bokeh_version():
 
         # Find all of the times "bokeh-#.#.#' appears in a template
         html_versions = re.findall(r'(?<=bokeh-)\d+\.\d+\.\d+', content)
+        html_versions += re.findall(r'(?<=bokeh-widgets-)\d+\.\d+\.\d+', content)
 
         # Make sure they all match the environment version
         for version in html_versions:
