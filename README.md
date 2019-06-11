@@ -140,6 +140,7 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 
 ## Acknowledgments:
 - Faith Abney (DMD)
+- Joshua Alexander (DMD) [@obviousrebel](https://github.com/obviousrebel)
 - Anastasia Alexov (DMD)
 - Sara Anderson (DMD)
 - Tracy Beck (INS)
