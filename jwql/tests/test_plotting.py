@@ -60,7 +60,7 @@ def test_bokeh_version():
     all_web_html_files = glob.glob(template_paths)
 
     for file in all_web_html_files:
-        with open(file) as f:
+        with open(file, 'r+', encoding="utf-8") as f:
             content = f.read()
 
         # Find all of the times "bokeh-#.#.#' appears in a template
