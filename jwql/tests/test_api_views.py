@@ -17,11 +17,13 @@ Use
 
         pytest -s test_api_views.py
 """
-import os
 
+import http
 import json
-import pytest
+import os
 from urllib import request, error
+
+import pytest
 
 from jwql.utils.utils import get_base_url
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
@@ -71,7 +73,6 @@ for rootname in rootnames:
     urls.append('api/{}/thumbnails/'.format(rootname))  # thumbnails_by_rootname
 
 
-# @pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 @pytest.mark.parametrize('url', urls)
 def test_api_views(url):
     """Test to see if the given ``url`` returns a populated JSON object
@@ -104,6 +105,9 @@ def test_api_views(url):
             pytest.skip("Dev server problem")
         raise(e)
 
-    data = json.loads(url.read().decode())
+    try:
+        data = json.loads(url.read().decode())
+    except (http.client.IncompleteRead) as e:
+        data = e.partial
 
     assert len(data[data_type]) > 0

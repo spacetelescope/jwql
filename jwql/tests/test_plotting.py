@@ -35,7 +35,7 @@ JWQL_DIR = __location__.split('tests')[0]
 
 def test_bar_chart():
     """Make sure some dummy data generates a ``bokeh`` plot"""
-    
+
     # Make a toy dataframe
     data = DataFrame({'meow': {'foo': 12, 'bar': 23, 'baz': 2},
                       'mix': {'foo': 45, 'bar': 31, 'baz': 23},
@@ -60,7 +60,7 @@ def test_bokeh_version():
     all_web_html_files = glob.glob(template_paths)
 
     for file in all_web_html_files:
-        with open(file) as f:
+        with open(file, 'r+', encoding="utf-8") as f:
             content = f.read()
 
         # Find all of the times "bokeh-#.#.#' appears in a template
