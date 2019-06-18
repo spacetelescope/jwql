@@ -107,7 +107,7 @@ def test_api_views(url):
 
     try:
         data = json.loads(url.read().decode())
+        assert len(data[data_type]) > 0
     except (http.client.IncompleteRead) as e:
         data = e.partial
-
-    assert len(data[data_type]) > 0
+        assert len(data) > 0
