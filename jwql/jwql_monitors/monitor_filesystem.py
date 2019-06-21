@@ -165,7 +165,7 @@ def get_area_stats(central_storage_dict):
     arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
     counteddirs = []
 
-    sum = 0  # to be used to count 'all'
+    sums = 0  # to be used to count 'all'
     for area in arealist:
 
         used = 0
@@ -204,7 +204,7 @@ def get_area_stats(central_storage_dict):
                 if exists:
                     filesize = os.path.getsize(file_path)
                     used += filesize
-                    sum += filesize
+                    sums += filesize
         use = used / (1024 ** 4)
         central_storage_dict[area]['used'] = use
         print(area, total, use, free)
