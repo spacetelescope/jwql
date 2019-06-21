@@ -252,7 +252,7 @@ class CentralStore(base):
 
     # Define the columns
     id = Column(Integer, primary_key=True, nullable=False)
-    date = Column(DateTime, unique=True, nullable=False)
+    date = Column(DateTime, nullable=False)
     area = Column(String(), nullable=False)
     size = Column(Float, nullable=False)
     used = Column(Float, nullable=False)
