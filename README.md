@@ -88,10 +88,16 @@ conda env create -f environment_python_3_6.yml --name jwql-3.6
 
 ### Package Installation
 
-Next, you need to install the `jwql` package. While still in the `jwql/` directory, run the following command to set up the package:
+Next, you need to install the `jwql` package under development mode.  This can be accomplished either by running the `setup.py` script, or `pip install` with the `-e` option:
 
 ```
 python setup.py develop
+```
+
+or 
+
+```
+pip install -e .
 ```
 The package should now appear if you run `conda list jwql`.
 
