@@ -735,7 +735,13 @@ class Dark():
                                  .format(self.instrument, self.aperture))
 
                     # Get full paths to the files
-                    new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
+                    new_filenames = []
+                    for file_entry in new_entries:
+                        try:
+                            new_filenames.append(filesystem_path(file_entry['filename']))
+                        except FileNotFoundError:
+                            logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
+                                            .format(file_entry['filename']))
 
                     # Set up directories for the copied data
                     ensure_dir_exists(os.path.join(self.output_dir, 'data'))
