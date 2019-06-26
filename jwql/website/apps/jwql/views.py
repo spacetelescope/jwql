@@ -391,7 +391,7 @@ def logging_display(request):
         Incoming request from the webpage
 
     Returns
-    -------,
+    -------
     HttpResponse object
         Outgoing response sent to the webpage
     """
