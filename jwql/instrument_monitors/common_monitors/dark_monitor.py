@@ -78,8 +78,9 @@ from jwql.jwql_monitors import monitor_mast
 from jwql.utils import calculations, instrument_properties
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import log_info, log_fail
+from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path, initialize_instrument_monitor, update_monitor_table
+from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
 
@@ -700,7 +701,8 @@ class Dark():
 
         # Loop over all instruments
         #for instrument in JWST_INSTRUMENT_NAMES:
-        for instrument in ['nirspec']:
+        print('MIRI-SPECIFIC INST NAME HERE')
+        for instrument in ['miri']:
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -710,7 +712,9 @@ class Dark():
             possible_apertures = list(Siaf(instrument).apernames)
             possible_apertures = [ap for ap in possible_apertures if ap not in apertures_to_skip]
 
-            for aperture in possible_apertures:
+            #for aperture in possible_apertures:
+            print('MIRI-SPECIFIC APERTURE HERE')
+            for aperture in ['MIRIM_FULL']:
 
                 logging.info('')
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
@@ -726,7 +730,21 @@ class Dark():
 
                 # Query MAST using the aperture and the time of the
                 # most recent previous search as the starting time
-                new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
+                #new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
+
+                print('MIRI-SPECIFIC CHECK HERE')
+                new_entries = [{'filename': 'jw04191001001_01101_00001_mirimage_uncal.fits'},
+                              {'filename': 'jw04191001001_01101_00002_mirimage_uncal.fits'},
+                              {'filename': 'jw04191001001_01101_00003_mirimage_uncal.fits'},
+                              {'filename': 'jw04191001001_01101_00004_mirimage_uncal.fits'},
+                              {'filename': 'jw04191001001_01101_00005_mirimage_uncal.fits'},
+                              {'filename': 'jw04191001001_01101_00006_mirimage_uncal.fits'},
+                              {'filename': 'jw04191001001_01101_00007_mirimage_uncal.fits'},
+                              {'filename': 'jw04191001001_01101_00008_mirimage_uncal.fits'},
+                              {'filename': 'jw05191001001_01101_00001_mirimage_uncal.fits'},
+                              {'filename': 'jw05191001001_01101_00002_mirimage_uncal.fits'}]
+
+
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
                 # Check to see if there are enough new files to meet the
@@ -737,7 +755,18 @@ class Dark():
                                  .format(self.instrument, self.aperture))
 
                     # Get full paths to the files
-                    new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
+                    new_filenames = []
+                    for file_entry in new_entries:
+                        try:
+                            new_filenames.append(filesystem_path(file_entry['filename']))
+                        except FileNotFoundError:
+                            logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
+                                            .format(file_entry['filename']))
+
+
+
+
+                    #new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
 
                     # Set up directories for the copied data
                     ensure_dir_exists(os.path.join(self.output_dir, 'data'))
@@ -748,6 +777,11 @@ class Dark():
 
                     # Copy files from filesystem
                     dark_files, not_copied = copy_files(new_filenames, self.data_dir)
+
+                    print('new_filenames: ', new_filenames)
+                    print('self.data_dir', self.data_dir)
+                    print('dark_files: ', dark_files)
+                    print('not_copied: ', not_copied)
 
                     # Run the dark monitor
                     self.process(dark_files)
