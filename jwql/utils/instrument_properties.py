@@ -234,6 +234,27 @@ def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
     return ((1.0 * xdim / amps + colpad) * (ydim + rowpad) + fullpad) * sample_time
 
 
+def get_obstime(filename):
+    """Extract the observation date and time from a fits file
+
+    Parameters
+    ----------
+    filename : str
+        Name of fits file
+
+    Returns
+    -------
+    obs_time : datetime.datetime
+        Observation date and time
+    """
+    with fits.open(filename) as h:
+        date = h[0].header['DATE-OBS']
+        time = h[0].header['TIME-OBS']
+    year, month, day = [int(element) for element in date.split('-')]
+    hour, minute, second = [float(element) for element in time.split(':')]
+    return datetime.datetime(year, month, day, hour, minute, second)
+
+
 def mean_time(times):
     """Given a list of datetime objects, calculate the mean time
 

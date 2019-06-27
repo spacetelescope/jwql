@@ -569,7 +569,7 @@ class Dark():
         for item in slope_files:
             logging.info('\t\t{}'.format(item))
             # Get the observation time for each file
-            obstime = get_obstime(item)
+            obstime = instrument_properties.get_obstime(item)
             obs_times.append(obstime)
 
         # Find the earliest and latest observation time, and calculate
