@@ -18,6 +18,7 @@ Uses
 """
 
 from copy import deepcopy
+import datetime
 
 from astropy.io import fits
 from jwst.datamodels import dqflags
@@ -231,3 +232,28 @@ def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
             fullpad = 0
 
     return ((1.0 * xdim / amps + colpad) * (ydim + rowpad) + fullpad) * sample_time
+
+
+def mean_time(times):
+    """Given a list of datetime objects, calculate the mean time
+
+    Paramters
+    ---------
+    times : list
+        List of datetime objects
+
+    Returns
+    -------
+    meantime ; datetime.datetime
+        Mean time of the input ``times``
+    """
+    seconds_per_day = 24. * 3600.
+    min_time = np.min(times)
+    delta_times = []
+    for time in times:
+        delta_time = time - min_time
+        total_seconds = delta_time.days * seconds_per_day + delta_time.seconds
+        delta_times.append(total_seconds)
+    mean_delta = np.mean(delta_times)
+    mean_time_delta = datetime.timedelta(0, mean_delta, 0)
+    return min_time + mean_time_delta
