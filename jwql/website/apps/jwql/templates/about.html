@@ -9,7 +9,7 @@
 {% block content %}
 
     <main role="main" class="container">
-        <div style="text-align: center"><img src={{ static('img/jwql_logo_full_transparent.png') }} width=350px></div><br>
+        <div style="text-align: center"><img src={{ static('img/jwql_logo_full_transparent.png') }} width=350px alt="The JWQL logo" title="The JWQL logo"></div><br>
         <hr>
 
         <h4>About the project</h4>
@@ -18,7 +18,12 @@
 
         The project consists of the following components:<br><br>
 
-        <div style='text-align: center'><img src={{ static('img/jwql_project.png') }} width=80%></div><br>
+        <div style='text-align: center'>
+            <img src={{ static('img/jwql_project.png') }}
+                 width=80%
+                 alt="MAST Cache, MAST API, JWQL Repo, VM, Web App, Automation"
+                 title="">
+        </div><br>
 
         The JWQL application is currently under heavy development. The 1.0 release is expected in 2019.<br><br>
 
