@@ -404,8 +404,7 @@ def plot_central_store_dirs():
     for area, color in zip(arealist, colors):
 
         # Query for used sizes
-        results = session.query(CentralStore.date, getattr(CentralStore))\
-                                .filter(CentralStore.used == used)
+        results = session.query(CentralStore.date, CentralStore.used)
 
         if area == 'all':
             results = results.all()
