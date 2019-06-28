@@ -2,12 +2,6 @@
   list-style: none;
 }
 
-.anomaly_form {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
 .APT_parameters {
   width: 20%
 }
@@ -37,6 +31,7 @@
     border-color: #c85108 !important;
     color: white !important;
     border-radius: 0px;
+    text-decoration: none;
 }
 
 /*Make outline buttons and highlighted normal buttons white*/
@@ -46,12 +41,14 @@
     border-color: #c85108 !important ;
     color: #c85108 !important;
     border-radius: 0px;
+    text-decoration: none;
 }
 
 /*Stop them from glowing blue*/
 .btn:focus, .btn.focus, .btn:active:focus, .btn.active:focus, .btn:active,
 .btn.active, .show > .btn.dropdown-toggle:focus {
     box-shadow: none !important;
+    text-decoration: none;
 }
 
 [class*="col-"] {
