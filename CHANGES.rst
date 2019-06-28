@@ -1,3 +1,42 @@
+0.20.0 (2019-06-05)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Updated the notebook exemplifying how to perform an engineering database (EDB) telemetry query.
+- Updated the README for the ``style_guide`` directory.
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Added form on preview image pages to allow users to submit image anomalies.
+- Added buttons for users to download the results of EDB telemetry queries as CSV files.
+- Enabled users to search for or navigate to program numbers without requiring leading zeros (i.e. "756" is now treated equivalently to "00756").
+- Enabled authentication for EDB queries via the web login (rather than requiring authentication information to be present in the configuration file).
+- Added custom 404 pages.
+- Added adaptive redirect feature so that users are not sent back to the homepage after login.
+- Added more descriptive errors if a user tries to run the web application without filling out the proper fields in the configuration file.
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Replaced all EDB interface code within ``jwql`` with the new ``jwedb`` `package<https://github.com/spacetelescope/jwst-dms-edb>`_.
+- Fully incorporated Python 3.5 testing into the Jenkins test suite.
+
+Bug Fixes
+---------
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Fixed bug in which dashboard page would throw an error.
+- Fixed incorrect dashboard axis labels.
+
+
 0.19.0 (2019-04-19)
 ===================
 
@@ -8,7 +47,7 @@ Project & API Documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - Added guidelines to the style guide for logging the execution of instrument monitors
-- Added example useage of logging in the ``example.py`` module
+- Added example usage of logging in the ``example.py`` module
 
 Web Application
 ~~~~~~~~~~~~~~~

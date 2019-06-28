@@ -26,9 +26,11 @@ import numpy as np
 from jwql.instrument_monitors import pipeline_tools
 from jwql.utils.utils import get_config
 
+# Determine if tests are being run on jenkins
+ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
-                    reason='Requires access to central storage.')
+
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_completed_pipeline_steps():
     """Test that the list of completed pipeline steps for a file is
     correct
@@ -39,7 +41,8 @@ def test_completed_pipeline_steps():
         File to be checked
     """
 
-    filename = os.path.join(get_config()['filesystem'], 'jw00312', 'jw00312002001_02102_00001_nrcb4_rateints.fits')
+    filename = os.path.join(get_config()['filesystem'], 'jw00312',
+                            'jw00312002001_02102_00001_nrcb4_rateints.fits')
     completed_steps = pipeline_tools.completed_pipeline_steps(filename)
     true_completed = OrderedDict([('group_scale', False),
                                   ('dq_init', True),
@@ -56,6 +59,10 @@ def test_completed_pipeline_steps():
                                   ('jump', True),
                                   ('rate', True)])
 
+    # Only test steps that have a value of True
+    completed_steps = OrderedDict((k, v) for k, v in completed_steps.items() if v is True)
+    true_completed = OrderedDict((k, v) for k, v in true_completed.items() if v is True)
+
     assert completed_steps == true_completed
 
 
@@ -64,21 +71,25 @@ def test_get_pipeline_steps():
     instrument
     """
 
-    # FGS, NIRCam, and NIRISS have the same required steps
+    # FGS, NIRCam, and NIRISS
     instruments = ['fgs', 'nircam', 'niriss']
     for instrument in instruments:
-      req_steps = pipeline_tools.get_pipeline_steps(instrument)
-      steps = ['dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
-               'persistence', 'dark_current', 'jump', 'rate']
-      not_required = ['group_scale', 'ipc', 'firstframe', 'lastframe', 'rscd']
-      steps_dict = OrderedDict({})
-      for step in steps:
-          steps_dict[step] = True
-      for step in not_required:
-          steps_dict[step] = False
-      assert req_steps == steps_dict
+        req_steps = pipeline_tools.get_pipeline_steps(instrument)
+        steps = ['dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
+                 'persistence', 'dark_current', 'jump', 'rate']
+        not_required = ['group_scale', 'ipc', 'firstframe', 'lastframe', 'rscd']
+        steps_dict = OrderedDict({})
+        for step in steps:
+            steps_dict[step] = True
+        for step in not_required:
+            steps_dict[step] = False
 
-    # NIRSpec and MIRI have different required steps
+        # Only test steps that have a value of True
+        req_steps = OrderedDict((k, v) for k, v in req_steps.items() if v is True)
+        steps_dict = OrderedDict((k, v) for k, v in steps_dict.items() if v is True)
+        assert req_steps == steps_dict
+
+    # NIRSpec
     nrs_req_steps = pipeline_tools.get_pipeline_steps('nirspec')
     nrs_steps = ['group_scale', 'dq_init', 'saturation', 'superbias', 'refpix', 'linearity',
                  'dark_current', 'jump', 'rate']
@@ -88,8 +99,12 @@ def test_get_pipeline_steps():
         nrs_dict[step] = True
     for step in not_required:
         nrs_dict[step] = False
+    # Only test steps that have a value of True
+    nrs_req_steps = OrderedDict((k, v) for k, v in nrs_req_steps.items() if v is True)
+    nrs_dict = OrderedDict((k, v) for k, v in nrs_dict.items() if v is True)
     assert nrs_req_steps == nrs_dict
 
+    # MIRI
     miri_req_steps = pipeline_tools.get_pipeline_steps('miri')
     miri_steps = ['dq_init', 'saturation', 'firstframe', 'lastframe',
                   'linearity', 'rscd', 'dark_current', 'refpix', 'jump', 'rate']
@@ -99,16 +114,18 @@ def test_get_pipeline_steps():
         miri_dict[step] = True
     for step in not_required:
         miri_dict[step] = False
+    # Only test steps that have a value of True
+    miri_req_steps = OrderedDict((k, v) for k, v in miri_req_steps.items() if v is True)
+    miri_dict = OrderedDict((k, v) for k, v in miri_dict.items() if v is True)
     assert miri_req_steps == miri_dict
 
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
-                    reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_image_stack():
     """Test stacking of slope images"""
 
     directory = os.path.join(get_config()['test_dir'], 'dark_monitor')
-    files = [os.path.join(directory, 'test_image_{}.fits'.format(str(i+1))) for i in range(3)]
+    files = [os.path.join(directory, 'test_image_{}.fits'.format(str(i + 1))) for i in range(3)]
 
     image_stack, exptimes = pipeline_tools.image_stack(files)
     truth = np.zeros((3, 10, 10))
