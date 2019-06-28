@@ -37,32 +37,74 @@
 		<a href="#main_content" style="color:white" title="Jump to main content">Jump to main content</a>
 
 		<!-- Navigation Bar -->
-		<nav class="navbar navbar-expand-md fixed-top">
+		<nav class="navbar navbar-dark navbar-expand-xl fixed-top">
 
 			<!-- Logo and Project Name -->
-		    <a class="navbar-left" href={{ url('jwql:home') }}><img src={{ static('img/jwql_logo_short_transparent.png') }} height=35 width=35></a>
-	        <a class="navbar-brand" href={{ url('jwql:home') }}>JWQL</a>
-	        <a class="navbar-brand" href="#"><font color='#f2ce3a'>{{ inst }}</font></a>
-	        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-	          <span class="navbar-toggler-icon"></span>
+		    <a class="navbar-brand" href={{ url('jwql:home') }}>
+				<img src={{ static('img/jwql_logo_short_transparent.png') }} height=35 width=35>
+				<span style="padding: 0.5rem;">JWQL</span>
+				{% if inst != "" %}
+					<font color='#f2ce3a'>{{ inst }}</font>
+				{% endif %}
+			</a>
+
+			<!--Show OAuth Button Link when navbar is collapsed-->
+			<ul class="navbar-nav ml-auto  d-xl-none">
+				{% if user.ezid %}
+				<li class="nav-item active">
+					<a id="oauth_user" href="https://auth.mastdev.stsci.edu/tokens" target="_blank" rel="noopener noreferrer">
+						{{ user.ezid }}
+					</a>
+					<a role="button" class="btn btn-primary" href={{ url('jwql:logout') }}>logout</a>
+				</li>
+				{% else %}
+					<li class="nav-item active">
+						<a role="button" class="btn btn-primary" href={{ url('jwql:login') }}>login</a>
+					</li>
+				{% endif %}
+			</ul>
+
+			<!--Make navbar collapsible when page shrinks-->
+	        <button class="navbar-toggler" type="button" data-toggle="collapse"
+					data-target="#instrument_menus" aria-controls="instrument_menus"
+					aria-expanded="false" aria-label="Toggle navigation">
+	          MENU <span class="navbar-toggler-icon"></span>
 	        </button>
 
-			<!-- Various pages -->
-	        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+			<!-- Menu pages -->
+	        <div class="collapse navbar-collapse" id="instrument_menus">
 	        	<ul class="navbar-nav mr-auto">
+					<!--Home-->
 	          		<li class="nav-item active">
 	            		<a class="nav-link" href={{ url('jwql:home') }}>Home<span class="sr-only">(current)</span></a>
 	          		</li>
+					<!--About-->
 	          		<li class="nav-item active">
 	            		<a class="nav-link" href={{ url('jwql:about') }}>About<span class="sr-only">(current)</span></a>
 	          		</li>
+					<!--Dashboard-->
 	          		<li class="nav-item active">
 	            		<a class="nav-link" href={{ url('jwql:dashboard') }}>Dashboard<span class="sr-only">(current)</span></a>
 	          		</li>
 	          		{% for inst_key, inst_tools in tools.items() %}
 						<li class="dropdown">
-							<a class="nav-link dropdown-toggle disabled" href={{ url('jwql:instrument', args=[inst_key]) }} id="dropdown"{{ inst_key }} aria-haspopup="true" aria-expanded="false">{{ inst_key }}</a>
-							<div class="dropdown-menu" aria-labelledby="dropdown01">
+							<!--Show dropdown links when navbar is NOT collapsed-->
+							<a class="nav-link dropdown-toggle d-none d-xl-block"
+							   href={{ url("jwql:instrument", args=[inst_key]) }}
+							   aria-haspopup="true"
+							   aria-expanded="false">
+								{{ inst_key }}
+							</a>
+
+							<!--Show dropdown buttons when navbar is collapsed-->
+							<a class="nav-link dropdown-toggle d-xl-none"
+							   data-toggle="dropdown"
+							   aria-haspopup="true"
+							   aria-expanded="false">
+								{{ inst_key }}
+							</a>
+
+							<div class="dropdown-menu" aria-labelledby="dropdown-{{ inst_key }}">
 								<a class='dropdown-heading mx-3'>Images</a>
 								<a class="dropdown-item disabled-dropdown" href='#'>Unlooked Images</a>
 								<a class="dropdown-item disabled-dropdown" href="#">Image Anomalies</a>
@@ -85,30 +127,52 @@
 		      		<li class="nav-item active">
 	            		<a class="nav-link" href="https://jwql.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer">Documentation<span class="sr-only">(current)</span></a>
 	          		</li>
-	        	</ul>
-	        </div>
 
-	        <!-- Oauth login and GitHub -->
-	        <div class="navbar-right">
-	            <ul class="navbar-nav mr-auto">
-	            	{% if user.ezid %}
-	            		<li>
-	            			<a class="nav-link" id="oauth_user" href="https://auth.mastdev.stsci.edu/tokens" target="_blank" rel="noopener noreferrer">{{ user.ezid }}</a>
-	            		</li>
-	            		<li>
-	            			<a role="button" class="btn btn-primary" href={{ url('jwql:logout') }}>logout</a>
-	            		</li>
-	            	{% else %}
-	            		<li class="nav-item active">
-	            			<a role="button" class="btn btn-primary" href={{ url('jwql:login') }}>login</a>
-	            		</li>
-	            	{% endif %}
-	            	<li class="nav-item active">
-						<a id="github-link" class="nav-link" href="https://github.com/spacetelescope/jwql" target="_blank"><img src={{ static('img/githublogo.svg') }} height=35 width=35></a>
+					<!--GitHub Link-->
+					<!--Show GitHub link when navbar is NOT collapsed-->
+	            	<li class="nav-item active d-none d-xl-block">
+						<a id="github-link"
+						   class="nav-link"
+						   href="https://github.com/spacetelescope/jwql"
+						   target="_blank">
+							<img src={{ static('img/githublogo.svg') }} height=35 width=35>
+						</a>
 					</li>
-	    		</ul>
+
+					<!--Show GitHub link when navbar is collapsed-->
+	            	<li class="nav-item active d-xl-none">
+						<a id="github-link"
+						   class="nav-link"
+						   href="https://github.com/spacetelescope/jwql"
+						   target="_blank">
+							GitHub Repository
+							<img src={{ static('img/githublogo.svg') }} height=20 width=20 style="margin-left: 0.5rem; margin-bottom: 0.4rem;">
+						</a>
+					</li>
+	        	</ul>
 	    	</div>
+
+
+			<!--Show OAuth button when navbar is NOT collapsed-->
+			<ul class="navbar-nav ml-auto d-none d-xl-block">
+				{% if user.ezid %}
+				<li class="nav-item active">
+					<a id="oauth_user" href="https://auth.mastdev.stsci.edu/tokens" target="_blank" rel="noopener noreferrer">
+						{{ user.ezid }}
+					</a>
+					<a role="button" class="btn btn-primary" href={{ url('jwql:logout') }}>logout</a>
+				</li>
+				{% else %}
+					<li class="nav-item active">
+						<a role="button" class="btn btn-primary" href={{ url('jwql:login') }}>login</a>
+					</li>
+				{% endif %}
+			</ul>
+
+
 	    </nav>
+
+
 	    <div class="banner">
 	    	<img src={{ static('img/hubble_image.jpg') }}>
 	    </div>

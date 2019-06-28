@@ -67,6 +67,13 @@
     margin-right: 2%;
 }
 
+/* Show the dropdown menu on hover */
+/* DO NOT how the dropdown menu on hover if the navbar is collapsed */
+@media only screen and (min-width: 1200px) {
+li.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
 /* Make disabled dropdown items grey and unclickable */
 .disabled-dropdown {
     color: #bec4d4 !important;
@@ -76,8 +83,7 @@
 
 /*Define dropdown menu colors*/
 .dropdown-item:hover{
-    color: #c85108;
-    background-color: #2d353c;
+    background-color: black;
 }
 
 .dropdown-menu {
@@ -293,12 +299,19 @@ display : inline;
     height: 100%;
 }
 
+/* Change color of dropdown links on hover */
+li:hover .nav-link, .navbar-brand:hover {
+    color: #fff !important;
+}
+
 /* Define navbar color*/
 .navbar {
     background-color: black;
 }
-.navbar-brand {
-    color: white;
+
+/*Define navbar font color and case*/
+.nav-link {
+    color: #bec4d4 !important;
     text-transform: uppercase;
 }
 
@@ -306,12 +319,6 @@ display : inline;
 .navbar-left {
   padding-left:10px;
   padding-right:10px;
-}
-
-/*Define navbar font color*/
-.nav-link, .nav-link.disabled {
-    color: #bec4d4;
-    text-transform: uppercase;
 }
 
 /* Get rid of padding around GitHub logo */
@@ -322,11 +329,14 @@ display : inline;
 
 /* Set username to be orange */
 #oauth_user {
+  text-transform: uppercase;
   color: #c85108;
+  padding-right: 1rem;
 }
 
 #oauth_user:hover {
   color: white;
+  text-decoration: none;
 }
 
 .plot-container {
@@ -488,11 +498,13 @@ display : inline;
   font-size: 12px
 }
 
+/*Add underline for links*/
 a {
   text-decoration: underline;
 }
 
-nav a {
+/*Don't add underline for navbar and button links*/
+nav a, .btn {
   text-decoration: none;
 }
 
@@ -512,16 +524,6 @@ h1, h2, h3, h4 {
 }
 h1 {
     letter-spacing: 0.05em;
-}
-
-/* Change color of dropdown links on hover */
-li:hover .nav-link, .navbar-brand:hover {
-    color: #fff;
-}
-
-/* Show the dropdown menu on hover */
-li.dropdown:hover .dropdown-menu {
-    display: block;
 }
 
 ul.no-bullets {
