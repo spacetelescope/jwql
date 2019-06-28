@@ -1,399 +1,172 @@
 #! /usr/bin/env python
 
 """
-This module monitors and gather statistics of the filesystem that hosts
-data for the ``jwql`` application. This will answer questions such as
-the total number of files, how much disk space is being used, and then
-plot these values over time.
+This module is meant to monitor and gather statistics of the filesystem
+that hosts data for the ``jwql`` application. This will answer
+questions such as the total number of files, how much disk space is
+being used, and then plot these values over time.
 
 Authors
 -------
 
     - Misty Cracraft
-    - Sara Ogaz
-    - Matthew Bourque
 
 Use
 ---
 
-    This module is intended to be executed from the command line:
+    This module can be executed from the command line:
 
     ::
 
         python monitor_filesystem.py
 
-    The user must have a ``config.json`` file in the ``utils``
-    directory with the following keys:
-      - ``filesystem`` - The path to the filesystem
-      - ``outputs`` - The path to where the output plots will be
-                      written
+    Alternatively, it can be called from scripts with the following
+    import statements:
+
+    ::
+
+        from monitor_filesystem import filesystem_monitor
+        from monitor_filesystem import plot_system_stats
+
+
+    Required arguments (in a ``config.json`` file):
+    ``filepath`` - The path to the input file needs to be in a
+    ``config.json`` file in the ``utils`` directory
+    ``outputs`` - The path to the output files needs to be in a
+    ``config.json`` file in the ``utils`` directory.
+
+    Required arguments for plotting:
+    ``inputfile`` - The name of the file to save all of the system
+    statistics to
+    ``filebytype`` - The name of the file to save stats on fits type
+    files to
+
 
 Dependencies
 ------------
 
     The user must have a configuration file named ``config.json``
     placed in the ``utils`` directory.
+
+Notes
+-----
+
+    The ``monitor_filesystem`` function queries the filesystem,
+    calculates the statistics and saves the output file(s) in the
+    directory specified in the ``config.json`` file.
+
+    The ``plot_system_stats`` function reads in the two specified files
+    of statistics and plots the figures to an html output page as well
+    as saving them to an output html file.
 """
 
 from collections import defaultdict
 import datetime
-import itertools
 import logging
 import os
 import subprocess
+import json
 
-from bokeh.embed import components
-from bokeh.layouts import gridplot
-from bokeh.palettes import Category20_20 as palette
-from bokeh.plotting import figure, output_file, save
+from astropy.utils.misc import JsonCustomEncoder
 
-from jwql.database.database_interface import engine
-from jwql.database.database_interface import session
-from jwql.database.database_interface import FilesystemGeneral
-from jwql.database.database_interface import FilesystemInstrument
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
-from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
-
-FILESYSTEM = get_config()['filesystem']
-
-
-def gather_statistics(general_results_dict, instrument_results_dict):
-    """Walks the filesytem to gather various statistics to eventually
-    store in the database
-
-    Parameters
-    ----------
-    general_results_dict : dict
-        A dictionary for the ``filesystem_general`` database table
-    instrument_results_dict : dict
-        A dictionary for the ``filesystem_instrument`` database table
-
-    Returns
-    -------
-    general_results_dict : dict
-        A dictionary for the ``filesystem_general`` database table
-    instrument_results_dict : dict
-        A dictionary for the ``filesystem_instrument`` database table
-    """
-
-    logging.info('Searching filesystem...')
-
-    for dirpath, _, files in os.walk(FILESYSTEM):
-        general_results_dict['total_file_count'] += len(files)
-        for filename in files:
-
-            file_path = os.path.join(dirpath, filename)
-            general_results_dict['total_file_size'] += os.path.getsize(file_path)
-
-            if filename.endswith(".fits"):
-
-                # Parse out filename information
-                filename_dict = filename_parser(filename)
-                filetype = filename_dict['suffix']
-                instrument = filename_dict['instrument']
-
-                # Populate general stats
-                general_results_dict['fits_file_count'] += 1
-                general_results_dict['fits_file_size'] += os.path.getsize(file_path)
-
-                # Populate instrument specific stats
-                if instrument not in instrument_results_dict:
-                    instrument_results_dict[instrument] = {}
-                if filetype not in instrument_results_dict[instrument]:
-                    instrument_results_dict[instrument][filetype] = {}
-                    instrument_results_dict[instrument][filetype]['count'] = 0
-                    instrument_results_dict[instrument][filetype]['size'] = 0
-                instrument_results_dict[instrument][filetype]['count'] += 1
-                instrument_results_dict[instrument][filetype]['size'] += os.path.getsize(file_path) / (2**40)
-
-    # Convert file sizes to terabytes
-    general_results_dict['total_file_size'] = general_results_dict['total_file_size'] / (2**40)
-    general_results_dict['fits_file_size'] = general_results_dict['fits_file_size'] / (2**40)
-
-    logging.info('{} files found in filesystem'.format(general_results_dict['fits_file_count']))
-
-    return general_results_dict, instrument_results_dict
-
-
-def get_global_filesystem_stats(general_results_dict):
-    """Gathers ``used`` and ``available`` ``df``-style stats on the
-    entire filesystem.
-
-    Parameters
-    ----------
-    general_results_dict : dict
-        A dictionary for the ``filesystem_general`` database table
-
-    Returns
-    -------
-    general_results_dict : dict
-        A dictionary for the ``filesystem_general`` database table
-    """
-
-    command = "df {}".format(FILESYSTEM)
-    command += " | awk '{print $3, $4}' | tail -n 1"
-    stats = subprocess.check_output(command, shell=True).split()
-    general_results_dict['used'] = int(stats[0]) / (2**40)
-    general_results_dict['available'] = int(stats[1]) / (2**40)
-
-    return general_results_dict
-
-
-def initialize_results_dicts():
-    """Initializes dictionaries that will hold filesystem statistics
-
-    Returns
-    -------
-    general_results_dict : dict
-        A dictionary for the ``filesystem_general`` database table
-    instrument_results_dict : dict
-        A dictionary for the ``filesystem_instrument`` database table
-    """
-
-    now = datetime.datetime.now()
-
-    general_results_dict = {}
-    general_results_dict['date'] = now
-    general_results_dict['total_file_count'] = 0
-    general_results_dict['fits_file_count'] = 0
-    general_results_dict['total_file_size'] = 0
-    general_results_dict['fits_file_size'] = 0
-
-    instrument_results_dict = {}
-    instrument_results_dict['date'] = now
-
-    return general_results_dict, instrument_results_dict
 
 
 @log_fail
 @log_info
 def monitor_filesystem():
-    """
-    Tabulates the inventory of the JWST filesystem, saving statistics
-    to database tables, and generates plots.
+    """Tabulates the inventory of the JWST filesystem, saving
+    statistics to files, and generates plots.
     """
 
+    # Begin logging
     logging.info('Beginning filesystem monitoring.')
 
-    # Initialize dictionaries for database input
-    general_results_dict, instrument_results_dict = initialize_results_dicts()
+    # Get path, directories and files in system and count files in all directories
+    settings = get_config()
+    filesystem = settings['filesystem']
+    outputs_dir = os.path.join(settings['outputs'], 'monitor_filesystem')
 
-    # Walk through filesystem recursively to gather statistics
-    general_results_dict, instrument_results_dict = gather_statistics(general_results_dict, instrument_results_dict)
+    # set up dictionaries for output
+    results_dict = defaultdict(int)
+    size_dict = defaultdict(float)
+    # Walk through all directories recursively and count files
+    logging.info('Searching filesystem...')
+    for dirpath, dirs, files in os.walk(filesystem):
+        results_dict['file_count'] += len(files)  # find number of all files
+        for filename in files:
+            file_path = os.path.join(dirpath, filename)
+            if filename.endswith(".fits"):  # find total number of fits files
+                results_dict['fits_files'] += 1
+                size_dict['size_fits'] += os.path.getsize(file_path)
+                suffix = filename_parser(filename)['suffix']
+                results_dict[suffix] += 1
+                size_dict[suffix] += os.path.getsize(file_path)
+                detector = filename_parser(filename)['detector']
+                instrument = detector[0:3]  # first three characters of detector specify instrument
+                results_dict[instrument] += 1
+                size_dict[instrument] += os.path.getsize(file_path)
+    logging.info('{} files found in filesystem'.format(results_dict['fits_files']))
 
     # Get df style stats on file system
-    general_results_dict = get_global_filesystem_stats(general_results_dict)
+    out = subprocess.check_output('df {}'.format(filesystem), shell=True)
+    outstring = out.decode("utf-8")  # put into string for parsing from byte format
+    parsed = outstring.split(sep=None)
 
-    # Add data to database tables
-    update_database(general_results_dict, instrument_results_dict)
+    # Select desired elements from parsed string
+    total = int(parsed[8])  # in blocks of 512 bytes
+    used = int(parsed[9])
+    available = int(parsed[10])
+    percent_used = parsed[11]
 
-    # Create the plots
-    plot_filesystem_stats()
+    # Save stats for plotting over time
+    now = datetime.datetime.now().isoformat(sep='T', timespec='auto')  # get date of stats
 
-    logging.info("Completed.")
+    # set up output file and write stats
+    statsfile = os.path.join(outputs_dir, 'statsfile.json')
+    stats_output = {'timestamp': now, 'file_count': results_dict['file_count'], 
+                    'tot': total, 'avail': available, 'used': used, 
+                    'pct': percent_used}
+    with open(statsfile, "r+") as f:
+        f.seek(os.stat(statsfile).st_size -1)
+        f.write( ',{}]'.format(now, json.dumps(stats_output, 
+                                               cls=JsonCustomEncoder)))
+    set_permissions(statsfile)
+    logging.info('Saved file statistics to: {}'.format(statsfile))
+    
+    filetype_outs = ['fits', 'uncal', 'cal', 'rate', 'rateint', 'i2d', 'nrc', 
+                     'nrs', 'nis', 'mir', 'fgs']
+    filetype_keys = ['fits_files', 'uncal', 'cal', 'rate', 'rateints', 
+                     'i2d', 'nrc', 'nrs', 'nis', 'mir', 'gui']
 
+    # set up and read out stats on files by type
+    filesbytype = os.path.join(outputs_dir, 'filesbytype.json')
+    fbt_output = {'timestamp': now}
+    fbt_output.update(dict([(x, results_dict[y]) for x, y in zip(filetype_outs, 
+                                                              filetype_keys)]))
+    with open(filesbytype, "r+") as f:
+        f.seek(os.stat(filesbytype).st_size -1)
+        f.write( ',{}]'.format(now, json.dumps(fbt_output,
+                                               cls=JsonCustomEncoder)))
+    set_permissions(filesbytype, verbose=False)
+    logging.info('Saved file statistics by type to {}'.format(filesbytype))
 
-def plot_by_filetype(plot_type, instrument):
-    """Plot ``count`` or ``size`` by filetype versus date for the given
-    instrument, or all instruments.
+    # set up file size by type file
+    sizebytype = os.path.join(outputs_dir, 'sizebytype.json')
+    sbt_output = {'timestamp': now}
+    sbt_output.update(dict([(x, size_dict[y]) for x, y in zip(filetype_outs, 
+                                                             filetype_keys)]))
+    with open(sizebytype, "r+") as f:
+        f.seek(os.stat(sizebytype).st_size -1)
+        f.write( ',{}]'.format(now, json.dumps(sbt_output,
+                                               cls=JsonCustomEncoder)))
+    set_permissions(sizebytype, verbose=False)
+    logging.info('Saved file sizes by type to {}'.format(sizebytype))
+    logging.info('Filesystem statistics calculation complete.')
 
-    Parameters
-    ----------
-    plot_type : str
-        Which data to plot.  Either ``count`` or ``size``.
-    instrument : str
-        The instrument to plot for.  Can be a valid JWST instrument or
-        ``all`` to plot across all instruments.
-
-    Returns
-    -------
-    plot : bokeh.plotting.figure.Figure object
-        ``bokeh`` plot of total file counts versus date
-    """
-
-    # Determine plot title
-    if instrument == 'all':
-        title = 'Total File {} by Type'.format(plot_type.capitalize())
-    else:
-        instrument_title = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument]
-        title = '{} Total File {} by Type'.format(instrument_title, plot_type.capitalize())
-
-    if plot_type == 'count':
-        ytitle = 'Counts'
-    else:
-        ytitle = 'Size (TB)'
-
-    # Initialize plot
-    plot = figure(
-        tools='pan,box_zoom,wheel_zoom,reset,save',
-        x_axis_type='datetime',
-        title=title,
-        x_axis_label='Date',
-        y_axis_label=ytitle)
-    colors = itertools.cycle(palette)
-
-    for filetype, color in zip(FILE_SUFFIX_TYPES, colors):
-
-        # Query for counts
-        results = session.query(FilesystemInstrument.date, getattr(FilesystemInstrument, plot_type))\
-                                .filter(FilesystemInstrument.filetype == filetype)
-
-        if instrument == 'all':
-            results = results.all()
-        else:
-            results = results.filter(FilesystemInstrument.instrument == instrument).all()
-
-        # Group by date
-        if results:
-            results_dict = defaultdict(int)
-            for date, value in results:
-                results_dict[date] += value
-
-            # Parse results so they can be easily plotted
-            dates = list(results_dict.keys())
-            values = list(results_dict.values())
-
-            # Plot the results
-            plot.line(dates, values, legend='{} files'.format(filetype), line_color=color)
-            plot.circle(dates, values, color=color)
-
-    return plot
-
-
-def plot_filesystem_size():
-    """Plot filesystem sizes (size, used, available) versus date
-
-    Returns
-    -------
-    plot : bokeh.plotting.figure.Figure object
-        ``bokeh`` plot of total file counts versus date
-    """
-
-    # Plot system stats vs. date
-    results = session.query(FilesystemGeneral.date, FilesystemGeneral.total_file_size,
-                            FilesystemGeneral.used, FilesystemGeneral.available).all()
-    dates, total_sizes, useds, availables = zip(*results)
-    plot = figure(
-        tools='pan,box_zoom,wheel_zoom,reset,save',
-        x_axis_type='datetime',
-        title='System stats',
-        x_axis_label='Date',
-        y_axis_label='Size TB')
-    plot.line(dates, total_sizes, legend='Total size', line_color='red')
-    plot.circle(dates, total_sizes, color='red')
-    plot.line(dates, useds, legend='Used bytes', line_color='green')
-    plot.circle(dates, useds, color='green')
-    plot.line(dates, availables, legend='Free bytes', line_color='blue')
-    plot.circle(dates, availables, color='blue')
-
-    return plot
-
-
-def plot_filesystem_stats():
-    """
-    Plot various filesystem statistics using ``bokeh`` and save them to
-    the output directory.
-    """
-
-    p1 = plot_total_file_counts()
-    p2 = plot_filesystem_size()
-    p3 = plot_by_filetype('count', 'all')
-    p4 = plot_by_filetype('size', 'all')
-    plot_list = [p1, p2, p3, p4]
-
-    for instrument in JWST_INSTRUMENT_NAMES:
-        plot_list.append(plot_by_filetype('count', instrument))
-        plot_list.append(plot_by_filetype('size', instrument))
-
-    # Create a layout with a grid pattern
-    grid_chunks = [plot_list[i:i+2] for i in range(0, len(plot_list), 2)]
-    grid = gridplot(grid_chunks)
-
-    # Save all of the plots in one file
-    outputs_dir = os.path.join(get_config()['outputs'], 'monitor_filesystem')
-    outfile = os.path.join(outputs_dir, 'filesystem_monitor.html')
-    output_file(outfile)
-    save(grid)
-    set_permissions(outfile)
-    logging.info('Saved plot of all statistics to {}'.format(outfile))
-
-    # Save each plot's components
-    for plot in plot_list:
-        plot_name = plot.title.text.lower().replace(' ', '_')
-        plot.sizing_mode = 'stretch_both'
-        script, div = components(plot)
-
-        div_outfile = os.path.join(outputs_dir, "{}_component.html".format(plot_name))
-        with open(div_outfile, 'w') as f:
-            f.write(div)
-            f.close()
-        set_permissions(div_outfile)
-
-        script_outfile = os.path.join(outputs_dir, "{}_component.js".format(plot_name))
-        with open(script_outfile, 'w') as f:
-            f.write(script)
-            f.close()
-        set_permissions(script_outfile)
-
-        logging.info('Saved components files: {}_component.html and {}_component.js'.format(plot_name, plot_name))
-
-    logging.info('Filesystem statistics plotting complete.')
-
-
-def plot_total_file_counts():
-    """Plot total file counts versus date
-
-    Returns
-    -------
-    plot : bokeh.plotting.figure.Figure object
-        ``bokeh`` plot of total file counts versus date
-    """
-
-    # Total file counts vs. date
-    results = session.query(FilesystemGeneral.date, FilesystemGeneral.total_file_count).all()
-    dates, file_counts = zip(*results)
-    plot = figure(
-        tools='pan,box_zoom,reset,wheel_zoom,save',
-        x_axis_type='datetime',
-        title="Total File Counts",
-        x_axis_label='Date',
-        y_axis_label='Count')
-    plot.line(dates, file_counts, line_width=2, line_color='blue')
-    plot.circle(dates, file_counts, color='blue')
-
-    return plot
-
-
-def update_database(general_results_dict, instrument_results_dict):
-    """Updates the ``filesystem_general`` and ``filesystem_instrument``
-    database tables.
-
-    Parameters
-    ----------
-    general_results_dict : dict
-        A dictionary for the ``filesystem_general`` database table
-    instrument_results_dict : dict
-        A dictionary for the ``filesystem_instrument`` database table
-    """
-
-    engine.execute(FilesystemGeneral.__table__.insert(), general_results_dict)
-    session.commit()
-
-    # Add data to filesystem_instrument table
-    for instrument in JWST_INSTRUMENT_NAMES:
-        for filetype in instrument_results_dict[instrument]:
-            new_record = {}
-            new_record['date'] = instrument_results_dict['date']
-            new_record['instrument'] = instrument
-            new_record['filetype'] = filetype
-            new_record['count'] = instrument_results_dict[instrument][filetype]['count']
-            new_record['size'] = instrument_results_dict[instrument][filetype]['size']
-
-            engine.execute(FilesystemInstrument.__table__.insert(), new_record)
-            session.commit()
 
 
 if __name__ == '__main__':
