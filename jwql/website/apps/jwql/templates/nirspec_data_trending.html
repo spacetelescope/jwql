@@ -7,14 +7,14 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
 {% block preamble %}
 
     <!--Put the webpage title here:-->
-    <title>Webpage Title - JWQL</title>
+    <title>NIRSpec Mnemonic Trending - JWQL</title>
 
 {% endblock %}
 
 <!--The "content" block below contains content that goes in the page <body> tag-->
 {% block content %}
 
-    <main role="main" class="container">
+    <main role="main" class="container mnemonic_trending_main">
 
       <div id="header">
         <!--Add a heading-->
@@ -22,11 +22,17 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
         <!--Horizontal line-->
         <hr>
         <!--Include an image located at jwql/website/apps/jwql/static/img/-->
-        <div style="text-align: center"><img src={{ static('img/jwql_logo_full_transparent.png') }} width=20%></div><br>
+        <div style="text-align: center">
+          <img src={{ static('img/jwql_logo_full_transparent.png') }}
+               width=20%
+               alt="JWQL Logo"
+               title="JWQL Logo">
+        </div>
+        <br>
       </div>
 
-      <div id= "description">
-        <h4>How it works</h4>
+      <p id= "description">
+        <h2>How it works</h2>
         The NIRSpec data-trending dashboard is a web based application that allows engineers and general users to keep track of a subset of key
         NIRSpec performance parameters (“mnemonics”) such as voltages, currents, sensor signals and temperatures. In total 200+ mnemonics are
         tracked for NIRSpec. This telemetry data is retrieved from the engineering data base (EDB) on the Mikulski Archive for Space Telescopes
@@ -43,9 +49,10 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
         <br>
         <br>
 
-      </div>
+      </p>
 
       <hr>
+
       <div id="bokeh">
         <head>
           <title>Bokeh Scatter Plots</title>
@@ -54,9 +61,9 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
         </head>
 
         <body>
-        <div id="plot1">
-            {{ dashboard[0] | safe }}
-        </div>
+          <div id="plot1">
+              {{ dashboard[0] | safe }}
+          </div>
         </body>
 
         <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-1.2.0.min.js"></script>

@@ -45,7 +45,7 @@
 }
 
 /*Stop them from glowing blue*/
-.btn:focus, .btn.focus, .btn:active:focus, .btn.active:focus, .btn:active,
+.btn.focus, .btn:active:focus, .btn.active:focus, .btn:active,
 .btn.active, .show > .btn.dropdown-toggle:focus {
     box-shadow: none !important;
     text-decoration: none;
@@ -67,8 +67,9 @@
 /* Show the dropdown menu on hover */
 /* DO NOT how the dropdown menu on hover if the navbar is collapsed */
 @media only screen and (min-width: 1200px) {
-li.dropdown:hover .dropdown-menu {
-    display: block;
+    li.dropdown:hover .dropdown-menu {
+        display: block;
+    }
 }
 
 /* Make disabled dropdown items grey and unclickable */
@@ -235,6 +236,11 @@ display : inline;
     border: 3px solid #2d353c;
     position: relative;
     display: inline-block;
+}
+
+/*Make H2 header smaller for select pages*/
+#instrument_main h2,  .mnemonic_trending_main h2 {
+    font-size: 1.75rem;
 }
 
 .instrument-name {
