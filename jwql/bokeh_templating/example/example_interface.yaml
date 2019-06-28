@@ -1,0 +1,35 @@
+- !ColumnDataSource: &dummy
+    data:
+        value: []
+    on_change: ['data', !self.controller ]
+- !CustomJS: &callback
+    ref: "callback"
+    args:
+        source: *dummy
+    code: "\n    source.data = { value: [cb_obj.value] }\n"
+- !Slider: &a_slider
+    ref: "a_slider"
+    title: "A"
+    value: 4
+    range: !!python/tuple [1, 20, 0.1]
+    callback: *callback
+- !Slider: &b_slider
+    ref: "b_slider"
+    title: "B"
+    value: 2
+    range: !!python/tuple [1, 20, 0.1]
+    callback: *callback
+- !ColumnDataSource: &figure_source
+    ref: "figure_source"
+    data:
+        x: !self.x
+        y: !self.y
+- !Figure: &the_figure
+    ref: 'the_figure'
+    elements:
+        - {'kind': 'line', 'source': *figure_source, 'line_color': 'orange', 'line_width': 2}
+- !Document:
+    - !column:
+        - *the_figure
+        - *a_slider
+        - *b_slider
