@@ -82,7 +82,7 @@ from sqlalchemy.types import ARRAY
 from jwql.utils.constants import ANOMALIES, FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
 from jwql.utils.utils import get_config
 
-ON_JENKINS =  '/home/jenkins' in os.path.expanduser('~')
+ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
 
 
 # Monkey patch Query with data_frame method
@@ -91,6 +91,7 @@ def data_frame(self):
     """Method to return a ``pandas.DataFrame`` of the results"""
 
     return pd.read_sql(self.statement, self.session.bind)
+
 
 Query.data_frame = data_frame
 
@@ -137,6 +138,7 @@ def load_connection(connection_string):
 
     return session, base, engine, meta
 
+
 # Import a global session.  If running from readthedocs or Jenkins, pass a dummy connection string
 if ['build' and 'project' in socket.gethostname()] or ON_JENKINS:
     dummy_connection_string = 'postgresql+psycopg2://account:password@hostname:0000/db_name'
@@ -169,7 +171,8 @@ class FilesystemInstrument(base):
 
     # Name the table
     __tablename__ = 'filesystem_instrument'
-    __table_args__ = (UniqueConstraint('date', 'instrument', 'filetype', name='filesystem_instrument_uc'),)
+    __table_args__ = (UniqueConstraint('date', 'instrument', 'filetype',
+                                       name='filesystem_instrument_uc'),)
 
     # Define the columns
     id = Column(Integer, primary_key=True, nullable=False)
@@ -294,7 +297,8 @@ def get_monitor_columns(data_dict, table_name):
         # Create a new column
         if dtype in list(data_type_dict.keys()):
             if array:
-                data_dict[column_name.lower()] = Column(ARRAY(data_type_dict[dtype], dimensions=dimension))
+                data_dict[column_name.lower()] = Column(ARRAY(data_type_dict[dtype],
+                                                              dimensions=dimension))
             else:
                 data_dict[column_name.lower()] = Column(data_type_dict[dtype])
         else:
@@ -347,7 +351,9 @@ def monitor_orm_factory(class_name):
     # Columns specific to all monitor ORMs
     data_dict['id'] = Column(Integer, primary_key=True, nullable=False)
     data_dict['entry_date'] = Column(DateTime, unique=True, nullable=False, default=datetime.now())
-    data_dict['__table_args__'] = (UniqueConstraint('id', 'entry_date', name='{}_uc'.format(data_dict['__tablename__'])),)
+    data_dict['__table_args__'] = (
+        UniqueConstraint('id', 'entry_date', name='{}_uc'.format(data_dict['__tablename__'])),
+    )
 
     # Get monitor-specific columns
     data_dict = get_monitor_columns(data_dict, data_dict['__tablename__'])

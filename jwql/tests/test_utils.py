@@ -25,7 +25,7 @@ import pytest
 from jwql.utils.utils import copy_files, get_config, filename_parser, filesystem_path
 
 # Determine if tests are being run on jenkins
-ON_JENKINS =  '/home/jenkins' in os.path.expanduser('~')
+ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
 
 FILENAME_PARSER_TEST_DATA = [
 

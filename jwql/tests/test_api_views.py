@@ -29,7 +29,7 @@ from jwql.utils.utils import get_base_url
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 
 # Determine if tests are being run on jenkins
-ON_JENKINS =  '/home/jenkins' in os.path.expanduser('~')
+ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
 
 # Determine if the local server is running
 try:

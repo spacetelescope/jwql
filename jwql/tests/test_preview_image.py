@@ -34,7 +34,7 @@ from jwql.utils.utils import get_config, ensure_dir_exists
 TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'preview_image_test')
 
 # Determine if tests are being run on jenkins
-ON_JENKINS =  '/home/jenkins' in os.path.expanduser('~')
+ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
 
 
 @pytest.fixture(scope="module")

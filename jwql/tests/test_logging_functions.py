@@ -28,7 +28,7 @@ from jwql.utils.logging_functions import configure_logging, log_fail, log_info, 
 from jwql.utils.utils import get_config
 
 # Determine if tests are being run on jenkins
-ON_JENKINS =  '/home/jenkins' in os.path.expanduser('~')
+ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
 
 
 @log_fail

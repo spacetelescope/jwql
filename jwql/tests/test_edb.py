@@ -24,7 +24,7 @@ from astropy.time import Time
 import pytest
 
 # Determine if tests are being run on jenkins
-ON_JENKINS =  '/home/jenkins' in os.path.expanduser('~')
+ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
 
 
 @pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
