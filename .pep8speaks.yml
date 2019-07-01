@@ -4,7 +4,7 @@ message:  # Customize the comment made by the bot
     opened:  # Messages when a new PR is submitted
         header: "Hello @{name}, Thank you for submitting the Pull Request !"
                 # The keyword {name} is converted into the author's username
-        footer: "If you have not done so, please consult the [`jwql` Style Guide](https://github.com/spacetelescope/jwql/blob/master/style_guide/style_guide.md)"
+        footer: "If you have not done so, please consult the [`jwql` Style Guide](https://github.com/spacetelescope/jwql/blob/master/style_guide/README.md)"
                 # The messages can be written as they would over GitHub
     updated:  # Messages when new commits are added to the PR
         header: "Hello @{name}, Thank you for updating !"
