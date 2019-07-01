@@ -124,7 +124,7 @@ def gather_statistics(general_results_dict, instrument_results_dict):
 
 def get_global_filesystem_stats(general_results_dict):
     """Gathers ``used`` and ``available`` ``df``-style stats on the
-    entire filesystem.
+    entire filesystem. (Not just directory titled filesystem.)
 
     Parameters
     ----------
@@ -178,10 +178,12 @@ def get_area_stats(central_storage_dict):
         else:
             fullpath = os.path.join(CENTRAL, area)
 
-        print(area, fullpath)
+        #print(area, fullpath)
+
+        logging.info('Searching directory {}'.format(fullpath))
         # record current area as being counted
         counteddirs.append(fullpath)
-        print(counteddirs)
+        #print(counteddirs)
 
         # to get df stats, use -k to get 1024 byte blocks
         command = "df -k {}".format(fullpath)
@@ -196,18 +198,36 @@ def get_area_stats(central_storage_dict):
 
         # do an os.walk on each directory to count up used space
 
-        for dirpath, _, files in os.walk(fullpath):
-            for filename in files:
-                file_path = os.path.join(dirpath, filename)
-                # Check if file_path exists, if so, add to used space
-                exists = os.path.isfile(file_path)
-                if exists:
-                    filesize = os.path.getsize(file_path)
-                    used += filesize
-                    sums += filesize
-        use = used / (1024 ** 4)
+        ### modifying here
+        if area == 'all':
+            # get listing of subdirectories
+            subdirs = [f.path for f in os.scandir(fullpath) if f.is_dir()]
+            for onedir in subdirs:
+                if onedir not in counteddirs:
+                    #print(onedir)
+                    logging.info('Searching directory {}'.format(onedir))
+                    for dirpath, _, files in os.walk(onedir):
+                        for filename in files:
+                            file_path = os.path.join(dirpath, filename)
+                            # Check if file_path exists, if so, add to used space
+                            exists = os.path.isfile(file_path)
+                            if exists:
+                                filesize = os.path.getsize(file_path)
+                                sums += filesize
+            use = sums / (1024 **4)
+        else:
+            for dirpath, _, files in os.walk(fullpath):
+                for filename in files:
+                    file_path = os.path.join(dirpath, filename)
+                    # Check if file_path exists, if so, add to used space
+                    exists = os.path.isfile(file_path)
+                    if exists:
+                        filesize = os.path.getsize(file_path)
+                        used += filesize
+                        sums += filesize
+            use = used / (1024 ** 4)
         central_storage_dict[area]['used'] = use
-        print(area, total, use, free)
+        #print(area, total, use, free)
 
     logging.info('Finished searching central storage system')
     return central_storage_dict
@@ -404,13 +424,7 @@ def plot_central_store_dirs():
     for area, color in zip(arealist, colors):
 
         # Query for used sizes
-        results = session.query(CentralStore.date, getattr(CentralStore))\
-                                .filter(CentralStore.used == used)
-
-        if area == 'all':
-            results = results.all()
-        else:
-            results = results.filter(CentralStore.area == area).all()
+        results = session.query(CentralStore.date, CentralStore.used).filter(CentralStore.area == area)
 
         # Group by date
         if results:
@@ -421,6 +435,8 @@ def plot_central_store_dirs():
             # Parse results so they can be easily plotted
             dates = list(results_dict.keys())
             values = list(results_dict.values())
+
+            #print(dates, values)
 
             # Plot the results
             plot.line(dates, values, legend='{} files'.format(area), line_color=color)
