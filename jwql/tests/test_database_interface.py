@@ -76,9 +76,9 @@ def test_anomaly_records():
     """Test to see that new records can be entered"""
 
     # Add some data
-    random_rootname = ''.join(random.SystemRandom().choice(string.ascii_lowercase
-                                                           + string.ascii_uppercase 
-                                                           + string.digits) for _ in range(10))
+    random_rootname = ''.join(random.SystemRandom().choice(string.ascii_lowercase + \
+                                                           string.ascii_uppercase + \
+                                                           string.digits) for _ in range(10))
     di.session.add(di.Anomaly(rootname=random_rootname,
                               flag_date=datetime.datetime.today(),
                               user='test', ghost=True))
@@ -88,7 +88,7 @@ def test_anomaly_records():
     ghosts = di.session.query(di.Anomaly)\
         .filter(di.Anomaly.rootname == random_rootname)\
         .filter(di.Anomaly.ghost == "True")
-    assert ghosts.data_frame.iloc[0]['ghost'] is True
+    assert ghosts.data_frame.iloc[0]['ghost'] == True
 
 
 @pytest.mark.skipif(ON_JENKINS, reason='Requires access to development database server.')
