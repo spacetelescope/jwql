@@ -19,9 +19,19 @@ withCredentials([
       bc.name = "debug-${os}-${env_py}"
       bc.conda_packages = ["python=${python_ver}"]
 
-      bc.build_cmds = ["echo ~",
-                       "hostname"]
+      bc.build_cmds = [
+          "conda env update --file=environment${env_py}.yml",
+          "pip install codecov pytest-cov",
+          "python setup.py install",
+          "python setup.py sdist bdist_wheel"]
 
+      bc.test_cmds = [
+          "pytest ./jwql/tests/ -s --junitxml=results.xml --cov=./jwql/ --cov-report=xml:coverage.xml",
+          "sed -i 's/file=\"[^\"]*\"//g;s/line=\"[^\"]*\"//g;s/skips=\"[^\"]*\"//g' results.xml",
+          "codecov --token=${codecov_token}",
+          "mkdir -v reports",
+          "mv -v coverage.xml reports/coverage.xml",
+          "twine upload -u '${pypi_username}' -p '${pypi_password}' --repository-url https://upload.pypi.org/legacy/ --skip-existing dist/*"]
 
       matrix += bc
     }

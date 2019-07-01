@@ -82,6 +82,8 @@ from sqlalchemy.types import ARRAY
 from jwql.utils.constants import ANOMALIES, FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
 from jwql.utils.utils import get_config
 
+ON_JENKINS =  '/home/jenkins' in os.path.expanduser('~')
+
 
 # Monkey patch Query with data_frame method
 @property
@@ -136,7 +138,7 @@ def load_connection(connection_string):
     return session, base, engine, meta
 
 # Import a global session.  If running from readthedocs or Jenkins, pass a dummy connection string
-if 'build' and 'project' in socket.gethostname() or os.path.expanduser('~') == '/home/jenkins':
+if ['build' and 'project' in socket.gethostname()] or ON_JENKINS:
     dummy_connection_string = 'postgresql+psycopg2://account:password@hostname:0000/db_name'
     session, base, engine, meta = load_connection(dummy_connection_string)
 else:
