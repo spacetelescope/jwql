@@ -29,7 +29,7 @@ from jwql.utils.constants import ANOMALIES
 from jwql.utils.utils import get_config
 
 # Determine if tests are being run on jenkins
-ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
+ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
 
 
 @pytest.mark.skipif(ON_JENKINS, reason='Requires access to development database server.')
@@ -64,7 +64,8 @@ def test_anomaly_orm_factory():
     TestAnomalyTable = di.anomaly_orm_factory('test_anomaly_table')
     table_attributes = TestAnomalyTable.__dict__.keys()
 
-    assert str(TestAnomalyTable) == "<class 'jwql.database.database_interface.{}'>".format(test_table_name)
+    assert str(TestAnomalyTable) == "<class 'jwql.database.database_interface.{}'>"\
+        .format(test_table_name)
 
     for anomaly in ANOMALIES:
         assert anomaly in table_attributes
@@ -75,12 +76,18 @@ def test_anomaly_records():
     """Test to see that new records can be entered"""
 
     # Add some data
-    random_rootname = ''.join(random.SystemRandom().choice(string.ascii_lowercase + string.ascii_uppercase + string.digits) for _ in range(10))
-    di.session.add(di.Anomaly(rootname=random_rootname, flag_date=datetime.datetime.today(), user='test', ghost=True))
+    random_rootname = ''.join(random.SystemRandom().choice(string.ascii_lowercase + \
+                                                           string.ascii_uppercase + \
+                                                           string.digits) for _ in range(10))
+    di.session.add(di.Anomaly(rootname=random_rootname,
+                              flag_date=datetime.datetime.today(),
+                              user='test', ghost=True))
     di.session.commit()
 
     # Test the ghosts column
-    ghosts = di.session.query(di.Anomaly).filter(di.Anomaly.rootname == random_rootname).filter(di.Anomaly.ghost == "True")
+    ghosts = di.session.query(di.Anomaly)\
+        .filter(di.Anomaly.rootname == random_rootname)\
+        .filter(di.Anomaly.ghost == "True")
     assert ghosts.data_frame.iloc[0]['ghost'] == True
 
 
@@ -103,7 +110,8 @@ def test_monitor_orm_factory():
     test_table_name = 'instrument_test_monitor_table'
 
     # Create temporary table definitions file
-    test_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'database', 'monitor_table_definitions', 'instrument')
+    test_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                            'database', 'monitor_table_definitions', 'instrument')
     test_filename = os.path.join(test_dir, '{}.txt'.format(test_table_name))
     if not os.path.isdir(test_dir):
         os.mkdir(test_dir)
@@ -115,7 +123,8 @@ def test_monitor_orm_factory():
     table_attributes = TestMonitorTable.__dict__.keys()
 
     # Ensure the ORM exists and contains appropriate columns
-    assert str(TestMonitorTable) == "<class 'jwql.database.database_interface.{}'>".format(test_table_name)
+    assert str(TestMonitorTable) == "<class 'jwql.database.database_interface.{}'>"\
+        .format(test_table_name)
     for column in ['id', 'entry_date', 'test_column']:
         assert column in table_attributes
 

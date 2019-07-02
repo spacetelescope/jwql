@@ -29,7 +29,7 @@ from jwql.utils.utils import get_base_url
 TIME_CONSTRAINT = 30  # seconds
 
 # Determine if tests are being run on jenkins
-ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
+ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
 
 urls = []
 
