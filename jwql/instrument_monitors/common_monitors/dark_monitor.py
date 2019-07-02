@@ -728,20 +728,20 @@ class Dark():
                 new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
+                # Get full paths to the files that actually exist in filesystem
+                new_filenames = []
+                for file_entry in new_entries:
+                    try:
+                        new_filenames.append(filesystem_path(file_entry['filename']))
+                    except FileNotFoundError:
+                        logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
+                                        .format(file_entry['filename']))
+
                 # Check to see if there are enough new files to meet the monitor's signal-to-noise requirements
-                if len(new_entries) >= file_count_threshold:
+                if len(new_filenames) >= file_count_threshold:
 
                     logging.info('\tSufficient new dark files found for {}, {} to run the dark monitor.'
                                  .format(self.instrument, self.aperture))
-
-                    # Get full paths to the files
-                    new_filenames = []
-                    for file_entry in new_entries:
-                        try:
-                            new_filenames.append(filesystem_path(file_entry['filename']))
-                        except FileNotFoundError:
-                            logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
-                                            .format(file_entry['filename']))
 
                     # Set up directories for the copied data
                     ensure_dir_exists(os.path.join(self.output_dir, 'data'))
