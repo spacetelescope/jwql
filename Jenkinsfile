@@ -26,7 +26,7 @@ withCredentials([
           "python setup.py sdist bdist_wheel"]
 
       bc.test_cmds = [
-          "pytest -s --junitxml=results.xml --cov=./jwql/ --cov-report=xml:coverage.xml",
+          "pytest ./jwql/tests/ -s --junitxml=results.xml --cov=./jwql/ --cov-report=xml:coverage.xml",
           "sed -i 's/file=\"[^\"]*\"//g;s/line=\"[^\"]*\"//g;s/skips=\"[^\"]*\"//g' results.xml",
           "codecov --token=${codecov_token}",
           "mkdir -v reports",
