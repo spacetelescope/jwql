@@ -26,6 +26,8 @@ import numpy as np
 from jwql.instrument_monitors.common_monitors import dark_monitor
 from jwql.utils.utils import get_config
 
+ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+
 
 def test_find_hot_dead_pixels():
     """Test hot and dead pixel searches"""
@@ -52,7 +54,7 @@ def test_find_hot_dead_pixels():
     assert np.all(dead[1] == np.array([6, 3]))
 
 
-@pytest.mark.skipif(os.path.expanduser('~') == '/home/jenkins',
+@pytest.mark.skipif(ON_JENKINS,
                     reason='Requires access to central storage.')
 def test_get_metadata():
     """Test retrieval of metadata from input file"""
