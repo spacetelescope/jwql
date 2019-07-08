@@ -2,17 +2,26 @@
 
 {% block preamble %}
 
-	<title> All JWQL Logging Files </title>
+	<title>{{ inst }} - JWQL</title>
 
 {% endblock %}
 
 {% block content %}
 
     <main role="main" class="container">
-
-    	<!-- List all possible  -->
-		<div class="col-md-6 text-center">
-		</div>
+    	{% for sect_name in sect %}
+	    	<div class="dropdown">
+			  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			    {{sect_name}}
+			  </button>
+			  
+			  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+			    <a class="dropdown-item" href="#">Action</a>
+			    <a class="dropdown-item" href="#">Another action</a>
+			    <a class="dropdown-item" href="#">Something else here</a>
+			  </div>
+			</div>
+		{% endfor %}
 
 	</main>
 
