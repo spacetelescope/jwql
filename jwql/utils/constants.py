@@ -72,6 +72,10 @@ JWST_INSTRUMENT_NAMES_UPPERCASE = {key: value.upper() for key, value in
 JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
                       JWST_INSTRUMENT_NAMES]
 
+# Monitors for the logging display
+LOGGING_MONITORS = ['dark_monitor', 'monitor_cron_jobs monitor_mast','generate_preview_images', 
+                    'monitor_filesystem','test_logging_functions']
+
 # Available monitor names and their location for each JWST instrument
 MONITORS = {
     'fgs': [('Bad Pixel Monitor', '#')],
