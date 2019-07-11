@@ -400,7 +400,7 @@ def get_config():
     return settings
 
 
-def check_config(key):
+def check_config_for_key(key):
     """Check that the config.json file contains the specified key
     and that the entry is not empty
 
