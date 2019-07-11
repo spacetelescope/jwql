@@ -22,7 +22,8 @@ import os
 from pathlib import Path
 import pytest
 
-from jwql.utils.utils import copy_files, get_config, filename_parser, filesystem_path
+from jwql.utils.utils import copy_files, get_config, filename_parser, \
+    filesystem_path, _validate_config
 
 # Determine if tests are being run on jenkins
 ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
@@ -344,3 +345,15 @@ def test_filesystem_path():
     location = os.path.join(get_config()['filesystem'], 'jw96003', filename)
 
     assert check == location
+
+
+def test_bad_validate_config():
+    """Test that an incorrect dictionary is rejected by the config validator.
+    """
+    # Make sure a bad config raises an error
+    bad_config_dict = {"just": "one_key"}
+
+    with pytest.raises(Exception) as excinfo:
+        _validate_config(bad_config_dict))
+    assert 'Provided config.json does not match the required JSON schema' in \
+           str(excinfo.value)
