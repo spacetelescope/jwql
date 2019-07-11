@@ -347,13 +347,44 @@ def test_filesystem_path():
     assert check == location
 
 
-def test_bad_validate_config():
-    """Test that an incorrect dictionary is rejected by the config validator.
+def test_validate_config():
+    """Test that the config validator works.
     """
     # Make sure a bad config raises an error
     bad_config_dict = {"just": "one_key"}
 
     with pytest.raises(Exception) as excinfo:
-        _validate_config(bad_config_dict))
-    assert 'Provided config.json does not match the required JSON schema' in \
-           str(excinfo.value)
+        _validate_config(bad_config_dict)
+    assert 'Provided config.json does not match the required JSON schema' \
+           in str(excinfo.value), \
+        'Failed to reject incorrect JSON dict.'
+
+    # Make sure a good config does not!
+    good_config_dict = {
+        "connection_string": "",
+        "database": {
+            "engine": "",
+            "name": "",
+            "user": "",
+            "password": "",
+            "host": "",
+            "port": ""
+        },
+        "filesystem": "",
+        "preview_image_filesystem": "",
+        "thumbnail_filesystem": "",
+        "outputs": "",
+        "jwql_dir": "",
+        "admin_account": "",
+        "log_dir": "",
+        "test_dir": "",
+        "test_data": "",
+        "setup_file": "",
+        "auth_mast": "",
+        "client_id": "",
+        "client_secret": "",
+        "mast_token": ""
+    }
+
+    is_valid = _validate_config(good_config_dict)
+    assert is_valid is None, 'Failed to validate correct JSON dict'
