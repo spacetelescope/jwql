@@ -49,8 +49,6 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
       <div id="bokeh">
         <head>
           <title>Bokeh Scatter Plots</title>
-          <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-1.2.0.min.css" type="text/css"/>
-          <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.2.0.min.css" type="text/css"/>
         </head>
 
         <body>
@@ -58,10 +56,6 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
               {{ dashboard[0] | safe }}
           </div>
         </body>
-
-        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-1.2.0.min.js"></script>
-        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.2.0.min.js"></script>
-        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-gl-1.2.0.min.js"></script>
 
         <div id="script1">
           {{ dashboard[1] | safe }}
