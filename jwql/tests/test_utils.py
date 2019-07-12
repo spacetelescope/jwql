@@ -348,8 +348,7 @@ def test_filesystem_path():
 
 
 def test_validate_config():
-    """Test that the config validator works.
-    """
+    """Test that the config validator works."""
     # Make sure a bad config raises an error
     bad_config_dict = {"just": "one_key"}
 

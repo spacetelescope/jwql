@@ -404,8 +404,7 @@ def get_config():
         except json.JSONDecodeError as e:
             # Raise a more helpful error if there is a formatting problem
             raise ValueError('Incorrectly formatted config.json file. '
-                             'Please fix JSON formatting: {}'
-                                       .format(e))
+                             'Please fix JSON formatting: {}'.format(e))
 
     # Ensure the file has all the needed entries with expected data types
     _validate_config(settings)
@@ -444,7 +443,7 @@ def _validate_config(config_file_dict):
     expected data types
 
     Parameters
-    -------
+    ----------
     config_file_dict : dict
         The configuration JSON file loaded as a dictionary
 
@@ -456,19 +455,20 @@ def _validate_config(config_file_dict):
     # Define the schema for config.json
     schema = {
         "type": "object",  # Must be a JSON object
-        "properties": { # List all the possible entries and their types
+        "properties": {  # List all the possible entries and their types
             "connection_string": {"type": "string"},
-            "database": {"type": "object",
-                         "properties": {
-                             "engine": {"type": "string"},
-                             "name": {"type": "string"},
-                             "user": {"type": "string"},
-                             "password": {"type": "string"},
-                             "host": {"type": "string"},
-                             "port": {"type": "string"}
-                            },
-                         "required": ['engine', 'name', 'user', 'password', 'host', 'port']
-                         },
+            "database": {
+                "type": "object",
+                "properties": {
+                    "engine": {"type": "string"},
+                    "name": {"type": "string"},
+                    "user": {"type": "string"},
+                    "password": {"type": "string"},
+                    "host": {"type": "string"},
+                    "port": {"type": "string"}
+                    },
+                    "required": ['engine', 'name', 'user', 'password', 'host', 'port']
+                 },
             "filesystem": {"type": "string"},
             "preview_image_filesystem": {"type": "string"},
             "thumbnail_filesystem": {"type": "string"},
@@ -485,11 +485,11 @@ def _validate_config(config_file_dict):
             "mast_token": {"type": "string"},
         },
         # List which entries are needed (all of them)
-        "required" : ["connection_string", "database", "filesystem",
-                      "preview_image_filesystem", "thumbnail_filesystem",
-                      "outputs", "jwql_dir", "admin_account", "log_dir",
-                      "test_dir", "test_data", "setup_file", "auth_mast",
-                      "client_id", "client_secret", "mast_token"]
+        "required": ["connection_string", "database", "filesystem",
+                     "preview_image_filesystem", "thumbnail_filesystem",
+                     "outputs", "jwql_dir", "admin_account", "log_dir",
+                     "test_dir", "test_data", "setup_file", "auth_mast",
+                     "client_id", "client_secret", "mast_token"]
     }
 
     # Test that the provided config file dict matches the schema
@@ -497,8 +497,8 @@ def _validate_config(config_file_dict):
         jsonschema.validate(instance=config_file_dict, schema=schema)
     except jsonschema.ValidationError as e:
         raise jsonschema.ValidationError(
-            'Provided config.json does not match the required JSON schema: {}'
-                .format(e.message)
+            'Provided config.json does not match the ' + \
+            'required JSON schema: {}'.format(e.message)
         )
 
 
