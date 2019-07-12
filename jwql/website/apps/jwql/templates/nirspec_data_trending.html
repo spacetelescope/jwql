@@ -37,7 +37,7 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
         in case these would appear.<br>
         In total there are 7 different tabs: 1) Power 2) Reference Voltages 3) Temperatures 4) MSA and MCE 5) FPA and FPE 6) CAA Lamps and 7)
         Filter and Grating Wheel. Each of these tabs has its own specific set of plots. One can hover over the data points and detailed
-        statistics will appear. Also, there are various zoom and pan tools implemented allowing the user to manipulate the graphs. 
+        statistics will appear. Also, there are various zoom and pan tools implemented allowing the user to manipulate the graphs.
         Curves can be activated and muted by clicking on the legend.<br>
         In the future, a cron job referring to the EDB will populate the database over time.
         <br>
@@ -49,8 +49,6 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
       <div id="bokeh">
         <head>
           <title>Bokeh Scatter Plots</title>
-          <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-1.0.1.min.css" type="text/css"/>
-          <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.0.1.min.css" type="text/css"/>
         </head>
 
         <body>
@@ -58,10 +56,6 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
             {{ dashboard[0] | safe }}
         </div>
         </body>
-
-        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-1.0.1.min.js"></script>
-        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.0.1.min.js"></script>
-        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-gl-1.0.1.min.js"></script>
 
         <div id="script1">
           {{ dashboard[1] | safe }}

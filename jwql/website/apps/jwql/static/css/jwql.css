@@ -482,7 +482,7 @@ display : inline;
 /*Format the version identifier text in bottom corner*/
 #version-div {
   float: right;
-  width: 120px;
+  width: 180px;
   text-align: right;
   color: white;
   font-size: 12px
