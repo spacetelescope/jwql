@@ -7,6 +7,7 @@ django==2.2.3
 inflection==0.3.1
 ipython==7.6.0
 jinja2==2.10.1
+jsonschema==3.0.1
 jwedb>=0.0.3
 jwst==0.0.0
 matplotlib==3.1.0
