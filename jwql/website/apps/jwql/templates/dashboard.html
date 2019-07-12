@@ -4,8 +4,7 @@
 
 	<title>Dashboard - JWQL</title>
 
-    <!-- Add bokeh files -->
-    <link href="https://cdn.pydata.org/bokeh/release/bokeh-1.2.0.min.css" rel="stylesheet" type="text/css">
+
     {% for monitor_name, plots in dashboard_components.items() %}
         {% for plot_name, components in plots.items() %}
             {{ components[1] | safe}}
