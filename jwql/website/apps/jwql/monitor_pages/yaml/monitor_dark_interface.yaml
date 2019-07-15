@@ -32,7 +32,7 @@
   bounds: !!python/tuple [0, 1]
 - !Figure: &dark_current_time_figure
   ref: "dark_current_time_figure"
-  x_axis_label: "Time (s)"
+  x_axis_label: "Time (MJD)"
   y_axis_label: "Dark current (e-)"
   x_range: *dark_current_xrange
   y_range: *dark_current_yrange
@@ -47,13 +47,13 @@
 #  elements:
 #    - {'kind': 'image'}
 - !Figure: &dark_full_histogram_figure
-  - ref: "dark_full_histogram_figure"
+  ref: "dark_full_histogram_figure"
   x_axis_label: "Dark Current (DN/sec)"
   y_axis_label: "Number of Pixels"
   x_range: *dark_histogram_xrange
   y_range: *dark_histogram_yrange
   elements:
-    - {'kind': 'vbar', 'x': 'full_dark_bin_center', 'top': 'full_dark_amplitude', 'bottom': 'full_dark_bottom', 'width': 'full_dark_bin_width', 'source': *dark_full_hist_source}
+    - {'kind': 'vbar', 'x': 'full_dark_bin_center', 'y': 'full_dark_bin_width', 'top': 'full_dark_amplitude', 'bottom': 'full_dark_bottom',  'source': *dark_full_hist_source}
 - !Document:
   - !column:
     - *dark_current_time_figure

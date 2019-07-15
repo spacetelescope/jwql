@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>{{ inst }} Dark Monitor- JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+
+		<h1>NIRCam Dark Monitor</h1>
+		<hr>
+
+		<div class="container-fluid">
+            <div class="row justify-content-md-center">
+				<div class="col-xl-6 col-6 plot-column">
+
+					<h2>Dark Current v. Time</h2>
+					<!--Add Bokeh HTML-->
+					{{ dark_current_time_components[0] | safe }}
+
+					<!--Add Bokeh scripts-->
+					{{ dark_current_time_components[1] | safe }}
+				</div>
+
+				<div class="col-xl-6 col-6 plot-column">
+					<h2>Dark Current Histogram</h2>
+					<!--Add Bokeh HTML-->
+					{{ dark_current_hist_components[0] | safe }}
+
+					<!--Add Bokeh scripts-->
+					{{ dark_current_hist_components[1] | safe }}
+				</div>
+			</div>
+		</div>
+
+	</main>
+
+{% endblock %}

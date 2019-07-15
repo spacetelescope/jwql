@@ -74,12 +74,12 @@ class BokehTemplate(object):
         
         raise NotImplementedError
     
-    def __init__(self):
+    def __init__(self, *args):
         self._register_default_constructors()
         
         #Allow for pre-init stuff from the subclass.
         if self.pre_init is not None:
-            self.pre_init()
+            self.pre_init(*args)
         
         #Initialize attributes for YAML parsing
         self.formats = {}
@@ -117,7 +117,7 @@ class BokehTemplate(object):
         #Read the interface file into a string
         filepath = os.path.abspath(os.path.expanduser(self.interface_file))
         if not os.path.exists(filepath):
-            raise BokehTemplateParserError("Interface file path does not exist.")
+            raise BokehTemplateParserError("Interface file path {} does not exist.".format(filepath))
         with open(filepath) as f:
             interface = f.read()
         
