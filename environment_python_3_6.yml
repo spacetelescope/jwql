@@ -9,8 +9,9 @@ dependencies:
 - crds>=7.2.7
 - django=2.2.1
 - inflection=0.3.1
-- ipython=7.5.0
+- ipython=7.6.0
 - jinja2=2.10
+- jsonschema>=3.0.1
 - jwst=0.13.1
 - matplotlib=3.0.2
 - nodejs=10.13.0

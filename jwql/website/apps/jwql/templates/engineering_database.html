@@ -117,8 +117,7 @@
                     Query returned {{ edb_components['mnemonic_query_result'].meta['paging']['rows'] }} records:
                     <a id="download_exploration_result" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}{{ edb_components["mnemonic_query_result"].file_for_download }}' download>Download data</a>
                     </b></div>
-                    <!-- Add bokeh files -->
-                    <link href="https://cdn.pydata.org/bokeh/release/bokeh-1.2.0.min.css" rel="stylesheet" type="text/css">
+
                     {{ edb_components['mnemonic_query_result_plot'][1] | safe}}
                     <span class='plot-container px-1'>
                         {{  edb_components['mnemonic_query_result_plot'][0] | safe }}
