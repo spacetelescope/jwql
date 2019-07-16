@@ -35,6 +35,7 @@ Dependencies
     placed in the ``jwql/utils/`` directory.
 """
 
+import datetime
 import os
 
 from django.http import JsonResponse
@@ -45,15 +46,15 @@ from .data_containers import get_dashboard_components
 from .data_containers import get_filenames_by_instrument
 from .data_containers import get_header_info
 from .data_containers import get_image_info
+from .data_containers import get_current_flagged_anomalies
 from .data_containers import get_proposal_info
 from .data_containers import random_404_page
 from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
 from .data_containers import data_trending
 from .data_containers import nirspec_trending
-from .forms import FileSearchForm
+from .forms import AnomalySubmitForm, FileSearchForm
 from .oauth import auth_info, auth_required
-import jwql
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
 
@@ -382,7 +383,7 @@ def instrument(request, inst):
     return render(request, template, context)
 
 
-def not_found(request):
+def not_found(request, *kwargs):
     """Generate a ``not_found`` page
 
     Parameters
@@ -461,9 +462,11 @@ def view_image(request, user, inst, file_root, rewrite=False):
     ----------
     request : HttpRequest object
         Incoming request from the webpage
+    user : dict
+        A dictionary of user credentials.
     inst : str
         Name of JWST instrument
-    file : str
+    file_root : str
         FITS filename of selected image in filesystem
     rewrite : bool, optional
         Regenerate the jpg preview of `file` if it already exists?
@@ -473,16 +476,32 @@ def view_image(request, user, inst, file_root, rewrite=False):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
+
+    # Determine current flagged anomalies
+    current_anomalies = get_current_flagged_anomalies(file_root)
+
+    # Create a form instance
+    form = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+
+    # If this is a POST request, process the form data
+    if request.method == 'POST':
+        anomaly_choices = dict(request.POST)['anomaly_choices']
+        if form.is_valid():
+            form.update_anomaly_table(file_root, user['ezid'], anomaly_choices)
+
+    # Build the context
     context = {'inst': inst,
                'file_root': file_root,
                'jpg_files': image_info['all_jpegs'],
                'fits_files': image_info['all_files'],
                'suffixes': image_info['suffixes'],
-               'num_ints': image_info['num_ints']}
+               'num_ints': image_info['num_ints'],
+               'form': form}
 
     return render(request, template, context)

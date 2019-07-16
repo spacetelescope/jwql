@@ -204,14 +204,14 @@ class PreviewImage():
                     else:
                         data = hdulist[ext].data.astype(np.float)
                 else:
-                    raise ValueError(('WARNING: no {} extension in {}!'.format(ext, filename)))
+                    raise ValueError('WARNING: no {} extension in {}!'.format(ext, filename))
+
                 if 'PIXELDQ' in extnames:
                     dq = hdulist['PIXELDQ'].data
                     dq = (dq & dqflags.pixel['NON_SCIENCE'] == 0)
                 else:
                     yd, xd = data.shape[-2:]
                     dq = np.ones((yd, xd), dtype="bool")
-
 
                 # Collect information on aperture location within the
                 # full detector. This is needed for mosaicking NIRCam
@@ -225,7 +225,7 @@ class PreviewImage():
                     logging.warning('SUBSTR and SUBSIZE header keywords not found')
 
         else:
-            raise FileNotFoundError(('WARNING: {} does not exist!'.format(filename)))
+            raise FileNotFoundError('WARNING: {} does not exist!'.format(filename))
 
         return data, dq
 
@@ -266,7 +266,7 @@ class PreviewImage():
 
         # Check the input scaling
         if scale not in ['linear', 'log']:
-            raise ValueError(('WARNING: scaling option {} not supported.'.format(scale)))
+            raise ValueError('WARNING: scaling option {} not supported.'.format(scale))
 
         # Set the figure size
         yd, xd = image.shape

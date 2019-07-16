@@ -46,7 +46,7 @@ from django.shortcuts import redirect, render
 
 import jwql
 from jwql.utils.constants import MONITORS
-from jwql.utils.utils import get_base_url, get_config, check_config
+from jwql.utils.utils import get_base_url, get_config, check_config_for_key
 
 PREV_PAGE = '/'
 
@@ -64,7 +64,7 @@ def register_oauth():
 
     # Get configuration parameters
     for key in ['client_id', 'client_secret', 'auth_mast']:
-        check_config(key)
+        check_config_for_key(key)
     client_id = get_config()['client_id']
     client_secret = get_config()['client_secret']
     auth_mast = get_config()['auth_mast']
@@ -168,7 +168,7 @@ def auth_info(fn):
 
         # If user is authenticated, return user credentials
         if cookie is not None:
-            check_config('auth_mast')
+            check_config_for_key('auth_mast')
             # Note: for now, this must be the development version
             auth_mast = get_config()['auth_mast']
 

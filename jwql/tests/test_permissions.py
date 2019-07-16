@@ -30,7 +30,7 @@ from jwql.utils.permissions import set_permissions, has_permissions, \
 TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'permission_test')
 
 # Determine if tests are being run on jenkins
-ON_JENKINS = os.path.expanduser('~') == '/home/jenkins'
+ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
 
 
 @pytest.fixture(scope="module")
