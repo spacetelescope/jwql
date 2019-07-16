@@ -2,14 +2,14 @@
 
 {% block preamble %}
 
-	<title>View {{ inst }} Image - JWQL</title>
+	<title>View {{ inst }} Image (Header) - JWQL</title>
 
 {% endblock %}
 
 {% block content %}
 
     <main role="main" class="container">
-    	<h5>{{ file }}</h5>
+    	<h4>{{ file }}</h5>
 
     	<p>
 	    	<a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:view_image', args=[inst, file_root]) }}>View Image</a>
