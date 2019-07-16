@@ -7,14 +7,14 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
 {% block preamble %}
 
     <!--Put the webpage title here:-->
-    <title>Webpage Title - JWQL</title>
+    <title>MIRI Mnemonic Trending - JWQL</title>
 
 {% endblock %}
 
 <!--The "content" block below contains content that goes in the page <body> tag-->
 {% block content %}
 
-    <main role="main" class="container">
+    <main role="main" class="container mnemonic_trending_main">
 
       <div id="header">
         <!--Add a heading-->
@@ -22,11 +22,17 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
         <!--Horizontal line-->
         <hr>
         <!--Include an image located at jwql/website/apps/jwql/static/img/-->
-        <div style="text-align: center"><img src={{ static('img/jwql_logo_full_transparent.png') }} width=20%></div><br>
+        <div style="text-align: center">
+          <img src={{ static('img/jwql_logo_full_transparent.png') }}
+               width=20%
+               alt="JWQL Logo"
+               title="JWQL Logo">
+        </div>
+        <br>
       </div>
 
-      <div id= "description">
-        <h4>How it works</h4>
+      <p id= "description">
+        <h2>How it works</h2>
         The MIRI data-trending dashboard is prepared for instrument engineers to keep
         tracking the trend of relevant parameters. A software behind processes a daily chunk of data and
         calculates average and deviation of all engineering values that correspond to specific
@@ -36,25 +42,20 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
         <br>
         <br>
 
-      </div>
+      </p>
 
       <hr>
+
       <div id="bokeh">
         <head>
           <title>Bokeh Scatter Plots</title>
-          <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-1.2.0.min.css" type="text/css"/>
-          <link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.2.0.min.css" type="text/css"/>
         </head>
 
         <body>
-        <div id="plot1">
-            {{ dashboard[0] | safe }}
-        </div>
+          <div id="plot1">
+              {{ dashboard[0] | safe }}
+          </div>
         </body>
-
-        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-1.2.0.min.js"></script>
-        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.2.0.min.js"></script>
-        <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-gl-1.2.0.min.js"></script>
 
         <div id="script1">
           {{ dashboard[1] | safe }}

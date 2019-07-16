@@ -23,6 +23,8 @@ Use
     As such, it will automatically be executed upon each request.
 """
 
+import bokeh
+
 import jwql
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS
 
@@ -50,5 +52,6 @@ def base_context(request, user):
     context['tools'] = MONITORS
     context['user'] = user
     context['version'] = jwql.__version__
+    context['bokeh_version'] = bokeh.__version__
 
     return context
