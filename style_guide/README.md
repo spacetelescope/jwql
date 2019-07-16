@@ -1,5 +1,5 @@
-Python Code Style Guide for `jwql`
-=================================
+`jwql` Style Guide
+==================
 
 This document serves as a style guide for all `jwql` software development.  Any requested contribution to the `jwql` code repository should be checked against this guide, and any violation of the guide should be fixed before the code is committed to
 the `master` or `develop` branch.  Please refer to the accompanying [`example.py`](https://github.com/spacetelescope/jwql/blob/master/style_guide/example.py) script for a example code that abides by this style guide.
