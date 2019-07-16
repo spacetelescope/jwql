@@ -331,7 +331,8 @@ function update_archive_page(inst, base_url) {
                 // Build div content
                 content = '<div class="proposal text-center">';
                 content += '<a href="/' + inst + '/archive/' + prop + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
-                content += '<span class="helper"></span><img src="/static/thumbnails/' + thumb + '" alt="" width=100%>';
+                content += '<span class="helper"></span>'
+                content += '<img src="/static/thumbnails/' + thumb + '" alt="" title="Thumbnail for ' + prop + '" width=100%>';
                 content += '<div class="proposal-color-fill" ></div>';
                 content += '<div class="proposal-info">';
                 content += '<h3>' + prop + '</h3>';
