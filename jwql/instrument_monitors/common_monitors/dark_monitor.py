@@ -728,14 +728,20 @@ class Dark():
                 new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
+                # Get full paths to the files that actually exist in filesystem
+                new_filenames = []
+                for file_entry in new_entries:
+                    try:
+                        new_filenames.append(filesystem_path(file_entry['filename']))
+                    except FileNotFoundError:
+                        logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
+                                        .format(file_entry['filename']))
+
                 # Check to see if there are enough new files to meet the monitor's signal-to-noise requirements
-                if len(new_entries) >= file_count_threshold:
+                if len(new_filenames) >= file_count_threshold:
 
                     logging.info('\tSufficient new dark files found for {}, {} to run the dark monitor.'
                                  .format(self.instrument, self.aperture))
-
-                    # Get full paths to the files
-                    new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
 
                     # Set up directories for the copied data
                     ensure_dir_exists(os.path.join(self.output_dir, 'data'))
@@ -947,7 +953,7 @@ class Dark():
             degrees_of_freedom = len(hist) - 3.
             total_pix = np.sum(hist[positive])
             p_i = gauss_fit[positive] / total_pix
-            gaussian_chi_squared[key] = (np.sum((hist[positive] - (total_pix*p_i)**2) / (total_pix*p_i))
+            gaussian_chi_squared[key] = (np.sum((hist[positive] - (total_pix * p_i) ** 2) / (total_pix * p_i))
                                          / degrees_of_freedom)
 
             # Double Gaussian fit only for full frame data (and only for
@@ -961,7 +967,7 @@ class Dark():
                     double_gauss_fit = calculations.double_gaussian(bin_centers, *double_gauss_params)
                     degrees_of_freedom = len(bin_centers) - 6.
                     dp_i = double_gauss_fit[positive] / total_pix
-                    double_gaussian_chi_squared[key] = np.sum((hist[positive] - (total_pix*dp_i)**2) / (total_pix*dp_i)) / degrees_of_freedom
+                    double_gaussian_chi_squared[key] = np.sum((hist[positive] - (total_pix * dp_i) ** 2) / (total_pix * dp_i)) / degrees_of_freedom
 
                 else:
                     double_gaussian_params[key] = [[0., 0.] for i in range(6)]
