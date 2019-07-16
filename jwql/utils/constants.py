@@ -73,8 +73,10 @@ JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
                       JWST_INSTRUMENT_NAMES]
 
 # Monitors for the logging display
-LOGGING_MONITORS = ['dark_monitor', 'monitor_cron_jobs monitor_mast','generate_preview_images', 
+LOGGING_MONITORS = ['dark_monitor', 'monitor_cron_jobs','monitor_mast','generate_preview_images', 
                     'monitor_filesystem','test_logging_functions']
+
+LOGGING_TYPE = ['dev', 'test', 'prod']
 
 # Available monitor names and their location for each JWST instrument
 MONITORS = {

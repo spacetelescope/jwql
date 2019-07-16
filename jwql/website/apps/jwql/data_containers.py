@@ -604,6 +604,47 @@ def get_instrument_proposals(instrument):
 
     return proposals
 
+def get_logging_filepaths(sect, log_path, log_type_dir):
+    """Return a directory of logging files for each monitor and type of 
+    server the code was run on.
+
+    Parameters
+    ----------
+    sect : list 
+        List of current logging monitors.
+
+    log_path : str
+        Start of the path to the logs.
+
+    log_type_dir: list
+        List of the directories in the logging directory.
+
+    Returns
+    -------
+    all_log_paths : list
+        A list of the monitor path options. 
+
+    logging_path_dict : dictionary
+        A dictionary of logging files available in the filesystem for a
+        given monitor and system environment.
+    """
+    all_log_paths = []
+    for env in log_type_dir:
+        for sec in sect:
+            path = os.path.join(log_path,env,sec)
+            all_log_paths.append(path)
+
+    filenames = []
+    for f_path in all_log_paths:
+        if os.path.exists(f_path) == True:
+            files = os.listdir(f_path)
+            filenames.append(files)
+        else: 
+            filenames.append(' ')
+
+    logging_path_dict = dict(zip(all_log_paths,filenames))
+
+    return all_log_paths, logging_path_dict
 
 def get_preview_images_by_instrument(inst):
     """Return a list of preview images available in the filesystem for

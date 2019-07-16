@@ -48,6 +48,7 @@ from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_current_flagged_anomalies
 from .data_containers import get_proposal_info
+from .data_containers import get_logging_filepaths
 from .data_containers import random_404_page
 from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
@@ -55,7 +56,7 @@ from .data_containers import data_trending
 from .data_containers import nirspec_trending
 from .forms import AnomalySubmitForm, FileSearchForm
 from .oauth import auth_info, auth_required
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE, LOGGING_MONITORS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE, LOGGING_MONITORS, LOGGING_TYPE
 from jwql.utils.utils import get_base_url, get_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -399,7 +400,16 @@ def logging_display(request):
 
     sect = LOGGING_MONITORS
 
-    context = {'sect': sect}
+    log_type_dir = LOGGING_TYPE
+
+    log_path = get_config()['log_dir']
+
+    all_log_paths, logging_path_dict = get_logging_filepaths(sect, log_path, log_type_dir)
+
+    context = {'sect': sect,
+                'log_type_dir' : log_type_dir,
+                'all_log_paths': all_log_paths,
+                'logging_path_dict': logging_path_dict}
 
     return render(request, template, context)
 
