@@ -9,19 +9,17 @@
 {% block content %}
 
     <main role="main" class="container">
-        	<h1 style="text-align: center"> Monitor Logs </h1></br>
-        <hr>
+        <h1 style="text-align: center"> Monitor Logs </h1>
 
-    	<!-- List all possible tools -->
     	<div class="row">
     		<div class="col-md-6 text-center">
     		{% for type_name in log_type_dir %}
 	    		<h3>{{type_name}}</h3>
 			  	{% for sect_name in sect %}
-    				<a role="button" class="btn btn-primary my-2 disabled" href="#">{{sect_name}}</a></br>
+    				<a role="button" class="btn btn-primary my-2 disabled" href="">{{sect_name}}</a></br>
     			{% endfor %}
+    		{% endfor %}
 			</div>
-			{% endfor %}
 		</div>
 
 	</main>

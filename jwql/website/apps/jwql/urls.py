@@ -49,6 +49,8 @@ from . import views
 
 app_name = 'jwql'
 instruments = 'nircam|NIRCam|niriss|NIRISS|nirspec|NIRSpec|miri|MIRI|fgs|FGS'
+log_type = 'prod|dev|test'
+monitor_type = 'dark_monitor|monitor_cron_jobs|monitor_mast|generate_preview_images|monitor_filesystem|test_logging_functions'
 
 urlpatterns = [
 
