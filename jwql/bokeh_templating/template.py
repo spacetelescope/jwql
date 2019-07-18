@@ -134,11 +134,15 @@ class BokehTemplate(object):
     
     def parse_string(self, yaml_string):
         return list(yaml.load_all(yaml_string))
-        
-    def embed(self, ref):
+
+    def get_bokeh_element(self, ref):
         element = self.refs.get(ref, None)
         if element is None:
             raise BokehTemplateEmbedError("Undefined component reference")
+        return element
+        
+    def embed(self, ref):
+        element = self.get_bokeh_element(ref)
         return components(element)
     
     def register_sequence_constructor(self, tag, parse_func):

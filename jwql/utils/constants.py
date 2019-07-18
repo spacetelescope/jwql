@@ -87,7 +87,7 @@ MONITORS = {
     'nircam': [('Bias Monitor', '#'),
                ('Readnoise Monitor', '#'),
                ('Gain Level Monitor', '#'),
-               ('Mean Dark Current Rate Monitor', '#'),
+               ('Mean Dark Current Rate Monitor', '/nircam/dark_monitor'),
                ('Photometric Stability Monitor', '#')],
     'niriss': [('Bad Pixel Monitor', '#'),
                ('Readnoise Monitor', '#'),

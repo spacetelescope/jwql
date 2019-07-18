@@ -24,11 +24,17 @@ Use
 
 import os
 
+from astropy.io import fits
 from astropy.time import Time
+from bokeh.models.tickers import LogTicker
 import numpy as np
 
 from jwql.database.database_interface import session
 from jwql.database.database_interface import NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
+from jwql.database.database_interface import NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
+from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent
+from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
+from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config
 from jwql.bokeh_templating import BokehTemplate
@@ -43,14 +49,11 @@ class DarkMonitor(BokehTemplate):
         self._embed = True
         self.instrument = instrument
         self.aperture = aperture
-        self.detector = aperture.split('_')[0]
+        self.detector = self.aperture.split('_')[0]
 
         # App design
         self.format_string = None
         self.interface_file = os.path.join(SCRIPT_DIR, "yaml", "monitor_dark_interface.yaml")
-
-        self.settings = get_config()
-        self.output_dir = self.settings['outputs']
 
         # Load data tables
         self.load_data()
@@ -66,29 +69,21 @@ class DarkMonitor(BokehTemplate):
         # Data for dark current histogram plot (full detector)
         # TODO: how to show multiple histograms? here just showing last.
         last_hist_index = -1
-        self.full_dark_bin_center = np.array([row.hist_dark_values for row in self.dark_table])[last_hist_index]
-        self.full_dark_amplitude = [row.hist_amplitudes for row in self.dark_table][last_hist_index]
+        self.last_timestamp = datetime_stamps[last_hist_index].isoformat()
+        self.full_dark_bin_center = np.array([row.hist_dark_values for
+                                              row in self.dark_table])[last_hist_index]
+        self.full_dark_amplitude = [row.hist_amplitudes for
+                                    row in self.dark_table][last_hist_index]
         self.full_dark_bottom = np.zeros(len(self.full_dark_amplitude))
-        self.full_dark_bin_width = self.full_dark_bin_center[1:] - self.full_dark_bin_center[0: -1]
+        self.full_dark_bin_width = self.full_dark_bin_center[1:] - \
+                                   self.full_dark_bin_center[0: -1]
 
     def post_init(self):
 
-        # Define y range of dark current v. time plot
-        self.refs['dark_current_yrange'].start = min(self.dark_current)
-        self.refs['dark_current_yrange'].end = max(self.dark_current)
-
-        # Define x range of dark current v. time plot
-        self.refs['dark_current_xrange'].start = min(self.timestamps)
-        self.refs['dark_current_xrange'].end = max(self.timestamps)
-
-        # Define y range of dark current histogram
-        self.refs['dark_histogram_yrange'].start = min(self.full_dark_bottom)
-        self.refs['dark_histogram_yrange'].end = max(self.full_dark_amplitude)
-
-        # Define x range of dark current histogram
-        self.refs['dark_histogram_xrange'].start = min(self.full_dark_bin_center)
-        self.refs['dark_histogram_xrange'].end = max(self.full_dark_bin_center)
-
+        self._update_dark_v_time()
+        self._update_hist()
+        if '5' not in self.aperture:
+            self._dark_mean_image()
 
     def identify_tables(self):
         """Determine which dark current database tables as associated with
@@ -99,28 +94,8 @@ class DarkMonitor(BokehTemplate):
         self.pixel_table = eval('{}DarkPixelStats'.format(mixed_case_name))
         self.stats_table = eval('{}DarkDarkCurrent'.format(mixed_case_name))
 
-    def load_data(self, aperture=None):
-        """Given a set of coordinates of bad pixels, determine which of
-        these pixels have been previously identified and remove them
-        from the list
-
-        Parameters
-        ----------
-        badpix : tuple
-            Tuple of lists containing x and y pixel coordinates. (Output
-            of ``numpy.where`` call)
-
-        pixel_type : str
-            Type of bad pixel being examined. Options are ``hot``,
-            ``dead``, and ``noisy``
-
-        Returns
-        -------
-        new_pixels_x : list
-            List of x coordinates of new bad pixels
-
-        new_pixels_y : list
-            List of y coordinates of new bad pixels
+    def load_data(self):
+        """Query the database tables to get data
         """
 
         # call this function "load_mean_dark" or something more specific than "load_data"
@@ -133,8 +108,68 @@ class DarkMonitor(BokehTemplate):
             .filter(self.stats_table.aperture == self.aperture) \
             .all()
 
-        # self.pix_table = session.query(self.pixel_table) \
-        #     .filter(self.pixel_table.detector == self.detector) \
-        #     .all()
+        self.pix_table = session.query(self.pixel_table) \
+            .filter(self.pixel_table.detector == self.detector) \
+            .all()
+
+    def _dark_mean_image(self):
+        """Update bokeh objects with mean dark image data.
+        """
+        # Open the mean dark current file and get the data
+        mean_dark_image_file = self.pix_table[-1].mean_dark_image_file
+        mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
+        mean_dark_image_path = os.path.join(mean_slope_dir, mean_dark_image_file)
+        with fits.open(mean_dark_image_path) as hdulist:
+            data = hdulist[1].data
+
+        # Update the plot with the data and boundaries
+        y_size, x_size = np.shape(data)
+        self.refs["mean_dark_source"].data['image'] = [data]
+        self.refs["stamp_xr"].end = x_size
+        self.refs["stamp_yr"].end = y_size
+        self.refs["mean_dark_source"].data['dw'] = [x_size]
+        self.refs["mean_dark_source"].data['dh'] = [x_size]
+
+        # Set the image color scale
+        self.refs["log_mapper"].high = 0
+        self.refs["log_mapper"].low = -.2
+
+        # This should add ticks to the colorbar, but it doesn't
+        self.refs["mean_dark_cbar"].ticker = LogTicker()
+
+        # Add a title
+        self.refs['mean_dark_image_figure'].title.text = self.aperture
+        self.refs['mean_dark_image_figure'].title.align = "center"
+        self.refs['mean_dark_image_figure'].title.text_font_size = "20px"
+
+    def _update_dark_v_time(self):
+        # Define y range of dark current v. time plot
+        buffer = 0.05 * (max(self.dark_current) - min(self.dark_current))
+        self.refs['dark_current_yrange'].start = min(self.dark_current) - buffer
+        self.refs['dark_current_yrange'].end = max(self.dark_current) + buffer
+
+        # Define x range of dark current v. time plot
+        self.refs['dark_current_xrange'].start = min(self.timestamps)
+        self.refs['dark_current_xrange'].end = max(self.timestamps)
+
+    def _update_hist(self):
+        # Define y range of dark current histogram
+        buffer = 0.05 * (max(self.full_dark_amplitude) - min(self.full_dark_bottom))
+        self.refs['dark_histogram_yrange'].start = min(self.full_dark_bottom)
+        self.refs['dark_histogram_yrange'].end = max(self.full_dark_amplitude) + buffer
+
+        # Define x range of dark current histogram
+        self.refs['dark_histogram_xrange'].start = min(self.full_dark_bin_center)
+        self.refs['dark_histogram_xrange'].end = max(self.full_dark_bin_center)
+
+        # Add a title
+        self.refs['dark_full_histogram_figure'].title.text = self.aperture
+        self.refs['dark_full_histogram_figure'].title.align = "center"
+        self.refs['dark_full_histogram_figure'].title.text_font_size = "20px"
+
+        # Add the date
+        # for ref in self.refs['dark_full_histogram_figure'].references():
+        #     if ref.id == 1001:
+        #         ref.text = self.last_timestamp
 
 # DarkMonitor()
