@@ -1,10 +1,9 @@
 #! /usr/bin/env python
 
-"""
-This module monitors and gather statistics of the filesystem that hosts
-data for the ``jwql`` application. This will answer questions such as
-the total number of files, how much disk space is being used, and then
-plot these values over time.
+"""This module monitors and gather statistics of the filesystem and
+central storage area that hosts data for the ``jwql`` application.
+This will answer questions such as the total number of files, how much
+disk space is being used, and then plot these values over time.
 
 Authors
 -------
@@ -39,7 +38,6 @@ from collections import defaultdict
 import datetime
 import itertools
 import logging
-import psutil
 import os
 import subprocess
 
@@ -80,7 +78,6 @@ def gather_statistics(general_results_dict, instrument_results_dict):
         A dictionary for the ``filesystem_general`` database table
     instrument_results_dict : dict
         A dictionary for the ``filesystem_instrument`` database table
-
     """
 
     logging.info('Searching filesystem...')
@@ -178,12 +175,8 @@ def get_area_stats(central_storage_dict):
         else:
             fullpath = os.path.join(CENTRAL, area)
 
-        #print(area, fullpath)
-
         logging.info('Searching directory {}'.format(fullpath))
-        # record current area as being counted
         counteddirs.append(fullpath)
-        #print(counteddirs)
 
         # to get df stats, use -k to get 1024 byte blocks
         command = "df -k {}".format(fullpath)
@@ -197,14 +190,11 @@ def get_area_stats(central_storage_dict):
         central_storage_dict[area]['available'] = free
 
         # do an os.walk on each directory to count up used space
-
-        ### modifying here
         if area == 'all':
             # get listing of subdirectories
             subdirs = [f.path for f in os.scandir(fullpath) if f.is_dir()]
             for onedir in subdirs:
                 if onedir not in counteddirs:
-                    #print(onedir)
                     logging.info('Searching directory {}'.format(onedir))
                     for dirpath, _, files in os.walk(onedir):
                         for filename in files:
@@ -214,7 +204,7 @@ def get_area_stats(central_storage_dict):
                             if exists:
                                 filesize = os.path.getsize(file_path)
                                 sums += filesize
-            use = sums / (1024 **4)
+            use = sums / (1024 ** 4)
         else:
             for dirpath, _, files in os.walk(fullpath):
                 for filename in files:
@@ -227,7 +217,6 @@ def get_area_stats(central_storage_dict):
                         sums += filesize
             use = used / (1024 ** 4)
         central_storage_dict[area]['used'] = use
-        #print(area, total, use, free)
 
     logging.info('Finished searching central storage system')
     return central_storage_dict
@@ -436,8 +425,6 @@ def plot_central_store_dirs():
             dates = list(results_dict.keys())
             values = list(results_dict.values())
 
-            #print(dates, values)
-
             # Plot the results
             plot.line(dates, values, legend='{} files'.format(area), line_color=color)
             plot.circle(dates, values, color=color)
@@ -550,14 +537,11 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
             new_record['filetype'] = filetype
             new_record['count'] = instrument_results_dict[instrument][filetype]['count']
             new_record['size'] = instrument_results_dict[instrument][filetype]['size']
-
             engine.execute(FilesystemInstrument.__table__.insert(), new_record)
             session.commit()
 
     # Add data to central_storage table
-
     arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
-
     for area in arealist:
         new_record = {}
         new_record['date'] = central_storage_dict['date']
@@ -565,7 +549,6 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
         new_record['size'] = central_storage_dict[area]['size']
         new_record['used'] = central_storage_dict[area]['used']
         new_record['available'] = central_storage_dict[area]['available']
-
         engine.execute(CentralStore.__table__.insert(), new_record)
         session.commit()
 
