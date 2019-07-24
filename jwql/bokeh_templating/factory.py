@@ -102,6 +102,8 @@ def figure_constructor(tool, loader, node):
     
     for element in elements:
         key = element.pop('kind')
+        # Shapes must be listed here:
+        # https://bokeh.pydata.org/en/latest/docs/reference/plotting.html
         shape = {'line': ('Line', figure.line),
                  'circle': ('Circle', figure.circle),
                  #'step': ('Step', figure.step), #not supported in 0.12.5
