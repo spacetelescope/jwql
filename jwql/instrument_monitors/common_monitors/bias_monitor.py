@@ -33,6 +33,36 @@ class Bias():
         """Initialize an instance of the ``Bias`` class.
         """
 
+    def process(self, file_list):
+        """The main method for processing darks.  See module docstrings
+        for further details.
+
+        Parameters
+        ----------
+        file_list : list
+            List of filenames (including full paths) to the dark current
+            files
+        """
+
+        for f in file_list:
+            logging.info('\tWorking on file: {}'.format(f))
+
+            # Get the pipeline superbias data used to calibrate this file
+            sb_file = fits.getheader(f, 0)['R_SUPERB'].replace('crds://', 
+                '/grp/crds/cache/references/jwst/')
+            sb_data = fits.getdata(sb_file, 'SCI')
+
+            # Get the uncalibrated 0th group data for this file
+            uncal_file = f.replace('dark', 'uncal')
+            if not os.path.isfile(uncal_file):
+                raise FileNotFoundError(
+                    '{} does not exist, even though {} does'.format(uncal_file, f))
+            uncal_data = fits.getdata(uncal_file, 'SCI')[0][0]
+
+            # Find the difference between the uncal 0th group and the superbias
+            diff = uncal_data - sb_data
+            
+
     @log_fail
     @log_info
     def run(self):
@@ -57,21 +87,29 @@ class Bias():
 
             for aperture in possible_apertures:
 
-                logging.info('')
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
 
-                # Query MAST for new data for this instrument/aperture
+                # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
                 new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
-                # Get full paths to the files, some dont exist in JWQL filesystem
-                new_filenames = []
+                # Get full paths to the uncal dark files; some dont exist in JWQL filesystem
+                new_files = []
                 for file_entry in new_entries:
                     try:
-                        new_filenames.append(filesystem_path(file_entry['filename']))
+                        new_files.append(filesystem_path(file_entry['filename']))
                     except FileNotFoundError:
                         logging.info('{} does not exist in JWQL filesystem'.format(file_entry['filename']))
+
+                # Run the dark monitor on any new files
+                if len(new_files) != 0:
+                    self.process(new_files)
+                else:
+                    logging.info(('\tBias monitor skipped. {} new dark files for {}, {}.').format(
+                        len(new_files), instrument, aperture))
+
+        logging.info('Bias Monitor completed successfully.')
 
 
 if __name__ == '__main__':
