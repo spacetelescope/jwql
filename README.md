@@ -188,6 +188,7 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Karen Levay (DMD)
 - Crystal Mannfolk (SCOPE) [@cmannfolk](https://github.com/cmannfolk)
 - Greg Masci (ITSD)
+- Jacob Matuskey (DMD) [@jmatuskey](https://github.com/jmatuskey)
 - Margaret Meixner (INS)
 - Christain Mesh (DMD) [@cam72cam](https://github.com/cam72cam)
 - Prem Mishra (ITSD)
