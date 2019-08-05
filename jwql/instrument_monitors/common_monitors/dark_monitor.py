@@ -827,9 +827,11 @@ class Dark():
         output_filename = '{}_{}_{}_to_{}_mean_slope_image.fits'.format(self.instrument.lower(),
                                                                         self.aperture.lower(),
                                                                         self.query_start, self.query_end)
+
         mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
         ensure_dir_exists(mean_slope_dir)
         output_filename = os.path.join(mean_slope_dir, output_filename)
+        logging.info("Name of mean slope image: {}".format(output_filename))
 
         primary_hdu = fits.PrimaryHDU()
         primary_hdu.header['INSTRUME'] = (self.instrument, 'JWST instrument')
