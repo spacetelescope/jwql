@@ -638,7 +638,7 @@ class Dark():
             new_noisy_pixels = self.exclude_existing_badpix(new_noisy_pixels, 'noisy')
 
             # Add new noisy pixels to the database
-            logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels)))
+            logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
             self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
         # ----- Calculate image statistics -----
