@@ -412,6 +412,8 @@ class Dark():
             filename = None
         else:
             filename = query.all()[0].baseline_file
+            # Specify the full path
+            filename = os.path.join(self.output_dir, 'mean_slope_images', filename)
             logging.info('Baseline filename: {}'.format(filename))
 
         return filename
@@ -620,8 +622,8 @@ class Dark():
             new_dead_pix = self.exclude_existing_badpix(new_dead_pix, 'dead')
 
             # Add new hot and dead pixels to the database
-            logging.info('\tFound {} new hot pixels'.format(len(new_hot_pix)))
-            logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix)))
+            logging.info('\tFound {} new hot pixels'.format(len(new_hot_pix[0])))
+            logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix[0])))
             self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
             self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
