@@ -400,6 +400,8 @@ class Dark():
             filename = None
         else:
             filename = query.all()[0].baseline_file
+            # Specify the full path
+            filename = os.path.join(self.output_dir, 'mean_slope_images', filename)
             logging.info('Baseline filename: {}'.format(filename))
 
         return filename
