@@ -22,7 +22,8 @@ from astropy.io import fits
 from astropy.time import Time
 import numpy as np
 
-from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks   
+from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
+from jwql.utils import instrument_properties
 from jwql.utils.utils import filesystem_path, initialize_instrument_monitor, update_monitor_table
 
 class Bias():
@@ -32,6 +33,43 @@ class Bias():
     def __init__(self):
         """Initialize an instance of the ``Bias`` class.
         """
+
+    def get_amp_medians(self, image, amps):
+        """Calculates the median in the input image for each amplifier
+        for odd and even columns separately.
+
+        Parameters
+        ----------
+        image : numpy.ndarray
+            2D array on which to calculate statistics
+
+        amps : dict
+            Dictionary containing amp boundary coordinates (output from
+            ``amplifier_info`` function)
+            ``amps[key] = [(xmin, ymin), (xmax, ymax)]``
+
+        Returns
+        -------
+        amp_meds : dict
+            Median values for each amp. Keys are ramp numbers as
+            strings with even/odd designation (e.g. ``'1_even'``)
+        """
+        
+        amp_meds = {}
+
+        for key in amps:
+            x_start, y_start = amps[key][0]
+            x_end, y_end = amps[key][1]
+            
+            # Find median value of both even and odd columns for this amp
+            amp_med_even = np.nanmedian(image[y_start: y_end, x_start: x_end][:, 1::2])
+            amp_meds[key+'_even'] = amp_med_even
+            amp_med_odd = np.nanmedian(image[y_start: y_end, x_start: x_end][:, ::2])
+            amp_meds[key+'_odd'] = amp_med_odd
+
+        logging.info('\tMean dark rate by amplifier: {}'.format(amp_meds))
+
+        return amp_meds
 
     def process(self, file_list):
         """The main method for processing darks.  See module docstrings
@@ -59,9 +97,18 @@ class Bias():
                     '{} does not exist, even though {} does'.format(uncal_file, f))
             uncal_data = fits.getdata(uncal_file, 'SCI')[0][0]
 
+            # Find amplifier boundaries so per-amp statistics can be calculated
+            # PLACEHOLDER - THIS FILE DOESNT HAVE DQ ARRAY SO CRASHES, IT HAS PIXELDQ INSTEAD
+            # DONT WANT TO INCLUDE REFPIX HERE
+            number_of_amps, amp_bounds = instrument_properties.amplifier_info(f)
+            logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
+
+            # Calculate median values of each amplifier for odd/even columns 
+            # in the uncal 0th group
+            amp_meds = self.get_amp_medians(uncal_data, amp_bounds)
+
             # Find the difference between the uncal 0th group and the superbias
             diff = uncal_data - sb_data
-            
 
     @log_fail
     @log_info
@@ -110,7 +157,6 @@ class Bias():
                         len(new_files), instrument, aperture))
 
         logging.info('Bias Monitor completed successfully.')
-
 
 if __name__ == '__main__':
 
