@@ -1,5 +1,5 @@
-Python Code Style Guide for `jwql`
-=================================
+`jwql` Style Guide
+==================
 
 This document serves as a style guide for all `jwql` software development.  Any requested contribution to the `jwql` code repository should be checked against this guide, and any violation of the guide should be fixed before the code is committed to
 the `master` or `develop` branch.  Please refer to the accompanying [`example.py`](https://github.com/spacetelescope/jwql/blob/master/style_guide/example.py) script for a example code that abides by this style guide.
@@ -69,7 +69,7 @@ Additionally, developers of this project should be mindful of application securi
 
 `jwql`-Specific Logging Standards
 ---------------------------------
-`jwql` employs standards for logging monitoring scripts.  See the [`logging guide`](https://github.com/spacetelescope/jwql/tree/develop/logging_guide) for further details.
+`jwql` employs standards for logging monitoring scripts.  See the [`logging guide`](https://github.com/spacetelescope/jwql/blob/develop/style_guide/logging_guide.md) for further details.
 
 
 `jwql`-Specific Variable Value/Type Standards
@@ -80,6 +80,11 @@ To the extent possible, `jwql` shall define frequently-used variable types/value
 - **JWST instrument names**: In all internal references and structures (e.g. dictionaries) instrument names shall be all lower-case strings, i.e. one of `fgs`, `miri`, `niriss`, `nircam`, `nirspec`. When variations are required for interfaces, e.g. `Nircam` for MAST, `NIRCam` or `NIRCAM` for SIAF, etc. these should be defined as dictionaries in [`jwql/utils/constants.py`](https://github.com/spacetelescope/jwql/blob/master/jwql/utils/constants.py) and imported from there.
 
 - **Program/proposal identifiers**: JWST program IDs shall be stored and referred to internally as integers and parsed to strings only when needed. For example, the inputs `"001144"` and `"1144"` shall both be converted to an integer variable with value `1144`.
+
+
+Accessibility in Development
+----------------------------
+`jwql` strives to create web pages and code that are as accessibile as possible for all users. See the [`accessibility guidelines`](https://github.com/spacetelescope/jwql/blob/develop/style_guide/accessibility_guidelines.md) page for further details.
 
 
 Tools and Library Recommendations

@@ -22,7 +22,7 @@ test_dark_monitor.py
 
 test_edb_interface.py
 ---------------------
-.. automodule:: jwql.tests.test_edb_interface
+.. automodule:: jwql.tests.test_edb
     :members:
     :undoc-members:
 

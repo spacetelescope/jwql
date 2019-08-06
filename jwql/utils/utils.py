@@ -36,6 +36,8 @@ import os
 import re
 import shutil
 
+import jsonschema
+
 from jwql.utils import permissions
 from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES_SHORTHAND
 
@@ -316,7 +318,10 @@ def filename_parser(filename):
     except AttributeError:
         jdox_url = 'https://jwst-docs.stsci.edu/display/JDAT/' \
                    'File+Naming+Conventions+and+Data+Products'
-        raise ValueError('Provided file {} does not follow JWST naming conventions.  See {} for further information.'.format(filename, jdox_url))
+        raise ValueError(
+            'Provided file {} does not follow JWST naming conventions.  '
+            'See {} for further information.'.format(filename, jdox_url)
+        )
 
     return filename_dict
 
@@ -345,7 +350,9 @@ def filesystem_path(filename):
     if os.path.isfile(full_path):
         return full_path
     else:
-        raise FileNotFoundError(('{} is not in the predicted location: {}'.format(filename, full_path)))
+        raise FileNotFoundError(
+            '{} is not in the predicted location: {}'.format(filename, full_path)
+        )
 
 
 def get_base_url():
@@ -382,6 +389,7 @@ def get_config():
     """
     config_file_location = os.path.join(__location__, 'config.json')
 
+    # Make sure the file exists
     if not os.path.isfile(config_file_location):
         raise FileNotFoundError('The JWQL package requires a configuration file (config.json) '
                                 'to be placed within the jwql/utils directory. '
@@ -389,7 +397,156 @@ def get_config():
                                 '(https://github.com/spacetelescope/jwql/wiki/'
                                 'Config-file) for more information.')
 
-    with open(config_file_location, 'r') as config_file:
-        settings = json.load(config_file)
+    with open(config_file_location, 'r') as config_file_object:
+        try:
+            # Load it with JSON
+            settings = json.load(config_file_object)
+        except json.JSONDecodeError as e:
+            # Raise a more helpful error if there is a formatting problem
+            raise ValueError('Incorrectly formatted config.json file. '
+                             'Please fix JSON formatting: {}'.format(e))
+
+    # Ensure the file has all the needed entries with expected data types
+    _validate_config(settings)
 
     return settings
+
+
+def check_config_for_key(key):
+    """Check that the config.json file contains the specified key
+    and that the entry is not empty
+
+    Parameters
+    -------
+    key : str
+        The configuration file key to verify
+    """
+    try:
+        get_config()[key]
+    except KeyError:
+        raise KeyError(
+            'The key `{}` is not present in config.json. Please add it.'.format(key)
+            + ' See the relevant wiki page (https://github.com/spacetelescope/'
+            'jwql/wiki/Config-file) for more information.'
+        )
+
+    if get_config()[key] == "":
+        raise ValueError(
+            'Please complete the `{}` field in your config.json. '.format(key)
+            + ' See the relevant wiki page (https://github.com/spacetelescope/'
+            'jwql/wiki/Config-file) for more information.'
+        )
+
+
+def _validate_config(config_file_dict):
+    """Check that the config.json file contains all the needed entries with
+    expected data types
+
+    Parameters
+    ----------
+    config_file_dict : dict
+        The configuration JSON file loaded as a dictionary
+
+    Notes
+    -----
+    See here for more information on JSON schemas:
+        https://json-schema.org/learn/getting-started-step-by-step.html
+    """
+    # Define the schema for config.json
+    schema = {
+        "type": "object",  # Must be a JSON object
+        "properties": {  # List all the possible entries and their types
+            "connection_string": {"type": "string"},
+            "database": {
+                "type": "object",
+                "properties": {
+                    "engine": {"type": "string"},
+                    "name": {"type": "string"},
+                    "user": {"type": "string"},
+                    "password": {"type": "string"},
+                    "host": {"type": "string"},
+                    "port": {"type": "string"}
+                    },
+                    "required": ['engine', 'name', 'user', 'password', 'host', 'port']
+                 },
+            "filesystem": {"type": "string"},
+            "preview_image_filesystem": {"type": "string"},
+            "thumbnail_filesystem": {"type": "string"},
+            "outputs": {"type": "string"},
+            "jwql_dir": {"type": "string"},
+            "admin_account": {"type": "string"},
+            "log_dir": {"type": "string"},
+            "test_dir": {"type": "string"},
+            "test_data": {"type": "string"},
+            "setup_file": {"type": "string"},
+            "auth_mast": {"type": "string"},
+            "client_id": {"type": "string"},
+            "client_secret": {"type": "string"},
+            "mast_token": {"type": "string"},
+        },
+        # List which entries are needed (all of them)
+        "required": ["connection_string", "database", "filesystem",
+                     "preview_image_filesystem", "thumbnail_filesystem",
+                     "outputs", "jwql_dir", "admin_account", "log_dir",
+                     "test_dir", "test_data", "setup_file", "auth_mast",
+                     "client_id", "client_secret", "mast_token"]
+    }
+
+    # Test that the provided config file dict matches the schema
+    try:
+        jsonschema.validate(instance=config_file_dict, schema=schema)
+    except jsonschema.ValidationError as e:
+        raise jsonschema.ValidationError(
+            'Provided config.json does not match the ' + \
+            'required JSON schema: {}'.format(e.message)
+        )
+
+
+def initialize_instrument_monitor(module):
+    """Configures a log file for the instrument monitor run and
+    captures the start time of the monitor
+
+    Parameters
+    ----------
+    module : str
+        The module name (e.g. ``dark_monitor``)
+
+    Returns
+    -------
+    start_time : datetime object
+        The start time of the monitor
+    log_file : str
+        The path to where the log file is stored
+    """
+
+    from jwql.utils.logging_functions import configure_logging
+
+    start_time = datetime.datetime.now()
+    log_file = configure_logging(module)
+
+    return start_time, log_file
+
+
+def update_monitor_table(module, start_time, log_file):
+    """Update the ``monitor`` database table with information about
+    the instrument monitor run
+
+    Parameters
+    ----------
+    module : str
+        The module name (e.g. ``dark_monitor``)
+    start_time : datetime object
+        The start time of the monitor
+    log_file : str
+        The path to where the log file is stored
+    """
+
+    from jwql.database.database_interface import Monitor
+
+    new_entry = {}
+    new_entry['monitor_name'] = module
+    new_entry['start_time'] = start_time
+    new_entry['end_time'] = datetime.datetime.now()
+    new_entry['log_file'] = os.path.basename(log_file)
+
+    Monitor.__table__.insert().execute(new_entry)

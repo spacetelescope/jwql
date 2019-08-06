@@ -23,7 +23,7 @@ from astropy.io import fits
 from jwst.datamodels import dqflags
 import numpy as np
 
-from jwql.utils.constants import AMPLIFIER_BOUNDARIES, FOUR_AMP_SUBARRAYS, SUBARRAYS_ONE_OR_FOUR_AMPS
+from jwql.utils.constants import AMPLIFIER_BOUNDARIES, NIRCAM_FOUR_AMP_SUBARRAYS, NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS
 
 
 def amplifier_info(filename, omit_reference_pixels=True):
@@ -70,13 +70,12 @@ def amplifier_info(filename, omit_reference_pixels=True):
     # Full frame data will be 2048x2048 for all instruments
     if instrument.lower() == 'miri' or ((x_dim == 2048) and (y_dim == 2048)) or \
        subarray_name in FOUR_AMP_SUBARRAYS:
-
         num_amps = 4
         amp_bounds = deepcopy(AMPLIFIER_BOUNDARIES[instrument])
 
     else:
 
-        if subarray_name not in SUBARRAYS_ONE_OR_FOUR_AMPS:
+        if subarray_name not in NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS:
             num_amps = 1
             amp_bounds = {'1': [(0, x_dim, 1), (0, y_dim, 1)]}
 

@@ -732,7 +732,6 @@ class Dark():
                 # Check to see if there are enough new files to meet the
                 # monitor's signal-to-noise requirements
                 if len(new_entries) >= file_count_threshold:
-
                     logging.info('\tSufficient new dark files found for {}, {} to run the dark monitor.'
                                  .format(self.instrument, self.aperture))
 
@@ -963,7 +962,7 @@ class Dark():
             degrees_of_freedom = len(hist) - 3.
             total_pix = np.sum(hist[positive])
             p_i = gauss_fit[positive] / total_pix
-            gaussian_chi_squared[key] = (np.sum((hist[positive] - (total_pix*p_i)**2) / (total_pix*p_i))
+            gaussian_chi_squared[key] = (np.sum((hist[positive] - (total_pix * p_i) ** 2) / (total_pix * p_i))
                                          / degrees_of_freedom)
 
             # Double Gaussian fit only for full frame data (and only for
@@ -977,7 +976,7 @@ class Dark():
                     double_gauss_fit = calculations.double_gaussian(bin_centers, *double_gauss_params)
                     degrees_of_freedom = len(bin_centers) - 6.
                     dp_i = double_gauss_fit[positive] / total_pix
-                    double_gaussian_chi_squared[key] = np.sum((hist[positive] - (total_pix*dp_i)**2) / (total_pix*dp_i)) / degrees_of_freedom
+                    double_gaussian_chi_squared[key] = np.sum((hist[positive] - (total_pix * dp_i) ** 2) / (total_pix * dp_i)) / degrees_of_freedom
 
                 else:
                     double_gaussian_params[key] = [[0., 0.] for i in range(6)]

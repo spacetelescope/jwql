@@ -1,3 +1,84 @@
+0.21.0 (2019-07-23)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Updated ``README`` to include instructions on package installation via ``pip``.
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Updated all webpages to conform to Web Application Accessibility Guidelines.
+- Upgraded to ``django`` version 2.2.
+- ``bokeh`` is now imported in ``base`` template so that the version being used is consistent across all HTML templates.
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- The ``jwql`` package is now available on PyPI (https://pypi.org/project/jwql/) and installable via ``pip``.
+- Updated Jenkins configuration file to include in-line comments and descriptions.
+- Added ``utils`` function to validate the ``config.json`` file during import of ``jwql`` package.
+- Added support for monitoring contents of the ``jwql`` central storage area in the filesystem monitor.
+
+
+Bug Fixes
+---------
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Fixed position error of JWQL version display in footer.
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Fixed spelling error in dark monitor database column names.
+- Fixed dark monitor to avoid processing files that are not in the filesystem.
+
+
+0.20.0 (2019-06-05)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Updated the notebook exemplifying how to perform an engineering database (EDB) telemetry query.
+- Updated the README for the ``style_guide`` directory.
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Added form on preview image pages to allow users to submit image anomalies.
+- Added buttons for users to download the results of EDB telemetry queries as CSV files.
+- Enabled users to search for or navigate to program numbers without requiring leading zeros (i.e. "756" is now treated equivalently to "00756").
+- Enabled authentication for EDB queries via the web login (rather than requiring authentication information to be present in the configuration file).
+- Added custom 404 pages.
+- Added adaptive redirect feature so that users are not sent back to the homepage after login.
+- Added more descriptive errors if a user tries to run the web application without filling out the proper fields in the configuration file.
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Replaced all EDB interface code within ``jwql`` with the new ``jwedb`` `package<https://github.com/spacetelescope/jwst-dms-edb>`_.
+- Fully incorporated Python 3.5 testing into the Jenkins test suite.
+
+Bug Fixes
+---------
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Fixed bug in which dashboard page would throw an error.
+- Fixed incorrect dashboard axis labels.
+
+
 0.19.0 (2019-04-19)
 ===================
 
@@ -8,7 +89,7 @@ Project & API Documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - Added guidelines to the style guide for logging the execution of instrument monitors
-- Added example useage of logging in the ``example.py`` module
+- Added example usage of logging in the ``example.py`` module
 
 Web Application
 ~~~~~~~~~~~~~~~
