@@ -7,5 +7,6 @@ include setup.py
 recursive-include notebooks *
 recursive-include style_guide *
 recursive-include typing_demo *
+recursive-include jwql/database/monitor_table_definitions *.txt
 
 exclude *.pyc
