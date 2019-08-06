@@ -504,7 +504,7 @@ class Dark():
         # Determine which pipeline steps need to be executed
         required_steps = pipeline_tools.get_pipeline_steps(self.instrument)
         logging.info('\tRequired calwebb1_detector pipeline steps to have the data in the '
-                      'correct format:')
+                     'correct format:')
         for item in required_steps:
             logging.info('\t\t{}: {}'.format(item, required_steps[item]))
 
@@ -743,8 +743,6 @@ class Dark():
                         except FileNotFoundError:
                             logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
                                             .format(file_entry['filename']))
-
-                    #new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
 
                     # Set up directories for the copied data
                     ensure_dir_exists(os.path.join(self.output_dir, 'data'))
