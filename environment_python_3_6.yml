@@ -11,7 +11,7 @@ dependencies:
 - inflection=0.3.1
 - ipython=7.7.0
 - jinja2=2.10
-- jsonschema>=3.0.1
+- jsonschema=2.6.0
 - jwst=0.13.1
 - matplotlib=3.1.0
 - numpy=1.16.4
