@@ -532,7 +532,9 @@ def generate_preview_images():
     logging.info("Beginning the script run")
 
     # Process programs in parallel
-    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], '*'))]
+    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(get_config()['public_filesystem'], '*'))]
+    program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(get_config()['proprietary_filesystem'], '*'))])
+    program_list = list(set(program_list))
     pool = multiprocessing.Pool(processes=int(get_config()['cores']))
     pool.map(process_program, program_list)
     pool.close()
@@ -626,7 +628,8 @@ def process_program(program):
     """
 
     # Group together common exposures
-    filenames = glob.glob(os.path.join(get_config()['filesystem'], program, '*.fits'))
+    filenames = glob.glob(os.path.join(get_config()['public_filesystem'], program, '*'. '*.fits'))
+    filenames.extend(glob.glob(os.path.join(get_config()['proprietary_filesystem'], program, '*'. '*.fits')))
     grouped_filenames = group_filenames(filenames)
     logging.info('Found {} filenames'.format(len(filenames)))
 

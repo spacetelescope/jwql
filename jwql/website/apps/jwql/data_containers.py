@@ -49,7 +49,7 @@ from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.jwql_monitors import monitor_cron_jobs
-from jwql.utils.utils import ensure_dir_exists
+from jwql.utils.utils import ensure_dir_exists, filesystem_path
 from jwql.utils.constants import MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
@@ -57,7 +57,8 @@ from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationFor
 
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
+PROPRIETARY_FILESYSTEM_DIR = get_config()['proprietary_filesystem']
+PUBLIC_FILESYSTEM_DIR = get_config()['public_filesystem']
 PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_images')
 THUMBNAIL_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'thumbnails')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
@@ -140,7 +141,8 @@ def get_all_proposals():
         filesystem
     """
 
-    proposals = glob.glob(os.path.join(FILESYSTEM_DIR, '*'))
+    proposals = glob.glob(os.path.join(PROPRIETARY_FILESYSTEM_DIR, '*'))
+    proposals.extend(glob.glob(os.path.join(PUBLIC_FILESYSTEM_DIR, '*')))
     proposals = [proposal.split('jw')[-1] for proposal in proposals]
     proposals = [proposal for proposal in proposals if len(proposal) == 5]
 
@@ -439,8 +441,10 @@ def get_filenames_by_instrument(instrument):
                         'NIRCam': 'nrc',
                         'NIRISS': 'nis',
                         'NIRSpec': 'nrs'}
-    search_filepath = os.path.join(FILESYSTEM_DIR, '*', '*.fits')
-    filepaths = [f for f in glob.glob(search_filepath) if instrument_match[instrument] in f]
+    search_filepath_proprietary = os.path.join(PROPRIETARY_FILESYSTEM_DIR, '*', '*', '*.fits')
+    search_filepath_public = os.path.join(PUBLIC_FILESYSTEM_DIR, '*', '*', '*.fits')
+    filepaths = [f for f in glob.glob(search_filepath_proprietary) if instrument_match[instrument] in f]
+    filepaths.extend([f for f in glob.glob(search_filepath_public) if instrument_match[instrument] in f])
 
     return filepaths
 
@@ -493,23 +497,22 @@ def get_filenames_by_rootname(rootname):
     return filenames
 
 
-def get_header_info(file):
-    """Return the header information for a given ``file``.
+def get_header_info(filename):
+    """Return the header information for a given ``filename``.
 
     Parameters
     ----------
-    file : str
+    filename : str
         The name of the file of interest.
 
     Returns
     -------
     header : str
-        The primary FITS header for the given ``file``.
+        The primary FITS header for the given ``filename``.
     """
 
-    dirname = file[:7]
-    fits_filepath = os.path.join(FILESYSTEM_DIR, dirname, file)
-    header = fits.getheader(fits_filepath, ext=0).tostring(sep='\n')
+    filepath = filesystem_path(filename)
+    header = fits.getheader(filepath, ext=0).tostring(sep='\n')
 
     return header
 
@@ -542,9 +545,12 @@ def get_image_info(file_root, rewrite):
     preview_dir = os.path.join(get_config()['jwql_dir'], 'preview_images')
 
     # Find all of the matching files
-    dirname = file_root[:7]
-    search_filepath = os.path.join(FILESYSTEM_DIR, dirname, file_root + '*.fits')
-    image_info['all_files'] = glob.glob(search_filepath)
+    subdir1 = file_root[:7]
+    subdir2 = file_root.split('_')[0]
+    search_filepath_proprietary = os.path.join(PROPRIETARY_FILESYSTEM_DIR, subdir1, subdir2, file_root + '*.fits')
+    search_filepath_public = os.path.join(PUBLIC_FILESYSTEM_DIR, subdir1, subdir2, file_root + '*.fits')
+    image_info['all_files'] = glob.glob(search_filepath_proprietary)
+    image_info['all_files'].extend(glob.glob(search_filepath_public))
 
     for file in image_info['all_files']:
 
@@ -729,10 +735,11 @@ def get_proposal_info(filepaths):
             thumbnail = '/'.join(thumbnail.split('/')[-2:])
         thumbnail_paths.append(thumbnail)
 
-        fits_search_filepath = os.path.join(
-            FILESYSTEM_DIR, 'jw{}'.format(proposal), 'jw{}*.fits'.format(proposal)
-        )
-        num_files.append(len(glob.glob(fits_search_filepath)))
+        fits_search_filepath_proprietary = os.path.join(PROPRIETARY_FILESYSTEM_DIR, 'jw{}'.format(proposal), '*', 'jw{}*.fits'.format(proposal))
+        fits_search_filepath_public = os.path.join(PUBLIC_FILESYSTEM_DIR, 'jw{}'.format(proposal), '*', 'jw{}*.fits'.format(proposal))
+        fits_files = glob.glob(fits_search_filepath_proprietary)
+        fits_files.extend(glob.glob(fits_search_filepath_public))
+        num_files.append(len(fits_files))
 
     # Put the various information into a dictionary of results
     proposal_info = {}

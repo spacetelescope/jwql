@@ -55,7 +55,8 @@ from jwql.database import database_interface as di
 from jwql.utils.constants import ANOMALY_CHOICES, JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.utils import get_config, filename_parser
 
-FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
+PROPRIETARY_FILESYSTEM_DIR = get_config()['proprietary_filesystem']
+PUBLIC_FILESYSTEM_DIR = get_config()['public_filesystem']
 
 
 class AnomalySubmitForm(forms.Form):
@@ -131,9 +132,10 @@ class FileSearchForm(forms.Form):
             # See if there are any matching proposals and, if so, what
             # instrument they are for
             proposal_string = '{:05d}'.format(int(search))
-            search_string = os.path.join(FILESYSTEM_DIR, 'jw{}'.format(proposal_string),
-                                         '*{}*.fits'.format(proposal_string))
-            all_files = glob.glob(search_string)
+            search_string_proprietary = os.path.join(PROPRIETARY_FILESYSTEM_DIR, 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
+            search_string_public = os.path.join(PUBLIC_FILESYSTEM_DIR, 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
+            all_files = glob.glob(search_string_proprietary)
+            all_files.extend(glob.glob(search_string_public))
             if len(all_files) > 0:
                 all_instruments = []
                 for file in all_files:
@@ -152,8 +154,10 @@ class FileSearchForm(forms.Form):
         elif self.search_type == 'fileroot':
             # See if there are any matching fileroots and, if so, what
             # instrument they are for
-            search_string = os.path.join(FILESYSTEM_DIR, search[:7], '{}*.fits'.format(search))
-            all_files = glob.glob(search_string)
+            search_string_proprietary = os.path.join(PROPRIETARY_FILESYSTEM_DIR, search[:7], '*', '{}*.fits'.format(search))
+            search_string_public = os.path.join(PUBLIC_FILESYSTEM_DIR, search[:7], '*', '{}*.fits'.format(search))
+            all_files = glob.glob(search_string_proprietary)
+            all_files.extend(glob.glob(search_string_public))
 
             if len(all_files) == 0:
                 raise forms.ValidationError('Fileroot {} not in the filesystem.'.format(search))

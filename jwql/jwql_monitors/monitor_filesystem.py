@@ -23,7 +23,8 @@ Use
 
     The user must have a ``config.json`` file in the ``utils``
     directory with the following keys:
-      - ``filesystem`` - The path to the filesystem
+      - ``proprietary_filesystem`` - The path to the proprietary filesystem
+      - ``public_filesystem`` - The path to the public filesystem
       - ``outputs`` - The path to where the output plots will be
                       written
 
@@ -57,7 +58,8 @@ from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES, JWST_
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 
-FILESYSTEM = get_config()['filesystem']
+PROPRIETARY_FILESYSTEM = get_config()['proprietary_filesystem']
+PUBLIC_FILESYSTEM = get_config()['public_filesystem']
 CENTRAL = get_config()['jwql_dir']
 
 
@@ -82,33 +84,34 @@ def gather_statistics(general_results_dict, instrument_results_dict):
 
     logging.info('Searching filesystem...')
 
-    for dirpath, _, files in os.walk(FILESYSTEM):
-        general_results_dict['total_file_count'] += len(files)
-        for filename in files:
+    for FILESYSTEM in [PROPRIETARY_FILESYSTEM, PUBLIC_FILESYSTEM]:
+        for dirpath, _, files in os.walk(FILESYSTEM):
+            general_results_dict['total_file_count'] += len(files)
+            for filename in files:
 
-            file_path = os.path.join(dirpath, filename)
-            general_results_dict['total_file_size'] += os.path.getsize(file_path)
+                file_path = os.path.join(dirpath, filename)
+                general_results_dict['total_file_size'] += os.path.getsize(file_path)
 
-            if filename.endswith(".fits"):
+                if filename.endswith(".fits"):
 
-                # Parse out filename information
-                filename_dict = filename_parser(filename)
-                filetype = filename_dict['suffix']
-                instrument = filename_dict['instrument']
+                    # Parse out filename information
+                    filename_dict = filename_parser(filename)
+                    filetype = filename_dict['suffix']
+                    instrument = filename_dict['instrument']
 
-                # Populate general stats
-                general_results_dict['fits_file_count'] += 1
-                general_results_dict['fits_file_size'] += os.path.getsize(file_path)
+                    # Populate general stats
+                    general_results_dict['fits_file_count'] += 1
+                    general_results_dict['fits_file_size'] += os.path.getsize(file_path)
 
-                # Populate instrument specific stats
-                if instrument not in instrument_results_dict:
-                    instrument_results_dict[instrument] = {}
-                if filetype not in instrument_results_dict[instrument]:
-                    instrument_results_dict[instrument][filetype] = {}
-                    instrument_results_dict[instrument][filetype]['count'] = 0
-                    instrument_results_dict[instrument][filetype]['size'] = 0
-                instrument_results_dict[instrument][filetype]['count'] += 1
-                instrument_results_dict[instrument][filetype]['size'] += os.path.getsize(file_path) / (2**40)
+                    # Populate instrument specific stats
+                    if instrument not in instrument_results_dict:
+                        instrument_results_dict[instrument] = {}
+                    if filetype not in instrument_results_dict[instrument]:
+                        instrument_results_dict[instrument][filetype] = {}
+                        instrument_results_dict[instrument][filetype]['count'] = 0
+                        instrument_results_dict[instrument][filetype]['size'] = 0
+                    instrument_results_dict[instrument][filetype]['count'] += 1
+                    instrument_results_dict[instrument][filetype]['size'] += os.path.getsize(file_path) / (2**40)
 
     # Convert file sizes to terabytes
     general_results_dict['total_file_size'] = general_results_dict['total_file_size'] / (2**40)
@@ -134,11 +137,15 @@ def get_global_filesystem_stats(general_results_dict):
         A dictionary for the ``filesystem_general`` database table
     """
 
-    command = "df -k {}".format(FILESYSTEM)
-    command += " | awk '{print $3, $4}' | tail -n 1"
-    stats = subprocess.check_output(command, shell=True).split()
-    general_results_dict['used'] = int(stats[0]) / (1024**3)
-    general_results_dict['available'] = int(stats[1]) / (1024**3)
+    general_results_dict['used'] = 0.0
+    general_results_dict['available'] = 0.0
+
+    for FILESYSTEM in [PROPRIETARY_FILESYSTEM, PUBLIC_FILESYSTEM]:
+        command = "df -k {}".format(FILESYSTEM)
+        command += " | awk '{print $3, $4}' | tail -n 1"
+        stats = subprocess.check_output(command, shell=True).split()
+        general_results_dict['used'] += int(stats[0]) / (1024**3)
+        general_results_dict['available'] += int(stats[1]) / (1024**3)
 
     return general_results_dict
 

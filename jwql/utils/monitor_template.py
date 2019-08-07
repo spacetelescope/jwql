@@ -105,7 +105,7 @@ def monitor_template_main():
     #      'suffix': 'uncal'}
 
     # Example of locating a dataset in the filesystem
-    filesystem = get_config()['filesystem']
+    filesystem = get_config()['public_filesystem']
     dataset = os.path.join(filesystem, 'jw{}'.format(filename_dict['program_id']),
                            filename_of_interest)
 

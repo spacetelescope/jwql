@@ -29,8 +29,12 @@ from jwql.utils.utils import get_config
 # Determine if tests are being run on jenkins
 ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
 
+# Determine if user has access to filesystem
+NO_FILESYSTEM_ACCESS = not os.path.exists(get_config()['public_filesystem']) or not os.path.exists(get_config()['proprietary_filesystem'])
+
 
 @pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(NO_FILESYSTEM_ACCESS, reason='Requires access to filesystem.')
 def test_completed_pipeline_steps():
     """Test that the list of completed pipeline steps for a file is
     correct
@@ -41,7 +45,7 @@ def test_completed_pipeline_steps():
         File to be checked
     """
 
-    filename = os.path.join(get_config()['filesystem'], 'jw00312',
+    filename = os.path.join(get_config()['proprietary_filesystem'], 'jw00312', 'jw00312002001',
                             'jw00312002001_02102_00001_nrcb4_rateints.fits')
     completed_steps = pipeline_tools.completed_pipeline_steps(filename)
     true_completed = OrderedDict([('group_scale', False),
