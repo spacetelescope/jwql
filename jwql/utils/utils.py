@@ -341,9 +341,11 @@ def filesystem_path(filename):
     """
 
     # Subdirectory name is based on the proposal ID
-    subdir = 'jw{}'.format(filename_parser(filename)['program_id'])
-    full_path_public = os.path.join(get_config()["public_filesystem"], subdir, filename)
-    full_path_proprietary = os.path.join(get_config()["proprietary_filesystem"], subdir, filename)
+    filename_dict = filename_parser(filename)
+    subdir1 = 'jw{}'.format(filename_dict['program_id'])
+    subdir2 = 'jw{}{}{}'.format(filename_dict['program_id'], filename_dict['observation'], filename_dict['visit'])
+    full_path_public = os.path.join(get_config()["public_filesystem"], subdir1, subdir2, filename)
+    full_path_proprietary = os.path.join(get_config()["proprietary_filesystem"], subdir1, subdir2, filename)
 
     # Check to see if the file exists
     if os.path.isfile(full_path_public):

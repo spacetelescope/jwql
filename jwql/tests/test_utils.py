@@ -348,7 +348,7 @@ def test_filesystem_path():
 
     filename = 'jw00621004001_02101_00001_guider2_cal.fits'
     check = filesystem_path(filename)
-    location = os.path.join(get_config()['public_filesystem'], 'jw00621', filename)
+    location = os.path.join(get_config()['public_filesystem'], 'jw00621', 'jw00621004001', filename)
 
     assert check == location
 
