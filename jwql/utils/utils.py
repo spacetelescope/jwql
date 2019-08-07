@@ -417,7 +417,7 @@ def check_config_for_key(key):
     and that the entry is not empty
 
     Parameters
-    -------
+    ----------
     key : str
         The configuration file key to verify
     """

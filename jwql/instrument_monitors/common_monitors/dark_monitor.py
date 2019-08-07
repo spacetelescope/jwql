@@ -76,10 +76,11 @@ from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelSt
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils import calculations, instrument_properties
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import log_info, log_fail
+from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path, initialize_instrument_monitor, update_monitor_table
+from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
 
@@ -518,7 +519,7 @@ class Dark():
         # Determine which pipeline steps need to be executed
         required_steps = pipeline_tools.get_pipeline_steps(self.instrument)
         logging.info('\tRequired calwebb1_detector pipeline steps to have the data in the '
-                      'correct format:')
+                     'correct format:')
         for item in required_steps:
             logging.info('\t\t{}: {}'.format(item, required_steps[item]))
 
@@ -727,7 +728,7 @@ class Dark():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in ['nircam']:
+        for instrument in JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -738,7 +739,6 @@ class Dark():
             possible_apertures = [ap for ap in possible_apertures if ap not in apertures_to_skip]
 
             for aperture in possible_apertures:
-
                 logging.info('')
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
 
@@ -754,22 +754,23 @@ class Dark():
                 # Query MAST using the aperture and the time of the
                 # most recent previous search as the starting time
                 new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
+
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
-                # Get full paths to the files that actually exist in filesystem
-                new_filenames = []
-                for file_entry in new_entries:
-                    try:
-                        new_filenames.append(filesystem_path(file_entry['filename']))
-                    except FileNotFoundError:
-                        logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
-                                        .format(file_entry['filename']))
-
-                # Check to see if there are enough new files to meet the monitor's signal-to-noise requirements
-                if len(new_filenames) >= file_count_threshold:
-
+                # Check to see if there are enough new files to meet the
+                # monitor's signal-to-noise requirements
+                if len(new_entries) >= file_count_threshold:
                     logging.info('\tSufficient new dark files found for {}, {} to run the dark monitor.'
                                  .format(self.instrument, self.aperture))
+
+                    # Get full paths to the files
+                    new_filenames = []
+                    for file_entry in new_entries:
+                        try:
+                            new_filenames.append(filesystem_path(file_entry['filename']))
+                        except FileNotFoundError:
+                            logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
+                                            .format(file_entry['filename']))
 
                     # Set up directories for the copied data
                     ensure_dir_exists(os.path.join(self.output_dir, 'data'))
@@ -780,6 +781,11 @@ class Dark():
 
                     # Copy files from filesystem
                     dark_files, not_copied = copy_files(new_filenames, self.data_dir)
+
+                    logging.info('\tNew_filenames: {}'.format(new_filenames))
+                    logging.info('\tData dir: {}'.format(self.data_dir))
+                    logging.info('\tCopied to working dir: {}'.format(dark_files))
+                    logging.info('\tNot copied: {}'.format(not_copied))
 
                     # Run the dark monitor
                     self.process(dark_files)
@@ -888,7 +894,7 @@ class Dark():
         amps : dict
             Dictionary containing amp boundary coordinates (output from
             ``amplifier_info`` function)
-            ``amps[key] = [(xmin, ymin), (xmax, ymax)]``
+            ``amps[key] = [(xmin, xmax, xstep), (ymin, ymax, ystep)]``
 
         Returns
         -------
@@ -943,22 +949,23 @@ class Dark():
             maxx = 0
             maxy = 0
             for amp in amps:
-                mxx = amps[amp][1][0]
+                mxx = amps[amp][0][1]
                 mxy = amps[amp][1][1]
                 if mxx > maxx:
                     maxx = copy(mxx)
                 if mxy > maxy:
                     maxy = copy(mxy)
-            amps['5'] = [(0, 0), (maxx, maxy)]
+            amps['5'] = [(0, maxx, 1), (0, maxy, 1)]
             logging.info(('\tFull frame exposure detected. Adding the full frame to the list '
                           'of amplifiers upon which to calculate statistics.'))
 
         for key in amps:
-            x_start, y_start = amps[key][0]
-            x_end, y_end = amps[key][1]
+            x_start, x_end, x_step = amps[key][0]
+            y_start, y_end, y_step = amps[key][1]
+            indexes = np.mgrid[y_start: y_end: y_step, x_start: x_end: x_step]
 
             # Basic statistics, sigma clipped areal mean and stdev
-            amp_mean, amp_stdev = calculations.mean_stdev(image[y_start: y_end, x_start: x_end])
+            amp_mean, amp_stdev = calculations.mean_stdev(image[indexes[0], indexes[1]])
             amp_means[key] = amp_mean
             amp_stdevs[key] = amp_stdev
 
@@ -966,7 +973,7 @@ class Dark():
             lower_bound = (amp_mean - 7 * amp_stdev)
             upper_bound = (amp_mean + 7 * amp_stdev)
 
-            hist, bin_edges = np.histogram(image[y_start: y_end, x_start: x_end], bins='auto',
+            hist, bin_edges = np.histogram(image[indexes[0], indexes[1]], bins='auto',
                                            range=(lower_bound, upper_bound))
             bin_centers = (bin_edges[1:] + bin_edges[0: -1]) / 2.
             initial_params = [np.max(hist), amp_mean, amp_stdev]
