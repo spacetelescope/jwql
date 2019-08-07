@@ -86,8 +86,8 @@ class Bias():
             logging.info('\tWorking on file: {}'.format(f))
 
             # Get the pipeline superbias data used to calibrate this file
-            sb_file = fits.getheader(f, 0)['R_SUPERB'].replace('crds://', 
-                '/grp/crds/cache/references/jwst/')
+            # PLACEHOLDER - needs to replace :crds// in sb_file path with actual path
+            sb_file = fits.getheader(f, 0)['R_SUPERB']
             sb_data = fits.getdata(sb_file, 'SCI')
 
             # Get the uncalibrated 0th group data for this file
@@ -157,6 +157,42 @@ class Bias():
                         len(new_files), instrument, aperture))
 
         logging.info('Bias Monitor completed successfully.')
+
+    def smooth_image(self, image, amps):
+        """Smooths an image to remove any amplifier and odd/even column
+        dependencies, which are still present after pipeline superbias 
+        subtraction.
+
+        Parameters
+        ----------
+        image : numpy.ndarray
+            2D image array to smooth
+
+        amps : dict
+            Dictionary containing amp boundary coordinates (output from
+            ``amplifier_info`` function)
+            ``amps[key] = [(xmin, ymin), (xmax, ymax)]``
+
+        Returns
+        -------
+        smoothed_image : numpy.ndarray
+            2D image array that has had any amplifier and odd/even
+            column effects removed.
+        """
+
+        smoothed_image = np.zeros(np.shape(image))
+
+        for key in amps:
+            x_start, y_start = amps[key][0]
+            x_end, y_end = amps[key][1]
+
+            # Remove the median odd/even column values from this amplifier region
+            odd_med = np.nanmedian(diff[y_start: y_end, x_start: x_end][:, ::2])
+            even_med = np.nanmedian(diff[y_start: y_end, x_start: x_end][:, 1::2])
+            smoothed_image[y_start: y_end, x_start: x_end][:, ::2] = image[y_start: y_end, x_start: x_end][:, ::2] - odd_med
+            smoothed_image[y_start: y_end, x_start: x_end][:, 1::2] = image[y_start: y_end, x_start: x_end][:, 1::2] - even_med
+
+        return smoothed_image
 
 if __name__ == '__main__':
 
