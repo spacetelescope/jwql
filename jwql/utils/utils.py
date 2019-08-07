@@ -340,19 +340,20 @@ def filesystem_path(filename):
         Full path to the given file, including filename
     """
 
-    filesystem_base = get_config()["filesystem"]
-
     # Subdirectory name is based on the proposal ID
     subdir = 'jw{}'.format(filename_parser(filename)['program_id'])
-    full_path = os.path.join(filesystem_base, subdir, filename)
+    full_path_public = os.path.join(get_config()["public_filesystem"], subdir, filename)
+    full_path_proprietary = os.path.join(get_config()["proprietary_filesystem"], subdir, filename)
 
     # Check to see if the file exists
-    if os.path.isfile(full_path):
-        return full_path
+    if os.path.isfile(full_path_public):
+        return full_path_public
+    elif os.path.isfile(full_path_proprietary):
+        return full_path_proprietary
     else:
         raise FileNotFoundError(
-            '{} is not in the predicted location: {}'.format(filename, full_path)
-        )
+            '{} is not in the predicted location: {} or {}'.format(
+                filename, full_path_public, full_path_proprietary))
 
 
 def get_base_url():
@@ -456,6 +457,10 @@ def _validate_config(config_file_dict):
     schema = {
         "type": "object",  # Must be a JSON object
         "properties": {  # List all the possible entries and their types
+            "admin_account": {"type": "string"},
+            "auth_mast": {"type": "string"},
+            "client_id": {"type": "string"},
+            "client_secret": {"type": "string"},
             "connection_string": {"type": "string"},
             "database": {
                 "type": "object",
@@ -469,27 +474,24 @@ def _validate_config(config_file_dict):
                     },
                     "required": ['engine', 'name', 'user', 'password', 'host', 'port']
                  },
-            "filesystem": {"type": "string"},
-            "preview_image_filesystem": {"type": "string"},
-            "thumbnail_filesystem": {"type": "string"},
-            "outputs": {"type": "string"},
             "jwql_dir": {"type": "string"},
-            "admin_account": {"type": "string"},
             "log_dir": {"type": "string"},
-            "test_dir": {"type": "string"},
-            "test_data": {"type": "string"},
-            "setup_file": {"type": "string"},
-            "auth_mast": {"type": "string"},
-            "client_id": {"type": "string"},
-            "client_secret": {"type": "string"},
             "mast_token": {"type": "string"},
+            "outputs": {"type": "string"},
+            "preview_image_filesystem": {"type": "string"},
+            "proprietary_filesystem": {"type": "string"},
+            "public_filesystem": {"type": "string"},
+            "setup_file": {"type": "string"},
+            "test_data": {"type": "string"},
+            "test_dir": {"type": "string"},
+            "thumbnail_filesystem": {"type": "string"},
         },
         # List which entries are needed (all of them)
-        "required": ["connection_string", "database", "filesystem",
-                     "preview_image_filesystem", "thumbnail_filesystem",
-                     "outputs", "jwql_dir", "admin_account", "log_dir",
-                     "test_dir", "test_data", "setup_file", "auth_mast",
-                     "client_id", "client_secret", "mast_token"]
+        "required": ["admin_account", "auth_mast", "client_id", "client_secret",
+                     "connection_string", "database", "jwql_dir", "log_dir",
+                     "mast_token", "outputs", "preview_image_filesystem",
+                     "proprietary_filesystem", "public_filesystem",
+                     "setup_file", "test_data", "test_dir", "thumbnail_filesystem"]
     }
 
     # Test that the provided config file dict matches the schema
