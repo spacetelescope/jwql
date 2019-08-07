@@ -28,6 +28,9 @@ from jwql.utils.utils import copy_files, get_config, filename_parser, \
 # Determine if tests are being run on jenkins
 ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
 
+# Determine if user has access to filesystem
+NO_FILESYSTEM_ACCESS = not os.path.exists(get_config()['public_filesystem']) or not os.path.exists(get_config()['proprietary_filesystem'])
+
 FILENAME_PARSER_TEST_DATA = [
 
     # Test full path
@@ -299,15 +302,17 @@ def test_filename_parser(filename, solution):
 
 
 @pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(NO_FILESYSTEM_ACCESS, reason='Requires access to filesystem.')
 def test_filename_parser_whole_filesystem():
     """Test the filename_parser on all files currently in the filesystem."""
     # Get all files
-    filesystem_dir = get_config()['filesystem']
+    filesystems = [get_config()['public_filesystem'], get_config()['proprietary_filesystem']]
     all_files = []
-    for dir_name, _, file_list in os.walk(filesystem_dir):
-        for file in file_list:
-            if file.endswith('.fits'):
-                all_files.append(os.path.join(dir_name, file))
+    for filesystem in filesystems:
+        for dir_name, _, file_list in os.walk(filesystem):
+            for file in file_list:
+                if file.endswith('.fits'):
+                    all_files.append(os.path.join(dir_name, file))
 
     # Run the filename_parser on all files
     bad_filenames = []
@@ -337,12 +342,13 @@ def test_filename_parser_nonJWST():
 
 
 @pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(NO_FILESYSTEM_ACCESS, reason='Requires access to filesystem.')
 def test_filesystem_path():
     """Test that a file's location in the filesystem is returned"""
 
-    filename = 'jw96003001001_02201_00001_nrca1_dark.fits'
+    filename = 'jw00621004001_02101_00001_guider2_cal.fits'
     check = filesystem_path(filename)
-    location = os.path.join(get_config()['filesystem'], 'jw96003', filename)
+    location = os.path.join(get_config()['public_filesystem'], 'jw00621', filename)
 
     assert check == location
 
