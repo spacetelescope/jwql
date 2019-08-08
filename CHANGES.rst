@@ -1,3 +1,45 @@
+0.21.0 (2019-07-23)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Updated ``README`` to include instructions on package installation via ``pip``.
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Updated all webpages to conform to Web Application Accessibility Guidelines.
+- Upgraded to ``django`` version 2.2.
+- ``bokeh`` is now imported in ``base`` template so that the version being used is consistent across all HTML templates.
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- The ``jwql`` package is now available on PyPI (https://pypi.org/project/jwql/) and installable via ``pip``.
+- Updated Jenkins configuration file to include in-line comments and descriptions.
+- Added ``utils`` function to validate the ``config.json`` file during import of ``jwql`` package.
+- Added support for monitoring contents of the ``jwql`` central storage area in the filesystem monitor.
+
+
+Bug Fixes
+---------
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Fixed position error of JWQL version display in footer.
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Fixed spelling error in dark monitor database column names.
+- Fixed dark monitor to avoid processing files that are not in the filesystem.
+
+
 0.20.0 (2019-06-05)
 ===================
 

@@ -34,8 +34,8 @@ import numpy as np
 
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
-from jwql.utils.utils import get_config, filename_parser, check_config
-check_config('auth_mast')
+from jwql.utils.utils import get_config, filename_parser, check_config_for_key
+check_config_for_key('auth_mast')
 auth_mast = get_config()['auth_mast']
 mast_flavour = '.'.join(auth_mast.split('.')[1:])
 from astropy import config

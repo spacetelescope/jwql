@@ -414,7 +414,7 @@ def logging_display(request):
     return render(request, template, context)
 
 
-def not_found(request):
+def not_found(request, *kwargs):
     """Generate a ``not_found`` page
 
     Parameters
