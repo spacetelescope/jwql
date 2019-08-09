@@ -211,7 +211,8 @@ class Dark():
     def __init__(self):
         """Initialize an instance of the ``Dark`` class."""
 
-    def add_bad_pix(self, coordinates, pixel_type, files, mean_filename, baseline_filename):
+    def add_bad_pix(self, coordinates, pixel_type, files, mean_filename, baseline_filename,
+                    observation_start_time, observation_mid_time, observation_end_time):
         """Add a set of bad pixels to the bad pixel database table
 
         Parameters
@@ -235,6 +236,15 @@ class Dark():
         baseline_filename : str
             Name of fits file containing the baseline dark rate image
             used to find these bad pixels
+
+        observation_start_time : datetime.datetime
+            Observation time of the earliest file in ``files``
+
+        observation_mid_time : datetime.datetime
+            Average of the observation times in ``files``
+
+        observation_end_time : datetime.datetime
+            Observation time of the latest file in ``files``
         """
 
         logging.info('Adding {} {} pixels to database.'.format(len(coordinates[0]), pixel_type))
@@ -245,6 +255,9 @@ class Dark():
                  'y_coord': coordinates[1],
                  'type': pixel_type,
                  'source_files': source_files,
+                 'obs_start_time': observation_start_time,
+                 'obs_mid_time': observation_mid_time,
+                 'obs_end_time': observation_end_time,
                  'mean_dark_image_file': os.path.basename(mean_filename),
                  'baseline_file': os.path.basename(baseline_filename),
                  'entry_date': datetime.datetime.now()}
@@ -554,9 +567,19 @@ class Dark():
                 # Delete the original dark ramp file to save disk space
                 os.remove(filename)
 
+        obs_times = []
         logging.info('\tSlope images to use in the dark monitor for {}, {}:'.format(self.instrument, self.aperture))
         for item in slope_files:
             logging.info('\t\t{}'.format(item))
+            # Get the observation time for each file
+            obstime = instrument_properties.get_obstime(item)
+            obs_times.append(obstime)
+
+        # Find the earliest and latest observation time, and calculate
+        # the mid-time.
+        min_time = np.min(obs_times)
+        max_time = np.max(obs_times)
+        mid_time = instrument_properties.mean_time(obs_times)
 
         # Read in all slope images and place into a list
         slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files)
@@ -600,10 +623,10 @@ class Dark():
             new_dead_pix = self.exclude_existing_badpix(new_dead_pix, 'dead')
 
             # Add new hot and dead pixels to the database
-            logging.info('\tFound {} new hot pixels'.format(len(new_hot_pix)))
-            logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix)))
-            self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file)
-            self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file)
+            logging.info('\tFound {} new hot pixels'.format(len(new_hot_pix[0])))
+            logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix[0])))
+            self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
+            self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
             # Check for any pixels that are significantly more noisy than
             # in the baseline stdev image
@@ -616,8 +639,8 @@ class Dark():
             new_noisy_pixels = self.exclude_existing_badpix(new_noisy_pixels, 'noisy')
 
             # Add new noisy pixels to the database
-            logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels)))
-            self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file)
+            logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
+            self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
         # ----- Calculate image statistics -----
 
@@ -636,6 +659,9 @@ class Dark():
             dark_db_entry = {'aperture': self.aperture, 'amplifier': key, 'mean': amp_mean[key],
                              'stdev': amp_stdev[key],
                              'source_files': source_files,
+                             'obs_start_time': min_time,
+                             'obs_mid_time': mid_time,
+                             'obs_end_time': max_time,
                              'gauss_amplitude': list(gauss_param[key][0]),
                              'gauss_peak': list(gauss_param[key][1]),
                              'gauss_width': list(gauss_param[key][2]),
@@ -809,9 +835,11 @@ class Dark():
         output_filename = '{}_{}_{}_to_{}_mean_slope_image.fits'.format(self.instrument.lower(),
                                                                         self.aperture.lower(),
                                                                         self.query_start, self.query_end)
+
         mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
         ensure_dir_exists(mean_slope_dir)
         output_filename = os.path.join(mean_slope_dir, output_filename)
+        logging.info("Name of mean slope image: {}".format(output_filename))
 
         primary_hdu = fits.PrimaryHDU()
         primary_hdu.header['INSTRUME'] = (self.instrument, 'JWST instrument')

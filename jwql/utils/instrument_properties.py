@@ -18,6 +18,7 @@ Uses
 """
 
 from copy import deepcopy
+import datetime
 
 from astropy.io import fits
 from jwst.datamodels import dqflags
@@ -234,3 +235,49 @@ def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
             fullpad = 0
 
     return ((1.0 * xdim / amps + colpad) * (ydim + rowpad) + fullpad) * sample_time
+
+
+def get_obstime(filename):
+    """Extract the observation date and time from a fits file
+
+    Parameters
+    ----------
+    filename : str
+        Name of fits file
+
+    Returns
+    -------
+    obs_time : datetime.datetime
+        Observation date and time
+    """
+    with fits.open(filename) as h:
+        date = h[0].header['DATE-OBS']
+        time = h[0].header['TIME-OBS']
+    year, month, day = [int(element) for element in date.split('-')]
+    hour, minute, second = [float(element) for element in time.split(':')]
+    return datetime.datetime(year, month, day, int(hour), int(minute), int(second))
+
+
+def mean_time(times):
+    """Given a list of datetime objects, calculate the mean time
+
+    Paramters
+    ---------
+    times : list
+        List of datetime objects
+
+    Returns
+    -------
+    meantime ; datetime.datetime
+        Mean time of the input ``times``
+    """
+    seconds_per_day = 24. * 3600.
+    min_time = np.min(times)
+    delta_times = []
+    for time in times:
+        delta_time = time - min_time
+        total_seconds = delta_time.days * seconds_per_day + delta_time.seconds
+        delta_times.append(total_seconds)
+    mean_delta = np.mean(delta_times)
+    mean_time_delta = datetime.timedelta(0, mean_delta, 0)
+    return min_time + mean_time_delta
