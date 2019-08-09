@@ -29,7 +29,6 @@ REQUIRES = [
     'pandas',
     'psycopg2',
     'pysiaf',
-    'pysqlite3',
     'pytest',
     'pytest-cov',
     'scipy',
