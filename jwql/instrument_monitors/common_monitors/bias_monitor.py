@@ -22,21 +22,119 @@ from astropy.io import fits
 from astropy.time import Time
 import numpy as np
 
+from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
 from jwql.utils import instrument_properties
-from jwql.utils.utils import filesystem_path, initialize_instrument_monitor, update_monitor_table
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, initialize_instrument_monitor, update_monitor_table
 
 class Bias():
     """Class for executing the bias monitor.
+
+    This class will search for new full-frame dark current files in 
+    the file system for each instrument and will run the monitor on
+    these files. The monitor will extract the 0th group from the new
+    dark files and output the contents into a new file located in
+    a working directory. It will then perform statistical measurements
+    on these files before and after pipeline superbias subtraction in
+    order to monitor the bias levels over time as well as ensure the
+    pipeline superbias is sufficiently calibrating new data. Results 
+    are all saved to database tables.
+
+    Attributes
+    ----------
+    output_dir : str
+        Path into which outputs will be placed
+
+    data_dir : str
+        Path into which new dark files will be copied to be worked on
+
+    query_start : float
+        MJD start date to use for querying MAST
+
+    query_end : float
+        MJD end date to use for querying MAST
+
+    instrument : str
+        Name of instrument used to collect the dark current data
+
+    aperture : str
+        Name of the aperture used for the dark current (e.g.
+        ``NRCA1_FULL``)
     """
 
     def __init__(self):
         """Initialize an instance of the ``Bias`` class.
         """
 
+    def collapse_image(self, image):
+        """Median-collapse the rows and columns of an image.
+
+        Parameters
+        ----------
+        image : numpy.ndarray
+            2D array on which to calculate statistics
+
+        Returns
+        -------
+        collapsed_rows : numpy.ndarray
+            1D array of the collapsed row values
+        
+        collapsed_columns : numpy.ndarray
+            1D array of the collapsed column values
+        """
+
+        collapsed_rows = np.nanmedian(image, axis=1)
+        collapsed_columns = np.nanmedian(image, axis=0)
+
+        return collapsed_rows, collapsed_columns
+
+    def extract_zeroth_group(self, filename):
+        """Extracts the 0th group of a fits image and outputs it into
+        a new fits file.
+        
+        Parameters
+        ----------
+        filename : str
+            The fits file from which the 0th group will be extracted
+
+        Outputs
+        -------
+        <filename>_0thgroup.fits : fits image file
+            A fits file containing only the 0th group
+            data from the input file, as well as the primary and
+            science headers
+
+        Returns
+        -------
+        output_filename : str
+            The full path to the output file
+        """
+
+        output_filename = os.path.join(self.data_dir,
+            os.path.basename(filename).replace('.fits', '_0thgroup.fits'))
+        
+        # Write a new fits file containing the primary and science
+        # headers from the input file, as well as the 0th group
+        # data of the first integration
+        if not os.path.isfile(output_filename):
+            hdu = fits.open(filename)
+            new_hdu = fits.HDUList([hdu['PRIMARY'], hdu['SCI']])
+            new_hdu['SCI'].data = hdu['SCI'].data[0:1,0:1,:,:]
+            new_hdu.writeto(output_filename)
+
+            # Close the fits files
+            hdu.close()
+            new_hdu.close()
+            logging.info('\t{} created'.format(output_filename))
+        else:
+            logging.info('\t{} already exists'.format(output_filename))
+            pass
+
+        return output_filename
+
     def get_amp_medians(self, image, amps):
         """Calculates the median in the input image for each amplifier
-        for odd and even columns separately.
+        and for odd and even columns separately.
 
         Parameters
         ----------
@@ -82,33 +180,51 @@ class Bias():
             files
         """
 
-        for f in file_list:
-            logging.info('\tWorking on file: {}'.format(f))
-
-            # Get the pipeline superbias data used to calibrate this file
-            # PLACEHOLDER - needs to replace :crds// in sb_file path with actual path
-            sb_file = fits.getheader(f, 0)['R_SUPERB']
-            sb_data = fits.getdata(sb_file, 'SCI')
+        for filename in file_list:
+            logging.info('\tWorking on file: {}'.format(filename))
 
             # Get the uncalibrated 0th group data for this file
-            uncal_file = f.replace('dark', 'uncal')
-            if not os.path.isfile(uncal_file):
-                raise FileNotFoundError(
-                    '{} does not exist, even though {} does'.format(uncal_file, f))
-            uncal_data = fits.getdata(uncal_file, 'SCI')[0][0]
+            uncal_data = fits.getdata(filename, 'SCI')[0][0]
 
             # Find amplifier boundaries so per-amp statistics can be calculated
-            # PLACEHOLDER - THIS FILE DOESNT HAVE DQ ARRAY SO CRASHES, IT HAS PIXELDQ INSTEAD
-            # DONT WANT TO INCLUDE REFPIX HERE
-            number_of_amps, amp_bounds = instrument_properties.amplifier_info(f)
+            # PLACEHOLDER - THIS FILE DOESNT HAVE DQ ARRAY SO CANT IGNORE REFPIX
+            number_of_amps, amp_bounds = instrument_properties.amplifier_info(filename, omit_reference_pixels=False)
             logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
 
             # Calculate median values of each amplifier for odd/even columns 
             # in the uncal 0th group
             amp_meds = self.get_amp_medians(uncal_data, amp_bounds)
+            logging.info('\tCalculated uncal image stats: {}'.format(amp_meds))
 
-            # Find the difference between the uncal 0th group and the superbias
-            diff = uncal_data - sb_data
+            # Run the uncal data through the pipeline superbias step
+            processed_file = filename.replace('.fits', '_superbias.fits')
+            if not os.path.isfile(processed_file):
+                logging.info('\tRunning pipeline superbias correction on {}'.format(filename))
+                processed_file = pipeline_tools.run_calwebb_detector1_steps(os.path.abspath(filename), steps_to_run)
+                logging.info('\tPipeline superbias correction complete. Output: {}'.format(processed_file))
+            else:
+                logging.info('\tSuperbias-calibrated file {} already exists. Skipping call to pipeline.'
+                             .format(processed_file))
+                pass
+
+            # Calculate median values of each amplifier for odd/even columns 
+            # in the superbias-calibrated 0th group
+            cal_data = fits.getdata(processed_file, 'SCI')[0][0]
+            amp_meds = self.get_amp_medians(cal_data, amp_bounds)
+            logging.info('\tCalculated superbias-calibrated image stats: {}'.format(amp_meds))
+
+            # Smooth the superbias-calibrated image to remove any odd/even 
+            # or amplifier effects to allow for visual inspection of how well
+            # the superbias correction performed
+            # PLACEHOLDER - need to output png of this image?
+            smoothed_cal_data = smooth_image(cal_data, amp_bounds)
+            logging.info('\tSmoothed the superbias-calibrated image.')
+
+            # Calculate the collapsed row and column values in the smoothed image
+            # to see how well the superbias calibrate performed
+            collapsed_rows, collapsed_columns = collapse_image(smoothed_cal_data)
+            logging.info('\tCalculated the collapsed row/column values of the smoothed '
+                         'superbias-calibrated image.')
 
     @log_fail
     @log_info
@@ -135,19 +251,37 @@ class Bias():
             for aperture in possible_apertures:
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
+                self.aperture = aperture
+
+                # Set up directories to store the copied data
+                ensure_dir_exists(os.path.join(self.output_dir, 'data'))
+                self.data_dir = os.path.join(self.output_dir,
+                                             'data/{}_{}'.format(self.instrument.lower(),
+                                                                 self.aperture.lower()))
+                ensure_dir_exists(self.data_dir)
 
                 # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
                 new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
-                # Get full paths to the uncal dark files; some dont exist in JWQL filesystem
+                # Save the 0th group image from each new file in the output directory;
+                # some dont exist in JWQL filesystem.
                 new_files = []
                 for file_entry in new_entries:
                     try:
-                        new_files.append(filesystem_path(file_entry['filename']))
+                        filename = filesystem_path(file_entry['filename'])
+                        uncal_filename = filename.replace('_dark', '_uncal')
+                        if not os.path.isfile(uncal_filename):
+                            logging.info('{} does not exist in JWQL filesystem, even though '
+                                         '{} does'.format(uncal_filename, filename))
+                            pass
+                        else:
+                            new_file = self.extract_zeroth_group(uncal_filename)
+                            new_files.append(new_file)
                     except FileNotFoundError:
                         logging.info('{} does not exist in JWQL filesystem'.format(file_entry['filename']))
+                        pass
 
                 # Run the dark monitor on any new files
                 if len(new_files) != 0:
