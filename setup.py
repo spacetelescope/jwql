@@ -10,6 +10,7 @@ AUTHORS += 'Graham Kanarek, Catherine Martlin, Johannes Sahlmann, Ben Sunnquist'
 DESCRIPTION = 'The James Webb Space Telescope Quicklook Project'
 
 REQUIRES = [
+    'asdf>=2.3.3',
     'astropy>=3.2.1',
     'astroquery>=0.3.9',
     'authlib',
