@@ -50,7 +50,7 @@ class MonitorFilesystem(BokehTemplate):
         self.initial_load()
 
         self.types_k = ['circle', 'diamond', 'square', 'triangle',
-                        'asterisk'] + ['x']*6
+                        'asterisk'] + ['x'] * 6
         self.types_y = ['fits', 'uncal', 'cal', 'rate', 'rateint',
                         'i2d', 'nrc', 'nrs', 'nis', 'mir', 'fgs']
         self.types_c = ['black', 'red', 'blue', 'green', 'orange', 'purple',
@@ -111,14 +111,14 @@ class MonitorFilesystem(BokehTemplate):
         if full:
             # Initialize each ColumnDataSource so that we can use stream() later
             self.refs['source_filecount'].data = {
-                    'dates': self.statistics['timestamp'].datetime64,
-                    'filecount': self.statistics['file_count'].data}
+                'dates': self.statistics['timestamp'].datetime64,
+                'filecount': self.statistics['file_count'].data}
 
             self.refs['source_stats'].data = {
-                    'dates': self.statistics['timestamp'].datetime64,
-                    'systemsize': self.statistics['total'].data.astype(float) / (1024.**3),
-                    'freesize': self.statistics['available'].data.astype(float) / (1024.**3),
-                    'usedsize': self.statistics['used'].data.astype(float) / (1024.**3)}
+                'dates': self.statistics['timestamp'].datetime64,
+                'systemsize': self.statistics['total'].data.astype(float) / (1024.**3),
+                'freesize': self.statistics['available'].data.astype(float) / (1024.**3),
+                'usedsize': self.statistics['used'].data.astype(float) / (1024.**3)}
 
             ftype_dict = {'dates': self.ftypes['timestamp'].datetime64}
             ftype_dict.update({x: self.ftypes[y].data for x, y in zip(self.types_y,
@@ -133,13 +133,13 @@ class MonitorFilesystem(BokehTemplate):
             new_stats, new_files, new_sizes = self.read_new_data()
             if new_stats:
                 self.refs['source_filecount'].stream({
-                        'dates': new_stats['timestamp'].datetime64,
-                        'filecount': new_stats['file_count'].data})
+                    'dates': new_stats['timestamp'].datetime64,
+                    'filecount': new_stats['file_count'].data})
                 self.refs['source_stats'].stream({
-                        'dates': new_stats['timestamp'].datetime64,
-                        'systemsize': new_stats['total'].data,
-                        'freesize': new_stats['available'].data,
-                        'usedsize': new_stats['used'].data})
+                    'dates': new_stats['timestamp'].datetime64,
+                    'systemsize': new_stats['total'].data,
+                    'freesize': new_stats['available'].data,
+                    'usedsize': new_stats['used'].data})
             if new_files:
                 ftype_dict = {'dates': new_files['timestamp'].datetime64}
                 ftype_dict.update({x: new_files[y].data for x, y in zip(self.types_y,
@@ -149,8 +149,7 @@ class MonitorFilesystem(BokehTemplate):
             if new_sizes:
                 stype_dict = {'dates': new_sizes['timestamp'].datetime64}
                 stype_dict.update({x: new_sizes[y].data / (1024.**3)
-                                    for x, y in zip(self.types_y,
-                                                    self.allowed_types)})
+                    for x, y in zip(self.types_y, self.allowed_types)})
                 self.refs['source_sizes'].data = stype_dict
 
         if not self.statistics:

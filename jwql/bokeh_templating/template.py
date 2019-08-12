@@ -41,14 +41,14 @@ class BokehTemplate(object):
         """
         A multi_constructor for `!self` tag in the interface file.
         """
-        yield eval("self"+tag_suffix, globals(), locals())
+        yield eval("self" + tag_suffix, globals(), locals())
 
     def _register_default_constructors(self):
         for m in factory.mappings:
-            yaml.add_constructor("!"+m+":", self._mapping_factory(m))
+            yaml.add_constructor("!" + m + ":", self._mapping_factory(m))
 
         for s in factory.sequences:
-            yaml.add_constructor("!"+s+":", self._sequence_factory(s))
+            yaml.add_constructor("!" + s + ":", self._sequence_factory(s))
 
         yaml.add_constructor("!Figure:", self._figure_constructor)
         yaml.add_constructor("!Document:", self._document_constructor)
@@ -152,7 +152,7 @@ class BokehTemplate(object):
             value = loader.construct_sequence(node, deep=True)
             yield parse_func(value)
         user_constructor.__name__ = tag.lower() + "_constructor"
-        yaml.add_constructor("!"+tag, user_constructor)
+        yaml.add_constructor("!" + tag, user_constructor)
 
     def register_mapping_constructor(self, tag, parse_func):
         if tag.startswith("!"):
@@ -162,4 +162,4 @@ class BokehTemplate(object):
             value = loader.construct_mapping(node, deep=True)
             yield parse_func(value)
         user_constructor.__name__ = tag.lower() + "_constructor"
-        yaml.add_constructor("!"+tag, user_constructor)
+        yaml.add_constructor("!" + tag, user_constructor)
