@@ -24,8 +24,8 @@ import os
 
 import pytest
 
-data_containers = pytest.importorskip('jwql.website.apps.jwql.data_containers', reason='Requires access to central storage.')
-from jwql.utils.utils import get_config
+utils = pytest.importorskip('jwql.utils.utils', reason='Requires access to central storage')
+from jwql.website.apps.jwql import data_containers
 
 
 def test_get_acknowledgements():
@@ -138,7 +138,7 @@ def test_get_preview_images_by_rootname():
 def test_get_proposal_info():
     """Tests the ``get_proposal_info`` function."""
 
-    filepaths = glob.glob(os.path.join(get_config()['filesystem'], 'jw88600', '*.fits'))
+    filepaths = glob.glob(os.path.join(utils.get_config()['filesystem'], 'jw88600', '*.fits'))
     proposal_info = data_containers.get_proposal_info(filepaths)
 
     assert isinstance(proposal_info, dict)
