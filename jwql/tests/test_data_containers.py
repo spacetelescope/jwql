@@ -26,7 +26,7 @@ import pytest
 
 # Skip testing this module if on Jenkins
 ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
-pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+pytestmark = pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 
 from jwql.website.apps.jwql import data_containers
 from jwql.utils.utils import get_config
