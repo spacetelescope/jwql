@@ -42,9 +42,13 @@ import os
 import requests
 
 from authlib.django.client import OAuth
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 
-from jwql.utils.utils import get_base_url, get_config
+import jwql
+from jwql.utils.constants import MONITORS
+from jwql.utils.utils import get_base_url, get_config, check_config_for_key
+
+PREV_PAGE = '/'
 
 
 def register_oauth():
@@ -59,6 +63,8 @@ def register_oauth():
     """
 
     # Get configuration parameters
+    for key in ['client_id', 'client_secret', 'auth_mast']:
+        check_config_for_key(key)
     client_id = get_config()['client_id']
     client_secret = get_config()['client_secret']
     auth_mast = get_config()['auth_mast']
@@ -70,7 +76,9 @@ def register_oauth():
         'mast_auth',
         client_id='{}'.format(client_id),
         client_secret='{}'.format(client_secret),
-        access_token_url='https://{}/oauth/access_token?client_secret={}'.format(auth_mast, client_secret),
+        access_token_url='https://{}/oauth/access_token?client_secret={}'.format(
+            auth_mast, client_secret
+        ),
         access_token_params=None,
         refresh_token_url=None,
         authorize_url='https://{}/oauth/authorize'.format(auth_mast),
@@ -78,6 +86,7 @@ def register_oauth():
         client_kwargs=client_kwargs)
 
     return oauth
+
 
 JWQL_OAUTH = register_oauth()
 
@@ -100,7 +109,9 @@ def authorize(request):
     """
 
     # Get auth.mast token
-    token = JWQL_OAUTH.mast_auth.authorize_access_token(request, headers={'Accept': 'application/json'})
+    token = JWQL_OAUTH.mast_auth.authorize_access_token(
+        request, headers={'Accept': 'application/json'}
+    )
 
     # Determine domain
     base_url = get_base_url()
@@ -116,54 +127,10 @@ def authorize(request):
     cookie_args['httponly'] = True
 
     # Set the cookie
-    response = redirect("/")
+    response = redirect(PREV_PAGE)
     response.set_cookie("ASB-AUTH", token["access_token"], **cookie_args)
 
     return response
-
-
-def auth_required(fn):
-    """A decorator function that requires the given function to have
-    authentication through ``auth.mast`` set up.
-
-    Parameters
-    ----------
-    fn : function
-        The function to decorate
-
-    Returns
-    -------
-    check_auth : function
-        The decorated function
-    """
-
-    @auth_info
-    def check_auth(request, user):
-        """Check if the user is authenticated through ``auth.mast``.
-        If not, perform the authorization.
-
-        Parameters
-        ----------
-        request : HttpRequest object
-            Incoming request from the webpage
-        user : dict
-            A dictionary of user credentials
-
-        Returns
-        -------
-        fn : function
-            The decorated function
-        """
-
-        # If user is currently anonymous, require a login
-        if user["anon"]:
-            # Redirect to oauth login
-            redirect_uri = os.path.join(get_base_url(), 'authorize')
-            return JWQL_OAUTH.mast_auth.authorize_redirect(request, redirect_uri)
-
-        return fn(request, user)
-
-    return check_auth
 
 
 def auth_info(fn):
@@ -201,22 +168,74 @@ def auth_info(fn):
 
         # If user is authenticated, return user credentials
         if cookie is not None:
+            check_config_for_key('auth_mast')
+            # Note: for now, this must be the development version
+            auth_mast = get_config()['auth_mast']
+
             response = requests.get(
-                'https://{}/info'.format(get_config()['auth_mast']),
+                'https://{}/info'.format(auth_mast),
                 headers={'Accept': 'application/json',
                          'Authorization': 'token {}'.format(cookie)})
             response = response.json()
+            response['access_token'] = cookie
 
         # If user is not authenticated, return no credentials
         else:
-            response = {'ezid' : None, "anon": True}
+            response = {'ezid': None, "anon": True, 'access_token': None}
 
         return fn(request, response, **kwargs)
 
     return user_info
 
 
-@auth_required
+def auth_required(fn):
+    """A decorator function that requires the given function to have
+    authentication through ``auth.mast`` set up.
+
+    Parameters
+    ----------
+    fn : function
+        The function to decorate
+
+    Returns
+    -------
+    check_auth : function
+        The decorated function
+    """
+
+    @auth_info
+    def check_auth(request, user, **kwargs):
+        """Check if the user is authenticated through ``auth.mast``.
+        If not, perform the authorization.
+
+        Parameters
+        ----------
+        request : HttpRequest object
+            Incoming request from the webpage
+        user : dict
+            A dictionary of user credentials
+
+        Returns
+        -------
+        fn : function
+            The decorated function
+        """
+
+        # If user is currently anonymous, require a login
+        if user['ezid']:
+
+            return fn(request, user, **kwargs)
+
+        else:
+            template = 'not_authenticated.html'
+            context = {'inst': ''}
+
+            return render(request, template, context)
+
+    return check_auth
+
+
+@auth_info
 def login(request, user):
     """Spawn a login process for the user
 
@@ -237,7 +256,12 @@ def login(request, user):
         Outgoing response sent to the webpage
     """
 
-    return redirect("/")
+    # Redirect to oauth login
+    global PREV_PAGE
+    PREV_PAGE = request.META.get('HTTP_REFERER')
+    redirect_uri = os.path.join(get_base_url(), 'authorize')
+
+    return JWQL_OAUTH.mast_auth.authorize_redirect(request, redirect_uri)
 
 
 def logout(request):
@@ -259,7 +283,9 @@ def logout(request):
         Outgoing response sent to the webpage
     """
 
-    response = redirect("/")
+    global PREV_PAGE
+    PREV_PAGE = request.META.get('HTTP_REFERER')
+    response = redirect(PREV_PAGE)
     response.delete_cookie("ASB-AUTH")
 
     return response

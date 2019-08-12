@@ -19,11 +19,14 @@ Use
 """
 
 import os
-
+from pathlib import Path
 import pytest
 
-from jwql.utils.utils import get_config, filename_parser
+from jwql.utils.utils import copy_files, get_config, filename_parser, \
+    filesystem_path, _validate_config
 
+# Determine if tests are being run on jenkins
+ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
 
 FILENAME_PARSER_TEST_DATA = [
 
@@ -245,8 +248,32 @@ FILENAME_PARSER_TEST_DATA = [
 ]
 
 
-@pytest.mark.xfail(raises=FileNotFoundError,
-                   reason='User must manually supply config file.')
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+def test_copy_files():
+    """Test that files are copied successfully"""
+
+    # Create an example file to be copied
+    data_dir = os.path.dirname(__file__)
+    file_to_copy = 'file.txt'
+    original_file = os.path.join(data_dir, file_to_copy)
+    Path(original_file).touch()
+    assert os.path.exists(original_file), 'Failed to create original test file.'
+
+    # Make a copy one level up
+    new_location = os.path.abspath(os.path.join(data_dir, '../'))
+    copied_file = os.path.join(new_location, file_to_copy)
+
+    # Copy the file
+    success, failure = copy_files([original_file], new_location)
+    assert success == [copied_file]
+    assert os.path.isfile(copied_file)
+
+    # Remove the copy
+    os.remove(original_file)
+    os.remove(copied_file)
+
+
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_get_config():
     """Assert that the ``get_config`` function successfully creates a
     dictionary.
@@ -271,11 +298,9 @@ def test_filename_parser(filename, solution):
     assert filename_parser(filename) == solution
 
 
-@pytest.mark.xfail(raises=(FileNotFoundError, ValueError), 
-                   reason='Known non-compliant files in filesystem; User must manually supply config file.')
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_filename_parser_whole_filesystem():
-    """Test the filename_parser on all files currently in the filesystem.
-    """
+    """Test the filename_parser on all files currently in the filesystem."""
     # Get all files
     filesystem_dir = get_config()['filesystem']
     all_files = []
@@ -309,3 +334,56 @@ def test_filename_parser_nonJWST():
     with pytest.raises(ValueError):
         filename = 'not_a_jwst_file.fits'
         filename_parser(filename)
+
+
+@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+def test_filesystem_path():
+    """Test that a file's location in the filesystem is returned"""
+
+    filename = 'jw96003001001_02201_00001_nrca1_dark.fits'
+    check = filesystem_path(filename)
+    location = os.path.join(get_config()['filesystem'], 'jw96003', filename)
+
+    assert check == location
+
+
+def test_validate_config():
+    """Test that the config validator works."""
+    # Make sure a bad config raises an error
+    bad_config_dict = {"just": "one_key"}
+
+    with pytest.raises(Exception) as excinfo:
+        _validate_config(bad_config_dict)
+    assert 'Provided config.json does not match the required JSON schema' \
+           in str(excinfo.value), \
+        'Failed to reject incorrect JSON dict.'
+
+    # Make sure a good config does not!
+    good_config_dict = {
+        "connection_string": "",
+        "database": {
+            "engine": "",
+            "name": "",
+            "user": "",
+            "password": "",
+            "host": "",
+            "port": ""
+        },
+        "filesystem": "",
+        "preview_image_filesystem": "",
+        "thumbnail_filesystem": "",
+        "outputs": "",
+        "jwql_dir": "",
+        "admin_account": "",
+        "log_dir": "",
+        "test_dir": "",
+        "test_data": "",
+        "setup_file": "",
+        "auth_mast": "",
+        "client_id": "",
+        "client_secret": "",
+        "mast_token": ""
+    }
+
+    is_valid = _validate_config(good_config_dict)
+    assert is_valid is None, 'Failed to validate correct JSON dict'

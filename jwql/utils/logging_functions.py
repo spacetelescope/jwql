@@ -9,8 +9,8 @@ storage area, named by module name and timestamp, e.g.
 Authors
 -------
 
-    - Catherine Martlin 2018
-    - Alex Viana, 2013 (WFC3 QL Version)
+    - Catherine Martlin
+    - Alex Viana (WFC3 QL Version)
     - Matthew Bourque
 
 Use
@@ -44,7 +44,6 @@ Dependencies
     The user must have a configuration file named ``config.json``
     placed in the ``utils`` directory and it must contain keys for
     ``log_dir`` and ``admin_account``.
-
 
 References
 ----------
@@ -82,10 +81,19 @@ def configure_logging(module):
         environement.
     path : str
         Where to write the log if user-supplied path; default to working dir.
+
+    Returns
+    -------
+    log_file : str
+        The path to the file where the log is written to.
     """
 
     # Determine log file location
     log_file = make_log_file(module)
+
+    # Make sure no other root lhandlers exist before configuring the logger
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
 
     # Create the log file and set the permissions
     logging.basicConfig(filename=log_file,
@@ -94,6 +102,34 @@ def configure_logging(module):
                         level=logging.INFO)
     print('Log file initialized to {}'.format(log_file))
     set_permissions(log_file)
+
+    return log_file
+
+
+def get_log_status(log_file):
+    """Returns the end status of the given ``log_file`` (i.e.
+    ``SUCCESS`` or ``FAILURE``)
+
+    Parameters
+    ----------
+    log_file : str
+        The path to the file where the log is written to
+
+    Returns
+    -------
+    status : bool
+        The status of the execution of the script described by the log
+        file (i.e. ``SUCCESS`` or ``FAILURE``)
+    """
+
+    with open(log_file, 'r') as f:
+        data = f.readlines()
+    last_line = data[-1].strip()
+
+    if 'Completed Successfully' in last_line:
+        return 'SUCCESS'
+    else:
+        return 'FAILURE'
 
 
 def make_log_file(module):
@@ -129,7 +165,7 @@ def make_log_file(module):
     log_path = get_config()['log_dir']
 
     # For production
-    if user == admin_account and socket.gethosename()[0] == 'p':
+    if user == admin_account and socket.gethostname()[0] == 'p':
         log_file = os.path.join(log_path, 'prod', module, filename)
 
     # For test
@@ -169,7 +205,7 @@ def log_info(func):
     """
 
     @wraps(func)
-    def wrapped(*a, **kw):
+    def wrapped(*args, **kwargs):
 
         # Log environment information
         logging.info('User: ' + getpass.getuser())
@@ -200,10 +236,12 @@ def log_info(func):
             except (ImportError, AttributeError) as err:
                 logging.warning(err)
 
+        logging.info('')
+
         # Call the function and time it
         t1_cpu = time.clock()
         t1_time = time.time()
-        func(*a, **kw)
+        func(*args, **kwargs)
         t2_cpu = time.clock()
         t2_time = time.time()
 
@@ -212,8 +250,8 @@ def log_info(func):
         minutes_cpu, seconds_cpu = divmod(remainder_cpu, 60)
         hours_time, remainder_time = divmod(t2_time - t1_time, 60 * 60)
         minutes_time, seconds_time = divmod(remainder_time, 60)
-        logging.info('Elapsed Real Time: {0:.0f}:{1:.0f}:{2:f}'.format(hours_time, minutes_time, seconds_time))
-        logging.info('Elapsed CPU Time: {0:.0f}:{1:.0f}:{2:f}'.format(hours_cpu, minutes_cpu, seconds_cpu))
+        logging.info('Elapsed Real Time: {}:{}:{}'.format(int(hours_time), int(minutes_time), int(seconds_time)))
+        logging.info('Elapsed CPU Time: {}:{}:{}'.format(int(hours_cpu), int(minutes_cpu), int(seconds_cpu)))
 
     return wrapped
 
@@ -233,16 +271,49 @@ def log_fail(func):
     """
 
     @wraps(func)
-    def wrapped(*a, **kw):
+    def wrapped(*args, **kwargs):
 
         try:
 
             # Run the function
-            func(*a, **kw)
+            func(*args, **kwargs)
             logging.info('Completed Successfully')
 
         except Exception:
             logging.critical(traceback.format_exc())
             logging.critical('CRASHED')
+
+    return wrapped
+
+
+def log_timing(func):
+    """Decorator to time a module or function within a code.
+
+    Parameters
+    ----------
+    func : func
+        The function to time.
+
+    Returns
+    -------
+    wrapped : func
+        The wrapped function. Will log the time."""
+
+    def wrapped(*args, **kwargs):
+
+        # Call the function and time it
+        t1_cpu = time.process_time()
+        t1_time = time.time()
+        func(*args, **kwargs)
+        t2_cpu = time.process_time()
+        t2_time = time.time()
+
+        # Log execution time
+        hours_cpu, remainder_cpu = divmod(t2_cpu - t1_cpu, 60 * 60)
+        minutes_cpu, seconds_cpu = divmod(remainder_cpu, 60)
+        hours_time, remainder_time = divmod(t2_time - t1_time, 60 * 60)
+        minutes_time, seconds_time = divmod(remainder_time, 60)
+        logging.info('Elapsed Real Time of {}: {}:{}:{}'.format(func.__name__, int(hours_time), int(minutes_time), int(seconds_time)))
+        logging.info('Elapsed CPU Time of {}: {}:{}:{}'.format(func.__name__, int(hours_cpu), int(minutes_cpu), int(seconds_cpu)))
 
     return wrapped
