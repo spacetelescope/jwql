@@ -176,23 +176,10 @@ def test_get_thumbnails_by_rootname():
     assert len(preview_images) > 0
 
 
-def test_thumbnails():
-    """Tests the ``get_thumbnails`` function."""
-
-    thumbnail_dict = data_containers.thumbnails('FGS')
-
-    assert isinstance(thumbnail_dict, dict)
-
-    keys = ['inst', 'tools', 'dropdown_menus', 'prop']
-    for key in keys:
-        assert key in thumbnail_dict
-
-
 def test_thumbnails_ajax():
     """Tests the ``get_thumbnails_ajax`` function."""
 
     thumbnail_dict = data_containers.thumbnails_ajax('FGS')
-    print(thumbnail_dict.keys())
 
     assert isinstance(thumbnail_dict, dict)
 
