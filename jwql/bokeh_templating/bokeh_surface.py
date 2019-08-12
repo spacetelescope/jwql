@@ -12,18 +12,18 @@ from bokeh.core.properties import Instance, String, Any, Dict
 from bokeh.models import ColumnDataSource, LayoutDOM
 
 DEFAULTS = {
-    'width':          '600px',
-    'height':         '600px',
-    'style':          'surface',
+    'width': '600px',
+    'height': '600px',
+    'style': 'surface',
     'showPerspective': True,
-    'showGrid':        True,
+    'showGrid': True,
     'keepAspectRatio': True,
-    'verticalRatio':   1.0,
-    'legendLabel':     'stuff',
-    'cameraPosition':  {
+    'verticalRatio': 1.0,
+    'legendLabel': 'stuff',
+    'cameraPosition': {
         'horizontal': -0.35,
-        'vertical':    0.22,
-        'distance':    1.8,
+        'vertical': 0.22,
+        'distance': 1.8,
     }
 }
 
@@ -138,6 +138,7 @@ export class Surface3d extends LayoutDOM
   }
 """
 
+
 # This custom extension model will have a DOM view that should layout-able in
 # Bokeh layouts, so use ``LayoutDOM`` as the base class. If you wanted to create
 # a custom tool, you could inherit from ``Tool``, or from ``Glyph`` if you
@@ -166,11 +167,8 @@ class Surface3d(LayoutDOM):
     # these properties let us specify the *name* of the column that should
     # be used for each field.
     x = String
-
     y = String
-
     z = String
-
     color = String
-    
+
     options = Dict(String, Any, default=DEFAULTS)

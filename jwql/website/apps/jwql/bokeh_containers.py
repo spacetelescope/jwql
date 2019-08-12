@@ -1,4 +1,4 @@
-"""Various functions to generate Bokeh objects to be used by the ``views`` of 
+"""Various functions to generate Bokeh objects to be used by the ``views`` of
 the ``jwql`` app.
 
 This module contains several functions that instantiate BokehTemplate objects
@@ -33,6 +33,7 @@ FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
+
 def get_acknowledgements():
     """Returns a list of individuals who are acknowledged on the
     ``about`` page.
@@ -60,7 +61,7 @@ def get_acknowledgements():
             index = i
 
     # Parse out the list of individuals
-    acknowledgements = data[index+1:]
+    acknowledgements = data[index + 1:]
     acknowledgements = [item.strip().replace('- ', '').split(' [@')[0].strip() for item in acknowledgements]
 
     return acknowledgements
