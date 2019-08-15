@@ -58,6 +58,8 @@ def test_get_dashboard_components():
     dashboard_components, dashboard_html = data_containers.get_dashboard_components()
     assert isinstance(dashboard_components, dict)
     assert isinstance(dashboard_html, dict)
+    assert len(dashboard_components) > 0
+    assert len(dashboard_html) > 0
 
 
 @pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
@@ -101,6 +103,7 @@ def test_get_header_info():
 
     header = data_containers.get_header_info('jw86600008001_02101_00007_guider2_uncal.fits')
     assert isinstance(header, str)
+    assert len(header) > 0
 
 
 @pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
