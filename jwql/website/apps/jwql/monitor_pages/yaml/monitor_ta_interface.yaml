@@ -1,0 +1,238 @@
+# Select a postage stamp by tapping on it using a TapTool
+- !ColumnDataSource: &dummy_tap
+    ref: "dummy_tap"
+    data:
+        value: []
+    on_change: ['data', !self.select_stamp ]
+# Primary V2/V3 offsets figure
+- !ColumnDataSource: &offsets_source
+    ref: "offsets_source"
+    data:
+        dv2: []
+        dv3: []
+        v2m: []
+        v3m: []
+        v2d: []
+        v3d: []
+        v2l: []
+        v3l: []
+        refstar_no: []
+    selection_on_change: ['indices', !self.select_stamp ]
+- !Range1d: &offsets_xr
+    ref: "offsets_xr"
+    start: 0
+    end: 1
+    bounds: !!python/tuple [0, 1]
+- !Range1d: &offsets_yr
+    ref: "offsets_yr"
+    start: 0
+    end: 1
+    bounds: !!python/tuple [0, 1]
+- !Figure: &offsets_fig
+    ref: "offsets_fig"
+    title: "V2/V3 Offsets"
+    height: 800
+    width: 800
+    x_axis_label: "V2_desired - V2_measured"
+    y_axis_label: "V3_desired - V3_measured"
+    x_range: *offsets_xr
+    y_range: *offsets_yr
+    #tools: [ *offsets_tap ]
+    tools: "tap,wheel_zoom"
+    elements:
+        - {'kind': 'circle', 'x': 'dv2', 'y': 'dv3', 'source': *offsets_source, 'size': 6}
+#Alternate summary plot
+- !Range1d: &summary_xr
+    ref: "summary_xr"
+    start: 0
+    end: 1
+    bounds: !!python/tuple [0, 1]
+- !Range1d: &summary_yr
+    ref: "summary_yr"
+    start: 0
+    end: 1
+    bounds: !!python/tuple [0, 1]
+- !Figure: &summary_fig
+    ref: "summary_fig"
+    title: "V2/V3"
+    height: 800
+    width: 800
+    x_axis_label: "V2 - mean_v2"
+    y_axis_label: "V3 - mean_V3"
+    x_range: *summary_xr
+    y_range: *summary_yr
+    #tools: [ *offsets_tap ]
+    tools: "tap,wheel_zoom"
+    elements:
+        - {'kind': 'circle', 'x': 'v2m', 'y': 'v3m', 'source': *offsets_source, 'size': 6, 'legend': 'Measured', 'line_color': 'blue'}
+        - {'kind': 'circle', 'x': 'v2d', 'y': 'v3d', 'source': *offsets_source, 'size': 6, 'legend': 'Desired', 'line_color': 'green'}
+        - {'kind': 'multi_line', 'xs': 'v2l', 'ys': 'v3l', 'line_color': 'black', 'source': *offsets_source}
+# Common objects for all postage stamp figures
+- !ColumnDataSource: &stamp_source
+    ref: "stamp_source"
+    data:
+        x: [0]
+        y: [0]
+        dh: [1]
+        dw: [1]
+        slope1: [[[1,0], [0, 1]]]
+        slope2: [[[1,0], [0, 1]]]
+        crj: [[[1,0], [0, 1]]]
+        bkg: [[[1,0], [0, 1]]]
+        flat: [[[1,0], [0, 1]]]
+- !ColumnDataSource: &checkbox_source
+    ref: "checkbox_source"
+    data:
+        l: [0]
+        r: [1]
+        t: [1]
+        b: [1]
+        x: [0]
+        y: [1]
+- !Range1d: &stamp_xr
+    ref: "stamp_xr"
+    start: 0
+    end: 1
+    bounds: !!python/tuple [0, 1]
+- !Range1d: &stamp_yr
+    ref: "stamp_yr"
+    start: 0
+    end: 1
+    bounds: !!python/tuple [0, 1]
+# slope1 stamp figure
+- !LinearColorMapper: &slope1_mapper
+    ref: "slope1_mapper"
+    palette: "Plasma256"
+    low: 0.
+    high: 1.
+- !ColorBar: &slope1_cbar
+    color_mapper: *slope1_mapper
+    location: !!python/tuple [0, 0]
+- !Figure: &slope1_fig
+    ref: "slope1_fig"
+    title: "slope1 stamp"
+    x_axis_label: "Col = SIAF det Y"
+    y_axis_label: "Row = SIAF det X"
+    x_range: *stamp_xr
+    y_range: *stamp_yr
+    tools: ""
+    height: 300
+    width: 400
+    elements:
+        - {"kind": "image", "image": "slope1", "x": "x", "y": "y", "dh": "dh", "dw": "dw", "source": *stamp_source, "color_mapper": *slope1_mapper}
+        - {"kind": "layout", "obj": *slope1_cbar, "place": "right"}
+        - {"kind": "quad", "left": "l", "right": "r", "top": "t", "bottom": "b", "source": *checkbox_source, "fill_alpha": 0., "line_color": "cyan"}
+        - {"kind": "x", "x": "x", "y": "y", "source": *checkbox_source, "color": "cyan", "size": 5}
+# slope2 stamp figure
+- !LinearColorMapper: &slope2_mapper
+    ref: "slope2_mapper"
+    palette: "Plasma256"
+    low: 0.
+    high: 1.
+- !ColorBar: &slope2_cbar
+    color_mapper: *slope2_mapper
+    location: !!python/tuple [0, 0]
+- !Figure: &slope2_fig
+    ref: "slope2_fig"
+    title: "slope2 stamp"
+    x_axis_label: "Col = SIAF det Y"
+    y_axis_label: "Row = SIAF det X"
+    tools: ""
+    height: 300
+    width: 400
+    x_range: *stamp_xr
+    y_range: *stamp_yr
+    elements:
+        - {"kind": "image", "image": "slope2", "x": "x", "y": "y", "dh": "dh", "dw": "dw", "source": *stamp_source, "color_mapper": *slope2_mapper}
+        - {"kind": "layout", "obj": *slope2_cbar, "place": "right"}
+        - {"kind": "quad", "left": "l", "right": "r", "top": "t", "bottom": "b", "source": *checkbox_source, "fill_alpha": 0., "line_color": "cyan"}
+        - {"kind": "x", "x": "x", "y": "y", "source": *checkbox_source, "color": "cyan", "size": 5}
+# crj stamp figure
+- !LinearColorMapper: &crj_mapper
+    ref: "crj_mapper"
+    palette: "Plasma256"
+    low: 0.
+    high: 1.
+- !ColorBar: &crj_cbar
+    color_mapper: *crj_mapper
+    location: !!python/tuple [0, 0]
+- !Figure: &crj_fig
+    ref: "crj_fig"
+    title: "crj stamp"
+    x_axis_label: "Col = SIAF det Y"
+    y_axis_label: "Row = SIAF det X"
+    tools: ""
+    height: 300
+    width: 400
+    x_range: *stamp_xr
+    y_range: *stamp_yr
+    elements:
+        - {"kind": "image", "image": "crj", "x": "x", "y": "y", "dh": "dh", "dw": "dw", "source": *stamp_source, "color_mapper": *crj_mapper}
+        - {"kind": "layout", "obj": *crj_cbar, "place": "right"}
+        - {"kind": "quad", "left": "l", "right": "r", "top": "t", "bottom": "b", "source": *checkbox_source, "fill_alpha": 0., "line_color": "cyan"}
+        - {"kind": "x", "x": "x", "y": "y", "source": *checkbox_source, "color": "cyan", "size": 5}
+# bkg_subtracted stamp figure
+- !LinearColorMapper: &bkg_mapper
+    ref: "bkg_mapper"
+    palette: "Plasma256"
+    low: 0.
+    high: 1.
+- !ColorBar: &bkg_cbar
+    color_mapper: *bkg_mapper
+    location: !!python/tuple [0, 0]
+- !Figure: &bkg_fig
+    ref: "bkg_fig"
+    title: "bkg_subtracted stamp"
+    x_axis_label: "Col = SIAF det Y"
+    y_axis_label: "Row = SIAF det X"
+    tools: ""
+    height: 300
+    width: 400
+    x_range: *stamp_xr
+    y_range: *stamp_yr
+    elements:
+        - {"kind": "image", "image": "bkg", "x": "x", "y": "y", "dh": "dh", "dw": "dw", "source": *stamp_source, "color_mapper": *bkg_mapper}
+        - {"kind": "layout", "obj": *bkg_cbar, "place": "right"}
+        - {"kind": "quad", "left": "l", "right": "r", "top": "t", "bottom": "b", "source": *checkbox_source, "fill_alpha": 0., "line_color": "cyan"}
+        - {"kind": "x", "x": "x", "y": "y", "source": *checkbox_source, "color": "cyan", "size": 5}
+# stamp_flat stamp figure
+- !LinearColorMapper: &flat_mapper
+    ref: "flat_mapper"
+    palette: "Greys256"
+    low: 0.
+    high: 1.
+- !ColorBar: &flat_cbar
+    color_mapper: *flat_mapper
+    location: !!python/tuple [0, 0]
+- !Figure: &flat_fig
+    ref: "flat_fig"
+    title: "stamp_flat stamp"
+    x_axis_label: "Col = SIAF det Y"
+    y_axis_label: "Row = SIAF det X"
+    tools: ""
+    height: 300
+    width: 400
+    x_range: *stamp_xr
+    y_range: *stamp_yr
+    elements:
+        - {"kind": "image", "image": "flat", "x": "x", "y": "y", "dh": "dh", "dw": "dw", "source": *stamp_source, "color_mapper": *flat_mapper}
+        - {"kind": "layout", "obj": *flat_cbar, "place": "right"}
+        - {"kind": "quad", "left": "l", "right": "r", "top": "t", "bottom": "b", "source": *checkbox_source, "fill_alpha": 0., "line_color": "cyan"}
+        - {"kind": "x", "x": "x", "y": "y", "source": *checkbox_source, "color": "cyan", "size": 5}
+- !Div: &output_div
+    ref: "output_div"
+    text: ""
+# Document structure
+- !Document:
+    - !column:
+        - !row:
+            - *offsets_fig
+            - *summary_fig
+        - !row:
+            - *slope1_fig
+            - *slope2_fig
+            - *crj_fig
+        - !row:
+            - *bkg_fig
+            - *flat_fig
+            - *output_div
