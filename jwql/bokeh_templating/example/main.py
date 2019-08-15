@@ -6,8 +6,10 @@ Created on Fri Jul 20 10:03:35 2018
 @author: gkanarek
 """
 import os
+
 import numpy as np
-from bokeh_templating import BokehTemplate
+
+from jwql.bokeh_templating import BokehTemplate
 
 file_dir = os.path.dirname(os.path.realpath(__file__))
 

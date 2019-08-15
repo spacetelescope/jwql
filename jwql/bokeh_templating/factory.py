@@ -5,8 +5,9 @@ Created on Mon Feb 20 14:05:03 2017
 @author: gkanarek
 """
 
-from .keyword_map import bokeh_mappings as mappings, bokeh_sequences as sequences
 from bokeh.io import curdoc
+
+from .keyword_map import bokeh_mappings as mappings, bokeh_sequences as sequences
 
 # Figures get their own constructor
 Figure = mappings.pop("Figure")

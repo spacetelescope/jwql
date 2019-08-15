@@ -8,13 +8,13 @@ Created on Tue Feb  5 15:19:20 2019
 
 import os
 
-import pandas as pd
 from astropy.time import Time
+import pandas as pd
 
-from jwql.utils.utils import get_config
 from jwql.bokeh_templating import BokehTemplate
+from jwql.utils.utils import get_config
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 class MastMonitor(BokehTemplate):
@@ -24,8 +24,7 @@ class MastMonitor(BokehTemplate):
 
         # App design
         self.format_string = None
-        self.interface_file = os.path.join(script_dir, 'yaml',
-                                           "monitor_mast_interface.yaml")
+        self.interface_file = os.path.join(SCRIPT_DIR, 'yaml', "monitor_mast_interface.yaml")
 
         self.settings = get_config()
         self.output_dir = self.settings['outputs']

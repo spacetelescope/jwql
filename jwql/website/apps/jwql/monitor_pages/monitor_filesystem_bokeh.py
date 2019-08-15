@@ -5,18 +5,19 @@ Created on Wed Jan 16 14:09:18 2019
 
 @author: gkanarek
 """
-import os
+
 import json
+import os
 
 from astropy.table import Table, vstack
 from astropy.time import Time
 
-from jwql.utils.utils import get_config
 from jwql.bokeh_templating import BokehTemplate
+from jwql.utils.utils import get_config
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-fig_formats = """
+FIG_FORMATS = """
 Figure:
     tools: 'pan,box_zoom,reset,wheel_zoom,save'
     x_axis_type: 'datetime'
@@ -33,9 +34,8 @@ class MonitorFilesystem(BokehTemplate):
         self._embed = True
 
         # App design
-        self.format_string = fig_formats
-        self.interface_file = os.path.join(script_dir, "yaml",
-                                           "monitor_filesystem_interface.yaml")
+        self.format_string = FIG_FORMATS
+        self.interface_file = os.path.join(SCRIPT_DIR, "yaml", "monitor_filesystem_interface.yaml")
 
         # Get path, directories and files in system and count files in all directories
         self.settings = get_config()

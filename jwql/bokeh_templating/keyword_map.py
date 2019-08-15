@@ -6,8 +6,9 @@ Created on Thu Jul 19 09:54:47 2018
 @author: gkanarek
 """
 
+from bokeh import layouts, models, palettes, plotting, transform
 from inspect import getmembers, isclass, isfunction
-from bokeh import models, plotting, layouts, palettes, transform
+
 from .bokeh_surface import Surface3d
 
 bokeh_sequences = {}

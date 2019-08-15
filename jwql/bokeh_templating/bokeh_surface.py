@@ -6,8 +6,6 @@ Created on Mon May 21 13:45:34 2018
 @author: gkanarek
 """
 
-from __future__ import division
-
 from bokeh.core.properties import Instance, String, Any, Dict
 from bokeh.models import ColumnDataSource, LayoutDOM
 
