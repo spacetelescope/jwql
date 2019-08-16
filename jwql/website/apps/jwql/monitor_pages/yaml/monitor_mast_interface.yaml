@@ -1,0 +1,64 @@
+# JWST figure
+- !ColumnDataSource: &jwst_source
+    ref: "jwst_source"
+    data:
+        x: []
+        counts: []
+- !HoverTool: &jwst_hover
+    ref: "jwst_hover"
+    tooltips: [('count', '@counts')]
+- !FactorRange: &jwst_xrange
+    ref: "jwst_xrange"
+    factors: !self.jwst_groups
+- !factor_cmap: &jwst_cmap
+    ref: "jwst_cmap"
+    arg: 'x'
+    palette: !Category20c[!self.jwst_bar_colors ]
+    factors: !self.jwst_datacols
+    start: 1
+    end: 2
+- !Figure: &jwst_figure
+    ref: "jwst_figure"
+    x_range: *jwst_xrange
+    plot_height: 250
+    tools: [*jwst_hover ]
+    elements:
+        - kind: 'vbar'
+          x: 'x'
+          top: 'counts'
+          width: 0.9
+          source: *jwst_source
+          line_color: 'white'
+          fill_color: *jwst_cmap
+# CAOM figure
+- !ColumnDataSource: &caom_source
+    ref: "caom_source"
+    data:
+        x: []
+        counts: []
+- !HoverTool: &caom_hover
+    ref: "caom_hover"
+    tooltips: [('count', '@counts')]
+- !FactorRange: &caom_xrange
+    ref: "caom_xrange"
+    factors: !self.caom_groups
+- !factor_cmap: &caom_cmap
+    ref: "caom_cmap"
+    arg: 'x'
+    palette: !Category20c[!self.caom_bar_colors ]
+    factors: !self.caom_datacols
+    start: 1
+    end: 2
+- !Figure: &caom_figure
+    ref: "caom_figure"
+    x_range: *caom_xrange
+    plot_height: 250
+    tools: [*caom_hover ]
+    elements:
+        - kind: 'vbar'
+          x: 'x'
+          top: 'counts'
+          width: 0.9
+          source: *caom_source
+          line_color: 'white'
+          fill_color: *caom_cmap
