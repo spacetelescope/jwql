@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 """This module is home to a suite of MAST queries that gather bulk
 properties of available JWST data for JWQL.
 
@@ -20,11 +22,15 @@ import logging
 import os
 
 from astroquery.mast import Mast
+from bokeh.embed import components
+from bokeh.io import save, output_file
 import pandas as pd
 
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
+from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_config
+from jwql.utils.plotting import bar_chart
 
 
 def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
@@ -140,7 +146,7 @@ def instrument_keywords(instrument, caom=False):
 
 def jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
                    dataproducts=['image', 'spectrum', 'cube'],
-                   caom=False):
+                   caom=False, plot=False):
     """Gather a full inventory of all JWST data in each instrument
     service by instrument/dtype
 
@@ -152,6 +158,8 @@ def jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
         The types of dataproducts to count
     caom: bool
         Query CAOM service
+    plot: bool
+        Return a pie chart of the data
 
     Returns
     -------
@@ -183,6 +191,48 @@ def jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
     all_cols = ['instrument'] + dataproducts + ['total']
     table = pd.DataFrame(inventory, columns=all_cols)
 
+    # Plot it
+    if plot:
+        # Determine plot location and names
+        output_dir = get_config()['outputs']
+
+        if caom:
+            output_filename = 'database_monitor_caom'
+        else:
+            output_filename = 'database_monitor_jwst'
+
+        # Make the plot
+        plt = bar_chart(table, 'instrument', dataproducts,
+                        title="JWST Inventory")
+
+        # Save the plot as full html
+        html_filename = output_filename + '.html'
+        outfile = os.path.join(output_dir, 'monitor_mast', html_filename)
+        output_file(outfile)
+        save(plt)
+        set_permissions(outfile)
+
+        logging.info('Saved Bokeh plots as HTML file: {}'.format(html_filename))
+
+        # Save the plot as components
+        plt.sizing_mode = 'stretch_both'
+        script, div = components(plt)
+
+        div_outfile = os.path.join(output_dir, 'monitor_mast', output_filename + "_component.html")
+        with open(div_outfile, 'w') as f:
+            f.write(div)
+            f.close()
+        set_permissions(div_outfile)
+
+        script_outfile = os.path.join(output_dir, 'monitor_mast', output_filename + "_component.js")
+        with open(script_outfile, 'w') as f:
+            f.write(script)
+            f.close()
+        set_permissions(script_outfile)
+
+        logging.info('Saved Bokeh components files: {}_component.html and {}_component.js'.format(
+            output_filename, output_filename))
+
     # Melt the table
     table = pd.melt(table, id_vars=['instrument'],
                     value_vars=dataproducts,
@@ -199,23 +249,15 @@ def monitor_mast():
     """
     logging.info('Beginning database monitoring.')
 
-    outputs_dir = os.path.join(get_config()['outputs'], 'monitor_mast')
-
     # Perform inventory of the JWST service
-    jwst_df, kw = jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
-                                 dataproducts=['image', 'spectrum', 'cube'],
-                                 caom=False)
-
-    with open(os.path.join(outputs_dir, 'database_monitor_jwst.json')) as f:
-        f.write(jwst_df.to_json(orient='records'))
+    jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
+                   dataproducts=['image', 'spectrum', 'cube'],
+                   caom=False, plot=True)
 
     # Perform inventory of the CAOM service
-    caom_df, kw = jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
-                                 dataproducts=['image', 'spectrum', 'cube'],
-                                 caom=True)
-
-    with open(os.path.join(outputs_dir, 'database_monitor_caom.json')) as f:
-        f.write(caom_df.to_json(orient='records'))
+    jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
+                   dataproducts=['image', 'spectrum', 'cube'],
+                   caom=True, plot=True)
 
 
 if __name__ == '__main__':
