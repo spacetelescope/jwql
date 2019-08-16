@@ -126,7 +126,7 @@ def get_log_status(log_file):
         data = f.readlines()
     last_line = data[-1].strip()
 
-    if 'Completed Successfully' in last line:
+    if 'Completed Successfully' in last_line:
         return 'SUCCESS'
     else:
         return 'FAILURE'

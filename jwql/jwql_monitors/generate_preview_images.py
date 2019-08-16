@@ -319,7 +319,7 @@ def create_mosaic(filenames):
     elif datadim == 3:
         full_array = np.zeros((datashape[0], full_ydim, full_xdim)) * np.nan
     else:
-        raise ValueError(('Difference image for {} must be either 2D or 3D.'.format(filenames[0])))
+        raise ValueError('Difference image for {} must be either 2D or 3D.'.format(filenames[0]))
 
     # Place the data from the individual detectors in the appropriate
     # places in the final image

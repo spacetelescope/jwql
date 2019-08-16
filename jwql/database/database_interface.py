@@ -62,8 +62,7 @@ import os
 import socket
 
 import pandas as pd
-from sqlalchemy import Boolean
-from sqlalchemy import Column
+from sqlalchemy import Boolean, Column, DateTime, Integer, MetaData, String, Table
 from sqlalchemy import create_engine
 from sqlalchemy import Date
 from sqlalchemy import DateTime
@@ -75,19 +74,24 @@ from sqlalchemy import String
 from sqlalchemy import Time
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
 from sqlalchemy.types import ARRAY
 
-from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import ANOMALIES, FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
 from jwql.utils.utils import get_config
+
+ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
 
 
 # Monkey patch Query with data_frame method
 @property
 def data_frame(self):
     """Method to return a ``pandas.DataFrame`` of the results"""
+
     return pd.read_sql(self.statement, self.session.bind)
+
 
 Query.data_frame = data_frame
 
@@ -130,74 +134,18 @@ def load_connection(connection_string):
     base = declarative_base(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
-    meta = MetaData()
+    meta = MetaData(engine)
 
     return session, base, engine, meta
 
 
 # Import a global session.  If running from readthedocs or Jenkins, pass a dummy connection string
-if 'build' and 'project' in socket.gethostname() or os.path.expanduser('~') == '/home/jenkins':
+if 'build' and 'project' in socket.gethostname() or ON_JENKINS:
     dummy_connection_string = 'postgresql+psycopg2://account:password@hostname:0000/db_name'
     session, base, engine, meta = load_connection(dummy_connection_string)
 else:
     SETTINGS = get_config()
     session, base, engine, meta = load_connection(SETTINGS['connection_string'])
-
-
-class Anomaly(base):
-    """ORM for the ``anomalies`` table"""
-
-    # Name the table
-    __tablename__ = 'anomalies'
-
-    # Define the columns
-    id = Column(Integer, primary_key=True, nullable=False)
-    filename = Column(String, nullable=False)
-    flag_date = Column(DateTime, nullable=False, default=datetime.now())
-    bowtie = Column(Boolean, nullable=False, default=False)
-    snowball = Column(Boolean, nullable=False, default=False)
-    cosmic_ray_shower = Column(Boolean, nullable=False, default=False)
-    crosstalk = Column(Boolean, nullable=False, default=False)
-    cte_correction_error = Column(Boolean, nullable=False, default=False)
-    data_transfer_error = Column(Boolean, nullable=False, default=False)
-    detector_ghost = Column(Boolean, nullable=False, default=False)
-    diamond = Column(Boolean, nullable=False, default=False)
-    diffraction_spike = Column(Boolean, nullable=False, default=False)
-    dragon_breath = Column(Boolean, nullable=False, default=False)
-    earth_limb = Column(Boolean, nullable=False, default=False)
-    excessive_saturation = Column(Boolean, nullable=False, default=False)
-    figure8_ghost = Column(Boolean, nullable=False, default=False)
-    filter_ghost = Column(Boolean, nullable=False, default=False)
-    fringing = Column(Boolean, nullable=False, default=False)
-    guidestar_failure = Column(Boolean, nullable=False, default=False)
-    banding = Column(Boolean, nullable=False, default=False)
-    persistence = Column(Boolean, nullable=False, default=False)
-    prominent_blobs = Column(Boolean, nullable=False, default=False)
-    trail = Column(Boolean, nullable=False, default=False)
-    scattered_light = Column(Boolean, nullable=False, default=False)
-    other = Column(Boolean, nullable=False, default=False)
-
-    def __repr__(self):
-        """Return the canonical string representation of the object"""
-
-        # Get the columns that are True
-        a_list = [col for col, val in self.__dict__.items()
-                  if val is True and isinstance(val, bool)]
-
-        txt = ('Anomaly {0.id}: {0.filename} flagged at '
-               '{0.flag_date} for {1}').format(self, a_list)
-
-        return txt
-
-    @property
-    def colnames(self):
-        """A list of all the column names in this table"""
-
-        # Get the columns
-        a_list = [col for col, val in self.__dict__.items()
-                  if isinstance(val, bool)]
-
-        return a_list
 
 
 class FilesystemGeneral(base):
@@ -223,7 +171,8 @@ class FilesystemInstrument(base):
 
     # Name the table
     __tablename__ = 'filesystem_instrument'
-    __table_args__ = (UniqueConstraint('date', 'instrument', 'filetype', name='filesystem_instrument_uc'),)
+    __table_args__ = (UniqueConstraint('date', 'instrument', 'filetype',
+                                       name='filesystem_instrument_uc'),)
 
     # Define the columns
     id = Column(Integer, primary_key=True, nullable=False)
@@ -243,6 +192,22 @@ class FilesystemInstrument(base):
         return a_list
 
 
+class CentralStore(base):
+    """ORM for the central storage area filesystem monitor
+    table"""
+
+    # Name the table
+    __tablename__ = 'central_storage'
+
+    # Define the columns
+    id = Column(Integer, primary_key=True, nullable=False)
+    date = Column(DateTime, nullable=False)
+    area = Column(String(), nullable=False)
+    size = Column(Float, nullable=False)
+    used = Column(Float, nullable=False)
+    available = Column(Float, nullable=False)
+
+
 class Monitor(base):
     """ORM for the ``monitor`` table"""
 
@@ -256,6 +221,40 @@ class Monitor(base):
     status = Column(Enum('SUCESS', 'FAILURE', name='monitor_status'), nullable=True)
     affected_tables = Column(ARRAY(String, dimensions=1), nullable=True)
     log_file = Column(String(), nullable=False)
+
+
+def anomaly_orm_factory(class_name):
+    """Create a ``SQLAlchemy`` ORM Class for an anomaly table.
+
+    Parameters
+    ----------
+    class_name : str
+        The name of the class to be created
+
+    Returns
+    -------
+    class : obj
+        The ``SQLAlchemy`` ORM
+    """
+
+    # Initialize a dictionary to hold the column metadata
+    data_dict = {}
+    data_dict['__tablename__'] = class_name.lower()
+
+    # Define anomaly table column names
+    data_dict['columns'] = ANOMALIES
+    data_dict['names'] = [name.replace('_', ' ') for name in data_dict['columns']]
+
+    # Create a table with the appropriate Columns
+    data_dict['id'] = Column(Integer, primary_key=True, nullable=False)
+    data_dict['rootname'] = Column(String(), nullable=False)
+    data_dict['flag_date'] = Column(DateTime, nullable=False)
+    data_dict['user'] = Column(String(), nullable=False)
+
+    for column in data_dict['columns']:
+        data_dict[column] = Column(Boolean, nullable=False, default=False)
+
+    return type(class_name, (base,), data_dict)
 
 
 def get_monitor_columns(data_dict, table_name):
@@ -314,7 +313,8 @@ def get_monitor_columns(data_dict, table_name):
         # Create a new column
         if dtype in list(data_type_dict.keys()):
             if array:
-                data_dict[column_name.lower()] = Column(ARRAY(data_type_dict[dtype], dimensions=dimension))
+                data_dict[column_name.lower()] = Column(ARRAY(data_type_dict[dtype],
+                                                              dimensions=dimension))
             else:
                 data_dict[column_name.lower()] = Column(data_type_dict[dtype])
         else:
@@ -367,7 +367,9 @@ def monitor_orm_factory(class_name):
     # Columns specific to all monitor ORMs
     data_dict['id'] = Column(Integer, primary_key=True, nullable=False)
     data_dict['entry_date'] = Column(DateTime, unique=True, nullable=False, default=datetime.now())
-    data_dict['__table_args__'] = (UniqueConstraint('id', 'entry_date', name='{}_uc'.format(data_dict['__tablename__'])),)
+    data_dict['__table_args__'] = (
+        UniqueConstraint('id', 'entry_date', name='{}_uc'.format(data_dict['__tablename__'])),
+    )
 
     # Get monitor-specific columns
     data_dict = get_monitor_columns(data_dict, data_dict['__tablename__'])
@@ -379,6 +381,7 @@ def monitor_orm_factory(class_name):
 
 
 # Create tables from ORM factory
+Anomaly = anomaly_orm_factory('anomaly')
 NIRCamDarkQueryHistory = monitor_orm_factory('nircam_dark_query_history')
 NIRCamDarkPixelStats = monitor_orm_factory('nircam_dark_pixel_stats')
 NIRCamDarkDarkCurrent = monitor_orm_factory('nircam_dark_dark_current')

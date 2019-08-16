@@ -3,8 +3,11 @@ AMPLIFIER, string
 MEAN, float
 STDEV, float
 SOURCE_FILES, string_array_1d
+OBS_START_TIME, datetime
+OBS_MID_TIME, datetime
+OBS_END_TIME, datetime
 GAUSS_AMPLITUDE, float_array_1d
-GUASS_PEAK, float_array_1d
+GAUSS_PEAK, float_array_1d
 GAUSS_WIDTH, float_array_1d
 GAUSS_CHISQ, float
 DOUBLE_GAUSS_AMPLITUDE1, float_array_1d

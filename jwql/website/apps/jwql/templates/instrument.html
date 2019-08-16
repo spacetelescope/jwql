@@ -2,45 +2,69 @@
 
 {% block preamble %}
 
-	<title>{{ inst }} - JWQL</title>
+	<title>{{ inst }} Home - JWQL</title>
 
 {% endblock %}
 
 {% block content %}
 
-    <main role="main" class="container">
-    	<h1 style="text-align: center"><img src="{{ static('') }}/img/{{inst.lower()}}logo.png" width=40 style="vertical-align: middle; max-width: 40; max-height: 40"> {{ inst }}</h1></br>
+    <main role="main" class="container" id="instrument_main">
+    	<h1 style="text-align: center">
+			<img src="{{ static('') }}/img/{{inst.lower()}}logo.png"
+				 width=40
+				 style="vertical-align: middle; max-width: 40; max-height: 40"
+				 alt="{{ inst }} Logo"
+				 title="{{ inst }} Logo">
+			{{ inst }}
+		</h1>
+		</br>
+
         <hr>
 
     	<!-- List all possible tools -->
     	<div class="row">
     		<div class="col-md-6 text-center">
     			<!-- Images -->
-    			<h3>Images</h3>
-    			<a role="button" class="btn btn-primary my-2 disabled" href={{ url('jwql:unlooked', args=[inst]) }}>Unlooked Images</a></br>
-    			<a role="button" class="btn btn-primary my-2 disabled" href="#">Image Anomalies</a></br>
-    			<a role="button" class="btn btn-primary my-2" href={{ url('jwql:archive', args=[inst]) }}>Archived Images</a></br>
+    			<h2>Images</h2>
+    			<a role="button" class="btn btn-primary my-2 disabled" href={{ url('jwql:unlooked', args=[inst]) }}>Unlooked Images</a>
+				</br>
+    			<a role="button" class="btn btn-primary my-2 disabled" href="#">Image Anomalies</a>
+				</br>
+    			<a role="button" class="btn btn-primary my-2" href={{ url('jwql:archive', args=[inst]) }}>Archived Images</a>
+				</br>
 			</div>
+
 			<div class="col-md-6 text-center">
 				<!-- Monitors -->
-    			<h3>Monitors</h3>
+    			<h2>Monitors</h2>
+
     			{% for key, inst_tools in tools.items() %}
 					{% if key == inst.lower() %}
 						{% for monitor_name, monitor_url in inst_tools %}
 							{% if monitor_url == '#' %}
-								<a role="button" class="btn btn-primary my-2 disabled" href="#">{{ monitor_name }}</a></br>
+								<a role="button" class="btn btn-primary my-2 disabled" href="#">{{ monitor_name }}</a>
+								</br>
 							{% else %}
-								<a role="button" class="btn btn-primary my-2" href="{{ monitor_url }}">{{ monitor_name }}</a></br>
+								<a role="button" class="btn btn-primary my-2" href="{{ monitor_url }}">{{ monitor_name }}</a>
+								</br>
 							{% endif %}
 						{% endfor %}
 					{% endif %}
 				{% endfor %}
 			</div>
+
 			<div class="col-md-6 text-center">
-					<!-- Documentation -->
-					<h3>Documentation</h3>
-					<a class="btn btn-primary my-2" role="button" href= {{doc_url}} target="_blank" rel="noopener noreferrer"> {{ inst }} Documentation</a></br>
-				</div>
+				<!-- Documentation -->
+				<h2>Documentation</h2>
+				<a class="btn btn-primary my-2"
+				   role="button"
+				   href= {{doc_url}}
+				   target="_blank"
+				   rel="noopener noreferrer">
+					{{ inst }} Documentation
+				</a>
+				</br>
+			</div>
 		</div>
 
 	</main>
