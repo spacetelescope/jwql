@@ -1,10 +1,12 @@
 include README.md
 include LICENSE
-include environment.yml
+include environment_python_3_5.yml
+include environment_python_3_6.yml
 include setup.py
 
 recursive-include notebooks *
 recursive-include style_guide *
 recursive-include typing_demo *
+recursive-include jwql/database/monitor_table_definitions *.txt
 
 exclude *.pyc
