@@ -1,4 +1,4 @@
-"""Various functions to generate Bokeh objects to be used by the ``views`` of 
+"""Various functions to generate Bokeh objects to be used by the ``views`` of
 the ``jwql`` app.
 
 This module contains several functions that instantiate BokehTemplate objects

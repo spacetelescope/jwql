@@ -6,24 +6,22 @@ Created on Mon May 21 13:45:34 2018
 @author: gkanarek
 """
 
-from __future__ import division
-
 from bokeh.core.properties import Instance, String, Any, Dict
 from bokeh.models import ColumnDataSource, LayoutDOM
 
 DEFAULTS = {
-    'width':          '600px',
-    'height':         '600px',
-    'style':          'surface',
+    'width': '600px',
+    'height': '600px',
+    'style': 'surface',
     'showPerspective': True,
-    'showGrid':        True,
+    'showGrid': True,
     'keepAspectRatio': True,
-    'verticalRatio':   1.0,
-    'legendLabel':     'stuff',
-    'cameraPosition':  {
+    'verticalRatio': 1.0,
+    'legendLabel': 'stuff',
+    'cameraPosition': {
         'horizontal': -0.35,
-        'vertical':    0.22,
-        'distance':    1.8,
+        'vertical': 0.22,
+        'distance': 1.8,
     }
 }
 
@@ -166,11 +164,8 @@ class Surface3d(LayoutDOM):
     # these properties let us specify the *name* of the column that should
     # be used for each field.
     x = String
-
     y = String
-
     z = String
-
     color = String
-    
+
     options = Dict(String, Any, default=DEFAULTS)

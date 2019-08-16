@@ -201,19 +201,21 @@ def monitor_mast():
     
     outputs_dir = os.path.join(get_config()['outputs'], 'monitor_mast')
 
+    outputs_dir = os.path.join(get_config()['outputs'], 'monitor_mast')
+
     # Perform inventory of the JWST service
     jwst_df, kw = jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
-                             dataproducts=['image', 'spectrum', 'cube'],
-                             caom=False)
-    
+                                 dataproducts=['image', 'spectrum', 'cube'],
+                                 caom=False)
+
     with open(os.path.join(outputs_dir, 'database_monitor_jwst.json')) as f:
         f.write(jwst_df.to_json(orient='records'))
 
     # Perform inventory of the CAOM service
     caom_df, kw = jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
-                             dataproducts=['image', 'spectrum', 'cube'],
-                             caom=True)
-    
+                                 dataproducts=['image', 'spectrum', 'cube'],
+                                 caom=True)
+
     with open(os.path.join(outputs_dir, 'database_monitor_caom.json')) as f:
         f.write(caom_df.to_json(orient='records'))
 
