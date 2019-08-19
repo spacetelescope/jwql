@@ -29,7 +29,9 @@ from jwql.utils.utils import copy_files, get_config, filename_parser, \
 ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
 
 # Determine if user has access to filesystem
-NO_FILESYSTEM_ACCESS = not os.path.exists(get_config()['public_filesystem']) or not os.path.exists(get_config()['proprietary_filesystem'])
+NO_FILESYSTEM_ACCESS = True
+if not ON_JENKINS:
+    NO_FILESYSTEM_ACCESS = not os.path.exists(get_config()['public_filesystem']) or not os.path.exists(get_config()['proprietary_filesystem'])
 
 FILENAME_PARSER_TEST_DATA = [
 

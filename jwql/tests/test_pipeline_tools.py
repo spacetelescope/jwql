@@ -30,7 +30,9 @@ from jwql.utils.utils import get_config
 ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
 
 # Determine if user has access to filesystem
-NO_FILESYSTEM_ACCESS = not os.path.exists(get_config()['public_filesystem']) or not os.path.exists(get_config()['proprietary_filesystem'])
+NO_FILESYSTEM_ACCESS = True
+if not ON_JENKINS:
+    NO_FILESYSTEM_ACCESS = not os.path.exists(get_config()['public_filesystem']) or not os.path.exists(get_config()['proprietary_filesystem'])
 
 
 @pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
