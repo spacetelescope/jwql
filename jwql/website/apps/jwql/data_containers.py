@@ -488,8 +488,8 @@ def get_filenames_by_rootname(rootname):
     """
 
     proposal = rootname.split('_')[0].split('jw')[-1][0:5]
-    filenames = sorted(glob.glob(os.path.join(PROPRIETARY_FILESYSTEM_DIR, 'jw{}'.format(proposal), '{}*'.format(rootname))))
-    filenames.extend(sorted(glob.glob(os.path.join(PUBLIC_FILESYSTEM_DIR, 'jw{}'.format(proposal), '{}*'.format(rootname)))))
+    filenames = sorted(glob.glob(os.path.join(PROPRIETARY_FILESYSTEM_DIR, 'jw{}'.format(proposal), '*', '{}*'.format(rootname))))
+    filenames.extend(sorted(glob.glob(os.path.join(PUBLIC_FILESYSTEM_DIR, 'jw{}'.format(proposal), '*', '{}*'.format(rootname)))))
     filenames = [os.path.basename(filename) for filename in filenames]
 
     return filenames
@@ -573,7 +573,8 @@ def get_image_info(file_root, rewrite):
             if not os.path.exists(jpg_dir):
                 os.makedirs(jpg_dir)
             im = PreviewImage(file, 'SCI')
-            im.output_directory = jpg_dir
+            im.preview_output_directory = jpg_dir
+            im.thumbnail_output_directory = jpg_dir.replace('preview_images', 'thumbnails')
             im.make_image()
 
         # Record how many integrations there are per filetype
