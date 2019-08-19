@@ -458,7 +458,7 @@ def plot_filesystem_stats():
         plot_list.append(plot_by_filetype('size', instrument))
 
     # Create a layout with a grid pattern
-    grid_chunks = [plot_list[i:i+2] for i in range(0, len(plot_list), 2)]
+    grid_chunks = [plot_list[i:i + 2] for i in range(0, len(plot_list), 2)]
     grid = gridplot(grid_chunks)
 
     # Save all of the plots in one file

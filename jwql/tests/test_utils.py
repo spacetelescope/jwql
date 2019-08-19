@@ -368,30 +368,30 @@ def test_validate_config():
 
     # Make sure a good config does not!
     good_config_dict = {
-        "admin_account" : "",
-        "auth_mast" : "",
-        "client_id" : "",
-        "client_secret" : "",
-        "connection_string" : "",
-        "database" : {
-            "engine" : "",
-            "name" : "",
-            "user" : "",
-            "password" : "",
-            "host" : "",
-            "port" : ""
+        "admin_account": "",
+        "auth_mast": "",
+        "client_id": "",
+        "client_secret": "",
+        "connection_string": "",
+        "database": {
+            "engine": "",
+            "name": "",
+            "user": "",
+            "password": "",
+            "host": "",
+            "port": ""
         },
-        "jwql_dir" : "",
-        "log_dir" : "",
-        "mast_token" : "",
-        "outputs" : "",
-        "preview_image_filesystem" : "",
-        "proprietary_filesystem" : "",
-        "public_filesystem" : "",
-        "setup_file" : "",
-        "test_data" : "",
-        "test_dir" : "",
-        "thumbnail_filesystem" : ""
+        "jwql_dir": "",
+        "log_dir": "",
+        "mast_token": "",
+        "outputs": "",
+        "preview_image_filesystem": "",
+        "proprietary_filesystem": "",
+        "public_filesystem": "",
+        "setup_file": "",
+        "test_data": "",
+        "test_dir": "",
+        "thumbnail_filesystem": ""
     }
 
     is_valid = _validate_config(good_config_dict)

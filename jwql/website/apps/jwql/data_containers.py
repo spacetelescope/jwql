@@ -465,8 +465,8 @@ def get_filenames_by_proposal(proposal):
     """
 
     proposal_string = '{:05d}'.format(int(proposal))
-    filenames = sorted(glob.glob(os.path.join(
-        FILESYSTEM_DIR, 'jw{}'.format(proposal_string), '*')))
+    filenames = sorted(glob.glob(os.path.join(PROPRIETARY_FILESYSTEM_DIR, 'jw{}'.format(proposal_string), '*')))
+    filenames.extend(sorted(glob.glob(os.path.join(PUBLIC_FILESYSTEM_DIR, 'jw{}'.format(proposal_string), '*'))))
     filenames = [os.path.basename(filename) for filename in filenames]
 
     return filenames
@@ -488,10 +488,8 @@ def get_filenames_by_rootname(rootname):
     """
 
     proposal = rootname.split('_')[0].split('jw')[-1][0:5]
-    filenames = sorted(glob.glob(os.path.join(
-        FILESYSTEM_DIR,
-        'jw{}'.format(proposal),
-        '{}*'.format(rootname))))
+    filenames = sorted(glob.glob(os.path.join(PROPRIETARY_FILESYSTEM_DIR, 'jw{}'.format(proposal), '{}*'.format(rootname))))
+    filenames.extend(sorted(glob.glob(os.path.join(PUBLIC_FILESYSTEM_DIR, 'jw{}'.format(proposal), '{}*'.format(rootname)))))
     filenames = [os.path.basename(filename) for filename in filenames]
 
     return filenames
@@ -561,7 +559,7 @@ def get_image_info(file_root, rewrite):
         image_info['suffixes'].append(suffix)
 
         # Determine JPEG file location
-        jpg_dir = os.path.join(preview_dir, dirname)
+        jpg_dir = os.path.join(preview_dir, subdir1)
         jpg_filename = os.path.basename(os.path.splitext(file)[0] + '_integ0.jpg')
         jpg_filepath = os.path.join(jpg_dir, jpg_filename)
 
@@ -579,7 +577,7 @@ def get_image_info(file_root, rewrite):
             im.make_image()
 
         # Record how many integrations there are per filetype
-        search_jpgs = os.path.join(preview_dir, dirname,
+        search_jpgs = os.path.join(preview_dir, subdir1,
                                    file_root + '_{}_integ*.jpg'.format(suffix))
         num_jpgs = len(glob.glob(search_jpgs))
         image_info['num_ints'][suffix] = num_jpgs

@@ -473,9 +473,9 @@ def _validate_config(config_file_dict):
                     "password": {"type": "string"},
                     "host": {"type": "string"},
                     "port": {"type": "string"}
-                    },
+                },
                     "required": ['engine', 'name', 'user', 'password', 'host', 'port']
-                 },
+            },
             "jwql_dir": {"type": "string"},
             "log_dir": {"type": "string"},
             "mast_token": {"type": "string"},
@@ -501,8 +501,7 @@ def _validate_config(config_file_dict):
         jsonschema.validate(instance=config_file_dict, schema=schema)
     except jsonschema.ValidationError as e:
         raise jsonschema.ValidationError(
-            'Provided config.json does not match the ' + \
-            'required JSON schema: {}'.format(e.message)
+            'Provided config.json does not match the required JSON schema: {}'.format(e.message)
         )
 
 
