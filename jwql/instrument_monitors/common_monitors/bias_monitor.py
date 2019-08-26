@@ -20,6 +20,7 @@ import os
 
 from astropy.io import fits
 from astropy.time import Time
+from collections import OrderedDict
 import numpy as np
 
 from jwql.instrument_monitors import pipeline_tools
@@ -119,7 +120,7 @@ class Bias():
         if not os.path.isfile(output_filename):
             hdu = fits.open(filename)
             new_hdu = fits.HDUList([hdu['PRIMARY'], hdu['SCI']])
-            new_hdu['SCI'].data = hdu['SCI'].data[0:1,0:1,:,:]
+            new_hdu['SCI'].data = hdu['SCI'].data[0:1, 0:1, :, :]
             new_hdu.writeto(output_filename)
 
             # Close the fits files
@@ -197,6 +198,7 @@ class Bias():
             logging.info('\tCalculated uncal image stats: {}'.format(amp_meds))
 
             # Run the uncal data through the pipeline superbias step
+            steps_to_run = OrderedDict([('superbias', True)])
             processed_file = filename.replace('.fits', '_superbias.fits')
             if not os.path.isfile(processed_file):
                 logging.info('\tRunning pipeline superbias correction on {}'.format(filename))
@@ -217,11 +219,11 @@ class Bias():
             # or amplifier effects to allow for visual inspection of how well
             # the superbias correction performed
             # PLACEHOLDER - need to output png of this image?
-            smoothed_cal_data = smooth_image(cal_data, amp_bounds)
+            smoothed_cal_data = self.smooth_image(cal_data, amp_bounds)
             logging.info('\tSmoothed the superbias-calibrated image.')
 
             # Calculate the collapsed row and column values in the smoothed image
-            # to see how well the superbias calibrate performed
+            # to see how well the superbias calibration performed
             collapsed_rows, collapsed_columns = collapse_image(smoothed_cal_data)
             logging.info('\tCalculated the collapsed row/column values of the smoothed '
                          'superbias-calibrated image.')
@@ -321,8 +323,8 @@ class Bias():
             x_end, y_end = amps[key][1]
 
             # Remove the median odd/even column values from this amplifier region
-            odd_med = np.nanmedian(diff[y_start: y_end, x_start: x_end][:, ::2])
-            even_med = np.nanmedian(diff[y_start: y_end, x_start: x_end][:, 1::2])
+            odd_med = np.nanmedian(image[y_start: y_end, x_start: x_end][:, ::2])
+            even_med = np.nanmedian(image[y_start: y_end, x_start: x_end][:, 1::2])
             smoothed_image[y_start: y_end, x_start: x_end][:, ::2] = image[y_start: y_end, x_start: x_end][:, ::2] - odd_med
             smoothed_image[y_start: y_end, x_start: x_end][:, 1::2] = image[y_start: y_end, x_start: x_end][:, 1::2] - even_med
 
