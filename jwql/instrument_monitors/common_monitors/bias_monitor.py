@@ -26,6 +26,7 @@ import numpy as np
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
 from jwql.utils import instrument_properties
+from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, initialize_instrument_monitor, update_monitor_table
 
 class Bias():
@@ -96,14 +97,7 @@ class Bias():
         Parameters
         ----------
         filename : str
-            The fits file from which the 0th group will be extracted
-
-        Outputs
-        -------
-        <filename>_0thgroup.fits : fits image file
-            A fits file containing only the 0th group
-            data from the input file, as well as the primary and
-            science headers
+            The fits file from which the 0th group will be extracted.
 
         Returns
         -------
@@ -166,8 +160,6 @@ class Bias():
             amp_med_odd = np.nanmedian(image[y_start: y_end, x_start: x_end][:, ::2])
             amp_meds[key+'_odd'] = amp_med_odd
 
-        logging.info('\tMean dark rate by amplifier: {}'.format(amp_meds))
-
         return amp_meds
 
     def process(self, file_list):
@@ -185,11 +177,11 @@ class Bias():
             logging.info('\tWorking on file: {}'.format(filename))
 
             # Get the uncalibrated 0th group data for this file
-            uncal_data = fits.getdata(filename, 'SCI')[0][0]
+            uncal_data = fits.getdata(filename, 'SCI')[0, 0, :, :].astype(float)
 
             # Find amplifier boundaries so per-amp statistics can be calculated
-            # PLACEHOLDER - THIS FILE DOESNT HAVE DQ ARRAY SO CANT IGNORE REFPIX
-            number_of_amps, amp_bounds = instrument_properties.amplifier_info(filename, omit_reference_pixels=False)
+            # TODO - THIS FILE DOESNT HAVE DQ ARRAY SO CANT IGNORE REFPIX
+            _, amp_bounds = instrument_properties.amplifier_info(filename, omit_reference_pixels=False)
             logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
 
             # Calculate median values of each amplifier for odd/even columns 
@@ -211,20 +203,20 @@ class Bias():
 
             # Calculate median values of each amplifier for odd/even columns 
             # in the superbias-calibrated 0th group
-            cal_data = fits.getdata(processed_file, 'SCI')[0][0]
+            cal_data = fits.getdata(processed_file, 'SCI')[0, 0, :, :]
             amp_meds = self.get_amp_medians(cal_data, amp_bounds)
             logging.info('\tCalculated superbias-calibrated image stats: {}'.format(amp_meds))
 
             # Smooth the superbias-calibrated image to remove any odd/even 
             # or amplifier effects to allow for visual inspection of how well
             # the superbias correction performed
-            # PLACEHOLDER - need to output png of this image?
+            # TODO - need to output png of this image?
             smoothed_cal_data = self.smooth_image(cal_data, amp_bounds)
             logging.info('\tSmoothed the superbias-calibrated image.')
 
             # Calculate the collapsed row and column values in the smoothed image
             # to see how well the superbias calibration performed
-            collapsed_rows, collapsed_columns = collapse_image(smoothed_cal_data)
+            collapsed_rows, collapsed_columns = self.collapse_image(smoothed_cal_data)
             logging.info('\tCalculated the collapsed row/column values of the smoothed '
                          'superbias-calibrated image.')
 
@@ -239,18 +231,18 @@ class Bias():
         # Get the output directory
         self.output_dir = os.path.join(get_config()['outputs'], 'bias_monitor')
 
-        # query_start is a PLACEHOLDER. Use the current time as the end time for MAST query
+        # query_start is a TODO. Use the current time as the end time for MAST query
         self.query_start, self.query_end = 57357.0, Time.now().mjd  # a.k.a. Dec 1, 2015 == CV3
 
         # Loop over all instruments
         for instrument in ['nircam']:
             self.instrument = instrument
 
-            # PLACEHOLDER Make a list of all possible apertures
-            possible_apertures = ['NRCA1_FULL','NRCA2_FULL','NRCA3_FULL','NRCA4_FULL','NRCA5_FULL',
-                                  'NRCB1_FULL','NRCB2_FULL','NRCB3_FULL','NRCB4_FULL','NRCB5_FULL']
+            # TODO Make a list of all possible apertures
+            possible_apertures = ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL', 'NRCA5_FULL',
+                                  'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL', 'NRCB4_FULL', 'NRCB5_FULL']
 
-            for aperture in possible_apertures:
+            for aperture in possible_apertures[0:1]: #test
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
@@ -270,7 +262,7 @@ class Bias():
                 # Save the 0th group image from each new file in the output directory;
                 # some dont exist in JWQL filesystem.
                 new_files = []
-                for file_entry in new_entries:
+                for file_entry in new_entries[0:1]: #test
                     try:
                         filename = filesystem_path(file_entry['filename'])
                         uncal_filename = filename.replace('_dark', '_uncal')
@@ -329,6 +321,7 @@ class Bias():
             smoothed_image[y_start: y_end, x_start: x_end][:, 1::2] = image[y_start: y_end, x_start: x_end][:, 1::2] - even_med
 
         return smoothed_image
+
 
 if __name__ == '__main__':
 
