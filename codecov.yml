@@ -1,6 +1,6 @@
 codecov:
   notify:
-    require_ci_to_pass: yes
+    require_ci_to_pass: no
 
 coverage:
   precision: 2
@@ -27,6 +27,7 @@ comment:
 
 ignore:
   - "jwql/database/"
+  - "jwql/tests/"
   - "jwql/instrument_monitors/miri_monitors/data_trending/plots/"
   - "jwql/instrument_monitors/nirspec_monitors/data_trending/plots/"
   - "*__init__.py*"
