@@ -49,8 +49,8 @@ from . import views
 
 app_name = 'jwql'
 instruments = 'nircam|NIRCam|niriss|NIRISS|nirspec|NIRSpec|miri|MIRI|fgs|FGS'
-log_type = 'prod|dev|test'
-monitor_type = 'dark_monitor|monitor_cron_jobs|monitor_mast|generate_preview_images|monitor_filesystem|test_logging_functions'
+log_type_dir = 'prod|dev|test'
+sects = 'dark_monitor|monitor_cron_jobs|monitor_mast|generate_preview_images|monitor_filesystem|test_logging_functions'
 
 urlpatterns = [
 
@@ -73,6 +73,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('edb/', views.engineering_database, name='edb'),
     path('logging_display/', views.logging_display, name='logging_display'),
+    re_path(r'^(?P<log_type_dir>({}))/(?P<sect>({}))/$'.format(log_type_dir, sects), views.logging_display, name='logging_types'),
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
     re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),
