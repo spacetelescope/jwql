@@ -494,7 +494,7 @@ def get_filenames_by_rootname(rootname):
 
 
 def get_header_info(filename):
-    """Return the header information for a given ``file``.
+    """Return the dheader information for a given ``file``.
 
     Parameters
     ----------
@@ -510,9 +510,18 @@ def get_header_info(filename):
 
     dirname = filename[:7]
     fits_filepath = os.path.join(FILESYSTEM_DIR, dirname, filename)
-    header = fits.getheader(fits_filepath, ext=0).tostring(sep='\n')
+    hdul = fits.open(fits_filepath)
+    extentions = len(hdul)
+    header_info = (hdul.info(False))
+    hdul.close()
 
-    return header
+    header = []
+    for ext in range(0, extentions): 
+        temp_header = fits.getheader(fits_filepath, ext=ext) 
+        temp_header_str = temp_header.tostring(sep='\n')       
+        header.append(temp_header) 
+
+    return header, header_info
 
 
 def get_image_info(file_root, rewrite):
