@@ -521,7 +521,9 @@ def get_header_info(filename):
         temp_header_str = temp_header.tostring(sep='\n')       
         header.append(temp_header) 
 
-    return header, header_info
+    header_names = list((x[1] for x in header_info))
+
+    return header, header_names
 
 
 def get_image_info(file_root, rewrite):
