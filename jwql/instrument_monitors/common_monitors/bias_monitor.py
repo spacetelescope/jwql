@@ -20,8 +20,12 @@ import os
 
 from astropy.io import fits
 from astropy.time import Time
+from astropy.visualization import ZScaleInterval
 from collections import OrderedDict
 import numpy as np
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
 
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
@@ -162,6 +166,43 @@ class Bias():
 
         return amp_meds
 
+    def image_to_png(self, image, outname):
+        """Ouputs an image array into a png file.
+
+        Parameters
+        ----------
+        image : numpy.ndarray
+            2D image array
+
+        outname : str
+            The name given to the output png file
+
+        Returns
+        -------
+        output_filename : str
+            The full path to the output png file
+        """
+
+        output_filename = os.path.join(self.data_dir, '{}.png'.format(outname))
+
+        if not os.path.isfile(output_filename):
+            fig = plt.figure()
+            ax1 = fig.add_axes([0, 0, 1, 1])
+
+            # Get image scale limits and plot
+            z = ZScaleInterval()
+            vmin, vmax = z.get_limits(image)
+            ax1.imshow(image, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
+            ax1.set_title(outname)
+
+            fig.savefig(output_filename, bbox_inches='tight')
+            logging.info('\t{} created'.format(output_filename))
+        else:
+            logging.info('\t{} already exists'.format(output_filename))
+            pass
+
+        return output_filename
+
     def process(self, file_list):
         """The main method for processing darks.  See module docstrings
         for further details.
@@ -210,9 +251,10 @@ class Bias():
             # Smooth the superbias-calibrated image to remove any odd/even 
             # or amplifier effects to allow for visual inspection of how well
             # the superbias correction performed
-            # TODO - need to output png of this image?
             smoothed_cal_data = self.smooth_image(cal_data, amp_bounds)
             logging.info('\tSmoothed the superbias-calibrated image.')
+            smoothed_png = self.image_to_png(smoothed_cal_data, 
+                os.path.basename(filename).replace('_uncal_0thgroup.fits', ''))
 
             # Calculate the collapsed row and column values in the smoothed image
             # to see how well the superbias calibration performed
