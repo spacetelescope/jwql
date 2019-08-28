@@ -523,7 +523,9 @@ def get_header_info(filename):
 
     header_names = list((x[1] for x in header_info))
 
-    return header, header_names
+    header_dic = dict(zip(header_names, header))
+
+    return header, header_names, header_dic
 
 
 def get_image_info(file_root, rewrite):

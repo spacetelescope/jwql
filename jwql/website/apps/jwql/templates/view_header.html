@@ -19,7 +19,7 @@
         {% autoescape false %}
 		{% for ext in header_names %}
 			<h5>{{ext}}</h5>
-	        <font face="Courier">{{ header | replace("\n", "<br/>") }}</font>
+	        <font face="Courier">{{ header_dic[ext] | replace("\n", "<br/>") }}</font>
         {% endfor %}
         {% endautoescape %}
     	<p>
