@@ -448,7 +448,7 @@ def view_header(request, inst, file):
     context = {'inst': inst,
                'file': file,
                'header': header,
-               'header_info': header_names,
+               'header_names': header_names,
                'file_root': file_root}
 
     return render(request, template, context)

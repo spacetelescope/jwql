@@ -9,7 +9,7 @@
 {% block content %}
 
     <main role="main" class="container">
-    	<h4>{{ file }}</h5>
+    	<h4>{{ file }}</h4<h>
 
     	<p>
 	    	<a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:view_image', args=[inst, file_root]) }}>View Image</a>
@@ -17,9 +17,11 @@
 	    </p>
 
         {% autoescape false %}
-	       <font face="Courier">{{ header | replace("\n", "<br/>") }}</font>
+		{% for ext in header_names %}
+			<h5>{{ext}}</h5>
+	        <font face="Courier">{{ header | replace("\n", "<br/>") }}</font>
+        {% endfor %}
         {% endautoescape %}
-
     	<p>
 	    	<a class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}{{ file[:7] }}/{{ file }}'>Download FITS</a>
 	    	<a class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}{{ file[:7] }}/{{ jpg }}'>Download JPEG</a>
