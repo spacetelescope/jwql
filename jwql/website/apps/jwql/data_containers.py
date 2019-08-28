@@ -513,19 +513,36 @@ def get_header_info(filename):
     hdul = fits.open(fits_filepath)
     extentions = len(hdul)
     header_info = (hdul.info(False))
-    hdul.close()
-
-    header = []
+    
+    all_keywords = []
+    all_values = []
     for ext in range(0, extentions): 
         temp_header = fits.getheader(fits_filepath, ext=ext) 
-        temp_header_str = temp_header.tostring(sep='\n')       
-        header.append(temp_header) 
+        keywords = list(temp_header.keys())
+        keywords = list(filter(None, keywords))
+        temp_values = [] 
+        for key in keywords:
+            value = hdul[ext].header[key]
+            temp_values.append(value)
+        all_keywords.append(keywords)
+        all_values.append(temp_values)
+
+    hdul.close()
 
     header_names = list((x[1] for x in header_info))
+    header_key_dic = dict(zip(header_names, all_keywords))
+    header_val_dic = dict(zip(header_names, all_values))
 
-    header_dic = dict(zip(header_names, header))
+    key_val_dict = {} 
+    i = 0 
+    for head_name in header_names:  
+        keys = header_key_dic[head_name] 
+        vals = header_val_dic[head_name] 
+        combo = list(zip(keys,vals)) 
+        key_val_dict[i] = {head_name : combo} 
+        i = i + 1 
 
-    return header, header_names, header_dic
+    return extentions, header_names, key_val_dict
 
 
 def get_image_info(file_root, rewrite):

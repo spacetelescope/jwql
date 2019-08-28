@@ -17,9 +17,11 @@
 	    </p>
 
         {% autoescape false %}
-		{% for ext in header_names %}
-			<h5>{{ext}}</h5>
-	        <font face="Courier">{{ header_dic[ext] | replace("\n", "<br/>") }}</font>
+		{% for ext in range(extentions) %}
+			{% for head in key_val_dict[ext] %}
+				<h5>{{head}}</h5>
+	        	<font face="Courier">{{ key_val_dict[ext][head] }}</font>
+        {% endfor %}
         {% endfor %}
         {% endautoescape %}
     	<p>
