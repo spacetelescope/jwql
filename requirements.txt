@@ -7,7 +7,7 @@ codecov==2.0.15
 django==2.2.5
 flake8==3.7.8
 inflection==0.3.1
-ipython==7.7.0
+ipython==7.8.0
 jinja2==2.10.1
 jsonschema==3.0.2
 jwedb>=0.0.3
