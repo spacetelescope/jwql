@@ -533,6 +533,10 @@ def get_header_info(filename):
     header_key_dic = dict(zip(header_names, all_keywords))
     header_val_dic = dict(zip(header_names, all_values))
 
+    from collections import OrderedDict
+    from astropy.table import Table
+
+    header_tables = OrderedDict()
     key_val_dict = {} 
     i = 0 
     for head_name in header_names:  
@@ -540,9 +544,22 @@ def get_header_info(filename):
         vals = header_val_dic[head_name] 
         combo = list(zip(keys,vals)) 
         key_val_dict[i] = {head_name : combo} 
-        i = i + 1 
+        i = i + 1
 
-    return extentions, header_names, key_val_dict
+        keyword_table = Table([keys, vals], names=('Key', 'Value'))
+        tmpdir = tempfile.mkdtemp()
+        file_name_root = '{}_table'.format(head_name)
+        path_for_html = os.path.join(tmpdir, '{}.html'.format(file_name_root))
+        with open(path_for_html, 'w') as tmp:
+            keyword_table.write(tmp, format='jsviewer')
+        header_tables[head_name] = open(path_for_html, 'r').read()
+
+
+
+    # header_tables[header_names[0]].pprint()
+    # Table(key_val_dict[0]).pprint()
+
+    return extentions, header_names, key_val_dict, header_tables
 
 
 def get_image_info(file_root, rewrite):

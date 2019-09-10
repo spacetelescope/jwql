@@ -9,7 +9,7 @@
 {% block content %}
 
     <main role="main" class="container">
-    	<h4>{{ file }}</h4<h>
+    	<h4>{{ file }}</h4><h>
 
     	<p>
 	    	<a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:view_image', args=[inst, file_root]) }}>View Image</a>
@@ -17,11 +17,13 @@
 	    </p>
 
         {% autoescape false %}
-		{% for ext in range(extentions) %}
-			{% for head in key_val_dict[ext] %}
-				<h5>{{head}}</h5>
-	        	<font face="Courier">{{ key_val_dict[ext][head] }}</font>
-        {% endfor %}
+		{% for header_name in header_names %}
+			{{ header_tables[header_name] }}
+
+			<!--{% for head in key_val_dict[ext] %}-->
+				<!--<h5>{{head}}</h5>-->
+	        	<!--<font face="Courier">{{ key_val_dict[ext][head] }}</font>-->
+        <!--{% endfor %}-->
         {% endfor %}
         {% endautoescape %}
     	<p>
