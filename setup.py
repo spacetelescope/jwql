@@ -52,7 +52,7 @@ setup(
     classifiers=['Programming Language :: Python'],
     packages=find_packages(),
     install_requires=REQUIRES,
-    dependency_links=DEPENDENCY_LINKS
+    dependency_links=DEPENDENCY_LINKS,
     include_package_data=True,
     include_dirs=[np.get_include()],
 )
