@@ -35,9 +35,10 @@ REQUIRES = [
     'sphinx',
     'sqlalchemy',
     'stsci_rtd_theme',
-    'twine',
-    'git+https://github.com/spacetelescope/jwst#0.13.0'
+    'twine'
 ]
+
+DEPENDENCY_LINKS = ['git+https://github.com/spacetelescope/jwst#0.13.0']
 
 setup(
     name='jwql',
@@ -51,6 +52,7 @@ setup(
     classifiers=['Programming Language :: Python'],
     packages=find_packages(),
     install_requires=REQUIRES,
+    dependency_links=DEPENDENCY_LINKS
     include_package_data=True,
     include_dirs=[np.get_include()],
 )
