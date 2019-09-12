@@ -442,14 +442,12 @@ def view_header(request, inst, file):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'view_header.html'
-    extentions, header_names, key_val_dict, header_tables = get_header_info(file)
+    header_names, header_tables = get_header_info(file)
     file_root = '_'.join(file.split('_')[:-1])
 
     context = {'inst': inst,
                'file': file,
-               'extentions': extentions,
                'header_names': header_names,
-               'key_val_dict': key_val_dict,
                'header_tables': header_tables,
                'file_root': file_root}
 

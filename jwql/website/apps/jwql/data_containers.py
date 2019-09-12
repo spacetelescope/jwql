@@ -21,6 +21,7 @@ Use
         from .data_containers import get_proposal_info
 """
 
+from collections import OrderedDict
 import copy
 import glob
 import os
@@ -28,6 +29,7 @@ import re
 import tempfile
 
 from astropy.io import fits
+from astropy.table import Table
 from astropy.time import Time
 from django.conf import settings
 import numpy as np
@@ -533,8 +535,6 @@ def get_header_info(filename):
     header_key_dic = dict(zip(header_names, all_keywords))
     header_val_dic = dict(zip(header_names, all_values))
 
-    from collections import OrderedDict
-    from astropy.table import Table
 
     header_tables = OrderedDict()
     key_val_dict = {} 
@@ -551,15 +551,12 @@ def get_header_info(filename):
         file_name_root = '{}_table'.format(head_name)
         path_for_html = os.path.join(tmpdir, '{}.html'.format(file_name_root))
         with open(path_for_html, 'w') as tmp:
-            keyword_table.write(tmp, format='jsviewer')
+            # see https://docs.astropy.org/en/stable/io/unified.html#jsviewer for options
+            keyword_table.write(tmp, format='jsviewer', jskwargs={'display_length': 11})
         header_tables[head_name] = open(path_for_html, 'r').read()
+        print(header_tables[head_name])
 
-
-
-    # header_tables[header_names[0]].pprint()
-    # Table(key_val_dict[0]).pprint()
-
-    return extentions, header_names, key_val_dict, header_tables
+    return header_names, header_tables
 
 
 def get_image_info(file_root, rewrite):
