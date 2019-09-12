@@ -23,7 +23,6 @@ REQUIRES = [
     'jinja2',
     'jsonschema==2.6.0',
     'jwedb>=0.0.3',
-    'jwst==0.13.0',
     'matplotlib',
     'numpy',
     'numpydoc',
@@ -36,7 +35,8 @@ REQUIRES = [
     'sphinx',
     'sqlalchemy',
     'stsci_rtd_theme',
-    'twine'
+    'twine',
+    'git+https://github.com/spacetelescope/jwst#0.13.0'
 ]
 
 setup(
