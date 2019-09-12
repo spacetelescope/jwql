@@ -554,7 +554,6 @@ def get_header_info(filename):
             # see https://docs.astropy.org/en/stable/io/unified.html#jsviewer for options
             keyword_table.write(tmp, format='jsviewer', jskwargs={'display_length': 11})
         header_tables[head_name] = open(path_for_html, 'r').read()
-        print(header_tables[head_name])
 
     return header_names, header_tables
 
