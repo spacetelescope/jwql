@@ -22,10 +22,15 @@ from astropy.io import fits
 from astropy.time import Time
 from astropy.visualization import ZScaleInterval
 from collections import OrderedDict
+from jwst.dq_init import DQInitStep
+from jwst.group_scale import GroupScaleStep
+from jwst.refpix import RefPixStep
+from jwst.superbias import SuperBiasStep
 import numpy as np
-import matplotlib as mpl
-mpl.use('Agg')
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
@@ -166,7 +171,7 @@ class Bias():
 
         return amp_meds
 
-    def image_to_png(self, image, outname):
+    def image_to_png(self, image, outname, title=''):
         """Ouputs an image array into a png file.
 
         Parameters
@@ -177,6 +182,9 @@ class Bias():
         outname : str
             The name given to the output png file
 
+        title : str
+            The title given to the plot
+
         Returns
         -------
         output_filename : str
@@ -186,16 +194,24 @@ class Bias():
         output_filename = os.path.join(self.data_dir, '{}.png'.format(outname))
 
         if not os.path.isfile(output_filename):
-            fig = plt.figure()
-            ax1 = fig.add_axes([0, 0, 1, 1])
-
-            # Get image scale limits and plot
+            # Get image scale limits
             z = ZScaleInterval()
             vmin, vmax = z.get_limits(image)
-            ax1.imshow(image, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
-            ax1.set_title(outname)
 
-            fig.savefig(output_filename, bbox_inches='tight')
+            # Plot the image
+            plt.figure(figsize=(12,12))
+            ax = plt.gca()
+            im = ax.imshow(image, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
+            ax.set_title('{}\n{}'.format(title, outname))
+
+            # Make the colorbar
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size="5%", pad=0.4)
+            cbar = plt.colorbar(im, cax=cax)
+            cbar.set_label('Signal [DN]')
+
+            # Save the plot
+            plt.savefig(output_filename, bbox_inches='tight', dpi=200)
             logging.info('\t{} created'.format(output_filename))
         else:
             logging.info('\t{} already exists'.format(output_filename))
@@ -217,50 +233,59 @@ class Bias():
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
 
-            # Get the uncalibrated 0th group data for this file
-            uncal_data = fits.getdata(filename, 'SCI')[0, 0, :, :].astype(float)
+            # Determine if the file needs group_scale in pipeline run
+            read_pattern = fits.getheader(filename, 0)['READPATT']
+            if read_pattern not in pipeline_tools.GROUPSCALE_READOUT_PATTERNS:
+                group_scale = False
+            else:
+                group_scale = True
+
+            # Run the file through the superbias and refpix pipeline steps
+            logging.info('\tRunning pipeline on {}'.format(filename))
+            processed_file_sb, processed_file_refpix = self.run_pipeline(filename, 
+                odd_even_rows=False, odd_even_columns=True, use_side_ref_pixels=True, 
+                group_scale=group_scale)
+            logging.info('\tPipeline complete. Output: {}, {}'.format(
+                processed_file_sb, processed_file_refpix))
 
             # Find amplifier boundaries so per-amp statistics can be calculated
-            # TODO - THIS FILE DOESNT HAVE DQ ARRAY SO CANT IGNORE REFPIX
-            _, amp_bounds = instrument_properties.amplifier_info(filename, omit_reference_pixels=False)
+            _, amp_bounds = instrument_properties.amplifier_info(processed_file_refpix, 
+                omit_reference_pixels=True)
             logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
+
+            # Get the uncalibrated 0th group data for this file
+            uncal_data = fits.getdata(filename, 'SCI')[0, 0, :, :].astype(float)
 
             # Calculate median values of each amplifier for odd/even columns 
             # in the uncal 0th group
             amp_meds = self.get_amp_medians(uncal_data, amp_bounds)
             logging.info('\tCalculated uncal image stats: {}'.format(amp_meds))
 
-            # Run the uncal data through the pipeline superbias step
-            steps_to_run = OrderedDict([('superbias', True)])
-            processed_file = filename.replace('.fits', '_superbias.fits')
-            if not os.path.isfile(processed_file):
-                logging.info('\tRunning pipeline superbias correction on {}'.format(filename))
-                processed_file = pipeline_tools.run_calwebb_detector1_steps(os.path.abspath(filename), steps_to_run)
-                logging.info('\tPipeline superbias correction complete. Output: {}'.format(processed_file))
-            else:
-                logging.info('\tSuperbias-calibrated file {} already exists. Skipping call to pipeline.'
-                             .format(processed_file))
-                pass
-
-            # Calculate median values of each amplifier for odd/even columns 
-            # in the superbias-calibrated 0th group
-            cal_data = fits.getdata(processed_file, 'SCI')[0, 0, :, :]
-            amp_meds = self.get_amp_medians(cal_data, amp_bounds)
-            logging.info('\tCalculated superbias-calibrated image stats: {}'.format(amp_meds))
-
             # Smooth the superbias-calibrated image to remove any odd/even 
             # or amplifier effects to allow for visual inspection of how well
             # the superbias correction performed
-            smoothed_cal_data = self.smooth_image(cal_data, amp_bounds)
+            sb_cal_data = fits.getdata(processed_file_sb, 'SCI')[0, 0, :, :]
+            smoothed_sb_cal_data = self.smooth_image(sb_cal_data, amp_bounds)
             logging.info('\tSmoothed the superbias-calibrated image.')
-            smoothed_png = self.image_to_png(smoothed_cal_data, 
-                os.path.basename(filename).replace('_uncal_0thgroup.fits', ''))
+            smoothed_png = self.image_to_png(smoothed_sb_cal_data, 
+                outname=os.path.basename(processed_file_sb).replace('.fits',''),
+                title='Smoothed Superbias-corrected Image')
 
             # Calculate the collapsed row and column values in the smoothed image
             # to see how well the superbias calibration performed
-            collapsed_rows, collapsed_columns = self.collapse_image(smoothed_cal_data)
+            collapsed_rows_sb, collapsed_columns_sb = self.collapse_image(smoothed_sb_cal_data)
             logging.info('\tCalculated the collapsed row/column values of the smoothed '
                          'superbias-calibrated image.')
+
+            # Calculate the collapsed row and column values in the superbias and
+            # refpix-corrected image to see how well the refpix calibration performed
+            refpix_cal_data = fits.getdata(processed_file_refpix, 'SCI')[0, 0, :, :]
+            collapsed_rows_refpix, collapsed_columns_refpix = self.collapse_image(refpix_cal_data)
+            logging.info('\tCalculated the collapsed row/column values of the superbias '
+                         'and refpix-calibrated image.')
+            smoothed_png = self.image_to_png(refpix_cal_data, 
+                outname=os.path.basename(processed_file_refpix).replace('.fits',''),
+                title='Superbias and Refpix-corrected Image')
 
     @log_fail
     @log_info
@@ -327,6 +352,67 @@ class Bias():
                         len(new_files), instrument, aperture))
 
         logging.info('Bias Monitor completed successfully.')
+
+    def run_pipeline(self, filename, odd_even_rows=False, odd_even_columns=True, 
+                     use_side_ref_pixels=True, group_scale=False):
+        """Runs the early steps of the jwst pipeline (dq_init, superbias, 
+        refpix) on uncalibrated files and outputs the results before and after
+        reference pixel correction.
+        
+        Parameters
+        ----------
+        filename : str
+            File on which to run the pipeline steps
+
+        odd_even_rows : bool
+            Option to treat odd and even rows separately during refpix step
+
+        odd_even_columns : bools
+            Option to treat odd and even columns separately during refpix step
+
+        use_side_ref_pixels : bool
+            Option to perform the side refpix correction during refpix step
+
+        group_scale : bool
+            Option to rescale pixel values to correct for instances where 
+            on-board frame averaging did not result in the proper values
+
+        Returns
+        -------
+        output_filename_sb : str
+            The full path to the superbias-calibrated file
+
+        output_filename_refpix : str
+            The full path to the superbias and refpix-calibrated file
+        """
+
+        # Run the group_scale and dq_init steps on the input file
+        if group_scale == True:
+            model = GroupScaleStep.call(filename)
+            model = DQInitStep.call(model)
+        else:
+            model = DQInitStep.call(filename)
+        
+        # Run the superbias step and save the output
+        output_filename_sb = filename.replace('.fits', '_superbias.fits')
+        model = SuperBiasStep.call(model)
+        if not os.path.isfile(output_filename_sb):
+            model.save(output_filename_sb)
+        else:
+            logging.info('\t{} already exists'.format(output_filename_sb))
+            pass
+
+        # Run the refpix step and save the output
+        output_filename_refpix = output_filename_sb.replace('.fits', '_refpix.fits')
+        model = RefPixStep.call(model, odd_even_rows=odd_even_rows, 
+            odd_even_columns=odd_even_columns, use_side_ref_pixels=use_side_ref_pixels)
+        if not os.path.isfile(output_filename_refpix):
+            model.save(output_filename_refpix)
+        else:
+            logging.info('\t{} already exists'.format(output_filename_refpix))
+            pass
+
+        return output_filename_sb, output_filename_refpix
 
     def smooth_image(self, image, amps):
         """Smooths an image to remove any amplifier and odd/even column
