@@ -59,8 +59,7 @@ class DarkMonitor(BokehTemplate):
         self.load_data()
 
         # Data for mean dark versus time plot
-        # TODO: how to get the time of the data, not the database entry?
-        datetime_stamps = [row.entry_date for row in self.dark_table]
+        datetime_stamps = [row.obs_mid_time for row in self.dark_table]
         # Convert to MJD
         times = Time(datetime_stamps, format='datetime', scale='utc')
         self.timestamps = times.mjd

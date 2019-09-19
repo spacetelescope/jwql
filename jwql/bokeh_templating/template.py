@@ -24,7 +24,7 @@ class BokehTemplateEmbedError(Exception):
     """
 
 
-class BokehTemplate(object):
+class BokehTemplate():
     """
     This is the base class for creating Bokeh web apps using a YAML templating
     framework.
