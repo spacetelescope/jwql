@@ -405,7 +405,7 @@ def logging_display(request):
 
     log_path = get_config()['log_dir']
 
-    all_log_paths, logging_path_dict = get_logging_filepaths(sect, log_path, log_type_dir)
+    all_log_paths, logging_path_dict = get_logging_filepaths(sect, log_path, log_type_dir) 
 
     context = {'sect': sect,
                 'log_type_dir' : log_type_dir,
@@ -562,13 +562,12 @@ def view_log(request, log_type, sect):
     all_logs = glob.glob(log_path + log_type + "/" + sect + "/*") 
 
     default_file = all_logs[-1]
+    log_name = default_file.split('/')[-1]
 
     filetext = get_log_text(default_file)
 
     if len(filetext) == 0:
-        filetext = "This is an empty file."
-
-    log_name = default_file.split('/')[-1]
+        filetext = list("This is an empty file.")
 
     context = {'sect': sect,
                 'log_type' : log_type,

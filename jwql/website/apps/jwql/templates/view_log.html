@@ -10,13 +10,14 @@
 
     <main role="main" class="container">
         <h1 style="text-align: center"> Most Recent {{log_type}} {{ sect }} Log </h1>
+        <h5> {{log_name}} </h5> </br> 
     	<div class="row">
             <div class="btn-group">
                 <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                    Older Logs <span class="caret"></span></button>
+                    All {{sect}} Logs <span class="caret"></span></button> </br>
                     <ul class="dropdown-menu" role="menu">
                         {% for path in all_logs %}
-                        <li><a role="button" class="btn btn-primary my-2" href={{ url('jwql:view_log', args=[log_type,sect]) }}>{{log_name}}</a></li>
+                        <li><a role="button" class="btn btn-primary my-2" href={{ url('jwql:view_log', args=[log_type, sect]) }}>{{path.split('/')[-1]}}</a></li>
                         {% endfor %}
                     </ul>
 			</div>
