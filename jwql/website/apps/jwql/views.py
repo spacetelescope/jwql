@@ -565,8 +565,14 @@ def view_log(request, log_type, sect):
 
     filetext = get_log_text(default_file)
 
+    if len(filetext) == 0:
+        filetext = "This is an empty file."
+
+    log_name = default_file.split('/')[-1]
+
     context = {'sect': sect,
                 'log_type' : log_type,
+                'log_name' : log_name,
                 'all_logs': all_logs,
                 'filetext': filetext}
 

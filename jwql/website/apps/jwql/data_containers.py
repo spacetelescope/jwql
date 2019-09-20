@@ -28,6 +28,7 @@ import re
 import tempfile
 
 from astropy.io import fits
+from astropy.table import Table
 from astropy.time import Time
 from django.conf import settings
 import numpy as np
@@ -706,8 +707,9 @@ def get_log_text(filepath):
         Text of that file. 
     """
 
-    fopen = open(filepath)
-    filetext = fopen.read()
+    fopen = open(filepath, 'r')
+
+    filetext = list(fopen)
 
     return filetext
 
