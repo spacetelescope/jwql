@@ -36,6 +36,7 @@ Dependencies
 """
 
 import datetime
+import glob
 import os
 
 from django.http import JsonResponse
@@ -49,6 +50,7 @@ from .data_containers import get_image_info
 from .data_containers import get_current_flagged_anomalies
 from .data_containers import get_proposal_info
 from .data_containers import get_logging_filepaths
+from .data_containers import get_log_text
 from .data_containers import random_404_page
 from .data_containers import thumbnails_ajax
 from .data_containers import data_trending
@@ -383,7 +385,7 @@ def instrument(request, inst):
     return render(request, template, context)
 
 def logging_display(request):
-    """Generate the logging files page
+    """Generate the main log file launch page
 
     Parameters
     ----------
@@ -533,5 +535,39 @@ def view_image(request, user, inst, file_root, rewrite=False):
                'suffixes': image_info['suffixes'],
                'num_ints': image_info['num_ints'],
                'form': form}
+
+    return render(request, template, context)
+
+def view_log(request, log_type, sect):
+    """Generate the individual log pages
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    template = 'view_log.html'
+
+    sect = sect
+
+    log_type = log_type
+
+    log_path = get_config()['log_dir']
+
+    all_logs = glob.glob(log_path + log_type + "/" + sect + "/*") 
+
+    default_file = all_logs[-1]
+
+    filetext = get_log_text(default_file)
+
+    context = {'sect': sect,
+                'log_type' : log_type,
+                'all_logs': all_logs,
+                'filetext': filetext}
 
     return render(request, template, context)

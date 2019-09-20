@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title> {{sect}} Log </title>
+
+{% endblock %}
+ 
+{% block content %}
+
+    <main role="main" class="container">
+        <h1 style="text-align: center"> Most Recent {{ sect }} Log </h1>
+    	<div class="row">
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                    Older Logs <span class="caret"></span></button>
+                    <ul class="dropdown-menu" role="menu">
+                        {% for path in all_logs %}
+                        <li><a href="#">{{ path[-20:] }}</a></li>
+                        {% endfor %}
+                    </ul>
+			</div>
+            {% for line in filetext %}
+                {{ line }}
+            {% endfor %}
+		</div>
+
+	</main>
+
+{% endblock %}
