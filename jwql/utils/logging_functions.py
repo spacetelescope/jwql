@@ -106,6 +106,32 @@ def configure_logging(module):
     return log_file
 
 
+def get_log_status(log_file):
+    """Returns the end status of the given ``log_file`` (i.e.
+    ``SUCCESS`` or ``FAILURE``)
+
+    Parameters
+    ----------
+    log_file : str
+        The path to the file where the log is written to
+
+    Returns
+    -------
+    status : bool
+        The status of the execution of the script described by the log
+        file (i.e. ``SUCCESS`` or ``FAILURE``)
+    """
+
+    with open(log_file, 'r') as f:
+        data = f.readlines()
+    last_line = data[-1].strip()
+
+    if 'Completed Successfully' in last_line:
+        return 'SUCCESS'
+    else:
+        return 'FAILURE'
+
+
 def make_log_file(module):
     """Create the log file name based on the module name.
 
