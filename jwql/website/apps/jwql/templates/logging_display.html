@@ -11,15 +11,19 @@
     <main role="main" class="container">
         <h1 style="text-align: center"> Monitor Logs </h1>
 
-    		<div class="center horizontal">
+    		<div class="center">
     		{% for types in log_type_dir %}
-	    		<h3 style="text-align: center" > {{types}}</h3>
-			  	{% for sectname in sect %}
-    				<a style="text-align: center" role="button" class="btn btn-primary my-2" href={{ url('jwql:view_log', args=[types,sectname]) }}> {{sectname}} </a>
-    			{% endfor %}
+            <div class="column">
+                <div class="btn-group mr-1">
+                    <button type="button" class="btn btn-primary dropdown-toggle mr-5" data-toggle="dropdown">
+                        {{types}} Logs <span class="caret"></span></button> </br>
+                        <ul class="dropdown-menu" role="menu">
+                            {% for sectname in sect %}
+                                <li> <a style="text-align: center" role="button" class="btn btn-primary my-2" href={{ url('jwql:view_log', args=[types,sectname]) }}> {{sectname}} </a> </li>
+                            {% endfor %}
+                    </ul>
     		{% endfor %}
 			</div>
-
 	</main>
 
 {% endblock %}
