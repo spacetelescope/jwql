@@ -49,14 +49,20 @@ def dark_monitor_tabs(inst):
 
     templates_all_apertures = {}
     for ap in full_apertures:
-        monitor_template = monitor_pages.DarkMonitor(inst, ap)
+        # Start with default values for instrument and aperture because
+        # BokehTemplate's __init__ method does not allow input arguments
+        monitor_template = monitor_pages.DarkMonitor()
+
+        # Set instrument and monitor using DarkMonitor's setters
+        monitor_template.aperture_info = (inst, ap)
         templates_all_apertures[ap] = monitor_template
 
     # Histogram tab
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     histograms_all_apertures = []
     for apername, template in templates_all_apertures.items():
-        hist = template.get_bokeh_element("dark_full_histogram_figure")
+        hist = template.refs["dark_full_histogram_figure"]
+        #hist = template.get_bokeh_element("dark_full_histogram_figure")
         hist.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
 
         histograms_all_apertures.append(hist)
@@ -72,7 +78,8 @@ def dark_monitor_tabs(inst):
 
     # Current v. time tab
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    line = monitor_template.get_bokeh_element("dark_current_time_figure")
+    #line = monitor_template.get_bokeh_element("dark_current_time_figure")
+    line = monitor_template.refs["dark_current_time_figure"]
     line.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
 
     # Add a title
@@ -89,7 +96,8 @@ def dark_monitor_tabs(inst):
 
     # Mean dark image tab
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    image = templates_all_apertures['NRCA3_FULL'].get_bokeh_element("mean_dark_image_figure")
+    #image = templates_all_apertures['NRCA3_FULL'].get_bokeh_element("mean_dark_image_figure")
+    image = templates_all_apertures['NRCA3_FULL'].refs["mean_dark_image_figure"]
     image.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
     image_layout = layout(image)
 

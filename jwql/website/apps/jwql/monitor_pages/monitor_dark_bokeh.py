@@ -44,12 +44,32 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class DarkMonitor(BokehTemplate):
 
-    def pre_init(self, instrument, aperture):
+    # Combine instrument and aperture into a single property because we
+    # do not want to invoke the setter unless both are updated
+    @property
+    def aperture_info(self):
+        return (self._instrument, self._aperture)
+
+    @aperture_info.setter
+    def aperture_info(self, info):
+        self._instrument, self._aperture = info
+        self.updated = True
+        self.pre_init()
+
+    def pre_init(self):
+        # Start with default values for instrument and aperture because
+        # BokehTemplate's __init__ method does not allow input arguments
+        try:
+            dummy_inst = self._instrument
+            dummy_ap = self._aperture
+        except AttributeError:
+            self._instrument = 'NIRCam'
+            self._aperture = 'NRCA1_FULL'
 
         self._embed = True
-        self.instrument = instrument
-        self.aperture = aperture
-        self.detector = self.aperture.split('_')[0]
+        #self.instrument = instrument
+        #self.aperture = aperture
+        self.detector = self._aperture.split('_')[0]
 
         # App design
         self.format_string = None
@@ -74,21 +94,21 @@ class DarkMonitor(BokehTemplate):
         self.full_dark_amplitude = [row.hist_amplitudes for
                                     row in self.dark_table][last_hist_index]
         self.full_dark_bottom = np.zeros(len(self.full_dark_amplitude))
-        self.full_dark_bin_width = self.full_dark_bin_center[1:] - \
-                                   self.full_dark_bin_center[0: -1]
+        deltas = self.full_dark_bin_center[1:] - self.full_dark_bin_center[0: -1]
+        self.full_dark_bin_width =  np.append(deltas[0], deltas)
 
     def post_init(self):
 
         self._update_dark_v_time()
         self._update_hist()
-        if '5' not in self.aperture:
+        if '5' not in self._aperture:
             self._dark_mean_image()
 
     def identify_tables(self):
         """Determine which dark current database tables as associated with
         a given instrument
         """
-        mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument.lower()]
+        mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self._instrument.lower()]
         self.query_table = eval('{}DarkQueryHistory'.format(mixed_case_name))
         self.pixel_table = eval('{}DarkPixelStats'.format(mixed_case_name))
         self.stats_table = eval('{}DarkDarkCurrent'.format(mixed_case_name))
@@ -104,7 +124,7 @@ class DarkMonitor(BokehTemplate):
 
         # Query database for all data in NIRCamDarkDarkCurrent with a matching aperture
         self.dark_table = session.query(self.stats_table) \
-            .filter(self.stats_table.aperture == self.aperture) \
+            .filter(self.stats_table.aperture == self._aperture) \
             .all()
 
         self.pix_table = session.query(self.pixel_table) \
@@ -137,7 +157,7 @@ class DarkMonitor(BokehTemplate):
         self.refs["mean_dark_cbar"].ticker = LogTicker()
 
         # Add a title
-        self.refs['mean_dark_image_figure'].title.text = self.aperture
+        self.refs['mean_dark_image_figure'].title.text = self._aperture
         self.refs['mean_dark_image_figure'].title.align = "center"
         self.refs['mean_dark_image_figure'].title.text_font_size = "20px"
 
@@ -162,7 +182,7 @@ class DarkMonitor(BokehTemplate):
         self.refs['dark_histogram_xrange'].end = max(self.full_dark_bin_center)
 
         # Add a title
-        self.refs['dark_full_histogram_figure'].title.text = self.aperture
+        self.refs['dark_full_histogram_figure'].title.text = self._aperture
         self.refs['dark_full_histogram_figure'].title.align = "center"
         self.refs['dark_full_histogram_figure'].title.text_font_size = "20px"
 
