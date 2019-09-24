@@ -147,6 +147,20 @@ def get_all_proposals():
     return proposals
 
 
+def get_all_proposals_no_leading_zeros():
+    """Return a list of all proposals that exist in the filesystem.
+
+    Returns
+    -------
+    proposals : list
+        A list of proposal numbers for all proposals that exist in the
+        filesystem, with leading zeros stripped off
+    """
+    props = get_all_proposals()
+    props_no_leading_zeros = [p.strip('0') for p in props]
+    return props_no_leading_zeros
+
+
 def get_current_flagged_anomalies(rootname):
     """Return a list of currently flagged anomalies for the given
     ``rootname``
