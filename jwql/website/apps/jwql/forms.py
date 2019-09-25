@@ -93,33 +93,25 @@ class AnomalySubmitForm(forms.Form):
             data_dict[choice] = True
         di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
 
-#def get_proposal_number_choice_list():
-#    return ['00001', '11111', '22222', '33333', '44444', '55555', '66666', '77777', '88888', '99999']
-
-FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
-def get_all_proposals_no_leading_zeros():
-    """Return a list of all proposals that exist in the filesystem.
-
-    Returns
-    -------
-    proposals : list
-        A list of proposal numbers for all proposals that exist in the
-        filesystem, with leading zeros stripped off
-    """
-    proposals = glob.glob(os.path.join(FILESYSTEM_DIR, '*'))
-    proposals = [proposal.split('jw')[-1] for proposal in proposals]
-    proposals = [proposal for proposal in proposals if len(proposal) == 5]
-    props_no_leading_zeros = [p.strip('0') for p in proposals]
-    return props_no_leading_zeros
-
+#from django.db import models
+#class FileSearchModel(models.Model):
+#    search = models.CharField(max_length=500)
 
 
 class FileSearchForm(forms.Form):
     """Single-field form to search for a proposal or fileroot."""
+
+#    class Meta:
+#        model = FileSearchModel
+#        fields = ('__all__')
+#        widgets = {'search': autocomplete.ListSelect2(url='proposal-list-autocomplete')}
+
     search = forms.CharField(label='', max_length=500, required=True,
-                             queryset=get_all_proposals_no_leading_zeros(),
                              widget=autocomplete.ListSelect2(url='proposal-list-autocomplete'),
                              empty_value='Search')
+    #class Meta:
+    #    model = Proposal
+    #    fields = ('__all__')
     #search = autocomplete.ListSelect2(url='proposal-list-autocomplete')
 
     # Define search field

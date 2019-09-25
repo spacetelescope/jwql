@@ -214,7 +214,6 @@ class ProposalAutocomplete(autocomplete.Select2ListView):
         # 'results' as the key rather than 'proposals', just in case
         # autocomplete cares.
         proposals = get_all_proposals_no_leading_zeros()
-        #props_no_leading_zeros = [p.strip('0') for p in proposals]
         return proposals
 
 

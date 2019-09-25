@@ -70,7 +70,6 @@ urlpatterns = [
     path('about/', views.about, name='about'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('edb/', views.engineering_database, name='edb'),
-    re_path(r'^proposal-list-autocomplete/$', api_views.ProposalAutocomplete.as_view(), name='proposal-list-autocomplete'),
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
     re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),
@@ -84,6 +83,7 @@ urlpatterns = [
 
     # REST API views
     path('api/proposals/', api_views.all_proposals, name='all_proposals'),
+    path('api/proposal_list_autocomplete/', api_views.ProposalAutocomplete.as_view(), name='proposal-list-autocomplete'),
     re_path(r'^api/(?P<inst>({}))/proposals/$'.format(instruments), api_views.instrument_proposals, name='instrument_proposals'),
     re_path(r'^api/(?P<inst>({}))/preview_images/$'.format(instruments), api_views.preview_images_by_instrument, name='preview_images_by_instrument'),
     re_path(r'^api/(?P<inst>({}))/thumbnails/$'.format(instruments), api_views.thumbnails_by_instrument, name='thumbnails_by_instrument'),
