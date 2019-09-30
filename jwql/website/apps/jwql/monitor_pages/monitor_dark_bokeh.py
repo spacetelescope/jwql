@@ -53,8 +53,8 @@ class DarkMonitor(BokehTemplate):
     @aperture_info.setter
     def aperture_info(self, info):
         self._instrument, self._aperture = info
-        self.updated = True
         self.pre_init()
+        self.post_init()
 
     def pre_init(self):
         # Start with default values for instrument and aperture because
@@ -86,7 +86,8 @@ class DarkMonitor(BokehTemplate):
         self.dark_current = [row.mean for row in self.dark_table]
 
         # Data for dark current histogram plot (full detector)
-        # TODO: how to show multiple histograms? here just showing last.
+        # Just show the last histogram, which is the one most recently
+        # added to the database
         last_hist_index = -1
         self.last_timestamp = datetime_stamps[last_hist_index].isoformat()
         self.full_dark_bin_center = np.array([row.hist_dark_values for

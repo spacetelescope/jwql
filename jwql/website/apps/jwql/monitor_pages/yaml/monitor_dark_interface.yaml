@@ -10,15 +10,15 @@
 
 - !Range1d: &dark_current_xrange
   ref: "dark_current_xrange"
-  start: 0
-  end: 1
-  bounds: !!python/tuple [0, 1]
+  #start: 0
+  #end: 1
+  #bounds: 'auto'  #!!python/tuple [0, 1]
 
 - !Range1d: &dark_current_yrange
   ref: "dark_current_yrange"
-  start: 0
-  end: 1
-  bounds: !!python/tuple [0, 1]
+  #start: 0
+  #end: 1
+  #bounds: !!python/tuple [-1, 1]
 
 - !Figure: &dark_current_time_figure
   ref: "dark_current_time_figure"
@@ -42,15 +42,15 @@
 
 - !Range1d: &dark_histogram_xrange
   ref: "dark_histogram_xrange"
-  start: 0
-  end: 1
-  bounds: !!python/tuple [0, 1]
+  #start: 0
+  #end: 1
+  #bounds: 'auto'  #!!python/tuple [0, 1]
 
 - !Range1d: &dark_histogram_yrange
   ref: "dark_histogram_yrange"
-  start: 0
-  end: 1
-  bounds: !!python/tuple [0, 1]
+  #start: 0
+  #end: 1
+  #bounds: !!python/tuple [0, 1]
 
 - !Figure: &dark_full_histogram_figure
   ref: "dark_full_histogram_figure"
@@ -73,14 +73,14 @@
         image: [[[1,0], [0, 1]]]
 - !Range1d: &stamp_xr
     ref: "stamp_xr"
-    start: 0
-    end: 1
-    bounds: !!python/tuple [0, 1]
+    #start: 0
+    #end: 1
+    #bounds: !!python/tuple [0, 1]
 - !Range1d: &stamp_yr
     ref: "stamp_yr"
-    start: 0
-    end: 1
-    bounds: !!python/tuple [0, 1]
+    #start: 0
+    #end: 1
+    #bounds: !!python/tuple [0, 1]
 - !LogColorMapper: &log_mapper
     ref: "log_mapper"
     palette: "Viridis256"
