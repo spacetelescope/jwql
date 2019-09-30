@@ -27,7 +27,7 @@
   x_range: *dark_current_xrange
   y_range: *dark_current_yrange
   elements:
-    - {'kind': 'line', 'x': 'time', 'y': 'dark_current', line_width: 5, 'source': *dark_current_source}
+    - {'kind': 'circle', 'x': 'time', 'y': 'dark_current', line_width: 5, 'source': *dark_current_source}
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Dark Histogram Figure

@@ -69,8 +69,6 @@ def dark_monitor_tabs(inst):
 
         histograms_all_apertures.append(hist)
 
-    import pdb; pdb.set_trace()
-
     if inst == 'NIRCam':
         a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = histograms_all_apertures
         hist_layout = layout(
@@ -96,21 +94,62 @@ def dark_monitor_tabs(inst):
 
     # Current v. time tab
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    #line = monitor_template.get_bokeh_element("dark_current_time_figure")
-    line = monitor_template.refs["dark_current_time_figure"]
-    line.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+
+    # ---------------THESE LINES WORK TO DISPLAY A SINGLE PLOT-----------------
+    #line = monitor_template.refs["dark_current_time_figure"]
+    #line.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
 
     # Add a title
-    line.title.text = "Dark Current v. Time"
-    line.title.align = "center"
-    line.title.text_font_size = "20px"
+    #line.title.text = "Dark Current v. Time"
+    #line.title.align = "center"
+    #line.title.text_font_size = "20px"
 
     # Make it shorter and thicker lines
-    line.height = 250
+    #line.height = 250
 
-    line_layout = layout(line)
-    line_layout.sizing_mode = "scale_width"
+    #line_layout = layout(line)
+    #line_layout.sizing_mode = "scale_width"
+    #line_tab = Panel(child=line_layout, title="Trending")
+    # ---------------THESE LINES WORK TO DISPLAY A SINGLE PLOT-----------------
+
+
+
+    lines_all_apertures = []
+    for apername, template in templates_all_apertures.items():
+        line = template.refs["dark_current_time_figure"]
+        #line.title.text = "Dark Current v. Time"
+        line.title.align = "center"
+        line.title.text_font_size = "20px"
+        line.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+
+        lines_all_apertures.append(line)
+
+    if inst == 'NIRCam':
+        a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = lines_all_apertures
+        line_layout = layout(
+            [a2, a4, b3, b1],
+            [a1, a3, b4, b2],
+            [a5, b5]
+        )
+
+    elif inst in ['NIRISS', 'MIRI']:
+        single_aperture = lines_all_apertures[0]
+        line_layout = layout(
+            [single_aperture]
+            )
+
+    elif inst == 'NIRSpec':
+        d1, d2 = lines_all_apertures
+        line_layout = layout(
+            [d1, d2]
+            )
+
+    line_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
     line_tab = Panel(child=line_layout, title="Trending")
+
+
+
+
 
     # Mean dark image tab
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -144,7 +183,7 @@ def dark_monitor_tabs(inst):
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # Build tabs
-    tabs = Tabs(tabs=[hist_tab, image_tab])#hist_tab, line_tab, image_tab])
+    tabs = Tabs(tabs=[hist_tab, line_tab, image_tab])
 
     # Return tab HTML and JavaScript to web app
     script, div = components(tabs)

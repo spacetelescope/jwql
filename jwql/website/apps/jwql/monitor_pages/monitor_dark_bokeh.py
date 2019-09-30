@@ -102,8 +102,8 @@ class DarkMonitor(BokehTemplate):
 
         self._update_dark_v_time()
         self._update_hist()
-        if '5' not in self._aperture:
-            self._dark_mean_image()
+        #if '5' not in self._aperture:
+        self._dark_mean_image()
 
     def identify_tables(self):
         """Determine which dark current database tables as associated with
@@ -164,19 +164,27 @@ class DarkMonitor(BokehTemplate):
 
     def _update_dark_v_time(self):
         # Define y range of dark current v. time plot
-        buffer = 0.05 * (max(self.dark_current) - min(self.dark_current))
-        self.refs['dark_current_yrange'].start = min(self.dark_current) - buffer
-        self.refs['dark_current_yrange'].end = max(self.dark_current) + buffer
+        buffer_size = 0.05 * (max(self.dark_current) - min(self.dark_current))
+        self.refs['dark_current_yrange'].start = min(self.dark_current) - buffer_size
+        self.refs['dark_current_yrange'].end = max(self.dark_current) + buffer_size
 
         # Define x range of dark current v. time plot
-        self.refs['dark_current_xrange'].start = min(self.timestamps)
-        self.refs['dark_current_xrange'].end = max(self.timestamps)
+        horizontal_half_buffer = (max(self.timestamps) - min(self.timestamps)) * 0.05
+        if horizontal_half_buffer == 0:
+            horizontal_half_buffer = 1.  # day
+        self.refs['dark_current_xrange'].start = min(self.timestamps) - horizontal_half_buffer
+        self.refs['dark_current_xrange'].end = max(self.timestamps) + horizontal_half_buffer
+
+        # Add a title
+        self.refs['dark_current_time_figure'].title.text = self._aperture
+        self.refs['dark_current_time_figure'].title.align = "center"
+        self.refs['dark_current_time_figure'].title.text_font_size = "20px"
 
     def _update_hist(self):
         # Define y range of dark current histogram
-        buffer = 0.05 * (max(self.full_dark_amplitude) - min(self.full_dark_bottom))
+        buffer_size = 0.05 * (max(self.full_dark_amplitude) - min(self.full_dark_bottom))
         self.refs['dark_histogram_yrange'].start = min(self.full_dark_bottom)
-        self.refs['dark_histogram_yrange'].end = max(self.full_dark_amplitude) + buffer
+        self.refs['dark_histogram_yrange'].end = max(self.full_dark_amplitude) + buffer_size
 
         # Define x range of dark current histogram
         self.refs['dark_histogram_xrange'].start = min(self.full_dark_bin_center)
