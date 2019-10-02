@@ -1,6 +1,21 @@
 #! /usr/bin/env python
 
-"""This module contains code for the bias monitor.
+"""This module contains code for the bias monitor, which monitors 
+the bias levels in dark exposures as well as the performance of 
+the pipeline superbias subtraction over time.
+
+For each instrument, the 0th group of full-frame dark exposures is
+saved to a fits file. The median signal levels in these images are
+recorded in the ``<Instrument>BiasStats`` database table for the 
+odd/even columns of each amp.
+
+Next, these images are run through the jwst pipeline up through the
+reference pixel correction step. These calibrated images are saved
+to a fits file as well as a png file for visual inspection of the
+quality of the pipeline calibration. The median-collpsed row and 
+column values, as well as the sigma-clipped mean and standard 
+deviation of these images, are recorded in the 
+``<Instrument>BiasStats`` database table.
 
 Author
 ------
@@ -22,16 +37,16 @@ from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
 from astropy.visualization import ZScaleInterval
-from collections import OrderedDict
 from jwst.dq_init import DQInitStep
 from jwst.group_scale import GroupScaleStep
 from jwst.refpix import RefPixStep
 from jwst.superbias import SuperBiasStep
-import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import numpy as np
+from pysiaf import Siaf
 
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
@@ -47,10 +62,10 @@ class Bias():
     these files. The monitor will extract the 0th group from the new
     dark files and output the contents into a new file located in
     a working directory. It will then perform statistical measurements
-    on these files before and after pipeline superbias subtraction in
-    order to monitor the bias levels over time as well as ensure the
-    pipeline superbias is sufficiently calibrating new data. Results 
-    are all saved to database tables.
+    on these files before and after pipeline calibration in order to
+    monitor the bias levels over time as well as ensure the pipeline
+    superbias is sufficiently calibrating new data. Results are all
+    saved to database tables.
 
     Attributes
     ----------
@@ -126,8 +141,6 @@ class Bias():
             new_hdu = fits.HDUList([hdu['PRIMARY'], hdu['SCI']])
             new_hdu['SCI'].data = hdu['SCI'].data[0:1, 0:1, :, :]
             new_hdu.writeto(output_filename)
-
-            # Close the fits files
             hdu.close()
             new_hdu.close()
             logging.info('\t{} created'.format(output_filename))
@@ -172,23 +185,7 @@ class Bias():
 
         return amp_meds
 
-    def image_stats(self, image):
-        """Calculates sigma_clipped stats in an image.
-
-        Parameters
-        ----------
-        image : numpy.ndarray
-            2D image array
-
-        Returns
-        -------
-        mean : float
-            The sigma-clipped mean of the image
-        stdev : float
-            The sigma-clipped standard deviation of the image
-        """
-
-    def image_to_png(self, image, outname, title=''):
+    def image_to_png(self, image, outname):
         """Ouputs an image array into a png file.
 
         Parameters
@@ -282,6 +279,7 @@ class Bias():
             logging.info('\tCalculated collapsed row/column values of calibrated image.')
 
             # Save a png of the calibrated image for visual inspection
+            logging.info('\tCreating png of calibrated image')
             output_png = self.image_to_png(cal_data, 
                 outname=os.path.basename(processed_file).replace('.fits',''))
 
@@ -293,8 +291,9 @@ class Bias():
 
         logging.info('Begin logging for bias_monitor')
 
-        # Get the output directory
+        # Get the output directory and setup a directory to store the data
         self.output_dir = os.path.join(get_config()['outputs'], 'bias_monitor')
+        ensure_dir_exists(os.path.join(self.output_dir, 'data'))
 
         # query_start is a TODO. Use the current time as the end time for MAST query
         self.query_start, self.query_end = 57357.0, Time.now().mjd  # a.k.a. Dec 1, 2015 == CV3
@@ -303,26 +302,25 @@ class Bias():
         for instrument in ['nircam']:
             self.instrument = instrument
 
-            # TODO Make a list of all possible apertures
-            possible_apertures = ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL', 'NRCA5_FULL',
-                                  'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL', 'NRCB4_FULL', 'NRCB5_FULL']
+            # Get a list of all possible full-frame apertures for this instrument
+            s = Siaf(self.instrument)
+            possible_apertures = [ap for ap in s.apertures if s[ap].AperType=='FULLSCA']
 
             for aperture in possible_apertures[0:1]: #test
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
 
-                # Set up directories to store the copied data
-                ensure_dir_exists(os.path.join(self.output_dir, 'data'))
-                self.data_dir = os.path.join(self.output_dir,
-                                             'data/{}_{}'.format(self.instrument.lower(),
-                                                                 self.aperture.lower()))
-                ensure_dir_exists(self.data_dir)
-
                 # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
                 new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
+
+                # Set up a directory to store the data for this aperture
+                self.data_dir = os.path.join(self.output_dir, 'data/{}_{}'\
+                    .format(self.instrument.lower(), self.aperture.lower()))
+                if len(new_entries) > 0:
+                    ensure_dir_exists(self.data_dir)
 
                 # Save the 0th group image from each new file in the output directory;
                 # some dont exist in JWQL filesystem.
