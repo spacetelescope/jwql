@@ -348,14 +348,14 @@ class Bias():
 
             # Construct new entry for this file for the bias database table
             bias_db_entry = {'aperture': self.aperture,
-                             'uncal_filename': filename
-                             'cal_filename': processed_file
-                             'cal_image': output_png
-                             'expstart': expstart
-                             'mean': mean
-                             'median': median
-                             'stddev': stddev
-                             'collapsed_rows': collapsed_rows
+                             'uncal_filename': filename,
+                             'cal_filename': processed_file,
+                             'cal_image': output_png,
+                             'expstart': expstart,
+                             'mean': mean,
+                             'median': median,
+                             'stddev': stddev,
+                             'collapsed_rows': collapsed_rows,
                              'collapsed_columns': collapsed_columns
                             }
             for key in amp_meds.keys():
@@ -363,8 +363,8 @@ class Bias():
             
             # Add this new entry to the bias database table
             self.stats_table.__table__.insert().execute(bias_db_entry)
-            logging.info('\tNew entry added to bias database table for {}'
-                         .format(filename))
+            logging.info('\tNew entry added to bias database table: {}'
+                         .format(bias_db_entry))
 
     @log_fail
     @log_info
