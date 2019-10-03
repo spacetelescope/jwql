@@ -30,6 +30,7 @@ Use
         python bias_monitor.py
 """
 
+import datetime
 import logging
 import os
 
@@ -40,6 +41,7 @@ from astropy.visualization import ZScaleInterval
 from jwst.dq_init import DQInitStep
 from jwst.group_scale import GroupScaleStep
 from jwst.refpix import RefPixStep
+from jwst.saturation import SaturationStep
 from jwst.superbias import SuperBiasStep
 import matplotlib
 matplotlib.use('Agg')
@@ -48,9 +50,12 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 from pysiaf import Siaf
 
+from jwql.database.database_interface import session
+from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
 from jwql.utils import instrument_properties
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, initialize_instrument_monitor, update_monitor_table
 
@@ -179,11 +184,20 @@ class Bias():
             
             # Find median value of both even and odd columns for this amp
             amp_med_even = np.nanmedian(image[y_start: y_end, x_start: x_end][:, 1::2])
-            amp_meds[key+'_even'] = amp_med_even
+            amp_meds['amp{}_even_med'.format(key)] = amp_med_even
             amp_med_odd = np.nanmedian(image[y_start: y_end, x_start: x_end][:, ::2])
-            amp_meds[key+'_odd'] = amp_med_odd
+            amp_meds['amp{}_odd_med'.format(key)] = amp_med_odd
 
         return amp_meds
+
+    def identify_tables(self):
+        """Determine which database tables to use for a run of the bias 
+        monitor.
+        """
+
+        mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
+        self.query_table = eval('{}BiasQueryHistory'.format(mixed_case_name))
+        self.stats_table = eval('{}BiasStats'.format(mixed_case_name))
 
     def image_to_png(self, image, outname):
         """Ouputs an image array into a png file.
@@ -230,6 +244,45 @@ class Bias():
 
         return output_filename
 
+    def most_recent_search(self):
+        """Query the query history database and return the information
+        on the most recent query for the given ``aperture_name`` where
+        the bias monitor was executed.
+
+        Returns
+        -------
+        query_result : float
+            Date (in MJD) of the ending range of the previous MAST query
+            where the dark monitor was run.
+        """
+
+        sub_query = session.query(self.query_table.aperture,
+                                  func.max(self.query_table.end_time_mjd).label('maxdate')
+                                  ).group_by(self.query_table.aperture).subquery('t2')
+
+        # Note that "self.query_table.run_monitor == True" below is
+        # intentional. Switching = to "is" results in an error in the query.
+        query = session.query(self.query_table).join(
+            sub_query,
+            and_(
+                self.query_table.aperture == self.aperture,
+                self.query_table.end_time_mjd == sub_query.c.maxdate,
+                self.query_table.run_monitor == True
+            )
+        ).all()
+
+        query_count = len(query)
+        if query_count == 0:
+            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
+            logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
+                         .format(self.aperture, query_result)))
+        elif query_count > 1:
+            raise ValueError('More than one "most recent" query?')
+        else:
+            query_result = query[0].end_time_mjd
+
+        return query_result
+
     def process(self, file_list):
         """The main method for processing darks.  See module docstrings
         for further details.
@@ -243,6 +296,16 @@ class Bias():
 
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
+
+            # Skip processing if this file already exists in the bias database
+            if filename in query_history:  #TODO query_history
+                logging.info('\t{} already exists in the bias database table.'
+                             .format(filename))
+                continue
+
+            # Get the exposure start time of this file
+            expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'], 
+                                      fits.getheader(filename, 0)['TIME-OBS'])
 
             # Determine if the file needs group_scale in pipeline run
             read_pattern = fits.getheader(filename, 0)['READPATT']
@@ -273,8 +336,8 @@ class Bias():
             # in the calibrated image
             cal_data = fits.getdata(processed_file, 'SCI')[0, 0, :, :]
             mean, median, stddev = sigma_clipped_stats(cal_data, sigma=3.0, maxiters=5)
-            logging.info('\tCalculated calibrated image stats: {:.3f} +/- {:.3f}'\
-                .format(mean, stddev))
+            logging.info('\tCalculated calibrated image stats: {:.3f} +/- {:.3f}'
+                         .format(mean, stddev))
             collapsed_rows, collapsed_columns = self.collapse_image(cal_data)
             logging.info('\tCalculated collapsed row/column values of calibrated image.')
 
@@ -282,6 +345,26 @@ class Bias():
             logging.info('\tCreating png of calibrated image')
             output_png = self.image_to_png(cal_data, 
                 outname=os.path.basename(processed_file).replace('.fits',''))
+
+            # Construct new entry for this file for the bias database table
+            bias_db_entry = {'aperture': self.aperture,
+                             'uncal_filename': filename
+                             'cal_filename': processed_file
+                             'cal_image': output_png
+                             'expstart': expstart
+                             'mean': mean
+                             'median': median
+                             'stddev': stddev
+                             'collapsed_rows': collapsed_rows
+                             'collapsed_columns': collapsed_columns
+                            }
+            for key in amp_meds.keys():
+                bias_db_entry[key] = amp_meds[key]
+            
+            # Add this new entry to the bias database table
+            self.stats_table.__table__.insert().execute(bias_db_entry)
+            logging.info('\tNew entry added to bias database table for {}'
+                         .format(filename))
 
     @log_fail
     @log_info
@@ -295,12 +378,15 @@ class Bias():
         self.output_dir = os.path.join(get_config()['outputs'], 'bias_monitor')
         ensure_dir_exists(os.path.join(self.output_dir, 'data'))
 
-        # query_start is a TODO. Use the current time as the end time for MAST query
-        self.query_start, self.query_end = 57357.0, Time.now().mjd  # a.k.a. Dec 1, 2015 == CV3
+        # Use the current time as the end time for MAST query
+        self.query_end = Time.now().mjd
 
         # Loop over all instruments
         for instrument in ['nircam']:
             self.instrument = instrument
+
+            # Identify which database tables to use
+            self.identify_tables()
 
             # Get a list of all possible full-frame apertures for this instrument
             s = Siaf(self.instrument)
@@ -311,13 +397,16 @@ class Bias():
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
 
+                # Locate the record of the most recent MAST search
+                self.query_start = self.most_recent_search()   #TODO need to write/test this function
+
                 # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
                 new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
                 # Set up a directory to store the data for this aperture
-                self.data_dir = os.path.join(self.output_dir, 'data/{}_{}'\
+                self.data_dir = os.path.join(self.output_dir, 'data/{}_{}'
                     .format(self.instrument.lower(), self.aperture.lower()))
                 if len(new_entries) > 0:
                     ensure_dir_exists(self.data_dir)
@@ -340,19 +429,33 @@ class Bias():
                         logging.info('{} does not exist in JWQL filesystem'.format(file_entry['filename']))
                         pass
 
-                # Run the dark monitor on any new files
+                # Run the bias monitor on any new files
                 if len(new_files) != 0:
                     self.process(new_files)
+                    monitor_run = True
                 else:
                     logging.info(('\tBias monitor skipped. {} new dark files for {}, {}.').format(
                         len(new_files), instrument, aperture))
+                    monitor_run = False
+
+                # Update the query history
+                new_entry = {'instrument': instrument,
+                             'aperture': aperture,
+                             'start_time_mjd': self.query_start,
+                             'end_time_mjd': self.query_end,
+                             'entries_found': len(new_entries),
+                             'files_found': len(new_files),
+                             'run_monitor': monitor_run,
+                             'entry_date': datetime.datetime.now()}
+                self.query_table.__table__.insert().execute(new_entry)
+                logging.info('\tUpdated the query history table')
 
         logging.info('Bias Monitor completed successfully.')
 
     def run_pipeline(self, filename, odd_even_rows=False, odd_even_columns=True, 
                      use_side_ref_pixels=True, group_scale=False):
-        """Runs the early steps of the jwst pipeline (dq_init, superbias, 
-        refpix) on uncalibrated files and outputs the result.
+        """Runs the early steps of the jwst pipeline (dq_init, saturation, 
+        superbias, refpix) on uncalibrated files and outputs the result.
         
         Parameters
         ----------
@@ -389,7 +492,8 @@ class Bias():
             else:
                 model = DQInitStep.call(filename)
             
-            # Run the superbias step
+            # Run the saturation and superbias steps
+            model = SaturationStep.call(model)
             model = SuperBiasStep.call(model)
 
             # Run the refpix step and save the output
