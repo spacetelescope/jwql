@@ -9,7 +9,7 @@ flake8==3.7.8
 inflection==0.3.1
 ipython==7.8.0
 jinja2==2.10.3
-jsonschema==3.0.2
+jsonschema==3.1.1
 jwedb>=0.0.3
 matplotlib==3.1.1
 numpy==1.17.2
