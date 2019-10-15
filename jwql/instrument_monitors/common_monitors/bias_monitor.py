@@ -49,6 +49,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 from pysiaf import Siaf
+from sqlalchemy import func
+from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
 from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats
@@ -335,7 +337,8 @@ class Bias():
             # Calculate image statistics and the collapsed row/column values 
             # in the calibrated image
             cal_data = fits.getdata(processed_file, 'SCI')[0, 0, :, :]
-            mean, median, stddev = sigma_clipped_stats(cal_data, sigma=3.0, maxiters=5)
+            dq = fits.getdata(processed_file, 'PIXELDQ')
+            mean, median, stddev = sigma_clipped_stats(cal_data[dq==0], sigma=3.0, maxiters=5)
             logging.info('\tCalculated calibrated image stats: {:.3f} +/- {:.3f}'
                          .format(mean, stddev))
             collapsed_rows, collapsed_columns = self.collapse_image(cal_data)
@@ -426,7 +429,8 @@ class Bias():
                             new_file = self.extract_zeroth_group(uncal_filename)
                             new_files.append(new_file)
                     except FileNotFoundError:
-                        logging.info('{} does not exist in JWQL filesystem'.format(file_entry['filename']))
+                        logging.info('{} does not exist in JWQL filesystem'
+                                     .format(file_entry['filename']))
                         pass
 
                 # Run the bias monitor on any new files
@@ -434,8 +438,8 @@ class Bias():
                     self.process(new_files)
                     monitor_run = True
                 else:
-                    logging.info(('\tBias monitor skipped. {} new dark files for {}, {}.').format(
-                        len(new_files), instrument, aperture))
+                    logging.info('\tBias monitor skipped. {} new dark files for {}, {}.'
+                                 .format(len(new_files), instrument, aperture))
                     monitor_run = False
 
                 # Update the query history
@@ -486,7 +490,7 @@ class Bias():
         
         if not os.path.isfile(output_filename):                       
             # Run the group_scale and dq_init steps on the input file
-            if group_scale == True:
+            if group_scale:
                 model = GroupScaleStep.call(filename)
                 model = DQInitStep.call(model)
             else:
