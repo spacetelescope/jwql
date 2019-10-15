@@ -299,11 +299,11 @@ class Bias():
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
 
-            # Skip processing if this file already exists in the bias database
-            if filename in query_history:  #TODO query_history
-                logging.info('\t{} already exists in the bias database table.'
-                             .format(filename))
-                continue
+            # # Skip processing if this file already exists in the bias database
+            # if filename in query_history:  #TODO query_history
+            #     logging.info('\t{} already exists in the bias database table.'
+            #                  .format(filename))
+            #     continue
 
             # Get the exposure start time of this file
             expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'], 
@@ -417,7 +417,7 @@ class Bias():
                 # Save the 0th group image from each new file in the output directory;
                 # some dont exist in JWQL filesystem.
                 new_files = []
-                for file_entry in new_entries[0:1]: #test
+                for file_entry in new_entries[0:3]: #test
                     try:
                         filename = filesystem_path(file_entry['filename'])
                         uncal_filename = filename.replace('_dark', '_uncal')
