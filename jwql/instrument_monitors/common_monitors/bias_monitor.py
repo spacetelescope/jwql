@@ -157,6 +157,31 @@ class Bias():
 
         return output_filename
 
+    def file_exists_in_database(self, filename):
+        """Checks if an entry for filename exists in the bias stats 
+        database.
+
+        Parameters
+        ----------
+        filename : str
+            The full path to the uncal filename
+
+        Returns
+        -------
+        file_exists : bool
+            ``True`` if filename exists in the bias stats database
+        """
+
+        query = session.query(self.stats_table)
+        results = query.filter(self.stats_table.uncal_filename == filename).all()
+
+        if len(results) != 0:
+            file_exists = True
+        else:
+            file_exists = False
+
+        return file_exists
+
     def get_amp_medians(self, image, amps):
         """Calculates the median in the input image for each amplifier
         and for odd and even columns separately.
@@ -237,7 +262,6 @@ class Bias():
             cbar = plt.colorbar(im, cax=cax)
             cbar.set_label('Signal [DN]')
 
-            # Save the plot
             plt.savefig(output_filename, bbox_inches='tight', dpi=200)
             logging.info('\t{} created'.format(output_filename))
         else:
@@ -299,11 +323,13 @@ class Bias():
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
 
-            # # Skip processing if this file already exists in the bias database
-            # if filename in query_history:  #TODO query_history
-            #     logging.info('\t{} already exists in the bias database table.'
-            #                  .format(filename))
-            #     continue
+            # Skip processing if an entry for this file already exists in 
+            # the bias database.
+            file_exists = file_exists_in_database(self, filename)
+            if file_exists:
+                logging.info('\t{} already exists in the bias database table.'
+                             .format(filename))
+                continue
 
             # Get the exposure start time of this file
             expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'], 
@@ -403,7 +429,7 @@ class Bias():
                 self.aperture = aperture
 
                 # Locate the record of the most recent MAST search
-                self.query_start = self.most_recent_search()   #TODO need to write/test this function
+                self.query_start = self.most_recent_search()
 
                 # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
