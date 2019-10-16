@@ -362,7 +362,7 @@ class Bias():
                              'collapsed_columns': list(collapsed_columns)
                             }
             for key in amp_meds.keys():
-                bias_db_entry[key] = amp_meds[key]
+                bias_db_entry[key] = float(amp_meds[key])
             
             # Add this new entry to the bias database table
             self.stats_table.__table__.insert().execute(bias_db_entry)
