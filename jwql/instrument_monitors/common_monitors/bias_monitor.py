@@ -357,9 +357,9 @@ class Bias():
                              'cal_filename': processed_file,
                              'cal_image': output_png,
                              'expstart': expstart,
-                             'mean': mean,
-                             'median': median,
-                             'stddev': stddev,
+                             'mean': float(mean),
+                             'median': float(median),
+                             'stddev': float(stddev),
                              'collapsed_rows': collapsed_rows.astype(float),
                              'collapsed_columns': collapsed_columns.astype(float)
                             }
