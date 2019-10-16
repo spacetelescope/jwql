@@ -23,13 +23,23 @@ Official API documentation can be found on [ReadTheDocs](https://jwql.readthedoc
 
 The `jwql` application is currently under heavy development.  The `1.0` release is expected in 2019.  Currently, a development version of the web application can be found at [https://dljwql.stsci.edu](https://dljwql.stsci.edu).
 
-## Installation
+## Installation for Users
+
+To install `jwql`, simply use `pip`:
+
+```
+pip install jwql
+```
+
+The section below describes a more detailed installation for users that wish to contribute to the `jwql` repository.
+
+## Installation for Contributors
 
 Getting `jwql` up and running on your own computer requires four steps, detailed below:
 1. Cloning the GitHub repository
-1. Installing the `conda`environment
-1. Installing the python package
-1. Setting up the configuration file
+2. Installing the `conda`environment
+3. Installing the python package
+4. Setting up the configuration file
 
 ### Prerequisites
 
@@ -64,24 +74,30 @@ Following the download of the `jwql` repository, contributors can then install t
 conda update conda
 ```
 
-Next, activate the `base` environment:
+Next, activate the `base` or `root` environment (depending on your version of `conda`):
 
 ```
-source activate base
+source activate base/root
 ```
 
 Lastly, create the `jwql` environment with either Python 3.5 or 3.6, via the `environment_python_3_5.yml` or `environment_python_3_6.yml` file, respectively. We recommend installing with the 3.6 version:
 
 ```
-conda env create -f environment_python_3_6.yml
+conda env create -f environment_python_3_6.yml --name jwql-3.6
 ```
 
 ### Package Installation
 
-Next, you need to install the `jwql` package. While still in the `jwql/` directory, run the following command to set up the package:
+Next, you need to install the `jwql` package under development mode.  This can be accomplished either by running the `setup.py` script, or `pip install` with the `-e` option:
 
 ```
 python setup.py develop
+```
+
+or 
+
+```
+pip install -e .
 ```
 The package should now appear if you run `conda list jwql`.
 
@@ -135,8 +151,8 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Bryan Hilbert (INS) [@bilhbert4](https://github.com/bhilbert4)
 - Graham Kanarek (INS) [@gkanarek](https://github.com/gkanarek)
 - Catherine Martlin (INS) [@catherine-martlin](https://github.com/catherine-martlin)
-- Sara Ogaz (OED) [@SaOgaz](https://github.com/SaOgaz)
 - Johannes Sahlmann (INS) [@Johannes-Sahlmann](https://github.com/johannes-sahlmann)
+- Ben Sunnquist (INS) [@bsunnquist](https://github.com/bsunnquist)
 
 ## Acknowledgments:
 - Faith Abney (DMD)
@@ -172,11 +188,13 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Karen Levay (DMD)
 - Crystal Mannfolk (SCOPE) [@cmannfolk](https://github.com/cmannfolk)
 - Greg Masci (ITSD)
+- Jacob Matuskey (DMD) [@jmatuskey](https://github.com/jmatuskey)
 - Margaret Meixner (INS)
 - Christain Mesh (DMD) [@cam72cam](https://github.com/cam72cam)
 - Prem Mishra (ITSD)
 - Don Mueller (ITSD)
 - Maria Antonia Nieto-Santisteban (SEITO)
+- Sara Ogaz (DMD) [@SaOgaz](https://github.com/SaOgaz)
 - Brian O'Sullivan (INS)
 - Joe Pollizzi (JWSTMO)
 - Lee Quick (DMD)

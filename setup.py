@@ -2,22 +2,28 @@ import numpy as np
 from setuptools import setup
 from setuptools import find_packages
 
-VERSION = '0.20.0'
+VERSION = '0.22.0'
 
-AUTHORS = 'Matthew Bourque, Lauren Chambers, Misty Cracraft, Joe Filippazzo, Bryan Hilbert, '
-AUTHORS += 'Graham Kanarek, Catherine Martlin, Johannes Sahlmann'
+AUTHORS = 'Matthew Bourque, Misty Cracraft, Joe Filippazzo, Bryan Hilbert, '
+AUTHORS += 'Graham Kanarek, Catherine Martlin, Johannes Sahlmann, Ben Sunnquist'
 
 DESCRIPTION = 'The James Webb Space Telescope Quicklook Project'
 
 REQUIRES = [
-    'astropy',
+    'asdf>=2.3.3',
+    'astropy>=3.2.1',
     'astroquery>=0.3.9',
     'authlib',
     'bokeh>=1.0',
+    'codecov',
     'django>=2.0',
+    'flake8',
+    'inflection',
+    'ipython',
     'jinja2',
-    'jwedb',
-    'jwst',
+    'jsonschema==2.6.0',
+    'jwedb>=0.0.3',
+    'jwst==0.13.0',
     'matplotlib',
     'numpy',
     'numpydoc',
@@ -25,9 +31,12 @@ REQUIRES = [
     'psycopg2',
     'pysiaf',
     'pytest',
+    'pytest-cov',
+    'scipy',
     'sphinx',
     'sqlalchemy',
-    'stsci_rtd_theme'
+    'stsci_rtd_theme',
+    'twine'
 ]
 
 setup(

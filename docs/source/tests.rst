@@ -14,14 +14,26 @@ test_calculations.py
     :members:
     :undoc-members:
 
+test_context_processors.py
+--------------------------
+.. automodule:: jwql.tests.test_context_processors
+    :members:
+    :undoc-members:
+
 test_dark_monitor.py
 --------------------
 .. automodule:: jwql.tests.test_dark_monitor
     :members:
     :undoc-members:
 
-test_edb_interface.py
----------------------
+test_data_containers.py
+-----------------------
+.. automodule:: jwql.tests.test_data_containers
+    :members:
+    :undoc-members:
+
+test_edb.py
+-----------
 .. automodule:: jwql.tests.test_edb
     :members:
     :undoc-members:
@@ -33,7 +45,7 @@ test_instrument_properties.py
     :undoc-members:
 
 test_loading_times.py
---------------------
+---------------------
 .. automodule:: jwql.tests.test_loading_times
     :members:
     :undoc-members:

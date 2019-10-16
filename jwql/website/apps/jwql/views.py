@@ -49,7 +49,6 @@ from .data_containers import get_image_info
 from .data_containers import get_current_flagged_anomalies
 from .data_containers import get_proposal_info
 from .data_containers import random_404_page
-from .data_containers import thumbnails
 from .data_containers import thumbnails_ajax
 from .data_containers import data_trending
 from .data_containers import nirspec_trending
@@ -383,7 +382,7 @@ def instrument(request, inst):
     return render(request, template, context)
 
 
-def not_found(request):
+def not_found(request, *kwargs):
     """Generate a ``not_found`` page
 
     Parameters

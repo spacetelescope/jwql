@@ -76,10 +76,11 @@ from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelSt
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils import calculations, instrument_properties
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import log_info, log_fail
+from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path, initialize_instrument_monitor, update_monitor_table
+from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
 
@@ -210,7 +211,8 @@ class Dark():
     def __init__(self):
         """Initialize an instance of the ``Dark`` class."""
 
-    def add_bad_pix(self, coordinates, pixel_type, files, mean_filename, baseline_filename):
+    def add_bad_pix(self, coordinates, pixel_type, files, mean_filename, baseline_filename,
+                    observation_start_time, observation_mid_time, observation_end_time):
         """Add a set of bad pixels to the bad pixel database table
 
         Parameters
@@ -234,6 +236,15 @@ class Dark():
         baseline_filename : str
             Name of fits file containing the baseline dark rate image
             used to find these bad pixels
+
+        observation_start_time : datetime.datetime
+            Observation time of the earliest file in ``files``
+
+        observation_mid_time : datetime.datetime
+            Average of the observation times in ``files``
+
+        observation_end_time : datetime.datetime
+            Observation time of the latest file in ``files``
         """
 
         logging.info('Adding {} {} pixels to database.'.format(len(coordinates[0]), pixel_type))
@@ -244,6 +255,9 @@ class Dark():
                  'y_coord': coordinates[1],
                  'type': pixel_type,
                  'source_files': source_files,
+                 'obs_start_time': observation_start_time,
+                 'obs_mid_time': observation_mid_time,
+                 'obs_end_time': observation_end_time,
                  'mean_dark_image_file': os.path.basename(mean_filename),
                  'baseline_file': os.path.basename(baseline_filename),
                  'entry_date': datetime.datetime.now()}
@@ -399,6 +413,8 @@ class Dark():
             filename = None
         else:
             filename = query.all()[0].baseline_file
+            # Specify the full path
+            filename = os.path.join(self.output_dir, 'mean_slope_images', filename)
             logging.info('Baseline filename: {}'.format(filename))
 
         return filename
@@ -503,7 +519,7 @@ class Dark():
         # Determine which pipeline steps need to be executed
         required_steps = pipeline_tools.get_pipeline_steps(self.instrument)
         logging.info('\tRequired calwebb1_detector pipeline steps to have the data in the '
-                      'correct format:')
+                     'correct format:')
         for item in required_steps:
             logging.info('\t\t{}: {}'.format(item, required_steps[item]))
 
@@ -551,9 +567,19 @@ class Dark():
                 # Delete the original dark ramp file to save disk space
                 os.remove(filename)
 
+        obs_times = []
         logging.info('\tSlope images to use in the dark monitor for {}, {}:'.format(self.instrument, self.aperture))
         for item in slope_files:
             logging.info('\t\t{}'.format(item))
+            # Get the observation time for each file
+            obstime = instrument_properties.get_obstime(item)
+            obs_times.append(obstime)
+
+        # Find the earliest and latest observation time, and calculate
+        # the mid-time.
+        min_time = np.min(obs_times)
+        max_time = np.max(obs_times)
+        mid_time = instrument_properties.mean_time(obs_times)
 
         # Read in all slope images and place into a list
         slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files)
@@ -597,10 +623,10 @@ class Dark():
             new_dead_pix = self.exclude_existing_badpix(new_dead_pix, 'dead')
 
             # Add new hot and dead pixels to the database
-            logging.info('\tFound {} new hot pixels'.format(len(new_hot_pix)))
-            logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix)))
-            self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file)
-            self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file)
+            logging.info('\tFound {} new hot pixels'.format(len(new_hot_pix[0])))
+            logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix[0])))
+            self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
+            self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
             # Check for any pixels that are significantly more noisy than
             # in the baseline stdev image
@@ -613,8 +639,8 @@ class Dark():
             new_noisy_pixels = self.exclude_existing_badpix(new_noisy_pixels, 'noisy')
 
             # Add new noisy pixels to the database
-            logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels)))
-            self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file)
+            logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
+            self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
         # ----- Calculate image statistics -----
 
@@ -633,6 +659,9 @@ class Dark():
             dark_db_entry = {'aperture': self.aperture, 'amplifier': key, 'mean': amp_mean[key],
                              'stdev': amp_stdev[key],
                              'source_files': source_files,
+                             'obs_start_time': min_time,
+                             'obs_mid_time': mid_time,
+                             'obs_end_time': max_time,
                              'gauss_amplitude': list(gauss_param[key][0]),
                              'gauss_peak': list(gauss_param[key][1]),
                              'gauss_width': list(gauss_param[key][2]),
@@ -699,7 +728,7 @@ class Dark():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in ['nircam']:
+        for instrument in JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -710,7 +739,6 @@ class Dark():
             possible_apertures = [ap for ap in possible_apertures if ap not in apertures_to_skip]
 
             for aperture in possible_apertures:
-
                 logging.info('')
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
 
@@ -726,16 +754,23 @@ class Dark():
                 # Query MAST using the aperture and the time of the
                 # most recent previous search as the starting time
                 new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
+
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
-                # Check to see if there are enough new files to meet the monitor's signal-to-noise requirements
+                # Check to see if there are enough new files to meet the
+                # monitor's signal-to-noise requirements
                 if len(new_entries) >= file_count_threshold:
-
                     logging.info('\tSufficient new dark files found for {}, {} to run the dark monitor.'
                                  .format(self.instrument, self.aperture))
 
                     # Get full paths to the files
-                    new_filenames = [filesystem_path(file_entry['filename']) for file_entry in new_entries]
+                    new_filenames = []
+                    for file_entry in new_entries:
+                        try:
+                            new_filenames.append(filesystem_path(file_entry['filename']))
+                        except FileNotFoundError:
+                            logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
+                                            .format(file_entry['filename']))
 
                     # Set up directories for the copied data
                     ensure_dir_exists(os.path.join(self.output_dir, 'data'))
@@ -746,6 +781,11 @@ class Dark():
 
                     # Copy files from filesystem
                     dark_files, not_copied = copy_files(new_filenames, self.data_dir)
+
+                    logging.info('\tNew_filenames: {}'.format(new_filenames))
+                    logging.info('\tData dir: {}'.format(self.data_dir))
+                    logging.info('\tCopied to working dir: {}'.format(dark_files))
+                    logging.info('\tNot copied: {}'.format(not_copied))
 
                     # Run the dark monitor
                     self.process(dark_files)
@@ -795,9 +835,11 @@ class Dark():
         output_filename = '{}_{}_{}_to_{}_mean_slope_image.fits'.format(self.instrument.lower(),
                                                                         self.aperture.lower(),
                                                                         self.query_start, self.query_end)
+
         mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
         ensure_dir_exists(mean_slope_dir)
         output_filename = os.path.join(mean_slope_dir, output_filename)
+        logging.info("Name of mean slope image: {}".format(output_filename))
 
         primary_hdu = fits.PrimaryHDU()
         primary_hdu.header['INSTRUME'] = (self.instrument, 'JWST instrument')
@@ -852,7 +894,7 @@ class Dark():
         amps : dict
             Dictionary containing amp boundary coordinates (output from
             ``amplifier_info`` function)
-            ``amps[key] = [(xmin, ymin), (xmax, ymax)]``
+            ``amps[key] = [(xmin, xmax, xstep), (ymin, ymax, ystep)]``
 
         Returns
         -------
@@ -907,22 +949,23 @@ class Dark():
             maxx = 0
             maxy = 0
             for amp in amps:
-                mxx = amps[amp][1][0]
+                mxx = amps[amp][0][1]
                 mxy = amps[amp][1][1]
                 if mxx > maxx:
                     maxx = copy(mxx)
                 if mxy > maxy:
                     maxy = copy(mxy)
-            amps['5'] = [(0, 0), (maxx, maxy)]
+            amps['5'] = [(0, maxx, 1), (0, maxy, 1)]
             logging.info(('\tFull frame exposure detected. Adding the full frame to the list '
                           'of amplifiers upon which to calculate statistics.'))
 
         for key in amps:
-            x_start, y_start = amps[key][0]
-            x_end, y_end = amps[key][1]
+            x_start, x_end, x_step = amps[key][0]
+            y_start, y_end, y_step = amps[key][1]
+            indexes = np.mgrid[y_start: y_end: y_step, x_start: x_end: x_step]
 
             # Basic statistics, sigma clipped areal mean and stdev
-            amp_mean, amp_stdev = calculations.mean_stdev(image[y_start: y_end, x_start: x_end])
+            amp_mean, amp_stdev = calculations.mean_stdev(image[indexes[0], indexes[1]])
             amp_means[key] = amp_mean
             amp_stdevs[key] = amp_stdev
 
@@ -930,7 +973,7 @@ class Dark():
             lower_bound = (amp_mean - 7 * amp_stdev)
             upper_bound = (amp_mean + 7 * amp_stdev)
 
-            hist, bin_edges = np.histogram(image[y_start: y_end, x_start: x_end], bins='auto',
+            hist, bin_edges = np.histogram(image[indexes[0], indexes[1]], bins='auto',
                                            range=(lower_bound, upper_bound))
             bin_centers = (bin_edges[1:] + bin_edges[0: -1]) / 2.
             initial_params = [np.max(hist), amp_mean, amp_stdev]
@@ -947,7 +990,7 @@ class Dark():
             degrees_of_freedom = len(hist) - 3.
             total_pix = np.sum(hist[positive])
             p_i = gauss_fit[positive] / total_pix
-            gaussian_chi_squared[key] = (np.sum((hist[positive] - (total_pix*p_i)**2) / (total_pix*p_i))
+            gaussian_chi_squared[key] = (np.sum((hist[positive] - (total_pix * p_i) ** 2) / (total_pix * p_i))
                                          / degrees_of_freedom)
 
             # Double Gaussian fit only for full frame data (and only for
@@ -961,7 +1004,7 @@ class Dark():
                     double_gauss_fit = calculations.double_gaussian(bin_centers, *double_gauss_params)
                     degrees_of_freedom = len(bin_centers) - 6.
                     dp_i = double_gauss_fit[positive] / total_pix
-                    double_gaussian_chi_squared[key] = np.sum((hist[positive] - (total_pix*dp_i)**2) / (total_pix*dp_i)) / degrees_of_freedom
+                    double_gaussian_chi_squared[key] = np.sum((hist[positive] - (total_pix * dp_i) ** 2) / (total_pix * dp_i)) / degrees_of_freedom
 
                 else:
                     double_gaussian_params[key] = [[0., 0.] for i in range(6)]
