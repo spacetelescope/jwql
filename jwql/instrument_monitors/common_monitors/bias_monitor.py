@@ -325,7 +325,7 @@ class Bias():
 
             # Skip processing if an entry for this file already exists in 
             # the bias stats database.
-            file_exists = self.file_exists_in_database(self, filename)
+            file_exists = self.file_exists_in_database(filename)
             if file_exists:
                 logging.info('\t{} already exists in the bias database table.'
                              .format(filename))
