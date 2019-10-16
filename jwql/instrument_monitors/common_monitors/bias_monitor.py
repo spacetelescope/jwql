@@ -358,8 +358,8 @@ class Bias():
                              'mean': mean,
                              'median': median,
                              'stddev': stddev,
-                             'collapsed_rows': collapsed_rows,
-                             'collapsed_columns': collapsed_columns
+                             'collapsed_rows': list(collapsed_rows),
+                             'collapsed_columns': list(collapsed_columns)
                             }
             for key in amp_meds.keys():
                 bias_db_entry[key] = amp_meds[key]
