@@ -349,7 +349,9 @@ class Bias():
             output_png = self.image_to_png(cal_data, 
                 outname=os.path.basename(processed_file).replace('.fits',''))
 
-            # Construct new entry for this file for the bias database table
+            # Construct new entry for this file for the bias database table.
+            # Can't insert values with numpy.float32 datatypes into database 
+            # so need to change the datatypes of these values.
             bias_db_entry = {'aperture': self.aperture,
                              'uncal_filename': filename,
                              'cal_filename': processed_file,
@@ -358,8 +360,8 @@ class Bias():
                              'mean': mean,
                              'median': median,
                              'stddev': stddev,
-                             'collapsed_rows': list(collapsed_rows),
-                             'collapsed_columns': list(collapsed_columns)
+                             'collapsed_rows': collapsed_rows.astype(float),
+                             'collapsed_columns': collapsed_columns.astype(float)
                             }
             for key in amp_meds.keys():
                 bias_db_entry[key] = float(amp_meds[key])
