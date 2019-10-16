@@ -169,7 +169,7 @@ class Bias():
         amps : dict
             Dictionary containing amp boundary coordinates (output from
             ``amplifier_info`` function)
-            ``amps[key] = [(xmin, ymin), (xmax, ymax)]``
+            ``amps[key] = [(xmin, xmax, xstep), (ymin, ymax, ystep)]``
 
         Returns
         -------
@@ -181,8 +181,8 @@ class Bias():
         amp_meds = {}
 
         for key in amps:
-            x_start, y_start = amps[key][0]
-            x_end, y_end = amps[key][1]
+            x_start, x_end, x_step = amps[key][0]
+            y_start, y_end, y_step = amps[key][1]
             
             # Find median value of both even and odd columns for this amp
             amp_med_even = np.nanmedian(image[y_start: y_end, x_start: x_end][:, 1::2])
