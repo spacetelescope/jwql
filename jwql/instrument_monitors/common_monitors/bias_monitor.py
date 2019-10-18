@@ -424,7 +424,7 @@ class Bias():
             s = Siaf(self.instrument)
             possible_apertures = [ap for ap in s.apertures if s[ap].AperType=='FULLSCA']
 
-            for aperture in possible_apertures[0:2]: #test
+            for aperture in possible_apertures:
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
@@ -449,7 +449,7 @@ class Bias():
                 # Save the 0th group image from each new file in the output directory;
                 # some dont exist in JWQL filesystem.
                 new_files = []
-                for file_entry in new_entries[0:4]: # test
+                for file_entry in new_entries:
                     try:
                         filename = filesystem_path(file_entry['filename'])
                         uncal_filename = filename.replace('_dark', '_uncal')
@@ -551,4 +551,4 @@ if __name__ == '__main__':
     monitor = Bias()
     monitor.run()
 
-    #update_monitor_table(module, start_time, log_file)
+    update_monitor_table(module, start_time, log_file)
