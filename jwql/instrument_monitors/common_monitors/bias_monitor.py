@@ -449,7 +449,7 @@ class Bias():
                 # Save the 0th group image from each new file in the output directory;
                 # some dont exist in JWQL filesystem.
                 new_files = []
-                for file_entry in new_entries:
+                for file_entry in new_entries[0:4]: # test
                     try:
                         filename = filesystem_path(file_entry['filename'])
                         uncal_filename = filename.replace('_dark', '_uncal')
