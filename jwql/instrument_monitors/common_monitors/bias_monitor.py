@@ -387,7 +387,8 @@ class Bias():
                              'median': float(median),
                              'stddev': float(stddev),
                              'collapsed_rows': collapsed_rows.astype(float),
-                             'collapsed_columns': collapsed_columns.astype(float)
+                             'collapsed_columns': collapsed_columns.astype(float),
+                             'entry_date': datetime.datetime.now()
                             }
             for key in amp_meds.keys():
                 bias_db_entry[key] = float(amp_meds[key])

@@ -16,3 +16,4 @@ AMP3_EVEN_MED, float
 AMP3_ODD_MED, float
 AMP4_EVEN_MED, float
 AMP4_ODD_MED, float
+ENTRY_DATE, datetime
