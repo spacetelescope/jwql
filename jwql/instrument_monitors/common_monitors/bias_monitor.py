@@ -279,7 +279,7 @@ class Bias():
         -------
         query_result : float
             Date (in MJD) of the ending range of the previous MAST query
-            where the dark monitor was run.
+            where the bias monitor was run.
         """
 
         sub_query = session.query(self.query_table.aperture,
@@ -424,13 +424,16 @@ class Bias():
             s = Siaf(self.instrument)
             possible_apertures = [ap for ap in s.apertures if s[ap].AperType=='FULLSCA']
 
-            for aperture in possible_apertures[0:1]: #test
+            for aperture in possible_apertures[0:2]: #test
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
 
-                # Locate the record of the most recent MAST search
-                self.query_start = self.most_recent_search()
+                # Locate the record of the most recent MAST search; use this time
+                # (plus a 30 day buffer to catch any missing files from the previous 
+                # run) as the start time in the new MAST search.
+                most_recent_search = self.most_recent_search()
+                self.query_start = most_recent_search - 30
 
                 # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
@@ -446,7 +449,7 @@ class Bias():
                 # Save the 0th group image from each new file in the output directory;
                 # some dont exist in JWQL filesystem.
                 new_files = []
-                for file_entry in new_entries[0:3]: #test
+                for file_entry in new_entries:
                     try:
                         filename = filesystem_path(file_entry['filename'])
                         uncal_filename = filename.replace('_dark', '_uncal')
