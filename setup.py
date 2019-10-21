@@ -23,7 +23,6 @@ REQUIRES = [
     'jinja2',
     'jsonschema==2.6.0',
     'jwedb>=0.0.3',
-    'jwst==0.13.0',
     'matplotlib',
     'numpy',
     'numpydoc',
@@ -39,6 +38,8 @@ REQUIRES = [
     'twine'
 ]
 
+DEPENDENCY_LINKS = ['git+https://github.com/spacetelescope/jwst#0.13.0']
+
 setup(
     name='jwql',
     version=VERSION,
@@ -51,6 +52,7 @@ setup(
     classifiers=['Programming Language :: Python'],
     packages=find_packages(),
     install_requires=REQUIRES,
+    dependency_links=DEPENDENCY_LINKS,
     include_package_data=True,
     include_dirs=[np.get_include()],
 )
