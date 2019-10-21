@@ -19,9 +19,9 @@ References
 ----------
 
 '''
-import .utils.mnemonics as mn
-import .utils.sql_interface as sql
-from .utils.process_data import whole_day_routine, wheelpos_routine
+import utils.mnemonics as mn
+import utils.sql_interface as sql
+from utils.process_data import whole_day_routine, wheelpos_routine
 from jwql.utils.engineering_database import query_single_mnemonic
 
 import pandas as pd
