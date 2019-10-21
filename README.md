@@ -80,7 +80,7 @@ Next, activate the `base` or `root` environment (depending on your version of `c
 source activate base/root
 ```
 
-Lastly, create the `jwql` environment with either Python 3.5 or 3.6, via the `environment_python_3_5.yml` or `environment_python_3_6.yml` file, respectively. We recommend installing with the 3.6 version:
+Lastly, create the `jwql` environment via the `environment_python_3_6.yml` file:
 
 ```
 conda env create -f environment_python_3_6.yml --name jwql-3.6
@@ -94,7 +94,7 @@ Next, you need to install the `jwql` package under development mode.  This can b
 python setup.py develop
 ```
 
-or 
+or
 
 ```
 pip install -e .
