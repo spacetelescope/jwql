@@ -1,16 +1,15 @@
 channels:
 - defaults
-- http://ssb.stsci.edu/astroconda-dev
+- http://ssb.stsci.edu/astroconda
 dependencies:
 - astroquery=0.3.9
 - bokeh=1.3.4
-- django=2.2.1
+- django=2.2.5
 - flake8=3.7.7
 - inflection=0.3.1
 - ipython=7.8.0
-- jinja2=2.10
-- jsonschema=2.6.0
-- jwst=0.13.0
+- jinja2=2.10.3
+- jsonschema=3.0.2
 - matplotlib=3.1.0
 - numpy=1.16.4
 - numpydoc=0.9.0
@@ -19,19 +18,20 @@ dependencies:
 - postgresql=9.6.6
 - psycopg2=2.7.5
 - python=3.6.4
-- pytest=5.0.1
+- pytest=5.2.1
 - pytest-cov=2.7.1
 - scipy=1.3.0
 - setuptools=41.0.1
 - sphinx=2.1.2
-- sqlalchemy=1.3.7
-- stsci_rtd_theme=0.0.2
-- twine=1.13.0
+- sqlalchemy=1.3.9
+- twine=2.0.0
 - pip:
   - asdf==2.4.2
-  - astropy==3.2.1
+  - astropy==3.2.2
   - authlib==0.12
   - codecov==2.0.15
   - jwedb>=0.0.3
   - pysiaf==0.5.0
   - pysqlite3==0.2.2
+  - stsci_rtd_theme==0.0.2
+  - git+https://github.com/spacetelescope/jwst#0.13.0
