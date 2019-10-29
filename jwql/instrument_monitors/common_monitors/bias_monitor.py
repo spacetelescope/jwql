@@ -153,7 +153,6 @@ class Bias():
             logging.info('\t{} created'.format(output_filename))
         else:
             logging.info('\t{} already exists'.format(output_filename))
-            pass
 
         return output_filename
 
@@ -198,12 +197,12 @@ class Bias():
 
         Returns
         -------
-        amp_meds : dict
+        amp_medians : dict
             Median values for each amp. Keys are ramp numbers as
             strings with even/odd designation (e.g. ``'1_even'``)
         """
         
-        amp_meds = {}
+        amp_medians = {}
 
         for key in amps:
             x_start, x_end, x_step = amps[key][0]
@@ -211,11 +210,11 @@ class Bias():
             
             # Find median value of both even and odd columns for this amp
             amp_med_even = np.nanmedian(image[y_start: y_end, x_start: x_end][:, 1::2])
-            amp_meds['amp{}_even_med'.format(key)] = amp_med_even
+            amp_medians['amp{}_even_med'.format(key)] = amp_med_even
             amp_med_odd = np.nanmedian(image[y_start: y_end, x_start: x_end][:, ::2])
-            amp_meds['amp{}_odd_med'.format(key)] = amp_med_odd
+            amp_medians['amp{}_odd_med'.format(key)] = amp_med_odd
 
-        return amp_meds
+        return amp_medians
 
     def identify_tables(self):
         """Determine which database tables to use for a run of the bias 
@@ -266,7 +265,6 @@ class Bias():
             logging.info('\t{} created'.format(output_filename))
         else:
             logging.info('\t{} already exists'.format(output_filename))
-            pass
 
         return output_filename
 
@@ -344,7 +342,7 @@ class Bias():
 
             # Run the file through the pipeline up through the refpix step
             logging.info('\tRunning pipeline on {}'.format(filename))
-            processed_file = self.run_pipeline(filename, odd_even_rows=False, 
+            processed_file = self.run_early_pipeline(filename, odd_even_rows=False, 
                 odd_even_columns=True, use_side_ref_pixels=True, group_scale=group_scale)
             logging.info('\tPipeline complete. Output: {}'.format(processed_file))
 
@@ -357,8 +355,8 @@ class Bias():
             uncal_data = fits.getdata(filename, 'SCI')[0, 0, :, :].astype(float)
 
             # Calculate the uncal median values of each amplifier for odd/even columns
-            amp_meds = self.get_amp_medians(uncal_data, amp_bounds)
-            logging.info('\tCalculated uncalibrated image stats: {}'.format(amp_meds))
+            amp_medians = self.get_amp_medians(uncal_data, amp_bounds)
+            logging.info('\tCalculated uncalibrated image stats: {}'.format(amp_medians))
 
             # Calculate image statistics and the collapsed row/column values 
             # in the calibrated image
@@ -390,8 +388,8 @@ class Bias():
                              'collapsed_columns': collapsed_columns.astype(float),
                              'entry_date': datetime.datetime.now()
                             }
-            for key in amp_meds.keys():
-                bias_db_entry[key] = float(amp_meds[key])
+            for key in amp_medians.keys():
+                bias_db_entry[key] = float(amp_medians[key])
             
             # Add this new entry to the bias database table
             self.stats_table.__table__.insert().execute(bias_db_entry)
@@ -421,8 +419,9 @@ class Bias():
             self.identify_tables()
 
             # Get a list of all possible full-frame apertures for this instrument
-            s = Siaf(self.instrument)
-            possible_apertures = [ap for ap in s.apertures if s[ap].AperType=='FULLSCA']
+            siaf = Siaf(self.instrument)
+            possible_apertures = [aperture for aperture in siaf.apertures if 
+                                  siaf[aperture].AperType=='FULLSCA']
 
             for aperture in possible_apertures:
 
@@ -456,17 +455,15 @@ class Bias():
                         if not os.path.isfile(uncal_filename):
                             logging.info('{} does not exist in JWQL filesystem, even though '
                                          '{} does'.format(uncal_filename, filename))
-                            pass
                         else:
                             new_file = self.extract_zeroth_group(uncal_filename)
                             new_files.append(new_file)
                     except FileNotFoundError:
                         logging.info('{} does not exist in JWQL filesystem'
                                      .format(file_entry['filename']))
-                        pass
 
                 # Run the bias monitor on any new files
-                if len(new_files) != 0:
+                if len(new_files) > 0:
                     self.process(new_files)
                     monitor_run = True
                 else:
@@ -488,8 +485,8 @@ class Bias():
 
         logging.info('Bias Monitor completed successfully.')
 
-    def run_pipeline(self, filename, odd_even_rows=False, odd_even_columns=True, 
-                     use_side_ref_pixels=True, group_scale=False):
+    def run_early_pipeline(self, filename, odd_even_rows=False, odd_even_columns=True, 
+                           use_side_ref_pixels=True, group_scale=False):
         """Runs the early steps of the jwst pipeline (dq_init, saturation, 
         superbias, refpix) on uncalibrated files and outputs the result.
         
@@ -538,7 +535,6 @@ class Bias():
             model.save(output_filename)
         else:
             logging.info('\t{} already exists'.format(output_filename))
-            pass
 
         return output_filename
 
