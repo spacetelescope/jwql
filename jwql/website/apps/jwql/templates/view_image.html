@@ -109,6 +109,22 @@
 	    	<a>Lauren needs to figure out what to do with these: {{suffixes}}</a>
 	    {% endif %}
 
+        <!-- Allow right/left arrow keys to increase/decrease the integration image that is showing -->
+        <script> 
+            document.onkeydown = function(e) {
+                var file_root = "{{file_root|safe}}";
+                var num_ints = "{{num_ints|safe}}";
+                switch (e.keyCode) {
+                    case 37:
+                        change_int("left", file_root, num_ints);
+                        break;
+                    case 39:
+                        change_int("right", file_root, num_ints);
+                        break;
+                }
+            }
+        </script>
+
 	</main>
 
 {% endblock %}
