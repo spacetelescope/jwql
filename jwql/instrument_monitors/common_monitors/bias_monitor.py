@@ -59,6 +59,7 @@ from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_dar
 from jwql.utils import instrument_properties
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
+from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, initialize_instrument_monitor, update_monitor_table
 
 class Bias():
@@ -148,6 +149,7 @@ class Bias():
             new_hdu.writeto(output_filename)
             hdu.close()
             new_hdu.close()
+            set_permissions(output_filename)
             logging.info('\t{} created'.format(output_filename))
         else:
             logging.info('\t{} already exists'.format(output_filename))
@@ -260,6 +262,7 @@ class Bias():
             cbar.set_label('Signal [DN]')
 
             plt.savefig(output_filename, bbox_inches='tight', dpi=200)
+            set_permissions(output_filename)
             logging.info('\t{} created'.format(output_filename))
         else:
             logging.info('\t{} already exists'.format(output_filename))
@@ -516,6 +519,7 @@ class Bias():
             # Run the refpix step and save the output
             model = RefPixStep.call(model, odd_even_rows=odd_even_rows, odd_even_columns=odd_even_columns, use_side_ref_pixels=use_side_ref_pixels)
             model.save(output_filename)
+            set_permissions(output_filename)
         else:
             logging.info('\t{} already exists'.format(output_filename))
 
