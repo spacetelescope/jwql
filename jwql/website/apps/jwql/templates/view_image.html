@@ -88,7 +88,24 @@
                 </div>
             </div>
 
+            <!-- Slider to change integration image showing -->
+            <div class="slidecontainer">
+                <input type="range" min="1" max="5" value="1" class="slider" id="myRange" onchange='change_int_slider("{{file_root}}", "{{num_ints}}")'>
+                <p>Integration: <span id="slider_val"></span></p>
+            </div>
+
         </div>
+
+        <!-- Update the current slider value -->
+        <script type="text/javascript">
+        var slider = document.getElementById("myRange")
+        var slider_val = document.getElementById("slider_val")
+        slider_val.innerHTML = slider.value; // Display the default slider value
+        
+        slider.oninput = function() {
+          slider_val.innerHTML = this.value;
+        }
+        </script>
 
 		<!-- Download the images? -->
 	    <p>
