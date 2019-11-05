@@ -1,20 +1,20 @@
 #! /usr/bin/env python
 
-"""This module contains code for the bias monitor, which monitors 
-the bias levels in dark exposures as well as the performance of 
+"""This module contains code for the bias monitor, which monitors
+the bias levels in dark exposures as well as the performance of
 the pipeline superbias subtraction over time.
 
 For each instrument, the 0th group of full-frame dark exposures is
 saved to a fits file. The median signal levels in these images are
-recorded in the ``<Instrument>BiasStats`` database table for the 
+recorded in the ``<Instrument>BiasStats`` database table for the
 odd/even columns of each amp.
 
 Next, these images are run through the jwst pipeline up through the
 reference pixel correction step. These calibrated images are saved
 to a fits file as well as a png file for visual inspection of the
-quality of the pipeline calibration. The median-collpsed row and 
-column values, as well as the sigma-clipped mean and standard 
-deviation of these images, are recorded in the 
+quality of the pipeline calibration. The median-collpsed row and
+column values, as well as the sigma-clipped mean and standard
+deviation of these images, are recorded in the
 ``<Instrument>BiasStats`` database table.
 
 Author
@@ -64,7 +64,7 @@ from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, ini
 class Bias():
     """Class for executing the bias monitor.
 
-    This class will search for new full-frame dark current files in 
+    This class will search for new full-frame dark current files in
     the file system for each instrument and will run the monitor on
     these files. The monitor will extract the 0th group from the new
     dark files and output the contents into a new file located in
@@ -97,8 +97,7 @@ class Bias():
     """
 
     def __init__(self):
-        """Initialize an instance of the ``Bias`` class.
-        """
+        """Initialize an instance of the ``Bias`` class."""
 
     def collapse_image(self, image):
         """Median-collapse the rows and columns of an image.
@@ -112,7 +111,7 @@ class Bias():
         -------
         collapsed_rows : numpy.ndarray
             1D array of the collapsed row values
-        
+
         collapsed_columns : numpy.ndarray
             1D array of the collapsed column values
         """
@@ -125,7 +124,7 @@ class Bias():
     def extract_zeroth_group(self, filename):
         """Extracts the 0th group of a fits image and outputs it into
         a new fits file.
-        
+
         Parameters
         ----------
         filename : str
@@ -137,9 +136,8 @@ class Bias():
             The full path to the output file
         """
 
-        output_filename = os.path.join(self.data_dir,
-            os.path.basename(filename).replace('.fits', '_0thgroup.fits'))
-        
+        output_filename = os.path.join(self.data_dir, os.path.basename(filename).replace('.fits', '_0thgroup.fits'))
+
         # Write a new fits file containing the primary and science
         # headers from the input file, as well as the 0th group
         # data of the first integration
@@ -157,7 +155,7 @@ class Bias():
         return output_filename
 
     def file_exists_in_database(self, filename):
-        """Checks if an entry for filename exists in the bias stats 
+        """Checks if an entry for filename exists in the bias stats
         database.
 
         Parameters
@@ -201,13 +199,13 @@ class Bias():
             Median values for each amp. Keys are ramp numbers as
             strings with even/odd designation (e.g. ``'1_even'``)
         """
-        
+
         amp_medians = {}
 
         for key in amps:
             x_start, x_end, x_step = amps[key][0]
             y_start, y_end, y_step = amps[key][1]
-            
+
             # Find median value of both even and odd columns for this amp
             amp_med_even = np.nanmedian(image[y_start: y_end, x_start: x_end][:, 1::2])
             amp_medians['amp{}_even_med'.format(key)] = amp_med_even
@@ -217,7 +215,7 @@ class Bias():
         return amp_medians
 
     def identify_tables(self):
-        """Determine which database tables to use for a run of the bias 
+        """Determine which database tables to use for a run of the bias
         monitor.
         """
 
@@ -280,9 +278,10 @@ class Bias():
             where the bias monitor was run.
         """
 
-        sub_query = session.query(self.query_table.aperture,
-                                  func.max(self.query_table.end_time_mjd).label('maxdate')
-                                  ).group_by(self.query_table.aperture).subquery('t2')
+        sub_query = session.query(
+            self.query_table.aperture,
+            func.max(self.query_table.end_time_mjd).label('maxdate')
+            ).group_by(self.query_table.aperture).subquery('t2')
 
         # Note that "self.query_table.run_monitor == True" below is
         # intentional. Switching = to "is" results in an error in the query.
@@ -298,8 +297,7 @@ class Bias():
         query_count = len(query)
         if query_count == 0:
             query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
-            logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
-                         .format(self.aperture, query_result)))
+            logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, query_result)))
         elif query_count > 1:
             raise ValueError('More than one "most recent" query?')
         else:
@@ -321,17 +319,15 @@ class Bias():
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
 
-            # Skip processing if an entry for this file already exists in 
+            # Skip processing if an entry for this file already exists in
             # the bias stats database.
             file_exists = self.file_exists_in_database(filename)
             if file_exists:
-                logging.info('\t{} already exists in the bias database table.'
-                             .format(filename))
+                logging.info('\t{} already exists in the bias database table.'.format(filename))
                 continue
 
             # Get the exposure start time of this file
-            expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'], 
-                                      fits.getheader(filename, 0)['TIME-OBS'])
+            expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'], fits.getheader(filename, 0)['TIME-OBS'])
 
             # Determine if the file needs group_scale in pipeline run
             read_pattern = fits.getheader(filename, 0)['READPATT']
@@ -342,13 +338,11 @@ class Bias():
 
             # Run the file through the pipeline up through the refpix step
             logging.info('\tRunning pipeline on {}'.format(filename))
-            processed_file = self.run_early_pipeline(filename, odd_even_rows=False, 
-                odd_even_columns=True, use_side_ref_pixels=True, group_scale=group_scale)
+            processed_file = self.run_early_pipeline(filename, odd_even_rows=False, odd_even_columns=True, use_side_ref_pixels=True, group_scale=group_scale)
             logging.info('\tPipeline complete. Output: {}'.format(processed_file))
 
             # Find amplifier boundaries so per-amp statistics can be calculated
-            _, amp_bounds = instrument_properties.amplifier_info(processed_file, 
-                omit_reference_pixels=True)
+            _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)
             logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
 
             # Get the uncalibrated 0th group data for this file
@@ -358,23 +352,21 @@ class Bias():
             amp_medians = self.get_amp_medians(uncal_data, amp_bounds)
             logging.info('\tCalculated uncalibrated image stats: {}'.format(amp_medians))
 
-            # Calculate image statistics and the collapsed row/column values 
+            # Calculate image statistics and the collapsed row/column values
             # in the calibrated image
             cal_data = fits.getdata(processed_file, 'SCI')[0, 0, :, :]
             dq = fits.getdata(processed_file, 'PIXELDQ')
             mean, median, stddev = sigma_clipped_stats(cal_data[dq==0], sigma=3.0, maxiters=5)
-            logging.info('\tCalculated calibrated image stats: {:.3f} +/- {:.3f}'
-                         .format(mean, stddev))
+            logging.info('\tCalculated calibrated image stats: {:.3f} +/- {:.3f}'.format(mean, stddev))
             collapsed_rows, collapsed_columns = self.collapse_image(cal_data)
             logging.info('\tCalculated collapsed row/column values of calibrated image.')
 
             # Save a png of the calibrated image for visual inspection
             logging.info('\tCreating png of calibrated image')
-            output_png = self.image_to_png(cal_data, 
-                outname=os.path.basename(processed_file).replace('.fits',''))
+            output_png = self.image_to_png(cal_data, outname=os.path.basename(processed_file).replace('.fits',''))
 
             # Construct new entry for this file for the bias database table.
-            # Can't insert values with numpy.float32 datatypes into database 
+            # Can't insert values with numpy.float32 datatypes into database
             # so need to change the datatypes of these values.
             bias_db_entry = {'aperture': self.aperture,
                              'uncal_filename': filename,
@@ -390,17 +382,15 @@ class Bias():
                             }
             for key in amp_medians.keys():
                 bias_db_entry[key] = float(amp_medians[key])
-            
+
             # Add this new entry to the bias database table
             self.stats_table.__table__.insert().execute(bias_db_entry)
-            logging.info('\tNew entry added to bias database table: {}'
-                         .format(bias_db_entry))
+            logging.info('\tNew entry added to bias database table: {}'.format(bias_db_entry))
 
     @log_fail
     @log_info
     def run(self):
-        """The main method.  See module docstrings for further details.
-        """
+        """The main method.  See module docstrings for further details."""
 
         logging.info('Begin logging for bias_monitor')
 
@@ -420,8 +410,7 @@ class Bias():
 
             # Get a list of all possible full-frame apertures for this instrument
             siaf = Siaf(self.instrument)
-            possible_apertures = [aperture for aperture in siaf.apertures if 
-                                  siaf[aperture].AperType=='FULLSCA']
+            possible_apertures = [aperture for aperture in siaf.apertures if siaf[aperture].AperType=='FULLSCA']
 
             for aperture in possible_apertures:
 
@@ -429,7 +418,7 @@ class Bias():
                 self.aperture = aperture
 
                 # Locate the record of the most recent MAST search; use this time
-                # (plus a 30 day buffer to catch any missing files from the previous 
+                # (plus a 30 day buffer to catch any missing files from the previous
                 # run) as the start time in the new MAST search.
                 most_recent_search = self.most_recent_search()
                 self.query_start = most_recent_search - 30
@@ -440,8 +429,7 @@ class Bias():
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
                 # Set up a directory to store the data for this aperture
-                self.data_dir = os.path.join(self.output_dir, 'data/{}_{}'
-                    .format(self.instrument.lower(), self.aperture.lower()))
+                self.data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
                 if len(new_entries) > 0:
                     ensure_dir_exists(self.data_dir)
 
@@ -453,22 +441,19 @@ class Bias():
                         filename = filesystem_path(file_entry['filename'])
                         uncal_filename = filename.replace('_dark', '_uncal')
                         if not os.path.isfile(uncal_filename):
-                            logging.info('{} does not exist in JWQL filesystem, even though '
-                                         '{} does'.format(uncal_filename, filename))
+                            logging.info('\t{} does not exist in JWQL filesystem, even though {} does'.format(uncal_filename, filename))
                         else:
                             new_file = self.extract_zeroth_group(uncal_filename)
                             new_files.append(new_file)
                     except FileNotFoundError:
-                        logging.info('{} does not exist in JWQL filesystem'
-                                     .format(file_entry['filename']))
+                        logging.info('\t{} does not exist in JWQL filesystem'.format(file_entry['filename']))
 
                 # Run the bias monitor on any new files
                 if len(new_files) > 0:
                     self.process(new_files)
                     monitor_run = True
                 else:
-                    logging.info('\tBias monitor skipped. {} new dark files for {}, {}.'
-                                 .format(len(new_files), instrument, aperture))
+                    logging.info('\tBias monitor skipped. {} new dark files for {}, {}.'.format(len(new_files), instrument, aperture))
                     monitor_run = False
 
                 # Update the query history
@@ -485,11 +470,11 @@ class Bias():
 
         logging.info('Bias Monitor completed successfully.')
 
-    def run_early_pipeline(self, filename, odd_even_rows=False, odd_even_columns=True, 
+    def run_early_pipeline(self, filename, odd_even_rows=False, odd_even_columns=True,
                            use_side_ref_pixels=True, group_scale=False):
-        """Runs the early steps of the jwst pipeline (dq_init, saturation, 
+        """Runs the early steps of the jwst pipeline (dq_init, saturation,
         superbias, refpix) on uncalibrated files and outputs the result.
-        
+
         Parameters
         ----------
         filename : str
@@ -505,7 +490,7 @@ class Bias():
             Option to perform the side refpix correction during refpix step
 
         group_scale : bool
-            Option to rescale pixel values to correct for instances where 
+            Option to rescale pixel values to correct for instances where
             on-board frame averaging did not result in the proper values
 
         Returns
@@ -514,24 +499,22 @@ class Bias():
             The full path to the calibrated file
         """
 
-        output_filename = filename.replace('_uncal', '')\
-                                  .replace('.fits', '_superbias_refpix.fits')
-        
-        if not os.path.isfile(output_filename):                       
+        output_filename = filename.replace('_uncal', '').replace('.fits', '_superbias_refpix.fits')
+
+        if not os.path.isfile(output_filename):
             # Run the group_scale and dq_init steps on the input file
             if group_scale:
                 model = GroupScaleStep.call(filename)
                 model = DQInitStep.call(model)
             else:
                 model = DQInitStep.call(filename)
-            
+
             # Run the saturation and superbias steps
             model = SaturationStep.call(model)
             model = SuperBiasStep.call(model)
 
             # Run the refpix step and save the output
-            model = RefPixStep.call(model, odd_even_rows=odd_even_rows, 
-                odd_even_columns=odd_even_columns, use_side_ref_pixels=use_side_ref_pixels)
+            model = RefPixStep.call(model, odd_even_rows=odd_even_rows, odd_even_columns=odd_even_columns, use_side_ref_pixels=use_side_ref_pixels)
             model.save(output_filename)
         else:
             logging.info('\t{} already exists'.format(output_filename))
