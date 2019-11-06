@@ -39,8 +39,8 @@ function change_filetype(type, file_root, num_ints, inst) {
     img.alt = jpg_filepath;
 
     // Reset the slider values
-    document.getElementById("myRange").value = 1
-    document.getElementById("myRange").max = num_ints[type]
+    document.getElementById("slider_range").value = 1
+    document.getElementById("slider_range").max = num_ints[type]
     document.getElementById("slider_val").innerHTML = 1
 
     // Update the number of integrations
@@ -64,46 +64,55 @@ function change_filetype(type, file_root, num_ints, inst) {
 
 };
 
+
  /**
  * Change the integration number of the displayed image
- * @param {String} direction - The direction to switch to, either "left" (decrease) or "right" (increase).
  * @param {String} file_root - The rootname of the file
  * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
  *                          values are the number of integrations for that suffix
+ * @param {String} method - How the integration change was initialized, either "button" or "slider"
+ * @param {String} direction - The direction to switch to, either "left" (decrease) or "right" (increase).
+ *                             Only relevant if method is "button".
  */
-function change_int(direction, file_root, num_ints) {
+function change_int(file_root, num_ints, method, direction = 'right') {
 
     // Figure out the current image and integration
     var suffix = document.getElementById("jpg_filename").innerHTML.split('_');
     var integration = Number(suffix[suffix.length - 1][5]);
     var suffix = suffix[suffix.length - 2];
     var program = file_root.slice(0,7);
-
+    
+    // Find the total number of integrations for the current image
     var num_ints = num_ints.replace(/'/g, '"');
     var num_ints = JSON.parse(num_ints)[suffix];
 
+    // Get the desired integration value
+    switch (method) {
+        case "button":
+            if ((integration == num_ints - 1 && direction == 'right')||
+                (integration == 0 && direction == 'left')) {
+                return;
+            } else if (direction == 'right') {
+                new_integration = integration + 1
+            } else if (direction == 'left') {
+                new_integration = integration - 1
+            }
+            break;
+        case "slider":
+            new_integration = document.getElementById("slider_range").value - 1;
+            break;
+    }
 
-    if ((integration == num_ints - 1 && direction == 'right')||
-        (integration == 0 && direction == 'left')) {
-        return;
-    } else if (direction == 'right') {
-        // Update integration number
-        var new_integration = integration + 1
-
-        // Don't let them go further if they're at the last integration
-        if (new_integration == num_ints - 1) {
-            document.getElementById("int_after").disabled = true;
-        }
-        document.getElementById("int_before").disabled = false;
-    } else if (direction == 'left') {
-        // Update integration number
-        var new_integration = integration - 1
-
-        // Don't let them go further if they're at the first integration
-        if (new_integration == 0) {
-            document.getElementById("int_before").disabled = true;
-        }
+    // Update which button are disabled based on the new integration
+    if (new_integration == 0) {
         document.getElementById("int_after").disabled = false;
+        document.getElementById("int_before").disabled = true;
+    } else if (new_integration < num_ints - 1) {
+        document.getElementById("int_after").disabled = false;
+        document.getElementById("int_before").disabled = false;
+    } else if (new_integration == num_ints - 1) {
+        document.getElementById("int_after").disabled = true;
+        document.getElementById("int_before").disabled = false;
     }
 
     // Update the JPG filename
@@ -125,61 +134,10 @@ function change_int(direction, file_root, num_ints) {
     document.getElementById("download_jpg").href = jpg_filepath;
 
     // Update the slider values
-    document.getElementById("myRange").value = new_integration + 1
+    document.getElementById("slider_range").value = new_integration + 1
     document.getElementById("slider_val").innerHTML = new_integration + 1
 };
 
- /**
- * Change the integration number of the displayed image based on the slider value
- * @param {String} file_root - The rootname of the file
- * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
- *                          values are the number of integrations for that suffix
- */
-function change_int_slider(file_root, num_ints) {
-
-    // Get the current value of the integration slider
-    var slider = document.getElementById("myRange");
-    new_integration = slider.value - 1;
-
-    // Figure out the current image and integration
-    var suffix = document.getElementById("jpg_filename").innerHTML.split('_');
-    var integration = Number(suffix[suffix.length - 1][5]);
-    var suffix = suffix[suffix.length - 2];
-    var program = file_root.slice(0,7);
-
-    var num_ints = num_ints.replace(/'/g, '"');
-    var num_ints = JSON.parse(num_ints)[suffix];
-
-    // Update the JPG filename based on the slider value
-    var jpg_filename = file_root + '_' + suffix + '_integ' + new_integration + '.jpg'
-    var jpg_filepath = '/static/preview_images/' + program + '/' + jpg_filename
-    document.getElementById("jpg_filename").innerHTML = jpg_filename;
-
-    // Show the appropriate image
-    var img = document.getElementById("image_viewer")
-    img.src = jpg_filepath;
-    img.alt = jpg_filepath;
-
-    // Update the number of integrations
-    var int_counter = document.getElementById("int_count");
-    var int_display = new_integration + 1;
-    int_counter.innerHTML = 'Displaying integration ' + int_display + '/' + num_ints;
-
-    // Update the buttons
-    if (int_display == 1) {
-        document.getElementById("int_after").disabled = false;
-        document.getElementById("int_before").disabled = true;
-    } else if (int_display < num_ints) {
-        document.getElementById("int_after").disabled = false;
-        document.getElementById("int_before").disabled = false;
-    } else if (int_display == num_ints) {
-        document.getElementById("int_after").disabled = true;
-        document.getElementById("int_before").disabled = false;
-    }
-
-    // Update the jpg download link
-    document.getElementById("download_jpg").href = jpg_filepath;
-};
 
 /**
  * Determine what filetype to use for a thumbnail
