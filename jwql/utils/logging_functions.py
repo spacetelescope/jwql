@@ -59,6 +59,7 @@ import logging
 import os
 import pwd
 import socket
+import subprocess
 import sys
 import time
 import traceback
@@ -235,6 +236,11 @@ def log_info(func):
                 logging.info(module + ' Path: ' + mod.__path__[0])
             except (ImportError, AttributeError) as err:
                 logging.warning(err)
+
+        environment = subprocess.run(['conda', 'env', 'export'],
+                                     stdout=subprocess.PIPE,
+                                     universal_newlines=True)
+        logging.info('Environment: ' + environment)
 
         logging.info('')
 
