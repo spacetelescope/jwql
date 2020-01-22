@@ -21,7 +21,6 @@ Use
         from .data_containers import get_proposal_info
 """
 
-from collections import OrderedDict
 import copy
 import glob
 import os
@@ -496,7 +495,7 @@ def get_filenames_by_rootname(rootname):
 
 
 def get_header_info(filename):
-    """Return the dheader information for a given ``file``.
+    """Return the header information for a given ``filename``.
 
     Parameters
     ----------
@@ -510,52 +509,47 @@ def get_header_info(filename):
         The primary FITS header for the given ``file``.
     """
 
-    dirname = filename[:7]
-    fits_filepath = os.path.join(FILESYSTEM_DIR, dirname, filename)
-    hdul = fits.open(fits_filepath)
-    extentions = len(hdul)
-    header_info = (hdul.info(False))
-    
-    all_keywords = []
-    all_values = []
-    for ext in range(0, extentions): 
-        temp_header = fits.getheader(fits_filepath, ext=ext) 
-        keywords = list(temp_header.keys())
-        keywords = list(filter(None, keywords))
-        temp_values = [] 
-        for key in keywords:
-            value = hdul[ext].header[key]
-            temp_values.append(value)
-        all_keywords.append(keywords)
-        all_values.append(temp_values)
+    # Initialize dictionary to store header information
+    header_info = {}
 
-    hdul.close()
+    # Open the file
+    fits_filepath = os.path.join(FILESYSTEM_DIR, filename[:7], filename)
+    hdulist = fits.open(fits_filepath)
 
-    header_names = list((x[1] for x in header_info))
-    header_key_dic = dict(zip(header_names, all_keywords))
-    header_val_dic = dict(zip(header_names, all_values))
+    # Extract header information from file
+    for ext in range(0, len(hdulist)):
 
+        # Initialize dictionary to store header information for particular extension
+        header_info[ext] = {}
 
-    header_tables = OrderedDict()
-    key_val_dict = {} 
-    i = 0 
-    for head_name in header_names:  
-        keys = header_key_dic[head_name] 
-        vals = header_val_dic[head_name] 
-        combo = list(zip(keys,vals)) 
-        key_val_dict[i] = {head_name : combo} 
-        i = i + 1
+        # Get header
+        header = fits.getheader(fits_filepath, ext=ext)
 
-        keyword_table = Table([keys, vals], names=('Key', 'Value'))
-        tmpdir = tempfile.mkdtemp()
-        file_name_root = '{}_table'.format(head_name)
-        path_for_html = os.path.join(tmpdir, '{}.html'.format(file_name_root))
-        with open(path_for_html, 'w') as tmp:
-            # see https://docs.astropy.org/en/stable/io/unified.html#jsviewer for options
-            keyword_table.write(tmp, format='jsviewer', jskwargs={'display_length': 11})
-        header_tables[head_name] = open(path_for_html, 'r').read()
+        # Determine the extension name
+        if ext == 0:
+            header_info[ext]['EXTNAME'] = 'PRIMARY'
+        else:
+            header_info[ext]['EXTNAME'] = header['EXTNAME']
 
-    return header_names, header_tables
+        # Get list of keywords and values
+        exclude_list = ['', 'COMMENT']
+        header_info[ext]['keywords'] = [item for item in list(header.keys()) if item not in exclude_list]
+        header_info[ext]['values'] = []
+        for key in header_info[ext]['keywords']:
+            header_info[ext]['values'].append(hdulist[ext].header[key])
+
+    # Close the file
+    hdulist.close()
+
+    # Build tables
+    for ext in header_info:
+        table = Table([header_info[ext]['keywords'], header_info[ext]['values']], names=('Key', 'Value'))
+        temp_path_for_html = os.path.join(tempfile.mkdtemp(), '{}_table.html'.format(header_info[ext]['EXTNAME']))
+        with open(temp_path_for_html, 'w') as f:
+            table.write(f, format='jsviewer', jskwargs={'display_length': 10})
+        header_info[ext]['table'] = open(temp_path_for_html, 'r').read()
+
+    return header_info
 
 
 def get_image_info(file_root, rewrite):

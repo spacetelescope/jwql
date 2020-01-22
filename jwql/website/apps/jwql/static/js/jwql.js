@@ -52,7 +52,7 @@ function change_filetype(type, file_root, num_ints, inst) {
     // Update the image download and header links
     document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename;
     document.getElementById("download_jpg").href = jpg_filepath;
-    document.getElementById("view_header").href = '/' + inst + '/' + fits_filename + '/hdr/';
+    document.getElementById("view_header").href = '/' + inst + '/' + fits_filename + '/header/';
 
     // Disable the "left" button, since this will be showing integ0
     document.getElementById("int_before").disabled = true;

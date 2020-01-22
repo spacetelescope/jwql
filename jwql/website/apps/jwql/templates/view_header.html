@@ -18,18 +18,18 @@
 
 
         {% autoescape false %}
-		{% for header_name in header_names %}
+		{% for extension in header_info %}
 			<div class="mnemonic_query_section">
-				<h4>Extension: {{ header_name }}</h4><h>
-				{{ header_tables[header_name] }}
+				<h4>Extension: {{ header_info[extension]['EXTNAME']}}</h4><h>
+                    {{header_info[extension]['table']}}
+
 			</div>
 		{% endfor %}
         {% endautoescape %}
-    	<p>
-	    	<a class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}{{ file[:7] }}/{{ file }}'>Download FITS</a>
-	    	<a class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}{{ file[:7] }}/{{ jpg }}'>Download JPEG</a>
-	    	<a class="btn btn-primary my-2 mx-2 disabled" role="button" href="#">Submit Anomaly</a>
-	    </p>
+        <p>
+            <a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:view_image', args=[inst, file_root]) }}>View Image</a>
+            <a class="btn btn-primary my-2 mx-2 disabled" role="button" href="#"> View Proposal</a>
+        </p>
 
 	</main>
 
