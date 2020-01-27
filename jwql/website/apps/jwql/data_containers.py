@@ -513,7 +513,7 @@ def get_header_info(filename):
     header_info = {}
 
     # Open the file
-    fits_filepath = os.path.join(FILESYSTEM_DIR, filename[:7], filename)
+    fits_filepath = os.path.join(FILESYSTEM_DIR, filename[:7], '{}.fits'.format(filename))
     hdulist = fits.open(fits_filepath)
 
     # Extract header information from file
@@ -546,7 +546,7 @@ def get_header_info(filename):
         table = Table([header_info[ext]['keywords'], header_info[ext]['values']], names=('Key', 'Value'))
         temp_path_for_html = os.path.join(tempfile.mkdtemp(), '{}_table.html'.format(header_info[ext]['EXTNAME']))
         with open(temp_path_for_html, 'w') as f:
-            table.write(f, format='jsviewer', jskwargs={'display_length': 10})
+            table.write(f, format='jsviewer', jskwargs={'display_length': 20})
         header_info[ext]['table'] = open(temp_path_for_html, 'r').read()
 
     return header_info
