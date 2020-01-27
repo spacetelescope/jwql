@@ -18,6 +18,7 @@ REQUIRES = [
     'bokeh>=1.0',
     'codecov',
     'django>=2.0',
+    'django-autocomplete-light',
     'flake8',
     'inflection',
     'ipython',

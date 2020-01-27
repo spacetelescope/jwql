@@ -83,6 +83,7 @@ urlpatterns = [
 
     # REST API views
     path('api/proposals/', api_views.all_proposals, name='all_proposals'),
+    path('api/proposal_list_autocomplete/', api_views.ProposalAutocomplete.as_view(), name='proposal-list-autocomplete'),
     re_path(r'^api/(?P<inst>({}))/proposals/$'.format(instruments), api_views.instrument_proposals, name='instrument_proposals'),
     re_path(r'^api/(?P<inst>({}))/preview_images/$'.format(instruments), api_views.preview_images_by_instrument, name='preview_images_by_instrument'),
     re_path(r'^api/(?P<inst>({}))/thumbnails/$'.format(instruments), api_views.thumbnails_by_instrument, name='thumbnails_by_instrument'),

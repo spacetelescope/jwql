@@ -44,9 +44,11 @@ References
         ``https://docs.djangoproject.com/en/2.0/topics/http/views/``
 """
 
+from dal import autocomplete
 from django.http import JsonResponse
 
 from .data_containers import get_all_proposals
+from .data_containers import get_all_proposals_no_leading_zeros
 from .data_containers import get_filenames_by_proposal
 from .data_containers import get_filenames_by_rootname
 from .data_containers import get_instrument_proposals
@@ -204,6 +206,15 @@ def preview_images_by_rootname(request, rootname):
 
     preview_images = get_preview_images_by_rootname(rootname)
     return JsonResponse({'preview_images': preview_images}, json_dumps_params={'indent': 2})
+
+
+class ProposalAutocomplete(autocomplete.Select2ListView):
+    def get_list(self):
+        # This is essentially the same view as all_proposals, but with
+        # 'results' as the key rather than 'proposals', just in case
+        # autocomplete cares.
+        proposals = get_all_proposals_no_leading_zeros()
+        return proposals
 
 
 def thumbnails_by_instrument(request, inst):
