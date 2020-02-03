@@ -4,7 +4,7 @@ astroquery==0.4
 authlib==0.13
 bokeh==1.4.0
 codecov==2.0.15
-django==2.2.7
+django==3.0.3
 flake8==3.7.9
 inflection==0.3.1
 ipython==7.9.0
