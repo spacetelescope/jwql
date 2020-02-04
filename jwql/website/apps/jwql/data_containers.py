@@ -65,19 +65,18 @@ REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
 
 def data_trending():
-    """Container for Miri datatrending dashboard and components
+    """Returns data for MIRI data trending dashboard
 
     Returns
     -------
-    variables : int
-        nonsense
-    dashboard : list
+    dashboard_components : list
         A list containing the JavaScript and HTML content for the
         dashboard
     """
-    dashboard, variables = miri_dash.data_trending_dashboard()
 
-    return variables, dashboard
+    dashboard_components = miri_dash.data_trending_dashboard()
+
+    return dashboard_components
 
 
 def nirspec_trending():

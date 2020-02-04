@@ -12,6 +12,8 @@ Authors
 
     - Lauren Chambers
     - Johannes Sahlmann
+    - Matthew Bourque
+    - Daniel Kühbacher
 
 Use
 ---
@@ -61,7 +63,7 @@ FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
 def miri_data_trending(request):
-    """Generate the ``MIRI DATA-TRENDING`` page
+    """Generate the MIRI data trending page
 
     Parameters
     ----------
@@ -75,20 +77,12 @@ def miri_data_trending(request):
     """
 
     template = "miri_data_trending.html"
-    variables, dash = data_trending()
+    dashboard_components = data_trending()
 
     context = {
-        'dashboard': dash,
-        'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
-        'inst_list': JWST_INSTRUMENT_NAMES_MIXEDCASE,  # Do not edit; Required for navigation bar
-        'tools': MONITORS,  # Do not edit; Required for navigation bar
-        'user': None  # Do not edit; Required for authentication
-    }
+        'dashboard': dashboard_components,
+        'inst': ''}
 
-    # append variables to context
-    context.update(variables)
-
-    # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
 
 
