@@ -433,11 +433,14 @@ def refdig(conn, start, end):
     plot.title.text = '2.5V Ref and FPE Dig.'
     plot_functions.add_basic_layout(plot)
 
+    # Add a line renderer with legend and line thickness
     fpe_dig_25v_line = plot_functions.add_to_plot(plot, 'FPE Dig. 2.5V', 'IMIR_SPW_V_DIG_2R5V', start, end, conn, color='orange')
     fpe_pdu_25v_ref_line = plot_functions.add_to_plot(plot, 'FPE PDU 2.5V REF', 'IMIR_PDU_V_REF_2R5V', start, end, conn, color='red')
 
+    # Configure hover tool
     plot_functions.add_hover_tool(plot, [fpe_dig_25v_line, fpe_pdu_25v_ref_line])
 
+    # Configure legend
     plot.legend.location = 'bottom_right'
     plot.legend.click_policy = 'hide'
 
