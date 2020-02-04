@@ -37,7 +37,6 @@ Dependencies
 
     - ``astropy``
     - ``bokeh``
-    - ``numpy``
     - ``pandas``
 
 """
@@ -50,6 +49,132 @@ from bokeh.plotting import figure
 import pandas as pd
 
 from jwql.instrument_monitors.miri_monitors.data_trending.plots import plot_functions
+
+
+def currents(conn, start, end):
+    """Generates the 'FPE & ICE Currents' plot
+
+    Parameters
+    ----------
+    conn : obj
+        Database connection object
+    start : string
+        The start time for query and visualisation
+    end : string
+        The end time for query and visualisation
+
+    Returns
+    -------
+    plot : obj
+        ``bokeh`` plot object
+    """
+
+    # Create the plot
+    plot = figure(
+        tools='pan,wheel_zoom,box_zoom,reset,save',
+        toolbar_location='above',
+        plot_width=1120,
+        plot_height=500,
+        y_range=[0, 1.1],
+        x_axis_type='datetime',
+        output_backend='webgl',
+        x_axis_label='Date',
+        y_axis_label='Current (A)')
+    plot.grid.visible = True
+    plot.title.text = "FPE & ICE Currents"
+    plot_functions.add_basic_layout(plot)
+
+    # Plot the data
+    ice_current_idle = plot_functions.add_to_plot(plot, 'ICE Current idle', 'SE_ZIMIRICEA_IDLE', start, end, conn, color='red')
+    ice_current_hv_on = plot_functions.add_to_plot(plot, 'ICE Current HV on', 'SE_ZIMIRICEA_HV_ON', start, end, conn, color='orange')
+    fpe_current = plot_functions.add_to_plot(plot, 'FPE Current', 'SE_ZIMIRFPEA', start, end, conn, color='brown')
+
+    # Configure hover tool
+    plot_functions.add_hover_tool(plot, [ice_current_idle, ice_current_hv_on, fpe_current])
+
+    # Configure legend
+    plot.legend.location = 'bottom_right'
+    plot.legend.click_policy = 'hide'
+    plot.legend.orientation = 'horizontal'
+
+    return plot
+
+
+def power_fpea(conn, start, end):
+    """Generates the 'POWER FPE' plot
+
+    Parameters
+    ----------
+    conn : obj
+        Database connection object
+    start : string
+        The start time for query and visualisation
+    end : string
+        The end time for query and visualisation
+
+    Returns
+    -------
+    plot : obj
+        ``bokeh`` plot object
+    """
+
+    # Query data from database
+    start_str = str(Time(start).mjd)
+    end_str = str(Time(end).mjd)
+    command = "SELECT * FROM SE_ZIMIRFPEA \
+               WHERE start_time BETWEEN {} AND {}\
+               ORDER BY start_time".format(start_str, end_str)
+    _fpea = pd.read_sql_query(command, conn)
+
+    # Apply voltage factor
+    voltage = 30
+    _fpea['average'] *= voltage
+
+    # Convert times to datetime objects
+    _fpea['start_time'] = pd.to_datetime(Time(_fpea['start_time'], format='mjd').datetime)
+
+    # Set column data source
+    fpea = ColumnDataSource(_fpea)
+
+    # Create the plot
+    plot = figure(
+        tools='pan,wheel_zoom,box_zoom,reset,save',
+        toolbar_location='above',
+        plot_width=1120,
+        plot_height=500,
+        y_range=[28.0, 28.5],
+        x_axis_type='datetime',
+        output_backend='webgl',
+        x_axis_label='Date',
+        y_axis_label='Power (W)')
+    plot.grid.visible = True
+    plot.title.text = 'POWER FPE'
+    plot_functions.add_basic_layout(plot)
+
+    # Add a line renderer with legend and line thickness
+    power_fpea_line = plot.scatter(x='start_time', y='average', color='orange', legend='Power FPEA', source=fpea)
+    plot.line(x='start_time', y='average', color='orange', legend='Power FPEA', source=fpea)
+
+    # Generate error bars
+    err_xs, err_ys = [], []
+    for index, item in _fpea.iterrows():
+        err_xs.append((item['start_time'], item['start_time']))
+        err_ys.append((item['average'] - item['deviation'], item['average'] + item['deviation']))
+
+    # plot the error bars
+    plot.multi_line(err_xs, err_ys, color='orange', legend='Power FPEA')
+
+    # Activate HoverTool for scatter plot
+    hover_tool = HoverTool(
+        tooltips=[('count', '@data_points'), ('mean', '@average'), ('deviation', '@deviation')],
+        renderers=[power_fpea_line])
+    plot.tools.append(hover_tool)
+
+    # Configure legend
+    plot.legend.location = 'bottom_right'
+    plot.legend.click_policy = 'hide'
+
+    return plot
 
 
 def power_ice(conn, start, end):
@@ -140,132 +265,6 @@ def power_ice(conn, start, end):
     # Configure legend
     plot.legend.location = 'bottom_right'
     plot.legend.click_policy = 'hide'
-
-    return plot
-
-
-def power_fpea(conn, start, end):
-    """Generates the 'POWER FPE' plot
-
-    Parameters
-    ----------
-    conn : obj
-        Database connection object
-    start : string
-        The start time for query and visualisation
-    end : string
-        The end time for query and visualisation
-
-    Returns
-    -------
-    plot : obj
-        ``bokeh`` plot object
-    """
-
-    # Query data from database
-    start_str = str(Time(start).mjd)
-    end_str = str(Time(end).mjd)
-    command = "SELECT * FROM SE_ZIMIRFPEA \
-               WHERE start_time BETWEEN {} AND {}\
-               ORDER BY start_time".format(start_str, end_str)
-    _fpea = pd.read_sql_query(command, conn)
-
-    # Apply voltage factor
-    voltage = 30
-    _fpea['average'] *= voltage
-
-    # Convert times to datetime objects
-    _fpea['start_time'] = pd.to_datetime(Time(_fpea['start_time'], format='mjd').datetime)
-
-    # Set column data source
-    fpea = ColumnDataSource(_fpea)
-
-    # Create the plot
-    plot = figure(
-        tools='pan,wheel_zoom,box_zoom,reset,save',
-        toolbar_location='above',
-        plot_width=1120,
-        plot_height=500,
-        y_range=[28.0, 28.5],
-        x_axis_type='datetime',
-        output_backend='webgl',
-        x_axis_label='Date',
-        y_axis_label='Power (W)')
-    plot.grid.visible = True
-    plot.title.text = 'POWER FPE'
-    plot_functions.add_basic_layout(plot)
-
-    # Add a line renderer with legend and line thickness
-    power_fpea_line = plot.scatter(x='start_time', y='average', color='orange', legend='Power FPEA', source=fpea)
-    plot.line(x='start_time', y='average', color='orange', legend='Power FPEA', source=fpea)
-
-    # Generate error bars
-    err_xs, err_ys = [], []
-    for index, item in _fpea.iterrows():
-        err_xs.append((item['start_time'], item['start_time']))
-        err_ys.append((item['average'] - item['deviation'], item['average'] + item['deviation']))
-
-    # plot the error bars
-    plot.multi_line(err_xs, err_ys, color='orange', legend='Power FPEA')
-
-    # Activate HoverTool for scatter plot
-    hover_tool = HoverTool(
-        tooltips=[('count', '@data_points'), ('mean', '@average'), ('deviation', '@deviation')],
-        renderers=[power_fpea_line])
-    plot.tools.append(hover_tool)
-
-    # Configure legend
-    plot.legend.location = 'bottom_right'
-    plot.legend.click_policy = 'hide'
-
-    return plot
-
-
-def currents(conn, start, end):
-    """Generates the 'FPE & ICE Currents' plot
-
-    Parameters
-    ----------
-    conn : obj
-        Database connection object
-    start : string
-        The start time for query and visualisation
-    end : string
-        The end time for query and visualisation
-
-    Returns
-    -------
-    plot : obj
-        ``bokeh`` plot object
-    """
-
-    # Create the plot
-    plot = figure(
-        tools='pan,wheel_zoom,box_zoom,reset,save',
-        toolbar_location='above',
-        plot_width=1120,
-        plot_height=500,
-        y_range=[0, 1.1],
-        x_axis_type='datetime',
-        output_backend='webgl',
-        x_axis_label='Date',
-        y_axis_label='Current (A)')
-    plot.grid.visible = True
-    plot.title.text = "FPE & ICE Currents"
-    plot_functions.add_basic_layout(plot)
-
-    # Plot the data
-    ice_current_idle = plot_functions.add_to_plot(plot, 'ICE Current idle', 'SE_ZIMIRICEA_IDLE', start, end, conn, color='red')
-    ice_current_hv_on = plot_functions.add_to_plot(plot, 'ICE Current HV on', 'SE_ZIMIRICEA_HV_ON', start, end, conn, color='orange')
-    fpe_current = plot_functions.add_to_plot(plot, 'FPE Current', 'SE_ZIMIRFPEA', start, end, conn, color='brown')
-
-    # Configure hover tool
-    plot_functions.add_hover_tool(plot, [ice_current_idle, ice_current_hv_on, fpe_current])
-
-    # Configure legend
-    plot.legend.location = 'bottom_right'
-    plot.legend.click_policy = 'hide'
-    plot.legend.orientation = 'horizontal'
 
     return plot
 
