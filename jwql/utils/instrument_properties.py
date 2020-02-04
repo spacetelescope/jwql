@@ -124,7 +124,10 @@ def amplifier_info(filename, omit_reference_pixels=True):
             try:
                 data_quality = hdu['DQ'].data
             except KeyError:
-                raise KeyError('DQ extension not found.')
+                try:
+                    data_quality = hdu['PIXELDQ'].data
+                except KeyError:
+                    raise KeyError('DQ extension not found.')
 
         # Reference pixels should be flagged in the DQ array with the
         # REFERENCE_PIXEL flag. Find the science pixels by looping for

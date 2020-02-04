@@ -218,7 +218,7 @@ class Monitor(base):
     monitor_name = Column(String(), nullable=False)
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=True)
-    status = Column(Enum('SUCESS', 'FAILURE', name='monitor_status'), nullable=True)
+    status = Column(Enum('SUCCESS', 'FAILURE', name='monitor_status'), nullable=True)
     affected_tables = Column(ARRAY(String, dimensions=1), nullable=True)
     log_file = Column(String(), nullable=False)
 
@@ -397,6 +397,8 @@ MIRIDarkDarkCurrent = monitor_orm_factory('miri_dark_dark_current')
 FGSDarkQueryHistory = monitor_orm_factory('fgs_dark_query_history')
 FGSDarkPixelStats = monitor_orm_factory('fgs_dark_pixel_stats')
 FGSDarkDarkCurrent = monitor_orm_factory('fgs_dark_dark_current')
+NIRCamBiasQueryHistory = monitor_orm_factory('nircam_bias_query_history')
+NIRCamBiasStats = monitor_orm_factory('nircam_bias_stats')
 
 
 if __name__ == '__main__':
