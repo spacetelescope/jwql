@@ -1,7 +1,7 @@
 """Prepares plots for ICE VOLTAGE tab on MIRI data trending webpage
 
-    Module prepares plots for the mnemonics listed below. Combines
-    plots in a grid and returns tab object.
+Module prepares plots for the mnemonics listed below. Combines plots
+in a grid and returns tab object.
 
     Plot 1:
     IMIR_HK_ICE_SEC_VOLT1
@@ -189,55 +189,6 @@ def volt4(conn, start, end):
     return plot
 
 
-def wheel_sensor_supply(conn, start, end):
-    """Generates the 'Wheel Sensor Supply' plot
-
-    Parameters
-    ----------
-    conn : obj
-        Database connection object
-    start : string
-        The start time for query and visualisation
-    end : string
-        The end time for query and visualisation
-
-    Returns
-    -------
-    plot : obj
-        ``bokeh`` plot object
-    """
-
-    # Create the plot
-    plot = figure(
-        tools='pan,wheel_zoom,box_zoom,reset,save',
-        toolbar_location='above',
-        plot_width=560,
-        plot_height=500,
-        y_range=[280, 300],
-        x_axis_type='datetime',
-        output_backend='webgl',
-        x_axis_label='Date',
-        y_axis_label='Voltage (mV)')
-    plot.grid.visible = True
-    plot.title.text = 'Wheel Sensor Supply'
-    plot_functions.add_basic_layout(plot)
-
-    # Add a line renderer with legend and line thickness
-    fw_line = plot_functions.add_to_plot(plot, 'FW', 'IMIR_HK_FW_POS_VOLT', start, end, conn, color='red')
-    gw14_line = plot_functions.add_to_plot(plot, 'GW14', 'IMIR_HK_GW14_POS_VOLT', start, end, conn, color='purple')
-    gw23_line = plot_functions.add_to_plot(plot, 'GW23', 'IMIR_HK_GW23_POS_VOLT', start, end, conn, color='orange')
-    ccc_line = plot_functions.add_to_plot(plot, 'CCC', 'IMIR_HK_CCC_POS_VOLT', start, end, conn, color='firebrick')
-
-    # Configure hover tool
-    plot_functions.add_hover_tool(plot, [fw_line, gw14_line, gw23_line, ccc_line])
-
-    # Configure legend
-    plot.legend.location = 'bottom_right'
-    plot.legend.click_policy = 'hide'
-
-    return plot
-
-
 def volt_plots(conn, start, end):
     """Generates the 'ICE VOLTAGE' tab
 
@@ -315,3 +266,52 @@ def volt_plots(conn, start, end):
     tab = Panel(child=layout, title='ICE VOLTAGE')
 
     return tab
+
+
+def wheel_sensor_supply(conn, start, end):
+    """Generates the 'Wheel Sensor Supply' plot
+
+    Parameters
+    ----------
+    conn : obj
+        Database connection object
+    start : string
+        The start time for query and visualisation
+    end : string
+        The end time for query and visualisation
+
+    Returns
+    -------
+    plot : obj
+        ``bokeh`` plot object
+    """
+
+    # Create the plot
+    plot = figure(
+        tools='pan,wheel_zoom,box_zoom,reset,save',
+        toolbar_location='above',
+        plot_width=560,
+        plot_height=500,
+        y_range=[280, 300],
+        x_axis_type='datetime',
+        output_backend='webgl',
+        x_axis_label='Date',
+        y_axis_label='Voltage (mV)')
+    plot.grid.visible = True
+    plot.title.text = 'Wheel Sensor Supply'
+    plot_functions.add_basic_layout(plot)
+
+    # Add a line renderer with legend and line thickness
+    fw_line = plot_functions.add_to_plot(plot, 'FW', 'IMIR_HK_FW_POS_VOLT', start, end, conn, color='red')
+    gw14_line = plot_functions.add_to_plot(plot, 'GW14', 'IMIR_HK_GW14_POS_VOLT', start, end, conn, color='purple')
+    gw23_line = plot_functions.add_to_plot(plot, 'GW23', 'IMIR_HK_GW23_POS_VOLT', start, end, conn, color='orange')
+    ccc_line = plot_functions.add_to_plot(plot, 'CCC', 'IMIR_HK_CCC_POS_VOLT', start, end, conn, color='firebrick')
+
+    # Configure hover tool
+    plot_functions.add_hover_tool(plot, [fw_line, gw14_line, gw23_line, ccc_line])
+
+    # Configure legend
+    plot.legend.location = 'bottom_right'
+    plot.legend.click_policy = 'hide'
+
+    return plot

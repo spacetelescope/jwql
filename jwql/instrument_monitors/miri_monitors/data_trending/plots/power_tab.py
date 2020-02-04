@@ -1,7 +1,7 @@
 """Prepares plots for POWER tab on MIRI data trending webpage
 
-    Module prepares plots for the mnemonics listed below. Combines
-    plots in a grid and returns tab object.
+Module prepares plots for the mnemonics listed below. Combines plots
+in a grid and returns tab object.
 
     Plot 1:
     SE_ZIMIRICEA * 30V
