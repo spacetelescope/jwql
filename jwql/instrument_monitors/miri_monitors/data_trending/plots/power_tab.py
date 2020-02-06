@@ -43,7 +43,7 @@ Dependencies
 
 from astropy.time import Time
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.models import BoxAnnotation, ColumnDataSource, HoverTool
 from bokeh.models.widgets import Panel, Div
 from bokeh.plotting import figure
 import pandas as pd
@@ -234,7 +234,7 @@ def power_ice(conn, start, end):
     plot.grid.visible = True
     plot.title.text = 'POWER ICE'
     plot_functions.add_basic_layout(plot)
-    plot_functions.add_limit_box(plot, 6, 8, alpha=0.1, color="green")
+    plot.add_layout(BoxAnnotation(bottom=6, top=8, fill_alpha=0.1, fill_color='green'))
 
     # Add a line renderer with legend and line thickness
     power_idle_line = plot.scatter(x='start_time', y='average', color='orange', legend='Power idle', source=idle)
