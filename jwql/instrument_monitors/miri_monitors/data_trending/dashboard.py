@@ -55,9 +55,9 @@ def data_trending_dashboard(start=DEFAULT_START, end=NOW):
 
     Parameters
     ----------
-    start : time
+    start : string
         The start time for query and visualisation
-    end : time
+    end : string
         The end time for query and visualisation
 
     Returns
