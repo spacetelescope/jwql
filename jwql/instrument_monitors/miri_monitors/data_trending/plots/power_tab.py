@@ -152,8 +152,8 @@ def power_fpea(conn, start, end):
     plot_functions.add_basic_layout(plot)
 
     # Add a line renderer with legend and line thickness
-    power_fpea_line = plot.scatter(x='start_time', y='average', color='orange', legend='Power FPEA', source=fpea)
-    plot.line(x='start_time', y='average', color='orange', legend='Power FPEA', source=fpea)
+    power_fpea_line = plot.scatter(x='start_time', y='average', color='orange', legend_label='Power FPEA', source=fpea)
+    plot.line(x='start_time', y='average', color='orange', legend_label='Power FPEA', source=fpea)
 
     # Generate error bars
     err_xs, err_ys = [], []
@@ -162,7 +162,7 @@ def power_fpea(conn, start, end):
         err_ys.append((item['average'] - item['deviation'], item['average'] + item['deviation']))
 
     # plot the error bars
-    plot.multi_line(err_xs, err_ys, color='orange', legend='Power FPEA')
+    plot.multi_line(err_xs, err_ys, color='orange', legend_label='Power FPEA')
 
     # Activate HoverTool for scatter plot
     hover_tool = HoverTool(
@@ -237,10 +237,10 @@ def power_ice(conn, start, end):
     plot.add_layout(BoxAnnotation(bottom=6, top=8, fill_alpha=0.1, fill_color='green'))
 
     # Add a line renderer with legend and line thickness
-    power_idle_line = plot.scatter(x='start_time', y='average', color='orange', legend='Power idle', source=idle)
-    power_hv_on_line = plot.scatter(x='start_time', y='average', color='red', legend='Power hv on', source=hv)
-    plot.line(x='start_time', y='average', color='orange', legend='Power idle', source=idle)
-    plot.line(x='start_time', y='average', color='red', legend='Power hv on', source=hv)
+    power_idle_line = plot.scatter(x='start_time', y='average', color='orange', legend_label='Power idle', source=idle)
+    power_hv_on_line = plot.scatter(x='start_time', y='average', color='red', legend_label='Power hv on', source=hv)
+    plot.line(x='start_time', y='average', color='orange', legend_label='Power idle', source=idle)
+    plot.line(x='start_time', y='average', color='red', legend_label='Power hv on', source=hv)
 
     # Generate error bars
     err_xs_hv, err_ys_hv, err_xs_idle, err_ys_idle = [], [], [], []
@@ -252,8 +252,8 @@ def power_ice(conn, start, end):
         err_ys_idle.append((item['average'] - item['deviation'], item['average'] + item['deviation']))
 
     # Plot the error bars
-    plot.multi_line(err_xs_hv, err_ys_hv, color='red', legend='Power hv on')
-    plot.multi_line(err_xs_idle, err_ys_idle, color='orange', legend='Power idle')
+    plot.multi_line(err_xs_hv, err_ys_hv, color='red', legend_label='Power hv on')
+    plot.multi_line(err_xs_idle, err_ys_idle, color='orange', legend_label='Power idle')
 
     # Activate HoverTool for scatter plot
     hover_tool = HoverTool(

@@ -117,8 +117,8 @@ def add_to_plot(plot, legend, mnemonic, start, end, conn, y_axis='default', colo
     plot_data = ColumnDataSource(query_results)
 
     # Plot data
-    plot.line(x='start_time', y='average', color=color, y_range_name=y_axis, legend=legend, source=plot_data)
-    scatter_plot = plot.scatter(x='start_time', y='average', color=color, name=mnemonic, y_range_name=y_axis, legend=legend, source=plot_data)
+    plot.line(x='start_time', y='average', color=color, y_range_name=y_axis, legend_label=legend, source=plot_data)
+    scatter_plot = plot.scatter(x='start_time', y='average', color=color, name=mnemonic, y_range_name=y_axis, legend_label=legend, source=plot_data)
 
     # Generate error lines if necessary
     if err != 'n':
@@ -128,7 +128,7 @@ def add_to_plot(plot, legend, mnemonic, start, end, conn, y_axis='default', colo
             err_ys.append((item['average'] - item['deviation'], item['average'] + item['deviation']))
 
         # Plot the error bars
-        plot.multi_line(err_xs, err_ys, color=color, legend=legend)
+        plot.multi_line(err_xs, err_ys, color=color, legend_label=legend)
 
     return scatter_plot
 
@@ -174,8 +174,8 @@ def add_to_wplot(plot, legend, mnemonic, start, end, conn, normalization_factor,
     plot_data = ColumnDataSource(query_results)
 
     # Plot data
-    plot.line(x='timestamp', y='value', color=color, legend=legend, source=plot_data)
-    plot.scatter(x='timestamp', y='value', color=color, legend=legend, source=plot_data)
+    plot.line(x='timestamp', y='value', color=color, legend_label=legend, source=plot_data)
+    plot.scatter(x='timestamp', y='value', color=color, legend_label=legend, source=plot_data)
 
 
 def pol_regression(x, y, rank):

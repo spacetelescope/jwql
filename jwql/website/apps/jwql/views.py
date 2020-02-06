@@ -81,7 +81,8 @@ def miri_data_trending(request):
 
     context = {
         'dashboard': dashboard_components,
-        'inst': ''}
+        'inst': ''
+    }
 
     return render(request, template, context)
 

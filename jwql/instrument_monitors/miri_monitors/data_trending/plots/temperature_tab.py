@@ -232,8 +232,8 @@ def iec_temp(conn, start, end):
     plot.grid.visible = True
     plot.title.text = 'IEC Temperatures'
     plot_functions.add_basic_layout(plot)
-    plot.line(x='start_time', y='average', color='brown', legend='ICE Internal', source=plot_data)
-    plot.scatter(x='start_time', y='average', color='brown', legend='ICE Internal', source=plot_data)
+    plot.line(x='start_time', y='average', color='brown', legend_label='ICE Internal', source=plot_data)
+    plot.scatter(x='start_time', y='average', color='brown', legend_label='ICE Internal', source=plot_data)
 
     # Add a line renderer with legend and line thickness
     ice_iec_a_line = plot_functions.add_to_plot(plot, 'ICE IEC A', 'ST_ZTC1MIRIA', start, end, conn, color='burlywood')
