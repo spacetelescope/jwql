@@ -1,256 +1,310 @@
-"""This module holds functions for miri data trending
+"""This module holds various utility functions for MIRI data trending
 
-All functions in this module are tailored for the miri datatrending application.
-Detailed descriptions are given for every function individually.
+All functions in this module are tailored for the MIRI data trending
+application.  Detailed descriptions are given for every function
+individually.
 
+Authors
 -------
+
     - Daniel Kühbacher
 
 Use
 ---
 
+    This module is intended to be imported and used by MIRI data
+    trending software, e.g.:
+
+    ::
+        from .utils.process_data import whole_day_routine
+        whole_day_routine(raw_daya)
+
 Dependencies
 ------------
-MIRI_trend_requestsDRAFT1900201.docx
 
-References
-----------
-
-Notes
------
-
+    - ``sqlite3``
 """
 
-import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
-import jwql.instrument_monitors.miri_monitors.data_trending.utils.condition as cond
-import statistics
-import sqlite3
-import warnings
 from collections import defaultdict
+import statistics
+import warnings
+
+import sqlite3
+
+from jwql.instrument_monitors.miri_monitors.data_trending.utils import condition
+from jwql.instrument_monitors.miri_monitors.data_trending.utils import mnemonics
 
 
+def _extract_data(condition, mnemonic):
+    """Extract data for given mnemmonic and a given condition
 
-def extract_data(condition, mnemonic):
-    '''Function extracts data from given mnemmonic at a given condition
     Parameters
     ----------
-    condition : object
-        conditon object that holds one or more subconditions
-    mnemonic : AstropyTable
-        holds single table with mnemonic data
-    Return
-    ------
-    temp : list  or None
-        holds data that applies to given condition
-    '''
-    temp = []
+    condition : obj
+        Conditon object that holds one or more subconditions
+    mnemonic : obj
+        ``AstropyTable`` object that holds single table with mnemonic
+        data
 
-    #look for all values that fit to the given conditions
+    Returns
+    -------
+    data : list or None
+        Contains data that applies to given condition
+    """
+
+    data = []
+
+    # Look for all values that fit to the given conditions
     for element in mnemonic:
         if condition.state(float(element['time'])):
-            temp.append(float(element['value']))
+            data.append(float(element['value']))
 
-    #return temp is one ore more values fit to the condition
-    #return None if no applicable data was found
-    if len(temp) > 0:
-        return temp
+    # Returned data is one or more values fit to the condition
+    # Return None if no applicable data was found
+    if len(data) > 0:
+        return data
     else:
         return None
 
-def extract_filterpos1(condition, nominals, ratio_mnem, pos_mnem):
-    '''Extracts ratio values which correspond to given position values and their
-       proposed nominals
+
+def _extract_filterpos(condition, nominals, ratio_mnemonic, position_mnemonic):
+    """Extracts ratio values which correspond to given position values
+    and their proposed nominals
+
     Parameters
     ----------
-    condition : object
-        conditon object that holds one or more subconditions
+    condition : obj
+        Conditon object that holds one or more subconditions
     nominals : dict
-        holds nominal values for all wheel positions
-    ratio_mem : AstropyTable
-        holds ratio values of one specific mnemonic
-    pos_mem : AstropyTable
-        holds pos values of one specific mnemonic
-    Return
-    ------
-    pos_values : dict
-        holds ratio values and times with corresponding positionlabel as key
-    '''
+        Holds nominal values for all wheel positions
+    ratio_mnemonic : AstropyTable
+        Holds ratio values of one specific mnemonic
+    position_mnemonic : AstropyTable
+        Holds position values of one specific mnemonic
 
-    #initilize empty dict
-    pos_values = defaultdict(list)
+    Returns
+    -------
+    position_values : dict
+        Holds ratio values and times with corresponding position label
+        as key
+    """
 
-    #do for every position in mnemonic attribute
-    for pos in pos_mnem:
+    # Initilize empty dict for assigned ratio values
+    position_values = defaultdict(list)
 
-        #raise warning if position is UNKNOWN
-        if pos['value'] != "UNKNOWN":
+    for index, position in enumerate(position_mnemonic):
 
-            #request time interval where the current positon is in between
-            interval = condition.get_interval(pos['time'])
+        if position['value'] != 'UNKNOWN':
 
-            #get all ratio values in the interval
-
-
-
-            #check if condition attribute for current positon is true
-            if interval is not None:
-                cur_pos_time = pos['time']
-                filtername = pos['value']
-
-                for ratio in ratio_mnem:
-
-                    #look for ratio values which are in the same time interval
-                    #and differ a certain value (here 5mV) from the nominal
-                    if (ratio['time'] >= cur_pos_time) and \
-                        (abs(float(ratio['value']) - nominals.get(pos['value'])) < 5):
-
-                        if (ratio['time'] > interval[0]) and (ratio['time'] < interval[1]):
-                            pos_values[pos['value']].append(( ratio['time'], ratio['value']))
-
-
-
-        else:
-            warnings.warn("UNKNOWN Position")
-    return pos_values
-
-def extract_filterpos(condition, nominals, ratio_mnem, pos_mnem):
-    '''Extracts ratio values which correspond to given position values and their
-       proposed nominals
-    Parameters
-    ----------
-    condition : object
-        conditon object that holds one or more subconditions
-    nominals : dict
-        holds nominal values for all wheel positions
-    ratio_mem : AstropyTable
-        holds ratio values of one specific mnemonic
-    pos_mem : AstropyTable
-        holds pos values of one specific mnemonic
-    Return
-    ------
-    pos_values : dict
-        holds ratio values and times with corresponding positionlabel as key
-    '''
-
-    #initilize empty dict for assigned ratio values
-    pos_values = defaultdict(list)
-
-    for index, pos in enumerate(pos_mnem):
-
-        #raise warning if position is UNKNOWN
-        if pos['value'] != "UNKNOWN":
-
-            #set up interval beween where the pos value was timed and the supply
-            interval = condition.get_interval(pos['time'])
-
+            # Set up interval beween where the position value was timed and the supply
+            interval = condition.get_interval(position['time'])
             if interval is None:
                 continue
             else:
-                interval[0] = pos['time']
-                if pos_mnem[index+1]['time'] < interval[1]:
-                    interval[1] = pos_mnem[index+1]['time']
+                interval[0] = position['time']
+                if position_mnemonic[index + 1]['time'] < interval[1]:
+                    interval[1] = position_mnemonic[index + 1]['time']
 
-            #empty list for pos values
+            # Empty list for position values
             interval_ratios = []
 
-            #get all ratio values in the interval
-            for ratio in ratio_mnem:
+            # Get all ratio values in the interval
+            for ratio in ratio_mnemonic:
                 if (ratio['time'] >= interval[0]) and (ratio['time'] < interval[1]):
                     interval_ratios.append(ratio)
                 elif ratio['time']>= interval[1]:
                         break
 
-            #check wheather pos values are in range of these checkvals
+            # Check whether position values are in range of these checkvals
             window = 1
             found_value = False
-
             while found_value == False:
                 for ratio in interval_ratios:
-                    if (abs(float(ratio['value']) - nominals.get(pos['value'])) < window):
+                    if (abs(float(ratio['value']) - nominals.get(position['value'])) < window):
                         found_value = True
-                        pos_values[pos['value']].append(( ratio['time'], ratio['value']))
+                        position_values[position['value']].append(( ratio['time'], ratio['value']))
                         break
-
                 window +=2
-
                 if window > 10:
                     print('ratio error')
                     break
+        else:
+            warnings.warn('UNKNOWN Position')
+
+    return position_values
+
+
+def _extract_filterpos1(condition, nominals, ratio_mnemonic, position_mnemonic):
+    """Extracts ratio values which correspond to given position values
+    and their proposed nominals
+
+    Parameters
+    ----------
+    condition : obj
+        Conditon object that holds one or more subconditions
+    nominals : dict
+        Holds nominal values for all wheel positions
+    ratio_mnemonic : AstropyTable
+        Holds ratio values of one specific mnemonic
+    position_mnemonic : AstropyTable
+        Holds position values of one specific mnemonic
+
+    Returns
+    -------
+    position_values : dict
+        Holds ratio values and times with corresponding position label
+        as key
+    """
+
+    position_values = defaultdict(list)
+
+    for position in position_mnemonic:
+
+        if position['value'] != 'UNKNOWN':
+
+            # Request time interval where the current positon is in between
+            interval = condition.get_interval(position['time'])
+
+            # Check if condition attribute for current positon is true
+            if interval is not None:
+                current_position_time = position['time']
+
+                for ratio in ratio_mnemonic:
+
+                    # Look for ratio values which are in the same time interval
+                    # and differ a certain value (here 5mV) from the nominal
+                    if (ratio['time'] >= current_position_time) and \
+                        (abs(float(ratio['value']) - nominals.get(position['value'])) < 5):
+
+                        if (ratio['time'] > interval[0]) and (ratio['time'] < interval[1]):
+                            position_values[position['value']].append(( ratio['time'], ratio['value']))
 
         else:
-            warnings.warn("UNKNOWN Position")
-    return pos_values
+            warnings.warn('UNKNOWN Position')
+
+    return position_values
+
 
 def once_a_day_routine(mnemonic_data):
-    '''Proposed routine for processing a 15min data file once a day
+    """Routine for processing a 15 min data file once a day
+
     Parameters
     ----------
     mnemonic_data : dict
-        dict holds time and value in a astropy table with correspining identifier as key
-    Return
-    ------
+        Holds time and value in a astropy table with correspining
+        identifier as key
+
+    Returns
+    -------
     data_cond_1 : dict
-        holds extracted data with condition 1 applied
-    data_cond_1 : dict
-        holds extracted data with condition 2 applied
-    '''
+        Holds extracted data with condition 1 applied
+    data_cond_2 : dict
+        Holds extracted data with condition 2 applied
+    """
 
-    #abbreviate attribute
-    m = mnemonic_data
-    returndata = dict()
+    # Initialize dictionary to hold data
+    data_dict = dict()
 
+    condition_set_1 = [
+        condition.equal(mnemonic_data.mnemonic('IMIR_HK_IMG_CAL_LOOP'), 'OFF'),
+        condition.equal(mnemonic_data.mnemonic('IMIR_HK_IFU_CAL_LOOP'), 'OFF'),
+        condition.equal(mnemonic_data.mnemonic('IMIR_HK_POM_LOOP'), 'OFF'),
+        condition.smaller(mnemonic_data.mnemonic('IMIR_HK_ICE_SEC_VOLT1'), 1.0),
+        condition.greater(mnemonic_data.mnemonic('SE_ZIMIRICEA'), 0.2)]
+    condition_1 = condition.condition(condition_set_1)
 
-    #########################################################################
-    con_set_1 = [                                               \
-    cond.equal(m.mnemonic('IMIR_HK_IMG_CAL_LOOP'),'OFF'),       \
-    cond.equal(m.mnemonic('IMIR_HK_IFU_CAL_LOOP'),'OFF'),       \
-    cond.equal(m.mnemonic('IMIR_HK_POM_LOOP'),'OFF'),           \
-    cond.smaller(m.mnemonic('IMIR_HK_ICE_SEC_VOLT1'),1.0),      \
-    cond.greater(m.mnemonic('SE_ZIMIRICEA'),0.2)]
-    #setup condition
-    condition_1 = cond.condition(con_set_1)
-
-
-    #add filtered engineering values of mnemonics given in list mnemonic_cond_1
-    #to dictitonary
-    for identifier in mn.mnemonic_cond_1:
-        data = extract_data(condition_1, m.mnemonic(identifier))
-
+    # Add filtered engineering values of mnemonics given in list mnemonic_cond_1
+    # to dictitonary
+    for identifier in mnemonics.mnemonic_cond_1:
+        data = _extract_data(condition_1, mnemonic_data.mnemonic(identifier))
         if data != None:
-            returndata.update( {identifier:data} )
+            data_dict.update({identifier:data})
         else:
-            print("no data for {}".format(identifier))
+            print('no data for {}'.format(identifier))
 
-    del condition_1
+    # Under normal use, the following line should be added:
+    #condition.equal(mnemonic_data.mnemonic('IGDP_IT_MIR_SW_STATUS'), 'DETECTOR_READY'),
+    # SW was missing in the trainigs data so I could not use it for a condition.
+    condition_set_2 = [
+        condition.greater(mnemonic_data.mnemonic('SE_ZIMIRFPEA'), 0.5),
+        condition.equal(mnemonic_data.mnemonic('IGDP_IT_MIR_IC_STATUS'), 'DETECTOR_READY'),
+        condition.equal(mnemonic_data.mnemonic('IGDP_IT_MIR_LW_STATUS'), 'DETECTOR_READY')]
+    condition_2 = condition.condition(condition_set_2)
 
-    ##########################################################################
-    #under normal use following line should be added:
-    #cond.equal(m.mnemonic('IGDP_IT_MIR_SW_STATUS'), 'DETECTOR_READY'),      \
-    #SW was missing in the trainigs data so I could not use it for a condition.
-    con_set_2 = [                                                           \
-    cond.greater(m.mnemonic('SE_ZIMIRFPEA'), 0.5),                          \
-    cond.equal(m.mnemonic('IGDP_IT_MIR_IC_STATUS'), 'DETECTOR_READY'),      \
-    cond.equal(m.mnemonic('IGDP_IT_MIR_LW_STATUS'), 'DETECTOR_READY')]
-    #setup condition
-    condition_2 = cond.condition(con_set_2)
-
-    #add filtered engineering values of mnemonics given in list mnemonic_cond_2
-    #to dictitonary
-    for identifier in mn.mnemonic_cond_2:
-        data = extract_data(condition_2, m.mnemonic(identifier))
-
+    # Add filtered engineering values of mnemonics given in list mnemonic_cond_2
+    # to dictitonary
+    for identifier in mnemonics.mnemonic_cond_2:
+        data = _extract_data(condition_2, mnemonic_data.mnemonic(identifier))
         if data != None:
-            returndata.update( {identifier:data} )
+            data_dict.update({identifier:data})
         else:
-            print("no data for {}".format(identifier))
+            print('no data for {}'.format(identifier))
 
-    del condition_2
+    return data_dict
 
-    return returndata
+
+def wheelpos_routine(mnemonic_data):
+    """Routine for position sensors each day
+
+    Parameters
+    ----------
+    mnemonic_data : dict
+        dict holds time and value in a astropy table with correspining
+        identifier as key
+
+    Returns
+    -------
+    FW : dict
+        Holds FW ratio values and times with corresponding
+        positionlabel as key
+    GW14 : dict
+        Holds GW14 ratio values and times with corresponding
+        positionlabel as key
+    GW23 : dict
+        Holds GW23 ratio values and times with corresponding
+        positionlabel as key
+    CCC : dict
+        Holds CCC ratio values and times with corresponding
+        positionlabel as key
+    """
+
+    condition_FW = condition.condition([condition.greater(mnemonic_data.mnemonic('IMIR_HK_FW_POS_VOLT'), 250.0)])
+    fw = _extract_filterpos(
+        condition_FW,
+        mnemonics.fw_nominals,
+        mnemonic_data.mnemonic('IMIR_HK_FW_POS_RATIO'),
+        mnemonic_data.mnemonic('IMIR_HK_FW_CUR_POS'))
+
+    condition_GW14 = condition.condition([condition.greater(mnemonic_data.mnemonic('IMIR_HK_GW14_POS_VOLT'), 250.0)])
+    gw14 = _extract_filterpos(
+        condition_GW14,
+        mnemonics.gw14_nominals,
+        mnemonic_data.mnemonic('IMIR_HK_GW14_POS_RATIO'),
+        mnemonic_data.mnemonic('IMIR_HK_GW14_CUR_POS'))
+
+    condition_set_GW23 = [                                               \
+    condition.greater(mnemonic_data.mnemonic('IMIR_HK_GW23_POS_VOLT'),250.0)]
+    #setup condition
+    condition_GW23 = condition.condition(condition_set_GW23)
+    gw23 = _extract_filterpos(condition_GW23, mnemonics.gw23_nominals, \
+        mnemonic_data.mnemonic('IMIR_HK_GW23_POS_RATIO'), mnemonic_data.mnemonic('IMIR_HK_GW23_CUR_POS'))
+
+    del condition_GW23
+
+    condition_set_CCC = [                                               \
+    condition.greater(mnemonic_data.mnemonic('IMIR_HK_CCC_POS_VOLT'),250.0)]
+    #setup condition
+    condition_CCC = condition.condition(condition_set_CCC)
+    ccc = _extract_filterpos(condition_CCC, mnemonics.ccc_nominals, \
+        mnemonic_data.mnemonic('IMIR_HK_CCC_POS_RATIO'), mnemonic_data.mnemonic('IMIR_HK_CCC_CUR_POS'))
+
+    del condition_CCC
+
+    return fw, gw14, gw23, ccc
 
 
 def whole_day_routine(mnemonic_data):
-    '''Proposed routine for processing data representing a whole day
+    """Proposed routine for processing data representing a whole day
     Parameters
     ----------
     mnemonic_data : dict
@@ -258,7 +312,7 @@ def whole_day_routine(mnemonic_data):
     Return
     ------
     data_cond_3 : dict
-        holds extracted data with condition 3 applied
+        Holds extracted data with condition 3 applied
     FW_volt : list
         extracted data for IMIR_HK_FW_POS_VOLT
     GW14_volt : list
@@ -267,128 +321,69 @@ def whole_day_routine(mnemonic_data):
         extracted data for IMIR_HK_GW23_POS_VOLT
     CCC_volt : list
         extracted data for IMIR_HK_CCC_POS_VOLT
-    '''
+    """
 
     #abbreviate attribute
     m = mnemonic_data
-    returndata = dict()
+    data_dict = dict()
 
     #########################################################################
-    con_set_3 = [                                               \
-    cond.greater(m.mnemonic('IMIR_HK_ICE_SEC_VOLT1'), 25.0)]
+    condition_set_3 = [                                               \
+    condition.greater(mnemonic_data.mnemonic('IMIR_HK_ICE_SEC_VOLT1'), 25.0)]
     #setup condition
-    condition_3 = cond.condition(con_set_3)
+    condition_3 = condition.condition(condition_set_3)
 
     #add filtered engineering values of mnemonics given in list mnemonic_cond_3
     #to dictitonary
-    for identifier in mn.mnemonic_cond_3:
-        data = extract_data(condition_3, m.mnemonic(identifier))
+    for identifier in mnemonics.mnemonic_cond_3:
+        data = _extract_data(condition_3, mnemonic_data.mnemonic(identifier))
 
         if data != None:
-            returndata.update({identifier:data})
+            data_dict.update({identifier:data})
         else:
-            print("no data for {}".format(identifier))
+            print('no data for {}'.format(identifier))
 
     del condition_3
 
     #########################################################################
     #extract data for IMIR_HK_FW_POS_VOLT under given condition
-    con_set_FW = [                                               \
-    cond.greater(m.mnemonic('IMIR_HK_FW_POS_VOLT'),250.0)]
+    condition_set_FW = [                                               \
+    condition.greater(mnemonic_data.mnemonic('IMIR_HK_FW_POS_VOLT'),250.0)]
     #setup condition
-    condition_FW = cond.condition(con_set_FW)
-    FW_volt = extract_data(condition_FW, m.mnemonic('IMIR_HK_FW_POS_VOLT'))
-    returndata.update({'IMIR_HK_FW_POS_VOLT':FW_volt})
+    condition_FW = condition.condition(condition_set_FW)
+    FW_volt = _extract_data(condition_FW, mnemonic_data.mnemonic('IMIR_HK_FW_POS_VOLT'))
+    data_dict.update({'IMIR_HK_FW_POS_VOLT':FW_volt})
     del condition_FW
 
     #extract data for IMIR_HK_GW14_POS_VOLT under given condition
-    con_set_GW14 = [                                               \
-    cond.greater(m.mnemonic('IMIR_HK_GW14_POS_VOLT'),250.0)]
+    condition_set_GW14 = [                                               \
+    condition.greater(mnemonic_data.mnemonic('IMIR_HK_GW14_POS_VOLT'),250.0)]
     #setup condition
-    condition_GW14 = cond.condition(con_set_GW14)
-    GW14_volt = extract_data(condition_GW14, m.mnemonic('IMIR_HK_GW14_POS_VOLT'))
-    returndata.update({'IMIR_HK_GW14_POS_VOLT':GW14_volt})
+    condition_GW14 = condition.condition(condition_set_GW14)
+    GW14_volt = _extract_data(condition_GW14, mnemonic_data.mnemonic('IMIR_HK_GW14_POS_VOLT'))
+    data_dict.update({'IMIR_HK_GW14_POS_VOLT':GW14_volt})
     del condition_GW14
 
     #extract data for IMIR_HK_GW23_POS_VOLT under given condition
-    con_set_GW23 = [                                               \
-    cond.greater(m.mnemonic('IMIR_HK_GW23_POS_VOLT'),250.0)]
+    condition_set_GW23 = [                                               \
+    condition.greater(mnemonic_data.mnemonic('IMIR_HK_GW23_POS_VOLT'),250.0)]
     #setup condition
-    condition_GW23 = cond.condition(con_set_GW23)
-    GW23_volt = extract_data(condition_GW23, m.mnemonic('IMIR_HK_GW23_POS_VOLT'))
-    returndata.update({'IMIR_HK_GW23_POS_VOLT':GW23_volt})
+    condition_GW23 = condition.condition(condition_set_GW23)
+    GW23_volt = _extract_data(condition_GW23, mnemonic_data.mnemonic('IMIR_HK_GW23_POS_VOLT'))
+    data_dict.update({'IMIR_HK_GW23_POS_VOLT':GW23_volt})
     del condition_GW23
 
     #extract data for IMIR_HK_CCC_POS_VOLT under given condition
-    con_set_CCC = [                                               \
-    cond.greater(m.mnemonic('IMIR_HK_CCC_POS_VOLT'),250.0)]
+    condition_set_CCC = [                                               \
+    condition.greater(mnemonic_data.mnemonic('IMIR_HK_CCC_POS_VOLT'),250.0)]
     #setup condition
-    condition_CCC = cond.condition(con_set_CCC)
-    CCC_volt = extract_data(condition_CCC, m.mnemonic('IMIR_HK_CCC_POS_VOLT'))
-    returndata.update({'IMIR_HK_CCC_POS_VOLT':CCC_volt})
+    condition_CCC = condition.condition(condition_set_CCC)
+    CCC_volt = _extract_data(condition_CCC, mnemonic_data.mnemonic('IMIR_HK_CCC_POS_VOLT'))
+    data_dict.update({'IMIR_HK_CCC_POS_VOLT':CCC_volt})
     del condition_CCC
 
-    return returndata
+    return data_dict
 
-
-def wheelpos_routine(mnemonic_data):
-    '''Proposed routine for positionsensors each day
-    Parameters
-    ----------
-    mnemonic_data : dict
-        dict holds time and value in a astropy table with correspining identifier as key
-    Return
-    ------
-    FW : dict
-        holds FW ratio values and times with corresponding positionlabel as key
-    GW14 : dict
-        holds GW14 ratio values and times with corresponding positionlabel as key
-    GW23 : dict
-        holds GW23 ratio values and times with corresponding positionlabel as key
-    CCC : dict
-        holds CCC ratio values and times with corresponding positionlabel as key
-    '''
-
-    #abbreviate attribute
-    m = mnemonic_data
-
-    con_set_FW = [                                               \
-    cond.greater(m.mnemonic('IMIR_HK_FW_POS_VOLT'),250.0)]
-    #setup condition
-    condition_FW = cond.condition(con_set_FW)
-    FW = extract_filterpos(condition_FW, mn.fw_nominals, \
-        m.mnemonic('IMIR_HK_FW_POS_RATIO'), m.mnemonic('IMIR_HK_FW_CUR_POS'))
-
-    del condition_FW
-
-    con_set_GW14 = [                                               \
-    cond.greater(m.mnemonic('IMIR_HK_GW14_POS_VOLT'),250.0)]
-    #setup condition
-    condition_GW14 = cond.condition(con_set_GW14)
-    GW14 = extract_filterpos(condition_GW14, mn.gw14_nominals, \
-        m.mnemonic('IMIR_HK_GW14_POS_RATIO'), m.mnemonic('IMIR_HK_GW14_CUR_POS'))
-
-    del condition_GW14
-
-    con_set_GW23 = [                                               \
-    cond.greater(m.mnemonic('IMIR_HK_GW23_POS_VOLT'),250.0)]
-    #setup condition
-    condition_GW23 = cond.condition(con_set_GW23)
-    GW23 = extract_filterpos(condition_GW23, mn.gw23_nominals, \
-        m.mnemonic('IMIR_HK_GW23_POS_RATIO'), m.mnemonic('IMIR_HK_GW23_CUR_POS'))
-
-    del condition_GW23
-
-    con_set_CCC = [                                               \
-    cond.greater(m.mnemonic('IMIR_HK_CCC_POS_VOLT'),250.0)]
-    #setup condition
-    condition_CCC = cond.condition(con_set_CCC)
-    CCC = extract_filterpos(condition_CCC, mn.ccc_nominals, \
-        m.mnemonic('IMIR_HK_CCC_POS_RATIO'), m.mnemonic('IMIR_HK_CCC_CUR_POS'))
-
-    del condition_CCC
-
-    return FW, GW14, GW23, CCC
 
 if __name__ =='__main__':
     pass

@@ -61,6 +61,246 @@ from bokeh.plotting import figure
 from jwql.instrument_monitors.miri_monitors.data_trending.plots import plot_functions
 
 
+def _vdduc(conn, start, end):
+    """Generates the 'VDDUC' plot
+
+    Parameters
+    ----------
+    conn : obj
+        Database connection object
+    start : string
+        The start time for query and visualisation
+    end : string
+        The end time for query and visualisation
+
+    Returns
+    -------
+    plot : obj
+        ``bokeh`` plot object
+    """
+
+    # Create the plot
+    plot = figure(
+        tools='pan,wheel_zoom,box_zoom,reset,save',
+        toolbar_location='above',
+        plot_width=560,
+        plot_height=500,
+        x_axis_type='datetime',
+        output_backend='webgl',
+        x_axis_label='Date',
+        y_axis_label='Voltage (V)')
+    plot.grid.visible = True
+    plot.title.text = 'VDDUC'
+    plot_functions.add_basic_layout(plot)
+
+    # Add a line renderer with legend and line thickness
+    vdduc_ic_line = plot_functions.add_to_plot(plot, 'VDDUC IC', 'IGDP_MIR_IC_V_VDDUC', start, end, conn, color='red')
+    vdduc_sw_line = plot_functions.add_to_plot(plot, 'VDDUC SW', 'IGDP_MIR_SW_V_VDDUC', start, end, conn, color='orange')
+    vdduc_lw_line = plot_functions.add_to_plot(plot, 'VDDUC LW', 'IGDP_MIR_LW_V_VDDUC', start, end, conn, color='green')
+
+    # Configure hover tool
+    plot_functions.add_hover_tool(plot, [vdduc_ic_line, vdduc_sw_line, vdduc_lw_line])
+
+    # Configure legend
+    plot.legend.location = 'bottom_right'
+    plot.legend.click_policy = 'hide'
+    plot.legend.orientation = 'horizontal'
+
+    return plot
+
+
+def _vdetcom(conn, start, end):
+    """Generates the 'VDETCOM' plot
+
+    Parameters
+    ----------
+    conn : obj
+        Database connection object
+    start : string
+        The start time for query and visualisation
+    end : string
+        The end time for query and visualisation
+
+    Returns
+    -------
+    plot : obj
+        ``bokeh`` plot object
+    """
+
+    # Create the plot
+    plot = figure(
+        tools='pan,wheel_zoom,box_zoom,reset,save',
+        toolbar_location='above',
+        plot_width=560,
+        plot_height=500,
+        x_axis_type='datetime',
+        output_backend='webgl',
+        x_axis_label='Date',
+        y_axis_label='Voltage (V)')
+    plot.grid.visible = True
+    plot.title.text = 'VDETCOM'
+    plot_functions.add_basic_layout(plot)
+
+    # Add a line renderer with legend and line thickness
+    vdetcom_ic_line = plot_functions.add_to_plot(plot, 'VDETCOM IC', 'IGDP_MIR_IC_V_VDETCOM', start, end, conn, color='red')
+    vdetcom_sw_line = plot_functions.add_to_plot(plot, 'VDETCOM SW', 'IGDP_MIR_SW_V_VDETCOM', start, end, conn, color='orange')
+    vdetcom_lw_line = plot_functions.add_to_plot(plot, 'VDETCOM LW', 'IGDP_MIR_LW_V_VDETCOM', start, end, conn, color='green')
+
+    # Configure hover tool
+    plot_functions.add_hover_tool(plot, [vdetcom_ic_line, vdetcom_sw_line, vdetcom_lw_line])
+
+    # Configure legend
+    plot.legend.location = 'bottom_right'
+    plot.legend.click_policy = 'hide'
+    plot.legend.orientation = 'horizontal'
+
+    return plot
+
+
+def _vp(conn, start, end):
+    """Generates the 'VP' plot
+
+    Parameters
+    ----------
+    conn : obj
+        Database connection object
+    start : string
+        The start time for query and visualisation
+    end : string
+        The end time for query and visualisation
+
+    Returns
+    -------
+    plot : obj
+        ``bokeh`` plot object
+    """
+
+    # Create the plot
+    plot = figure(
+        tools='pan,wheel_zoom,box_zoom,reset,save',
+        toolbar_location='above',
+        plot_width=560,
+        plot_height=500,
+        x_axis_type='datetime',
+        output_backend='webgl',
+        x_axis_label='Date',
+        y_axis_label='Voltage (V)')
+    plot.grid.visible = True
+    plot.title.text = 'VP'
+    plot_functions.add_basic_layout(plot)
+
+    # Add a line renderer with legend and line thickness
+    vp_ic_line = plot_functions.add_to_plot(plot, 'VP IC', 'IGDP_MIR_IC_V_VP', start, end, conn, color='red')
+    vp_sw_line = plot_functions.add_to_plot(plot, 'VP SW', 'IGDP_MIR_SW_V_VP', start, end, conn, color='orange')
+    vp_lw_line = plot_functions.add_to_plot(plot, 'VP LW', 'IGDP_MIR_LW_V_VP', start, end, conn, color='green')
+
+    # Configure hover tool
+    plot_functions.add_hover_tool(plot, [vp_ic_line, vp_sw_line, vp_lw_line])
+
+    # Configure legend
+    plot.legend.location = 'bottom_right'
+    plot.legend.click_policy = 'hide'
+    plot.legend.orientation = 'horizontal'
+
+    return plot
+
+
+def _vrstoff(conn, start, end):
+    """Generates the 'VRSTOFF' plot
+
+    Parameters
+    ----------
+    conn : obj
+        Database connection object
+    start : string
+        The start time for query and visualisation
+    end : string
+        The end time for query and visualisation
+
+    Returns
+    -------
+    plot : obj
+        ``bokeh`` plot object
+    """
+
+    # Create the plot
+    plot = figure(
+        tools='pan,wheel_zoom,box_zoom,reset,save',
+        toolbar_location='above',
+        plot_width=560,
+        plot_height=500,
+        x_axis_type='datetime',
+        output_backend='webgl',
+        x_axis_label='Date',
+        y_axis_label='Voltage (V)')
+    plot.grid.visible = True
+    plot.title.text = 'VRSTOFF'
+    plot_functions.add_basic_layout(plot)
+
+    # Add a line renderer with legend and line thickness
+    vrstoff_ic_line = plot_functions.add_to_plot(plot, 'VRSTOFF IC', 'IGDP_MIR_IC_V_VRSTOFF', start, end, conn, color='red')
+    vrstoff_sw_line = plot_functions.add_to_plot(plot, 'VRSTOFF SW', 'IGDP_MIR_SW_V_VRSTOFF', start, end, conn, color='orange')
+    vrstoff_lw_line = plot_functions.add_to_plot(plot, 'VRSTOFF LW', 'IGDP_MIR_LW_V_VRSTOFF', start, end, conn, color='green')
+
+    # Configure hover tool
+    plot_functions.add_hover_tool(plot, [vrstoff_ic_line, vrstoff_sw_line, vrstoff_lw_line])
+
+    # Configure legend
+    plot.legend.location = 'bottom_right'
+    plot.legend.click_policy = 'hide'
+    plot.legend.orientation = 'horizontal'
+
+    return plot
+
+
+def _vssout(conn, start, end):
+    """Generates the 'VSSOUT' plot
+
+    Parameters
+    ----------
+    conn : obj
+        Database connection object
+    start : string
+        The start time for query and visualisation
+    end : string
+        The end time for query and visualisation
+
+    Returns
+    -------
+    plot : obj
+        ``bokeh`` plot object
+    """
+
+    # Create the plot
+    plot = figure(
+        tools='pan,wheel_zoom,box_zoom,reset,save',
+        toolbar_location='above',
+        plot_width=560,
+        plot_height=500,
+        x_axis_type='datetime',
+        output_backend='webgl',
+        x_axis_label='Date',
+        y_axis_label='Voltage (V)')
+    plot.grid.visible = True
+    plot.title.text = 'VSSOUT'
+    plot_functions.add_basic_layout(plot)
+
+    # Add a line renderer with legend and line thickness
+    vssout_ic_line = plot_functions.add_to_plot(plot, 'VSSOUT IC', 'IGDP_MIR_IC_V_VSSOUT', start, end, conn, color='red')
+    vssout_sw_line = plot_functions.add_to_plot(plot, 'VSSOUT SW', 'IGDP_MIR_SW_V_VSSOUT', start, end, conn, color='orange')
+    vssout_lw_line = plot_functions.add_to_plot(plot, 'VSSOUT LW', 'IGDP_MIR_LW_V_VSSOUT', start, end, conn, color='green')
+
+    # Configure hover tool
+    plot_functions.add_hover_tool(plot, [vssout_ic_line, vssout_sw_line, vssout_lw_line])
+
+    # Configure legend
+    plot.legend.location = 'bottom_right'
+    plot.legend.click_policy = 'hide'
+    plot.legend.orientation = 'horizontal'
+
+    return plot
+
+
 def bias_plots(conn, start, end):
     """Generates the 'BIAS' tab
 
@@ -140,11 +380,11 @@ def bias_plots(conn, start, end):
             </body>""",
         width=1100)
 
-    plot1 = vdetcom(conn, start, end)
-    plot2 = vssout(conn, start, end)
-    plot3 = vrstoff(conn, start, end)
-    plot4 = vp(conn, start, end)
-    plot5 = vdduc(conn, start, end)
+    plot1 = _vdetcom(conn, start, end)
+    plot2 = _vssout(conn, start, end)
+    plot3 = _vrstoff(conn, start, end)
+    plot4 = _vp(conn, start, end)
+    plot5 = _vdduc(conn, start, end)
     grid = gridplot([[plot2, plot1],
                      [plot3, plot4],
                      [plot5, None]], merge_tools=False)
@@ -152,243 +392,3 @@ def bias_plots(conn, start, end):
     tab = Panel(child=layout, title='BIAS')
 
     return tab
-
-
-def vdduc(conn, start, end):
-    """Generates the 'VDDUC' plot
-
-    Parameters
-    ----------
-    conn : obj
-        Database connection object
-    start : string
-        The start time for query and visualisation
-    end : string
-        The end time for query and visualisation
-
-    Returns
-    -------
-    plot : obj
-        ``bokeh`` plot object
-    """
-
-    # Create the plot
-    plot = figure(
-        tools='pan,wheel_zoom,box_zoom,reset,save',
-        toolbar_location='above',
-        plot_width=560,
-        plot_height=500,
-        x_axis_type='datetime',
-        output_backend='webgl',
-        x_axis_label='Date',
-        y_axis_label='Voltage (V)')
-    plot.grid.visible = True
-    plot.title.text = 'VDDUC'
-    plot_functions.add_basic_layout(plot)
-
-    # Add a line renderer with legend and line thickness
-    vdduc_ic_line = plot_functions.add_to_plot(plot, 'VDDUC IC', 'IGDP_MIR_IC_V_VDDUC', start, end, conn, color='red')
-    vdduc_sw_line = plot_functions.add_to_plot(plot, 'VDDUC SW', 'IGDP_MIR_SW_V_VDDUC', start, end, conn, color='orange')
-    vdduc_lw_line = plot_functions.add_to_plot(plot, 'VDDUC LW', 'IGDP_MIR_LW_V_VDDUC', start, end, conn, color='green')
-
-    # Configure hover tool
-    plot_functions.add_hover_tool(plot, [vdduc_ic_line, vdduc_sw_line, vdduc_lw_line])
-
-    # Configure legend
-    plot.legend.location = 'bottom_right'
-    plot.legend.click_policy = 'hide'
-    plot.legend.orientation = 'horizontal'
-
-    return plot
-
-
-def vdetcom(conn, start, end):
-    """Generates the 'VDETCOM' plot
-
-    Parameters
-    ----------
-    conn : obj
-        Database connection object
-    start : string
-        The start time for query and visualisation
-    end : string
-        The end time for query and visualisation
-
-    Returns
-    -------
-    plot : obj
-        ``bokeh`` plot object
-    """
-
-    # Create the plot
-    plot = figure(
-        tools='pan,wheel_zoom,box_zoom,reset,save',
-        toolbar_location='above',
-        plot_width=560,
-        plot_height=500,
-        x_axis_type='datetime',
-        output_backend='webgl',
-        x_axis_label='Date',
-        y_axis_label='Voltage (V)')
-    plot.grid.visible = True
-    plot.title.text = 'VDETCOM'
-    plot_functions.add_basic_layout(plot)
-
-    # Add a line renderer with legend and line thickness
-    vdetcom_ic_line = plot_functions.add_to_plot(plot, 'VDETCOM IC', 'IGDP_MIR_IC_V_VDETCOM', start, end, conn, color='red')
-    vdetcom_sw_line = plot_functions.add_to_plot(plot, 'VDETCOM SW', 'IGDP_MIR_SW_V_VDETCOM', start, end, conn, color='orange')
-    vdetcom_lw_line = plot_functions.add_to_plot(plot, 'VDETCOM LW', 'IGDP_MIR_LW_V_VDETCOM', start, end, conn, color='green')
-
-    # Configure hover tool
-    plot_functions.add_hover_tool(plot, [vdetcom_ic_line, vdetcom_sw_line, vdetcom_lw_line])
-
-    # Configure legend
-    plot.legend.location = 'bottom_right'
-    plot.legend.click_policy = 'hide'
-    plot.legend.orientation = 'horizontal'
-
-    return plot
-
-
-def vp(conn, start, end):
-    """Generates the 'VP' plot
-
-    Parameters
-    ----------
-    conn : obj
-        Database connection object
-    start : string
-        The start time for query and visualisation
-    end : string
-        The end time for query and visualisation
-
-    Returns
-    -------
-    plot : obj
-        ``bokeh`` plot object
-    """
-
-    # Create the plot
-    plot = figure(
-        tools='pan,wheel_zoom,box_zoom,reset,save',
-        toolbar_location='above',
-        plot_width=560,
-        plot_height=500,
-        x_axis_type='datetime',
-        output_backend='webgl',
-        x_axis_label='Date',
-        y_axis_label='Voltage (V)')
-    plot.grid.visible = True
-    plot.title.text = 'VP'
-    plot_functions.add_basic_layout(plot)
-
-    # Add a line renderer with legend and line thickness
-    vp_ic_line = plot_functions.add_to_plot(plot, 'VP IC', 'IGDP_MIR_IC_V_VP', start, end, conn, color='red')
-    vp_sw_line = plot_functions.add_to_plot(plot, 'VP SW', 'IGDP_MIR_SW_V_VP', start, end, conn, color='orange')
-    vp_lw_line = plot_functions.add_to_plot(plot, 'VP LW', 'IGDP_MIR_LW_V_VP', start, end, conn, color='green')
-
-    # Configure hover tool
-    plot_functions.add_hover_tool(plot, [vp_ic_line, vp_sw_line, vp_lw_line])
-
-    # Configure legend
-    plot.legend.location = 'bottom_right'
-    plot.legend.click_policy = 'hide'
-    plot.legend.orientation = 'horizontal'
-
-    return plot
-
-
-def vrstoff(conn, start, end):
-    """Generates the 'VRSTOFF' plot
-
-    Parameters
-    ----------
-    conn : obj
-        Database connection object
-    start : string
-        The start time for query and visualisation
-    end : string
-        The end time for query and visualisation
-
-    Returns
-    -------
-    plot : obj
-        ``bokeh`` plot object
-    """
-
-    # Create the plot
-    plot = figure(
-        tools='pan,wheel_zoom,box_zoom,reset,save',
-        toolbar_location='above',
-        plot_width=560,
-        plot_height=500,
-        x_axis_type='datetime',
-        output_backend='webgl',
-        x_axis_label='Date',
-        y_axis_label='Voltage (V)')
-    plot.grid.visible = True
-    plot.title.text = 'VRSTOFF'
-    plot_functions.add_basic_layout(plot)
-
-    # Add a line renderer with legend and line thickness
-    vrstoff_ic_line = plot_functions.add_to_plot(plot, 'VRSTOFF IC', 'IGDP_MIR_IC_V_VRSTOFF', start, end, conn, color='red')
-    vrstoff_sw_line = plot_functions.add_to_plot(plot, 'VRSTOFF SW', 'IGDP_MIR_SW_V_VRSTOFF', start, end, conn, color='orange')
-    vrstoff_lw_line = plot_functions.add_to_plot(plot, 'VRSTOFF LW', 'IGDP_MIR_LW_V_VRSTOFF', start, end, conn, color='green')
-
-    # Configure hover tool
-    plot_functions.add_hover_tool(plot, [vrstoff_ic_line, vrstoff_sw_line, vrstoff_lw_line])
-
-    # Configure legend
-    plot.legend.location = 'bottom_right'
-    plot.legend.click_policy = 'hide'
-    plot.legend.orientation = 'horizontal'
-
-    return plot
-
-
-def vssout(conn, start, end):
-    """Generates the 'VSSOUT' plot
-
-    Parameters
-    ----------
-    conn : obj
-        Database connection object
-    start : string
-        The start time for query and visualisation
-    end : string
-        The end time for query and visualisation
-
-    Returns
-    -------
-    plot : obj
-        ``bokeh`` plot object
-    """
-
-    # Create the plot
-    plot = figure(
-        tools='pan,wheel_zoom,box_zoom,reset,save',
-        toolbar_location='above',
-        plot_width=560,
-        plot_height=500,
-        x_axis_type='datetime',
-        output_backend='webgl',
-        x_axis_label='Date',
-        y_axis_label='Voltage (V)')
-    plot.grid.visible = True
-    plot.title.text = 'VSSOUT'
-    plot_functions.add_basic_layout(plot)
-
-    # Add a line renderer with legend and line thickness
-    vssout_ic_line = plot_functions.add_to_plot(plot, 'VSSOUT IC', 'IGDP_MIR_IC_V_VSSOUT', start, end, conn, color='red')
-    vssout_sw_line = plot_functions.add_to_plot(plot, 'VSSOUT SW', 'IGDP_MIR_SW_V_VSSOUT', start, end, conn, color='orange')
-    vssout_lw_line = plot_functions.add_to_plot(plot, 'VSSOUT LW', 'IGDP_MIR_LW_V_VSSOUT', start, end, conn, color='green')
-
-    # Configure hover tool
-    plot_functions.add_hover_tool(plot, [vssout_ic_line, vssout_sw_line, vssout_lw_line])
-
-    # Configure legend
-    plot.legend.location = 'bottom_right'
-    plot.legend.click_policy = 'hide'
-    plot.legend.orientation = 'horizontal'
-
-    return plot

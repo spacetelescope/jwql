@@ -51,7 +51,7 @@ import pandas as pd
 from jwql.instrument_monitors.miri_monitors.data_trending.plots import plot_functions
 
 
-def currents(conn, start, end):
+def _currents(conn, start, end):
     """Generates the 'FPE & ICE Currents' plot
 
     Parameters
@@ -100,7 +100,7 @@ def currents(conn, start, end):
     return plot
 
 
-def power_fpea(conn, start, end):
+def _power_fpea(conn, start, end):
     """Generates the 'POWER FPE' plot
 
     Parameters
@@ -177,7 +177,7 @@ def power_fpea(conn, start, end):
     return plot
 
 
-def power_ice(conn, start, end):
+def _power_ice(conn, start, end):
     """Generates the 'POWER ICE' plot
 
     Parameters
@@ -329,9 +329,9 @@ def power_plots(conn, start, end):
             </body>""",
         width=1100)
 
-    plot1 = power_ice(conn, start, end)
-    plot2 = power_fpea(conn, start, end)
-    plot3 = currents(conn, start, end)
+    plot1 = _power_ice(conn, start, end)
+    plot2 = _power_fpea(conn, start, end)
+    plot3 = _currents(conn, start, end)
     layout = column(description_table, plot1, plot2, plot3)
     tab = Panel(child=layout, title='POWER')
 

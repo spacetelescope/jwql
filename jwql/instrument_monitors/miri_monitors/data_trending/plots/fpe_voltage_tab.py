@@ -61,7 +61,7 @@ from bokeh.plotting import figure
 from jwql.instrument_monitors.miri_monitors.data_trending.plots import plot_functions
 
 
-def ana5(conn, start, end):
+def _ana5(conn, start, end):
     """Generates the 'FPE Ana. 5V' plot
 
     Parameters
@@ -110,7 +110,7 @@ def ana5(conn, start, end):
     return plot
 
 
-def ana5n(conn, start, end):
+def _ana5n(conn, start, end):
     """Generates the 'FPE Ana. N5V' plot
 
     Parameters
@@ -159,7 +159,7 @@ def ana5n(conn, start, end):
     return plot
 
 
-def ana7(conn, start, end):
+def _ana7(conn, start, end):
     """Generates the 'FPE Ana. 7V' plot
 
     Parameters
@@ -208,7 +208,7 @@ def ana7(conn, start, end):
     return plot
 
 
-def ana7n(conn, start, end):
+def _ana7n(conn, start, end):
     """Generates the 'FPE Ana. N7V' plot
 
     Parameters
@@ -257,7 +257,7 @@ def ana7n(conn, start, end):
     return plot
 
 
-def dig5(conn, start, end):
+def _dig5(conn, start, end):
     """Generates the 'FPE Dig. 5v' plot
 
     Parameters
@@ -298,6 +298,53 @@ def dig5(conn, start, end):
 
     # Configure hover tool
     plot_functions.add_hover_tool(plot, [fpe_dig_5v_line, fpe_dig_5v_current_line])
+
+    # Configure legend
+    plot.legend.location = 'bottom_right'
+    plot.legend.click_policy = 'hide'
+
+    return plot
+
+
+def _refdig(conn, start, end):
+    """Generates the '2.5V Reg and FPE Dig.' plot
+
+    Parameters
+    ----------
+    conn : obj
+        Database connection object
+    start : string
+        The start time for query and visualisation
+    end : string
+        The end time for query and visualisation
+
+    Returns
+    -------
+    plot : obj
+        ``bokeh`` plot object
+    """
+
+    # Create the plot
+    plot = figure(
+        tools='pan,wheel_zoom,box_zoom,reset,save',
+        toolbar_location='above',
+        plot_width=560,
+        plot_height=500,
+        y_range=[2.45, 2.55],
+        x_axis_type='datetime',
+        output_backend='webgl',
+        x_axis_label='Date',
+        y_axis_label='Voltage (V)')
+    plot.grid.visible = True
+    plot.title.text = '2.5V Ref and FPE Dig.'
+    plot_functions.add_basic_layout(plot)
+
+    # Add a line renderer with legend and line thickness
+    fpe_dig_25v_line = plot_functions.add_to_plot(plot, 'FPE Dig. 2.5V', 'IMIR_SPW_V_DIG_2R5V', start, end, conn, color='orange')
+    fpe_pdu_25v_ref_line = plot_functions.add_to_plot(plot, 'FPE PDU 2.5V REF', 'IMIR_PDU_V_REF_2R5V', start, end, conn, color='red')
+
+    # Configure hover tool
+    plot_functions.add_hover_tool(plot, [fpe_dig_25v_line, fpe_pdu_25v_ref_line])
 
     # Configure legend
     plot.legend.location = 'bottom_right'
@@ -385,12 +432,12 @@ def fpe_plots(conn, start, end):
             </body>""",
         width=1100)
 
-    plot1 = dig5(conn, start, end)
-    plot2 = refdig(conn, start, end)
-    plot3 = ana5(conn, start, end)
-    plot4 = ana5n(conn, start, end)
-    plot5 = ana7(conn, start, end)
-    plot6 = ana7n(conn, start, end)
+    plot1 = _dig5(conn, start, end)
+    plot2 = _refdig(conn, start, end)
+    plot3 = _ana5(conn, start, end)
+    plot4 = _ana5n(conn, start, end)
+    plot5 = _ana7(conn, start, end)
+    plot6 = _ana7n(conn, start, end)
     grid = gridplot([[plot2, plot1],
                      [plot3, plot4],
                      [plot5, plot6]], merge_tools=False)
@@ -398,50 +445,3 @@ def fpe_plots(conn, start, end):
     tab = Panel(child=layout, title='FPE VOLTAGE/CURRENT')
 
     return tab
-
-
-def refdig(conn, start, end):
-    """Generates the '2.5V Reg and FPE Dig.' plot
-
-    Parameters
-    ----------
-    conn : obj
-        Database connection object
-    start : string
-        The start time for query and visualisation
-    end : string
-        The end time for query and visualisation
-
-    Returns
-    -------
-    plot : obj
-        ``bokeh`` plot object
-    """
-
-    # Create the plot
-    plot = figure(
-        tools='pan,wheel_zoom,box_zoom,reset,save',
-        toolbar_location='above',
-        plot_width=560,
-        plot_height=500,
-        y_range=[2.45, 2.55],
-        x_axis_type='datetime',
-        output_backend='webgl',
-        x_axis_label='Date',
-        y_axis_label='Voltage (V)')
-    plot.grid.visible = True
-    plot.title.text = '2.5V Ref and FPE Dig.'
-    plot_functions.add_basic_layout(plot)
-
-    # Add a line renderer with legend and line thickness
-    fpe_dig_25v_line = plot_functions.add_to_plot(plot, 'FPE Dig. 2.5V', 'IMIR_SPW_V_DIG_2R5V', start, end, conn, color='orange')
-    fpe_pdu_25v_ref_line = plot_functions.add_to_plot(plot, 'FPE PDU 2.5V REF', 'IMIR_PDU_V_REF_2R5V', start, end, conn, color='red')
-
-    # Configure hover tool
-    plot_functions.add_hover_tool(plot, [fpe_dig_25v_line, fpe_pdu_25v_ref_line])
-
-    # Configure legend
-    plot.legend.location = 'bottom_right'
-    plot.legend.click_policy = 'hide'
-
-    return plot

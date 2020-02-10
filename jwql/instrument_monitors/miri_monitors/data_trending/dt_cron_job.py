@@ -1,60 +1,62 @@
 #! /usr/bin/env python
-''' Cron Job for miri datatrending -> populates database
+""" Cron Job for MIRI data trending
 
-    This module holds functions to connect with the engineering database in order
-    to grab and process data for the specific miri database. The scrips queries
-    a daily 15 min chunk and a whole day dataset. These contain several mnemonics
-    defined in ''mnemonics.py''. The queried data gets processed and stored in
-    an auxiliary database.
+This module holds functions to connect with the engineering database in
+order to grab and process data for MIRI data trending. The script
+queries a daily 15-minute chunk and a whole-day dataset. These contain
+several mnemonics defined in ``mnemonics.py``. The queried data gets
+processed and stored in an auxiliary database.
 
 Authors
 -------
+
     - Daniel Kühbacher
 
 Dependencies
 ------------
-    For further information please contact Brian O'Sullivan
+
+    - ``astropy``
 
 References
 ----------
 
-'''
-import .utils.mnemonics as mn
-import .utils.sql_interface as sql
-from .utils.process_data import whole_day_routine, wheelpos_routine
-from jwql.utils.engineering_database import query_single_mnemonic
+    For further information please contact Brian O'Sullivan
+"""
 
-import pandas as pd
-import numpy as np
-import statistics
-import sqlite3
 import os
+import statistics
 
 from astropy.time import Time
 
-__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-PACKAGE_DIR = __location__.split('instrument_monitors')[0]
+from jwql.utils.engineering_database import query_single_mnemonic
+from .utils import mnemonics as mn
+from .utils import sql_interface as sql
+from .utils.process_data import whole_day_routine, wheelpos_routine
+
+PACKAGE_DIR = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))).split('instrument_monitors')[0]
 
 
-def process_day_sample(conn, m_raw_data):
-    '''Parse CSV file, process data within and put to DB
+def process_day_sample(conn, path):
+    """Parse CSV file, process data within, and put to auxillary
+    database
+
     Parameters
     ----------
-    conn : DBobject
-        Connection object to temporary database
+    conn : obj
+        Connection object to auxillary database
     path : str
         defines path to the files
-    '''
+    """
 
-    m_raw_data = apt.mnemonics(path)
+    raw_data = apt.mnemonics(path)
 
-    cond3, FW_volt, GW14_volt, GW23_volt, CCC_volt = whole_day_routine(m_raw_data)
-    FW, GW14, GW23, CCC= wheelpos_routine(m_raw_data)
+    cond3, FW_volt, GW14_volt, GW23_volt, CCC_volt = whole_day_routine(raw_data)
+    FW, GW14, GW23, CCC= wheelpos_routine(raw_data)
 
     #put data from con3 to database
     for key, value in cond3.items():
 
-        m = m_raw_data.mnemonic(key)
+        m = raw_data.mnemonic(key)
 
         if value != None:
             if len(value) > 2:
@@ -154,8 +156,6 @@ def process_15min_sample(conn, m_raw_data):
             sql.add_data(conn, key, dataset)
 
 def main():
-
-    from ..utils.engineering_database import query_single_mnemonic
 
     mnemonic_identifier = 'SA_ZFGOUTFOV'
     start_time = Time(2016.0, format='decimalyear')

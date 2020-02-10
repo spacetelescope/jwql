@@ -70,7 +70,7 @@ from jwql.instrument_monitors.miri_monitors.data_trending.plots import plot_func
 from jwql.instrument_monitors.miri_monitors.data_trending.utils import mnemonics
 
 
-def ccc(conn, start, end):
+def _ccc(conn, start, end):
     """Generates the 'CCC Ratio' plot
 
     Parameters
@@ -113,7 +113,7 @@ def ccc(conn, start, end):
     return plot
 
 
-def dga_a(conn, start, end):
+def _dga_a(conn, start, end):
     """Generates the 'DGA-A Ratio' plot
 
     Parameters
@@ -158,7 +158,7 @@ def dga_a(conn, start, end):
     return plot
 
 
-def dga_b(conn, start, end):
+def _dga_b(conn, start, end):
     """Generates the 'DGA-B Ratio' plot
 
     Parameters
@@ -203,7 +203,7 @@ def dga_b(conn, start, end):
     return plot
 
 
-def fw(conn, start, end):
+def _fw(conn, start, end):
     """Generates the 'Filterwheel Ratio' plot
 
     Parameters
@@ -326,10 +326,10 @@ def wheel_ratios(conn, start, end):
             </body>""",
         width=1100)
 
-    plot1 = fw(conn, start, end)
-    plot2 = dga_a(conn, start, end)
-    plot3 = dga_b(conn,  start, end)
-    plot4 = ccc(conn, start, end)
+    plot1 = _fw(conn, start, end)
+    plot2 = _dga_a(conn, start, end)
+    plot3 = _dga_b(conn,  start, end)
+    plot4 = _ccc(conn, start, end)
     layout = column(description_table, plot1, plot2, plot3, plot4)
     tab = Panel(child=layout, title='WHEEL RATIO')
 

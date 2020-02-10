@@ -72,7 +72,7 @@ import pandas as pd
 import jwql.instrument_monitors.miri_monitors.data_trending.plots.plot_functions as plot_functions
 
 
-def cryo(conn, start, end):
+def _cryo(conn, start, end):
     """Generates the 'Cryo Temperatures' plot
 
     Parameters
@@ -134,7 +134,7 @@ def cryo(conn, start, end):
     return plot
 
 
-def detector(conn, start, end):
+def _detector(conn, start, end):
     """Generates the 'Detector Temperatures' plot
 
     Parameters
@@ -183,7 +183,7 @@ def detector(conn, start, end):
     return plot
 
 
-def iec_temp(conn, start, end):
+def _iec_temp(conn, start, end):
     """Generates the 'IEC Temperatures' plot
 
     Parameters
@@ -367,9 +367,9 @@ def temperature_plots(conn, start, end):
             </body>""",
         width=1100)
 
-    plot1 = cryo(conn, start, end)
-    plot2 = iec_temp(conn, start, end)
-    plot3 = detector(conn, start, end)
+    plot1 = _cryo(conn, start, end)
+    plot2 = _iec_temp(conn, start, end)
+    plot3 = _detector(conn, start, end)
     layout = column(description_table, plot1, plot2, plot3)
     tab = Panel(child=layout, title='TEMPERATURE')
 
