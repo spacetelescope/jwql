@@ -16,7 +16,6 @@ Authors
 Dependencies
 ------------
 
-    - ``astropy``
     - ``jwedb``
 
 References
@@ -28,7 +27,6 @@ References
 import os
 import statistics
 
-from astropy.time import Time
 from jwedb.edb_interface import query_single_mnemonic
 
 from .utils import mnemonics
@@ -117,7 +115,7 @@ def process_day_sample(conn, path):
 
         mnemonics_data_table = raw_data.mnemonic(key)
 
-        if value != None:
+        if value is not None:
             if len(value) > 2:
 
                 length = len(value)
@@ -141,7 +139,7 @@ def process_day_sample(conn, path):
         try:
             data = FW[position]
             for element in data:
-                sql_interface.add_wheel_data(conn, 'IMIR_HK_FW_POS_RATIO_{}'.format(pos), element)
+                sql_interface.add_wheel_data(conn, 'IMIR_HK_FW_POS_RATIO_{}'.format(position), element)
         except KeyError:
             pass
 
@@ -150,9 +148,9 @@ def process_day_sample(conn, path):
             data_GW14 = GW14[position]
             data_GW23 = GW23[position]
             for element in data_GW14:
-                sql_interface.add_wheel_data(conn, 'IMIR_HK_GW14_POS_RATIO_{}'.format(pos), element)
+                sql_interface.add_wheel_data(conn, 'IMIR_HK_GW14_POS_RATIO_{}'.format(position), element)
             for element in data_GW23:
-                sql_interface.add_wheel_data(conn, 'IMIR_HK_GW23_POS_RATIO_{}'.format(pos), element)
+                sql_interface.add_wheel_data(conn, 'IMIR_HK_GW23_POS_RATIO_{}'.format(position), element)
         except KeyError:
             pass
 
@@ -160,6 +158,6 @@ def process_day_sample(conn, path):
         try:
             data = CCC[position]
             for element in data:
-                sql_interface.add_wheel_data(conn, 'IMIR_HK_CCC_POS_RATIO_{}'.format(pos), element)
+                sql_interface.add_wheel_data(conn, 'IMIR_HK_CCC_POS_RATIO_{}'.format(position), element)
         except KeyError:
             pass
