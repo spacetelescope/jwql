@@ -1,5 +1,6 @@
 #! /usr/bin/env python
-""" Cron Job for MIRI data trending
+
+"""Cron Job for MIRI data trending
 
 This module holds functions to connect with the engineering database in
 order to grab and process data for MIRI data trending. The script
@@ -16,6 +17,7 @@ Dependencies
 ------------
 
     - ``astropy``
+    - ``jwedb``
 
 References
 ----------
@@ -27,17 +29,74 @@ import os
 import statistics
 
 from astropy.time import Time
+from jwedb.edb_interface import query_single_mnemonic
 
-from jwql.utils.engineering_database import query_single_mnemonic
-from .utils import mnemonics as mn
-from .utils import sql_interface as sql
-from .utils.process_data import whole_day_routine, wheelpos_routine
+from .utils import mnemonics
+from .utils import sql_interface
+from .utils.process_data import wheelpos_routine, whole_day_routine
 
 PACKAGE_DIR = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))).split('instrument_monitors')[0]
 
 
+def main():
+    """Main function of the ``dt_cron_job`` module.  See module
+    docstring for further details"""
+
+    for mnemonic in mnemonics.mnemonic_set_15min:
+        whole_day.update(mnemonic=query_single_mnemonic(mnemonic, start, end))
+
+    # Open temporary database and write data
+    database_file = os.path.join(PACKAGE_DIR, 'database', 'miri_database.db')
+    conn = sql_interface.create_connection(database_file)
+    process_day_sample(conn, table_day)
+    process_15process_15min_sample(conn, table_15min)
+    sql_interface.close_connection(conn)
+
+
+def process_15min_sample(conn, path):
+    """Parse CSV file, process data within and put into auxillary
+    database
+
+    Parameters
+    ----------
+    conn : DBobject
+        Connection object to temporary database
+    path : str
+        Defines path to the files
+    """
+
+    # Import mnemonic data and append dict to variable below
+    mnemonics_raw_data = apt.mnemonics(path)
+
+    # Process raw data with once a day routine
+    processed_data = once_a_day_routine(mnemonics_raw_data)
+
+    # Push extracted and filtered data to auxillary database
+    for key, value in processed_data.items():
+
+        # Abbreviate data table
+        mnemonics_data_table = mnemonics_raw_data.mnemonic(key)
+
+        length = len(value)
+        mean = statistics.mean(value)
+        deviation = statistics.stdev(value)
+        dataset = (
+            float(mnemonics_data_table.meta['start']),
+            float(mnemonics_data_table.meta['end']),
+            length,
+            mean,
+            deviation)
+
+        if key == "SE_ZIMIRICEA":
+            sql_interface.add_data(conn, 'SE_ZIMIRICEA_IDLE', dataset)
+        elif key == 'IMIR_HK_ICE_SEC_VOLT4':
+            sql_interface.add_data(conn, 'IMIR_HK_ICE_SEC_VOLT4_IDLE', dataset)
+        else:
+            sql_interface.add_data(conn, key, dataset)
+
+
 def process_day_sample(conn, path):
-    """Parse CSV file, process data within, and put to auxillary
+    """Parse CSV file, process data within and put into auxillary
     database
 
     Parameters
@@ -45,152 +104,62 @@ def process_day_sample(conn, path):
     conn : obj
         Connection object to auxillary database
     path : str
-        defines path to the files
+        Defines path to the files
     """
 
     raw_data = apt.mnemonics(path)
 
     cond3, FW_volt, GW14_volt, GW23_volt, CCC_volt = whole_day_routine(raw_data)
-    FW, GW14, GW23, CCC= wheelpos_routine(raw_data)
+    FW, GW14, GW23, CCC = wheelpos_routine(raw_data)
 
-    #put data from con3 to database
+    # Put data from con3 to database
     for key, value in cond3.items():
 
-        m = raw_data.mnemonic(key)
+        mnemonics_data_table = raw_data.mnemonic(key)
 
         if value != None:
             if len(value) > 2:
-                if key == "SE_ZIMIRICEA":
-                    length = len(value)
-                    mean = statistics.mean(value)
-                    deviation = statistics.stdev(value)
-                    dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-                    sql.add_data(conn, "SE_ZIMIRICEA_HV_ON", dataset)
 
-                elif key == "IMIR_HK_ICE_SEC_VOLT4":
-                    length = len(value)
-                    mean = statistics.mean(value)
-                    deviation = statistics.stdev(value)
-                    dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-                    sql.add_data(conn, "IMIR_HK_ICE_SEC_VOLT4_HV_ON", dataset)
+                length = len(value)
+                mean = statistics.mean(value)
+                deviation = statistics.stdev(value)
+                dataset = (
+                    float(mnemonics_data_table.meta['start']),
+                    float(mnemonics_data_table.meta['end']),
+                    length,
+                    mean,
+                    deviation)
 
+                if key == 'SE_ZIMIRICEA':
+                    sql_interface.add_data(conn, 'SE_ZIMIRICEA_HV_ON', dataset)
+                elif key == 'IMIR_HK_ICE_SEC_VOLT4':
+                    sql_interface.add_data(conn, 'IMIR_HK_ICE_SEC_VOLT4_HV_ON', dataset)
                 else:
-                    length = len(value)
-                    mean = statistics.mean(value)
-                    deviation = statistics.stdev(value)
-                    dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-                    sql.add_data(conn, key, dataset)
+                    sql_interface.add_data(conn, key, dataset)
 
-
-    #########################################################################################
-    for pos in mn.fw_positions:
+    for position in mnemonics.fw_positions:
         try:
-            data = FW[pos]
+            data = FW[position]
             for element in data:
-                sql.add_wheel_data(conn, 'IMIR_HK_FW_POS_RATIO_{}'.format(pos), element)
+                sql_interface.add_wheel_data(conn, 'IMIR_HK_FW_POS_RATIO_{}'.format(pos), element)
         except KeyError:
             pass
 
-    for pos in mn.gw_positions:
+    for position in mnemonics.gw_positions:
         try:
-            data_GW14 = GW14[pos]
-            data_GW23 = GW23[pos]
-
+            data_GW14 = GW14[position]
+            data_GW23 = GW23[position]
             for element in data_GW14:
-                sql.add_wheel_data(conn, 'IMIR_HK_GW14_POS_RATIO_{}'.format(pos), element)
+                sql_interface.add_wheel_data(conn, 'IMIR_HK_GW14_POS_RATIO_{}'.format(pos), element)
             for element in data_GW23:
-                sql.add_wheel_data(conn, 'IMIR_HK_GW23_POS_RATIO_{}'.format(pos), element)
+                sql_interface.add_wheel_data(conn, 'IMIR_HK_GW23_POS_RATIO_{}'.format(pos), element)
         except KeyError:
             pass
 
-    for pos in mn.ccc_positions:
+    for position in mnemonics.ccc_positions:
         try:
-            data = CCC[pos]
+            data = CCC[position]
             for element in data:
-                sql.add_wheel_data(conn, 'IMIR_HK_CCC_POS_RATIO_{}'.format(pos), element)
+                sql_interface.add_wheel_data(conn, 'IMIR_HK_CCC_POS_RATIO_{}'.format(pos), element)
         except KeyError:
             pass
-
-
-def process_15min_sample(conn, m_raw_data):
-    '''Parse CSV file, process data within and put to DB
-    Parameters
-    ----------
-    conn : DBobject
-        Connection object to temporary database
-    path : str
-        defines path to the files
-    '''
-
-    #import mnemonic data and append dict to variable below
-    m_raw_data = apt.mnemonics(path)
-
-    #process raw data with once a day routine
-    processed_data = once_a_day_routine(m_raw_data)
-
-    #push extracted and filtered data to temporary database
-    for key, value in processed_data.items():
-
-        #abbreviate data table
-        m = m_raw_data.mnemonic(key)
-
-        if key == "SE_ZIMIRICEA":
-            length = len(value)
-            mean = statistics.mean(value)
-            deviation = statistics.stdev(value)
-            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-            sql.add_data(conn, "SE_ZIMIRICEA_IDLE", dataset)
-
-        elif key == "IMIR_HK_ICE_SEC_VOLT4":
-            length = len(value)
-            mean = statistics.mean(value)
-            deviation = statistics.stdev(value)
-            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-            sql.add_data(conn, "IMIR_HK_ICE_SEC_VOLT4_IDLE", dataset)
-
-        else:
-            length = len(value)
-            mean = statistics.mean(value)
-            deviation = statistics.stdev(value)
-            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-            sql.add_data(conn, key, dataset)
-
-def main():
-
-    mnemonic_identifier = 'SA_ZFGOUTFOV'
-    start_time = Time(2016.0, format='decimalyear')
-    end_time = Time(2018.1, format='decimalyear')
-
-
-    mnemonic = query_single_mnemonic(mnemonic_identifier, start_time, end_time)
-    assert len(mnemonic.data) == mnemonic.meta['paging']['rows']
-
-
-
-    for mnemonic in mn.mnemonic_set_15min:
-        whole_day.update(mnemonic = query_single_mnemonic(mnemonic, start, end))
-
-
-    #configure start and end time for query
-    #
-    #
-    #
-    #
-
-    #query table start and end from engineering_database
-    #
-    #
-    #
-    #
-    #return table_day, table_15min
-
-    #open temporary database and write data!
-    DATABASE_LOCATION = os.path.join(PACKAGE_DIR, 'database')
-    DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'miri_database.db')
-
-    conn = sql.create_connection(DATABASE_FILE)
-
-    process_day_sample(conn, table_day)
-    process_15process_15min_sample(conn, table_15min)
-
-    sql.close_connection(conn)
