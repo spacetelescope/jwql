@@ -27,7 +27,7 @@ Notes
 
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
-import jwql.instrument_monitors.miri_monitors.data_trending.utils.csv_to_AstropyTable as apt
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.csv_to_astropy_table as apt
 from jwql.instrument_monitors.miri_monitors.data_trending.utils.process_data import once_a_day_routine
 from jwql.utils.utils import get_config, filename_parser
 

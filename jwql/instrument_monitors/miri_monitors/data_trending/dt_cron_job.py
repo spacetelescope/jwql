@@ -29,9 +29,9 @@ import statistics
 
 from jwedb.edb_interface import query_single_mnemonic
 
-from .utils import mnemonics
-from .utils import sql_interface
+from .utils import csv_to_astropy_table, mnemonics, sql_interface
 from .utils.process_data import wheelpos_routine, whole_day_routine
+
 
 PACKAGE_DIR = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))).split('instrument_monitors')[0]
 
@@ -64,7 +64,7 @@ def process_15min_sample(conn, path):
     """
 
     # Import mnemonic data and append dict to variable below
-    mnemonics_raw_data = apt.mnemonics(path)
+    mnemonics_raw_data = csv_to_astropy_table.mnemonics(path)
 
     # Process raw data with once a day routine
     processed_data = once_a_day_routine(mnemonics_raw_data)
@@ -105,7 +105,7 @@ def process_day_sample(conn, path):
         Defines path to the files
     """
 
-    raw_data = apt.mnemonics(path)
+    raw_data = csv_to_astropy_table.mnemonics(path)
 
     cond3, FW_volt, GW14_volt, GW23_volt, CCC_volt = whole_day_routine(raw_data)
     FW, GW14, GW23, CCC = wheelpos_routine(raw_data)
