@@ -1,5 +1,4 @@
-#! /usr/bin/env python
-''' Cron Job for miri datatrending -> populates database
+"""dt_corn_job.py
 
     This module holds functions to connect with the engineering database in order
     to grab and process data for the specific miri database. The scrips queries
@@ -9,188 +8,197 @@
 
 Authors
 -------
-    - Daniel Kühbacher
+
+    - [AIRBUS] Daniel Kübacher
+    - [AIRBUS] Leo Stumpf
+
+Use
+---
+    -
 
 Dependencies
 ------------
-    For further information please contact Brian O'Sullivan
 
+    The file miri_database.db in the directory jwql/jwql/database/ must exist.
+    
 References
 ----------
+    The code was developed in reference to the information provided in:
+    ‘MIRI trend requestsDRAFT1900301.docx’
 
-'''
-import utils.mnemonics as mn
-import utils.sql_interface as sql
-from utils.process_data import whole_day_routine, wheelpos_routine
-from jwql.utils.engineering_database import query_single_mnemonic
+Notes
+-----
 
-import pandas as pd
-import numpy as np
-import statistics
-import sqlite3
+    For further information please contact Brian O'Sullivan
+"""
+import datetime
+import netrc
 import os
+import sys
+import time
+from datetime import date
 
+from astropy.table import Table
 from astropy.time import Time
 
-__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-PACKAGE_DIR = __location__.split('instrument_monitors')[0]
+import jwql.edb.engineering_database as edb
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.log_error_and_file as log_error_and_file
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
+from jwql.instrument_monitors.miri_monitors.data_trending.day_job import process_day
+from jwql.instrument_monitors.miri_monitors.data_trending.min_job import process_15min
+from jwql.utils.utils import get_config
 
+def querry_data(mnemonic_name, start_time, end_time, mast_token):
+    """Download data from the mast database
 
-def process_day_sample(conn, m_raw_data):
-    '''Parse CSV file, process data within and put to DB
+    This function dowloads all datapoints of a given mnemonic in the set time frame.
+
     Parameters
     ----------
-    conn : DBobject
-        Connection object to temporary database
-    path : str
-        defines path to the files
-    '''
+    mnemonic_name : str
+        Name of the mnemonic to be downloaded.
+    start_time : astrophy.time
+        Start of timespan to be downloaded
+    end_time : astrophy.time
+        end of timespan to be downloaded
+    mast_token : mast token
 
-    m_raw_data = apt.mnemonics(path)
+    Returns
+    -------
+    mnemonic_table : astrophy.table
+        all downloaded data is presented in an astrophy table, with the format needed for the processing functions.
+    """
 
-    cond3, FW_volt, GW14_volt, GW23_volt, CCC_volt = whole_day_routine(m_raw_data)
-    FW, GW14, GW23, CCC= wheelpos_routine(m_raw_data)
+    #Declare log region Querry
+    log = log_error_and_file.Log('Querry')
 
-    #put data from con3 to database
-    for key, value in cond3.items():
+    #Download data from the mast website and check weather there is anything wrong with the downloaded data
+    try:
+        data, meta, info = edb.query_single_mnemonic(mnemonic_name, start_time, end_time, token=mast_token)
 
-        m = m_raw_data.mnemonic(key)
-
-        if value != None:
-            if len(value) > 2:
-                if key == "SE_ZIMIRICEA":
-                    length = len(value)
-                    mean = statistics.mean(value)
-                    deviation = statistics.stdev(value)
-                    dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-                    sql.add_data(conn, "SE_ZIMIRICEA_HV_ON", dataset)
-
-                elif key == "IMIR_HK_ICE_SEC_VOLT4":
-                    length = len(value)
-                    mean = statistics.mean(value)
-                    deviation = statistics.stdev(value)
-                    dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-                    sql.add_data(conn, "IMIR_HK_ICE_SEC_VOLT4_HV_ON", dataset)
-
-                else:
-                    length = len(value)
-                    mean = statistics.mean(value)
-                    deviation = statistics.stdev(value)
-                    dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-                    sql.add_data(conn, key, dataset)
-
-
-    #########################################################################################
-    for pos in mn.fw_positions:
-        try:
-            data = FW[pos]
-            for element in data:
-                sql.add_wheel_data(conn, 'IMIR_HK_FW_POS_RATIO_{}'.format(pos), element)
-        except KeyError:
-            pass
-
-    for pos in mn.gw_positions:
-        try:
-            data_GW14 = GW14[pos]
-            data_GW23 = GW23[pos]
-
-            for element in data_GW14:
-                sql.add_wheel_data(conn, 'IMIR_HK_GW14_POS_RATIO_{}'.format(pos), element)
-            for element in data_GW23:
-                sql.add_wheel_data(conn, 'IMIR_HK_GW23_POS_RATIO_{}'.format(pos), element)
-        except KeyError:
-            pass
-
-    for pos in mn.ccc_positions:
-        try:
-            data = CCC[pos]
-            for element in data:
-                sql.add_wheel_data(conn, 'IMIR_HK_CCC_POS_RATIO_{}'.format(pos), element)
-        except KeyError:
-            pass
-
-
-def process_15min_sample(conn, m_raw_data):
-    '''Parse CSV file, process data within and put to DB
-    Parameters
-    ----------
-    conn : DBobject
-        Connection object to temporary database
-    path : str
-        defines path to the files
-    '''
-
-    #import mnemonic data and append dict to variable below
-    m_raw_data = apt.mnemonics(path)
-
-    #process raw data with once a day routine
-    processed_data = once_a_day_routine(m_raw_data)
-
-    #push extracted and filtered data to temporary database
-    for key, value in processed_data.items():
-
-        #abbreviate data table
-        m = m_raw_data.mnemonic(key)
-
-        if key == "SE_ZIMIRICEA":
-            length = len(value)
-            mean = statistics.mean(value)
-            deviation = statistics.stdev(value)
-            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-            sql.add_data(conn, "SE_ZIMIRICEA_IDLE", dataset)
-
-        elif key == "IMIR_HK_ICE_SEC_VOLT4":
-            length = len(value)
-            mean = statistics.mean(value)
-            deviation = statistics.stdev(value)
-            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-            sql.add_data(conn, "IMIR_HK_ICE_SEC_VOLT4_IDLE", dataset)
-
+        if data is None:
+            data = Table(names=('MJD', 'euvalue', 'sqldataType', 'theTime'), dtype=('f8', 'f8', 'U4', 'U21'))
+            log.log(mnemonic_name + ' Failed: No Data', 'Error')
         else:
-            length = len(value)
-            mean = statistics.mean(value)
-            deviation = statistics.stdev(value)
-            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-            sql.add_data(conn, key, dataset)
+            log.log(mnemonic_name + ' Succesful Downloaded ' + str(len(data)) + ' data points')
 
-def main():
-
-    from ..utils.engineering_database import query_single_mnemonic
-
-    mnemonic_identifier = 'SA_ZFGOUTFOV'
-    start_time = Time(2016.0, format='decimalyear')
-    end_time = Time(2018.1, format='decimalyear')
+    except:
+        # set text and color
+        data = Table(names=('MJD', 'euvalue', 'sqldataType', 'theTime'), dtype=('f8', 'f8', 'U4', 'U21'))
+        log.log(mnemonic_name + ' Failed: ' + str(sys.exc_info()[1]), 'Error')
 
 
-    mnemonic = query_single_mnemonic(mnemonic_identifier, start_time, end_time)
-    assert len(mnemonic.data) == mnemonic.meta['paging']['rows']
+    # Generate Info for the meta section
+    time_column = data['MJD']
+    if len(time_column) > 0:
+        date_start = time_column[0]
+        date_end = time_column[len(time_column) - 1]
+        info = {'start': date_start, 'end': date_end}
+    else:
+        info = {"n": "n"}
+
+    info['mnemonic'] = mnemonic_name
+    info['len'] = len(time_column)
+
+    #Format the table as it is needet for the processing unit
+    description = ('time', 'value')
+    data_return = [data['MJD'], data['euvalue']]
+
+    return Table(data_return, names=description, dtype=('f8', 'str'), meta=info)
+
+def get_data_day(day):
+    """Download + Process + Save all mnemonics for one specific day
+
+    Parameters
+    ----------
+    day : string
+    string of date to be downloaded: Format = JJJJ-MM-DD
+
+    Returns
+    -------
+    Saves directly in defined SQL database
+    """
+
+    #save the start time of the function to calculate the run time
+    start_time_proc = time.time()
+
+    #Connect to the miri database to save the variables
+    database_location = os.path.join(get_config()['jwql_dir'], 'database')
+    database_file = os.path.join(database_location, 'miri_database.db')
+    conn = sql.create_connection(database_file)
+
+    #Define Mast token
+    host = 'mast'
+    secrets = netrc.netrc()
+    mast_token = secrets.authenticators(host)[2]
+
+    #Generate a new log file
+    log_error_and_file.define_log_file('log//LogFile_' + day + '.log')
+    log = log_error_and_file.Log('MAIN')
+    log.info('Process Startet for day ' + day)
 
 
+    #Download data in the 15 min job
+    log.info('querry data 15 min')
+    mnemonic_dict = {}
 
-    for mnemonic in mn.mnemonic_set_15min:
-        whole_day.update(mnemonic = query_single_mnemonic(mnemonic, start, end))
+    start_time = Time(day + ' 11:59:59.000', format='iso')
+    end_time = Time(day + ' 12:15:01.000', format='iso')
+
+    for mnemonic_name in mn.miri_mnemonic_min:
+        mnemonic_table = querry_data(mnemonic_name, start_time, end_time, mast_token)
+        mnemonic_dict.update({mnemonic_name: mnemonic_table})
+
+    process_15min(conn, mnemonic_dict)
 
 
-    #configure start and end time for query
-    #
-    #
-    #
-    #
+    # Download data in the day min job
+    log.info('querry data day')
+    mnemonic_dict = {}
 
-    #query table start and end from engineering_database
-    #
-    #
-    #
-    #
-    #return table_day, table_15min
+    start_time = Time(day + ' 00:00:00.001', format='iso')
+    end_time = Time(day + ' 23:59:59.000', format='iso')
 
-    #open temporary database and write data!
-    DATABASE_LOCATION = os.path.join(PACKAGE_DIR, 'database')
-    DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'miri_database.db')
+    for mnemonic_name in mn.whould_day:
+        mnemonic_table = querry_data(mnemonic_name, start_time, end_time, mast_token)
+        mnemonic_dict.update({mnemonic_name: mnemonic_table})
 
-    conn = sql.create_connection(DATABASE_FILE)
+    process_day(conn, mnemonic_dict)
 
-    process_day_sample(conn, table_day)
-    process_15process_15min_sample(conn, table_15min)
 
-    sql.close_connection(conn)
+    #Generate info end section
+    end_time_proc = time.time()
+    hours, rem = divmod(end_time_proc - start_time_proc, 3600)
+    minutes, seconds = divmod(rem, 60)
+
+    end_print = ['file:     dt_corn_job.py',
+                 'version:  1.0',
+                 'run time: {:0>2}:{:0>2}:{:05.2f}'.format(int(hours), int(minutes), seconds),
+                 'status:   finished']
+    log.info(end_print)
+
+    log_error_and_file.delete_log_file()
+
+def main_oneDay():
+    #runs the software once for one specific date
+    day = '2019-11-10'
+    get_data_day(day)
+
+def main_daily():
+    #runs the software once for yesterday
+    today = date.today()
+    day = today - datetime.timedelta(days=1)
+    day = day.strftime("%Y-%m-%d")
+
+    get_data_day(day)
+
+def main_multipleDays():
+    #runs the software for mulatiple days
+    today = date.today()
+    for i in range(20):
+        day = today - datetime.timedelta(days=(300 - i))
+        day = day.strftime("%Y-%m-%d")
+        get_data_day(day)
+
+main_oneDay()

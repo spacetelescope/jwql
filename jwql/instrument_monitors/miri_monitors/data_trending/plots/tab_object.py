@@ -41,6 +41,19 @@ Notes
     For further information please contact Brian O'Sullivan
 """
 from bokeh.models.widgets import Div
+import jwql.instrument_monitors.miri_monitors.data_trending.plots.plot_functions as pf
+import jwql.instrument_monitors.miri_monitors.data_trending.utils_f as utils
+from bokeh.models import (BoxSelectTool, Circle, Column, ColumnDataSource,
+                          DataTable, Grid, HoverTool, IntEditor, LinearAxis,
+                          NumberEditor, NumberFormatter, Plot, SelectEditor,
+                          StringEditor, StringFormatter, TableColumn,)
+from bokeh.document import Document
+from bokeh.util.browser import view
+from bokeh.embed import file_html
+from bokeh.resources import INLINE
+import pandas as pd
+from astropy.time import Time
+from bokeh.layouts import column
 
 def generate_tab_description(input):
     str_start = """
@@ -64,7 +77,7 @@ def generate_tab_description(input):
         </body>
     """
 
-    str_body = """"
+    str_body = """
         <body>
         <table style="width:100%">
           <tr>
@@ -88,3 +101,40 @@ def generate_tab_description(input):
     str_out = str_start + str_body + str_end
     descr = Div(text=str_out, width=1100)
     return descr
+
+def anomaly_table(conn, mnemonic):
+
+    get_str = '('
+    for element in mnemonic:
+        get_str = get_str + "'"+ str(element)+ "',"
+    get_str = get_str[:-1] + ')'
+
+
+    sql_c = "SELECT * FROM miriAnomaly WHERE plot in " + get_str +" ORDER BY start_time"
+    anomaly_orange = pd.read_sql_query(sql_c, conn)
+
+    div = Div(text="<font size='5'> Reported anomalys: </font>")
+
+    try:
+        # convert mjd to iso time
+        anomaly_orange['start_time'] = Time(anomaly_orange['start_time'], format='mjd').iso
+        anomaly_orange['end_time'] = Time(anomaly_orange['end_time'], format='mjd').iso
+
+        # neu
+        source = ColumnDataSource(anomaly_orange)
+
+        columns = [
+            TableColumn(field="id", title="ID", width=20),
+            TableColumn(field="plot", title="Mnemonic", width=100),
+            TableColumn(field="autor", title="Autor", width=100),
+            TableColumn(field="start_time", title="Start Time", width=200),
+            TableColumn(field="end_time", title="End Time", width=200),
+            TableColumn(field="comment", title="Comment", width=600),
+        ]
+
+        data_table = DataTable(source=source, columns=columns, editable=False, width=1120, fit_columns=True,
+                               index_position=None, selectable=True)
+    except:
+        data_table = Div(text='There are currently no anomalies reported')
+
+    return column(div, data_table)

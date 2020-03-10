@@ -19,22 +19,22 @@ References
 ----------
 
 '''
-import netrc
-import statistics
-import os
-import sys
 import datetime
-
-import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
-import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
-import jwql.edb.engineering_database as edb
+import netrc
+import os
+import statistics
+import sys
+from datetime import date
+from datetime import datetime as DateTime
+from multiprocessing import Process
+from time import sleep
 
 from astropy.time import Time
+
+import jwql.edb.engineering_database as edb
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
 from jwql.utils.utils import get_config
-from time import sleep
-from multiprocessing import Process
-from datetime import datetime as DateTime
-from datetime import date
 
 host = 'mast'
 
@@ -43,11 +43,13 @@ class NullWriter(object):
     def write(self, arg):
         pass
 
+
 def frange(start, stop, step):
     i = start
-    while i<stop:
+    while i < stop:
         yield i
-        i+= step
+        i += step
+
 
 def querry_in_background(mnemonic_name, start_time, end_time, mast_token, conn):
     nullwrite = NullWriter()
@@ -81,116 +83,117 @@ def querry_in_background(mnemonic_name, start_time, end_time, mast_token, conn):
 
     print_string = 'dt_corn_job: ' + DateTime.now().isoformat() + '\t' + status + '\t' + mnemonic_name
     sys.stdout = oldstdout  # enable output
-    print_string=color + print_string + '\033[0m'
-    #sys.stdout.flush()
-    #sys.stdout.write("\r%s" %print_string)
+    print_string = color + print_string + '\033[0m'
+    # sys.stdout.flush()
+    # sys.stdout.write("\r%s" %print_string)
     print(print_string)
 
-def main():
-    max_time=90
-    step_time=0.5
 
-    #get date
+def main():
+    max_time = 90
+    step_time = 0.5
+
+    # get date
     today = date.today()
     day = today - datetime.timedelta(days=10)
     day = day.strftime("%Y-%m-%d")
 
-    #connect database
+    # connect database
     DATABASE_LOCATION = os.path.join(get_config()['jwql_dir'], 'database')
     DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'miri_database.db')
     conn = sql.create_connection(DATABASE_FILE)
 
-    #define token
+    # define token
     secrets = netrc.netrc()
     mast_token = secrets.authenticators(host)[2]
 
-    #define time
-    start_time = Time(day+' 12:00:00.000', format='iso')
-    end_time =   Time(day+' 12:15:00.000', format='iso')
+    # define time
+    start_time = Time(day + ' 12:00:00.000', format='iso')
+    end_time = Time(day + ' 12:15:00.000', format='iso')
 
-    #querry data 15 min STARTED
+    # querry data 15 min STARTED
     print("*************************************************************")
     print("* querry data 15 min STARTED")
     print("*************************************************************")
 
     # go over all nmemonics
     for mnemonic_name in mn.mnemonic_set_15min:
-        #define a new precess
+        # define a new precess
         p = Process(target=querry_in_background, args=(mnemonic_name, start_time, end_time, mast_token, conn,))
         p.start()
-        #sys.stdout.write("\n")
+        # sys.stdout.write("\n")
 
-        #define max preccess time
+        # define max preccess time
         for i in frange(0, max_time, step_time):
-            if i==(max_time-1):
+            if i == (max_time - 1):
                 output_s = '\33[31m' + 'dt_corn_job: ' + DateTime.now().isoformat() + '\t' + 'TimeOut' + '\t' + mnemonic_name + '\033[0m'
-                #sys.stdout.write("\r%s" % output_s)
+                # sys.stdout.write("\r%s" % output_s)
                 print(output_s)
                 break
 
-            #display preccessed seconds
+            # display preccessed seconds
             if p.is_alive():
-                #sys.stdout.flush()
-                #output_s='\33[33m'+'dt_corn_job: Querry '+ mnemonic_name + ' for '+ str(i) + 's of ' + str(max_time) +'s' + '\033[0m'
-                #sys.stdout.write("\r%s" % output_s)
+                # sys.stdout.flush()
+                # output_s='\33[33m'+'dt_corn_job: Querry '+ mnemonic_name + ' for '+ str(i) + 's of ' + str(max_time) +'s' + '\033[0m'
+                # sys.stdout.write("\r%s" % output_s)
 
                 sleep(step_time)
 
-            #if data querry was succesfull, break out of for
+            # if data querry was succesfull, break out of for
             else:
                 break
 
-        #if necessary close procces
+        # if necessary close procces
         p.terminate()
         p.join()
 
-    #finished
+    # finished
     sys.stdout.write("\n")
     print("*************************************************************")
     print("* querry data 15 min FINISHED")
     print("*************************************************************")
 
-    #define time
-    start_time = Time(day+' 00:00:00.001', format='iso')
-    end_time =   Time(day+' 23:59:59.000', format='iso')
+    # define time
+    start_time = Time(day + ' 00:00:00.001', format='iso')
+    end_time = Time(day + ' 23:59:59.000', format='iso')
 
-    #querry data 15 min STARTED
+    # querry data 15 min STARTED
     print("*************************************************************")
     print("* querry data day STARTED")
     print("*************************************************************")
 
     # go over all nmemonics
     for mnemonic_name in mn.mnemonic_set_15min:
-        #define a new precess
+        # define a new precess
         p = Process(target=querry_in_background, args=(mnemonic_name, start_time, end_time, mast_token, conn,))
         p.start()
-        #sys.stdout.write("\n")
+        # sys.stdout.write("\n")
 
-        #define max preccess time
+        # define max preccess time
         for i in frange(0, max_time, step_time):
-            if i==(max_time-1):
+            if i == (max_time - 1):
                 output_s = '\33[31m' + 'dt_corn_job: ' + DateTime.now().isoformat() + '\t' + 'TimeOut' + '\t' + mnemonic_name + '\033[0m'
-                #sys.stdout.write("\r%s" % output_s)
+                # sys.stdout.write("\r%s" % output_s)
                 print(output_s)
                 break
 
-            #display preccessed seconds
+            # display preccessed seconds
             if p.is_alive():
-                #sys.stdout.flush()
-                #output_s='\33[33m'+'dt_corn_job: Querry '+ mnemonic_name + ' for '+ str(i) + 's of ' + str(max_time) +'s' + '\033[0m'
-                #sys.stdout.write("\r%s" % output_s)
+                # sys.stdout.flush()
+                # output_s='\33[33m'+'dt_corn_job: Querry '+ mnemonic_name + ' for '+ str(i) + 's of ' + str(max_time) +'s' + '\033[0m'
+                # sys.stdout.write("\r%s" % output_s)
 
                 sleep(step_time)
 
-            #if data querry was succesfull, break out of for
+            # if data querry was succesfull, break out of for
             else:
                 break
 
-        #if necessary close procces
+        # if necessary close procces
         p.terminate()
         p.join()
 
-    #finished
+    # finished
     sys.stdout.write("\n")
     print("*************************************************************")
     print("* querry data day FINISHED")

@@ -19,25 +19,22 @@ References
 ----------
 
 '''
-import netrc
-import statistics
-import os
-import sys
 import datetime
-import warnings
+import netrc
+import os
+import statistics
+import sys
+from datetime import date
+from datetime import datetime as DateTime
 
+from astropy.table import Table
+from astropy.time import Time
+
+import jwql.edb.engineering_database as edb
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
-import jwql.edb.engineering_database as edb
-
-from astropy.time import Time
+from jwql.instrument_monitors.miri_monitors.data_trending.utils.extract_data import once_a_day_routine
 from jwql.utils.utils import get_config
-from time import sleep
-from multiprocessing import Process
-from datetime import datetime as DateTime
-from datetime import date
-from astropy.table import Table
-from jwql.instrument_monitors.miri_monitors.data_trending.utils.process_data import once_a_day_routine
 
 host = 'mast'
 
@@ -46,11 +43,13 @@ class NullWriter(object):
     def write(self, arg):
         pass
 
+
 def frange(start, stop, step):
     i = start
-    while i<stop:
+    while i < stop:
         yield i
-        i+= step
+        i += step
+
 
 def process_15min(conn, m_raw_data):
     '''Parse CSV file, process data within and put to DB
@@ -63,15 +62,14 @@ def process_15min(conn, m_raw_data):
         defines file to read
     '''
 
-    #import mnemonic data and append dict to variable below
-    #m_raw_data = mnemonic_dict
+    # import mnemonic data and append dict to variable below
+    # m_raw_data = mnemonic_dict
 
-    #process raw data with once a day routine
+    # process raw data with once a day routine
 
     print("*************************************************************")
     print("* process data 15 min")
     print("*************************************************************")
-
 
     processed_data = once_a_day_routine(m_raw_data)
 
@@ -79,10 +77,10 @@ def process_15min(conn, m_raw_data):
     print("* SQL data 15 min")
     print("*************************************************************")
 
-    #push extracted and filtered data to temporary database
+    # push extracted and filtered data to temporary database
     for key, value in processed_data.items():
 
-        #abbreviate data table
+        # abbreviate data table
         m = m_raw_data[key]
 
         if key == "SE_ZIMIRICEA":
@@ -105,6 +103,7 @@ def process_15min(conn, m_raw_data):
             deviation = statistics.stdev(value)
             dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
             sql.add_data(conn, key, dataset)
+
 
 def querry_data(mnemonic_name, start_time, end_time, mast_token):
     try:
@@ -159,36 +158,35 @@ def querry_data(mnemonic_name, start_time, end_time, mast_token):
 
 
 def main():
-    max_time=90
-    step_time=0.5
+    max_time = 90
+    step_time = 0.5
 
-    #get date
+    # get date
     today = date.today()
     day = today - datetime.timedelta(days=10)
     day = day.strftime("%Y-%m-%d")
 
-    #connect database
+    # connect database
     DATABASE_LOCATION = os.path.join(get_config()['jwql_dir'], 'database')
     DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'miri_database.db')
     conn = sql.create_connection(DATABASE_FILE)
 
-    #define token
+    # define token
     secrets = netrc.netrc()
     mast_token = secrets.authenticators(host)[2]
 
-    day='2019-10-15'
-    day='2019-12-10'
+    day = '2019-10-15'
+    day = '2019-12-10'
 
-    #define time
-    start_time = Time(day+' 12:00:00.000', format='iso')
-    end_time =   Time(day+' 12:15:00.000', format='iso')
+    # define time
+    start_time = Time(day + ' 12:00:00.000', format='iso')
+    end_time = Time(day + ' 12:15:00.000', format='iso')
 
-    #define time
-    start_time = Time(day+' 00:00:00.001', format='iso')
-    end_time =   Time(day+' 23:59:59.000', format='iso')
+    # define time
+    start_time = Time(day + ' 00:00:00.001', format='iso')
+    end_time = Time(day + ' 23:59:59.000', format='iso')
 
-
-    #querry data 15 min STARTED
+    # querry data 15 min STARTED
     print("*************************************************************")
     print("* querry data 15 min")
     print("*************************************************************")
@@ -202,7 +200,6 @@ def main():
             status = 'Succes'
             color = '\033[0m'  # color black (standard)
 
-
             # get data
             data, meta, info = edb.query_single_mnemonic(mnemonic_name, start_time, end_time, token=mast_token)
 
@@ -210,7 +207,7 @@ def main():
                 data = Table(names=('MJD', 'euvalue', 'sqldataType', 'theTime'), dtype=('f8', 'f8', 'U4', 'U21'))
                 status = 'Failure No data'
                 color = '\33[31m'  # color red
-                #raise Exception('No data')
+                # raise Exception('No data')
 
             data['time_iso'] = Time(data['MJD'], format='mjd').iso
             del data['theTime']
@@ -243,7 +240,7 @@ def main():
 
         except:
             # set text and color
-            status = 'Failure '+ str(sys.exc_info()[1])
+            status = 'Failure ' + str(sys.exc_info()[1])
             color = '\33[31m'  # color red
 
         print_string = DateTime.now().isoformat() + ' Querry 15min: ' + mnemonic_name + '\t' + status
@@ -252,15 +249,13 @@ def main():
 
     process_15min(conn, mnemonic_dict)
 
-
     print("*************************************************************")
     print("* querry data 15 min FINISHED")
     print("*************************************************************")
 
-    #define time
-    start_time = Time(day+' 00:00:00.001', format='iso')
-    end_time =   Time(day+' 23:59:59.000', format='iso')
-
+    # define time
+    start_time = Time(day + ' 00:00:00.001', format='iso')
+    end_time = Time(day + ' 23:59:59.000', format='iso')
 
 
 main()

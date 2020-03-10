@@ -70,23 +70,23 @@ def ref_volt(conn, start, end):
         Bokeh plot
     '''
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 500,
-                x_axis_type = 'datetime',
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=500,
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
     p.title.text = "Ref Voltages"
     pf.add_basic_layout(p)
 
-    a = pf.add_to_plot(p, "FWA_MOTOR_VREF", "INRSH_FWA_MOTOR_VREF", start, end, conn, color = "green")
-    b = pf.add_to_plot(p, "GWA_MOTOR_VREF", "INRSH_GWA_MOTOR_VREF", start, end, conn, color = "blue")
-    c = pf.add_to_plot(p, "OA_VREF", "INRSH_OA_VREF", start, end, conn, color = "red")
+    a = pf.add_to_plot(p, "FWA_MOTOR_VREF", "INRSH_FWA_MOTOR_VREF", start, end, conn, color="green")
+    b = pf.add_to_plot(p, "GWA_MOTOR_VREF", "INRSH_GWA_MOTOR_VREF", start, end, conn, color="blue")
+    c = pf.add_to_plot(p, "OA_VREF", "INRSH_OA_VREF", start, end, conn, color="red")
 
-    pf.add_hover_tool(p,[a,b,c])
+    pf.add_hover_tool(p, [a, b, c])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -111,29 +111,29 @@ def gain_volt(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 500,
-                x_axis_type = 'datetime',
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=500,
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
     p.title.text = "ADCMAIN"
     pf.add_basic_layout(p)
 
-    a = pf.add_to_plot(p, "FWA_ADCMGAIN", "INRSH_FWA_ADCMGAIN", start, end, conn, color = "green")
-    b = pf.add_to_plot(p, "GWA_ADCMGAIN", "INRSH_GWA_ADCMGAIN", start, end, conn, color = "blue")
-    c = pf.add_to_plot(p, "RMA_ADCMGAIN", "INRSH_RMA_ADCMGAIN", start, end, conn, color = "red")
+    a = pf.add_to_plot(p, "FWA_ADCMGAIN", "INRSH_FWA_ADCMGAIN", start, end, conn, color="green")
+    b = pf.add_to_plot(p, "GWA_ADCMGAIN", "INRSH_GWA_ADCMGAIN", start, end, conn, color="blue")
+    c = pf.add_to_plot(p, "RMA_ADCMGAIN", "INRSH_RMA_ADCMGAIN", start, end, conn, color="red")
 
-
-    #pf.add_hover_tool(p,[a,b,c])
+    # pf.add_hover_tool(p,[a,b,c])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
     p.legend.orientation = "horizontal"
     return p
+
 
 def offset_volt(conn, start, end):
     '''Create specific plot and return plot object
@@ -152,24 +152,24 @@ def offset_volt(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 500,
-                x_axis_type = 'datetime',
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=500,
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date', y_axis_label='Voltage (V)')
 
     p.grid.visible = True
     p.title.text = "OFFSET"
     pf.add_basic_layout(p)
 
-    a = pf.add_to_plot(p, "GWA_ADCMOFFSET", "INRSH_GWA_ADCMOFFSET", start, end, conn, color = "blue")
-    b = pf.add_to_plot(p, "FWA_ADCMOFFSET", "INRSH_FWA_ADCMOFFSET", start, end, conn, color = "green")
-    c = pf.add_to_plot(p, "OA_VREFOFF", "INRSH_OA_VREFOFF", start, end, conn, color = "orange")
-    d = pf.add_to_plot(p, "RMA_ADCMOFFSET", "INRSH_RMA_ADCMOFFSET", start, end, conn, color = "red")
+    a = pf.add_to_plot(p, "GWA_ADCMOFFSET", "INRSH_GWA_ADCMOFFSET", start, end, conn, color="blue")
+    b = pf.add_to_plot(p, "FWA_ADCMOFFSET", "INRSH_FWA_ADCMOFFSET", start, end, conn, color="green")
+    c = pf.add_to_plot(p, "OA_VREFOFF", "INRSH_OA_VREFOFF", start, end, conn, color="orange")
+    d = pf.add_to_plot(p, "RMA_ADCMOFFSET", "INRSH_RMA_ADCMOFFSET", start, end, conn, color="red")
 
-    pf.add_hover_tool(p,[a,b,c,d])
+    pf.add_hover_tool(p, [a, b, c, d])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -194,63 +194,63 @@ def volt_plots(conn, start, end):
         used by dashboard.py to set up dashboard
     '''
     descr = Div(text=
-    """
-    <style>
-    table, th, td {
-      border: 1px solid black;
-      background-color: #efefef;
-      border-collapse: collapse;
-      padding: 5px
-    }
-    table {
-      border-spacing: 15px;
-    }
-    </style>
-
-    <body>
-    <table style="width:100%">
-      <tr>
-        <th><h6>Plotname</h6></th>
-        <th><h6>Mnemonic</h6></th>
-        <th><h6>Description</h6></th>
-      </tr>
-      <tr>
-        <td>Ref Voltages</td>
-        <td>INRSH_FWA_MOTOR_VREF<br>
-            INRSH_GWA_MOTOR_VREF<br>
-            INRSH_OA_VREF</td>
-        <td>FWA Motor Reference Voltage for Calibration<br>
-            GWA Motor Reference Voltage for Calibration<br>
-            OA/RMA Reference Voltage for TM Calibration<br>
-        </td>
-      </tr>
-
-      <tr>
-        <td>ADCMGAIN</td>
-        <td>INRSH_FWA_ADCMGAIN<br>
-            INRSH_GWA_ADCMGAIN<br>
-            INRSH_RMA_ADCMGAIN</td>
-        <td>FWA ADC Motor Chain Gain for Calibration<br>
-            GWA ADC Motor Chain Gain for Calibration<br>
-            RMA ADC Motor Chain Gain for Calibration<br>
-        </td>
-      </tr>
-
-      <tr>
-        <td>OFFSET</td>
-        <td>INRSH_FWA_ADCMOFFSET<br>
-            INRSH_GWA_ADCMOFFSET<br>
-            INRSH_OA_VREFOFF<br>
-            INRSH_RMA_ADCMOFFSET</td>
-        <td>FWA ADC Motor Chain Offset for Calibration<br>
-            GWA ADC Motor Chain Offset for Calibration<br>
-            CAA Reference Voltage Offset for TM Calibration<br>
-            RMA ADC Motor Chain Offset for Calibration<br>
-        </td>
-      </tr>
-    </table>
-    </body>
-    """, width=1100)
+                """
+                <style>
+                table, th, td {
+                  border: 1px solid black;
+                  background-color: #efefef;
+                  border-collapse: collapse;
+                  padding: 5px
+                }
+                table {
+                  border-spacing: 15px;
+                }
+                </style>
+            
+                <body>
+                <table style="width:100%">
+                  <tr>
+                    <th><h6>Plotname</h6></th>
+                    <th><h6>Mnemonic</h6></th>
+                    <th><h6>Description</h6></th>
+                  </tr>
+                  <tr>
+                    <td>Ref Voltages</td>
+                    <td>INRSH_FWA_MOTOR_VREF<br>
+                        INRSH_GWA_MOTOR_VREF<br>
+                        INRSH_OA_VREF</td>
+                    <td>FWA Motor Reference Voltage for Calibration<br>
+                        GWA Motor Reference Voltage for Calibration<br>
+                        OA/RMA Reference Voltage for TM Calibration<br>
+                    </td>
+                  </tr>
+            
+                  <tr>
+                    <td>ADCMGAIN</td>
+                    <td>INRSH_FWA_ADCMGAIN<br>
+                        INRSH_GWA_ADCMGAIN<br>
+                        INRSH_RMA_ADCMGAIN</td>
+                    <td>FWA ADC Motor Chain Gain for Calibration<br>
+                        GWA ADC Motor Chain Gain for Calibration<br>
+                        RMA ADC Motor Chain Gain for Calibration<br>
+                    </td>
+                  </tr>
+            
+                  <tr>
+                    <td>OFFSET</td>
+                    <td>INRSH_FWA_ADCMOFFSET<br>
+                        INRSH_GWA_ADCMOFFSET<br>
+                        INRSH_OA_VREFOFF<br>
+                        INRSH_RMA_ADCMOFFSET</td>
+                    <td>FWA ADC Motor Chain Offset for Calibration<br>
+                        GWA ADC Motor Chain Offset for Calibration<br>
+                        CAA Reference Voltage Offset for TM Calibration<br>
+                        RMA ADC Motor Chain Offset for Calibration<br>
+                    </td>
+                  </tr>
+                </table>
+                </body>
+                """, width=1100)
 
     plot1 = ref_volt(conn, start, end)
     plot2 = gain_volt(conn, start, end)
@@ -258,6 +258,6 @@ def volt_plots(conn, start, end):
 
     layout = Column(descr, plot1, plot2, plot3)
 
-    tab = Panel(child = layout, title = "REF VOLTAGES")
+    tab = Panel(child=layout, title="REF VOLTAGES")
 
     return tab
