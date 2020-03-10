@@ -51,7 +51,7 @@ from bokeh.plotting import figure
 import numpy as np
 
 from jwql.utils.credentials import get_mast_token
-from jwedb.edb_interface import query_single_mnemonic, query_mnemonic_info
+from jwedb.edb_interface import query_single_mnemonic, query_mnemonic_info, process_mast_service_request_result
 
 
 class EdbMnemonic:

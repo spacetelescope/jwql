@@ -28,13 +28,14 @@ Notes
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.csv_to_AstropyTable as apt
-from jwql.instrument_monitors.miri_monitors.data_trending.utils.process_data import whole_day_routine, wheelpos_routine
+from jwql.instrument_monitors.miri_monitors.data_trending.utils.extract_data import whole_day_routine, wheelpos_routine
 from jwql.utils.utils import get_config, filename_parser
 
 import os
 import glob
 import statistics
 import sqlite3
+
 
 #set _location_ variable
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
