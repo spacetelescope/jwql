@@ -1,6 +1,7 @@
 """utils_f.py
 
     Contains all utils/variables/definitions/settings for dashboard.py (coherently)
+    Contains Elements for the dashbord
 
 Authors
 -------
@@ -27,10 +28,13 @@ Notes
     For further information please contact Brian O'Sullivan
 """
 import datetime
+from astropy.time import Time
 from bokeh.models import DatetimeTickFormatter
+from bokeh.plotting import figure
 
+import jwql.instrument_monitors.miri_monitors.data_trending.plots.plot_functions as pf
 
-
+# Defines Layout of the Legend of all plots
 plot_x_axis_format = DatetimeTickFormatter(
     hours=["%Y-%m-%d ,%H:%M:%S.%f"],
     days=["%Y-%m-%d, %H:%M"],
@@ -38,11 +42,15 @@ plot_x_axis_format = DatetimeTickFormatter(
     years=["%Y-%m-%d"],
 )
 
+
+# Time Delta function it is used to only display a certain timeframe of e.g. the last 120 days
 def time_delta(endtime):
     timeDeltaEnd = endtime.datetime
     timeDelta = [timeDeltaEnd - datetime.timedelta(days=120), timeDeltaEnd]
     return timeDelta
 
+
+# Tab Description
 description_bias = [
     [['VSSOUT'], ['IGDP_MIR_IC_V_VSSOUT', 'IGDP_MIR_SW_V_VSSOUT', 'IGDP_MIR_LW_V_VSSOUT'],
      ['Detector Bias VSSOUT (IC,SW, & LW)']],
@@ -55,6 +63,7 @@ description_bias = [
      ['Detector Bias VDDUC (IC,SW, & LW)']]
 ]
 
+# Tab Description
 description_power = [
     [['POWER ICE'], ['SE_ZIMIRICEA * 30V (static)'], ['Primary power consumption ICE side A - HV on and IDLE']],
     [['POWER FPE'], ['SE_ZIMIRIFPEA * 30V (static)'], ['Primary power consumption FPE side A']],
@@ -62,6 +71,7 @@ description_power = [
      ['Supply voltage and current ICE/FPE']]
 ]
 
+# Tab Description
 description_IceVoltage = [
     [['ICE_SEC_VOLT1/3'], ['IMIR_HK_ICE_SEC_VOLT1 ', 'IMIR_HK_ICE_SEC_VOLT3'],
      ['ICE Secondary Voltage (HV) V1 and V3']],
@@ -72,6 +82,7 @@ description_IceVoltage = [
      ['Wheel Sensor supply voltages ']]
 ]
 
+# Tab Description
 description_FpeVC = [
     [['2.5V Ref and FPE Digg'], ['IMIR_SPW_V_DIG_2R5V', 'IMIR_PDU_V_REF_2R5V'],
      ['FPE 2.5V Digital and FPE 2.5V PDU Reference Voltage']],
@@ -82,34 +93,35 @@ description_FpeVC = [
     [['FPE Ana. N7V'], ['IMIR_PDU_V_ANA_N7V', 'IMIR_PDU_I_ANA_N7V'], ['FPE -7V Analog Voltage and Current']]
 ]
 
+# Tab Description
 description_Temperature = [
     # line 1 collum 1
-    [['CRYO Temperatures'], \
+    [['CRYO Temperatures'],
      # line 1 collum 2
-     ['IGDP_MIR_ICE_T1P_CRYO', 'IGDP_MIR_ICE_T2R_CRYO', 'IGDP_MIR_ICE_T3LW_CRYO', \
-      'IGDP_MIR_ICE_T4SW_CRYO', 'IGDP_MIR_ICE_T5IMG_CRYO', 'IGDP_MIR_ICE_T6DECKCRYO', \
-      'IGDP_MIR_ICE_T7IOC_CRYO', 'IGDP_MIR_ICE_FW_CRYO', 'IGDP_MIR_ICE_CCC_CRYO', \
-      'IGDP_MIR_ICE_GW14_CRYO', 'IGDP_MIR_ICE_GW23_CRYO', 'IGDP_MIR_ICE_POMP_CRYO', \
-      'IGDP_MIR_ICE_POMR_CRYO', 'IGDP_MIR_ICE_IFU_CRYO', 'IGDP_MIR_ICE_IMG_CRYO'], \
+     ['IGDP_MIR_ICE_T1P_CRYO', 'IGDP_MIR_ICE_T2R_CRYO', 'IGDP_MIR_ICE_T3LW_CRYO',
+      'IGDP_MIR_ICE_T4SW_CRYO', 'IGDP_MIR_ICE_T5IMG_CRYO', 'IGDP_MIR_ICE_T6DECKCRYO',
+      'IGDP_MIR_ICE_T7IOC_CRYO', 'IGDP_MIR_ICE_FW_CRYO', 'IGDP_MIR_ICE_CCC_CRYO',
+      'IGDP_MIR_ICE_GW14_CRYO', 'IGDP_MIR_ICE_GW23_CRYO', 'IGDP_MIR_ICE_POMP_CRYO',
+      'IGDP_MIR_ICE_POMR_CRYO', 'IGDP_MIR_ICE_IFU_CRYO', 'IGDP_MIR_ICE_IMG_CRYO'],
      # line 1 collum 3
-     ['Deck Nominal Temperature (T1)', ' Deck Redundant Temperature (T2)', ' LW FPM I/F Temperature (T3)', \
-      ' SW FPM I/F Temperature (T4)', ' IM FPM I/F Temperature (T5)', ' A-B Strut Apex Temperature (T6)', \
-      ' IOC Temperature (T7)', ' FWA Temperature', ' CCC Temperature', \
-      ' DGA-A (GW14) Temperature', ' DGA-B (GW23) Temperature', ' POMH Nominal Temperature', \
+     ['Deck Nominal Temperature (T1)', ' Deck Redundant Temperature (T2)', ' LW FPM I/F Temperature (T3)',
+      ' SW FPM I/F Temperature (T4)', ' IM FPM I/F Temperature (T5)', ' A-B Strut Apex Temperature (T6)',
+      ' IOC Temperature (T7)', ' FWA Temperature', ' CCC Temperature',
+      ' DGA-A (GW14) Temperature', ' DGA-B (GW23) Temperature', ' POMH Nominal Temperature',
       ' POMH Redundant Temperature', ' MRS (CF) Cal. Source Temperature', ' Imager (CI) Cal. Source Temperature']],
 
     # line 2 collum 1
     [['IEC Temperatures'],
      # line 2 collum 2
-     ['ST_ZTC1MIRIA', 'ST_ZTC2MIRIA', 'ST_ZTC1MIRIB', \
-      'ST_ZTC2MIRIB', 'IGDP_MIR_ICE_INTER_TEMP', 'IMIR_PDU_TEMP', \
-      'IMIR_IC_SCE_ANA_TEMP1', 'IMIR_SW_SCE_ANA_TEMP1', 'IMIR_LW_SCE_ANA_TEMP1', \
+     ['ST_ZTC1MIRIA', 'ST_ZTC2MIRIA', 'ST_ZTC1MIRIB',
+      'ST_ZTC2MIRIB', 'IGDP_MIR_ICE_INTER_TEMP', 'IMIR_PDU_TEMP',
+      'IMIR_IC_SCE_ANA_TEMP1', 'IMIR_SW_SCE_ANA_TEMP1', 'IMIR_LW_SCE_ANA_TEMP1',
       'IMIR_IC_SCE_DIG_TEMP', 'IMIR_SW_SCE_DIG_TEMP', 'IMIR_LW_SCE_DIG_TEMP'],
      # line 2 collum 3
-     ['ICE IEC Panel Temp A', ' FPE IEC Panel Temp A', ' ICE IEC Panel Temp B', \
-      ' FPE IEC Panel Temp B', ' ICE internal Temperature', ' FPE PDU Temperature', \
+     ['ICE IEC Panel Temp A', ' FPE IEC Panel Temp A', ' ICE IEC Panel Temp B',
+      ' FPE IEC Panel Temp B', ' ICE internal Temperature', ' FPE PDU Temperature',
       ' FPE SCE Analogue board Temperature IC', ' FPE SCE Analogue board Temperature SW',
-      ' FPE SCE Analogue board Temperature LW', \
+      ' FPE SCE Analogue board Temperature LW',
       ' FPE SCE Digital board Temperature IC', ' FPE SCE Digital board Temperature SW',
       ' FPE SCE Digital board Temperature LW']],
 
@@ -118,6 +130,7 @@ description_Temperature = [
      ['Detector Temperature (IC,SW&LW)']]
 ]
 
+# Tab Description
 description_weehl = [
     [['Filterwheel Ratio'], ['IMIR_HK_FW_POS_RATIO', 'IMIR_HK_FW_CUR_POS'],
      ['FW position sensor ratio (normalised) and commanded position']],
@@ -129,14 +142,16 @@ description_weehl = [
      ['Contamination Control Cover position sensor ratio (normalised) and commanded position']]
 ]
 
+# List of anomalys to be displayed on a certain page
 list_mn_power = [
     'SE_ZIMIRICEA_IDLE',
     'SE_ZIMIRICEA_HV_ON',
     'SE_ZIMIRFPEA',
     'SE_ZIMIRCEA'
-    ]
+]
 
-list_mn_temperature =[
+# List of anomalys to be displayed on a certain page
+list_mn_temperature = [
     'IGDP_MIR_ICE_T1P_CRYO',
     'IGDP_MIR_ICE_T2R_CRYO',
     'IGDP_MIR_ICE_T3LW_CRYO',
@@ -166,6 +181,7 @@ list_mn_temperature =[
     'IGDP_MIR_SW_DET_TEMP',
 ]
 
+# List of anomalys to be displayed on a certain page
 list_mn_weelRatio = [
     'IMIR_HK_FW_POS_RATIO_FND',
     'IMIR_HK_FW_POS_RATIO_OPAQUE',
@@ -196,6 +212,7 @@ list_mn_weelRatio = [
     'IMIR_HK_CCC_POS_RATIO_CLOSED',
 ]
 
+# List of anomalys to be displayed on a certain page
 list_ms_bias = [
     'IGDP_MIR_IC_V_VDETCOM',
     'IGDP_MIR_SW_V_VDETCOM',
@@ -214,6 +231,7 @@ list_ms_bias = [
     'IGDP_MIR_LW_V_VDDUC',
 ]
 
+# List of anomalys to be displayed on a certain page
 list_mn_fpeV = [
     'SE_ZIMIRICEA',
     'SE_ZIMIRIFPEA',
@@ -221,6 +239,7 @@ list_mn_fpeV = [
     'SE_ZIMIRCEA',
 ]
 
+# List of anomalys to be displayed on a certain page
 list_mn_iceV = [
     'IMIR_HK_ICE_SEC_VOLT1',
     'IMIR_HK_ICE_SEC_VOLT3',
@@ -233,3 +252,29 @@ list_mn_iceV = [
     'IMIR_HK_CCC_POS_VOLT',
 ]
 
+
+# Unified Figure to standardise all plots
+def get_figure(end, title, y_ax_label, width, hight, y_ax_range):
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=width,
+               plot_height=hight,
+               x_range=time_delta(Time(end)),
+               y_range=y_ax_range,
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date',
+               y_axis_label=y_ax_label)
+
+    p.xaxis.formatter = DatetimeTickFormatter(
+        hours=["%Y-%m-%d ,%H:%M:%S.%f"],
+        days=["%Y-%m-%d, %H:%M"],
+        months=["%Y-%m-%d"],
+        years=["%Y-%m-%d"],
+    )
+
+    p.grid.visible = True
+    p.title.text = title
+    pf.add_basic_layout(p)
+
+    return p

@@ -23,8 +23,9 @@ Notes
 
 """
 import os
-import sqlite3
 from sqlite3 import Error
+
+import sqlite3
 
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.log_error_and_file as log_error_and_file
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as m
@@ -32,7 +33,7 @@ from jwql.utils.utils import get_config
 
 
 def create_connection(db_file):
-    '''Sets up a connection or builds database
+    """Sets up a connection or builds database
     Parameters
     ----------
     db_file : string
@@ -41,7 +42,7 @@ def create_connection(db_file):
     ------
     conn : DBobject or None
         Connection object or None
-    '''
+    """
     try:
         conn = sqlite3.connect(db_file)
         print('Connected to database "{}"'.format(db_file))
@@ -52,18 +53,18 @@ def create_connection(db_file):
 
 
 def close_connection(conn):
-    '''Closes connection to database
+    """Closes connection to database
     Parameters
     ----------
     conn : DBobject
         Connection object to be closed
-    '''
+    """
     conn.close()
     print('Connection closed')
 
 
 def add_data(conn, mnemonic, data):
-    '''Add data of a specific mnemonic to database if it not exists
+    """Add data of a specific mnemonic to database if it not exists
     Parameters
     ----------
     conn : DBobject
@@ -72,7 +73,7 @@ def add_data(conn, mnemonic, data):
         identifies the table
     data : list
         specifies the data
-    '''
+    """
 
     log = log_error_and_file.Log('SQL')
 
@@ -89,12 +90,11 @@ def add_data(conn, mnemonic, data):
 
         log.log('Succesful saved: TS=' + str(data[0]) + ' TE=' + str(data[1]) + ' ' + mnemonic)
     else:
-        print('test')
         log.log('Failed data already exists: TS=' + str(data[0]) + ' TE=' + str(data[1]) + ' ' + mnemonic, 'Error')
 
 
 def add_wheel_data(conn, mnemonic, data):
-    '''Add data of a specific wheel position to database if it not exists
+    """Add data of a specific wheel position to database if it not exists
     Parameters
     ----------
     conn : DBobject
@@ -103,7 +103,7 @@ def add_wheel_data(conn, mnemonic, data):
         identifies the table
     data : list
         specifies the data
-    '''
+    """
 
     log = log_error_and_file.Log('SQL')
 
@@ -123,7 +123,7 @@ def add_wheel_data(conn, mnemonic, data):
 
 
 def main():
-    ''' Creates SQLite database with tables proposed in mnemonics.py'''
+    """ Creates SQLite database with tables proposed in mnemonics.py"""
 
     __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -138,37 +138,37 @@ def main():
     for mnemonic in m.mnemonic_set_database:
         try:
             c.execute('CREATE TABLE IF NOT EXISTS {} (         \
-                                        id INTEGER,                     \
-                                        start_time REAL,                \
-                                        end_time REAL,                  \
-                                        data_points INTEGER,               \
-                                        average REAL,                   \
-                                        deviation REAL,                 \
-                                        performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
-                                        PRIMARY KEY (id));'.format(mnemonic))
+                                            id INTEGER,                     \
+                                            start_time REAL,                \
+                                            end_time REAL,                  \
+                                            data_points INTEGER,               \
+                                            average REAL,                   \
+                                            deviation REAL,                 \
+                                            performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
+                                            PRIMARY KEY (id));'.format(mnemonic))
         except Error as e:
             print('e')
 
     for mnemonic in m.mnemonic_wheelpositions:
         try:
             c.execute('CREATE TABLE IF NOT EXISTS {} (         \
-                                        id INTEGER,            \
-                                        timestamp REAL,        \
-                                        value REAL,            \
-                                        performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
-                                        PRIMARY KEY (id));'.format(mnemonic))
+                                            id INTEGER,            \
+                                            timestamp REAL,        \
+                                            value REAL,            \
+                                            performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
+                                            PRIMARY KEY (id));'.format(mnemonic))
         except Error as e:
             print('e')
 
-    #create anomaly
-    c.execute('CREATE TABLE IF NOT EXISTS miriAnomaly (         \
-                                            id INTEGER,            \
-                                            start_time float,        \
-                                            end_time float,            \
-                                            plot char,\
-                                            comment char,           \
-                                            autor char);')
-
+    # create anomaly
+    c.execute('CREATE TABLE IF NOT EXISTS miriAnomaly (\
+                          id INTEGER,                       \
+                          start_time float,                 \
+                          end_time float,                   \
+                          plot char,                        \
+                          comment char,                     \
+                          autor char,                       \
+    					  PRIMARY KEY (id));')
 
     print("Database initial setup complete")
     conn.commit()

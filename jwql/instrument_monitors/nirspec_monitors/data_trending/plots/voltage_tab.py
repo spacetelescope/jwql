@@ -39,18 +39,16 @@ Dependencies
     User must provide database "nirpsec_database.db"
 
 """
-import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.sql_interface as sql
-import jwql.instrument_monitors.nirspec_monitors.data_trending.plots.plot_functions as pf
-from bokeh.models import LinearAxis, Range1d
-from bokeh.plotting import figure
-from bokeh.models.widgets import Panel, Tabs, Div
-from bokeh.models import ColumnDataSource, HoverTool
-from bokeh.layouts import WidgetBox, gridplot, Column
-
-import pandas as pd
-import numpy as np
+import copy
 
 from astropy.time import Time
+from bokeh.layouts import Column
+from bokeh.models.widgets import Panel
+from bokeh.plotting import figure
+
+import jwql.instrument_monitors.nirspec_monitors.data_trending.plots.plot_functions as pf
+import jwql.instrument_monitors.nirspec_monitors.data_trending.plots.tab_object as tabObjects
+import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.utils_f as utils
 
 
 def ref_volt(conn, start, end):
@@ -74,9 +72,12 @@ def ref_volt(conn, start, end):
                toolbar_location="above",
                plot_width=1120,
                plot_height=500,
+               x_range=utils.time_delta(Time(end)),
                x_axis_type='datetime',
                output_backend="webgl",
                x_axis_label='Date', y_axis_label='Voltage (V)')
+
+    p.xaxis.formatter = copy.copy(utils.plot_x_axis_format)
 
     p.grid.visible = True
     p.title.text = "Ref Voltages"
@@ -115,9 +116,12 @@ def gain_volt(conn, start, end):
                toolbar_location="above",
                plot_width=1120,
                plot_height=500,
+               x_range=utils.time_delta(Time(end)),
                x_axis_type='datetime',
                output_backend="webgl",
                x_axis_label='Date', y_axis_label='Voltage (V)')
+
+    p.xaxis.formatter = copy.copy(utils.plot_x_axis_format)
 
     p.grid.visible = True
     p.title.text = "ADCMAIN"
@@ -156,9 +160,12 @@ def offset_volt(conn, start, end):
                toolbar_location="above",
                plot_width=1120,
                plot_height=500,
+               x_range=utils.time_delta(Time(end)),
                x_axis_type='datetime',
                output_backend="webgl",
                x_axis_label='Date', y_axis_label='Voltage (V)')
+
+    p.xaxis.formatter = copy.copy(utils.plot_x_axis_format)
 
     p.grid.visible = True
     p.title.text = "OFFSET"
@@ -193,70 +200,16 @@ def volt_plots(conn, start, end):
     p : tab object
         used by dashboard.py to set up dashboard
     '''
-    descr = Div(text=
-                """
-                <style>
-                table, th, td {
-                  border: 1px solid black;
-                  background-color: #efefef;
-                  border-collapse: collapse;
-                  padding: 5px
-                }
-                table {
-                  border-spacing: 15px;
-                }
-                </style>
-            
-                <body>
-                <table style="width:100%">
-                  <tr>
-                    <th><h6>Plotname</h6></th>
-                    <th><h6>Mnemonic</h6></th>
-                    <th><h6>Description</h6></th>
-                  </tr>
-                  <tr>
-                    <td>Ref Voltages</td>
-                    <td>INRSH_FWA_MOTOR_VREF<br>
-                        INRSH_GWA_MOTOR_VREF<br>
-                        INRSH_OA_VREF</td>
-                    <td>FWA Motor Reference Voltage for Calibration<br>
-                        GWA Motor Reference Voltage for Calibration<br>
-                        OA/RMA Reference Voltage for TM Calibration<br>
-                    </td>
-                  </tr>
-            
-                  <tr>
-                    <td>ADCMGAIN</td>
-                    <td>INRSH_FWA_ADCMGAIN<br>
-                        INRSH_GWA_ADCMGAIN<br>
-                        INRSH_RMA_ADCMGAIN</td>
-                    <td>FWA ADC Motor Chain Gain for Calibration<br>
-                        GWA ADC Motor Chain Gain for Calibration<br>
-                        RMA ADC Motor Chain Gain for Calibration<br>
-                    </td>
-                  </tr>
-            
-                  <tr>
-                    <td>OFFSET</td>
-                    <td>INRSH_FWA_ADCMOFFSET<br>
-                        INRSH_GWA_ADCMOFFSET<br>
-                        INRSH_OA_VREFOFF<br>
-                        INRSH_RMA_ADCMOFFSET</td>
-                    <td>FWA ADC Motor Chain Offset for Calibration<br>
-                        GWA ADC Motor Chain Offset for Calibration<br>
-                        CAA Reference Voltage Offset for TM Calibration<br>
-                        RMA ADC Motor Chain Offset for Calibration<br>
-                    </td>
-                  </tr>
-                </table>
-                </body>
-                """, width=1100)
+
+    descr = tabObjects.generate_tab_description(utils.description_volt)
+
 
     plot1 = ref_volt(conn, start, end)
     plot2 = gain_volt(conn, start, end)
     plot3 = offset_volt(conn, start, end)
+    data_table = tabObjects.anomaly_table(conn, utils.list_voltage)
 
-    layout = Column(descr, plot1, plot2, plot3)
+    layout = Column(descr, plot1, plot2, plot3, data_table)
 
     tab = Panel(child=layout, title="REF VOLTAGES")
 

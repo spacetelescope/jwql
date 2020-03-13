@@ -28,88 +28,7 @@ Notes
     For further information please contact Brian O'Sullivan
 """
 
-
-######################################
-# 15 min stuff
-######################################
-Mnemonic15min_Sync = [
-    'IGDP_MIR_IC_DET_TEMP',
-    'IGDP_MIR_IC_V_VDDUC',
-    'IGDP_MIR_IC_V_VDETCOM',
-    'IGDP_MIR_IC_V_VP',
-    'IGDP_MIR_IC_V_VRSTOFF',
-    'IGDP_MIR_IC_V_VSSOUT',
-    'IGDP_MIR_ICE_CCC_CRYO',
-    'IGDP_MIR_ICE_FW_CRYO',
-    'IGDP_MIR_ICE_GW14_CRYO',
-    'IGDP_MIR_ICE_GW23_CRYO',
-    'IGDP_MIR_ICE_IFU_CRYO',
-    'IGDP_MIR_ICE_IMG_CRYO',
-    'IGDP_MIR_ICE_INTER_TEMP',
-    'IGDP_MIR_ICE_POMP_CRYO',
-    'IGDP_MIR_ICE_POMR_CRYO',
-    'IGDP_MIR_ICE_T1P_CRYO',
-    'IGDP_MIR_ICE_T2R_CRYO',
-    'IGDP_MIR_ICE_T3LW_CRYO',
-    'IGDP_MIR_ICE_T4SW_CRYO',
-    'IGDP_MIR_ICE_T5IMG_CRYO',
-    'IGDP_MIR_ICE_T6DECKCRYO',
-    'IGDP_MIR_ICE_T7IOC_CRYO',
-    'IGDP_MIR_LW_DET_TEMP',
-    'IGDP_MIR_LW_V_VDDUC',
-    'IGDP_MIR_LW_V_VDETCOM',
-    'IGDP_MIR_LW_V_VP',
-    'IGDP_MIR_LW_V_VRSTOFF',
-    'IGDP_MIR_LW_V_VSSOUT',
-    'IGDP_MIR_SW_DET_TEMP',
-    'IGDP_MIR_SW_V_VDDUC',
-    'IGDP_MIR_SW_V_VDETCOM',
-    'IGDP_MIR_SW_V_VP',
-    'IGDP_MIR_SW_V_VRSTOFF',
-    'IGDP_MIR_SW_V_VSSOUT',
-    'IMIR_HK_ICE_SEC_VOLT1',
-    'IMIR_HK_ICE_SEC_VOLT4',
-    'IMIR_HK_IFU_CAL_LOOP',
-    'IMIR_HK_IMG_CAL_LOOP',
-    'IMIR_HK_POM_LOOP',
-    'IMIR_IC_SCE_ANA_TEMP1',
-    'IMIR_IC_SCE_DIG_TEMP',
-    'IMIR_LW_SCE_ANA_TEMP1',
-    'IMIR_LW_SCE_DIG_TEMP',
-    'IMIR_PDU_I_ANA_5V',
-    'IMIR_PDU_I_ANA_7V',
-    'IMIR_PDU_I_ANA_N5V',
-    'IMIR_PDU_I_ANA_N7V',
-    'IMIR_PDU_I_DIG_5V',
-    'IMIR_PDU_TEMP',
-    'IMIR_PDU_V_ANA_5V',
-    'IMIR_PDU_V_ANA_7V',
-    'IMIR_PDU_V_ANA_N5V',
-    'IMIR_PDU_V_ANA_N7V',
-    'IMIR_PDU_V_DIG_5V',
-    'IMIR_PDU_V_REF_2R5V',
-    'IMIR_SPW_V_DIG_2R5V',
-    'IMIR_SW_SCE_ANA_TEMP1',
-    'IMIR_SW_SCE_DIG_TEMP',
-]
-
-Mnemonic15min_ASync = [
-    'IGDP_IT_MIR_IC_STATUS',
-    'IGDP_IT_MIR_LW_STATUS',
-    'IGDP_IT_MIR_SW_STATUS',
-    'SE_ZIMIRFPEA',
-    'SE_ZIMIRICEA',
-]
-
-Mnemonic15min_Unknown = [
-    'SE_ZBUSVLT',
-    'SI_GZMPT1AK',
-    'SI_GZMPT2AK',
-    'ST_ZTC1MIRIA',
-    'ST_ZTC2MIRIA',
-    'ST_ZTC1MIRIB',
-]
-
+# min job mnemonics
 miri_mnemonic_min = [
     'IGDP_MIR_IC_DET_TEMP',
     'IGDP_MIR_IC_V_VDDUC',
@@ -181,7 +100,6 @@ miri_mnemonic_min = [
     'ST_ZTC2MIRIA',
     'ST_ZTC1MIRIB',
 ]
-
 mnemonic_cond_1 = [
     "SE_ZIMIRICEA",
     "SE_ZBUSVLT",
@@ -262,28 +180,14 @@ mnemonic_cond_2 = [
     "IGDP_MIR_IC_DET_TEMP",
     "IGDP_MIR_LW_DET_TEMP",
     "IGDP_MIR_SW_DET_TEMP"]
-cond1_cond2 = [
-    "IMIR_HK_IMG_CAL_LOOP",
-    "IMIR_HK_IFU_CAL_LOOP",
-    "IMIR_HK_POM_LOOP",
-    "IMIR_HK_ICE_SEC_VOLT1",
-    "SE_ZIMIRICEA",
-    "SE_ZIMIRFPEA",
-    "IGDP_IT_MIR_IC_STATUS",
-    "IGDP_IT_MIR_LW_STATUS",
-]
-mnemonic_set_15min = mnemonic_cond_1 + mnemonic_cond_2 + cond1_cond2
 
-######################################
-# whould day
-######################################
+# day job mnemonics
 mnemonic_cond_3 = [
     "IMIR_HK_ICE_SEC_VOLT1",
     "IMIR_HK_ICE_SEC_VOLT2",
     "IMIR_HK_ICE_SEC_VOLT3",
     "IMIR_HK_ICE_SEC_VOLT4",
     "SE_ZIMIRICEA"]
-
 whould_day_nm = [
     "IMIR_HK_ICE_SEC_VOLT1",
     "mak_err",
@@ -305,14 +209,9 @@ whould_day_nm = [
     "IMIR_HK_CCC_CUR_POS",
     "IMIR_HK_CCC_ACTUATOR",
 ]
-
 whould_day = mnemonic_cond_3 + whould_day_nm
 
-######################################
-# Daniesl stuff
-######################################
-
-# different tables for wheelpostions
+# database mnemonics
 mnemonic_wheelpositions = [
     "IMIR_HK_FW_POS_RATIO_FND",
     "IMIR_HK_FW_POS_RATIO_OPAQUE",
@@ -344,137 +243,6 @@ mnemonic_wheelpositions = [
     "IMIR_HK_CCC_POS_RATIO_LOCKED",
     "IMIR_HK_CCC_POS_RATIO_OPEN",
     "IMIR_HK_CCC_POS_RATIO_CLOSED"]
-
-fw_pos_mnemonic = [
-    "IMIR_HK_FW_POS_RATIO_FND",
-    "IMIR_HK_FW_POS_RATIO_OPAQUE",
-    "IMIR_HK_FW_POS_RATIO_F1000W",
-    "IMIR_HK_FW_POS_RATIO_F1130W",
-    "IMIR_HK_FW_POS_RATIO_F1280W",
-    "IMIR_HK_FW_POS_RATIO_P750L",
-    "IMIR_HK_FW_POS_RATIO_F1500W",
-    "IMIR_HK_FW_POS_RATIO_F1800W",
-    "IMIR_HK_FW_POS_RATIO_F2100W",
-    "IMIR_HK_FW_POS_RATIO_F560W",
-    "IMIR_HK_FW_POS_RATIO_FLENS",
-    "IMIR_HK_FW_POS_RATIO_F2300C",
-    "IMIR_HK_FW_POS_RATIO_F770W",
-    "IMIR_HK_FW_POS_RATIO_F1550C",
-    "IMIR_HK_FW_POS_RATIO_F2550W",
-    "IMIR_HK_FW_POS_RATIO_F1140C",
-    "IMIR_HK_FW_POS_RATIO_F2550WR",
-    "IMIR_HK_FW_POS_RATIO_F1065C"]
-
-# comprises all mnemonics used throughout he programm
-mnemonic_set_base = [
-    "SE_ZIMIRICEA",
-    # "SE_ZBUSVLT",
-
-    "IMIR_HK_ICE_SEC_VOLT1",
-    "IMIR_HK_ICE_SEC_VOLT2",
-    "IMIR_HK_ICE_SEC_VOLT3",
-    "IMIR_HK_ICE_SEC_VOLT4",
-
-    "IGDP_MIR_ICE_INTER_TEMP",
-
-    # "ST_ZTC1MIRIB",
-    # "ST_ZTC1MIRIA",
-    # "ST_ZTC2MIRIB",
-    # "ST_ZTC2MIRIA",
-
-    "IGDP_MIR_ICE_T1P_CRYO",
-    "IGDP_MIR_ICE_T2R_CRYO",
-    "IGDP_MIR_ICE_T3LW_CRYO",
-    "IGDP_MIR_ICE_T4SW_CRYO",
-    "IGDP_MIR_ICE_T5IMG_CRYO",
-    "IGDP_MIR_ICE_T6DECKCRYO",
-    "IGDP_MIR_ICE_T7IOC_CRYO",
-    "IGDP_MIR_ICE_FW_CRYO",
-    "IGDP_MIR_ICE_CCC_CRYO",
-    "IGDP_MIR_ICE_GW14_CRYO",
-    "IGDP_MIR_ICE_GW23_CRYO",
-    "IGDP_MIR_ICE_POMP_CRYO",
-    "IGDP_MIR_ICE_POMR_CRYO",
-    "IGDP_MIR_ICE_IFU_CRYO",
-    "IGDP_MIR_ICE_IMG_CRYO",
-
-    "SE_ZIMIRFPEA",
-
-    "IMIR_PDU_V_DIG_5V",
-    "IMIR_PDU_I_DIG_5V",
-    "IMIR_PDU_V_ANA_5V",
-    "IMIR_PDU_I_ANA_5V",
-
-    "IMIR_PDU_V_ANA_N5V",
-    "IMIR_PDU_I_ANA_N5V",
-
-    "IMIR_PDU_V_ANA_7V",
-    "IMIR_PDU_I_ANA_7V",
-
-    "IMIR_PDU_V_ANA_N7V",
-    "IMIR_PDU_I_ANA_N7V",
-
-    "IMIR_SPW_V_DIG_2R5V",
-    "IMIR_PDU_V_REF_2R5V",
-
-    "IGDP_MIR_IC_V_VDETCOM",
-    "IGDP_MIR_SW_V_VDETCOM",
-    "IGDP_MIR_LW_V_VDETCOM",
-
-    "IGDP_MIR_IC_V_VSSOUT",
-    "IGDP_MIR_SW_V_VSSOUT",
-    "IGDP_MIR_LW_V_VSSOUT",
-    "IGDP_MIR_IC_V_VRSTOFF",
-
-    "IGDP_MIR_SW_V_VRSTOFF",
-    "IGDP_MIR_LW_V_VRSTOFF",
-
-    "IGDP_MIR_IC_V_VP",
-    "IGDP_MIR_SW_V_VP",
-    "IGDP_MIR_LW_V_VP",
-
-    "IGDP_MIR_IC_V_VDDUC",
-    "IGDP_MIR_SW_V_VDDUC",
-    "IGDP_MIR_LW_V_VDDUC",
-
-    # "IMIR_PDU_TEMP",
-
-    "IMIR_IC_SCE_ANA_TEMP1",
-    "IMIR_SW_SCE_ANA_TEMP1",
-    "IMIR_LW_SCE_ANA_TEMP1",
-
-    "IMIR_IC_SCE_DIG_TEMP",
-    "IMIR_SW_SCE_DIG_TEMP",
-    "IMIR_LW_SCE_DIG_TEMP",
-
-    "IGDP_MIR_IC_DET_TEMP",
-    "IGDP_MIR_LW_DET_TEMP",
-    "IGDP_MIR_SW_DET_TEMP",
-
-    "IMIR_HK_IMG_CAL_LOOP",
-    "IMIR_HK_IFU_CAL_LOOP",
-    "IMIR_HK_POM_LOOP",
-    "IGDP_IT_MIR_IC_STATUS",
-    "IGDP_IT_MIR_LW_STATUS",
-    "IGDP_IT_MIR_SW_STATUS",
-
-    "IMIR_HK_FW_POS_VOLT",
-    "IMIR_HK_FW_POS_RATIO",
-    "IMIR_HK_FW_CUR_POS",
-
-    "IMIR_HK_GW14_POS_VOLT",
-    "IMIR_HK_GW14_POS_RATIO",
-    "IMIR_HK_GW14_CUR_POS",
-
-    "IMIR_HK_GW23_POS_VOLT",
-    "IMIR_HK_GW23_POS_RATIO",
-    "IMIR_HK_GW23_CUR_POS",
-
-    "IMIR_HK_CCC_POS_RATIO",
-    "IMIR_HK_CCC_CUR_POS",
-    "IMIR_HK_CCC_POS_VOLT"]
-
-# mnemonic set for setting up database
 mnemonic_set_database = [
     'IGDP_MIR_ICE_CCC_CRYO',
     'IGDP_MIR_ICE_FW_CRYO',
@@ -548,10 +316,7 @@ mnemonic_set_database = [
     'ST_ZTC2MIRIB'
 ]
 
-######################################
-# Filter weel positions
-######################################
-# filter weel positions
+# Weel positions and values
 fw_positions = [
     "FND",
     "OPAQUE",
@@ -571,19 +336,14 @@ fw_positions = [
     "F1140C",
     "F2550WR",
     "F1065C"]
-
-# grating weel positions
 gw_positions = [
     "SHORT",
     "MEDIUM",
     "LONG"]
-
-# contamination control clap positions
 ccc_positions = [
     "LOCKED",
     "OPEN",
     "CLOSED"]
-
 fw_nominals = {
     "FND": -164.46,
     "OPAQUE": 380.42,
@@ -603,18 +363,16 @@ fw_nominals = {
     "F1140C": 83.08,
     "F2550WR": -255.18,
     "F1065C": 261.62}
-
 gw23_nominals = {
     "SHORT": 619.81,
     "MEDIUM": 373.31,
     "LONG": 441.4}
-
 gw14_nominals = {
     "SHORT": 627.49,
     "MEDIUM": 342.71,
     "LONG": 408.75}
-
 ccc_nominals = {
     "LOCKED": 577.23,
     "OPEN": 507.86,
     "CLOSED": 399.90}
+

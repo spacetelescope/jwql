@@ -34,7 +34,7 @@ Dependencies
 References
 ----------
     The code was developed in reference to the information provided in:
-    ‘MIRI trend requestsDRAFT1900301.docx’
+    ‘JWQL_NIRSpec_Inputs_V8.xlsx’
 
 Notes
 -----
@@ -95,14 +95,15 @@ def generate_tab_description(input):
     descr = Div(text=str_out, width=1100)
     return descr
 
-
 def anomaly_table(conn, mnemonic):
+
     get_str = '('
     for element in mnemonic:
-        get_str = get_str + "'" + str(element) + "',"
+        get_str = get_str + "'"+ str(element)+ "',"
     get_str = get_str[:-1] + ')'
 
-    sql_c = "SELECT * FROM miriAnomaly WHERE plot in " + get_str + " ORDER BY start_time"
+
+    sql_c = "SELECT * FROM nirspecAnomaly WHERE plot in " + get_str +" ORDER BY start_time"
     anomaly_orange = pd.read_sql_query(sql_c, conn)
 
     div = Div(text="<font size='5'> Reported anomalys: </font>")

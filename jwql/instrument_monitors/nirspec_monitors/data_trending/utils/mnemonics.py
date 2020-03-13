@@ -1,24 +1,33 @@
-"""Module lists all neccessary mnemonics for NIRSpec data trending
+"""mnemonic.py
 
-The module includes several lists to import to NIRSpec data trending monitor program.
-The lists are used for data aquisation and to set up the initial database.
+    The module includes several lists to import to NIRSpec data trending monitor program.
+    The lists are used for data aquisation and to set up the initial database.
 
 Authors
 -------
-    - Daniel Kühbacher
+
+    - [AIRBUS] Daniel Kübacher
+    - [AIRBUS] Leo Stumpf
 
 Use
 ---
     import mnemoncis as mn
 
+Dependencies
+------------
+    -
+
 References
 ----------
-    JWQL_NIRSpec_INputs_V4[2414].xlsx
+    The code was developed in reference to the information provided in:
+    ‘JWQL_NIRSpec_Inputs_V8.xlsx’
 
 Notes
 -----
 
+    For further information please contact Brian O'Sullivan
 """
+
 
 # mnemonics underlaying certain conditions 15min
 # INRSD_EXP_STAT != STARTED
@@ -82,7 +91,12 @@ mnemonic_for_conditions = [
     "INRSI_C_GWA_X_POSITION",
     "INRSI_C_GWA_Y_POSITION",
 
-    "ICTM_RT_FILTER"]
+    "ICTM_RT_FILTER",
+    "INRSI_C_CAA_CURRENT",
+    "INRSI_C_CAA_VOLTAGE",
+
+]
+
 
 # these mnemonic are used by the day routine
 mnemSet_day = [
@@ -506,6 +520,11 @@ mnemonic_wheelpositions = [
 
     "INRSI_C_GWA_X_POSITION_G395M",
     "INRSI_C_GWA_Y_POSITION_G395M"]
+
+
+querry_mnemonic_min = mnemSet_15min + mnemonic_for_conditions + mnemonic_cond_1 + mnemonic_cond_2 + mnemonic_cond_3
+
+querry_mnemonic_day = mnemSet_day + mnemonic_for_conditions + mnemonic_ft10 + mnemonic_caa
 
 fw_nominals = {
     'F110W': -123.99,

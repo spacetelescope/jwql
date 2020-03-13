@@ -31,18 +31,16 @@ Dependencies
     User must provide database "nirpsec_database.db"
 
 """
-import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.sql_interface as sql
-import jwql.instrument_monitors.nirspec_monitors.data_trending.plots.plot_functions as pf
-from bokeh.models import LinearAxis, Range1d
-from bokeh.plotting import figure
-from bokeh.models.widgets import Panel, Tabs, Div
-from bokeh.models import ColumnDataSource, HoverTool
-from bokeh.layouts import WidgetBox, gridplot, Column
-
-import pandas as pd
-import numpy as np
+import copy
 
 from astropy.time import Time
+from bokeh.layouts import Column
+from bokeh.models.widgets import Panel
+from bokeh.plotting import figure
+
+import jwql.instrument_monitors.nirspec_monitors.data_trending.plots.plot_functions as pf
+import jwql.instrument_monitors.nirspec_monitors.data_trending.plots.tab_object as tabObjects
+import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.utils_f as utils
 
 
 def lamp_volt(conn, start, end):
@@ -66,10 +64,13 @@ def lamp_volt(conn, start, end):
                toolbar_location="above",
                plot_width=1120,
                plot_height=800,
+               x_range=utils.time_delta(Time(end)),
                y_range=[1.2, 2.3],
                x_axis_type='datetime',
                output_backend="webgl",
                x_axis_label='Date', y_axis_label='Voltage (V)')
+
+    p.xaxis.formatter = copy.copy(utils.plot_x_axis_format)
 
     p.grid.visible = True
     p.title.text = "CAA Lamp Voltages"
@@ -117,10 +118,13 @@ def lamp_current(conn, start, end):
                toolbar_location="above",
                plot_width=1120,
                plot_height=600,
+               x_range=utils.time_delta(Time(end)),
                y_range=[10.5, 14.5],
                x_axis_type='datetime',
                output_backend="webgl",
                x_axis_label='Date', y_axis_label='Current (mA)')
+
+    p.xaxis.formatter = copy.copy(utils.plot_x_axis_format)
 
     p.grid.visible = True
     p.title.text = "CAA Lamp currents"
@@ -167,9 +171,12 @@ def caa_volt(conn, start, end):
                toolbar_location="above",
                plot_width=1120,
                plot_height=600,
+               x_range=utils.time_delta(Time(end)),
                x_axis_type='datetime',
                output_backend="webgl",
                x_axis_label='Date', y_axis_label='Voltage (V)')
+
+    p.xaxis.formatter = copy.copy(utils.plot_x_axis_format)
 
     a = pf.add_to_plot(p, "CAA_VREFOFF", "INRSH_CAA_VREFOFF", start, end, conn, color="red")
     b = pf.add_to_plot(p, "CAA_VREF", "INRSH_CAA_VREF", start, end, conn, color="green")
@@ -199,50 +206,15 @@ def caa_plots(conn, start, end):
     p : tab object
         used by dashboard.py to set up dashboard
     '''
-    descr = Div(text=
-                """
-                <style>
-                table, th, td {
-                  border: 1px solid black;
-                  background-color: #efefef;
-                  border-collapse: collapse;
-                  padding: 5px
-                }
-                table {
-                  border-spacing: 15px;
-                }
-                </style>
-            
-                <body>
-                <table style="width:100%">
-                  <tr>
-                    <th><h6>Plotname</h6></th>
-                    <th><h6>Mnemonic</h6></th>
-                    <th><h6>Description</h6></th>
-                  </tr>
-                  <tr>
-                    <td>CAA Lamp Voltages</td>
-                    <td>INRSH_LAMP_SEL<br>
-                        INRSI_C_CAA_VOLTAGE</td>
-                    <td>Lamp Voltage for each CAA Lamp</td>
-                  </tr>
-            
-                  <tr>
-                    <td>CAA Lamp Currents</td>
-                    <td>INRSH_LAMP_SEL<br>
-                        INRSI_C_CAA_CURRENT</td>
-                    <td>Lamp Currents for each CAA Lamp</td>
-                  </tr>
-            
-                </table>
-                </body>
-                """, width=1100)
+
+    descr = tabObjects.generate_tab_description(utils.description_caa)
 
     plot1 = lamp_volt(conn, start, end)
     plot2 = lamp_current(conn, start, end)
     # plot3 = caa_plots(conn, start, end)
+    data_table = tabObjects.anomaly_table(conn, utils.list_caa)
 
-    layout = Column(descr, plot1, plot2)
+    layout = Column(descr, plot1, plot2, data_table)
 
     tab = Panel(child=layout, title="CAA/LAMPS")
 

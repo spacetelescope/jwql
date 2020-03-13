@@ -40,35 +40,20 @@ Notes
 -----
     For further information please contact Brian O'Sullivan
 """
-import datetime
-import copy
-import os
-import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
-
 import pandas as pd
 from astropy.time import Time
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, Div
-from bokeh.models import HoverTool
+from bokeh.models import (ColumnDataSource,
+                          DataTable, TableColumn, )
+from bokeh.models import Div
 from bokeh.models.widgets import Panel
-from bokeh.plotting import figure
 
 import jwql.instrument_monitors.miri_monitors.data_trending.plots.plot_functions as pf
-import jwql.instrument_monitors.miri_monitors.data_trending.utils_f as utils
 import jwql.instrument_monitors.miri_monitors.data_trending.plots.tab_object as tabObjects
-from bokeh.models import (BoxSelectTool, Circle, Column, ColumnDataSource,
-                          DataTable, Grid, HoverTool, IntEditor, LinearAxis,
-                          NumberEditor, NumberFormatter, Plot, SelectEditor,
-                          StringEditor, StringFormatter, TableColumn,)
-from bokeh.document import Document
-from bokeh.util.browser import view
-from bokeh.embed import file_html
-from bokeh.resources import INLINE
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.utils_f as utils
 
 
 def power_ice(conn, start, end):
-    # query data from database
-
     start_str = str(Time(start).mjd)
     end_str = str(Time(end).mjd)
 
@@ -85,37 +70,17 @@ def power_ice(conn, start, end):
     _hv['start_time'] = pd.to_datetime(Time(_hv['start_time'], format="mjd").datetime)
 
     # set column data source
-    idle = ColumnDataSource(_idle)
-    hv = ColumnDataSource(_hv)
 
     timeDeltaEnd = Time(end).datetime
-    timeDelta = [timeDeltaEnd - datetime.timedelta(days=120), timeDeltaEnd]
 
-    # create a new plot with a title and axis labels
-    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save", \
-               toolbar_location="above", \
-               plot_width=1120, \
-               plot_height=500, \
-               y_range=[5, 14], \
-               x_range=utils.time_delta(Time(end)), \
-               x_minor_ticks=10, \
-               x_axis_type='datetime', \
-               output_backend="webgl", \
-               x_axis_label='Date', y_axis_label='Power (W)')
-
-    p.xaxis.formatter = copy.copy(utils.plot_x_axis_format)
-
-
-    p.grid.visible = True
-    p.title.text = "POWER ICE"
-    pf.add_basic_layout(p)
+    p = utils.get_figure(end, "POWER ICE", "Power (W)", 1120, 500, [5, 14])
     pf.add_limit_box(p, 6, 8, alpha=0.1, color="green")
 
-    # add a line renderer with legend and line thickness
-    scat1 = p.scatter(x="start_time", y="average", color='orange', legend="Power idle", source=idle)
-    scat2 = p.scatter(x="start_time", y="average", color='red', legend="Power hv on", source=hv)
-    p.line(x="start_time", y="average", color='orange', legend="Power idle", source=idle)
-    p.line(x="start_time", y="average", color='red', legend="Power hv on", source=hv)
+    voltage = 30
+    a = pf.add_to_plot(p, "Power idle", "SE_ZIMIRICEA_IDLE", start, end, conn, color="orange")
+    b = pf.add_to_plot(p, "Power hv on", "SE_ZIMIRICEA_HV_ON", start, end, conn, color="red")
+    a.data_source.data['average'] *= voltage
+    b.data_source.data['average'] *= voltage
 
     # generate error bars
     err_xs_hv = []
@@ -134,21 +99,13 @@ def power_ice(conn, start, end):
     p.multi_line(err_xs_hv, err_ys_hv, color='red', legend='Power hv on')
     p.multi_line(err_xs_idle, err_ys_idle, color='orange', legend='Power idle')
 
+    pf.add_hover_tool(p, [a, b])
     # activate HoverTool for scatter plot
-    hover_tool = HoverTool(tooltips=
-    [
-        ('count', '@data_points'),
-        ('mean', '@average'),
-        ('deviation', '@deviation'),
 
-    ], mode='mouse', renderers=[scat1, scat2])
-
-    p.tools.append(hover_tool)
-
-    p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
 
     return p
+
 
 def power_fpea(conn, start, end):
     start_str = str(Time(start).mjd)
@@ -166,25 +123,11 @@ def power_fpea(conn, start, end):
     fpea = ColumnDataSource(_fpea)
 
     # create a new plot with a title and axis labels
-    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save", \
-               toolbar_location="above", \
-               plot_width=1120, \
-               plot_height=500, \
-               y_range=[28.0, 28.5], \
-               x_range=utils.time_delta(Time(end)), \
-               x_axis_type='datetime', \
-               output_backend="webgl", \
-               x_axis_label='Date', y_axis_label='Power (W)')
-
-    p.xaxis.formatter = copy.copy(utils.plot_x_axis_format)
-
-    p.grid.visible = True
-    p.title.text = "POWER FPE"
-    pf.add_basic_layout(p)
+    p = utils.get_figure(end, "POWER FPE", "Power (W)", 1120, 500, [28.0, 28.5])
 
     # add a line renderer with legend and line thickness
     scat1 = p.scatter(x="start_time", y="average", color='orange', legend="Power FPEA", source=fpea)
-    p.line(x="start_time", y="average", color='orange', legend="Power FPEA", source=fpea)
+    scat1.data_source.data['average'] *= voltage
 
     err_xs = []
     err_ys = []
@@ -197,22 +140,14 @@ def power_fpea(conn, start, end):
     p.multi_line(err_xs, err_ys, color='orange', legend='Power FPEA')
 
     # activate HoverTool for scatter plot
-    hover_tool = HoverTool(tooltips=
-    [
-        ('count', '@data_points'),
-        ('mean', '@average'),
-        ('deviation', '@deviation'),
-
-    ], renderers=[scat1])
-    p.tools.append(hover_tool)
-
-    p.legend.location = "bottom_right"
+    pf.add_hover_tool(p, [scat1])
     p.legend.click_policy = "hide"
 
     return p
 
+
 def currents(conn, start, end):
-    '''Create specific plot and return plot object
+    """Create specific plot and return plot object
     Parameters
     ----------
     conn : DBobject
@@ -225,46 +160,28 @@ def currents(conn, start, end):
     ------
     p : Plot object
         Bokeh plot
-    '''
+    """
 
     # create a new plot with a title and axis labels
-    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
-               toolbar_location="above",
-               plot_width=1120,
-               plot_height=500,
-               y_range=[0, 1.1],
-               x_range=utils.time_delta(Time(end)),
-               x_axis_type='datetime',
-               output_backend="webgl",
-               x_axis_label='Date', y_axis_label='Current (A)')
-
-    p.xaxis.formatter = copy.copy(utils.plot_x_axis_format)
-
-    p.grid.visible = True
-    p.title.text = "FPE & ICE Currents"
-    pf.add_basic_layout(p)
+    p = utils.get_figure(end, "FPE & ICE Currents", "Current (A)", 1120, 500, [0, 1.1])
 
     a = pf.add_to_plot(p, "ICE Current idle", "SE_ZIMIRICEA_IDLE", start, end, conn, color="red")
     b = pf.add_to_plot(p, "ICE Current HV on", "SE_ZIMIRICEA_HV_ON", start, end, conn, color="orange")
     c = pf.add_to_plot(p, "FPE Current", "SE_ZIMIRFPEA", start, end, conn, color="brown")
 
     pf.add_hover_tool(p, [a, b, c])
-
-    p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
-    p.legend.orientation = "horizontal"
 
     return p
 
-def anomaly_table(conn, mnemonic):
 
+def anomaly_table(conn, mnemonic):
     get_str = '('
     for element in mnemonic:
-        get_str = get_str + "'"+ str(element)+ "',"
+        get_str = get_str + "'" + str(element) + "',"
     get_str = get_str[:-1] + ')'
 
-
-    sql_c = "SELECT * FROM miriAnomaly WHERE plot in " + get_str +" ORDER BY start_time"
+    sql_c = "SELECT * FROM miriAnomaly WHERE plot in " + get_str + " ORDER BY start_time"
     anomaly_orange = pd.read_sql_query(sql_c, conn)
 
     div = Div(text="<font size='5'> Reported anomalys: </font>")
@@ -293,6 +210,7 @@ def anomaly_table(conn, mnemonic):
 
     return column(div, data_table)
 
+
 def power_plots(conn, start, end):
     descr = tabObjects.generate_tab_description(utils.description_power)
 
@@ -301,12 +219,9 @@ def power_plots(conn, start, end):
     plot3 = currents(conn, start, end)
     data_table = tabObjects.anomaly_table(conn, utils.list_mn_power)
 
-
     layout = column(descr, plot1, plot2, plot3, data_table)
-
 
     # layout_volt = row(volt4, volt1_3)
     tab = Panel(child=layout, title="POWER")
 
     return tab
-

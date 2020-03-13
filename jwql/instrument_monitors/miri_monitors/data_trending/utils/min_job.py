@@ -31,6 +31,7 @@ Notes
     For further information please contact Brian O'Sullivan
 """
 import statistics
+
 import sys
 
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.condition as cond
@@ -41,32 +42,29 @@ import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface 
 
 
 def process_15min(conn, m_raw_data):
-    '''Parse CSV file, process data within and put to DB
+    """Parse CSV file, process data within and put to DB
 
     Parameters
     ----------
+    m_raw_data
     conn : DBobject
         Connection object to auxiliary database
-    path : str
-        defines file to read
-    '''
+    """
 
-    # import mnemonic data and append dict to variable below
-    # m_raw_data = mnemonic_dict
-
-    # process raw data with once a day routine
+    # Define new log section
     log = log_error_and_file.Log('PROCESS')
     log.info('process data 15 min')
 
+    # Process and Filter the downloaded mnmemonics
     processed_data = once_a_day_routine(m_raw_data)
 
+    # Sql save the mnemonics
     log.info('SQL data 15 min')
 
-    # push extracted and filtered data to temporary database
     for key, value in processed_data.items():
+        m = m_raw_data[key]
         try:
-            # abbreviate data table
-            m = m_raw_data[key]
+            # Convert mnemonics name of specific mnemonics
 
             if key == "SE_ZIMIRICEA":
                 key = "SE_ZIMIRICEA_IDLE"
@@ -74,6 +72,7 @@ def process_15min(conn, m_raw_data):
             if key == "IMIR_HK_ICE_SEC_VOLT4":
                 key = "IMIR_HK_ICE_SEC_VOLT4_IDLE"
 
+            # Save in sql database
             length = len(value)
             mean = statistics.mean(value)
             deviation = statistics.stdev(value)
@@ -87,8 +86,9 @@ def process_15min(conn, m_raw_data):
             else:
                 log.log('Error: ' + str(sys.exc_info()[1]), 'Error')
 
+
 def once_a_day_routine(mnemonic_data):
-    '''Proposed routine for processing a 15min data file once a day
+    """Proposed routine for processing a 15min data file once a day
     Parameters
     ----------
     mnemonic_data : dict
@@ -99,30 +99,26 @@ def once_a_day_routine(mnemonic_data):
         holds extracted data with condition 1 applied
     data_cond_1 : dict
         holds extracted data with condition 2 applied
-    '''
+    """
 
     log = log_error_and_file.Log('Process')
-
-    # abbreviate attribute
     m = mnemonic_data
     returndata = dict()
 
-    #########################################################################
-    con_set_1 = [ \
-        cond.equal(m['IMIR_HK_IMG_CAL_LOOP'], 'OFF'), \
-        cond.equal(m['IMIR_HK_IFU_CAL_LOOP'], 'OFF'), \
-        cond.equal(m['IMIR_HK_POM_LOOP'], 'OFF'), \
-        cond.smaller(m['IMIR_HK_ICE_SEC_VOLT1'], 1.0), \
+    # Define Condition Set 1
+    # add filtered engineering values of mnemonics given in list mnemonic_cond_1
+    con_set_1 = [
+        cond.equal(m['IMIR_HK_IMG_CAL_LOOP'], 'OFF'),
+        cond.equal(m['IMIR_HK_IFU_CAL_LOOP'], 'OFF'),
+        cond.equal(m['IMIR_HK_POM_LOOP'], 'OFF'),
+        cond.smaller(m['IMIR_HK_ICE_SEC_VOLT1'], 1.0),
         cond.greater(m['SE_ZIMIRICEA'], 0.2)]
-    # setup condition
     condition_1 = cond.condition(con_set_1)
 
-    # add filtered engineering values of mnemonics given in list mnemonic_cond_1
-    # to dictitonary
     for identifier in mn.mnemonic_cond_1:
         data = extract_data.extract_data(condition_1, m[identifier])
 
-        if data != None:
+        if data is not None:
             returndata.update({identifier: data})
             log.log('Check condition 1 Succesful for ' + identifier)
         else:
@@ -130,28 +126,23 @@ def once_a_day_routine(mnemonic_data):
 
     del condition_1
 
-    ##########################################################################
+    # Define Condition Set 2
+    # add filtered engineering values of mnemonics given in list mnemonic_cond_2
+    #
+    # Pleas Note:
     # under normal use following line should be added:
     # cond.equal(m['IGDP_IT_MIR_SW_STATUS'), 'DETECTOR_READY'),      \
-    # SW was missing in the trainigs data so I could not use it for a condition.
-    # con_set_2 = [                                                           \
-    # cond.greater(m['SE_ZIMIRFPEA'], 0.5),                          \
-    # cond.equal(m['IGDP_IT_MIR_IC_STATUS'], 'DETECTOR_READY'),      \
-    # cond.equal(m['IGDP_IT_MIR_LW_STATUS'], 'DETECTOR_READY')]
+    # cond.greater(m['SE_ZIMIRFPEA'], 0.5), \
 
-    con_set_2 = [ \
-        cond.equal(m['IGDP_IT_MIR_IC_STATUS'], 'DETECTOR_READY'), \
+    con_set_2 = [
+        cond.equal(m['IGDP_IT_MIR_IC_STATUS'], 'DETECTOR_READY'),
         cond.equal(m['IGDP_IT_MIR_IC_STATUS'], 'DETECTOR_READY')]
-
-    # setup condition
     condition_2 = cond.condition(con_set_2)
 
-    # add filtered engineering values of mnemonics given in list mnemonic_cond_2
-    # to dictitonary
     for identifier in mn.mnemonic_cond_2:
         data = extract_data.extract_data(condition_2, m[identifier])
 
-        if data != None:
+        if data is not None:
             returndata.update({identifier: data})
             log.log('Check condition 2 Succesful for ' + identifier)
         else:

@@ -44,21 +44,20 @@ Use
 
 Dependencies
 ------------
-    User must provide database "miri_database.db"
+    User must provide database "nirspec_database.db"
 
 """
-import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.sql_interface as sql
-import jwql.instrument_monitors.nirspec_monitors.data_trending.plots.plot_functions as pf
-from bokeh.models import LinearAxis, Range1d
-from bokeh.plotting import figure
-from bokeh.models.widgets import Panel, Tabs, Div
-from bokeh.models import ColumnDataSource, HoverTool
-from bokeh.layouts import WidgetBox, gridplot, Column
-
-import pandas as pd
-import numpy as np
+import copy
 
 from astropy.time import Time
+from bokeh.layouts import Column
+from bokeh.models import LinearAxis, Range1d
+from bokeh.models.widgets import Panel
+from bokeh.plotting import figure
+
+import jwql.instrument_monitors.nirspec_monitors.data_trending.plots.plot_functions as pf
+import jwql.instrument_monitors.nirspec_monitors.data_trending.plots.tab_object as tabObjects
+import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.utils_f as utils
 
 
 def ice_power(conn, start, end):
@@ -82,10 +81,13 @@ def ice_power(conn, start, end):
                toolbar_location="above",
                plot_width=1120,
                plot_height=700,
+               x_range=utils.time_delta(Time(end)),
                x_axis_type='datetime',
                y_range=[-20, 20],
                output_backend="webgl",
                x_axis_label='Date', y_axis_label='Voltage (V)')
+
+    p.xaxis.formatter = copy.copy(utils.plot_x_axis_format)
 
     p.grid.visible = True
     p.title.text = "ICE Power Parameters"
@@ -133,9 +135,12 @@ def mce_power(conn, start, end):
                toolbar_location="above",
                plot_width=1120,
                plot_height=400,
+               x_range=utils.time_delta(Time(end)),
                x_axis_type='datetime',
                output_backend="webgl",
                x_axis_label='Date', y_axis_label='Current (A)')
+
+    p.xaxis.formatter = copy.copy(utils.plot_x_axis_format)
 
     p.grid.visible = True
     p.title.text = "MCE Power Parameters"
@@ -172,10 +177,13 @@ def fpe_power(conn, start, end):
                toolbar_location="above",
                plot_width=1120,
                plot_height=700,
+               x_range=utils.time_delta(Time(end)),
                y_range=[-30, 280],
                x_axis_type='datetime',
                output_backend="webgl",
                x_axis_label='Date', y_axis_label='Voltage (V)')
+
+    p.xaxis.formatter = copy.copy(utils.plot_x_axis_format)
 
     p.grid.visible = True
     p.title.text = "FPE Power Parameters"
@@ -214,90 +222,16 @@ def power_plots(conn, start, end):
     p : tab object
         used by dashboard.py to set up dashboard
     '''
-    descr = Div(text=
-                """
-                <style>
-                table, th, td {
-                  border: 1px solid black;
-                  background-color: #efefef;
-                  border-collapse: collapse;
-                  padding: 5px
-                }
-                table {
-                  border-spacing: 15px;
-                }
-                </style>
-            
-                <body>
-                <table style="width:100%">
-                  <tr>
-                    <th><h6>Plotname</h6></th>
-                    <th><h6>Mnemonic</h6></th>
-                    <th><h6>Description</h6></th>
-                  </tr>
-                  <tr>
-                    <td>ICE Power Parameters</td>
-                    <td>GP_ZPSVOLT (missing)<br>
-                        SE_ZINRSICEA<br>
-                        INRSH_HK_P15V<br>
-                        INRSH_HK_N15V<br>
-                        INRSH_HK_VMOTOR<br>
-                        INRSH_HK_P5V<br>
-                        INRSH_HK_2P5V<br>
-                        INRSH_HK_ADCTGAIN<br>
-                        INRSH_HK_ADCTOFFSET<br>
-                        INRSH_OA_VREFOFF<br>
-                        INRSH_OA_VREF<br>
-                    </td>
-                    <td>ICE Input Voltage<br>
-                        ICE Input Current (A side)<br>
-                        ICE +15V Voltage<br>
-                        ICE -15V Voltage<br>
-                        ICE Motor Voltage<br>
-                        ICE +5V FPGA Voltage<br>
-                        ICE +2V5 FPGA Voltage<br>
-                        ICE ADC TM Chain Gain for Calibration<br>
-                        ICE ADC TM Chain Offset for Calibration<br>
-                    </td>
-                  </tr>
-            
-                  <tr>
-                    <td>MCE Power Parameters</td>
-                    <td>GP_ZPSVOLT (missing)<br>
-                        SE_ZINRSMCEA
-                    </td>
-                    <td>ICE Input Voltage<br>
-                        MCE Input Current (A side)<br>
-                    </td>
-                  </tr>
-            
-                  <tr>
-                    <td>FPE Power Parameters</td>
-                    <td>GP_ZPSVOLT (missing)<br>
-                        SE_ZINRSFPEA<br>
-                        INRSD_ALG_ACC_P12C<br>
-                        INRSD_ALG_ACC_N12C<br>
-                        INRSD_ALG_ACC_3D3_1D5_C<br>
-                        INRSD_ALG_CHASSIS<br>
-                    </td>
-                    <td>ICE Input Voltage<br>
-                        MCE Input Current (A side)<br>
-                        ACC +12V Current<br>
-                        ACC -12V Current<br>
-                        ACC 3.3/1.5 Supply Current<br>
-                        Chassis Voltage<br>
-                    </td>
-                  </tr>
-            
-                </table>
-                </body>
-                """, width=1100)
+
+    descr = tabObjects.generate_tab_description(utils.description_power)
+
 
     plot1 = ice_power(conn, start, end)
     plot2 = mce_power(conn, start, end)
     plot3 = fpe_power(conn, start, end)
+    data_table = tabObjects.anomaly_table(conn, utils.list_power)
 
-    layout = Column(descr, plot1, plot2, plot3)
+    layout = Column(descr, plot1, plot2, plot3, data_table)
 
     tab = Panel(child=layout, title="POWER")
 

@@ -23,11 +23,13 @@ Notes
 
 """
 import os
-import sqlite3
 from sqlite3 import Error
 
+import sqlite3
+
+import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.log_error_and_file as log_error_and_file
 import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.mnemonics as m
-from jwql.utils.utils import get_config, filename_parser
+from jwql.utils.utils import get_config
 
 
 def create_connection(db_file):
@@ -73,6 +75,8 @@ def add_data(conn, mnemonic, data):
         specifies the data
     '''
 
+    log = log_error_and_file.Log('SQL')
+
     c = conn.cursor()
 
     # check if data already exists (start_time as identifier)
@@ -83,8 +87,10 @@ def add_data(conn, mnemonic, data):
         c.execute('INSERT INTO {} (start_time,end_time,data_points,average,deviation) \
                 VALUES (?,?,?,?,?)'.format(mnemonic), data)
         conn.commit()
+
+        log.log('Succesful saved: TS=' + str(data[0]) + ' TE=' + str(data[1]) + ' ' + mnemonic)
     else:
-        print('data for {} already exists'.format(mnemonic))
+        log.log('Failed data already exists: TS=' + str(data[0]) + ' TE=' + str(data[1]) + ' ' + mnemonic, 'Error')
 
 
 def add_wheel_data(conn, mnemonic, data):
@@ -99,6 +105,8 @@ def add_wheel_data(conn, mnemonic, data):
         specifies the data
     '''
 
+    log = log_error_and_file.Log('SQL')
+
     c = conn.cursor()
 
     # check if data already exists (start_time)
@@ -109,8 +117,9 @@ def add_wheel_data(conn, mnemonic, data):
         c.execute('INSERT INTO {} (timestamp, value) \
                 VALUES (?,?)'.format(mnemonic), data)
         conn.commit()
+        log.log('Succesful saved: TS=' + str(data[0]) + ' ' + mnemonic)
     else:
-        print('data already exists')
+        log.log('Failed data already exists: TS=' + str(data[0]) + ' ' + mnemonic, 'Error')
 
 
 def main():
@@ -150,6 +159,17 @@ def main():
                                         PRIMARY KEY (id));'.format(mnemonic))
         except Error as e:
             print('e')
+
+    #create anomaly
+    c.execute('CREATE TABLE IF NOT EXISTS nirspecAnomaly (\
+                          id INTEGER,                       \
+                          start_time float,                 \
+                          end_time float,                   \
+                          plot char,                        \
+                          comment char,                     \
+                          autor char,                       \
+    					  PRIMARY KEY (id));')
+
 
     print("Database initial setup complete")
     conn.commit()

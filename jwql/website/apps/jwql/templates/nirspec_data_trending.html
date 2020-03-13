@@ -16,6 +16,11 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
 
     <main role="main" class="container mnemonic_trending_main">
 
+        <!--Mandatory JAVA-Scrips needet for the anomaly table-->
+        <script src="https://cdn.bokeh.org/bokeh/release/bokeh-1.4.0.min.js"></script>
+        <script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-1.4.0.min.js"></script>
+        <script src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-1.4.0.min.js"></script>
+
       <div id="header">
         <!--Add a heading-->
         <h1>NIRSpec data-trending monitors</h1>
@@ -52,7 +57,9 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
       </p>
 
       <hr>
+       <a href="#PostAnomaly">Click here to jump to the anomaly section.</a>
 
+      <!--Brokeh element includes all Tabs with all mnemonics-->
       <div id="bokeh">
         <head>
           <title>Bokeh Scatter Plots</title>
@@ -68,6 +75,84 @@ loading the contents of WEBPAGE_TEMPLATE.html-->
           {{ dashboard[1] | safe }}
         </div>
       </div>
+
+      <!--Add Anomaly section-->
+      <div id="PostAnomaly" class="container">
+        <form action="/nirspec/nirspec_data_trending/" method="post">
+
+          <table style="width:100%">
+              <tr>
+                <td colspan="2">
+                    Please provide a description of all anomaly encountered
+                </td>
+                <td rowspan="6">
+                    {{ formAdd.comment }}
+                </td>
+              </tr>
+              <tr>
+                <td>
+                    {{ formAdd.name.label }}
+                </td>
+                <td>
+                    {{ formAdd.name }}
+                </td>
+              </tr>
+              <tr>
+                <td>
+                    {{ formAdd.starttime.label }}
+                </td>
+                <td>
+                    {{ formAdd.starttime }}
+                </td>
+              </tr>
+              <tr>
+                <td>
+                    {{ formAdd.endtime.label }}
+                </td>
+                <td>
+                    {{ formAdd.endtime }}
+                </td>
+              </tr>
+              <tr>
+                <td>
+                    {{ formAdd.select_plot.label }}
+                </td>
+                <td>
+                    {{ formAdd.select_plot }}
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                       <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+
+                    <button type="submit" name="_newItem">Submit new anomaly</button>
+
+                </td>
+              </tr>
+            </table>
+        </form>
+
+        <!--Delete anomaly section-->
+        <form action="/nirspec/nirspec_data_trending/" method="post">
+            <table style="width:100%">
+                <tr>
+                    <td>
+                       {{ formDelete.ID.label }}
+                    </td>
+                    <td>
+                        {{ formDelete.ID }}
+                    </td>
+                    <td>
+                        {{ csrf_input }}
+                        <button type="submit" name="_deleteItem">Delete anomaly</button>
+                    </td>
+                </tr>
+            </table>
+        </form>
+      </div>
+
+        <a href="#header">jump back up?</a>
 
      </main>
 

@@ -16,19 +16,11 @@ Dependencies
 ------------
 
 """
-import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.sql_interface as sql
-from bokeh.plotting import figure
-from bokeh.models import BoxAnnotation, LinearAxis, Range1d
-from bokeh.embed import components
-from bokeh.models.widgets import Panel, Tabs
-from bokeh.models import ColumnDataSource, HoverTool, DatetimeTickFormatter, DatetimeTicker, SingleIntervalTicker
-from bokeh.models.formatters import TickFormatter
-from bokeh.models.tools import PanTool, SaveTool
-
-import pandas as pd
 import numpy as np
-
+import pandas as pd
 from astropy.time import Time
+from bokeh.models import BoxAnnotation
+from bokeh.models import ColumnDataSource
 
 
 def pol_regression(x, y, rank):
@@ -71,10 +63,34 @@ def add_hover_tool(p, rend):
         ('Count', '@data_points'),
         ('Mean', '@average'),
         ('Deviation', '@deviation'),
+        ('Time', '@strTime'),
+        ('Anomaly', '@amomaly')
     ], renderers=rend)
     # append hover tool
     p.tools.append(hover_tool)
 
+def add_hover_tool_weel(p, rend):
+    ''' Append hover tool to plot
+    parameters
+    ----------
+    p : bokeh figure
+        declares where to append hover tool
+    rend : list
+        list of renderer to append hover tool
+    '''
+
+    from bokeh.models import HoverTool
+
+    # activate HoverTool for scatter plot
+    hover_tool = HoverTool(tooltips=
+    [
+        ('Name', '$name'),
+        ('Value', '@value'),
+        ('Time', '@strTime'),
+        ('Anomaly', '@amomaly')
+    ], renderers=rend)
+    # append hover tool
+    p.tools.append(hover_tool)
 
 def add_limit_box(p, lower, upper, alpha=0.1, color="green"):
     ''' Adds box to plot
@@ -132,7 +148,44 @@ def add_to_plot(p, legend, mnemonic, start, end, conn, y_axis="default", color="
     # put data into Dataframe and define ColumnDataSource for each plot
     # reg = pd.DataFrame({'reg' : pol_regression(temp['start_time'], temp['average'],3)})
     # temp = pd.concat([temp, reg], axis = 1)
+    #temp['start_time'] = pd.to_datetime(Time(temp['start_time'], format="mjd").datetime)
+
+    # get anomaly of anolmaly table
+    sql_neu = "SELECT * FROM nirspecAnomaly WHERE plot = '" + mnemonic + "' ORDER BY start_time"
+    anomaly_table = pd.read_sql_query(sql_neu, conn)
+
+    # define lists
+    list_time_element = temp['start_time']
+    list_anomaly_start = anomaly_table['start_time']
+    list_anomaly_end = anomaly_table['end_time']
+    list_anomaly_id = anomaly_table['id']
+    list_anomaly_order = []
+    for i in range(len(list_time_element)):
+        list_anomaly_order.append('')
+
+    # populate info
+    for i in range(len(list_anomaly_start)):
+        element_anomaly_start = list_anomaly_start[i]
+        element_anomaly_end = list_anomaly_end[i]
+        element_anomaly_id = list_anomaly_id[i]
+        for id, element_time_element in enumerate(list_time_element):
+            if element_time_element >= element_anomaly_start and element_time_element <= element_anomaly_end :
+                list_anomaly_order[id]+=str(element_anomaly_id)+ ' '
+
+    # get rid of empty strings
+    for id, element in enumerate(list_anomaly_order):
+        if len(element) < 1:
+            list_anomaly_order[id] = 'NaN'
+
+    # make date string
+    str_time = []
+    for element in temp['start_time']:
+        str_time.append(str(Time(element, format="mjd").iso))
+
+    temp['strTime'] = str_time
     temp['start_time'] = pd.to_datetime(Time(temp['start_time'], format="mjd").datetime)
+    temp['amomaly'] = list_anomaly_order
+
     plot_data = ColumnDataSource(temp)
 
     # plot data
@@ -186,11 +239,51 @@ def add_to_plot_normalized(p, legend, mnemonic, start, end, conn, nominal, color
     temp['value'] -= nominal
     # temp['value'] -= 1
 
+    #temp['timestamp'] = pd.to_datetime(Time(temp['timestamp'], format="mjd").datetime)
+
+    #get anomaly
+    sql_neu = "SELECT * FROM nirspecAnomaly WHERE plot = '" + mnemonic + "' ORDER BY start_time"
+    anomaly_table = pd.read_sql_query(sql_neu, conn)
+
+    # define lists
+    list_time_element = temp['timestamp']
+    list_anomaly_start = anomaly_table['start_time']
+    list_anomaly_end = anomaly_table['end_time']
+    list_anomaly_id = anomaly_table['id']
+    list_anomaly_order = []
+    for i in range(len(list_time_element)):
+        list_anomaly_order.append('')
+
+    # populate info
+    for i in range(len(list_anomaly_start)):
+        element_anomaly_start = list_anomaly_start[i]
+        element_anomaly_end = list_anomaly_end[i]
+        element_anomaly_id = list_anomaly_id[i]
+        for id, element_time_element in enumerate(list_time_element):
+            if element_time_element >= element_anomaly_start and element_time_element <= element_anomaly_end :
+                list_anomaly_order[id]+=str(element_anomaly_id) +' '
+
+    # get rid of empty strings
+    for id, element in enumerate(list_anomaly_order):
+
+        if len(element) < 1:
+            list_anomaly_order[id] = 'NaN'
+
+    # make date string
+    str_time = []
+    for element in temp['timestamp']:
+        str_time.append(str(Time(element, format="mjd").iso))
+    temp['strTime'] = str_time
+
     temp['timestamp'] = pd.to_datetime(Time(temp['timestamp'], format="mjd").datetime)
+    temp['amomaly'] = list_anomaly_order
+
+
     plot_data = ColumnDataSource(temp)
 
     p.line(x="timestamp", y="value", color=color, legend=legend, source=plot_data)
-    p.scatter(x="timestamp", y="value", color=color, legend=legend, source=plot_data)
+    scat= p.scatter(x="timestamp", y="value", color=color, legend=legend, source=plot_data, name=mnemonic)
+    return scat
 
 
 def add_basic_layout(p):

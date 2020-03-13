@@ -35,27 +35,28 @@ Dependencies
     placed in the ``jwql/utils/`` directory.
 """
 
-import datetime
 import os
 
+from astropy.time import Time
 from django.http import JsonResponse
 from django.shortcuts import render
 
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
+from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
+from jwql.utils.constants import MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.utils import get_base_url, get_config
 from .data_containers import get_acknowledgements, get_edb_components
+from .data_containers import get_current_flagged_anomalies
 from .data_containers import get_dashboard_components
 from .data_containers import get_filenames_by_instrument
 from .data_containers import get_header_info
 from .data_containers import get_image_info
-from .data_containers import get_current_flagged_anomalies
 from .data_containers import get_proposal_info
+from .data_containers import nirspec_trending
 from .data_containers import random_404_page
 from .data_containers import thumbnails_ajax
-from .data_containers import data_trending
-from .data_containers import nirspec_trending
-from .forms import AnomalySubmitForm, FileSearchForm
+from .forms import AnomalySubmitForm, FileSearchForm, addAnomalyForm_Miri, deleteAnomalyForm, addAnomalyForm_nir
 from .oauth import auth_info, auth_required
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.utils import get_base_url, get_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
@@ -74,26 +75,78 @@ def miri_data_trending(request):
         Outgoing response sent to the webpage
     """
 
-    template = "miri_data_trending.html"
-    variables, dash = data_trending()
+    # Check if GET or POST request
+    if request.method == 'POST':
 
+        # Connect to database
+        database_location = os.path.join(get_config()['jwql_dir'], 'database')
+        database_file = os.path.join(database_location, 'miri_database.db')
+        conn = sql.create_connection(database_file)  # get variables
+        c = conn.cursor()
+
+        # check if new item or delete item
+        if '_newItem' in request.POST:
+
+            # gat form
+            formAdd = addAnomalyForm_Miri(request.POST)
+            if formAdd.is_valid():
+                Autor = str(formAdd.cleaned_data['name'])
+                start = str(formAdd.cleaned_data['starttime'])
+                end = str(formAdd.cleaned_data['endtime'])
+                plot = str(formAdd.cleaned_data['select_plot'])
+                comment = str(formAdd.cleaned_data['comment'])
+
+                # convert time
+                start = float(Time(start, format='iso').mjd)
+                end = float(Time(end, format='iso').mjd)
+
+                anomalyDataset = (start, end, Autor, plot, comment)
+
+                # add dataset
+                c.execute('INSERT INTO miriAnomaly (start_time,end_time,autor,plot,comment) \
+                                VALUES (?,?,?,?,?)', anomalyDataset)
+
+
+        elif '_deleteItem' in request.POST:
+
+            # get from
+            formDelete = deleteAnomalyForm(request.POST)
+            if formDelete.is_valid():
+                ID_delete = str(formDelete.cleaned_data['ID'])
+
+                # delete
+                try:
+                    c.execute('DELETE FROM miriAnomaly WHERE id=' + ID_delete)
+                except:
+                    print(request, 'Delete ID=' + ID_delete + ' failed')
+
+        conn.commit()
+        sql.close_connection(conn)
+
+    # overrite form with empty form
+    formAdd = addAnomalyForm_Miri()
+    formDelete = deleteAnomalyForm()
+
+    # get bokeh tabs
+    template = "miri_data_trending.html"
+    dash = miri_dash.data_trending_dashboard()
+
+    # define html context
     context = {
         'dashboard': dash,
         'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
         'inst_list': JWST_INSTRUMENT_NAMES_MIXEDCASE,  # Do not edit; Required for navigation bar
         'tools': MONITORS,  # Do not edit; Required for navigation bar
-        'user': None  # Do not edit; Required for authentication
+        'user': None,  # Do not edit; Required for authentication
+        'formAdd': formAdd,
+        'formDelete': formDelete
     }
 
-    # append variables to context
-    context.update(variables)
-
-    # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
 
 
 def nirspec_data_trending(request):
-    """Generate the ``MIRI DATA-TRENDING`` page
+    """Generate the ``nirspec DATA-TRENDING`` page
 
     Parameters
     ----------
@@ -106,21 +159,71 @@ def nirspec_data_trending(request):
         Outgoing response sent to the webpage
     """
 
-    template = "nirspec_data_trending.html"
-    variables, dash = nirspec_trending()
+    # Check if GET or POST request
+    if request.method == 'POST':
+        database_location = os.path.join(get_config()['jwql_dir'], 'database')
+        database_file = os.path.join(database_location, 'nirspec_database.db')
+        conn = sql.create_connection(database_file)  # get variables
+        c = conn.cursor()
 
+        # check if new item or delete item
+        if '_newItem' in request.POST:
+
+            # gat form
+            formAdd = addAnomalyForm_nir(request.POST)
+            if formAdd.is_valid():
+                Autor = str(formAdd.cleaned_data['name'])
+                start = str(formAdd.cleaned_data['starttime'])
+                end = str(formAdd.cleaned_data['endtime'])
+                plot = str(formAdd.cleaned_data['select_plot'])
+                comment = str(formAdd.cleaned_data['comment'])
+
+                # convert time
+                start = float(Time(start, format='iso').mjd)
+                end = float(Time(end, format='iso').mjd)
+
+                anomalyDataset = (start, end, Autor, plot, comment)
+
+                # add dataset
+                c.execute('INSERT INTO nirspecAnomaly (start_time,end_time,autor,plot,comment) \
+                                VALUES (?,?,?,?,?)', anomalyDataset)
+
+
+        elif '_deleteItem' in request.POST:
+
+            # gat form
+            formDelete = deleteAnomalyForm(request.POST)
+            if formDelete.is_valid():
+                ID_delete = str(formDelete.cleaned_data['ID'])
+
+                # delete dataset
+                try:
+                    c.execute('DELETE FROM nirspecAnomaly WHERE id=' + ID_delete)
+                except:
+                    print(request, 'Delete ID=' + ID_delete + ' failed')
+
+        conn.commit()
+        sql.close_connection(conn)
+
+    # overrite form with empty form
+    formAdd = addAnomalyForm_nir()
+    formDelete = deleteAnomalyForm()
+
+    # get bokeh tabs
+    template = "nirspec_data_trending.html"
+    dash = nirspec_trending()
+
+    # define html context
     context = {
         'dashboard': dash,
         'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
         'inst_list': JWST_INSTRUMENT_NAMES_MIXEDCASE,  # Do not edit; Required for navigation bar
         'tools': MONITORS,  # Do not edit; Required for navigation bar
-        'user': None  # Do not edit; Required for authentication
+        'user': None,  # Do not edit; Required for authentication
+        'formAdd': formAdd,
+        'formDelete': formDelete
     }
 
-    # append variables to context
-    context.update(variables)
-
-    # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
 
 

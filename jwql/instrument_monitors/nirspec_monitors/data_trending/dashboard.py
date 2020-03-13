@@ -1,60 +1,52 @@
-#! /usr/bin/env python
-"""Combines plots to tabs and prepares dashboard
+"""dashboard.py
 
-The module imports all prepares plot functions from .plots and combines
-prebuilt tabs to a dashboard. Furthermore it defines the timerange for
-the visualisation. Default time_range should be set to about 4 Month (120days)
+    The module imports all prepares plot functions from .plots and combines
+    prebuilt tabs to a dashboard. Furthermore it defines the timerange for
+    the visualisation. Default time_range should be set to about 4 Month (120days)
 
 Authors
 -------
-    - Daniel Kühbacher
+
+    - [AIRBUS] Daniel Kübacher
+    - [AIRBUS] Leo Stumpf
 
 Use
 ---
-    The functions within this module are intended to be imported and
-    used by ``data_container.py``, e.g.:
-
-    ::
-        import jwql.instrument_monitors.miri_monitors.data_trending.dashboard as dash
-        dashboard, variables = dash.data_trending_dashboard(start_time, end_time)
+    -
 
 Dependencies
 ------------
-    User must provide "nirspec_database.db" in folder jwql/database
 
+    The file nirspec_database.db in the directory jwql/jwql/database/ must be populated.
+
+References
+----------
+    The code was developed in reference to the information provided in:
+    ‘JWQL_NIRSpec_Inputs_V8.xlsx’
+
+Notes
+-----
+
+    For further information please contact Brian O'Sullivan
 """
 import os
-import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.sql_interface as sql
-from jwql.utils.utils import get_config, filename_parser
 
+import datetime
 from bokeh.embed import components
 from bokeh.models.widgets import Tabs
-from bokeh.resources import Resources
-from bokeh.io.state import curstate
 
-from astropy.time import Time
-import datetime
-from datetime import date
-
-# import plot functions
-from .plots.power_tab import power_plots
-from .plots.voltage_tab import volt_plots
-from .plots.temperature_tab import temperature_plots
-from .plots.msa_mce_tab import msa_mce_plots
-from .plots.fpe_fpa_tab import fpe_fpa_plots
+import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.sql_interface as sql
 from .plots.caa_tab import caa_plots
+from .plots.fpe_fpa_tab import fpe_fpa_plots
+from .plots.msa_mce_tab import msa_mce_plots
+from .plots.power_tab import power_plots
+from .plots.temperature_tab import temperature_plots
+from .plots.voltage_tab import volt_plots
 from .plots.wheel_tab import wheel_pos
 
-# configure actual datetime in order to implement range function
-now = datetime.datetime.now()
-# default_start = now - datetime.timedelta(1000)
-default_start = datetime.date(2017, 8, 15).isoformat()
 
-__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-
-
-def data_trending_dashboard(start=default_start, end=now):
-    """Bulilds dashboard
+def data_trending_dashboard(start=datetime.date(2017, 8, 15).isoformat(), end=datetime.datetime.now()):
+    """Builds dashboard
     Parameters
     ----------
     start : time
@@ -69,17 +61,12 @@ def data_trending_dashboard(start=default_start, end=now):
         no use
     """
 
-    # connect to database
-    DATABASE_LOCATION = os.path.join(get_config()['jwql_dir'], 'database')
-    DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'nirspec_database.db')
-
-    conn = sql.create_connection(DATABASE_FILE)
-
-    # some variables can be passed to the template via following
-    variables = dict(init=1)
-
-    # some variables can be passed to the template via following
-    variables = dict(init=1)
+    # Connect to database
+    __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+    package_dir = __location__.split('instrument_monitors')[0]
+    database_location = os.path.join(package_dir, 'database')
+    database_file = os.path.join(database_location, 'nirspec_database.db')
+    conn = sql.create_connection(database_file)
 
     # add tabs to dashboard
     tab1 = power_plots(conn, start, end)
@@ -92,13 +79,14 @@ def data_trending_dashboard(start=default_start, end=now):
 
     # build dashboard
     tabs = Tabs(tabs=[tab1, tab2, tab3, tab4, tab5, tab6, tab7])
-    # tabs = Tabs( tabs=[ tab1, tab7] )
 
-    # return dasboard to webapp
+    # return dashboard to web app
     script, div = components(tabs)
     plot_data = [div, script]
 
     # close sql connection
     sql.close_connection(conn)
 
-    return plot_data, variables
+    return plot_data
+
+

@@ -31,23 +31,24 @@ Notes
 
     For further information please contact Brian O'Sullivan
 """
-import datetime
 import netrc
 import os
+
+import datetime
 import sys
 import time
-from datetime import date
-
 from astropy.table import Table
 from astropy.time import Time
+from datetime import date
 
 import jwql.edb.engineering_database as edb
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.log_error_and_file as log_error_and_file
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
-from jwql.instrument_monitors.miri_monitors.data_trending.day_job import process_day
-from jwql.instrument_monitors.miri_monitors.data_trending.min_job import process_15min
+from jwql.instrument_monitors.miri_monitors.data_trending.utils.day_job import process_day
+from jwql.instrument_monitors.miri_monitors.data_trending.utils.min_job import process_15min
 from jwql.utils.utils import get_config
+
 
 def querry_data(mnemonic_name, start_time, end_time, mast_token):
     """Download data from the mast database
@@ -70,13 +71,13 @@ def querry_data(mnemonic_name, start_time, end_time, mast_token):
         all downloaded data is presented in an astrophy table, with the format needed for the processing functions.
     """
 
-    #Declare log region Querry
+    # Declare new Log Instance
     log = log_error_and_file.Log('Querry')
 
-    #Download data from the mast website and check weather there is anything wrong with the downloaded data
+    # Download them mnmemonic from the MAST website
+    # Check if any data is downloaded, if not: make empty table
     try:
         data, meta, info = edb.query_single_mnemonic(mnemonic_name, start_time, end_time, token=mast_token)
-
         if data is None:
             data = Table(names=('MJD', 'euvalue', 'sqldataType', 'theTime'), dtype=('f8', 'f8', 'U4', 'U21'))
             log.log(mnemonic_name + ' Failed: No Data', 'Error')
@@ -84,12 +85,11 @@ def querry_data(mnemonic_name, start_time, end_time, mast_token):
             log.log(mnemonic_name + ' Succesful Downloaded ' + str(len(data)) + ' data points')
 
     except:
-        # set text and color
         data = Table(names=('MJD', 'euvalue', 'sqldataType', 'theTime'), dtype=('f8', 'f8', 'U4', 'U21'))
         log.log(mnemonic_name + ' Failed: ' + str(sys.exc_info()[1]), 'Error')
 
-
-    # Generate Info for the meta section
+    # Download them mnmemonic from the MAST website
+    # Check if any data is downloaded, if not: make empty table
     time_column = data['MJD']
     if len(time_column) > 0:
         date_start = time_column[0]
@@ -101,11 +101,12 @@ def querry_data(mnemonic_name, start_time, end_time, mast_token):
     info['mnemonic'] = mnemonic_name
     info['len'] = len(time_column)
 
-    #Format the table as it is needet for the processing unit
+    # Apply formatiing needet for the drocessing routine
     description = ('time', 'value')
     data_return = [data['MJD'], data['euvalue']]
 
     return Table(data_return, names=description, dtype=('f8', 'str'), meta=info)
+
 
 def get_data_day(day):
     """Download + Process + Save all mnemonics for one specific day
@@ -120,26 +121,28 @@ def get_data_day(day):
     Saves directly in defined SQL database
     """
 
-    #save the start time of the function to calculate the run time
+    # save the start time of the function to calculate the run time
     start_time_proc = time.time()
 
-    #Connect to the miri database to save the variables
+    # Connect to the miri database to save the variables
     database_location = os.path.join(get_config()['jwql_dir'], 'database')
     database_file = os.path.join(database_location, 'miri_database.db')
     conn = sql.create_connection(database_file)
 
-    #Define Mast token
+    # Define Mast token
     host = 'mast'
     secrets = netrc.netrc()
     mast_token = secrets.authenticators(host)[2]
 
-    #Generate a new log file
+    # Generate a new log file
     log_error_and_file.define_log_file('log//LogFile_' + day + '.log')
     log = log_error_and_file.Log('MAIN')
     log.info('Process Startet for day ' + day)
 
-
-    #Download data in the 15 min job
+    # Download data in the 15 min job
+    # Querry data in 15 min timeframe after nune
+    # Procces data to filter mnemonics needet
+    # save data in SQL database
     log.info('querry data 15 min')
     mnemonic_dict = {}
 
@@ -152,8 +155,10 @@ def get_data_day(day):
 
     process_15min(conn, mnemonic_dict)
 
-
-    # Download data in the day min job
+    # Download data in the day job
+    # Querry data for a howl day
+    # Procces data to filter mnemonics needet
+    # save data in SQL database
     log.info('querry data day')
     mnemonic_dict = {}
 
@@ -165,7 +170,6 @@ def get_data_day(day):
         mnemonic_dict.update({mnemonic_name: mnemonic_table})
 
     process_day(conn, mnemonic_dict)
-
 
     #Generate info end section
     end_time_proc = time.time()
@@ -180,25 +184,30 @@ def get_data_day(day):
 
     log_error_and_file.delete_log_file()
 
+
 def main_oneDay():
-    #runs the software once for one specific date
-    day = '2019-11-10'
+    # runs the software once for one specific date
+    day = '2019-07-17'
     get_data_day(day)
 
+
 def main_daily():
-    #runs the software once for yesterday
+    # runs the software once for a specific day relative to today
     today = date.today()
-    day = today - datetime.timedelta(days=1)
+    day = today - datetime.timedelta(days=100)
     day = day.strftime("%Y-%m-%d")
 
     get_data_day(day)
 
+
 def main_multipleDays():
-    #runs the software for mulatiple days
+    # runs the software for mulatiple days
     today = date.today()
-    for i in range(20):
-        day = today - datetime.timedelta(days=(300 - i))
+    for i in range(200):
+        print(str(i))
+        day = today - datetime.timedelta(days=(230 - i))
         day = day.strftime("%Y-%m-%d")
         get_data_day(day)
 
-main_oneDay()
+
+main_daily()

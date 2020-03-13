@@ -21,20 +21,20 @@ Use
     For use in programm set condition up like below:
 
     import the module as follow:
-    >>>import condition as cond
+    #>>>import condition as cond
 
     generate list with required conditions:
-    >>>con_set = [ cond.equal(m.mnemonic('IMIR_HK_POM_LOOP'),'OFF'),
+    #>>>con_set = [ cond.equal(m.mnemonic('IMIR_HK_POM_LOOP'),'OFF'),
                 cond.smaller(m.mnemonic('IMIR_HK_ICE_SEC_VOLT1'),1),
                 cond.greater(m.mnemonic('SE_ZIMIRICEA'),0.2)]
 
     generate object of condition with the con_set as attribute:
-    >>>condition_object=cond.condition(con_set)
+    #>>>condition_object=cond.condition(con_set)
 
     Now the condition_object can return a True/False statement wheather
     the time given as attribut meets the conditions:
 
-    >>>if condition.state(float(element['Primary Time'])):
+    #>>>if condition.state(float(element['Primary Time'])):
         -> True when condition for the given time applies
         -> False when condition for the given time is not applicable
 

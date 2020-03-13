@@ -119,7 +119,7 @@ def define_log_file(log_file_name):
     # save name
     if not os.path.exists('log'):
         os.mkdir('log')
-        
+
     f = open('log_control.txt', 'w')
     f.write(log_file_name)
     f.close()

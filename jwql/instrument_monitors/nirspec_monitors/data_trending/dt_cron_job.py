@@ -1,192 +1,210 @@
-#! /usr/bin/env python
-''' Main module for nirspec datatrending -> fills database
+"""dt_corn_job.py
 
     This module holds functions to connect with the engineering database in order
-    to grab and process data for the specific miri database. The scrips queries
+    to grab and process data for the specific nirSpec database. The scrips queries
     a daily 15 min chunk and a whole day dataset. These contain several mnemonics
     defined in ''mnemonics.py''. The queried data gets processed and stored in
-    a prepared database.
+    an auxiliary database.
 
 Authors
 -------
 
-    - Daniel Kühbacher
+    - [AIRBUS] Daniel Kübacher
+    - [AIRBUS] Leo Stumpf
 
 Use
 ---
+    -
 
 Dependencies
 ------------
 
+    The file nirspec_database.db in the directory jwql/jwql/database/ must exist.
+    
 References
 ----------
+    The code was developed in reference to the information provided in:
+    ‘JWQL_NIRSpec_Inputs_V8.xlsx’
 
 Notes
 -----
-'''
-import utils.mnemonics as mn
-import utils.sql_interface as sql
-from utils.process_data import whole_day_routine, wheelpos_routine
-from jwql.utils.engineering_database import query_single_mnemonic
 
-import pandas as pd
-import numpy as np
-import statistics
-import sqlite3
+    For further information please contact Brian O'Sullivan
+"""
+import netrc
+import os
 
+import datetime
+import sys
+import time
+from astropy.table import Table
 from astropy.time import Time
+from datetime import date
+
+import jwql.edb.engineering_database as edb
+import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.log_error_and_file as log_error_and_file
+import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.mnemonics as mn
+import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.sql_interface as sql
+from jwql.instrument_monitors.nirspec_monitors.data_trending.utils.day_job import process_day
+from jwql.instrument_monitors.nirspec_monitors.data_trending.utils.min_job import process_15min
+from jwql.utils.utils import get_config
 
 
-def process_daysample(conn, m_raw_data):
-    '''Parse CSV file, process data within and put to DB
+def querry_data(mnemonic_name, start_time, end_time, mast_token):
+    """Download data from the mast database
+
+    This function dowloads all datapoints of a given mnemonic in the set time frame.
+
     Parameters
     ----------
-    conn : DBobject
-        Connection object to temporary database
-    path : str
-        defines path to the files
-    '''
+    mnemonic_name : str
+        Name of the mnemonic to be downloaded.
+    start_time : astrophy.time
+        Start of timespan to be downloaded
+    end_time : astrophy.time
+        end of timespan to be downloaded
+    mast_token : mast token
 
-    # process raw data with once a day routine
-    return_data, lamp_data = whole_day_routine(m_raw_data)
-    FW, GWX, GWY = wheelpos_routine(m_raw_data)
+    Returns
+    -------
+    mnemonic_table : astrophy.table
+        all downloaded data is presented in an astrophy table, with the format needed for the processing functions.
+    """
 
-    # put all data to a database that uses a condition
-    for key, value in return_data.items():
-        m = m_raw_data.mnemonic(key)
-        length = len(value)
-        mean = statistics.mean(value)
-        deviation = statistics.stdev(value)
-        dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-        sql.add_data(conn, key, dataset)
+    #Declare log region Querry
+    log = log_error_and_file.Log('Querry')
 
-    # add rest of the data to database -> no conditions applied
-    for identifier in mn.mnemSet_day:
-        m = m_raw_data.mnemonic(identifier)
-        temp = []
-        # look for all values that fit to the given conditions
-        for element in m:
-            temp.append(float(element['value']))
-        # return None if no applicable data was found
-        if len(temp) > 2:
-            length = len(temp)
-            mean = statistics.mean(temp)
-            deviation = statistics.stdev(temp)
+    # Download them mnmemonic from the MAST website
+    # Check if any data is downloaded, if not: make empty table
+    try:
+        data, meta, info = edb.query_single_mnemonic(mnemonic_name, start_time, end_time, token=mast_token)
+        if data is None:
+            data = Table(names=('MJD', 'euvalue', 'sqldataType', 'theTime'), dtype=('f8', 'f8', 'U4', 'U21'))
+            log.log(mnemonic_name + ' Failed: No Data', 'Error')
         else:
-            print('No data for {}'.format(identifier))
-        del temp
+            log.log(mnemonic_name + ' Succesful Downloaded ' + str(len(data)) + ' data points')
 
-    # add lamp data to database -> distiction over lamps
-    for key, values in lamp_data.items():
-        for data in values:
-            dataset_volt = (data[0], data[1], data[5], data[6], data[7])
-            dataset_curr = (data[0], data[1], data[2], data[3], data[4])
-            sql.add_data(conn, 'LAMP_{}_VOLT'.format(key), dataset_volt)
-            sql.add_data(conn, 'LAMP_{}_CURR'.format(key), dataset_curr)
-
-    # add wheeldata to database
-    for key, values in FW.items():
-        for data in values:
-            sql.add_wheel_data(conn, 'INRSI_C_FWA_POSITION_{}'.format(key), data)
-
-    for key, values in GWX.items():
-        for data in values:
-            sql.add_wheel_data(conn, 'INRSI_C_GWA_X_POSITION_{}'.format(key), data)
-
-    for key, values in GWY.items():
-        for data in values:
-            sql.add_wheel_data(conn, 'INRSI_C_GWA_Y_POSITION_{}'.format(key), data)
+    except:
+        data = Table(names=('MJD', 'euvalue', 'sqldataType', 'theTime'), dtype=('f8', 'f8', 'U4', 'U21'))
+        log.log(mnemonic_name + ' Failed: ' + str(sys.exc_info()[1]), 'Error')
 
 
-def process_15minsample(conn, m_raw_data):
-    '''Parse CSV file, process data within and put to DB
+    # Download them mnmemonic from the MAST website
+    # Check if any data is downloaded, if not: make empty table
+    time_column = data['MJD']
+    if len(time_column) > 0:
+        date_start = time_column[0]
+        date_end = time_column[len(time_column) - 1]
+        info = {'start': date_start, 'end': date_end}
+    else:
+        info = {"n": "n"}
+
+    info['mnemonic'] = mnemonic_name
+    info['len'] = len(time_column)
+
+    # Apply formatiing needet for the drocessing routine
+    description = ('time', 'value')
+    data_return = [data['MJD'], data['euvalue']]
+
+    return Table(data_return, names=description, dtype=('f8', 'str'), meta=info)
+
+def get_data_day(day):
+    """Download + Process + Save all mnemonics for one specific day
+
     Parameters
     ----------
-    conn : DBobject
-        Connection object to temporary database
-    path : str
-        defines path to the files
-    '''
+    day : string
+    string of date to be downloaded: Format = JJJJ-MM-DD
 
-    # process raw data with once a day routine
-    returndata = once_a_day_routine(m_raw_data)
+    Returns
+    -------
+    Saves directly in defined SQL database
+    """
 
-    # put all data in a database that uses a condition
-    for key, value in returndata.items():
-        m = m_raw_data.mnemonic(key)
-        length = len(value)
-        mean = statistics.mean(value)
-        deviation = statistics.stdev(value)
-        dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-        sql.add_data(conn, key, dataset)
+    #save the start time of the function to calculate the run time
+    start_time_proc = time.time()
 
-    # add rest of the data to database
-    for identifier in mn.mnemSet_15min:
+    #Connect to the miri database to save the variables
+    database_location = os.path.join(get_config()['jwql_dir'], 'database')
+    database_file = os.path.join(database_location, 'nirspec_database.db')
+    conn = sql.create_connection(database_file)
 
-        m = m_raw_data.mnemonic(identifier)
+    #Define Mast token
+    host = 'mast'
+    secrets = netrc.netrc()
+    mast_token = secrets.authenticators(host)[2]
 
-        temp = []
+    #Generate a new log file
+    log_error_and_file.define_log_file('log//LogFile_' + day + '.log')
+    log = log_error_and_file.Log('MAIN')
+    log.info('Process Startet for day ' + day)
 
-        # look for all values that fit to the given conditions
-        for element in m:
-            temp.append(float(element['value']))
+    # Download data in the 15 min job
+    # Querry data in 15 min timeframe after nuun
+    # Procces data to filter mnemonics needet
+    # save data in SQL database
+    log.info('querry data 15 min')
+    mnemonic_dict = {}
 
-        # return None if no applicable data was found
-        if len(temp) > 2:
-            length = len(temp)
-            mean = statistics.mean(temp)
-            deviation = statistics.stdev(temp)
+    start_time = Time(day + ' 11:59:59.000', format='iso')
+    end_time = Time(day + ' 12:15:01.000', format='iso')
 
-            dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
-            sql.add_data(conn, identifier, dataset)
-        elif len(temp) == 2:
-            dataset = (float(element['time']), float(element['time']), 1, temp[0], 0)
-            sql.add_data(conn, identifier, dataset)
-        else:
-            print('No data for {}'.format(identifier))
-            print(temp)
+    for mnemonic_name in mn.querry_mnemonic_min:
+        mnemonic_table = querry_data(mnemonic_name, start_time, end_time, mast_token)
+        mnemonic_dict.update({mnemonic_name: mnemonic_table})
 
-        del temp
+    process_15min(conn, mnemonic_dict)
 
 
-def main():
-    '''
-    from ..utils.engineering_database import query_single_mnemonic
+    # Download data in the day job
+    # Querry data for a howl day
+    # Procces data to filter mnemonics needet
+    # save data in SQL database
+    log.info('querry data day')
+    mnemonic_dict = {}
 
-    mnemonic_identifier = 'SA_ZFGOUTFOV'
-    start_time = Time(2016.0, format='decimalyear')
-    end_time = Time(2018.1, format='decimalyear')
+    start_time = Time(day + ' 00:00:00.001', format='iso')
+    end_time = Time(day + ' 23:59:59.000', format='iso')
+
+    for mnemonic_name in mn.querry_mnemonic_day:
+        mnemonic_table = querry_data(mnemonic_name, start_time, end_time, mast_token)
+        mnemonic_dict.update({mnemonic_name: mnemonic_table})
+
+    process_day(conn, mnemonic_dict)
 
 
-    mnemonic = query_single_mnemonic(mnemonic_identifier, start_time, end_time)
-    assert len(mnemonic.data) == mnemonic.meta['paging']['rows']
-    '''
+    #Generate info end section
+    end_time_proc = time.time()
+    hours, rem = divmod(end_time_proc - start_time_proc, 3600)
+    minutes, seconds = divmod(rem, 60)
 
-    for mnemonic in mn.mnemonic_set_15min:
-        whole_day.update(mnemonic=query_single_mnemonic(mnemonic, start, end))
+    end_print = ['file:     dt_corn_job.py',
+                 'version:  1.0',
+                 'run time: {:0>2}:{:0>2}:{:05.2f}'.format(int(hours), int(minutes), seconds),
+                 'status:   finished']
+    log.info(end_print)
 
-    # configure start and end time for query
-    #
-    #
-    #
-    #
+    log_error_and_file.delete_log_file()
 
-    # query table start and end from engineering_database
-    #
-    #
-    #
-    #
-    # return table_day, table_15min
-    # generate paths
-    DATABASE_LOCATION = os.path.join(get_config()['jwql_dir'], 'database')
-    DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'nirspec_database.db')
+def main_oneDay():
+    #runs the software once for one specific date
+    day = '2019-11-10'
+    get_data_day(day)
 
-    # connect to temporary database
-    conn = sql.create_connection(DATABASE_FILE)
+def main_daily():
+    #runs the software once for yesterday
+    today = date.today()
+    day = today - datetime.timedelta(days=100)
+    day = day.strftime("%Y-%m-%d")
 
-    process_daysample(conn, table_day)
-    process_15minsample(conn, table_15min)
+    get_data_day(day)
 
-    # close connection
-    sql.close_connection(conn)
-    print("done")
+def main_multipleDays():
+    #runs the software for mulatiple days
+    today = date.today()
+    for i in range(20):
+        day = today - datetime.timedelta(days=(300 - i))
+        day = day.strftime("%Y-%m-%d")
+        get_data_day(day)
+
+main_daily()

@@ -62,18 +62,16 @@ Dependencies
     User must provide database "nirspec_database.db"
 
 """
-import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.sql_interface as sql
-import jwql.instrument_monitors.nirspec_monitors.data_trending.plots.plot_functions as pf
-from bokeh.models import LinearAxis, Range1d
-from bokeh.plotting import figure
-from bokeh.models.widgets import Panel, Tabs, Div
-from bokeh.models import ColumnDataSource, HoverTool
-from bokeh.layouts import WidgetBox, gridplot, Column, Row
-
-import pandas as pd
-import numpy as np
+import copy
 
 from astropy.time import Time
+from bokeh.layouts import Column, Row
+from bokeh.models.widgets import Panel
+from bokeh.plotting import figure
+
+import jwql.instrument_monitors.nirspec_monitors.data_trending.plots.plot_functions as pf
+import jwql.instrument_monitors.nirspec_monitors.data_trending.plots.tab_object as tabObjects
+import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.utils_f as utils
 
 
 def asic_1_voltages(conn, start, end):
@@ -97,9 +95,12 @@ def asic_1_voltages(conn, start, end):
                toolbar_location="above",
                plot_width=1120,
                plot_height=800,
+               x_range=utils.time_delta(Time(end)),
                x_axis_type='datetime',
                output_backend="webgl",
                x_axis_label='Date', y_axis_label='Voltage (V)')
+
+    p.xaxis.formatter = copy.copy(utils.plot_x_axis_format)
 
     p.grid.visible = True
     p.title.text = "ASIC 1 Voltages"
@@ -144,9 +145,12 @@ def asic_2_voltages(conn, start, end):
                toolbar_location="above",
                plot_width=1120,
                plot_height=800,
+               x_range=utils.time_delta(Time(end)),
                x_axis_type='datetime',
                output_backend="webgl",
                x_axis_label='Date', y_axis_label='Voltage (V)')
+
+    p.xaxis.formatter = copy.copy(utils.plot_x_axis_format)
 
     p.grid.visible = True
     p.title.text = "ASIC 2 Voltages"
@@ -191,9 +195,12 @@ def asic_1_currents(conn, start, end):
                toolbar_location="above",
                plot_width=560,
                plot_height=500,
+               x_range=utils.time_delta(Time(end)),
                x_axis_type='datetime',
                output_backend="webgl",
                x_axis_label='Date', y_axis_label='Current (mA)')
+
+    p.xaxis.formatter = copy.copy(utils.plot_x_axis_format)
 
     p.grid.visible = True
     p.title.text = "ASIC 1 Currents"
@@ -234,9 +241,12 @@ def asic_2_currents(conn, start, end):
                toolbar_location="above",
                plot_width=560,
                plot_height=500,
+               x_range=utils.time_delta(Time(end)),
                x_axis_type='datetime',
                output_backend="webgl",
                x_axis_label='Date', y_axis_label='Current (mA)')
+
+    p.xaxis.formatter = copy.copy(utils.plot_x_axis_format)
 
     p.grid.visible = True
     p.title.text = "ASIC 2 Currents"
@@ -270,83 +280,18 @@ def fpe_fpa_plots(conn, start, end):
     p : tab object
         used by dashboard.py to set up dashboard
     '''
-    descr = Div(text=
-                """
-                <style>
-                table, th, td {
-                  border: 1px solid black;
-                  background-color: #efefef;
-                  border-collapse: collapse;
-                  padding: 5px
-                }
-                table {
-                  border-spacing: 15px;
-                }
-                </style>
-            
-                <body>
-                <table style="width:100%">
-                  <tr>
-                    <th><h6>Plotname</h6></th>
-                    <th><h6>Mnemonic</h6></th>
-                    <th><h6>Description</h6></th>
-                  </tr>
-                  <tr>
-                    <td>ASIC (1,2) Voltages</td>
-                    <td>IGDP_NRSD_ALG_A(1,2)_VDDA<br>
-                        IGDP_NRSD_ALG_A(1,2)GND4VDA<br>
-                        IGDP_NRSD_ALG_A(1,2)GND5VRF<br>
-                        INRSD_ALG_A(1,2)_VDD3P3<br>
-                        INRSD_ALG_A(1,2)_VDD<br>
-                        INRSD_ALG_A(1,2)_REF<br>
-                        INRSD_A(1,2)_DSUB_V<br>
-                        INRSD_A(1,2)_VRESET_V<br>
-                        INRSD_A(1,2)_CELLDRN_V<br>
-                        INRSD_A(1,2)_DRAIN_V<br>
-                        INRSD_A(1,2)_VBIASGATE_V<br>
-                        INRSD_A(1,2)_VBIASPWR_V<br>
-                    </td>
-                    <td>
-                        ASIC (1,2) VDDA Voltage<br>
-                        ASIC (1,2) VDDA/Ground Voltage<br>
-                        ASIC (1,2) Ref/Ground Voltage<br>
-                        ASIC (1,2) VDD 3.3 Supply Voltage<br>
-                        ASIC (1,2) VDD Voltage<br>
-                        ASIC (1,2) Reference Voltage<br>
-                        ASIC (1,2) Dsub Voltage<br>
-                        ASIC (1,2) Reset Voltage<br>
-                        ASIC (1,2) Cell Drain Voltage<br>
-                        ASIC (1,2) Drain Voltage<br>
-                        ASIC (1,2) Bias Gate Voltage<br>
-                        ASIC (1,2) Bias Power Voltage<br>
-                    </td>
-                  </tr>
-            
-                  <tr>
-                    <td>ASIC (1,2) Currents</td>
-                    <td>IGDP_NRSD_ALG_A(1,2)_VDD_C<br>
-                        IGDP_NRSD_ALG_A(1,2)VDAP12C<br>
-                        IGDP_NRSD_ALG_A(1,2)VDAN12C<br>
-                        INRSD_A(1,2)_VDDA_I<br>
-                    </td>
-                    <td>ASIC (1,2) VDD Current<br>
-                        ASIC (1,2) VDDA +12V Current<br>
-                        ASIC (1,2) VDDA -12V Current<br>
-                        ASIC (1,2) VDDA Current<br>
-                    </td>
-                  </tr>
-                  
-                </table>
-                </body>
-                """, width=1100)
+
+    descr = tabObjects.generate_tab_description(utils.description_fpe_fpa)
+
 
     plot1 = asic_1_voltages(conn, start, end)
     plot2 = asic_2_voltages(conn, start, end)
     plot3 = asic_1_currents(conn, start, end)
     plot4 = asic_2_currents(conn, start, end)
+    data_table = tabObjects.anomaly_table(conn, utils.list_fpe_fpa)
 
     currents = Row(plot3, plot4)
-    layout = Column(descr, plot1, plot2, currents)
+    layout = Column(descr, plot1, plot2, currents, data_table)
 
     tab = Panel(child=layout, title="FPE/FPA")
 
