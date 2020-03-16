@@ -54,6 +54,8 @@ from jwedb.edb_interface import is_valid_mnemonic
 from jwql.database import database_interface as di
 from jwql.utils.constants import ANOMALY_CHOICES, JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.utils import get_config, filename_parser
+import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn_miri
+import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.mnemonics as mn_nir
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
@@ -380,3 +382,58 @@ class MnemonicExplorationForm(forms.Form):
                                    help_text="String ID (tlmMnemonic)")
     unit = forms.CharField(label='unit', max_length=500, required=False,
                            help_text="unit")
+    
+    class addAnomalyForm_Miri(forms.Form):
+
+    #Devault variables
+    default_start_time = Time('2019-01-16 00:00:00.000', format='iso')
+    default_end_time = Time('2019-01-16 00:01:00.000', format='iso')
+
+    #make list of variabes (Only difference to nirspec verision)
+    list_mn_Miri = mn_miri.mnemonic_set_database + mn_miri.mnemonic_wheelpositions
+    list_choices = []
+    for element in list_mn_Miri:
+        list_choices.append((element , element))
+
+    #define grafical elements
+    name = forms.CharField(label='Your Name', initial='Your Name')
+
+    starttime = forms.CharField(label='Start time', max_length=500, required=False,
+                                 initial=default_start_time.iso)
+
+    endtime = forms.CharField(label='End time', max_length=500, required=False,
+                               initial=default_end_time.iso)
+
+    select_plot = forms.CharField(label='Select Plot', widget=forms.Select(choices=list_choices))
+
+    comment = forms.CharField(widget=forms.Textarea, initial='Pleas provide a short description of the anomoly')
+
+
+class addAnomalyForm_nir(forms.Form):
+
+    #Devault variables
+    default_start_time = Time('2019-01-16 00:00:00.000', format='iso')
+    default_end_time = Time('2019-01-16 00:01:00.000', format='iso')
+
+    #make list of variabes (Only difference to miri verision)
+    list_mn_nir = mn_nir.mnemonic_set_database + mn_nir.mnemonic_wheelpositions
+    list_choices = []
+    for element in list_mn_nir:
+        list_choices.append((element, element))
+
+    #define grafical elements
+    name = forms.CharField(label='Your Name', initial='Your Name')
+
+    starttime = forms.CharField(label='Start time', max_length=500, required=False,
+                                initial=default_start_time.iso)
+
+    endtime = forms.CharField(label='End time', max_length=500, required=False,
+                              initial=default_end_time.iso)
+
+    select_plot = forms.CharField(label='Select Plot', widget=forms.Select(choices=list_choices))
+
+    comment = forms.CharField(widget=forms.Textarea, initial='Pleas provide a short description of the anomoly')
+
+class deleteAnomalyForm(forms.Form):
+    #form to delete anomaly entry
+    ID = forms.CharField(label='To delete a Anomaly pleas input ID', initial='??')
