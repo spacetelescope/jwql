@@ -1,4 +1,4 @@
-"""Defines the views for the ``jwql`` web app monitors.
+"""Defines the views for the ``jwql`` web app instrument monitors.
 
 Authors
 -------
@@ -31,7 +31,6 @@ import os
 
 from django.shortcuts import render
 
-from . import monitor_pages
 from . import bokeh_containers
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config
@@ -54,6 +53,7 @@ def dark_monitor(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
