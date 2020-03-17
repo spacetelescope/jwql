@@ -15,7 +15,7 @@ REQUIRES = [
     'astropy>=3.2.1',
     'astroquery>=0.3.9',
     'authlib',
-    'bokeh>=1.0',
+    'bokeh>=1.0,<1.4',
     'codecov',
     'django>=2.0',
     'flake8',
