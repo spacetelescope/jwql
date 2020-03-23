@@ -25,7 +25,7 @@ import random
 import string
 
 from jwql.database import database_interface as di
-from jwql.utils.constants import ANOMALIES
+from jwql.utils.constants import ANOMALIES_PER_INST
 from jwql.utils.utils import get_config
 
 # Determine if tests are being run on jenkins
@@ -67,7 +67,7 @@ def test_anomaly_orm_factory():
     assert str(TestAnomalyTable) == "<class 'jwql.database.database_interface.{}'>"\
         .format(test_table_name)
 
-    for anomaly in ANOMALIES:
+    for anomaly in ANOMALIES_PER_INST:
         assert anomaly in table_attributes
 
 

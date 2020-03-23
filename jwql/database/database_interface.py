@@ -79,7 +79,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
 from sqlalchemy.types import ARRAY
 
-from jwql.utils.constants import ANOMALIES, FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import ANOMALIES_PER_INST, FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
 from jwql.utils.utils import get_config
 
 ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
@@ -241,8 +241,14 @@ def anomaly_orm_factory(class_name):
     data_dict = {}
     data_dict['__tablename__'] = class_name.lower()
 
+    inst = data_dict['__tablename__'].split('_')[0]
+    inst_anomalies = []
+    for anomaly in ANOMALIES_PER_INST:
+        if inst in ANOMALIES_PER_INST[anomaly]:
+            inst_anomalies.append(anomaly)
+
     # Define anomaly table column names
-    data_dict['columns'] = ANOMALIES
+    data_dict['columns'] = inst_anomalies
     data_dict['names'] = [name.replace('_', ' ') for name in data_dict['columns']]
 
     # Create a table with the appropriate Columns
@@ -381,7 +387,11 @@ def monitor_orm_factory(class_name):
 
 
 # Create tables from ORM factory
-Anomaly = anomaly_orm_factory('anomaly')
+NIRCamAnomaly = anomaly_orm_factory('nircam_anomaly')
+NIRISSAnomaly = anomaly_orm_factory('niriss_anomaly')
+NIRSpecAnomaly = anomaly_orm_factory('nirspec_anomaly')
+MIRIAnomaly = anomaly_orm_factory('miri_anomaly')
+FGSAnomaly = anomaly_orm_factory('fgs_anomaly')
 NIRCamDarkQueryHistory = monitor_orm_factory('nircam_dark_query_history')
 NIRCamDarkPixelStats = monitor_orm_factory('nircam_dark_pixel_stats')
 NIRCamDarkDarkCurrent = monitor_orm_factory('nircam_dark_dark_current')

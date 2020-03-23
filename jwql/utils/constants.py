@@ -49,11 +49,28 @@ AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 512, 1), (0, 2048, 1)],
 
 
 # Defines the possible anomalies to flag through the web app
-ANOMALIES = ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error', 'diffraction_spike',
-             'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail', 'other']
+# ANOMALIES = ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error', 'diffraction_spike',
+#              'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail', 'other']
 
-# Defines the possible anomalies (with rendered name) to flag through the web app
-ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES]
+# INST_ANOMALIES = {
+#     'fgs': ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error', 'diffraction_spike',
+#              'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail',
+#              'other'],
+#     'miri': ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error', 'diffraction_spike',
+#              'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail',
+#              'other'],
+#     'nircam': ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error', 'diffraction_spike',
+#              'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail',
+#              'dragons_breath', 'other'],
+#     'niriss': ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error', 'diffraction_spike',
+#              'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail',
+#              'other'],
+#     'nirspec': ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error', 'diffraction_spike',
+#              'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail',
+#              'optical_short', 'other']}
+
+# # Defines the possible anomalies (with rendered name) to flag through the web app
+# ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES]
 
 FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R', 'WFSS128C', 'WFSS64C']
 
@@ -96,6 +113,27 @@ JWST_INSTRUMENT_NAMES_UPPERCASE = {key: value.upper() for key, value in
 # Astoquery service string for each JWST instrument
 JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
                       JWST_INSTRUMENT_NAMES]
+
+ANOMALIES_PER_INST = {
+    # anomalies affecting all instruments:
+    'snowball': JWST_INSTRUMENT_NAMES,
+    'cosmic_ray_shower': JWST_INSTRUMENT_NAMES,
+    'crosstalk': JWST_INSTRUMENT_NAMES,
+    'data_transfer_error': JWST_INSTRUMENT_NAMES,
+    'diffraction_spike': JWST_INSTRUMENT_NAMES,
+    'excessive_saturation': JWST_INSTRUMENT_NAMES,
+    'ghost': JWST_INSTRUMENT_NAMES,
+    'guidestar_failure': JWST_INSTRUMENT_NAMES,
+    'persistence': JWST_INSTRUMENT_NAMES,
+    'satellite_trail': JWST_INSTRUMENT_NAMES,
+    # instrument-specific anomalies:
+    'optical_short': ['nirspec'],
+    'dragons_breath': ['nircam'],
+    # additional anomalies:
+    'other': JWST_INSTRUMENT_NAMES}
+
+# Defines the possible anomalies (with rendered name) to flag through the web app
+ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INST]
 
 # Available monitor names and their location for each JWST instrument
 MONITORS = {
