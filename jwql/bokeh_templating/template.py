@@ -24,7 +24,7 @@ class BokehTemplateEmbedError(Exception):
     """
 
 
-class BokehTemplate(object):
+class BokehTemplate():
     """
     This is the base class for creating Bokeh web apps using a YAML templating
     framework.
@@ -34,13 +34,13 @@ class BokehTemplate(object):
     _sequence_factory = factory.sequence_factory
     _figure_constructor = factory.figure_constructor
     _document_constructor = factory.document_constructor
-
     _embed = False
 
     def _self_constructor(self, loader, tag_suffix, node):
         """
         A multi_constructor for `!self` tag in the interface file.
         """
+
         yield eval("self" + tag_suffix, globals(), locals())
 
     def _register_default_constructors(self):
@@ -104,7 +104,7 @@ class BokehTemplate(object):
         if not self.format_string:
             return
 
-        self.formats = yaml.load(self.format_string)
+        self.formats = yaml.load(self.format_string, Loader=yaml.Loader)
 
     def parse_interface(self):
         """
@@ -133,10 +133,10 @@ class BokehTemplate(object):
         # variable, since the constructors store everything in self.refs
         # (and self.document, for the document)
 
-        self.full_stream = list(yaml.load_all(interface))
+        self.full_stream = list(yaml.load(interface, Loader=yaml.Loader))
 
     def parse_string(self, yaml_string):
-        return list(yaml.load_all(yaml_string))
+        return list(yaml.load(yaml_string, Loader=yaml.Loader))
 
     def embed(self, ref):
         element = self.refs.get(ref, None)
