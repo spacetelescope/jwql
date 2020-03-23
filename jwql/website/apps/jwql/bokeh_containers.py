@@ -16,7 +16,7 @@ Use
     used by ``views.py``, e.g.:
 
     ::
-        from .data_containers import get_mast_monitor
+        from .bokeh_containers import dark_monitor_tabs
 """
 
 import os
@@ -36,7 +36,20 @@ REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
 
 def dark_monitor_tabs(instrument):
-    """WRITE ME"""
+    """Creates the various tabs of the dark monitor results page.
+
+    Parameters
+    ----------
+    instrument : str
+        The JWST instrument of interest (e.g. ``nircam``).
+
+    Returns
+    -------
+    div : str
+        The HTML div to render dark monitor plots
+    script : str
+        The JS script to render dark monitor plots
+    """
 
     full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
 
