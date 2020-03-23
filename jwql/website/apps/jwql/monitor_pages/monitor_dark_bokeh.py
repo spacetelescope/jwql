@@ -94,7 +94,12 @@ class DarkMonitor(BokehTemplate):
             self._aperture = 'NRCA1_FULL'
 
         self._embed = True
-        self.detector = self._aperture.split('_')[0]
+
+        # Fix aperture/detector name discrepency
+        if self._aperture in ['NRCA5_FULL', 'NRCB5_FULL']:
+            self.detector = '{}LONG'.format(self._aperture[0:4])
+        else:
+            self.detector = self._aperture.split('_')[0]
 
         # App design
         self.format_string = None
