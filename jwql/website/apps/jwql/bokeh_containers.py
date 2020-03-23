@@ -83,13 +83,13 @@ def dark_monitor_tabs(instrument):
         single_aperture = histograms_all_apertures[0]
         histogram_layout = layout(
             [single_aperture]
-            )
+        )
 
     elif instrument == 'NIRSpec':
         d1, d2 = histograms_all_apertures
         histogram_layout = layout(
             [d1, d2]
-            )
+        )
 
     histogram_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
     histogram_tab = Panel(child=histogram_layout, title="Histogram")
@@ -115,13 +115,13 @@ def dark_monitor_tabs(instrument):
         single_aperture = lines_all_apertures[0]
         line_layout = layout(
             [single_aperture]
-            )
+        )
 
     elif instrument == 'NIRSpec':
         d1, d2 = lines_all_apertures
         line_layout = layout(
             [d1, d2]
-            )
+        )
 
     line_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
     line_tab = Panel(child=line_layout, title="Trending")

@@ -40,6 +40,7 @@ INSTRUMENT_LIST = (('FGS', 'FGS'),
                    ('NIRISS', 'NIRISS'),
                    ('NIRSpec', 'NIRSpec'))
 
+
 class BaseModel(models.Model):
     """A base model that other classes will inherit. Created to avoid
     an obscure error about a missing ``app_label``.
@@ -66,7 +67,7 @@ class ImageData(BaseModel):
 
     inst = models.CharField('instrument', max_length=7, choices=INSTRUMENT_LIST, default=None)
     pub_date = models.DateTimeField('date published')
-    filepath = models.FilePathField(path='/user/lchambers/jwql/')  #upload_to=str(inst))
+    filepath = models.FilePathField(path='/user/lchambers/jwql/')
 
     def filename(self):
         return os.path.basename(self.filepath)

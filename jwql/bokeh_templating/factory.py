@@ -13,6 +13,7 @@ from .keyword_map import bokeh_mappings as mappings, bokeh_sequences as sequence
 Figure = mappings.pop("Figure")
 del sequences["figure"]
 
+
 def mapping_factory(tool, element_type):
     def mapping_constructor(loader, node):
         fmt = tool.formats.get(element_type, {})
@@ -108,7 +109,6 @@ def figure_constructor(tool, loader, node):
         key = element.pop('kind')
         shape = {'line': ('Line', figure.line),
                  'circle': ('Circle', figure.circle),
-                 #'step': ('Step', figure.step), #not supported in 0.12.5
                  'diamond': ('Diamond', figure.diamond),
                  'triangle': ('Triangle', figure.triangle),
                  'square': ('Square', figure.square),

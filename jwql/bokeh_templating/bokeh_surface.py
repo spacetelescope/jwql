@@ -136,6 +136,7 @@ export class Surface3d extends LayoutDOM
   }
 """
 
+
 # This custom extension model will have a DOM view that should layout-able in
 # Bokeh layouts, so use ``LayoutDOM`` as the base class. If you wanted to create
 # a custom tool, you could inherit from ``Tool``, or from ``Glyph`` if you

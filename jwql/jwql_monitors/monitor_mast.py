@@ -188,7 +188,7 @@ def jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
                  format(instruments, dataproducts))
 
     # Make the table
-    all_cols = ['instrument']+dataproducts+['total']
+    all_cols = ['instrument'] + dataproducts + ['total']
     table = pd.DataFrame(inventory, columns=all_cols)
 
     # Plot it
@@ -248,7 +248,7 @@ def monitor_mast():
     archive and generates plots.
     """
     logging.info('Beginning database monitoring.')
-    
+
     outputs_dir = os.path.join(get_config()['outputs'], 'monitor_mast')
 
     # Perform inventory of the JWST service

@@ -27,6 +27,7 @@ def parse_module(module):
         maps['Donut'] = seqs.pop('Donut')
     return (seqs, maps)
 
+
 for module in [models, plotting, layouts, palettes, transform]:
     seqs, maps = parse_module(module)
     bokeh_sequences.update(seqs)
