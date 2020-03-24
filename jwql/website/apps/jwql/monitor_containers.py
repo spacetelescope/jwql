@@ -34,6 +34,32 @@ FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
+def bias_monitor_tabs(instrument):
+    """Creates the various tabs of the bias monitor results page.
+
+    Parameters
+    ----------
+    instrument : str
+        The JWST instrument of interest (e.g. ``nircam``).
+
+    Returns
+    -------
+    div : str
+        The HTML div to render dark monitor plots
+    script : str
+        The JS script to render dark monitor plots
+    """
+
+    monitor_template = monitor_bias_bokeh.BiasMonitor()
+
+    # Build tabs
+    tabs = Tabs(tabs=[histogram_tab, line_tab, image_tab])
+
+    # Return tab HTML and JavaScript to web app
+    script, div = components(tabs)
+
+    return div, script
+
 
 def dark_monitor_tabs(instrument):
     """Creates the various tabs of the dark monitor results page.

@@ -38,14 +38,14 @@ from jwql.utils.utils import get_config
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
-def dark_monitor(request, inst):
-    """Generate the dark monitor page for a given instrument
+def bias_monitor(request, instrument):
+    """Generate the bias monitor page for a given instrument
 
     Parameters
     ----------
     request : HttpRequest object
         Incoming request from the webpage
-    inst : str
+    instrument : str
         Name of JWST instrument
 
     Returns
@@ -55,18 +55,54 @@ def dark_monitor(request, inst):
     """
 
     # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+    instrument = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
 
     # Deal with the fact that only the NIRCam database is populated
-    if inst == 'NIRCam':
+    if instrument == 'NIRCam':
+        tabs_components = monitor_containers.bias_monitor_tabs(inst)
+    else:
+        tabs_components = None
+
+    template = 'bias_monitor.html'
+
+    context = {
+        'inst': instrument,
+        'tabs_components': tabs_components,
+    }
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
+
+
+def dark_monitor(request, instrument):
+    """Generate the dark monitor page for a given instrument
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    instrument : str
+        Name of JWST instrument
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # Ensure the instrument is correctly capitalized
+    instrument = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
+
+    # Deal with the fact that only the NIRCam database is populated
+    if instrument == 'NIRCam':
         tabs_components = monitor_containers.dark_monitor_tabs(inst)
     else:
         tabs_components = None
 
-    template = "dark_monitor.html"
+    template = 'dark_monitor.html'
 
     context = {
-        'inst': inst,
+        'inst': instrument,
         'tabs_components': tabs_components,
     }
 
