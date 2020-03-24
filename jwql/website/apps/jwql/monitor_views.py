@@ -4,6 +4,7 @@ Authors
 -------
 
     - Lauren Chambers
+    - Matthew Bourque
 
 Use
 ---

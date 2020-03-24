@@ -14,8 +14,8 @@ Use
 
     ::
 
-        from jwql.website.apps.jwql import monitor_pages
-        monitor_template = monitor_pages.DarkMonitor('NIRCam', 'NRCA3_FULL')
+        from jwql.website.apps.jwql.monitor_pages import monitor_dark_bokeh
+        monitor_template = monitor_dark_bokeh.DarkMonitor('NIRCam', 'NRCA3_FULL')
         script, div = monitor_template.embed("dark_current_time_figure")
 """
 

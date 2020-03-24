@@ -8,6 +8,7 @@ Authors
 -------
 
     - Gray Kanarek
+    - Matthew Bourque
 
 Use
 ---
@@ -25,7 +26,7 @@ from bokeh.embed import components
 from bokeh.layouts import layout
 from bokeh.models.widgets import Tabs, Panel
 
-from monitor_pages import monitor_dark_bokeh
+from jwql.website.apps.jwql.monitor_pages import monitor_dark_bokeh
 from jwql.utils.constants import FULL_FRAME_APERTURES
 from jwql.utils.utils import get_config
 
