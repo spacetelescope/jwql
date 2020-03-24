@@ -25,7 +25,7 @@ from bokeh.embed import components
 from bokeh.layouts import layout
 from bokeh.models.widgets import Tabs, Panel
 
-from . import monitor_pages
+from monitor_pages import monitor_dark_bokeh
 from jwql.utils.constants import FULL_FRAME_APERTURES
 from jwql.utils.utils import get_config
 
@@ -58,7 +58,7 @@ def dark_monitor_tabs(instrument):
 
         # Start with default values for instrument and aperture because
         # BokehTemplate's __init__ method does not allow input arguments
-        monitor_template = monitor_pages.DarkMonitor()
+        monitor_template = monitor_dark_bokeh.DarkMonitor()
 
         # Set instrument and monitor using DarkMonitor's setters
         monitor_template.aperture_info = (instrument, aperture)

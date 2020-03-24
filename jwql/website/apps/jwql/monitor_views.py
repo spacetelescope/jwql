@@ -31,7 +31,7 @@ import os
 
 from django.shortcuts import render
 
-from . import bokeh_containers
+from . import monitor_containers
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config
 
@@ -59,7 +59,7 @@ def dark_monitor(request, inst):
 
     # Deal with the fact that only the NIRCam database is populated
     if inst == 'NIRCam':
-        tabs_components = bokeh_containers.dark_monitor_tabs(inst)
+        tabs_components = monitor_containers.dark_monitor_tabs(inst)
     else:
         tabs_components = None
 
