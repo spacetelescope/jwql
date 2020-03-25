@@ -24,9 +24,9 @@ function change_filetype(type, file_root, num_ints, inst) {
     var num_ints = JSON.parse(num_ints);
 
     // Propogate the text fields showing the filename and APT parameters
-    var fits_filename = file_root + '_' + type + '.fits'
+    var fits_filename = file_root + '_' + type
     document.getElementById("jpg_filename").innerHTML = file_root + '_' + type + '_integ0.jpg';
-    document.getElementById("fits_filename").innerHTML = fits_filename;
+    document.getElementById("fits_filename").innerHTML = fits_filename + '.fits';
     document.getElementById("proposal").innerHTML = file_root.slice(2,7);
     document.getElementById("obs_id").innerHTML = file_root.slice(7,10);
     document.getElementById("visit_id").innerHTML = file_root.slice(10,13);
@@ -55,9 +55,9 @@ function change_filetype(type, file_root, num_ints, inst) {
     }
 
     // Update the image download and header links
-    document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename;
+    document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename + '.fits';
     document.getElementById("download_jpg").href = jpg_filepath;
-    document.getElementById("view_header").href = '/' + inst + '/' + fits_filename + '/hdr/';
+    document.getElementById("view_header").href = '/' + inst + '/' + fits_filename + '/header/';
 
     // Disable the "left" button, since this will be showing integ0
     document.getElementById("int_before").disabled = true;
@@ -400,6 +400,29 @@ function update_filter_options(data) {
 
     // Add the content to the div
     $("#thumbnail-filter")[0].innerHTML = content;
+};
+
+/**
+ * Change the header extension displayed
+ * @param {String} extension - The extension of the header selected
+  * @param {String} num_extensions - The total number of extensions
+ */
+function update_header_display(extension, num_extensions) {
+
+    // Hide all headers
+    for (var i = 0; i < num_extensions; i++) {
+        var header_name = document.getElementById("header-display-name-extension" + i);
+        var header_table = document.getElementById("header-table-extension" + i);
+        header_name.style.display = 'none';
+        header_table.style.display = 'none';
+    };
+
+    // Display the header selected
+    var header_name_to_show = document.getElementById("header-display-name-extension" + extension);
+    var header_table_to_show = document.getElementById("header-table-extension" + extension);
+    header_name_to_show.style.display = 'inline';
+    header_table_to_show.style.display = 'inline';
+
 };
 
 /**
