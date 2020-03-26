@@ -10,8 +10,9 @@ Authors
 -------
 
     - Catherine Martlin
-    - Alex Viana (WFC3 QL Version)
+    - Alex Viana (wfc3ql Version)
     - Matthew Bourque
+    - Jason Neal
 
 Use
 ---
@@ -237,12 +238,10 @@ def log_info(func):
             except (ImportError, AttributeError) as err:
                 logging.warning(err)
 
-        environment = subprocess.run(['conda', 'env', 'export'],
-                                     stdout=subprocess.PIPE,
-                                     universal_newlines=True)
-        logging.info('Environment: ' + environment)
-
-        logging.info('')
+        environment = subprocess.check_output(['conda', 'env', 'export'], universal_newlines=True)
+        logging.info('Environment:')
+        for line in environment.split('\n'):
+            logging.info(line)
 
         # Call the function and time it
         t1_cpu = time.clock()
