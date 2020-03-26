@@ -222,6 +222,68 @@ def run_calwebb_detector1_steps(input_file, steps):
     return output_filename
 
 
+def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True):
+    """Call calwebb_detector1 on the provided file, running all steps up to
+    the ramp_fit step, and save the result. Optionally run the ramp_fit step
+    and save the resulting slope file as well.
+
+    Parameters
+    ----------
+    input_file : str
+        Name of fits file to run on the pipeline
+
+    output_dir : str
+        Directory into which the pipeline outputs are saved
+
+    ramp_fit : bool
+        If False, the ramp_fit step is not run. The output file will be a
+        *_jump.fits file.
+        If True, the *jump.fits file will be produced and saved. In addition,
+        the ramp_fit step will be run and a *rate.fits or *_rateints.fits
+        file will be saved. (rateints if the input file has >1 integration)
+
+    Returns
+    -------
+    jump_output : str
+        Name of the saved file containing the output prior to the ramp_fit
+        step.
+
+    pipe_output : str
+        Name of the saved file containing the output after ramp-fitting is
+        performed (if requested). Otherwise None.
+    """
+    # Find the instrument used to collect the data
+    instrument = fits.getheader(input_file)['INSTRUME'].lower()
+
+    # Switch to calling the pipeline rather than individual steps,
+    # and use the run() method so that we can set parameters
+    # progammatically.
+    model = Detector1Pipeline()
+
+    # Always true
+    if instrument == 'nircam':
+        model.refpix.odd_even_rows = False
+
+    # Default CR rejection threshold is too low
+    model.jump.rejection_threshold = 15
+
+    model.jump.save_results = True
+    model.jump.output_dir = output_dir
+    jump_output = os.path.join(output_dir, input_file.replace('uncal', 'jump'))
+
+    if ramp_fit:
+        model.save_results = True
+        model.output_dir = output_dir
+        pipe_output = os.path.join(output_dir, input_file.replace('uncal', 'rate'))
+    else:
+        model.ramp_fit.skip = True
+        pipe_output = None
+
+    model.run(input_file)
+
+    return jump_output, pipe_output
+
+
 def steps_to_run(all_steps, finished_steps):
     """Given a list of pipeline steps that need to be completed as well
     as a list of steps that have already been completed, return a list

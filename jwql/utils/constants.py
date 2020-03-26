@@ -55,6 +55,19 @@ ANOMALIES = ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error'
 # Defines the possible anomalies (with rendered name) to flag through the web app
 ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES]
 
+# Possible exposure types for dark current data
+DARK_EXP_TYPES = {'nircam': ['NRC_DARK'],
+                  'niriss': ['NIS_DARK'],
+                  'miri': ['MIR_DARKIMG', 'MIR_DARKMRS', 'MIR_DARKALL'],
+                  'nirspec': ['NRS_DARK'],
+                  'fgs': ['FGS_DARK']}
+
+FLAT_EXP_TYPES = {'nircam': ['NRC_FLAT'],
+                  'niriss': ['NIS_LAMP'],
+                  'miri': ['MIR_FLATIMAGE', 'MIR_FLATMRS'],
+                  'nirspec': ['NRS_AUTOFLAT', 'NRS_LAMP'],
+                  'fgs': ['FGS_INTFLAT']}
+
 FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R', 'WFSS128C', 'WFSS64C']
 
 # Possible suffix types for nominal files
