@@ -10,8 +10,9 @@ Authors
 -------
 
     - Catherine Martlin
-    - Alex Viana (WFC3 QL Version)
+    - Alex Viana (wfc3ql Version)
     - Matthew Bourque
+    - Jason Neal
 
 Use
 ---
@@ -59,6 +60,7 @@ import logging
 import os
 import pwd
 import socket
+import subprocess
 import sys
 import time
 import traceback
@@ -236,7 +238,10 @@ def log_info(func):
             except (ImportError, AttributeError) as err:
                 logging.warning(err)
 
-        logging.info('')
+        environment = subprocess.check_output(['conda', 'env', 'export'], universal_newlines=True)
+        logging.info('Environment:')
+        for line in environment.split('\n'):
+            logging.info(line)
 
         # Call the function and time it
         t1_cpu = time.clock()

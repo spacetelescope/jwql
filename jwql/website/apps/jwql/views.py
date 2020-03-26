@@ -454,7 +454,7 @@ def unlooked_images(request, inst):
     pass
 
 
-def view_header(request, inst, file):
+def view_header(request, inst, filename):
     """Generate the header view page
 
     Parameters
@@ -463,7 +463,7 @@ def view_header(request, inst, file):
         Incoming request from the webpage
     inst : str
         Name of JWST instrument
-    file : str
+    filename : str
         FITS filename of selected image in filesystem
 
     Returns
@@ -475,13 +475,12 @@ def view_header(request, inst, file):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'view_header.html'
-    header = get_header_info(file)
-    file_root = '_'.join(file.split('_')[:-1])
+    file_root = '_'.join(filename.split('_')[:-1])
 
     context = {'inst': inst,
-               'file': file,
-               'header': header,
-               'file_root': file_root}
+               'filename': filename,
+               'file_root': file_root,
+               'header_info': get_header_info(filename)}
 
     return render(request, template, context)
 
@@ -529,6 +528,7 @@ def view_image(request, user, inst, file_root, rewrite=False):
 
     # Build the context
     context = {'inst': inst,
+               'prop_id': file_root[2:7],
                'file_root': file_root,
                'jpg_files': image_info['all_jpegs'],
                'fits_files': image_info['all_files'],
