@@ -383,7 +383,7 @@ class MnemonicExplorationForm(forms.Form):
     unit = forms.CharField(label='unit', max_length=500, required=False,
                            help_text="unit")
     
-    class addAnomalyForm_Miri(forms.Form):
+class addAnomalyForm_Miri(forms.Form):
 
     #Devault variables
     default_start_time = Time('2019-01-16 00:00:00.000', format='iso')
