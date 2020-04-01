@@ -2,7 +2,7 @@ asdf==2.5.2
 astropy==4.0.1
 astroquery==0.4
 authlib==0.14.1
-bokeh>=1.0,<1.4
+bokeh==2.0.1
 codecov==2.0.15
 django==3.0.3
 flake8==3.7.9
