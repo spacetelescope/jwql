@@ -78,10 +78,13 @@ def miri_data_trending(request):
     # Check if GET or POST request
     if request.method == 'POST':
 
-        # Connect to database
-        database_location = os.path.join(get_config()['jwql_dir'], 'database')
+        # Connect to databas
+        __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+        package_dir = __location__.split('website')[0]
+        database_location = os.path.join(package_dir, 'database')
         database_file = os.path.join(database_location, 'miri_database.db')
-        conn = sql.create_connection(database_file)  # get variables
+        conn = sql.create_connection(database_file)
+
         c = conn.cursor()
 
         # check if new item or delete item
@@ -161,7 +164,9 @@ def nirspec_data_trending(request):
 
     # Check if GET or POST request
     if request.method == 'POST':
-        database_location = os.path.join(get_config()['jwql_dir'], 'database')
+        __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+        package_dir = __location__.split('website')[0]
+        database_location = os.path.join(package_dir, 'database')
         database_file = os.path.join(database_location, 'nirspec_database.db')
         conn = sql.create_connection(database_file)  # get variables
         c = conn.cursor()
