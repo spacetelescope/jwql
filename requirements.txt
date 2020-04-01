@@ -15,7 +15,7 @@ matplotlib==3.2.1
 nodejs==10.13.0
 numpy==1.18.2
 numpydoc==0.9.2
-pandas==1.0.1
+pandas==1.0.3
 psycopg2==2.8.4
 pysiaf==0.7.1
 pytest==5.3.5
