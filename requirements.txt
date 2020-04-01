@@ -1,4 +1,4 @@
-asdf==2.4.2
+asdf==2.5.2
 astropy==4.0
 astroquery==0.4
 authlib==0.13
