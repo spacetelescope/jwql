@@ -145,8 +145,9 @@ def about(request):
     return render(request, template, context)
 
 
-@auth_required
-def archived_proposals(request, user, inst):
+# @auth_required
+# def archived_proposals(request, user, inst):
+def archived_proposals(request, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -171,8 +172,9 @@ def archived_proposals(request, user, inst):
     return render(request, template, context)
 
 
-@auth_required
-def archived_proposals_ajax(request, user, inst):
+# @auth_required
+# def archived_proposals_ajax(request, user, inst):
+def archived_proposals_ajax(request, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -206,8 +208,9 @@ def archived_proposals_ajax(request, user, inst):
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-@auth_required
-def archive_thumbnails(request, user, inst, proposal):
+# @auth_required
+# def archive_thumbnails(request, user, inst, proposal):
+def archive_thumbnails(request, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -237,8 +240,9 @@ def archive_thumbnails(request, user, inst, proposal):
     return render(request, template, context)
 
 
-@auth_required
-def archive_thumbnails_ajax(request, user, inst, proposal):
+# @auth_required
+# def archive_thumbnails_ajax(request, user, inst, proposal):
+def archive_thumbnails_ajax(request, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -452,8 +456,9 @@ def view_header(request, inst, filename):
     return render(request, template, context)
 
 
-@auth_required
-def view_image(request, user, inst, file_root, rewrite=False):
+# @auth_required
+# def view_image(request, user, inst, file_root, rewrite=False):
+def view_image(request, inst, file_root, rewrite=False):
     """Generate the image view page
 
     Parameters
@@ -482,7 +487,7 @@ def view_image(request, user, inst, file_root, rewrite=False):
     image_info = get_image_info(file_root, rewrite)
 
     # Determine current flagged anomalies
-    current_anomalies = get_current_flagged_anomalies(file_root)
+    current_anomalies = get_current_flagged_anomalies(file_root, inst)
 
     # Create a form instance
     form = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})

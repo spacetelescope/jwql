@@ -70,7 +70,7 @@ AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 512, 1), (0, 2048, 1)],
 #              'optical_short', 'other']}
 
 # # Defines the possible anomalies (with rendered name) to flag through the web app
-# ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES]
+# ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INST]
 
 FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R', 'WFSS128C', 'WFSS64C']
 
@@ -127,7 +127,7 @@ ANOMALIES_PER_INST = {
     'persistence': JWST_INSTRUMENT_NAMES,
     'satellite_trail': JWST_INSTRUMENT_NAMES,
     # instrument-specific anomalies:
-    'optical_short': ['nirspec'],
+    'optical_short': ['nirspec'],    ######## JUST FOR MOS OBSERVATIONS!
     'dragons_breath': ['nircam'],
     # additional anomalies:
     'other': JWST_INSTRUMENT_NAMES}
