@@ -62,6 +62,12 @@ DARK_EXP_TYPES = {'nircam': ['NRC_DARK'],
                   'nirspec': ['NRS_DARK'],
                   'fgs': ['FGS_DARK']}
 
+EXPTYPES = {"nircam": {"imaging": "NRC_IMAGE", "ts_imaging": "NRC_TSIMAGE",
+                       "wfss": "NRC_WFSS", "ts_grism": "NRC_TSGRISM"},
+            "niriss": {"imaging": "NIS_IMAGE", "ami": "NIS_IMAGE", "pom": "NIS_IMAGE",
+                       "wfss": "NIS_WFSS"},
+            "fgs": {"imaging": "FGS_IMAGE"}}
+
 FLAT_EXP_TYPES = {'nircam': ['NRC_FLAT'],
                   'niriss': ['NIS_LAMP'],
                   'miri': ['MIR_FLATIMAGE', 'MIR_FLATMRS'],

@@ -222,7 +222,7 @@ def run_calwebb_detector1_steps(input_file, steps):
     return output_filename
 
 
-def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True):
+def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True, save_fitopt=True):
     """Call calwebb_detector1 on the provided file, running all steps up to
     the ramp_fit step, and save the result. Optionally run the ramp_fit step
     and save the resulting slope file as well.
@@ -241,6 +241,10 @@ def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True):
         If True, the *jump.fits file will be produced and saved. In addition,
         the ramp_fit step will be run and a *rate.fits or *_rateints.fits
         file will be saved. (rateints if the input file has >1 integration)
+
+    save_fitopt : bool
+        If True, the file of optional outputs from the ramp fitting step of
+        the pipeline is saved.
 
     Returns
     -------
@@ -275,13 +279,20 @@ def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True):
         model.save_results = True
         model.output_dir = output_dir
         pipe_output = os.path.join(output_dir, input_file.replace('uncal', 'rate'))
+        if save_fitopt:
+            model.ramp_fitting.save_opt = True
+            fitopt_output = os.path.join(output_dir, input_file.replace('uncal', 'fitopt'))
+        else:
+            model.ramp_fitting.save_opt = False
+            fitopt_output = None
     else:
         model.ramp_fit.skip = True
         pipe_output = None
+        fitopt_output = None
 
     model.run(input_file)
 
-    return jump_output, pipe_output
+    return jump_output, pipe_output, fitopt_output
 
 
 def steps_to_run(all_steps, finished_steps):

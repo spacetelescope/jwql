@@ -26,8 +26,8 @@ Use
 import datetime
 import os
 
-from mirage.utils.utils import ensure_dir_exists
-from mirage.utils.constants import EXPTYPES
+from jwql.utils.utils import ensure_dir_exists
+from jwql.utils.constants import EXPTYPES
 
 
 def env_variables():

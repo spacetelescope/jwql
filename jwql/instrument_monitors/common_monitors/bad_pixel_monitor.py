@@ -163,7 +163,7 @@ def exclude_crds_mask_pix(bad_pix, existing_bad_pix):
     Returns
     -------
     new_bad_pix : numpy.ndarray
-        2D array of bad pixel flags contained in ```_bad_pix```
+        2D array of bad pixel flags contained in ```bad_pix```
         but not ```existing_bad_pix```
     """
     return bad_pix - (bad_pix & existing_bad_pix)
@@ -534,6 +534,28 @@ class BadPixels():
 
         return query_result
 
+    def make_crds_parameter_dict(self):
+        """Construct a paramter dictionary to be used for querying CRDS
+
+        Returns
+        -------
+        parameters : dict
+            Dictionary of parameters, in the format expected by CRDS
+        """
+        parameters = {}
+        parameters['INSTRUME'] = self.instrument.upper()
+        parameters['SUBARRAY'] = 'FULL'
+        parameters['DATE-OBS'] = datetime.date.today().isoformat()
+        current_date = datetime.datetime.now()
+        parameters['TIME-OBS'] = current_date.time().isoformat()
+        parameters['DETECTOR'] = self.detector.upper()
+        if instrument == 'NIRCAM':
+            if parameters['DETECTOR'] in ['NRCALONG', 'NRCBLONG']:
+                parameters['CHANNEL'] = 'LONG'
+            else:
+                parameters['CHANNEL'] = 'SHORT'
+        return parameters
+
     def process(self, illuminated_raw_files, illuminated_slope_files, dark_raw_files, dark_slope_files):
         """The main method for processing darks.  See module docstrings
         for further details.
@@ -566,113 +588,82 @@ class BadPixels():
         """
         # Illuminated files - run entirety of calwebb_detector1 for uncal
         # files where corresponding rate file is 'None'
-        illum_rates = []
-        illum_obstimes = []
+        badpix_types = []
+        illuminated_obstimes = []
         if len(illuminated_raw_files) > 0:
+            index = 0
+            badpix_types.extend(['DEAD', 'LOW_QE', 'OPEN', 'ADJ_OPEN'])
             for uncal_file, rate_file in zip(illuminated_raw_files, illuminated_slope_files):
                 if rate_file == 'None':
                     self.get_metadata(uncal_file)
-                    jump_output, rate_output = calwebb_detector1_save_jump(uncal_file, out_dir, ramp_fit=True)
+                    jump_output, rate_output, junk = pipeline_tools.calwebb_detector1_save_jump(uncal_file, out_dir,
+                                                                                          ramp_fit=True, save_fitopt=False)
                     if self.nints > 1:
-                        illum_rates.append(rate_output.replace('rate', 'rateints'))
+                        illuminated_slope_files[index] = rate_output.replace('rate', 'rateints')
                     else:
-                        illum_rates.append(rate_output)
-                illum_obstimes.append(instrument_properties.get_obstime(uncal_file))
+                        illuminated_slope_files[index] = copy.deepcopy(rate_output)
+                    index += 1
 
-        min_illum_time = np.min(illum_obstimes)
-        max_illum_time = np.max(illum_obstimes)
-        mid_illum_time = instrument_properties.mean_time(illum_obstimes)
+                # Get observation time for all files
+                illuminated_obstimes.append(instrument_properties.get_obstime(uncal_file))
+
+            min_illum_time = min(illuminated_obstimes)
+            max_illum_time = max(illuminated_obstimes)
+            mid_illum_time = instrument_properties.mean_time(illuminated_obstimes)
 
         # Dark files - Run calwebb_detector1 on all uncal files, saving the
         # Jump step output. If corresponding rate file is 'None', then also
         # run the ramp-fit step and save the output
-        dark_rates = []
-        dark_jumps = []
+        dark_jump_files = []
+        dark_fitopts_files = []
         dark_obstimes = []
         if len(dark_raw_files) > 0:
+            badpix_types.extend(['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH'])
+            # In this case we need to run the pipeline on all input files,
+            # even if the rate file is present, because we also need the jump
+            # and fitops files, which are not saved by default
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
-                if rate_file == 'None':
-                    save_rate = True
-                else:
-                    save_rate = False
-                jump_output, rate_output = calwebb_detector1_save_jump(uncal_file, out_dir, ramp_fit=save_rate)
+                jump_output, rate_output, fitopt_output = pipeline_tools.calwebb_detector1_save_jump(uncal_file, out_dir,
+                                                                                                     ramp_fit=save_rate, save_fitopt=True)
                 self.get_metadata(uncal_file)
-                dark_jumps.append(jump_output)
+                dark_jump_files.append(jump_output)
+                dark_fitopts_files.append(fitopt_output)
                 if self.nints > 1:
                     dark_rates.append(rate_output.replace('rate', 'rateints'))
                 else:
                     dark_rates.append(rate_output)
                 dark_obstimes.append(instrument_properties.get_obstime(uncal_file))
 
-        min_dark_time = np.min(dark_obstimes)
-        max_dark_time = np.max(dark_obstimes)
-        mid_dark_time = instrument_properties.mean_time(dark_obstimes)
+            min_dark_time = min(dark_obstimes)
+            max_dark_time = max(dark_obstimes)
+            mid_dark_time = instrument_properties.mean_time(dark_obstimes)
 
-        # Call the appropriate modules from jwst_reffiles to perform the
-        # bad pixel search
-        if len(illum_rates) > 0:
+        # Instrument-specific preferences from jwst_reffiles meetings
+        if self.instrument in ['nircam', 'niriss', 'fgs']:
+            dead_search_type = 'sigma_rate'
+        elif self.instrument in ['miri', 'nirspec']:
+            dead_search_type = 'absolute_rate'
+            flat_mean_normalization_method = 'smoothed'
 
-            instrument-specific input values? nirspec has their own way
-            bad_pixel_mask.find_bad_pix(illum_rates, dead_search=True, low_qe_and_open_search=True,
-                                        dead_search_type='sigma_rate', sigma_threshold=3,
-                                        smoothing_box_width=15, dead_sigma_threshold=5.,
-                                        dead_zero_signal_fraction=0.9, run_dead_flux_check=False,
-                                        dead_flux_check=[], max_dead_norm_signal=0.05,
-                                        maual_flag_file='default', max_low_qe_norm_signal=0.5,
-                                        max_open_adj_norm_signal=1.05,
-                                        do_not_use=['DEAD', 'LOW_QE', 'OPEN', 'ADJ_OPEN'],
-                                        output_file=self.badpix_from_flat_file, author='jwst_reffiles',
-                                        description='Bad pixel mask automatically created from JWQL',
-                                        pedigree='GROUND', useafter='2222-04-01 00:00:00',
-                                        history='This file was made using mkrefs.py',
-                                        quality_check=False)
+        # Call the bad pixel search module from jwst_reffiles. Lots of
+        # other possible parameters. Only specify the non-default params
+        # in order to make things easier to read.
+        output_file = '{}_{}_{}_{}_bpm.fits'.format(self.instrument, self.aperture, self.query_start, self.query_end)
+        output_file = os.path.join(self.output_dir, output_file)
+        bad_pixel_mask.bad_pixels(flat_slope_files=illuminated_slope_files, dead_search_type=dead_search_type,
+                                  flat_mean_normalization_method=flat_mean_normalization_method,
+                                  run_dead_flux_check=True, dead_flux_check_files=illuminated_raw_files, flux_check=35000,
+                                  dark_slope_files=dark_slope_files, dark_uncal_files=dark_raw_files,
+                                  dark_jump_files=dark_jump_files, dark_fitopt_files=dark_fitopt_files, plot=False,
+                                  output_file=output_file, author='jwst_reffiles', description='A bad pix mask',
+                                  pedigree='GROUND', useafter='2222-04-01 00:00:00',
+                                  history='This file was created by JWQL', quality_check=False)
 
-            # Read in the resulting bad pixel list
-            badpix_from_flats = fits.getdata(self.badpix_from_flat_file)
-            flat_bad_types = ['DEAD', 'LOW_QE', 'OPEN', 'ADJ_OPEN']
-        else:
-            badpix_from_flats = np.zeros((), type=np.int)
-            flat_bad_types = []
-
-        if len(dark_rates) > 0:
-            instrument-specific input values?
-            badpix_from_darks.find_bad_pix(dark_rates, clipping_sigma=5., max_clipping_iters=5, noisy_threshold=5,
-                                           max_saturated_fraction=0.5, max_jump_limit=10, jump_ratio_threshold=5,
-                                           early_cutoff_fraction=0.25, pedestal_sigma_threshold=5,
-                                           rc_fraction_threshold=0.8, low_pedestal_fraction=0.8, high_cr_fraction=0.8,
-                                           flag_values={'hot': ['HOT'], 'rc': ['RC'], 'low_pedestal': ['OTHER_BAD_PIXEL'],
-                                                        'high_cr': ["TELEGRAPH"]},
-                                           do_not_use=['hot', 'rc', 'low_pedestal', 'high_cr'],
-                                           outfile=self.badpix_from_dark_file, plot=False)
-
-            # Read in the resulting bad pixel list
-            badpix_from_darks = fits.getdata(self.badpix_from_dark_file)
-            dark_bad_types = []
-        else:
-            badpix_from_darks = np.zeros((), type=np.int)
-            dark_bad_types = []
-
-        # Generate a list of bad pixel types to check for
-        badpix_types = flat_bad_types + dark_bad_types
-
-        # Combine the two bad pixel maps
-        badpix_map = badpix_from_flats + badpix_from_darks
+        # Read in the newly-created bad pixel file
+        badpix_map = fits.getdata(output_file)
 
         # Locate and read in the current bad pixel mask
-        paramters = {}
-        parameters['INSTRUME'] = self.instrument
-        parameters['SUBARRAY'] = 'FULL'
-        parameters['DATE-OBS'] = datetime.date.today().isoformat()
-        current_date = datetime.datetime.now()
-        parameters['TIME-OBS'] = current_date.time().isoformat()
-        parameters['DETECTOR'] = self.detector
-        if instrument == 'NIRCAM':
-            if parameters['DETECTOR'] in ['NRCALONG', 'NRCBLONG']:
-                parameters['CHANNEL'] = 'LONG'
-            else:
-                parameters['CHANNEL'] = 'SHORT'
-        parameters['EXP_TYPE'] = '{}_IMAGE'.format(instrument_abbrev)
-
+        parameters = self.make_crds_parameter_dict()
         mask_dictionary = crds_tools.get_reffiles(parameters, ['mask'], download=True)
         baseline_file = mask_dictionary['mask']
 
