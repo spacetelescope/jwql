@@ -164,18 +164,14 @@ def get_current_flagged_anomalies(rootname, inst):
         A list of currently flagged anomalies for the given ``rootname``
         (e.g. ``['snowball', 'crosstalk']``)
     """
-    inst_lower=inst.lower()   #####Put into MIXED case as seen in constants.py!
-    if inst_lower=='nircam':
-        query = di.session.query(di.NIRCamAnomaly).filter(di.NIRCamAnomaly.rootname == rootname).order_by(di.NIRCamAnomaly.flag_date.desc()).limit(1)
-    if inst_lower=='niriss':
-        query = di.session.query(di.NIRISSAnomaly).filter(di.NIRISSAnomaly.rootname == rootname).order_by(di.NIRISSAnomaly.flag_date.desc()).limit(1)
-    if inst_lower=='nirspec':
-        query = di.session.query(di.NIRSpecAnomaly).filter(di.NIRSpecAnomaly.rootname == rootname).order_by(di.NIRSpecAnomaly.flag_date.desc()).limit(1)
-    if inst_lower=='miri':
-        query = di.session.query(di.MIRIAnomaly).filter(di.MIRIAnomaly.rootname == rootname).order_by(di.MIRIAnomaly.flag_date.desc()).limit(1)
-    if inst_lower=='fgs':
-        query = di.session.query(di.FGSAnomaly).filter(di.FGSAnomaly.rootname == rootname).order_by(di.FGSAnomaly.flag_date.desc()).limit(1)
-    # query = di.session.query(di.Anomaly).filter(di.Anomaly.rootname == rootname).order_by(di.Anomaly.flag_date.desc()).limit(1)
+
+    table_dict = {}
+    for instrument in JWST_INSTRUMENT_NAMES_MIXEDCASE:
+        table_dict[instrument.lower()] = getattr(di, '{}Anomaly'.format(instrument))
+
+    table = table_dict[inst.lower()]
+    query = di.session.query(table).filter(table.rootname == rootname).order_by(table.flag_date.desc()).limit(1)
+
     all_records = query.data_frame
     if not all_records.empty:
         current_anomalies = [col for col, val in np.sum(all_records, axis=0).items() if val]
