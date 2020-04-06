@@ -19,6 +19,7 @@ def parse_module(module):
     test = lambda nm, mem: (not nm.startswith("_")) and (module.__name__ in mem.__module__)
     seqs = {nm: mem for nm, mem in getmembers(module, isfunction) if test(nm, mem)}
     maps = {nm: mem for nm, mem in getmembers(module, isclass) if test(nm, mem)}
+
     # these need to be mappings
     if 'gridplot' in seqs:
         maps['gridplot'] = seqs.pop('gridplot')

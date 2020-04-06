@@ -25,6 +25,7 @@ REQUIRES = [
     'jsonschema==2.6.0',
     'jwedb>=0.0.3',
     'matplotlib',
+    'nodejs',
     'numpy',
     'numpydoc',
     'pandas',
