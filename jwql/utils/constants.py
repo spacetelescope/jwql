@@ -57,6 +57,15 @@ ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMAL
 
 FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R', 'WFSS128C', 'WFSS64C']
 
+# Names of full-frame apertures for all instruments
+FULL_FRAME_APERTURES = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',
+                                   'NRCA5_FULL', 'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL',
+                                   'NRCB4_FULL', 'NRCB5_FULL'],
+                        'NIRISS': ['NIS_CEN'],
+                        'NIRSPEC': ['NRS1_FULL', 'NRS2_FULL'],
+                        'MIRI': ['MIRIM_FULL']
+                        }
+
 # Possible suffix types for nominal files
 GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',
                         'x1dints', 'x1d', 's2d', 's3d', 'dark', 'crfints',
@@ -112,7 +121,7 @@ MONITORS = {
     'nircam': [('Bias Monitor', '#'),
                ('Readnoise Monitor', '#'),
                ('Gain Level Monitor', '#'),
-               ('Mean Dark Current Rate Monitor', '#'),
+               ('Mean Dark Current Rate Monitor', '/nircam/dark_monitor'),
                ('Photometric Stability Monitor', '#')],
     'niriss': [('Bad Pixel Monitor', '#'),
                ('Readnoise Monitor', '#'),

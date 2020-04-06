@@ -28,6 +28,7 @@ import re
 import tempfile
 
 from astropy.io import fits
+from astropy.table import Table
 from astropy.time import Time
 from django.conf import settings
 import numpy as np
@@ -510,10 +511,47 @@ def get_header_info(filename):
         The primary FITS header for the given ``filename``.
     """
 
-    filepath = filesystem_path(filename)
-    header = fits.getheader(filepath, ext=0).tostring(sep='\n')
+    # Initialize dictionary to store header information
+    header_info = {}
 
-    return header
+    # Open the file
+    fits_filepath = os.path.join(FILESYSTEM_DIR, filename[:7], '{}.fits'.format(filename))
+    hdulist = fits.open(fits_filepath)
+
+    # Extract header information from file
+    for ext in range(0, len(hdulist)):
+
+        # Initialize dictionary to store header information for particular extension
+        header_info[ext] = {}
+
+        # Get header
+        header = fits.getheader(fits_filepath, ext=ext)
+
+        # Determine the extension name
+        if ext == 0:
+            header_info[ext]['EXTNAME'] = 'PRIMARY'
+        else:
+            header_info[ext]['EXTNAME'] = header['EXTNAME']
+
+        # Get list of keywords and values
+        exclude_list = ['', 'COMMENT']
+        header_info[ext]['keywords'] = [item for item in list(header.keys()) if item not in exclude_list]
+        header_info[ext]['values'] = []
+        for key in header_info[ext]['keywords']:
+            header_info[ext]['values'].append(hdulist[ext].header[key])
+
+    # Close the file
+    hdulist.close()
+
+    # Build tables
+    for ext in header_info:
+        table = Table([header_info[ext]['keywords'], header_info[ext]['values']], names=('Key', 'Value'))
+        temp_path_for_html = os.path.join(tempfile.mkdtemp(), '{}_table.html'.format(header_info[ext]['EXTNAME']))
+        with open(temp_path_for_html, 'w') as f:
+            table.write(f, format='jsviewer', jskwargs={'display_length': 20})
+        header_info[ext]['table'] = open(temp_path_for_html, 'r').read()
+
+    return header_info
 
 
 def get_image_info(file_root, rewrite):
