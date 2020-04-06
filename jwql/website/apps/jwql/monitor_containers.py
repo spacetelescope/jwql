@@ -51,35 +51,34 @@ def bias_monitor_tabs(instrument):
         The JS script to render dark monitor plots
     """
 
-    full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
-    templates_all_apertures = {}
-    zeroth_group_uncal_signal_tabs = []
+    # Create the plots
+    plots_dict = {}
+    for aperture in FULL_FRAME_APERTURES[instrument.upper()]:
+        plots_dict[aperture] = {}
+        for amp in [1, 2, 3, 4]:
+            plots_dict[aperture][amp] = {}
+            for mode in ['even', 'odd']:
+                monitor_template = monitor_bias_bokeh.ZerothGroupSignal()
+                monitor_template.instrument = instrument
+                monitor_template.aperture = aperture
+                monitor_template.amp = amp
+                monitor_template.mode = mode
+                plot = monitor_template.refs['zeroth_group_uncal_signal_figure']
+                plots_dict[aperture][amp][mode] = plot
 
-    for aperture in full_apertures:
-        monitor_template = monitor_bias_bokeh.BiasMonitor()
-        monitor_template.aperture_info = (instrument, aperture)
-        templates_all_apertures[aperture] = monitor_template
-
-    zeroth_group_uncal_all_apertures = []
-    for aperture_name, template in templates_all_apertures.items():
-        plot = template.refs["zeroth_group_uncal_signal_figure"]
-        plot.sizing_mode = "scale_width"
-        zeroth_group_uncal_all_apertures.append(plot)
-
-        zeroth_group_uncal_signal_layout = layout(
-            [amp1_even, amp1_odd],
-            [amp2_even, amp2_odd],
-            [amp3_even, amp3_odd],
-            [amp4_even, amp4_odd]
-        )
-        zeroth_group_uncal_signal_tab = Panel(child=zeroth_group_uncal_signal_layout, title="0th Group Uncal Signal, {}".format(aperture))
-        zeroth_group_uncal_signal_tabs.append(zeroth_group_uncal_signal_tab)
+    # Unpack plots and put into layout
+    tabs = []
+    for aperture in plots_dict:
+        layout = []
+        for amp in plots_dict[aperture]:
+            layout.append(plots_dict[aperture][amp]['even'], plots_dict[aperture][amp]['odd'])
+        tabs.append(Panel(layout, title='0th Group Uncal Signal for {}'.format(aperture)))
 
     # Build tabs
-    tabs = Tabs(tabs=[zeroth_group_uncal_signal_tab])
+    all_tabs = Tabs(tabs=tabs)
 
     # Return tab HTML and JavaScript to web app
-    script, div = components(tabs)
+    script, div = components(all_tabs)
 
     return div, script
 

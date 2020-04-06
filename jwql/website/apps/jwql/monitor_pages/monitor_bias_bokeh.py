@@ -37,43 +37,81 @@ from jwql.bokeh_templating import BokehTemplate
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-class BiasMonitor(BokehTemplate):
+class ZerothGroupSignal(BokehTemplate):
 
-    def pre_init(self):
+    def _identify_tables(self):
+    """Determine which database tables as associated with a given
+    instrument"""
 
-        self._instrument = 'NIRCam'
+    mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument.lower()]
+    self.stats_table = eval('{}BiasStats'.format(mixed_case_name))
 
-        self.load_data()
-
-        # Zeroth group uncal signal plots
-        self.timestamps =
-        self.singals =
-
-
-    def post_init(self):
-
-        self._update_dark_v_time()
-        self._update_hist()
-        self._dark_mean_image()
-
-    def identify_tables(self):
-        """Determine which database tables as associated with a given
-        instrument"""
-
-        mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self._instrument.lower()]
-        self.stats_table = eval('{}BiasStats'.format(mixed_case_name))
-
-    def load_data(self):
+    def _load_data(self):
         """Query the database tables to get data"""
 
         # Determine which database tables are needed based on instrument
-        self.identify_tables()
+        self._identify_tables()
 
-        # Query database for all data in NIRCamDarkDarkCurrent with a matching aperture
-        self.dark_table = session.query(self.stats_table) \
-            .filter(self.stats_table.aperture == self._aperture) \
+        # Query database for all data in bias stats with a matching aperture
+        self.query_results = session.query(self.stats_table) \
+            .filter(self.stats_table.aperture == self.aperture) \
             .all()
 
-        self.pixel_table = session.query(self.pixel_table) \
-            .filter(self.pixel_table.detector == self.detector) \
-            .all()
+    def pre_init(self):
+
+        self.instrument = 'NIRCam'
+        self.aperture = 'NRCA1_FULL'
+        self.amp = '1'
+        self.mode = 'even'
+        self.stats_table = self
+
+        self._load_data()
+
+        # Gather data needed for plots
+        self.timestamps = self.query_results.expstart
+        singals_column = getattr(self.query_results, 'amp{}_{}_med'.format(self.amp, self.mode))
+        self.signals = self.query_results.signals_column
+
+        print(self.timestamps)
+        print(self.signals)
+
+# class BiasMonitor(BokehTemplate):
+
+#     def pre_init(self):
+
+#         self._instrument = 'NIRCam'
+
+#         self.load_data()
+
+#         # Zeroth group uncal signal plots
+#         self.timestamps =
+#         self.singals =
+
+
+#     def post_init(self):
+
+#         self._update_dark_v_time()
+#         self._update_hist()
+#         self._dark_mean_image()
+
+#     def identify_tables(self):
+#         """Determine which database tables as associated with a given
+#         instrument"""
+
+#         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self._instrument.lower()]
+#         self.stats_table = eval('{}BiasStats'.format(mixed_case_name))
+
+#     def load_data(self):
+#         """Query the database tables to get data"""
+
+#         # Determine which database tables are needed based on instrument
+#         self.identify_tables()
+
+#         # Query database for all data in NIRCamDarkDarkCurrent with a matching aperture
+#         self.dark_table = session.query(self.stats_table) \
+#             .filter(self.stats_table.aperture == self._aperture) \
+#             .all()
+
+#         self.pixel_table = session.query(self.pixel_table) \
+#             .filter(self.pixel_table.detector == self.detector) \
+#             .all()
