@@ -76,32 +76,28 @@ Templates to use: FGS_INTFLAT, NIS_LAMP, NRS_LAMP, MIR_DARK
 
 """
 
-from copy import copy, deepcopy
+from copy import deepcopy
 import datetime
 import logging
 import os
 
 from astropy.io import ascii, fits
-from astropy.modeling import models
 from astropy.time import Time
 from jwst.datamodels import dqflags
-from jwst_reffiles.bad_pixel_mask.bad_pixel_mask import find_bad_pix as deadpix_search
-from jwst_reffiles.dark_current.badpix_from_darks import find_bad_pix as noisypix_search
+from jwst_reffiles.bad_pixel_mask import bad_pixel_mask
 import numpy as np
-from pysiaf import Siaf
 from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
-from jwql.database.database_interface import NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
-from jwql.database.database_interface import NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
-from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent
-from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
-from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
+from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats
+from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSBadPixelStats
+from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats
+from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
+from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors import pipeline_tools
-from jwql.jwql_monitors import monitor_mast
-from jwql.utils import calculations, instrument_properties
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, \
+from jwql.utils import instrument_properties
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
                                  FLAT_EXP_TYPES, DARK_EXP_TYPES
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.mast_utils import mast_query
@@ -601,7 +597,7 @@ class BadPixels():
                     if self.nints > 1:
                         illuminated_slope_files[index] = rate_output.replace('rate', 'rateints')
                     else:
-                        illuminated_slope_files[index] = copy.deepcopy(rate_output)
+                        illuminated_slope_files[index] = deepcopy(rate_output)
                     index += 1
 
                 # Get observation time for all files
@@ -660,6 +656,7 @@ class BadPixels():
                                   history='This file was created by JWQL', quality_check=False)
 
         # Read in the newly-created bad pixel file
+        set_permissions(output_file)
         badpix_map = fits.getdata(output_file)
 
         # Locate and read in the current bad pixel mask
