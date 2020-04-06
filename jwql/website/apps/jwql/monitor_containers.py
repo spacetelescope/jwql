@@ -51,10 +51,32 @@ def bias_monitor_tabs(instrument):
         The JS script to render dark monitor plots
     """
 
-    monitor_template = monitor_bias_bokeh.BiasMonitor()
+    full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
+    templates_all_apertures = {}
+    zeroth_group_uncal_signal_tabs = []
+
+    for aperture in full_apertures:
+        monitor_template = monitor_bias_bokeh.BiasMonitor()
+        monitor_template.aperture_info = (instrument, aperture)
+        templates_all_apertures[aperture] = monitor_template
+
+    zeroth_group_uncal_all_apertures = []
+    for aperture_name, template in templates_all_apertures.items():
+        plot = template.refs["zeroth_group_uncal_signal_figure"]
+        plot.sizing_mode = "scale_width"
+        zeroth_group_uncal_all_apertures.append(plot)
+
+        zeroth_group_uncal_signal_layout = layout(
+            [amp1_even, amp1_odd],
+            [amp2_even, amp2_odd],
+            [amp3_even, amp3_odd],
+            [amp4_even, amp4_odd]
+        )
+        zeroth_group_uncal_signal_tab = Panel(child=zeroth_group_uncal_signal_layout, title="0th Group Uncal Signal, {}".format(aperture))
+        zeroth_group_uncal_signal_tabs.append(zeroth_group_uncal_signal_tab)
 
     # Build tabs
-    tabs = Tabs(tabs=[histogram_tab, line_tab, image_tab])
+    tabs = Tabs(tabs=[zeroth_group_uncal_signal_tab])
 
     # Return tab HTML and JavaScript to web app
     script, div = components(tabs)

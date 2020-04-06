@@ -41,6 +41,13 @@ class BiasMonitor(BokehTemplate):
 
     def pre_init(self):
 
+        self._instrument = 'NIRCam'
+
+        self.load_data()
+
+        # Zeroth group uncal signal plots
+        self.timestamps =
+        self.singals =
 
 
     def post_init(self):
@@ -50,13 +57,11 @@ class BiasMonitor(BokehTemplate):
         self._dark_mean_image()
 
     def identify_tables(self):
-        """Determine which dark current database tables as associated with
-        a given instrument"""
+        """Determine which database tables as associated with a given
+        instrument"""
 
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self._instrument.lower()]
-        self.query_table = eval('{}DarkQueryHistory'.format(mixed_case_name))
-        self.pixel_table = eval('{}DarkPixelStats'.format(mixed_case_name))
-        self.stats_table = eval('{}DarkDarkCurrent'.format(mixed_case_name))
+        self.stats_table = eval('{}BiasStats'.format(mixed_case_name))
 
     def load_data(self):
         """Query the database tables to get data"""
