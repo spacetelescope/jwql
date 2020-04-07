@@ -44,6 +44,7 @@ from django.urls import path
 from django.urls import re_path
 
 from . import api_views
+from . import monitor_views
 from . import oauth
 from . import views
 
@@ -60,11 +61,14 @@ urlpatterns = [
     path('logout/', oauth.logout, name='logout'),
     path('authorize/', oauth.authorize, name='authorize'),
 
-    # NIRSpec views
+    # MIRI-specific views
+    path('miri/miri_data_trending/', views.miri_data_trending, name='miri_data_trending'),
+
+    # NIRSpec-specific views
     path('nirspec/nirspec_data_trending/', views.nirspec_data_trending, name='nirspec_data_trending'),
 
-    # MIRI views
-    path('miri/miri_data_trending/', views.miri_data_trending, name='miri_data_trending'),
+    # Common monitor views
+    re_path(r'^(?P<inst>({}))/.+_monitor/$'.format(instruments), monitor_views.dark_monitor, name='dark_monitor'),
 
     # Main site views
     path('about/', views.about, name='about'),
