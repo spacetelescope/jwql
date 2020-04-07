@@ -69,7 +69,7 @@ urlpatterns = [
 
     # Common monitor views
     re_path(r'^(?P<inst>({}))/dark_monitor/$'.format(instruments), monitor_views.dark_monitor, name='dark_monitor'),
-    re_path(r'^(?P<inst>({}))/bias_monitor/$'.format(instruments), monitor_views.bias_monitor, name='bias_monitor'),
+    re_path(r'^(?P<instrument>({}))/bias_monitor/$'.format(instruments), monitor_views.bias_monitor, name='bias_monitor'),
 
     # Main site views
     path('about/', views.about, name='about'),

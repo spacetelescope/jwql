@@ -60,7 +60,7 @@ def bias_monitor(request, instrument):
 
     # Deal with the fact that only the NIRCam database is populated
     if instrument == 'NIRCam':
-        tabs_components = monitor_containers.bias_monitor_tabs(inst)
+        tabs_components = monitor_containers.bias_monitor_tabs(instrument)
     else:
         tabs_components = None
 

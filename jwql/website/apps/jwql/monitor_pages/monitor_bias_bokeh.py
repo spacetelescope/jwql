@@ -25,6 +25,7 @@ from bokeh.models.tickers import LogTicker
 import numpy as np
 
 from jwql.database.database_interface import session
+from jwql.database.database_interface import NIRCamBiasStats
 from jwql.database.database_interface import NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent
 from jwql.database.database_interface import NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent
 from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent
@@ -40,11 +41,11 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 class ZerothGroupSignal(BokehTemplate):
 
     def _identify_tables(self):
-    """Determine which database tables as associated with a given
-    instrument"""
+        """Determine which database tables as associated with a given
+        instrument"""
 
-    mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument.lower()]
-    self.stats_table = eval('{}BiasStats'.format(mixed_case_name))
+        mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument.lower()]
+        self.stats_table = eval('{}BiasStats'.format(mixed_case_name))
 
     def _load_data(self):
         """Query the database tables to get data"""
@@ -59,21 +60,27 @@ class ZerothGroupSignal(BokehTemplate):
 
     def pre_init(self):
 
+        # Some initializations
         self.instrument = 'NIRCam'
         self.aperture = 'NRCA1_FULL'
         self.amp = '1'
         self.mode = 'even'
-        self.stats_table = self
 
-        self._load_data()
+        # App design
+        self.format_string = None
+        self.interface_file = os.path.join(SCRIPT_DIR, 'yaml', 'bias_monitor_interface.yaml')
 
         # Gather data needed for plots
-        self.timestamps = self.query_results.expstart
-        singals_column = getattr(self.query_results, 'amp{}_{}_med'.format(self.amp, self.mode))
-        self.signals = self.query_results.signals_column
+        self._load_data()
+        signals_column = getattr(self.query_results[0], 'amp{}_{}_med'.format(self.amp, self.mode))
+        self.timestamps, self.signals = [], []
+        for result in self.query_results:
+            self.timestamps.append(result.expstart)
+            self.signals.append(getattr(result, 'amp{}_{}_med'.format(self.amp, self.mode)))
 
-        print(self.timestamps)
-        print(self.signals)
+    def post_init(self):
+
+        pass
 
 # class BiasMonitor(BokehTemplate):
 

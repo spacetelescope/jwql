@@ -26,6 +26,7 @@ from bokeh.embed import components
 from bokeh.layouts import layout
 from bokeh.models.widgets import Tabs, Panel
 
+from jwql.website.apps.jwql.monitor_pages import monitor_bias_bokeh
 from jwql.website.apps.jwql.monitor_pages import monitor_dark_bokeh
 from jwql.utils.constants import FULL_FRAME_APERTURES
 from jwql.utils.utils import get_config
@@ -69,11 +70,22 @@ def bias_monitor_tabs(instrument):
     # Unpack plots and put into layout
     tabs = []
     for aperture in plots_dict:
-        layout = []
+        print(aperture)
+        full_layout = []
         for amp in plots_dict[aperture]:
-            layout.append(plots_dict[aperture][amp]['even'], plots_dict[aperture][amp]['odd'])
-        tabs.append(Panel(layout, title='0th Group Uncal Signal for {}'.format(aperture)))
+            print(amp)
+            full_layout.append(plots_dict[aperture][amp]['even'])
+            full_layout.append(plots_dict[aperture][amp]['odd'])
+        amp1_even, amp1_odd, amp2_even, amp2_odd, amp3_even, amp3_odd, amp4_even, amp4_odd = full_layout
+        foo_layout = layout([amp1_even, amp1_odd], [amp2_even, amp2_odd], [amp3_even, amp3_odd], [amp4_even, amp4_odd])
+        tabs.append(Panel(child=foo_layout, title='0th Group Uncal Signal for {}'.format(aperture)))
 
+    print('')
+    print(tabs[0])
+    print(dir(tabs[0]))
+    print('')
+    for tab in tabs:
+        print(tab.title)
     # Build tabs
     all_tabs = Tabs(tabs=tabs)
 
