@@ -47,31 +47,6 @@ AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 512, 1), (0, 2048, 1)],
                                  '3': [(2, 1032, 4), (0, 1024, 1)],
                                  '4': [(3, 1032, 4), (0, 1024, 1)]}}
 
-
-# Defines the possible anomalies to flag through the web app
-# ANOMALIES = ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error', 'diffraction_spike',
-#              'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail', 'other']
-
-# INST_ANOMALIES = {
-#     'fgs': ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error', 'diffraction_spike',
-#              'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail',
-#              'other'],
-#     'miri': ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error', 'diffraction_spike',
-#              'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail',
-#              'other'],
-#     'nircam': ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error', 'diffraction_spike',
-#              'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail',
-#              'dragons_breath', 'other'],
-#     'niriss': ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error', 'diffraction_spike',
-#              'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail',
-#              'other'],
-#     'nirspec': ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error', 'diffraction_spike',
-#              'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail',
-#              'optical_short', 'other']}
-
-# # Defines the possible anomalies (with rendered name) to flag through the web app
-# ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INST]
-
 FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R', 'WFSS128C', 'WFSS64C']
 
 # Names of full-frame apertures for all instruments
@@ -136,7 +111,7 @@ ANOMALIES_PER_INST = {
     'persistence': JWST_INSTRUMENT_NAMES,
     'satellite_trail': JWST_INSTRUMENT_NAMES,
     # instrument-specific anomalies:
-    'optical_short': ['nirspec'],    ######## JUST FOR MOS OBSERVATIONS!
+    'optical_short': ['nirspec'],  # Only for MOS observations
     'dragons_breath': ['nircam'],
     # additional anomalies:
     'other': JWST_INSTRUMENT_NAMES}
