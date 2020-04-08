@@ -167,7 +167,7 @@ def get_current_flagged_anomalies(rootname, inst):
 
     table_dict = {}
     for instrument in JWST_INSTRUMENT_NAMES_MIXEDCASE:
-        table_dict[instrument.lower()] = getattr(di, '{}Anomaly'.format(instrument))
+        table_dict[instrument.lower()] = getattr(di, '{}Anomaly'.format(JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument]))
 
     table = table_dict[inst.lower()]
     query = di.session.query(table).filter(table.rootname == rootname).order_by(table.flag_date.desc()).limit(1)
