@@ -47,13 +47,26 @@ AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 512, 1), (0, 2048, 1)],
                                  '3': [(2, 1032, 4), (0, 1024, 1)],
                                  '4': [(3, 1032, 4), (0, 1024, 1)]}}
 
-
-# Defines the possible anomalies to flag through the web app
-ANOMALIES = ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error', 'diffraction_spike',
-             'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail', 'other']
+ANOMALIES_PER_INSTRUMENT = {
+    # anomalies affecting all instruments:
+    'snowball': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'cosmic_ray_shower': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'crosstalk': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'data_transfer_error': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'diffraction_spike': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'excessive_saturation': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'ghost': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'guidestar_failure': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'persistence': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'satellite_trail': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    # instrument-specific anomalies:
+    'optical_short': ['nirspec'],  # Only for MOS observations
+    'dragons_breath': ['nircam'],
+    # additional anomalies:
+    'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
 
 # Defines the possible anomalies (with rendered name) to flag through the web app
-ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES]
+ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT]
 
 FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R', 'WFSS128C', 'WFSS64C']
 

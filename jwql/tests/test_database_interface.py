@@ -25,7 +25,7 @@ import random
 import string
 
 from jwql.database import database_interface as di
-from jwql.utils.constants import ANOMALIES
+from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
 from jwql.utils.utils import get_config
 
 # Determine if tests are being run on jenkins
@@ -61,14 +61,14 @@ def test_anomaly_orm_factory():
     creates an ORM and contains the appropriate columns"""
 
     test_table_name = 'test_anomaly_table'
-    TestAnomalyTable = di.anomaly_orm_factory('test_anomaly_table')
+    TestAnomalyTable = di.anomaly_orm_factory(test_table_name)
     table_attributes = TestAnomalyTable.__dict__.keys()
 
     assert str(TestAnomalyTable) == "<class 'jwql.database.database_interface.{}'>"\
         .format(test_table_name)
 
-    for anomaly in ANOMALIES:
-        assert anomaly in table_attributes
+    for item in ['id', 'rootname', 'flag_date', 'user']:
+        assert item in table_attributes
 
 
 @pytest.mark.skipif(ON_JENKINS, reason='Requires access to development database server.')
@@ -79,15 +79,15 @@ def test_anomaly_records():
     random_rootname = ''.join(random.SystemRandom().choice(string.ascii_lowercase + \
                                                            string.ascii_uppercase + \
                                                            string.digits) for _ in range(10))
-    di.session.add(di.Anomaly(rootname=random_rootname,
+    di.session.add(di.FGSAnomaly(rootname=random_rootname,
                               flag_date=datetime.datetime.today(),
                               user='test', ghost=True))
     di.session.commit()
 
     # Test the ghosts column
-    ghosts = di.session.query(di.Anomaly)\
-        .filter(di.Anomaly.rootname == random_rootname)\
-        .filter(di.Anomaly.ghost == "True")
+    ghosts = di.session.query(di.FGSAnomaly)\
+        .filter(di.FGSAnomaly.rootname == random_rootname)\
+        .filter(di.FGSAnomaly.ghost == "True")
     assert ghosts.data_frame.iloc[0]['ghost'] == True
 
 
