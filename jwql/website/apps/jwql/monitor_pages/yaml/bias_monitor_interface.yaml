@@ -2,8 +2,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Zeroth Group Uncal Signal vs Time
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-- !ColumnDataSource: &zeroth_group_uncal_signal_source
-  ref: "zeroth_group_uncal_signal_source"
+- !ColumnDataSource: &bias_level_source
+  ref: "bias_level_source"
   data:
     time: !self.timestamps
     signal: !self.signals
@@ -20,14 +20,14 @@
   #end: 1
   #bounds: !!python/tuple [-1, 1]
 
-- !Figure: &zeroth_group_uncal_signal_figure
-  ref: "zeroth_group_uncal_signal_figure"
-  x_axis_label: "Time (MJD)"
+- !Figure: &bias_level_figure
+  ref: "bias_level_figure"
+  x_axis_label: "Time"
   y_axis_label: "0th Group Uncal Signal [DN]"
   x_range: *time_range
   y_range: *signal_range
   elements:
-    - {'kind': 'circle', 'x': 'time', 'y': 'signal', line_width: 5, 'source': *zeroth_group_uncal_signal_source}
+    - {'kind': 'circle', 'x': 'time', 'y': 'signal', line_width: 5, 'source': *bias_level_source}
 
 # - !Document:
 #  - !column:

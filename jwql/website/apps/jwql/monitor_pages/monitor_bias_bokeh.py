@@ -38,7 +38,7 @@ from jwql.bokeh_templating import BokehTemplate
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-class ZerothGroupSignal(BokehTemplate):
+class BiasLevel(BokehTemplate):
 
     def _identify_tables(self):
         """Determine which database tables as associated with a given

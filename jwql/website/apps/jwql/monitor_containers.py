@@ -59,12 +59,12 @@ def bias_monitor_tabs(instrument):
         for amp in [1, 2, 3, 4]:
             plots_dict[aperture][amp] = {}
             for mode in ['even', 'odd']:
-                monitor_template = monitor_bias_bokeh.ZerothGroupSignal()
+                monitor_template = monitor_bias_bokeh.BiasLevel()
                 monitor_template.instrument = instrument
                 monitor_template.aperture = aperture
                 monitor_template.amp = amp
                 monitor_template.mode = mode
-                plot = monitor_template.refs['zeroth_group_uncal_signal_figure']
+                plot = monitor_template.refs['bias_level_figure']
                 plots_dict[aperture][amp][mode] = plot
 
     # Unpack plots and put into layout
