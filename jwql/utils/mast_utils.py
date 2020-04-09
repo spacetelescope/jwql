@@ -17,8 +17,9 @@ Use
 import datetime
 import os
 
-from jwql.utils.constants import INSTRUMENT_MONITOR_DATABASE_TABLES
 from jwql.database.database_interface import Monitor
+from jwql.jwql_monitors import monitor_mast
+from jwql.utils.constants import INSTRUMENT_MONITOR_DATABASE_TABLES, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import configure_logging, get_log_status
 
 

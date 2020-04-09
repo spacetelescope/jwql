@@ -18,6 +18,7 @@ Use
 from collections import OrderedDict
 import copy
 import numpy as np
+import os
 
 from astropy.io import fits
 from jwst.dq_init import DQInitStep
@@ -29,6 +30,7 @@ from jwst.jump import JumpStep
 from jwst.lastframe import LastFrameStep
 from jwst.linearity import LinearityStep
 from jwst.persistence import PersistenceStep
+from jwst.pipeline.calwebb_detector1 import Detector1Pipeline
 from jwst.ramp_fitting import RampFitStep
 from jwst.refpix import RefPixStep
 from jwst.rscd import RSCD_Step
@@ -256,6 +258,8 @@ def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True, save_fito
         Name of the saved file containing the output after ramp-fitting is
         performed (if requested). Otherwise None.
     """
+    input_file_only = os.path.basename(input_file)
+
     # Find the instrument used to collect the data
     instrument = fits.getheader(input_file)['INSTRUME'].lower()
 
@@ -273,24 +277,41 @@ def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True, save_fito
 
     model.jump.save_results = True
     model.jump.output_dir = output_dir
-    jump_output = os.path.join(output_dir, input_file.replace('uncal', 'jump'))
+    jump_output = os.path.join(output_dir, input_file_only.replace('uncal', 'jump'))
+
+    # Check to see if the jump version of the requested file is already
+    # present
+    run_jump =  not os.path.isfile(jump_output)
 
     if ramp_fit:
-        model.save_results = True
+        model.ramp_fit.save_results = True
+        #model.save_results = True
         model.output_dir = output_dir
-        pipe_output = os.path.join(output_dir, input_file.replace('uncal', 'rate'))
+        #pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', 'rate'))
+        pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', '0_ramp_fit'))
+        run_slope = not os.path.isfile(pipe_output)
         if save_fitopt:
-            model.ramp_fitting.save_opt = True
-            fitopt_output = os.path.join(output_dir, input_file.replace('uncal', 'fitopt'))
+            model.ramp_fit.save_opt = True
+            fitopt_output = os.path.join(output_dir, input_file_only.replace('uncal', 'fitopt'))
+            run_fitopt = not os.path.isfile(fitopt_output)
         else:
-            model.ramp_fitting.save_opt = False
+            model.ramp_fit.save_opt = False
             fitopt_output = None
+            run_fitopt = False
     else:
         model.ramp_fit.skip = True
         pipe_output = None
         fitopt_output = None
+        run_slope = False
+        run_fitopt = False
 
-    model.run(input_file)
+    # Call the pipeline if any of the files at the requested calibration
+    # states are not present in the output directory
+    if run_jump or (ramp_fit and run_slope) or (save_fitopt and run_fitopt):
+        model.run(input_file)
+    else:
+        print(("Files with all requested calibration states for {} already present in "
+                      "output directory. Skipping pipeline call.".format(input_file)))
 
     return jump_output, pipe_output, fitopt_output
 

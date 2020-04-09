@@ -222,7 +222,7 @@ def locate_uncal_files(query_result):
         uncal_files = []
         for entry in query_result:
             filename = entry['filename']
-            suffix = filename.split('_')[-1].strip('.fits')
+            suffix = filename.split('_')[-1].replace('.fits', '')
             uncal_file = filename.replace(suffix, 'uncal')
 
             # Look for uncal file
@@ -595,7 +595,8 @@ class BadPixels():
                     jump_output, rate_output, junk = pipeline_tools.calwebb_detector1_save_jump(uncal_file, out_dir,
                                                                                           ramp_fit=True, save_fitopt=False)
                     if self.nints > 1:
-                        illuminated_slope_files[index] = rate_output.replace('rate', 'rateints')
+                        #illuminated_slope_files[index] = rate_output.replace('rate', 'rateints')
+                        illuminated_slope_files[index] = rate_output.replace('0_ramp_fit', '1_ramp_fit')
                     else:
                         illuminated_slope_files[index] = deepcopy(rate_output)
                     index += 1
@@ -611,24 +612,27 @@ class BadPixels():
         # Jump step output. If corresponding rate file is 'None', then also
         # run the ramp-fit step and save the output
         dark_jump_files = []
-        dark_fitopts_files = []
+        dark_fitopt_files = []
         dark_obstimes = []
         if len(dark_raw_files) > 0:
+            index = 0
             badpix_types.extend(['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH'])
             # In this case we need to run the pipeline on all input files,
             # even if the rate file is present, because we also need the jump
             # and fitops files, which are not saved by default
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
-                jump_output, rate_output, fitopt_output = pipeline_tools.calwebb_detector1_save_jump(uncal_file, out_dir,
-                                                                                                     ramp_fit=save_rate, save_fitopt=True)
+                jump_output, rate_output, fitopt_output = pipeline_tools.calwebb_detector1_save_jump(uncal_file, self.data_dir,
+                                                                                                     ramp_fit=True, save_fitopt=True)
                 self.get_metadata(uncal_file)
                 dark_jump_files.append(jump_output)
-                dark_fitopts_files.append(fitopt_output)
+                dark_fitopt_files.append(fitopt_output)
                 if self.nints > 1:
-                    dark_rates.append(rate_output.replace('rate', 'rateints'))
+                    #dark_slope_files[index] = rate_output.replace('rate', 'rateints')
+                    dark_slope_files[index] = rate_output.replace('0_ramp_fit', '1_ramp_fit')
                 else:
-                    dark_rates.append(rate_output)
+                    dark_slope_files[index] = deepcopy(rate_output)
                 dark_obstimes.append(instrument_properties.get_obstime(uncal_file))
+                index += 1
 
             min_dark_time = min(dark_obstimes)
             max_dark_time = max(dark_obstimes)
@@ -639,7 +643,8 @@ class BadPixels():
             dead_search_type = 'sigma_rate'
         elif self.instrument in ['miri', 'nirspec']:
             dead_search_type = 'absolute_rate'
-            flat_mean_normalization_method = 'smoothed'
+
+        flat_mean_normalization_method = 'smoothed'
 
         # Call the bad pixel search module from jwst_reffiles. Lots of
         # other possible parameters. Only specify the non-default params
@@ -668,9 +673,7 @@ class BadPixels():
             logging.warning(('\tNo baseline bad pixel file for {} {}. Any bad '
                              'pixels found as part of this search will be considered new'.format(self.instrument, self.aperture)))
             baseline_file = new_badpix_file
-            with fits.open(illum_rates[0]) as hdulist:
-                xd = hdulist[0].header[]
-                yd = hdulist[0].header[] fix me
+            yd, xd = badpix_mask.shape
             baseline_badpix_mask = np.zeros((yd, xd), type=np.int)
         else:
             logging.info('\tBaseline bad pixel file is {}'.format(baseline_file))
@@ -717,7 +720,15 @@ class BadPixels():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in JWST_INSTRUMENT_NAMES:
+        for instrument in ['nircam']:  # JWST_INSTRUMENT_NAMES:
+
+
+
+            logging.info("Testing using nircam only")
+
+
+
+
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -738,7 +749,13 @@ class BadPixels():
             if self.instrument == 'nirspec':
                 possible_apertures = ['NRS1_FULL', 'NRS2_FULL']
 
-            for aperture in possible_apertures:
+            for aperture in ['NRCA1_FULL']:  #possible_apertures:
+
+
+                logging.info('Testing using nrca1_full only')
+
+
+
                 logging.info('')
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
 
@@ -783,7 +800,7 @@ class BadPixels():
                 # Remove duplicates and check if there are enough new flat
                 # field files
                 if len(flat_uncal_files) > 0:
-                    flat_uncal_files = list(set(flat_uncal_files))
+                    flat_uncal_files = sorted(list(set(flat_uncal_files)))
 
                 if len(flat_uncal_files) < flat_file_count_threshold:
                     logging.info(('\tBad pixels from flats skipped. {} new flat files for {}, {}. {} new files are '
@@ -801,7 +818,7 @@ class BadPixels():
                 # Remove duplicates and check if there are enough new dark
                 # files
                 if len(dark_uncal_files) > 0:
-                    dark_uncal_files = list(set(dark_uncal_files))
+                    dark_uncal_files = sorted(list(set(dark_uncal_files)))
 
                 if len(dark_uncal_files) < dark_file_count_threshold:
                     logging.info(('\tBad pixels from darks skipped. {} new dark files for {}, {}. {} new files are '
@@ -851,8 +868,8 @@ class BadPixels():
                              'aperture': aperture,
                              'start_time_mjd': self.query_start,
                              'end_time_mjd': self.query_end,
-                             'flat_files_found': len(new_flat_entries[0]),
-                             'dark_files_found': len(new_dark_entries[0]),
+                             'flat_files_found': len(flat_uncal_files),
+                             'dark_files_found': len(dark_uncal_files),
                              'run_flats': run_flats,
                              'run_darks': run_darks,
                              'run_monitor': run_flats or run_darks,
@@ -868,7 +885,7 @@ if __name__ == '__main__':
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = initialize_instrument_monitor(module)
 
-    monitor = Dark()
+    monitor = BadPixels()
     monitor.run()
 
     update_monitor_table(module, start_time, log_file)
