@@ -96,7 +96,7 @@ from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPi
 from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors import pipeline_tools
-from jwql.utils import instrument_properties
+from jwql.utils import crds_tools, instrument_properties
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
                                  FLAT_EXP_TYPES, DARK_EXP_TYPES
 from jwql.utils.logging_functions import log_info, log_fail
@@ -137,7 +137,13 @@ def bad_map_to_list(badpix_image, mnemonic):
 
     # Find locations of this type of bad pixel
     y_loc, x_loc = np.where(badpix_image & dqflags.pixel[mnemonic] > 0)
-    return x_loc, y_loc
+
+    # Convert from numpy int to python native int, in order to avoid SQL
+    # error when adding to the database tables.
+    y_location = [int(element) for element in y_loc]
+    x_location = [int(element) for element in x_loc]
+
+    return x_location, y_location
 
 
 def exclude_crds_mask_pix(bad_pix, existing_bad_pix):
@@ -187,6 +193,9 @@ def locate_rate_files(uncal_files):
             Same as ``rate_files`` but without the None entries. This is a list
             of only the rate files that exist in the filesystem
         """
+        if uncal_files is None:
+            return None, None
+
         rate_files = []
         rate_files_to_copy = []
         for uncal in uncal_files:
@@ -298,8 +307,7 @@ class BadPixels():
     def __init__(self):
         """Initialize an instance of the ``Dark`` class."""
 
-    def add_bad_pix(self, coordinates, pixel_type, files, observation_start_time,
-                    observation_mid_time, observation_end_time, baseline_file):
+    def add_bad_pix(self, coordinates, pixel_type, files, obs_start_time, obs_mid_time, obs_end_time, baseline_file):
         """Add a set of bad pixels to the bad pixel database table
 
         Parameters
@@ -315,13 +323,13 @@ class BadPixels():
             List of fits files which were used to identify the bad
             pixels
 
-        observation_start_time : datetime.datetime
+        obs_start_time : datetime.datetime
             Observation time of the earliest file in ``files``
 
-        observation_mid_time : datetime.datetime
+        obs_mid_time : datetime.datetime
             Average of the observation times in ``files``
 
-        observation_end_time : datetime.datetime
+        obs_end_time : datetime.datetime
             Observation time of the latest file in ``files``
 
         baseline_file : str
@@ -337,9 +345,9 @@ class BadPixels():
                  'y_coord': coordinates[1],
                  'type': pixel_type,
                  'source_files': source_files,
-                 'obs_start_time': observation_start_time,
-                 'obs_mid_time': observation_mid_time,
-                 'obs_end_time': observation_end_time,
+                 'obs_start_time': obs_start_time,
+                 'obs_mid_time': obs_mid_time,
+                 'obs_end_time': obs_end_time,
                  'baseline_file': baseline_file,
                  'entry_date': datetime.datetime.now()}
         self.pixel_table.__table__.insert().execute(entry)
@@ -492,10 +500,16 @@ class BadPixels():
 
         return uncal_files, rate_files
 
-    def most_recent_search(self):
+    def most_recent_search(self, file_type='dark'):
         """Query the query history database and return the information
         on the most recent query for the given ``aperture_name`` where
         the dark monitor was executed.
+
+        Parameters
+        ----------
+        file_type : str
+            "dark" or "flat". Specifies the type of file whose previous
+            search time is queried.
 
         Returns
         -------
@@ -503,8 +517,13 @@ class BadPixels():
             Date (in MJD) of the ending range of the previous MAST query
             where the dark monitor was run.
         """
+        if file_type.lower() == 'dark':
+            mjd_field = self.query_table.dark_end_time_mjd
+        elif file_type.lower() == 'flat':
+            mjd_field = self.query_table.flat_end_time_mjd
+
         sub_query = session.query(self.query_table.aperture,
-                                  func.max(self.query_table.end_time_mjd).label('maxdate')
+                                  func.max(mjd_field).label('maxdate')
                                   ).group_by(self.query_table.aperture).subquery('t2')
 
         # Note that "self.query_table.run_monitor == True" below is
@@ -513,7 +532,7 @@ class BadPixels():
             sub_query,
             and_(
                 self.query_table.aperture == self.aperture,
-                self.query_table.end_time_mjd == sub_query.c.maxdate,
+                mjd_field == sub_query.c.maxdate,
                 self.query_table.run_monitor == True
             )
         ).all()
@@ -526,7 +545,10 @@ class BadPixels():
         elif query_count > 1:
             raise ValueError('More than one "most recent" query?')
         else:
-            query_result = query[0].end_time_mjd
+            if file_type.lower() == 'dark':
+                query_result = query[0].dark_end_time_mjd
+            elif file_type.lower() == 'flat':
+                query_result = query[0].flat_end_time_mjd
 
         return query_result
 
@@ -545,7 +567,7 @@ class BadPixels():
         current_date = datetime.datetime.now()
         parameters['TIME-OBS'] = current_date.time().isoformat()
         parameters['DETECTOR'] = self.detector.upper()
-        if instrument == 'NIRCAM':
+        if self.instrument.upper() == 'NIRCAM':
             if parameters['DETECTOR'] in ['NRCALONG', 'NRCBLONG']:
                 parameters['CHANNEL'] = 'LONG'
             else:
@@ -584,11 +606,14 @@ class BadPixels():
         """
         # Illuminated files - run entirety of calwebb_detector1 for uncal
         # files where corresponding rate file is 'None'
+        all_files = []
         badpix_types = []
+        badpix_types_from_flats = ['DEAD', 'LOW_QE', 'OPEN', 'ADJ_OPEN']
+        badpix_types_from_darks = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
         illuminated_obstimes = []
-        if len(illuminated_raw_files) > 0:
+        if illuminated_raw_files is not None:
             index = 0
-            badpix_types.extend(['DEAD', 'LOW_QE', 'OPEN', 'ADJ_OPEN'])
+            badpix_types.extend(badpix_types_from_flats)
             for uncal_file, rate_file in zip(illuminated_raw_files, illuminated_slope_files):
                 if rate_file == 'None':
                     self.get_metadata(uncal_file)
@@ -604,6 +629,8 @@ class BadPixels():
                 # Get observation time for all files
                 illuminated_obstimes.append(instrument_properties.get_obstime(uncal_file))
 
+            all_files = deepcopy(illuminated_slope_files)
+
             min_illum_time = min(illuminated_obstimes)
             max_illum_time = max(illuminated_obstimes)
             mid_illum_time = instrument_properties.mean_time(illuminated_obstimes)
@@ -614,9 +641,9 @@ class BadPixels():
         dark_jump_files = []
         dark_fitopt_files = []
         dark_obstimes = []
-        if len(dark_raw_files) > 0:
+        if dark_raw_files is not None:
             index = 0
-            badpix_types.extend(['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH'])
+            badpix_types.extend(badpix_types_from_darks)
             # In this case we need to run the pipeline on all input files,
             # even if the rate file is present, because we also need the jump
             # and fitops files, which are not saved by default
@@ -634,6 +661,11 @@ class BadPixels():
                 dark_obstimes.append(instrument_properties.get_obstime(uncal_file))
                 index += 1
 
+            if len(all_files) == 0:
+                all_files = deepcopy(dark_slope_files)
+            else:
+                all_files = all_files + dark_slope_files
+
             min_dark_time = min(dark_obstimes)
             max_dark_time = max(dark_obstimes)
             mid_dark_time = instrument_properties.mean_time(dark_obstimes)
@@ -649,7 +681,7 @@ class BadPixels():
         # Call the bad pixel search module from jwst_reffiles. Lots of
         # other possible parameters. Only specify the non-default params
         # in order to make things easier to read.
-        output_file = '{}_{}_{}_{}_bpm.fits'.format(self.instrument, self.aperture, self.query_start, self.query_end)
+        output_file = '{}_{}_{}_{}_bpm.fits'.format(self.instrument, self.aperture, self.dark_query_start, self.query_end)
         output_file = os.path.join(self.output_dir, output_file)
         bad_pixel_mask.bad_pixels(flat_slope_files=illuminated_slope_files, dead_search_type=dead_search_type,
                                   flat_mean_normalization_method=flat_mean_normalization_method,
@@ -686,11 +718,17 @@ class BadPixels():
         # Create a list of the new instances of each type of bad pixel
         bad_lists = {}
         for bad_type in badpix_types:
-            bad_location_list = self.bad_map_to_list(new_since_reffile, bad_type)
+            bad_location_list = bad_map_to_list(new_since_reffile, bad_type)
 
             # Add new hot and dead pixels to the database
             logging.info('\tFound {} new {} pixels'.format(len(bad_location_list[0]), bad_type))
-            self.add_bad_pix(bad_location_list, bad_type, file_list, min_time, mid_time, max_time, baseline_file)
+
+            if bad_type in badpix_types_from_flats:
+                self.add_bad_pix(bad_location_list, bad_type, illuminated_slope_files, min_illum_time, mid_illum_time, max_illum_time, baseline_file)
+            elif bad_type in badpix_types_from_darks:
+                self.add_bad_pix(bad_location_list, bad_type, dark_slope_files, min_dark_time, mid_dark_time, max_dark_time, baseline_file)
+            else:
+                raise ValueError("Unrecognized type of bad pixel: {}. Cannot update database table.".format(bad_type))
 
     @log_fail
     @log_info
@@ -766,16 +804,18 @@ class BadPixels():
 
                 # Locate the record of the most recent MAST search
                 self.aperture = aperture
-                self.query_start = self.most_recent_search()
-                logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
+                self.flat_query_start = self.most_recent_search(file_type='flat')
+                self.dark_query_start = self.most_recent_search(file_type='dark')
+                logging.info('\tFlat field query times: {} {}'.format(self.flat_query_start, self.query_end))
+                logging.info('\tDark current query times: {} {}'.format(self.dark_query_start, self.query_end))
 
                 # Query MAST using the aperture and the time of the
                 # most recent previous search as the starting time
                 flat_templates = FLAT_EXP_TYPES[instrument]
-                new_flat_entries = mast_query(instrument, aperture, flat_templates, self.query_start, self.query_end)
+                new_flat_entries = mast_query(instrument, aperture, flat_templates, self.flat_query_start, self.query_end)
 
                 dark_templates = DARK_EXP_TYPES[instrument]
-                new_dark_entries = mast_query(instrument, aperture, dark_templates, self.query_start, self.query_end)
+                new_dark_entries = mast_query(instrument, aperture, dark_templates, self.dark_query_start, self.query_end)
 
                 # NIRISS - results can include rate, rateints, trapsfilled
                 # MIRI - Jane says they now use illuminated data!!
@@ -806,7 +846,7 @@ class BadPixels():
                     logging.info(('\tBad pixels from flats skipped. {} new flat files for {}, {}. {} new files are '
                                   'required to run bad pixels from flats portion of monitor.').format(
                         len(new_flat_entries), instrument, aperture, flat_file_count_threshold[0]))
-                    flat_uncal_files = []
+                    flat_uncal_files = None
                     run_flats = False
 
                 else:
@@ -824,7 +864,7 @@ class BadPixels():
                     logging.info(('\tBad pixels from darks skipped. {} new dark files for {}, {}. {} new files are '
                                   'required to run bad pixels from darks portion of monitor.').format(
                         len(new_dark_entries), instrument, aperture, dark_file_count_threshold[0]))
-                    dark_uncal_files = []
+                    dark_uncal_files = None
                     run_darks = False
 
                 else:
@@ -847,13 +887,12 @@ class BadPixels():
                 ensure_dir_exists(self.data_dir)
 
                 # Copy files from filesystem
-                if len(flat_uncal_files) > 0:
+                if run_flats:
                     flat_uncal_files, flat_rate_files = self.map_uncal_and_rate_file_lists(flat_uncal_files,
                                                                                            flat_rate_files,
                                                                                            flat_rate_files_to_copy,
                                                                                            'flat')
-
-                if len(dark_uncal_files) > 0:
+                if run_darks:
                     dark_uncal_files, dark_rate_files = self.map_uncal_and_rate_file_lists(dark_uncal_files,
                                                                                            dark_rate_files,
                                                                                            dark_rate_files_to_copy,
@@ -864,14 +903,26 @@ class BadPixels():
                     self.process(flat_uncal_files, flat_rate_files, dark_uncal_files, dark_rate_files)
 
                 # Update the query history
+                if dark_uncal_files is None:
+                    num_dark_files = 0
+                else:
+                    num_dark_files = len(dark_uncal_files)
+
+                if flat_uncal_files is None:
+                    num_flat_files = 0
+                else:
+                    num_flat_files = len(flat_uncal_files)
+
                 new_entry = {'instrument': self.instrument.upper(),
                              'aperture': aperture,
-                             'start_time_mjd': self.query_start,
-                             'end_time_mjd': self.query_end,
-                             'flat_files_found': len(flat_uncal_files),
-                             'dark_files_found': len(dark_uncal_files),
-                             'run_flats': run_flats,
-                             'run_darks': run_darks,
+                             'dark_start_time_mjd': self.dark_query_start,
+                             'dark_end_time_mjd': self.query_end,
+                             'flat_start_time_mjd': self.flat_query_start,
+                             'flat_end_time_mjd': self.query_end,
+                             'dark_files_found': num_dark_files,
+                             'flat_files_found': num_flat_files,
+                             'run_bpix_from_darks': run_darks,
+                             'run_bpix_from_flats': run_flats,
                              'run_monitor': run_flats or run_darks,
                              'entry_date': datetime.datetime.now()}
                 self.query_table.__table__.insert().execute(new_entry)
