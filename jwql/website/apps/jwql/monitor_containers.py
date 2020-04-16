@@ -52,40 +52,29 @@ def bias_monitor_tabs(instrument):
         The JS script to render dark monitor plots
     """
 
-    # Create the plots
-    plots_dict = {}
-    for aperture in FULL_FRAME_APERTURES[instrument.upper()]:
-        plots_dict[aperture] = {}
-        for amp in [1, 2, 3, 4]:
-            plots_dict[aperture][amp] = {}
-            for mode in ['even', 'odd']:
-                monitor_template = monitor_bias_bokeh.BiasLevel()
-                monitor_template.instrument = instrument
-                monitor_template.aperture = aperture
-                monitor_template.amp = amp
-                monitor_template.mode = mode
-                plot = monitor_template.refs['bias_level_figure']
-                plots_dict[aperture][amp][mode] = plot
-
-    # Unpack plots and put into layout
     tabs = []
-    for aperture in plots_dict:
-        print(aperture)
-        full_layout = []
-        for amp in plots_dict[aperture]:
-            print(amp)
-            full_layout.append(plots_dict[aperture][amp]['even'])
-            full_layout.append(plots_dict[aperture][amp]['odd'])
-        amp1_even, amp1_odd, amp2_even, amp2_odd, amp3_even, amp3_odd, amp4_even, amp4_odd = full_layout
-        foo_layout = layout([amp1_even, amp1_odd], [amp2_even, amp2_odd], [amp3_even, amp3_odd], [amp4_even, amp4_odd])
-        tabs.append(Panel(child=foo_layout, title='0th Group Uncal Signal for {}'.format(aperture)))
+    for aperture in FULL_FRAME_APERTURES[instrument.upper()]:
+        plots = []
+        for amp in ['1', '2', '3', '4']:
+            for mode in ['even', 'odd']:
+                print('before')
+                monitor_template = monitor_bias_bokeh.BiasLevel()
+                print('after')
+                monitor_template.input_parameters = (instrument, aperture, amp, mode)
+                print('after2')
+                plot = monitor_template.refs['bias_level_figure']
+                print('after3')
+                plots.append(plot)
 
-    print('')
-    print(tabs[0])
-    print(dir(tabs[0]))
-    print('')
-    for tab in tabs:
-        print(tab.title)
+        amp1_even, amp1_odd, amp2_even, amp2_odd, amp3_even, amp3_odd, amp4_even, amp4_odd = plots
+        aperture_layout = layout(
+            [amp1_even, amp1_odd],
+            [amp2_even, amp2_odd],
+            [amp3_even, amp3_odd],
+            [amp4_even, amp4_odd]
+        )
+        tabs.append(Panel(child=aperture_layout, title='{}'.format(aperture)))
+
     # Build tabs
     all_tabs = Tabs(tabs=tabs)
 

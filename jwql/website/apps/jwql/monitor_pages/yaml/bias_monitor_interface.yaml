@@ -10,15 +10,15 @@
 
 - !Range1d: &time_range
   ref: "time_range"
-  #start: 0
-  #end: 1
-  #bounds: 'auto'  #!!python/tuple [0, 1]
+  start: 57400
+  end: 57415
+  bounds: 'auto'
 
 - !Range1d: &signal_range
   ref: "signal_range"
-  #start: 0
-  #end: 1
-  #bounds: !!python/tuple [-1, 1]
+  start: 6500
+  end: 6700
+  bounds: 'auto'
 
 - !Figure: &bias_level_figure
   ref: "bias_level_figure"

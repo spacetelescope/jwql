@@ -17,6 +17,7 @@ Use
         script, div = monitor_template.embed("dark_current_time_figure")
 """
 
+import datetime
 import os
 
 from astropy.io import fits
@@ -40,6 +41,18 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class BiasLevel(BokehTemplate):
 
+    # Combine input parameters into a single property because we
+    # do not want to invoke the setter unless both are updated
+    @property
+    def input_parameters(self):
+        return (self.instrument, self.aperture, self.amp, self.mode)
+
+    @input_parameters.setter
+    def input_parameters(self, values):
+        self.instrument, self.aperture, self.amp, self.mode = values
+        self.pre_init()
+        self.post_init()
+
     def _identify_tables(self):
         """Determine which database tables as associated with a given
         instrument"""
@@ -60,23 +73,48 @@ class BiasLevel(BokehTemplate):
 
     def pre_init(self):
 
-        # Some initializations
-        self.instrument = 'NIRCam'
-        self.aperture = 'NRCA1_FULL'
-        self.amp = '1'
-        self.mode = 'even'
+        # Start with default values for instrument and aperture because
+        # BokehTemplate's __init__ method does not allow input arguments
+        try:
+            dummy_instrument = self.instrument
+            dummy_aperture = self.aperture
+            dummy_amp = self.amp
+            dummy_mode = self.mode
+            flag = True
+        except AttributeError:
+            self.instrument = 'foo'
+            self.aperture = 'bar'
+            self.amp = 'tar'
+            self.mode = 'par'
+            flag = False
 
-        # App design
-        self.format_string = None
-        self.interface_file = os.path.join(SCRIPT_DIR, 'yaml', 'bias_monitor_interface.yaml')
+        if flag:
+            print('here')
 
-        # Gather data needed for plots
-        self._load_data()
-        signals_column = getattr(self.query_results[0], 'amp{}_{}_med'.format(self.amp, self.mode))
-        self.timestamps, self.signals = [], []
-        for result in self.query_results:
-            self.timestamps.append(result.expstart)
-            self.signals.append(getattr(result, 'amp{}_{}_med'.format(self.amp, self.mode)))
+            # dummy_instrument = self.instrument
+            # dummy_aperture = self.aperture
+            # dummy_amp = self.amp
+            # dummy_mode = self.mode
+
+            # self.instrument = 'NIRCam'
+            # self.aperture = 'NRCA1_FULL'
+            # self.amp = '1'
+            # self.mode = 'even'
+
+            # App design
+            self.format_string = None
+            self.interface_file = os.path.join(SCRIPT_DIR, 'yaml', 'bias_monitor_interface.yaml')
+
+            # Gather data needed for plots
+            print('Gathering data for {}/{}/{}'.format(self.aperture, self.amp, self.mode))
+            self._load_data()
+            signals_column = getattr(self.query_results[0], 'amp{}_{}_med'.format(self.amp, self.mode))
+            self.timestamps, self.signals = [], []
+            for result in self.query_results:
+                time_datetime = datetime.datetime.strptime(result.expstart, '%Y-%m-%dT%H:%M:%S.%f')  # Convert to datetime
+                time_mjd = Time(time_datetime, format='datetime', scale='utc')  # Convert to MJD
+                self.timestamps.append(time_mjd.mjd)
+                self.signals.append(getattr(result, 'amp{}_{}_med'.format(self.amp, self.mode)))
 
     def post_init(self):
 
