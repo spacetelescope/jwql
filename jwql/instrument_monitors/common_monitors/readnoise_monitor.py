@@ -4,17 +4,17 @@
 the readnoise levels in dark exposures as well as the accuracy of
 the pipeline readnoise reference files over time.
 
-For each instrument, the readnoise, technically the "CDS noise", is found 
-by calculating the standard deviation through a stack of consecutive 
-frame differences in each dark exposure. The sigma-clipped mean and 
-standard deviation in each of these readnoise images is recorded in the 
+For each instrument, the readnoise, technically the "CDS noise", is found
+by calculating the standard deviation through a stack of consecutive
+frame differences in each dark exposure. The sigma-clipped mean and
+standard deviation in each of these readnoise images is recorded in the
 ``<Instrument>ReadnoiseStats`` database table.
 
-Next, each of these readnoise images are differenced with the current 
-pipeline readnoise reference file to identify the need for new reference 
-files. A histogram distribution of these difference images, as well as 
-the sigma-clipped mean and standard deviation,are recorded in the 
-``<Instrument>ReadnoiseStats`` database table. A png version of these 
+Next, each of these readnoise images are differenced with the current
+pipeline readnoise reference file to identify the need for new reference
+files. A histogram distribution of these difference images, as well as
+the sigma-clipped mean and standard deviation,are recorded in the
+``<Instrument>ReadnoiseStats`` database table. A png version of these
 difference images is also saved for visual inspection.
 
 Author
@@ -33,15 +33,14 @@ Use
 import datetime
 import logging
 import os
+import shutil
 
 from astropy.io import fits
 from astropy.stats import sigma_clip, sigma_clipped_stats
-from astropy.time import Time
 from astropy.visualization import ZScaleInterval
 from jwst.dq_init import DQInitStep
 from jwst.group_scale import GroupScaleStep
 from jwst.refpix import RefPixStep
-from jwst.saturation import SaturationStep
 from jwst.superbias import SuperBiasStep
 import matplotlib
 matplotlib.use('Agg')
@@ -56,7 +55,7 @@ from jwql.database.database_interface import session
 from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
-from jwql.utils import instrument_properties
+from jwql.utils import crds_tools, instrument_properties
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
@@ -67,9 +66,9 @@ class Readnoise():
 
     This class will search for new dark current files in the file
     system for each instrument and will run the monitor on these
-    files. The monitor will create a readnoise image for each of the 
+    files. The monitor will create a readnoise image for each of the
     new dark files. It will then perform statistical measurements
-    on these readnoise images, as well as their differences with the 
+    on these readnoise images, as well as their differences with the
     current pipeline readnoise reference file, in order to monitor
     the readnoise levels over time as well as ensure the pipeline
     readnoise reference file is sufficiently capturing the current
@@ -125,6 +124,63 @@ class Readnoise():
 
         return file_exists
 
+    def get_amp_means(self, image, amps):
+        """Calculates the sigma-clipped mean in the input image for each
+        amplifier.
+
+        Parameters
+        ----------
+        image : numpy.ndarray
+            2D array on which to calculate statistics
+
+        amps : dict
+            Dictionary containing amp boundary coordinates (output from
+            ``amplifier_info`` function)
+            ``amps[key] = [(xmin, xmax, xstep), (ymin, ymax, ystep)]``
+
+        Returns
+        -------
+        amp_means : dict
+            Contains the mean values for each amp.
+        """
+
+        amp_means = {}
+
+        for key in amps:
+            x_start, x_end, x_step = amps[key][0]
+            y_start, y_end, y_step = amps[key][1]
+
+            # Find sigma-clipped mean value for this amp
+            amp_data = image[y_start: y_end, x_start: x_end]
+            clipped = sigma_clip(amp_data, sigma=3.0, maxiters=5)
+            amp_means['amp{}_mean'.format(key)] = np.nanmean(clipped)
+
+        return amp_means
+
+    def get_metadata(self, filename):
+        """Collect basic metadata from a fits file.
+        
+        Parameters
+        ----------
+        filename : str
+            Name of fits file to examine
+        """
+
+        header = fits.getheader(filename)
+
+        try:
+            self.detector = header['DETECTOR']
+            self.read_pattern = header['READPATT']
+            self.subarray = header['SUBARRAY']
+            self.nints = header['NINTS']
+            self.ngroups = header['NGROUPS']
+            self.date_obs = header['DATE-OBS']
+            self.time_obs = header['TIME-OBS']
+            self.expstart = '{}T{}'.format(self.date_obs, self.time_obs)
+
+        except KeyError as e:
+            logging.error(e)
+
     def identify_tables(self):
         """Determine which database tables to use for a run of the readnoise
         monitor.
@@ -178,13 +234,34 @@ class Readnoise():
 
         return output_filename
 
+    def make_crds_parameter_dict(self):
+        """Construct a paramter dictionary to be used for querying CRDS
+        for the current reffiles in use by the JWST pipeline.
+
+        Returns
+        -------
+        parameters : dict
+            Dictionary of parameters, in the format expected by CRDS
+        """
+
+        parameters = {}
+        parameters['INSTRUME'] = self.instrument.upper()
+        parameters['DETECTOR'] = self.detector.upper()
+        parameters['READPATT'] = self.read_pattern.upper()
+        parameters['SUBARRAY'] = self.subarray.upper()
+        parameters['DATE-OBS'] = datetime.date.today().isoformat()
+        current_date = datetime.datetime.now()
+        parameters['TIME-OBS'] = current_date.time().isoformat()
+
+        return parameters
+
     def make_readnoise_image(self, data):
         """Calculates the readnoise for the given input dark current ramp.
 
         Parameters
         ----------
         data : numpy.ndarray
-            The input ramp data. The data shape is assumed to be a 4D array in 
+            The input ramp data. The data shape is assumed to be a 4D array in
             DMS format (integration, group, y, x).
 
         Returns
@@ -272,12 +349,11 @@ class Readnoise():
                 logging.info('\t{} already exists in the readnoise database table.'.format(filename))
                 continue
 
-            # Get the exposure start time of this file
-            expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'], fits.getheader(filename, 0)['TIME-OBS'])
+            # Get the relevant parameters for this file to be used in e.g. CRDS calls, database entries
+            self.get_metadata(filename)
 
             # Determine if the file needs group_scale in pipeline run
-            read_pattern = fits.getheader(filename, 0)['READPATT']
-            if read_pattern not in pipeline_tools.GROUPSCALE_READOUT_PATTERNS:
+            if self.read_pattern not in pipeline_tools.GROUPSCALE_READOUT_PATTERNS:
                 group_scale = False
             else:
                 group_scale = True
@@ -306,30 +382,55 @@ class Readnoise():
                 readnoise = fits.getdata(readnoise_outfile)
                 logging.info('\tReadnoise image already exists: {}'.format(readnoise_outfile))
 
-            # TODO Record readnoise stats
-            # TODO Find the pipeline readnoise image
-            # TODO Record difference image stats
+            # Calculate the sigma-clipped mean readnoise value in each amp
+            amp_means = self.get_amp_means(readnoise, amp_bounds)
+            logging.info('\tCalculated readnoise image stats: {}'.format(amp_means))
 
-            # Save a png of the calibrated image for visual inspection
+            # Get the current JWST Readnoise Reference File data
+            parameters = self.make_crds_parameter_dict()
+            readnoise_dictionary = crds_tools.get_reffiles(parameters, ['readnoise'], download=True)  # TODO do i need to download this?
+            readnoise_file = readnoise_dictionary['readnoise']
+            if 'NOT FOUND' in readnoise_file:
+                logging.warning(('\tNo pipeline readnoise reffile for {} {}. Assuming all zeros.'.format(self.instrument, self.aperture)))
+                pipeline_readnoise = np.zeros(readnoise.shape)
+            else:
+                logging.info('\tPipeline readnoise reffile is {}'.format(readnoise_file))
+                pipeline_readnoise = fits.getdata(readnoise_file)
+
+            # Find the difference between the current readnoise image and the pipeline readnoise reffile, and record image stats
+            readnoise_diff = readnoise - pipeline_readnoise
+            mean_diff, median_diff, stddev_diff = sigma_clipped_stats(readnoise_diff, sigma=3.0, maxiters=5)
+
+            # Save a png of the readnoise difference image for visual inspection
             logging.info('\tCreating png of readnoise difference image')
-            readnoise_png = self.image_to_png(readnoise, outname=os.path.basename(readnoise_outfile).replace('.fits', ''))
+            readnoise_diff_png = self.image_to_png(readnoise_diff, outname=os.path.basename(readnoise_outfile).replace('.fits', '_diff'))
 
             # Construct new entry for this file for the readnoise database table.
             # Can't insert values with numpy.float32 datatypes into database
             # so need to change the datatypes of these values.
             readnoise_db_entry = {'aperture': self.aperture,
-                                  'nints': n_ints,
-                                  'ngroups': n_groups,
+                                  'read_pattern': self.read_pattern,
+                                  'nints': self.nints,
+                                  'ngroups': self.ngroups,
                                   'uncal_filename': filename,
                                   'readnoise_filename': readnoise_outfile,
-                                  'readnoise_image': readnoise_png,
-                                  'expstart': expstart,
+                                  'readnoise_diff_image': readnoise_diff_png,
+                                  'expstart': self.expstart,
+                                  'mean_diff': float(mean_diff),
+                                  'median_diff': float(median_diff),
+                                  'stddev_diff': float(stddev_diff),
                                   'entry_date': datetime.datetime.now()
                                  }
+            for key in amp_means.keys():
+                readnoise_db_entry[key] = float(amp_means[key])
 
             # Add this new entry to the readnoise database table
             self.stats_table.__table__.insert().execute(readnoise_db_entry)
             logging.info('\tNew entry added to readnoise database table: {}'.format(readnoise_db_entry))
+
+            # Remove the raw and calibrated files to save memory space
+            os.remove(filename)
+            os.remove(processed_file)
 
     @log_fail
     @log_info
@@ -420,7 +521,7 @@ class Readnoise():
         logging.info('Readnoise Monitor completed successfully.')
 
     def run_early_pipeline(self, filename, group_scale=False):
-        """Runs the early steps of the jwst pipeline on uncalibrated files 
+        """Runs the early steps of the jwst pipeline on uncalibrated files
         and outputs the result.
 
         Parameters
@@ -465,9 +566,9 @@ class Readnoise():
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    #start_time, log_file = initialize_instrument_monitor(module)
+    start_time, log_file = initialize_instrument_monitor(module)
 
     monitor = Bias()
     monitor.run()
 
-    #update_monitor_table(module, start_time, log_file)
+    update_monitor_table(module, start_time, log_file)
