@@ -42,9 +42,8 @@
 
         <div class="row">
 
-            <!-- Display the image -->
+            <!-- Display the image and integration buttons/slider -->
     	    <div class="col-xl-9 text-center">
-    		    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("left", "{{file_root}}", "{{num_ints}}");' disabled>&#9664;</button>
     		    <span class="image_preview">
     		    	<a id="int_count">Displaying integration 1/1</a><br>
     		    	<img id="image_viewer"
@@ -52,9 +51,15 @@
                          alt='{{ file_root }}_cal_integ0.jpg'
                          title="Preview image for {{ file_root }}">
     		    </span>
-    		    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("right", "{{file_root}}", "{{num_ints}}");' disabled>&#9658;</button>
-            </div>
 
+                <div class="int_changer">
+                    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("{{file_root}}", "{{num_ints}}", "button", "left");' disabled>&#9664;</button>
+                    <input type="range" min="1" max="5" value="1" class="slider" id="slider_range" onchange='change_int("{{file_root}}", "{{num_ints}}", "slider")'>
+                    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("{{file_root}}", "{{num_ints}}", "button", "right");' disabled>&#9658;</button>
+                    <p>Integration: <span id="slider_val"></span></p>
+                </div>
+            </div>
+            
             <!-- Display the anomaly form -->
             <div class="col-xl-3 text-left">
                 <!--Load the file search form from the view-->
@@ -87,8 +92,18 @@
                     </form>
                 </div>
             </div>
-
         </div>
+
+        <!-- Update the current slider integration value while it is being dragged -->
+        <script type="text/javascript">
+        var slider = document.getElementById("slider_range")
+        var slider_val = document.getElementById("slider_val")
+        slider_val.innerHTML = slider.value; // Display the default slider value
+        
+        slider.oninput = function() {
+          slider_val.innerHTML = this.value;
+        }
+        </script>
 
 		<!-- Download the images? -->
 	    <p>
