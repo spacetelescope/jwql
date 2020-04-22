@@ -148,7 +148,7 @@ def get_all_proposals():
     return proposals
 
 
-def get_current_flagged_anomalies(rootname):
+def get_current_flagged_anomalies(rootname, instrument):
     """Return a list of currently flagged anomalies for the given
     ``rootname``
 
@@ -165,7 +165,13 @@ def get_current_flagged_anomalies(rootname):
         (e.g. ``['snowball', 'crosstalk']``)
     """
 
-    query = di.session.query(di.Anomaly).filter(di.Anomaly.rootname == rootname).order_by(di.Anomaly.flag_date.desc()).limit(1)
+    table_dict = {}
+    for instrument in JWST_INSTRUMENT_NAMES_MIXEDCASE:
+        table_dict[instrument.lower()] = getattr(di, '{}Anomaly'.format(JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument]))
+
+    table = table_dict[instrument.lower()]
+    query = di.session.query(table).filter(table.rootname == rootname).order_by(table.flag_date.desc()).limit(1)
+
     all_records = query.data_frame
     if not all_records.empty:
         current_anomalies = [col for col, val in np.sum(all_records, axis=0).items() if val]
