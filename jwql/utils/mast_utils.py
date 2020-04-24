@@ -108,6 +108,59 @@ def mast_query(instrument, aperture, templates, start_date, end_date):
     return query_results
 
 
+def mast_query_miri(detector, templates, start_date, end_date):
+    """Use ``astroquery`` to search MAST for data for given observation
+    templates over a given time range for MIRI. Miri is different than
+    the other instruments in that (to find full frame flats and darks at
+    least) you need to use the detector name rather than the aperture
+    name. There is no full frame aperture name for the MRS detectors.
+
+    Parameters
+    ----------
+    detector : str
+        Name of the detector to search for. One of MIRIMAGE, MIRIFULONG, MIRIFUSHORT.
+
+    templates : str or list
+        Single, or list of, templates for the query (e.g. ``NRC_DARK``, ``MIR_FLATMRS``)
+
+    start_date : float
+        Starting date for the search in MJD
+
+    end_date : float
+        Ending date for the search in MJD
+
+    Returns
+    -------
+    query_results : list
+        List of dictionaries containing the query results
+    """
+    # If a single template name is input as a string, put it in a list
+    if isinstance(templates, str):
+        templates = [templates]
+
+    instrument = 'MIRI'
+
+    # monitor_mast.instrument_inventory does not allow list inputs to
+    # the added_filters input (or at least if you do provide a list, then
+    # it becomes a nested list when it sends the query to MAST. The
+    # nested list is subsequently ignored by MAST.)
+    # So query once for each flat template, and combine outputs into a
+    # single list.
+    query_results = []
+    for template_name in templates:
+
+        # Create dictionary of parameters to add
+        parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
+                      "detector": detector, "exp_type": template_name}
+
+        query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
+                                                  add_filters=parameters, return_data=True, caom=False)
+        if len(query['data']) > 0:
+            query_results.extend(query['data'])
+
+    return query_results
+
+
 def update_monitor_table(module, start_time, log_file):
     """Update the ``monitor`` database table with information about
     the instrument monitor run

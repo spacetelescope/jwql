@@ -773,7 +773,11 @@ class BadPixels():
             if self.instrument == 'niriss':
                 possible_apertures = ['NIS_CEN']
             if self.instrument == 'miri':
-                possible_apertures = ['MIRIM_FULL']
+                # Since MIRI is organized a little bit differently than the
+                # other instruments, you can't use aperture names to uniquely
+                # identify the full frame darks/flats from a given detector.
+                # Instead you must use detector names.
+                possible_apertures = ['MIRIMAGE', 'MIRIFULONG', 'MIRIFUSHORT']
             if self.instrument == 'fgs':
                 possible_apertures = ['FGS1_FULL', 'FGS2_FULL']
             if self.instrument == 'nirspec':
@@ -795,13 +799,16 @@ class BadPixels():
                 logging.info('\tFlat field query times: {} {}'.format(self.flat_query_start, self.query_end))
                 logging.info('\tDark current query times: {} {}'.format(self.dark_query_start, self.query_end))
 
-                # Query MAST using the aperture and the time of the
-                # most recent previous search as the starting time
+                # Query MAST using the aperture and the time of the most
+                # recent previous search as the starting time.
                 flat_templates = FLAT_EXP_TYPES[instrument]
-                new_flat_entries = mast_query(instrument, aperture, flat_templates, self.flat_query_start, self.query_end)
-
                 dark_templates = DARK_EXP_TYPES[instrument]
-                new_dark_entries = mast_query(instrument, aperture, dark_templates, self.dark_query_start, self.query_end)
+                if self.instrument != 'miri':
+                    new_flat_entries = mast_query(instrument, aperture, flat_templates, self.flat_query_start, self.query_end)
+                    new_dark_entries = mast_query(instrument, aperture, dark_templates, self.dark_query_start, self.query_end)
+                else:
+                    new_flat_entries = mast_query_miri(aperture, flat_templates, self.flat_query_start, self.query_end)
+                    new_dark_entries = mast_query_miri(aperture, dark_templates, self.dark_query_start, self.query_end)
 
                 # NIRISS - results can include rate, rateints, trapsfilled
                 # MIRI - Jane says they now use illuminated data!!
