@@ -49,19 +49,24 @@ AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 512, 1), (0, 2048, 1)],
 
 ANOMALIES_PER_INSTRUMENT = {
     # anomalies affecting all instruments:
-    'snowball': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
     'cosmic_ray_shower': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
-    'crosstalk': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
-    'data_transfer_error': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
     'diffraction_spike': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
     'excessive_saturation': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
-    'ghost': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
     'guidestar_failure': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
     'persistence': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
-    'satellite_trail': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    #anomalies affecting multiple instruments:
+    'crosstalk': ['fgs', 'nircam', 'niriss', 'nirspec'],
+    'data_transfer_error': ['fgs', 'nircam', 'niriss', 'nirspec'],
+    'ghost': ['fgs', 'nircam', 'niriss', 'nirspec'],
+    'snowball': ['fgs', 'nircam', 'niriss', 'nirspec'],
     # instrument-specific anomalies:
-    'optical_short': ['nirspec'],  # Only for MOS observations
+    'column_pull_up': ['miri'],
+    'dominant_msa_leakage': ['nirspec'],
     'dragons_breath': ['nircam'],
+    'glow': ['miri'],
+    'internal_reflection': ['miri'],
+    'optical_short': ['nirspec'],  # Only for MOS observations
+    'row_pull_down': ['miri'],
     # additional anomalies:
     'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
 
