@@ -100,7 +100,7 @@ from jwql.utils import crds_tools, instrument_properties
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
                                  FLAT_EXP_TYPES, DARK_EXP_TYPES
 from jwql.utils.logging_functions import log_info, log_fail
-from jwql.utils.mast_utils import mast_query
+from jwql.utils.mast_utils import mast_query, mast_query_miri
 from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
