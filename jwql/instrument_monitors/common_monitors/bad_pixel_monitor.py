@@ -617,7 +617,7 @@ class BadPixels():
             for uncal_file, rate_file in zip(illuminated_raw_files, illuminated_slope_files):
                 if rate_file == 'None':
                     self.get_metadata(uncal_file)
-                    jump_output, rate_output, junk = pipeline_tools.calwebb_detector1_save_jump(uncal_file, out_dir,
+                    jump_output, rate_output, junk = pipeline_tools.calwebb_detector1_save_jump(uncal_file, self.data_dir,
                                                                                           ramp_fit=True, save_fitopt=False)
                     if self.nints > 1:
                         #illuminated_slope_files[index] = rate_output.replace('rate', 'rateints')
