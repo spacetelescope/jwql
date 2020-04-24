@@ -483,7 +483,7 @@ class BadPixels():
         # entirely from the uncal and rate lists
         if len(uncal_not_copied) > 0:
             for badfile in uncal_not_copied:
-                bad_index = uncal_files.index[badfile]
+                bad_index = uncal_files.index(badfile)
                 del uncal_files[bad_index]
                 del rate_files[bad_index]
 
@@ -831,7 +831,7 @@ class BadPixels():
                 if len(flat_uncal_files) < flat_file_count_threshold:
                     logging.info(('\tBad pixels from flats skipped. {} new flat files for {}, {}. {} new files are '
                                   'required to run bad pixels from flats portion of monitor.').format(
-                        len(new_flat_entries), instrument, aperture, flat_file_count_threshold[0]))
+                        len(flat_uncal_files), instrument, aperture, flat_file_count_threshold[0]))
                     flat_uncal_files = None
                     run_flats = False
 
@@ -849,7 +849,7 @@ class BadPixels():
                 if len(dark_uncal_files) < dark_file_count_threshold:
                     logging.info(('\tBad pixels from darks skipped. {} new dark files for {}, {}. {} new files are '
                                   'required to run bad pixels from darks portion of monitor.').format(
-                        len(new_dark_entries), instrument, aperture, dark_file_count_threshold[0]))
+                        len(dark_uncal_files), instrument, aperture, dark_file_count_threshold[0]))
                     dark_uncal_files = None
                     run_darks = False
 
