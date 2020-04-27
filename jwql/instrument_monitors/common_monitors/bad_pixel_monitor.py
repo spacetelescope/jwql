@@ -670,6 +670,17 @@ class BadPixels():
             max_dark_time = max(dark_obstimes)
             mid_dark_time = instrument_properties.mean_time(dark_obstimes)
 
+        # For the dead flux check, filter out any files that have less than
+        # 4 groups
+        dead_flux_files = []
+        if illuminated_raw_files is not None:
+            for illum_file in illuminated_raw_files:
+                ngroup = fits.getheader(illum_file)['NGROUPS']
+                if ngroup >= 4:
+                    dead_flux_files.append(illum_file)
+        if len(dead_flux_files) == 0:
+            dead_flux_files = None
+
         # Instrument-specific preferences from jwst_reffiles meetings
         if self.instrument in ['nircam', 'niriss', 'fgs']:
             dead_search_type = 'sigma_rate'
@@ -685,7 +696,7 @@ class BadPixels():
         output_file = os.path.join(self.output_dir, output_file)
         bad_pixel_mask.bad_pixels(flat_slope_files=illuminated_slope_files, dead_search_type=dead_search_type,
                                   flat_mean_normalization_method=flat_mean_normalization_method,
-                                  run_dead_flux_check=True, dead_flux_check_files=illuminated_raw_files, flux_check=35000,
+                                  run_dead_flux_check=True, dead_flux_check_files=dead_flux_files, flux_check=35000,
                                   dark_slope_files=dark_slope_files, dark_uncal_files=dark_raw_files,
                                   dark_jump_files=dark_jump_files, dark_fitopt_files=dark_fitopt_files, plot=False,
                                   output_file=output_file, author='jwst_reffiles', description='A bad pix mask',
