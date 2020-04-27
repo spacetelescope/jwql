@@ -777,23 +777,31 @@ class BadPixels():
                 # other instruments, you can't use aperture names to uniquely
                 # identify the full frame darks/flats from a given detector.
                 # Instead you must use detector names.
-                possible_apertures = ['MIRIMAGE', 'MIRIFULONG', 'MIRIFUSHORT']
+                possible_apertures = [('MIRIMAGE', 'MIRIM_FULL'), ('MIRIFULONG', 'None'), ('MIRIFUSHORT', 'None')]
             if self.instrument == 'fgs':
                 possible_apertures = ['FGS1_FULL', 'FGS2_FULL']
             if self.instrument == 'nirspec':
                 possible_apertures = ['NRS1_FULL', 'NRS2_FULL']
 
             for aperture in possible_apertures:
+                # MIRI is unlike the other instruments. We basically treat
+                # the detector as the aperture name because there is no
+                # aperture name for a full frame MRS exposure.
+                if self.instrument == 'miri':
+                    detector_name, aperture_name = aperture
+                    self.aperture = detector_name
+                else:
+                    self.aperture = aperture
+
                 logging.info('')
-                logging.info('Working on aperture {} in {}'.format(aperture, instrument))
+                logging.info('Working on aperture {} in {}'.format(aperture, self.instrument))
 
                 # Find the appropriate threshold for the number of new files needed
-                match = aperture == limits['Aperture']
-                flat_file_count_threshold = limits['FlatThreshold'][match]
-                dark_file_count_threshold = limits['DarkThreshold'][match]
+                match = self.aperture == limits['Aperture']
+                flat_file_count_threshold = limits['FlatThreshold'][match].data[0]
+                dark_file_count_threshold = limits['DarkThreshold'][match].data[0]
 
                 # Locate the record of the most recent MAST search
-                self.aperture = aperture
                 self.flat_query_start = self.most_recent_search(file_type='flat')
                 self.dark_query_start = self.most_recent_search(file_type='dark')
                 logging.info('\tFlat field query times: {} {}'.format(self.flat_query_start, self.query_end))
@@ -807,8 +815,8 @@ class BadPixels():
                     new_flat_entries = mast_query(instrument, aperture, flat_templates, self.flat_query_start, self.query_end)
                     new_dark_entries = mast_query(instrument, aperture, dark_templates, self.dark_query_start, self.query_end)
                 else:
-                    new_flat_entries = mast_query_miri(aperture, flat_templates, self.flat_query_start, self.query_end)
-                    new_dark_entries = mast_query_miri(aperture, dark_templates, self.dark_query_start, self.query_end)
+                    new_flat_entries = mast_query_miri(detector_name, aperture_name, flat_templates, self.flat_query_start, self.query_end)
+                    new_dark_entries = mast_query_miri(detector_name, aperture_name, dark_templates, self.dark_query_start, self.query_end)
 
                 # NIRISS - results can include rate, rateints, trapsfilled
                 # MIRI - Jane says they now use illuminated data!!
@@ -837,14 +845,14 @@ class BadPixels():
 
                 if len(flat_uncal_files) < flat_file_count_threshold:
                     logging.info(('\tBad pixels from flats skipped. {} new flat files for {}, {}. {} new files are '
-                                  'required to run bad pixels from flats portion of monitor.').format(
-                        len(flat_uncal_files), instrument, aperture, flat_file_count_threshold[0]))
+                                  'required to run bad pixels from flats portion of monitor.')
+                                  .format(len(flat_uncal_files), instrument, aperture, flat_file_count_threshold))
                     flat_uncal_files = None
                     run_flats = False
 
                 else:
                     logging.info('\tSufficient new files found for {}, {} to run the bad pixel from flats portion of the monitor.'
-                                 .format(self.instrument, self.aperture))
+                                 .format(self.instrument, aperture))
                     logging.info('\tNew entries: {}'.format(len(flat_uncal_files)))
                     run_flats = True
 
@@ -855,14 +863,13 @@ class BadPixels():
 
                 if len(dark_uncal_files) < dark_file_count_threshold:
                     logging.info(('\tBad pixels from darks skipped. {} new dark files for {}, {}. {} new files are '
-                                  'required to run bad pixels from darks portion of monitor.').format(
-                        len(dark_uncal_files), instrument, aperture, dark_file_count_threshold[0]))
+                                  'required to run bad pixels from darks portion of monitor.')
+                                  .format(len(dark_uncal_files), instrument, aperture, dark_file_count_threshold))
                     dark_uncal_files = None
                     run_darks = False
-
-                else:
+                elif len(dark_uncal_files) >= dark_file_count_threshold:
                     logging.info('\tSufficient new files found for {}, {} to run the bad pixel from darks portion of the monitor.'
-                                 .format(self.instrument, self.aperture))
+                                 .format(self.instrument, aperture))
                     logging.info('\tNew entries: {}'.format(len(dark_uncal_files)))
                     run_darks = True
 
@@ -907,7 +914,7 @@ class BadPixels():
                     num_flat_files = len(flat_uncal_files)
 
                 new_entry = {'instrument': self.instrument.upper(),
-                             'aperture': aperture,
+                             'aperture': self.aperture,
                              'dark_start_time_mjd': self.dark_query_start,
                              'dark_end_time_mjd': self.query_end,
                              'flat_start_time_mjd': self.flat_query_start,

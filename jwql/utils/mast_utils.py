@@ -108,7 +108,7 @@ def mast_query(instrument, aperture, templates, start_date, end_date):
     return query_results
 
 
-def mast_query_miri(detector, templates, start_date, end_date):
+def mast_query_miri(detector, aperture, templates, start_date, end_date):
     """Use ``astroquery`` to search MAST for data for given observation
     templates over a given time range for MIRI. Miri is different than
     the other instruments in that (to find full frame flats and darks at
@@ -119,6 +119,9 @@ def mast_query_miri(detector, templates, start_date, end_date):
     ----------
     detector : str
         Name of the detector to search for. One of MIRIMAGE, MIRIFULONG, MIRIFUSHORT.
+
+    aperture : str
+        Aperture name on the detector (e.g. MIRIM_FULL)
 
     templates : str or list
         Single, or list of, templates for the query (e.g. ``NRC_DARK``, ``MIR_FLATMRS``)
@@ -150,8 +153,12 @@ def mast_query_miri(detector, templates, start_date, end_date):
     for template_name in templates:
 
         # Create dictionary of parameters to add
-        parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
-                      "detector": detector, "exp_type": template_name}
+        if aperture.lower() != 'none':
+            parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
+                          "detector": detector, "apername": aperture, "exp_type": template_name}
+        else:
+            parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
+                          "detector": detector, "exp_type": template_name}
 
         query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
                                                   add_filters=parameters, return_data=True, caom=False)
