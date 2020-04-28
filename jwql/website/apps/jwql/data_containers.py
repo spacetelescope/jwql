@@ -51,7 +51,7 @@ from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as mi
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.utils import ensure_dir_exists
-from jwql.utils.constants import MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
 from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
@@ -82,7 +82,7 @@ def data_trending():
 
 
 def nirspec_trending():
-    """Container for Miri datatrending dashboard and components
+    """Container for NIRSpec datatrending dashboard and components
 
     Returns
     -------
@@ -782,6 +782,44 @@ def get_proposal_info(filepaths):
     proposal_info['num_files'] = num_files
 
     return proposal_info
+
+
+def get_thumbnails_all_instruments():
+    """Return a list of thumbnails available in the filesystem for all
+    instruments.
+
+    Returns
+    -------
+    thumbnails : list
+        A list of thumbnails available in the filesystem for the
+        given instrument.
+    """
+
+    # Make sure instruments are of the proper format (e.g. "Nircam")
+    thumbnail_list = []
+    for inst in JWST_INSTRUMENT_NAMES:
+        instrument = inst[0].upper()+inst[1:]
+
+        # Query MAST for all rootnames for the instrument
+        service = "Mast.Jwst.Filtered.{}".format(instrument)
+        params = {"columns": "filename",
+                "filters": []}
+        response = Mast.service_request_async(service, params)
+        results = response[0].json()['data']
+
+        # Parse the results to get the rootnames
+        filenames = [result['filename'].split('.')[0] for result in results]
+
+        # Get list of all thumbnails
+        thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
+
+    thumbnail_list.extend(thumbnails)
+
+    # Get subset of preview images that match the filenames
+    thumbnails = [os.path.basename(item) for item in thumbnail_list if
+                os.path.basename(item).split('_integ')[0] in filenames]
+
+    return thumbnails
 
 
 def get_thumbnails_by_instrument(inst):
