@@ -482,7 +482,7 @@ def view_image(request, user, inst, file_root, rewrite=False):
     image_info = get_image_info(file_root, rewrite)
 
     # Determine current flagged anomalies
-    current_anomalies = get_current_flagged_anomalies(file_root)
+    current_anomalies = get_current_flagged_anomalies(file_root, inst)
 
     # Create a form instance
     form = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
