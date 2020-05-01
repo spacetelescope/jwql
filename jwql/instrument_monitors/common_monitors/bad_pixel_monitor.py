@@ -372,8 +372,8 @@ class BadPixels():
         """
         # Need to filter all instruments' results by filter. Choose filter with the most files
         # Only for flats
-        if datatype == 'flat':
-            if self.instrument not in ['nirspec', 'miri']:
+        if ((datatype == 'flat') and (self.instrument != 'fgs')):
+            if self.instrument in ['nircam', 'niriss']:
                 filter_on = 'pupil'
             elif self.instrument == 'nirspec':
                 filter_on = 'grating'
@@ -836,7 +836,7 @@ class BadPixels():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in JWST_INSTRUMENT_NAMES:
+        for instrument in ['fgs']:  #JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -886,6 +886,10 @@ class BadPixels():
                 # What lamp is most appropriate for NIRSpec?
                 if self.instrument == 'nirspec':
                     lamp = 'LINE2'
+
+                # What lamp is most appropriate for FGS?
+                #if self.instrument == 'fgs':
+                #    lamp = 'G2LAMP1'
 
                 logging.info('')
                 logging.info('Working on aperture {} in {}'.format(aperture, self.instrument))
