@@ -100,7 +100,7 @@ from jwql.utils import crds_tools, instrument_properties
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
                                  FLAT_EXP_TYPES, DARK_EXP_TYPES
 from jwql.utils.logging_functions import log_info, log_fail
-from jwql.utils.mast_utils import mast_query, mast_query_miri
+from jwql.utils.mast_utils import mast_query
 from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
@@ -351,6 +351,73 @@ class BadPixels():
                  'baseline_file': baseline_file,
                  'entry_date': datetime.datetime.now()}
         self.pixel_table.__table__.insert().execute(entry)
+
+    def filter_query_results(self, results, datatype):
+        """Filter MAST query results. For input flats, keep only those with
+        the most common filter/pupil/grating combination. For both flats
+        and darks, keep only those with the most common readout pattern.
+
+        Parameters
+        ----------
+        results : list
+            List of query results, as returned by mast_query()
+
+        datatype : str
+            Type of data being filtered. 'flat' or 'dark'.
+
+        Returns
+        -------
+        readpatt_filtered : list
+            Filtered list of query results.
+        """
+        # Need to filter all instruments' results by filter. Choose filter with the most files
+        # Only for flats
+        if datatype == 'flat':
+            if self.instrument not in ['nirspec', 'miri']:
+                filter_on = 'pupil'
+            elif self.instrument == 'nirspec':
+                filter_on = 'grating'
+            elif self.instrument == 'miri':
+                filter_on = 'filter'
+
+            filter_list = ['{}:{}'.format(entry['filter'], entry[filter_on]) for entry in results]
+            filter_set = list(set(filter_list))
+
+            # Find the filter with the largest number of entries
+            maxnum = 0
+            maxfilt = ''
+            for filt in filter_set:
+                if filter_list.count(filt) > maxnum:
+                    maxnum = filter_list.count(filt)
+                    maxfilt = filt
+            filter_name, other_name = maxfilt.split(':')
+
+            filtered = []
+            for entry in results:
+                if ((str(entry['filter']) == filter_name) and (str(entry[filter_on]) == other_name)):
+                    filtered.append(entry)
+
+            results = deepcopy(filtered)
+
+        # All instruments: need to filter by readout pattern. Any pattern name not containing "IRS2" is ok
+        # choose readout pattern with the most entries
+        readpatt_list = [entry['readpatt'] for entry in results]
+        readpatt_set = list(set(readpatt_list))
+
+        maxnum = 0
+        maxpatt = ''
+        for patt in readpatt_set:
+            if ((readpatt_list.count(patt) > maxnum) and ('IRS2' not in patt)):
+                maxnum = readpatt_list.count(patt)
+                maxpatt = patt
+
+        # Find the readpattern with the largest number of entries
+        readpatt_filtered = []
+        for entry in results:
+            if entry['readpatt'] == maxpatt:
+                readpatt_filtered.append(entry)
+
+        return readpatt_filtered
 
     def get_metadata(self, filename):
         """Collect basic metadata from a fits file
@@ -769,7 +836,7 @@ class BadPixels():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in JWST_INSTRUMENT_NAMES:
+        for instrument in ['nirspec']:  # JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -788,13 +855,20 @@ class BadPixels():
                 # other instruments, you can't use aperture names to uniquely
                 # identify the full frame darks/flats from a given detector.
                 # Instead you must use detector names.
-                possible_apertures = [('MIRIMAGE', 'MIRIM_FULL'), ('MIRIFULONG', 'None'), ('MIRIFUSHORT', 'None')]
+                possible_apertures = [('MIRIMAGE', 'MIRIM_FULL'), ('MIRIFULONG', 'MIRIM_FULL'), ('MIRIFUSHORT', 'MIRIM_FULL')]
             if self.instrument == 'fgs':
                 possible_apertures = ['FGS1_FULL', 'FGS2_FULL']
             if self.instrument == 'nirspec':
+                # NIRSpec flats use the MIRROR grating.
                 possible_apertures = ['NRS1_FULL', 'NRS2_FULL']
+                grating = 'MIRROR'
 
             for aperture in possible_apertures:
+                grating = None
+                detector_name = None
+                lamp = None
+                lamp_power = None
+
                 # MIRI is unlike the other instruments. We basically treat
                 # the detector as the aperture name because there is no
                 # aperture name for a full frame MRS exposure.
@@ -803,6 +877,15 @@ class BadPixels():
                     self.aperture = detector_name
                 else:
                     self.aperture = aperture
+                    aperture_name = aperture
+
+                # In flight, NIRISS plans to take darks using the LINE2 lamp
+                if self.instrument == 'niriss':
+                    lamp = 'LINE2'
+
+                # What lamp is most appropriate for NIRSpec?
+                if self.instrument == 'nirspec':
+                    lamp = 'LINE2'
 
                 logging.info('')
                 logging.info('Working on aperture {} in {}'.format(aperture, self.instrument))
@@ -822,12 +905,38 @@ class BadPixels():
                 # recent previous search as the starting time.
                 flat_templates = FLAT_EXP_TYPES[instrument]
                 dark_templates = DARK_EXP_TYPES[instrument]
-                if self.instrument != 'miri':
-                    new_flat_entries = mast_query(instrument, aperture, flat_templates, self.flat_query_start, self.query_end)
-                    new_dark_entries = mast_query(instrument, aperture, dark_templates, self.dark_query_start, self.query_end)
-                else:
-                    new_flat_entries = mast_query_miri(detector_name, aperture_name, flat_templates, self.flat_query_start, self.query_end)
-                    new_dark_entries = mast_query_miri(detector_name, aperture_name, dark_templates, self.dark_query_start, self.query_end)
+
+                new_flat_entries = mast_query(instrument, flat_templates, self.flat_query_start, self.query_end,
+                                              aperture=aperture_name, grating=grating, detector=detector_name,
+                                              lamp=lamp)
+                new_dark_entries = mast_query(instrument, dark_templates, self.dark_query_start, self.query_end,
+                                              aperture=aperture_name, detector=detector_name)
+
+                # Filter the results
+                print('FLATS')
+                for entry in new_flat_entries:
+                    print(entry['detector'], entry['apername'], entry['filter'], entry['readpatt'], entry['exp_type'], entry['lamp'], entry['template'])
+                print('DARKS')
+                for entry in new_dark_entries:
+                    print(entry['detector'], entry['apername'], entry['filter'], entry['readpatt'])
+                #print('FLATS - PREV')
+                #for entry in new_flat_entries_prev:
+                #    print(entry['detector'], entry['apername'], entry['filter'], entry['readpatt'], entry['exp_type'], entry['lamp'], entry['template'])
+
+                # filtering could be different for flats vs darks.
+                # Kevin says we shouldn't need to worry about mixing lamps in the data used to create the bad pixel
+                # mask. In flight, data will only be taken with LINE2, LEVEL 5. Currently in MAST all lamps are
+                # present, but Kevin is not concerned about variations in flat field strucutre.
+                new_flat_entries = self.filter_query_results(new_flat_entries, datatype='flat')
+                new_dark_entries = self.filter_query_results(new_dark_entries, datatype='dark')
+
+                print('FILTERED FLATS')
+                for entry in new_flat_entries:
+                    print(entry['detector'], entry['apername'], entry['filter'], entry['readpatt'], entry['exp_type'], entry['lamp'], entry['template'])
+
+                print('FILTERED DARKS')
+                for entry in new_dark_entries:
+                    print(entry['detector'], entry['apername'], entry['filter'], entry['readpatt'], entry['exp_type'], entry['lamp'], entry['template'])
 
                 # NIRISS - results can include rate, rateints, trapsfilled
                 # MIRI - Jane says they now use illuminated data!!
