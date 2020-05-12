@@ -37,6 +37,7 @@ import shutil
 
 from astropy.io import fits
 from astropy.stats import sigma_clip, sigma_clipped_stats
+from astropy.time import Time
 from astropy.visualization import ZScaleInterval
 from jwst.dq_init import DQInitStep
 from jwst.group_scale import GroupScaleStep
@@ -52,10 +53,11 @@ from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
-from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats
+#from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
-from jwql.utils import crds_tools, instrument_properties
+#from jwql.utils import crds_tools, instrument_properties
+from jwql.utils import instrument_properties  # TODO UNCOMMENT WHEN CRDS_TOOLS IS UPDATED
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
@@ -177,7 +179,6 @@ class Readnoise():
             self.date_obs = header['DATE-OBS']
             self.time_obs = header['TIME-OBS']
             self.expstart = '{}T{}'.format(self.date_obs, self.time_obs)
-
         except KeyError as e:
             logging.error(e)
 
@@ -275,7 +276,7 @@ class Readnoise():
         logging.info('\tCreating stack of CDS frames')
         n_ints, n_groups, n_y, n_x = data.shape
         for integration in range(n_ints):
-                cds = data[integration, 1::2, :, :] - data[integration, ::2, :, :]
+            cds = data[integration, 1::2, :, :] - data[integration, ::2, :, :]
             if integration == 0:
                 cds_stack = cds
             else:
@@ -335,22 +336,20 @@ class Readnoise():
         Parameters
         ----------
         file_list : list
-            List of filenames (including full paths) to the dark current
-            files
+            List of filenames (including full paths) to the dark current files
         """
 
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
 
-            # Skip processing if an entry for this file already exists in
-            # the readnoise stats database.
-            file_exists = self.file_exists_in_database(filename)
-            if file_exists:
-                logging.info('\t{} already exists in the readnoise database table.'.format(filename))
-                continue
-
-            # Get the relevant parameters for this file to be used in e.g. CRDS calls, database entries
+            # Get relevant header information for this file
             self.get_metadata(filename)
+
+            # Skip processing if the file doesnt have enough groups to calculate the readnoise
+            if self.ngroups < 2:  # TODO set this to 10 after testing so MIRI will also be ok
+                logging.info('\tNot enough groups to calculate readnoise.')
+                os.remove(filename)
+                continue
 
             # Determine if the file needs group_scale in pipeline run
             if self.read_pattern not in pipeline_tools.GROUPSCALE_READOUT_PATTERNS:
@@ -360,77 +359,79 @@ class Readnoise():
 
             # Run the file through the pipeline up through the refpix step
             logging.info('\tRunning pipeline on {}'.format(filename))
-            processed_file = self.run_early_pipeline(filename, group_scale=group_scale)
-            logging.info('\tPipeline complete. Output: {}'.format(processed_file))
+            # processed_file = self.run_early_pipeline(filename, group_scale=group_scale)
+            # logging.info('\tPipeline complete. Output: {}'.format(processed_file))
 
-            # Find amplifier boundaries so per-amp statistics can be calculated
-            _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)
-            logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
+            # # Find amplifier boundaries so per-amp statistics can be calculated
+            # _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)
+            # logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
 
-            # Get the ramp data; remove first 5 groups and last group for MIRI to avoid reset/rscd effects
-            cal_data = fits.getdata(processed_file, 'SCI', uint=False)
-            if self.instrument == 'MIRI':
-                cal_data = cal_data[:, 5:-1, :, :]
+            # # Get the ramp data; remove first 5 groups and last group for MIRI to avoid reset/rscd effects
+            # cal_data = fits.getdata(processed_file, 'SCI', uint=False)
+            # if self.instrument == 'MIRI':
+            #     cal_data = cal_data[:, 5:-1, :, :]
 
-            # Make the readnoise image
-            readnoise_outfile = os.path.join(self.data_dir, os.path.basename(processed_file.replace('.fits', '_readnoise.fits')))
-            if not os.path.isfile(readnoise_outfile):
-                readnoise = self.make_readnoise_image(cal_data)
-                fits.writeto(readnoise_outfile, readnoise, overwrite=True)
-                logging.info('\tReadnoise image saved to {}'.format(readnoise_outfile))
-            else:
-                readnoise = fits.getdata(readnoise_outfile)
-                logging.info('\tReadnoise image already exists: {}'.format(readnoise_outfile))
+            # # Make the readnoise image
+            # readnoise_outfile = os.path.join(self.data_dir, os.path.basename(processed_file.replace('.fits', '_readnoise.fits')))
+            # if not os.path.isfile(readnoise_outfile):
+            #     readnoise = self.make_readnoise_image(cal_data)
+            #     fits.writeto(readnoise_outfile, readnoise)
+            #     logging.info('\tReadnoise image saved to {}'.format(readnoise_outfile))
+            # else:
+            #     readnoise = fits.getdata(readnoise_outfile)
+            #     logging.info('\tReadnoise image already exists: {}'.format(readnoise_outfile))
 
-            # Calculate the sigma-clipped mean readnoise value in each amp
-            amp_means = self.get_amp_means(readnoise, amp_bounds)
-            logging.info('\tCalculated readnoise image stats: {}'.format(amp_means))
+            # # Calculate the sigma-clipped mean readnoise value in each amp
+            # amp_means = self.get_amp_means(readnoise, amp_bounds)
+            # logging.info('\tCalculated readnoise image stats: {}'.format(amp_means))
 
-            # Get the current JWST Readnoise Reference File data
-            parameters = self.make_crds_parameter_dict()
-            readnoise_dictionary = crds_tools.get_reffiles(parameters, ['readnoise'], download=True)  # TODO do i need to download this?
-            readnoise_file = readnoise_dictionary['readnoise']
-            if 'NOT FOUND' in readnoise_file:
-                logging.warning(('\tNo pipeline readnoise reffile for {} {}. Assuming all zeros.'.format(self.instrument, self.aperture)))
-                pipeline_readnoise = np.zeros(readnoise.shape)
-            else:
-                logging.info('\tPipeline readnoise reffile is {}'.format(readnoise_file))
-                pipeline_readnoise = fits.getdata(readnoise_file)
+            # # Get the current JWST Readnoise Reference File data
+            # parameters = self.make_crds_parameter_dict()
+            # readnoise_dictionary = crds_tools.get_reffiles(parameters, ['readnoise'], download=True)  # TODO do i need to download this?
+            # readnoise_file = readnoise_dictionary['readnoise']
+            # if 'NOT FOUND' in readnoise_file:
+            #     logging.warning(('\tNo pipeline readnoise reffile for {} {}. Assuming all zeros.'.format(self.instrument, self.aperture)))
+            #     pipeline_readnoise = np.zeros(readnoise.shape)
+            # else:
+            #     logging.info('\tPipeline readnoise reffile is {}'.format(readnoise_file))
+            #     pipeline_readnoise = fits.getdata(readnoise_file)
 
-            # Find the difference between the current readnoise image and the pipeline readnoise reffile, and record image stats
-            readnoise_diff = readnoise - pipeline_readnoise
-            mean_diff, median_diff, stddev_diff = sigma_clipped_stats(readnoise_diff, sigma=3.0, maxiters=5)
+            # # Find the difference between the current readnoise image and the pipeline readnoise reffile, and record image stats
+            # readnoise_diff = readnoise - pipeline_readnoise
+            # mean_diff, median_diff, stddev_diff = sigma_clipped_stats(readnoise_diff, sigma=3.0, maxiters=5)
 
-            # Save a png of the readnoise difference image for visual inspection
-            logging.info('\tCreating png of readnoise difference image')
-            readnoise_diff_png = self.image_to_png(readnoise_diff, outname=os.path.basename(readnoise_outfile).replace('.fits', '_diff'))
+            # # Save a png of the readnoise difference image for visual inspection
+            # logging.info('\tCreating png of readnoise difference image')
+            # readnoise_diff_png = self.image_to_png(readnoise_diff, outname=os.path.basename(readnoise_outfile).replace('.fits', '_diff'))
 
-            # Construct new entry for this file for the readnoise database table.
-            # Can't insert values with numpy.float32 datatypes into database
-            # so need to change the datatypes of these values.
-            readnoise_db_entry = {'aperture': self.aperture,
-                                  'read_pattern': self.read_pattern,
-                                  'nints': self.nints,
-                                  'ngroups': self.ngroups,
-                                  'uncal_filename': filename,
-                                  'readnoise_filename': readnoise_outfile,
-                                  'readnoise_diff_image': readnoise_diff_png,
-                                  'expstart': self.expstart,
-                                  'mean_diff': float(mean_diff),
-                                  'median_diff': float(median_diff),
-                                  'stddev_diff': float(stddev_diff),
-                                  'entry_date': datetime.datetime.now()
-                                 }
-            for key in amp_means.keys():
-                readnoise_db_entry[key] = float(amp_means[key])
+            # # Construct new entry for this file for the readnoise database table.
+            # # Can't insert values with numpy.float32 datatypes into database
+            # # so need to change the datatypes of these values.
+            # readnoise_db_entry = {'aperture': self.aperture,
+            #                       'detector': self.detector,
+            #                       'subarray': self.subarray,
+            #                       'read_pattern': self.read_pattern,
+            #                       'nints': self.nints,
+            #                       'ngroups': self.ngroups,
+            #                       'uncal_filename': filename,
+            #                       'readnoise_filename': readnoise_outfile,
+            #                       'readnoise_diff_image': readnoise_diff_png,
+            #                       'expstart': self.expstart,
+            #                       'mean_diff': float(mean_diff),
+            #                       'median_diff': float(median_diff),
+            #                       'stddev_diff': float(stddev_diff),
+            #                       'entry_date': datetime.datetime.now()
+            #                      }
+            # for key in amp_means.keys():
+            #     readnoise_db_entry[key] = float(amp_means[key])
 
-            # Add this new entry to the readnoise database table
-            self.stats_table.__table__.insert().execute(readnoise_db_entry)
-            logging.info('\tNew entry added to readnoise database table: {}'.format(readnoise_db_entry))
+            # # Add this new entry to the readnoise database table
+            # #self.stats_table.__table__.insert().execute(readnoise_db_entry)
+            # logging.info('\tNew entry added to readnoise database table: {}'.format(readnoise_db_entry))
 
-            # Remove the raw and calibrated files to save memory space
-            os.remove(filename)
-            os.remove(processed_file)
+            # # Remove the raw and calibrated files to save memory space
+            # os.remove(filename)
+            # os.remove(processed_file)
 
     @log_fail
     @log_info
@@ -450,23 +451,24 @@ class Readnoise():
         for instrument in ['nircam']:
             self.instrument = instrument
 
-            # Identify which database tables to use
-            self.identify_tables()
+        #     # Identify which database tables to use
+        #     self.identify_tables()
 
-            # Get a list of all possible full-frame apertures for this instrument
+            # Get a list of all possible apertures for this instrument
             siaf = Siaf(self.instrument)
-            possible_apertures = [aperture for aperture in siaf.apertures if siaf[aperture].AperType=='FULLSCA']
+            possible_apertures = list(siaf.apertures)
 
-            for aperture in possible_apertures:
+            for aperture in possible_apertures[12:13]:  # TODO remove index range
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
 
-                # Locate the record of the most recent MAST search; use this time
-                # (plus a 30 day buffer to catch any missing files from the previous
-                # run) as the start time in the new MAST search.
-                most_recent_search = self.most_recent_search()
-                self.query_start = most_recent_search - 30
+        #         # Locate the record of the most recent MAST search; use this time
+        #         # (plus a 30 day buffer to catch any missing files from the previous
+        #         # run) as the start time in the new MAST search.
+        #         most_recent_search = self.most_recent_search()
+        #         self.query_start = most_recent_search - 30
+                self.query_start = 57357.0  # a.k.a. Dec 1, 2015 == CV3  # TODO remove this and uncomment above
 
                 # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
@@ -478,22 +480,27 @@ class Readnoise():
                 if len(new_entries) > 0:
                     ensure_dir_exists(self.data_dir)
 
-                # Save any new uncal files in the output directory; some dont exist in JWQL filesystem.
+                # Get any new files to process
                 new_files = []
-                for file_entry in new_entries:
+                for file_entry in new_entries[0:1]:  # TODO remove index range
+                    output_filename = os.path.join(self.data_dir, file_entry['filename'].replace('_dark', '_uncal'))
+                    
+                    # # Dont process files that already exist in the readnoise stats database
+                    # file_exists = self.file_exists_in_database(output_filename)
+                    # if file_exists:
+                    #     logging.info('\t{} already exists in the readnoise database table.'.format(output_filename))
+                    #     continue
+
+                    # Save any new uncal files in the output directory; some dont exist in JWQL filesystem.
                     try:
                         filename = filesystem_path(file_entry['filename'])
                         uncal_filename = filename.replace('_dark', '_uncal')
                         if not os.path.isfile(uncal_filename):
                             logging.info('\t{} does not exist in JWQL filesystem, even though {} does'.format(uncal_filename, filename))
                         else:
-                            output_filename = os.path.join(self.data_dir, os.path.basename(uncal_filename))
-                            if not os.path.isfile(output_filename):
-                                shutil.copy(uncal_filename, self.data_dir)
-                                logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
-                                set_permissions(output_filename)
-                            else:
-                                logging.info('\t{} already exists'.format(output_filename))
+                            shutil.copy(uncal_filename, self.data_dir)
+                            logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
+                            set_permissions(output_filename)
                             new_files.append(output_filename)
                     except FileNotFoundError:
                         logging.info('\t{} does not exist in JWQL filesystem'.format(file_entry['filename']))
@@ -506,17 +513,17 @@ class Readnoise():
                     logging.info('\tReadnoise monitor skipped. {} new dark files for {}, {}.'.format(len(new_files), instrument, aperture))
                     monitor_run = False
 
-                # Update the query history
-                new_entry = {'instrument': instrument,
-                             'aperture': aperture,
-                             'start_time_mjd': self.query_start,
-                             'end_time_mjd': self.query_end,
-                             'entries_found': len(new_entries),
-                             'files_found': len(new_files),
-                             'run_monitor': monitor_run,
-                             'entry_date': datetime.datetime.now()}
-                self.query_table.__table__.insert().execute(new_entry)
-                logging.info('\tUpdated the query history table')
+        #         # Update the query history
+        #         new_entry = {'instrument': instrument,
+        #                      'aperture': aperture,
+        #                      'start_time_mjd': self.query_start,
+        #                      'end_time_mjd': self.query_end,
+        #                      'entries_found': len(new_entries),
+        #                      'files_found': len(new_files),
+        #                      'run_monitor': monitor_run,
+        #                      'entry_date': datetime.datetime.now()}
+        #         #self.query_table.__table__.insert().execute(new_entry)
+        #         logging.info('\tUpdated the query history table')
 
         logging.info('Readnoise Monitor completed successfully.')
 
@@ -568,7 +575,7 @@ if __name__ == '__main__':
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = initialize_instrument_monitor(module)
 
-    monitor = Bias()
+    monitor = Readnoise()
     monitor.run()
 
-    update_monitor_table(module, start_time, log_file)
+    #update_monitor_table(module, start_time, log_file)
