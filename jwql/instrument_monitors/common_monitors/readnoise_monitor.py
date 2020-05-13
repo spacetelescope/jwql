@@ -39,6 +39,7 @@ from astropy.io import fits
 from astropy.stats import sigma_clip, sigma_clipped_stats
 from astropy.time import Time
 from astropy.visualization import ZScaleInterval
+import crds
 from jwst.dq_init import DQInitStep
 from jwst.group_scale import GroupScaleStep
 from jwst.refpix import RefPixStep
@@ -56,8 +57,7 @@ from jwql.database.database_interface import session
 #from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
-#from jwql.utils import crds_tools, instrument_properties
-from jwql.utils import instrument_properties  # TODO UNCOMMENT WHEN CRDS_TOOLS IS UPDATED
+from jwql.utils import instrument_properties
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
@@ -210,28 +210,26 @@ class Readnoise():
 
         output_filename = os.path.join(self.data_dir, '{}.png'.format(outname))
 
-        if not os.path.isfile(output_filename):
-            # Get image scale limits
-            z = ZScaleInterval()
-            vmin, vmax = z.get_limits(image)
+        # Get image scale limits
+        z = ZScaleInterval()
+        vmin, vmax = z.get_limits(image)
 
-            # Plot the image
-            plt.figure(figsize=(12,12))
-            ax = plt.gca()
-            im = ax.imshow(image, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
-            ax.set_title('{}'.format(outname))
+        # Plot the image
+        plt.figure(figsize=(12,12))
+        ax = plt.gca()
+        im = ax.imshow(image, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
+        ax.set_title('{}'.format(outname))
 
-            # Make the colorbar
-            divider = make_axes_locatable(ax)
-            cax = divider.append_axes("right", size="5%", pad=0.4)
-            cbar = plt.colorbar(im, cax=cax)
-            cbar.set_label('Signal [DN]')
+        # Make the colorbar
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.4)
+        cbar = plt.colorbar(im, cax=cax)
+        cbar.set_label('Readnoise Difference (current - reffile) [DN]')
 
-            plt.savefig(output_filename, bbox_inches='tight', dpi=200)
-            set_permissions(output_filename)
-            logging.info('\t{} created'.format(output_filename))
-        else:
-            logging.info('\t{} already exists'.format(output_filename))
+        # Save the figure
+        plt.savefig(output_filename, bbox_inches='tight', dpi=200, overwrite=True)
+        set_permissions(output_filename)
+        logging.info('\t{} created'.format(output_filename))
 
         return output_filename
 
@@ -345,12 +343,6 @@ class Readnoise():
             # Get relevant header information for this file
             self.get_metadata(filename)
 
-            # Skip processing if the file doesnt have enough groups to calculate the readnoise
-            if self.ngroups < 2:  # TODO set this to 10 after testing so MIRI will also be ok
-                logging.info('\tNot enough groups to calculate readnoise.')
-                os.remove(filename)
-                continue
-
             # Determine if the file needs group_scale in pipeline run
             if self.read_pattern not in pipeline_tools.GROUPSCALE_READOUT_PATTERNS:
                 group_scale = False
@@ -359,50 +351,47 @@ class Readnoise():
 
             # Run the file through the pipeline up through the refpix step
             logging.info('\tRunning pipeline on {}'.format(filename))
-            # processed_file = self.run_early_pipeline(filename, group_scale=group_scale)
-            # logging.info('\tPipeline complete. Output: {}'.format(processed_file))
+            processed_file = self.run_early_pipeline(filename, group_scale=group_scale)
+            logging.info('\tPipeline complete. Output: {}'.format(processed_file))
 
-            # # Find amplifier boundaries so per-amp statistics can be calculated
-            # _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)
-            # logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
+            # Find amplifier boundaries so per-amp statistics can be calculated
+            _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)
+            logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
 
-            # # Get the ramp data; remove first 5 groups and last group for MIRI to avoid reset/rscd effects
-            # cal_data = fits.getdata(processed_file, 'SCI', uint=False)
-            # if self.instrument == 'MIRI':
-            #     cal_data = cal_data[:, 5:-1, :, :]
+            # Get the ramp data; remove first 5 groups and last group for MIRI to avoid reset/rscd effects
+            cal_data = fits.getdata(processed_file, 'SCI', uint=False)
+            if self.instrument == 'MIRI':
+                cal_data = cal_data[:, 5:-1, :, :]
 
-            # # Make the readnoise image
-            # readnoise_outfile = os.path.join(self.data_dir, os.path.basename(processed_file.replace('.fits', '_readnoise.fits')))
-            # if not os.path.isfile(readnoise_outfile):
-            #     readnoise = self.make_readnoise_image(cal_data)
-            #     fits.writeto(readnoise_outfile, readnoise)
-            #     logging.info('\tReadnoise image saved to {}'.format(readnoise_outfile))
-            # else:
-            #     readnoise = fits.getdata(readnoise_outfile)
-            #     logging.info('\tReadnoise image already exists: {}'.format(readnoise_outfile))
+            # Make the readnoise image
+            readnoise_outfile = os.path.join(self.data_dir, os.path.basename(processed_file.replace('_ramp.fits', '_readnoise.fits')))
+            readnoise = self.make_readnoise_image(cal_data)
+            fits.writeto(readnoise_outfile, readnoise, overwrite=True)
+            logging.info('\tReadnoise image saved to {}'.format(readnoise_outfile))
 
-            # # Calculate the sigma-clipped mean readnoise value in each amp
-            # amp_means = self.get_amp_means(readnoise, amp_bounds)
-            # logging.info('\tCalculated readnoise image stats: {}'.format(amp_means))
+            # Calculate the sigma-clipped mean readnoise value in each amp
+            amp_means = self.get_amp_means(readnoise, amp_bounds)
+            logging.info('\tReadnoise image stats: {}'.format(amp_means))
 
-            # # Get the current JWST Readnoise Reference File data
-            # parameters = self.make_crds_parameter_dict()
-            # readnoise_dictionary = crds_tools.get_reffiles(parameters, ['readnoise'], download=True)  # TODO do i need to download this?
-            # readnoise_file = readnoise_dictionary['readnoise']
-            # if 'NOT FOUND' in readnoise_file:
-            #     logging.warning(('\tNo pipeline readnoise reffile for {} {}. Assuming all zeros.'.format(self.instrument, self.aperture)))
-            #     pipeline_readnoise = np.zeros(readnoise.shape)
-            # else:
-            #     logging.info('\tPipeline readnoise reffile is {}'.format(readnoise_file))
-            #     pipeline_readnoise = fits.getdata(readnoise_file)
+            # Get the current JWST Readnoise Reference File data
+            parameters = self.make_crds_parameter_dict()
+            reffile_mapping = crds.getreferences(parameters, reftypes=['readnoise'])
+            readnoise_file = reffile_mapping['readnoise']
+            if 'NOT FOUND' in readnoise_file:
+                logging.warning('\tNo pipeline readnoise reffile match for this file - assuming all zeros.')
+                pipeline_readnoise = np.zeros(readnoise.shape)
+            else:
+                logging.info('\tPipeline readnoise reffile is {}'.format(readnoise_file))
+                pipeline_readnoise = fits.getdata(readnoise_file)
 
-            # # Find the difference between the current readnoise image and the pipeline readnoise reffile, and record image stats
-            # readnoise_diff = readnoise - pipeline_readnoise
-            # mean_diff, median_diff, stddev_diff = sigma_clipped_stats(readnoise_diff, sigma=3.0, maxiters=5)
+            # Find the difference between the current readnoise image and the pipeline readnoise reffile, and record image stats
+            readnoise_diff = readnoise - pipeline_readnoise
+            mean_diff, median_diff, stddev_diff = sigma_clipped_stats(readnoise_diff, sigma=3.0, maxiters=5)
+            logging.info('\tReadnoise difference image stats: {:.5f} +/- {:.5f}'.format(mean_diff, stddev_diff))
 
-            # # Save a png of the readnoise difference image for visual inspection
-            # logging.info('\tCreating png of readnoise difference image')
-            # readnoise_diff_png = self.image_to_png(readnoise_diff, outname=os.path.basename(readnoise_outfile).replace('.fits', '_diff'))
+            # Save a png of the readnoise difference image for visual inspection
+            logging.info('\tCreating png of readnoise difference image')
+            readnoise_diff_png = self.image_to_png(readnoise_diff, outname=os.path.basename(readnoise_outfile).replace('.fits', '_diff'))
 
             # # Construct new entry for this file for the readnoise database table.
             # # Can't insert values with numpy.float32 datatypes into database
@@ -498,10 +487,14 @@ class Readnoise():
                         if not os.path.isfile(uncal_filename):
                             logging.info('\t{} does not exist in JWQL filesystem, even though {} does'.format(uncal_filename, filename))
                         else:
-                            shutil.copy(uncal_filename, self.data_dir)
-                            logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
-                            set_permissions(output_filename)
-                            new_files.append(output_filename)
+                            n_groups = fits.getheader(uncal_filename)['NGROUPS']
+                            if n_groups > 1:  # Skip processing if the file doesnt have enough groups to calculate the readnoise TODO change to 10 after testing so MIRI is also oK
+                                shutil.copy(uncal_filename, self.data_dir)
+                                logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
+                                set_permissions(output_filename)
+                                new_files.append(output_filename)
+                            else:
+                                logging.info('\tNot enough groups to calculate readnoise in {}'.format(uncal_filename))
                     except FileNotFoundError:
                         logging.info('\t{} does not exist in JWQL filesystem'.format(file_entry['filename']))
 
@@ -548,24 +541,21 @@ class Readnoise():
 
         output_filename = filename.replace('_uncal', '').replace('.fits', '_ramp.fits')
 
-        if not os.path.isfile(output_filename):
-            # Run the group_scale and dq_init steps on the input file
-            if group_scale:
-                model = GroupScaleStep.call(filename)
-                model = DQInitStep.call(model)
-            else:
-                model = DQInitStep.call(filename)
-
-            # Run the superbias step for NIRCam
-            if self.instrument == 'NIRCAM':
-                model = SuperBiasStep.call(model)
-
-            # Run the refpix step and save the output
-            model = RefPixStep.call(model)
-            model.save(output_filename)
-            set_permissions(output_filename)
+        # Run the group_scale and dq_init steps on the input file
+        if group_scale:
+            model = GroupScaleStep.call(filename)
+            model = DQInitStep.call(model)
         else:
-            logging.info('\t{} already exists'.format(output_filename))
+            model = DQInitStep.call(filename)
+
+        # Run the superbias step for NIRCam
+        if self.instrument.upper() == 'NIRCAM':
+            model = SuperBiasStep.call(model)
+
+        # Run the refpix step and save the output
+        model = RefPixStep.call(model)
+        model.save(output_filename)
+        set_permissions(output_filename)
 
         return output_filename
 
