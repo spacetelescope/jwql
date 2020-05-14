@@ -1,0 +1,10 @@
+DETECTOR, string
+X_COORD, integer_array_1d
+Y_COORD, integer_array_1d
+TYPE, string
+SOURCE_FILES, string_array_1d
+OBS_START_TIME, datetime
+OBS_MID_TIME, datetime
+OBS_END_TIME, datetime
+MEAN_DARK_IMAGE_FILE, string
+BASELINE_FILE, string

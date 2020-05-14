@@ -10,3 +10,5 @@ docs/source/api/
 .cache
 *.pytest_cache
 htmlcov/
+*.sqlite3
+jwql/website/static/*.csv

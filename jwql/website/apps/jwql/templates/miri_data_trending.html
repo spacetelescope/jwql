@@ -1,0 +1,67 @@
+<!--This line tells the HTML file to read the contents of base.html before
+loading the contents of WEBPAGE_TEMPLATE.html-->
+{% extends "base.html" %}
+
+
+<!--The "preamble" block below contains content that goes in the page <head> tag-->
+{% block preamble %}
+
+    <!--Put the webpage title here:-->
+    <title>MIRI Mnemonic Trending - JWQL</title>
+
+{% endblock %}
+
+<!--The "content" block below contains content that goes in the page <body> tag-->
+{% block content %}
+
+    <main role="main" class="container mnemonic_trending_main">
+
+      <div id="header">
+        <!--Add a heading-->
+        <h1>MIRI data-trending monitors</h1>
+        <!--Horizontal line-->
+        <hr>
+        <!--Include an image located at jwql/website/apps/jwql/static/img/-->
+        <div style="text-align: center">
+          <img src={{ static('img/jwql_logo_full_transparent.png') }}
+               width=20%
+               alt="JWQL Logo"
+               title="JWQL Logo">
+        </div>
+        <br>
+      </div>
+
+      <p id= "description">
+        <h2>How it works</h2>
+        The MIRI data-trending dashboard is prepared for instrument engineers to keep
+        tracking the trend of relevant parameters. A software behind processes a daily chunk of data and
+        calculates average and deviation of all engineering values that correspond to specific
+        mnemonic identifiers. The outcome is stored in a seperate database and shown on
+        the dashboard below. Since a cron job populates the database over time, the app
+        allows to keep track of the general value trend caused by degadiation and radiation.
+        <br>
+        <br>
+
+      </p>
+
+      <hr>
+
+      <div id="bokeh">
+        <head>
+          <title>Bokeh Scatter Plots</title>
+        </head>
+
+        <body>
+          <div id="plot1">
+              {{ dashboard[0] | safe }}
+          </div>
+        </body>
+
+        <div id="script1">
+          {{ dashboard[1] | safe }}
+        </div>
+      </div>
+
+     </main>
+
+{% endblock %}

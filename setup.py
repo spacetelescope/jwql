@@ -2,32 +2,48 @@ import numpy as np
 from setuptools import setup
 from setuptools import find_packages
 
-VERSION = '0.17.0'
+VERSION = '0.22.0'
 
-AUTHORS = 'Matthew Bourque, Sara Ogaz, Joe Filippazzo, Bryan Hilbert, Misty Cracraft, '
-AUTHORS += 'Graham Kanarek, Johannes Sahlmann, Lauren Chambers, Catherine Martlin'
+AUTHORS = 'Matthew Bourque, Misty Cracraft, Joe Filippazzo, Bryan Hilbert, '
+AUTHORS += 'Graham Kanarek, Catherine Martlin, Johannes Sahlmann, Ben Sunnquist'
 
-REQUIRES = ['astropy',
-            'astroquery>=0.3.9',
-            'authlib',
-            'bokeh>=1.0',
-            'django>=2.0',
-            'jinja2',
-            'jwst',
-            'matplotlib',
-            'numpy',
-            'numpydoc',
-            'pandas',
-            'psycopg2',
-            'pytest',
-            'sphinx',
-            'sqlalchemy',
-            'stsci_rtd_theme']
+DESCRIPTION = 'The James Webb Space Telescope Quicklook Project'
+
+DEPENDENCY_LINKS = ['git+https://github.com/spacetelescope/jwst#0.13.0']
+REQUIRES = [
+    'asdf>=2.3.3',
+    'astropy>=3.2.1',
+    'astroquery>=0.3.9',
+    'authlib',
+    'bokeh>=1.0,<1.4',
+    'codecov',
+    'django>=2.0',
+    'flake8',
+    'inflection',
+    'ipython',
+    'jinja2',
+    'jsonschema==2.6.0',
+    'jwedb>=0.0.3',
+    'matplotlib',
+    'nodejs',
+    'numpy',
+    'numpydoc',
+    'pandas',
+    'psycopg2',
+    'pysiaf',
+    'pytest',
+    'pytest-cov',
+    'scipy',
+    'sphinx',
+    'sqlalchemy',
+    'stsci_rtd_theme',
+    'twine'
+]
 
 setup(
     name='jwql',
     version=VERSION,
-    description='The JWST Quicklook Project',
+    description=DESCRIPTION,
     url='https://github.com/spacetelescope/jwql.git',
     author=AUTHORS,
     author_email='jwql@stsci.edu',
@@ -36,6 +52,7 @@ setup(
     classifiers=['Programming Language :: Python'],
     packages=find_packages(),
     install_requires=REQUIRES,
+    dependency_links=DEPENDENCY_LINKS,
     include_package_data=True,
     include_dirs=[np.get_include()],
 )

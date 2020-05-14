@@ -49,6 +49,13 @@ Notes
 from django.contrib import admin
 from django.urls import include, path
 
+from ..apps.jwql import views
+
+# Define custom error page views
+handler404 = views.not_found  # Page not found
+handler500 = views.not_found  # Internal error
+handler403 = views.not_found  # Permission denied
+handler400 = views.not_found  # Bad request
 
 urlpatterns = [
     path('', include('jwql.website.apps.jwql.urls')),

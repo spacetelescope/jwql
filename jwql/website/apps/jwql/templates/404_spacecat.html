@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+    <title>404 Not Found - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+
+        <!--Add JavaScript to make text fade in after video loads-->
+        <script>
+            $(document).ready(function() {
+                $("#space_404_text").delay(500).fadeIn(200);
+            });
+        </script>
+
+        <!-- The video -->
+        <video autoplay muted loop id="space_404">
+          <source src={{ static('img/flyby.mov') }} type="video/mp4" alt="">
+        </video>
+
+        <!-- Overlay text to describe the video -->
+        <div id="space_404_text">
+          <h1>Lost in space?</h1>
+          <p>Page not found for the <i>Space Telescope Console for Analysis and Trending (SpaceCAT)</i></p>
+          <p>Ooops, we meant to say JWQL</p>
+          <img src={{ static('img/spacecat.jpg') }} alt='SpaceCAT' style="width:650px;height:400px;">
+
+        </div>
+
+    </main>
+
+{% endblock %}

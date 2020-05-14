@@ -4,11 +4,13 @@
 
 # The JWST Quicklook Application (`JWQL`)
 
+[![Current Release](https://img.shields.io/github/release/spacetelescope/jwql.svg)](https://github.com/spacetelescope/jwql/releases/latest/)
 [![PyPI - License](https://img.shields.io/pypi/l/Django.svg)](https://github.com/spacetelescope/jwql/blob/master/LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.6-blue.svg)](https://www.python.org/)
 [![Build Status](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/badge/icon)](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/)
 [![Documentation Status](https://readthedocs.org/projects/jwql/badge/?version=latest)](https://jwql.readthedocs.io/en/latest/?badge=latest)
 [![STScI](https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat)](http://www.stsci.edu)
+[![codecov](https://codecov.io/gh/spacetelescope/jwql/branch/develop/graph/badge.svg)](https://codecov.io/gh/spacetelescope/jwql)
 
 
 The JWST Quicklook Application (`JWQL`) is a database-driven web application and automation framework for use by the JWST instrument teams to monitor and trend the health, stability, and performance of the JWST instruments.  The system is comprised of the following:
@@ -21,7 +23,23 @@ Official API documentation can be found on [ReadTheDocs](https://jwql.readthedoc
 
 The `jwql` application is currently under heavy development.  The `1.0` release is expected in 2019.  Currently, a development version of the web application can be found at [https://dljwql.stsci.edu](https://dljwql.stsci.edu).
 
-## Installation
+## Installation for Users
+
+To install `jwql`, simply use `pip`:
+
+```
+pip install jwql
+```
+
+The section below describes a more detailed installation for users that wish to contribute to the `jwql` repository.
+
+## Installation for Contributors
+
+Getting `jwql` up and running on your own computer requires four steps, detailed below:
+1. Cloning the GitHub repository
+2. Installing the `conda`environment
+3. Installing the python package
+4. Setting up the configuration file
 
 ### Prerequisites
 
@@ -32,43 +50,56 @@ It is highly suggested that contributors have a working installation of `anacond
 
 Requirements for contributing to the `jwql` package will be included in the `jwql` `conda` environment, which is included in our installation instructions below. Further package requirements will be provided for `jwql` by a `setup.py` script included in the repository.
 
-### Package Installation
+### Clone the `jwql` repo
 
-You first need to install the current version of `jwql`. The simplest way to do this is to go to the directory you want your copy of the repository to be in and clone the repoistory there. Once you are in the directory you can do the following:
+You first need to clone the current version of `jwql`. The simplest way to do this is to go to the directory you want your copy of the repository to be in and clone the repository there. Once you are in the directory you can do the following:
 
 ```
 git clone https://github.com/spacetelescope/jwql.git
 cd jwql
-python setup.py develop
 ```
 
 or, if you would rather use `SSH` instead of `https`, type
 ```
 git clone git@github.com:spacetelescope/jwql.git
 cd jwql
-python setup.py develop
 ```
 instead, and then proceed as stated.
 
 ### Environment Installation
 
-Following the download of the `jwql` package, contributors can then install the `jwql` `conda` environment via the `environment.yml` file, which contains all of the dependencies for the project.  First, one should ensure that their version of `conda` is up to date:
+Following the download of the `jwql` repository, contributors can then install the `jwql` `conda` environment via the environment yaml file, which contains all of the dependencies for the project.  First, ensure that your version of `conda` is up to date:
 
 ```
 conda update conda
 ```
 
-Next, one should activate the `base` environment:
+Next, activate the `base` or `root` environment (depending on your version of `conda`):
 
 ```
-source activate base
+source activate base/root
 ```
 
-Lastly, one can create the `jwql` environment via the `environment.yml` file:
+Lastly, create the `jwql` environment via the `environment_python_3_6.yml` file:
 
 ```
-conda env create -f environment.yml
+conda env create -f environment_python_3_6.yml --name jwql-3.6
 ```
+
+### Package Installation
+
+Next, you need to install the `jwql` package under development mode.  This can be accomplished either by running the `setup.py` script, or `pip install` with the `-e` option:
+
+```
+python setup.py develop
+```
+
+or
+
+```
+pip install -e .
+```
+The package should now appear if you run `conda list jwql`.
 
 ### Configuration File
 
@@ -77,7 +108,7 @@ Much of the `jwql` software depends on the existence of a `config.json` file wit
 
 ## Software Contributions
 
-There are two current pages to review before you begin contributing to the `jwql` development. The first is our [style guide](https://github.com/spacetelescope/jwql/blob/master/style_guide/style_guide.md) and the second is our [suggested git workflow page](https://github.com/spacetelescope/jwql/wiki/git-&-GitHub-workflow-for-contributing), which contains an in-depth explanation of the workflow.
+There are two current pages to review before you begin contributing to the `jwql` development. The first is our [style guide](https://github.com/spacetelescope/jwql/blob/master/style_guide/README.md) and the second is our [suggested git workflow page](https://github.com/spacetelescope/jwql/wiki/git-&-GitHub-workflow-for-contributing), which contains an in-depth explanation of the workflow.
 
 Contributors are also encouraged to check out the [Checklist for Contributors Guide](https://github.com/spacetelescope/jwql/wiki/Checklist-for-Contributors-and-Reviewers-of-Pull-Requests) to ensure the pull request contains all of the necessary changes.
 
@@ -89,7 +120,7 @@ The following is a bare-bones example of a best work flow for contributing to th
 4. Create a branch on that personal fork.
 5. Make your software changes.
 6. Push that branch to your personal GitHub repository (i.e. `origin`).
-7. On the `spacetelescope` `jwql` repository, create a pull request that merges the branch into `spacetelescope:master`.
+7. On the `spacetelescope` `jwql` repository, create a pull request that merges the branch into `spacetelescope:develop`.
 8. Assign a reviewer from the team for the pull request.
 9. Iterate with the reviewer over any needed changes until the reviewer accepts and merges your branch.
 10. Delete your local copy of your branch.
@@ -120,11 +151,12 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Bryan Hilbert (INS) [@bilhbert4](https://github.com/bhilbert4)
 - Graham Kanarek (INS) [@gkanarek](https://github.com/gkanarek)
 - Catherine Martlin (INS) [@catherine-martlin](https://github.com/catherine-martlin)
-- Sara Ogaz (OED) [@SaOgaz](https://github.com/SaOgaz)
 - Johannes Sahlmann (INS) [@Johannes-Sahlmann](https://github.com/johannes-sahlmann)
+- Ben Sunnquist (INS) [@bsunnquist](https://github.com/bsunnquist)
 
 ## Acknowledgments:
 - Faith Abney (DMD)
+- Joshua Alexander (DMD) [@obviousrebel](https://github.com/obviousrebel)
 - Anastasia Alexov (DMD)
 - Sara Anderson (DMD)
 - Tracy Beck (INS)
@@ -151,15 +183,19 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Joe Hunkeler (DMD) [@jhunkeler](https://github.com/jhunkeler)
 - Catherine Kaleida (DMD) [@ckaleida](https://github.com/ckaleida)
 - Jenn Kotler (DMD) [@jenneh](https://github.com/jenneh)
+- Daniel Kühbacher (Goddard) [@DanielKuebi](https://github.com/DanielKuebi)
 - Mark Kyprianou (DMD) [@mkyp](https://github.com/mkyp)
 - Karen Levay (DMD)
 - Crystal Mannfolk (SCOPE) [@cmannfolk](https://github.com/cmannfolk)
 - Greg Masci (ITSD)
+- Jacob Matuskey (DMD) [@jmatuskey](https://github.com/jmatuskey)
 - Margaret Meixner (INS)
 - Christain Mesh (DMD) [@cam72cam](https://github.com/cam72cam)
 - Prem Mishra (ITSD)
 - Don Mueller (ITSD)
 - Maria Antonia Nieto-Santisteban (SEITO)
+- Sara Ogaz (DMD) [@SaOgaz](https://github.com/SaOgaz)
+- Brian O'Sullivan (INS)
 - Joe Pollizzi (JWSTMO)
 - Lee Quick (DMD)
 - Anupinder Rai (ITSD)

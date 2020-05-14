@@ -10,6 +10,7 @@ Authors
 
     - Lauren Chambers
     - Johannes Sahlmann
+    - Matthew Bourque
 
 Use
 ---
@@ -40,18 +41,53 @@ Dependencies
     placed in the ``jwql/utils/`` directory.
 
 """
+
+import datetime
 import glob
 import os
 
 from astropy.time import Time, TimeDelta
 from django import forms
 from django.shortcuts import redirect
+from jwedb.edb_interface import is_valid_mnemonic
 
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
-from jwql.utils.engineering_database import is_valid_mnemonic
+from jwql.database import database_interface as di
+from jwql.utils.constants import ANOMALY_CHOICES, JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.utils import get_config, filename_parser
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
+
+
+class AnomalySubmitForm(forms.Form):
+    """A multiple choice field for specifying flagged anomalies."""
+
+    # Define anomaly choice field
+    anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())
+
+    def update_anomaly_table(self, rootname, user, anomaly_choices):
+        """Updated the ``anomaly`` table of the database with flagged
+        anomaly information
+
+        Parameters
+        ----------
+        rootname : str
+            The rootname of the image to flag (e.g.
+            ``jw86600008001_02101_00001_guider2``)
+        user : str
+            The ``ezid`` of the authenticated user that is flagging the
+            anomaly
+        anomaly_choices : list
+            A list of anomalies that are to be flagged (e.g.
+            ``['snowball', 'crosstalk']``)
+        """
+
+        data_dict = {}
+        data_dict['rootname'] = rootname
+        data_dict['flag_date'] = datetime.datetime.now()
+        data_dict['user'] = user
+        for choice in anomaly_choices:
+            data_dict[choice] = True
+        di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
 
 
 class FileSearchForm(forms.Form):
@@ -82,7 +118,7 @@ class FileSearchForm(forms.Form):
         search = self.cleaned_data['search']
 
         # Make sure the search is either a proposal or fileroot
-        if len(search) == 5 and search.isnumeric():
+        if search.isnumeric() and 1 < int(search) < 99999:
             self.search_type = 'proposal'
         elif self._search_is_fileroot(search):
             self.search_type = 'fileroot'
@@ -94,19 +130,21 @@ class FileSearchForm(forms.Form):
         if self.search_type == 'proposal':
             # See if there are any matching proposals and, if so, what
             # instrument they are for
-            search_string = os.path.join(FILESYSTEM_DIR, 'jw{}'.format(search),
-                                         '*{}*.fits'.format(search))
+            proposal_string = '{:05d}'.format(int(search))
+            search_string = os.path.join(FILESYSTEM_DIR, 'jw{}'.format(proposal_string),
+                                         '*{}*.fits'.format(proposal_string))
             all_files = glob.glob(search_string)
             if len(all_files) > 0:
                 all_instruments = []
                 for file in all_files:
-                    instrument = filename_parser(file)['detector']
-                    all_instruments.append(instrument[:3])
+                    instrument = filename_parser(file)['instrument']
+                    all_instruments.append(instrument)
                 if len(set(all_instruments)) > 1:
                     raise forms.ValidationError('Cannot return result for proposal with multiple '
-                                                'instruments.')
+                                                'instruments ({}).'
+                                                .format(', '.join(set(all_instruments))))
 
-                self.instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[all_instruments[0]]
+                self.instrument = all_instruments[0]
             else:
                 raise forms.ValidationError('Proposal {} not in the filesystem.'.format(search))
 
@@ -156,10 +194,11 @@ class FileSearchForm(forms.Form):
         """
         # Process the data in form.cleaned_data as required
         search = self.cleaned_data['search']
+        proposal_string = '{:05d}'.format(int(search))
 
         # If they searched for a proposal
         if self.search_type == 'proposal':
-            return redirect('/{}/archive/{}'.format(self.instrument, search))
+            return redirect('/{}/archive/{}'.format(self.instrument, proposal_string))
 
         # If they searched for a file root
         elif self.search_type == 'fileroot':
@@ -176,6 +215,14 @@ class MnemonicSearchForm(forms.Form):
     # Initialize attributes
     search_type = None
 
+    def __init__(self, *args, **kwargs):
+        try:
+            self.logged_in = kwargs.pop('logged_in')
+        except KeyError:
+            self.logged_in = True
+
+        super(MnemonicSearchForm, self).__init__(*args, **kwargs)
+
     def clean_search(self):
         """Validate the "search" field.
 
@@ -187,6 +234,11 @@ class MnemonicSearchForm(forms.Form):
             The cleaned data input into the "search" field
 
         """
+        # Stop now if not logged in
+        if not self.logged_in:
+            raise forms.ValidationError('Could not log into MAST. Please login or provide MAST '
+                                        'token in environment variable or config.json.')
+
         # Get the cleaned search data
         search = self.cleaned_data['search']
 
@@ -211,7 +263,7 @@ class MnemonicQueryForm(forms.Form):
         delta_day = -7.
         range_day = 1.
         default_start_time = now + TimeDelta(delta_day, format='jd')
-        default_end_time = now + TimeDelta(delta_day+range_day, format='jd')
+        default_end_time = now + TimeDelta(delta_day + range_day, format='jd')
     else:
         # example for testing
         default_start_time = Time('2019-01-16 00:00:00.000', format='iso')
@@ -233,6 +285,14 @@ class MnemonicQueryForm(forms.Form):
     # Initialize attributes
     search_type = None
 
+    def __init__(self, *args, **kwargs):
+        try:
+            self.logged_in = kwargs.pop('logged_in')
+        except KeyError:
+            self.logged_in = True
+
+        super(MnemonicQueryForm, self).__init__(*args, **kwargs)
+
     def clean_search(self):
         """Validate the "search" field.
 
@@ -244,6 +304,11 @@ class MnemonicQueryForm(forms.Form):
             The cleaned data input into the "search" field
 
         """
+        # Stop now if not logged in
+        if not self.logged_in:
+            raise forms.ValidationError('Could not log into MAST. Please login or provide MAST '
+                                        'token in environment variable or config.json.')
+
         # Get the cleaned search data
         search = self.cleaned_data['search']
 
@@ -295,3 +360,23 @@ class MnemonicQueryForm(forms.Form):
                                             ' Start time.')
 
         return self.cleaned_data['end_time']
+
+
+class MnemonicExplorationForm(forms.Form):
+    """A sextuple-field form to explore the EDB mnemonic inventory."""
+
+    default_description = 'centroid data'
+
+    # Define search fields
+    description = forms.CharField(label='description', max_length=500, required=False,
+                                  initial=default_description, help_text="Description")
+    sql_data_type = forms.CharField(label='sqlDataType', max_length=500, required=False,
+                                    help_text="sqlDataType")
+    subsystem = forms.CharField(label='subsystem', max_length=500, required=False,
+                                help_text="subsystem")
+    tlm_identifier = forms.CharField(label='tlmIdentifier', max_length=500, required=False,
+                                     help_text="Numerical ID (tlmIdentifier)")
+    tlm_mnemonic = forms.CharField(label='tlmMnemonic', max_length=500, required=False,
+                                   help_text="String ID (tlmMnemonic)")
+    unit = forms.CharField(label='unit', max_length=500, required=False,
+                           help_text="unit")

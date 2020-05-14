@@ -1,0 +1,74 @@
+<!--This line tells the HTML file to read the contents of base.html before
+loading the contents of WEBPAGE_TEMPLATE.html-->
+{% extends "base.html" %}
+
+
+<!--The "preamble" block below contains content that goes in the page <head> tag-->
+{% block preamble %}
+
+    <!--Put the webpage title here:-->
+    <title>NIRSpec Mnemonic Trending - JWQL</title>
+
+{% endblock %}
+
+<!--The "content" block below contains content that goes in the page <body> tag-->
+{% block content %}
+
+    <main role="main" class="container mnemonic_trending_main">
+
+      <div id="header">
+        <!--Add a heading-->
+        <h1>NIRSpec data-trending monitors</h1>
+        <!--Horizontal line-->
+        <hr>
+        <!--Include an image located at jwql/website/apps/jwql/static/img/-->
+        <div style="text-align: center">
+          <img src={{ static('img/jwql_logo_full_transparent.png') }}
+               width=20%
+               alt="JWQL Logo"
+               title="JWQL Logo">
+        </div>
+        <br>
+      </div>
+
+      <p id= "description">
+        <h2>How it works</h2>
+        The NIRSpec data-trending dashboard is a web based application that allows engineers and general users to keep track of a subset of key
+        NIRSpec performance parameters (“mnemonics”) such as voltages, currents, sensor signals and temperatures. In total 200+ mnemonics are
+        tracked for NIRSpec. This telemetry data is retrieved from the engineering data base (EDB) on the Mikulski Archive for Space Telescopes
+        (MAST) at STScI and some statistical analysis is performed (number of samples considered, mean, standard deviation).<br>
+        The processed data is stored in a separate database and also presented by a series of plots in the dashboard below.
+        Each point on a specific graph represents the data collected for one specific day. As such, the application allows the user
+        to perform (long term) trending on key NIRSpec performance parameters and identify potential changes in instrument behaviour
+        in case these would appear.<br>
+        In total there are 7 different tabs: 1) Power 2) Reference Voltages 3) Temperatures 4) MSA and MCE 5) FPA and FPE 6) CAA Lamps and 7)
+        Filter and Grating Wheel. Each of these tabs has its own specific set of plots. One can hover over the data points and detailed
+        statistics will appear. Also, there are various zoom and pan tools implemented allowing the user to manipulate the graphs.
+        Curves can be activated and muted by clicking on the legend.<br>
+        In the future, a cron job referring to the EDB will populate the database over time.
+        <br>
+        <br>
+
+      </p>
+
+      <hr>
+
+      <div id="bokeh">
+        <head>
+          <title>Bokeh Scatter Plots</title>
+        </head>
+
+        <body>
+          <div id="plot1">
+              {{ dashboard[0] | safe }}
+          </div>
+        </body>
+
+        <div id="script1">
+          {{ dashboard[1] | safe }}
+        </div>
+      </div>
+
+     </main>
+
+{% endblock %}

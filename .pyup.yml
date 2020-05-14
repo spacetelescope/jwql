@@ -13,12 +13,12 @@ pin: True
 
 # set the default branch
 # default: empty, the default branch on GitHub
-branch: master
+branch: develop
 
 # update schedule
 # default: empty
 # allowed: "every day", "every week", ..
-schedule: "every week"
+schedule: "every month"
 
 # search for requirement files
 # default: True

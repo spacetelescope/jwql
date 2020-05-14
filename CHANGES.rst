@@ -1,3 +1,211 @@
+0.22.0 (2019-08-26)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Added slides from July 2019 TIPS presentation to ``presentations/`` directory
+
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Updated dark monitor to support all five JWST instruments, instead of only NIRCam
+- Changed the ``jwql-3.5`` and ``jwql-3.6`` conda environments to be more simple and to work on Linux distributions
+- Added library code for creating instrument monitoring ``bokeh`` plots with new ``bokeh`` templating software
+
+
+Bug Fixes
+---------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Fixed various bugs that were causing the ``sphinx`` API documentation to crash on ReadTheDocs
+
+
+0.21.0 (2019-07-23)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Updated ``README`` to include instructions on package installation via ``pip``.
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Updated all webpages to conform to Web Application Accessibility Guidelines.
+- Upgraded to ``django`` version 2.2.
+- ``bokeh`` is now imported in ``base`` template so that the version being used is consistent across all HTML templates.
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- The ``jwql`` package is now available on PyPI (https://pypi.org/project/jwql/) and installable via ``pip``.
+- Updated Jenkins configuration file to include in-line comments and descriptions.
+- Added ``utils`` function to validate the ``config.json`` file during import of ``jwql`` package.
+- Added support for monitoring contents of the ``jwql`` central storage area in the filesystem monitor.
+
+
+Bug Fixes
+---------
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Fixed position error of JWQL version display in footer.
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Fixed spelling error in dark monitor database column names.
+- Fixed dark monitor to avoid processing files that are not in the filesystem.
+
+
+0.20.0 (2019-06-05)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Updated the notebook exemplifying how to perform an engineering database (EDB) telemetry query.
+- Updated the README for the ``style_guide`` directory.
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Added form on preview image pages to allow users to submit image anomalies.
+- Added buttons for users to download the results of EDB telemetry queries as CSV files.
+- Enabled users to search for or navigate to program numbers without requiring leading zeros (i.e. "756" is now treated equivalently to "00756").
+- Enabled authentication for EDB queries via the web login (rather than requiring authentication information to be present in the configuration file).
+- Added custom 404 pages.
+- Added adaptive redirect feature so that users are not sent back to the homepage after login.
+- Added more descriptive errors if a user tries to run the web application without filling out the proper fields in the configuration file.
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Replaced all EDB interface code within ``jwql`` with the new ``jwedb`` `package<https://github.com/spacetelescope/jwst-dms-edb>`_.
+- Fully incorporated Python 3.5 testing into the Jenkins test suite.
+
+Bug Fixes
+---------
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Fixed bug in which dashboard page would throw an error.
+- Fixed incorrect dashboard axis labels.
+
+
+0.19.0 (2019-04-19)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Added guidelines to the style guide for logging the execution of instrument monitors
+- Added example usage of logging in the ``example.py`` module
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Modified various web app views to enable faster loading times
+- Modified archive and preview image views to only display data for an authenticated user
+- Added views for MIRI and NIRSpec Data Trending Monitors, which monitors the behavior of select MIRI and NIRSpec Engineering Database mnemonics over time
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Added Dark Monitor module, which monitors the dark current and hot pixel populations for each JWST instrument
+- Added software for producing MIRI and NIRSpec Data Trending Monitors (described above)
+- Modified ``generate_preview_images`` module to support the creation of preview images for stage 3 data products
+- Refactored ``monitor_filesystem`` to utilize PostgreSQL database tables to store archive filesystem statistics
+- Configured ``codecov`` for the project.  The project homepage can be found at https://codecov.io/gh/spacetelescope/jwql
+- Modified ``logging_functions`` module to enable dev, test, and production logging environments
+- Added convenience decorator to ``logging_functions`` module to time the execution of a function or method
+- Modified ``monitor_cron_jobs`` module to make use of updated ``logging_functions``
+
+Bug Fixes
+---------
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Fixed API views to only return the basenames of file paths, instead of full directory names
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Fixed ``logging_functions`` module to properly parse new format of ``INSTALL_REQUIRES`` dependency in ``setup.py`` for logging system dependencies and their versions
+- Fixed ``Jenkinsfile`` to not allow for one failed unit test in Jenkins builds
+
+
+0.18.0 (2019-03-14)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Added instructions in ``README`` that details how to supply the required ``config.json`` configuration file
+- Updated installation instructions in ``README`` to be more comprehensive
+- Updated API docs for JavaScript functions in web app
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Added a webpage for interacting with the JWST Engineering Database (EDB), including searching for available mneumonics and plotting mneumonic time series data
+- Added ``context_processors`` module that provides functions that define context inherent to all views
+- Added display of package version in footer
+- Moved all JavaScript functions in HTML templates into the ``jwql.js`` module
+- Modified links to external webpages to open in new tab
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Added ``__version__`` package attribute
+- Updated ``install_requires`` in ``setup.py`` to adhere to best practices
+- Added template branch and supporting documentation for how to contribute a new webpage in the ``jwql`` web application
+- Added custom error message if required ``config.json`` configuration file is missing
+- Updated ``database_interface`` module to dynamically create tables to store instrument monitoring data from user-supplied table definition files
+- Added Jupyter notebook that describes how to integrate ``auth.mast`` service in a ``djang``` web application
+- Updated ``utils.filename_parser`` function to handle stage 2C and guider filenames
+- Updated ``utils.filename_parser`` function to always provide an ``instrument`` key, as needed by several webpages within the web app
+- Added separate file suffix type lists in ``constants.py`` module
+- Added ``reset_database`` module that resets and rebuilds a database provided by the ``connection_string`` key in the ``config.json`` configuration file
+- Added ``pytest`` results file in order to fix Jenkins CI builds
+
+Bug Fixes
+---------
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Fixed navbar padding
+- Fixed broken instrument logos on homepage
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Fixed ``monitor_mast`` module to actually be command-line executable
+
+
 0.17.0 (2019-02-05)
 ===================
 

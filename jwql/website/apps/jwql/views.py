@@ -35,6 +35,7 @@ Dependencies
     placed in the ``jwql/utils/`` directory.
 """
 
+import datetime
 import os
 
 from django.http import JsonResponse
@@ -45,20 +46,22 @@ from .data_containers import get_dashboard_components
 from .data_containers import get_filenames_by_instrument
 from .data_containers import get_header_info
 from .data_containers import get_image_info
+from .data_containers import get_current_flagged_anomalies
 from .data_containers import get_proposal_info
-from .data_containers import thumbnails
+from .data_containers import random_404_page
 from .data_containers import thumbnails_ajax
-from .data_containers import webpage_template_data
-from .forms import FileSearchForm
-from .oauth import auth_info
+from .data_containers import data_trending
+from .data_containers import nirspec_trending
+from .forms import AnomalySubmitForm, FileSearchForm
+from .oauth import auth_info, auth_required
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
-def webpage_template(request):
-    """Generate the ``WEBPAGE_TEMPLATE`` page
+def miri_data_trending(request):
+    """Generate the ``MIRI DATA-TRENDING`` page
 
     Parameters
     ----------
@@ -70,28 +73,58 @@ def webpage_template(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    # Define which HTML template to render
-    template = 'WEBPAGE_TEMPLATE.html'
 
-    # Define variables with data from data_containers.py
-    launch, plot_data = webpage_template_data()
+    template = "miri_data_trending.html"
+    variables, dash = data_trending()
 
-    # Pack all needed variables into a Python dictionary
     context = {
-        'launch_date': launch,
-        'plot_data': plot_data,
+        'dashboard': dash,
         'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
-        'inst_list': JWST_INSTRUMENT_NAMES,  # Do not edit; Required for navigation bar
+        'inst_list': JWST_INSTRUMENT_NAMES_MIXEDCASE,  # Do not edit; Required for navigation bar
         'tools': MONITORS,  # Do not edit; Required for navigation bar
         'user': None  # Do not edit; Required for authentication
     }
+
+    # append variables to context
+    context.update(variables)
 
     # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
 
 
-@auth_info
-def about(request, user):
+def nirspec_data_trending(request):
+    """Generate the ``MIRI DATA-TRENDING`` page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    template = "nirspec_data_trending.html"
+    variables, dash = nirspec_trending()
+
+    context = {
+        'dashboard': dash,
+        'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
+        'inst_list': JWST_INSTRUMENT_NAMES_MIXEDCASE,  # Do not edit; Required for navigation bar
+        'tools': MONITORS,  # Do not edit; Required for navigation bar
+        'user': None  # Do not edit; Required for authentication
+    }
+
+    # append variables to context
+    context.update(variables)
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
+
+
+def about(request):
     """Generate the ``about`` page
 
     Parameters
@@ -107,15 +140,12 @@ def about(request, user):
     template = 'about.html'
     acknowledgements = get_acknowledgements()
     context = {'acknowledgements': acknowledgements,
-               'inst': '',
-               'inst_list': JWST_INSTRUMENT_NAMES,
-               'tools': MONITORS,
-               'user': user}
+               'inst': ''}
 
     return render(request, template, context)
 
 
-@auth_info
+@auth_required
 def archived_proposals(request, user, inst):
     """Generate the page listing all archived proposals in the database
 
@@ -136,14 +166,13 @@ def archived_proposals(request, user, inst):
 
     template = 'archive.html'
     context = {'inst': inst,
-               'tools': MONITORS,
-               'user': user,
                'base_url': get_base_url()}
 
     return render(request, template, context)
 
 
-def archived_proposals_ajax(request, inst):
+@auth_required
+def archived_proposals_ajax(request, user, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -169,7 +198,6 @@ def archived_proposals_ajax(request, inst):
 
     context = {'inst': inst,
                'all_filenames': all_filenames,
-               'tools': MONITORS,
                'num_proposals': proposal_info['num_proposals'],
                'thumbnails': {'proposals': proposal_info['proposals'],
                               'thumbnail_paths': proposal_info['thumbnail_paths'],
@@ -178,7 +206,7 @@ def archived_proposals_ajax(request, inst):
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-@auth_info
+@auth_required
 def archive_thumbnails(request, user, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
@@ -197,20 +225,20 @@ def archive_thumbnails(request, user, inst, proposal):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'thumbnails.html'
     context = {'inst': inst,
                'prop': proposal,
-               'tools': MONITORS,
-               'user': user,
                'base_url': get_base_url()}
 
     return render(request, template, context)
 
 
-def archive_thumbnails_ajax(request, inst, proposal):
+@auth_required
+def archive_thumbnails_ajax(request, user, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -237,8 +265,7 @@ def archive_thumbnails_ajax(request, inst, proposal):
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
-@auth_info
-def dashboard(request, user):
+def dashboard(request):
     """Generate the dashbaord page
 
     Parameters
@@ -256,9 +283,6 @@ def dashboard(request, user):
     dashboard_components, dashboard_html = get_dashboard_components()
 
     context = {'inst': '',
-               'inst_list': JWST_INSTRUMENT_NAMES,
-               'tools': MONITORS,
-               'user': user,
                'outputs': output_dir,
                'filesystem_html': os.path.join(output_dir, 'monitor_filesystem',
                                                'filesystem_monitor.html'),
@@ -289,16 +313,12 @@ def engineering_database(request, user):
 
     template = 'engineering_database.html'
     context = {'inst': '',
-               'inst_list': JWST_INSTRUMENT_NAMES,
-               'user': user,
-               'tools': MONITORS,
                'edb_components': edb_components}
 
     return render(request, template, context)
 
 
-@auth_info
-def home(request, user):
+def home(request):
     """Generate the home page
 
     Parameters
@@ -324,16 +344,12 @@ def home(request, user):
 
     template = 'home.html'
     context = {'inst': '',
-               'inst_list': JWST_INSTRUMENT_NAMES,
-               'tools': MONITORS,
-               'form': form,
-               'user': user}
+               'form': form}
 
     return render(request, template, context)
 
 
-@auth_info
-def instrument(request, user, inst):
+def instrument(request, inst):
     """Generate the instrument tool index page.
 
     Parameters
@@ -353,7 +369,7 @@ def instrument(request, user, inst):
 
     template = 'instrument.html'
     url_dict = {'fgs': 'http://jwst-docs.stsci.edu/display/JTI/Fine+Guidance+Sensor%2C+FGS?q=fgs',
-                'miri': 'http://jwst-docs.stsci.edu/display/JTI/Mid-Infrared+Instrument%2C+MIRI',
+                'miri': 'http://jwst-docs.stsci.edu/display/JTI/Mid+Infrared+Instrument',
                 'niriss': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Imager+and+Slitless+Spectrograph',
                 'nirspec': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Spectrograph',
                 'nircam': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Camera'}
@@ -361,15 +377,32 @@ def instrument(request, user, inst):
     doc_url = url_dict[inst.lower()]
 
     context = {'inst': inst,
-               'tools': MONITORS,
-               'user': user,
                'doc_url': doc_url}
 
     return render(request, template, context)
 
 
-@auth_info
-def unlooked_images(request, user, inst):
+def not_found(request, *kwargs):
+    """Generate a ``not_found`` page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    template = random_404_page()
+    status_code = 404  # Note that this will show 400, 403, 404, and 500 as 404 status
+    context = {'inst': ''}
+
+    return render(request, template, context, status=status_code)
+
+
+def unlooked_images(request, inst):
     """Generate the page listing all unlooked images in the database
 
     Parameters
@@ -384,18 +417,11 @@ def unlooked_images(request, user, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    template = 'thumbnails.html'
-    context = thumbnails(inst)
-    context['user'] = user
-
-    return render(request, template, context)
+    pass
 
 
-@auth_info
-def view_header(request, user, inst, file):
+def view_header(request, inst, filename):
     """Generate the header view page
 
     Parameters
@@ -404,7 +430,7 @@ def view_header(request, user, inst, file):
         Incoming request from the webpage
     inst : str
         Name of JWST instrument
-    file : str
+    filename : str
         FITS filename of selected image in filesystem
 
     Returns
@@ -416,19 +442,17 @@ def view_header(request, user, inst, file):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'view_header.html'
-    header = get_header_info(file)
-    file_root = '_'.join(file.split('_')[:-1])
+    file_root = '_'.join(filename.split('_')[:-1])
 
-    return render(request, template,
-                  {'inst': inst,
-                   'file': file,
-                   'tools': MONITORS,
-                   'user': user,
-                   'header': header,
-                   'file_root': file_root})
+    context = {'inst': inst,
+               'filename': filename,
+               'file_root': file_root,
+               'header_info': get_header_info(filename)}
+
+    return render(request, template, context)
 
 
-@auth_info
+@auth_required
 def view_image(request, user, inst, file_root, rewrite=False):
     """Generate the image view page
 
@@ -436,9 +460,11 @@ def view_image(request, user, inst, file_root, rewrite=False):
     ----------
     request : HttpRequest object
         Incoming request from the webpage
+    user : dict
+        A dictionary of user credentials.
     inst : str
         Name of JWST instrument
-    file : str
+    file_root : str
         FITS filename of selected image in filesystem
     rewrite : bool, optional
         Regenerate the jpg preview of `file` if it already exists?
@@ -448,18 +474,33 @@ def view_image(request, user, inst, file_root, rewrite=False):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
+
+    # Determine current flagged anomalies
+    current_anomalies = get_current_flagged_anomalies(file_root, inst)
+
+    # Create a form instance
+    form = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+
+    # If this is a POST request, process the form data
+    if request.method == 'POST':
+        anomaly_choices = dict(request.POST)['anomaly_choices']
+        if form.is_valid():
+            form.update_anomaly_table(file_root, user['ezid'], anomaly_choices)
+
+    # Build the context
     context = {'inst': inst,
+               'prop_id': file_root[2:7],
                'file_root': file_root,
-               'tools': MONITORS,
-               'user': user,
                'jpg_files': image_info['all_jpegs'],
                'fits_files': image_info['all_files'],
                'suffixes': image_info['suffixes'],
-               'num_ints': image_info['num_ints']}
+               'num_ints': image_info['num_ints'],
+               'form': form}
 
     return render(request, template, context)
