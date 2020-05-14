@@ -153,7 +153,7 @@ class Readnoise():
             y_start, y_end, y_step = amps[key][1]
 
             # Find sigma-clipped mean value for this amp
-            amp_data = image[y_start: y_end, x_start: x_end]
+            amp_data = image[y_start: y_end: y_step, x_start: x_end: x_step]
             clipped = sigma_clip(amp_data, sigma=3.0, maxiters=5)
             amp_means['amp{}_mean'.format(key)] = np.nanmean(clipped)
 
@@ -447,7 +447,7 @@ class Readnoise():
             siaf = Siaf(self.instrument)
             possible_apertures = list(siaf.apertures)
 
-            for aperture in possible_apertures[12:13]:  # TODO remove index range
+            for aperture in possible_apertures[12:14]:  # TODO remove index range
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
