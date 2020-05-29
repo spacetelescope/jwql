@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>Home - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+    	<h2>Anomaly Query Form Step 2</h2>
+        <hr>
+
+        <br>
+        
+        Continue to submit form to search the database for anomalies across various instruments and metadata.
+
+        <hr>
+            <div class="col-xl">
+                <!--Load the anomaly form from the view-->
+                <div class="anomaly_form">
+                    <h5>Anomalies to Query</h5>
+                    <form action="" method="post">
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+                        <!--Show the field forms-->
+                        {% for field in form %}
+                            {% for subwidget in field.subwidgets %}
+                                <li class="anomaly_choice">{{subwidget}}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </form>
+                </div>
+            </div>
+            <!-- Display Anomaly Form-->
+            <div class="col-xl">
+                <!--Load the filter form from the view-->
+                <div class="anomaly_form">
+                    <h5>Filter</h5>
+                    <form action="" method="post">
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+                        <!--Show the field forms-->
+                        {% for field in choose_filter_form %}
+                            {% for subwidget in field.subwidgets %}
+                                <li class="anomaly_choice">{{subwidget}}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </form>
+                </div>
+            </div>
+            <a role="button" class="btn btn-primary my-2" href={{ url( 'jwql:query_anomaly_2' ) }}>Next</a>  <!--change to query_anomaly_3-->
+        </main>
+
+{% endblock %}

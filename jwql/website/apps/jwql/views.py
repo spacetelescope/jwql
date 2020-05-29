@@ -39,6 +39,7 @@ import datetime
 import os
 
 from django.http import JsonResponse
+# from django import forms
 from django.shortcuts import render
 
 from .data_containers import get_acknowledgements, get_edb_components
@@ -52,10 +53,11 @@ from .data_containers import random_404_page
 from .data_containers import thumbnails_ajax
 from .data_containers import data_trending
 from .data_containers import nirspec_trending
-from .forms import AnomalySubmitForm, FileSearchForm
+from .forms import AnomalySubmitForm, FileSearchForm, AnomalyForm, ExptimeMinForm, ExptimeMaxForm, ChooseInstrumentForm, EarlyDateForm, LateDateForm, ChooseFilterForm
 from .oauth import auth_info, auth_required
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE, ANOMALIES_PER_INSTRUMENT
 from jwql.utils.utils import get_base_url, get_config
+# from .query_form import AnomalyForm # DateForm, ExptimeForm, MultiCheckboxField, QueryForm
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
@@ -400,6 +402,79 @@ def not_found(request, *kwargs):
     context = {'inst': ''}
 
     return render(request, template, context, status=status_code)
+
+
+def query_anomaly(request):
+    """Generate the anomaly query form page.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    user : dict
+        A dictionary of user credentials.
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # form = AnomalyForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+    # form_test = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+    exposure_min_form = ExptimeMinForm(request.POST or None)
+    exposure_max_form = ExptimeMaxForm(request.POST or None)
+    choose_instrument_form = ChooseInstrumentForm(request.POST or None)
+    early_date_form = EarlyDateForm(request.POST or None)
+    late_date_form = LateDateForm(request.POST or None)
+
+    template = 'query_anomaly.html'
+    context = {'inst': '',
+               'exposure_min_form': exposure_min_form,
+               'exposure_max_form': exposure_max_form,
+               'choose_instrument_form': choose_instrument_form,
+               'early_date_form': early_date_form,
+               'late_date_form': late_date_form}
+
+    return render(request, template, context)
+
+
+def query_anomaly_2(request):  ### perhaps it would make sense to display inputs at the top so all of the information is on one page? Or adjust form as enter data on same page?
+    """Generate the second page of the anomaly query form.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    user : dict
+        A dictionary of user credentials.
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    chosen_instruments = ["nirspec", "miri"]   ### will need to retreive from query_anomaly request
+    # chosen_instruments=query_anomaly.choose_instrument_form.clean_instrument()  
+    
+    current_anomalies=[]
+    for anomaly in ANOMALIES_PER_INSTRUMENT:
+        for inst in chosen_instruments:
+            if inst in ANOMALIES_PER_INSTRUMENT[anomaly]:
+                current_anomalies.append(anomaly)
+    
+    ### Change to AnomalyForm
+    form = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+
+    # filterlist = ["filter A", "filter B", "filter C"]
+    choose_filter_form=ChooseFilterForm(request.POST or None)
+
+    template = 'query_anomaly_2.html'
+    context = {'inst': '',
+               'form': form,
+               'choose_filter_form': choose_filter_form}
+
+    return render(request, template, context)
 
 
 def unlooked_images(request, inst):

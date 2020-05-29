@@ -45,6 +45,7 @@ Dependencies
 import datetime
 import glob
 import os
+import inflection
 
 from astropy.time import Time, TimeDelta
 from django import forms
@@ -52,7 +53,7 @@ from django.shortcuts import redirect
 from jwedb.edb_interface import is_valid_mnemonic
 
 from jwql.database import database_interface as di
-from jwql.utils.constants import ANOMALY_CHOICES, JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.constants import ANOMALY_CHOICES, JWST_INSTRUMENT_NAMES_SHORTHAND, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config, filename_parser
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -88,6 +89,96 @@ class AnomalySubmitForm(forms.Form):
         for choice in anomaly_choices:
             data_dict[choice] = True
         di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
+
+
+class AnomalyForm(forms.Form):
+    """Creates a ``AnomalyForm`` object that allows for anomaly input
+    in a form field.
+    """
+    query = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())   ###UPDATE DEPENDING ON WHICH INSTRUMENTS ARE SELECTED
+    
+    def update_anomaly_table(self, rootname, user, anomaly_choices):   ## MAKE SURE DOESN"T OVERWRITE ANOMALYSUBMITFORM
+        """Updated the ``anomaly`` table of the database with flagged
+        anomaly information
+
+        Parameters
+        ----------
+        rootname : str
+            The rootname of the image to flag (e.g.
+            ``jw86600008001_02101_00001_guider2``)
+        user : str
+            The ``ezid`` of the authenticated user that is flagging the
+            anomaly
+        anomaly_choices : list
+            A list of anomalies that are to be flagged (e.g.
+            ``['snowball', 'crosstalk']``)
+        """
+
+        data_dict = {}
+        data_dict['rootname'] = rootname
+        data_dict['flag_date'] = datetime.datetime.now()
+        data_dict['user'] = user
+        for choice in anomaly_choices:
+            data_dict[choice] = True
+        di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
+
+
+class ExptimeMinForm(forms.Form):
+    """Creates a ``ExptimeMinForm`` object that allows for ``exptimemin``
+    input in a form field.
+    """
+    exptimemin = forms.DecimalField(initial="100")
+    def clean_exptime_min(self):
+        exptime_min = self.cleaned_data['exptimemin']
+        return exptime_min
+
+class ExptimeMaxForm(forms.Form):
+    """Creates a ``ExptimeMaxForm`` object that allows for ``exptimemax``
+    input in a form field.
+    """
+    exptimemax = forms.DecimalField(initial="2000") 
+    def clean_exptime_max(self):
+        exptime_max = self.cleaned_data['exptimemax']
+        return exptime_max
+
+
+class EarlyDateForm(forms.Form):
+    """Creates a ``EarlyDateForm`` object that allows for ``earlydate``
+    input in a form field.
+    """
+    earlydate = forms.DateField(required = False, initial= "eg, 2021-11-25 14:30:59 or 2021-11-25")
+    # still working out whether we can have initial pre-fill without setting values in request
+    def clean_early_date(self):
+        early_date = self.cleaned_data['earlydate']
+        return early_date
+
+class LateDateForm(forms.Form):
+    """Creates a ``LateDateForm`` object that allows for ``latedate``
+    input in a form field.
+    """
+    latedate = forms.DateField(required = False, initial= "eg, 2021-11-25 14:30:59 or 2021-11-25")
+    def clean_late_date(self):
+        late_date = self.cleaned_data['latedate']
+        return late_date
+
+class ChooseInstrumentForm(forms.Form):
+    """Creates a ``ChooseInstrumentForm`` object that allows for ``query``
+    input in a form field.
+    """
+    query = forms.MultipleChoiceField(required = False,
+                               choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE] , 
+                               widget=forms.CheckboxSelectMultiple())
+    def clean_instrument(self):
+        instrument_chosen = self.cleaned_data['query']
+        return instrument_chosen
+
+
+class ChooseFilterForm(forms.Form):
+    """Creates a ``ChooseFilterForm`` object that allows for ``filter``
+    input in a form field.
+    """
+    filterlist = [["filter A","filter A"], ["filter B", "filter B"], ["filter C", "filter C"]]
+    filter = forms.MultipleChoiceField(required=False, choices=filterlist, widget=forms.CheckboxSelectMultiple)
 
 
 class FileSearchForm(forms.Form):

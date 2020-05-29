@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>Home - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+    	<h2>Anomaly Query Form</h2>
+        <hr>
+
+        <br>
+        
+        Submit form to search the database for anomalies across various instruments and metadata.
+
+        <hr>
+        <div class="row">
+            <!-- <div class="col-xl-1 text-left"> -->
+            <div class = "col-2">
+                <!--Load the instrument form from the view-->
+                <div class="anomaly_form">
+                    <h5>Instrument</h5>
+                    <form action="" method="post">
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+                        <!--Show the field forms-->
+                        {% for field in choose_instrument_form %}
+                            {% for subwidget in field.subwidgets %}
+                                <li class="anomaly_choice">{{subwidget}}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </form>
+                </div>
+            </div>
+            <div class = "col-xl-3">
+                <!--Load the minimum exposure time form from the view-->
+                <div class="anomaly_form">
+                    <h5>Minimum Exposure Time</h5>
+                    <form action="" method="post">
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+                        <!--Show the field forms-->
+                        {% for field in exposure_min_form %}
+                            {% for subwidget in field.subwidgets %}
+                                <li class="anomaly_choice">{{subwidget}}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </form>
+                </div>
+                <!--Load the maximum exposure time form from the view-->
+                <div class="anomaly_form">
+                    <h5>Maximum Exposure Time</h5>
+                    <form action="" method="post">
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+                        <!--Show the field forms-->
+                        {% for field in exposure_max_form %}
+                            {% for subwidget in field.subwidgets %}
+                                <li class="anomaly_choice">{{subwidget}}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </form>
+                </div>
+            </div>
+            <div class = "col-4">
+                <!--Load the earliest date observed form from the view-->
+                <div class="anomaly_form">
+                    <h5>Earliest Date/Time Observed</h5>
+                    <form action="" method="post">
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+                        <!--Show the field forms-->
+                        {% for field in early_date_form %}
+                            {% for subwidget in field.subwidgets %}
+                                <li class="anomaly_choice">{{subwidget}}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </form>
+                </div>
+                <!--Load the latest date observed form from the view-->
+                <div class="anomaly_form">
+                    <h5>Latest Date/Time Observed</h5>
+                    <form action="" method="post">
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+                        <!--Show the field forms-->
+                        {% for field in late_date_form %}
+                            {% for subwidget in field.subwidgets %}
+                                <li class="anomaly_choice">{{subwidget}}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </form>
+                </div>
+            </div>
+            </div>
+        </div>
+        <a role="button" class="btn btn-primary my-2" href={{ url( 'jwql:query_anomaly_2' ) }}>Next</a>
+    </main>
+
+{% endblock %}
