@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>Interactive Database Viewer - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+    	<h2>Explore JWQL database tables through the web browser.</h2><hr>
+
+        <p align="justify">
+        Explore the JWQL database tables interactively with Astropy Tables Javascript Viewer.
+        </p><br>
+
+        <form action="" method="post" id="view_db_table">
+            <!--DB TABLE DROPDOWN-->
+            <h4>Select JWQL Database Table</h4>
+            <div class="db_table_select">
+                <select name="db_table_select" id="table_name">
+                    {% for table in all_jwql_tables %}
+                        <option value="{{ table }}">{{ table }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button name=make_table_view class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
+            <br>
+        </form>
+	</main>
+
+{% endblock %}

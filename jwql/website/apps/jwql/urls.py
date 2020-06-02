@@ -67,6 +67,9 @@ urlpatterns = [
     # NIRSpec-specific views
     path('nirspec/nirspec_data_trending/', views.nirspec_data_trending, name='nirspec_data_trending'),
 
+    # Table Viewer view
+    path('table_viewer', views.db_table_viewer, name='table_viewer'),
+
     # Common monitor views
     re_path(r'^(?P<inst>({}))/.+_monitor/$'.format(instruments), monitor_views.dark_monitor, name='dark_monitor'),
 

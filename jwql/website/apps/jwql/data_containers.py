@@ -65,6 +65,25 @@ PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
 
+def get_table_view_components(request):
+    """Render table view.
+    """
+    if request.method == 'POST':
+        if "view_db_table" in request.POST.keys():
+            session, base, engine, meta = load_connection(get_config()['connection_string'])
+
+            q = session.query(tablename)
+            column_names = [d['name'] for d in q.column_descriptions]
+
+            data = []
+            for col in column_names:
+                column_data = [d[col] for d in q]
+                data.append(column_data)
+
+            tbl = Table(data, names=column_names)
+            tbl.show_in_browser(jsviewer=True)
+
+
 def data_trending():
     """Container for Miri datatrending dashboard and components
 
