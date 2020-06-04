@@ -126,9 +126,9 @@ class Readnoise():
 
         return file_exists
 
-    def get_amp_means(self, image, amps):
-        """Calculates the sigma-clipped mean in the input image for each
-        amplifier.
+    def get_amp_stats(self, image, amps):
+        """Calculates the sigma-clipped mean and stddev, as well as the histogram 
+        stats in the input image for each amplifier.
 
         Parameters
         ----------
@@ -142,22 +142,28 @@ class Readnoise():
 
         Returns
         -------
-        amp_means : dict
-            Contains the mean values for each amp.
+        amp_stats : dict
+            Contains the image statistics for each amp.
         """
 
-        amp_means = {}
+        amp_stats = {}
 
         for key in amps:
             x_start, x_end, x_step = amps[key][0]
             y_start, y_end, y_step = amps[key][1]
 
-            # Find sigma-clipped mean value for this amp
+            # Find sigma-clipped mean/stddev values for this amp
             amp_data = image[y_start: y_end: y_step, x_start: x_end: x_step]
             clipped = sigma_clip(amp_data, sigma=3.0, maxiters=5)
-            amp_means['amp{}_mean'.format(key)] = np.nanmean(clipped)
+            amp_stats['amp{}_mean'.format(key)] = np.nanmean(clipped)
+            amp_stats['amp{}_stddev'.format(key)] = np.nanstd(clipped)
 
-        return amp_means
+            # Find the histogram stats for this amp
+            n, bin_centers = make_histogram(amp_data)
+            amp_stats['amp{}_n'.format(key)] = n
+            amp_stats['amp{}_bin_centers'.format(key)] = bin_centers
+
+        return amp_stats
 
     def get_metadata(self, filename):
         """Collect basic metadata from a fits file.
@@ -253,6 +259,36 @@ class Readnoise():
         parameters['TIME-OBS'] = current_date.time().isoformat()
 
         return parameters
+
+    def make_histogram(self, data):
+        """Creates a histogram of the input data and returns the bin centers 
+        and the counts in each bin.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            The input data
+
+        Returns
+        -------
+        n : numpy.ndarray
+            The counts in each histogram bin
+
+        bin_centers : numpy.ndarray
+            The histogram bin centers
+        """
+
+        # Calculate the histogram range as that within 5 sigma from the mean
+        data = data.flatten()
+        clipped = sigma_clip(data, sigma=3.0, maxiters=5)
+        mean, stddev = np.nanmean(clipped), np.nanstd(clipped)
+        lower_thresh, upper_thresh = mean - 5 * stddev, mean + 5 * stddev
+
+        # Make the histogram
+        n, bin_edges = np.histogram(data, bins=100, range=(lower_thresh, upper_thresh))
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+        return n, bin_centers
 
     def make_readnoise_image(self, data):
         """Calculates the readnoise for the given input dark current ramp.
@@ -369,9 +405,13 @@ class Readnoise():
             fits.writeto(readnoise_outfile, readnoise, overwrite=True)
             logging.info('\tReadnoise image saved to {}'.format(readnoise_outfile))
 
-            # Calculate the sigma-clipped mean readnoise value in each amp
-            amp_means = self.get_amp_means(readnoise, amp_bounds)
-            logging.info('\tReadnoise image stats: {}'.format(amp_means))
+            # Calculate the full image readnoise stats
+            full_image_mean, full_image_median, full_image_stddev = sigma_clipped_stats(readnoise, sigma=3.0, maxiters=5)
+            full_image_n, full_image_bin_centers = make_histogram(readnoise)
+
+            # Calculate readnoise stats in each amp separately
+            amp_stats = self.get_amp_stats(readnoise, amp_bounds)
+            logging.info('\tReadnoise image stats: {}'.format(amp_stats))
 
             # Get the current JWST Readnoise Reference File data
             parameters = self.make_crds_parameter_dict()
@@ -386,8 +426,9 @@ class Readnoise():
 
             # Find the difference between the current readnoise image and the pipeline readnoise reffile, and record image stats
             readnoise_diff = readnoise - pipeline_readnoise
-            mean_diff, median_diff, stddev_diff = sigma_clipped_stats(readnoise_diff, sigma=3.0, maxiters=5)
-            logging.info('\tReadnoise difference image stats: {:.5f} +/- {:.5f}'.format(mean_diff, stddev_diff))
+            diff_image_mean, diff_image_median, diff_image_stddev = sigma_clipped_stats(readnoise_diff, sigma=3.0, maxiters=5)
+            logging.info('\tReadnoise difference image stats: {:.5f} +/- {:.5f}'.format(diff_image_mean, diff_image_stddev))
+            diff_image_n, diff_image_bin_centers = make_histogram(readnoise_diff)
 
             # Save a png of the readnoise difference image for visual inspection
             logging.info('\tCreating png of readnoise difference image')
@@ -396,23 +437,30 @@ class Readnoise():
             # # Construct new entry for this file for the readnoise database table.
             # # Can't insert values with numpy.float32 datatypes into database
             # # so need to change the datatypes of these values.
-            # readnoise_db_entry = {'aperture': self.aperture,
+            # readnoise_db_entry = {'uncal_filename': filename,
+            #                       'aperture': self.aperture,
             #                       'detector': self.detector,
             #                       'subarray': self.subarray,
             #                       'read_pattern': self.read_pattern,
             #                       'nints': self.nints,
             #                       'ngroups': self.ngroups,
-            #                       'uncal_filename': filename,
-            #                       'readnoise_filename': readnoise_outfile,
-            #                       'readnoise_diff_image': readnoise_diff_png,
             #                       'expstart': self.expstart,
-            #                       'mean_diff': float(mean_diff),
-            #                       'median_diff': float(median_diff),
-            #                       'stddev_diff': float(stddev_diff),
+            #                       'readnoise_filename': readnoise_outfile,
+            #                       'full_image_mean': float(full_image_mean),
+            #                       'full_image_median': float(full_image_median),
+            #                       'full_image_stddev': float(full_image_stddev),
+            #                       'full_image_n': full_image_n,
+            #                       'full_image_bin_centers': full_image_bin_centers,
+            #                       'readnoise_diff_image': readnoise_diff_png,
+            #                       'diff_image_mean': float(diff_image_mean),
+            #                       'diff_image_median': float(diff_image_median),
+            #                       'diff_image_stddev': float(diff_image_stddev),
+            #                       'diff_image_n': diff_image_n,
+            #                       'diff_image_bin_centers': diff_image_bin_centers,
             #                       'entry_date': datetime.datetime.now()
             #                      }
-            # for key in amp_means.keys():
-            #     readnoise_db_entry[key] = float(amp_means[key])
+            # for key in amp_stats.keys():
+            #     readnoise_db_entry[key] = float(amp_stats[key])
 
             # # Add this new entry to the readnoise database table
             # #self.stats_table.__table__.insert().execute(readnoise_db_entry)
@@ -549,7 +597,7 @@ class Readnoise():
             model = DQInitStep.call(filename)
 
         # Run the superbias step for NIRCam
-        if self.instrument.upper() == 'NIRCAM':
+        if self.instrument.upper() != 'MIRI':
             model = SuperBiasStep.call(model)
 
         # Run the refpix step and save the output
