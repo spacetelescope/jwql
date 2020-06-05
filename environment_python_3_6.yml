@@ -4,7 +4,7 @@ channels:
 dependencies:
 - astroquery=0.3.10
 - bokeh>=1.0,<1.4
-- django=2.2.5
+- django=2.2.13
 - flake8=3.7.9
 - inflection=0.3.1
 - ipython=7.13.0
