@@ -1,0 +1,6 @@
+INSTRUMENT, string
+SOURCE_FILES, string_array_1d
+OBS_START_TIME, datetime
+OBS_END_TIME, datetime
+JUMP_COUNT, integer
+MAGNITUDE, float_array_1d
