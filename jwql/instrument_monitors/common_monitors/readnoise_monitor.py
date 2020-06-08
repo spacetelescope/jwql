@@ -159,7 +159,7 @@ class Readnoise():
             amp_stats['amp{}_stddev'.format(key)] = np.nanstd(clipped)
 
             # Find the histogram stats for this amp
-            n, bin_centers = make_histogram(amp_data)
+            n, bin_centers = self.make_histogram(amp_data)
             amp_stats['amp{}_n'.format(key)] = n
             amp_stats['amp{}_bin_centers'.format(key)] = bin_centers
 
@@ -230,7 +230,7 @@ class Readnoise():
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.4)
         cbar = plt.colorbar(im, cax=cax)
-        cbar.set_label('Readnoise Difference (current - reffile) [DN]')
+        cbar.set_label('Readnoise Difference (most recent dark - reffile) [DN]')
 
         # Save the figure
         plt.savefig(output_filename, bbox_inches='tight', dpi=200, overwrite=True)
@@ -282,10 +282,10 @@ class Readnoise():
         data = data.flatten()
         clipped = sigma_clip(data, sigma=3.0, maxiters=5)
         mean, stddev = np.nanmean(clipped), np.nanstd(clipped)
-        lower_thresh, upper_thresh = mean - 5 * stddev, mean + 5 * stddev
+        lower_thresh, upper_thresh = mean - 4 * stddev, mean + 4 * stddev
 
         # Make the histogram
-        n, bin_edges = np.histogram(data, bins=100, range=(lower_thresh, upper_thresh))
+        n, bin_edges = np.histogram(data, bins=60, range=(lower_thresh, upper_thresh))
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
         return n, bin_centers
@@ -407,11 +407,12 @@ class Readnoise():
 
             # Calculate the full image readnoise stats
             full_image_mean, full_image_median, full_image_stddev = sigma_clipped_stats(readnoise, sigma=3.0, maxiters=5)
-            full_image_n, full_image_bin_centers = make_histogram(readnoise)
+            full_image_n, full_image_bin_centers = self.make_histogram(readnoise)
+            logging.info('\tReadnoise image stats: {:.5f} +/- {:.5f}'.format(full_image_mean, full_image_stddev))
 
             # Calculate readnoise stats in each amp separately
             amp_stats = self.get_amp_stats(readnoise, amp_bounds)
-            logging.info('\tReadnoise image stats: {}'.format(amp_stats))
+            logging.info('\tReadnoise image stats by amp: {}'.format(amp_stats))
 
             # Get the current JWST Readnoise Reference File data
             parameters = self.make_crds_parameter_dict()
@@ -427,8 +428,8 @@ class Readnoise():
             # Find the difference between the current readnoise image and the pipeline readnoise reffile, and record image stats
             readnoise_diff = readnoise - pipeline_readnoise
             diff_image_mean, diff_image_median, diff_image_stddev = sigma_clipped_stats(readnoise_diff, sigma=3.0, maxiters=5)
+            diff_image_n, diff_image_bin_centers = self.make_histogram(readnoise_diff)
             logging.info('\tReadnoise difference image stats: {:.5f} +/- {:.5f}'.format(diff_image_mean, diff_image_stddev))
-            diff_image_n, diff_image_bin_centers = make_histogram(readnoise_diff)
 
             # Save a png of the readnoise difference image for visual inspection
             logging.info('\tCreating png of readnoise difference image')
