@@ -83,9 +83,9 @@ def db_table_viewer(request):
 
     template = 'db_table_viewer.html'
     context = {
-        'inst':'',
-        'all_jwql_tables':all_jwql_tables,
-        'table_view_components':table_view_components}
+        'inst': '',
+        'all_jwql_tables': all_jwql_tables,
+        'table_view_components': table_view_components}
 
     return render(request, template, context)
 
