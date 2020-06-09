@@ -32,6 +32,8 @@ from astropy.table import Table
 from astropy.time import Time
 from django.conf import settings
 import numpy as np
+from operator import itemgetter 
+
 
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
@@ -46,6 +48,7 @@ from astroquery.mast import Mast
 from jwedb.edb_interface import mnemonic_inventory
 
 from jwql.database import database_interface as di
+from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
@@ -69,19 +72,30 @@ def get_table_view_components(request):
     """Render table view.
     """
     if request.method == 'POST':
-        if "view_db_table" in request.POST.keys():
-            session, base, engine, meta = load_connection(get_config()['connection_string'])
+        # Make dictionary of tablename : class object
+        # This matches what the user selects in the drop down to the python obj.
+        tables_of_interest = {}
+        for item in di.__dict__.keys():
+            table = getattr(di, item)
+            if hasattr(table, '__tablename__'):
+                tables_of_interest[table.__tablename__] = table
 
-            q = session.query(tablename)
-            column_names = [d['name'] for d in q.column_descriptions]
+        session, base, engine, meta = load_connection(get_config()['connection_string'])
+        tablename = request.POST['db_table_select']
+        table = tables_of_interest[tablename]  # Select table object
+        result = session.query(table)
+        result_dict = [row.__dict__ for row in result.all()]  # Turn query result into list of dicts
+        column_names = table.__table__.columns.keys()
 
-            data = []
-            for col in column_names:
-                column_data = [d[col] for d in q]
-                data.append(column_data)
+        # Build list of column data based on column name.
+        data = []
+        for column in column_names:
+            column_data = list(map(itemgetter(column), result_dict)) 
+            data.append(column_data)
 
-            tbl = Table(data, names=column_names)
-            tbl.show_in_browser(jsviewer=True)
+        # Build table.
+        tbl = Table(data, names=column_names)
+        tbl.show_in_browser(jsviewer=True)
 
 
 def data_trending():

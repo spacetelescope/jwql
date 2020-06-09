@@ -61,8 +61,8 @@ from jwql.utils.utils import get_base_url, get_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
-@auth_info
-def db_table_viewer(request, user):
+
+def db_table_viewer(request):
     """Generate the JWQL Table Viewer view.
     Parameters
     ----------
@@ -79,14 +79,9 @@ def db_table_viewer(request, user):
     table_view_components = get_table_view_components(request)
 
     session, base, engine, meta = load_connection(get_config()['connection_string'])
-    # all_jwql_tables = engine.table_names()
+    all_jwql_tables = engine.table_names()
     # all_jwql_tables.remove('django_migrations')
-    all_jwql_tables = [ 'nircam_bad_pixel_stats',
-                        'niriss_bad_pixel_query_history',
-                        'observations_webtest',
-                        'niriss_bad_pixel_stats',
-                        'fgs_bad_pixel_query_history',
-                        'nirspec_dark_dark_current']
+
     template = 'db_table_viewer.html'
     context = {
         'inst': '',

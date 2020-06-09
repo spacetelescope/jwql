@@ -16,12 +16,13 @@
         </p><br>
 
         <form action="" method="post" id="view_db_table">
+            {{ csrf_input }}
             <!--DB TABLE DROPDOWN-->
             <h4>Select JWQL Database Table</h4>
             <div class="db_table_select">
                 <select name="db_table_select" id="table_name">
-                    {% for table in all_jwql_tables %}
-                        <option value="{{ table }}">{{ table }}</option>
+                    {% for tablename in all_jwql_tables %}
+                        <option value="{{ tablename }}">{{ tablename }}</option>
                     {% endfor %}
                 </select>
             </div>
