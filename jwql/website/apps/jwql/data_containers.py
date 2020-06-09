@@ -32,7 +32,7 @@ from astropy.table import Table
 from astropy.time import Time
 from django.conf import settings
 import numpy as np
-from operator import itemgetter 
+from operator import itemgetter
 
 
 # astroquery.mast import that depends on value of auth_mast
@@ -90,12 +90,12 @@ def get_table_view_components(request):
         # Build list of column data based on column name.
         data = []
         for column in column_names:
-            column_data = list(map(itemgetter(column), result_dict)) 
+            column_data = list(map(itemgetter(column), result_dict))
             data.append(column_data)
 
         # Build table.
         tbl = Table(data, names=column_names)
-        tbl.show_in_browser(jsviewer=True)
+        tbl.show_in_browser(jsviewer=True, max_lines=-1)  # Negative max_lines shows all lines avaliable.
 
 
 def data_trending():

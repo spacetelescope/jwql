@@ -75,17 +75,16 @@ def db_table_viewer(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    
+
     table_view_components = get_table_view_components(request)
 
     session, base, engine, meta = load_connection(get_config()['connection_string'])
     all_jwql_tables = engine.table_names()
-    # all_jwql_tables.remove('django_migrations')
 
     template = 'db_table_viewer.html'
     context = {
-        'inst': '',
-        'all_jwql_tables': all_jwql_tables,
+        'inst':'',
+        'all_jwql_tables':all_jwql_tables,
         'table_view_components':table_view_components}
 
     return render(request, template, context)
