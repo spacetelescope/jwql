@@ -7,13 +7,14 @@ the pipeline readnoise reference files over time.
 For each instrument, the readnoise, technically the "CDS noise", is found
 by calculating the standard deviation through a stack of consecutive
 frame differences in each dark exposure. The sigma-clipped mean and
-standard deviation in each of these readnoise images is recorded in the
-``<Instrument>ReadnoiseStats`` database table.
+standard deviation in each of these readnoise images, as well as histogram
+distributions, are recorded in the ``<Instrument>ReadnoiseStats`` 
+database table.
 
 Next, each of these readnoise images are differenced with the current
 pipeline readnoise reference file to identify the need for new reference
 files. A histogram distribution of these difference images, as well as
-the sigma-clipped mean and standard deviation,are recorded in the
+the sigma-clipped mean and standard deviation, are recorded in the
 ``<Instrument>ReadnoiseStats`` database table. A png version of these
 difference images is also saved for visual inspection.
 
@@ -182,6 +183,10 @@ class Readnoise():
             self.subarray = header['SUBARRAY']
             self.nints = header['NINTS']
             self.ngroups = header['NGROUPS']
+            self.substrt1 = header['SUBSTRT1']
+            self.substrt2 = header['SUBSTRT2']
+            self.subsize1 = header['SUBSIZE1']
+            self.subsize2 = header['SUBSIZE2']
             self.date_obs = header['DATE-OBS']
             self.time_obs = header['TIME-OBS']
             self.expstart = '{}T{}'.format(self.date_obs, self.time_obs)
@@ -285,7 +290,7 @@ class Readnoise():
         lower_thresh, upper_thresh = mean - 4 * stddev, mean + 4 * stddev
 
         # Make the histogram
-        n, bin_edges = np.histogram(data, bins=60, range=(lower_thresh, upper_thresh))
+        n, bin_edges = np.histogram(data, bins='auto', range=(lower_thresh, upper_thresh))
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
         return n, bin_centers
@@ -307,10 +312,15 @@ class Readnoise():
 
         # Create a stack of CDS images (group difference images) using the input ramp data, 
         # combining multiple integrations if necessary.
-        logging.info('\tCreating stack of CDS frames')
+        logging.info('\tCreating stack of CDS difference frames')
         n_ints, n_groups, n_y, n_x = data.shape
         for integration in range(n_ints):
-            cds = data[integration, 1::2, :, :] - data[integration, ::2, :, :]
+            if n_groups % 2 == 0:
+                cds = data[integration, 1::2, :, :] - data[integration, ::2, :, :]
+            else:
+                # Omit the last group if the number of groups is odd
+                cds = data[integration, 1::2, :, :] - data[integration, ::2, :, :][:-1]
+            
             if integration == 0:
                 cds_stack = cds
             else:
@@ -425,7 +435,9 @@ class Readnoise():
                 logging.info('\tPipeline readnoise reffile is {}'.format(readnoise_file))
                 pipeline_readnoise = fits.getdata(readnoise_file)
 
-            # Find the difference between the current readnoise image and the pipeline readnoise reffile, and record image stats
+            # Find the difference between the current readnoise image and the pipeline readnoise reffile, and record image stats.
+            # Sometimes, the pipeline readnoise reffile needs to be cutout to match the subarray.
+            pipeline_readnoise = pipeline_readnoise[self.substrt2-1:self.substrt2+self.subsize2-1, self.substrt1-1:self.substrt1+self.subsize1-1]
             readnoise_diff = readnoise - pipeline_readnoise
             diff_image_mean, diff_image_median, diff_image_stddev = sigma_clipped_stats(readnoise_diff, sigma=3.0, maxiters=5)
             diff_image_n, diff_image_bin_centers = self.make_histogram(readnoise_diff)
@@ -435,37 +447,40 @@ class Readnoise():
             logging.info('\tCreating png of readnoise difference image')
             readnoise_diff_png = self.image_to_png(readnoise_diff, outname=os.path.basename(readnoise_outfile).replace('.fits', '_diff'))
 
-            # # Construct new entry for this file for the readnoise database table.
-            # # Can't insert values with numpy.float32 datatypes into database
-            # # so need to change the datatypes of these values.
-            # readnoise_db_entry = {'uncal_filename': filename,
-            #                       'aperture': self.aperture,
-            #                       'detector': self.detector,
-            #                       'subarray': self.subarray,
-            #                       'read_pattern': self.read_pattern,
-            #                       'nints': self.nints,
-            #                       'ngroups': self.ngroups,
-            #                       'expstart': self.expstart,
-            #                       'readnoise_filename': readnoise_outfile,
-            #                       'full_image_mean': float(full_image_mean),
-            #                       'full_image_median': float(full_image_median),
-            #                       'full_image_stddev': float(full_image_stddev),
-            #                       'full_image_n': full_image_n,
-            #                       'full_image_bin_centers': full_image_bin_centers,
-            #                       'readnoise_diff_image': readnoise_diff_png,
-            #                       'diff_image_mean': float(diff_image_mean),
-            #                       'diff_image_median': float(diff_image_median),
-            #                       'diff_image_stddev': float(diff_image_stddev),
-            #                       'diff_image_n': diff_image_n,
-            #                       'diff_image_bin_centers': diff_image_bin_centers,
-            #                       'entry_date': datetime.datetime.now()
-            #                      }
-            # for key in amp_stats.keys():
-            #     readnoise_db_entry[key] = float(amp_stats[key])
+            # Construct new entry for this file for the readnoise database table.
+            # Can't insert values with numpy.float32 datatypes into database
+            # so need to change the datatypes of these values.
+            readnoise_db_entry = {'uncal_filename': filename,
+                                  'aperture': self.aperture,
+                                  'detector': self.detector,
+                                  'subarray': self.subarray,
+                                  'read_pattern': self.read_pattern,
+                                  'nints': self.nints,
+                                  'ngroups': self.ngroups,
+                                  'expstart': self.expstart,
+                                  'readnoise_filename': readnoise_outfile,
+                                  'full_image_mean': float(full_image_mean),
+                                  'full_image_median': float(full_image_median),
+                                  'full_image_stddev': float(full_image_stddev),
+                                  'full_image_n': full_image_n.astype(float),
+                                  'full_image_bin_centers': full_image_bin_centers.astype(float),
+                                  'readnoise_diff_image': readnoise_diff_png,
+                                  'diff_image_mean': float(diff_image_mean),
+                                  'diff_image_median': float(diff_image_median),
+                                  'diff_image_stddev': float(diff_image_stddev),
+                                  'diff_image_n': diff_image_n.astype(float),
+                                  'diff_image_bin_centers': diff_image_bin_centers.astype(float),
+                                  'entry_date': datetime.datetime.now()
+                                 }
+            for key in amp_stats.keys():
+                if isinstance(amp_stats[key], (int, float)):
+                    readnoise_db_entry[key] = float(amp_stats[key])
+                else:
+                    readnoise_db_entry[key] = amp_stats[key].astype(float)
 
             # # Add this new entry to the readnoise database table
             # #self.stats_table.__table__.insert().execute(readnoise_db_entry)
-            # logging.info('\tNew entry added to readnoise database table: {}'.format(readnoise_db_entry))
+            logging.info('\tNew entry added to readnoise database table: {}'.format(readnoise_db_entry))
 
             # # Remove the raw and calibrated files to save memory space
             # os.remove(filename)
@@ -486,7 +501,7 @@ class Readnoise():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in ['nircam']:
+        for instrument in ['niriss']:
             self.instrument = instrument
 
         #     # Identify which database tables to use
@@ -496,7 +511,7 @@ class Readnoise():
             siaf = Siaf(self.instrument)
             possible_apertures = list(siaf.apertures)
 
-            for aperture in possible_apertures[12:14]:  # TODO remove index range
+            for aperture in possible_apertures[1::19][1:]:  # TODO remove index range
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
@@ -520,7 +535,7 @@ class Readnoise():
 
                 # Get any new files to process
                 new_files = []
-                for file_entry in new_entries[0:1]:  # TODO remove index range
+                for file_entry in new_entries[-2:-1]:  # TODO remove index range
                     output_filename = os.path.join(self.data_dir, file_entry['filename'].replace('_dark', '_uncal'))
                     
                     # # Dont process files that already exist in the readnoise stats database
@@ -597,7 +612,7 @@ class Readnoise():
         else:
             model = DQInitStep.call(filename)
 
-        # Run the superbias step for NIRCam
+        # Run the superbias step for NIR instruments
         if self.instrument.upper() != 'MIRI':
             model = SuperBiasStep.call(model)
 
