@@ -227,15 +227,9 @@ class Readnoise():
 
         # Plot the image
         plt.figure(figsize=(12,12))
-        ax = plt.gca()
-        im = ax.imshow(image, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
-        ax.set_title('{}'.format(outname))
-
-        # Make the colorbar
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes("right", size="5%", pad=0.4)
-        cbar = plt.colorbar(im, cax=cax)
-        cbar.set_label('Readnoise Difference (most recent dark - reffile) [DN]')
+        im = plt.imshow(image, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
+        plt.colorbar(im, label='Readnoise Difference (most recent dark - reffile) [DN]')
+        plt.title('{}'.format(outname))
 
         # Save the figure
         plt.savefig(output_filename, bbox_inches='tight', dpi=200, overwrite=True)
@@ -397,8 +391,12 @@ class Readnoise():
 
             # Run the file through the pipeline up through the refpix step
             logging.info('\tRunning pipeline on {}'.format(filename))
-            processed_file = self.run_early_pipeline(filename, group_scale=group_scale)
-            logging.info('\tPipeline complete. Output: {}'.format(processed_file))
+            try:
+                processed_file = self.run_early_pipeline(filename, group_scale=group_scale)
+                logging.info('\tPipeline complete. Output: {}'.format(processed_file))
+            except:
+                logging.info('\tPipeline processing failed for {}'.format(filename))
+                continue
 
             # Find amplifier boundaries so per-amp statistics can be calculated
             _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)
@@ -482,9 +480,9 @@ class Readnoise():
             # #self.stats_table.__table__.insert().execute(readnoise_db_entry)
             logging.info('\tNew entry added to readnoise database table: {}'.format(readnoise_db_entry))
 
-            # # Remove the raw and calibrated files to save memory space
-            # os.remove(filename)
-            # os.remove(processed_file)
+            # Remove the raw and calibrated files to save memory space
+            os.remove(filename)
+            os.remove(processed_file)
 
     @log_fail
     @log_info
@@ -511,7 +509,7 @@ class Readnoise():
             siaf = Siaf(self.instrument)
             possible_apertures = list(siaf.apertures)
 
-            for aperture in possible_apertures[1::19][1:]:  # TODO remove index range
+            for aperture in possible_apertures[11:]:  # TODO? remove index range
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
@@ -535,7 +533,7 @@ class Readnoise():
 
                 # Get any new files to process
                 new_files = []
-                for file_entry in new_entries[-2:-1]:  # TODO remove index range
+                for file_entry in new_entries:  # TODO? remove index range
                     output_filename = os.path.join(self.data_dir, file_entry['filename'].replace('_dark', '_uncal'))
                     
                     # # Dont process files that already exist in the readnoise stats database
@@ -544,7 +542,7 @@ class Readnoise():
                     #     logging.info('\t{} already exists in the readnoise database table.'.format(output_filename))
                     #     continue
 
-                    # Save any new uncal files in the output directory; some dont exist in JWQL filesystem.
+                    # Save any new uncal files with enough groups in the output directory; some dont exist in JWQL filesystem.
                     try:
                         filename = filesystem_path(file_entry['filename'])
                         uncal_filename = filename.replace('_dark', '_uncal')
