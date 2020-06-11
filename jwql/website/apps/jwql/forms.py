@@ -123,43 +123,13 @@ class AnomalyForm(forms.Form):
         di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
 
 
-class ExptimeMinForm(forms.Form):
-    """Creates a ``ExptimeMinForm`` object that allows for ``exptimemin``
+class ChooseFilterForm(forms.Form):
+    """Creates a ``ChooseFilterForm`` object that allows for ``filter``
     input in a form field.
     """
-    exptimemin = forms.DecimalField(initial="100")
-    def clean_exptime_min(self):
-        exptime_min = self.cleaned_data['exptimemin']
-        return exptime_min
+    filterlist = [["filter A","filter A"], ["filter B", "filter B"], ["filter C", "filter C"]]
+    filter = forms.MultipleChoiceField(required=False, choices=filterlist, widget=forms.CheckboxSelectMultiple)
 
-class ExptimeMaxForm(forms.Form):
-    """Creates a ``ExptimeMaxForm`` object that allows for ``exptimemax``
-    input in a form field.
-    """
-    exptimemax = forms.DecimalField(initial="2000") 
-    def clean_exptime_max(self):
-        exptime_max = self.cleaned_data['exptimemax']
-        return exptime_max
-
-
-class EarlyDateForm(forms.Form):
-    """Creates a ``EarlyDateForm`` object that allows for ``earlydate``
-    input in a form field.
-    """
-    earlydate = forms.DateField(required = False, initial= "eg, 2021-11-25 14:30:59 or 2021-11-25")
-    # still working out whether we can have initial pre-fill without setting values in request
-    def clean_early_date(self):
-        early_date = self.cleaned_data['earlydate']
-        return early_date
-
-class LateDateForm(forms.Form):
-    """Creates a ``LateDateForm`` object that allows for ``latedate``
-    input in a form field.
-    """
-    latedate = forms.DateField(required = False, initial= "eg, 2021-11-25 14:30:59 or 2021-11-25")
-    def clean_late_date(self):
-        late_date = self.cleaned_data['latedate']
-        return late_date
 
 class ChooseInstrumentForm(forms.Form):
     """Creates a ``ChooseInstrumentForm`` object that allows for ``query``
@@ -173,12 +143,48 @@ class ChooseInstrumentForm(forms.Form):
         return instrument_chosen
 
 
-class ChooseFilterForm(forms.Form):
-    """Creates a ``ChooseFilterForm`` object that allows for ``filter``
+class EarlyDateForm(forms.Form):
+    """Creates a ``EarlyDateForm`` object that allows for ``earlydate``
     input in a form field.
     """
-    filterlist = [["filter A","filter A"], ["filter B", "filter B"], ["filter C", "filter C"]]
-    filter = forms.MultipleChoiceField(required=False, choices=filterlist, widget=forms.CheckboxSelectMultiple)
+    earlydate = forms.DateField(required = False, initial= "eg, 2021-11-25 14:30:59 or 2021-11-25")
+    # still working out whether we can have initial pre-fill without setting values in request
+    def clean_early_date(self):
+        early_date = self.cleaned_data['earlydate']
+        return early_date
+
+
+class ExptimeMaxForm(forms.Form):
+    """Creates a ``ExptimeMaxForm`` object that allows for ``exptimemax``
+    input in a form field.
+    """
+    exptimemax = forms.DecimalField(initial="57404.70") 
+    def clean_exptime_max(self):
+        exptime_max = self.cleaned_data['exptimemax']
+        return exptime_max
+
+
+class ExptimeMinForm(forms.Form):
+    """Creates a ``ExptimeMinForm`` object that allows for ``exptimemin``
+    input in a form field.
+    """
+    exptimemin = forms.DecimalField(initial="57404.04")
+    def clean_exptime_min(self):
+        """Validate the "exptimemin" field.
+
+        Check that the input is greater than or equal to zero.
+
+        Returns
+        -------
+        int
+            The cleaned data input into the "exptimemin" field
+
+        """
+        exptime_min = self.cleaned_data['exptimemin']
+        if int(exptime_min) < 0:
+            raise forms.ValidationError("""Invalid minimum exposure time {}. 
+                                           Please provide positive value""".format(exptime_min))
+        return exptime_min
 
 
 class FileSearchForm(forms.Form):
@@ -294,6 +300,16 @@ class FileSearchForm(forms.Form):
         # If they searched for a file root
         elif self.search_type == 'fileroot':
             return redirect('/{}/{}'.format(self.instrument, search))
+
+
+class LateDateForm(forms.Form):
+    """Creates a ``LateDateForm`` object that allows for ``latedate``
+    input in a form field.
+    """
+    latedate = forms.DateField(required = False, initial= "eg, 2021-11-25 14:30:59 or 2021-11-25")
+    def clean_late_date(self):
+        late_date = self.cleaned_data['latedate']
+        return late_date
 
 
 class MnemonicSearchForm(forms.Form):

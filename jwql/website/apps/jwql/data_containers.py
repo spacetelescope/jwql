@@ -790,9 +790,9 @@ def get_proposal_info(filepaths):
     return proposal_info
 
 
-def get_thumbnails_all_instruments():
+def get_thumbnails_all_instruments(request):
     """Return a list of thumbnails available in the filesystem for all
-    instruments.
+    instruments given requested parameters.
 
     Returns
     -------
@@ -806,10 +806,24 @@ def get_thumbnails_all_instruments():
     for inst in JWST_INSTRUMENT_NAMES:
         instrument = inst[0].upper()+inst[1:]
 
+        # requested items -- still working on this bit:
+        # filename = request
+        # if 'expstart' in request.POST.keys():
+
+        # expstart = request
+        # filter_used = request
+        # readpatt = request
+        # date_beg = request
+        # date_end = request
+        # apername = request
+        # exp_type = request
+
+
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
-        params = {"columns": "filename",
-                "filters": []}
+        params = {"columns":"filename, expstart, filter, readpatt, date_beg, date_end, apername, exp_type", ### make list of items in request
+                  "filters":[{"paramName":"expstart",
+                      "values":[{"min":57404.04, "max":57404.07}],}]}  ### adjust based on request
         response = Mast.service_request_async(service, params)
         results = response[0].json()['data']
 
@@ -938,64 +952,6 @@ def log_into_mast(request):
         return Mast.authenticated()
     else:
         return False
-
-
-def query_database(): ##############placeholder################################################
-    """Page to query the database of images.
-    Returns
-    -------
-    database_query.html : obj
-        The template for ``database_query.html``.
-    database_thumbnails.html : obj
-        The template for ``database_thumbnails.html``.
-    database_error.html : obj
-        The template for ``database_error.html``
-
-    This function is based on the query_database() function
-    from WFC3 Quicklook
-    """
-
-    try:
-        # instantiate query form with arguments from page request
-        form = QueryForm(request.args)  #######see how to do with django
-        if request.query_string:  # if any arguments were submitted
-            if form.validate():
-                formdict = request.args.to_dict(flat=False)  # convert form args to dictionary
-                num_results, builder_all, output_format, output_columns = ql_db_lib.get_db_output(formdict)
-                if num_results is None:  # something went wrong with query
-                    # show page saying what went wrong with query
-                    output = render_template('database_error.html', form=form, msg=builder_all)
-                elif num_results == 0:
-                    # show page saying 'your query returned no results'
-                    results = True
-                    output = render_template('database_table.html', results=results,
-                                             num_results=num_results)
-                else:
-                    results = builder_all
-                    if output_format == ['table']:
-                        # return page with table of results
-                        output = render_template('database_table.html', results=results,
-                                          num_results=num_results, output_columns=output_columns)
-                    if output_format == ['csv']:
-                        # make csv file and send for download
-                        output = Response(ql_db_lib.generate_csv(output_columns, results), mimetype='text/csv')
-                        output.headers["Content-Disposition"] = "attachment; filename=query_results.csv"
-                    if output_format == ['thumbnails']:
-                        # return thumbnails page
-                        thumbnail_out = OrderedDict()
-                        thumbnail_out['type'] = 'results'
-                        thumbnail_out['num_images'] = num_results
-                        thumbnail_out['buttons'] = OrderedDict({'kind': ['CAL', 'GO'], 'detector': ['UVIS', 'IR']})
-                        thumbnail_out = ql_lib.make_thumbdict(thumbnail_out, results, listtype='query')
-                        output = render_template('thumbnails.html', thumbnail_dict=thumbnail_out)
-                return output
-            else:
-                return render_template('database_error.html', form=form)
-        else:
-            return render_template('database_query.html', form=form)
-    except:
-        trace_raw = traceback.format_exc()
-        return handle_500(trace_raw)
 
 
 def random_404_page():
