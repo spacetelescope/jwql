@@ -51,10 +51,10 @@ from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as mi
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.utils import ensure_dir_exists
-from jwql.utils.constants import MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
-# from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
+from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
 
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -81,8 +81,8 @@ def data_trending():
     return variables, dashboard
 
 
-def nirspec_trending():  
-    """Container for NIRSpec datatrending dashboard and components
+def nirspec_trending():
+    """Container for Miri datatrending dashboard and components
 
     Returns
     -------
@@ -853,7 +853,7 @@ def get_thumbnails_by_instrument(inst):
 
     Returns
     -------
-    thumbnails : list
+    preview_images : list
         A list of thumbnails available in the filesystem for the
         given instrument.
     """
