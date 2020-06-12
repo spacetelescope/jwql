@@ -55,7 +55,7 @@ ANOMALIES = ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error'
 # Defines the possible anomalies (with rendered name) to flag through the web app
 ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES]
 
-FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R', 'WFSS128C', 'WFSS64C']
+FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
 
 # Names of full-frame apertures for all instruments
 FULL_FRAME_APERTURES = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',

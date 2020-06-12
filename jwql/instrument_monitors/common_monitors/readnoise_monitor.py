@@ -283,6 +283,10 @@ class Readnoise():
         mean, stddev = np.nanmean(clipped), np.nanstd(clipped)
         lower_thresh, upper_thresh = mean - 4 * stddev, mean + 4 * stddev
 
+        # Some images, e.g. readnoise images, will never have values below zero
+        if (lower_thresh < 0) & (len(data[data < 0]) == 0):
+            lower_thresh = 0.0
+
         # Make the histogram
         n, bin_edges = np.histogram(data, bins='auto', range=(lower_thresh, upper_thresh))
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
@@ -568,17 +572,17 @@ class Readnoise():
                     logging.info('\tReadnoise monitor skipped. {} new dark files for {}, {}.'.format(len(new_files), instrument, aperture))
                     monitor_run = False
 
-        #         # Update the query history
-        #         new_entry = {'instrument': instrument,
-        #                      'aperture': aperture,
-        #                      'start_time_mjd': self.query_start,
-        #                      'end_time_mjd': self.query_end,
-        #                      'entries_found': len(new_entries),
-        #                      'files_found': len(new_files),
-        #                      'run_monitor': monitor_run,
-        #                      'entry_date': datetime.datetime.now()}
+                # Update the query history
+                new_entry = {'instrument': instrument,
+                             'aperture': aperture,
+                             'start_time_mjd': self.query_start,
+                             'end_time_mjd': self.query_end,
+                             'entries_found': len(new_entries),
+                             'files_found': len(new_files),
+                             'run_monitor': monitor_run,
+                             'entry_date': datetime.datetime.now()}
         #         #self.query_table.__table__.insert().execute(new_entry)
-        #         logging.info('\tUpdated the query history table')
+                logging.info('\tUpdated the query history table')
 
         logging.info('Readnoise Monitor completed successfully.')
 
