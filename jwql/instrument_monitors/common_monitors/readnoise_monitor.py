@@ -512,7 +512,7 @@ class Readnoise():
             siaf = Siaf(self.instrument)
             possible_apertures = list(siaf.apertures)
 
-            for aperture in possible_apertures:
+            for aperture in possible_apertures[0:2]:  # TODO remove index
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
@@ -535,7 +535,7 @@ class Readnoise():
 
                 # Get any new files to process
                 new_files = []
-                for file_entry in new_entries:
+                for file_entry in new_entries[0:11]: # TODO remove index
                     output_filename = os.path.join(self.data_dir, file_entry['filename'].replace('_dark', '_uncal'))
                     
                     # Dont process files that already exist in the readnoise stats database
