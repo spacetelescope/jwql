@@ -37,7 +37,7 @@ import os
 import shutil
 
 from astropy.io import fits
-from astropy.stats import sigma_clip, sigma_clipped_stats
+from astropy.stats import sigma_clip
 from astropy.time import Time
 from astropy.visualization import ZScaleInterval
 import crds
@@ -55,7 +55,7 @@ from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
-#from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats
+#from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats, NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
 from jwql.utils import instrument_properties
@@ -418,7 +418,8 @@ class Readnoise():
             logging.info('\tReadnoise image saved to {}'.format(readnoise_outfile))
 
             # Calculate the full image readnoise stats
-            full_image_mean, full_image_median, full_image_stddev = sigma_clipped_stats(readnoise, sigma=3.0, maxiters=5)
+            clipped = sigma_clip(readnoise, sigma=3.0, maxiters=5)
+            full_image_mean, full_image_stddev = np.nanmean(clipped), np.nanstd(clipped)
             full_image_n, full_image_bin_centers = self.make_histogram(readnoise)
             logging.info('\tReadnoise image stats: {:.5f} +/- {:.5f}'.format(full_image_mean, full_image_stddev))
 
@@ -441,7 +442,8 @@ class Readnoise():
             # Sometimes, the pipeline readnoise reffile needs to be cutout to match the subarray.
             pipeline_readnoise = pipeline_readnoise[self.substrt2-1:self.substrt2+self.subsize2-1, self.substrt1-1:self.substrt1+self.subsize1-1]
             readnoise_diff = readnoise - pipeline_readnoise
-            diff_image_mean, diff_image_median, diff_image_stddev = sigma_clipped_stats(readnoise_diff, sigma=3.0, maxiters=5)
+            clipped = sigma_clip(readnoise_diff, sigma=3.0, maxiters=5)
+            diff_image_mean, diff_image_stddev = np.nanmean(clipped), np.nanstd(clipped)
             diff_image_n, diff_image_bin_centers = self.make_histogram(readnoise_diff)
             logging.info('\tReadnoise difference image stats: {:.5f} +/- {:.5f}'.format(diff_image_mean, diff_image_stddev))
 

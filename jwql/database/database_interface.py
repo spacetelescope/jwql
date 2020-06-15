@@ -409,7 +409,10 @@ FGSDarkPixelStats = monitor_orm_factory('fgs_dark_pixel_stats')
 FGSDarkDarkCurrent = monitor_orm_factory('fgs_dark_dark_current')
 NIRCamBiasQueryHistory = monitor_orm_factory('nircam_bias_query_history')
 NIRCamBiasStats = monitor_orm_factory('nircam_bias_stats')
-
+NIRCamReadnoiseQueryHistory = monitor_orm_factory('nircam_readnoise_query_history')
+NIRCamReadnoiseStats = monitor_orm_factory('nircam_readnoise_stats')
+NIRISSReadnoiseQueryHistory = monitor_orm_factory('niriss_readnoise_query_history')
+NIRISSReadnoiseStats = monitor_orm_factory('niriss_readnoise_stats')
 
 if __name__ == '__main__':
 
