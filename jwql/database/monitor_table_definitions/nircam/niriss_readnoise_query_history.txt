@@ -1,8 +1,0 @@
-INSTRUMENT, string
-APERTURE, string
-START_TIME_MJD, float
-END_TIME_MJD, float
-ENTRIES_FOUND, integer
-FILES_FOUND, integer
-RUN_MONITOR, bool
-ENTRY_DATE, datetime
