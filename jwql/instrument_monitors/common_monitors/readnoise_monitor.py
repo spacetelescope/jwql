@@ -48,14 +48,13 @@ from jwst.superbias import SuperBiasStep
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 from pysiaf import Siaf
 from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
-#from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats, NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats
+from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats, NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
 from jwql.utils import instrument_properties
@@ -203,7 +202,7 @@ class Readnoise():
         self.stats_table = eval('{}ReadnoiseStats'.format(mixed_case_name))
 
     def image_to_png(self, image, outname):
-        """Ouputs an image array into a png file.
+        """Outputs an image array into a png file.
 
         Parameters
         ----------
@@ -464,13 +463,11 @@ class Readnoise():
                                   'expstart': self.expstart,
                                   'readnoise_filename': readnoise_outfile,
                                   'full_image_mean': float(full_image_mean),
-                                  'full_image_median': float(full_image_median),
                                   'full_image_stddev': float(full_image_stddev),
                                   'full_image_n': full_image_n.astype(float),
                                   'full_image_bin_centers': full_image_bin_centers.astype(float),
                                   'readnoise_diff_image': readnoise_diff_png,
                                   'diff_image_mean': float(diff_image_mean),
-                                  'diff_image_median': float(diff_image_median),
                                   'diff_image_stddev': float(diff_image_stddev),
                                   'diff_image_n': diff_image_n.astype(float),
                                   'diff_image_bin_centers': diff_image_bin_centers.astype(float),
@@ -482,8 +479,8 @@ class Readnoise():
                 else:
                     readnoise_db_entry[key] = amp_stats[key].astype(float)
 
-            # # Add this new entry to the readnoise database table
-            # #self.stats_table.__table__.insert().execute(readnoise_db_entry)
+            # Add this new entry to the readnoise database table
+            self.stats_table.__table__.insert().execute(readnoise_db_entry)
             logging.info('\tNew entry added to readnoise database table: {}'.format(readnoise_db_entry))
 
             # Remove the raw and calibrated files to save memory space
@@ -508,24 +505,23 @@ class Readnoise():
         for instrument in ['niriss']:
             self.instrument = instrument
 
-        #     # Identify which database tables to use
-        #     self.identify_tables()
+            # Identify which database tables to use
+            self.identify_tables()
 
             # Get a list of all possible apertures for this instrument
             siaf = Siaf(self.instrument)
             possible_apertures = list(siaf.apertures)
 
-            for aperture in possible_apertures[11:]:  # TODO? remove index range
+            for aperture in possible_apertures:
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
 
-        #         # Locate the record of the most recent MAST search; use this time
-        #         # (plus a 30 day buffer to catch any missing files from the previous
-        #         # run) as the start time in the new MAST search.
-        #         most_recent_search = self.most_recent_search()
-        #         self.query_start = most_recent_search - 30
-                self.query_start = 57357.0  # a.k.a. Dec 1, 2015 == CV3  # TODO remove this and uncomment above
+                # Locate the record of the most recent MAST search; use this time
+                # (plus a 30 day buffer to catch any missing files from the previous
+                # run) as the start time in the new MAST search.
+                most_recent_search = self.most_recent_search()
+                self.query_start = most_recent_search - 30
 
                 # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
@@ -539,14 +535,14 @@ class Readnoise():
 
                 # Get any new files to process
                 new_files = []
-                for file_entry in new_entries:  # TODO? remove index range
+                for file_entry in new_entries:
                     output_filename = os.path.join(self.data_dir, file_entry['filename'].replace('_dark', '_uncal'))
                     
-                    # # Dont process files that already exist in the readnoise stats database
-                    # file_exists = self.file_exists_in_database(output_filename)
-                    # if file_exists:
-                    #     logging.info('\t{} already exists in the readnoise database table.'.format(output_filename))
-                    #     continue
+                    # Dont process files that already exist in the readnoise stats database
+                    file_exists = self.file_exists_in_database(output_filename)
+                    if file_exists:
+                        logging.info('\t{} already exists in the readnoise database table.'.format(output_filename))
+                        continue
 
                     # Save any new uncal files with enough groups in the output directory; some dont exist in JWQL filesystem.
                     try:
@@ -556,7 +552,7 @@ class Readnoise():
                             logging.info('\t{} does not exist in JWQL filesystem, even though {} does'.format(uncal_filename, filename))
                         else:
                             n_groups = fits.getheader(uncal_filename)['NGROUPS']
-                            if n_groups > 1:  # Skip processing if the file doesnt have enough groups to calculate the readnoise TODO change to 10 after testing so MIRI is also oK
+                            if n_groups > 1:  # Skip processing if the file doesnt have enough groups to calculate the readnoise TODO change to 10 after testing so MIRI is also OK
                                 shutil.copy(uncal_filename, self.data_dir)
                                 logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
                                 set_permissions(output_filename)
@@ -583,7 +579,7 @@ class Readnoise():
                              'files_found': len(new_files),
                              'run_monitor': monitor_run,
                              'entry_date': datetime.datetime.now()}
-        #         #self.query_table.__table__.insert().execute(new_entry)
+                self.query_table.__table__.insert().execute(new_entry)
                 logging.info('\tUpdated the query history table')
 
         logging.info('Readnoise Monitor completed successfully.')
@@ -636,4 +632,4 @@ if __name__ == '__main__':
     monitor = Readnoise()
     monitor.run()
 
-    #update_monitor_table(module, start_time, log_file)
+    update_monitor_table(module, start_time, log_file)
