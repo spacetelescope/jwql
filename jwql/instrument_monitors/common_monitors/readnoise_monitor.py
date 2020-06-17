@@ -512,7 +512,7 @@ class Readnoise():
             siaf = Siaf(self.instrument)
             possible_apertures = list(siaf.apertures)
 
-            for aperture in possible_apertures[0:2]:  # TODO remove index
+            for aperture in possible_apertures:  # TODO remove index
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
@@ -521,7 +521,7 @@ class Readnoise():
                 # (plus a 30 day buffer to catch any missing files from the previous
                 # run) as the start time in the new MAST search.
                 most_recent_search = self.most_recent_search()
-                self.query_start = most_recent_search - 30
+                self.query_start = most_recent_search - 10000
 
                 # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
@@ -535,7 +535,7 @@ class Readnoise():
 
                 # Get any new files to process
                 new_files = []
-                for file_entry in new_entries[0:11]: # TODO remove index
+                for file_entry in new_entries: # TODO remove index
                     output_filename = os.path.join(self.data_dir, file_entry['filename'].replace('_dark', '_uncal'))
                     
                     # Dont process files that already exist in the readnoise stats database
