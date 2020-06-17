@@ -8,7 +8,7 @@ For each instrument, the readnoise, technically the "CDS noise", is found
 by calculating the standard deviation through a stack of consecutive
 frame differences in each dark exposure. The sigma-clipped mean and
 standard deviation in each of these readnoise images, as well as histogram
-distributions, are recorded in the ``<Instrument>ReadnoiseStats`` 
+distributions, are recorded in the ``<Instrument>ReadnoiseStats``
 database table.
 
 Next, each of these readnoise images are differenced with the current
@@ -50,7 +50,6 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from pysiaf import Siaf
-from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
@@ -79,23 +78,23 @@ class Readnoise():
     Attributes
     ----------
     output_dir : str
-        Path into which outputs will be placed
+        Path into which outputs will be placed.
 
     data_dir : str
-        Path into which new dark files will be copied to be worked on
+        Path into which new dark files will be copied to be worked on.
 
     query_start : float
-        MJD start date to use for querying MAST
+        MJD start date to use for querying MAST.
 
     query_end : float
-        MJD end date to use for querying MAST
+        MJD end date to use for querying MAST.
 
     instrument : str
-        Name of instrument used to collect the dark current data
+        Name of instrument used to collect the dark current data.
 
     aperture : str
         Name of the aperture used for the dark current (e.g.
-        ``NRCA1_FULL``)
+        ``NRCA1_FULL``).
     """
 
     def __init__(self):
@@ -108,12 +107,12 @@ class Readnoise():
         Parameters
         ----------
         filename : str
-            The full path to the uncal filename
+            The full path to the uncal filename.
 
         Returns
         -------
         file_exists : bool
-            ``True`` if filename exists in the readnoise stats database
+            ``True`` if filename exists in the readnoise stats database.
         """
 
         query = session.query(self.stats_table)
@@ -127,13 +126,13 @@ class Readnoise():
         return file_exists
 
     def get_amp_stats(self, image, amps):
-        """Calculates the sigma-clipped mean and stddev, as well as the histogram 
+        """Calculates the sigma-clipped mean and stddev, as well as the histogram
         stats in the input image for each amplifier.
 
         Parameters
         ----------
         image : numpy.ndarray
-            2D array on which to calculate statistics
+            2D array on which to calculate statistics.
 
         amps : dict
             Dictionary containing amp boundary coordinates (output from
@@ -167,11 +166,11 @@ class Readnoise():
 
     def get_metadata(self, filename):
         """Collect basic metadata from a fits file.
-        
+
         Parameters
         ----------
         filename : str
-            Name of fits file to examine
+            Name of fits file to examine.
         """
 
         header = fits.getheader(filename)
@@ -207,15 +206,15 @@ class Readnoise():
         Parameters
         ----------
         image : numpy.ndarray
-            2D image array
+            2D image array.
 
         outname : str
-            The name given to the output png file
+            The name given to the output png file.
 
         Returns
         -------
         output_filename : str
-            The full path to the output png file
+            The full path to the output png file.
         """
 
         output_filename = os.path.join(self.data_dir, '{}.png'.format(outname))
@@ -244,7 +243,7 @@ class Readnoise():
         Returns
         -------
         parameters : dict
-            Dictionary of parameters, in the format expected by CRDS
+            Dictionary of parameters, in the format expected by CRDS.
         """
 
         parameters = {}
@@ -265,15 +264,15 @@ class Readnoise():
         Parameters
         ----------
         data : numpy.ndarray
-            The input data
+            The input data.
 
         Returns
         -------
         n : numpy.ndarray
-            The counts in each histogram bin
+            The counts in each histogram bin.
 
         bin_centers : numpy.ndarray
-            The histogram bin centers
+            The histogram bin centers.
         """
 
         # Calculate the histogram range as that within 5 sigma from the mean
@@ -307,7 +306,7 @@ class Readnoise():
             The 2D readnoise image.
         """
 
-        # Create a stack of CDS images (group difference images) using the input ramp data, 
+        # Create a stack of CDS images (group difference images) using the input ramp data,
         # combining multiple integrations if necessary.
         logging.info('\tCreating stack of CDS difference frames')
         n_ints, n_groups, n_y, n_x = data.shape
@@ -317,7 +316,7 @@ class Readnoise():
             else:
                 # Omit the last group if the number of groups is odd
                 cds = data[integration, 1::2, :, :] - data[integration, ::2, :, :][:-1]
-            
+
             if integration == 0:
                 cds_stack = cds
             else:
@@ -328,7 +327,7 @@ class Readnoise():
         clipped = sigma_clip(cds_stack, sigma=3.0, maxiters=3, axis=0)
         readnoise = np.std(clipped, axis=0)
         readnoise = readnoise.filled(fill_value=np.nan)  # converts masked array to normal array and fills missing data
-        
+
         return readnoise
 
     def most_recent_search(self):
@@ -343,7 +342,7 @@ class Readnoise():
             where the readnoise monitor was run.
         """
 
-        query = session.query(self.query_table).filter(and_(self.query_table.aperture==self.aperture, 
+        query = session.query(self.query_table).filter(and_(self.query_table.aperture==self.aperture,
             self.query_table.run_monitor==True)).order_by(self.query_table.end_time_mjd).all()
 
         if len(query) == 0:
@@ -361,7 +360,7 @@ class Readnoise():
         Parameters
         ----------
         file_list : list
-            List of filenames (including full paths) to the dark current files
+            List of filenames (including full paths) to the dark current files.
         """
 
         for filename in file_list:
@@ -496,7 +495,7 @@ class Readnoise():
             siaf = Siaf(self.instrument)
             possible_apertures = list(siaf.apertures)
 
-            for aperture in possible_apertures[0:14]:  # TODO remove index
+            for aperture in possible_apertures:
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
@@ -505,7 +504,7 @@ class Readnoise():
                 # (plus a 30 day buffer to catch any missing files from the previous
                 # run) as the start time in the new MAST search.
                 most_recent_search = self.most_recent_search()
-                self.query_start = most_recent_search - 10000  #TODO change to - 30
+                self.query_start = most_recent_search - 30
 
                 # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
@@ -520,7 +519,7 @@ class Readnoise():
                 # Get any new files to process
                 new_files = []
                 checked_files = []
-                for file_entry in new_entries[0:2]: # TODO remove index
+                for file_entry in new_entries:
                     output_filename = os.path.join(self.data_dir, file_entry['filename'].replace('_dark', '_uncal'))
 
                     # Sometimes both the dark and uncal name of a file is picked up in new_entries
@@ -528,14 +527,14 @@ class Readnoise():
                         logging.info('\t{} already checked in this run.'.format(output_filename))
                         continue
                     checked_files.append(output_filename)
-                    
+
                     # Dont process files that already exist in the readnoise stats database
                     file_exists = self.file_exists_in_database(output_filename)
                     if file_exists:
                         logging.info('\t{} already exists in the readnoise database table.'.format(output_filename))
                         continue
 
-                    # Save any new uncal files with enough groups in the output directory; some dont exist in JWQL filesystem.
+                    # Save any new uncal files with enough groups in the output directory; some dont exist in JWQL filesystem
                     try:
                         filename = filesystem_path(file_entry['filename'])
                         uncal_filename = filename.replace('_dark', '_uncal')
@@ -543,7 +542,7 @@ class Readnoise():
                             logging.info('\t{} does not exist in JWQL filesystem, even though {} does'.format(uncal_filename, filename))
                         else:
                             n_groups = fits.getheader(uncal_filename)['NGROUPS']
-                            if n_groups > 1:  # Skip processing if the file doesnt have enough groups to calculate the readnoise TODO change to 10 after testing so MIRI is also OK
+                            if n_groups > 1:  # skip processing if the file doesnt have enough groups to calculate the readnoise; TODO change to 10 before incorporating MIRI
                                 shutil.copy(uncal_filename, self.data_dir)
                                 logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
                                 set_permissions(output_filename)
@@ -582,16 +581,16 @@ class Readnoise():
         Parameters
         ----------
         filename : str
-            File on which to run the pipeline steps
+            File on which to run the pipeline steps.
 
         group_scale : bool
             Option to rescale pixel values to correct for instances where
-            on-board frame averaging did not result in the proper values
+            on-board frame averaging did not result in the proper values.
 
         Returns
         -------
         output_filename : str
-            The full path to the calibrated file
+            The full path to the calibrated file.
         """
 
         output_filename = filename.replace('_uncal', '').replace('.fits', '_ramp.fits')
