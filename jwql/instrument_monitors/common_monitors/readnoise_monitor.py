@@ -521,7 +521,7 @@ class Readnoise():
                 # (plus a 30 day buffer to catch any missing files from the previous
                 # run) as the start time in the new MAST search.
                 most_recent_search = self.most_recent_search()
-                self.query_start = most_recent_search - 10000
+                self.query_start = most_recent_search - 10000  #TODO change to - 30
 
                 # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
@@ -535,8 +535,15 @@ class Readnoise():
 
                 # Get any new files to process
                 new_files = []
+                checked_files = []
                 for file_entry in new_entries: # TODO remove index
                     output_filename = os.path.join(self.data_dir, file_entry['filename'].replace('_dark', '_uncal'))
+
+                    # Sometimes both the dark and uncal name of a file is picked up in new_entries
+                    if output_filename in checked_files:
+                        logging.info('\t{} already checked in this run.'.format(output_filename))
+                        continue
+                    checked_files.append(output_filename)
                     
                     # Dont process files that already exist in the readnoise stats database
                     file_exists = self.file_exists_in_database(output_filename)
