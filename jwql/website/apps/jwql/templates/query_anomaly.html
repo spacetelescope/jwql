@@ -15,14 +15,14 @@
         <br>
         
         Submit form to search the database for anomalies across various instruments and metadata.
-
+        
         <hr>
         <div class="row">
             <!-- <div class="col-xl-1 text-left"> -->
             <div class = "col-2">
                 <!--Load the instrument form from the view-->
                 <div class="anomaly_form">
-                    <h5>Instrument</h5>
+                    <h5>Instruments</h5>
                     <form action="" method="post">
                         <!--Django Cross-Site Request Forgery magic-->
                         {{ csrf_input }}
@@ -32,6 +32,8 @@
                                 <li class="anomaly_choice">{{subwidget}}</li>
                             {% endfor %}
                         {% endfor %}
+                        <input type="submit" value="Save">
+                    <!-- <a role="button" class="btn btn-primary my-2" href={{ url( 'jwql:query_submit' ) }}>Submit</a> -->
                     </form>
                 </div>
             </div>
@@ -97,6 +99,19 @@
             </div>
             </div>
         </div>
+
+        <div>
+            Confirm current data from form before clicking submit.
+            <div>
+                Instruments: {{requested_insts}}
+            </div>
+            <div>
+                Possible anomalies corresponding with chosen instruments (can choose from these in next form): 
+                {{ current_anomalies }}
+    
+            </div>
+        </div>
+
         <a role="button" class="btn btn-primary my-2" href={{ url( 'jwql:query_anomaly_2' ) }}>Next</a>
     </main>
 

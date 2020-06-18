@@ -790,7 +790,7 @@ def get_proposal_info(filepaths):
     return proposal_info
 
 
-def get_thumbnails_all_instruments(request):
+def get_thumbnails_all_instruments(instruments):
     """Return a list of thumbnails available in the filesystem for all
     instruments given requested parameters.
 
@@ -803,8 +803,8 @@ def get_thumbnails_all_instruments(request):
 
     # Make sure instruments are of the proper format (e.g. "Nircam")
     thumbnail_list = []
-    for inst in JWST_INSTRUMENT_NAMES:
-        instrument = inst[0].upper()+inst[1:]
+    for inst in instruments:  # JWST_INSTRUMENT_NAMES:
+        instrument = inst[0].upper()+inst[1:].lower()
 
         # requested items -- still working on this bit:
         # filename = request

@@ -53,6 +53,7 @@ from .data_containers import get_instrument_proposals
 from .data_containers import get_preview_images_by_instrument
 from .data_containers import get_preview_images_by_proposal
 from .data_containers import get_preview_images_by_rootname
+from .data_containers import get_thumbnails_all_instruments
 from .data_containers import get_thumbnails_by_instrument
 from .data_containers import get_thumbnails_by_proposal
 from .data_containers import get_thumbnails_by_rootname
@@ -206,6 +207,28 @@ def preview_images_by_rootname(request, rootname):
     return JsonResponse({'preview_images': preview_images}, json_dumps_params={'indent': 2})
 
 
+def thumbnails_all_instruments(request, inst_list):
+    """Return a list of available thumbnails in the filesystem for the
+    given request
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : list of strings
+        The instrument of interest.  The name of each instrument in the
+        list must match one of the following: (``nircam``, ``NIRCam``,
+        ``niriss``, ``NIRISS``, ``nirspec``, ``NIRSpec``, ``miri``, 
+        ``MIRI``, ``fgs``, ``FGS``).
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+    thumbnails = get_thumbnails_all_instruments(inst_list)
+    return JsonResponse({'thumbnails': thumbnails}, json_dumps_params={'indent': 2})
+
 def thumbnails_by_instrument(request, inst):
     """Return a list of available thumbnails in the filesystem for the
     given instrument.
@@ -216,7 +239,7 @@ def thumbnails_by_instrument(request, inst):
         Incoming request from the webpage
     inst : str
         The instrument of interest.  The name of the instrument must
-        mach one of the following: (``nircam``, ``NIRCam``, ``niriss``,
+        match one of the following: (``nircam``, ``NIRCam``, ``niriss``,
         ``NIRISS``, ``nirspec``, ``NIRSpec``, ``miri``, ``MIRI``,
         ``fgs``, ``FGS``).
 

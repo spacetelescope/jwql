@@ -48,6 +48,7 @@ from .data_containers import get_filenames_by_instrument
 from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_current_flagged_anomalies
+from .data_containers import get_thumbnails_all_instruments
 from .data_containers import get_proposal_info
 from .data_containers import random_404_page
 from .data_containers import thumbnails_ajax
@@ -419,22 +420,39 @@ def query_anomaly(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-
-    # form = AnomalyForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    # form_test = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
     exposure_min_form = ExptimeMinForm(request.POST or None)
     exposure_max_form = ExptimeMaxForm(request.POST or None)
     choose_instrument_form = ChooseInstrumentForm(request.POST or None)
     early_date_form = EarlyDateForm(request.POST or None)
     late_date_form = LateDateForm(request.POST or None)
-
+    
+    instruments_chosen = "No instruments chosen"
+    if request.method == 'POST':
+        if choose_instrument_form.is_valid():
+            instruments_chosen = choose_instrument_form.clean_instruments()
+    
+    global current_anomalies
+    current_anomalies=['cosmic_ray_shower', 'diffraction_spike', 'excessive_saturation', 
+                       'guidestar_failure', 'persistence', 'other']
+    
+    for anomaly in ANOMALIES_PER_INSTRUMENT:
+        for inst in instruments_chosen:
+            if inst in ANOMALIES_PER_INSTRUMENT[anomaly]:
+                current_anomalies.append(anomaly) if anomaly not in current_anomalies else current_anomalies
+    
+    choose_anomalies_form = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+    
     template = 'query_anomaly.html'
     context = {'inst': '',
                'exposure_min_form': exposure_min_form,
                'exposure_max_form': exposure_max_form,
                'choose_instrument_form': choose_instrument_form,
                'early_date_form': early_date_form,
-               'late_date_form': late_date_form}
+               'late_date_form': late_date_form,
+               'choose_anomalies_form': choose_anomalies_form,
+               'requested_insts': instruments_chosen,
+               'current_anomalies': current_anomalies,
+               'None': "No instruments chosen"}
 
     return render(request, template, context)
 
@@ -446,35 +464,68 @@ def query_anomaly_2(request):  ### perhaps it would make sense to display inputs
     ----------
     request : HttpRequest object
         Incoming request from the webpage
-    user : dict
-        A dictionary of user credentials.
 
     Returns
     -------
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    chosen_instruments = ["nirspec", "miri"]   ### will need to retreive from query_anomaly request
-    # chosen_instruments=query_anomaly.choose_instrument_form.clean_instrument()  
-    
-    current_anomalies=[]
-    for anomaly in ANOMALIES_PER_INSTRUMENT:
-        for inst in chosen_instruments:
-            if inst in ANOMALIES_PER_INSTRUMENT[anomaly]:
-                current_anomalies.append(anomaly)
     
     ### Change to AnomalyForm
     form = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
 
-    # filterlist = ["filter A", "filter B", "filter C"]
     choose_filter_form=ChooseFilterForm(request.POST or None)
+
+    if current_anomalies == None:
+        print("PLEASE START AT THE FIRST PAGE IN THE FORMS! (eg, <SERVER ADDRESS>/query_anomaly/ ")
+    global anomalies_chosen_from_current_anomalies
+    anomalies_chosen_from_current_anomalies = current_anomalies
+    if request.method == 'POST':
+        if form.is_valid():
+            anomalies_chosen_from_current_anomalies = form.clean_anomalies()
+            print("Chosen from current anomalies:", anomalies_chosen_from_current_anomalies)
 
     template = 'query_anomaly_2.html'
     context = {'inst': '',
                'form': form,
-               'choose_filter_form': choose_filter_form}
+               'current_anomalies': current_anomalies,
+               'choose_filter_form': choose_filter_form,
+               'chosen_current_anomalies': anomalies_chosen_from_current_anomalies}
 
     return render(request, template, context)
+
+
+def query_submit(request):
+    """Generate the page listing all archived images in the database
+    for a certain proposal
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    if current_anomalies == None:
+        print("PLEASE START AT THE FIRST PAGE IN THE FORMS! (eg, <SERVER ADDRESS>/query_anomaly/ ")
+
+    template = 'query_submit.html'
+    inst_list_chosen = ["NIRSpec", "NIRCam"]
+
+    # print(get_thumbnails_all_instruments(inst_list_chosen))
+
+    context = {'inst': '',
+               'inst_list_chosen': inst_list_chosen,
+               'current_anomalies': current_anomalies,
+               'anomalies_chosen_from_current_anomalies': anomalies_chosen_from_current_anomalies
+               #    'thumbnails': get_thumbnails_all_instruments(inst_list_chosen)
+              }
+
+    return render(request, template, context)
+
 
 
 def unlooked_images(request, inst):

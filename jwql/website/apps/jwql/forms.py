@@ -52,9 +52,11 @@ from django import forms
 from django.shortcuts import redirect
 from jwedb.edb_interface import is_valid_mnemonic
 
+# from data_containers import get_thumbnails_all_instruments
 from jwql.database import database_interface as di
 from jwql.utils.constants import ANOMALY_CHOICES, JWST_INSTRUMENT_NAMES_SHORTHAND, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config, filename_parser
+# from jwql.website.apps.jwql.views import current_anomalies  ### global variable defined once query_anomaly page has forms filled
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
@@ -89,15 +91,17 @@ class AnomalySubmitForm(forms.Form):
         for choice in anomaly_choices:
             data_dict[choice] = True
         di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
+    def clean_anomalies(self):
+        anomalies=self.cleaned_data['anomaly_choices']
+        return anomalies
 
-
-class AnomalyForm(forms.Form):
+class AnomalyForm(forms.Form):  #### This should work the same way that AnomalySubmitForm does, but initial={...} doesn't update initial checked boxes
     """Creates a ``AnomalyForm`` object that allows for anomaly input
     in a form field.
     """
     query = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())   ###UPDATE DEPENDING ON WHICH INSTRUMENTS ARE SELECTED
     
-    def update_anomaly_table(self, rootname, user, anomaly_choices):   ## MAKE SURE DOESN"T OVERWRITE ANOMALYSUBMITFORM
+    def update_anomaly_table(self, rootname, user, anomaly_choices):   ## MAKE SURE DOESN'T OVERWRITE ANOMALYSUBMITFORM
         """Updated the ``anomaly`` table of the database with flagged
         anomaly information
 
@@ -138,9 +142,23 @@ class ChooseInstrumentForm(forms.Form):
     query = forms.MultipleChoiceField(required = False,
                                choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE] , 
                                widget=forms.CheckboxSelectMultiple())
-    def clean_instrument(self):
-        instrument_chosen = self.cleaned_data['query']
-        return instrument_chosen
+    def clean_instruments(self):
+        instruments_chosen = self.cleaned_data['query']
+        return instruments_chosen
+    def redirect_to_files(self):
+        """Determine where to redirect the web app based on user input.
+
+        Returns
+        -------
+        HttpResponseRedirect object
+            Outgoing redirect response sent to the webpage
+
+        """
+        # Process the data in form.clean_instruments as required
+        instruments = self.cleaned_data['query']
+
+        # get_thumbnails_all_instruments(instruments)
+        return instruments
 
 
 class EarlyDateForm(forms.Form):
