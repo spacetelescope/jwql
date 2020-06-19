@@ -21,7 +21,7 @@
             <!-- <div class="col-xl-1 text-left"> -->
             <div class = "col-2">
                 <!--Load the instrument form from the view-->
-                <div class="anomaly_form">
+                <div class="choose_instrument_form">
                     <h5>Instruments</h5>
                     <form action="" method="post">
                         <!--Django Cross-Site Request Forgery magic-->
@@ -29,6 +29,7 @@
                         <!--Show the field forms-->
                         {% for field in choose_instrument_form %}
                             {% for subwidget in field.subwidgets %}
+                                <!-- This does actually need to be anomaly_choice -->
                                 <li class="anomaly_choice">{{subwidget}}</li>
                             {% endfor %}
                         {% endfor %}
@@ -39,7 +40,7 @@
             </div>
             <div class = "col-xl-3">
                 <!--Load the minimum exposure time form from the view-->
-                <div class="anomaly_form">
+                <div class="choose_min_exposure_form">
                     <h5>Minimum Exposure Time</h5>
                     <form action="" method="post">
                         <!--Django Cross-Site Request Forgery magic-->
@@ -50,10 +51,11 @@
                                 <li class="anomaly_choice">{{subwidget}}</li>
                             {% endfor %}
                         {% endfor %}
+                        <!-- <input type="submit" value="Save"> -->
                     </form>
                 </div>
                 <!--Load the maximum exposure time form from the view-->
-                <div class="anomaly_form">
+                <div class="choose_max_exposure_form">
                     <h5>Maximum Exposure Time</h5>
                     <form action="" method="post">
                         <!--Django Cross-Site Request Forgery magic-->
@@ -64,12 +66,13 @@
                                 <li class="anomaly_choice">{{subwidget}}</li>
                             {% endfor %}
                         {% endfor %}
+                        <!-- <input type="submit" value="Save"> -->
                     </form>
                 </div>
             </div>
             <div class = "col-4">
                 <!--Load the earliest date observed form from the view-->
-                <div class="anomaly_form">
+                <div class="choose_min_date_form">
                     <h5>Earliest Date/Time Observed</h5>
                     <form action="" method="post">
                         <!--Django Cross-Site Request Forgery magic-->
@@ -80,10 +83,11 @@
                                 <li class="anomaly_choice">{{subwidget}}</li>
                             {% endfor %}
                         {% endfor %}
+                        <!-- <input type="submit" value="Save"> -->
                     </form>
                 </div>
                 <!--Load the latest date observed form from the view-->
-                <div class="anomaly_form">
+                <div class="choose_max_date_form">
                     <h5>Latest Date/Time Observed</h5>
                     <form action="" method="post">
                         <!--Django Cross-Site Request Forgery magic-->
@@ -94,21 +98,55 @@
                                 <li class="anomaly_choice">{{subwidget}}</li>
                             {% endfor %}
                         {% endfor %}
+                        <!-- <input type="submit" value="Save"> -->
                     </form>
                 </div>
             </div>
+        </div>
+        <div class = "row">  
+            <div class = "col-2">
+                <!--Load the file type form from the view-->
+                <div class="choose_file_type_form">
+                    <h5>File Type</h5>
+                    <form action="" method="post">
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+                        <!--Show the field forms-->
+                        {% for field in filetype_form %}
+                            {% for subwidget in field.subwidgets %}
+                                <li class="anomaly_choice">{{subwidget}}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        <!-- <input type="submit" value="Save"> -->
+                    </form>
+                </div>
+            </div>
+            <div class = "col-4">
+                <!-- Load the aperture form from the view -->
+                <div>
+                    <h5>Aperture</h5>
+                    <form action="" method="post">
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+                        <!--Show the field forms-->
+                        {% for field in aperture_form %}
+                            {% for subwidget in field.subwidgets %}
+                                <li class="anomaly_choice">{{subwidget}}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        <!-- <input type="submit" value="Save"> -->
+                    </form>
+                </div>
             </div>
         </div>
-
-        <div>
-            Confirm current data from form before clicking submit.
             <div>
-                Instruments: {{requested_insts}}
-            </div>
-            <div>
-                Possible anomalies corresponding with chosen instruments (can choose from these in next form): 
-                {{ current_anomalies }}
-    
+                Confirm current data from form before clicking submit.
+                <div>
+                    Instruments: {{requested_insts}}
+                </div>
+                <div>
+                    Possible anomalies corresponding with chosen instruments (can choose from these in next form): 
+                    {{ current_anomalies }}
             </div>
         </div>
 

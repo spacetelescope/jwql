@@ -54,7 +54,7 @@ from jwedb.edb_interface import is_valid_mnemonic
 
 # from data_containers import get_thumbnails_all_instruments
 from jwql.database import database_interface as di
-from jwql.utils.constants import ANOMALY_CHOICES, JWST_INSTRUMENT_NAMES_SHORTHAND, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import ANOMALY_CHOICES, JWST_INSTRUMENT_NAMES_SHORTHAND, JWST_INSTRUMENT_NAMES_MIXEDCASE, FULL_FRAME_APERTURES, GENERIC_SUFFIX_TYPES
 from jwql.utils.utils import get_config, filename_parser
 # from jwql.website.apps.jwql.views import current_anomalies  ### global variable defined once query_anomaly page has forms filled
 
@@ -95,6 +95,7 @@ class AnomalySubmitForm(forms.Form):
         anomalies=self.cleaned_data['anomaly_choices']
         return anomalies
 
+
 class AnomalyForm(forms.Form):  #### This should work the same way that AnomalySubmitForm does, but initial={...} doesn't update initial checked boxes
     """Creates a ``AnomalyForm`` object that allows for anomaly input
     in a form field.
@@ -125,6 +126,29 @@ class AnomalyForm(forms.Form):  #### This should work the same way that AnomalyS
         for choice in anomaly_choices:
             data_dict[choice] = True
         di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
+
+
+class ChooseApertureForm(forms.Form):
+    """Creates a ``ChooseFilterForm`` object that allows for ``filter``
+    input in a form field.
+    """
+    aperturelist = []
+    for instrument in FULL_FRAME_APERTURES.keys():
+        for aperture in FULL_FRAME_APERTURES[instrument]:
+            item = [aperture, aperture]
+            aperturelist.append(item)
+    aperture = forms.MultipleChoiceField(required=False, choices=aperturelist, widget=forms.CheckboxSelectMultiple)
+
+
+class ChooseFiletypeForm(forms.Form):
+    """Creates a ``ChooseFilterForm`` object that allows for ``filter``
+    input in a form field.
+    """
+    filetypelist = []
+    for filetype in GENERIC_SUFFIX_TYPES:
+        item = [filetype, filetype]
+        filetypelist.append(item)
+    filetype = forms.MultipleChoiceField(required=False, choices=filetypelist, widget=forms.CheckboxSelectMultiple)
 
 
 class ChooseFilterForm(forms.Form):
@@ -165,7 +189,7 @@ class EarlyDateForm(forms.Form):
     """Creates a ``EarlyDateForm`` object that allows for ``earlydate``
     input in a form field.
     """
-    earlydate = forms.DateField(required = False, initial= "eg, 2021-11-25 14:30:59 or 2021-11-25")
+    earlydate = forms.DateField(required = False, initial= "eg, 2021-10-02 12:04:39 or 2021-10-02")
     # still working out whether we can have initial pre-fill without setting values in request
     def clean_early_date(self):
         early_date = self.cleaned_data['earlydate']

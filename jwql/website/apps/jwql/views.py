@@ -54,7 +54,7 @@ from .data_containers import random_404_page
 from .data_containers import thumbnails_ajax
 from .data_containers import data_trending
 from .data_containers import nirspec_trending
-from .forms import AnomalySubmitForm, FileSearchForm, AnomalyForm, ExptimeMinForm, ExptimeMaxForm, ChooseInstrumentForm, EarlyDateForm, LateDateForm, ChooseFilterForm
+from .forms import AnomalySubmitForm, FileSearchForm, AnomalyForm, ExptimeMinForm, ExptimeMaxForm, ChooseApertureForm, ChooseFiletypeForm, ChooseInstrumentForm, EarlyDateForm, LateDateForm, ChooseFilterForm
 from .oauth import auth_info, auth_required
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE, ANOMALIES_PER_INSTRUMENT
 from jwql.utils.utils import get_base_url, get_config
@@ -420,12 +420,14 @@ def query_anomaly(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+    aperture_form = ChooseApertureForm(request.POST or None)
     exposure_min_form = ExptimeMinForm(request.POST or None)
     exposure_max_form = ExptimeMaxForm(request.POST or None)
     choose_instrument_form = ChooseInstrumentForm(request.POST or None)
     early_date_form = EarlyDateForm(request.POST or None)
     late_date_form = LateDateForm(request.POST or None)
-    
+    filetype_form = ChooseFiletypeForm(request.POST or None)
+
     instruments_chosen = "No instruments chosen"
     if request.method == 'POST':
         if choose_instrument_form.is_valid():
@@ -444,10 +446,12 @@ def query_anomaly(request):
     
     template = 'query_anomaly.html'
     context = {'inst': '',
+               'aperture_form': aperture_form,
                'exposure_min_form': exposure_min_form,
                'exposure_max_form': exposure_max_form,
                'choose_instrument_form': choose_instrument_form,
                'early_date_form': early_date_form,
+               'filetype_form': filetype_form,
                'late_date_form': late_date_form,
                'choose_anomalies_form': choose_anomalies_form,
                'requested_insts': instruments_chosen,
