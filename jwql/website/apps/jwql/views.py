@@ -64,12 +64,15 @@ FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 def db_table_viewer(request):
     """Generate the JWQL Table Viewer view.
+    
     Parameters
     ----------
     request : HttpRequest object
         Incoming request from the webpage
+    
     user : dict
         A dictionary of user credentials.
+    
     Returns
     -------
     HttpResponse object

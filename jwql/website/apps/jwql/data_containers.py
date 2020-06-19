@@ -68,36 +68,6 @@ PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
 
-def get_table_view_components(request):
-    """Render table view.
-    """
-    if request.method == 'POST':
-        # Make dictionary of tablename : class object
-        # This matches what the user selects in the drop down to the python obj.
-        tables_of_interest = {}
-        for item in di.__dict__.keys():
-            table = getattr(di, item)
-            if hasattr(table, '__tablename__'):
-                tables_of_interest[table.__tablename__] = table
-
-        session, base, engine, meta = load_connection(get_config()['connection_string'])
-        tablename = request.POST['db_table_select']
-        table = tables_of_interest[tablename]  # Select table object
-        result = session.query(table)
-        result_dict = [row.__dict__ for row in result.all()]  # Turn query result into list of dicts
-        column_names = table.__table__.columns.keys()
-
-        # Build list of column data based on column name.
-        data = []
-        for column in column_names:
-            column_data = list(map(itemgetter(column), result_dict))
-            data.append(column_data)
-
-        # Build table.
-        tbl = Table(data, names=column_names)
-        tbl.show_in_browser(jsviewer=True, max_lines=-1)  # Negative max_lines shows all lines avaliable.
-
-
 def data_trending():
     """Container for Miri datatrending dashboard and components
 
@@ -821,6 +791,48 @@ def get_proposal_info(filepaths):
     proposal_info['num_files'] = num_files
 
     return proposal_info
+
+
+def get_table_view_components(request):
+    """Render table view.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    
+    Returns
+    -------
+    None
+    """
+
+    if request.method == 'POST':
+        # Make dictionary of tablename : class object
+        # This matches what the user selects in the drop down to the python obj.
+        tables_of_interest = {}
+        for item in di.__dict__.keys():
+            table = getattr(di, item)
+            if hasattr(table, '__tablename__'):
+                tables_of_interest[table.__tablename__] = table
+
+        session, base, engine, meta = load_connection(get_config()['connection_string'])
+        tablename_from_dropdown = request.POST['db_table_select']
+        table_object = tables_of_interest[tablename_from_dropdown]  # Select table object
+
+        result = session.query(table_object)
+
+        result_dict = [row.__dict__ for row in result.all()]  # Turn query result into list of dicts
+        column_names = table_object.__table__.columns.keys()
+
+        # Build list of column data based on column name.
+        data = []
+        for column in column_names:
+            column_data = list(map(itemgetter(column), result_dict))
+            data.append(column_data)
+
+        # Build table.
+        table_to_display = Table(data, names=column_names)
+        table_to_display.show_in_browser(jsviewer=True, max_lines=-1)  # Negative max_lines shows all lines avaliable.
 
 
 def get_thumbnails_by_instrument(inst):
