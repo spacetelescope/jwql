@@ -76,6 +76,7 @@ def dict_from_yaml(yaml_dict):
     """Create a dictionary to be used as input to the CRDS getreferences
     function from the nested dictionary created when a standard Mirage
     input yaml file is read in.
+
     Parameters
     ----------
     yaml_dict : dict

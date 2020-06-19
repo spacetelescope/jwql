@@ -9,7 +9,9 @@ AUTHORS += 'Graham Kanarek, Catherine Martlin, Johannes Sahlmann, Ben Sunnquist'
 
 DESCRIPTION = 'The James Webb Space Telescope Quicklook Project'
 
-DEPENDENCY_LINKS = ['git+https://github.com/spacetelescope/jwst#0.13.0']
+DEPENDENCY_LINKS = ['git+https://github.com/spacetelescope/jwst#0.16.2',
+                    'git+https://github.com/spacetelescope/jwst_reffiles'
+                    ]
 REQUIRES = [
     'asdf>=2.3.3',
     'astropy>=3.2.1',
@@ -17,6 +19,7 @@ REQUIRES = [
     'authlib',
     'bokeh>=1.0',
     'codecov',
+    'crds',
     'django>=2.0',
     'flake8',
     'inflection',

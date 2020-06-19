@@ -4,6 +4,7 @@ astroquery==0.4
 authlib==0.13
 bokeh==1.4.0
 codecov==2.0.15
+crds==7.5.0.0
 django==3.0.3
 flake8==3.7.9
 inflection==0.3.1
@@ -25,3 +26,4 @@ sqlalchemy==1.3.13
 stsci_rtd_theme==0.0.2
 twine==3.1.1
 git+https://github.com/spacetelescope/jwst@stable
+git+https://github.com/spacetelescope/jwst_reffiles
