@@ -339,45 +339,6 @@ class Dark():
 
         return (new_pixels_x, new_pixels_y)
 
-    def find_hot_pixels(self, file_list, badpix_file):
-        """Call the bad pixel (from dark) algorithm from jwst_reffiles
-        Note that inputs must be slope images, but that the algorithm requires:
-
-        slope_images
-        jump_step outputs
-        fitopt output from ramp fitting.
-
-
-        """
-        find_bad_pix(file_list, clipping_sigma=5., max_clipping_iters=5, noisy_threshold=5,
-                     max_saturated_fraction=0.5, max_jump_limit=10, jump_ratio_threshold=5,
-                     early_cutoff_fraction=0.25, pedestal_sigma_threshold=5, rc_fraction_threshold=0.8,
-                     low_pedestal_fraction=0.8, high_cr_fraction=0.8,
-                     flag_values={'hot': ['HOT'], 'rc': ['RC'], 'low_pedestal': ['OTHER_BAD_PIXEL'],
-                                  'high_cr': ["TELEGRAPH"]},
-                     do_not_use=['hot', 'rc', 'low_pedestal', 'high_cr'], outfile=badpix_file, plot=False)
-
-        # Read in bad pixel mask created from these data
-        with fits.open(badpix_file) as hdulist:
-            image = hdulist['SCI'].data
-
-        # Get DQ flag definitions
-        dq_def = dqflags.pixel
-        flags_to_check = ['SATURATED', 'RC', ]
-
-
-        #hmmm. jwst_reffiles looks for saturated, rc, noisy, high crs. maybe this isn't actually what we want.
-        #maybe the current search for hot pixels is what we want? people will be interested in seeing if new hot
-        #pixels show up, regardless of whether they are noisy or not. This argues in favor of ratioing a mean new
-        #image to some baseline image. what about looking for new pixels with lots of CRs? but maybe people also want
-        #to look for pixels that are newly noisy??
-
-        # Create dictionary containing bad pixel list
-        # Keys are the bad pixel types in dq_def
-        #badpix = {}
-        #for
-
-
     def find_hot_dead_pixels(self, mean_image, comparison_image, hot_threshold=2., dead_threshold=0.1):
         """Create the ratio of the slope image to a baseline slope
         image. Pixels in the ratio image with values above
