@@ -49,7 +49,7 @@ from .data_containers import get_image_info
 from .data_containers import get_current_flagged_anomalies
 from .data_containers import get_proposal_info
 from .data_containers import random_404_page
-from .data_containers import get_table_view_components
+from .data_containers import get_jwqldb_table_view_components
 from .data_containers import thumbnails_ajax
 from .data_containers import data_trending
 from .data_containers import nirspec_trending
@@ -60,37 +60,6 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMEN
 from jwql.utils.utils import get_base_url, get_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
-
-
-def db_table_viewer(request):
-    """Generate the JWQL Table Viewer view.
-    
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    
-    user : dict
-        A dictionary of user credentials.
-    
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-
-    table_view_components = get_table_view_components(request)
-
-    session, base, engine, meta = load_connection(get_config()['connection_string'])
-    all_jwql_tables = engine.table_names()
-
-    template = 'db_table_viewer.html'
-    context = {
-        'inst': '',
-        'all_jwql_tables': all_jwql_tables,
-        'table_view_components': table_view_components}
-
-    return render(request, template, context)
 
 
 def miri_data_trending(request):
@@ -411,6 +380,37 @@ def instrument(request, inst):
 
     context = {'inst': inst,
                'doc_url': doc_url}
+
+    return render(request, template, context)
+
+
+def jwqldb_table_viewer(request):
+    """Generate the JWQL Table Viewer view.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    user : dict
+        A dictionary of user credentials.
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    table_view_components = get_jwqldb_table_view_components(request)
+
+    session, base, engine, meta = load_connection(get_config()['connection_string'])
+    all_jwql_tables = engine.table_names()
+
+    template = 'jwqldb_table_viewer.html'
+    context = {
+        'inst': '',
+        'all_jwql_tables': all_jwql_tables,
+        'table_view_components': table_view_components}
 
     return render(request, template, context)
 

@@ -793,14 +793,14 @@ def get_proposal_info(filepaths):
     return proposal_info
 
 
-def get_table_view_components(request):
-    """Render table view.
+def get_jwqldb_table_view_components(request):
+    """Renders view for JWQLDB table viewer.
 
     Parameters
     ----------
     request : HttpRequest object
         Incoming request from the webpage
-    
+
     Returns
     -------
     None
