@@ -73,6 +73,17 @@ ANOMALIES_PER_INSTRUMENT = {
 # Defines the possible anomalies (with rendered name) to flag through the web app
 ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT]
 
+FILTERS_PER_INSTRUMENT = {'miri': ['F560W', 'F770W', 'F1000W', 'F1065C', 'F1130W', 'F1140C', 'F1280W',
+                                   'F1500W', 'F1550C', 'F1800W', 'F2100W', 'F2300C', 'F2550W'],
+                          'nircam': ['F070W', 'F090W', 'F115W', 'F140M', 'F150W', 'F150W2', 'F162M',
+                                     'F164N', 'F182M', 'F187N', 'F200W', 'F210M', 'F212N', 'F250M',
+                                     'F277W', 'F300M', 'F322W2', 'F323N', 'F335M', 'F356W', 'F360M',
+                                     'F405N', 'F410M', 'F430M', 'F444W', 'F460M', 'F466N', 'F470N', 
+                                     'F480M'],
+                          'niriss': ['F090W', 'F115W', 'F140M', 'F150W', 'F185M', 'F200W', 'F227W',
+                                     'F356W', 'F380M', 'F430M', 'F444W', 'F480M'],
+                          'nirspec': ['CLEAR', 'F070LP', 'F100LP', 'F170LP', 'F290LP']}
+
 FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R', 'WFSS128C', 'WFSS64C']
 
 # Names of full-frame apertures for all instruments
@@ -172,6 +183,14 @@ NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'S
 
 # Possible suffix types for AMI files
 NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami']
+
+OBSERVING_MODE_PER_INSTRUMENT = {'miri': ['Imaging', '4QPM Coronagraphic Imaging',
+                                          'Lyot Coronagraphic Imaging', 'LRS', 'MRS'],
+                                 'nircam': ['Imaging', 'Coronagraphic Imaging', 'WFSS',
+                                            'Time-Series Imaging', 'Grism Time Series'],
+                                 'niriss': ['WFSS', 'SOSS', 'AMI', 'Imaging'],
+                                 'nirspec': ['Multi-Object Spectroscopy', 'IFU Spectroscopy',
+                                             'Fixed Slit Spectroscopy', 'Bright Object Time Series']}
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 

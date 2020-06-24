@@ -103,49 +103,14 @@
                 </div>
             </div>
         </div>
-        <div class = "row">  
-            <div class = "col-2">
-                <!--Load the file type form from the view-->
-                <div class="choose_file_type_form">
-                    <h5>File Type</h5>
-                    <form action="" method="post">
-                        <!--Django Cross-Site Request Forgery magic-->
-                        {{ csrf_input }}
-                        <!--Show the field forms-->
-                        {% for field in filetype_form %}
-                            {% for subwidget in field.subwidgets %}
-                                <li class="anomaly_choice">{{subwidget}}</li>
-                            {% endfor %}
-                        {% endfor %}
-                        <!-- <input type="submit" value="Save"> -->
-                    </form>
-                </div>
-            </div>
-            <div class = "col-4">
-                <!-- Load the aperture form from the view -->
-                <div>
-                    <h5>Aperture</h5>
-                    <form action="" method="post">
-                        <!--Django Cross-Site Request Forgery magic-->
-                        {{ csrf_input }}
-                        <!--Show the field forms-->
-                        {% for field in aperture_form %}
-                            {% for subwidget in field.subwidgets %}
-                                <li class="anomaly_choice">{{subwidget}}</li>
-                            {% endfor %}
-                        {% endfor %}
-                        <!-- <input type="submit" value="Save"> -->
-                    </form>
-                </div>
-            </div>
-        </div>
+
             <div>
                 Confirm current data from form before clicking submit.
                 <div>
                     Instruments: {{requested_insts}}
                 </div>
                 <div>
-                    Possible anomalies corresponding with chosen instruments (can choose from these in next form): 
+                    Possible anomalies corresponding with chosen instruments (can choose from these in subsequent forms): 
                     {{ current_anomalies }}
             </div>
         </div>

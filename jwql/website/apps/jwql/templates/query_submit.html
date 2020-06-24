@@ -21,20 +21,32 @@
         This page will provide thumbnails of images that satisfy your request.
         The anomaly query forms are still under development. 
         <div>
-            We have recognized your request to view images from the following instruments: {{inst_list_chosen}}.
+            We have recognized the request to view images from the following instruments: {{inst_list_chosen}}.
         </div>
+
         <div>
             The anomalies that correspond with those instruments are the following: {{current_anomalies}}.
         </div>
+
         <div>
-            The anomalies you chose from the relevant set are the following: {{anomalies_chosen_from_current_anomalies}}
+            The anomalies chosen from the relevant set are the following: {{anomalies_chosen_from_current_anomalies}}
+        </div>
+
+        <div>
+            The requested filters are the following: {{filters_chosen}}
+        </div>
+
+        <div>
+            The requested apertures are the following: {{apertures_chosen}}
+        </div>
+
+        <div>
+            The requested observing modes are the following: {{observing_modes_chosen}}
         </div>
 
         thumbnails list: {{thumbnails}}
 
 
-        <!-- {{inst_list}} -->
-        <!-- {{thumbnails}} -->
         <!-- {{base_url}} -->
     	<!-- <script>determine_page_title('{{ inst }}','{{ prop }}');</script> -->
 

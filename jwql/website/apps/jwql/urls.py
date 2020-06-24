@@ -76,6 +76,7 @@ urlpatterns = [
     path('edb/', views.engineering_database, name='edb'),
     path('query_anomaly/', views.query_anomaly, name='query_anomaly'),
     path('query_anomaly_2/', views.query_anomaly_2, name='query_anomaly_2'),
+    path('query_anomaly_3/', views.query_anomaly_3, name='query_anomaly_3'),
     path('query_submit/', views.query_submit, name='query_submit'),
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),

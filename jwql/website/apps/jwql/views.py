@@ -54,9 +54,9 @@ from .data_containers import random_404_page
 from .data_containers import thumbnails_ajax
 from .data_containers import data_trending
 from .data_containers import nirspec_trending
-from .forms import AnomalySubmitForm, FileSearchForm, AnomalyForm, ExptimeMinForm, ExptimeMaxForm, ChooseApertureForm, ChooseFiletypeForm, ChooseInstrumentForm, EarlyDateForm, LateDateForm, ChooseFilterForm
+from .forms import AnomalySubmitForm, FileSearchForm, AnomalyForm, ExptimeMinForm, ExptimeMaxForm, ChooseApertureForm, ChooseFiletypeForm, ChooseInstrumentForm, ChooseObservingModeForm, EarlyDateForm, LateDateForm, ChooseFilterForm
 from .oauth import auth_info, auth_required
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE, ANOMALIES_PER_INSTRUMENT
+from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT, FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE, OBSERVING_MODE_PER_INSTRUMENT
 from jwql.utils.utils import get_base_url, get_config
 # from .query_form import AnomalyForm # DateForm, ExptimeForm, MultiCheckboxField, QueryForm
 
@@ -420,14 +420,13 @@ def query_anomaly(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    aperture_form = ChooseApertureForm(request.POST or None)
     exposure_min_form = ExptimeMinForm(request.POST or None)
     exposure_max_form = ExptimeMaxForm(request.POST or None)
     choose_instrument_form = ChooseInstrumentForm(request.POST or None)
     early_date_form = EarlyDateForm(request.POST or None)
     late_date_form = LateDateForm(request.POST or None)
-    filetype_form = ChooseFiletypeForm(request.POST or None)
 
+    global instruments_chosen
     instruments_chosen = "No instruments chosen"
     if request.method == 'POST':
         if choose_instrument_form.is_valid():
@@ -446,12 +445,10 @@ def query_anomaly(request):
     
     template = 'query_anomaly.html'
     context = {'inst': '',
-               'aperture_form': aperture_form,
                'exposure_min_form': exposure_min_form,
                'exposure_max_form': exposure_max_form,
                'choose_instrument_form': choose_instrument_form,
                'early_date_form': early_date_form,
-               'filetype_form': filetype_form,
                'late_date_form': late_date_form,
                'choose_anomalies_form': choose_anomalies_form,
                'requested_insts': instruments_chosen,
@@ -475,10 +472,51 @@ def query_anomaly_2(request):  ### perhaps it would make sense to display inputs
         Outgoing response sent to the webpage
     """
     
-    ### Change to AnomalyForm
-    form = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+    initial_aperture_list = []
+    for instrument in FULL_FRAME_APERTURES.keys():
+        if instrument.lower() in instruments_chosen:
+            for aperture in FULL_FRAME_APERTURES[instrument]:
+                initial_aperture_list.append(aperture)
 
-    choose_filter_form=ChooseFilterForm(request.POST or None)
+    initial_mode_list = []
+    for instrument in ['miri', 'nircam', 'niriss', 'nirspec']:  # Not FGS
+        if instrument in instruments_chosen:
+            for mode in OBSERVING_MODE_PER_INSTRUMENT[instrument]:
+                initial_mode_list.append(mode)
+    
+    initial_filter_list = []
+    for instrument in ['miri', 'nircam', 'niriss', 'nirspec']:  # Not FGS
+        if instrument in instruments_chosen:
+            for filter in FILTERS_PER_INSTRUMENT[instrument]:
+                initial_filter_list.append(filter)
+
+    ### Change to AnomalyForm
+    form = AnomalyForm(request.POST or None, initial={'query': current_anomalies})
+    aperture_form = ChooseApertureForm(request.POST or None, initial={'aperture': initial_aperture_list})
+    choose_filter_form=ChooseFilterForm(request.POST or None, initial={'filter': initial_filter_list})
+    filetype_form = ChooseFiletypeForm(request.POST or None)
+    observing_mode_form = ChooseObservingModeForm(request.POST or None, initial={'mode': initial_mode_list})
+
+    global apertures_chosen
+    apertures_chosen = "No apertures chosen"
+    if request.method == 'POST':
+        if aperture_form.is_valid():
+            apertures_chosen = aperture_form.clean_apertures()
+            initial_aperture_list = apertures_chosen  # Saving one form currently removes initial choices of other forms on the page
+
+    global filters_chosen
+    filters_chosen = "No filters chosen"
+    if request.method == 'POST':
+        if choose_filter_form.is_valid():
+            filters_chosen = choose_filter_form.clean_filters()
+            initial_filter_list = filters_chosen
+
+    global observing_modes_chosen
+    observing_modes_chosen = "No observing modes chosen"
+    if request.method == 'POST':
+        if observing_mode_form.is_valid():
+            observing_modes_chosen = observing_mode_form.clean_modes()
+            initial_mode_list = observing_modes_chosen
 
     if current_anomalies == None:
         print("PLEASE START AT THE FIRST PAGE IN THE FORMS! (eg, <SERVER ADDRESS>/query_anomaly/ ")
@@ -492,8 +530,51 @@ def query_anomaly_2(request):  ### perhaps it would make sense to display inputs
     template = 'query_anomaly_2.html'
     context = {'inst': '',
                'form': form,
+               'aperture_form': aperture_form,
                'current_anomalies': current_anomalies,
                'choose_filter_form': choose_filter_form,
+               'filetype_form': filetype_form,
+               'observing_mode_form': observing_mode_form,
+               'apertures_chosen': apertures_chosen,
+               'filters_chosen': filters_chosen,
+               'observing_modes_chosen': observing_modes_chosen,
+               'chosen_current_anomalies': anomalies_chosen_from_current_anomalies}
+
+    return render(request, template, context)
+
+
+def query_anomaly_3(request):  ### perhaps it would make sense to display inputs at the top so all of the information is on one page? Or adjust form as enter data on same page?
+    """Generate the second page of the anomaly query form.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    
+    ### Change to AnomalyForm
+    form = AnomalyForm(request.POST or None, initial={'query': current_anomalies})
+
+
+    if current_anomalies == None:
+        print("PLEASE START AT THE FIRST PAGE IN THE FORMS! (eg, <SERVER ADDRESS>/query_anomaly/ ")
+    global anomalies_chosen_from_current_anomalies
+    anomalies_chosen_from_current_anomalies = current_anomalies
+    if request.method == 'POST':
+        if form.is_valid():
+            anomalies_chosen_from_current_anomalies = form.clean_anomalies()
+            print("Chosen from current anomalies:", anomalies_chosen_from_current_anomalies)
+
+    template = 'query_anomaly_3.html'
+    context = {'inst': '',
+               'form': form,
+               'current_anomalies': current_anomalies,
+               # 'choose_filter_form': choose_filter_form,
                'chosen_current_anomalies': anomalies_chosen_from_current_anomalies}
 
     return render(request, template, context)
@@ -522,10 +603,13 @@ def query_submit(request):
     # print(get_thumbnails_all_instruments(inst_list_chosen))
 
     context = {'inst': '',
-               'inst_list_chosen': inst_list_chosen,
+               'anomalies_chosen_from_current_anomalies': anomalies_chosen_from_current_anomalies,
+               'apertures_chosen': apertures_chosen,
                'current_anomalies': current_anomalies,
-               'anomalies_chosen_from_current_anomalies': anomalies_chosen_from_current_anomalies
-               #    'thumbnails': get_thumbnails_all_instruments(inst_list_chosen)
+               'filters_chosen': filters_chosen,
+               'inst_list_chosen': inst_list_chosen,
+               'observing_modes_chosen': observing_modes_chosen
+               # 'thumbnails': get_thumbnails_all_instruments(inst_list_chosen)
               }
 
     return render(request, template, context)

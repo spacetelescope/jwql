@@ -54,7 +54,7 @@ from jwedb.edb_interface import is_valid_mnemonic
 
 # from data_containers import get_thumbnails_all_instruments
 from jwql.database import database_interface as di
-from jwql.utils.constants import ANOMALY_CHOICES, JWST_INSTRUMENT_NAMES_SHORTHAND, JWST_INSTRUMENT_NAMES_MIXEDCASE, FULL_FRAME_APERTURES, GENERIC_SUFFIX_TYPES
+from jwql.utils.constants import ANOMALY_CHOICES, JWST_INSTRUMENT_NAMES_SHORTHAND, JWST_INSTRUMENT_NAMES_MIXEDCASE, FILTERS_PER_INSTRUMENT, FULL_FRAME_APERTURES, GENERIC_SUFFIX_TYPES, OBSERVING_MODE_PER_INSTRUMENT
 from jwql.utils.utils import get_config, filename_parser
 # from jwql.website.apps.jwql.views import current_anomalies  ### global variable defined once query_anomaly page has forms filled
 
@@ -96,37 +96,14 @@ class AnomalySubmitForm(forms.Form):
         return anomalies
 
 
-class AnomalyForm(forms.Form):  #### This should work the same way that AnomalySubmitForm does, but initial={...} doesn't update initial checked boxes
+class AnomalyForm(forms.Form):
     """Creates a ``AnomalyForm`` object that allows for anomaly input
     in a form field.
     """
-    query = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())   ###UPDATE DEPENDING ON WHICH INSTRUMENTS ARE SELECTED
-    
-    def update_anomaly_table(self, rootname, user, anomaly_choices):   ## MAKE SURE DOESN'T OVERWRITE ANOMALYSUBMITFORM
-        """Updated the ``anomaly`` table of the database with flagged
-        anomaly information
-
-        Parameters
-        ----------
-        rootname : str
-            The rootname of the image to flag (e.g.
-            ``jw86600008001_02101_00001_guider2``)
-        user : str
-            The ``ezid`` of the authenticated user that is flagging the
-            anomaly
-        anomaly_choices : list
-            A list of anomalies that are to be flagged (e.g.
-            ``['snowball', 'crosstalk']``)
-        """
-
-        data_dict = {}
-        data_dict['rootname'] = rootname
-        data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = user
-        for choice in anomaly_choices:
-            data_dict[choice] = True
-        di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
-
+    query = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())  # Update depending on chosen instruments
+    def clean_anomalies(self):
+        anomalies=self.cleaned_data['query']
+        return anomalies
 
 class ChooseApertureForm(forms.Form):
     """Creates a ``ChooseFilterForm`` object that allows for ``filter``
@@ -138,7 +115,9 @@ class ChooseApertureForm(forms.Form):
             item = [aperture, aperture]
             aperturelist.append(item)
     aperture = forms.MultipleChoiceField(required=False, choices=aperturelist, widget=forms.CheckboxSelectMultiple)
-
+    def clean_apertures(self):
+        apertures=self.cleaned_data['aperture']
+        return apertures
 
 class ChooseFiletypeForm(forms.Form):
     """Creates a ``ChooseFilterForm`` object that allows for ``filter``
@@ -149,14 +128,37 @@ class ChooseFiletypeForm(forms.Form):
         item = [filetype, filetype]
         filetypelist.append(item)
     filetype = forms.MultipleChoiceField(required=False, choices=filetypelist, widget=forms.CheckboxSelectMultiple)
-
+    def clean_filetypes(self):
+        filetypes=self.cleaned_data['filetype']
+        return filetypes
 
 class ChooseFilterForm(forms.Form):
     """Creates a ``ChooseFilterForm`` object that allows for ``filter``
     input in a form field.
     """
-    filterlist = [["filter A","filter A"], ["filter B", "filter B"], ["filter C", "filter C"]]
+    filterlist = []
+    for instrument in FILTERS_PER_INSTRUMENT.keys():
+        filters_per_inst = FILTERS_PER_INSTRUMENT[instrument]
+        for filter in filters_per_inst:
+            filterlist.append([filter, filter]) if [filter, filter] not in filterlist else filterlist
     filter = forms.MultipleChoiceField(required=False, choices=filterlist, widget=forms.CheckboxSelectMultiple)
+    def clean_filters(self):
+        filters=self.cleaned_data['filter']
+        return filters
+
+class ChooseObservingModeForm(forms.Form): # Add instruments chosen parameter
+    """Creates a ``ChooseObservingModeForm`` object that allows for ``mode``
+    input in a form field.
+    """
+    modelist=[]
+    for instrument in OBSERVING_MODE_PER_INSTRUMENT.keys():  # Add AND in instruments chosen
+        modes_per_inst = OBSERVING_MODE_PER_INSTRUMENT[instrument]
+        for mode in modes_per_inst:
+            modelist.append([mode, mode]) if [mode, mode] not in modelist else modelist
+    mode = forms.MultipleChoiceField(required=False, choices=modelist, widget=forms.CheckboxSelectMultiple)
+    def clean_modes(self):
+        modes=self.cleaned_data['mode']
+        return modes
 
 
 class ChooseInstrumentForm(forms.Form):
