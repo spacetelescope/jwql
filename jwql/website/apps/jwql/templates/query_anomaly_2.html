@@ -19,7 +19,7 @@
             <div class = "row">  
                 <div class = "col-2">
                     <!--Load the file type form from the view-->
-                    <div class="choose_file_type_form">
+                    <div class="file_type_form">
                         <h5>File Type</h5>
                         <form action="" method="post">
                             <!--Django Cross-Site Request Forgery magic-->
@@ -79,7 +79,7 @@
                             <!--Django Cross-Site Request Forgery magic-->
                             {{ csrf_input }}
                             <!--Show the field forms-->
-                            {% for field in choose_filter_form %}
+                            {% for field in filter_form %}
                                 {% for subwidget in field.subwidgets %}
                                     <li class="anomaly_choice">{{subwidget}}</li>
                                     <!-- Reorganize checkboxes to multiple columns -->

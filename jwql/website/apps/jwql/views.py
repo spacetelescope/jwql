@@ -54,7 +54,9 @@ from .data_containers import random_404_page
 from .data_containers import thumbnails_ajax
 from .data_containers import data_trending
 from .data_containers import nirspec_trending
-from .forms import AnomalySubmitForm, FileSearchForm, AnomalyForm, ExptimeMinForm, ExptimeMaxForm, ChooseApertureForm, ChooseFiletypeForm, ChooseInstrumentForm, ChooseObservingModeForm, EarlyDateForm, LateDateForm, ChooseFilterForm
+from .forms import AnomalyForm, AnomalySubmitForm, ApertureForm, EarlyDateForm
+from .forms import ExptimeMaxForm, ExptimeMinForm, FileSearchForm, FiletypeForm
+from .forms import FilterForm, InstrumentForm, LateDateForm, ObservingModeForm
 from .oauth import auth_info, auth_required
 from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT, FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE, OBSERVING_MODE_PER_INSTRUMENT
 from jwql.utils.utils import get_base_url, get_config
@@ -422,15 +424,15 @@ def query_anomaly(request):
     """
     exposure_min_form = ExptimeMinForm(request.POST or None)
     exposure_max_form = ExptimeMaxForm(request.POST or None)
-    choose_instrument_form = ChooseInstrumentForm(request.POST or None)
+    instrument_form = InstrumentForm(request.POST or None)
     early_date_form = EarlyDateForm(request.POST or None)
     late_date_form = LateDateForm(request.POST or None)
 
     global instruments_chosen
     instruments_chosen = "No instruments chosen"
     if request.method == 'POST':
-        if choose_instrument_form.is_valid():
-            instruments_chosen = choose_instrument_form.clean_instruments()
+        if instrument_form.is_valid():
+            instruments_chosen = instrument_form.clean_instruments()
     
     global current_anomalies
     current_anomalies=['cosmic_ray_shower', 'diffraction_spike', 'excessive_saturation', 
@@ -441,16 +443,16 @@ def query_anomaly(request):
             if inst in ANOMALIES_PER_INSTRUMENT[anomaly]:
                 current_anomalies.append(anomaly) if anomaly not in current_anomalies else current_anomalies
     
-    choose_anomalies_form = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+    anomalies_form = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
     
     template = 'query_anomaly.html'
     context = {'inst': '',
                'exposure_min_form': exposure_min_form,
                'exposure_max_form': exposure_max_form,
-               'choose_instrument_form': choose_instrument_form,
+               'instrument_form': instrument_form,
                'early_date_form': early_date_form,
                'late_date_form': late_date_form,
-               'choose_anomalies_form': choose_anomalies_form,
+               'anomalies_form': anomalies_form,
                'requested_insts': instruments_chosen,
                'current_anomalies': current_anomalies,
                'None': "No instruments chosen"}
@@ -492,10 +494,10 @@ def query_anomaly_2(request):  ### perhaps it would make sense to display inputs
 
     ### Change to AnomalyForm
     form = AnomalyForm(request.POST or None, initial={'query': current_anomalies})
-    aperture_form = ChooseApertureForm(request.POST or None, initial={'aperture': initial_aperture_list})
-    choose_filter_form=ChooseFilterForm(request.POST or None, initial={'filter': initial_filter_list})
-    filetype_form = ChooseFiletypeForm(request.POST or None)
-    observing_mode_form = ChooseObservingModeForm(request.POST or None, initial={'mode': initial_mode_list})
+    aperture_form = ApertureForm(request.POST or None, initial={'aperture': initial_aperture_list})
+    filter_form=FilterForm(request.POST or None, initial={'filter': initial_filter_list})
+    filetype_form = FiletypeForm(request.POST or None)
+    observing_mode_form = ObservingModeForm(request.POST or None, initial={'mode': initial_mode_list})
 
     global apertures_chosen
     apertures_chosen = "No apertures chosen"
@@ -507,8 +509,8 @@ def query_anomaly_2(request):  ### perhaps it would make sense to display inputs
     global filters_chosen
     filters_chosen = "No filters chosen"
     if request.method == 'POST':
-        if choose_filter_form.is_valid():
-            filters_chosen = choose_filter_form.clean_filters()
+        if filter_form.is_valid():
+            filters_chosen = filter_form.clean_filters()
             initial_filter_list = filters_chosen
 
     global observing_modes_chosen
@@ -532,7 +534,7 @@ def query_anomaly_2(request):  ### perhaps it would make sense to display inputs
                'form': form,
                'aperture_form': aperture_form,
                'current_anomalies': current_anomalies,
-               'choose_filter_form': choose_filter_form,
+               'filter_form': filter_form,
                'filetype_form': filetype_form,
                'observing_mode_form': observing_mode_form,
                'apertures_chosen': apertures_chosen,
@@ -574,7 +576,7 @@ def query_anomaly_3(request):  ### perhaps it would make sense to display inputs
     context = {'inst': '',
                'form': form,
                'current_anomalies': current_anomalies,
-               # 'choose_filter_form': choose_filter_form,
+               # 'filter_form': filter_form,
                'chosen_current_anomalies': anomalies_chosen_from_current_anomalies}
 
     return render(request, template, context)
@@ -613,7 +615,6 @@ def query_submit(request):
               }
 
     return render(request, template, context)
-
 
 
 def unlooked_images(request, inst):

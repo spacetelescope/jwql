@@ -54,11 +54,25 @@ from jwedb.edb_interface import is_valid_mnemonic
 
 # from data_containers import get_thumbnails_all_instruments
 from jwql.database import database_interface as di
-from jwql.utils.constants import ANOMALY_CHOICES, JWST_INSTRUMENT_NAMES_SHORTHAND, JWST_INSTRUMENT_NAMES_MIXEDCASE, FILTERS_PER_INSTRUMENT, FULL_FRAME_APERTURES, GENERIC_SUFFIX_TYPES, OBSERVING_MODE_PER_INSTRUMENT
+from jwql.utils.constants import ANOMALY_CHOICES, FILTERS_PER_INSTRUMENT
+from jwql.utils.constants import FULL_FRAME_APERTURES, GENERIC_SUFFIX_TYPES
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.constants import OBSERVING_MODE_PER_INSTRUMENT
 from jwql.utils.utils import get_config, filename_parser
 # from jwql.website.apps.jwql.views import current_anomalies  ### global variable defined once query_anomaly page has forms filled
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
+
+
+class AnomalyForm(forms.Form):
+    """Creates a ``AnomalyForm`` object that allows for anomaly input
+    in a form field.
+    """
+    query = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())  # Update depending on chosen instruments
+
+    def clean_anomalies(self):
+        anomalies=self.cleaned_data['query']
+        return anomalies
 
 
 class AnomalySubmitForm(forms.Form):
@@ -96,17 +110,8 @@ class AnomalySubmitForm(forms.Form):
         return anomalies
 
 
-class AnomalyForm(forms.Form):
-    """Creates a ``AnomalyForm`` object that allows for anomaly input
-    in a form field.
-    """
-    query = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())  # Update depending on chosen instruments
-    def clean_anomalies(self):
-        anomalies=self.cleaned_data['query']
-        return anomalies
-
-class ChooseApertureForm(forms.Form):
-    """Creates a ``ChooseFilterForm`` object that allows for ``filter``
+class ApertureForm(forms.Form):
+    """Creates an ``ApertureForm`` object that allows for ``aperture``
     input in a form field.
     """
     aperturelist = []
@@ -115,76 +120,10 @@ class ChooseApertureForm(forms.Form):
             item = [aperture, aperture]
             aperturelist.append(item)
     aperture = forms.MultipleChoiceField(required=False, choices=aperturelist, widget=forms.CheckboxSelectMultiple)
+
     def clean_apertures(self):
         apertures=self.cleaned_data['aperture']
         return apertures
-
-class ChooseFiletypeForm(forms.Form):
-    """Creates a ``ChooseFilterForm`` object that allows for ``filter``
-    input in a form field.
-    """
-    filetypelist = []
-    for filetype in GENERIC_SUFFIX_TYPES:
-        item = [filetype, filetype]
-        filetypelist.append(item)
-    filetype = forms.MultipleChoiceField(required=False, choices=filetypelist, widget=forms.CheckboxSelectMultiple)
-    def clean_filetypes(self):
-        filetypes=self.cleaned_data['filetype']
-        return filetypes
-
-class ChooseFilterForm(forms.Form):
-    """Creates a ``ChooseFilterForm`` object that allows for ``filter``
-    input in a form field.
-    """
-    filterlist = []
-    for instrument in FILTERS_PER_INSTRUMENT.keys():
-        filters_per_inst = FILTERS_PER_INSTRUMENT[instrument]
-        for filter in filters_per_inst:
-            filterlist.append([filter, filter]) if [filter, filter] not in filterlist else filterlist
-    filter = forms.MultipleChoiceField(required=False, choices=filterlist, widget=forms.CheckboxSelectMultiple)
-    def clean_filters(self):
-        filters=self.cleaned_data['filter']
-        return filters
-
-class ChooseObservingModeForm(forms.Form): # Add instruments chosen parameter
-    """Creates a ``ChooseObservingModeForm`` object that allows for ``mode``
-    input in a form field.
-    """
-    modelist=[]
-    for instrument in OBSERVING_MODE_PER_INSTRUMENT.keys():  # Add AND in instruments chosen
-        modes_per_inst = OBSERVING_MODE_PER_INSTRUMENT[instrument]
-        for mode in modes_per_inst:
-            modelist.append([mode, mode]) if [mode, mode] not in modelist else modelist
-    mode = forms.MultipleChoiceField(required=False, choices=modelist, widget=forms.CheckboxSelectMultiple)
-    def clean_modes(self):
-        modes=self.cleaned_data['mode']
-        return modes
-
-
-class ChooseInstrumentForm(forms.Form):
-    """Creates a ``ChooseInstrumentForm`` object that allows for ``query``
-    input in a form field.
-    """
-    query = forms.MultipleChoiceField(required = False,
-                               choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE] , 
-                               widget=forms.CheckboxSelectMultiple())
-    def clean_instruments(self):
-        instruments_chosen = self.cleaned_data['query']
-        return instruments_chosen
-    def redirect_to_files(self):
-        """Determine where to redirect the web app based on user input.
-
-        Returns
-        -------
-        HttpResponseRedirect object
-            Outgoing redirect response sent to the webpage
-
-        """
-        # Process the data in form.clean_instruments as required
-        instruments = self.cleaned_data['query']
-
-        # get_thumbnails_all_instruments(instruments)
-        return instruments
 
 
 class EarlyDateForm(forms.Form):
@@ -344,6 +283,64 @@ class FileSearchForm(forms.Form):
         # If they searched for a file root
         elif self.search_type == 'fileroot':
             return redirect('/{}/{}'.format(self.instrument, search))
+
+
+class FiletypeForm(forms.Form):
+    """Creates a ``FiletypeForm`` object that allows for ``filetype``
+    input in a form field.
+    """
+    filetypelist = []
+    for filetype in GENERIC_SUFFIX_TYPES:
+        item = [filetype, filetype]
+        filetypelist.append(item)
+    filetype = forms.MultipleChoiceField(required=False, choices=filetypelist, widget=forms.CheckboxSelectMultiple)
+
+    def clean_filetypes(self):
+        filetypes=self.cleaned_data['filetype']
+        return filetypes
+
+
+class FilterForm(forms.Form):
+    """Creates a ``FilterForm`` object that allows for ``filter``
+    input in a form field.
+    """
+    filterlist = []
+    for instrument in FILTERS_PER_INSTRUMENT.keys():
+        filters_per_inst = FILTERS_PER_INSTRUMENT[instrument]
+        for filter in filters_per_inst:
+            filterlist.append([filter, filter]) if [filter, filter] not in filterlist else filterlist
+    filter = forms.MultipleChoiceField(required=False, choices=filterlist, widget=forms.CheckboxSelectMultiple)
+
+    def clean_filters(self):
+        filters=self.cleaned_data['filter']
+        return filters
+
+
+class InstrumentForm(forms.Form):
+    """Creates a ``InstrumentForm`` object that allows for ``query``
+    input in a form field.
+    """
+    query = forms.MultipleChoiceField(required = False,
+                               choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE] , 
+                               widget=forms.CheckboxSelectMultiple())
+
+    def clean_instruments(self):
+        instruments_chosen = self.cleaned_data['query']
+        return instruments_chosen
+    def redirect_to_files(self):
+        """Determine where to redirect the web app based on user input.
+
+        Returns
+        -------
+        HttpResponseRedirect object
+            Outgoing redirect response sent to the webpage
+
+        """
+        # Process the data in form.clean_instruments as required
+        instruments = self.cleaned_data['query']
+
+        # get_thumbnails_all_instruments(instruments)
+        return instruments
 
 
 class LateDateForm(forms.Form):
@@ -531,3 +528,19 @@ class MnemonicExplorationForm(forms.Form):
                                    help_text="String ID (tlmMnemonic)")
     unit = forms.CharField(label='unit', max_length=500, required=False,
                            help_text="unit")
+
+
+class ObservingModeForm(forms.Form): # Add instruments chosen parameter
+    """Creates a ``ObservingModeForm`` object that allows for ``mode``
+    input in a form field.
+    """
+    modelist=[]
+    for instrument in OBSERVING_MODE_PER_INSTRUMENT.keys():  # Add AND in instruments chosen
+        modes_per_inst = OBSERVING_MODE_PER_INSTRUMENT[instrument]
+        for mode in modes_per_inst:
+            modelist.append([mode, mode]) if [mode, mode] not in modelist else modelist
+    mode = forms.MultipleChoiceField(required=False, choices=modelist, widget=forms.CheckboxSelectMultiple)
+
+    def clean_modes(self):
+        modes=self.cleaned_data['mode']
+        return modes

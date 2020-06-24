@@ -21,13 +21,13 @@
             <!-- <div class="col-xl-1 text-left"> -->
             <div class = "col-2">
                 <!--Load the instrument form from the view-->
-                <div class="choose_instrument_form">
+                <div class="instrument_form">
                     <h5>Instruments</h5>
                     <form action="" method="post">
                         <!--Django Cross-Site Request Forgery magic-->
                         {{ csrf_input }}
                         <!--Show the field forms-->
-                        {% for field in choose_instrument_form %}
+                        {% for field in instrument_form %}
                             {% for subwidget in field.subwidgets %}
                                 <!-- This does actually need to be anomaly_choice -->
                                 <li class="anomaly_choice">{{subwidget}}</li>
@@ -40,7 +40,7 @@
             </div>
             <div class = "col-xl-3">
                 <!--Load the minimum exposure time form from the view-->
-                <div class="choose_min_exposure_form">
+                <div class="min_exposure_form">
                     <h5>Minimum Exposure Time</h5>
                     <form action="" method="post">
                         <!--Django Cross-Site Request Forgery magic-->
@@ -55,7 +55,7 @@
                     </form>
                 </div>
                 <!--Load the maximum exposure time form from the view-->
-                <div class="choose_max_exposure_form">
+                <div class="max_exposure_form">
                     <h5>Maximum Exposure Time</h5>
                     <form action="" method="post">
                         <!--Django Cross-Site Request Forgery magic-->
@@ -72,7 +72,7 @@
             </div>
             <div class = "col-4">
                 <!--Load the earliest date observed form from the view-->
-                <div class="choose_min_date_form">
+                <div class="min_date_form">
                     <h5>Earliest Date/Time Observed</h5>
                     <form action="" method="post">
                         <!--Django Cross-Site Request Forgery magic-->
@@ -87,7 +87,7 @@
                     </form>
                 </div>
                 <!--Load the latest date observed form from the view-->
-                <div class="choose_max_date_form">
+                <div class="max_date_form">
                     <h5>Latest Date/Time Observed</h5>
                     <form action="" method="post">
                         <!--Django Cross-Site Request Forgery magic-->

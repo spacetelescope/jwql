@@ -47,6 +47,7 @@ AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 512, 1), (0, 2048, 1)],
                                  '3': [(2, 1032, 4), (0, 1024, 1)],
                                  '4': [(3, 1032, 4), (0, 1024, 1)]}}
 
+# Dictionary describing instruments to which anomalies apply
 ANOMALIES_PER_INSTRUMENT = {
     # anomalies affecting all instruments:
     'cosmic_ray_shower': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
@@ -73,6 +74,7 @@ ANOMALIES_PER_INSTRUMENT = {
 # Defines the possible anomalies (with rendered name) to flag through the web app
 ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT]
 
+# Dictionary of filters for each instrument
 FILTERS_PER_INSTRUMENT = {'miri': ['F560W', 'F770W', 'F1000W', 'F1065C', 'F1130W', 'F1140C', 'F1280W',
                                    'F1500W', 'F1550C', 'F1800W', 'F2100W', 'F2300C', 'F2550W'],
                           'nircam': ['F070W', 'F090W', 'F115W', 'F140M', 'F150W', 'F150W2', 'F162M',
@@ -84,6 +86,7 @@ FILTERS_PER_INSTRUMENT = {'miri': ['F560W', 'F770W', 'F1000W', 'F1065C', 'F1130W
                                      'F356W', 'F380M', 'F430M', 'F444W', 'F480M'],
                           'nirspec': ['CLEAR', 'F070LP', 'F100LP', 'F170LP', 'F290LP']}
 
+# Names of four amp subarrays
 FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R', 'WFSS128C', 'WFSS64C']
 
 # Names of full-frame apertures for all instruments
@@ -103,6 +106,7 @@ GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d'
 # Possible suffix types for guider exposures
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
 
+# Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
     'dark_monitor': ['nircam_dark_dark_current', 'nircam_dark_pixel_stats', 'nircam_dark_query_history']}
 
@@ -184,6 +188,7 @@ NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'S
 # Possible suffix types for AMI files
 NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami']
 
+# Dictionary of observing modes available for each instrument
 OBSERVING_MODE_PER_INSTRUMENT = {'miri': ['Imaging', '4QPM Coronagraphic Imaging',
                                           'Lyot Coronagraphic Imaging', 'LRS', 'MRS'],
                                  'nircam': ['Imaging', 'Coronagraphic Imaging', 'WFSS',
