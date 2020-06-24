@@ -25,7 +25,7 @@
                         <!--Django Cross-Site Request Forgery magic-->
                         {{ csrf_input }}
                         <!--Show the field forms-->
-                        {% for field in form %}
+                        {% for field in anomaly_form %}
                             {% for subwidget in field.subwidgets %}
                                 <li class="anomaly_choice">{{subwidget}}</li>
                             {% endfor %}

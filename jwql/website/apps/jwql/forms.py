@@ -63,6 +63,9 @@ from jwql.utils.utils import get_config, filename_parser
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
+from jwql.utils import query_config
+# from jwql.website.apps.jwql import views # update query_config
+
 
 class AnomalyForm(forms.Form):
     """Creates a ``AnomalyForm`` object that allows for anomaly input
@@ -299,13 +302,14 @@ class FiletypeForm(forms.Form):
         filetypes=self.cleaned_data['filetype']
         return filetypes
 
-
+# from jwql.website.apps.jwql import views # update query_config
 class FilterForm(forms.Form):
     """Creates a ``FilterForm`` object that allows for ``filter``
     input in a form field.
     """
     filterlist = []
     for instrument in FILTERS_PER_INSTRUMENT.keys():
+        # if instrument in query_config.INSTRUMENTS_CHOSEN:   # eg ['nirspec']: selects relevant filters, but not specific to chosen instruments
         filters_per_inst = FILTERS_PER_INSTRUMENT[instrument]
         for filter in filters_per_inst:
             filterlist.append([filter, filter]) if [filter, filter] not in filterlist else filterlist
