@@ -4,8 +4,8 @@ from setuptools import find_packages
 
 VERSION = '0.22.0'
 
-AUTHORS = 'Matthew Bourque, Misty Cracraft, Joe Filippazzo, Bryan Hilbert, '
-AUTHORS += 'Graham Kanarek, Catherine Martlin, Johannes Sahlmann, Ben Sunnquist'
+AUTHORS = 'Matthew Bourque, Lauren Chambers, Misty Cracraft, Mike Engesser, Mees Fix, Joe Filippazzo, Bryan Hilbert, '
+AUTHORS += 'Graham Kanarek, Teagan King, Catherine Martlin, Maria Pena-Guerrero, Johannes Sahlmann, Ben Sunnquist'
 
 DESCRIPTION = 'The James Webb Space Telescope Quicklook Project'
 
