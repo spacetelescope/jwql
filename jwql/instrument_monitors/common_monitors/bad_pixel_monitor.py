@@ -2,47 +2,48 @@
 
 """This module contains code for the bad/dead pixel monitor.
 
-The monitor calls the bad_pixel_mask.py module in the
-spacetelescope/jwst_reffiles package in order to identify bad pixels.
-https://github.com/spacetelescope/jwst_reffiles
+The monitor calls the ``bad_pixel_mask.py`` module in the
+``spacetelescope/jwst_reffiles`` package in order to identify bad
+pixels. (``https://github.com/spacetelescope/jwst_reffiles``)
 
 The definitions of the bad pixel types to be searched for are given
 in the jwst package:
-https://jwst-pipeline.readthedocs.io/en/stable/jwst/references_general/
-references_general.html#data-quality-flags
+``https://jwst-pipeline.readthedocs.io/en/stable/jwst/references_general/
+references_general.html#data-quality-flags``
 
 The bad pixel search is composed of two different parts, each of which
 can be run independently.
 
-1. Internal flat field exposures are used to search for DEAD, LOW QE,
-OPEN, and ADJACENT TO OPEN pixels.
+1. Internal flat field exposures are used to search for ``DEAD``,
+``LOW QE``, ``OPEN``, and ``ADJACENT TO OPEN`` pixels.
 
-2. Dark current exposures are used to search for NOISY, HOT, RC, TELEGRAPH,
-and LOW_PEDESTAL pixels.
+2. Dark current exposures are used to search for ``NOISY``, ``HOT``,
+``RC``, ``TELEGRAPH``, and ``LOW_PEDESTAL`` pixels.
 
-Both of these modules expect input data in at least 2 calibration states.
-In practice, the bad pixel monitor will search MAST for the appropriate
-dark current and flat field files. In both cases, a given file is
-considered useful if the uncal (and potentially the rate) versions of the
-file are present in the archive. For files where the uncal version only
-is found, the pipeline is run to produce the rate file.
+Both of these modules expect input data in at least 2 calibration
+states. In practice, the bad pixel monitor will search MAST for the
+appropriate dark current and flat field files. In both cases, a given
+file is considered useful if the uncal (and potentially the rate)
+versions of the file are present in the archive. For files where the
+uncal version only is found, the pipeline is run to produce the rate
+file.
 
 Once a sufficient number of new flats or darks are identified, the bad
-pixel montior is called. The bad_pixel_file_thresholds.txt file contains
-a list of the minimum number of new files necessary to run the monitor
-for each instrument and aperture.
+pixel montior is called. The ``bad_pixel_file_thresholds.txt`` file
+contains a list of the minimum number of new files necessary to run the
+monitor for each instrument and aperture.
 
 For the flat field files, the pipeline is run on the uncal files far
 enough to produce cosmic ray flagged (jump) files. These are also
 needed for the bad pixel search.
 
-The jwst_reffiles bad_pixel_mask.py is run, and returns a map of bad
-pixels for each of the various bad pixel mnemonics. The bad_pixel_monitor
-then downloads the latest bad pixel mask in CRDS for the given
-instrument and detector/aperture, and this is compared to the new map
-of bad pixels. For each bad pixel mnemonic, any pixels flagged as bad
-that are not bad in the current reference file are saved to the
-(e.g. NIRCamBadPixelStats) database table.
+The ``jwst_reffiles`` ``bad_pixel_mask.py`` is run, and returns a map of
+bad pixels for each of the various bad pixel mnemonics. The
+``bad_pixel_monitor`` then downloads the latest bad pixel mask in CRDS
+for the given instrument and detector/aperture, and this is compared to
+the new map of bad pixels. For each bad pixel mnemonic, any pixels
+flagged as bad that are not bad in the current reference file are saved
+to the (e.g. ``NIRCamBadPixelStats``) database table.
 
 Author
 ------
@@ -58,15 +59,17 @@ Use
 
         python bad_pixel_monitor.py
 
-NOTES
+Notes
 -----
 
-The bad pixel flat that utilizes flat field ramps can't be used with NIRCam
-since NIRCam has no internal lamp and therefore will not be taking any more
-internal flat field images. Could perhaps be used with a series of external
-undithered observations, but that's something to think about later.
+The bad pixel flat that utilizes flat field ramps can't be used with
+NIRCam since NIRCam has no internal lamp and therefore will not be
+taking any more internal flat field images. Could perhaps be used with
+a series of external undithered observations, but that's something to
+think about later.
 
-Templates to use: FGS_INTFLAT, NIS_LAMP, NRS_LAMP, MIR_DARK
+Templates to use: ``FGS_INTFLAT``, ``NIS_LAMP``, ``NRS_LAMP``,
+``MIR_DARK``
 """
 
 from copy import deepcopy
@@ -100,9 +103,10 @@ from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesyst
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'bad_pixel_file_thresholds.txt')
 
+
 def bad_map_to_list(badpix_image, mnemonic):
-    """Given an DQ image and a bad pixel mnemonic, create a list of (x,y)
-    locations of this type of bad pixel in ```badpix_image```
+    """Given an DQ image and a bad pixel mnemonic, create a list of
+    (x,y) locations of this type of bad pixel in ``badpix_image``
 
     Parameters
     ----------
@@ -116,12 +120,12 @@ def bad_map_to_list(badpix_image, mnemonic):
     Returns
     -------
     x_loc : list
-        List of x locations within ```badpix_image``` containing
-        ```mnemonic``` pixels.
+        List of x locations within ``badpix_image`` containing
+        ``mnemonic`` pixels.
 
     y_loc : list
-        List of x locations within ```badpix_image``` containing
-        ```mnemonic``` pixels.
+        List of x locations within ``badpix_image`` containing
+        ``mnemonic`` pixels.
     """
     mnemonic = mnemonic.upper()
     possible_mnemonics = dqflags.pixel.keys()
@@ -140,9 +144,10 @@ def bad_map_to_list(badpix_image, mnemonic):
 
 
 def check_for_sufficient_files(uncal_files, instrument_name, aperture_name, threshold_value, file_type):
-    """From a list of files of a given type (flats or darks), check to see
-    if there are enough files to call the bad pixel monitor. The numbner of
-    files must be equal to or greater than the provided threshold_value.
+    """From a list of files of a given type (flats or darks), check to
+    see if there are enough files to call the bad pixel monitor. The
+    number of files must be equal to or greater than the provided
+    ``threshold_value``.
 
     Parameters
     ----------
@@ -150,27 +155,30 @@ def check_for_sufficient_files(uncal_files, instrument_name, aperture_name, thre
         List of filenames
 
     instrument_name : str
-        Name of JWST instrument (e.g. 'nircam') that the data are from. This
-        is used only in logging statements
+        Name of JWST instrument (e.g. ``nircam``) that the data are
+        from. This is used only in logging statements
 
     aperture_name : str
-        Name of aperture (e.g. NRCA1_FULL) that the data are from. This is
-        used only in logging statements
+        Name of aperture (e.g.`` NRCA1_FULL``) that the data are from.
+        This is used only in logging statements
 
     threshold_value : int
-        Minimum number of files required in order to run the bad pixel monitor
+        Minimum number of files required in order to run the bad pixel
+        monitor
 
     file_type : str
-        Either 'darks' or 'flats'. This is used only in the logging statements.
+        Either `darks`` or ``flats``. This is used only in the logging
+        statements.
 
     Returns
     -------
     uncal_files : list
-        List of sorted, unique files from the input file list. Set to None
-        if the number of unique files is under the threshold
+        List of sorted, unique files from the input file list. Set to
+        ``None`` if the number of unique files is under the threshold
 
     run_data : bool
-        Whether or not the bad pixel monitor will be called on these files.
+        Whether or not the bad pixel monitor will be called on these
+        files.
     """
     if file_type not in ['darks', 'flats']:
         raise ValueError('Input file_type must be "darks" or "flats"')
@@ -213,14 +221,15 @@ def exclude_crds_mask_pix(bad_pix, existing_bad_pix):
     Returns
     -------
     new_bad_pix : numpy.ndarray
-        2D array of bad pixel flags contained in ```bad_pix```
-        but not ```existing_bad_pix```
+        2D array of bad pixel flags contained in ``bad_pix``
+        but not ``existing_bad_pix``
     """
     return bad_pix - (bad_pix & existing_bad_pix)
 
 
 def get_possible_apertures(self):
-    """Generate a list of possible SIAF apertures for the given instrument
+    """Generate a list of possible SIAF apertures for the given
+    instrument.
 
     Returns
     -------
@@ -248,98 +257,99 @@ def get_possible_apertures(self):
 
 
 def locate_rate_files(uncal_files):
-        """Given a list of uncal (raw) files, generate a list of corresponding
-        rate files. For each uncal file, if the rate file is present in the
-        filesystem, add the name of the rate file (if a rateints file exists,
-        use that) to the list of files. If no rate file is present, add None to
-        the list.
+    """Given a list of uncal (raw) files, generate a list of
+    corresponding rate files. For each uncal file, if the rate file
+    is present in the filesystem, add the name of the rate file (if
+    a rateints file exists, use that) to the list of files. If no
+    rate file is present, add ``None`` to the list.
 
-        Parameters
-        ----------
-        uncal_files : list
-            List of uncal files to use as the basis of the search
+    Parameters
+    ----------
+    uncal_files : list
+        List of uncal files to use as the basis of the search
 
-        Returns
-        -------
-        rate_files : list
-            List of rate files. This list corresponds 1-to-1 with ``uncal_files``.
-            Any missing rate files are listed as None.
+    Returns
+    -------
+    rate_files : list
+        List of rate files. This list corresponds 1-to-1 with
+        ``uncal_files``. Any missing rate files are listed as None.
 
-        rate_files_to_copy : list
-            Same as ``rate_files`` but without the None entries. This is a list
-            of only the rate files that exist in the filesystem
-        """
-        if uncal_files is None:
-            return None, None
+    rate_files_to_copy : list
+        Same as ``rate_files`` but without the None entries. This is
+        a list of only the rate files that exist in the filesystem
+    """
+    if uncal_files is None:
+        return None, None
 
-        rate_files = []
-        rate_files_to_copy = []
-        for uncal in uncal_files:
-            base = uncal.split('_uncal.fits')[0]
-            constructed_ratefile = '{}_rateints.fits'.format(base)
+    rate_files = []
+    rate_files_to_copy = []
+    for uncal in uncal_files:
+        base = uncal.split('_uncal.fits')[0]
+        constructed_ratefile = '{}_rateints.fits'.format(base)
+        try:
+            rate_files.append(filesystem_path(constructed_ratefile))
+            rate_files_to_copy.append(filesystem_path(constructed_ratefile))
+        except FileNotFoundError:
+            constructed_ratefile = '{}_rate.fits'.format(base)
             try:
                 rate_files.append(filesystem_path(constructed_ratefile))
                 rate_files_to_copy.append(filesystem_path(constructed_ratefile))
             except FileNotFoundError:
-                constructed_ratefile = '{}_rate.fits'.format(base)
-                try:
-                    rate_files.append(filesystem_path(constructed_ratefile))
-                    rate_files_to_copy.append(filesystem_path(constructed_ratefile))
-                except FileNotFoundError:
-                    rate_files.append('None')
-        return rate_files, rate_files_to_copy
+                rate_files.append('None')
+    return rate_files, rate_files_to_copy
 
 
 def locate_uncal_files(query_result):
-        """Given a MAST query result, locate the raw version (uncal.fits) of
-        the listed files in the filesystem.
+    """Given a MAST query result, locate the raw version
+    (``uncal.fits``) of the listed files in the filesystem.
 
-        Parameters
-        ----------
-        query_result : list
-            MAST query results. List of dictionaries
+    Parameters
+    ----------
+    query_result : list
+        MAST query results. List of dictionaries
 
-        Returns
-        -------
-        uncal_files : list
-            List of raw file locations within the filesystem
-        """
-        uncal_files = []
-        for entry in query_result:
-            filename = entry['filename']
-            suffix = filename.split('_')[-1].replace('.fits', '')
-            uncal_file = filename.replace(suffix, 'uncal')
+    Returns
+    -------
+    uncal_files : list
+        List of raw file locations within the filesystem
+    """
+    uncal_files = []
+    for entry in query_result:
+        filename = entry['filename']
+        suffix = filename.split('_')[-1].replace('.fits', '')
+        uncal_file = filename.replace(suffix, 'uncal')
 
-            # Look for uncal file
-            try:
-                uncal_files.append(filesystem_path(uncal_file))
-            except FileNotFoundError:
-                logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
-                                .format(uncal_file))
-        return uncal_files
+        # Look for uncal file
+        try:
+            uncal_files.append(filesystem_path(uncal_file))
+        except FileNotFoundError:
+            logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
+                            .format(uncal_file))
+    return uncal_files
 
 
 class BadPixels():
     """Class for executing the bad pixel monitor.
 
     This class will search for new (since the previous instance of the
-    class) dark current and internal flat field files in the file system.
-    It will loop over instrument/aperture combinations and find the number
-    of new dark/flat files available. If there are enough, it will copy the
-    files over to a working directory and run the monitor.
+    class) dark current and internal flat field files in the filesystem.
+    It will loop over instrument/aperture combinations and find the
+    number of new dark/flat files available. If there are enough, it
+    will copy the files over to a working directory and run the monitor.
 
-    This will use the jwst_reffiles package to locate new bad pixels, which
-    will be returned as a map. This map will be compared to the current
-    bad pixel reference file (dq_init) in CRDS, and any the coordinates and
-    type of any new bad pixels will be saved in a database table.
+    This will use the ``jwst_reffiles`` package to locate new bad
+    pixels, which will be returned as a map. This map will be compared
+    to the current bad pixel reference file (``dq_init``) in CRDS, and
+    any the coordinates and type of any new bad pixels will be saved in
+    a database table.
 
     Attributes
     ----------
     aperture : str
-        Aperture name of the data (e.g. NRCA1_FULL)
+        Aperture name of the data (e.g. ``NRCA1_FULL``)
 
     dark_query_start : float
-        Date (in MJD) of the ending range of the previous MAST query
+        Date (in ``MJD``) of the ending range of the previous MAST query
         where the bad pixel from darks monitor was run.
 
     data_dir : str
@@ -347,7 +357,7 @@ class BadPixels():
         by the bad pixel monitor
 
     detector : str
-        Detector associated with the data (e.g. NRCA1)
+        Detector associated with the data (e.g. ``NRCA1``)
 
     flat_query_start : float
         Date (in MJD) of the ending range of the previous MAST query
@@ -439,17 +449,18 @@ class BadPixels():
         self.pixel_table.__table__.insert().execute(entry)
 
     def filter_query_results(self, results, datatype):
-        """Filter MAST query results. For input flats, keep only those with
-        the most common filter/pupil/grating combination. For both flats
-        and darks, keep only those with the most common readout pattern.
+        """Filter MAST query results. For input flats, keep only those
+        with the most common filter/pupil/grating combination. For both
+        flats and darks, keep only those with the most common readout
+        pattern.
 
         Parameters
         ----------
         results : list
-            List of query results, as returned by mast_query()
+            List of query results, as returned by ``mast_query()``
 
         datatype : str
-            Type of data being filtered. 'flat' or 'dark'.
+            Type of data being filtered. ``flat`` or ``dark``.
 
         Returns
         -------
@@ -585,8 +596,9 @@ class BadPixels():
 
     def map_uncal_and_rate_file_lists(self, uncal_files, rate_files, rate_files_to_copy, obs_type):
         """Copy uncal and rate files from the filesystem to the working
-        directory. Any requested files that are not in the filesystem are
-        noted and skipped. Return the file lists with skipped files removed.
+        directory. Any requested files that are not in the filesystem
+        are noted and skipped. Return the file lists with skipped files
+        removed.
 
         Parameters
         ----------
@@ -602,17 +614,19 @@ class BadPixels():
             Similar to ``rate_files`` but with the None entries omitted.
 
         obs_type : str
-            Observation type ("dark" or "flat"). Used only for logging
+            Observation type (``dark`` or ``flat``). Used only for
+            logging
 
         Returns
         -------
         uncal_files : list
-            List of the input raw files with any that failed to copy removed
+            List of the input raw files with any that failed to copy
+            removed
 
         rate_files : list
-            List of the input rate files with any that failed to copy removed
-            (if the uncal also failed) or set to None (if only the rate file
-            failed)
+            List of the input rate files with any that failed to copy
+            removed (if the uncal also failed) or set to None (if only
+            the rate file failed)
         """
         # Copy files from filesystem
         uncal_copied_files, uncal_not_copied = copy_files(uncal_files, self.data_dir)
@@ -653,8 +667,8 @@ class BadPixels():
         Parameters
         ----------
         file_type : str
-            "dark" or "flat". Specifies the type of file whose previous
-            search time is queried.
+            ``dark`` or ``flat``. Specifies the type of file whose
+            previous search time is queried.
 
         Returns
         -------
@@ -732,10 +746,10 @@ class BadPixels():
 
         illuminated_slope_files : list
             List of filenames (including full paths) of flat field slope
-            files. These should all be for the same detector and aperture
-            and correspond one-to-one with ``illuminated_raw_files``. For
-            cases where a raw file exists but no slope file, the slope
-            file should be None
+            files. These should all be for the same detector and
+            aperture and correspond one-to-one with
+            ``illuminated_raw_files``. For cases where a raw file exists
+            but no slope file, the slope file should be None
 
         dark_raw_files : list
             List of filenames (including full paths) of raw (uncal) dark
@@ -743,11 +757,11 @@ class BadPixels():
             aperture.
 
         dark_slope_files : list
-            List of filenames (including full paths) of dark current slope
-            files. These should all be for the same detector and aperture
-            and correspond one-to-one with ``dark_raw_files``. For
-            cases where a raw file exists but no slope file, the slope
-            file should be None
+            List of filenames (including full paths) of dark current
+            slope files. These should all be for the same detector and
+            aperture and correspond one-to-one with ``dark_raw_files``.
+            For cases where a raw file exists but no slope file, the
+            slope file should be ``None``
         """
         # Illuminated files - run entirety of calwebb_detector1 for uncal
         # files where corresponding rate file is 'None'
@@ -872,7 +886,6 @@ class BadPixels():
         new_since_reffile = exclude_crds_mask_pix(badpix_map, baseline_badpix_mask)
 
         # Create a list of the new instances of each type of bad pixel
-        bad_lists = {}
         for bad_type in badpix_types:
             bad_location_list = bad_map_to_list(new_since_reffile, bad_type)
 
@@ -889,19 +902,16 @@ class BadPixels():
     @log_fail
     @log_info
     def run(self):
-        """The main method.  See module docstrings for further
-        details.
+        """The main method.  See module docstrings for further details.
 
         There are 2 parts to the bad pixel monitor:
         1. Bad pixels from illuminated data
         2. Bad pixels from dark data
 
         For each, we will query MAST, copy new files from the filesystem
-        and pass the list of copied files into the process() method.
+        and pass the list of copied files into the ``process()`` method.
         """
         logging.info('Begin logging for bad_pixel_monitor')
-
-        apertures_to_skip = ['NRCALL_FULL', 'NRCAS_FULL', 'NRCBS_FULL']
 
         # Get the output directory
         self.output_dir = os.path.join(get_config()['outputs'], 'badpix_monitor')
@@ -927,7 +937,6 @@ class BadPixels():
                 grating = None
                 detector_name = None
                 lamp = None
-                lamp_power = None
 
                 # NIRSpec flats use the MIRROR grating.
                 if self.instrument == 'nirspec':
@@ -1002,9 +1011,6 @@ class BadPixels():
 
                 # In the end, we need rate files as well as uncal files
                 # because we're going to need to create jump files.
-                rate_files = []
-                uncal_files = []
-
                 flat_uncal_files = locate_uncal_files(new_flat_entries)
                 dark_uncal_files = locate_uncal_files(new_dark_entries)
 
