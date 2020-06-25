@@ -1,12 +1,13 @@
 """
-This module defines YAML constructors and factory functions which are used
-to create Bokeh objects parsed from YAML template files. 
+This module defines YAML constructors and factory functions which are
+used to create Bokeh objects parsed from YAML template files.
 
-The ``mapping_factory`` and ``sequence_factory`` functions are used to create a
-constructor function for each of the mappings (i.e., classes) and sequences 
-(i.e., functions) included in the keyword map. The ``document_constructor``
-and ``figure_constructor`` functions are stand-alone constructors for the
-``!Document`` and ``!Figure`` tag, respectively.
+The ``mapping_factory`` and ``sequence_factory`` functions are used to
+create a constructor function for each of the mappings (i.e., classes)
+and sequences  (i.e., functions) included in the keyword map. The
+``document_constructor`` and ``figure_constructor`` functions are
+stand-alone constructors for the ``!Document`` and ``!Figure`` tag,
+respectively.
 
 Author
 -------
@@ -20,14 +21,13 @@ Use
     directly; users should subclass the ``BokehTemplate`` class found in
     ``template.py`` instead. However, they can be used as a model for
     creating new constructors for user-defined tags, which can then be
-    registered using the `BokehTemplate.register_mapping_constructor`` and
-    `BokehTemplate.register_sequence_constructor`` classmethods.
+    registered using the `BokehTemplate.register_mapping_constructor``
+    and `BokehTemplate.register_sequence_constructor`` classmethods.
 
 Dependencies
 ------------
 
     The user must have Bokeh installed.
-
 """
 
 from bokeh.io import curdoc
@@ -42,31 +42,30 @@ del sequences["figure"]
 
 def mapping_factory(tool, element_type):
     """
-    Create a mapping constructor for the given tool, used to parse the given
-    element tag.
-    
+    Create a mapping constructor for the given tool, used to parse the
+    given element tag.
+
     Parameters
     ----------
-    
     tool : BokehTemplate instance
-      The web app class instance to which the constructor will be attached.
-      This will become ``self`` when the factory is a method, and is used to
-      both store the Bokeh objects in the ``BokehTemplate.refs`` dictionary, 
-      and allow for app-wide formatting choices via ``BokehTemplate.format_string``.
-    
+      The web app class instance to which the constructor will be
+      attached. This will become ``self`` when the factory is a method,
+      and is used to both store the Bokeh objects in the
+      ``BokehTemplate.refs`` dictionary, and allow for app-wide
+      formatting choices via ``BokehTemplate.format_string``.
+
     element_type : str
-      The Bokeh element name for which a constructor is desired. For example,
-      an ``element_type`` of ``'Slider'`` will create a constructor for a
-      Bokeh ``Slider`` widget, designated by the ``!Slider`` tag in the YAML
-      template file.
-      
+      The Bokeh element name for which a constructor is desired. For
+      example, an ``element_type`` of ``'Slider'`` will create a
+      constructor for a Bokeh ``Slider`` widget, designated by the
+      ``!Slider`` tag in the YAML template file.
+
     Usage
     -----
-    
-    See the ``BokehTemplate`` class implementation in ``template.py`` for an
-    example of how this function is used.
+    See the ``BokehTemplate`` class implementation in ``template.py``
+    for an example of how this function is used.
     """
-    
+
     def mapping_constructor(loader, node): #docstring added below
         fmt = tool.formats.get(element_type, {})
         value = loader.construct_mapping(node, deep=True)
@@ -108,42 +107,41 @@ def mapping_factory(tool, element_type):
         object wherever the ``!{et}`` tag appears in the YAML template file.
         If a ``ref`` tag is specified, the object will then be stored in the
         ``BokehTemplate.refs`` dictionary.
-        
-        This constructor is used for mappings -- i.e., classes or functions 
+
+        This constructor is used for mappings -- i.e., classes or functions
         which primarily have keyword arguments in their signatures. If
         positional arguments appear, they can be included in the YAML file
         with the `args` keyword.
         """.format(et=element_type)
-    
+
     return mapping_constructor
 
 
 def sequence_factory(tool, element_type):
-    """
-    Create a sequence constructor for the given tool, used to parse the given
-    element tag.
-    
+    """ Create a sequence constructor for the given tool, used to parse
+    the given element tag.
+
     Parameters
     ----------
-    
     tool : BokehTemplate instance
-      The web app class instance to which the constructor will be attached.
-      This will become ``self`` when the factory is a method, and is used to
-      both store the Bokeh objects in the ``BokehTemplate.refs`` dictionary, 
-      and allow for app-wide formatting choices via ``BokehTemplate.format_string``.
-    
+      The web app class instance to which the constructor will be
+      attached. This will become ``self`` when the factory is a method,
+      and is used to both store the Bokeh objects in the
+      ``BokehTemplate.refs`` dictionary, and allow for app-wide
+      formatting choices via ``BokehTemplate.format_string``.
+
     element_type : str
-      The Bokeh element name for which a constructor is desired. For example,
-      an ``element_type`` of ``'Slider'`` will create a constructor for a
-      Bokeh ``Slider`` widget, designated by the ``!Slider`` tag in the YAML
-      template file.
-      
+      The Bokeh element name for which a constructor is desired. For
+      example, an ``element_type`` of ``'Slider'`` will create a
+      constructor for a Bokeh ``Slider`` widget, designated by the
+      ``!Slider`` tag in the YAML template file.
+
     Usage
     -----
-    
-    See the ``BokehTemplate`` class implementation in ``template.py`` for an
-    example of how this function is used.
+    See the ``BokehTemplate`` class implementation in ``template.py``
+    for an example of how this function is used.
     """
+
     def sequence_constructor(loader, node):
         fmt = tool.formats.get(element_type, {})
         value = loader.construct_sequence(node, deep=True)
@@ -156,24 +154,24 @@ def sequence_factory(tool, element_type):
         object wherever the ``!{et}`` tag appears in the YAML template file.
         If a ``ref`` tag is specified, the object will then be stored in the
         ``BokehTemplate.refs`` dictionary.
-        
-        This constructor is used for sequences -- i.e., classes or functions 
+
+        This constructor is used for sequences -- i.e., classes or functions
         which have only positional arguments in their signatures (which for
         Bokeh is only functions, no classes).
         """.format(et=element_type)
-    
+
     return sequence_constructor
 
 
 # These constructors need more specialized treatment
 
 def document_constructor(tool, loader, node):
+    """ A YAML constructor for the Bokeh document, which is grabbed via
+    the Bokeh ``curdoc()`` function. When laying out a Bokeh document
+    with a YAML template, the ``!Document`` tag should be used as the
+    top-level tag in the layout.
     """
-    A YAML constructor for the Bokeh document, which is grabbed via the Bokeh
-    ``curdoc()`` function. When laying out a Bokeh document with a YAML
-    template, the ``!Document`` tag should be used as the top-level tag in
-    the layout.
-    """
+
     layout = loader.construct_sequence(node, deep=True)
     for element in layout:
         curdoc().add_root(element)
@@ -182,11 +180,11 @@ def document_constructor(tool, loader, node):
 
 
 def figure_constructor(tool, loader, node):
-    """
-    A YAML constructor for Bokeh Figure objects, which are complicated enough
-    to require their own (non-factory) constructor. Each ``!Figure`` tag in
-    the YAML template file will be turned into a ``Figure`` object via this 
-    constructor (once it's been registered by the ``BokehTemplate`` class).
+    """ A YAML constructor for Bokeh Figure objects, which are
+    complicated enough to require their own (non-factory) constructor.
+    Each ``!Figure`` tag in the YAML template file will be turned into a
+    ``Figure`` object via this constructor (once it's been registered by
+    the ``BokehTemplate`` class).
     """
 
     fig = loader.construct_mapping(node, deep=True)

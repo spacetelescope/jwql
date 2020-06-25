@@ -1,6 +1,6 @@
 """
-This module defines the ``BokehTemplate`` class, which can be subclassed to
-create a Bokeh web app with a YAML templating file.
+This module defines the ``BokehTemplate`` class, which can be subclassed
+to create a Bokeh web app with a YAML templating file.
 
 
 Author
@@ -11,10 +11,11 @@ Author
 Use
 ---
 
-    The user should subclass the ``BokehTemplate`` class to create an app,
-    as demonstrated in ``example.py``. 
-    
-    (A full tutorial on developing Bokeh apps with ``BokehTemplate`` is forthcoming.)
+    The user should subclass the ``BokehTemplate`` class to create an
+    app, as demonstrated in ``example.py``.
+
+    (A full tutorial on developing Bokeh apps with ``BokehTemplate`` is
+    forthcoming.)
 
 
 Dependencies
@@ -29,40 +30,41 @@ from . import factory
 from bokeh.embed import components
 from inspect import signature
 
+
 class BokehTemplate(object):
-    """
-    The base class for creating Bokeh web apps using a YAML templating
-    framework.
-    
+    """The base class for creating Bokeh web apps using a YAML
+    templating framework.
+
     Attributes
     ----------
     _embed : bool
         A flag to indicate whether or not the individual widgets will be
-        embedded in a webpage. If ``False``, the YAML interface file must include
-        a !Document tag. Defaults to ``False``.
-    document: object
-        The Bokeh Dpcument object (if any), equivalent to the result of calling
-        ``curdoc()``.
+        embedded in a webpage. If ``False``, the YAML interface file
+        must include a !Document tag. Defaults to ``False``.
+    document: obje
+        The Bokeh Dpcument object (if any), equivalent to the result of
+        calling ``curdoc()``.
     formats: dict
-        A dictionary of widget formating specifications, parsed from 
+        A dictionary of widget formating specifications, parsed from
         ``format_string`` (if one exists).
     format_string: str
-        A string of YAML formatting specifications, using the same syntax as
-        the interface file, for Bokeh widgets. Note that formatting choices
-        present in individual widget instances in the interface file override
-        these.
+        A string of YAML formatting specifications, using the same
+        syntax as the interface file, for Bokeh widgets. Note that
+        formatting choices present in individual widget instances in the
+        interface file override these.
     interface_file: str
         The path to the YAML interface file.
     refs : dict
-        A dictionary of Bokeh objects which are given ``ref`` strings in the 
-        interface file. Use this to store and interact with the Bokeh data
-        sources and widgets in callback methods.
-    
+        A dictionary of Bokeh objects which are given ``ref`` strings in
+        the interface file. Use this to store and interact with the
+        Bokeh data sources and widgets in callback methods.
+
     Methods
     -------
-    ``_mapping_factory``, ``_sequence_factory``, ``_figure_constructor``, and 
-    ``_document_constructor`` are imported from ``bokeh_templating.factory``,
-    used by the interface parser to construct Bokeh widgets.
+    ``_mapping_factory``, ``_sequence_factory``,
+    ``_figure_constructor``, and ``_document_constructor`` are imported
+    from ``bokeh_templating.factory``, used by the interface parser to
+    construct Bokeh widgets.
     """
 
     # Each of these functions has a ``tool`` argument, which becomes ``self``
@@ -80,7 +82,7 @@ class BokehTemplate(object):
     formats = {}
     interface_file = ""
     refs = {}
-    
+
     def __init__(self, **kwargs):
         # Register the default constructors
         self._register_default_constructors()
@@ -105,19 +107,17 @@ class BokehTemplate(object):
         # Allow for post-init stuff from the subclass.
         if self.post_init is not None:
             self.post_init()
-        
+
     def _include_formatting(self):
-        """
-        A utility function to parse the format string, if any.
-        """
+        """A utility function to parse the format string, if any."""
         if not self.format_string:
             return
 
         self.formats = yaml.load(self.format_string)
 
     def _parse_interface(self):
-        """
-        Parse the YAML interface file using the registered constructors
+        """Parse the YAML interface file using the registered
+        constructors
         """
 
         if not self.interface_file:
@@ -143,10 +143,10 @@ class BokehTemplate(object):
             yaml.load_all(interface)
         except yaml.YAMLError as exc:
             raise BokehTemplateParserError(exc)
-    
+
     def _register_default_constructors(self):
-        """
-        Register all  the default constructors with ``yaml.add_constructor``.
+        """Register all  the default constructors with
+        ``yaml.add_constructor``.
         """
         for m in factory.mappings:
             yaml.add_constructor("!" + m + ":", self._mapping_factory(m))
@@ -159,16 +159,12 @@ class BokehTemplate(object):
         yaml.add_multi_constructor(u"!self", self._self_constructor)
 
     def _self_constructor(self, loader, tag_suffix, node):
-        """
-        A multi_constructor for `!self` tag in the interface file.
-        """
+        """A multi_constructor for `!self` tag in the interface file."""
         yield eval("self" + tag_suffix, globals(), locals())
-        
+
     def embed(self, ref):
-        """
-        A wrapper for ``bokeh.embed.components`` to return embeddable code
-        for the given widget reference.
-        """
+        """A wrapper for ``bokeh.embed.components`` to return embeddable
+        code for the given widget reference."""
         element = self.refs.get(ref, None)
         if element is None:
             raise BokehTemplateEmbedError("Undefined component reference")
@@ -176,31 +172,28 @@ class BokehTemplate(object):
 
     @staticmethod
     def parse_string(yaml_string):
-        """
-        A utility functon to parse any YAML string using the registered 
-        constructors. (Usually used for debugging.)
-        """
+        """ A utility functon to parse any YAML string using the
+        registered constructors. (Usually used for debugging.)"""
         return list(yaml.load_all(yaml_string))
-        
-    def post_init(self):
-        """
-        This should be implemented by the app subclass, to perform any post-
-        initialization actions that the tool requires.
 
-        If this is not required, the subclass should set `post_init = None`
-        in the class definition.
+    def post_init(self):
+        """This should be implemented by the app subclass, to perform
+        any post-initialization actions that the tool requires.
+
+        If this is not required, the subclass should set
+        `post_init = None` in the class definition.
         """
 
         raise NotImplementedError
 
     def pre_init(self, **kwargs):
-        """
-        This should be implemented by the app subclass, to perform any pre-
-        initialization actions that it requires (setting defaults, loading
-        data, etc). Note that positional arguments are not currently supported.
+        """This should be implemented by the app subclass, to perform
+        any pre-initialization actions that it requires (setting
+        defaults, loading data, etc). Note that positional arguments are
+        not currently supported.
 
-        If this is not required, the subclass should set `pre_init = None`
-        in the class definition.
+        If this is not required, the subclass should set
+        `pre_init = None` in the class definition.
         """
 
         raise NotImplementedError
@@ -209,30 +202,30 @@ class BokehTemplate(object):
     def register_sequence_constructor(cls, tag, parse_func):
         """
         Register a new sequence constructor with YAML.
-        
+
         Parameters
         ----------
         tag : str
             The YAML tag string to be used for the constructor.
         parse_func: object
-            The parsing function to be registered with YAML. This function
-            should accept a multi-line string, and return a python object.
-            
+            The parsing function to be registered with YAML. This
+            function should accept a multi-line string, and return a
+            python object.
+
         Usage
         -----
-        This classmethod should be used to register a new constructor *before* 
-        creating & instantiating a subclass of BokehTemplate :
-            
+        This classmethod should be used to register a new constructor
+        *before* creating & instantiating a subclass of BokehTemplate :
+
         ::
-            
+
             from bokeh_template import BokehTemplate
             BokehTemplate.register_sequence_constructor("my_tag", my_parser)
-            
+
             class myTool(BokehTemplate):
                 pass
-            
+
             myTool()
-            
         """
         if tag.startswith("!"):
             tag = tag[1:]
@@ -242,35 +235,35 @@ class BokehTemplate(object):
             yield parse_func(value)
         user_constructor.__name__ = tag.lower() + "_constructor"
         yaml.add_constructor("!" + tag, user_constructor)
-    
+
     @classmethod
     def register_mapping_constructor(cls, tag, parse_func):
         """
         Register a new mapping constructor with YAML.
-        
+
         Parameters
         ----------
         tag : str
             The YAML tag string to be used for the constructor.
         parse_func: object
-            The parsing function to be registered with YAML. This function
-            should accept a multi-line string, and return a python object.
-        
+            The parsing function to be registered with YAML. This
+            function should accept a multi-line string, and return a
+            python object.
+
         Usage
         -----
-        This classmethod should be used to register a new constructor *before* 
-        creating & instantiating a subclass of BokehTemplate :
-            
+        This classmethod should be used to register a new constructor
+        *before* creating & instantiating a subclass of BokehTemplate :
+
         ::
-            
+
             from bokeh_template import BokehTemplate
             BokehTemplate.register_mapping_constructor("my_tag", my_parser)
-            
+
             class myTool(BokehTemplate):
                 pass
-            
+
             myTool()
-            
         """
         if tag.startswith("!"):
             tag = tag[1:]
@@ -281,12 +274,10 @@ class BokehTemplate(object):
         user_constructor.__name__ = tag.lower() + "_constructor"
         yaml.add_constructor("!" + tag, user_constructor)
 
+
 class BokehTemplateEmbedError(Exception):
-    """
-    A custom error for problems with embedding components.
-    """
+    """A custom error for problems with embedding components."""
+
 
 class BokehTemplateParserError(Exception):
-    """
-    A custom error for problems with parsing the interface files.
-    """
+    """A custom error for problems with parsing the interface files."""

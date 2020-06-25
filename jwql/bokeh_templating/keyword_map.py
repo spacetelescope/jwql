@@ -1,14 +1,15 @@
-"""
-A script to scrape the Bokeh package and collate dictionaries of classes
-and functions.
+"""A script to scrape the Bokeh package and collate dictionaries of
+classes and functions.
 
-The ``_parse_module`` function iterates over a module, and uses the ``inspect``
-package to sort everything in the module's namespace (as identified by 
-``inspect.getmembers``) into a dictionary of mappings (requiring primarily
-keyword arguments) and sequences (requiring primarily positional arguments).
+The ``_parse_module`` function iterates over a module, and uses the
+``inspect`` package to sort everything in the module's namespace (as
+identified by ``inspect.getmembers``) into a dictionary of mappings
+(requiring primarily keyword arguments) and sequences (requiring
+primarily positional arguments).
 
-Note that thhe files ``surface3d.py`` and ``surface3d.ts``, used to create
-3D surface plots, were downloaded from the Bokeh surface3d example.
+Note that thhe files ``surface3d.py`` and ``surface3d.ts``, used to
+create 3D surface plots, were downloaded from the Bokeh ``surface3d``
+example.
 
 Author
 -------
@@ -40,8 +41,9 @@ bokeh_mappings = {"Surface3d": Surface3d}  # Note that abstract base classes *ar
 
 
 def _parse_module(module):
-    """Sort the members of a module into dictionaries of functions (sequences) and classes (mappings)."""
-    
+    """Sort the members of a module into dictionaries of functions
+    (sequences) and classes (mappings)."""
+
     test = lambda nm, mem: (not nm.startswith("_")) and (module.__name__ in mem.__module__)
     seqs = {nm: mem for nm, mem in getmembers(module, isfunction) if test(nm, mem)}
     maps = {nm: mem for nm, mem in getmembers(module, isclass) if test(nm, mem)}
