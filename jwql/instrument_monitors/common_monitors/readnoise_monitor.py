@@ -4,12 +4,12 @@
 the readnoise levels in dark exposures as well as the accuracy of
 the pipeline readnoise reference files over time.
 
-For each instrument, the readnoise, technically the "CDS noise", is found
-by calculating the standard deviation through a stack of consecutive
-frame differences in each dark exposure. The sigma-clipped mean and
-standard deviation in each of these readnoise images, as well as histogram
-distributions, are recorded in the ``<Instrument>ReadnoiseStats``
-database table.
+For each instrument, the readnoise, technically the correlated double 
+sampling (CDS) noise, is found by calculating the standard deviation 
+through a stack of consecutive frame differences in each dark exposure. 
+The sigma-clipped mean and standard deviation in each of these readnoise 
+images, as well as histogram distributions, are recorded in the 
+``<Instrument>ReadnoiseStats`` database table.
 
 Next, each of these readnoise images are differenced with the current
 pipeline readnoise reference file to identify the need for new reference
@@ -31,6 +31,7 @@ Use
         python readnoise_monitor.py
 """
 
+from collections import OrderedDict
 import datetime
 import logging
 import os
@@ -99,6 +100,38 @@ class Readnoise():
 
     def __init__(self):
         """Initialize an instance of the ``Readnoise`` class."""
+
+    def determine_pipeline_steps(self):
+        """Determines the necessary JWST pipelines steps to run on a 
+        given dark file.
+
+        Returns
+        -------
+        pipeline_steps : collections.OrderedDict
+            The pipeline steps to run.
+        """
+
+        pipeline_steps = OrderedDict({})
+        
+        # Determine if the file needs group_scale step run
+        if self.read_pattern not in pipeline_tools.GROUPSCALE_READOUT_PATTERNS:
+            pipeline_steps['group_scale'] = False 
+        else:
+            pipeline_steps['group_scale'] = True 
+
+        # Run the DQ step on all files
+        pipeline_steps['dq_init'] = True
+
+        # Only run the superbias step for NIR instruments
+        if self.instrument.upper() != 'MIRI':
+            pipeline_steps['superbias'] = True
+        else:
+            pipeline_steps['superbias'] = False
+
+        # Run the refpix step on all files
+        pipeline_steps['refpix'] = True
+
+        return pipeline_steps
 
     def file_exists_in_database(self, filename):
         """Checks if an entry for filename exists in the readnoise stats
@@ -220,8 +253,8 @@ class Readnoise():
         output_filename = os.path.join(self.data_dir, '{}.png'.format(outname))
 
         # Get image scale limits
-        z = ZScaleInterval()
-        vmin, vmax = z.get_limits(image)
+        zscale = ZScaleInterval()
+        vmin, vmax = zscale.get_limits(image)
 
         # Plot the image
         plt.figure(figsize=(12,12))
@@ -268,7 +301,7 @@ class Readnoise():
 
         Returns
         -------
-        n : numpy.ndarray
+        counts : numpy.ndarray
             The counts in each histogram bin.
 
         bin_centers : numpy.ndarray
@@ -286,10 +319,10 @@ class Readnoise():
             lower_thresh = 0.0
 
         # Make the histogram
-        n, bin_edges = np.histogram(data, bins='auto', range=(lower_thresh, upper_thresh))
+        counts, bin_edges = np.histogram(data, bins='auto', range=(lower_thresh, upper_thresh))
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
-        return n, bin_centers
+        return counts, bin_centers
 
     def make_readnoise_image(self, data):
         """Calculates the readnoise for the given input dark current ramp.
@@ -306,12 +339,12 @@ class Readnoise():
             The 2D readnoise image.
         """
 
-        # Create a stack of CDS images (group difference images) using the input ramp data,
-        # combining multiple integrations if necessary.
+        # Create a stack of correlated double sampling (CDS) images using the input
+        # ramp data, combining multiple integrations if necessary.
         logging.info('\tCreating stack of CDS difference frames')
-        n_ints, n_groups, n_y, n_x = data.shape
-        for integration in range(n_ints):
-            if n_groups % 2 == 0:
+        num_ints, num_groups, num_y, num_x = data.shape
+        for integration in range(num_ints):
+            if num_groups % 2 == 0:
                 cds = data[integration, 1::2, :, :] - data[integration, ::2, :, :]
             else:
                 # Omit the last group if the number of groups is odd
@@ -369,17 +402,13 @@ class Readnoise():
             # Get relevant header information for this file
             self.get_metadata(filename)
 
-            # Determine if the file needs group_scale in pipeline run
-            if self.read_pattern not in pipeline_tools.GROUPSCALE_READOUT_PATTERNS:
-                group_scale = False
-            else:
-                group_scale = True
-
-            # Run the file through the pipeline up through the refpix step
+            # Run the file through the necessary pipeline steps
+            pipeline_steps = self.determine_pipeline_steps()
             logging.info('\tRunning pipeline on {}'.format(filename))
             try:
-                processed_file = self.run_early_pipeline(filename, group_scale=group_scale)
+                processed_file = pipeline_tools.run_calwebb_detector1_steps(filename, pipeline_steps)
                 logging.info('\tPipeline complete. Output: {}'.format(processed_file))
+                set_permissions(processed_file)
             except:
                 logging.info('\tPipeline processing failed for {}'.format(filename))
                 continue
@@ -495,7 +524,7 @@ class Readnoise():
             siaf = Siaf(self.instrument)
             possible_apertures = list(siaf.apertures)
 
-            for aperture in possible_apertures:
+            for aperture in possible_apertures[0:13]:  #TODO index
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
@@ -519,7 +548,7 @@ class Readnoise():
                 # Get any new files to process
                 new_files = []
                 checked_files = []
-                for file_entry in new_entries:
+                for file_entry in new_entries[-2:]:  #TODO index
                     output_filename = os.path.join(self.data_dir, file_entry['filename'].replace('_dark', '_uncal'))
 
                     # Sometimes both the dark and uncal name of a file is picked up in new_entries
@@ -541,8 +570,8 @@ class Readnoise():
                         if not os.path.isfile(uncal_filename):
                             logging.info('\t{} does not exist in JWQL filesystem, even though {} does'.format(uncal_filename, filename))
                         else:
-                            n_groups = fits.getheader(uncal_filename)['NGROUPS']
-                            if n_groups > 1:  # skip processing if the file doesnt have enough groups to calculate the readnoise; TODO change to 10 before incorporating MIRI
+                            num_groups = fits.getheader(uncal_filename)['NGROUPS']
+                            if num_groups > 1:  # skip processing if the file doesnt have enough groups to calculate the readnoise; TODO change to 10 before incorporating MIRI
                                 shutil.copy(uncal_filename, self.data_dir)
                                 logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
                                 set_permissions(output_filename)
@@ -573,46 +602,6 @@ class Readnoise():
                 logging.info('\tUpdated the query history table')
 
         logging.info('Readnoise Monitor completed successfully.')
-
-    def run_early_pipeline(self, filename, group_scale=False):
-        """Runs the early steps of the jwst pipeline on uncalibrated files
-        and outputs the result.
-
-        Parameters
-        ----------
-        filename : str
-            File on which to run the pipeline steps.
-
-        group_scale : bool
-            Option to rescale pixel values to correct for instances where
-            on-board frame averaging did not result in the proper values.
-
-        Returns
-        -------
-        output_filename : str
-            The full path to the calibrated file.
-        """
-
-        output_filename = filename.replace('_uncal', '').replace('.fits', '_ramp.fits')
-
-        # Run the group_scale and dq_init steps on the input file
-        if group_scale:
-            model = GroupScaleStep.call(filename)
-            model = DQInitStep.call(model)
-        else:
-            model = DQInitStep.call(filename)
-
-        # Run the superbias step for NIR instruments
-        if self.instrument.upper() != 'MIRI':
-            model = SuperBiasStep.call(model)
-
-        # Run the refpix step and save the output
-        model = RefPixStep.call(model)
-        model.save(output_filename)
-        set_permissions(output_filename)
-
-        return output_filename
-
 
 if __name__ == '__main__':
 
