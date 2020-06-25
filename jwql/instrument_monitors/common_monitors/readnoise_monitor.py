@@ -423,7 +423,7 @@ class Readnoise():
                 cal_data = cal_data[:, 5:-1, :, :]
 
             # Make the readnoise image
-            readnoise_outfile = os.path.join(self.data_dir, os.path.basename(processed_file.replace('_ramp.fits', '_readnoise.fits')))
+            readnoise_outfile = os.path.join(self.data_dir, os.path.basename(processed_file.replace('.fits', '_readnoise.fits')))
             readnoise = self.make_readnoise_image(cal_data)
             fits.writeto(readnoise_outfile, readnoise, overwrite=True)
             logging.info('\tReadnoise image saved to {}'.format(readnoise_outfile))
@@ -548,7 +548,7 @@ class Readnoise():
                 # Get any new files to process
                 new_files = []
                 checked_files = []
-                for file_entry in new_entries[-2:]:  #TODO index
+                for file_entry in new_entries[0:2]:  #TODO index
                     output_filename = os.path.join(self.data_dir, file_entry['filename'].replace('_dark', '_uncal'))
 
                     # Sometimes both the dark and uncal name of a file is picked up in new_entries
