@@ -1,13 +1,15 @@
 #! /usr/bin/env python
 
-"""
-This module contains functions used to indentify and download reference files
-from CRDS and place them in the expected location, for JWQL to find.
-This module uses the crds software package
-(https://hst-crds.stsci.edu/static/users_guide/index.html) which is installed when
-the JWST calibration pipeline package is installed. Reference files are
-identified by supplying some basic metadata from the exposure being calibrated.
-See https://hst-crds.stsci.edu/static/users_guide/library_use.html#crds-getreferences
+"""This module contains functions used to indentify and download
+reference files from CRDS and place them in the expected location, for
+JWQL to find.
+
+This module uses the ``crds`` software package
+(``https://hst-crds.stsci.edu/static/users_guide/index.html``) which is
+installed when the JWST calibration pipeline package is installed.
+Reference files are identified by supplying some basic metadata from the
+exposure being calibrated. See
+https://hst-crds.stsci.edu/static/users_guide/library_use.html#crds-getreferences
 for a description of the function used for this task.
 
 Author
@@ -32,8 +34,9 @@ from jwql.utils.constants import EXPTYPES
 
 def env_variables():
     """Check the values of the CRDS-related environment variables
+
     Returns
-    ----------
+    -------
     crds_data_path : str
         Full path to the location of the CRDS reference files
     """
@@ -43,9 +46,10 @@ def env_variables():
 
 
 def path_check():
-    """Check that the CRDS_PATH environment variable is set. This will be
-    the location to which CRDS reference files are downloaded. If the env
-    variable is not set, default to use $HOME/crds_cache/
+    """Check that the ``CRDS_PATH`` environment variable is set. This
+    will be the location to which CRDS reference files are downloaded.
+    If the env variable is not set, default to use ``$HOME/crds_cache/``
+
     Returns
     -------
     crds_path : str
@@ -63,9 +67,9 @@ def path_check():
 
 
 def server_check():
-    """Check that the CRDS_SERVER_URL environment variable is set. This
-    controls where Mirage will look for CRDS information. If the env
-    variable is not set, set it to the JWST CRDS server.
+    """Check that the ``CRDS_SERVER_URL`` environment variable is set.
+    This controls where Mirage will look for CRDS information. If the
+    env variable is not set, set it to the JWST CRDS server.
     """
     crds_server = os.environ.get('CRDS_SERVER_URL')
     if crds_server is None:
@@ -133,32 +137,33 @@ def dict_from_yaml(yaml_dict):
 def get_reffiles(parameter_dict, reffile_types, download=True):
     """Determine CRDS's best reference files to use for a particular
     observation, and download them if they are not already present in
-    the CRDS_PATH. The determination is made based on the information in
-    the parameter_dictionary.
+    the ``CRDS_PATH``. The determination is made based on the
+    information in the ``parameter_dictionary``.
 
     Parameters
     ----------
-
     parameter_dict : dict
-        Dictionary of basic metadata from the file to be processed by the
-        returned reference files (e.g. INSTRUME, DETECTOR, etc)
+        Dictionary of basic metadata from the file to be processed by
+        the returned reference files (e.g. ``INSTRUME``, ``DETECTOR``,
+        etc)
 
     reffile_types : list
         List of reference file types to look up and download. These must
         be contained in CRDS's list of reference file types.
 
     download : bool
-        If True (default), the identified best reference files will be
-        downloaded. If False, the dictionary of best reference files will
-        still be returned, but the files will not be downloaded. The use
-        of False is primarily intended to support testing on Travis.
+        If ``True`` (default), the identified best reference files will
+        be downloaded. If ``False``, the dictionary of best reference
+        files will still be returned, but the files will not be
+        downloaded. The use of ``False`` is primarily intended to
+        support testing on Travis.
 
     Returns
     -------
-
     reffile_mapping : dict
         Mapping of downloaded CRDS file locations
     """
+
     # IMPORTANT: Import of crds package must be done AFTER the environment
     # variables are set in the functions above
     import crds
@@ -167,7 +172,7 @@ def get_reffiles(parameter_dict, reffile_types, download=True):
     if download:
         try:
             reffile_mapping = crds.getreferences(parameter_dict, reftypes=reffile_types)
-        except CrdsLookupError as e:
+        except CrdsLookupError:
             raise ValueError("ERROR: CRDSLookupError when trying to find reference files for parameters: {}".format(parameter_dict))
     else:
         # If the files will not be downloaded, still return the same local
@@ -176,7 +181,7 @@ def get_reffiles(parameter_dict, reffile_types, download=True):
         crds_path = os.environ.get('CRDS_PATH')
         try:
             reffile_mapping = crds.getrecommendations(parameter_dict, reftypes=reffile_types)
-        except CrdsLookupError as e:
+        except CrdsLookupError:
             raise ValueError("ERROR: CRDSLookupError when trying to find reference files for parameters: {}".format(parameter_dict))
 
         for key, value in reffile_mapping.items():
