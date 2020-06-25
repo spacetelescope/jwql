@@ -14,13 +14,9 @@ Use
     results = mast_utils.mast_query('nircam', 'NRCA1_FULL', 'NRC_DARK', 53005.1, 53005.2)
 
  """
-import datetime
-import os
 
-from jwql.database.database_interface import Monitor
 from jwql.jwql_monitors import monitor_mast
-from jwql.utils.constants import INSTRUMENT_MONITOR_DATABASE_TABLES, JWST_DATAPRODUCTS, JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.logging_functions import configure_logging, get_log_status
+from jwql.utils.constants import JWST_DATAPRODUCTS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 
 
 def mast_query(instrument, templates, start_date, end_date, aperture=None, detector=None, filter_name=None,
@@ -34,7 +30,8 @@ def mast_query(instrument, templates, start_date, end_date, aperture=None, detec
         Instrument name (e.g. ``nircam``)
 
     templates : str or list
-        Single, or list of, templates for the query (e.g. ``NRC_DARK``, ``MIR_FLATMRS``)
+        Single, or list of, templates for the query (e.g. ``NRC_DARK``,
+        ``MIR_FLATMRS``)
 
     start_date : float
         Starting date for the search in MJD
@@ -46,34 +43,35 @@ def mast_query(instrument, templates, start_date, end_date, aperture=None, detec
         Detector aperture to search for (e.g. ``NRCA1_FULL``)
 
     detector : str
-        Detector name (e.g. MIRIMAGE)
+        Detector name (e.g. ``MIRIMAGE``)
 
     filter_name : str
-        Fitler element (e.g. F200W)
+        Fitler element (e.g. ``F200W``)
 
     pupil : str
-        Pupil element (e.g. F323N)
+        Pupil element (e.g. ``F323N``)
 
     grating : str
-        Grating element (e.g. MIRROR)
+        Grating element (e.g. ``MIRROR``)
 
     readpattern : str
-        Detector read out pattern (e.g. NISRAPID)
+        Detector read out pattern (e.g. ``NISRAPID``)
 
     lamp : str
-        Lamp name (e.g. LINE2)
+        Lamp name (e.g. ``LINE2``)
 
     Returns
     -------
     query_results : list
         List of dictionaries containing the query results
     """
+
     # If a single template name is input as a string, put it in a list
     if isinstance(templates, str):
         templates = [templates]
 
     # Make sure instrument is correct case
-    instrument = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrumnt.lower()]
+    instrument = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
 
     # monitor_mast.instrument_inventory does not allow list inputs to
     # the added_filters input (or at least if you do provide a list, then
@@ -113,7 +111,7 @@ def mast_query(instrument, templates, start_date, end_date, aperture=None, detec
 
 def mast_query_miri(detector, aperture, templates, start_date, end_date):
     """Use ``astroquery`` to search MAST for data for given observation
-    templates over a given time range for MIRI. Miri is different than
+    templates over a given time range for MIRI. MIRI is different than
     the other instruments in that (to find full frame flats and darks at
     least) you need to use the detector name rather than the aperture
     name. There is no full frame aperture name for the MRS detectors.
@@ -121,13 +119,15 @@ def mast_query_miri(detector, aperture, templates, start_date, end_date):
     Parameters
     ----------
     detector : str
-        Name of the detector to search for. One of MIRIMAGE, MIRIFULONG, MIRIFUSHORT.
+        Name of the detector to search for. One of ``MIRIMAGE``,
+        ``MIRIFULONG``, ``MIRIFUSHORT``.
 
     aperture : str
-        Aperture name on the detector (e.g. MIRIM_FULL)
+        Aperture name on the detector (e.g. ``MIRIM_FULL``)
 
     templates : str or list
-        Single, or list of, templates for the query (e.g. ``NRC_DARK``, ``MIR_FLATMRS``)
+        Single, or list of, templates for the query (e.g. ``NRC_DARK``,
+        ``MIR_FLATMRS``)
 
     start_date : float
         Starting date for the search in MJD
@@ -140,6 +140,7 @@ def mast_query_miri(detector, aperture, templates, start_date, end_date):
     query_results : list
         List of dictionaries containing the query results
     """
+
     # If a single template name is input as a string, put it in a list
     if isinstance(templates, str):
         templates = [templates]
