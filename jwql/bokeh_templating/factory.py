@@ -219,7 +219,6 @@ def figure_constructor(tool, loader, node):
         key = element.pop('kind')
         shape = {'line': ('Line', figure.line),
                  'circle': ('Circle', figure.circle),
-                 #'step': ('Step', figure.step), #not supported in 0.12.5
                  'diamond': ('Diamond', figure.diamond),
                  'triangle': ('Triangle', figure.triangle),
                  'square': ('Square', figure.square),

@@ -49,11 +49,13 @@ from .data_containers import get_image_info
 from .data_containers import get_current_flagged_anomalies
 from .data_containers import get_proposal_info
 from .data_containers import random_404_page
+from .data_containers import get_jwqldb_table_view_components
 from .data_containers import thumbnails_ajax
 from .data_containers import data_trending
 from .data_containers import nirspec_trending
 from .forms import AnomalySubmitForm, FileSearchForm
 from .oauth import auth_info, auth_required
+from jwql.database.database_interface import load_connection
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_base_url, get_config
 
@@ -382,6 +384,37 @@ def instrument(request, inst):
     return render(request, template, context)
 
 
+def jwqldb_table_viewer(request):
+    """Generate the JWQL Table Viewer view.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    user : dict
+        A dictionary of user credentials.
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    table_view_components = get_jwqldb_table_view_components(request)
+
+    session, base, engine, meta = load_connection(get_config()['connection_string'])
+    all_jwql_tables = engine.table_names()
+
+    template = 'jwqldb_table_viewer.html'
+    context = {
+        'inst': '',
+        'all_jwql_tables': all_jwql_tables,
+        'table_view_components': table_view_components}
+
+    return render(request, template, context)
+
+
 def not_found(request, *kwargs):
     """Generate a ``not_found`` page
 
@@ -421,7 +454,7 @@ def unlooked_images(request, inst):
     pass
 
 
-def view_header(request, inst, file):
+def view_header(request, inst, filename):
     """Generate the header view page
 
     Parameters
@@ -430,7 +463,7 @@ def view_header(request, inst, file):
         Incoming request from the webpage
     inst : str
         Name of JWST instrument
-    file : str
+    filename : str
         FITS filename of selected image in filesystem
 
     Returns
@@ -442,13 +475,12 @@ def view_header(request, inst, file):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'view_header.html'
-    header = get_header_info(file)
-    file_root = '_'.join(file.split('_')[:-1])
+    file_root = '_'.join(filename.split('_')[:-1])
 
     context = {'inst': inst,
-               'file': file,
-               'header': header,
-               'file_root': file_root}
+               'filename': filename,
+               'file_root': file_root,
+               'header_info': get_header_info(filename)}
 
     return render(request, template, context)
 
@@ -483,7 +515,7 @@ def view_image(request, user, inst, file_root, rewrite=False):
     image_info = get_image_info(file_root, rewrite)
 
     # Determine current flagged anomalies
-    current_anomalies = get_current_flagged_anomalies(file_root)
+    current_anomalies = get_current_flagged_anomalies(file_root, inst)
 
     # Create a form instance
     form = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
@@ -496,6 +528,7 @@ def view_image(request, user, inst, file_root, rewrite=False):
 
     # Build the context
     context = {'inst': inst,
+               'prop_id': file_root[2:7],
                'file_root': file_root,
                'jpg_files': image_info['all_jpegs'],
                'fits_files': image_info['all_files'],

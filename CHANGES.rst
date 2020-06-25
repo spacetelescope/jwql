@@ -1,3 +1,32 @@
+0.22.0 (2019-08-26)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Added slides from July 2019 TIPS presentation to ``presentations/`` directory
+
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Updated dark monitor to support all five JWST instruments, instead of only NIRCam
+- Changed the ``jwql-3.5`` and ``jwql-3.6`` conda environments to be more simple and to work on Linux distributions
+- Added library code for creating instrument monitoring ``bokeh`` plots with new ``bokeh`` templating software
+
+
+Bug Fixes
+---------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Fixed various bugs that were causing the ``sphinx`` API documentation to crash on ReadTheDocs
+
+
 0.21.0 (2019-07-23)
 ===================
 

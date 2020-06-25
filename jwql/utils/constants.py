@@ -47,15 +47,42 @@ AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 512, 1), (0, 2048, 1)],
                                  '3': [(2, 1032, 4), (0, 1024, 1)],
                                  '4': [(3, 1032, 4), (0, 1024, 1)]}}
 
-
-# Defines the possible anomalies to flag through the web app
-ANOMALIES = ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error', 'diffraction_spike',
-             'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail', 'other']
+ANOMALIES_PER_INSTRUMENT = {
+    # anomalies affecting all instruments:
+    'cosmic_ray_shower': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'diffraction_spike': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'excessive_saturation': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'guidestar_failure': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'persistence': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    #anomalies affecting multiple instruments:
+    'crosstalk': ['fgs', 'nircam', 'niriss', 'nirspec'],
+    'data_transfer_error': ['fgs', 'nircam', 'niriss', 'nirspec'],
+    'ghost': ['fgs', 'nircam', 'niriss', 'nirspec'],
+    'snowball': ['fgs', 'nircam', 'niriss', 'nirspec'],
+    # instrument-specific anomalies:
+    'column_pull_up': ['miri'],
+    'dominant_msa_leakage': ['nirspec'],
+    'dragons_breath': ['nircam'],
+    'glow': ['miri'],
+    'internal_reflection': ['miri'],
+    'optical_short': ['nirspec'],  # Only for MOS observations
+    'row_pull_down': ['miri'],
+    # additional anomalies:
+    'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
 
 # Defines the possible anomalies (with rendered name) to flag through the web app
-ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES]
+ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT]
 
 FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R', 'WFSS128C', 'WFSS64C']
+
+# Names of full-frame apertures for all instruments
+FULL_FRAME_APERTURES = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',
+                                   'NRCA5_FULL', 'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL',
+                                   'NRCB4_FULL', 'NRCB5_FULL'],
+                        'NIRISS': ['NIS_CEN'],
+                        'NIRSPEC': ['NRS1_FULL', 'NRS2_FULL'],
+                        'MIRI': ['MIRIM_FULL']
+                        }
 
 # Possible suffix types for nominal files
 GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',
@@ -112,7 +139,7 @@ MONITORS = {
     'nircam': [('Bias Monitor', '#'),
                ('Readnoise Monitor', '#'),
                ('Gain Level Monitor', '#'),
-               ('Mean Dark Current Rate Monitor', '#'),
+               ('Mean Dark Current Rate Monitor', '/nircam/dark_monitor'),
                ('Photometric Stability Monitor', '#')],
     'niriss': [('Bad Pixel Monitor', '#'),
                ('Readnoise Monitor', '#'),

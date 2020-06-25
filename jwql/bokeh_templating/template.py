@@ -75,7 +75,6 @@ class BokehTemplate(object):
     _sequence_factory = factory.sequence_factory
     _figure_constructor = factory.figure_constructor
     _document_constructor = factory.document_constructor
-
     _embed = False
     document = None
     format_string = ""
@@ -113,7 +112,7 @@ class BokehTemplate(object):
         if not self.format_string:
             return
 
-        self.formats = yaml.load(self.format_string)
+        self.formats = yaml.load(self.format_string, Loader=yaml.Loader)
 
     def _parse_interface(self):
         """Parse the YAML interface file using the registered
@@ -138,7 +137,6 @@ class BokehTemplate(object):
         # entire string with yaml. We don't need to assign the result to a
         # variable, since the constructors store everything in self.refs
         # (and self.document, for the document).
-
         try:
             yaml.load_all(interface)
         except yaml.YAMLError as exc:

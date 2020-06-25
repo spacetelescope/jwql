@@ -9,64 +9,42 @@ Authors
 -------
 
     - Misty Cracraft
+    - Sara Ogaz
+    - Matthew Bourque
 
 Use
 ---
 
-    This module can be executed from the command line:
+    This module is intended to be executed from the command line:
 
     ::
 
         python monitor_filesystem.py
 
-    Alternatively, it can be called from scripts with the following
-    import statements:
-
-    ::
-
-        from monitor_filesystem import filesystem_monitor
-        from monitor_filesystem import plot_system_stats
-
-
-    Required arguments (in a ``config.json`` file):
-    ``filepath`` - The path to the input file needs to be in a
-    ``config.json`` file in the ``utils`` directory
-    ``outputs`` - The path to the output files needs to be in a
-    ``config.json`` file in the ``utils`` directory.
-
-    Required arguments for plotting:
-    ``inputfile`` - The name of the file to save all of the system
-    statistics to
-    ``filebytype`` - The name of the file to save stats on fits type
-    files to
-
+    The user must have a ``config.json`` file in the ``utils``
+    directory with the following keys:
+      - ``filesystem`` - The path to the filesystem
+      - ``outputs`` - The path to where the output plots will be
+                      written
 
 Dependencies
 ------------
 
     The user must have a configuration file named ``config.json``
     placed in the ``utils`` directory.
-
-Notes
------
-
-    The ``monitor_filesystem`` function queries the filesystem,
-    calculates the statistics and saves the output file(s) in the
-    directory specified in the ``config.json`` file.
-
-    The ``plot_system_stats`` function reads in the two specified files
-    of statistics and plots the figures to an html output page as well
-    as saving them to an output html file.
 """
 
 from collections import defaultdict
 import datetime
+import itertools
 import logging
 import os
 import subprocess
-import json
 
-from astropy.utils.misc import JsonCustomEncoder
+from bokeh.embed import components
+from bokeh.layouts import gridplot
+from bokeh.palettes import Category20_20 as palette
+from bokeh.plotting import figure, output_file, save
 
 from jwql.database.database_interface import engine
 from jwql.database.database_interface import session
@@ -75,6 +53,7 @@ from jwql.database.database_interface import FilesystemInstrument
 from jwql.database.database_interface import CentralStore
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
+from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 
@@ -277,36 +256,18 @@ def initialize_results_dicts():
 @log_fail
 @log_info
 def monitor_filesystem():
-    """Tabulates the inventory of the JWST filesystem, saving
-    statistics to files, and generates plots.
+    """
+    Tabulates the inventory of the JWST filesystem, saving statistics
+    to database tables, and generates plots.
     """
 
-    # Begin logging
     logging.info('Beginning filesystem monitoring.')
 
     # Initialize dictionaries for database input
     general_results_dict, instrument_results_dict, central_storage_dict = initialize_results_dicts()
 
-    # set up dictionaries for output
-    results_dict = defaultdict(int)
-    size_dict = defaultdict(float)
-    # Walk through all directories recursively and count files
-    logging.info('Searching filesystem...')
-    for dirpath, dirs, files in os.walk(filesystem):
-        results_dict['file_count'] += len(files)  # find number of all files
-        for filename in files:
-            file_path = os.path.join(dirpath, filename)
-            if filename.endswith(".fits"):  # find total number of fits files
-                results_dict['fits_files'] += 1
-                size_dict['size_fits'] += os.path.getsize(file_path)
-                suffix = filename_parser(filename)['suffix']
-                results_dict[suffix] += 1
-                size_dict[suffix] += os.path.getsize(file_path)
-                detector = filename_parser(filename)['detector']
-                instrument = detector[0:3]  # first three characters of detector specify instrument
-                results_dict[instrument] += 1
-                size_dict[instrument] += os.path.getsize(file_path)
-    logging.info('{} files found in filesystem'.format(results_dict['fits_files']))
+    # Walk through filesystem recursively to gather statistics
+    general_results_dict, instrument_results_dict = gather_statistics(general_results_dict, instrument_results_dict)
 
     # Get df style stats on file system
     general_results_dict = get_global_filesystem_stats(general_results_dict)
@@ -366,7 +327,7 @@ def plot_by_filetype(plot_type, instrument):
 
         # Query for counts
         results = session.query(FilesystemInstrument.date, getattr(FilesystemInstrument, plot_type))\
-                         .filter(FilesystemInstrument.filetype == filetype)
+                                .filter(FilesystemInstrument.filetype == filetype)
 
         if instrument == 'all':
             results = results.all()
@@ -490,7 +451,7 @@ def plot_filesystem_stats():
         plot_list.append(plot_by_filetype('size', instrument))
 
     # Create a layout with a grid pattern
-    grid_chunks = [plot_list[i:i + 2] for i in range(0, len(plot_list), 2)]
+    grid_chunks = [plot_list[i:i+2] for i in range(0, len(plot_list), 2)]
     grid = gridplot(grid_chunks)
 
     # Save all of the plots in one file

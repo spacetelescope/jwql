@@ -15,7 +15,6 @@ Dependencies
 """
 
 import os
-
 import numpy as np
 
 from jwql.bokeh_templating import BokehTemplate
