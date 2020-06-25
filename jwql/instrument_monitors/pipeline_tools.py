@@ -225,9 +225,9 @@ def run_calwebb_detector1_steps(input_file, steps):
 
 
 def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True, save_fitopt=True):
-    """Call calwebb_detector1 on the provided file, running all steps up to
-    the ramp_fit step, and save the result. Optionally run the ramp_fit step
-    and save the resulting slope file as well.
+    """Call ``calwebb_detector1`` on the provided file, running all
+    steps up to the ``ramp_fit`` step, and save the result. Optionally
+    run the ``ramp_fit`` step and save the resulting slope file as well.
 
     Parameters
     ----------
@@ -238,25 +238,26 @@ def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True, save_fito
         Directory into which the pipeline outputs are saved
 
     ramp_fit : bool
-        If False, the ramp_fit step is not run. The output file will be a
-        *_jump.fits file.
-        If True, the *jump.fits file will be produced and saved. In addition,
-        the ramp_fit step will be run and a *rate.fits or *_rateints.fits
-        file will be saved. (rateints if the input file has >1 integration)
+        If ``False``, the ``ramp_fit`` step is not run. The output file
+        will be a ``*_jump.fits`` file.
+        If ``True``, the ``*jump.fits`` file will be produced and saved.
+        In addition, the ``ramp_fit`` step will be run and a
+        ``*rate.fits`` or ``*_rateints.fits`` file will be saved.
+        (``rateints`` if the input file has >1 integration)
 
     save_fitopt : bool
-        If True, the file of optional outputs from the ramp fitting step of
-        the pipeline is saved.
+        If ``True``, the file of optional outputs from the ramp fitting
+        step of the pipeline is saved.
 
     Returns
     -------
     jump_output : str
-        Name of the saved file containing the output prior to the ramp_fit
-        step.
+        Name of the saved file containing the output prior to the
+        ``ramp_fit`` step.
 
     pipe_output : str
-        Name of the saved file containing the output after ramp-fitting is
-        performed (if requested). Otherwise None.
+        Name of the saved file containing the output after ramp-fitting
+        is performed (if requested). Otherwise ``None``.
     """
     input_file_only = os.path.basename(input_file)
 
@@ -311,7 +312,7 @@ def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True, save_fito
         model.run(input_file)
     else:
         print(("Files with all requested calibration states for {} already present in "
-                      "output directory. Skipping pipeline call.".format(input_file)))
+               "output directory. Skipping pipeline call.".format(input_file)))
 
     return jump_output, pipe_output, fitopt_output
 
