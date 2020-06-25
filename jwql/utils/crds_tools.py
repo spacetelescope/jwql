@@ -14,10 +14,12 @@ for a description of the function used for this task.
 
 Author
 ------
+
     - Bryan Hilbert
 
 Use
 ---
+
     This module can be used as such:
     ::
         from mirage.reference_files import crds
@@ -42,6 +44,7 @@ def env_variables():
     """
     crds_data_path = path_check()
     server_check()
+
     return crds_data_path
 
 
@@ -131,6 +134,7 @@ def dict_from_yaml(yaml_dict):
     # filter to be in the filter field.
     crds_dict['FILTER'] = yaml_dict['Readout']['filter']
     crds_dict['PUPIL'] = yaml_dict['Readout']['pupil']
+
     return crds_dict
 
 
