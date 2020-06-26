@@ -226,36 +226,6 @@ def exclude_crds_mask_pix(bad_pix, existing_bad_pix):
     """
     return bad_pix - (bad_pix & existing_bad_pix)
 
-
-def get_possible_apertures(self):
-    """Generate a list of possible SIAF apertures for the given
-    instrument.
-
-    Returns
-    -------
-    possible_aperture : list
-        List of acceptible apertures for self.instrument
-    """
-    if self.instrument == 'nircam':
-        possible_apertures = []
-        for i in range(1, 6):
-            possible_apertures.append('NRCA{}_FULL'.format(i))
-            possible_apertures.append('NRCB{}_FULL'.format(i))
-    if self.instrument == 'niriss':
-        possible_apertures = ['NIS_CEN']
-    if self.instrument == 'miri':
-        # Since MIRI is organized a little bit differently than the
-        # other instruments, you can't use aperture names to uniquely
-        # identify the full frame darks/flats from a given detector.
-        # Instead you must use detector names.
-        possible_apertures = [('MIRIMAGE', 'MIRIM_FULL'), ('MIRIFULONG', 'MIRIM_FULL'), ('MIRIFUSHORT', 'MIRIM_FULL')]
-    if self.instrument == 'fgs':
-        possible_apertures = ['FGS1_FULL', 'FGS2_FULL']
-    if self.instrument == 'nirspec':
-        possible_apertures = ['NRS1_FULL', 'NRS2_FULL']
-    return possible_apertures
-
-
 def locate_rate_files(uncal_files):
     """Given a list of uncal (raw) files, generate a list of
     corresponding rate files. For each uncal file, if the rate file
@@ -533,6 +503,34 @@ class BadPixels():
 
         except KeyError as e:
             logging.error(e)
+
+    def get_possible_apertures(self):
+        """Generate a list of possible SIAF apertures for the given
+        instrument.
+
+        Returns
+        -------
+        possible_aperture : list
+            List of acceptible apertures for self.instrument
+        """
+        if self.instrument == 'nircam':
+            possible_apertures = []
+            for i in range(1, 6):
+                possible_apertures.append('NRCA{}_FULL'.format(i))
+                possible_apertures.append('NRCB{}_FULL'.format(i))
+        if self.instrument == 'niriss':
+            possible_apertures = ['NIS_CEN']
+        if self.instrument == 'miri':
+            # Since MIRI is organized a little bit differently than the
+            # other instruments, you can't use aperture names to uniquely
+            # identify the full frame darks/flats from a given detector.
+            # Instead you must use detector names.
+            possible_apertures = [('MIRIMAGE', 'MIRIM_FULL'), ('MIRIFULONG', 'MIRIM_FULL'), ('MIRIFUSHORT', 'MIRIM_FULL')]
+        if self.instrument == 'fgs':
+            possible_apertures = ['FGS1_FULL', 'FGS2_FULL']
+        if self.instrument == 'nirspec':
+            possible_apertures = ['NRS1_FULL', 'NRS2_FULL']
+        return possible_apertures
 
     def exclude_existing_badpix(self, badpix, pixel_type):
         """Given a set of coordinates of bad pixels, determine which of
