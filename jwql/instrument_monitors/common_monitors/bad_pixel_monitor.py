@@ -914,7 +914,7 @@ class BadPixels():
         logging.info('Begin logging for bad_pixel_monitor')
 
         # Get the output directory
-        self.output_dir = os.path.join(get_config()['outputs'], 'badpix_monitor')
+        self.output_dir = os.path.join(get_config()['outputs'], 'bad_pixel_monitor')
 
         # Read in config file that defines the thresholds for the number
         # of dark files that must be present in order for the monitor to run
