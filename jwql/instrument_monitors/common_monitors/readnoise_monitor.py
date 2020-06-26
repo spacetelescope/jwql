@@ -495,7 +495,7 @@ class Readnoise():
 
             # Add this new entry to the readnoise database table
             self.stats_table.__table__.insert().execute(readnoise_db_entry)
-            logging.info('\tNew entry added to readnoise database table: {}'.format(readnoise_db_entry))
+            logging.info('\tNew entry added to readnoise database table')
 
             # Remove the raw and calibrated files to save memory space
             os.remove(filename)
