@@ -419,7 +419,10 @@ MIRIBadPixelQueryHistory = monitor_orm_factory('miri_bad_pixel_query_history')
 MIRIBadPixelStats = monitor_orm_factory('miri_bad_pixel_stats')
 NIRSpecBadPixelQueryHistory = monitor_orm_factory('nirspec_bad_pixel_query_history')
 NIRSpecBadPixelStats = monitor_orm_factory('nirspec_bad_pixel_stats')
-
+NIRCamReadnoiseQueryHistory = monitor_orm_factory('nircam_readnoise_query_history')
+NIRCamReadnoiseStats = monitor_orm_factory('nircam_readnoise_stats')
+NIRISSReadnoiseQueryHistory = monitor_orm_factory('niriss_readnoise_query_history')
+NIRISSReadnoiseStats = monitor_orm_factory('niriss_readnoise_stats')
 
 if __name__ == '__main__':
 

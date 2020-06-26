@@ -32,6 +32,8 @@ from astropy.table import Table
 from astropy.time import Time
 from django.conf import settings
 import numpy as np
+from operator import itemgetter
+
 
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
@@ -46,6 +48,7 @@ from astroquery.mast import Mast
 from jwedb.edb_interface import mnemonic_inventory
 
 from jwql.database import database_interface as di
+from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
@@ -788,6 +791,48 @@ def get_proposal_info(filepaths):
     proposal_info['num_files'] = num_files
 
     return proposal_info
+
+
+def get_jwqldb_table_view_components(request):
+    """Renders view for JWQLDB table viewer.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    None
+    """
+
+    if request.method == 'POST':
+        # Make dictionary of tablename : class object
+        # This matches what the user selects in the drop down to the python obj.
+        tables_of_interest = {}
+        for item in di.__dict__.keys():
+            table = getattr(di, item)
+            if hasattr(table, '__tablename__'):
+                tables_of_interest[table.__tablename__] = table
+
+        session, base, engine, meta = load_connection(get_config()['connection_string'])
+        tablename_from_dropdown = request.POST['db_table_select']
+        table_object = tables_of_interest[tablename_from_dropdown]  # Select table object
+
+        result = session.query(table_object)
+
+        result_dict = [row.__dict__ for row in result.all()]  # Turn query result into list of dicts
+        column_names = table_object.__table__.columns.keys()
+
+        # Build list of column data based on column name.
+        data = []
+        for column in column_names:
+            column_data = list(map(itemgetter(column), result_dict))
+            data.append(column_data)
+
+        # Build table.
+        table_to_display = Table(data, names=column_names)
+        table_to_display.show_in_browser(jsviewer=True, max_lines=-1)  # Negative max_lines shows all lines avaliable.
 
 
 def get_thumbnails_by_instrument(inst):
