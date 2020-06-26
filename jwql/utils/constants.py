@@ -73,7 +73,7 @@ ANOMALIES_PER_INSTRUMENT = {
 # Defines the possible anomalies (with rendered name) to flag through the web app
 ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT]
 
-FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R', 'WFSS128C', 'WFSS64C']
+FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
 
 # Names of full-frame apertures for all instruments
 FULL_FRAME_APERTURES = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',
@@ -182,3 +182,4 @@ TIME_SERIES_SUFFIX_TYPES = ['phot', 'whtlt']
 FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
                     TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
                     NIRISS_AMI_SUFFIX_TYPES
+ 
