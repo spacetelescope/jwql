@@ -4,11 +4,11 @@
 the readnoise levels in dark exposures as well as the accuracy of
 the pipeline readnoise reference files over time.
 
-For each instrument, the readnoise, technically the correlated double 
-sampling (CDS) noise, is found by calculating the standard deviation 
-through a stack of consecutive frame differences in each dark exposure. 
-The sigma-clipped mean and standard deviation in each of these readnoise 
-images, as well as histogram distributions, are recorded in the 
+For each instrument, the readnoise, technically the correlated double
+sampling (CDS) noise, is found by calculating the standard deviation
+through a stack of consecutive frame differences in each dark exposure.
+The sigma-clipped mean and standard deviation in each of these readnoise
+images, as well as histogram distributions, are recorded in the
 ``<Instrument>ReadnoiseStats`` database table.
 
 Next, each of these readnoise images are differenced with the current
@@ -102,7 +102,7 @@ class Readnoise():
         """Initialize an instance of the ``Readnoise`` class."""
 
     def determine_pipeline_steps(self):
-        """Determines the necessary JWST pipelines steps to run on a 
+        """Determines the necessary JWST pipelines steps to run on a
         given dark file.
 
         Returns
@@ -112,12 +112,12 @@ class Readnoise():
         """
 
         pipeline_steps = OrderedDict({})
-        
+
         # Determine if the file needs group_scale step run
         if self.read_pattern not in pipeline_tools.GROUPSCALE_READOUT_PATTERNS:
-            pipeline_steps['group_scale'] = False 
+            pipeline_steps['group_scale'] = False
         else:
-            pipeline_steps['group_scale'] = True 
+            pipeline_steps['group_scale'] = True
 
         # Run the DQ step on all files
         pipeline_steps['dq_init'] = True
@@ -159,8 +159,8 @@ class Readnoise():
         return file_exists
 
     def get_amp_stats(self, image, amps):
-        """Calculates the sigma-clipped mean and stddev, as well as the histogram
-        stats in the input image for each amplifier.
+        """Calculates the sigma-clipped mean and stddev, as well as the
+        histogram stats in the input image for each amplifier.
 
         Parameters
         ----------
@@ -225,8 +225,8 @@ class Readnoise():
             logging.error(e)
 
     def identify_tables(self):
-        """Determine which database tables to use for a run of the readnoise
-        monitor.
+        """Determine which database tables to use for a run of the
+        readnoise monitor.
         """
 
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
@@ -291,8 +291,8 @@ class Readnoise():
         return parameters
 
     def make_histogram(self, data):
-        """Creates a histogram of the input data and returns the bin centers 
-        and the counts in each bin.
+        """Creates a histogram of the input data and returns the bin
+        centers  and the counts in each bin.
 
         Parameters
         ----------
@@ -325,13 +325,14 @@ class Readnoise():
         return counts, bin_centers
 
     def make_readnoise_image(self, data):
-        """Calculates the readnoise for the given input dark current ramp.
+        """Calculates the readnoise for the given input dark current
+        ramp.
 
         Parameters
         ----------
         data : numpy.ndarray
-            The input ramp data. The data shape is assumed to be a 4D array in
-            DMS format (integration, group, y, x).
+            The input ramp data. The data shape is assumed to be a 4D
+            array in DMS format (integration, group, y, x).
 
         Returns
         -------
@@ -393,7 +394,8 @@ class Readnoise():
         Parameters
         ----------
         file_list : list
-            List of filenames (including full paths) to the dark current files.
+            List of filenames (including full paths) to the dark current
+            files.
         """
 
         for filename in file_list:
@@ -502,9 +504,11 @@ class Readnoise():
     @log_fail
     @log_info
     def run(self):
-        """The main method.  See module docstrings for further details."""
+        """The main method.  See module docstrings for further
+        details.
+        """
 
-        logging.info('Begin logging for readnoise_monitor')
+        logging.info('Begin logging for readnoise_monitor\n')
 
         # Get the output directory and setup a directory to store the data
         self.output_dir = os.path.join(get_config()['outputs'], 'readnoise_monitor')
@@ -526,7 +530,7 @@ class Readnoise():
 
             for aperture in possible_apertures:
 
-                logging.info('Working on aperture {} in {}'.format(aperture, instrument))
+                logging.info('\nWorking on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
 
                 # Locate the record of the most recent MAST search; use this time
