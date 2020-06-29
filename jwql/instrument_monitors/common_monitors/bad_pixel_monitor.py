@@ -1011,42 +1011,28 @@ class BadPixels():
 
                 # In the end, we need rate files as well as uncal files
                 # because we're going to need to create jump files.
-                if new_flat_entries:
-                    flat_uncal_files = locate_uncal_files(new_flat_entries)
-                if new_dark_entries:
-                    dark_uncal_files = locate_uncal_files(new_dark_entries)
-
-                # Remove duplicates and check if there are enough new flat
-                # field files
-                flat_uncal_files, run_flats = check_for_sufficient_files(flat_uncal_files, instrument, aperture,
-                                                                         flat_file_count_threshold, 'flats')
-                dark_uncal_files, run_darks = check_for_sufficient_files(dark_uncal_files, instrument, aperture,
-                                                                         dark_file_count_threshold, 'darks')
-
                 # In order to use a given file we must have at least the
                 # uncal version of the file. Get the uncal and rate file
                 # lists to align.
-                flat_rate_files, flat_rate_files_to_copy = locate_rate_files(flat_uncal_files)
-                dark_rate_files, dark_rate_files_to_copy = locate_rate_files(dark_uncal_files)
+                if new_flat_entries:
+                    flat_uncal_files = locate_uncal_files(new_flat_entries)
+                    flat_uncal_files, run_flats = check_for_sufficient_files(flat_uncal_files, instrument, aperture, flat_file_count_threshold, 'flats')
+                    flat_rate_files, flat_rate_files_to_copy = locate_rate_files(flat_uncal_files)
+                if new_dark_entries:
+                    dark_uncal_files = locate_uncal_files(new_dark_entries)
+                    dark_uncal_files, run_darks = check_for_sufficient_files(dark_uncal_files, instrument, aperture, dark_file_count_threshold, 'darks')
+                    dark_rate_files, dark_rate_files_to_copy = locate_rate_files(dark_uncal_files)
 
                 # Set up directories for the copied data
                 ensure_dir_exists(os.path.join(self.output_dir, 'data'))
-                self.data_dir = os.path.join(self.output_dir,
-                                             'data/{}_{}'.format(self.instrument.lower(),
-                                                                 self.aperture.lower()))
+                self.data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
                 ensure_dir_exists(self.data_dir)
 
                 # Copy files from filesystem
                 if run_flats:
-                    flat_uncal_files, flat_rate_files = self.map_uncal_and_rate_file_lists(flat_uncal_files,
-                                                                                           flat_rate_files,
-                                                                                           flat_rate_files_to_copy,
-                                                                                           'flat')
+                    flat_uncal_files, flat_rate_files = self.map_uncal_and_rate_file_lists(flat_uncal_files, flat_rate_files, flat_rate_files_to_copy, 'flat')
                 if run_darks:
-                    dark_uncal_files, dark_rate_files = self.map_uncal_and_rate_file_lists(dark_uncal_files,
-                                                                                           dark_rate_files,
-                                                                                           dark_rate_files_to_copy,
-                                                                                           'dark')
+                    dark_uncal_files, dark_rate_files = self.map_uncal_and_rate_file_lists(dark_uncal_files, dark_rate_files, dark_rate_files_to_copy, 'dark')
 
                 # Run the bad pixel monitor
                 if run_flats or run_darks:
