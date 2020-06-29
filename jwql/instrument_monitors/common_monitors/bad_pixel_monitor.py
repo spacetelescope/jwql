@@ -992,8 +992,10 @@ class BadPixels():
                 # Kevin says we shouldn't need to worry about mixing lamps in the data used to create the bad pixel
                 # mask. In flight, data will only be taken with LINE2, LEVEL 5. Currently in MAST all lamps are
                 # present, but Kevin is not concerned about variations in flat field strucutre.
-                new_flat_entries = self.filter_query_results(new_flat_entries, datatype='flat')
-                new_dark_entries = self.filter_query_results(new_dark_entries, datatype='dark')
+                if new_flat_entries:
+                    new_flat_entries = self.filter_query_results(new_flat_entries, datatype='flat')
+                if new_dark_entries:
+                    new_dark_entries = self.filter_query_results(new_dark_entries, datatype='dark')
 
                 # NIRISS - results can include rate, rateints, trapsfilled
                 # MIRI - Jane says they now use illuminated data for dead pixel checks, just like other insts.
@@ -1009,8 +1011,10 @@ class BadPixels():
 
                 # In the end, we need rate files as well as uncal files
                 # because we're going to need to create jump files.
-                flat_uncal_files = locate_uncal_files(new_flat_entries)
-                dark_uncal_files = locate_uncal_files(new_dark_entries)
+                if new_flat_entries:
+                    flat_uncal_files = locate_uncal_files(new_flat_entries)
+                if new_dark_entries:
+                    dark_uncal_files = locate_uncal_files(new_dark_entries)
 
                 # Remove duplicates and check if there are enough new flat
                 # field files
