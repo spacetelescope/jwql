@@ -797,6 +797,8 @@ class BadPixels():
         dark_jump_files = []
         dark_fitopt_files = []
         dark_obstimes = []
+        logging.info(dark_raw_files)
+        loggin.info(dark_slope_files)
         if dark_raw_files is not None:
             index = 0
             badpix_types.extend(badpix_types_from_darks)
@@ -804,6 +806,9 @@ class BadPixels():
             # even if the rate file is present, because we also need the jump
             # and fitops files, which are not saved by default
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
+                logging.info('Here is the uncal file':)
+                logging.info(uncal_file)
+                logging.info(rate_file)
                 jump_output, rate_output, fitopt_output = pipeline_tools.calwebb_detector1_save_jump(uncal_file, self.data_dir,
                                                                                                      ramp_fit=True, save_fitopt=True)
                 self.get_metadata(uncal_file)
