@@ -1018,10 +1018,14 @@ class BadPixels():
                     flat_uncal_files = locate_uncal_files(new_flat_entries)
                     flat_uncal_files, run_flats = check_for_sufficient_files(flat_uncal_files, instrument, aperture, flat_file_count_threshold, 'flats')
                     flat_rate_files, flat_rate_files_to_copy = locate_rate_files(flat_uncal_files)
+                else:
+                    run_flats = False
                 if new_dark_entries:
                     dark_uncal_files = locate_uncal_files(new_dark_entries)
                     dark_uncal_files, run_darks = check_for_sufficient_files(dark_uncal_files, instrument, aperture, dark_file_count_threshold, 'darks')
                     dark_rate_files, dark_rate_files_to_copy = locate_rate_files(dark_uncal_files)
+                else:
+                    run_darks = False
 
                 # Set up directories for the copied data
                 ensure_dir_exists(os.path.join(self.output_dir, 'data'))
