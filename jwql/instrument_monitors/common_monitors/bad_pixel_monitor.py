@@ -829,7 +829,7 @@ class BadPixels():
         # For the dead flux check, filter out any files that have less than
         # 4 groups
         dead_flux_files = []
-        if illuminated_raw_files is not None:
+        if illuminated_raw_files:
             for illum_file in illuminated_raw_files:
                 ngroup = fits.getheader(illum_file)['NGROUPS']
                 if ngroup >= 4:
@@ -992,10 +992,6 @@ class BadPixels():
                 # Kevin says we shouldn't need to worry about mixing lamps in the data used to create the bad pixel
                 # mask. In flight, data will only be taken with LINE2, LEVEL 5. Currently in MAST all lamps are
                 # present, but Kevin is not concerned about variations in flat field strucutre.
-                if new_flat_entries:
-                    new_flat_entries = self.filter_query_results(new_flat_entries, datatype='flat')
-                if new_dark_entries:
-                    new_dark_entries = self.filter_query_results(new_dark_entries, datatype='dark')
 
                 # NIRISS - results can include rate, rateints, trapsfilled
                 # MIRI - Jane says they now use illuminated data for dead pixel checks, just like other insts.
@@ -1014,20 +1010,24 @@ class BadPixels():
                 # In order to use a given file we must have at least the
                 # uncal version of the file. Get the uncal and rate file
                 # lists to align.
+
                 if new_flat_entries:
+                    new_flat_entries = self.filter_query_results(new_flat_entries, datatype='flat')
                     flat_uncal_files = locate_uncal_files(new_flat_entries)
                     flat_uncal_files, run_flats = check_for_sufficient_files(flat_uncal_files, instrument, aperture, flat_file_count_threshold, 'flats')
                     flat_rate_files, flat_rate_files_to_copy = locate_rate_files(flat_uncal_files)
                 else:
                     run_flats = False
-                    flat_uncal_files, flat_rate_files, flat_rate_files_to_copy = [], [], []
+                    flat_uncal_files, flat_rate_files, flat_rate_files_to_copy = None, None, None
+
                 if new_dark_entries:
+                    new_dark_entries = self.filter_query_results(new_dark_entries, datatype='dark')
                     dark_uncal_files = locate_uncal_files(new_dark_entries)
                     dark_uncal_files, run_darks = check_for_sufficient_files(dark_uncal_files, instrument, aperture, dark_file_count_threshold, 'darks')
                     dark_rate_files, dark_rate_files_to_copy = locate_rate_files(dark_uncal_files)
                 else:
                     run_darks = False
-                    dark_uncal_files, dark_rate_files, dark_rate_files_to_copy = [], [], []
+                    dark_uncal_files, dark_rate_files, dark_rate_files_to_copy = None, None, None
 
                 # Set up directories for the copied data
                 ensure_dir_exists(os.path.join(self.output_dir, 'data'))
