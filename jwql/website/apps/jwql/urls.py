@@ -12,6 +12,7 @@ Authors
     - Lauren Chambers
     - Matthew Bourque
     - Johannes Sahlmann
+    - Teagan King
 
 Use
 ---
@@ -74,6 +75,10 @@ urlpatterns = [
     path('about/', views.about, name='about'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('edb/', views.engineering_database, name='edb'),
+    path('query_anomaly/', views.query_anomaly, name='query_anomaly'),
+    path('query_anomaly_2/', views.query_anomaly_2, name='query_anomaly_2'),
+    path('query_anomaly_3/', views.query_anomaly_3, name='query_anomaly_3'),
+    path('query_submit/', views.query_submit, name='query_submit'),
     path('table_viewer', views.jwqldb_table_viewer, name='table_viewer'),
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
@@ -88,6 +93,7 @@ urlpatterns = [
 
     # REST API views
     path('api/proposals/', api_views.all_proposals, name='all_proposals'),
+    #path('api/queried_thumbnails/', api_views.thumbnails_all_instruments, name='thumbnails_all_instruments'),
     re_path(r'^api/(?P<inst>({}))/proposals/$'.format(instruments), api_views.instrument_proposals, name='instrument_proposals'),
     re_path(r'^api/(?P<inst>({}))/preview_images/$'.format(instruments), api_views.preview_images_by_instrument, name='preview_images_by_instrument'),
     re_path(r'^api/(?P<inst>({}))/thumbnails/$'.format(instruments), api_views.thumbnails_by_instrument, name='thumbnails_by_instrument'),
