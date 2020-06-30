@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>Home - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+    	<h2>Anomaly Query Form Step 3</h2>
+        <hr>
+
+        <br>
+        
+        Continue to submit form to search the database for anomalies across various instruments and metadata.
+        <hr>
+            <div class="col-xl">
+                <!--Load the anomaly form from the view-->
+                <div class="anomaly_form">
+                    <h5>Anomalies to Query</h5>
+                    <h7>All possible anomalies have been checked. Feel free to uncheck anomalies. Default with no instruments selected is all anomalies corresponding to all instruments.</h7>
+                    <form action="" method="post">
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+                        <!--Show the field forms-->
+                        {% for field in anomaly_form %}
+                            {% for subwidget in field.subwidgets %}
+                                <li class="anomaly_choice">{{subwidget}}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        <input type="submit" value="Save">
+                    </form>
+                </div>
+            </div>
+          
+            <div>
+                Anomalies chosen given options from chosen instruments: {{chosen_current_anomalies}}
+            </div>
+            <a role="button" class="btn btn-primary my-2" href={{ url( 'jwql:query_submit' ) }}>Next</a>  <!--change to query_anomaly_3-->
+        </main>
+
+{% endblock %}

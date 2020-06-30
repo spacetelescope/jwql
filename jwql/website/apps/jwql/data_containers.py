@@ -10,6 +10,7 @@ Authors
 
     - Lauren Chambers
     - Matthew Bourque
+    - Teagan King
 
 Use
 ---
@@ -485,7 +486,8 @@ def get_filenames_by_rootname(rootname):
     Parameters
     ----------
     rootname : str
-        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+        The rootname of interest (e.g.
+        ``jw86600008001_02101_00007_guider2``).
 
     Returns
     -------
@@ -725,7 +727,8 @@ def get_preview_images_by_rootname(rootname):
     Parameters
     ----------
     rootname : str
-        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+        The rootname of interest (e.g.
+        ``jw86600008001_02101_00007_guider2``).
 
     Returns
     -------
@@ -792,7 +795,48 @@ def get_proposal_info(filepaths):
 
     return proposal_info
 
+  
+def get_thumbnails_all_instruments(instruments):
+    """Return a list of thumbnails available in the filesystem for all
+    instruments given requested parameters.
 
+    Returns
+    -------
+    thumbnails : list
+        A list of thumbnails available in the filesystem for the
+        given instrument.
+    """
+
+    # Make sure instruments are of the proper format (e.g. "Nircam")
+    thumbnail_list = []
+    for inst in instruments:  # JWST_INSTRUMENT_NAMES:
+        instrument = inst[0].upper()+inst[1:].lower()
+
+        ### adjust query based on request
+
+        # Query MAST for all rootnames for the instrument
+        service = "Mast.Jwst.Filtered.{}".format(instrument)
+        params = {"columns": "filename, expstart, filter, readpatt, date_beg, date_end, apername, exp_type",
+                  "filters": [{"paramName": "expstart",
+                  "values": [{"min": 57404.04, "max": 57404.07}], }]}
+        response = Mast.service_request_async(service, params)
+        results = response[0].json()['data']
+
+        # Parse the results to get the rootnames
+        filenames = [result['filename'].split('.')[0] for result in results]
+
+        # Get list of all thumbnails
+        thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
+
+    thumbnail_list.extend(thumbnails)
+
+    # Get subset of preview images that match the filenames
+    thumbnails = [os.path.basename(item) for item in thumbnail_list if
+                  os.path.basename(item).split('_integ')[0] in filenames]
+
+    return thumbnails
+
+ 
 def get_jwqldb_table_view_components(request):
     """Renders view for JWQLDB table viewer.
 
@@ -904,7 +948,8 @@ def get_thumbnails_by_rootname(rootname):
     Parameters
     ----------
     rootname : str
-        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+        The rootname of interest (e.g.
+        ``jw86600008001_02101_00007_guider2``).
 
     Returns
     -------
