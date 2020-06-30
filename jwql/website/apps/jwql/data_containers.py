@@ -10,6 +10,7 @@ Authors
 
     - Lauren Chambers
     - Matthew Bourque
+    - Teagan King
 
 Use
 ---
@@ -482,7 +483,8 @@ def get_filenames_by_rootname(rootname):
     Parameters
     ----------
     rootname : str
-        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+        The rootname of interest (e.g.
+        ``jw86600008001_02101_00007_guider2``).
 
     Returns
     -------
@@ -722,7 +724,8 @@ def get_preview_images_by_rootname(rootname):
     Parameters
     ----------
     rootname : str
-        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+        The rootname of interest (e.g.
+        ``jw86600008001_02101_00007_guider2``).
 
     Returns
     -------
@@ -810,9 +813,9 @@ def get_thumbnails_all_instruments(instruments):
 
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
-        params = {"columns":"filename, expstart, filter, readpatt, date_beg, date_end, apername, exp_type",
-                  "filters":[{"paramName":"expstart",
-                      "values":[{"min":57404.04, "max":57404.07}],}]}  
+        params = {"columns": "filename, expstart, filter, readpatt, date_beg, date_end, apername, exp_type",
+                  "filters": [{"paramName": "expstart",
+                  "values": [{"min": 57404.04, "max": 57404.07}], }]}
         response = Mast.service_request_async(service, params)
         results = response[0].json()['data']
 
@@ -826,7 +829,7 @@ def get_thumbnails_all_instruments(instruments):
 
     # Get subset of preview images that match the filenames
     thumbnails = [os.path.basename(item) for item in thumbnail_list if
-                os.path.basename(item).split('_integ')[0] in filenames]
+                  os.path.basename(item).split('_integ')[0] in filenames]
 
     return thumbnails
 
@@ -900,7 +903,8 @@ def get_thumbnails_by_rootname(rootname):
     Parameters
     ----------
     rootname : str
-        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+        The rootname of interest (e.g.
+        ``jw86600008001_02101_00007_guider2``).
 
     Returns
     -------

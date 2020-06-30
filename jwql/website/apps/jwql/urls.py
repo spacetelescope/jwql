@@ -12,6 +12,7 @@ Authors
     - Lauren Chambers
     - Matthew Bourque
     - Johannes Sahlmann
+    - Teagan King
 
 Use
 ---
@@ -91,7 +92,7 @@ urlpatterns = [
 
     # REST API views
     path('api/proposals/', api_views.all_proposals, name='all_proposals'),
-    path('api/queried_thumbnails/', api_views.thumbnails_all_instruments, name='thumbnails_all_instruments'),
+    #path('api/queried_thumbnails/', api_views.thumbnails_all_instruments, name='thumbnails_all_instruments'),
     re_path(r'^api/(?P<inst>({}))/proposals/$'.format(instruments), api_views.instrument_proposals, name='instrument_proposals'),
     re_path(r'^api/(?P<inst>({}))/preview_images/$'.format(instruments), api_views.preview_images_by_instrument, name='preview_images_by_instrument'),
     re_path(r'^api/(?P<inst>({}))/thumbnails/$'.format(instruments), api_views.thumbnails_by_instrument, name='thumbnails_by_instrument'),

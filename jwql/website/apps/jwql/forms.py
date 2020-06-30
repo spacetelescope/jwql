@@ -11,6 +11,7 @@ Authors
     - Lauren Chambers
     - Johannes Sahlmann
     - Matthew Bourque
+    - Teagan King
 
 Use
 ---
@@ -39,13 +40,11 @@ Dependencies
 ------------
     The user must have a configuration file named ``config.json``
     placed in the ``jwql/utils/`` directory.
-
 """
 
 import datetime
 import glob
 import os
-import inflection
 
 from astropy.time import Time, TimeDelta
 from django import forms
@@ -66,18 +65,19 @@ from jwql.utils.utils import get_config, filename_parser
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
-from jwql.utils import anomaly_query_config
+# from jwql.utils import anomaly_query_config
 # from jwql.website.apps.jwql import views # update anomaly_query_config
 
 
 class AnomalyForm(forms.Form):
     """Creates a ``AnomalyForm`` object that allows for anomaly input
-    in a form field.
-    """
+    in a form field."""
     query = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())  # Update depending on chosen instruments
 
     def clean_anomalies(self):
-        anomalies=self.cleaned_data['query']
+
+        anomalies = self.cleaned_data['query']
+
         return anomalies
 
 
@@ -111,15 +111,18 @@ class AnomalySubmitForm(forms.Form):
         for choice in anomaly_choices:
             data_dict[choice] = True
         di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
+
     def clean_anomalies(self):
-        anomalies=self.cleaned_data['anomaly_choices']
+
+        anomalies = self.cleaned_data['anomaly_choices']
+
         return anomalies
 
 
 class ApertureForm(forms.Form):
     """Creates an ``ApertureForm`` object that allows for ``aperture``
-    input in a form field.
-    """
+    input in a form field."""
+
     aperture_list = []
     for instrument in FULL_FRAME_APERTURES.keys():
         for aperture in FULL_FRAME_APERTURES[instrument]:
@@ -128,36 +131,43 @@ class ApertureForm(forms.Form):
     aperture = forms.MultipleChoiceField(required=False, choices=aperture_list, widget=forms.CheckboxSelectMultiple)
 
     def clean_apertures(self):
-        apertures=self.cleaned_data['aperture']
+
+        apertures = self.cleaned_data['aperture']
+
         return apertures
 
 
 class EarlyDateForm(forms.Form):
     """Creates a ``EarlyDateForm`` object that allows for ``early_date``
-    input in a form field.
-    """
-    early_date = forms.DateField(required = False, initial= "eg, 2021-10-02 12:04:39 or 2021-10-02")
+    input in a form field."""
+
+    early_date = forms.DateField(required=False, initial="eg, 2021-10-02 12:04:39 or 2021-10-02")
+
     # still working out whether we can have initial pre-fill without setting values in request
     def clean_early_date(self):
         early_date = self.cleaned_data['early_date']
+
         return early_date
 
 
 class ExptimeMaxForm(forms.Form):
-    """Creates a ``ExptimeMaxForm`` object that allows for ``exp_time_max``
-    input in a form field.
-    """
-    exp_time_max = forms.DecimalField(initial="57404.70") 
+    """Creates a ``ExptimeMaxForm`` object that allows for
+    ``exp_time_max`` input in a form field."""
+
+    exp_time_max = forms.DecimalField(initial="57404.70")
+
     def clean_exptime_max(self):
         exptime_max = self.cleaned_data['exp_time_max']
+
         return exptime_max
 
 
 class ExptimeMinForm(forms.Form):
-    """Creates a ``ExptimeMinForm`` object that allows for ``exp_time_min``
-    input in a form field.
-    """
+    """Creates a ``ExptimeMinForm`` object that allows for
+    ``exp_time_min`` input in a form field."""
+
     exp_time_min = forms.DecimalField(initial="57404.04")
+
     def clean_exptime_min(self):
         """Validate the "exp_time_min" field.
 
@@ -165,14 +175,15 @@ class ExptimeMinForm(forms.Form):
 
         Returns
         -------
-        int
+        exptime_min : int
             The cleaned data input into the "exp_time_min" field
 
         """
         exptime_min = self.cleaned_data['exp_time_min']
         if int(exptime_min) < 0:
-            raise forms.ValidationError("""Invalid minimum exposure time {}. 
+            raise forms.ValidationError("""Invalid minimum exposure time {}.
                                            Please provide positive value""".format(exptime_min))
+
         return exptime_min
 
 
@@ -198,8 +209,8 @@ class FileSearchForm(forms.Form):
         -------
         str
             The cleaned data input into the "search" field
-
         """
+
         # Get the cleaned search data
         search = self.cleaned_data['search']
 
@@ -261,8 +272,8 @@ class FileSearchForm(forms.Form):
         -------
         bool
             Is the search term formatted like a fileroot?
-
         """
+
         try:
             self.fileroot_dict = filename_parser(search)
             return True
@@ -278,6 +289,7 @@ class FileSearchForm(forms.Form):
             Outgoing redirect response sent to the webpage
 
         """
+
         # Process the data in form.cleaned_data as required
         search = self.cleaned_data['search']
         proposal_string = '{:05d}'.format(int(search))
@@ -293,8 +305,8 @@ class FileSearchForm(forms.Form):
 
 class FiletypeForm(forms.Form):
     """Creates a ``FiletypeForm`` object that allows for ``filetype``
-    input in a form field.
-    """
+    input in a form field."""
+
     file_type_list = []
     for filetype in GENERIC_SUFFIX_TYPES:
         item = [filetype, filetype]
@@ -302,14 +314,16 @@ class FiletypeForm(forms.Form):
     filetype = forms.MultipleChoiceField(required=False, choices=file_type_list, widget=forms.CheckboxSelectMultiple)
 
     def clean_filetypes(self):
-        file_types=self.cleaned_data['filetype']
+
+        file_types = self.cleaned_data['filetype']
+
         return file_types
 
 # from jwql.website.apps.jwql import views # update anomaly_query_config
 class FilterForm(forms.Form):
     """Creates a ``FilterForm`` object that allows for ``filter``
-    input in a form field.
-    """
+    input in a form field."""
+
     filter_list = []
     for instrument in FILTERS_PER_INSTRUMENT.keys():
         # if instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:   # eg ['nirspec']: selects relevant filters, but not specific to chosen instruments
@@ -319,21 +333,26 @@ class FilterForm(forms.Form):
     filter = forms.MultipleChoiceField(required=False, choices=filter_list, widget=forms.CheckboxSelectMultiple)
 
     def clean_filters(self):
-        filters=self.cleaned_data['filter']
+
+        filters = self.cleaned_data['filter']
+
         return filters
 
 
 class InstrumentForm(forms.Form):
     """Creates a ``InstrumentForm`` object that allows for ``query``
-    input in a form field.
-    """
-    query = forms.MultipleChoiceField(required = False,
-                               choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE], 
-                               widget=forms.CheckboxSelectMultiple())
+    input in a form field."""
+
+    query = forms.MultipleChoiceField(required=False,
+                                      choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
+                                      widget=forms.CheckboxSelectMultiple())
 
     def clean_instruments(self):
+
         instruments_chosen = self.cleaned_data['query']
+
         return instruments_chosen
+
     def redirect_to_files(self):
         """Determine where to redirect the web app based on user input.
 
@@ -352,11 +371,13 @@ class InstrumentForm(forms.Form):
 
 class LateDateForm(forms.Form):
     """Creates a ``LateDateForm`` object that allows for ``late_date``
-    input in a form field.
-    """
-    late_date = forms.DateField(required = False, initial= "eg, 2021-11-25 14:30:59 or 2021-11-25")
+    input in a form field."""
+
+    late_date = forms.DateField(required=False, initial="eg, 2021-11-25 14:30:59 or 2021-11-25")
+
     def clean_late_date(self):
         latedate = self.cleaned_data['late_date']
+
         return latedate
 
 
@@ -457,8 +478,8 @@ class MnemonicQueryForm(forms.Form):
         -------
         str
             The cleaned data input into the "search" field
-
         """
+
         # Stop now if not logged in
         if not self.logged_in:
             raise forms.ValidationError('Could not log into MAST. Please login or provide MAST '
@@ -482,14 +503,15 @@ class MnemonicQueryForm(forms.Form):
         -------
         str
            The cleaned data input into the start_time field
-
         """
+
         start_time = self.cleaned_data['start_time']
         try:
             Time(start_time, format='iso')
         except ValueError:
             raise forms.ValidationError('Invalid start time {}. Please enter a time in iso format, '
                                         'e.g. {}'.format(start_time, self.default_start_time))
+
         return self.cleaned_data['start_time']
 
     def clean_end_time(self):
@@ -499,8 +521,8 @@ class MnemonicQueryForm(forms.Form):
         -------
         str
            The cleaned data input into the end_time field
-
         """
+
         end_time = self.cleaned_data['end_time']
         try:
             Time(end_time, format='iso')
@@ -537,11 +559,11 @@ class MnemonicExplorationForm(forms.Form):
                            help_text="unit")
 
 
-class ObservingModeForm(forms.Form): # Add instruments chosen parameter
+class ObservingModeForm(forms.Form):  # Add instruments chosen parameter
     """Creates a ``ObservingModeForm`` object that allows for ``mode``
-    input in a form field.
-    """
-    mode_list=[]
+    input in a form field."""
+
+    mode_list = []
     for instrument in OBSERVING_MODE_PER_INSTRUMENT.keys():  # Add AND in instruments chosen
         modes_per_inst = OBSERVING_MODE_PER_INSTRUMENT[instrument]
         for mode in modes_per_inst:
@@ -549,6 +571,7 @@ class ObservingModeForm(forms.Form): # Add instruments chosen parameter
     mode = forms.MultipleChoiceField(required=False, choices=mode_list, widget=forms.CheckboxSelectMultiple)
 
     def clean_modes(self):
-        modes=self.cleaned_data['mode']
-        return modes
 
+        modes = self.cleaned_data['mode']
+
+        return modes

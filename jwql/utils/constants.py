@@ -4,6 +4,10 @@ Authors
 -------
 
     - Johannes Sahlmann
+    - Matthew Bourque
+    - Bryan Hilbert
+    - Ben Sunnquist
+    - Teagan King
 
 Use
 ---
@@ -80,7 +84,7 @@ FILTERS_PER_INSTRUMENT = {'miri': ['F560W', 'F770W', 'F1000W', 'F1065C', 'F1130W
                           'nircam': ['F070W', 'F090W', 'F115W', 'F140M', 'F150W', 'F150W2', 'F162M',
                                      'F164N', 'F182M', 'F187N', 'F200W', 'F210M', 'F212N', 'F250M',
                                      'F277W', 'F300M', 'F322W2', 'F323N', 'F335M', 'F356W', 'F360M',
-                                     'F405N', 'F410M', 'F430M', 'F444W', 'F460M', 'F466N', 'F470N', 
+                                     'F405N', 'F410M', 'F430M', 'F444W', 'F460M', 'F466N', 'F470N',
                                      'F480M'],
                           'niriss': ['F090W', 'F115W', 'F140M', 'F150W', 'F185M', 'F200W', 'F227W',
                                      'F356W', 'F380M', 'F430M', 'F444W', 'F480M'],

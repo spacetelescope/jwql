@@ -12,6 +12,8 @@ Authors
 
     - Lauren Chambers
     - Johannes Sahlmann
+    - Teagan King
+    - Mees Fix
 
 Use
 ---
@@ -35,7 +37,6 @@ Dependencies
     placed in the ``jwql/utils/`` directory.
 """
 
-import datetime
 import os
 
 from django.http import JsonResponse
@@ -69,7 +70,7 @@ from .forms import LateDateForm
 from .forms import ObservingModeForm
 from .oauth import auth_info, auth_required
 from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
-from jwql.utils.constants importFILTERS_PER_INSTRUMENT
+from jwql.utils.constants import FILTERS_PER_INSTRUMENT
 from jwql.utils.constants import FULL_FRAME_APERTURES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 from jwql.utils.constants import MONITORS
@@ -77,10 +78,10 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import OBSERVING_MODE_PER_INSTRUMENT
 from jwql.utils.utils import get_base_url, get_config
 
-# from jwql.utils.query_config import APERTURES_CHOSEN, CURRENT_ANOMALIES
-# from jwql.utils.query_config import INSTRUMENTS_CHOSEN, OBSERVING_MODES_CHOSEN
-# from jwql.utils.query_config import ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
-from jwql.utils import query_config
+# from jwql.utils.anomaly_query_config import APERTURES_CHOSEN, CURRENT_ANOMALIES
+# from jwql.utils.anomaly_query_config import INSTRUMENTS_CHOSEN, OBSERVING_MODES_CHOSEN
+# from jwql.utils.anomaly_query_config import ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
+from jwql.utils import anomaly_query_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
@@ -162,6 +163,7 @@ def about(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     template = 'about.html'
     acknowledgements = get_acknowledgements()
     context = {'acknowledgements': acknowledgements,
@@ -186,6 +188,7 @@ def archived_proposals(request, user, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
@@ -212,6 +215,7 @@ def archived_proposals_ajax(request, user, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
@@ -303,6 +307,7 @@ def dashboard(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     template = 'dashboard.html'
     output_dir = get_config()['outputs']
     dashboard_components, dashboard_html = get_dashboard_components()
@@ -334,6 +339,7 @@ def engineering_database(request, user):
         Outgoing response sent to the webpage
 
     """
+
     edb_components = get_edb_components(request)
 
     template = 'engineering_database.html'
@@ -389,6 +395,7 @@ def instrument(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
@@ -420,6 +427,7 @@ def not_found(request, *kwargs):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     template = random_404_page()
     status_code = 404  # Note that this will show 400, 403, 404, and 500 as 404 status
     context = {'inst': ''}
@@ -442,6 +450,7 @@ def query_anomaly(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     exposure_min_form = ExptimeMinForm(request.POST or None)
     exposure_max_form = ExptimeMaxForm(request.POST or None)
     instrument_form = InstrumentForm(request.POST or None)
@@ -449,22 +458,22 @@ def query_anomaly(request):
     late_date_form = LateDateForm(request.POST or None)
 
     # global current_anomalies
-    current_anomalies=['cosmic_ray_shower', 'diffraction_spike', 'excessive_saturation', 
-                       'guidestar_failure', 'persistence', 'other']
+    current_anomalies = ['cosmic_ray_shower', 'diffraction_spike', 'excessive_saturation',
+                         'guidestar_failure', 'persistence', 'other']
 
     # global instruments_chosen
     instruments_chosen = "No instruments chosen"
     if request.method == 'POST':
         if instrument_form.is_valid():
             instruments_chosen = instrument_form.clean_instruments()
-    
+
             for anomaly in ANOMALIES_PER_INSTRUMENT:
                 for inst in instruments_chosen:
                     if inst in ANOMALIES_PER_INSTRUMENT[anomaly]:
                         current_anomalies.append(anomaly) if anomaly not in current_anomalies else current_anomalies
- 
-    query_config.INSTRUMENTS_CHOSEN = instruments_chosen
-    query_config.CURRENT_ANOMALIES = current_anomalies
+
+    anomaly_query_config.INSTRUMENTS_CHOSEN = instruments_chosen
+    anomaly_query_config.CURRENT_ANOMALIES = current_anomalies
 
     template = 'query_anomaly.html'
     context = {'inst': '',
@@ -473,8 +482,8 @@ def query_anomaly(request):
                'instrument_form': instrument_form,
                'early_date_form': early_date_form,
                'late_date_form': late_date_form,
-               'requested_insts': query_config.INSTRUMENTS_CHOSEN,
-               'current_anomalies': query_config.CURRENT_ANOMALIES,
+               'requested_insts': anomaly_query_config.INSTRUMENTS_CHOSEN,
+               'current_anomalies': anomaly_query_config.CURRENT_ANOMALIES,
                'None': "No instruments chosen"}
 
     return render(request, template, context)
@@ -496,24 +505,24 @@ def query_anomaly_2(request):
 
     initial_aperture_list = []
     for instrument in FULL_FRAME_APERTURES.keys():
-        if instrument.lower() in query_config.INSTRUMENTS_CHOSEN:
+        if instrument.lower() in anomaly_query_config.INSTRUMENTS_CHOSEN:
             for aperture in FULL_FRAME_APERTURES[instrument]:
                 initial_aperture_list.append(aperture)
 
     initial_mode_list = []
     for instrument in OBSERVING_MODE_PER_INSTRUMENT.keys():
-        if instrument in query_config.INSTRUMENTS_CHOSEN:
+        if instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:
             for mode in OBSERVING_MODE_PER_INSTRUMENT[instrument]:
                 initial_mode_list.append(mode)
-    
+
     initial_filter_list = []
     for instrument in FILTERS_PER_INSTRUMENT.keys():
-        if instrument in query_config.INSTRUMENTS_CHOSEN:
+        if instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:
             for filter in FILTERS_PER_INSTRUMENT[instrument]:
                 initial_filter_list.append(filter)
 
     aperture_form = ApertureForm(request.POST or None, initial={'aperture': initial_aperture_list})
-    filter_form=FilterForm(request.POST or None, initial={'filter': initial_filter_list})
+    filter_form = FilterForm(request.POST or None, initial={'filter': initial_filter_list})
     filetype_form = FiletypeForm(request.POST or None)
     observing_mode_form = ObservingModeForm(request.POST or None, initial={'mode': initial_mode_list})
 
@@ -524,7 +533,7 @@ def query_anomaly_2(request):
         if aperture_form.is_valid():
             apertures_chosen = aperture_form.clean_apertures()
             initial_aperture_list = apertures_chosen
-    query_config.APERTURES_CHOSEN = apertures_chosen
+    anomaly_query_config.APERTURES_CHOSEN = apertures_chosen
 
     # global filters_chosen
     filters_chosen = "No filters chosen"
@@ -532,7 +541,7 @@ def query_anomaly_2(request):
         if filter_form.is_valid():
             filters_chosen = filter_form.clean_filters()
             initial_filter_list = filters_chosen
-    query_config.FILTERS_CHOSEN = filters_chosen
+    anomaly_query_config.FILTERS_CHOSEN = filters_chosen
 
     # global observing_modes_chosen
     observing_modes_chosen = "No observing modes chosen"
@@ -540,22 +549,22 @@ def query_anomaly_2(request):
         if observing_mode_form.is_valid():
             observing_modes_chosen = observing_mode_form.clean_modes()
             initial_mode_list = observing_modes_chosen
-    query_config.OBSERVING_MODES_CHOSEN = observing_modes_chosen
+    anomaly_query_config.OBSERVING_MODES_CHOSEN = observing_modes_chosen
 
     # if current_anomalies == None:
     #     print("PLEASE START AT THE FIRST PAGE IN THE FORMS! (eg, <SERVER ADDRESS>/query_anomaly/ ")
-    
+
     template = 'query_anomaly_2.html'
     context = {'inst': '',
                'aperture_form': aperture_form,
                'filter_form': filter_form,
                'filetype_form': filetype_form,
                'observing_mode_form': observing_mode_form,
-               'apertures_chosen': query_config.APERTURES_CHOSEN,
-               'current_anomalies': query_config.CURRENT_ANOMALIES,
-               'filters_chosen': query_config.FILTERS_CHOSEN,
-               'instruments_chosen_cfg': query_config.INSTRUMENTS_CHOSEN,
-               'observing_modes_chosen': query_config.OBSERVING_MODES_CHOSEN
+               'apertures_chosen': anomaly_query_config.APERTURES_CHOSEN,
+               'current_anomalies': anomaly_query_config.CURRENT_ANOMALIES,
+               'filters_chosen': anomaly_query_config.FILTERS_CHOSEN,
+               'instruments_chosen_cfg': anomaly_query_config.INSTRUMENTS_CHOSEN,
+               'observing_modes_chosen': anomaly_query_config.OBSERVING_MODES_CHOSEN
                }
 
     return render(request, template, context)
@@ -574,17 +583,17 @@ def query_anomaly_3(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    
-    anomaly_form = AnomalyForm(request.POST or None, initial={'query': query_config.CURRENT_ANOMALIES})
+
+    anomaly_form = AnomalyForm(request.POST or None, initial={'query': anomaly_query_config.CURRENT_ANOMALIES})
 
     # if current_anomalies == None:
     #     print("PLEASE START AT THE FIRST PAGE IN THE FORMS! (eg, <SERVER ADDRESS>/query_anomaly/ ")
     # global anomalies_chosen_from_current_anomalies
-    anomalies_chosen_from_current_anomalies = query_config.CURRENT_ANOMALIES
+    anomalies_chosen_from_current_anomalies = anomaly_query_config.CURRENT_ANOMALIES
     if request.method == 'POST':
         if anomaly_form.is_valid():
             anomalies_chosen_from_current_anomalies = anomaly_form.clean_anomalies()
-    query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = anomalies_chosen_from_current_anomalies
+    anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = anomalies_chosen_from_current_anomalies
 
     template = 'query_anomaly_3.html'
     context = {'inst': '',
@@ -609,6 +618,7 @@ def query_submit(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # if current_anomalies == None:
     #     print("PLEASE START AT THE FIRST PAGE IN THE FORMS! (eg, <SERVER ADDRESS>/query_anomaly/ ")
 
@@ -618,12 +628,12 @@ def query_submit(request):
     # print(get_thumbnails_all_instruments(inst_list_chosen))
 
     context = {'inst': '',
-               'anomalies_chosen_from_current_anomalies': query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
-               'apertures_chosen': query_config.APERTURES_CHOSEN,
-               'current_anomalies': query_config.CURRENT_ANOMALIES,
-               'filters_chosen': query_config.FILTERS_CHOSEN,
-               'inst_list_chosen': query_config.INSTRUMENTS_CHOSEN,
-               'observing_modes_chosen': query_config.OBSERVING_MODES_CHOSEN
+               'anomalies_chosen_from_current_anomalies': anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
+               'apertures_chosen': anomaly_query_config.APERTURES_CHOSEN,
+               'current_anomalies': anomaly_query_config.CURRENT_ANOMALIES,
+               'filters_chosen': anomaly_query_config.FILTERS_CHOSEN,
+               'inst_list_chosen': anomaly_query_config.INSTRUMENTS_CHOSEN,
+               'observing_modes_chosen': anomaly_query_config.OBSERVING_MODES_CHOSEN
                # 'thumbnails': get_thumbnails_all_instruments(inst_list_chosen)
               }
 
