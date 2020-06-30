@@ -18,6 +18,7 @@ Use
 from collections import OrderedDict
 import copy
 import numpy as np
+import os
 
 from astropy.io import fits
 from jwst.dq_init import DQInitStep
@@ -29,6 +30,7 @@ from jwst.jump import JumpStep
 from jwst.lastframe import LastFrameStep
 from jwst.linearity import LinearityStep
 from jwst.persistence import PersistenceStep
+from jwst.pipeline.calwebb_detector1 import Detector1Pipeline
 from jwst.ramp_fitting import RampFitStep
 from jwst.refpix import RefPixStep
 from jwst.rscd import RSCD_Step
@@ -220,6 +222,99 @@ def run_calwebb_detector1_steps(input_file, steps):
         model[0].save(output_filename)
 
     return output_filename
+
+
+def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True, save_fitopt=True):
+    """Call ``calwebb_detector1`` on the provided file, running all
+    steps up to the ``ramp_fit`` step, and save the result. Optionally
+    run the ``ramp_fit`` step and save the resulting slope file as well.
+
+    Parameters
+    ----------
+    input_file : str
+        Name of fits file to run on the pipeline
+
+    output_dir : str
+        Directory into which the pipeline outputs are saved
+
+    ramp_fit : bool
+        If ``False``, the ``ramp_fit`` step is not run. The output file
+        will be a ``*_jump.fits`` file.
+        If ``True``, the ``*jump.fits`` file will be produced and saved.
+        In addition, the ``ramp_fit`` step will be run and a
+        ``*rate.fits`` or ``*_rateints.fits`` file will be saved.
+        (``rateints`` if the input file has >1 integration)
+
+    save_fitopt : bool
+        If ``True``, the file of optional outputs from the ramp fitting
+        step of the pipeline is saved.
+
+    Returns
+    -------
+    jump_output : str
+        Name of the saved file containing the output prior to the
+        ``ramp_fit`` step.
+
+    pipe_output : str
+        Name of the saved file containing the output after ramp-fitting
+        is performed (if requested). Otherwise ``None``.
+    """
+    input_file_only = os.path.basename(input_file)
+
+    # Find the instrument used to collect the data
+    instrument = fits.getheader(input_file)['INSTRUME'].lower()
+
+    # Switch to calling the pipeline rather than individual steps,
+    # and use the run() method so that we can set parameters
+    # progammatically.
+    model = Detector1Pipeline()
+
+    # Always true
+    if instrument == 'nircam':
+        model.refpix.odd_even_rows = False
+
+    # Default CR rejection threshold is too low
+    model.jump.rejection_threshold = 15
+
+    model.jump.save_results = True
+    model.jump.output_dir = output_dir
+    jump_output = os.path.join(output_dir, input_file_only.replace('uncal', 'jump'))
+
+    # Check to see if the jump version of the requested file is already
+    # present
+    run_jump =  not os.path.isfile(jump_output)
+
+    if ramp_fit:
+        model.ramp_fit.save_results = True
+        #model.save_results = True
+        model.output_dir = output_dir
+        #pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', 'rate'))
+        pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', '0_ramp_fit'))
+        run_slope = not os.path.isfile(pipe_output)
+        if save_fitopt:
+            model.ramp_fit.save_opt = True
+            fitopt_output = os.path.join(output_dir, input_file_only.replace('uncal', 'fitopt'))
+            run_fitopt = not os.path.isfile(fitopt_output)
+        else:
+            model.ramp_fit.save_opt = False
+            fitopt_output = None
+            run_fitopt = False
+    else:
+        model.ramp_fit.skip = True
+        pipe_output = None
+        fitopt_output = None
+        run_slope = False
+        run_fitopt = False
+
+    # Call the pipeline if any of the files at the requested calibration
+    # states are not present in the output directory
+    if run_jump or (ramp_fit and run_slope) or (save_fitopt and run_fitopt):
+        model.run(input_file)
+    else:
+        print(("Files with all requested calibration states for {} already present in "
+               "output directory. Skipping pipeline call.".format(input_file)))
+
+    return jump_output, pipe_output, fitopt_output
 
 
 def steps_to_run(all_steps, finished_steps):

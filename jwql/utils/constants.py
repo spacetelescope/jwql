@@ -78,7 +78,25 @@ ANOMALIES_PER_INSTRUMENT = {
 # Defines the possible anomalies (with rendered name) to flag through the web app
 ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT]
 
-# Dictionary of filters for each instrument
+# Possible exposure types for dark current data
+DARK_EXP_TYPES = {'nircam': ['NRC_DARK'],
+                  'niriss': ['NIS_DARK'],
+                  'miri': ['MIR_DARKIMG', 'MIR_DARKMRS', 'MIR_DARKALL'],
+                  'nirspec': ['NRS_DARK'],
+                  'fgs': ['FGS_DARK']}
+
+EXPTYPES = {"nircam": {"imaging": "NRC_IMAGE", "ts_imaging": "NRC_TSIMAGE",
+                       "wfss": "NRC_WFSS", "ts_grism": "NRC_TSGRISM"},
+            "niriss": {"imaging": "NIS_IMAGE", "ami": "NIS_IMAGE", "pom": "NIS_IMAGE",
+                       "wfss": "NIS_WFSS"},
+            "fgs": {"imaging": "FGS_IMAGE"}}
+
+FLAT_EXP_TYPES = {'nircam': ['NRC_FLAT'],
+                  'niriss': ['NIS_LAMP'],
+                  'miri': ['MIR_FLATIMAGE', 'MIR_FLATMRS'],
+                  'nirspec': ['NRS_AUTOFLAT', 'NRS_LAMP'],
+                  'fgs': ['FGS_INTFLAT']}
+
 FILTERS_PER_INSTRUMENT = {'miri': ['F560W', 'F770W', 'F1000W', 'F1065C', 'F1130W', 'F1140C', 'F1280W',
                                    'F1500W', 'F1550C', 'F1800W', 'F2100W', 'F2300C', 'F2550W'],
                           'nircam': ['F070W', 'F090W', 'F115W', 'F140M', 'F150W', 'F150W2', 'F162M',
@@ -90,7 +108,6 @@ FILTERS_PER_INSTRUMENT = {'miri': ['F560W', 'F770W', 'F1000W', 'F1065C', 'F1130W
                                      'F356W', 'F380M', 'F430M', 'F444W', 'F480M'],
                           'nirspec': ['CLEAR', 'F070LP', 'F100LP', 'F170LP', 'F290LP']}
 
-# Names of four amp subarrays
 FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R', 'WFSS128C', 'WFSS64C']
 
 # Names of full-frame apertures for all instruments
@@ -112,7 +129,8 @@ GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 
 
 # Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
-    'dark_monitor': ['nircam_dark_dark_current', 'nircam_dark_pixel_stats', 'nircam_dark_query_history']}
+    'dark_monitor': ['<instrument>_dark_dark_current', '<instrument>_dark_pixel_stats', '<instrument>_dark_query_history'],
+    'bad_pixel_monitor': ['<instrument>_bad_pixel_stats', '<instrument>_bad_pixel_query_history']}
 
 # JWST data products
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
@@ -210,4 +228,3 @@ TIME_SERIES_SUFFIX_TYPES = ['phot', 'whtlt']
 FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
                     TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
                     NIRISS_AMI_SUFFIX_TYPES
- 
