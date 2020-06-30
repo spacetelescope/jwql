@@ -43,6 +43,17 @@ from django.http import JsonResponse
 # from django import forms
 from django.shortcuts import render
 
+from jwql.database.database_interface import load_connection
+from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
+from jwql.utils.constants import FILTERS_PER_INSTRUMENT
+from jwql.utils.constants import FULL_FRAME_APERTURES
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import MONITORS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import OBSERVING_MODE_PER_INSTRUMENT
+from jwql.utils.utils import get_base_url
+from jwql.utils.utils import get_config
+
 from .data_containers import data_trending
 from .data_containers import get_acknowledgements
 from .data_containers import get_current_flagged_anomalies
@@ -55,6 +66,7 @@ from .data_containers import get_proposal_info
 from .data_containers import get_thumbnails_all_instruments
 from .data_containers import nirspec_trending
 from .data_containers import random_404_page
+from .data_containers import get_jwqldb_table_view_components
 from .data_containers import thumbnails_ajax
 from .forms import AnomalyForm
 from .forms import AnomalySubmitForm
@@ -69,14 +81,6 @@ from .forms import InstrumentForm
 from .forms import LateDateForm
 from .forms import ObservingModeForm
 from .oauth import auth_info, auth_required
-from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
-from jwql.utils.constants import FILTERS_PER_INSTRUMENT
-from jwql.utils.constants import FULL_FRAME_APERTURES
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES
-from jwql.utils.constants import MONITORS
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.constants import OBSERVING_MODE_PER_INSTRUMENT
-from jwql.utils.utils import get_base_url, get_config
 
 # from jwql.utils.anomaly_query_config import APERTURES_CHOSEN, CURRENT_ANOMALIES
 # from jwql.utils.anomaly_query_config import INSTRUMENTS_CHOSEN, OBSERVING_MODES_CHOSEN
@@ -410,6 +414,37 @@ def instrument(request, inst):
 
     context = {'inst': inst,
                'doc_url': doc_url}
+
+    return render(request, template, context)
+
+
+def jwqldb_table_viewer(request):
+    """Generate the JWQL Table Viewer view.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    user : dict
+        A dictionary of user credentials.
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    table_view_components = get_jwqldb_table_view_components(request)
+
+    session, base, engine, meta = load_connection(get_config()['connection_string'])
+    all_jwql_tables = engine.table_names()
+
+    template = 'jwqldb_table_viewer.html'
+    context = {
+        'inst': '',
+        'all_jwql_tables': all_jwql_tables,
+        'table_view_components': table_view_components}
 
     return render(request, template, context)
 
