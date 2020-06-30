@@ -42,25 +42,38 @@ from django.http import JsonResponse
 # from django import forms
 from django.shortcuts import render
 
-from .data_containers import get_acknowledgements, get_edb_components
+from .data_containers import data_trending
+from .data_containers import get_acknowledgements
+from .data_containers import get_current_flagged_anomalies
 from .data_containers import get_dashboard_components
+from .data_containers import get_edb_components
 from .data_containers import get_filenames_by_instrument
 from .data_containers import get_header_info
 from .data_containers import get_image_info
-from .data_containers import get_current_flagged_anomalies
-from .data_containers import get_thumbnails_all_instruments
 from .data_containers import get_proposal_info
+from .data_containers import get_thumbnails_all_instruments
+from .data_containers import nirspec_trending
 from .data_containers import random_404_page
 from .data_containers import thumbnails_ajax
-from .data_containers import data_trending
-from .data_containers import nirspec_trending
-from .forms import AnomalyForm, AnomalySubmitForm, ApertureForm, EarlyDateForm
-from .forms import ExptimeMaxForm, ExptimeMinForm, FileSearchForm, FiletypeForm
-from .forms import FilterForm, InstrumentForm, LateDateForm, ObservingModeForm
+from .forms import AnomalyForm
+from .forms import AnomalySubmitForm
+from .forms import ApertureForm
+from .forms import EarlyDateForm
+from .forms import ExptimeMaxForm
+from .forms import ExptimeMinForm
+from .forms import FileSearchForm
+from .forms import FiletypeForm
+from .forms import FilterForm
+from .forms import InstrumentForm
+from .forms import LateDateForm
+from .forms import ObservingModeForm
 from .oauth import auth_info, auth_required
-from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT
-from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES
-from jwql.utils.constants import MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
+from jwql.utils.constants importFILTERS_PER_INSTRUMENT
+from jwql.utils.constants import FULL_FRAME_APERTURES
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import MONITORS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import OBSERVING_MODE_PER_INSTRUMENT
 from jwql.utils.utils import get_base_url, get_config
 

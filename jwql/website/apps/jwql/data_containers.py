@@ -806,24 +806,13 @@ def get_thumbnails_all_instruments(instruments):
     for inst in instruments:  # JWST_INSTRUMENT_NAMES:
         instrument = inst[0].upper()+inst[1:].lower()
 
-        # requested items -- still working on this bit:
-        # filename = request
-        # if 'expstart' in request.POST.keys():
-
-        # expstart = request
-        # filter_used = request
-        # readpatt = request
-        # date_beg = request
-        # date_end = request
-        # apername = request
-        # exp_type = request
-
+        ### adjust query based on request
 
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
-        params = {"columns":"filename, expstart, filter, readpatt, date_beg, date_end, apername, exp_type", ### make list of items in request
+        params = {"columns":"filename, expstart, filter, readpatt, date_beg, date_end, apername, exp_type",
                   "filters":[{"paramName":"expstart",
-                      "values":[{"min":57404.04, "max":57404.07}],}]}  ### adjust based on request
+                      "values":[{"min":57404.04, "max":57404.07}],}]}  
         response = Mast.service_request_async(service, params)
         results = response[0].json()['data']
 

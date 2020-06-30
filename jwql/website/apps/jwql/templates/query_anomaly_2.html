@@ -101,6 +101,7 @@
             <div>
                 Apertures chosen: {{apertures_chosen}}
                 <!-- Currently, one can submit choose either observing mode OR filter OR aperture, but you can only choose one of these -->
+                <!-- The query_config file does store one of these values, but it's not accessible in its updated version in forms.py -->
             </div>
             <a role="button" class="btn btn-primary my-2" href={{ url( 'jwql:query_anomaly_3' ) }}>Next</a>  <!--change to query_anomaly_3-->
         </main>

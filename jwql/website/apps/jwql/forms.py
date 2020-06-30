@@ -54,9 +54,12 @@ from jwedb.edb_interface import is_valid_mnemonic
 
 # from data_containers import get_thumbnails_all_instruments
 from jwql.database import database_interface as di
-from jwql.utils.constants import ANOMALY_CHOICES, FILTERS_PER_INSTRUMENT
-from jwql.utils.constants import FULL_FRAME_APERTURES, GENERIC_SUFFIX_TYPES
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.constants import ANOMALY_CHOICES
+from jwql.utils.constants import FILTERS_PER_INSTRUMENT
+from jwql.utils.constants import FULL_FRAME_APERTURES
+from jwql.utils.constants import GENERIC_SUFFIX_TYPES
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.constants import OBSERVING_MODE_PER_INSTRUMENT
 from jwql.utils.utils import get_config, filename_parser
 # from jwql.website.apps.jwql.views import current_anomalies  ### global variable defined once query_anomaly page has forms filled
@@ -117,12 +120,12 @@ class ApertureForm(forms.Form):
     """Creates an ``ApertureForm`` object that allows for ``aperture``
     input in a form field.
     """
-    aperturelist = []
+    aperture_list = []
     for instrument in FULL_FRAME_APERTURES.keys():
         for aperture in FULL_FRAME_APERTURES[instrument]:
             item = [aperture, aperture]
-            aperturelist.append(item)
-    aperture = forms.MultipleChoiceField(required=False, choices=aperturelist, widget=forms.CheckboxSelectMultiple)
+            aperture_list.append(item)
+    aperture = forms.MultipleChoiceField(required=False, choices=aperture_list, widget=forms.CheckboxSelectMultiple)
 
     def clean_apertures(self):
         apertures=self.cleaned_data['aperture']
@@ -130,43 +133,43 @@ class ApertureForm(forms.Form):
 
 
 class EarlyDateForm(forms.Form):
-    """Creates a ``EarlyDateForm`` object that allows for ``earlydate``
+    """Creates a ``EarlyDateForm`` object that allows for ``early_date``
     input in a form field.
     """
-    earlydate = forms.DateField(required = False, initial= "eg, 2021-10-02 12:04:39 or 2021-10-02")
+    early_date = forms.DateField(required = False, initial= "eg, 2021-10-02 12:04:39 or 2021-10-02")
     # still working out whether we can have initial pre-fill without setting values in request
     def clean_early_date(self):
-        early_date = self.cleaned_data['earlydate']
+        early_date = self.cleaned_data['early_date']
         return early_date
 
 
 class ExptimeMaxForm(forms.Form):
-    """Creates a ``ExptimeMaxForm`` object that allows for ``exptimemax``
+    """Creates a ``ExptimeMaxForm`` object that allows for ``exp_time_max``
     input in a form field.
     """
-    exptimemax = forms.DecimalField(initial="57404.70") 
+    exp_time_max = forms.DecimalField(initial="57404.70") 
     def clean_exptime_max(self):
-        exptime_max = self.cleaned_data['exptimemax']
+        exptime_max = self.cleaned_data['exp_time_max']
         return exptime_max
 
 
 class ExptimeMinForm(forms.Form):
-    """Creates a ``ExptimeMinForm`` object that allows for ``exptimemin``
+    """Creates a ``ExptimeMinForm`` object that allows for ``exp_time_min``
     input in a form field.
     """
-    exptimemin = forms.DecimalField(initial="57404.04")
+    exp_time_min = forms.DecimalField(initial="57404.04")
     def clean_exptime_min(self):
-        """Validate the "exptimemin" field.
+        """Validate the "exp_time_min" field.
 
         Check that the input is greater than or equal to zero.
 
         Returns
         -------
         int
-            The cleaned data input into the "exptimemin" field
+            The cleaned data input into the "exp_time_min" field
 
         """
-        exptime_min = self.cleaned_data['exptimemin']
+        exptime_min = self.cleaned_data['exp_time_min']
         if int(exptime_min) < 0:
             raise forms.ValidationError("""Invalid minimum exposure time {}. 
                                            Please provide positive value""".format(exptime_min))
@@ -292,28 +295,28 @@ class FiletypeForm(forms.Form):
     """Creates a ``FiletypeForm`` object that allows for ``filetype``
     input in a form field.
     """
-    filetypelist = []
+    file_type_list = []
     for filetype in GENERIC_SUFFIX_TYPES:
         item = [filetype, filetype]
-        filetypelist.append(item)
-    filetype = forms.MultipleChoiceField(required=False, choices=filetypelist, widget=forms.CheckboxSelectMultiple)
+        file_type_list.append(item)
+    filetype = forms.MultipleChoiceField(required=False, choices=file_type_list, widget=forms.CheckboxSelectMultiple)
 
     def clean_filetypes(self):
-        filetypes=self.cleaned_data['filetype']
-        return filetypes
+        file_types=self.cleaned_data['filetype']
+        return file_types
 
 # from jwql.website.apps.jwql import views # update query_config
 class FilterForm(forms.Form):
     """Creates a ``FilterForm`` object that allows for ``filter``
     input in a form field.
     """
-    filterlist = []
+    filter_list = []
     for instrument in FILTERS_PER_INSTRUMENT.keys():
         # if instrument in query_config.INSTRUMENTS_CHOSEN:   # eg ['nirspec']: selects relevant filters, but not specific to chosen instruments
         filters_per_inst = FILTERS_PER_INSTRUMENT[instrument]
         for filter in filters_per_inst:
-            filterlist.append([filter, filter]) if [filter, filter] not in filterlist else filterlist
-    filter = forms.MultipleChoiceField(required=False, choices=filterlist, widget=forms.CheckboxSelectMultiple)
+            filter_list.append([filter, filter]) if [filter, filter] not in filter_list else filter_list
+    filter = forms.MultipleChoiceField(required=False, choices=filter_list, widget=forms.CheckboxSelectMultiple)
 
     def clean_filters(self):
         filters=self.cleaned_data['filter']
@@ -325,7 +328,7 @@ class InstrumentForm(forms.Form):
     input in a form field.
     """
     query = forms.MultipleChoiceField(required = False,
-                               choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE] , 
+                               choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE], 
                                widget=forms.CheckboxSelectMultiple())
 
     def clean_instruments(self):
@@ -348,13 +351,13 @@ class InstrumentForm(forms.Form):
 
 
 class LateDateForm(forms.Form):
-    """Creates a ``LateDateForm`` object that allows for ``latedate``
+    """Creates a ``LateDateForm`` object that allows for ``late_date``
     input in a form field.
     """
-    latedate = forms.DateField(required = False, initial= "eg, 2021-11-25 14:30:59 or 2021-11-25")
+    late_date = forms.DateField(required = False, initial= "eg, 2021-11-25 14:30:59 or 2021-11-25")
     def clean_late_date(self):
-        late_date = self.cleaned_data['latedate']
-        return late_date
+        latedate = self.cleaned_data['late_date']
+        return latedate
 
 
 class MnemonicSearchForm(forms.Form):
@@ -538,13 +541,14 @@ class ObservingModeForm(forms.Form): # Add instruments chosen parameter
     """Creates a ``ObservingModeForm`` object that allows for ``mode``
     input in a form field.
     """
-    modelist=[]
+    mode_list=[]
     for instrument in OBSERVING_MODE_PER_INSTRUMENT.keys():  # Add AND in instruments chosen
         modes_per_inst = OBSERVING_MODE_PER_INSTRUMENT[instrument]
         for mode in modes_per_inst:
-            modelist.append([mode, mode]) if [mode, mode] not in modelist else modelist
-    mode = forms.MultipleChoiceField(required=False, choices=modelist, widget=forms.CheckboxSelectMultiple)
+            mode_list.append([mode, mode]) if [mode, mode] not in mode_list else mode_list
+    mode = forms.MultipleChoiceField(required=False, choices=mode_list, widget=forms.CheckboxSelectMultiple)
 
     def clean_modes(self):
         modes=self.cleaned_data['mode']
         return modes
+

@@ -207,28 +207,6 @@ def preview_images_by_rootname(request, rootname):
     return JsonResponse({'preview_images': preview_images}, json_dumps_params={'indent': 2})
 
 
-def thumbnails_all_instruments(request, inst_list):
-    """Return a list of available thumbnails in the filesystem for the
-    given request
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    inst : list of strings
-        The instrument of interest.  The name of each instrument in the
-        list must match one of the following: (``nircam``, ``NIRCam``,
-        ``niriss``, ``NIRISS``, ``nirspec``, ``NIRSpec``, ``miri``, 
-        ``MIRI``, ``fgs``, ``FGS``).
-
-    Returns
-    -------
-    JsonResponse object
-        Outgoing response sent to the webpage
-    """
-    thumbnails = get_thumbnails_all_instruments(inst_list)
-    return JsonResponse({'thumbnails': thumbnails}, json_dumps_params={'indent': 2})
-
 def thumbnails_by_instrument(request, inst):
     """Return a list of available thumbnails in the filesystem for the
     given instrument.
