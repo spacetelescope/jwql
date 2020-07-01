@@ -1,3 +1,46 @@
+0.23.0 (2020-07-01)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- The ``jwql_web_app`` PowerPoint presentation has been updated
+- The bokeh templating software is now has full API documentation
+- Updated ``README`` and About webpage to reflect changes to development team members
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Added webpage to view FITS headers of each extension for a given dataset
+- Added webpage for displaying Dark Monitor results with ``bokeh`` plots
+- Added webpage for viewing contents of a given JWQL database table
+- Added webpage for querying and displaying anomaly results
+- Added slider bar for easily navigating through integrations in preview image display
+- The list of anomalies one can flag in a preview image is now instrument specific
+
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- The ``jwql-3.6`` conda environment now uses the ``astroconda`` channel instead of ``astroconda-dev``
+- Added Bias Monitor module, which currently monitors the bias levels for NIRCam
+- Added Readnoise Monitor module, which monitors readnoise for all instruments except FGS
+- Added Bad Pixel Monitor module, which tracks bad pixels for all instruments
+- Cron job logs now include a print out of the complete ``conda`` environment being used
+
+
+Bug Fixes
+---------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Fixed broken link to ``numpydoc`` docstring convention in Style Guide
+
+
 0.22.0 (2019-08-26)
 ===================
 
