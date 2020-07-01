@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>Home - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+    	<h2>Anomaly Query Form Step 2</h2>
+        <hr>
+
+        <br>
+        
+        Continue to submit form to search the database for anomalies across various instruments and metadata.
+        <hr>
+            <div class = "row">  
+                <div class = "col-2">
+                    <!--Load the file type form from the view-->
+                    <div class="file_type_form">
+                        <h5>File Type</h5>
+                        <form action="" method="post">
+                            <!--Django Cross-Site Request Forgery magic-->
+                            {{ csrf_input }}
+                            <!--Show the field forms-->
+                            {% for field in filetype_form %}
+                                {% for subwidget in field.subwidgets %}
+                                    <li class="anomaly_choice">{{subwidget}}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            <input type="submit" value="Save">
+                        </form>
+                    </div>
+                </div>
+                <div class = "col-3">
+                    <!-- Load the aperture form from the view -->
+                    <div>
+                        <h5>Aperture</h5>
+                        <form action="" method="post">
+                            <!--Django Cross-Site Request Forgery magic-->
+                            {{ csrf_input }}
+                            <!--Show the field forms-->
+                            {% for field in aperture_form %}
+                                {% for subwidget in field.subwidgets %}
+                                    <li class="anomaly_choice">{{subwidget}}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            <input type="submit" value="Save">
+                        </form>
+                    </div>
+                </div>
+
+                <div class = "col-4">
+                    <!-- Load the observing mode form from the view -->
+                    <div>
+                        <h5>Observing Mode</h5>
+                        <form action="" method="post">
+                            <!--Django Cross-Site Request Forgery magic-->
+                            {{ csrf_input }}
+                            <!--Show the field forms-->
+                            {% for field in observing_mode_form %}
+                                {% for subwidget in field.subwidgets %}
+                                    <li class="anomaly_choice">{{subwidget}}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            <input type="submit" value="Save">
+                        </form>
+                    </div>
+                </div>
+
+
+                <div class="col-5">
+                    <!--Load the filter form from the view-->
+                    <div class="filter_form">
+                        <h5>Filter</h5>
+                        <form action="" method="post">
+                            <!--Django Cross-Site Request Forgery magic-->
+                            {{ csrf_input }}
+                            <!--Show the field forms-->
+                            {% for field in filter_form %}
+                                {% for subwidget in field.subwidgets %}
+                                    <li class="anomaly_choice">{{subwidget}}</li>
+                                    <!-- Reorganize checkboxes to multiple columns -->
+                                {% endfor %}
+                            {% endfor %}
+                            <input type="submit" value="Save">
+                        </form>
+                    </div>
+                </div>
+            </div>
+            Current anomaly options: {{current_anomalies}}
+            Instruments chosen: {{instruments_chosen_cfg}}
+            <div>
+                Observing modes chosen: {{observing_modes_chosen}}
+            </div>
+            <div>
+                Filters chosen: {{filters_chosen}}
+            </div>
+            <div>
+                Apertures chosen: {{apertures_chosen}}
+                <!-- Currently, one can submit choose either observing mode OR filter OR aperture, but you can only choose one of these -->
+                <!-- The query_config file does store one of these values, but it's not accessible in its updated version in forms.py -->
+            </div>
+            <a role="button" class="btn btn-primary my-2" href={{ url( 'jwql:query_anomaly_3' ) }}>Next</a>  <!--change to query_anomaly_3-->
+        </main>
+
+{% endblock %}

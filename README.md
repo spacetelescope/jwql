@@ -80,7 +80,7 @@ Next, activate the `base` or `root` environment (depending on your version of `c
 source activate base/root
 ```
 
-Lastly, create the `jwql` environment with either Python 3.5 or 3.6, via the `environment_python_3_5.yml` or `environment_python_3_6.yml` file, respectively. We recommend installing with the 3.6 version:
+Lastly, create the `jwql` environment via the `environment_python_3_6.yml` file:
 
 ```
 conda env create -f environment_python_3_6.yml --name jwql-3.6
@@ -94,7 +94,7 @@ Next, you need to install the `jwql` package under development mode.  This can b
 python setup.py develop
 ```
 
-or 
+or
 
 ```
 pip install -e .
@@ -145,14 +145,22 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 
 ## Current Development Team
 - Matthew Bourque (INS) [@bourque](https://github.com/bourque)
-- Lauren Chambers (INS) [@laurenmarietta](https://github.com/laurenmarietta)
 - Misty Cracraft (INS) [@cracraft](https://github.com/cracraft)
-- Joe Filippazzo (INS) [@hover2pi](https://github.com/hover2pi)
+- Mike Engesser (INS) [@mengesser](https://github.com/mengesser)
+- Mees Fix (INS) [@mfixstsci](https://github.com/mfixstsci)
 - Bryan Hilbert (INS) [@bilhbert4](https://github.com/bhilbert4)
 - Graham Kanarek (INS) [@gkanarek](https://github.com/gkanarek)
+- Teagan King (INS) [@tnking97](https://github.com/tnking97)
+- Maria Pena-Guerrero [@penaguerrero](https://github.com/penaguerrero)
+- Ben Sunnquist (INS) [@bsunnquist](https://github.com/bsunnquist)
+
+## Past Development Team Members
+- Lauren Chambers (INS) [@laurenmarietta](https://github.com/laurenmarietta)
+- Joe Filippazzo (INS) [@hover2pi](https://github.com/hover2pi)
+- Sara Ogaz (DMD) [@SaOgaz](https://github.com/SaOgaz)
 - Catherine Martlin (INS) [@catherine-martlin](https://github.com/catherine-martlin)
 - Johannes Sahlmann (INS) [@Johannes-Sahlmann](https://github.com/johannes-sahlmann)
-- Ben Sunnquist (INS) [@bsunnquist](https://github.com/bsunnquist)
+
 
 ## Acknowledgments:
 - Faith Abney (DMD)
@@ -194,7 +202,6 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Prem Mishra (ITSD)
 - Don Mueller (ITSD)
 - Maria Antonia Nieto-Santisteban (SEITO)
-- Sara Ogaz (DMD) [@SaOgaz](https://github.com/SaOgaz)
 - Brian O'Sullivan (INS)
 - Joe Pollizzi (JWSTMO)
 - Lee Quick (DMD)

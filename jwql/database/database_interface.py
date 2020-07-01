@@ -79,7 +79,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
 from sqlalchemy.types import ARRAY
 
-from jwql.utils.constants import ANOMALIES, FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT, FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
 from jwql.utils.utils import get_config
 
 ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
@@ -218,7 +218,7 @@ class Monitor(base):
     monitor_name = Column(String(), nullable=False)
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=True)
-    status = Column(Enum('SUCESS', 'FAILURE', name='monitor_status'), nullable=True)
+    status = Column(Enum('SUCCESS', 'FAILURE', name='monitor_status'), nullable=True)
     affected_tables = Column(ARRAY(String, dimensions=1), nullable=True)
     log_file = Column(String(), nullable=False)
 
@@ -241,8 +241,14 @@ def anomaly_orm_factory(class_name):
     data_dict = {}
     data_dict['__tablename__'] = class_name.lower()
 
+    instrument = data_dict['__tablename__'].split('_')[0]
+    instrument_anomalies = []
+    for anomaly in ANOMALIES_PER_INSTRUMENT:
+        if instrument in ANOMALIES_PER_INSTRUMENT[anomaly]:
+            instrument_anomalies.append(anomaly)
+
     # Define anomaly table column names
-    data_dict['columns'] = ANOMALIES
+    data_dict['columns'] = instrument_anomalies
     data_dict['names'] = [name.replace('_', ' ') for name in data_dict['columns']]
 
     # Create a table with the appropriate Columns
@@ -381,7 +387,11 @@ def monitor_orm_factory(class_name):
 
 
 # Create tables from ORM factory
-Anomaly = anomaly_orm_factory('anomaly')
+NIRCamAnomaly = anomaly_orm_factory('nircam_anomaly')
+NIRISSAnomaly = anomaly_orm_factory('niriss_anomaly')
+NIRSpecAnomaly = anomaly_orm_factory('nirspec_anomaly')
+MIRIAnomaly = anomaly_orm_factory('miri_anomaly')
+FGSAnomaly = anomaly_orm_factory('fgs_anomaly')
 NIRCamDarkQueryHistory = monitor_orm_factory('nircam_dark_query_history')
 NIRCamDarkPixelStats = monitor_orm_factory('nircam_dark_pixel_stats')
 NIRCamDarkDarkCurrent = monitor_orm_factory('nircam_dark_dark_current')
@@ -397,7 +407,22 @@ MIRIDarkDarkCurrent = monitor_orm_factory('miri_dark_dark_current')
 FGSDarkQueryHistory = monitor_orm_factory('fgs_dark_query_history')
 FGSDarkPixelStats = monitor_orm_factory('fgs_dark_pixel_stats')
 FGSDarkDarkCurrent = monitor_orm_factory('fgs_dark_dark_current')
-
+NIRCamBiasQueryHistory = monitor_orm_factory('nircam_bias_query_history')
+NIRCamBiasStats = monitor_orm_factory('nircam_bias_stats')
+NIRCamBadPixelQueryHistory = monitor_orm_factory('nircam_bad_pixel_query_history')
+NIRCamBadPixelStats = monitor_orm_factory('nircam_bad_pixel_stats')
+NIRISSBadPixelQueryHistory = monitor_orm_factory('niriss_bad_pixel_query_history')
+NIRISSBadPixelStats = monitor_orm_factory('niriss_bad_pixel_stats')
+FGSBadPixelQueryHistory = monitor_orm_factory('fgs_bad_pixel_query_history')
+FGSBadPixelStats = monitor_orm_factory('fgs_bad_pixel_stats')
+MIRIBadPixelQueryHistory = monitor_orm_factory('miri_bad_pixel_query_history')
+MIRIBadPixelStats = monitor_orm_factory('miri_bad_pixel_stats')
+NIRSpecBadPixelQueryHistory = monitor_orm_factory('nirspec_bad_pixel_query_history')
+NIRSpecBadPixelStats = monitor_orm_factory('nirspec_bad_pixel_stats')
+NIRCamReadnoiseQueryHistory = monitor_orm_factory('nircam_readnoise_query_history')
+NIRCamReadnoiseStats = monitor_orm_factory('nircam_readnoise_stats')
+NIRISSReadnoiseQueryHistory = monitor_orm_factory('niriss_readnoise_query_history')
+NIRISSReadnoiseStats = monitor_orm_factory('niriss_readnoise_stats')
 
 if __name__ == '__main__':
 

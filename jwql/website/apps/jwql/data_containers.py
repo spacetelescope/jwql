@@ -10,6 +10,7 @@ Authors
 
     - Lauren Chambers
     - Matthew Bourque
+    - Teagan King
 
 Use
 ---
@@ -28,9 +29,12 @@ import re
 import tempfile
 
 from astropy.io import fits
+from astropy.table import Table
 from astropy.time import Time
 from django.conf import settings
 import numpy as np
+from operator import itemgetter
+
 
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
@@ -45,6 +49,7 @@ from astroquery.mast import Mast
 from jwedb.edb_interface import mnemonic_inventory
 
 from jwql.database import database_interface as di
+from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
@@ -147,7 +152,7 @@ def get_all_proposals():
     return proposals
 
 
-def get_current_flagged_anomalies(rootname):
+def get_current_flagged_anomalies(rootname, instrument):
     """Return a list of currently flagged anomalies for the given
     ``rootname``
 
@@ -164,7 +169,13 @@ def get_current_flagged_anomalies(rootname):
         (e.g. ``['snowball', 'crosstalk']``)
     """
 
-    query = di.session.query(di.Anomaly).filter(di.Anomaly.rootname == rootname).order_by(di.Anomaly.flag_date.desc()).limit(1)
+    table_dict = {}
+    for instrument in JWST_INSTRUMENT_NAMES_MIXEDCASE:
+        table_dict[instrument.lower()] = getattr(di, '{}Anomaly'.format(JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument]))
+
+    table = table_dict[instrument.lower()]
+    query = di.session.query(table).filter(table.rootname == rootname).order_by(table.flag_date.desc()).limit(1)
+
     all_records = query.data_frame
     if not all_records.empty:
         current_anomalies = [col for col, val in np.sum(all_records, axis=0).items() if val]
@@ -475,7 +486,8 @@ def get_filenames_by_rootname(rootname):
     Parameters
     ----------
     rootname : str
-        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+        The rootname of interest (e.g.
+        ``jw86600008001_02101_00007_guider2``).
 
     Returns
     -------
@@ -494,7 +506,7 @@ def get_filenames_by_rootname(rootname):
 
 
 def get_header_info(filename):
-    """Return the header information for a given ``file``.
+    """Return the header information for a given ``filename``.
 
     Parameters
     ----------
@@ -508,11 +520,47 @@ def get_header_info(filename):
         The primary FITS header for the given ``file``.
     """
 
-    dirname = filename[:7]
-    fits_filepath = os.path.join(FILESYSTEM_DIR, dirname, filename)
-    header = fits.getheader(fits_filepath, ext=0).tostring(sep='\n')
+    # Initialize dictionary to store header information
+    header_info = {}
 
-    return header
+    # Open the file
+    fits_filepath = os.path.join(FILESYSTEM_DIR, filename[:7], '{}.fits'.format(filename))
+    hdulist = fits.open(fits_filepath)
+
+    # Extract header information from file
+    for ext in range(0, len(hdulist)):
+
+        # Initialize dictionary to store header information for particular extension
+        header_info[ext] = {}
+
+        # Get header
+        header = fits.getheader(fits_filepath, ext=ext)
+
+        # Determine the extension name
+        if ext == 0:
+            header_info[ext]['EXTNAME'] = 'PRIMARY'
+        else:
+            header_info[ext]['EXTNAME'] = header['EXTNAME']
+
+        # Get list of keywords and values
+        exclude_list = ['', 'COMMENT']
+        header_info[ext]['keywords'] = [item for item in list(header.keys()) if item not in exclude_list]
+        header_info[ext]['values'] = []
+        for key in header_info[ext]['keywords']:
+            header_info[ext]['values'].append(hdulist[ext].header[key])
+
+    # Close the file
+    hdulist.close()
+
+    # Build tables
+    for ext in header_info:
+        table = Table([header_info[ext]['keywords'], header_info[ext]['values']], names=('Key', 'Value'))
+        temp_path_for_html = os.path.join(tempfile.mkdtemp(), '{}_table.html'.format(header_info[ext]['EXTNAME']))
+        with open(temp_path_for_html, 'w') as f:
+            table.write(f, format='jsviewer', jskwargs={'display_length': 20})
+        header_info[ext]['table'] = open(temp_path_for_html, 'r').read()
+
+    return header_info
 
 
 def get_image_info(file_root, rewrite):
@@ -679,7 +727,8 @@ def get_preview_images_by_rootname(rootname):
     Parameters
     ----------
     rootname : str
-        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+        The rootname of interest (e.g.
+        ``jw86600008001_02101_00007_guider2``).
 
     Returns
     -------
@@ -745,6 +794,89 @@ def get_proposal_info(filepaths):
     proposal_info['num_files'] = num_files
 
     return proposal_info
+
+  
+def get_thumbnails_all_instruments(instruments):
+    """Return a list of thumbnails available in the filesystem for all
+    instruments given requested parameters.
+
+    Returns
+    -------
+    thumbnails : list
+        A list of thumbnails available in the filesystem for the
+        given instrument.
+    """
+
+    # Make sure instruments are of the proper format (e.g. "Nircam")
+    thumbnail_list = []
+    for inst in instruments:  # JWST_INSTRUMENT_NAMES:
+        instrument = inst[0].upper()+inst[1:].lower()
+
+        ### adjust query based on request
+
+        # Query MAST for all rootnames for the instrument
+        service = "Mast.Jwst.Filtered.{}".format(instrument)
+        params = {"columns": "filename, expstart, filter, readpatt, date_beg, date_end, apername, exp_type",
+                  "filters": [{"paramName": "expstart",
+                  "values": [{"min": 57404.04, "max": 57404.07}], }]}
+        response = Mast.service_request_async(service, params)
+        results = response[0].json()['data']
+
+        # Parse the results to get the rootnames
+        filenames = [result['filename'].split('.')[0] for result in results]
+
+        # Get list of all thumbnails
+        thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
+
+    thumbnail_list.extend(thumbnails)
+
+    # Get subset of preview images that match the filenames
+    thumbnails = [os.path.basename(item) for item in thumbnail_list if
+                  os.path.basename(item).split('_integ')[0] in filenames]
+
+    return thumbnails
+
+ 
+def get_jwqldb_table_view_components(request):
+    """Renders view for JWQLDB table viewer.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    None
+    """
+
+    if request.method == 'POST':
+        # Make dictionary of tablename : class object
+        # This matches what the user selects in the drop down to the python obj.
+        tables_of_interest = {}
+        for item in di.__dict__.keys():
+            table = getattr(di, item)
+            if hasattr(table, '__tablename__'):
+                tables_of_interest[table.__tablename__] = table
+
+        session, base, engine, meta = load_connection(get_config()['connection_string'])
+        tablename_from_dropdown = request.POST['db_table_select']
+        table_object = tables_of_interest[tablename_from_dropdown]  # Select table object
+
+        result = session.query(table_object)
+
+        result_dict = [row.__dict__ for row in result.all()]  # Turn query result into list of dicts
+        column_names = table_object.__table__.columns.keys()
+
+        # Build list of column data based on column name.
+        data = []
+        for column in column_names:
+            column_data = list(map(itemgetter(column), result_dict))
+            data.append(column_data)
+
+        # Build table.
+        table_to_display = Table(data, names=column_names)
+        table_to_display.show_in_browser(jsviewer=True, max_lines=-1)  # Negative max_lines shows all lines avaliable.
 
 
 def get_thumbnails_by_instrument(inst):
@@ -816,7 +948,8 @@ def get_thumbnails_by_rootname(rootname):
     Parameters
     ----------
     rootname : str
-        The rootname of interest (e.g. ``jw86600008001_02101_00007_guider2``).
+        The rootname of interest (e.g.
+        ``jw86600008001_02101_00007_guider2``).
 
     Returns
     -------
