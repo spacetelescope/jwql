@@ -8,7 +8,7 @@ Project & API Documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - The ``jwql_web_app`` PowerPoint presentation has been updated
-- The bokeh templating software is now has full API documentation
+- The bokeh templating software now has full API documentation
 - Updated ``README`` and About webpage to reflect changes to development team members
 
 Web Application
