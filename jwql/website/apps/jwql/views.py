@@ -459,6 +459,7 @@ def jwqldb_table_viewer(request):
 
     session, base, engine, meta = load_connection(get_config()['connection_string'])
     all_jwql_tables = engine.table_names()
+    all_jwql_tables.remove('django_migrations')  # No necessary information.
 
     template = 'jwqldb_table_viewer.html'
     context = {
