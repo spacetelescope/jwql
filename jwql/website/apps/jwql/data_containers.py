@@ -876,7 +876,8 @@ def get_jwqldb_table_view_components(request):
 
         # Build table.
         table_to_display = Table(data, names=column_names)
-        table_to_display.show_in_browser(jsviewer=True, max_lines=-1)  # Negative max_lines shows all lines avaliable.
+        # Table html is returned as list of strings, here we strip it.
+        table_to_display_html = ''.join(map(str, table_to_display.pformat_all(html='True')))
 
 
 def get_thumbnails_by_instrument(inst):

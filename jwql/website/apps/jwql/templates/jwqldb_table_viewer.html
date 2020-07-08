@@ -28,6 +28,9 @@
             </div>
             <button name=make_table_view class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
             <br>
+            <div class="db_table_html">
+                {{ table_to_display_html|safe }}
+            </div>
         </form>
 	</main>
 
