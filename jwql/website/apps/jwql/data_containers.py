@@ -879,6 +879,7 @@ def get_jwqldb_table_view_components(request):
         # Table html is returned as list of strings, here we strip it.
         table_to_display_html = ''.join(map(str, table_to_display.pformat_all(html='True')))
 
+        return table_to_display_html
 
 def get_thumbnails_by_instrument(inst):
     """Return a list of thumbnails available in the filesystem for the

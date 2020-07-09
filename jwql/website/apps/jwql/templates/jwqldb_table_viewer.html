@@ -27,11 +27,15 @@
                 </select>
             </div>
             <button name=make_table_view class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
+            <br><br>
             <br>
-            <div class="db_table_html">
-                {{ table_to_display_html|safe }}
-            </div>
+            {% if table_html %}
+                <h4>{{ tablename|safe }}</h4><hr>
+                {{ table_html|safe }}
+            {% endif %}
         </form>
+
+
 	</main>
 
 {% endblock %}

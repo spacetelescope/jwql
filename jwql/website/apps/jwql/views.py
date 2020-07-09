@@ -455,7 +455,7 @@ def jwqldb_table_viewer(request):
         Outgoing response sent to the webpage
     """
 
-    table_view_components = get_jwqldb_table_view_components(request)
+    table_html = get_jwqldb_table_view_components(request)
 
     session, base, engine, meta = load_connection(get_config()['connection_string'])
     all_jwql_tables = engine.table_names()
@@ -465,7 +465,7 @@ def jwqldb_table_viewer(request):
     context = {
         'inst': '',
         'all_jwql_tables': all_jwql_tables,
-        'table_view_components': table_view_components}
+        'table_html': table_html}
 
     return render(request, template, context)
 
