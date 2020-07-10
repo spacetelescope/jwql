@@ -34,6 +34,7 @@ from astropy.time import Time
 from django.conf import settings
 import numpy as np
 from operator import itemgetter
+import pandas as pd
 
 
 # astroquery.mast import that depends on value of auth_mast
@@ -874,10 +875,12 @@ def get_jwqldb_table_view_components(request):
             column_data = list(map(itemgetter(column), result_dict))
             data.append(column_data)
 
+        data = dict(zip(column_names, data))
+
         # Build table.
-        table_to_display = Table(data, names=column_names)
+        df = pd.DataFrame(data)
         # Table html is returned as list of strings, here we strip it.
-        table_to_display_html = ''.join(map(str, table_to_display.pformat_all(html='True')))
+        table_to_display_html = df.to_html(index=False)
 
         return table_to_display_html
 

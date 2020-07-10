@@ -28,9 +28,9 @@
             </div>
             <button name=make_table_view class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
             <br><br>
+            <h4> {{ table_name|safe }} </h4><hr>
             <br>
             {% if table_html %}
-                <h4>{{ tablename|safe }}</h4><hr>
                 {{ table_html|safe }}
             {% endif %}
         </form>
