@@ -190,22 +190,28 @@ def image_stack(file_list):
     return cube, exptimes
 
 
-def run_calwebb_detector1_steps(input_file, steps):
+def run_calwebb_detector1_steps(input_file, steps, steps_to_save=False):
     """Run the steps of ``calwebb_detector1`` specified in the steps
-    dictionary on the input file
-
-    Parameters
-    ----------
-    input_file : str
+        dictionary on the input file
+        
+        Parameters
+        ----------
+        input_file : str
         File on which to run the pipeline steps
-
-    steps : collections.OrderedDict
+        
+        steps : collections.OrderedDict
         Keys are the individual pipeline steps (as seen in the
         ``PIPE_KEYWORDS`` values above). Boolean values indicate whether
         a step should be run or not. Steps are run in the official
         ``calwebb_detector1`` order.
-    """
-
+        
+        steps_to_save: Single Boolean or collections.OrderedDict
+        If not provided, set to False by default. Otherwise,
+        Keys are the individual pipeline steps (as seen in the
+        ``PIPE_KEYWORDS`` values above). Boolean values indicate whether
+        the output of a step should be saved or not.
+        """
+    
     first_step_to_be_run = True
     for step_name in steps:
         if steps[step_name]:
@@ -213,15 +219,31 @@ def run_calwebb_detector1_steps(input_file, steps):
                 model = PIPELINE_STEP_MAPPING[step_name].call(input_file)
                 first_step_to_be_run = False
             else:
-                model = PIPELINE_STEP_MAPPING[step_name].call(model)
+                if step_name == 'rate':
+                    model = PIPELINE_STEP_MAPPING[step_name].call(model,save_opt='True', opt_name='rateint')
+                else:
+                    model = PIPELINE_STEP_MAPPING[step_name].call(model)
             suffix = step_name
+            
+            #If steps_to_save is given, save the output of the givens steps
+            if steps_to_save != False:
+                if steps_to_save[suffix]:
+                    if suffix != 'rate':
+                        output_filename = input_file.replace('_uncal.fits', '_{}.fits'.format(suffix))
+                        model.save(output_filename)
+                    else:
+                        output_filename = input_file.replace('_uncal.fits', '_{}.fits'.format(suffix))
+                        model[0].save(output_filename)
+
+#Default output functionality: Save the ramp fitting step, or the last step run
+if steps_to_save == False:
     output_filename = input_file.replace('.fits', '_{}.fits'.format(suffix))
     if suffix != 'rate':
         model.save(output_filename)
-    else:
-        model[0].save(output_filename)
+        else:
+            model[0].save(output_filename)
 
-    return output_filename
+return output_filename
 
 
 def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True, save_fitopt=True):
