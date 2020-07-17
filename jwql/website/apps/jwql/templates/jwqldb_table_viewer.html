@@ -12,7 +12,7 @@
     	<h2>Explore JWQL database tables through the web browser</h2><hr>
 
         <p align="justify">
-        This page provides users to interactively explore the JWQL database tables with Astropy Tables Javascript Viewer.  Simply select a table from the dropdown menu.
+        This page provides users to interactively explore the JWQL database tables.  Simply select a table from the dropdown menu.
         </p><br>
 
         <form action="" method="post" id="view_db_table">
@@ -28,9 +28,9 @@
             </div>
             <button name=make_table_view class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
             <br><br>
-            <h4> {{ table_name|safe }} </h4><hr>
-            <br>
             {% if table_html %}
+                <h4> {{ table_name|safe }} </h4><hr>
+                <button name=download_data class="btn btn-primary my-2">Download Data</button>
                 {{ table_html|safe }}
             {% endif %}
         </form>
@@ -38,4 +38,8 @@
 
 	</main>
 
+{% endblock %}
+
+{% block js %}
+    
 {% endblock %}
