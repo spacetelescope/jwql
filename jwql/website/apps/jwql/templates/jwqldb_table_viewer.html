@@ -28,18 +28,44 @@
             </div>
             <button name=make_table_view class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
             <br><br>
-            {% if table_html %}
+
+            {% if table_name %}
                 <h4> {{ table_name|safe }} </h4><hr>
                 <button name=download_data class="btn btn-primary my-2">Download Data</button>
-                {{ table_html|safe }}
+                <table id="example" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            {% for column in table_columns %}
+                                <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in table_rows %}
+                            <tr>
+                                {% for value in row %}
+                                    <td>{{ value }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            {% for column in table_columns %}
+                                <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </tfoot>
+                </table>
             {% endif %}
         </form>
 
-
 	</main>
 
-{% endblock %}
-
-{% block js %}
-    
+    <!-- JS for datatables rendering and sorting. -->
+    <script>
+        $(document).ready(function() {
+            $('#example').DataTable();
+        } );
+    </script>
 {% endblock %}

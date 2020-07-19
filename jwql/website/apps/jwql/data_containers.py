@@ -879,14 +879,11 @@ def get_jwqldb_table_view_components(request):
 
         # Build table.
         table_meta_data = pd.DataFrame(data)
-        # Table html is returned as list of strings, here we strip it.
-        table_to_display_html = table_meta_data.to_html(index=False)
     else:
-        table_to_display_html = None 
         table_meta_data = None 
         tablename_from_dropdown = None
 
-    return table_to_display_html, table_meta_data, tablename_from_dropdown
+    return table_meta_data, tablename_from_dropdown
 
 def get_thumbnails_by_instrument(inst):
     """Return a list of thumbnails available in the filesystem for the

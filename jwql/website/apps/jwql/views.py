@@ -455,17 +455,25 @@ def jwqldb_table_viewer(request):
         Outgoing response sent to the webpage
     """
 
-    table_html, table_meta, tablename = get_jwqldb_table_view_components(request)
+    table_meta, tablename = get_jwqldb_table_view_components(request)
     session, base, engine, meta = load_connection(get_config()['connection_string'])
     all_jwql_tables = engine.table_names()
     all_jwql_tables.remove('django_migrations')  # No necessary information.
 
     template = 'jwqldb_table_viewer.html'
-    context = {
-        'inst': '',
-        'all_jwql_tables': all_jwql_tables,
-        'table_html': table_html,
-        'table_name': tablename}
+    
+    if table_meta.empty:
+        context = {
+            'inst': '',
+            'all_jwql_tables': all_jwql_tables}
+    else:
+        context = {
+            'inst': '',
+            'all_jwql_tables': all_jwql_tables,
+            'table_columns': table_meta.columns.values,
+            'table_rows': table_meta.values,
+            'table_name': tablename}
+
 
     return render(request, template, context)
 
