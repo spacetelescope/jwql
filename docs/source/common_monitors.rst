@@ -15,13 +15,13 @@ bias_monitor.py
     :undoc-members:
 
 bad_pixel_monitor.py
----------------
+--------------------
 .. automodule:: jwql.instrument_monitors.common_monitors.bad_pixel_monitor
     :members:
     :undoc-members:
 
 readnoise_monitor.py
----------------
+--------------------
 .. automodule:: jwql.instrument_monitors.common_monitors.readnoise_monitor
     :members:
     :undoc-members:
