@@ -62,6 +62,7 @@ from jwql.utils.credentials import get_mast_token
 from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
 
 
+
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_images')
@@ -837,7 +838,7 @@ def get_thumbnails_all_instruments(instruments):
 
     return thumbnails
 
- 
+
 def get_jwqldb_table_view_components(request):
     """Renders view for JWQLDB table viewer.
 
@@ -851,7 +852,7 @@ def get_jwqldb_table_view_components(request):
     None
     """
 
-    if request.method == 'POST':
+    def _build_table(request):
         # Make dictionary of tablename : class object
         # This matches what the user selects in the drop down to the python obj.
         tables_of_interest = {}
@@ -860,7 +861,7 @@ def get_jwqldb_table_view_components(request):
             if hasattr(table, '__tablename__'):
                 tables_of_interest[table.__tablename__] = table
 
-        session, base, engine, meta = load_connection(get_config()['connection_string'])
+        session, _, _, _ = load_connection(get_config()['connection_string'])
         tablename_from_dropdown = request.POST['db_table_select']
         table_object = tables_of_interest[tablename_from_dropdown]  # Select table object
 
@@ -879,11 +880,25 @@ def get_jwqldb_table_view_components(request):
 
         # Build table.
         table_meta_data = pd.DataFrame(data)
-    else:
-        table_meta_data = None 
-        tablename_from_dropdown = None
 
-    return table_meta_data, tablename_from_dropdown
+        return table_meta_data, tablename_from_dropdown
+
+    if 'make_table_view' in request.POST:
+        table_data, table_name = _build_table(request)
+        return table_data, table_name
+    elif 'download_data' in request.POST:
+        table_data = None 
+        table_name = None
+        # Download data table here
+        # table_data, table_name = _build_table(request)
+        # export(request, table_data)
+    else:
+        # When coming from home/monitor views
+        table_data = None 
+        table_name = None
+
+    return table_data, table_name
+
 
 def get_thumbnails_by_instrument(inst):
     """Return a list of thumbnails available in the filesystem for the

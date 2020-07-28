@@ -37,9 +37,12 @@ Dependencies
     placed in the ``jwql/utils/`` directory.
 """
 
+import csv
 import os
 
-from django.http import JsonResponse
+
+from django.http import JsonResponse, HttpResponse
+
 # from django import forms
 from django.shortcuts import render
 
@@ -456,26 +459,61 @@ def jwqldb_table_viewer(request):
     """
 
     table_meta, tablename = get_jwqldb_table_view_components(request)
-    session, base, engine, meta = load_connection(get_config()['connection_string'])
+    _, _, engine, _ = load_connection(get_config()['connection_string'])
     all_jwql_tables = engine.table_names()
     all_jwql_tables.remove('django_migrations')  # No necessary information.
+    jwql_tables_by_instrument = {}
+    instruments = ['nircam', 'nirspec', 'niriss', 'miri', 'fgs']
+
+    #  Sort tables by instrument
+    for instrument in instruments:
+        jwql_tables_by_instrument[instrument] = [tablename for tablename in all_jwql_tables if instrument in tablename]
+
+    # Don't forget tables that dont contain instrument specific instrument information.
+    jwql_tables_by_instrument['other'] = [table for table in all_jwql_tables if not any(instrument in table for instrument in instruments)] 
 
     template = 'jwqldb_table_viewer.html'
-    
-    if table_meta.empty:
+
+    # If value of table_meta is None (when coming from home page)
+    if table_meta is None:
         context = {
             'inst': '',
-            'all_jwql_tables': all_jwql_tables}
+            'all_jwql_tables': jwql_tables_by_instrument}
+    # If table_meta is empty, just render table with no data.
+    elif table_meta.empty:
+        context = {
+            'inst': '',
+            'all_jwql_tables': jwql_tables_by_instrument,
+            'table_columns': table_meta.columns.values,
+            'table_name': tablename}
+    # Else, everything is good to go, render the table.
     else:
         context = {
             'inst': '',
-            'all_jwql_tables': all_jwql_tables,
+            'all_jwql_tables': jwql_tables_by_instrument,
             'table_columns': table_meta.columns.values,
             'table_rows': table_meta.values,
             'table_name': tablename}
 
 
     return render(request, template, context)
+
+
+def export(request):
+    import pandas as pd
+    # return HttpResponse('Hello.')
+    df = pd.DataFrame({'age':    [ 3,  29],
+                   'height': [94, 170],
+                   'weight': [31, 115]})
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(df.columns.values)
+    for _, row in df.iterrows():
+        writer.writerow(row.values)
+
+    return response
 
 
 def not_found(request, *kwargs):

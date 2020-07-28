@@ -81,6 +81,7 @@ urlpatterns = [
     path('query_anomaly_3/', views.query_anomaly_3, name='query_anomaly_3'),
     path('query_submit/', views.query_submit, name='query_submit'),
     path('table_viewer', views.jwqldb_table_viewer, name='table_viewer'),
+    path('export', views.export, name='export'),
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
     re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),
