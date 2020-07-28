@@ -2,9 +2,9 @@
 common_monitors
 ***************
 
-dark_monitor.py
----------------
-.. automodule:: jwql.instrument_monitors.common_monitors.dark_monitor
+bad_pixel_monitor.py
+--------------------
+.. automodule:: jwql.instrument_monitors.common_monitors.bad_pixel_monitor
     :members:
     :undoc-members:
 
@@ -14,9 +14,9 @@ bias_monitor.py
     :members:
     :undoc-members:
 
-bad_pixel_monitor.py
---------------------
-.. automodule:: jwql.instrument_monitors.common_monitors.bad_pixel_monitor
+dark_monitor.py
+---------------
+.. automodule:: jwql.instrument_monitors.common_monitors.dark_monitor
     :members:
     :undoc-members:
 
