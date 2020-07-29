@@ -12,3 +12,9 @@ docs/source/api/
 htmlcov/
 *.sqlite3
 jwql/website/static/*.csv
+*.DS_Store
+*.idea/
+*/website/apps/jwql/static/filesystem
+*/website/apps/jwql/static/preview_images
+*/website/apps/jwql/static/thumbnails
+

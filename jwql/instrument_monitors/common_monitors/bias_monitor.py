@@ -54,6 +54,7 @@ from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
 from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats
+from jwql.database.database_interface import NIRSpecBiasQueryHistory, NIRSpecBiasStats
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
 from jwql.utils import instrument_properties
@@ -405,7 +406,7 @@ class Bias():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in ['nircam']:
+        for instrument in ['nircam', 'nirspec']:
             self.instrument = instrument
 
             # Identify which database tables to use
