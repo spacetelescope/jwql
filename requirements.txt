@@ -17,7 +17,6 @@ numpy==1.18.4
 numpydoc==1.0.0
 pandas==1.0.4
 psycopg2==2.8.5
-pygments==2.5.1
 pysiaf==0.7.1
 pytest==5.4.2
 pytest-cov==2.9.0
