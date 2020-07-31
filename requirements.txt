@@ -1,3 +1,4 @@
+pygments==2.5.1
 pytest==5.4.2
 git+https://github.com/spacetelescope/jwst@stable
 git+https://github.com/spacetelescope/jwst_reffiles
