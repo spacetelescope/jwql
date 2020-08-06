@@ -887,11 +887,11 @@ def get_jwqldb_table_view_components(request):
         table_data, table_name = _build_table(request)
         return table_data, table_name
     elif 'download_data' in request.POST:
-        table_data = None 
-        table_name = None
+        # table_data = None 
+        # table_name = None
         # Download data table here
-        # table_data, table_name = _build_table(request)
-        # export(request, table_data)
+        table_data, table_name = _build_table(request)
+        export(request, table=table_data)
     else:
         # When coming from home/monitor views
         table_data = None 

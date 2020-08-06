@@ -470,7 +470,7 @@ def jwqldb_table_viewer(request):
         jwql_tables_by_instrument[instrument] = [tablename for tablename in all_jwql_tables if instrument in tablename]
 
     # Don't forget tables that dont contain instrument specific instrument information.
-    jwql_tables_by_instrument['other'] = [table for table in all_jwql_tables if not any(instrument in table for instrument in instruments)] 
+    jwql_tables_by_instrument['general'] = [table for table in all_jwql_tables if not any(instrument in table for instrument in instruments)] 
 
     template = 'jwqldb_table_viewer.html'
 
@@ -499,21 +499,21 @@ def jwqldb_table_viewer(request):
     return render(request, template, context)
 
 
-def export(request):
-    import pandas as pd
-    # return HttpResponse('Hello.')
-    df = pd.DataFrame({'age':    [ 3,  29],
-                   'height': [94, 170],
-                   'weight': [31, 115]})
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+def export(request, **kwargs):
+    print(kwargs)
+    return HttpResponse('Hello.')
+    # df = pd.DataFrame({'age':    [ 3,  29],
+    #                'height': [94, 170],
+    #                'weight': [31, 115]})
+    # response = HttpResponse(content_type='text/csv')
+    # response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
 
-    writer = csv.writer(response)
-    writer.writerow(df.columns.values)
-    for _, row in df.iterrows():
-        writer.writerow(row.values)
+    # writer = csv.writer(response)
+    # writer.writerow(df.columns.values)
+    # for _, row in df.iterrows():
+    #     writer.writerow(row.values)
 
-    return response
+    # return response
 
 
 def not_found(request, *kwargs):
