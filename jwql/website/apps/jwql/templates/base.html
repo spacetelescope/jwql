@@ -229,5 +229,11 @@
 	    <!-- IMPORTANT: jQuery first, then popper, then Bootstrap -->
 		<script src="{{ static('js/popper.min.js') }}?{% now 'U' %}"></script>
 		<script src="{{ static('js/bootstrap.bundle.min.js') }}?{% now 'U' %}"></script>
+
+		<!-- IMPORTANT: Renders coding blocks in webpages. -->
+		<link rel="stylesheet"
+              href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/styles/default.min.css">
+        <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script>
 	</body>
 </html>
