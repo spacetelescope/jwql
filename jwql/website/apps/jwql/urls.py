@@ -70,6 +70,7 @@ urlpatterns = [
 
     # Common monitor views
     re_path(r'^(?P<inst>({}))/.+_monitor/$'.format(instruments), monitor_views.dark_monitor, name='dark_monitor'),
+    re_path(r'^(?P<inst>({}))/.+_monitor/$'.format(instruments), monitor_views.badpixel_monitor, name='badpixel_monitor'),
 
     # Main site views
     path('about/', views.about, name='about'),
