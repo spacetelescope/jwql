@@ -40,9 +40,9 @@ def test_determine_pipeline_steps():
 
     # Create dictionary of expected pipeline steps
     pipeline_steps_truth = OrderedDict([('group_scale', False),
-                                         ('dq_init', True),
-                                         ('superbias', True),
-                                         ('refpix', True)])
+                                        ('dq_init', True),
+                                        ('superbias', True),
+                                        ('refpix', True)])
 
     # Find the necessary pipeline steps using the readnoise monitor
     pipeline_steps = monitor.determine_pipeline_steps()
@@ -58,9 +58,9 @@ def test_get_amp_stats():
     # Create test data and its corresponding amp stats
     data = np.zeros((100, 100))
     amps = {'1': [(0, 100, 1), (0, 100, 1)]}
-    amp_stats_truth = {'amp1_mean': 0.0, 
-                       'amp1_stddev': 0.0, 
-                       'amp1_n': np.array([10000]), 
+    amp_stats_truth = {'amp1_mean': 0.0,
+                       'amp1_stddev': 0.0,
+                       'amp1_n': np.array([10000]),
                        'amp1_bin_centers': np.array([0.0])}
 
     # Find the amp stats using the readnoise monitor
@@ -94,7 +94,7 @@ def test_get_metadata():
 
 def test_identify_tables():
     """Be sure the correct database tables are identified"""
-    
+
     monitor = readnoise_monitor.Readnoise()
     monitor.instrument = 'nircam'
     monitor.identify_tables()
