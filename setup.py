@@ -25,7 +25,7 @@ REQUIRES = [
     'inflection',
     'ipython',
     'jinja2',
-    'jsonschema==2.6.0',
+    'jsonschema>=2.6.0',
     'jwedb>=0.0.3',
     'matplotlib',
     'nodejs',
