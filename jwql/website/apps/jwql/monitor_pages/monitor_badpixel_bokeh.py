@@ -21,7 +21,6 @@ import os
 
 from astropy.io import fits
 from astropy.time import Time
-from bokeh.models.tickers import LogTicker
 import numpy as np
 
 from jwql.database.database_interface import session
@@ -31,7 +30,7 @@ from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPi
 from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.utils import get_config
+from jwql.utils.utils import get_config, filesystem_path
 from jwql.bokeh_templating import BokehTemplate
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -51,35 +50,126 @@ class BadPixelMonitor(BokehTemplate):
         self.pre_init()
         self.post_init()
 
-    def _dark_mean_image(self):
-        """Update bokeh objects with mean dark image data."""
+    def bad_pixel_history(self, bad_type):
+        """Use the database to construct information on the total number
+        of a given type of bad pixels over time
 
+        Parameters
+        ----------
+        bad_type : str
+            The flavor of bad pixel (e.g. 'hot')
+
+        Returns
+        -------
+        num_bad : numpy.ndarray
+            1D array of the number of bad pixels
+
+        dates : datetime.datetime
+            1D array of dates/times corresponding to num_bad
+        """
+        # Find all the rows corresponding to the requested type of bad pixel
+        rows = [row for row in self.badpixel_table if row.type == bad_type]
+
+        # Extract the dates and number of bad pixels from each entry
+        dates = [row.obs_mid_time for row in rows]
+        num = [len(row.coordinates[0]) for row in rows]
+
+        # If there are no valid entres in the database, return None
+        if len(dates) == 0:
+            return None, None
+
+        # Sort by date to make sure everything is in chronological order
+        chrono = np.argsort(dates)
+        dates = dates[chrono]
+        num = num[chrono]
+
+        # Sum the number of bad pixels found from the earliest entry up to
+        # each new entry
+        num_bad = [np.sum(num[0:i]) for i in range(1, len(num)+1)]
+
+        return num_bad, dates
+
+    def _badpix_image(self):
+        """Update bokeh objects with sample image data.
+        """
         # Open the mean dark current file and get the data
-        mean_dark_image_file = self.pixel_table[-1].mean_dark_image_file
-        mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
-        mean_dark_image_path = os.path.join(mean_slope_dir, mean_dark_image_file)
-        with fits.open(mean_dark_image_path) as hdulist:
+        with fits.open(self.image_file) as hdulist:
             data = hdulist[1].data
 
+        # Grab only one frame
+        ndims = len(data.shape)
+        if ndims == 4:
+            data = data[0, -1, :, :]
+        elif ndims == 3:
+            data = data[-1, :, :]
+        elif ndims == 2:
+            pass
+        else:
+            raise ValueError('Unrecognized number of dimensions in data file: {}'.format(ndims))
+
         # Update the plot with the data and boundaries
-        y_size, x_size = np.shape(data)
-        self.refs["mean_dark_source"].data['image'] = [data]
+        y_size, x_size = data.shape
+        self.refs["bkgd_image"].data['image'] = [data]
         self.refs["stamp_xr"].end = x_size
         self.refs["stamp_yr"].end = y_size
-        self.refs["mean_dark_source"].data['dw'] = [x_size]
-        self.refs["mean_dark_source"].data['dh'] = [x_size]
+        self.refs["bkgd_source"].data['dw'] = [x_size]
+        self.refs["bkgd_source"].data['dh'] = [y_size]
 
         # Set the image color scale
         self.refs["log_mapper"].high = 0
         self.refs["log_mapper"].low = -.2
 
-        # This should add ticks to the colorbar, but it doesn't
-        self.refs["mean_dark_cbar"].ticker = LogTicker()
-
         # Add a title
-        self.refs['mean_dark_image_figure'].title.text = self._aperture
-        self.refs['mean_dark_image_figure'].title.align = "center"
-        self.refs['mean_dark_image_figure'].title.text_font_size = "20px"
+        self.refs['badpix_map_figure'].title.text = '{}: New Bad Pixels'.format(self._aperture)
+        self.refs['badpix_map_figure'].title.align = "center"
+        self.refs['badpix_map_figure'].title.text_font_size = "20px"
+
+
+    def most_recent_coords(self, bad_type):
+        """Return the coordinates of the bad pixels in the most recent
+        database entry for the given bad pixel type
+
+        Parameters
+        ----------
+        bad_type : str
+            The flavor of bad pixel (e.g. 'hot')
+
+        Returns
+        -------
+        coords : tup
+            Tuple containing a list of x coordinates and a list of y
+            coordinates
+        """
+        # Find all the rows corresponding to the requested type of bad pixel
+        rows = [row for row in self.badpixel_table if row.type == bad_type]
+
+        # Extract the dates, number of bad pixels, and files used from each entry
+        dates = [row.obs_mid_time for row in rows]
+        coords = [row.coordinates for row in rows]
+        files = [row.source_files[0] for row in rows]
+
+        # If there are no valid entres in the database, return None
+        if len(dates) == 0:
+            return None, None
+
+        # Sort by date to make sure everything is in chronological order
+        chrono = np.argsort(dates)
+        dates = dates[chrono]
+        coords = coords[chrono]
+        files = files[chrono]
+
+        # Keep track of the latest timestamp
+        self.last_timestamp = dates[-1].isoformat()
+
+        # Grab the name of one of the files used when these bad pixels
+        # were identified. We'll use this as an image on top of which
+        # the bad pixels will be noted. Note that these should be
+        # slope files
+        self.image_file = filesystem_path(files[-1])
+
+        # Return the list of coordinates for the most recent entry
+        return coords[-1]
+
 
     def pre_init(self):
         # Start with default values for instrument and aperture because
@@ -106,58 +196,37 @@ class BadPixelMonitor(BokehTemplate):
         # Load data tables
         self.load_data()
 
-        # Data for mean dark versus time plot
-        datetime_stamps = [row.obs_mid_time for row in self.badpixel_table]
-        times = Time(datetime_stamps, format='datetime', scale='utc')  # Convert to MJD
-        self.timestamps = times.mjd
+        # Populate a dictionary with the number of bad pixels vs time for
+        # each type of bad pixel. We can't get the full list of bad pixel
+        # types from the database itself, because if there is a type of bad
+        # pixel with no found instances, then it won't appear in the database
+        # Also populate a dictionary containing the locations of all of the
+        # bad pixels found in the most recent search
+        self.bad_history = {}
+        self.bad_latest = {}
+        for badtype in BAD_PIXEL_TYPES:
+            num, times = self.bad_pixel_history(badtype)
+            self.bad_history[badtype] = (times, num)
+            self.bad_latest[badtype] = self.most_recent_coords(badtype)
 
 
-        replace the line below with a new function? We need the number of bad pixels for
-        each flavor of bad pixel versus time
-        self.dark_current = [row.mean for row in self.badpixel_table]
 
-        something like this, where self.bad_pixels is a dictionary with keys equal
-        to aperture names (e.g. NRCA1_FULL)
-        self.bad_pixels = XXXX.bad_pixel_trends()
 
         We also want to retrieve the information for just the most recent entry for each
         bad pixel type. We will print the coordinates of the most-recently found bad pixels
         in a table, and show an image (or maybe just a blank 2048x2048 grid) with dots at
         the locations of the new bad pixels.
 
-        So for each type of bad pixel, that's three panels.
+        for each type of bad pixel, there are three items to show:
         1) bad pixel count vs time
-        2) plot of latest locations
+        2) plot of latest locations (overlain on an image?)
         3) table of latest bad pix - API view, so users can download
 
-        for badpix_type in BAD_PIXEL_TYPES:
-            entries = [row for row in self.badpixel_table if row.type == badpix_type]
-            time_stamps = [row.obs_mid_time for row in entries]
-            latest_timestamp = time_stamps[-1].isoformat()
-            latest_xcoord = entries[-1].x_coord
-            latest_ycoord = entries[-1].y_coord
-
-
-
-
-        # Data for dark current histogram plot (full detector)
-        # Just show the last histogram, which is the one most recently
-        # added to the database
-        last_hist_index = -1
-        self.last_timestamp = datetime_stamps[last_hist_index].isoformat()
-        self.full_dark_bin_center = np.array([row.hist_dark_values for
-                                              row in self.dark_table])[last_hist_index]
-        self.full_dark_amplitude = [row.hist_amplitudes for
-                                    row in self.dark_table][last_hist_index]
-        self.full_dark_bottom = np.zeros(len(self.full_dark_amplitude))
-        deltas = self.full_dark_bin_center[1:] - self.full_dark_bin_center[0: -1]
-        self.full_dark_bin_width = np.append(deltas[0], deltas)
 
     def post_init(self):
-
-        self._update_dark_v_time()
-        self._update_hist()
-        self._dark_mean_image()
+        self._update_badpix_v_time()
+        self._update_badpix_loc_plot()
+        self._badpix_image()
 
     def identify_tables(self):
         """Determine which dark current database tables as associated with
@@ -180,7 +249,7 @@ class BadPixelMonitor(BokehTemplate):
 
     def _update_dark_v_time(self):
 
-        # Define y range of dark current v. time plot
+        # Define y range of bad pixel v. time plot
         buffer_size = 0.05 * (max(self.dark_current) - min(self.dark_current))
         self.refs['dark_current_yrange'].start = min(self.dark_current) - buffer_size
         self.refs['dark_current_yrange'].end = max(self.dark_current) + buffer_size
@@ -198,7 +267,6 @@ class BadPixelMonitor(BokehTemplate):
         self.refs['dark_current_time_figure'].title.text_font_size = "20px"
 
     def _update_hist(self):
-
         # Define y range of dark current histogram
         buffer_size = 0.05 * (max(self.full_dark_amplitude) - min(self.full_dark_bottom))
         self.refs['dark_histogram_yrange'].start = min(self.full_dark_bottom)
@@ -212,3 +280,37 @@ class BadPixelMonitor(BokehTemplate):
         self.refs['dark_full_histogram_figure'].title.text = self._aperture
         self.refs['dark_full_histogram_figure'].title.align = "center"
         self.refs['dark_full_histogram_figure'].title.text_font_size = "20px"
+
+    def _update_badpix_loc_plot(self):
+        """Update the plot properties for the plot showing the locations
+        of new bad pixels"""
+        self.refs['bad_pixel_map_xrange'].start = 0
+        self.refs['bad_pixel_map_xrange'].end = 2047
+        self.refs['bad_pixel_map_yrange'].start = 0
+        self.refs['bad_pixel_map_yrange'].end = 2047
+
+        self.refs['bad_pixel_map'].title.text = '{}: New Bad Pixel Locations'.format(self._aperture)
+        self.refs['bad_pixel_map'].title.align = "center"
+        self.refs['bad_pixel_map'].title.text_font_size = "20px"
+
+    def _update_badpix_v_time(self):
+        """Update the plot properties for the plots of the number of bad
+        pixels versus time
+        """
+        for bad_type in BAD_PIXEL_TYPES:
+            # Define y ranges of bad pixel v. time plot
+            buffer_size = 0.05 * (max(self.bad_history[badtype][1]) - min(self.bad_history[badtype][1]))
+            self.refs['{}_history_yrange'.format(bad_type)].start = min(self.bad_history[badtype][1]) - buffer_size
+            self.refs['{}_history_yrange'.format(bad_type)].end = max(self.bad_history[badtype][1]) + buffer_size
+
+            # Define x range of bad_pixel v. time plot
+            horizontal_half_buffer = (max(self.bad_history[badtype][0]) - min(self.bad_history[badtype][0])) * 0.05
+            if horizontal_half_buffer == 0:
+                horizontal_half_buffer = 1.  # day
+            self.refs['{}_history_xrange'.format(bad_type)].start = min(self.bad_history[badtype][0]) - horizontal_half_buffer
+            self.refs['{}_history_xrange'.format(bad_type)].end = max(self.bad_history[badtype][0]) + horizontal_half_buffer
+
+            # Add a title
+            self.refs['{}_history_figure'].title.text = '{}: {} pixels'.format(self._aperture, bad_type)
+            self.refs['{}_history_figure'].title.align = "center"
+            self.refs['{}_history_figure'].title.text_font_size = "20px"

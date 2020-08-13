@@ -34,6 +34,78 @@ FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
+def badpixel_monitor_tabs(instrument):
+    """Creates the various tabs of the bad pixel monitor results page.
+
+    Parameters
+    ----------
+    instrument : str
+        The JWST instrument of interest (e.g. ``nircam``).
+
+    Returns
+    -------
+    div : str
+        The HTML div to render bad pixel monitor plots
+    script : str
+        The JS script to render bad pixel monitor plots
+    """
+    full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
+
+    templates_all_apertures = {}
+    for aperture in full_apertures:
+
+        # Start with default values for instrument and aperture because
+        # BokehTemplate's __init__ method does not allow input arguments
+        monitor_template = monitor_pages.BadPixelMonitor()
+
+        # Set instrument and monitor using DarkMonitor's setters
+        monitor_template.aperture_info = (instrument, aperture)
+        templates_all_apertures[aperture] = monitor_template
+
+    #for reference - here are the bad pixel types
+    #badpix_types_from_flats = ['DEAD', 'LOW_QE', 'OPEN', 'ADJ_OPEN']
+    #badpix_types_from_darks = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
+
+    # We loop over detectors here, and create one tab per detector, rather
+    # than one tab for each plot type, as is done with the dark monitor
+    all_tabs = []
+    for aperture_name, template in templates_all_apertures.items():
+
+        tab_plots = []
+        for badpix_type in BAD_PIXEL_TYPES:
+            history = template.refs["{}_history_figure".format(badpix_type)]
+            history.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+            tab_plots.append(history)
+
+        # Now add the image
+        image = tmeplate.refs["badpix_image_figure"]
+        image.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+        tab_plots.append(image)
+
+        # Let's put three plots per line, but keep the image with the marked
+        # locations last, on its own line
+        num_plots = len(tab_plots) - 1
+        plots_per_line = 3
+        start_index = np.arange(0, num_plots, plots_per_line)
+        badpix_layout = layout(
+            tab_plots[start_index[0]: start_index[1]],
+            tab_plots[start_index[1]: start_index[2]],
+            tab_plots[start_index[2]: start_index[3]],
+            [tab_plots[-1]]
+        )
+
+        badpix_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+        badpix_tab = Panel(child=badpix_layout, title=aperture_name)
+        all_tabs.append(badpix_tab)
+
+    # Build tabs
+    tabs = Tabs(tabs=all_tabs)
+
+    # Return tab HTML and JavaScript to web app
+    script, div = components(tabs)
+
+    return div, script
+
 
 def dark_monitor_tabs(instrument):
     """Creates the various tabs of the dark monitor results page.
