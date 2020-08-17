@@ -62,7 +62,6 @@ from jwql.utils.credentials import get_mast_token
 from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
 
 
-
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_images')
@@ -829,7 +828,7 @@ def get_proposal_info(filepaths):
 
     return proposal_info
 
-  
+
 def get_thumbnails_all_instruments(instruments):
     """Return a list of thumbnails available in the filesystem for all
     instruments given requested parameters.
@@ -844,7 +843,7 @@ def get_thumbnails_all_instruments(instruments):
     # Make sure instruments are of the proper format (e.g. "Nircam")
     thumbnail_list = []
     for inst in instruments:  # JWST_INSTRUMENT_NAMES:
-        instrument = inst[0].upper()+inst[1:].lower()
+        instrument = inst[0].upper() + inst[1:].lower()
 
         ### adjust query based on request
 

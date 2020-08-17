@@ -471,7 +471,7 @@ def jwqldb_table_viewer(request):
         jwql_tables_by_instrument[instrument] = [tablename for tablename in all_jwql_tables if instrument in tablename]
 
     # Don't forget tables that dont contain instrument specific instrument information.
-    jwql_tables_by_instrument['general'] = [table for table in all_jwql_tables if not any(instrument in table for instrument in instruments)] 
+    jwql_tables_by_instrument['general'] = [table for table in all_jwql_tables if not any(instrument in table for instrument in instruments)]
 
     template = 'jwqldb_table_viewer.html'
 
@@ -495,7 +495,6 @@ def jwqldb_table_viewer(request):
             'table_columns': table_meta.columns.values,
             'table_rows': table_meta.values,
             'table_name': tablename}
-
 
     return render(request, template, context)
 
