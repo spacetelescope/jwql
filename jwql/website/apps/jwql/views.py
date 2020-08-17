@@ -71,6 +71,7 @@ from .data_containers import nirspec_trending
 from .data_containers import random_404_page
 from .data_containers import get_jwqldb_table_view_components
 from .data_containers import thumbnails_ajax
+from .data_containers import build_table
 from .forms import AnomalyForm
 from .forms import AnomalySubmitForm
 from .forms import ApertureForm
@@ -499,21 +500,22 @@ def jwqldb_table_viewer(request):
     return render(request, template, context)
 
 
-def export(request, **kwargs):
-    print(kwargs)
-    return HttpResponse('Hello.')
-    # df = pd.DataFrame({'age':    [ 3,  29],
-    #                'height': [94, 170],
-    #                'weight': [31, 115]})
-    # response = HttpResponse(content_type='text/csv')
-    # response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+def export(request, tablename):
+    import pandas as pd
+    import csv
+    from jwql.website.apps.jwql.data_containers import get_jwqldb_table_view_components
 
-    # writer = csv.writer(response)
-    # writer.writerow(df.columns.values)
-    # for _, row in df.iterrows():
-    #     writer.writerow(row.values)
+    table_meta = build_table(tablename)
 
-    # return response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="{}.csv"'.format(tablename)
+
+    writer = csv.writer(response)
+    writer.writerow(table_meta.columns.values)
+    for _, row in table_meta.iterrows():
+        writer.writerow(row.values)
+
+    return response
 
 
 def not_found(request, *kwargs):

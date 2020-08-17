@@ -40,7 +40,7 @@
             <!-- Table is not rendered when coming from home/monitor views -->
             {% if table_name %}
                 <h4> {{ table_name|safe }} </h4><hr>
-                <a href="export" name=download_data class="btn btn-primary my-2" type="submit">Download Data</a>
+                <a href="{{ '/download_table/%s'%table_name }}" name=download_data class="btn btn-primary my-2" type="submit" value="{{ tablename }}">Download Data</a>
                 <table id="jwqltable" class="display" style="width:100%">
                     <thead>
                         <tr>

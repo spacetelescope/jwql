@@ -71,6 +71,38 @@ PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
 
+def build_table(tablename):
+    # Make dictionary of tablename : class object
+    # This matches what the user selects in the drop down to the python obj.
+    tables_of_interest = {}
+    for item in di.__dict__.keys():
+        table = getattr(di, item)
+        if hasattr(table, '__tablename__'):
+            tables_of_interest[table.__tablename__] = table
+
+    session, _, _, _ = load_connection(get_config()['connection_string'])
+    # tablename_from_dropdown = request.POST['db_table_select']
+    table_object = tables_of_interest[tablename]  # Select table object
+
+    result = session.query(table_object)
+
+    result_dict = [row.__dict__ for row in result.all()]  # Turn query result into list of dicts
+    column_names = table_object.__table__.columns.keys()
+
+    # Build list of column data based on column name.
+    data = []
+    for column in column_names:
+        column_data = list(map(itemgetter(column), result_dict))
+        data.append(column_data)
+
+    data = dict(zip(column_names, data))
+
+    # Build table.
+    table_meta_data = pd.DataFrame(data)
+
+    return table_meta_data
+
+
 def data_trending():
     """Container for Miri datatrending dashboard and components
 
@@ -852,46 +884,11 @@ def get_jwqldb_table_view_components(request):
     None
     """
 
-    def _build_table(request):
-        # Make dictionary of tablename : class object
-        # This matches what the user selects in the drop down to the python obj.
-        tables_of_interest = {}
-        for item in di.__dict__.keys():
-            table = getattr(di, item)
-            if hasattr(table, '__tablename__'):
-                tables_of_interest[table.__tablename__] = table
-
-        session, _, _, _ = load_connection(get_config()['connection_string'])
-        tablename_from_dropdown = request.POST['db_table_select']
-        table_object = tables_of_interest[tablename_from_dropdown]  # Select table object
-
-        result = session.query(table_object)
-
-        result_dict = [row.__dict__ for row in result.all()]  # Turn query result into list of dicts
-        column_names = table_object.__table__.columns.keys()
-
-        # Build list of column data based on column name.
-        data = []
-        for column in column_names:
-            column_data = list(map(itemgetter(column), result_dict))
-            data.append(column_data)
-
-        data = dict(zip(column_names, data))
-
-        # Build table.
-        table_meta_data = pd.DataFrame(data)
-
-        return table_meta_data, tablename_from_dropdown
-
     if 'make_table_view' in request.POST:
-        table_data, table_name = _build_table(request)
+        table_name = request.POST['db_table_select']
+        table_data = build_table(table_name)
+
         return table_data, table_name
-    elif 'download_data' in request.POST:
-        # table_data = None 
-        # table_name = None
-        # Download data table here
-        table_data, table_name = _build_table(request)
-        export(request, table=table_data)
     else:
         # When coming from home/monitor views
         table_data = None 
