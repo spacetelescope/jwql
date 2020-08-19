@@ -15,7 +15,7 @@
                 <li><a href="#introduction">What is the JWQL API?</a></li>
                 <li><a href="#examples">Examples</a></li>
                 <li><a href="#api_list">List of Avaliable Services</a></li>
-                <li><a href="https://jwql.readthedocs.io/en/latest/index.html?highlight=api">Documentation</a></li>
+                <li><a href="https://jwql.readthedocs.io/en/latest/website.html#api-views-py">Documentation</a></li>
             </ul>
         </p>
         <br>
@@ -51,8 +51,8 @@
 
                     # Build the URL https://dljwql.stsci.edu/api/roontname/service/
                     url = 'https://dljwql.stsci.edu/api/jw93025001001_02102_00001_nrca2/filenames/' 
-                    r = request.urlopen(url) 
-                    filenames = json.loads(r.read().decode())
+                    req = request.urlopen(url) 
+                    filenames = json.loads(req.read().decode())
 
                     print(filenames)
 
@@ -64,7 +64,7 @@
                     </code>
              </pre>
 
-                <h5>Obtaining Filenames Associated with Proposal</h5>
+                <h5>Obtaining Thumbnails with Instrument Name</h5>
                 <p align="justify">
                     A user is interested in all of the thumbnail associated with the Fine Guider Sensors (FGS).  
                 </p>
@@ -75,8 +75,8 @@
 
                     # Build the URL https://dljwql.stsci.edu/api/instrument/service/
                     url = 'https://dljwql.stsci.edu/api/fgs/thumbnails/'
-                    r = request.urlopen(url) 
-                    thumbnails = json.loads(r.read().decode())
+                    req = request.urlopen(url) 
+                    thumbnails = json.loads(req.read().decode())
 
                     print(thumbnails)
 
@@ -96,7 +96,7 @@
                         </code>
                     </pre>
 
-                    <h5>Obtaining Filenames Associated with Proposal</h5>
+                    <h5>Obtaining Filenames with Proposal ID </h5>
                     <p align="justify">
                         A user is interested in all of the thumbnail associated with the Fine Guider Sensors (FGS).  
                     </p>
@@ -107,8 +107,8 @@
     
                         # Build the URL https://dljwql.stsci.edu/api/proposal/service/
                         url = 'https://dljwql.stsci.edu/api/86600/filenames/'
-                        r = request.urlopen(url) 
-                        filenames = json.loads(r.read().decode())
+                        req = request.urlopen(url) 
+                        filenames = json.loads(req.read().decode())
     
                         print(filenames)
     
@@ -137,8 +137,8 @@
             <h4>List of Available Services</h4><hr>
                 <ul>
                     <li>All Proposals</li>
-                    <li>Instrument Proposals</li>
-                    <li>Preview Images by Instrument</li>
+                    <li>Instrument Proposals (https://dljwql.stsci.edu/api/&lt;instrument&gt;/proposals/)</li>
+                    <li>Preview Images by Instrument ()</li>
                     <li>Thumbnails by Instrument</li>
                     <li>Filenames by Proposal</li>
                     <li>Preview Images by Proposal</li>
