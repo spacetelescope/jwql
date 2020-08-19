@@ -71,8 +71,21 @@ REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
 
 def build_table(tablename):
+    """Create Pandas dataframe from JWQLDB table.
+
+    Parameters
+    ----------
+    tablename : str
+        Name of JWQL database table name.
+
+    Returns
+    -------
+    table_meta_data : pandas.DataFrame
+        Pandas data frame version of JWQL database table.
+    """
     # Make dictionary of tablename : class object
-    # This matches what the user selects in the drop down to the python obj.
+    # This matches what the user selects in the select element
+    # in the webform to the python object on the backend.
     tables_of_interest = {}
     for item in di.__dict__.keys():
         table = getattr(di, item)
@@ -80,12 +93,12 @@ def build_table(tablename):
             tables_of_interest[table.__tablename__] = table
 
     session, _, _, _ = load_connection(get_config()['connection_string'])
-    # tablename_from_dropdown = request.POST['db_table_select']
     table_object = tables_of_interest[tablename]  # Select table object
 
     result = session.query(table_object)
 
-    result_dict = [row.__dict__ for row in result.all()]  # Turn query result into list of dicts
+    # Turn query result into list of dicts
+    result_dict = [row.__dict__ for row in result.all()]
     column_names = table_object.__table__.columns.keys()
 
     # Build list of column data based on column name.
@@ -689,6 +702,35 @@ def get_instrument_proposals(instrument):
     return proposals
 
 
+def get_jwqldb_table_view_components(request):
+    """Renders view for JWQLDB table viewer.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    table_data : pandas.DataFrame
+        Pandas data frame of JWQL database table
+    table_name : str
+        Name of database table selected by user
+    """
+
+    if 'make_table_view' in request.POST:
+        table_name = request.POST['db_table_select']
+        table_data = build_table(table_name)
+
+        return table_data, table_name
+    else:
+        # When coming from home/monitor views
+        table_data = None
+        table_name = None
+
+    return table_data, table_name
+
+
 def get_preview_images_by_instrument(inst):
     """Return a list of preview images available in the filesystem for
     the given instrument.
@@ -845,7 +887,7 @@ def get_thumbnails_all_instruments(instruments):
     for inst in instruments:  # JWST_INSTRUMENT_NAMES:
         instrument = inst[0].upper() + inst[1:].lower()
 
-        ### adjust query based on request
+        # adjust query based on request
 
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
@@ -868,32 +910,6 @@ def get_thumbnails_all_instruments(instruments):
                   os.path.basename(item).split('_integ')[0] in filenames]
 
     return thumbnails
-
-
-def get_jwqldb_table_view_components(request):
-    """Renders view for JWQLDB table viewer.
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-
-    Returns
-    -------
-    None
-    """
-
-    if 'make_table_view' in request.POST:
-        table_name = request.POST['db_table_select']
-        table_data = build_table(table_name)
-
-        return table_data, table_name
-    else:
-        # When coming from home/monitor views
-        table_data = None 
-        table_name = None
-
-    return table_data, table_name
 
 
 def get_thumbnails_by_instrument(inst):
