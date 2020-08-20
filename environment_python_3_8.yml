@@ -6,12 +6,12 @@ dependencies:
 - django=3.0.3
 - flake8=3.8.3
 - inflection=0.3.1
-- ipython=7.17.0
+- ipython=7.16.1
 - jinja2=2.11.2
 - jsonschema=3.2.0
 - matplotlib=3.2.2
 - nodejs=10.13.0
-- numpy=1.19.1
+- numpy=1.18.5
 - numpydoc=1.1.0
 - pandas=1.1.0
 - pip=20.2.2
