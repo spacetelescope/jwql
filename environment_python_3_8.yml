@@ -26,15 +26,15 @@ dependencies:
 - pip:
   - asdf==2.7.1
   - astropy==4.0.1.post1
-  - astroquery=0.4.1
+  - astroquery==0.4.1
   - authlib==0.14.3
   - bokeh>=1.0,<1.4
   - codecov==2.1.8
   - crds==7.5.0.0
   - jwedb==0.0.6
-  - pysiaf=0.9.0
+  - pysiaf==0.9.0
   - pysqlite3==0.4.3
-  - sqlalchemy=1.3.19
+  - sqlalchemy==1.3.19
   - stsci_rtd_theme==0.0.2
   - git+https://github.com/spacetelescope/jwst@0.16.2
   - git+https://github.com/spacetelescope/jwst_reffiles
