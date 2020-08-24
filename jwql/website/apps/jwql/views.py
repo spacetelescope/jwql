@@ -176,6 +176,26 @@ def about(request):
     return render(request, template, context)
 
 
+def api_landing(request):
+    """Generate the ``api`` page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    template = 'api_landing.html'
+    context = {'inst': ''}
+
+    return render(request, template, context)
+
+
 @auth_required
 def archived_proposals(request, user, inst):
     """Generate the page listing all archived proposals in the database
