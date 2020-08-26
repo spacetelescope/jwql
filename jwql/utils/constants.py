@@ -108,7 +108,7 @@ FILTERS_PER_INSTRUMENT = {'miri': ['F560W', 'F770W', 'F1000W', 'F1065C', 'F1130W
                                      'F356W', 'F380M', 'F430M', 'F444W', 'F480M'],
                           'nirspec': ['CLEAR', 'F070LP', 'F100LP', 'F170LP', 'F290LP']}
 
-FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R', 'WFSS128C', 'WFSS64C']
+FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
 
 # Names of full-frame apertures for all instruments
 FULL_FRAME_APERTURES = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',
