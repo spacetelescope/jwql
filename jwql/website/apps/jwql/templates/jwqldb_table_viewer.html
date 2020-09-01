@@ -72,50 +72,19 @@
 	</main>
 
     <!-- JS for datatables rendering and sorting with DataTables. -->
+    <style>
+          table.dataTable td  {
+            max-width: 150px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+          }
+    </style>
+
     <script>
         $(document).ready(function() {
             $('#jwqltable').DataTable();
         } );
     </script>
-
-    <!-- JS AND HTML FOR MULTILAYER DROPDOWN -->
-    <!--
-    <div class="dropdown">
-        <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
-            JWQL Monitor Tables
-        </button>
-        
-        <ul class="dropdown-menu">
-            {% for instrument in all_jwql_tables %}
-                <li class="dropdown-submenu">
-                    <a class="dropdown-item dropdown-toggle" href="#">{{ instrument.upper() }}</a>
-                    <ul class="dropdown-menu dropdown-menu-right"> 
-                        {% for table in all_jwql_tables[instrument] %}
-                            <li value="{{ table }}"><a class="dropdown-item" href="#">{{ table }}</a></li>
-                        {% endfor %}
-                    </ul>
-                </li>
-            {% endfor %}
-        </ul>
-    </div>
-    
-    <script>
-        $('.dropdown-menu a.dropdown-toggle').on('click', function(e) {
-            if (!$(this).next().hasClass('show')) {
-              $(this).parents('.dropdown-menu').first().find('.show').removeClass('show');
-            }
-            var $subMenu = $(this).next('.dropdown-menu');
-            $subMenu.toggleClass('show');
-          
-          
-            $(this).parents('li.nav-item.dropdown.show').on('hidden.bs.dropdown', function(e) {
-              $('.dropdown-submenu .show').removeClass('show');
-            });
-          
-          
-            return false;
-          });
-    </script>
-    //-->
 
 {% endblock %}
