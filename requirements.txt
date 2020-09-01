@@ -12,7 +12,7 @@ ipython==7.18.1
 jinja2==2.11.2
 jsonschema==3.2.0
 jwedb>=0.0.6
-matplotlib==3.2.2
+matplotlib==3.3.1
 nodejs==10.13.0
 numpy==1.18.5
 numpydoc==1.1.0
