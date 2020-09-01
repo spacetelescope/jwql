@@ -14,7 +14,7 @@ jsonschema==3.2.0
 jwedb>=0.0.6
 matplotlib==3.3.1
 nodejs==10.13.0
-numpy==1.18.5
+numpy==1.19.1
 numpydoc==1.1.0
 pandas==1.0.5
 psycopg2==2.8.5
