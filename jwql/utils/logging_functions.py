@@ -244,10 +244,10 @@ def log_info(func):
             logging.info(line)
 
         # Call the function and time it
-        t1_cpu = time.clock()
+        t1_cpu = time.perf_counter()
         t1_time = time.time()
         func(*args, **kwargs)
-        t2_cpu = time.clock()
+        t2_cpu = time.perf_counter()
         t2_time = time.time()
 
         # Log execution time

@@ -73,6 +73,7 @@ urlpatterns = [
 
     # Main site views
     path('about/', views.about, name='about'),
+    path('api/', views.api_landing, name='api'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('edb/', views.engineering_database, name='edb'),
     path('query_anomaly/', views.query_anomaly, name='query_anomaly'),
