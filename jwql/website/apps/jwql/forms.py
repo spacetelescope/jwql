@@ -63,10 +63,134 @@ from jwql.utils.constants import OBSERVING_MODE_PER_INSTRUMENT
 from jwql.utils.utils import get_config, filename_parser
 # from jwql.website.apps.jwql.views import current_anomalies  ### global variable defined once query_anomaly page has forms filled
 
+from wtforms import StringField, SubmitField, DecimalField, RadioField, SelectField, SelectMultipleField, IntegerField, FloatField
+from wtforms.validators import InputRequired, Length, NumberRange, AnyOf, ValidationError
+from wtforms.widgets import ListWidget, CheckboxInput
+
+from wtforms.ext.sqlalchemy.orm import model_form
+
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 # from jwql.utils import anomaly_query_config
 # from jwql.website.apps.jwql import views # update anomaly_query_config
+
+# from flask_wtf import FlaskForm
+
+
+# class BaseForm(FlaskForm):
+class BaseForm(forms.Form):
+    """A generic form with target resolve built in"""
+    # Target Resolve
+    targname = StringField('targname', default='')
+    target_url = StringField('target_url', default='')
+
+    # Submit button
+    resolve_submit = SubmitField('Resolve Target')
+
+# def DynamicForm():
+#     class StaticForm(BaseForm):
+#         pass
+
+#     if args[0] == True:
+#         StaticForm.class_attrib1 = StringField('targname', default='default 1')
+#     else:
+#         StaticForm.class_attrib2 = StringField('target_url', default='default 2')
+
+#     return StaticForm()
+
+
+class GroupsIntsForm(BaseForm):
+    """Form validation for the groups_integrations tool"""
+    # # Form submits
+    # calculate_submit = SubmitField('Calculate Groups and Integrations')
+
+    # Stellar Parameters
+    kmag = DecimalField('kmag', default=10.5, validators=[InputRequired('A K-band magnitude is required!'), NumberRange(min=5.1, max=11.9, message='K-band mag must be between 5-12, non-inclusive.')])
+    obs_duration = DecimalField('obs_duration', default=3, validators=[InputRequired('An observation duration is required!'), NumberRange(min=0, message='Observation duration must be a positive number')])
+    # time_unit = SelectField('time_unit', default='hour', choices=[('hour', 'hours'), ('day', 'days')])
+    # models = [('a0i', 'A0I 9750 2.0'), ('aov', 'A0V 9500 2.0'), ('a1v', 'A1V 9250 4.0'), ('a5i', 'A5I 8500 2.0'), ('a3v', 'A3V 8250 4.0'), ('a5v', 'A5V 8250 4.0'), ('f0i', 'F0I 7750 2.0'), ('f0v', 'F0V 7250 1.5'), ('f5i', 'F5I 7000 4.0'), ('f2v', 'F2V 7000 4.0'), ('f5v', 'F5V 6500 4.0'), ('f8v', 'F8V 6250 4.5'), ('g0v', 'G0V 6000 4.5'), ('g0iii', 'G0III 5750 3.0'), ('g2v', 'G2V 5750 4.5'), ('g5v', 'G5V 5750 4.5'), ('g0i', 'G0I 5500 1.5'), ('g8v', 'G8V 5500 4.5'), ('g5iii', 'G5III 5250 2.5'), ('g5i', 'G5I 4740 1.0'), ('k0v', 'K0V 5250 4.5'), ('k0iii', 'K0III 4750 2.0'), ('k2v', 'K2V 4750 4.5'), ('k0i', 'K0I 4500 1.0'), ('k5v', 'K5V 4250 1.5'), ('k5iii', 'K5III 4000 1.5'), ('k7v', 'K7V 4000 4.5'), ('k5i', 'K5I 3750 0.5'), ('m0i', 'M0I 3750 0.0'), ('m0iii', 'M0III 3750 1.5'), ('m0v', 'M0V 3750 4.5'), ('m2i', 'M2I 3500 0.0'), ('m2v', 'M2V 3500 4.5'), ('m5v', 'M5V 3500 5.0')]
+    # mod = SelectField('mod', choices=models)
+    # n_group = IntegerField('n_group', default=0)
+    # ins = SelectField('ins', default='miri', choices=[('niriss', 'NIRISS'), ('nircam', 'NIRCam'), ('nirspec', 'NIRSpec'), ('miri', 'MIRI')])
+
+    # # Filter selects
+    # miri_filt = SelectField('miri_filt', choices=[('lrs', 'LRS')])
+    # nirspec_filt = SelectField('nirspec_filt', choices=[('f070lp_g140h', 'F070LP/G140H'), ('f100lp_g140h', 'F100LP/G140H'), ('f070lp_g140m', 'F070LP/G140M'), ('f100lp_g140m', 'F100LP/G140M'), ('f170lp_g235h', 'F170LP/G235H'), ('f170lp_g235m', 'F170LP/G235M'), ('f290lp_g395h', 'F290LP/G395H'), ('f290lp_g395m', 'F290LP/G395M')])
+    # niriss_filt = SelectField('niriss_filt', choices=[('soss', 'SOSS')])
+    # nircam_filt = SelectField('nircam_filt', choices=[('f322w2', 'F322W2'), ('f444w', 'F444W'), ('f277w', 'F277W')])
+
+    # # TA filter selects
+    # miri_filt_ta = SelectField('miri_filt_ta', choices=[('f560w', 'F560W'), ('f100w', 'F100W'), ('f1500w', 'F1500W')])
+    # nirspec_filt_ta = SelectField('nirspec_filt_ta', choices=[('f110w', 'F110W'), ('f140x', 'F140X'), ('clear', 'CLEAR')])
+    # niriss_filt_ta = SelectField('niriss_filt_ta', choices=[('f480m', 'F480M')])
+    # nircam_filt_ta = SelectField('nircam_filt_ta', choices=[('f335m', 'F335M')])
+
+    # # Subarray selects
+    # miri_subarray = SelectField('miri_subarray', choices=[('slitlessprism', 'SLITLESSPRISM')])
+    # nirspec_subarray = SelectField('nirspec_subarray', choices=[('sub2048', 'SUB2048'), ('sub1024a', 'SUB1024A'), ('sub1024b', 'SUB1024B'), ('sub512', 'SUB512')])
+    # niriss_subarray = SelectField('niriss_subarray', choices=[('substrip256', 'SUBSTRIP256'), ('substrip96', 'SUBSTRIP96')])
+    # nircam_subarray = SelectField('nircam_subarray', choices=[('full', 'FULL FRAME'), ('subgrism256', 'SUBGRISM256'), ('subgrism128', 'SUBGRISM128'), ('subgrism64', 'SUBGRISM64')])
+
+    # # TA subarray selects
+    # miri_subarray_ta = SelectField('miri_subarray_ta', choices=[('slitlessprism', 'SLITLESSPRISM')])
+    # nirspec_subarray_ta = SelectField('nirspec_subarray_ta', choices=[('full', 'FULL'), ('sub32', 'SUB32'), ('sub2048', 'SUB2048')])
+    # niriss_subarray_ta = SelectField('niriss_subarray_ta', choices=[('nrm', 'SUBTASOSS -- BRIGHT'), ('im', 'SUBTASOSS -- FAINT')])
+    # nircam_subarray_ta = SelectField('nircam_subarray_ta', choices=[('sub32tats', 'SUB32TATS')])
+
+    # # Saturation
+    # sat_mode = RadioField('sat_mode', default='well', choices=[('counts', 'Counts'), ('well', 'Full well fraction')])
+    # sat_max = DecimalField('sat_max', default=0.95, validators=[InputRequired('A saturation level is required!'), NumberRange(min=0.0, message='Saturation level must be positive.')])
+
+class DynamicAnomalyForm(BaseForm):
+    """test to see if calculate_submit will work"""
+
+    calculate_submit = SubmitField()
+
+    instrument = forms.MultipleChoiceField(required=False,
+                    choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE])
+
+class DynamicAnomalyFormORIGINAL(BaseForm):
+    """Form validation for the anomaly viewing tool"""
+
+    # Form submits
+    calculate_submit = SubmitField()
+
+
+    # Generate dynamic lists of options to use in forms
+    aperture_list = []
+    for instrument in FULL_FRAME_APERTURES.keys():
+        for aperture in FULL_FRAME_APERTURES[instrument]:
+            item = [aperture, aperture]
+            aperture_list.append(item)
+
+    filter_list = []
+    for instrument in FILTERS_PER_INSTRUMENT.keys():
+        # if instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:   # eg ['nirspec']: selects relevant filters, but not specific to chosen instruments
+        filters_per_inst = FILTERS_PER_INSTRUMENT[instrument]
+        for filter in filters_per_inst:
+            filter_list.append([filter, filter]) if [filter, filter] not in filter_list else filter_list
+    
+    # Anomaly Parameters
+    instrument = forms.MultipleChoiceField(required=False,
+                                      choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE]) #,
+                                    #   widget=forms.CheckboxSelectMultiple())
+    aperture = forms.MultipleChoiceField(required=False, choices=aperture_list, widget=forms.CheckboxSelectMultiple)
+    filter = forms.MultipleChoiceField(required=False, choices=filter_list, widget=forms.CheckboxSelectMultiple)
+    early_date = forms.DateField(required=False, initial="eg, 2021-10-02 12:04:39 or 2021-10-02")
+    late_date = forms.DateField(required=False, initial="eg, 2021-11-25 14:30:59 or 2021-11-25")
+    exp_time_max = forms.DecimalField(initial="57404.70")
+    exp_time_min = forms.DecimalField(initial="57404.04")
+    
+    # should use something like 'nirpsec_filt', choices=[...] in order to choose particular series to show up
+    miri_filt = forms.MultipleChoiceField(choices=[('lrs', 'LRS')])
+    nirspec_filt = forms.MultipleChoiceField(choices=[('f070lp_g140h', 'F070LP/G140H'), ('f100lp_g140h', 'F100LP/G140H'), ('f070lp_g140m', 'F070LP/G140M'), ('f100lp_g140m', 'F100LP/G140M'), ('f170lp_g235h', 'F170LP/G235H'), ('f170lp_g235m', 'F170LP/G235M'), ('f290lp_g395h', 'F290LP/G395H'), ('f290lp_g395m', 'F290LP/G395M')])
+    niriss_filt = forms.MultipleChoiceField(choices=[('soss', 'SOSS')])
+    nircam_filt = forms.MultipleChoiceField(choices=[('f322w2', 'F322W2'), ('f444w', 'F444W'), ('f277w', 'F277W')])
+    def clean_inst(self):
+
+        inst = self.cleaned_data['instrument']
+
+        return inst
 
 
 class AnomalyForm(forms.Form):
@@ -122,6 +246,8 @@ class AnomalySubmitForm(forms.Form):
 class ApertureForm(forms.Form):
     """Creates an ``ApertureForm`` object that allows for ``aperture``
     input in a form field."""
+
+    calculate_submit = SubmitField()
 
     aperture_list = []
     for instrument in FULL_FRAME_APERTURES.keys():
@@ -342,7 +468,7 @@ class FilterForm(forms.Form):
 class InstrumentForm(forms.Form):
     """Creates a ``InstrumentForm`` object that allows for ``query``
     input in a form field."""
-
+    
     query = forms.MultipleChoiceField(required=False,
                                       choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
                                       widget=forms.CheckboxSelectMultiple())

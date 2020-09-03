@@ -1,0 +1,62 @@
+{%extends "base.html" %}
+
+{% block content %}
+<!doctype html>
+<script type="text/javascript">
+    /* Courtesy of Natasha and Joe */
+    $(document).ready(function(){
+      /*  $("select").select2({
+            theme: "bootstrap",
+            width: "100%",
+            minimumResultsForSearch: 7
+        });  */
+
+        $("#ins").change(function () {
+            $("#miri_filt, #nirspec_filt, #niriss_filt, #nircam_filt, #miri_filt_ta, #nirspec_filt_ta, #niriss_filt_ta, #nircam_filt_ta, #miri_sub, #nirspec_sub, #niriss_sub, #nircam_sub, #miri_sub_ta, #nircam_sub_ta, #niriss_sub_ta, #nirspec_sub_ta").hide(); 
+            var selopt = $("#ins").val();
+            switch (selopt) {
+                case "miri":
+                    $("#miri_filt").show();
+                    $("#miri_filt_ta").show();
+                    $("#miri_sub").show();
+                    $("#miri_sub_ta").show();
+                    break;
+                case "nirspec":
+                    $("#nirspec_filt").show();
+                    $("#nirspec_filt_ta").show();
+                    $("#nirspec_sub").show();
+                    $("#nirspec_sub_ta").show();
+                    break;
+                case "niriss":
+                    $("#niriss_filt").show();
+                    $("#niriss_filt_ta").show();
+                    $("#niriss_sub").show();
+                    $("#niriss_sub_ta").show();
+                    break;
+                case "nircam":
+                    $("#nircam_filt").show();
+                    $("#nircam_filt_ta").show();
+                    $("#nircam_sub").show();
+                    $("#nircam_sub_ta").show();
+                    break;
+            }
+        });
+    });
+</script>
+
+<div class='form-group' method='post'>
+    <h1>Dynamic Anomaly Form</h1>
+        <select class='form-group' style='width:186px;'>
+            {% for option in form.instrument %}
+                <div class='radio'>
+                {{ option }}
+                </div>
+            {% endfor %}
+        </select>                
+    <label>Submit!</label>
+
+    {{ form.calculate_submit }}   <!--(class="btn btn-success")-->
+    </div>
+        
+    
+{% endblock %}
