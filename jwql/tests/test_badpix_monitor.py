@@ -112,39 +112,6 @@ def test_exclude_crds_mask_pix():
     assert np.all(diff[~mask] == 0)
 
 
-@pytest.mark.skipif(ON_JENKINS,
-                    reason='Requires access to central storage.')
-def test_locate_rate_files():
-    """Test that rate files are found in filesystem"""
-
-    uncal_files = ['jw00300002001_02102_00001_mirimage_uncal.fits', 'jw00300002001_0210a_00001_mirimage_uncal.fits']
-    ratefiles, ratefiles2copy = bad_pixel_monitor.locate_rate_files(uncal_files)
-
-    rates = [os.path.basename(entry) for entry in ratefiles]
-    rates2copy = [os.path.basename(entry) for entry in ratefiles2copy]
-
-    expected = ['jw00300002001_02102_00001_mirimage_rateints.fits', 'jw00300002001_0210a_00001_mirimage_rateints.fits']
-    assert rates == expected
-    assert rates2copy == expected
-
-
-@pytest.mark.skipif(ON_JENKINS,
-                    reason='Requires access to central storage.')
-def test_locate_uncal_files():
-    """Test the filesystem search for uncal files
-    """
-    file1 = 'jw00300002001_02102_00001_mirimage_rate.fits'
-    file2 = 'jw00300010001_02102_00001_mirifushort_uncal.fits'
-    query_results = [{'filename': file1},
-                     {'filename': file2}]
-
-    found = bad_pixel_monitor.locate_uncal_files(query_results)
-
-    found_base = [os.path.basename(entry) for entry in found]
-    assert found_base[0] == file1.replace('rate', 'uncal')
-    assert found_base[1] == file2
-
-
 def test_filter_query_results():
     """Test MAST query filtering to extract most common filter/pupil and
     acceptable readout patterns
@@ -201,6 +168,39 @@ def test_identify_tables():
     badpix.identify_tables()
     assert badpix.query_table == eval('NIRCamBadPixelQueryHistory')
     assert badpix.pixel_table == eval('NIRCamBadPixelStats')
+
+
+@pytest.mark.skipif(ON_JENKINS,
+                    reason='Requires access to central storage.')
+def test_locate_rate_files():
+    """Test that rate files are found in filesystem"""
+
+    uncal_files = ['jw00300002001_02102_00001_mirimage_uncal.fits', 'jw00300002001_0210a_00001_mirimage_uncal.fits']
+    ratefiles, ratefiles2copy = bad_pixel_monitor.locate_rate_files(uncal_files)
+
+    rates = [os.path.basename(entry) for entry in ratefiles]
+    rates2copy = [os.path.basename(entry) for entry in ratefiles2copy]
+
+    expected = ['jw00300002001_02102_00001_mirimage_rateints.fits', 'jw00300002001_0210a_00001_mirimage_rateints.fits']
+    assert rates == expected
+    assert rates2copy == expected
+
+
+@pytest.mark.skipif(ON_JENKINS,
+                    reason='Requires access to central storage.')
+def test_locate_uncal_files():
+    """Test the filesystem search for uncal files
+    """
+    file1 = 'jw00300002001_02102_00001_mirimage_rate.fits'
+    file2 = 'jw00300010001_02102_00001_mirifushort_uncal.fits'
+    query_results = [{'filename': file1},
+                     {'filename': file2}]
+
+    found = bad_pixel_monitor.locate_uncal_files(query_results)
+
+    found_base = [os.path.basename(entry) for entry in found]
+    assert found_base[0] == file1.replace('rate', 'uncal')
+    assert found_base[1] == file2
 
 
 def test_make_crds_parameter_dict():
