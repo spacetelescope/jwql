@@ -196,7 +196,10 @@ class BadPixelMonitor(BokehTemplate):
         self.interface_file = os.path.join(SCRIPT_DIR, "yaml", "badpixel_monitor_interface.yaml")
 
         # Load data tables
-        self.load_data()
+
+        # comment out for now since the database is empty
+        #self.load_data()
+        import datetime
 
         # Populate a dictionary with the number of bad pixels vs time for
         # each type of bad pixel. We can't get the full list of bad pixel
@@ -207,9 +210,22 @@ class BadPixelMonitor(BokehTemplate):
         self.bad_history = {}
         self.bad_latest = {}
         for badtype in BAD_PIXEL_TYPES:
-            num, times = self.bad_pixel_history(badtype)
+
+            # Comment out while waiting for populated database tables
+            #num, times = self.bad_pixel_history(badtype)
+
+            # Placeholders while we wait for a populated database
+            days = np.arange(1, 11)
+            times = np.array([datetime.datetime(2020, 8, day, 12, 0, 0) for day in days])
+            num = np.arange(10)
+
             self.bad_history[badtype] = (times, num)
-            self.bad_latest[badtype] = self.most_recent_coords(badtype)
+            #self.bad_latest[badtype] = self.most_recent_coords(badtype)
+
+            self.bad_latest[badtype] = ([0, 1, 2], [4, 4, 4])
+
+
+            print(badtype, self.bad_latest[badtype], times, num)
 
 
 
@@ -300,19 +316,23 @@ class BadPixelMonitor(BokehTemplate):
         pixels versus time
         """
         for bad_type in BAD_PIXEL_TYPES:
+            bad_type_lc = bad_type.lower()
+
             # Define y ranges of bad pixel v. time plot
-            buffer_size = 0.05 * (max(self.bad_history[badtype][1]) - min(self.bad_history[badtype][1]))
-            self.refs['{}_history_yrange'.format(bad_type)].start = min(self.bad_history[badtype][1]) - buffer_size
-            self.refs['{}_history_yrange'.format(bad_type)].end = max(self.bad_history[badtype][1]) + buffer_size
+            buffer_size = 0.05 * (max(self.bad_history[bad_type][1]) - min(self.bad_history[bad_type][1]))
+            self.refs['{}_history_yrange'.format(bad_type_lc)].start = min(self.bad_history[bad_type][1]) - buffer_size
+            self.refs['{}_history_yrange'.format(bad_type_lc)].end = max(self.bad_history[bad_type][1]) + buffer_size
 
             # Define x range of bad_pixel v. time plot
-            horizontal_half_buffer = (max(self.bad_history[badtype][0]) - min(self.bad_history[badtype][0])) * 0.05
+            horizontal_half_buffer = (max(self.bad_history[bad_type][0]) - min(self.bad_history[bad_type][0])) * 0.05
             if horizontal_half_buffer == 0:
                 horizontal_half_buffer = 1.  # day
-            self.refs['{}_history_xrange'.format(bad_type)].start = min(self.bad_history[badtype][0]) - horizontal_half_buffer
-            self.refs['{}_history_xrange'.format(bad_type)].end = max(self.bad_history[badtype][0]) + horizontal_half_buffer
+            self.refs['{}_history_xrange'.format(bad_type_lc)].start = min(self.bad_history[bad_type][0]) - horizontal_half_buffer
+            self.refs['{}_history_xrange'.format(bad_type_lc)].end = max(self.bad_history[bad_type][0]) + horizontal_half_buffer
 
             # Add a title
             self.refs['{}_history_figure'].title.text = '{}: {} pixels'.format(self._aperture, bad_type)
             self.refs['{}_history_figure'].title.align = "center"
             self.refs['{}_history_figure'].title.text_font_size = "20px"
+
+BadPixelMonitor()
