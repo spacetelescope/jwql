@@ -36,6 +36,8 @@ from jwql.bokeh_templating import BokehTemplate
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
+BAD_PIXEL_TYPES = ['DEAD', 'HOT', 'LOW_QE', 'OPEN', 'ADJ_OPEN', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
+
 class BadPixelMonitor(BokehTemplate):
 
     # Combine instrument and aperture into a single property because we
@@ -212,15 +214,15 @@ class BadPixelMonitor(BokehTemplate):
 
 
 
-        We also want to retrieve the information for just the most recent entry for each
-        bad pixel type. We will print the coordinates of the most-recently found bad pixels
-        in a table, and show an image (or maybe just a blank 2048x2048 grid) with dots at
-        the locations of the new bad pixels.
+        #We also want to retrieve the information for just the most recent entry for each
+        #bad pixel type. We will print the coordinates of the most-recently found bad pixels
+        #in a table, and show an image (or maybe just a blank 2048x2048 grid) with dots at
+        #the locations of the new bad pixels.
 
-        for each type of bad pixel, there are three items to show:
-        1) bad pixel count vs time
-        2) plot of latest locations (overlain on an image?)
-        3) table of latest bad pix - API view, so users can download
+        #for each type of bad pixel, there are three items to show:
+        #1) bad pixel count vs time
+        #2) plot of latest locations (overlain on an image?)
+        #3) table of latest bad pix - API view, so users can download
 
 
     def post_init(self):
