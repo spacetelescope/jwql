@@ -251,11 +251,12 @@ def groups_integrations(request):
 def dynamic_anomaly(request):
     """The anomaly query form page"""
 
-    form = DynamicAnomalyForm(request.POST or None, initial={'instrument': "NIRSpec"})
+    form = DynamicAnomalyForm(request.POST or None) #, initial={'instrument': "NIRSpec"})
     
     if request.method == 'POST':
         print("using post!")
-        print("form.instrument_is_valid()", form.instrument_is_valid())
+        print("form.is_valid()", form.is_valid())
+        print("form.errors", form.errors) 
         # print("form.instrument", form.instrument)
 
         if form.is_valid():   # make form bound???   ### NOT INSTRUMENT_IS_VALID!
