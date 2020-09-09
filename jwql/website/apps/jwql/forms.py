@@ -144,10 +144,25 @@ class GroupsIntsForm(BaseForm):
 class DynamicAnomalyForm(BaseForm):
     """test to see if calculate_submit will work"""
 
-    calculate_submit = SubmitField()
+    # calculate_submit = SubmitField()
 
-    instrument = forms.MultipleChoiceField(required=False,
-                    choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE])
+    # instrument = forms.MultipleChoiceField(required=False,
+    #                 choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE])
+
+    instrument = forms.MultipleChoiceField(choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
+                                            initial="NIRSpec", validators=[InputRequired('Instrument is required!')])
+                                            # 'instrument', default="NIRSpec", 
+
+    def instrument_is_valid(self):
+        valid = self.is_valid()
+        print("errors", self.errors)
+        print(valid)
+        print(self.cleaned_data)
+        instrument = self.cleaned_data #['instrument']
+        if instrument in JWST_INSTRUMENT_NAMES_MIXEDCASE:
+            return True
+        else:
+            return False
 
 class DynamicAnomalyFormORIGINAL(BaseForm):
     """Form validation for the anomaly viewing tool"""

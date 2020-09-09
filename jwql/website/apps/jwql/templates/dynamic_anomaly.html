@@ -44,19 +44,36 @@
     });
 </script>
 
-<div class='form-group' method='post'>
+<script>
+    function formSubmit() {
+        document.forms["myForm"].submit();
+    }
+</script>
+
+<form method="POST" action="." name="dynamicanomalyform">
     <h1>Dynamic Anomaly Form</h1>
-        <select class='form-group' style='width:186px;'>
-            {% for option in form.instrument %}
-                <div class='radio'>
-                {{ option }}
-                </div>
-            {% endfor %}
-        </select>                
+        <form action="" method="post">
+            {{ csrf_input }}
+            <select class='form-group' style='width:186px;'>
+                {% for option in form.instrument %}
+                    <div class='radio'>
+                    {{ option }}
+                    </div>
+                {% endfor %}
+                
+            </select>    
+            <input type="submit" value="Save">
+        
+    
     <label>Submit!</label>
 
     {{ form.calculate_submit }}   <!--(class="btn btn-success")-->
-    </div>
-        
+
+<div class="form-group" >
+    <input type="button" onclick="formSubmit()" value="Send form data!">
+    <input type="submit" value="Submit" class="btn btn-primary" name="dynamicanomalyform" />
+</div>
     
+</form>
+
 {% endblock %}
