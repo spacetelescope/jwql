@@ -141,7 +141,7 @@ class GroupsIntsForm(BaseForm):
     # sat_mode = RadioField('sat_mode', default='well', choices=[('counts', 'Counts'), ('well', 'Full well fraction')])
     # sat_max = DecimalField('sat_max', default=0.95, validators=[InputRequired('A saturation level is required!'), NumberRange(min=0.0, message='Saturation level must be positive.')])
 
-class DynamicAnomalyForm(BaseForm):
+class DynamicAnomalyFormSIMPLE(BaseForm):
     """test to see if calculate_submit will work"""
 
     # calculate_submit = SubmitField()
@@ -164,7 +164,17 @@ class DynamicAnomalyForm(BaseForm):
         else:
             return False
 
-class DynamicAnomalyFormORIGINAL(BaseForm):
+    def _clean_form(self):
+        try:
+            cleaned_data = self.clean()
+        except ValidationError as e:
+            self.add_error(None, e)
+        else:
+            if cleaned_data is not None:
+                self.cleaned_data = cleaned_data
+
+
+class DynamicAnomalyForm(BaseForm):
     """Form validation for the anomaly viewing tool"""
 
     # Form submits
@@ -180,11 +190,29 @@ class DynamicAnomalyFormORIGINAL(BaseForm):
 
     filter_list = []
     for instrument in FILTERS_PER_INSTRUMENT.keys():
-        # if instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:   # eg ['nirspec']: selects relevant filters, but not specific to chosen instruments
+        # # if instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:   # eg ['nirspec']: selects relevant filters, but not specific to chosen instruments
         filters_per_inst = FILTERS_PER_INSTRUMENT[instrument]
         for filter in filters_per_inst:
             filter_list.append([filter, filter]) if [filter, filter] not in filter_list else filter_list
     
+    miri_filter_list = []
+    for filter in FILTERS_PER_INSTRUMENT['miri']:
+        miri_filter_list.append([filter, filter])
+    
+    nirspec_filter_list = []
+    for filter in FILTERS_PER_INSTRUMENT['nirspec']:
+        nirspec_filter_list.append([filter, filter])
+
+    niriss_filter_list = []
+    for filter in FILTERS_PER_INSTRUMENT['niriss']:
+        niriss_filter_list.append([filter, filter])
+    
+    nircam_filter_list = []
+    for filter in FILTERS_PER_INSTRUMENT['nircam']:
+        nircam_filter_list.append([filter, filter])
+
+    print("FILTERS_PER_INSTRUMENT['miri']", FILTERS_PER_INSTRUMENT['miri'])
+
     # Anomaly Parameters
     instrument = forms.MultipleChoiceField(required=False,
                                       choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE]) #,
@@ -197,10 +225,11 @@ class DynamicAnomalyFormORIGINAL(BaseForm):
     exp_time_min = forms.DecimalField(initial="57404.04")
     
     # should use something like 'nirpsec_filt', choices=[...] in order to choose particular series to show up
-    miri_filt = forms.MultipleChoiceField(choices=[('lrs', 'LRS')])
-    nirspec_filt = forms.MultipleChoiceField(choices=[('f070lp_g140h', 'F070LP/G140H'), ('f100lp_g140h', 'F100LP/G140H'), ('f070lp_g140m', 'F070LP/G140M'), ('f100lp_g140m', 'F100LP/G140M'), ('f170lp_g235h', 'F170LP/G235H'), ('f170lp_g235m', 'F170LP/G235M'), ('f290lp_g395h', 'F290LP/G395H'), ('f290lp_g395m', 'F290LP/G395M')])
-    niriss_filt = forms.MultipleChoiceField(choices=[('soss', 'SOSS')])
-    nircam_filt = forms.MultipleChoiceField(choices=[('f322w2', 'F322W2'), ('f444w', 'F444W'), ('f277w', 'F277W')])
+    miri_filt = forms.MultipleChoiceField(choices = miri_filter_list) #choices=[('lrs', 'LRS')])
+    nirspec_filt = forms.MultipleChoiceField(choices = nirspec_filter_list) #choices=[('f070lp_g140h', 'F070LP/G140H'), ('f100lp_g140h', 'F100LP/G140H'), ('f070lp_g140m', 'F070LP/G140M'), ('f100lp_g140m', 'F100LP/G140M'), ('f170lp_g235h', 'F170LP/G235H'), ('f170lp_g235m', 'F170LP/G235M'), ('f290lp_g395h', 'F290LP/G395H'), ('f290lp_g395m', 'F290LP/G395M')])
+    niriss_filt = forms.MultipleChoiceField(choices=niriss_filter_list) #choices=[('soss', 'SOSS')])
+    nircam_filt = forms.MultipleChoiceField(choices=nircam_filter_list) #choices=[('f322w2', 'F322W2'), ('f444w', 'F444W'), ('f277w', 'F277W')])
+    
     def clean_inst(self):
 
         inst = self.cleaned_data['instrument']

@@ -255,13 +255,19 @@ def dynamic_anomaly(request):
     
     if request.method == 'POST':
         print("using post!")
-        print("form.is_valid()", form.is_valid())
-        print("form.errors", form.errors) 
-        # print("form.instrument", form.instrument)
+        # # print("form.clean()", form.clean())
+
+        # # form.is_valid: <bound method BaseForm.is_valid of <DynamicAnomalyForm bound=True, valid=Unknown, fields=(instrument)>>
+        # print("form.is_valid()", form.is_valid()) # False
+        # print("form.errors", form.errors) # This field (instrument) is required
+        # print("form.isbound", form.is_bound)  #True
+        # # print("form.instrument", form.instrument)
 
         if form.is_valid():   # make form bound???   ### NOT INSTRUMENT_IS_VALID!
             print("it's valid!")
-            print(form.cleaned_data)
+            print("form.cleaned_data", form.cleaned_data)
+    
+    
     context = {'form': form,
                'inst': ''}
     template = 'dynamic_anomaly.html'
