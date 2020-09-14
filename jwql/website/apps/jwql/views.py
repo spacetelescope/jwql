@@ -462,7 +462,10 @@ def jwqldb_table_viewer(request):
     table_meta, tablename = get_jwqldb_table_view_components(request)
     _, _, engine, _ = load_connection(get_config()['connection_string'])
     all_jwql_tables = engine.table_names()
-    all_jwql_tables.remove('django_migrations')  # No necessary information.
+
+    if 'django_migrations' in all_jwql_tables:
+        all_jwql_tables.remove('django_migrations')  # No necessary information.
+
     jwql_tables_by_instrument = {}
     instruments = ['nircam', 'nirspec', 'niriss', 'miri', 'fgs']
 
