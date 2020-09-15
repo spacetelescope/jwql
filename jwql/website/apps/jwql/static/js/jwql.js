@@ -517,6 +517,27 @@ function update_thumbnails_page(inst, proposal, base_url) {
 };
 
 /**
+ * Updates various components on the thumbnails anomaly query page
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function update_thumbnails_query_page(base_url) {
+    $.ajax({
+        url: base_url + '/ajax/query_submit/',
+        success: function(data){
+
+            // Perform various updates to divs
+            update_show_count(Object.keys(data.file_data).length, 'activities');
+            update_thumbnail_array(data);
+            update_filter_options(data);
+            update_sort_options(data);
+
+            // Replace loading screen with the proposal array div
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("thumbnail-array").style.display = "block";
+        }});
+};
+
+/**
  * Construct the URL corresponding to a specific GitHub release
  * @param {String} version_string - The x.y.z version number
  */

@@ -796,7 +796,9 @@ def get_proposal_info(filepaths):
     return proposal_info
 
   
-def get_thumbnails_all_instruments(instruments):
+def get_thumbnails_all_instruments(instruments, apertures, filters, observing_modes):
+
+    
     """Return a list of thumbnails available in the filesystem for all
     instruments given requested parameters.
 
@@ -814,27 +816,45 @@ def get_thumbnails_all_instruments(instruments):
 
         ### adjust query based on request
 
+        # instrument='Nircam'
+        # instrument='Nirspec'
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
-        params = {"columns": "filename, expstart, filter, readpatt, date_beg, date_end, apername, exp_type",
-                  "filters": [{"paramName": "expstart",
-                  "values": [{"min": 57404.04, "max": 57404.07}], }]}
-        response = Mast.service_request_async(service, params)
-        results = response[0].json()['data']
+
+        
+        # params = {"columns": "filename",
+        #           "filters": []}
+
+        # params = {"columns": "filename, expstart, filter, readpatt, date_beg, date_end, apername, exp_type",
+        #           "filters": [{"paramName": "apername",
+        #           "values": ['NRCA1_FULL'], }]}
+        # aperture = ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL', 'NRCA5_FULL', 'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL', 'NRCB4_FULL', 'NRCB5_FULL']
+        # aperture = ['NRS1_FULL', 'NRS2_FULL']
+        params = {"columns":"*","filters":[{"paramName":"apername",
+                          "values": apertures}]}
+
+        response = Mast.service_request_async(service,params)
+
+        results = response[0].json()['data'][0]
 
         # Parse the results to get the rootnames
-        filenames = [result['filename'].split('.')[0] for result in results]
+        filenames = [results['filename'].split('.')[0] for result in results]
 
         # Get list of all thumbnails
         thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
 
-    thumbnail_list.extend(thumbnails)
+        thumbnail_list.extend(thumbnails)
+
+        print(thumbnail_list[:20])
+
+    ####TEMPORARY THING####
+    thumbnails_subset = thumbnail_list[:10]
 
     # Get subset of preview images that match the filenames
-    thumbnails = [os.path.basename(item) for item in thumbnail_list if
-                  os.path.basename(item).split('_integ')[0] in filenames]
+    thumbnails_subset = [os.path.basename(item) for item in thumbnail_list if
+                os.path.basename(item).split('_integ')[0] in filenames]
 
-    return thumbnails
+    return thumbnails_subset
 
  
 def get_jwqldb_table_view_components(request):

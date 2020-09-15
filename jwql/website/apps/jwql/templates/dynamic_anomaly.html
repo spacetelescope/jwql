@@ -12,32 +12,20 @@
         });  */
 
         $("#ins").change(function () {
-            $("#miri_filt, #nirspec_filt, #niriss_filt, #nircam_filt, #miri_filt_ta, #nirspec_filt_ta, #niriss_filt_ta, #nircam_filt_ta, #miri_sub, #nirspec_sub, #niriss_sub, #nircam_sub, #miri_sub_ta, #nircam_sub_ta, #niriss_sub_ta, #nirspec_sub_ta").hide(); 
+            $("#miri_filt, #nirspec_filt, #niriss_filt, #nircam_filt").hide(); 
             var selopt = $("#ins").val();
             switch (selopt) {
-                case "miri":
+                case "Miri":
                     $("#miri_filt").show();
-                    $("#miri_filt_ta").show();
-                    $("#miri_sub").show();
-                    $("#miri_sub_ta").show();
                     break;
-                case "nirspec":
+                case "Nirspec":
                     $("#nirspec_filt").show();
-                    $("#nirspec_filt_ta").show();
-                    $("#nirspec_sub").show();
-                    $("#nirspec_sub_ta").show();
                     break;
-                case "niriss":
+                case "Niriss":
                     $("#niriss_filt").show();
-                    $("#niriss_filt_ta").show();
-                    $("#niriss_sub").show();
-                    $("#niriss_sub_ta").show();
                     break;
                 case "nircam":
-                    $("#nircam_filt").show();
-                    $("#nircam_filt_ta").show();
-                    $("#nircam_sub").show();
-                    $("#nircam_sub_ta").show();
+                    $("#Nircam_filt").show();
                     break;
             }
         });
@@ -56,30 +44,28 @@
         
                 <div class='form-group'>
         
-                    <label for='aper' class="col-sm-2 control-label">Anomaly Query Parameters</label>
-                    
+                    <label for='ins' class="col-sm-2 control-label"></label>Anomaly Query Parameters</label>
                     
                     <div class="col-sm-10">
-                    <label for='ins' class="col-sm-2 control-label">The JWST Instrument(s)</label>
-                    <div class="col-sm-3">
-                        <select class='form-control' style='width:186px;'>
-                            {% for option in form.instrument %}
-                                <div class='radio'>
-                                    {{ option }}
-                                </div>
-                            {% endfor %}
-                        </select>
+                    <label for='ins' class="help-block">The JWST Instrument(s)</label>
+                        <div class="input-group">
+                                {% for option in form.ins %}
+                                    <div class='col-sm-10'>
+                                        {{ option }}
+                                    </div>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
-                    </div>
-                    
-                    
                     
                     
                     <div class="col-sm-10">
                         <span id="helpBlock" class="help-block">Aperture(s) used</span>
                         <div class="input-group">
                             {% for field in form.aperture %}
-                                <div class="col-sm-10">{{ field        }}     </div>
+                                <div class="col-sm-10">
+                                    {{ field        }} 
+                                </div>
                             {% endfor %}
                             <div class="input-group-addon" style='width:60px'></div>
                         </div>
@@ -89,8 +75,6 @@
                             <p style="color: red;">{{ error }}</p>
                         {% endfor %}
                     </div>
-        
-
         
                 
                     <div class="col-md-12 dropdown">
@@ -153,10 +137,8 @@
                             {% endfor %}
                         </select>
                     </div>
-                <div class='form-group' id="instrument-mode-section">
         
-                    <label for='filt' class="col-sm-2 control-label">Filter NIRCam</label>
-                    <div class="col-sm-3" id="nircam_filt">
+                    <div class="col-sm-3" id="nircam_filt" style='display:none;'>
                         <select class='form-control' name="nircam_filt" style='width:186px;'>
                             {% for option in form.nircam_filt %}
                                 <div class='radio'>
@@ -166,7 +148,6 @@
                         </select>
                     </div>
         
-                    <label for='filt' class="col-sm-2 control-label">Filter NIRSpec</label>
                     <div class="col-sm-3" id="niriss_filt" style="display:none;">
                         <select class='form-control' name="niriss_filt" style='width:186px;'>
                             {% for option in form.niriss_filt %}
@@ -187,14 +168,35 @@
                         </select>
                     </div>
                     <div class="col-sm-10 col-sm-offset-2">
+                        <span id="helpBlock" class="help-block">The photometric bandpass or grism</span>
                     </div>
+                </div>
+
+                <div class="col-sm-10">
+                    <span id="helpBlock" class="help-block">Anomalies</span>
+                    <div class="input-group">
+                        {% for field in form.anomalies %}
+                            <div class="col-sm-10">
+                                {{ field        }} 
+                            </div>
+                        {% endfor %}
+                        <div class="input-group-addon" style='width:60px'></div>
+                    </div>
+                    
+                    <br>
+                    {% for error in form.aperture.errors %}
+                        <p style="color: red;">{{ error }}</p>
+                    {% endfor %}
                 </div>
 
                 <hr class="col-md-12">
                 
                 <div class='form-group'>
-                    <input type="submit" value="Submit" class="btn btn-primary" name="dynamicanomalyform" />
+                    <input type="submit" value="Save selection" class="btn btn-primary" name="dynamicanomalyform"/>
+                    Please save selection before clicking next!
                 </div>
         
-    
+                <a role="button" class="btn btn-primary my-2" href={{ url( 'jwql:query_submit' ) }}>Next
+                    Querying archive may take a minute...
+                </a>
 {% endblock %}

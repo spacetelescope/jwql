@@ -90,6 +90,7 @@ urlpatterns = [
     re_path(r'^(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/$'.format(instruments), views.archive_thumbnails, name='archive_thumb'),
 
     # AJAX views
+    re_path('ajax/query_submit/', views.archive_thumbnails_query_ajax, name='archive_thumb_query_ajax'),
     re_path(r'^ajax/(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals_ajax, name='archive_ajax'),
     re_path(r'^ajax/(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/$'.format(instruments), views.archive_thumbnails_ajax, name='archive_thumb_ajax'),
 

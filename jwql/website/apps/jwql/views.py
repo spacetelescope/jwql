@@ -256,27 +256,28 @@ def dynamic_anomaly(request):
     if request.method == 'POST':
         print("using post!")
         # # print("form.clean()", form.clean())
-
         # # form.is_valid: <bound method BaseForm.is_valid of <DynamicAnomalyForm bound=True, valid=Unknown, fields=(instrument)>>
         # print("form.is_valid()", form.is_valid()) # False
         # print("form.errors", form.errors) # This field (instrument) is required
         # print("form.isbound", form.is_bound)  #True
         # # print("form.instrument", form.instrument)
-
         if form.is_valid():   # make form bound???   ### NOT INSTRUMENT_IS_VALID!
             print("it's valid!")
             print("form.cleaned_data", form.cleaned_data)
     
+            anomaly_query_config.INSTRUMENTS_CHOSEN = form.cleaned_data['instrument']
+            anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = ['anomaly'] ### NOT PRESENT
+            anomaly_query_config.APERTURES_CHOSEN = form.cleaned_data['aperture']
+            anomaly_query_config.CURRENT_ANOMALIES = ['anomaly current'] ### NOT PRESENT
+            anomaly_query_config.FILTERS_CHOSEN = form.cleaned_data['filter']
+            anomaly_query_config.OBSERVING_MODES_CHOSEN = ['obsmode'] ### NOT PRESENT
     
     context = {'form': form,
                'inst': ''}
     template = 'dynamic_anomaly.html'
     
-
     print("request.method:", request.method)
     return render(request, template, context)
-
-
 
 
 def miri_data_trending(request):
@@ -483,6 +484,37 @@ def archive_thumbnails_ajax(request, user, inst, proposal):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     data = thumbnails_ajax(inst, proposal)
+
+    return JsonResponse(data, json_dumps_params={'indent': 2})
+
+
+@auth_required
+def archive_thumbnails_query_ajax(request, user, insts):
+    """Generate the page listing all archived images in the database
+    for a certain proposal
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    proposal : str
+        Number of observing proposal
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # Ensure the instrument is correctly capitalized
+    insts_list = []
+    for inst in insts:
+        inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+        insts_list.append(inst)
+
+    data = thumbnails_ajax(insts_list)
 
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
@@ -847,18 +879,29 @@ def query_submit(request):
     #     print("PLEASE START AT THE FIRST PAGE IN THE FORMS! (eg, <SERVER ADDRESS>/query_anomaly/ ")
 
     template = 'query_submit.html'
-    # inst_list_chosen = ["NIRSpec", "NIRCam"]
+    inst_list_chosen = ["NIRSpec", "NIRCam"]
+    apers_chosen = ['NRCA1_FULL', 'NRCA5_FULL', 
+                    'NRCB4_FULL', 'NRCB5_FULL', 
+                    'NRS1_FULL', 'NRS2_FULL']
+    filt_chosen = ['CLEAR']
 
-    # print(get_thumbnails_all_instruments(inst_list_chosen))
+    print("getting thumbnails")
+    # thumbnails = get_thumbnails_all_instruments(inst_list_chosen, apers_chosen)
+    insts = anomaly_query_config.INSTRUMENTS_CHOSEN
+    apers = anomaly_query_config.APERTURES_CHOSEN
+    filts = anomaly_query_config.FILTERS_CHOSEN
+    obs_modes = anomaly_query_config.OBSERVING_MODES_CHOSEN
+    thumbnails = get_thumbnails_all_instruments(insts, apers, filts, obs_modes)
 
     context = {'inst': '',
                'anomalies_chosen_from_current_anomalies': anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
-               'apertures_chosen': anomaly_query_config.APERTURES_CHOSEN,
+               'apertures_chosen': apers,
                'current_anomalies': anomaly_query_config.CURRENT_ANOMALIES,
-               'filters_chosen': anomaly_query_config.FILTERS_CHOSEN,
-               'inst_list_chosen': anomaly_query_config.INSTRUMENTS_CHOSEN,
-               'observing_modes_chosen': anomaly_query_config.OBSERVING_MODES_CHOSEN
-               # 'thumbnails': get_thumbnails_all_instruments(inst_list_chosen)
+               'filters_chosen': filts,
+               'inst_list_chosen': insts,
+               'observing_modes_chosen': obs_modes,
+               'thumbnails': thumbnails,
+               'base_url': get_base_url()
               }
 
     return render(request, template, context)

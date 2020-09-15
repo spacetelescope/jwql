@@ -141,6 +141,7 @@ class GroupsIntsForm(BaseForm):
     # sat_mode = RadioField('sat_mode', default='well', choices=[('counts', 'Counts'), ('well', 'Full well fraction')])
     # sat_max = DecimalField('sat_max', default=0.95, validators=[InputRequired('A saturation level is required!'), NumberRange(min=0.0, message='Saturation level must be positive.')])
 
+
 class DynamicAnomalyFormSIMPLE(BaseForm):
     """test to see if calculate_submit will work"""
 
@@ -211,12 +212,12 @@ class DynamicAnomalyForm(BaseForm):
     for filter in FILTERS_PER_INSTRUMENT['nircam']:
         nircam_filter_list.append([filter, filter])
 
-    print("FILTERS_PER_INSTRUMENT['miri']", FILTERS_PER_INSTRUMENT['miri'])
+    # print("FILTERS_PER_INSTRUMENT['miri']", FILTERS_PER_INSTRUMENT['miri'])
 
     # Anomaly Parameters
-    instrument = forms.MultipleChoiceField(required=False,
-                                      choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE]) #,
-                                    #   widget=forms.CheckboxSelectMultiple())
+    ins = forms.MultipleChoiceField(required=False,
+                                      choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
+                                      widget=forms.CheckboxSelectMultiple())
     aperture = forms.MultipleChoiceField(required=False, choices=aperture_list, widget=forms.CheckboxSelectMultiple)
     filter = forms.MultipleChoiceField(required=False, choices=filter_list, widget=forms.CheckboxSelectMultiple)
     early_date = forms.DateField(required=False, initial="eg, 2021-10-02 12:04:39 or 2021-10-02")
@@ -230,6 +231,9 @@ class DynamicAnomalyForm(BaseForm):
     niriss_filt = forms.MultipleChoiceField(choices=niriss_filter_list) #choices=[('soss', 'SOSS')])
     nircam_filt = forms.MultipleChoiceField(choices=nircam_filter_list) #choices=[('f322w2', 'F322W2'), ('f444w', 'F444W'), ('f277w', 'F277W')])
     
+
+    anomalies = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())
+
     def clean_inst(self):
 
         inst = self.cleaned_data['instrument']
