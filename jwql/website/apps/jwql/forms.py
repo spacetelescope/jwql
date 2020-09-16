@@ -215,7 +215,7 @@ class DynamicAnomalyForm(BaseForm):
     # print("FILTERS_PER_INSTRUMENT['miri']", FILTERS_PER_INSTRUMENT['miri'])
 
     # Anomaly Parameters
-    ins = forms.MultipleChoiceField(required=False,
+    instrument = forms.MultipleChoiceField(required=False,
                                       choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
                                       widget=forms.CheckboxSelectMultiple())
     aperture = forms.MultipleChoiceField(required=False, choices=aperture_list, widget=forms.CheckboxSelectMultiple)
