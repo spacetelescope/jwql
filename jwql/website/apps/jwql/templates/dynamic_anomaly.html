@@ -6,9 +6,9 @@
     /* Courtesy of Natasha and Joe */
     $(document).ready(function(){
         $("#instrument").change(function () {
-            $("#miri_filt, #nirspec_filt").hide(); 
+            $("#nirspec_filt").hide(); 
             var selopt = $("#instrument").val();
-            console.log($("#instrument").val())
+            console.log($("#instrument").val());
             switch (selopt) {
                 case "#miri":
                     $("#miri_filt").show();
@@ -20,7 +20,7 @@
                     $("#niriss_filt").show();
                     break;
                 case "#nircam":
-                    $("#Nircam_filt").show();
+                    $("#nircam_filt").show();
                     break;
                 case "fgs":
                     break;
@@ -45,20 +45,19 @@
                     
                     <div class="col-sm-10">
                     <label for='instrument' class="help-block">The JWST Instrument(s)</label>
-                        <div class="input-group" name='instrument' id='instrument'>
-                                {% for option in form.instrument %}
-                                    <div class='col-sm-10'>
-                                        {{ option }}
-                                    </div>
-                                {% endfor %}
-                            </select>
+                        <div class="form-control" name='instrument' id='instrument'>
+                            {% for option in form.instrument %}
+                                <div class='radio'>
+                                    {{ option }}
+                                </div>
+                            {% endfor %}
                         </div>
                     </div>
-                    
-                    
+
+
                     <div class="col-sm-10">
                         <span id="helpBlock" class="help-block">Aperture(s) used</span>
-                        <div class="input-group">
+                        <div class="form-control">
                             {% for field in form.aperture %}
                                 <div class="col-sm-10">
                                     {{ field        }} 

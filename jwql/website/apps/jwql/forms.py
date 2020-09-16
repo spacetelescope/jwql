@@ -217,7 +217,7 @@ class DynamicAnomalyForm(BaseForm):
     # Anomaly Parameters
     instrument = forms.MultipleChoiceField(required=False,
                                       choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
-                                      widget=forms.CheckboxSelectMultiple())
+                                      widget=forms.CheckboxSelectMultiple)  #had () before...
     aperture = forms.MultipleChoiceField(required=False, choices=aperture_list, widget=forms.CheckboxSelectMultiple)
     filter = forms.MultipleChoiceField(required=False, choices=filter_list, widget=forms.CheckboxSelectMultiple)
     early_date = forms.DateField(required=False, initial="eg, 2021-10-02 12:04:39 or 2021-10-02")
