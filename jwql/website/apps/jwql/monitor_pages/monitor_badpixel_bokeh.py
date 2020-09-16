@@ -21,6 +21,7 @@ import os
 
 from astropy.io import fits
 from astropy.time import Time
+import datetime
 import numpy as np
 
 from jwql.database.database_interface import session
@@ -198,7 +199,92 @@ class BadPixelMonitor(BokehTemplate):
         # Load data tables
 
         # comment out for now since the database is empty
-        #self.load_data()
+        self.load_data()
+        self.get_history_data()
+        #self.load_dummy_data()
+
+
+        print(self.refs)
+        print('\n\n\n\DATA:')
+        print(self.bad_history['DEAD'])
+
+
+        #self.bad_latest[badtype] = self.most_recent_coords(badtype)
+
+
+
+
+
+        #We also want to retrieve the information for just the most recent entry for each
+        #bad pixel type. We will print the coordinates of the most-recently found bad pixels
+        #in a table, and show an image (or maybe just a blank 2048x2048 grid) with dots at
+        #the locations of the new bad pixels.
+
+        #for each type of bad pixel, there are three items to show:
+        #1) bad pixel count vs time
+        #2) plot of latest locations (overlain on an image?)
+        #3) table of latest bad pix - API view, so users can download
+
+
+    def post_init(self):
+        self._update_badpix_v_time()
+        #self._update_badpix_loc_plot()
+        #self._badpix_image()
+
+    def get_history_data(self):
+        """Extract data on the history of bad pixel numbers from the
+        database query result
+        """
+
+        print('TYPE:', type(self.badpixel_table))
+        print(self.badpixel_table)
+
+        self.bad_history = {}
+        self.bad_latest = {}
+        for bad_type in BAD_PIXEL_TYPES:
+            matching_rows = [row for row in self.badpixel_table if row.type == bad_type]
+            if len(matching_rows) != 0:
+                times = [row.obs_mid_time for row in matching_rows]
+                badpix_x = [row.x_coord for row in matching_rows]
+                badpix_y = [row.y_coord for row in matching_rows]
+                num = len(badpix_x)
+                self.bad_latest[bad_type] = (badpix_x[-1], badpix_y[-1])
+            # If there are no records of a certain type of bad pixel, then
+            # fall back to a default date and 0 bad pixels. Remember that
+            # these plots are always showing the number of NEW bad pixels
+            # that are not included in the current reference file.
+            else:
+                times = np.array([datetime.datetime(2021, 10, 31), datetime.datetime(2021, 11, 1)])
+                badpix_x = []
+                badpix_y = []
+                num = np.array([0, 0])
+                self.bad_latest[bad_type] = ([], [])
+
+            hover_values = np.array([datetime.datetime.strftime(t, "%d-%b-%Y %H:%M") for t in times])
+            self.bad_history[bad_type] = (times, num, hover_values)
+
+
+    def identify_tables(self):
+        """Determine which dark current database tables as associated with
+        a given instrument"""
+        mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self._instrument.lower()]
+        self.query_table = eval('{}BadPixelQueryHistory'.format(mixed_case_name))
+        self.pixel_table = eval('{}BadPixelStats'.format(mixed_case_name))
+
+    def load_data(self):
+        """Query the database tables to get data"""
+
+        # Determine which database tables are needed based on instrument
+        self.identify_tables()
+
+        # Query database for all data with a matching aperture
+        self.badpixel_table = session.query(self.pixel_table) \
+            .filter(self.pixel_table.detector == self.detector) \
+            .all()
+
+    def load_dummy_data(self):
+        """Create dummy data for Bokeh plot development
+        """
         import datetime
 
         # Populate a dictionary with the number of bad pixels vs time for
@@ -220,50 +306,7 @@ class BadPixelMonitor(BokehTemplate):
             num = np.arange(10)
 
             self.bad_history[badtype] = (times, num)
-            #self.bad_latest[badtype] = self.most_recent_coords(badtype)
-
             self.bad_latest[badtype] = ([0, 1, 2], [4, 4, 4])
-
-
-            print(badtype, self.bad_latest[badtype], times, num)
-
-
-
-
-        #We also want to retrieve the information for just the most recent entry for each
-        #bad pixel type. We will print the coordinates of the most-recently found bad pixels
-        #in a table, and show an image (or maybe just a blank 2048x2048 grid) with dots at
-        #the locations of the new bad pixels.
-
-        #for each type of bad pixel, there are three items to show:
-        #1) bad pixel count vs time
-        #2) plot of latest locations (overlain on an image?)
-        #3) table of latest bad pix - API view, so users can download
-
-
-    def post_init(self):
-        self._update_badpix_v_time()
-        self._update_badpix_loc_plot()
-        self._badpix_image()
-
-    def identify_tables(self):
-        """Determine which dark current database tables as associated with
-        a given instrument"""
-
-        mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self._instrument.lower()]
-        self.query_table = eval('{}BadPixelQueryHistory'.format(mixed_case_name))
-        self.pixel_table = eval('{}BadPixelStats'.format(mixed_case_name))
-
-    def load_data(self):
-        """Query the database tables to get data"""
-
-        # Determine which database tables are needed based on instrument
-        self.identify_tables()
-
-        # Query database for all data with a matching aperture
-        self.badpixel_table = session.query(self.pixel_table) \
-            .filter(self.pixel_table.detector == self.detector) \
-            .all()
 
     def _update_dark_v_time(self):
 
@@ -320,6 +363,10 @@ class BadPixelMonitor(BokehTemplate):
 
             # Define y ranges of bad pixel v. time plot
             buffer_size = 0.05 * (max(self.bad_history[bad_type][1]) - min(self.bad_history[bad_type][1]))
+            #print('\n\n\nBUFFER SIZE: ', buffer_size, '\n\n\n')
+            #print(self.refs['{}_history_yrange'.format(bad_type_lc)].start)
+            if buffer_size == 0:
+                buffer_size = 1
             self.refs['{}_history_yrange'.format(bad_type_lc)].start = min(self.bad_history[bad_type][1]) - buffer_size
             self.refs['{}_history_yrange'.format(bad_type_lc)].end = max(self.bad_history[bad_type][1]) + buffer_size
 
@@ -331,8 +378,8 @@ class BadPixelMonitor(BokehTemplate):
             self.refs['{}_history_xrange'.format(bad_type_lc)].end = max(self.bad_history[bad_type][0]) + horizontal_half_buffer
 
             # Add a title
-            self.refs['{}_history_figure'].title.text = '{}: {} pixels'.format(self._aperture, bad_type)
-            self.refs['{}_history_figure'].title.align = "center"
-            self.refs['{}_history_figure'].title.text_font_size = "20px"
+            self.refs['{}_history_figure'.format(bad_type.lower())].title.text = '{}: {} pixels'.format(self._aperture, bad_type)
+            self.refs['{}_history_figure'.format(bad_type.lower())].title.align = "center"
+            self.refs['{}_history_figure'.format(bad_type.lower())].title.text_font_size = "20px"
 
 BadPixelMonitor()
