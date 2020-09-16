@@ -891,7 +891,7 @@ def query_submit(request):
     apers = anomaly_query_config.APERTURES_CHOSEN
     filts = anomaly_query_config.FILTERS_CHOSEN
     obs_modes = anomaly_query_config.OBSERVING_MODES_CHOSEN
-    thumbnails = get_thumbnails_all_instruments(insts, apers, filts, obs_modes)
+    thumbnails = get_thumbnails_all_instruments(inst_list_chosen, apers_chosen, filt_chosen, obs_modes)
 
     context = {'inst': '',
                'anomalies_chosen_from_current_anomalies': anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,

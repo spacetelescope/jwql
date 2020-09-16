@@ -5,27 +5,24 @@
 <script type="text/javascript">
     /* Courtesy of Natasha and Joe */
     $(document).ready(function(){
-      /*  $("select").select2({
-            theme: "bootstrap",
-            width: "100%",
-            minimumResultsForSearch: 7
-        });  */
-
-        $("#ins").change(function () {
-            $("#miri_filt, #nirspec_filt, #niriss_filt, #nircam_filt").hide(); 
-            var selopt = $("#ins").val();
+        $("#instrument").change(function () {
+            $("#miri_filt, #nirspec_filt").hide(); 
+            var selopt = $("#instrument").val();
+            console.log($("#instrument").val())
             switch (selopt) {
-                case "Miri":
+                case "#miri":
                     $("#miri_filt").show();
                     break;
-                case "Nirspec":
+                case "#nirspec":
                     $("#nirspec_filt").show();
                     break;
-                case "Niriss":
+                case "#niriss":
                     $("#niriss_filt").show();
                     break;
-                case "nircam":
+                case "#nircam":
                     $("#Nircam_filt").show();
+                    break;
+                case "fgs":
                     break;
             }
         });
@@ -44,12 +41,12 @@
         
                 <div class='form-group'>
         
-                    <label for='ins' class="col-sm-2 control-label"></label>Anomaly Query Parameters</label>
+                    <label class="col-sm-2 control-label"></label>Anomaly Query Parameters</label>
                     
                     <div class="col-sm-10">
-                    <label for='ins' class="help-block">The JWST Instrument(s)</label>
-                        <div class="input-group">
-                                {% for option in form.ins %}
+                    <label for='instrument' class="help-block">The JWST Instrument(s)</label>
+                        <div class="input-group" name='instrument' id='instrument'>
+                                {% for option in form.instrument %}
                                     <div class='col-sm-10'>
                                         {{ option }}
                                     </div>
@@ -127,7 +124,7 @@
 
                 <div class='form-group' id="instrument-mode-section">
         
-                    <label for='filt' class="col-sm-2 control-label">Filter MIRI</label>
+                    <label for='filter' class="col-sm-2 control-label">Filter</label>
                     <div class="col-sm-3" id="miri_filt" >
                         <select class='form-control' name="miri_filt" style='width:186px;'>
                             {% for option in form.miri_filt %}
@@ -138,7 +135,7 @@
                         </select>
                     </div>
         
-                    <div class="col-sm-3" id="nircam_filt" style='display:none;'>
+                    <div class="col-sm-3" id="nircam_filt">
                         <select class='form-control' name="nircam_filt" style='width:186px;'>
                             {% for option in form.nircam_filt %}
                                 <div class='radio'>
@@ -148,7 +145,7 @@
                         </select>
                     </div>
         
-                    <div class="col-sm-3" id="niriss_filt" style="display:none;">
+                    <div class="col-sm-3" id="niriss_filt">
                         <select class='form-control' name="niriss_filt" style='width:186px;'>
                             {% for option in form.niriss_filt %}
                                 <div class='radio'>
