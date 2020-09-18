@@ -29,7 +29,7 @@
   x_range: *dead_history_xrange
   y_range: *dead_history_yrange
   tools: 'hover'
-  tooltips: "[('Date:', '@time_labels'), ('Dead pix': '@dead_pixels')]"
+  tooltips: "@time_labels Dead pix: @dead_pixels"
   elements:
     - {'kind': 'circle', 'x': 'time', 'y': 'dead_pixels', line_width: 5, 'source': *dead_history_source}
 
@@ -63,7 +63,7 @@
   x_range: *hot_history_xrange
   y_range: *hot_history_yrange
   tools: 'hover'
-  tooltips: "[('Date:', '@time_labels'), ('Hot pix': '@hot_pixels')]"
+  tooltips: "@time_labels Hot pix: @hot_pixels"
   elements:
     - {'kind': 'circle', 'x': 'time', 'y': 'hot_pixels', line_width: 5, 'source': *hot_history_source}
 
@@ -97,7 +97,7 @@
   x_range: *low_qe_history_xrange
   y_range: *low_qe_history_yrange
   tools: 'hover'
-  tooltips: "[('Date:', '@time_labels'), ('Low QE pix': '@low_qe_pixels')]"
+  tooltips: "@time_labels Low QE pix: @low_qe_pixels"
   elements:
     - {'kind': 'circle', 'x': 'time', 'y': 'low_qe_pixels', line_width: 5, 'source': *low_qe_history_source}
 
@@ -131,7 +131,7 @@
   x_range: *open_history_xrange
   y_range: *open_history_yrange
   tools: 'hover'
-  tooltips: "[('Date:', '@time_labels'), ('Open pix': '@open_pixels')]"
+  tooltips: "@time_labels Open pix: @open_pixels"
   elements:
     - {'kind': 'circle', 'x': 'time', 'y': 'open_pixels', line_width: 5, 'source': *open_history_source}
 
@@ -165,7 +165,7 @@
   x_range: *adj_open_history_xrange
   y_range: *adj_open_history_yrange
   tools: 'hover'
-  tooltips: "[('Date:', '@time_labels'), ('Adj open pix': '@adj_open_pixels')]"
+  tooltips: "@time_labels Adj open pix: @adj_open_pixels"
   elements:
     - {'kind': 'circle', 'x': 'time', 'y': 'adj_open_pixels', line_width: 5, 'source': *adj_open_history_source}
 
@@ -199,7 +199,7 @@
   x_range: *rc_history_xrange
   y_range: *rc_history_yrange
   tools: 'hover'
-  tooltips: "[('Date:', '@time_labels'), ('RC pix': '@rc_pixels')]"
+  tooltips: "@time_labels RC pix: @rc_pixels"
   elements:
     - {'kind': 'circle', 'x': 'time', 'y': 'rc_pixels', line_width: 5, 'source': *rc_history_source}
 
@@ -234,7 +234,7 @@
   x_range: *other_bad_pixel_history_xrange
   y_range: *other_bad_pixel_history_yrange
   tools: 'hover'
-  tooltips: "[('Date:', '@time_labels'), ('Other bad pix': '@other_bad_pixel_pixels')]"
+  tooltips: '@time_labels Other bad pix: @other_bad_pixel_pixels'
   elements:
     - {'kind': 'circle', 'x': 'time', 'y': 'other_bad_pixel_pixels', line_width: 5, 'source': *other_bad_pixel_history_source}
 
@@ -269,56 +269,77 @@
   x_range: *telegraph_history_xrange
   y_range: *telegraph_history_yrange
   tools: 'hover'
-  tooltips: "[('Date:', '@time_labels'), ('Telegraph pix': '@telegraph_pixels')]"
+  tooltips: "@time_labels Telegraph pix: @telegraph_pixels"
   elements:
     - {'kind': 'circle', 'x': 'time', 'y': 'telegraph_pixels', line_width: 5, 'source': *telegraph_history_source}
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Show positions of bad pixels found in darks
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &dark_position_source
+  ref: "dark_position_source"
+  data:
+    bad_type: !self.latest_bad_from_dark_type
+    x_coord: !self.latest_bad_from_dark_x
+    y_coord: !self.latest_bad_from_dark_y
+
+- !Range1d: &dark_position_xrange
+  ref: "dark_position_xrange"
+  start: 0
+  end: 2047
+
+- !Range1d: &dark_position_yrange
+  ref: "dark_position_yrange"
+  start: 0
+  end: 2047
+
+- !Figure: &dark_position_figure
+  ref: "dark_position_figure"
+  x_axis_label: "X (pixel)"
+  y_axis_label: "Y (pixel)"
+  x_range: *dark_position_xrange
+  y_range: *dark_position_yrange
+  tools: 'hover'
+  tooltips: "(x,y): (@x_coord, @y_coord) Type: @bad_type"
+  elements:
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source}
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Mean Dark Image Figure
+# Show positions of bad pixels found in flats
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#- !ColumnDataSource: &bkgd_image
-#    ref: "bkgd_image"
-#    data:
-#        dh: [1]
-#        dw: [1]
-#        image: [[[1,0], [0, 1]]]
-#        dead_pixels_x: !self.bad_latestxxxxx
-#        dead_pixels_y: !self.bad_latestxxxxx
-#- !Range1d: &stamp_xr
-#    ref: "stamp_xr"
-#    #start: 0
-#    #end: 1
-#    #bounds: !!python/tuple [0, 1]
-#- !Range1d: &stamp_yr
-#    ref: "stamp_yr"
-#    #start: 0
-#    #end: 1
-#    #bounds: !!python/tuple [0, 1]
-#- !LogColorMapper: &log_mapper
-#    ref: "log_mapper"
-#    palette: "Greys256"
-#    low: 0.
-#    high: 1.
-#- !Figure: &badpix_image_figure
-#    ref: "badpix_image_figure"
-#    x_axis_label: "Col = SIAF det Y"
-#    y_axis_label: "Row = SIAF det X"
-#    x_range: *stamp_xr
-#    y_range: *stamp_yr
-#    tools: ""
-#    height: 2048  # Not working
-#    width: 2048  # Not working
-#    elements:
-#        - {"kind": "image", "image": "image", "x": 0, "y": 0, "dh": 'dh', "dw": 'dw', "source": *bkgd_image, "color_mapper": *log_mapper}
-#        - {'kind': 'circle', 'x': 'dead_pixels_x', 'y': 'dead_pixels_y', line_width: 5, 'source': *other_bad_pixel__history_source}
-#        - {'kind': 'circle', 'x': 'hot_pixels_x', 'y': 'hot_pixels_y', line_width: 5, 'source': *other_bad_pixel__history_source}
-#        - {'kind': 'circle', 'x': 'open_pixels_x', 'y': 'open_pixels_y', line_width: 5, 'source': *other_bad_pixel__history_source}
-#        - {'kind': 'circle', 'x': 'adjopen_pixels_x', 'y': 'adjopen_pixels_y', line_width: 5, 'source': *other_bad_pixel__history_source}
+- !ColumnDataSource: &flat_position_source
+  ref: "flat_position_source"
+  data:
+    bad_type: !self.latest_bad_from_flat_type
+    x_coord: !self.latest_bad_from_flat_x
+    y_coord: !self.latest_bad_from_flat_y
 
+- !Range1d: &flat_position_xrange
+  ref: "flat_position_xrange"
+  start: 0
+  end: 2047
+
+- !Range1d: &flat_position_yrange
+  ref: "flat_position_yrange"
+  start: 0
+  end: 2047
+
+- !Figure: &flat_position_figure
+  ref: "flat_position_figure"
+  x_axis_label: "X (pixel)"
+  y_axis_label: "Y (pixel)"
+  x_range: *flat_position_xrange
+  y_range: *flat_position_yrange
+  tools: 'hover'
+  tooltips: "(x, y): (@x_coord, @y_coord) Type: @bad_type"
+  elements:
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source}
 
 - !Document:
+  - !row:
+    - *dark_position_figure
+    - *flat_position_figure
   - !row:
     - *dead_history_figure
     - *hot_history_figure

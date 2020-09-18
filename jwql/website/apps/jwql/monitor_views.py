@@ -38,7 +38,7 @@ from jwql.utils.utils import get_config
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
-def badpix_monitor(request, inst):
+def badpixel_monitor(request, inst):
     """Generate the dark monitor page for a given instrument
 
     Parameters

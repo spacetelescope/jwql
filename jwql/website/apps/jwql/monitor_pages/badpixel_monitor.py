@@ -7,7 +7,7 @@ from jwql.utils.utils import get_config
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-class BadPixelMonitor(BokehTemplate):
+class JunkBadPixelMonitor(BokehTemplate):
 
     def pre_init(self):
 

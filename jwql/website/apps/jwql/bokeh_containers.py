@@ -72,26 +72,29 @@ def badpixel_monitor_tabs(instrument):
     for aperture_name, template in templates_all_apertures.items():
 
         tab_plots = []
+        # Add the image of bad pixels found in darks
+        dark_image = template.refs["dark_position_figure"]
+        dark_image.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+        tab_plots.append(dark_image)
+
+        # Add the image of bad pixels found in flats
+        flat_image = template.refs["flat_position_figure"]
+        flat_image.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+        tab_plots.append(flat_image)
+
+        # Add history plots
         for badpix_type in BAD_PIXEL_TYPES:
             history = template.refs["{}_history_figure".format(badpix_type)]
             history.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
             tab_plots.append(history)
 
-        # Now add the image
-        image = tmeplate.refs["badpix_image_figure"]
-        image.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-        tab_plots.append(image)
-
-        # Let's put three plots per line, but keep the image with the marked
-        # locations last, on its own line
-        num_plots = len(tab_plots) - 1
-        plots_per_line = 3
-        start_index = np.arange(0, num_plots, plots_per_line)
+        # Let's put two plots per line
         badpix_layout = layout(
-            tab_plots[start_index[0]: start_index[1]],
-            tab_plots[start_index[1]: start_index[2]],
-            tab_plots[start_index[2]: start_index[3]],
-            [tab_plots[-1]]
+            tab_plots[0:2],
+            tab_plots[2:4],
+            tab_plots[4:6],
+            tab_plots[6:8],
+            tab_plots[8:10]
         )
 
         badpix_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
