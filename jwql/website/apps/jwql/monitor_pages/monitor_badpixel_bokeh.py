@@ -237,7 +237,7 @@ class BadPixelMonitor(BokehTemplate):
                 badpix_x = []
                 badpix_y = []
                 num = np.array([0, 0])
-                self.bad_latest[bad_type] = ([], [], [])
+                self.bad_latest[bad_type] = (max(times), [], [])
 
             hover_values = np.array([datetime.datetime.strftime(t, "%d-%b-%Y") for t in times])
             self.bad_history[bad_type] = (times, num, hover_values)
@@ -297,7 +297,22 @@ class BadPixelMonitor(BokehTemplate):
         self.latest_bad_from_dark_x = []
         self.latest_bad_from_dark_y = []
         dark_times = [self.bad_latest[bad_type][0] for bad_type in DARKS_BAD_PIXEL_TYPES]
-        self.most_recent_dark_date = max(dark_times)
+
+
+        print('DARK_TIMES:', dark_times)
+
+
+
+        if len(dark_times) > 0:
+            self.most_recent_dark_date = max(dark_times)
+        else:
+            self.most_recent_dark_date = datetime.datetime(1999, 10, 31)
+
+
+
+        print('DARK DATE:', self.most_recent_dark_date)
+
+
         for bad_type in DARKS_BAD_PIXEL_TYPES:
             if self.bad_latest[bad_type][0] == self.most_recent_dark_date:
                 self.latest_bad_from_dark_type.extend([bad_type] * len(self.bad_latest[bad_type][1]))
@@ -314,7 +329,10 @@ class BadPixelMonitor(BokehTemplate):
 
         self.latest_bad_from_flat = [[], [], []]
         flat_times = [self.bad_latest[bad_type][0] for bad_type in FLATS_BAD_PIXEL_TYPES]
-        self.most_recent_flat_date = max(flat_times)
+        if len(flat_times) > 1:
+            self.most_recent_flat_date = max(flat_times)
+        else:
+            self.most_recent_flat_date = datetime.datetime(1999, 10, 31)
         for bad_type in FLATS_BAD_PIXEL_TYPES:
             if self.bad_latest[bad_type][0] == self.most_recent_flat_date:
                 self.latest_bad_from_flat_type.extend([bad_type] * len(self.bad_latest[bad_type][1]))

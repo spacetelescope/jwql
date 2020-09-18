@@ -331,10 +331,10 @@
   tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset, save'
   tooltips: "(x,y): (@x_coord, @y_coord) Type: @bad_type"
   elements:
-    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source, 'color': 'red', 'size': 6, 'view': *figure_hot_view}
-    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source, 'color': 'blue', 'size': 6, 'view': *figure_rc_view}
-    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source, 'color': 'green', 'size': 6, 'view': *figure_other_view}
-    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source, 'color': 'black', 'size': 6, 'view': *figure_telegraph_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source, 'color': 'red', 'legend': 'Hot', 'size': 6, 'view': *figure_hot_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source, 'color': 'blue', 'legend': 'RC', 'size': 6, 'view': *figure_rc_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source, 'color': 'green', 'legend': 'Other', 'size': 6, 'view': *figure_other_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source, 'color': 'black', 'legend': 'Telegraph', 'size': 6, 'view': *figure_telegraph_view}
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Show positions of bad pixels found in flats
@@ -393,10 +393,10 @@
   tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset, save'
   tooltips: "(x, y): (@x_coord, @y_coord) Type: @bad_type"
   elements:
-    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'red', 'size': 6, 'view': *figure_dead_view}
-    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'blue', 'size': 6, 'view': *figure_open_view}
-    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'green', 'size': 6, 'view': *figure_adj_open_view}
-    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'black', 'size': 6, 'view': *figure_low_qe_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'red', 'legend': 'Dead', 'size': 6, 'view': *figure_dead_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'blue', 'legend': 'Open', 'size': 6, 'view': *figure_open_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'green', 'legend': 'Adj Open', 'size': 6, 'view': *figure_adj_open_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'black', 'legend': 'Low QE', 'size': 6, 'view': *figure_low_qe_view}
 
 
 - !Document:
