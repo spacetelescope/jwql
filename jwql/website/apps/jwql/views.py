@@ -690,7 +690,7 @@ def query_submit(request):
                'inst_list_chosen': anomaly_query_config.INSTRUMENTS_CHOSEN,
                'observing_modes_chosen': anomaly_query_config.OBSERVING_MODES_CHOSEN
                # 'thumbnails': get_thumbnails_all_instruments(inst_list_chosen)
-              }
+               }
 
     return render(request, template, context)
 
