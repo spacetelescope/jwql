@@ -69,10 +69,11 @@ withCredentials([
                 "cd ../", // Install jwst_reffiles
                 "git clone https://github.com/spacetelescope/jwst_reffiles", // Install jwst_reffiles
                 "cd jwst_reffiles", // Install jwst_reffiles
+                "pwd",
                 "python setup.py install", // Install jwst_reffiles
-                "cd ../", // Install jwst_reffiles
-                "cd jwql/", // Install jwst_reffiles
-                "python setup.py install", // Install JWQL package
+                "cd ../", // Install jwql
+                "cd jwql/", // Install jwql
+                "python setup.py install", // Install jwql
                 "python setup.py sdist bdist_wheel" // Build JWQL pacakge wheel for PyPI
             ]
 
