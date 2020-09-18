@@ -424,11 +424,11 @@ def instrument(request, inst):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'instrument.html'
-    url_dict = {'fgs': 'http://jwst-docs.stsci.edu/display/JTI/Fine+Guidance+Sensor%2C+FGS?q=fgs',
-                'miri': 'http://jwst-docs.stsci.edu/display/JTI/Mid+Infrared+Instrument',
-                'niriss': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Imager+and+Slitless+Spectrograph',
-                'nirspec': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Spectrograph',
-                'nircam': 'http://jwst-docs.stsci.edu/display/JTI/Near+Infrared+Camera'}
+    url_dict = {'fgs': 'https://jwst-docs.stsci.edu/jwst-observatory-hardware/fine-guidance-sensor',
+                'miri': 'https://jwst-docs.stsci.edu/mid-infrared-instrument',
+                'niriss': 'https://jwst-docs.stsci.edu/near-infrared-imager-and-slitless-spectrograph',
+                'nirspec': 'https://jwst-docs.stsci.edu/near-infrared-spectrograph',
+                'nircam': 'https://jwst-docs.stsci.edu/near-infrared-camera'}
 
     doc_url = url_dict[inst.lower()]
 
