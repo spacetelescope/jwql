@@ -77,7 +77,7 @@ withCredentials([
                 "cd jwst_reffiles", // Install jwst_reffiles
                 "pwd",
                 "ls",
-                "python setup.py install", // Install jwst_reffiles
+                "python jwst_reffiles/setup.py install", // Install jwst_reffiles
                 "cd ../", // Install jwql
                 "pwd",
                 "ls",
