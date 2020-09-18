@@ -143,3 +143,40 @@ def dark_monitor_tabs(instrument):
     script, div = components(tabs)
 
     return div, script
+
+def readnoise_monitor_tabs(instrument):
+    """Creates the various tabs of the readnoise monitor results page.
+
+    Parameters
+    ----------
+    instrument : str
+        The JWST instrument of interest (e.g. ``nircam``).
+
+    Returns
+    -------
+    div : str
+        The HTML div to render readnoise monitor plots
+    script : str
+        The JS script to render readnoise monitor plots
+    """
+
+    full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
+
+    templates_all_apertures = {}
+    for aperture in full_apertures:
+
+        # Start with default values for instrument and aperture because
+        # BokehTemplate's __init__ method does not allow input arguments
+        monitor_template = monitor_pages.ReadnoiseMonitor()
+
+        # Set instrument and monitor using ReadnoiseMonitor's setters
+        monitor_template.aperture_info = (instrument, aperture)
+        templates_all_apertures[aperture] = monitor_template
+
+    # Build tabs
+    tabs = Tabs(tabs=all_tabs)
+
+    # Return tab HTML and JavaScript to web app
+    script, div = components(tabs)
+
+    return div, script

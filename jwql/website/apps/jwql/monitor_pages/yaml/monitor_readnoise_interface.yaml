@@ -1,0 +1,32 @@
+# Mean readnoise vs time figure
+- !ColumnDataSource: &mean_readnoise_source
+    ref: "mean_readnoise_source"
+    data:
+        time: []
+        mean_rn: []
+- !Range1d: &mean_readnoise_xr
+    ref: "mean_readnoise_xr"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &mean_readnoise_yr
+    ref: "mean_readnoise_yr"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &mean_readnoise_figure
+    ref: "mean_readnoise_figure"
+    title: "Mean Readnoise vs Time"
+    x_axis_label: "Time"
+    y_axis_label: "Mean readnoise (DN-)"
+    x_range: *mean_readnoise_xr
+    y_range: *mean_readnoise_yr
+    height: 800
+    width: 800
+    tools: "hover"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'mean_rn', 'size': 6, 'source': *mean_readnoise_source}
+# Document structure
+- !Document:
+    - !column:
+        - *mean_readnoise_figure
