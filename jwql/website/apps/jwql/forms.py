@@ -54,6 +54,7 @@ from jwedb.edb_interface import is_valid_mnemonic
 # from data_containers import get_thumbnails_all_instruments
 from jwql.database import database_interface as di
 from jwql.utils.constants import ANOMALY_CHOICES
+from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
 from jwql.utils.constants import FILTERS_PER_INSTRUMENT
 from jwql.utils.constants import FULL_FRAME_APERTURES
 from jwql.utils.constants import GENERIC_SUFFIX_TYPES
@@ -189,6 +190,22 @@ class DynamicAnomalyForm(BaseForm):
             item = [aperture, aperture]
             aperture_list.append(item)
 
+    miri_aperture_list = []
+    for aperture in FULL_FRAME_APERTURES['MIRI']:
+        miri_aperture_list.append([aperture, aperture])
+
+    nirspec_aperture_list = []
+    for aperture in FULL_FRAME_APERTURES['NIRSPEC']:
+        nirspec_aperture_list.append([aperture, aperture])
+    
+    nircam_aperture_list = []
+    for aperture in FULL_FRAME_APERTURES['NIRCAM']:
+        nircam_aperture_list.append([aperture, aperture])
+
+    niriss_aperture_list = []
+    for aperture in FULL_FRAME_APERTURES['NIRISS']:
+        niriss_aperture_list.append([aperture, aperture])
+
     filter_list = []
     for instrument in FILTERS_PER_INSTRUMENT.keys():
         # # if instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:   # eg ['nirspec']: selects relevant filters, but not specific to chosen instruments
@@ -212,6 +229,30 @@ class DynamicAnomalyForm(BaseForm):
     for filter in FILTERS_PER_INSTRUMENT['nircam']:
         nircam_filter_list.append([filter, filter])
 
+    miri_anomalies_list = []
+    for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
+        if 'miri' in ANOMALIES_PER_INSTRUMENT[anomaly]:
+            item = [anomaly, anomaly]
+            miri_anomalies_list.append(item)
+
+    nircam_anomalies_list = []
+    for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
+        if 'nircam' in ANOMALIES_PER_INSTRUMENT[anomaly]:
+            item = [anomaly, anomaly]
+            nircam_anomalies_list.append(item)
+
+    niriss_anomalies_list = []
+    for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
+        if 'niriss' in ANOMALIES_PER_INSTRUMENT[anomaly]:
+            item = [anomaly, anomaly]
+            niriss_anomalies_list.append(item)
+    
+    nirspec_anomalies_list = []
+    for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
+        if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]:
+            item = [anomaly, anomaly]
+            nirspec_anomalies_list.append(item)
+
     # print("FILTERS_PER_INSTRUMENT['miri']", FILTERS_PER_INSTRUMENT['miri'])
 
     # Anomaly Parameters
@@ -225,12 +266,21 @@ class DynamicAnomalyForm(BaseForm):
     exp_time_max = forms.DecimalField(initial="57404.70")
     exp_time_min = forms.DecimalField(initial="57404.04")
     
+    miri_aper = forms.MultipleChoiceField(choices = miri_aperture_list, widget=forms.CheckboxSelectMultiple)
+    nirspec_aper = forms.MultipleChoiceField(choices = nirspec_aperture_list, widget=forms.CheckboxSelectMultiple)
+    niriss_aper = forms.MultipleChoiceField(choices=niriss_aperture_list, widget=forms.CheckboxSelectMultiple)
+    nircam_aper = forms.MultipleChoiceField(choices=nircam_aperture_list, widget=forms.CheckboxSelectMultiple)
+
     # should use something like 'nirpsec_filt', choices=[...] in order to choose particular series to show up
-    miri_filt = forms.MultipleChoiceField(choices = miri_filter_list) #choices=[('lrs', 'LRS')])
-    nirspec_filt = forms.MultipleChoiceField(choices = nirspec_filter_list) #choices=[('f070lp_g140h', 'F070LP/G140H'), ('f100lp_g140h', 'F100LP/G140H'), ('f070lp_g140m', 'F070LP/G140M'), ('f100lp_g140m', 'F100LP/G140M'), ('f170lp_g235h', 'F170LP/G235H'), ('f170lp_g235m', 'F170LP/G235M'), ('f290lp_g395h', 'F290LP/G395H'), ('f290lp_g395m', 'F290LP/G395M')])
-    niriss_filt = forms.MultipleChoiceField(choices=niriss_filter_list) #choices=[('soss', 'SOSS')])
-    nircam_filt = forms.MultipleChoiceField(choices=nircam_filter_list) #choices=[('f322w2', 'F322W2'), ('f444w', 'F444W'), ('f277w', 'F277W')])
+    miri_filt = forms.MultipleChoiceField(choices = miri_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('lrs', 'LRS')])
+    nirspec_filt = forms.MultipleChoiceField(choices = nirspec_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('f070lp_g140h', 'F070LP/G140H'), ('f100lp_g140h', 'F100LP/G140H'), ('f070lp_g140m', 'F070LP/G140M'), ('f100lp_g140m', 'F100LP/G140M'), ('f170lp_g235h', 'F170LP/G235H'), ('f170lp_g235m', 'F170LP/G235M'), ('f290lp_g395h', 'F290LP/G395H'), ('f290lp_g395m', 'F290LP/G395M')])
+    niriss_filt = forms.MultipleChoiceField(choices=niriss_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('soss', 'SOSS')])
+    nircam_filt = forms.MultipleChoiceField(choices=nircam_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('f322w2', 'F322W2'), ('f444w', 'F444W'), ('f277w', 'F277W')])
     
+    miri_anomalies= forms.MultipleChoiceField(choices = miri_anomalies_list, widget=forms.CheckboxSelectMultiple)
+    nirspec_anomalies = forms.MultipleChoiceField(choices = nirspec_anomalies_list, widget=forms.CheckboxSelectMultiple)
+    niriss_anomalies = forms.MultipleChoiceField(choices=niriss_anomalies_list, widget=forms.CheckboxSelectMultiple)
+    nircam_anomalies = forms.MultipleChoiceField(choices=nircam_anomalies_list, widget=forms.CheckboxSelectMultiple)
 
     anomalies = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())
 
