@@ -8,6 +8,13 @@ test_api_views.py
     :members:
     :undoc-members:
 
+test_bad_pixel_monitor.py
+-------------------------
+.. automodule:: jwql.tests.test_bad_pixel_monitor
+    :members:
+    :undoc-members:
+
+
 test_bias_monitor.py
 --------------------
 .. automodule:: jwql.tests.test_bias_monitor
