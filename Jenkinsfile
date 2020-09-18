@@ -66,6 +66,12 @@ withCredentials([
             bc.build_cmds = [
                 "conda env update --file=environment${env_py}.yml", // Update env from file
                 "pip install codecov pytest-cov", // Install additional packages
+                "cd ../", // Install jwst_reffiles
+                "git clone https://github.com/spacetelescope/jwst_reffiles", // Install jwst_reffiles
+                "cd jwst_reffiles", // Install jwst_reffiles
+                "python setup.py install", // Install jwst_reffiles
+                "cd ../", // Install jwst_reffiles
+                "cd jwql/", // Install jwst_reffiles
                 "python setup.py install", // Install JWQL package
                 "python setup.py sdist bdist_wheel" // Build JWQL pacakge wheel for PyPI
             ]
