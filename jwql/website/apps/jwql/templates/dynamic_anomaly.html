@@ -6,24 +6,29 @@
     /* Courtesy of Natasha and Joe */
     $(document).ready(function(){
         $("#instrument").change(function () {
-            $("#nirspec_filt").hide(); 
-            var selopt = $("#instrument").val();
-            console.log($("#instrument").val());
-            switch (selopt) {
-                case "#miri":
-                    $("#miri_filt").show();
-                    break;
-                case "#nirspec":
-                    $("#nirspec_filt").show();
-                    break;
-                case "#niriss":
-                    $("#niriss_filt").show();
-                    break;
-                case "#nircam":
-                    $("#nircam_filt").show();
-                    break;
-                case "fgs":
-                    break;
+            if (document.getElementById("id_instrument_1").checked){
+                $("#miri_filt").show();
+            }
+            if (document.getElementById("id_instrument_2").checked){
+                $("#nircam_filt").show();
+            }
+            if (document.getElementById("id_instrument_3").checked){
+                $("#niriss_filt").show();
+            }
+            if (document.getElementById("id_instrument_4").checked){
+                $("#nirspec_filt").show();
+            }
+            if (document.getElementById("id_instrument_1").checked==false){
+                $("#miri_filt").hide();
+            }
+            if (document.getElementById("id_instrument_2").checked==false){
+                $("#nircam_filt").hide();
+            }
+            if (document.getElementById("id_instrument_3").checked==false){
+                $("#niriss_filt").hide();
+            }
+            if (document.getElementById("id_instrument_4").checked==false){
+                $("#nirspec_filt").hide();
             }
         });
     });
@@ -39,7 +44,7 @@
 
                 <hr class="col-md-12">
         
-                <div class='form-group'>
+                <div class='instrument-form-group'>
         
                     <label class="col-sm-2 control-label"></label>Anomaly Query Parameters</label>
                     
@@ -86,8 +91,6 @@
                             </div>
                     </div>
 
-
-
                 <hr class="col-md-12">
                 <div class='form-group'>
         
@@ -123,8 +126,8 @@
 
                 <div class='form-group' id="instrument-mode-section">
         
-                    <label for='filter' class="col-sm-2 control-label">Filter</label>
                     <div class="col-sm-3" id="miri_filt" >
+                        <label for='filter' class="col-sm-2 control-label">MIRI Filter</label>
                         <select class='form-control' name="miri_filt" style='width:186px;'>
                             {% for option in form.miri_filt %}
                                 <div class='radio'>
@@ -135,6 +138,7 @@
                     </div>
         
                     <div class="col-sm-3" id="nircam_filt">
+                        <label for='filter' class="col-sm-2 control-label">NIRCam Filter</label>
                         <select class='form-control' name="nircam_filt" style='width:186px;'>
                             {% for option in form.nircam_filt %}
                                 <div class='radio'>
@@ -145,6 +149,7 @@
                     </div>
         
                     <div class="col-sm-3" id="niriss_filt">
+                        <label for='filter' class="col-sm-2 control-label">NIRISS Filter</label>
                         <select class='form-control' name="niriss_filt" style='width:186px;'>
                             {% for option in form.niriss_filt %}
                                 <div class='radio'>
@@ -154,7 +159,8 @@
                         </select>
                     </div>
         
-                    <div class="col-sm-3" id="nirspec_filt" style="display:none;">
+                    <div class="col-sm-3" id="nirspec_filt">
+                        <label for='filter' class="col-sm-2 control-label">NIRSpec Filter</label>
                         <select class='form-control' name="nirspec_filt" style='width:186px;'>
                             {% for option in form.nirspec_filt %}
                                 <div class='radio'>
