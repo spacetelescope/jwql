@@ -28,12 +28,15 @@ from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSB
 from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats
 from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
-from jwql.instrument_monitors.common_monitors import bad_pixel_monitor
 
 
 ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
 
+if not ON_JENKINS:
+    from jwql.instrument_monitors.common_monitors import bad_pixel_monitor
 
+
+@pytest.mark.skipif(ON_JENKINS, reason='Jenkins server currently unable to import jwst_reffiles')
 def test_bad_map_to_list():
     """Check that bad pixel locations are correctly retrieved from an image
     """
@@ -61,6 +64,7 @@ def test_bad_map_to_list():
     assert rc == (y_rc, x_rc)
 
 
+@pytest.mark.skipif(ON_JENKINS, reason='Jenkins server currently unable to import jwst_reffiles')
 def test_check_for_sufficient_files():
     """Be sure that the file threshold values are being used correctly
     """
@@ -80,6 +84,7 @@ def test_check_for_sufficient_files():
     assert to_run is False
 
 
+@pytest.mark.skipif(ON_JENKINS, reason='Jenkins server currently unable to import jwst_reffiles')
 def test_exclude_crds_mask_pix():
     """Test that bad pixel images are differentiated correctly
     """
@@ -112,6 +117,7 @@ def test_exclude_crds_mask_pix():
     assert np.all(diff[~mask] == 0)
 
 
+@pytest.mark.skipif(ON_JENKINS, reason='Jenkins server currently unable to import jwst_reffiles')
 def test_filter_query_results():
     """Test MAST query filtering to extract most common filter/pupil and
     acceptable readout patterns
@@ -149,6 +155,7 @@ miri_list = [('MIRIMAGE', 'MIRIM_FULL'), ('MIRIFULONG', 'MIRIM_FULL'), ('MIRIFUS
 fgs_list = ['FGS1_FULL', 'FGS2_FULL']
 
 
+@pytest.mark.skipif(ON_JENKINS, reason='Jenkins server currently unable to import jwst_reffiles')
 @pytest.mark.parametrize("instrument,expected_list", [("nircam", nrc_list), ("niriss", nis_list),
                                                       ("nirspec", nrs_list), ("miri", miri_list), ("fgs", fgs_list)])
 def test_get_possible_apertures(instrument, expected_list):
@@ -160,6 +167,7 @@ def test_get_possible_apertures(instrument, expected_list):
     assert ap_list == expected_list
 
 
+@pytest.mark.skipif(ON_JENKINS, reason='Jenkins server currently unable to import jwst_reffiles')
 def test_identify_tables():
     """Be sure the correct database tables are identified
     """
@@ -170,6 +178,7 @@ def test_identify_tables():
     assert badpix.pixel_table == eval('NIRCamBadPixelStats')
 
 
+@pytest.mark.skipif(ON_JENKINS, reason='Jenkins server currently unable to import jwst_reffiles')
 @pytest.mark.skipif(ON_JENKINS,
                     reason='Requires access to central storage.')
 def test_locate_rate_files():
@@ -186,6 +195,7 @@ def test_locate_rate_files():
     assert rates2copy == expected
 
 
+@pytest.mark.skipif(ON_JENKINS, reason='Jenkins server currently unable to import jwst_reffiles')
 @pytest.mark.skipif(ON_JENKINS,
                     reason='Requires access to central storage.')
 def test_locate_uncal_files():
@@ -203,6 +213,7 @@ def test_locate_uncal_files():
     assert found_base[1] == file2
 
 
+@pytest.mark.skipif(ON_JENKINS, reason='Jenkins server currently unable to import jwst_reffiles')
 def test_make_crds_parameter_dict():
     """Test that the dictionary to be used for CRDS queries is properly
     created
