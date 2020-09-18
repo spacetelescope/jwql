@@ -81,6 +81,7 @@ withCredentials([
                 "cd ../", // Install jwql
                 "pwd",
                 "ls",
+                "python -c 'import jwst_reffiles;print(jwst_reffiles.__path__)'"
                 "cd jwql/", // Install jwql
                 "python setup.py install", // Install jwql
                 "python setup.py sdist bdist_wheel" // Build JWQL pacakge wheel for PyPI
