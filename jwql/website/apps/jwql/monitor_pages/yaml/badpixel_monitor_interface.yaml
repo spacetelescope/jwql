@@ -28,7 +28,7 @@
   y_axis_label: "Number of DEAD pixels"
   x_range: *dead_history_xrange
   y_range: *dead_history_yrange
-  tools: 'hover'
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset'
   tooltips: "@time_labels Dead pix: @dead_pixels"
   elements:
     - {'kind': 'circle', 'x': 'time', 'y': 'dead_pixels', line_width: 5, 'source': *dead_history_source}
@@ -62,7 +62,7 @@
   y_axis_label: "Number of HOT pixels"
   x_range: *hot_history_xrange
   y_range: *hot_history_yrange
-  tools: 'hover'
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset'
   tooltips: "@time_labels Hot pix: @hot_pixels"
   elements:
     - {'kind': 'circle', 'x': 'time', 'y': 'hot_pixels', line_width: 5, 'source': *hot_history_source}
@@ -96,7 +96,7 @@
   y_axis_label: "Number of LOW QE pixels"
   x_range: *low_qe_history_xrange
   y_range: *low_qe_history_yrange
-  tools: 'hover'
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset'
   tooltips: "@time_labels Low QE pix: @low_qe_pixels"
   elements:
     - {'kind': 'circle', 'x': 'time', 'y': 'low_qe_pixels', line_width: 5, 'source': *low_qe_history_source}
@@ -130,7 +130,7 @@
   y_axis_label: "Number of OPEN pixels"
   x_range: *open_history_xrange
   y_range: *open_history_yrange
-  tools: 'hover'
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset'
   tooltips: "@time_labels Open pix: @open_pixels"
   elements:
     - {'kind': 'circle', 'x': 'time', 'y': 'open_pixels', line_width: 5, 'source': *open_history_source}
@@ -164,7 +164,7 @@
   y_axis_label: "Number of OPEN ADJACENT pixels"
   x_range: *adj_open_history_xrange
   y_range: *adj_open_history_yrange
-  tools: 'hover'
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset'
   tooltips: "@time_labels Adj open pix: @adj_open_pixels"
   elements:
     - {'kind': 'circle', 'x': 'time', 'y': 'adj_open_pixels', line_width: 5, 'source': *adj_open_history_source}
@@ -198,7 +198,7 @@
   y_axis_label: "Number of RC pixels"
   x_range: *rc_history_xrange
   y_range: *rc_history_yrange
-  tools: 'hover'
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset'
   tooltips: "@time_labels RC pix: @rc_pixels"
   elements:
     - {'kind': 'circle', 'x': 'time', 'y': 'rc_pixels', line_width: 5, 'source': *rc_history_source}
@@ -233,7 +233,7 @@
   y_axis_label: "Number of OTHER BAD pixels"
   x_range: *other_bad_pixel_history_xrange
   y_range: *other_bad_pixel_history_yrange
-  tools: 'hover'
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset'
   tooltips: '@time_labels Other bad pix: @other_bad_pixel_pixels'
   elements:
     - {'kind': 'circle', 'x': 'time', 'y': 'other_bad_pixel_pixels', line_width: 5, 'source': *other_bad_pixel_history_source}
@@ -268,7 +268,7 @@
   y_axis_label: "Number of TELEGRAPH pixels"
   x_range: *telegraph_history_xrange
   y_range: *telegraph_history_yrange
-  tools: 'hover'
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset'
   tooltips: "@time_labels Telegraph pix: @telegraph_pixels"
   elements:
     - {'kind': 'circle', 'x': 'time', 'y': 'telegraph_pixels', line_width: 5, 'source': *telegraph_history_source}
@@ -294,16 +294,47 @@
   start: 0
   end: 2047
 
+- !CDSView: &figure_hot_view
+    source: *dark_position_source
+    filters:
+        - !GroupFilter:
+            column_name: "bad_type"
+            group: "HOT"
+
+- !CDSView: &figure_rc_view
+    source: *dark_position_source
+    filters:
+        - !GroupFilter:
+            column_name: "bad_type"
+            group: "RC"
+
+- !CDSView: &figure_other_view
+    source: *dark_position_source
+    filters:
+        - !GroupFilter:
+            column_name: "bad_type"
+            group: "OTHER_BAD_PIXEL"
+
+- !CDSView: &figure_telegraph_view
+    source: *dark_position_source
+    filters:
+        - !GroupFilter:
+            column_name: "bad_type"
+            group: "TELEGRAPH"
+
 - !Figure: &dark_position_figure
   ref: "dark_position_figure"
   x_axis_label: "X (pixel)"
   y_axis_label: "Y (pixel)"
   x_range: *dark_position_xrange
   y_range: *dark_position_yrange
-  tools: 'hover'
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset'
   tooltips: "(x,y): (@x_coord, @y_coord) Type: @bad_type"
   elements:
-    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source, 'color': 'red', 'size': 6, 'view': *figure_hot_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source, 'color': 'blue', 'size': 6, 'view': *figure_rc_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source, 'color': 'green', 'size': 6, 'view': *figure_other_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source, 'color': 'black', 'size': 6, 'view': *figure_telegraph_view}
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Show positions of bad pixels found in flats
@@ -325,16 +356,48 @@
   start: 0
   end: 2047
 
+- !CDSView: &figure_dead_view
+    source: *flat_position_source
+    filters:
+        - !GroupFilter:
+            column_name: "bad_type"
+            group: "DEAD"
+
+- !CDSView: &figure_open_view
+    source: *flat_position_source
+    filters:
+        - !GroupFilter:
+            column_name: "bad_type"
+            group: "OPEN"
+
+- !CDSView: &figure_adj_open_view
+    source: *flat_position_source
+    filters:
+        - !GroupFilter:
+            column_name: "bad_type"
+            group: "ADJ_OPEN"
+
+- !CDSView: &figure_low_qe_view
+    source: *flat_position_source
+    filters:
+        - !GroupFilter:
+            column_name: "bad_type"
+            group: "LOW_QE"
+
 - !Figure: &flat_position_figure
   ref: "flat_position_figure"
   x_axis_label: "X (pixel)"
   y_axis_label: "Y (pixel)"
   x_range: *flat_position_xrange
   y_range: *flat_position_yrange
-  tools: 'hover'
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset'
   tooltips: "(x, y): (@x_coord, @y_coord) Type: @bad_type"
   elements:
-    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'red', 'size': 6, 'view': *figure_dead_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'blue', 'size': 6, 'view': *figure_open_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'green', 'size': 6, 'view': *figure_adj_open_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'black', 'size': 6, 'view': *figure_low_qe_view}
+
 
 - !Document:
   - !row:

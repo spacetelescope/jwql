@@ -199,53 +199,13 @@ class BadPixelMonitor(BokehTemplate):
         self.interface_file = os.path.join(SCRIPT_DIR, "yaml", "badpixel_monitor_interface.yaml")
 
         # Load data tables
-        #self.load_data()
-        #self.get_history_data()
-        self.load_dummy_data()
-
-
-        print('\n\n\nBEFORE\n')
+        self.load_data()
+        self.get_history_data()
+        # For development, while the database tables are empty
+        #self.load_dummy_data()
 
         # Get dates and coordinates of the most recent entries
         self.most_recent_data()
-
-
-        print('\n\n\nAFTER\n')
-
-
-        print(self.latest_bad_from_dark_type)
-        print(self.latest_bad_from_dark_x)
-        print(self.latest_bad_from_dark_y)
-
-        print(self.latest_bad_from_flat_type)
-        print(self.latest_bad_from_flat_x)
-        print(self.latest_bad_from_flat_y)
-
-        for b in BAD_PIXEL_TYPES:
-            print(b)
-            print(self.bad_history[b])
-            print('\n')
-
-
-        #print(self.latest_bad_from_dark[0])
-        #print(self.latest_bad_from_dark[1])
-        #print(self.latest_bad_from_dark[2])
-
-        #print(self.latest_bad_from_flat[0])
-        #print(self.latest_bad_from_flat[1])
-        #print(self.latest_bad_from_flat[2])
-
-
-        #We also want to retrieve the information for just the most recent entry for each
-        #bad pixel type. We will print the coordinates of the most-recently found bad pixels
-        #in a table, and show an image (or maybe just a blank 2048x2048 grid) with dots at
-        #the locations of the new bad pixels.
-
-        #for each type of bad pixel, there are three items to show:
-        #1) bad pixel count vs time
-        #2) plot of latest locations (overlain on an image?)
-        #3) table of latest bad pix - API view, so users can download
-
 
     def post_init(self):
         self._update_badpix_v_time()
@@ -279,7 +239,7 @@ class BadPixelMonitor(BokehTemplate):
                 num = np.array([0, 0])
                 self.bad_latest[bad_type] = ([], [], [])
 
-            hover_values = np.array([datetime.datetime.strftime(t, "%d-%b-%Y %H:%M") for t in times])
+            hover_values = np.array([datetime.datetime.strftime(t, "%d-%b-%Y") for t in times])
             self.bad_history[bad_type] = (times, num, hover_values)
 
     def identify_tables(self):
@@ -313,29 +273,26 @@ class BadPixelMonitor(BokehTemplate):
         # bad pixels found in the most recent search
         self.bad_history = {}
         self.bad_latest = {}
-        for badtype in BAD_PIXEL_TYPES:
+        for i, badtype in enumerate(BAD_PIXEL_TYPES):
 
             # Comment out while waiting for populated database tables
             #num, times = self.bad_pixel_history(badtype)
+            delta = 10 * i
 
             # Placeholders while we wait for a populated database
             days = np.arange(1, 11)
             times = np.array([datetime.datetime(2020, 8, day, 12, 0, 0) for day in days])
             num = np.arange(10)
-            hover_values = np.array([datetime.datetime.strftime(t, "%d-%b-%Y %H:%M") for t in times])
+            hover_values = np.array([datetime.datetime.strftime(t, "%d-%b-%Y") for t in times])
 
             self.bad_history[badtype] = (times, num, hover_values)
-            self.bad_latest[badtype] = (datetime.datetime(1999, 12, 31), [0, 1, 2], [4, 4, 4])
+            self.bad_latest[badtype] = (datetime.datetime(1999, 12, 31), [500+delta, 501+delta, 502+delta], [4, 4, 4])
 
     def most_recent_data(self):
         """Get the bad pixel type and coordinates associated with the most
         recent run of the monitor. Note that the most recent date can be
         different for dark current data vs flat field data
         """
-
-        print('\n\n\nINSIDE\n\n\n')
-
-
         self.latest_bad_from_dark_type = []
         self.latest_bad_from_dark_x = []
         self.latest_bad_from_dark_y = []
@@ -351,12 +308,6 @@ class BadPixelMonitor(BokehTemplate):
         self.latest_bad_from_dark_x = np.array(self.latest_bad_from_dark_x)
         self.latest_bad_from_dark_y = np.array(self.latest_bad_from_dark_y)
 
-
-
-                #self.latest_bad_from_dark[0].extend([bad_type] * len(self.bad_latest[bad_type][1]))
-                #self.latest_bad_from_dark[1].extend(self.bad_latest[bad_type][1])
-                #self.latest_bad_from_dark[2].extend(self.bad_latest[bad_type][2])
-
         self.latest_bad_from_flat_type = []
         self.latest_bad_from_flat_x = []
         self.latest_bad_from_flat_y = []
@@ -370,48 +321,9 @@ class BadPixelMonitor(BokehTemplate):
                 self.latest_bad_from_flat_x.extend(self.bad_latest[bad_type][1])
                 self.latest_bad_from_flat_y.extend(self.bad_latest[bad_type][2])
 
-                #self.latest_bad_from_flat[0].extend([bad_type] * len(self.bad_latest[bad_type][1]))
-                #self.latest_bad_from_flat[1].extend(self.bad_latest[bad_type][1])
-                #self.latest_bad_from_flat[2].extend(self.bad_latest[bad_type][2])
-
         self.latest_bad_from_flat_type = np.array(self.latest_bad_from_flat_type)
         self.latest_bad_from_flat_x = np.array(self.latest_bad_from_flat_x)
         self.latest_bad_from_flat_y = np.array(self.latest_bad_from_flat_y)
-
-
-    def _update_dark_v_time(self):
-
-        # Define y range of bad pixel v. time plot
-        buffer_size = 0.05 * (max(self.dark_current) - min(self.dark_current))
-        self.refs['dark_current_yrange'].start = min(self.dark_current) - buffer_size
-        self.refs['dark_current_yrange'].end = max(self.dark_current) + buffer_size
-
-        # Define x range of dark current v. time plot
-        horizontal_half_buffer = (max(self.timestamps) - min(self.timestamps)) * 0.05
-        if horizontal_half_buffer == 0:
-            horizontal_half_buffer = 1.  # day
-        self.refs['dark_current_xrange'].start = min(self.timestamps) - horizontal_half_buffer
-        self.refs['dark_current_xrange'].end = max(self.timestamps) + horizontal_half_buffer
-
-        # Add a title
-        self.refs['dark_current_time_figure'].title.text = self._aperture
-        self.refs['dark_current_time_figure'].title.align = "center"
-        self.refs['dark_current_time_figure'].title.text_font_size = "20px"
-
-    def _update_hist(self):
-        # Define y range of dark current histogram
-        buffer_size = 0.05 * (max(self.full_dark_amplitude) - min(self.full_dark_bottom))
-        self.refs['dark_histogram_yrange'].start = min(self.full_dark_bottom)
-        self.refs['dark_histogram_yrange'].end = max(self.full_dark_amplitude) + buffer_size
-
-        # Define x range of dark current histogram
-        self.refs['dark_histogram_xrange'].start = min(self.full_dark_bin_center)
-        self.refs['dark_histogram_xrange'].end = max(self.full_dark_bin_center)
-
-        # Add a title
-        self.refs['dark_full_histogram_figure'].title.text = self._aperture
-        self.refs['dark_full_histogram_figure'].title.align = "center"
-        self.refs['dark_full_histogram_figure'].title.text_font_size = "20px"
 
     def _update_badpix_loc_plot(self):
         """Update the plot properties for the plots showing the locations
@@ -441,8 +353,6 @@ class BadPixelMonitor(BokehTemplate):
 
             # Define y ranges of bad pixel v. time plot
             buffer_size = 0.05 * (max(self.bad_history[bad_type][1]) - min(self.bad_history[bad_type][1]))
-            #print('\n\n\nBUFFER SIZE: ', buffer_size, '\n\n\n')
-            #print(self.refs['{}_history_yrange'.format(bad_type_lc)].start)
             if buffer_size == 0:
                 buffer_size = 1
             self.refs['{}_history_yrange'.format(bad_type_lc)].start = min(self.bad_history[bad_type][1]) - buffer_size
@@ -460,4 +370,6 @@ class BadPixelMonitor(BokehTemplate):
             self.refs['{}_history_figure'.format(bad_type.lower())].title.align = "center"
             self.refs['{}_history_figure'.format(bad_type.lower())].title.text_font_size = "20px"
 
+# Uncomment the line below when testing via the command line:
+# bokeh serve --show monitor_badpixel_bokeh.py
 BadPixelMonitor()
