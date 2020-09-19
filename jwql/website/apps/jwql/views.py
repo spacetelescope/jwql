@@ -264,13 +264,45 @@ def dynamic_anomaly(request):
         if form.is_valid():   # make form bound???   ### NOT INSTRUMENT_IS_VALID!
             print("it's valid!")
             print("form.cleaned_data", form.cleaned_data)
-    
+
+            miri_filters = form.cleaned_data['miri_filt']
+            miri_apers = form.cleaned_data['miri_aper']
+            miri_anomalies = form.cleaned_data['miri_anomalies']
+
+            nirspec_filters = form.cleaned_data['nirspec_filt']
+            nirspec_apers = form.cleaned_data['nirspec_aper']
+            nirspec_anomalies = form.cleaned_data['nirspec_anomalies']
+
+            niriss_filters = form.cleaned_data['niriss_filt']
+            niriss_apers = form.cleaned_data['niriss_aper']
+            niriss_anomalies = form.cleaned_data['niriss_anomalies']
+
+            nircam_filters = form.cleaned_data['nircam_filt']
+            nircam_apers = form.cleaned_data['nircam_aper']
+            nircam_anomalies = form.cleaned_data['nircam_anomalies']
+
+            all_filters = []
+            for instrument_filters in [miri_filters, nirspec_filters, niriss_filters, nircam_filters]:
+                for filter in instrument_filters:
+                    all_filters.append(filter) if filter not in all_filters else all_filters
+            
+            all_apers = []
+            for instrument_apers in [miri_apers, nirspec_apers, niriss_apers, nircam_apers]:
+                for filter in instrument_apers:
+                    all_apers.append(filter) if filter not in all_apers else all_apers
+
+            all_anomalies = []
+            for instrument_anomalies in [miri_anomalies, nirspec_anomalies, niriss_anomalies, nircam_anomalies]:
+                for filter in instrument_anomalies:
+                    all_anomalies.append(filter) if filter not in all_anomalies else all_anomalies
+
+
             anomaly_query_config.INSTRUMENTS_CHOSEN = form.cleaned_data['instrument']
-            anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = ['anomaly'] ### NOT PRESENT
-            anomaly_query_config.APERTURES_CHOSEN = form.cleaned_data['aperture']
-            anomaly_query_config.CURRENT_ANOMALIES = ['anomaly current'] ### NOT PRESENT
-            anomaly_query_config.FILTERS_CHOSEN = form.cleaned_data['filter']
+            anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = all_anomalies
+            anomaly_query_config.APERTURES_CHOSEN = all_apers
+            anomaly_query_config.FILTERS_CHOSEN = all_filters
             anomaly_query_config.OBSERVING_MODES_CHOSEN = ['obsmode'] ### NOT PRESENT
+
     
     context = {'form': form,
                'inst': ''}
