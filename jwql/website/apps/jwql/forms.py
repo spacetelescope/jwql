@@ -51,7 +51,6 @@ from django import forms
 from django.shortcuts import redirect
 from jwedb.edb_interface import is_valid_mnemonic
 
-# from data_containers import get_thumbnails_all_instruments
 from jwql.database import database_interface as di
 from jwql.utils.constants import ANOMALY_CHOICES
 from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
@@ -62,23 +61,13 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.constants import OBSERVING_MODE_PER_INSTRUMENT
 from jwql.utils.utils import get_config, filename_parser
-# from jwql.website.apps.jwql.views import current_anomalies  ### global variable defined once query_anomaly page has forms filled
 
 from wtforms import StringField, SubmitField, DecimalField, RadioField, SelectField, SelectMultipleField, IntegerField, FloatField
-from wtforms.validators import InputRequired, Length, NumberRange, AnyOf, ValidationError
-from wtforms.widgets import ListWidget, CheckboxInput
-
-from wtforms.ext.sqlalchemy.orm import model_form
+from wtforms.validators import InputRequired, Length, ValidationError
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
-# from jwql.utils import anomaly_query_config
-# from jwql.website.apps.jwql import views # update anomaly_query_config
 
-# from flask_wtf import FlaskForm
-
-
-# class BaseForm(FlaskForm):
 class BaseForm(forms.Form):
     """A generic form with target resolve built in"""
     # Target Resolve
@@ -87,60 +76,6 @@ class BaseForm(forms.Form):
 
     # Submit button
     resolve_submit = SubmitField('Resolve Target')
-
-# def DynamicForm():
-#     class StaticForm(BaseForm):
-#         pass
-
-#     if args[0] == True:
-#         StaticForm.class_attrib1 = StringField('targname', default='default 1')
-#     else:
-#         StaticForm.class_attrib2 = StringField('target_url', default='default 2')
-
-#     return StaticForm()
-
-
-class GroupsIntsForm(BaseForm):
-    """Form validation for the groups_integrations tool"""
-    # # Form submits
-    # calculate_submit = SubmitField('Calculate Groups and Integrations')
-
-    # Stellar Parameters
-    kmag = DecimalField('kmag', default=10.5, validators=[InputRequired('A K-band magnitude is required!'), NumberRange(min=5.1, max=11.9, message='K-band mag must be between 5-12, non-inclusive.')])
-    obs_duration = DecimalField('obs_duration', default=3, validators=[InputRequired('An observation duration is required!'), NumberRange(min=0, message='Observation duration must be a positive number')])
-    # time_unit = SelectField('time_unit', default='hour', choices=[('hour', 'hours'), ('day', 'days')])
-    # models = [('a0i', 'A0I 9750 2.0'), ('aov', 'A0V 9500 2.0'), ('a1v', 'A1V 9250 4.0'), ('a5i', 'A5I 8500 2.0'), ('a3v', 'A3V 8250 4.0'), ('a5v', 'A5V 8250 4.0'), ('f0i', 'F0I 7750 2.0'), ('f0v', 'F0V 7250 1.5'), ('f5i', 'F5I 7000 4.0'), ('f2v', 'F2V 7000 4.0'), ('f5v', 'F5V 6500 4.0'), ('f8v', 'F8V 6250 4.5'), ('g0v', 'G0V 6000 4.5'), ('g0iii', 'G0III 5750 3.0'), ('g2v', 'G2V 5750 4.5'), ('g5v', 'G5V 5750 4.5'), ('g0i', 'G0I 5500 1.5'), ('g8v', 'G8V 5500 4.5'), ('g5iii', 'G5III 5250 2.5'), ('g5i', 'G5I 4740 1.0'), ('k0v', 'K0V 5250 4.5'), ('k0iii', 'K0III 4750 2.0'), ('k2v', 'K2V 4750 4.5'), ('k0i', 'K0I 4500 1.0'), ('k5v', 'K5V 4250 1.5'), ('k5iii', 'K5III 4000 1.5'), ('k7v', 'K7V 4000 4.5'), ('k5i', 'K5I 3750 0.5'), ('m0i', 'M0I 3750 0.0'), ('m0iii', 'M0III 3750 1.5'), ('m0v', 'M0V 3750 4.5'), ('m2i', 'M2I 3500 0.0'), ('m2v', 'M2V 3500 4.5'), ('m5v', 'M5V 3500 5.0')]
-    # mod = SelectField('mod', choices=models)
-    # n_group = IntegerField('n_group', default=0)
-    # ins = SelectField('ins', default='miri', choices=[('niriss', 'NIRISS'), ('nircam', 'NIRCam'), ('nirspec', 'NIRSpec'), ('miri', 'MIRI')])
-
-    # # Filter selects
-    # miri_filt = SelectField('miri_filt', choices=[('lrs', 'LRS')])
-    # nirspec_filt = SelectField('nirspec_filt', choices=[('f070lp_g140h', 'F070LP/G140H'), ('f100lp_g140h', 'F100LP/G140H'), ('f070lp_g140m', 'F070LP/G140M'), ('f100lp_g140m', 'F100LP/G140M'), ('f170lp_g235h', 'F170LP/G235H'), ('f170lp_g235m', 'F170LP/G235M'), ('f290lp_g395h', 'F290LP/G395H'), ('f290lp_g395m', 'F290LP/G395M')])
-    # niriss_filt = SelectField('niriss_filt', choices=[('soss', 'SOSS')])
-    # nircam_filt = SelectField('nircam_filt', choices=[('f322w2', 'F322W2'), ('f444w', 'F444W'), ('f277w', 'F277W')])
-
-    # # TA filter selects
-    # miri_filt_ta = SelectField('miri_filt_ta', choices=[('f560w', 'F560W'), ('f100w', 'F100W'), ('f1500w', 'F1500W')])
-    # nirspec_filt_ta = SelectField('nirspec_filt_ta', choices=[('f110w', 'F110W'), ('f140x', 'F140X'), ('clear', 'CLEAR')])
-    # niriss_filt_ta = SelectField('niriss_filt_ta', choices=[('f480m', 'F480M')])
-    # nircam_filt_ta = SelectField('nircam_filt_ta', choices=[('f335m', 'F335M')])
-
-    # # Subarray selects
-    # miri_subarray = SelectField('miri_subarray', choices=[('slitlessprism', 'SLITLESSPRISM')])
-    # nirspec_subarray = SelectField('nirspec_subarray', choices=[('sub2048', 'SUB2048'), ('sub1024a', 'SUB1024A'), ('sub1024b', 'SUB1024B'), ('sub512', 'SUB512')])
-    # niriss_subarray = SelectField('niriss_subarray', choices=[('substrip256', 'SUBSTRIP256'), ('substrip96', 'SUBSTRIP96')])
-    # nircam_subarray = SelectField('nircam_subarray', choices=[('full', 'FULL FRAME'), ('subgrism256', 'SUBGRISM256'), ('subgrism128', 'SUBGRISM128'), ('subgrism64', 'SUBGRISM64')])
-
-    # # TA subarray selects
-    # miri_subarray_ta = SelectField('miri_subarray_ta', choices=[('slitlessprism', 'SLITLESSPRISM')])
-    # nirspec_subarray_ta = SelectField('nirspec_subarray_ta', choices=[('full', 'FULL'), ('sub32', 'SUB32'), ('sub2048', 'SUB2048')])
-    # niriss_subarray_ta = SelectField('niriss_subarray_ta', choices=[('nrm', 'SUBTASOSS -- BRIGHT'), ('im', 'SUBTASOSS -- FAINT')])
-    # nircam_subarray_ta = SelectField('nircam_subarray_ta', choices=[('sub32tats', 'SUB32TATS')])
-
-    # # Saturation
-    # sat_mode = RadioField('sat_mode', default='well', choices=[('counts', 'Counts'), ('well', 'Full well fraction')])
-    # sat_max = DecimalField('sat_max', default=0.95, validators=[InputRequired('A saturation level is required!'), NumberRange(min=0.0, message='Saturation level must be positive.')])
 
 
 class DynamicAnomalyFormSIMPLE(BaseForm):
@@ -181,7 +116,6 @@ class DynamicAnomalyForm(BaseForm):
 
     # Form submits
     calculate_submit = SubmitField()
-
 
     # Generate dynamic lists of options to use in forms
     aperture_list = []
@@ -252,8 +186,6 @@ class DynamicAnomalyForm(BaseForm):
         if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]:
             item = [anomaly, anomaly]
             nirspec_anomalies_list.append(item)
-
-    # print("FILTERS_PER_INSTRUMENT['miri']", FILTERS_PER_INSTRUMENT['miri'])
 
     # Anomaly Parameters
     instrument = forms.MultipleChoiceField(required=False,
@@ -333,82 +265,13 @@ class AnomalySubmitForm(forms.Form):
         for choice in anomaly_choices:
             data_dict[choice] = True
         di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
+        # no attribute 'Anomaly'
 
     def clean_anomalies(self):
 
         anomalies = self.cleaned_data['anomaly_choices']
 
         return anomalies
-
-
-class ApertureForm(forms.Form):
-    """Creates an ``ApertureForm`` object that allows for ``aperture``
-    input in a form field."""
-
-    calculate_submit = SubmitField()
-
-    aperture_list = []
-    for instrument in FULL_FRAME_APERTURES.keys():
-        for aperture in FULL_FRAME_APERTURES[instrument]:
-            item = [aperture, aperture]
-            aperture_list.append(item)
-    aperture = forms.MultipleChoiceField(required=False, choices=aperture_list, widget=forms.CheckboxSelectMultiple)
-
-    def clean_apertures(self):
-
-        apertures = self.cleaned_data['aperture']
-
-        return apertures
-
-
-class EarlyDateForm(forms.Form):
-    """Creates a ``EarlyDateForm`` object that allows for ``early_date``
-    input in a form field."""
-
-    early_date = forms.DateField(required=False, initial="eg, 2021-10-02 12:04:39 or 2021-10-02")
-
-    # still working out whether we can have initial pre-fill without setting values in request
-    def clean_early_date(self):
-        early_date = self.cleaned_data['early_date']
-
-        return early_date
-
-
-class ExptimeMaxForm(forms.Form):
-    """Creates a ``ExptimeMaxForm`` object that allows for
-    ``exp_time_max`` input in a form field."""
-
-    exp_time_max = forms.DecimalField(initial="57404.70")
-
-    def clean_exptime_max(self):
-        exptime_max = self.cleaned_data['exp_time_max']
-
-        return exptime_max
-
-
-class ExptimeMinForm(forms.Form):
-    """Creates a ``ExptimeMinForm`` object that allows for
-    ``exp_time_min`` input in a form field."""
-
-    exp_time_min = forms.DecimalField(initial="57404.04")
-
-    def clean_exptime_min(self):
-        """Validate the "exp_time_min" field.
-
-        Check that the input is greater than or equal to zero.
-
-        Returns
-        -------
-        exptime_min : int
-            The cleaned data input into the "exp_time_min" field
-
-        """
-        exptime_min = self.cleaned_data['exp_time_min']
-        if int(exptime_min) < 0:
-            raise forms.ValidationError("""Invalid minimum exposure time {}.
-                                           Please provide positive value""".format(exptime_min))
-
-        return exptime_min
 
 
 class FileSearchForm(forms.Form):
@@ -542,67 +405,6 @@ class FiletypeForm(forms.Form):
         file_types = self.cleaned_data['filetype']
 
         return file_types
-
-# from jwql.website.apps.jwql import views # update anomaly_query_config
-class FilterForm(forms.Form):
-    """Creates a ``FilterForm`` object that allows for ``filter``
-    input in a form field."""
-
-    filter_list = []
-    for instrument in FILTERS_PER_INSTRUMENT.keys():
-        # if instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:   # eg ['nirspec']: selects relevant filters, but not specific to chosen instruments
-        filters_per_inst = FILTERS_PER_INSTRUMENT[instrument]
-        for filter in filters_per_inst:
-            filter_list.append([filter, filter]) if [filter, filter] not in filter_list else filter_list
-    filter = forms.MultipleChoiceField(required=False, choices=filter_list, widget=forms.CheckboxSelectMultiple)
-
-    def clean_filters(self):
-
-        filters = self.cleaned_data['filter']
-
-        return filters
-
-
-class InstrumentForm(forms.Form):
-    """Creates a ``InstrumentForm`` object that allows for ``query``
-    input in a form field."""
-    
-    query = forms.MultipleChoiceField(required=False,
-                                      choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
-                                      widget=forms.CheckboxSelectMultiple())
-
-    def clean_instruments(self):
-
-        instruments_chosen = self.cleaned_data['query']
-
-        return instruments_chosen
-
-    def redirect_to_files(self):
-        """Determine where to redirect the web app based on user input.
-
-        Returns
-        -------
-        HttpResponseRedirect object
-            Outgoing redirect response sent to the webpage
-
-        """
-        # Process the data in form.clean_instruments as required
-        instruments = self.cleaned_data['query']
-
-        # get_thumbnails_all_instruments(instruments)
-        return instruments
-
-
-class LateDateForm(forms.Form):
-    """Creates a ``LateDateForm`` object that allows for ``late_date``
-    input in a form field."""
-
-    late_date = forms.DateField(required=False, initial="eg, 2021-11-25 14:30:59 or 2021-11-25")
-
-    def clean_late_date(self):
-        latedate = self.cleaned_data['late_date']
-
-        return latedate
 
 
 class MnemonicSearchForm(forms.Form):
@@ -781,21 +583,3 @@ class MnemonicExplorationForm(forms.Form):
                                    help_text="String ID (tlmMnemonic)")
     unit = forms.CharField(label='unit', max_length=500, required=False,
                            help_text="unit")
-
-
-class ObservingModeForm(forms.Form):  # Add instruments chosen parameter
-    """Creates a ``ObservingModeForm`` object that allows for ``mode``
-    input in a form field."""
-
-    mode_list = []
-    for instrument in OBSERVING_MODE_PER_INSTRUMENT.keys():  # Add AND in instruments chosen
-        modes_per_inst = OBSERVING_MODE_PER_INSTRUMENT[instrument]
-        for mode in modes_per_inst:
-            mode_list.append([mode, mode]) if [mode, mode] not in mode_list else mode_list
-    mode = forms.MultipleChoiceField(required=False, choices=mode_list, widget=forms.CheckboxSelectMultiple)
-
-    def clean_modes(self):
-
-        modes = self.cleaned_data['mode']
-
-        return modes

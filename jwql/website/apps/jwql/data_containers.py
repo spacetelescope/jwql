@@ -797,8 +797,6 @@ def get_proposal_info(filepaths):
 
   
 def get_thumbnails_all_instruments(instruments, apertures, filters, observing_modes):
-
-    
     """Return a list of thumbnails available in the filesystem for all
     instruments given requested parameters.
 
@@ -812,12 +810,11 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
     # Make sure instruments are of the proper format (e.g. "Nircam")
     thumbnail_list = []
     filenames=[]
-    for inst in instruments:  # JWST_INSTRUMENT_NAMES:
+    for inst in instruments:
         instrument = inst[0].upper()+inst[1:].lower()
 
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
-
         
         # params = {"columns": "filename",
         #           "filters": []}
@@ -825,10 +822,10 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
         # params = {"columns": "filename, expstart, filter, readpatt, date_beg, date_end, apername, exp_type",
         #           "filters": [{"paramName": "apername",
         #           "values": ['NRCA1_FULL'], }]}
-        # aperture = ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL', 'NRCA5_FULL', 'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL', 'NRCB4_FULL', 'NRCB5_FULL']
-        # aperture = ['NRS1_FULL', 'NRS2_FULL']
-        params = {"columns":"*","filters":[{"paramName":"apername",
-                          "values": apertures}]}
+
+        params = {"columns":"*",
+                  "filters":[{"paramName": "apername",
+                              "values":     apertures}]}
 
         response = Mast.service_request_async(service,params)
 
@@ -839,15 +836,10 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
             filename = result['filename'].split('.')[0]
             filenames.append(filename)
 
-        # filenames = [results['filename'].split('.')[0] for result in results]
-
         # Get list of all thumbnails
         thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
 
         thumbnail_list.extend(thumbnails)
-
-    ####TEMPORARY THING####
-    # thumbnails_subset = thumbnail_list[:10]
 
     # Get subset of preview images that match the filenames
     thumbnails_subset = [os.path.basename(item) for item in thumbnail_list if
