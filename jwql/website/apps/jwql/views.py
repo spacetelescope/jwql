@@ -43,6 +43,7 @@ from django.http import JsonResponse
 from django.http import HttpRequest as request
 # from django import forms
 from django.shortcuts import render
+from django.shortcuts import redirect
 
 from jwql.database.database_interface import load_connection
 from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
@@ -303,6 +304,7 @@ def dynamic_anomaly(request):
             anomaly_query_config.FILTERS_CHOSEN = all_filters
             anomaly_query_config.OBSERVING_MODES_CHOSEN = ['obsmode'] ### NOT PRESENT
 
+            return redirect('/query_submit')
     
     context = {'form': form,
                'inst': ''}

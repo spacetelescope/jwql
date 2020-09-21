@@ -51,7 +51,7 @@
 </script>
 
 <div class='form-group'>
-    <form method="POST" action="." name="dynamicanomalyform">
+    <form method="POST" action= "." name="dynamicanomalyform">
         <h1>Dynamic Anomaly Form</h1>
             {{ csrf_input }}
             <p> In progress dynamic anomaly query form.... currently uses much of exoctk's framework </p> 
@@ -314,11 +314,6 @@
                 <hr class="col-md-12">
                 
                 <div class='form-group'>
-                    <input type="submit" value="Save selection" class="btn btn-primary" name="dynamicanomalyform"/>
-                    Please save selection before clicking next!
+                    <input type="submit" value="Submit" class="btn btn-primary" name="dynamicanomalyform"/>
                 </div>
-        
-                <a role="button" class="btn btn-primary my-2" href={{ url( 'jwql:query_submit' ) }}>Next
-                    Querying archive may take a minute...
-                </a>
 {% endblock %}
