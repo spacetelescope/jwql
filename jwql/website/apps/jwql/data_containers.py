@@ -811,13 +811,10 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
 
     # Make sure instruments are of the proper format (e.g. "Nircam")
     thumbnail_list = []
+    filenames=[]
     for inst in instruments:  # JWST_INSTRUMENT_NAMES:
         instrument = inst[0].upper()+inst[1:].lower()
 
-        ### adjust query based on request
-
-        # instrument='Nircam'
-        # instrument='Nirspec'
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
@@ -835,26 +832,28 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
 
         response = Mast.service_request_async(service,params)
 
-        results = response[0].json()['data'][0]
+        results = response[0].json()['data']
 
         # Parse the results to get the rootnames
-        filenames = [results['filename'].split('.')[0] for result in results]
+        for result in results:
+            filename = result['filename'].split('.')[0]
+            filenames.append(filename)
+
+        # filenames = [results['filename'].split('.')[0] for result in results]
 
         # Get list of all thumbnails
         thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
 
         thumbnail_list.extend(thumbnails)
 
-        print(thumbnail_list[:20])
-
     ####TEMPORARY THING####
-    thumbnails_subset = thumbnail_list[:10]
+    # thumbnails_subset = thumbnail_list[:10]
 
     # Get subset of preview images that match the filenames
     thumbnails_subset = [os.path.basename(item) for item in thumbnail_list if
                 os.path.basename(item).split('_integ')[0] in filenames]
 
-    return thumbnails_subset
+    return list(set(thumbnails_subset))
 
  
 def get_jwqldb_table_view_components(request):

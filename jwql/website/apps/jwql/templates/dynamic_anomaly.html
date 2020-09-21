@@ -54,16 +54,15 @@
     <form method="POST" action= "." name="dynamicanomalyform">
         <h1>Dynamic Anomaly Form</h1>
             {{ csrf_input }}
-            <p> In progress dynamic anomaly query form.... currently uses much of exoctk's framework </p> 
+            <p> Use this form to query the archive for anomalies for any instrument or combination of instruments.
+                Enter the instruments for which you would like to view the archive and other constraints.
+                Feel free to leave fields blank if you do not want to further constrain the database search.
+                Note, however, that it may increase the run time if you search a wider array of images.
+            </p> 
 
             <form class='form-horizontal' id='searchform' method='post'>
-
                 <hr class="col-md-12">
-        
                 <div class='instrument-form-group'>
-        
-                    <label class="col-sm-2 control-label"></label>Anomaly Query Parameters</label>
-                    
                     <div class="col-sm-10">
                     <label for='instrument' class="help-block">The JWST Instrument(s)</label>
                         <div class="form-control" name='instrument' id='instrument'>
@@ -74,11 +73,8 @@
                             {% endfor %}
                         </div>
                     </div>
-
-
                 <hr class="col-md-12">
                 <div class='form-group'>
-        
                     <label for='exptime' class="col-sm-2 control-label">Minimum Exposure Time</label>
                     <div class="col-sm-10">
                         <div class="input-group" style='float:left;'>
@@ -89,10 +85,8 @@
                             <p style="color: red;">{{ error }}</p>
                         {% endfor %}
                     </div>
-        
                 </div>
                 <div class='form-group'>
-        
                     <label for='exptime' class="col-sm-2 control-label">Maximum Exposure Time</label>
                     <div class="col-sm-10">
                         <div class="input-group" style='float:left;'>
@@ -103,29 +97,22 @@
                             <p style="color: red;">{{ error }}</p>
                         {% endfor %}
                     </div>
-        
                 </div>
-
                 <hr class="col-md-12">
-
-
                 <div class="col-sm-10">
                     <div class="form-control" id='miri_aper'>
                     <span id="helpBlock" class="help-block">MIRI Aperture(s)</span>
                         {% for field in form.miri_aper %}
                             <div class="col-sm-10">
-                                {{ field        }} 
+                                {{ field }} 
                             </div>
                         {% endfor %}
                         <div class="input-group-addon" style='width:60px'></div>
                     </div>
-                    
-                    <br>
                     {% for error in form.miri_aper.errors %}
                         <p style="color: red;">{{ error }}</p>
                     {% endfor %}
                 </div>
-
                 <div class="col-sm-10">
                     <div class="form-control" id='nircam_aper'>
                     <span id="helpBlock" class="help-block">NIRCam Aperture(s)</span>
@@ -136,13 +123,10 @@
                         {% endfor %}
                         <div class="input-group-addon" style='width:60px'></div>
                     </div>
-                    
-                    <br>
                     {% for error in form.nircam_aper.errors %}
                         <p style="color: red;">{{ error }}</p>
                     {% endfor %}
                 </div>
-
                 <div class="col-sm-10">
                     <div class="form-control" id='niriss_aper'>
                     <span id="helpBlock" class="help-block">NIRISS Aperture(s)</span>
@@ -153,13 +137,10 @@
                         {% endfor %}
                         <div class="input-group-addon" style='width:60px'></div>
                     </div>
-                    
-                    <br>
                     {% for error in form.niriss_aper.errors %}
                         <p style="color: red;">{{ error }}</p>
                     {% endfor %}
                 </div>
-
                 <div class="col-sm-10">
                     <div class="form-control" id='nirspec_aper'>
                     <span id="helpBlock" class="help-block">NIRSpec Aperture(s)</span>
@@ -170,22 +151,19 @@
                         {% endfor %}
                         <div class="input-group-addon" style='width:60px'></div>
                     </div>
-                    
-                    <br>
                     {% for error in form.nirspec_aper.errors %}
                         <p style="color: red;">{{ error }}</p>
                     {% endfor %}
                 </div>
 
-
-
-
+                <hr class="col-md-12">
                 <div class='form-group' id="instrument-mode-section">
                     <div class="col-md-12 dropdown">
-                    <div class="btn btn-primary dropdown-toggle" id='miri_filt' type="button" data-toggle="dropdown">{{"Select MIRI filter(s)"}}
-                        <span class="caret"></span>
-                    </div>
+                        <div class="btn btn-primary dropdown-toggle" id='miri_filt' type="button" data-toggle="dropdown">
+                            {{"Select MIRI filter(s)"}}
+                        </div>
                         <div class='dropdown-menu' name="miri_filt" style="color: rgb(255, 117, 6)">
+                            <span class="caret"></span>
                             {% for option in form.miri_filt %}
                                 <div>
                                     {{ option }}
@@ -193,13 +171,12 @@
                             {% endfor %}
                         </div>
                     </div>
-                    </div>
-        
                     <div class="col-md-12 dropdown">
-                    <div class="btn btn-primary dropdown-toggle" id='nircam_filt' type="button" data-toggle="dropdown">{{"Select NIRCam filter(s)"}}
-                        <span class="caret"></span>
-                    </div>
+                        <div class="btn btn-primary dropdown-toggle" id='nircam_filt' type="button" data-toggle="dropdown">
+                            {{"Select NIRCam filter(s)"}}
+                        </div>
                         <div class='dropdown-menu' name="nircam_filt" style="color: rgb(255, 117, 6)">
+                            <span class="caret"></span>
                             {% for option in form.nircam_filt %}
                                 <div>
                                     {{ option }}
@@ -207,38 +184,35 @@
                             {% endfor %}
                         </div>
                     </div>
-                    </div>
-        
                     <div class="col-md-12 dropdown">
-                        <div class="btn btn-primary dropdown-toggle" id='niriss_filt' type="button" data-toggle="dropdown">{{"Select NIRISS filter(s)"}}
-                            <span class="caret"></span>
+                        <div class="btn btn-primary dropdown-toggle" id='niriss_filt' type="button" data-toggle="dropdown">
+                            {{"Select NIRISS filter(s)"}}
                         </div>
-                            <div class='dropdown-menu' name="niriss_filt" style="color: rgb(255, 117, 6)">
-                                {% for option in form.niriss_filt %}
-                                    <div>
-                                        {{ option }}
-                                    </div>
-                                {% endfor %}
-                            </div>
+                        <div class='dropdown-menu' name="niriss_filt" style="color: rgb(255, 117, 6)">
+                            <span class="caret"></span>
+                            {% for option in form.niriss_filt %}
+                                <div>
+                                    {{ option }}
+                                </div>
+                            {% endfor %}
                         </div>
                     </div>
-        
                     <div class="col-md-12 dropdown">
-                        <div class="btn btn-primary dropdown-toggle" id='nirspec_filt' type="button" data-toggle="dropdown">{{"Select NIRSpec filter(s)"}}
+                        <div class="btn btn-primary dropdown-toggle" id='nirspec_filt' type="button" data-toggle="dropdown">
+                            {{"Select NIRSpec filter(s)"}}
+                        </div>
+                        <div class='dropdown-menu' name="nirspec_filt" style="color: rgb(255, 117, 6)">
                             <span class="caret"></span>
-                        </div>
-                            <div class='dropdown-menu' name="nirspec_filt" style="color: rgb(255, 117, 6)">
-                                {% for option in form.nirspec_filt %}
-                                    <div>
-                                        {{ option }}
-                                    </div>
-                                {% endfor %}
+                            {% for option in form.nirspec_filt %}
+                                <div>
+                                    {{ option }}
+                                </div>
+                            {% endfor %}
                             </div>
-                        </div>
                     </div>
                 </div>
 
-
+                <hr class="col-md-12">
                 <div class="col-sm-10">
                     <div class="form-control" id='miri_anomalies'>
                     <span id="helpBlock" class="help-block">MIRI Anomalies</span>
@@ -249,70 +223,58 @@
                         {% endfor %}
                         <div class="input-group-addon" style='width:60px'></div>
                     </div>
-                    
                     <br>
                     {% for error in form.miri_anomalies.errors %}
                         <p style="color: red;">{{ error }}</p>
                     {% endfor %}
                 </div>
-
                 <div class="col-sm-10">
                     <div class="form-control" id='nircam_anomalies'>
                     <span id="helpBlock" class="help-block">NIRCam Anomalies</span>
                         {% for field in form.nircam_anomalies %}
                             <div class="col-sm-10">
-                                {{ field        }} 
+                                {{ field }} 
                             </div>
                         {% endfor %}
                         <div class="input-group-addon" style='width:60px'></div>
                     </div>
-                    
                     <br>
                     {% for error in form.nircam_anomalies.errors %}
                         <p style="color: red;">{{ error }}</p>
                     {% endfor %}
                 </div>
-
                 <div class="col-sm-10">
                     <div class="form-control" id='niriss_anomalies'>
                     <span id="helpBlock" class="help-block">NIRISS Anomalies</span>
                         {% for field in form.niriss_anomalies %}
                             <div class="col-sm-10">
-                                {{ field        }} 
+                                {{ field }} 
                             </div>
                         {% endfor %}
                         <div class="input-group-addon" style='width:60px'></div>
-                    </div>
-                    
+                    </div>   
                     <br>
                     {% for error in form.niriss_anomalies.errors %}
                         <p style="color: red;">{{ error }}</p>
                     {% endfor %}
                 </div>
-
                 <div class="col-sm-10">
                     <div class="form-control" id='nirspec_anomalies'>
                     <span id="helpBlock" class="help-block">NIRSpec Anomalies</span>
                         {% for field in form.nirspec_anomalies %}
                             <div class="col-sm-10">
-                                {{ field        }} 
+                                {{ field }} 
                             </div>
                         {% endfor %}
                         <div class="input-group-addon" style='width:60px'></div>
                     </div>
-                    
                     <br>
                     {% for error in form.nirspec_anomalies.errors %}
                         <p style="color: red;">{{ error }}</p>
                     {% endfor %}
                 </div>
 
-
-
-
-
                 <hr class="col-md-12">
-                
                 <div class='form-group'>
                     <input type="submit" value="Submit" class="btn btn-primary" name="dynamicanomalyform"/>
                 </div>
