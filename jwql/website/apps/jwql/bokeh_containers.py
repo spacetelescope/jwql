@@ -173,6 +173,25 @@ def readnoise_monitor_tabs(instrument):
         monitor_template.aperture_info = (instrument, aperture)
         templates_all_apertures[aperture] = monitor_template
 
+    # Create one tab per detector
+    all_tabs = []
+    for aperture_name, template in templates_all_apertures.items():
+
+        tab_plots = []
+        # Add the readnoise over time plot
+        readnoise_plot = template.refs["readnoise_plot"]
+        readnoise_plot.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+        tab_plots.append(readnoise_plot)
+
+        # Let's put two plots per line
+        readnoise_layout = layout(
+            tab_plots[0:1]
+        )
+
+        readnoise_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+        readnoise_tab = Panel(child=readnoise_layout, title=aperture_name)
+        all_tabs.append(readnoise_tab)
+
     # Build tabs
     tabs = Tabs(tabs=all_tabs)
 

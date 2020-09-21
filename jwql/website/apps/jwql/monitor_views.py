@@ -89,8 +89,6 @@ def readnoise_monitor(request, inst):
         Outgoing response sent to the webpage
     """
 
-    print('hello?')
-
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
