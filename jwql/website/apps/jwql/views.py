@@ -72,19 +72,10 @@ from .data_containers import get_jwqldb_table_view_components
 from .data_containers import thumbnails_ajax
 from .forms import AnomalyForm
 from .forms import AnomalySubmitForm
-from .forms import ApertureForm
 from .forms import DynamicAnomalyForm
-from .forms import EarlyDateForm
-from .forms import ExptimeMaxForm
-from .forms import ExptimeMinForm
 from .forms import FileSearchForm
 from .forms import FiletypeForm
-from .forms import FilterForm
-from .forms import GroupsIntsForm
 from .forms import BaseForm
-from .forms import InstrumentForm
-from .forms import LateDateForm
-from .forms import ObservingModeForm
 from .oauth import auth_info, auth_required
 
 # from jwql.utils.anomaly_query_config import APERTURES_CHOSEN, CURRENT_ANOMALIES
@@ -94,160 +85,6 @@ from jwql.utils import anomaly_query_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
-# app_exoctk = Flask(__name__)
-# @app_exoctk.route('/groups_integrations', methods=['GET', 'POST'])
-def groups_integrations(request):
-    """The groups and integrations calculator form page"""
-
-    # Print out pandeia sat values
-    # sat_data = [0, 1, 3, 4, 5, 6, 7, 8, 9, 33, 77, 55, 44, 116]
-
-    # form = BaseForm()
-    # Load default form
-    form = GroupsIntsForm()
-
-    # if request.method == 'GET':
-
-    #     # http://0.0.0.0:5000/groups_integrations?k_mag=8.131&transit_duration=0.09089&target=WASP-18+b
-    #     target_name = request.args.get('target')
-    #     form.targname.data = target_name
-
-    #     k_mag = request.args.get('k_mag')
-    #     form.kmag.data = k_mag
-
-    #     # According to Kevin the obs_dur = 3*trans_dur+1 hours
-    #     # transit_dur is in days from exomast, convert first.
-    #     try:
-    #         trans_dur = float(request.args.get('transit_duration'))
-    #         trans_dur *= u.day.to(u.hour)
-    #         obs_dur = 3 * trans_dur + 1
-    #         form.obs_duration.data = obs_dur
-    #     except TypeError:
-    #         trans_dur = request.args.get('transit_duration')
-    #         if trans_dur is None:
-    #             pass
-    #         else:
-    #             err = 'The Transit Duration from ExoMAST experienced some issues. Try a different spelling or source.'
-    #             return render('groups_integrations_error.html', err=err)
-    #     return render('groups_integrations.html', form=form, sat_data=sat_data)
-
-    # Reload page with stellar data from ExoMAST
-    # if form.resolve_submit.data:
-
-    #     if form.targname.data.strip() != '':
-
-    #         # Resolve the target in exoMAST
-    #         try:
-    #             form.targname.data = "target"
-    #             data = {'Kmag': [0,1,2], 'transit_duration': [3, 4, 5], 'stellar_gravity': [6,7,8], 'Teff':[9,10,11]}
-    #             url = "https://exoctk.stsci.edu/groups_integrations"
-
-    #             # Update the Kmag
-    #             kmag = data.get('Kmag')
-
-    #             # Transit duration in exomast is in days, need it in hours
-    #             if form.time_unit.data == 'day':
-    #                 trans_dur = data.get('transit_duration')
-    #                 obs_dur = 3 * trans_dur + (1 / 24.)
-    #             else:
-    #                 trans_dur = data.get('transit_duration')
-    #                 trans_dur *= u.Unit('day').to('hour')
-    #                 obs_dur = 3 * trans_dur + 1
-
-    #             # Model guess
-    #             logg_targ = data.get('stellar_gravity') or 4.5
-    #             teff_targ = data.get('Teff') or 5500
-    #             arr = np.array([tuple(i[1].split()) for i in form.mod.choices], dtype=[('spt', 'O'), ('teff', '>f4'), ('logg', '>f4')])
-    #             mod_table = at.Table(arr)
-
-    #             # If high logg, remove giants from guess list
-    #             if logg_targ < 4:
-    #                 mod_table = ["modified","modified","modified"]
-    #             teff = min(arr['teff'], key=lambda x: abs(x - teff_targ))
-
-    #             # Set the form values
-    #             form.mod.data = mod_table[-1]['value']
-    #             form.kmag.data = kmag
-    #             form.obs_duration.data = obs_dur
-    #             form.target_url.data = url
-
-    #         except Exception:
-    #             form.target_url.data = ''
-    #             form.targname.errors = ["Sorry, could not resolve '{}' in exoMAST.".format(form.targname.data)]
-
-        # # Send it back to the main page
-        # return render('groups_integrations.html', form=form, sat_data=sat_data)
-
-    # if form.validate_on_submit() and form.calculate_submit.data:
-
-    #     # Get the form data
-    #     ins = form.ins.data
-    #     params = {'ins': ins,
-    #               'mag': form.kmag.data,
-    #               'obs_time': form.obs_duration.data,
-    #               'sat_max': form.sat_max.data,
-    #               'sat_mode': form.sat_mode.data,
-    #               'time_unit': form.time_unit.data,
-    #               'band': 'K',
-    #               'mod': form.mod.data,
-    #               'filt'.format(ins): getattr(form, '{}_filt'.format(ins)).data,
-    #               'subarray'.format(ins): getattr(form, '{}_subarray'.format(ins)).data,
-    #               'filt_ta'.format(ins): getattr(form, '{}_filt_ta'.format(ins)).data,
-    #               'subarray_ta'.format(ins): getattr(form, '{}_subarray_ta'.format(ins)).data}
-
-    #     # Get ngroups
-    #     params['n_group'] = 'optimize' if form.n_group.data == 0 else int(form.n_group.data)
-
-
-    #     # Run the calculation
-    #     results = params
-    #     if type(results) == dict:
-    #         results_dict = results
-    #         one_group_error = ""
-    #         zero_group_error = ""
-    #         if results_dict['n_group'] == 1:
-    #             one_group_error = 'Be careful! This only predicts one group, and you may be in danger of oversaturating!'
-    #         if results_dict['max_ta_groups'] == -1:
-    #             zero_group_error = 'This object is too faint to reach the required TA SNR in this filter. Consider a different TA setup.'
-    #             results_dict['min_sat_ta'] = 0
-    #             results_dict['t_duration_ta_max'] = 0
-    #             results_dict['max_sat_ta'] = 0
-    #             results_dict['t_duration_ta_max'] = 0
-    #         if results_dict['max_sat_prediction'] > results_dict['sat_max']:
-    #             one_group_error = 'This many groups will oversaturate the detector! Proceed with caution!'
-    #         # Do some formatting for a prettier end product
-    #         results_dict['filt'] = results_dict['filt'].upper()
-    #         results_dict['filt_ta'] = results_dict['filt_ta'].upper()
-    #         results_dict['band'] = results_dict['band'].upper()
-    #         results_dict['mod'] = results_dict['mod'].upper()
-    #         if results_dict['ins'] == 'niriss':
-    #             if results_dict['subarray_ta'] == 'nrm':
-    #                 results_dict['subarray_ta'] = 'SUBTASOSS -- BRIGHT'
-    #             else:
-    #                 results_dict['subarray_ta'] = 'SUBTASOSS -- FAINT'
-    #         results_dict['subarray'] = results_dict['subarray'].upper()
-    #         results_dict['subarray_ta'] = results_dict['subarray_ta'].upper()
-
-    #         form_dict = {'miri': 'MIRI', 'nircam': 'NIRCam', 'nirspec': 'NIRSpec', 'niriss': 'NIRISS'}
-    #         results_dict['ins'] = form_dict[results_dict['ins']]
-
-    #         return render('groups_integrations_results.html',
-    #                                results_dict=results_dict,
-    #                                one_group_error=one_group_error,
-    #                                zero_group_error=zero_group_error)
-
-    #     else:
-    #         err = results
-    #         return render('groups_integrations_error.html', err=err)
-
-    # return render('groups_integrations.html', form=form, sat_data=sat_data)
-    context = {'form': form}
-    template = 'groups_integrations.html'
-    return render(request, template, context)
-
-
-
-
 
 def dynamic_anomaly(request):
     """The anomaly query form page"""
@@ -256,12 +93,6 @@ def dynamic_anomaly(request):
     
     if request.method == 'POST':
         print("using post!")
-        # # print("form.clean()", form.clean())
-        # # form.is_valid: <bound method BaseForm.is_valid of <DynamicAnomalyForm bound=True, valid=Unknown, fields=(instrument)>>
-        # print("form.is_valid()", form.is_valid()) # False
-        # print("form.errors", form.errors) # This field (instrument) is required
-        # print("form.isbound", form.is_bound)  #True
-        # # print("form.instrument", form.instrument)
         if form.is_valid():   # make form bound???   ### NOT INSTRUMENT_IS_VALID!
             print("it's valid!")
             print("form.cleaned_data", form.cleaned_data)

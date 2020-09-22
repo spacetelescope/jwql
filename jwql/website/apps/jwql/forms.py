@@ -264,7 +264,19 @@ class AnomalySubmitForm(forms.Form):
         data_dict['user'] = user
         for choice in anomaly_choices:
             data_dict[choice] = True
-        di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
+        if 'guider' in rootname:
+            di.engine.execute(di.FGSAnomaly.__table__.insert(), data_dict)
+        elif "nrs" in rootname:
+            di.engine.execute(di.NIRSpecAnomaly.__table__.insert(), data_dict)
+        elif "miri" in rootname:
+            di.engine.execute(di.MiriAnomaly.__table__.insert(), data_dict)
+        elif "nis" in rootname:
+            di.engine.execute(di.NIRISSAnomaly.__table__.insert(), data_dict)
+        elif "nrc" in rootname:
+            di.engine.execute(di.NIRCamAnomaly.__table__.insert(), data_dict)
+        else:
+            print("cannot determine instrument anomaly corresponds to")
+        #  '{}Anomaly'.format(JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument]
         # no attribute 'Anomaly'
 
     def clean_anomalies(self):
