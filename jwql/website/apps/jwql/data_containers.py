@@ -55,7 +55,9 @@ from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as mi
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.utils import ensure_dir_exists
-from jwql.utils.constants import MONITORS, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import MONITORS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
 from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
@@ -796,7 +798,7 @@ def get_proposal_info(filepaths):
     return proposal_info
 
   
-def get_thumbnails_all_instruments(instruments, apertures, filters, observing_modes):
+def get_thumbnails_all_instruments(instruments, apertures, filters, observing_modes, anomalies):
     """Return a list of thumbnails available in the filesystem for all
     instruments given requested parameters.
 
@@ -845,7 +847,27 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
     thumbnails_subset = [os.path.basename(item) for item in thumbnail_list if
                 os.path.basename(item).split('_integ')[0] in filenames]
 
-    return list(set(thumbnails_subset))
+    thumbnails_subset = list(set(thumbnails_subset))  # Eliminate any duplicates
+
+    # Determine whether or not queried anomalies are flagged
+    final_subset=[]
+    for thumbnail in thumbnails_subset:
+        rootname = thumbnail.split("_")[0]+"_"+thumbnail.split("_")[1]+"_"+thumbnail.split("_")[2]+"_"+thumbnail.split("_")[3]
+        # eg 'jw87600001001_02101_00002_nis_trapsfilled_integ2.thumb'
+        try:
+            instrument=JWST_INSTRUMENT_NAMES_SHORTHAND[thumbnail.split("_")[3][:3]]
+            thumbnail_anomalies = get_current_flagged_anomalies(rootname, instrument)
+            if thumbnail_anomalies:
+                for anomaly in anomalies:
+                    print("Oh my! It's an anomaly! ", thumbnail)
+                    if anomaly in thumbnail_anomalies:
+                        final_subset.append(thumbnail)
+        except KeyError:
+            print("key: ", thumbnail.split("_")[3][:3])
+            print("thumbnail: ", thumbnail)
+
+    # return list(set(final_subset))  # This will be none at the moment because of error flagging anomalies, which depends on login issue
+    return thumbnails_subset
 
  
 def get_jwqldb_table_view_components(request):

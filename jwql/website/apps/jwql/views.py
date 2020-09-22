@@ -78,9 +78,6 @@ from .forms import FiletypeForm
 from .forms import BaseForm
 from .oauth import auth_info, auth_required
 
-# from jwql.utils.anomaly_query_config import APERTURES_CHOSEN, CURRENT_ANOMALIES
-# from jwql.utils.anomaly_query_config import INSTRUMENTS_CHOSEN, OBSERVING_MODES_CHOSEN
-# from jwql.utils.anomaly_query_config import ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
 from jwql.utils import anomaly_query_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -89,11 +86,11 @@ FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 def dynamic_anomaly(request):
     """The anomaly query form page"""
 
-    form = DynamicAnomalyForm(request.POST or None) #, initial={'instrument': "NIRSpec"})
+    form = DynamicAnomalyForm(request.POST or None)
     
     if request.method == 'POST':
         print("using post!")
-        if form.is_valid():   # make form bound???   ### NOT INSTRUMENT_IS_VALID!
+        if form.is_valid():
             print("it's valid!")
             print("form.cleaned_data", form.cleaned_data)
 
@@ -556,175 +553,6 @@ def not_found(request, *kwargs):
     return render(request, template, context, status=status_code)
 
 
-def query_anomaly(request):
-    """Generate the anomaly query form page.
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    user : dict
-        A dictionary of user credentials.
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-
-    exposure_min_form = ExptimeMinForm(request.POST or None)
-    exposure_max_form = ExptimeMaxForm(request.POST or None)
-    instrument_form = InstrumentForm(request.POST or None)
-    early_date_form = EarlyDateForm(request.POST or None)
-    late_date_form = LateDateForm(request.POST or None)
-
-    # global current_anomalies
-    current_anomalies = ['cosmic_ray_shower', 'diffraction_spike', 'excessive_saturation',
-                         'guidestar_failure', 'persistence', 'other']
-
-    # global instruments_chosen
-    instruments_chosen = "No instruments chosen"
-    if request.method == 'POST':
-        if instrument_form.is_valid():
-            instruments_chosen = instrument_form.clean_instruments()
-
-            for anomaly in ANOMALIES_PER_INSTRUMENT:
-                for inst in instruments_chosen:
-                    if inst in ANOMALIES_PER_INSTRUMENT[anomaly]:
-                        current_anomalies.append(anomaly) if anomaly not in current_anomalies else current_anomalies
-
-    anomaly_query_config.INSTRUMENTS_CHOSEN = instruments_chosen
-    anomaly_query_config.CURRENT_ANOMALIES = current_anomalies
-
-    template = 'query_anomaly.html'
-    context = {'inst': '',
-               'exposure_min_form': exposure_min_form,
-               'exposure_max_form': exposure_max_form,
-               'instrument_form': instrument_form,
-               'early_date_form': early_date_form,
-               'late_date_form': late_date_form,
-               'requested_insts': anomaly_query_config.INSTRUMENTS_CHOSEN,
-               'current_anomalies': anomaly_query_config.CURRENT_ANOMALIES,
-               'None': "No instruments chosen"}
-
-    return render(request, template, context)
-
-
-def query_anomaly_2(request):
-    """Generate the second page of the anomaly query form.
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-
-    initial_aperture_list = []
-    for instrument in FULL_FRAME_APERTURES.keys():
-        if instrument.lower() in anomaly_query_config.INSTRUMENTS_CHOSEN:
-            for aperture in FULL_FRAME_APERTURES[instrument]:
-                initial_aperture_list.append(aperture)
-
-    initial_mode_list = []
-    for instrument in OBSERVING_MODE_PER_INSTRUMENT.keys():
-        if instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:
-            for mode in OBSERVING_MODE_PER_INSTRUMENT[instrument]:
-                initial_mode_list.append(mode)
-
-    initial_filter_list = []
-    for instrument in FILTERS_PER_INSTRUMENT.keys():
-        if instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:
-            for filter in FILTERS_PER_INSTRUMENT[instrument]:
-                initial_filter_list.append(filter)
-
-    aperture_form = ApertureForm(request.POST or None, initial={'aperture': initial_aperture_list})
-    filter_form = FilterForm(request.POST or None, initial={'filter': initial_filter_list})
-    filetype_form = FiletypeForm(request.POST or None)
-    observing_mode_form = ObservingModeForm(request.POST or None, initial={'mode': initial_mode_list})
-
-    # Saving one form currently removes initial choices of other forms on the page
-    # global apertures_chosen
-    apertures_chosen = "No apertures chosen"
-    if request.method == 'POST':
-        if aperture_form.is_valid():
-            apertures_chosen = aperture_form.clean_apertures()
-            initial_aperture_list = apertures_chosen
-    anomaly_query_config.APERTURES_CHOSEN = apertures_chosen
-
-    # global filters_chosen
-    filters_chosen = "No filters chosen"
-    if request.method == 'POST':
-        if filter_form.is_valid():
-            filters_chosen = filter_form.clean_filters()
-            initial_filter_list = filters_chosen
-    anomaly_query_config.FILTERS_CHOSEN = filters_chosen
-
-    # global observing_modes_chosen
-    observing_modes_chosen = "No observing modes chosen"
-    if request.method == 'POST':
-        if observing_mode_form.is_valid():
-            observing_modes_chosen = observing_mode_form.clean_modes()
-            initial_mode_list = observing_modes_chosen
-    anomaly_query_config.OBSERVING_MODES_CHOSEN = observing_modes_chosen
-
-    # if current_anomalies == None:
-    #     print("PLEASE START AT THE FIRST PAGE IN THE FORMS! (eg, <SERVER ADDRESS>/query_anomaly/ ")
-
-    template = 'query_anomaly_2.html'
-    context = {'inst': '',
-               'aperture_form': aperture_form,
-               'filter_form': filter_form,
-               'filetype_form': filetype_form,
-               'observing_mode_form': observing_mode_form,
-               'apertures_chosen': anomaly_query_config.APERTURES_CHOSEN,
-               'current_anomalies': anomaly_query_config.CURRENT_ANOMALIES,
-               'filters_chosen': anomaly_query_config.FILTERS_CHOSEN,
-               'instruments_chosen_cfg': anomaly_query_config.INSTRUMENTS_CHOSEN,
-               'observing_modes_chosen': anomaly_query_config.OBSERVING_MODES_CHOSEN
-               }
-
-    return render(request, template, context)
-
-
-def query_anomaly_3(request):
-    """Generate the second page of the anomaly query form.
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-
-    anomaly_form = AnomalyForm(request.POST or None, initial={'query': anomaly_query_config.CURRENT_ANOMALIES})
-
-    # if current_anomalies == None:
-    #     print("PLEASE START AT THE FIRST PAGE IN THE FORMS! (eg, <SERVER ADDRESS>/query_anomaly/ ")
-    # global anomalies_chosen_from_current_anomalies
-    anomalies_chosen_from_current_anomalies = anomaly_query_config.CURRENT_ANOMALIES
-    if request.method == 'POST':
-        if anomaly_form.is_valid():
-            anomalies_chosen_from_current_anomalies = anomaly_form.clean_anomalies()
-    anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = anomalies_chosen_from_current_anomalies
-
-    template = 'query_anomaly_3.html'
-    context = {'inst': '',
-               'anomaly_form': anomaly_form,
-               'chosen_current_anomalies': anomalies_chosen_from_current_anomalies
-               }
-
-    return render(request, template, context)
-
-
 def query_submit(request):
     """Generate the page listing all archived images in the database
     for a certain proposal
@@ -756,7 +584,8 @@ def query_submit(request):
     apers = anomaly_query_config.APERTURES_CHOSEN
     filts = anomaly_query_config.FILTERS_CHOSEN
     obs_modes = anomaly_query_config.OBSERVING_MODES_CHOSEN
-    thumbnails = get_thumbnails_all_instruments(insts, apers, filts, obs_modes)
+    anomalies = anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
+    thumbnails = get_thumbnails_all_instruments(insts, apers, filts, obs_modes, anomalies)
 
     context = {'inst': '',
                'anomalies_chosen_from_current_anomalies': anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
