@@ -216,9 +216,10 @@ def figure_constructor(tool, loader, node):
                 figure.js_on_event(*event)
 
     for element in elements:
-        key = element.pop('kind')
+        key = element.pop('kind', 'diamond')
         shape = {'line': ('Line', figure.line),
                  'circle': ('Circle', figure.circle),
+                 'step': ('Step', figure.step),
                  'diamond': ('Diamond', figure.diamond),
                  'triangle': ('Triangle', figure.triangle),
                  'square': ('Square', figure.square),
