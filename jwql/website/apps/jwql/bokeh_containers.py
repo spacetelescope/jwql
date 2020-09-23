@@ -163,7 +163,7 @@ def readnoise_monitor_tabs(instrument):
     full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
 
     templates_all_apertures = {}
-    for aperture in full_apertures:
+    for aperture in full_apertures[0:1]:
 
         # Start with default values for instrument and aperture because
         # BokehTemplate's __init__ method does not allow input arguments
@@ -179,7 +179,7 @@ def readnoise_monitor_tabs(instrument):
 
         tab_plots = []
         # Add the readnoise over time plot
-        readnoise_plot = template.refs["readnoise_plot"]
+        readnoise_plot = template.refs["mean_readnoise_figure"]
         readnoise_plot.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
         tab_plots.append(readnoise_plot)
 
@@ -190,10 +190,14 @@ def readnoise_monitor_tabs(instrument):
 
         readnoise_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
         readnoise_tab = Panel(child=readnoise_layout, title=aperture_name)
+        print(readnoise_tab.__dict__)
         all_tabs.append(readnoise_tab)
 
     # Build tabs
+    print('uhh', all_tabs)
     tabs = Tabs(tabs=all_tabs)
+    print('uhhh', tabs)
+    print(tabs._property_values)
 
     # Return tab HTML and JavaScript to web app
     script, div = components(tabs)

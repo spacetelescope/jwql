@@ -13,6 +13,14 @@
 		<h1>{{ inst }} Readnoise Monitor</h1>
 		<hr>
 
+		<div width=100%>
+			<!--Add Bokeh HTML-->
+			{{ tabs_components[0] | safe }}
+		</div>
+
+		<!--Add Bokeh scripts-->
+		{{ tabs_components[1] | safe }}
+
 	</main>
 
 {% endblock %}
