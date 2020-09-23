@@ -60,14 +60,3 @@ class TestTemplate(BokehTemplate):
         self.b = self.refs["b_slider"].value
 
         self.refs["figure_source"].data = {'x': self.x, 'y': self.y}
-
-def test_bokeh_templating():
-    """
-    """
-
-    test_template = TestTemplate()
-    script, div = test_template.embed('the_figure')
-    
-    assert type(script) == str
-    assert type(div) == str
-    assert "Figure" in script
