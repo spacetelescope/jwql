@@ -8,9 +8,28 @@ test_api_views.py
     :members:
     :undoc-members:
 
+test_bad_pixel_monitor.py
+-------------------------
+.. automodule:: jwql.tests.test_bad_pixel_monitor
+    :members:
+    :undoc-members:
+
+
+test_bias_monitor.py
+--------------------
+.. automodule:: jwql.tests.test_bias_monitor
+    :members:
+    :undoc-members:
+
 test_calculations.py
 --------------------
 .. automodule:: jwql.tests.test_calculations
+    :members:
+    :undoc-members:
+
+test_context_processors.py
+--------------------------
+.. automodule:: jwql.tests.test_context_processors
     :members:
     :undoc-members:
 
@@ -20,8 +39,14 @@ test_dark_monitor.py
     :members:
     :undoc-members:
 
-test_edb_interface.py
----------------------
+test_data_containers.py
+-----------------------
+.. automodule:: jwql.tests.test_data_containers
+    :members:
+    :undoc-members:
+
+test_edb.py
+-----------
 .. automodule:: jwql.tests.test_edb
     :members:
     :undoc-members:
@@ -33,7 +58,7 @@ test_instrument_properties.py
     :undoc-members:
 
 test_loading_times.py
---------------------
+---------------------
 .. automodule:: jwql.tests.test_loading_times
     :members:
     :undoc-members:

@@ -24,9 +24,9 @@ function change_filetype(type, file_root, num_ints, inst) {
     var num_ints = JSON.parse(num_ints);
 
     // Propogate the text fields showing the filename and APT parameters
-    var fits_filename = file_root + '_' + type + '.fits'
+    var fits_filename = file_root + '_' + type
     document.getElementById("jpg_filename").innerHTML = file_root + '_' + type + '_integ0.jpg';
-    document.getElementById("fits_filename").innerHTML = fits_filename;
+    document.getElementById("fits_filename").innerHTML = fits_filename + '.fits';
     document.getElementById("proposal").innerHTML = file_root.slice(2,7);
     document.getElementById("obs_id").innerHTML = file_root.slice(7,10);
     document.getElementById("visit_id").innerHTML = file_root.slice(10,13);
@@ -37,6 +37,11 @@ function change_filetype(type, file_root, num_ints, inst) {
     var jpg_filepath = '/static/preview_images/' + file_root.slice(0,7) + '/' + file_root + '_' + type + '_integ0.jpg';
     img.src = jpg_filepath;
     img.alt = jpg_filepath;
+
+    // Reset the slider values
+    document.getElementById("slider_range").value = 1
+    document.getElementById("slider_range").max = num_ints[type]
+    document.getElementById("slider_val").innerHTML = 1
 
     // Update the number of integrations
     var int_counter = document.getElementById("int_count");
@@ -50,55 +55,64 @@ function change_filetype(type, file_root, num_ints, inst) {
     }
 
     // Update the image download and header links
-    document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename;
+    document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename + '.fits';
     document.getElementById("download_jpg").href = jpg_filepath;
-    document.getElementById("view_header").href = '/' + inst + '/' + fits_filename + '/hdr/';
+    document.getElementById("view_header").href = '/' + inst + '/' + fits_filename + '/header/';
 
     // Disable the "left" button, since this will be showing integ0
     document.getElementById("int_before").disabled = true;
 
 };
 
+
  /**
  * Change the integration number of the displayed image
- * @param {String} direction - The direction to switch to, either "left" (decrease) or "right" (increase).
  * @param {String} file_root - The rootname of the file
  * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
  *                          values are the number of integrations for that suffix
+ * @param {String} method - How the integration change was initialized, either "button" or "slider"
+ * @param {String} direction - The direction to switch to, either "left" (decrease) or "right" (increase).
+ *                             Only relevant if method is "button".
  */
-function change_int(direction, file_root, num_ints) {
+function change_int(file_root, num_ints, method, direction = 'right') {
 
     // Figure out the current image and integration
     var suffix = document.getElementById("jpg_filename").innerHTML.split('_');
     var integration = Number(suffix[suffix.length - 1][5]);
     var suffix = suffix[suffix.length - 2];
     var program = file_root.slice(0,7);
-
+    
+    // Find the total number of integrations for the current image
     var num_ints = num_ints.replace(/'/g, '"');
     var num_ints = JSON.parse(num_ints)[suffix];
 
+    // Get the desired integration value
+    switch (method) {
+        case "button":
+            if ((integration == num_ints - 1 && direction == 'right')||
+                (integration == 0 && direction == 'left')) {
+                return;
+            } else if (direction == 'right') {
+                new_integration = integration + 1
+            } else if (direction == 'left') {
+                new_integration = integration - 1
+            }
+            break;
+        case "slider":
+            new_integration = document.getElementById("slider_range").value - 1;
+            break;
+    }
 
-    if ((integration == num_ints - 1 && direction == 'right')||
-        (integration == 0 && direction == 'left')) {
-        return;
-    } else if (direction == 'right') {
-        // Update integration number
-        var new_integration = integration + 1
-
-        // Don't let them go further if they're at the last integration
-        if (new_integration == num_ints - 1) {
-            document.getElementById("int_after").disabled = true;
-        }
-        document.getElementById("int_before").disabled = false;
-    } else if (direction == 'left') {
-        // Update integration number
-        var new_integration = integration - 1
-
-        // Don't let them go further if they're at the first integration
-        if (new_integration == 0) {
-            document.getElementById("int_before").disabled = true;
-        }
+    // Update which button are disabled based on the new integration
+    if (new_integration == 0) {
         document.getElementById("int_after").disabled = false;
+        document.getElementById("int_before").disabled = true;
+    } else if (new_integration < num_ints - 1) {
+        document.getElementById("int_after").disabled = false;
+        document.getElementById("int_before").disabled = false;
+    } else if (new_integration == num_ints - 1) {
+        document.getElementById("int_after").disabled = true;
+        document.getElementById("int_before").disabled = false;
     }
 
     // Update the JPG filename
@@ -118,7 +132,12 @@ function change_int(direction, file_root, num_ints) {
 
     // Update the jpg download link
     document.getElementById("download_jpg").href = jpg_filepath;
+
+    // Update the slider values
+    document.getElementById("slider_range").value = new_integration + 1
+    document.getElementById("slider_val").innerHTML = new_integration + 1
 };
+
 
 /**
  * Determine what filetype to use for a thumbnail
@@ -188,9 +207,10 @@ function search() {
         // Evaluate if the proposal number matches the search
         var j = i + 1
         var prop_name = document.getElementById("proposal" + j).getAttribute('proposal')
+        var prop_num = Number(prop_name)
 
 
-        if (prop_name.startsWith(search_value)) {
+        if (prop_name.startsWith(search_value) || prop_num.toString().startsWith(search_value)) {
             proposals[i].style.display = "inline-block";
             num_proposals_displayed++;
         } else {
@@ -330,7 +350,8 @@ function update_archive_page(inst, base_url) {
                 // Build div content
                 content = '<div class="proposal text-center">';
                 content += '<a href="/' + inst + '/archive/' + prop + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
-                content += '<span class="helper"></span><img src="/static/thumbnails/' + thumb + '" alt="" width=100%>';
+                content += '<span class="helper"></span>'
+                content += '<img src="/static/thumbnails/' + thumb + '" alt="" title="Thumbnail for ' + prop + '" width=100%>';
                 content += '<div class="proposal-color-fill" ></div>';
                 content += '<div class="proposal-info">';
                 content += '<h3>' + prop + '</h3>';
@@ -379,6 +400,29 @@ function update_filter_options(data) {
 
     // Add the content to the div
     $("#thumbnail-filter")[0].innerHTML = content;
+};
+
+/**
+ * Change the header extension displayed
+ * @param {String} extension - The extension of the header selected
+  * @param {String} num_extensions - The total number of extensions
+ */
+function update_header_display(extension, num_extensions) {
+
+    // Hide all headers
+    for (var i = 0; i < num_extensions; i++) {
+        var header_name = document.getElementById("header-display-name-extension" + i);
+        var header_table = document.getElementById("header-table-extension" + i);
+        header_name.style.display = 'none';
+        header_table.style.display = 'none';
+    };
+
+    // Display the header selected
+    var header_name_to_show = document.getElementById("header-display-name-extension" + extension);
+    var header_table_to_show = document.getElementById("header-table-extension" + extension);
+    header_name_to_show.style.display = 'inline';
+    header_table_to_show.style.display = 'inline';
+
 };
 
 /**

@@ -1,3 +1,156 @@
+0.23.0 (2020-07-01)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- The ``jwql_web_app`` PowerPoint presentation has been updated
+- The bokeh templating software now has full API documentation
+- Updated ``README`` and About webpage to reflect changes to development team members
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Added webpage to view FITS headers of each extension for a given dataset
+- Added webpage for displaying Dark Monitor results with ``bokeh`` plots
+- Added webpage for viewing contents of a given JWQL database table
+- Added webpage for querying and displaying anomaly results
+- Added slider bar for easily navigating through integrations in preview image display
+- The list of anomalies one can flag in a preview image is now instrument specific
+
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- The ``jwql-3.6`` conda environment now uses the ``astroconda`` channel instead of ``astroconda-dev``
+- Added Bias Monitor module, which currently monitors the bias levels for NIRCam
+- Added Readnoise Monitor module, which monitors readnoise for all instruments except FGS
+- Added Bad Pixel Monitor module, which tracks bad pixels for all instruments
+- Cron job logs now include a print out of the complete ``conda`` environment being used
+
+
+Bug Fixes
+---------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Fixed broken link to ``numpydoc`` docstring convention in Style Guide
+
+
+0.22.0 (2019-08-26)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Added slides from July 2019 TIPS presentation to ``presentations/`` directory
+
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Updated dark monitor to support all five JWST instruments, instead of only NIRCam
+- Changed the ``jwql-3.5`` and ``jwql-3.6`` conda environments to be more simple and to work on Linux distributions
+- Added library code for creating instrument monitoring ``bokeh`` plots with new ``bokeh`` templating software
+
+
+Bug Fixes
+---------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Fixed various bugs that were causing the ``sphinx`` API documentation to crash on ReadTheDocs
+
+
+0.21.0 (2019-07-23)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Updated ``README`` to include instructions on package installation via ``pip``.
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Updated all webpages to conform to Web Application Accessibility Guidelines.
+- Upgraded to ``django`` version 2.2.
+- ``bokeh`` is now imported in ``base`` template so that the version being used is consistent across all HTML templates.
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- The ``jwql`` package is now available on PyPI (https://pypi.org/project/jwql/) and installable via ``pip``.
+- Updated Jenkins configuration file to include in-line comments and descriptions.
+- Added ``utils`` function to validate the ``config.json`` file during import of ``jwql`` package.
+- Added support for monitoring contents of the ``jwql`` central storage area in the filesystem monitor.
+
+
+Bug Fixes
+---------
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Fixed position error of JWQL version display in footer.
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Fixed spelling error in dark monitor database column names.
+- Fixed dark monitor to avoid processing files that are not in the filesystem.
+
+
+0.20.0 (2019-06-05)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Updated the notebook exemplifying how to perform an engineering database (EDB) telemetry query.
+- Updated the README for the ``style_guide`` directory.
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Added form on preview image pages to allow users to submit image anomalies.
+- Added buttons for users to download the results of EDB telemetry queries as CSV files.
+- Enabled users to search for or navigate to program numbers without requiring leading zeros (i.e. "756" is now treated equivalently to "00756").
+- Enabled authentication for EDB queries via the web login (rather than requiring authentication information to be present in the configuration file).
+- Added custom 404 pages.
+- Added adaptive redirect feature so that users are not sent back to the homepage after login.
+- Added more descriptive errors if a user tries to run the web application without filling out the proper fields in the configuration file.
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Replaced all EDB interface code within ``jwql`` with the new ``jwedb`` `package<https://github.com/spacetelescope/jwst-dms-edb>`_.
+- Fully incorporated Python 3.5 testing into the Jenkins test suite.
+
+Bug Fixes
+---------
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Fixed bug in which dashboard page would throw an error.
+- Fixed incorrect dashboard axis labels.
+
+
 0.19.0 (2019-04-19)
 ===================
 
@@ -8,7 +161,7 @@ Project & API Documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - Added guidelines to the style guide for logging the execution of instrument monitors
-- Added example useage of logging in the ``example.py`` module
+- Added example usage of logging in the ``example.py`` module
 
 Web Application
 ~~~~~~~~~~~~~~~

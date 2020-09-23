@@ -1,5 +1,9 @@
+.anomaly_choice {
+  list-style: none;
+}
+
 .APT_parameters {
-    width: 20%
+  width: 20%
 }
 
 .banner {
@@ -27,6 +31,7 @@
     border-color: #c85108 !important;
     color: white !important;
     border-radius: 0px;
+    text-decoration: none;
 }
 
 /*Make outline buttons and highlighted normal buttons white*/
@@ -36,12 +41,14 @@
     border-color: #c85108 !important ;
     color: #c85108 !important;
     border-radius: 0px;
+    text-decoration: none;
 }
 
 /*Stop them from glowing blue*/
-.btn:focus, .btn.focus, .btn:active:focus, .btn.active:focus, .btn:active,
+.btn.focus, .btn:active:focus, .btn.active:focus, .btn:active,
 .btn.active, .show > .btn.dropdown-toggle:focus {
     box-shadow: none !important;
+    text-decoration: none;
 }
 
 [class*="col-"] {
@@ -57,6 +64,14 @@
     margin-right: 2%;
 }
 
+/* Show the dropdown menu on hover */
+/* DO NOT how the dropdown menu on hover if the navbar is collapsed */
+@media only screen and (min-width: 1200px) {
+    li.dropdown:hover .dropdown-menu {
+        display: block;
+    }
+}
+
 /* Make disabled dropdown items grey and unclickable */
 .disabled-dropdown {
     color: #bec4d4 !important;
@@ -66,8 +81,7 @@
 
 /*Define dropdown menu colors*/
 .dropdown-item:hover{
-    color: #c85108;
-    background-color: #2d353c;
+    background-color: black;
 }
 
 .dropdown-menu {
@@ -182,6 +196,11 @@ display : inline;
     display: inline;
 }
 
+#id_anomaly_choices {
+  list-style: none;
+  padding-left: 0;
+}
+
 /*Don't let the search bar be super long*/
 .input-group {
     width: 250px;
@@ -217,6 +236,11 @@ display : inline;
     border: 3px solid #2d353c;
     position: relative;
     display: inline-block;
+}
+
+/*Make H2 header smaller for select pages*/
+#instrument_main h2,  .mnemonic_trending_main h2 {
+    font-size: 1.75rem;
 }
 
 .instrument-name {
@@ -278,12 +302,19 @@ display : inline;
     height: 100%;
 }
 
+/* Change color of dropdown links on hover */
+li:hover .nav-link, .navbar-brand:hover {
+    color: #fff !important;
+}
+
 /* Define navbar color*/
 .navbar {
     background-color: black;
 }
-.navbar-brand {
-    color: white;
+
+/*Define navbar font color and case*/
+.nav-link {
+    color: #bec4d4 !important;
     text-transform: uppercase;
 }
 
@@ -291,12 +322,6 @@ display : inline;
 .navbar-left {
   padding-left:10px;
   padding-right:10px;
-}
-
-/*Define navbar font color*/
-.nav-link, .nav-link.disabled {
-    color: #bec4d4;
-    text-transform: uppercase;
 }
 
 /* Get rid of padding around GitHub logo */
@@ -307,11 +332,14 @@ display : inline;
 
 /* Set username to be orange */
 #oauth_user {
+  text-transform: uppercase;
   color: #c85108;
+  padding-right: 1rem;
 }
 
 #oauth_user:hover {
   color: white;
+  text-decoration: none;
 }
 
 .plot-container {
@@ -380,6 +408,37 @@ display : inline;
 .row {
   margin-bottom: 1rem;
 }
+
+.slider{
+  -webkit-appearance: none;
+  width: 250px;
+  height: 15px;
+  background: #BEC4D4;
+  outline: none;
+}
+
+/* slider style for Chrome/Safari/Opera/Edge */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 30px;
+  background: #C85108;
+  cursor: pointer;
+}
+
+/* slider style for Firefox */
+.slider::-moz-range-thumb {
+  width: 15px;
+  height: 30px;
+  background: #C85108;
+  cursor: pointer;
+}
+
+/* remove slider outline for Firefox */
+.slider::-moz-focus-outer {
+    border: 0;
+    }
 
 .row .row {
   margin-top: 1rem;
@@ -467,10 +526,20 @@ display : inline;
 /*Format the version identifier text in bottom corner*/
 #version-div {
   float: right;
-  width: 120px;
+  width: 180px;
   text-align: right;
   color: white;
   font-size: 12px
+}
+
+/*Add underline for links*/
+a {
+  text-decoration: underline;
+}
+
+/*Don't add underline for navbar and button links*/
+nav a, .btn {
+  text-decoration: none;
 }
 
 body {
@@ -491,13 +560,8 @@ h1 {
     letter-spacing: 0.05em;
 }
 
-/* Change color of dropdown links on hover */
-li:hover .nav-link, .navbar-brand:hover {
-    color: #fff;
+ul.no-bullets {
+    list-style: none;
+    padding-left:10px;
+    line-height:25px;
 }
-
-/* Show the dropdown menu on hover */
-li.dropdown:hover .dropdown-menu {
-    display: block;
-}
-
