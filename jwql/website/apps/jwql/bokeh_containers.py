@@ -163,7 +163,7 @@ def readnoise_monitor_tabs(instrument):
     full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
 
     templates_all_apertures = {}
-    for aperture in full_apertures[0:1]:
+    for aperture in full_apertures:
 
         # Start with default values for instrument and aperture because
         # BokehTemplate's __init__ method does not allow input arguments
@@ -174,30 +174,32 @@ def readnoise_monitor_tabs(instrument):
         templates_all_apertures[aperture] = monitor_template
 
     # Create one tab per detector
+    print(templates_all_apertures)
     all_tabs = []
     for aperture_name, template in templates_all_apertures.items():
-
         tab_plots = []
-        # Add the readnoise over time plot
-        readnoise_plot = template.refs["mean_readnoise_figure"]
-        readnoise_plot.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-        tab_plots.append(readnoise_plot)
 
-        # Let's put two plots per line
+        # Add the readnoise over time plot for each amp
+        for amp in '1 2 3 4'.split():
+            readnoise_plot = template.refs["mean_readnoise_amp{}_figure".format(amp)]
+            readnoise_plot.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+            tab_plots.append(readnoise_plot)
+
+        # Add the readnoise difference image
+
+
+        # Put the mean readnoise plots in the first row, and the readnoise difference image in
+        # the second row.
         readnoise_layout = layout(
-            tab_plots[0:1]
+            [tab_plots[0:4]]
         )
 
         readnoise_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
         readnoise_tab = Panel(child=readnoise_layout, title=aperture_name)
-        print(readnoise_tab.__dict__)
         all_tabs.append(readnoise_tab)
 
     # Build tabs
-    print('uhh', all_tabs)
     tabs = Tabs(tabs=all_tabs)
-    print('uhhh', tabs)
-    print(tabs._property_values)
 
     # Return tab HTML and JavaScript to web app
     script, div = components(tabs)
