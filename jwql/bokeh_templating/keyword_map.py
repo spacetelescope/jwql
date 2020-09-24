@@ -35,10 +35,8 @@ Dependencies
 from bokeh import layouts, models, palettes, plotting, transform
 from inspect import getmembers, isclass, isfunction
 
-from .surface3d import Surface3d
-
 bokeh_sequences = {}
-bokeh_mappings = {"Surface3d": Surface3d}  # Note that abstract base classes *are* included
+bokeh_mappings = {}  # Note that abstract base classes *are* included
 
 
 def _parse_module(module):
@@ -46,10 +44,12 @@ def _parse_module(module):
     Sort the members of a module into dictionaries of functions (sequences)
     and classes (mappings).
     """
+    
+    def accessible_member(name, member):
+        return (not name.startswith("_")) and (module.__name__ in member.__module__)
 
-    test = lambda nm, mem: (not nm.startswith("_")) and (module.__name__ in mem.__module__)
-    seqs = {nm: mem for nm, mem in getmembers(module, isfunction) if test(nm, mem)}
-    maps = {nm: mem for nm, mem in getmembers(module, isclass) if test(nm, mem)}
+    seqs = {nm: mem for nm, mem in getmembers(module, isfunction) if accessible_member(nm, mem)}
+    maps = {nm: mem for nm, mem in getmembers(module, isclass) if accessible_member(nm, mem)}
 
     # these need to be mappings
     if 'gridplot' in seqs:
@@ -57,6 +57,7 @@ def _parse_module(module):
     if 'Donut' in seqs:
         maps['Donut'] = seqs.pop('Donut')
     return (seqs, maps)
+
 
 for module in [models, plotting, layouts, palettes, transform]:
     seqs, maps = _parse_module(module)
