@@ -366,8 +366,6 @@ class BadPixelMonitor(BokehTemplate):
             bad_type_lc = bad_type.lower()
 
             # Define y ranges of bad pixel v. time plot
-            if type(self.bad_history[bad_type][1]) == int:
-                raise TypeError(bad_type, self.bad_history[bad_type])
             buffer_size = 0.05 * (max(self.bad_history[bad_type][1]) - min(self.bad_history[bad_type][1]))
             if buffer_size == 0:
                 buffer_size = 1
