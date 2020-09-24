@@ -399,19 +399,19 @@
     - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'black', 'legend': 'Low QE', 'size': 6, 'view': *figure_low_qe_view}
 
 
-- !Document:
-  - !row:
-    - *dark_position_figure
-    - *flat_position_figure
-  - !row:
-    - *dead_history_figure
-    - *hot_history_figure
-  - !row:
-    - *low_qe_history_figure
-    - *rc_history_figure
-  - !row:
-    - *open_history_figure
-    - *adj_open_history_figure
-  - !row:
-    - *telegraph_history_figure
-    - *other_bad_pixel_history_figure
+#- !Document:
+#  - !row:
+#    - *dark_position_figure
+#    - *flat_position_figure
+#  - !row:
+#    - *dead_history_figure
+#    - *hot_history_figure
+#  - !row:
+#    - *low_qe_history_figure
+#    - *rc_history_figure
+#  - !row:
+#    - *open_history_figure
+#    - *adj_open_history_figure
+#  - !row:
+#    - *telegraph_history_figure
+#    - *other_bad_pixel_history_figure

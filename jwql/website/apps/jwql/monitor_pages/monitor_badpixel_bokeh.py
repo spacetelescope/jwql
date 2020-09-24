@@ -30,16 +30,12 @@ from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSB
 from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats
 from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import BAD_PIXEL_TYPES, DARKS_BAD_PIXEL_TYPES, FLATS_BAD_PIXEL_TYPES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config, filesystem_path
 from jwql.bokeh_templating import BokehTemplate
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# move these into utils.constants.py
-BAD_PIXEL_TYPES = ['DEAD', 'HOT', 'LOW_QE', 'RC', 'OPEN', 'ADJ_OPEN', 'TELEGRAPH', 'OTHER_BAD_PIXEL']
-DARKS_BAD_PIXEL_TYPES = ['HOT',  'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
-FLATS_BAD_PIXEL_TYPES = ['DEAD', 'OPEN', 'ADJ_OPEN', 'LOW_QE']
 
 class BadPixelMonitor(BokehTemplate):
 
@@ -223,7 +219,7 @@ class BadPixelMonitor(BokehTemplate):
                 times = [row.obs_mid_time for row in matching_rows]
                 badpix_x = [row.x_coord for row in matching_rows]
                 badpix_y = [row.y_coord for row in matching_rows]
-                num = len(badpix_x)
+                num = [len(row.x_coord) for row in matching_rows]
 
                 latest_row = times.index(max(times))
                 self.bad_latest[bad_type] = (max(times), matching_rows[latest_row].x_coord, matching_rows[latest_row].y_coord)
@@ -370,6 +366,8 @@ class BadPixelMonitor(BokehTemplate):
             bad_type_lc = bad_type.lower()
 
             # Define y ranges of bad pixel v. time plot
+            if type(self.bad_history[bad_type][1]) == int:
+                raise TypeError(bad_type, self.bad_history[bad_type])
             buffer_size = 0.05 * (max(self.bad_history[bad_type][1]) - min(self.bad_history[bad_type][1]))
             if buffer_size == 0:
                 buffer_size = 1
@@ -390,4 +388,4 @@ class BadPixelMonitor(BokehTemplate):
 
 # Uncomment the line below when testing via the command line:
 # bokeh serve --show monitor_badpixel_bokeh.py
-BadPixelMonitor()
+#BadPixelMonitor()

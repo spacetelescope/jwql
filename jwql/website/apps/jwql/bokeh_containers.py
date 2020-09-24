@@ -26,7 +26,7 @@ from bokeh.layouts import layout
 from bokeh.models.widgets import Tabs, Panel
 
 from . import monitor_pages
-from jwql.utils.constants import FULL_FRAME_APERTURES
+from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES
 from jwql.utils.utils import get_config
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -84,7 +84,7 @@ def badpixel_monitor_tabs(instrument):
 
         # Add history plots
         for badpix_type in BAD_PIXEL_TYPES:
-            history = template.refs["{}_history_figure".format(badpix_type)]
+            history = template.refs["{}_history_figure".format(badpix_type.lower())]
             history.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
             tab_plots.append(history)
 
