@@ -18,7 +18,7 @@
     bounds: 'auto'
 - !Figure: &mean_readnoise_amp1_figure
     ref: "mean_readnoise_amp1_figure"
-    title: "Mean Readnoise vs Time"
+    title: "Amp 1"
     x_axis_label: "Time"
     y_axis_label: "Mean readnoise [DN]"
     x_range: *mean_readnoise_xr
@@ -30,7 +30,7 @@
         - {'kind': 'circle', 'x': 'time', 'y': 'mean_rn', 'size': 6, 'source': *mean_readnoise_source}
 - !Figure: &mean_readnoise_amp2_figure
     ref: "mean_readnoise_amp2_figure"
-    title: "Mean Readnoise vs Time"
+    title: "Amp 2"
     x_axis_label: "Time"
     y_axis_label: "Mean readnoise [DN]"
     x_range: *mean_readnoise_xr
@@ -42,7 +42,7 @@
         - {'kind': 'circle', 'x': 'time', 'y': 'mean_rn', 'size': 6, 'source': *mean_readnoise_source}
 - !Figure: &mean_readnoise_amp3_figure
     ref: "mean_readnoise_amp3_figure"
-    title: "Mean Readnoise vs Time"
+    title: "Amp 3"
     x_axis_label: "Time"
     y_axis_label: "Mean readnoise [DN]"
     x_range: *mean_readnoise_xr
@@ -54,7 +54,7 @@
         - {'kind': 'circle', 'x': 'time', 'y': 'mean_rn', 'size': 6, 'source': *mean_readnoise_source}
 - !Figure: &mean_readnoise_amp4_figure
     ref: "mean_readnoise_amp4_figure"
-    title: "Mean Readnoise vs Time"
+    title: "Amp 4"
     x_axis_label: "Time"
     y_axis_label: "Mean readnoise [DN]"
     x_range: *mean_readnoise_xr
@@ -64,6 +64,7 @@
     tools: "hover"
     elements:
         - {'kind': 'circle', 'x': 'time', 'y': 'mean_rn', 'size': 6, 'source': *mean_readnoise_source}
+
 # Document structure
 # - !Document:
 #     - !row:

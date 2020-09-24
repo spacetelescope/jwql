@@ -49,5 +49,4 @@ class ReadnoiseMonitor(BokehTemplate):
         self.refs["mean_readnoise_yr"].start = dummy_data.min()
         self.refs["mean_readnoise_yr"].end = dummy_data.max()
 
-
 ReadnoiseMonitor()

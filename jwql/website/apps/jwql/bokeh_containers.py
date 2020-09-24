@@ -23,7 +23,7 @@ import os
 
 from bokeh.embed import components
 from bokeh.layouts import layout
-from bokeh.models.widgets import Tabs, Panel
+from bokeh.models.widgets import Div, Tabs, Panel
 
 from . import monitor_pages
 from jwql.utils.constants import FULL_FRAME_APERTURES
@@ -174,7 +174,6 @@ def readnoise_monitor_tabs(instrument):
         templates_all_apertures[aperture] = monitor_template
 
     # Create one tab per detector
-    print(templates_all_apertures)
     all_tabs = []
     for aperture_name, template in templates_all_apertures.items():
         tab_plots = []
@@ -185,11 +184,7 @@ def readnoise_monitor_tabs(instrument):
             readnoise_plot.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
             tab_plots.append(readnoise_plot)
 
-        # Add the readnoise difference image
-
-
-        # Put the mean readnoise plots in the first row, and the readnoise difference image in
-        # the second row.
+        # Put the mean readnoise plots in the same row
         readnoise_layout = layout(
             [tab_plots[0:4]]
         )
