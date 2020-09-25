@@ -170,14 +170,26 @@ def readnoise_monitor_tabs(instrument):
             monitor_template = monitor_pages.ReadnoiseMonitor()
             monitor_template.input_parameters = (instrument, aperture, amp)
             readnoise_plot = monitor_template.refs['mean_readnoise_figure']
-            readnoise_plot.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+            readnoise_plot.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
             plots.append(readnoise_plot)
 
-        # Put the mean readnoise plots for each amp together in the same row
+        # Add the readnoise difference image
+        readnoise_diff_image = monitor_template.refs['readnoise_diff_image']
+        readnoise_diff_image.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
+        plots.append(readnoise_diff_image)
+
+        # Add the readnoise difference histogram
+        readnoise_diff_hist = monitor_template.refs['readnoise_diff_hist']
+        #readnoise_diff_hist.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
+        plots.append(readnoise_diff_hist)
+
+        # Put the mean readnoise plots on the top row, and the difference image and 
+        # histogram on the second row. 
         readnoise_layout = layout(
-            [plots[0:4]]
+            plots[0:4],
+            plots[4:6],
         )
-        readnoise_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+        readnoise_layout.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
         readnoise_tab = Panel(child=readnoise_layout, title=aperture)
         tabs.append(readnoise_tab)
 
