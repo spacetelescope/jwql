@@ -160,41 +160,29 @@ def readnoise_monitor_tabs(instrument):
         The JS script to render readnoise monitor plots
     """
 
-    full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
+    # Make a separate tab for each aperture
+    tabs = []
+    for aperture in FULL_FRAME_APERTURES[instrument.upper()]:
 
-    templates_all_apertures = {}
-    for aperture in full_apertures:
-
-        # Start with default values for instrument and aperture because
-        # BokehTemplate's __init__ method does not allow input arguments
-        monitor_template = monitor_pages.ReadnoiseMonitor()
-
-        # Set instrument and monitor using ReadnoiseMonitor's setters
-        monitor_template.aperture_info = (instrument, aperture)
-        templates_all_apertures[aperture] = monitor_template
-
-    # Create one tab per detector
-    all_tabs = []
-    for aperture_name, template in templates_all_apertures.items():
-        tab_plots = []
-
-        # Add the readnoise over time plot for each amp
-        for amp in '1 2 3 4'.split():
-            readnoise_plot = template.refs["mean_readnoise_amp{}_figure".format(amp)]
+        # Make a separate plot for each amp
+        plots = []
+        for amp in ['1', '2', '3', '4']:
+            monitor_template = monitor_pages.ReadnoiseMonitor()
+            monitor_template.input_parameters = (instrument, aperture, amp)
+            readnoise_plot = monitor_template.refs['mean_readnoise_figure']
             readnoise_plot.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-            tab_plots.append(readnoise_plot)
+            plots.append(readnoise_plot)
 
-        # Put the mean readnoise plots in the same row
+        # Put the mean readnoise plots for each amp together in the same row
         readnoise_layout = layout(
-            [tab_plots[0:4]]
+            [plots[0:4]]
         )
-
         readnoise_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-        readnoise_tab = Panel(child=readnoise_layout, title=aperture_name)
-        all_tabs.append(readnoise_tab)
+        readnoise_tab = Panel(child=readnoise_layout, title=aperture)
+        tabs.append(readnoise_tab)
 
     # Build tabs
-    tabs = Tabs(tabs=all_tabs)
+    tabs = Tabs(tabs=tabs)
 
     # Return tab HTML and JavaScript to web app
     script, div = components(tabs)
