@@ -798,9 +798,26 @@ def get_proposal_info(filepaths):
     return proposal_info
 
   
-def get_thumbnails_all_instruments(instruments, apertures, filters, observing_modes, anomalies):
+def get_thumbnails_all_instruments(instruments, apertures, filters, observing_modes, effexptm_min, effexptm_max, anomalies):
     """Return a list of thumbnails available in the filesystem for all
-    instruments given requested parameters.
+    instruments given requested MAST parameters and queried anomalies.
+    
+    Parameters
+    ----------
+    instruments: list
+        A list of selected instruments used to refine MAST query
+    apertures: list
+        A list of selected apertures used to refine MAST query
+    filters: list
+        A list of selected filters used to refine MAST query
+    observing_modes: list
+        A list of selected observing_modes used to refine MAST query
+    effexptm_min: float
+        Minimum exposure time used to refine MAST query
+    effexptm_max: float
+        Maximum exposure time used to refine MAST query 
+    anomalies: list
+        A list of seleted anomalies used to determine relevant thumbnails
 
     Returns
     -------
@@ -808,7 +825,10 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
         A list of thumbnails available in the filesystem for the
         given instrument.
     """
-
+    skip=True
+    if skip==True:
+        thumbnails = ['jw95175001001_02103_00001_nrs2_rate_integ0.thumb', 'jw95175001001_02104_00002_nrs1_rate_integ0.thumb', 'jw95175001001_02101_00001_nrs2_rate_integ0.thumb', 'jw95175001001_02104_00001_nrs2_rate_integ0.thumb']
+        return thumbnails
     # Make sure instruments are of the proper format (e.g. "Nircam")
     thumbnail_list = []
     filenames=[]
@@ -818,16 +838,17 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
         
-        # params = {"columns": "filename",
-        #           "filters": []}
 
         # params = {"columns": "filename, expstart, filter, readpatt, date_beg, date_end, apername, exp_type",
         #           "filters": [{"paramName": "apername",
         #           "values": ['NRCA1_FULL'], }]}
+        # params = {"columns":"*",    ### THIS ONE WORKS
+        #           "filters":[{"paramName": "apername",
+        #                       "values":     apertures}]}
 
         params = {"columns":"*",
-                  "filters":[{"paramName": "apername",
-                              "values":     apertures}]}
+                  "filters":[{"paramName": ["detector", "filter", "effexptm"],
+                              "values":     [apertures, filters, {"min":effexptm_min, "max":effexptm_max}]}]}
 
         response = Mast.service_request_async(service,params)
 
@@ -861,13 +882,14 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
                 for anomaly in anomalies:
                     print("Oh my! It's an anomaly! ", thumbnail)
                     if anomaly in thumbnail_anomalies:
+                        print("Plus it's an anomaly selected in the query!")
                         final_subset.append(thumbnail)
         except KeyError:
-            print("key: ", thumbnail.split("_")[3][:3])
-            print("thumbnail: ", thumbnail)
+            # print("key: ", thumbnail.split("_")[3][:3])
+            print("Error with thumbnail: ", thumbnail)
 
-    # return list(set(final_subset))  # This will be none at the moment because of error flagging anomalies, which depends on login issue
-    return thumbnails_subset
+    return list(set(final_subset))  # This will be none at the moment because of error flagging anomalies, which depends on login issue
+    # return thumbnails_subset  # return any thumbnails matching all but anomaly criteria
 
  
 def get_jwqldb_table_view_components(request):

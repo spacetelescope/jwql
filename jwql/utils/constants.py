@@ -211,13 +211,36 @@ NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'S
 NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami']
 
 # Dictionary of observing modes available for each instrument
-OBSERVING_MODE_PER_INSTRUMENT = {'miri': ['Imaging', '4QPM Coronagraphic Imaging',
-                                          'Lyot Coronagraphic Imaging', 'LRS', 'MRS'],
-                                 'nircam': ['Imaging', 'Coronagraphic Imaging', 'WFSS',
-                                            'Time-Series Imaging', 'Grism Time Series'],
-                                 'niriss': ['WFSS', 'SOSS', 'AMI', 'Imaging'],
-                                 'nirspec': ['Multi-Object Spectroscopy', 'IFU Spectroscopy',
-                                             'Fixed Slit Spectroscopy', 'Bright Object Time Series']}
+# OBSERVING_MODE_PER_INSTRUMENT = {'miri': ['Imaging', '4QPM Coronagraphic Imaging',
+#                                           'Lyot Coronagraphic Imaging', 'LRS', 'MRS'],
+#                                  'nircam': ['Imaging', 'Coronagraphic Imaging', 'WFSS',
+#                                             'Time-Series Imaging', 'Grism Time Series'],
+#                                  'niriss': ['WFSS', 'SOSS', 'AMI', 'Imaging'],
+#                                  'nirspec': ['Multi-Object Spectroscopy', 'IFU Spectroscopy',
+#                                              'Fixed Slit Spectroscopy', 'Bright Object Time Series']}
+
+# Dictionary of observing modes available for each instrument
+OBSERVING_MODE_PER_INSTRUMENT = {'fgs': ['FGS_DARK', 'FGS_FOCUS', 'FGS_IMAGE', 'FGS_INTFLAT', 'FGS_SKYFLAT'],
+                                 'miri': ['MIR_IMAGE', 'MIR_TACQ', 'MIR_LYOT', 'MIR_4QPM', 'MIR_LRS-FIXEDSLIT', 
+                                          'MIR_LRS-SLITLESS', 'MIR_MRS', 'MIR_DARKIMG', 'MIR_DARKMRS', 'MIR_DARKALL', 
+                                          'MIR_FLATIMAGE', 'MIR_FLATMRS', 'MIR_CORONCAL'],
+                                 'nircam': ['NRC_IMAGE', 'NRC_WFSS', 'NRC_TACQ', 'NRC_CORON', 'NRC_FOCUS', 'NRC_DARK', 
+                                            'NRC_FLAT', 'NRC_GRISM', 'NRC_LED', 'NRC_TSIMAGE', 'NRC_TSGRISM', 
+                                            'NRC_TACONFIRM', 'NRC_WFSC'],
+                                 'niriss': ['NIS_AMI', 'NIS_DARK', 'NIS_EXTCAL', 'NIS_FOCUS', 'NIS_IMAGE', 'NIS_LAMP',
+                                            'NIS_SOSS', 'NIS_WFSS', 'NIS_TACQ', 'NIS_TACONFIRM'],
+                                 'nirspec': ['NRS_AUTOFLAT', 'NRS_AUTOWAVE', 'NRS_BRIGHTOBJ', 'NRS_CONFIRM', 
+                                             'NRS_DARK', 'NRS_FIXEDSLIT', 'NRS_FOCUS', 'NRS_IFU', 'NRS_IMAGE',
+                                             'NRS_LAMP', 'NRS_MIMF', 'NRS_MSASPEC', 'NRS_TACONFIRM', 'NRS_TACQ',
+                                             'NRS_TASLIT']}
+
+
+# EXP_TYPE
+# N/A, ANY, FGS_ID-IMAGE, FGS_ID-STACK, FGS_ACQ1, FGS_ACQ2, FGS_TRACK, FGS_FINEGUIDE, 
+# MIR_FLATIMAGE-EXT, MIR_FLATMRS-EXT, NRS_WATA, NRS_MSATA, MIR_TACONFIRM
+
+# datamodl:
+# ImageModel, MultiSpecModel, CubeModel, MultiSlitModel, IFUCubeModel
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 

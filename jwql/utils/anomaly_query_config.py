@@ -30,11 +30,19 @@ INSTRUMENTS_CHOSEN = ["No instruments selected"]
 
 print("INSTRUMENTS_CHOSEN", INSTRUMENTS_CHOSEN)
 
-# Observing modes selected by user
+# Observing modes selected by user in query_anomaly
 OBSERVING_MODES_CHOSEN = ["No observing modes selected"]
 
-# Anomalies selected by user in query_anomaly_3
+# Anomalies selected by user in query_anomaly
 ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = ["No anomalies selected"]
 
-# Filters selected by user in query_anomaly_2
+# Filters selected by user in query_anomaly
 FILTERS_CHOSEN = ["No filters selected"]
+
+# Minimum exposure time selected by user in query_anomaly. Corresponds to EFFEXPTM in MAST.
+EXPTIME_MIN = ['0']  # select all as default
+
+# Maximum exposure time selected by user in query_anomaly. Corresponds to EFFEXPTM in MAST.
+EXPTIME_MAX = ['999999999999999']   # select all as default
+
+THUMBNAILS = []

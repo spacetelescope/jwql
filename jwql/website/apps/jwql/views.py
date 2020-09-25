@@ -96,18 +96,22 @@ def dynamic_anomaly(request):
 
             miri_filters = form.cleaned_data['miri_filt']
             miri_apers = form.cleaned_data['miri_aper']
+            miri_obsmode = form.cleaned_data['miri_obsmode']
             miri_anomalies = form.cleaned_data['miri_anomalies']
 
             nirspec_filters = form.cleaned_data['nirspec_filt']
             nirspec_apers = form.cleaned_data['nirspec_aper']
+            nirspec_obsmode = form.cleaned_data['nirspec_obsmode']
             nirspec_anomalies = form.cleaned_data['nirspec_anomalies']
 
             niriss_filters = form.cleaned_data['niriss_filt']
             niriss_apers = form.cleaned_data['niriss_aper']
+            niriss_obsmode = form.cleaned_data['niriss_obsmode']
             niriss_anomalies = form.cleaned_data['niriss_anomalies']
 
             nircam_filters = form.cleaned_data['nircam_filt']
             nircam_apers = form.cleaned_data['nircam_aper']
+            nircam_obsmode = form.cleaned_data['nircam_obsmode']
             nircam_anomalies = form.cleaned_data['nircam_anomalies']
 
             all_filters = []
@@ -117,20 +121,27 @@ def dynamic_anomaly(request):
             
             all_apers = []
             for instrument_apers in [miri_apers, nirspec_apers, niriss_apers, nircam_apers]:
-                for filter in instrument_apers:
-                    all_apers.append(filter) if filter not in all_apers else all_apers
+                for aper in instrument_apers:
+                    all_apers.append(aper) if aper not in all_apers else all_apers
+
+            all_obsmodes = []
+            for instrument_obsmode in [miri_obsmode, nirspec_obsmode, niriss_obsmode, nircam_obsmode]:
+                for obsmode in instrument_obsmode:
+                    all_obsmodes.append(obsmode) if obsmode not in all_obsmodes else all_obsmodes
 
             all_anomalies = []
             for instrument_anomalies in [miri_anomalies, nirspec_anomalies, niriss_anomalies, nircam_anomalies]:
-                for filter in instrument_anomalies:
-                    all_anomalies.append(filter) if filter not in all_anomalies else all_anomalies
+                for anomaly in instrument_anomalies:
+                    all_anomalies.append(anomaly) if anomaly not in all_anomalies else all_anomalies
 
 
             anomaly_query_config.INSTRUMENTS_CHOSEN = form.cleaned_data['instrument']
             anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = all_anomalies
             anomaly_query_config.APERTURES_CHOSEN = all_apers
             anomaly_query_config.FILTERS_CHOSEN = all_filters
-            anomaly_query_config.OBSERVING_MODES_CHOSEN = ['obsmode'] ### NOT PRESENT
+            anomaly_query_config.EXPTIME_MIN = str(form.cleaned_data['exp_time_min'])
+            anomaly_query_config.EXPTIME_MAX = str(form.cleaned_data['exp_time_max'])
+            anomaly_query_config.OBSERVING_MODES_CHOSEN = all_obsmodes
 
             return redirect('/query_submit')
     
@@ -228,8 +239,8 @@ def about(request):
     return render(request, template, context)
 
 
-@auth_required
-def archived_proposals(request, user, inst):
+# @auth_required
+def archived_proposals(request,       inst):  # user,
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -255,8 +266,8 @@ def archived_proposals(request, user, inst):
     return render(request, template, context)
 
 
-@auth_required
-def archived_proposals_ajax(request, user, inst):
+# @auth_required
+def archived_proposals_ajax(request,      inst):   # user,
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -271,7 +282,7 @@ def archived_proposals_ajax(request, user, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-
+    print('in archvied proposals ajax')
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
@@ -280,6 +291,13 @@ def archived_proposals_ajax(request, user, inst):
     filepaths = get_filenames_by_instrument(inst)
     all_filenames = [os.path.basename(f) for f in filepaths]
     proposal_info = get_proposal_info(filepaths)
+
+
+    # TRY GETTING MY THUMBNAILS TO SHOW UP
+    
+    all_filenames = [os.path.basename(f) for f in anomaly_query_config.THUMBNAILS]
+    proposal_info = get_proposal_info(anomaly_query_config.THUMBNAILS)
+
 
     context = {'inst': inst,
                'all_filenames': all_filenames,
@@ -291,8 +309,8 @@ def archived_proposals_ajax(request, user, inst):
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-@auth_required
-def archive_thumbnails(request, user, inst, proposal):
+# @auth_required
+def archive_thumbnails(request,      inst, proposal):  # user,
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -310,7 +328,7 @@ def archive_thumbnails(request, user, inst, proposal):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-
+    print("in archive thumnbails")
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
@@ -322,8 +340,8 @@ def archive_thumbnails(request, user, inst, proposal):
     return render(request, template, context)
 
 
-@auth_required
-def archive_thumbnails_ajax(request, user, inst, proposal):
+# @auth_required
+def archive_thumbnails_ajax(request,       inst, proposal):  # user,
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -341,7 +359,7 @@ def archive_thumbnails_ajax(request, user, inst, proposal):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-
+    print("in archive thumnbails ajax")
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
@@ -350,8 +368,8 @@ def archive_thumbnails_ajax(request, user, inst, proposal):
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
-@auth_required
-def archive_thumbnails_query_ajax(request, user, insts):
+# @auth_required
+def archive_thumbnails_query_ajax(request,       insts):  # user,
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -369,7 +387,7 @@ def archive_thumbnails_query_ajax(request, user, insts):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-
+    print("in archive thumnbails query ajax")
     # Ensure the instrument is correctly capitalized
     insts_list = []
     for inst in insts:
@@ -568,26 +586,25 @@ def query_submit(request):
         Outgoing response sent to the webpage
     """
 
-    # if current_anomalies == None:
-    #     print("PLEASE START AT THE FIRST PAGE IN THE FORMS! (eg, <SERVER ADDRESS>/query_anomaly/ ")
-
     template = 'query_submit.html'
-    # inst_list_chosen = ["NIRSpec", "NIRCam"]
-    # apers_chosen = ['NRCA1_FULL', 'NRCA5_FULL', 
-    #                 'NRCB4_FULL', 'NRCB5_FULL', 
-    #                 'NRS1_FULL', 'NRS2_FULL']
-    # filt_chosen = ['CLEAR']
 
-    print("getting thumbnails")
-    # thumbnails = get_thumbnails_all_instruments(inst_list_chosen, apers_chosen)
     insts = anomaly_query_config.INSTRUMENTS_CHOSEN
     apers = anomaly_query_config.APERTURES_CHOSEN
     filts = anomaly_query_config.FILTERS_CHOSEN
+    exptime_min = anomaly_query_config.EXPTIME_MIN
+    exptime_max = anomaly_query_config.EXPTIME_MAX
     obs_modes = anomaly_query_config.OBSERVING_MODES_CHOSEN
     anomalies = anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
-    thumbnails = get_thumbnails_all_instruments(insts, apers, filts, obs_modes, anomalies)
+    print("getting thumbnails")
+    thumbnails = get_thumbnails_all_instruments(insts, apers, filts, exptime_min, exptime_max, obs_modes, anomalies)
+    anomaly_query_config.THUMBNAILS = thumbnails
 
-    context = {'inst': '',
+    # get information about thumbnails for thumbnail viewer
+    proposal_info = get_proposal_info(thumbnails)
+
+    context = { # 'inst': '',
+               'inst': "miri",   # Use with UPDATE_THUMBNAILS_PAGE instead of UPDATE_THUMBNAILS_QUERY_PAGE 
+               'prop': "jw05191001001_01101_00002",   # Use with UPDATE_THUMBNAILS_PAGE instead of UPDATE_THUMBNAILS_QUERY_PAGE
                'anomalies_chosen_from_current_anomalies': anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
                'apertures_chosen': apers,
                'current_anomalies': anomaly_query_config.CURRENT_ANOMALIES,
@@ -595,7 +612,13 @@ def query_submit(request):
                'inst_list_chosen': insts,
                'observing_modes_chosen': obs_modes,
                'thumbnails': thumbnails,
-               'base_url': get_base_url()
+               'base_url': get_base_url(),
+               'thumbnail_data':  {'inst': "Queried Anomalies",
+                                   'all_filenames': thumbnails,
+                                   'num_proposals': proposal_info['num_proposals'],
+                                   'thumbnails': {'proposals': proposal_info['proposals'],
+                                                  'thumbnail_paths': proposal_info['thumbnail_paths'],
+                                                  'num_files': proposal_info['num_files']}}
               }
 
     return render(request, template, context)
@@ -651,8 +674,8 @@ def view_header(request, inst, filename):
     return render(request, template, context)
 
 
-@auth_required
-def view_image(request, user, inst, file_root, rewrite=False):
+# @auth_required
+def view_image(request,       inst, file_root, rewrite=False):   # user,
     """Generate the image view page
 
     Parameters
@@ -690,7 +713,7 @@ def view_image(request, user, inst, file_root, rewrite=False):
     if request.method == 'POST':
         anomaly_choices = dict(request.POST)['anomaly_choices']
         if form.is_valid():
-            form.update_anomaly_table(file_root, user['ezid'], anomaly_choices)
+            form.update_anomaly_table(file_root,          anomaly_choices)     #  user['ezid'],
 
     # Build the context
     context = {'inst': inst,

@@ -117,7 +117,7 @@ class DynamicAnomalyForm(BaseForm):
     # Form submits
     calculate_submit = SubmitField()
 
-    # Generate dynamic lists of options to use in forms
+    # Generate dynamic lists of apertures to use in forms
     aperture_list = []
     for instrument in FULL_FRAME_APERTURES.keys():
         for aperture in FULL_FRAME_APERTURES[instrument]:
@@ -140,6 +140,7 @@ class DynamicAnomalyForm(BaseForm):
     for aperture in FULL_FRAME_APERTURES['NIRISS']:
         niriss_aperture_list.append([aperture, aperture])
 
+    # Generate dynamic lists of filters to use in forms
     filter_list = []
     for instrument in FILTERS_PER_INSTRUMENT.keys():
         # # if instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:   # eg ['nirspec']: selects relevant filters, but not specific to chosen instruments
@@ -163,6 +164,24 @@ class DynamicAnomalyForm(BaseForm):
     for filter in FILTERS_PER_INSTRUMENT['nircam']:
         nircam_filter_list.append([filter, filter])
 
+    # Generate dynamic lists of observing modes to use in forms
+    miri_obsmode_list = []
+    for obsmode in OBSERVING_MODE_PER_INSTRUMENT['miri']:
+        miri_obsmode_list.append([obsmode, obsmode])
+
+    niriss_obsmode_list = []
+    for obsmode in OBSERVING_MODE_PER_INSTRUMENT['niriss']:
+        niriss_obsmode_list.append([obsmode, obsmode])
+    
+    nircam_obsmode_list = []
+    for obsmode in OBSERVING_MODE_PER_INSTRUMENT['nircam']:
+        nircam_obsmode_list.append([obsmode, obsmode])
+    
+    nirspec_obsmode_list = []
+    for obsmode in OBSERVING_MODE_PER_INSTRUMENT['nirspec']:
+        nirspec_obsmode_list.append([obsmode, obsmode])
+
+    # Generate dynamic lists of anomalies to use in forms
     miri_anomalies_list = []
     for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
         if 'miri' in ANOMALIES_PER_INSTRUMENT[anomaly]:
@@ -209,6 +228,11 @@ class DynamicAnomalyForm(BaseForm):
     niriss_filt = forms.MultipleChoiceField(required=False, choices=niriss_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('soss', 'SOSS')])
     nircam_filt = forms.MultipleChoiceField(required=False, choices=nircam_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('f322w2', 'F322W2'), ('f444w', 'F444W'), ('f277w', 'F277W')])
     
+    miri_obsmode= forms.MultipleChoiceField(required=False, choices = miri_obsmode_list, widget=forms.CheckboxSelectMultiple)
+    nirspec_obsmode = forms.MultipleChoiceField(required=False, choices = nirspec_obsmode_list, widget=forms.CheckboxSelectMultiple)
+    niriss_obsmode = forms.MultipleChoiceField(required=False, choices=niriss_obsmode_list, widget=forms.CheckboxSelectMultiple)
+    nircam_obsmode = forms.MultipleChoiceField(required=False, choices=nircam_obsmode_list, widget=forms.CheckboxSelectMultiple)
+
     miri_anomalies= forms.MultipleChoiceField(required=False, choices = miri_anomalies_list, widget=forms.CheckboxSelectMultiple)
     nirspec_anomalies = forms.MultipleChoiceField(required=False, choices = nirspec_anomalies_list, widget=forms.CheckboxSelectMultiple)
     niriss_anomalies = forms.MultipleChoiceField(required=False, choices=niriss_anomalies_list, widget=forms.CheckboxSelectMultiple)
@@ -241,7 +265,7 @@ class AnomalySubmitForm(forms.Form):
     # Define anomaly choice field
     anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())
 
-    def update_anomaly_table(self, rootname, user, anomaly_choices):
+    def update_anomaly_table(self, rootname,       anomaly_choices):   # user,
         """Updated the ``anomaly`` table of the database with flagged
         anomaly information
 
@@ -261,7 +285,7 @@ class AnomalySubmitForm(forms.Form):
         data_dict = {}
         data_dict['rootname'] = rootname
         data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = user
+        data_dict['user'] = 'TEMPORARY_USER' # user
         for choice in anomaly_choices:
             data_dict[choice] = True
         if 'guider' in rootname:

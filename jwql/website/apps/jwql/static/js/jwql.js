@@ -522,7 +522,7 @@ function update_thumbnails_page(inst, proposal, base_url) {
  */
 function update_thumbnails_query_page(base_url) {
     $.ajax({
-        url: base_url + '/ajax/query_submit/',
+        url: base_url + '/query_submit/',
         success: function(data){
 
             // Perform various updates to divs
