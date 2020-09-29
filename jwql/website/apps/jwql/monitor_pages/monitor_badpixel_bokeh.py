@@ -203,6 +203,14 @@ class BadPixelMonitor(BokehTemplate):
         # Get dates and coordinates of the most recent entries
         self.most_recent_data()
 
+
+        # This shows that for e.g. NRCA2_FULL, the data are what we expect, but somehow the plot
+        # is not showing it!!!!!!!!
+        #if self._aperture != 'NRCA1_FULL':
+        #    raise ValueError(self._aperture, self.latest_bad_from_dark_type, self.latest_bad_from_dark_x, self.latest_bad_from_dark_y)
+
+
+
     def post_init(self):
         self._update_badpix_v_time()
         self._update_badpix_loc_plot()
@@ -216,28 +224,18 @@ class BadPixelMonitor(BokehTemplate):
         for bad_type in BAD_PIXEL_TYPES:
             matching_rows = [row for row in self.badpixel_table if row.type == bad_type]
             if len(matching_rows) != 0:
-
                 real_data = True
-                for_debugging = datetime.timedelta(days=1)
-
                 times = [row.obs_mid_time for row in matching_rows]
-
-                #badpix_x = [row.x_coord for row in matching_rows]
-                #badpix_y = [row.y_coord for row in matching_rows]
                 num = np.array([len(row.x_coord) for row in matching_rows])
 
                 latest_row = times.index(max(times))
                 self.bad_latest[bad_type] = (max(times), matching_rows[latest_row].x_coord, matching_rows[latest_row].y_coord)
-
-                #raise ValueError(matching_rows[latest_row].x_coord)
 
             # If there are no records of a certain type of bad pixel, then
             # fall back to a default date and 0 bad pixels. Remember that
             # these plots are always showing the number of NEW bad pixels
             # that are not included in the current reference file.
             else:
-
-
                 real_data = False
 
                 times = [datetime.datetime(2021, 10, 31), datetime.datetime(2021, 11, 1)]
