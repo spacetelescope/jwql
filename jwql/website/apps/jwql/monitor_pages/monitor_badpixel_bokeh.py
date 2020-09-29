@@ -216,27 +216,42 @@ class BadPixelMonitor(BokehTemplate):
         for bad_type in BAD_PIXEL_TYPES:
             matching_rows = [row for row in self.badpixel_table if row.type == bad_type]
             if len(matching_rows) != 0:
+
+                real_data = True
+                for_debugging = datetime.timedelta(days=1)
+
                 times = [row.obs_mid_time for row in matching_rows]
-                badpix_x = [row.x_coord for row in matching_rows]
-                badpix_y = [row.y_coord for row in matching_rows]
-                num = [len(row.x_coord) for row in matching_rows]
+
+                #badpix_x = [row.x_coord for row in matching_rows]
+                #badpix_y = [row.y_coord for row in matching_rows]
+                num = np.array([len(row.x_coord) for row in matching_rows])
 
                 latest_row = times.index(max(times))
                 self.bad_latest[bad_type] = (max(times), matching_rows[latest_row].x_coord, matching_rows[latest_row].y_coord)
+
+                #raise ValueError(matching_rows[latest_row].x_coord)
 
             # If there are no records of a certain type of bad pixel, then
             # fall back to a default date and 0 bad pixels. Remember that
             # these plots are always showing the number of NEW bad pixels
             # that are not included in the current reference file.
             else:
-                times = np.array([datetime.datetime(2021, 10, 31), datetime.datetime(2021, 11, 1)])
-                badpix_x = []
-                badpix_y = []
+
+
+                real_data = False
+
+                times = [datetime.datetime(2021, 10, 31), datetime.datetime(2021, 11, 1)]
+                badpix_x = [1000, 999]
+                badpix_y = [1000, 999]
                 num = np.array([0, 0])
-                self.bad_latest[bad_type] = (max(times), [], [])
+                self.bad_latest[bad_type] = (max(times), badpix_x, badpix_y)
 
             hover_values = np.array([datetime.datetime.strftime(t, "%d-%b-%Y") for t in times])
             self.bad_history[bad_type] = (times, num, hover_values)
+
+            #if real_data:
+            #    raise ValueError(bad_type, self.bad_history[bad_type])
+
 
     def identify_tables(self):
         """Determine which database tables as associated with
@@ -293,21 +308,10 @@ class BadPixelMonitor(BokehTemplate):
         self.latest_bad_from_dark_x = []
         self.latest_bad_from_dark_y = []
         dark_times = [self.bad_latest[bad_type][0] for bad_type in DARKS_BAD_PIXEL_TYPES]
-
-
-        print('DARK_TIMES:', dark_times)
-
-
-
         if len(dark_times) > 0:
             self.most_recent_dark_date = max(dark_times)
         else:
             self.most_recent_dark_date = datetime.datetime(1999, 10, 31)
-
-
-
-        print('DARK DATE:', self.most_recent_dark_date)
-
 
         for bad_type in DARKS_BAD_PIXEL_TYPES:
             if self.bad_latest[bad_type][0] == self.most_recent_dark_date:
