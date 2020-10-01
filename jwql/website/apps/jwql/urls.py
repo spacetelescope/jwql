@@ -64,14 +64,12 @@ urlpatterns = [
 
     # MIRI-specific views
     path('miri/miri_data_trending/', views.miri_data_trending, name='miri_data_trending'),
-    path('miri/cosmic_ray_monitor/', monitor_views.cosmic_ray_monitor, name='cosmic_ray_monitor'),
 
     # NIRSpec-specific views
     path('nirspec/nirspec_data_trending/', views.nirspec_data_trending, name='nirspec_data_trending'),
 
     # Common monitor views
-    re_path(r'^(?P<inst>({}))/dark_monitor/$'.format(instruments), monitor_views.dark_monitor, name='dark_monitor'),
-    re_path(r'^(?P<inst>({}))/badpixel_monitor/$'.format(instruments), monitor_views.badpixel_monitor, name='badpixel_monitor'),
+    re_path(r'^(?P<inst>({}))/.+_monitor/$'.format(instruments), monitor_views.dark_monitor, name='dark_monitor'),
 
     # Main site views
     path('about/', views.about, name='about'),
