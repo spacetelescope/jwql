@@ -37,6 +37,36 @@ from jwql.utils.utils import get_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
+def cosmic_ray_monitor(request, inst='MIRI'):
+    """Generate the cosmic ray monitor page for a given instrument
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # Ensure the instrument is correctly capitalized
+    inst = 'MIRI' #other instruments not currently supported
+    #JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+
+    tabs_components = bokeh_containers.cosmic_ray_monitor_tabs(inst)
+
+    template = "cosmic_ray_monitor.html"
+
+    context = {
+        'inst': inst,
+        'tabs_components': tabs_components,
+    }
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
+
 
 def dark_monitor(request, inst):
     """Generate the dark monitor page for a given instrument
