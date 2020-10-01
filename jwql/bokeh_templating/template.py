@@ -138,7 +138,7 @@ class BokehTemplate(object):
         # variable, since the constructors store everything in self.refs
         # (and self.document, for the document).
         try:
-            self.full_stream = list(yaml.load_all(interface, Loader=yaml.FullLoader))
+            yaml.load_all(interface)
         except yaml.YAMLError as exc:
             raise BokehTemplateParserError(exc)
 
