@@ -423,13 +423,9 @@ NIRCamReadnoiseQueryHistory = monitor_orm_factory('nircam_readnoise_query_histor
 NIRCamReadnoiseStats = monitor_orm_factory('nircam_readnoise_stats')
 NIRISSReadnoiseQueryHistory = monitor_orm_factory('niriss_readnoise_query_history')
 NIRISSReadnoiseStats = monitor_orm_factory('niriss_readnoise_stats')
-<<<<<<< Updated upstream
 MIRICosmicRayStats = monitor_orm_factory('miri_cosmic_ray_stats')
 MIRICosmicRayQueryHistory = monitor_orm_factory('miri_cosmic_ray_query_history')
-=======
-MIRICosmicRayQueryHistory = monitor_orm_factory('miri_cosmic_ray_query_history')
-MIRICosmicRayStats = monitor_orm_factory('miri_cosmic_ray_stats')
->>>>>>> Stashed changes
+
 
 if __name__ == '__main__':
 
