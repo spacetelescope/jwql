@@ -402,16 +402,26 @@ def dashboard(request):
         Outgoing response sent to the webpage
     """
 
-    template = 'dashboard.html'
-    output_dir = get_config()['outputs']
-    dashboard_components, dashboard_html = get_dashboard_components()
+    from jwql.website.apps.jwql.bokeh_dashboard import generalDashboard
+    from bokeh.plotting import figure, output_file, show 
+    from bokeh.embed import components
+    from bokeh.layouts import column, layout
+    import numpy as np
 
-    context = {'inst': '',
-               'outputs': output_dir,
-               'filesystem_html': os.path.join(output_dir, 'monitor_filesystem',
-                                               'filesystem_monitor.html'),
-               'dashboard_components': dashboard_components,
-               'dashboard_html': dashboard_html}
+    template = 'dashboard.html'
+
+    db = generalDashboard()
+    pie_graph = db.dashboard_instrument_pie_chart()
+    files_graph = db.dashboard_files_per_day()
+
+    p = layout([
+        [files_graph],[pie_graph]
+        ]) 
+    script, div = components(p)
+
+    context =  {'inst': '',
+               'script': script,
+               'div': div}
 
     return render(request, template, context)
 
