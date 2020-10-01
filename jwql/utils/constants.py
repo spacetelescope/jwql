@@ -78,6 +78,11 @@ ANOMALIES_PER_INSTRUMENT = {
 # Defines the possible anomalies (with rendered name) to flag through the web app
 ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT]
 
+# Bad pixel types by the type of data used to find them
+BAD_PIXEL_TYPES = ['DEAD', 'HOT', 'LOW_QE', 'RC', 'OPEN', 'ADJ_OPEN', 'TELEGRAPH', 'OTHER_BAD_PIXEL']
+DARKS_BAD_PIXEL_TYPES = ['HOT',  'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
+FLATS_BAD_PIXEL_TYPES = ['DEAD', 'OPEN', 'ADJ_OPEN', 'LOW_QE']
+
 # Possible exposure types for dark current data
 DARK_EXP_TYPES = {'nircam': ['NRC_DARK'],
                   'niriss': ['NIS_DARK'],
@@ -116,7 +121,8 @@ FULL_FRAME_APERTURES = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NR
                                    'NRCB4_FULL', 'NRCB5_FULL'],
                         'NIRISS': ['NIS_CEN'],
                         'NIRSPEC': ['NRS1_FULL', 'NRS2_FULL'],
-                        'MIRI': ['MIRIM_FULL']
+                        'MIRI': ['MIRIM_FULL'],
+                        'FGS': ['FGS1_FULL', 'FGS2_FULL']
                         }
 
 # Possible suffix types for nominal files
@@ -167,7 +173,7 @@ MONITORS = {
     'miri': [('Dark Current Monitor', '#'),
              ('Data Trending', '/miri/miri_data_trending'),
              ('Bad Pixel Monitor', '#'),
-             ('Cosmic Ray Monitor', '#'),
+             ('Cosmic Ray Monitor', '/miri/cosmic_ray_monitor'),
              ('Photometry Monitor', '#'),
              ('TA Failure Monitor', '#'),
              ('Blind Pointing Accuracy Monitor', '#'),
