@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>{{ inst }} Cosmic Ray Monitor- JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+
+		<h1>{{ inst }} Cosmic Ray Monitor</h1>
+		<hr>
+
+		<div width=100%>
+			<!--Add Bokeh HTML-->
+			{{ tabs_components[0] | safe }}
+		</div>
+
+		<!--Add Bokeh scripts-->
+		{{ tabs_components[1] | safe }}
+
+	</main>
+
+{% endblock %}
