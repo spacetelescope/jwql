@@ -13,20 +13,18 @@ Use
     ::
 
         from jwql.website.apps.jwql import monitor_pages
-        monitor_template = monitor_pages.ReadnoiseMonitor('NIRCam', 'NRCA3_FULL')
-        script, div = monitor_template.embed("bad_pixel_time_figure")
+        monitor_template = monitor_pages.ReadnoiseMonitor()
+        monitor_template.input_parameters = ('NIRCam', 'NRCA1_FULL', '1')
 """
 
 from datetime import datetime, timedelta
 import os
 
-from astropy.time import Time
 import numpy as np
 
 from jwql.bokeh_templating import BokehTemplate
 from jwql.database.database_interface import session, NIRCamReadnoiseStats, NIRISSReadnoiseStats
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.utils import get_config
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -46,8 +44,7 @@ class ReadnoiseMonitor(BokehTemplate):
         self.post_init()
 
     def identify_tables(self):
-        """Determine which database tables as associated with a given
-        instrument"""
+        """Determine which database tables to use for the given instrument"""
 
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self._instrument.lower()]
         self.stats_table = eval('{}ReadnoiseStats'.format(mixed_case_name))
@@ -98,7 +95,7 @@ class ReadnoiseMonitor(BokehTemplate):
         # Update the mean readnoise figure
         self.update_mean_readnoise_figure()
 
-        # Update the readnoise difference image
+        # Update the readnoise difference image and histogram
         self.update_readnoise_diff_plots()
 
     def update_mean_readnoise_figure(self):
@@ -131,10 +128,8 @@ class ReadnoiseMonitor(BokehTemplate):
         diff_image_png = self.query_results[-1].readnoise_diff_image
         diff_image_n = np.array(self.query_results[-1].diff_image_n)
         diff_image_bin_centers = np.array(self.query_results[-1].diff_image_bin_centers)
-        most_recent_filename = os.path.basename(self.query_results[-1].uncal_filename).replace('_uncal.fits', '')
 
         # Update the readnoise difference image
-        diff_image_png = '/static/img/jw96003001001_02201_00001_nrcblong_uncal_refpix_readnoise_diff.png'  # TODO PLACEHOLDER - erase when done
         self.refs['readnoise_diff_image'].image_url(url=[diff_image_png], x=0, y=0, w=2048, h=2048, anchor="bottom_left")
         self.refs['readnoise_diff_image'].xaxis.visible = False
         self.refs['readnoise_diff_image'].yaxis.visible = False
