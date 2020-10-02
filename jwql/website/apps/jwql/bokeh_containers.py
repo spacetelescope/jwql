@@ -23,7 +23,7 @@ import os
 
 from bokeh.embed import components
 from bokeh.layouts import layout
-from bokeh.models.widgets import Div, Tabs, Panel
+from bokeh.models.widgets import Tabs, Panel
 
 from . import monitor_pages
 from jwql.utils.constants import FULL_FRAME_APERTURES
