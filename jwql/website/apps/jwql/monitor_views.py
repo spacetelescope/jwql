@@ -73,6 +73,7 @@ def dark_monitor(request, inst):
     # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
 
+
 def readnoise_monitor(request, inst):
     """Generate the readnoise monitor page for a given instrument
 

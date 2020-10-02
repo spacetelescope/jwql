@@ -144,6 +144,7 @@ def dark_monitor_tabs(instrument):
 
     return div, script
 
+
 def readnoise_monitor_tabs(instrument):
     """Creates the various tabs of the readnoise monitor results page.
 
@@ -180,11 +181,10 @@ def readnoise_monitor_tabs(instrument):
 
         # Add the readnoise difference histogram
         readnoise_diff_hist = monitor_template.refs['readnoise_diff_hist']
-        #readnoise_diff_hist.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
         plots.append(readnoise_diff_hist)
 
-        # Put the mean readnoise plots on the top row, and the difference image and 
-        # histogram on the second row. 
+        # Put the mean readnoise plots on the top row, and the difference image and
+        # histogram on the second row.
         readnoise_layout = layout(
             plots[0:4],
             plots[4:6],

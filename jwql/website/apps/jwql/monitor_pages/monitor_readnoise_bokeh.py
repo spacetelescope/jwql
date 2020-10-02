@@ -30,6 +30,7 @@ from jwql.utils.utils import get_config
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
+
 class ReadnoiseMonitor(BokehTemplate):
 
     # Combine the input parameters into a single property because we
@@ -57,7 +58,7 @@ class ReadnoiseMonitor(BokehTemplate):
         # Determine which database tables are needed based on instrument
         self.identify_tables()
 
-        # Query database for all data in readnoise stats with a matching aperture, 
+        # Query database for all data in readnoise stats with a matching aperture,
         # and sort the data by exposure start time.
         self.query_results = session.query(self.stats_table) \
             .filter(self.stats_table.aperture == self._aperture) \
@@ -89,12 +90,11 @@ class ReadnoiseMonitor(BokehTemplate):
         # Get the relevant plotting data
         self.readnoise_vals = np.array([getattr(result, 'amp{}_mean'.format(self._amp)) for result in self.query_results])
         self.expstarts_iso = np.array([result.expstart for result in self.query_results])
-        #self.expstarts = Time(self.expstarts_iso, format='isot').decimalyear
         self.expstarts = np.array([datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f') for date in self.expstarts_iso])
         self.filenames = [os.path.basename(result.uncal_filename).replace('_uncal.fits', '') for result in self.query_results]
         self.nints = [result.nints for result in self.query_results]
         self.ngroups = [result.ngroups for result in self.query_results]
-        
+
         # Update the mean readnoise figure
         self.update_mean_readnoise_figure()
 
@@ -105,7 +105,7 @@ class ReadnoiseMonitor(BokehTemplate):
         """Updates the mean readnoise bokeh plot"""
 
         # Update the mean readnoise vs time plot
-        self.refs['mean_readnoise_source'].data = {'time': self.expstarts, 
+        self.refs['mean_readnoise_source'].data = {'time': self.expstarts,
                                                    'time_iso': self.expstarts_iso,
                                                    'mean_rn': self.readnoise_vals,
                                                    'filename': self.filenames,
@@ -121,12 +121,12 @@ class ReadnoiseMonitor(BokehTemplate):
                                                              ('nints', '@nints'),
                                                              ('ngroups', '@ngroups'),
                                                              ('readnoise', '@mean_rn')
-                                                            ]
+                                                             ]
 
     def update_readnoise_diff_plots(self):
         """Updates the readnoise difference image and histogram"""
 
-        # Get the most recent data; the entries were sorted by time when 
+        # Get the most recent data; the entries were sorted by time when
         # loading the database, so the last entry will always be the most recent.
         diff_image_png = self.query_results[-1].readnoise_diff_image
         diff_image_n = np.array(self.query_results[-1].diff_image_n)
@@ -136,8 +136,8 @@ class ReadnoiseMonitor(BokehTemplate):
         # Update the readnoise difference image
         diff_image_png = '/static/img/jw96003001001_02201_00001_nrcblong_uncal_refpix_readnoise_diff.png'  # TODO PLACEHOLDER - erase when done
         self.refs['readnoise_diff_image'].image_url(url=[diff_image_png], x=0, y=0, w=2048, h=2048, anchor="bottom_left")
-        self.refs['readnoise_diff_image'].xaxis.visible=False
-        self.refs['readnoise_diff_image'].yaxis.visible=False
+        self.refs['readnoise_diff_image'].xaxis.visible = False
+        self.refs['readnoise_diff_image'].yaxis.visible = False
         self.refs['readnoise_diff_image'].xgrid.grid_line_color = None
         self.refs['readnoise_diff_image'].ygrid.grid_line_color = None
         self.refs['readnoise_diff_image'].title.text_font_size = '30px'
@@ -149,5 +149,6 @@ class ReadnoiseMonitor(BokehTemplate):
         self.refs['diff_hist_xr'].end = diff_image_bin_centers.max()
         self.refs['diff_hist_yr'].start = diff_image_n.min()
         self.refs['diff_hist_yr'].end = diff_image_n.max() + diff_image_n.max() * 0.05
+
 
 ReadnoiseMonitor()
