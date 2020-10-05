@@ -1115,6 +1115,7 @@ def thumbnails_ajax(inst, proposal=None):
                              'visit_group': rootname[14:16]}
 
         # Get list of available filenames
+        print('rootname', rootname)
         available_files = get_filenames_by_rootname(rootname)
 
         # Add data to dictionary
@@ -1141,6 +1142,8 @@ def thumbnails_ajax(inst, proposal=None):
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
     data_dict['prop'] = proposal
+
+    print("data_dict from thumbnails_ajax", data_dict)
 
     return data_dict
 
@@ -1183,6 +1186,7 @@ def thumbnails_query_ajax(rootnames, insts):
 
     # Gather data for each rootname
     for rootname in rootnames:
+        rootname=rootname.split("_")[0]+'_'+rootname.split("_")[1]+'_'+rootname.split("_")[2]+'_'+rootname.split("_")[3]
 
         # Parse filename
         try:
@@ -1199,7 +1203,11 @@ def thumbnails_query_ajax(rootnames, insts):
                              'visit_group': rootname[14:16]}
 
         # Get list of available filenames
+        print(rootname)
+        # import pdb
+        # pdb.set_trace()
         available_files = get_filenames_by_rootname(rootname)
+        print('available_files', available_files)
 
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
@@ -1215,8 +1223,8 @@ def thumbnails_query_ajax(rootnames, insts):
     # proposal has already been specified)
     detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for
                  rootname in list(data_dict['file_data'].keys())]
-    proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for
-                 rootname in list(data_dict['file_data'].keys())]
+    # proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for
+    #              rootname in list(data_dict['file_data'].keys())]
     # if proposal is not None:
     #     dropdown_menus = {'detector': detectors}
     # else:
