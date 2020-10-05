@@ -62,7 +62,7 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.constants import OBSERVING_MODE_PER_INSTRUMENT
 from jwql.utils.utils import get_config, filename_parser
 
-from wtforms import SubmitField
+from wtforms import SubmitField, StringField
 from wtforms.validators import InputRequired, ValidationError
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
