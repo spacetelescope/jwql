@@ -234,14 +234,6 @@ OBSERVING_MODE_PER_INSTRUMENT = {'fgs': ['FGS_DARK', 'FGS_FOCUS', 'FGS_IMAGE', '
                                              'NRS_LAMP', 'NRS_MIMF', 'NRS_MSASPEC', 'NRS_TACONFIRM', 'NRS_TACQ',
                                              'NRS_TASLIT']}
 
-
-# EXP_TYPE
-# N/A, ANY, FGS_ID-IMAGE, FGS_ID-STACK, FGS_ACQ1, FGS_ACQ2, FGS_TRACK, FGS_FINEGUIDE, 
-# MIR_FLATIMAGE-EXT, MIR_FLATMRS-EXT, NRS_WATA, NRS_MSATA, MIR_TACONFIRM
-
-# datamodl:
-# ImageModel, MultiSpecModel, CubeModel, MultiSlitModel, IFUCubeModel
-
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 
 # Possible suffix types for time-series exposures

@@ -62,8 +62,8 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.constants import OBSERVING_MODE_PER_INSTRUMENT
 from jwql.utils.utils import get_config, filename_parser
 
-from wtforms import StringField, SubmitField, DecimalField, RadioField, SelectField, SelectMultipleField, IntegerField, FloatField
-from wtforms.validators import InputRequired, Length, ValidationError
+from wtforms import SubmitField
+from wtforms.validators import InputRequired, ValidationError
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
@@ -263,7 +263,8 @@ class AnomalySubmitForm(forms.Form):
     """A multiple choice field for specifying flagged anomalies."""
 
     # Define anomaly choice field
-    anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())
+    anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES,
+                                                widget=forms.CheckboxSelectMultiple())
 
     def update_anomaly_table(self, rootname,       anomaly_choices):   # user,
         """Updated the ``anomaly`` table of the database with flagged
@@ -285,7 +286,7 @@ class AnomalySubmitForm(forms.Form):
         data_dict = {}
         data_dict['rootname'] = rootname
         data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = 'TEMPORARY_USER' # user
+        data_dict['user'] = 'TEMPORARY_USER'  # user
         for choice in anomaly_choices:
             data_dict[choice] = True
         if 'guider' in rootname:
@@ -360,8 +361,8 @@ class FileSearchForm(forms.Form):
                     instrument = filename_parser(file)['instrument']
                     all_instruments.append(instrument)
                 if len(set(all_instruments)) > 1:
-                    raise forms.ValidationError('Cannot return result for proposal with multiple '
-                                                'instruments ({}).'
+                    raise forms.ValidationError('Cannot return result for proposal with '
+                                                'multiple instruments ({}).'
                                                 .format(', '.join(set(all_instruments))))
 
                 self.instrument = all_instruments[0]

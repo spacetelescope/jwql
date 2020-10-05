@@ -71,12 +71,9 @@ from .data_containers import random_404_page
 from .data_containers import get_jwqldb_table_view_components
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
-from .forms import AnomalyForm
 from .forms import AnomalySubmitForm
 from .forms import DynamicAnomalyForm
 from .forms import FileSearchForm
-from .forms import FiletypeForm
-from .forms import BaseForm
 from .oauth import auth_info, auth_required
 
 from jwql.utils import anomaly_query_config
@@ -88,7 +85,7 @@ def dynamic_anomaly(request):
     """The anomaly query form page"""
 
     form = DynamicAnomalyForm(request.POST or None)
-    
+
     if request.method == 'POST':
         if form.is_valid():
             print("form.cleaned_data", form.cleaned_data)
@@ -143,12 +140,11 @@ def dynamic_anomaly(request):
             anomaly_query_config.OBSERVING_MODES_CHOSEN = all_obsmodes
 
             return redirect('/query_submit')
-    
+
     context = {'form': form,
                'inst': ''}
     template = 'dynamic_anomaly.html'
-    
-    print("request.method:", request.method)
+
     return render(request, template, context)
 
 
@@ -369,7 +365,7 @@ def archive_thumbnails_ajax(request,       inst, proposal):  # user,
 
 
 # @auth_required
-def archive_thumbnails_query_ajax(request): #,       insts):  # user,
+def archive_thumbnails_query_ajax(request):  # ,       insts):  # user,
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -389,24 +385,16 @@ def archive_thumbnails_query_ajax(request): #,       insts):  # user,
     """
     print("in archive thumnbails query ajax")
     # Ensure the instrument is correctly capitalized
-    # insts_list = []
-    # for inst in anomaly_query_config.INSTRUMENTS_CHOSEN:
-    #     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-    #     insts_list.append(inst)
+    insts_list = []
+    for inst in anomaly_query_config.INSTRUMENTS_CHOSEN:
+        inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+        insts_list.append(inst)
 
-    print("about to get data")
     rootnames = anomaly_query_config.THUMBNAILS
-    nirspec_data = thumbnails_query_ajax(rootnames, ["NIRSpec", "NIRCam"])
-    print("got nirspec_data")
-    print(nirspec_data)
-
-    # print("about to get data")
-    # nircam_data = thumbnails_ajax('NIRCam', '82700')
-    # print("got nircam_data")
-    # print(nircam_data)
+    data = thumbnails_query_ajax(rootnames, insts_list)
 
     # return JsonResponse({'instrument_datasets': [nirspec_data, nircam_data]}, json_dumps_params={'indent': 2})
-    return JsonResponse(nirspec_data, json_dumps_params={'indent': 2})
+    return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
 def dashboard(request):
@@ -613,22 +601,22 @@ def query_submit(request):
     proposal_info = get_proposal_info(thumbnails)
 
     context = { 'inst': '',
-            #    'inst': "miri",   # Use with UPDATE_THUMBNAILS_PAGE instead of UPDATE_THUMBNAILS_QUERY_PAGE 
-            #    'prop': "jw05191001001_01101_00002",   # Use with UPDATE_THUMBNAILS_PAGE instead of UPDATE_THUMBNAILS_QUERY_PAGE
-               'anomalies_chosen_from_current_anomalies': anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
-               'apertures_chosen': apers,
-               'filters_chosen': filts,
-               'inst_list_chosen': insts,
-               'observing_modes_chosen': obs_modes,
-               'thumbnails': thumbnails,
-               'base_url': get_base_url(),
-               'rootnames': thumbnails,
-               'thumbnail_data':  {'inst': "Queried Anomalies",
-                                   'all_filenames': thumbnails,
-                                   'num_proposals': proposal_info['num_proposals'],
-                                   'thumbnails': {'proposals': proposal_info['proposals'],
-                                                  'thumbnail_paths': proposal_info['thumbnail_paths'],
-                                                  'num_files': proposal_info['num_files']}}
+           #    'inst': "miri",   # Use with UPDATE_THUMBNAILS_PAGE instead of UPDATE_THUMBNAILS_QUERY_PAGE 
+           #    'prop': "jw05191001001_01101_00002",   # Use with UPDATE_THUMBNAILS_PAGE instead of UPDATE_THUMBNAILS_QUERY_PAGE
+                'anomalies_chosen_from_current_anomalies': anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
+                'apertures_chosen': apers,
+                'filters_chosen': filts,
+                'inst_list_chosen': insts,
+                'observing_modes_chosen': obs_modes,
+                'thumbnails': thumbnails,
+                'base_url': get_base_url(),
+                'rootnames': thumbnails,
+                'thumbnail_data':  {'inst': "Queried Anomalies",
+                                    'all_filenames': thumbnails,
+                                    'num_proposals': proposal_info['num_proposals'],
+                                    'thumbnails': {'proposals': proposal_info['proposals'],
+                                                   'thumbnail_paths': proposal_info['thumbnail_paths'],
+                                                   'num_files': proposal_info['num_files']}}
               }
 
     return render(request, template, context)

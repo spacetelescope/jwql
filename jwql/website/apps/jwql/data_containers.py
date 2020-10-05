@@ -797,11 +797,11 @@ def get_proposal_info(filepaths):
 
     return proposal_info
 
-  
+
 def get_thumbnails_all_instruments(instruments, apertures, filters, observing_modes, effexptm_min, effexptm_max, anomalies):
     """Return a list of thumbnails available in the filesystem for all
     instruments given requested MAST parameters and queried anomalies.
-    
+
     Parameters
     ----------
     instruments: list
@@ -825,25 +825,25 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
         A list of thumbnails available in the filesystem for the
         given instrument.
     """
-    skip=False
-    if skip==True:
+    skip = False
+    if skip == True:
         thumbnails = ['jw95175001001_02103_00001_nrs2_rate_integ0.thumb', 'jw95175001001_02104_00002_nrs1_rate_integ0.thumb', 'jw95175001001_02101_00001_nrs2_rate_integ0.thumb', 'jw95175001001_02104_00001_nrs2_rate_integ0.thumb']
         return thumbnails
     # Make sure instruments are of the proper format (e.g. "Nircam")
     thumbnail_list = []
-    filenames=[]
+    filenames = []
     for inst in instruments:
         print("Working on ", inst)
         instrument = inst[0].upper()+inst[1:].lower()
 
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
-        
-        params = {"columns":"*",
-                  "filters":[{"paramName": ["detector", "filter", "effexptm"],
-                              "values":     [apertures, filters, {"min":effexptm_min, "max":effexptm_max}]}]}
 
-        response = Mast.service_request_async(service,params)
+        params = {"columns" : "*",
+                  "filters" : [{"paramName": ["detector", "filter", "effexptm"],
+                              "values":     [apertures, filters, {"min" : effexptm_min, "max" : effexptm_max}]}]}
+
+        response = Mast.service_request_async(service, params)
         print("response:", response)
         results = response[0].json()['data']
 
@@ -865,12 +865,11 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
     thumbnails_subset = list(set(thumbnails_subset))  # Eliminate any duplicates
 
     # Determine whether or not queried anomalies are flagged
-    final_subset=[]
+    final_subset = []
     for thumbnail in thumbnails_subset:
         rootname = thumbnail.split("_")[0]+"_"+thumbnail.split("_")[1]+"_"+thumbnail.split("_")[2]+"_"+thumbnail.split("_")[3]
-        # eg 'jw87600001001_02101_00002_nis_trapsfilled_integ2.thumb'
         try:
-            instrument=JWST_INSTRUMENT_NAMES_SHORTHAND[thumbnail.split("_")[3][:3]]
+            instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[thumbnail.split("_")[3][:3]]
             thumbnail_anomalies = get_current_flagged_anomalies(rootname, instrument)
             if thumbnail_anomalies:
                 for anomaly in anomalies:
@@ -878,9 +877,6 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
                     if anomaly in thumbnail_anomalies:
                         print("Plus it's an anomaly selected in the query!")
                         final_subset.append(thumbnail)
-            else:  # if no anomalies are selected, return all images fulfilling remainder of properties
-                print("Warning: returning thumbnails without any anomaly specification")
-                return thumbnails_subset
         except KeyError:
             # print("key: ", thumbnail.split("_")[3][:3])
             print("Error with thumbnail: ", thumbnail)
@@ -1162,7 +1158,7 @@ def thumbnails_query_ajax(rootnames, insts):
 
     # Initialize dictionary that will contain all needed data
     data_dict = {}
-    data_dict['inst'] = "NIRSpec"
+    data_dict['inst'] = "NIRSpec"  # dummy variable at the moment to allow view_image to work properly when thumbnail is selected
     data_dict['file_data'] = {}
 
     # Gather data for each rootname
@@ -1192,8 +1188,8 @@ def thumbnails_query_ajax(rootnames, insts):
         try:
             data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[JWST_INSTRUMENT_NAMES_SHORTHAND[rootname[26:29]]]
         except KeyError:
-            inst = "NIRSpec"
-            print("ASSUMING NIRSpec")
+            data_dict['file_data'][rootname]['inst'] = "NIRSpec"
+            print("Assuming NIRSpec")
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
         data_dict['file_data'][rootname]['expstart'] = get_expstart(rootname)
