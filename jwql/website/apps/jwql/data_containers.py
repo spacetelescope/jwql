@@ -825,7 +825,7 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
         A list of thumbnails available in the filesystem for the
         given instrument.
     """
-    skip=True
+    skip=False
     if skip==True:
         thumbnails = ['jw95175001001_02103_00001_nrs2_rate_integ0.thumb', 'jw95175001001_02104_00002_nrs1_rate_integ0.thumb', 'jw95175001001_02101_00001_nrs2_rate_integ0.thumb', 'jw95175001001_02104_00001_nrs2_rate_integ0.thumb']
         return thumbnails
@@ -833,25 +833,18 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
     thumbnail_list = []
     filenames=[]
     for inst in instruments:
+        print("Working on ", inst)
         instrument = inst[0].upper()+inst[1:].lower()
 
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
         
-
-        # params = {"columns": "filename, expstart, filter, readpatt, date_beg, date_end, apername, exp_type",
-        #           "filters": [{"paramName": "apername",
-        #           "values": ['NRCA1_FULL'], }]}
-        # params = {"columns":"*",    ### THIS ONE WORKS
-        #           "filters":[{"paramName": "apername",
-        #                       "values":     apertures}]}
-
         params = {"columns":"*",
                   "filters":[{"paramName": ["detector", "filter", "effexptm"],
                               "values":     [apertures, filters, {"min":effexptm_min, "max":effexptm_max}]}]}
 
         response = Mast.service_request_async(service,params)
-
+        print("response:", response)
         results = response[0].json()['data']
 
         # Parse the results to get the rootnames
@@ -863,6 +856,7 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
         thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
 
         thumbnail_list.extend(thumbnails)
+        print("thumbnail_list:", thumbnail_list)
 
     # Get subset of preview images that match the filenames
     thumbnails_subset = [os.path.basename(item) for item in thumbnail_list if
@@ -884,6 +878,9 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
                     if anomaly in thumbnail_anomalies:
                         print("Plus it's an anomaly selected in the query!")
                         final_subset.append(thumbnail)
+            else:  # if no anomalies are selected, return all images fulfilling remainder of properties
+                print("Warning: returning thumbnails without any anomaly specification")
+                return thumbnails_subset
         except KeyError:
             # print("key: ", thumbnail.split("_")[3][:3])
             print("Error with thumbnail: ", thumbnail)
@@ -1143,8 +1140,6 @@ def thumbnails_ajax(inst, proposal=None):
     data_dict['dropdown_menus'] = dropdown_menus
     data_dict['prop'] = proposal
 
-    print("data_dict from thumbnails_ajax", data_dict)
-
     return data_dict
 
 
@@ -1165,27 +1160,14 @@ def thumbnails_query_ajax(rootnames, insts):
         Dictionary of data needed for the ``thumbnails`` template
     """
 
-    print("in thumbnails_query_ajax()")
-    # Get the available files for the instrument
-    # filepaths = get_filenames_by_instrument(insts)
-
-    # # Get set of unique rootnames
-    # rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filepaths])
-
-    # # If the proposal is specified (i.e. if the page being loaded is
-    # # an archive page), only collect data for given proposal
-    # for proposal in proposals:
-    #     if proposal is not None:
-    #         proposal_string = '{:05d}'.format(int(proposal))
-    #         rootnames = [rootname for rootname in rootnames if rootname[2:7] == proposal_string]
-
     # Initialize dictionary that will contain all needed data
     data_dict = {}
-    data_dict['inst'] = insts
+    data_dict['inst'] = "NIRSpec"
     data_dict['file_data'] = {}
 
     # Gather data for each rootname
     for rootname in rootnames:
+        # adjust to fit expected format, particularly for get_filenames_by_rootname()
         rootname=rootname.split("_")[0]+'_'+rootname.split("_")[1]+'_'+rootname.split("_")[2]+'_'+rootname.split("_")[3]
 
         # Parse filename
@@ -1203,14 +1185,15 @@ def thumbnails_query_ajax(rootnames, insts):
                              'visit_group': rootname[14:16]}
 
         # Get list of available filenames
-        print(rootname)
-        # import pdb
-        # pdb.set_trace()
         available_files = get_filenames_by_rootname(rootname)
-        print('available_files', available_files)
 
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
+        try:
+            data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[JWST_INSTRUMENT_NAMES_SHORTHAND[rootname[26:29]]]
+        except KeyError:
+            inst = "NIRSpec"
+            print("ASSUMING NIRSpec")
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
         data_dict['file_data'][rootname]['expstart'] = get_expstart(rootname)
@@ -1219,20 +1202,11 @@ def thumbnails_query_ajax(rootnames, insts):
         data_dict['file_data'][rootname]['prop'] = rootname[2:7] # added to file_data rather than entire dict
 
     # Extract information for sorting with dropdown menus
-    # (Don't include the proposal as a sorting parameter if the
-    # proposal has already been specified)
     detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for
                  rootname in list(data_dict['file_data'].keys())]
-    # proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for
-    #              rootname in list(data_dict['file_data'].keys())]
-    # if proposal is not None:
-    #     dropdown_menus = {'detector': detectors}
-    # else:
-    dropdown_menus = {'detector': detectors} #,
-                          #'proposal': proposals}
+    dropdown_menus = {'detector': detectors}
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
-    
 
     return data_dict

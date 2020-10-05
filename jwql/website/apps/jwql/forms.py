@@ -293,7 +293,7 @@ class AnomalySubmitForm(forms.Form):
         elif "nrs" in rootname:
             di.engine.execute(di.NIRSpecAnomaly.__table__.insert(), data_dict)
         elif "miri" in rootname:
-            di.engine.execute(di.MiriAnomaly.__table__.insert(), data_dict)
+            di.engine.execute(di.MIRIAnomaly.__table__.insert(), data_dict)
         elif "nis" in rootname:
             di.engine.execute(di.NIRISSAnomaly.__table__.insert(), data_dict)
         elif "nrc" in rootname:

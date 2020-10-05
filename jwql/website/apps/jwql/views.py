@@ -90,9 +90,7 @@ def dynamic_anomaly(request):
     form = DynamicAnomalyForm(request.POST or None)
     
     if request.method == 'POST':
-        print("using post!")
         if form.is_valid():
-            print("it's valid!")
             print("form.cleaned_data", form.cleaned_data)
 
             miri_filters = form.cleaned_data['miri_filt']
@@ -398,7 +396,7 @@ def archive_thumbnails_query_ajax(request): #,       insts):  # user,
 
     print("about to get data")
     rootnames = anomaly_query_config.THUMBNAILS
-    nirspec_data = thumbnails_query_ajax(rootnames, "NIRSpec")
+    nirspec_data = thumbnails_query_ajax(rootnames, ["NIRSpec", "NIRCam"])
     print("got nirspec_data")
     print(nirspec_data)
 
@@ -614,12 +612,11 @@ def query_submit(request):
     # get information about thumbnails for thumbnail viewer
     proposal_info = get_proposal_info(thumbnails)
 
-    context = { # 'inst': '',
-               'inst': "miri",   # Use with UPDATE_THUMBNAILS_PAGE instead of UPDATE_THUMBNAILS_QUERY_PAGE 
-               'prop': "jw05191001001_01101_00002",   # Use with UPDATE_THUMBNAILS_PAGE instead of UPDATE_THUMBNAILS_QUERY_PAGE
+    context = { 'inst': '',
+            #    'inst': "miri",   # Use with UPDATE_THUMBNAILS_PAGE instead of UPDATE_THUMBNAILS_QUERY_PAGE 
+            #    'prop': "jw05191001001_01101_00002",   # Use with UPDATE_THUMBNAILS_PAGE instead of UPDATE_THUMBNAILS_QUERY_PAGE
                'anomalies_chosen_from_current_anomalies': anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
                'apertures_chosen': apers,
-               'current_anomalies': anomaly_query_config.CURRENT_ANOMALIES,
                'filters_chosen': filts,
                'inst_list_chosen': insts,
                'observing_modes_chosen': obs_modes,
