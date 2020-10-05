@@ -431,6 +431,7 @@ function update_header_display(extension, num_extensions) {
  * @param {String} type - The type of the count (e.g. "activities")
  */
 function update_show_count(count, type) {
+    console.log("in update_show_count")
 
     content = 'Showing ' + count + '/' + count + ' ' + type;
     content += '<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">';
@@ -503,7 +504,8 @@ function update_thumbnails_page(inst, proposal, base_url) {
     $.ajax({
         url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/',
         success: function(data){
-
+            console.log("this is data in update_thumbnails_page:")
+            console.log(data)
             // Perform various updates to divs
             update_show_count(Object.keys(data.file_data).length, 'activities');
             update_thumbnail_array(data);
@@ -519,21 +521,22 @@ function update_thumbnails_page(inst, proposal, base_url) {
 /**
  * Updates various components on the thumbnails anomaly query page
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ * @param {List} rootnames
  */
 function update_thumbnails_query_page(base_url) {
     $.ajax({
-        url: base_url + '/query_submit/',
+        url: base_url + '/ajax/query_submit/',
         success: function(data){
-
+            console.log("in update_thumbnails_query_page")
             // Perform various updates to divs
             update_show_count(Object.keys(data.file_data).length, 'activities');
             update_thumbnail_array(data);
             update_filter_options(data);
             update_sort_options(data);
-
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
             document.getElementById("thumbnail-array").style.display = "block";
+            console.log("GOT TO HERE but thumbnails are there but empty and with weird info, eg all 5000s exposure")
         }});
 };
 

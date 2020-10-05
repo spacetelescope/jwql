@@ -78,25 +78,9 @@
 	</main>
 
     <!-- <script>update_thumbnails_page('{{inst}}', '{{prop}}', '{{base_url}}');</script> -->
-    <!-- <script>update_thumbnails_query_page('{{base_url}}');</script> -->
+    <script>update_thumbnails_query_page('{{base_url}}');</script>
    
-    <script type="text/javascript">  
-        function update_thumbnails(data){
-            // Perform various updates to divs
-            update_show_count(Object.keys(data.file_data).length, 'activities');
-            update_thumbnail_array(data);
-            update_filter_options(data);
-            update_sort_options(data);
-
-            // Replace loading screen with the proposal array div
-            document.getElementById("loading").style.display = "none";
-            document.getElementById("thumbnail-array").style.display = "block";
-        };
-    </script>
     
-    <script>
-        update_thumbnails('{{thumbnail_data}}')
-    </script>
 
 {% endblock %}
 

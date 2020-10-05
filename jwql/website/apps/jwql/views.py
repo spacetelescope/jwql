@@ -70,6 +70,7 @@ from .data_containers import nirspec_trending
 from .data_containers import random_404_page
 from .data_containers import get_jwqldb_table_view_components
 from .data_containers import thumbnails_ajax
+from .data_containers import thumbnails_query_ajax
 from .forms import AnomalyForm
 from .forms import AnomalySubmitForm
 from .forms import DynamicAnomalyForm
@@ -364,12 +365,13 @@ def archive_thumbnails_ajax(request,       inst, proposal):  # user,
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     data = thumbnails_ajax(inst, proposal)
-
+    # print("data:", data)
+    print("proposal:", proposal)
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
 # @auth_required
-def archive_thumbnails_query_ajax(request,       insts):  # user,
+def archive_thumbnails_query_ajax(request): #,       insts):  # user,
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -389,14 +391,24 @@ def archive_thumbnails_query_ajax(request,       insts):  # user,
     """
     print("in archive thumnbails query ajax")
     # Ensure the instrument is correctly capitalized
-    insts_list = []
-    for inst in insts:
-        inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-        insts_list.append(inst)
+    # insts_list = []
+    # for inst in anomaly_query_config.INSTRUMENTS_CHOSEN:
+    #     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+    #     insts_list.append(inst)
 
-    data = thumbnails_ajax(insts_list)
+    print("about to get data")
+    rootnames = anomaly_query_config.THUMBNAILS
+    nirspec_data = thumbnails_query_ajax(rootnames, "NIRSpec")
+    print("got nirspec_data")
+    print(nirspec_data)
 
-    return JsonResponse(data, json_dumps_params={'indent': 2})
+    # print("about to get data")
+    # nircam_data = thumbnails_ajax('NIRCam', '82700')
+    # print("got nircam_data")
+    # print(nircam_data)
+
+    # return JsonResponse({'instrument_datasets': [nirspec_data, nircam_data]}, json_dumps_params={'indent': 2})
+    return JsonResponse(nirspec_data, json_dumps_params={'indent': 2})
 
 
 def dashboard(request):
@@ -613,6 +625,7 @@ def query_submit(request):
                'observing_modes_chosen': obs_modes,
                'thumbnails': thumbnails,
                'base_url': get_base_url(),
+               'rootnames': thumbnails,
                'thumbnail_data':  {'inst': "Queried Anomalies",
                                    'all_filenames': thumbnails,
                                    'num_proposals': proposal_info['num_proposals'],

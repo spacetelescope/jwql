@@ -1079,6 +1079,7 @@ def thumbnails_ajax(inst, proposal=None):
         Dictionary of data needed for the ``thumbnails`` template
     """
 
+    print("in thumbnails_ajax()")
     # Get the available files for the instrument
     filepaths = get_filenames_by_instrument(inst)
 
@@ -1140,5 +1141,90 @@ def thumbnails_ajax(inst, proposal=None):
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
     data_dict['prop'] = proposal
+
+    return data_dict
+
+
+def thumbnails_query_ajax(rootnames, insts):
+    """Generate a page that provides data necessary to render the
+    ``thumbnails`` template.
+
+    Parameters
+    ----------
+    insts : list of strings
+        Name of JWST instrument
+    proposal : list of strings (optional)
+        Number of APT proposal to filter
+
+    Returns
+    -------
+    data_dict : dict
+        Dictionary of data needed for the ``thumbnails`` template
+    """
+
+    print("in thumbnails_query_ajax()")
+    # Get the available files for the instrument
+    # filepaths = get_filenames_by_instrument(insts)
+
+    # # Get set of unique rootnames
+    # rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filepaths])
+
+    # # If the proposal is specified (i.e. if the page being loaded is
+    # # an archive page), only collect data for given proposal
+    # for proposal in proposals:
+    #     if proposal is not None:
+    #         proposal_string = '{:05d}'.format(int(proposal))
+    #         rootnames = [rootname for rootname in rootnames if rootname[2:7] == proposal_string]
+
+    # Initialize dictionary that will contain all needed data
+    data_dict = {}
+    data_dict['inst'] = insts
+    data_dict['file_data'] = {}
+
+    # Gather data for each rootname
+    for rootname in rootnames:
+
+        # Parse filename
+        try:
+            filename_dict = filename_parser(rootname)
+        except ValueError:
+            # Temporary workaround for noncompliant files in filesystem
+            filename_dict = {'activity': rootname[17:19],
+                             'detector': rootname[26:],
+                             'exposure_id': rootname[20:25],
+                             'observation': rootname[7:10],
+                             'parallel_seq_id': rootname[16],
+                             'program_id': rootname[2:7],
+                             'visit': rootname[10:13],
+                             'visit_group': rootname[14:16]}
+
+        # Get list of available filenames
+        available_files = get_filenames_by_rootname(rootname)
+
+        # Add data to dictionary
+        data_dict['file_data'][rootname] = {}
+        data_dict['file_data'][rootname]['filename_dict'] = filename_dict
+        data_dict['file_data'][rootname]['available_files'] = available_files
+        data_dict['file_data'][rootname]['expstart'] = get_expstart(rootname)
+        data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for
+                                                        filename in available_files]
+        data_dict['file_data'][rootname]['prop'] = rootname[2:7] # added to file_data rather than entire dict
+
+    # Extract information for sorting with dropdown menus
+    # (Don't include the proposal as a sorting parameter if the
+    # proposal has already been specified)
+    detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for
+                 rootname in list(data_dict['file_data'].keys())]
+    proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for
+                 rootname in list(data_dict['file_data'].keys())]
+    # if proposal is not None:
+    #     dropdown_menus = {'detector': detectors}
+    # else:
+    dropdown_menus = {'detector': detectors} #,
+                          #'proposal': proposals}
+
+    data_dict['tools'] = MONITORS
+    data_dict['dropdown_menus'] = dropdown_menus
+    
 
     return data_dict
