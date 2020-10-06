@@ -281,12 +281,12 @@ def archived_proposals_ajax(request,      inst):   # user,
 
     # For each proposal, get the first available thumbnail and determine
     # how many files there are
-    # filepaths = get_filenames_by_instrument(inst)
-    # all_filenames = [os.path.basename(f) for f in filepaths]
-    # proposal_info = get_proposal_info(filepaths)
+    filepaths = get_filenames_by_instrument(inst)
+    all_filenames = [os.path.basename(f) for f in filepaths]
+    proposal_info = get_proposal_info(filepaths)
     
-    all_filenames = [os.path.basename(f) for f in anomaly_query_config.THUMBNAILS]
-    proposal_info = get_proposal_info(anomaly_query_config.THUMBNAILS)
+    # all_filenames = [os.path.basename(f) for f in anomaly_query_config.THUMBNAILS]
+    # proposal_info = get_proposal_info(anomaly_query_config.THUMBNAILS)
 
     context = {'inst': inst,
                'all_filenames': all_filenames,
