@@ -17,9 +17,6 @@
 
     	<!-- Page title -->
         <h3 id='title'>Images of Queried Instruments</h3>
-        
-        This page will provide thumbnails of images that satisfy your request.
-        The anomaly query forms are still under development. 
         <div>
             We have recognized the request to view images from the following instruments: {{inst_list_chosen}}.
         </div>
@@ -31,16 +28,6 @@
         <div>
             The requested apertures are the following: {{apertures_chosen}}
         </div>
-
-        <div>
-            The requested observing modes are the following: {{observing_modes_chosen}}
-        </div>
-
-        thumbnails list: {{thumbnails}}
-
-
-        {{base_url}}
-    	<!-- <script>determine_page_title('{{ inst }}','{{ prop }}');</script> -->
 
     	<!-- Show Count -->
     	<p id='img_show_count'></p>
@@ -77,10 +64,8 @@
 
 	</main>
 
-    <!-- <script>update_thumbnails_page('{{inst}}', '{{prop}}', '{{base_url}}');</script> -->
     <script>update_thumbnails_query_page('{{base_url}}');</script>
    
-    
 
 {% endblock %}
 

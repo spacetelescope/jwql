@@ -113,7 +113,7 @@ FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R', 'WFSS128C', 'WFSS64C']
 # Names of full-frame apertures for all instruments
 FULL_FRAME_APERTURES = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',
                                    'NRCA5_FULL', 'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL',
-                                   'NRCB4_FULL', 'NRCB5_FULL'],
+                                   'NRCB4_FULL', 'NRCB5_FULL', 'NRCALONG', 'NRCBLONG'],
                         'NIRISS': ['NIS_CEN'],
                         'NIRSPEC': ['NRS1_FULL', 'NRS2_FULL'],
                         'MIRI': ['MIRIM_FULL']

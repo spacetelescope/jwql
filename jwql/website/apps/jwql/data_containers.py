@@ -856,7 +856,7 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
         thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
 
         thumbnail_list.extend(thumbnails)
-        print("thumbnail_list:", thumbnail_list)
+        print("thumbnail_list sample:", thumbnail_list[:10])
 
     # Get subset of preview images that match the filenames
     thumbnails_subset = [os.path.basename(item) for item in thumbnail_list if
@@ -870,11 +870,13 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
         rootname = thumbnail.split("_")[0]+"_"+thumbnail.split("_")[1]+"_"+thumbnail.split("_")[2]+"_"+thumbnail.split("_")[3]
         try:
             instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[thumbnail.split("_")[3][:3]]
+            print('instrument:', instrument )
             thumbnail_anomalies = get_current_flagged_anomalies(rootname, instrument)
             if thumbnail_anomalies:
+                print('thumbnail_anomalies:', thumbnail_anomalies)
                 for anomaly in anomalies:
                     if anomaly in thumbnail_anomalies:
-                        print(thumbnail, " is an anomaly selected in the query")
+                        print(thumbnail, "contains an anomaly selected in the query")
                         final_subset.append(thumbnail)
         except KeyError:
             print("Error with thumbnail: ", thumbnail)
@@ -1154,7 +1156,7 @@ def thumbnails_query_ajax(rootnames, insts):
 
     # Initialize dictionary that will contain all needed data
     data_dict = {}
-    data_dict['inst'] = "NIRSpec"  # dummy variable at the moment to allow view_image to work properly when thumbnail is selected
+    data_dict['inst'] = "DUMMY_INSTRUMENT"  # dummy variable at the moment to allow view_image to work properly when thumbnail is selected
     data_dict['file_data'] = {}
 
     # Gather data for each rootname
@@ -1184,8 +1186,8 @@ def thumbnails_query_ajax(rootnames, insts):
         try:
             data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[JWST_INSTRUMENT_NAMES_SHORTHAND[rootname[26:29]]]
         except KeyError:
-            data_dict['file_data'][rootname]['inst'] = "NIRSpec"
-            print("Assuming NIRSpec")
+            data_dict['file_data'][rootname]['inst'] = "MIRI"
+            print("Warning: assuming instrument is MIRI")
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
         data_dict['file_data'][rootname]['expstart'] = get_expstart(rootname)
