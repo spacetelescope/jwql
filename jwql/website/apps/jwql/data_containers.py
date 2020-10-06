@@ -873,12 +873,10 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
             thumbnail_anomalies = get_current_flagged_anomalies(rootname, instrument)
             if thumbnail_anomalies:
                 for anomaly in anomalies:
-                    print("Oh my! It's an anomaly! ", thumbnail)
                     if anomaly in thumbnail_anomalies:
-                        print("Plus it's an anomaly selected in the query!")
+                        print(thumbnail, " is an anomaly selected in the query")
                         final_subset.append(thumbnail)
         except KeyError:
-            # print("key: ", thumbnail.split("_")[3][:3])
             print("Error with thumbnail: ", thumbnail)
 
     return list(set(final_subset))  # This will be none at the moment because of error flagging anomalies, which depends on login issue
@@ -1072,7 +1070,6 @@ def thumbnails_ajax(inst, proposal=None):
         Dictionary of data needed for the ``thumbnails`` template
     """
 
-    print("in thumbnails_ajax()")
     # Get the available files for the instrument
     filepaths = get_filenames_by_instrument(inst)
 
@@ -1108,7 +1105,6 @@ def thumbnails_ajax(inst, proposal=None):
                              'visit_group': rootname[14:16]}
 
         # Get list of available filenames
-        print('rootname', rootname)
         available_files = get_filenames_by_rootname(rootname)
 
         # Add data to dictionary

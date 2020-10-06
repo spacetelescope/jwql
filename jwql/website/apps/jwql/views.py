@@ -41,7 +41,6 @@ import os
 
 from django.http import JsonResponse
 from django.http import HttpRequest as request
-# from django import forms
 from django.shortcuts import render
 from django.shortcuts import redirect
 
@@ -277,7 +276,6 @@ def archived_proposals_ajax(request,      inst):   # user,
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    print('in archvied proposals ajax')
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
@@ -323,7 +321,6 @@ def archive_thumbnails(request,      inst, proposal):  # user,
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    print("in archive thumnbails")
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
@@ -354,13 +351,11 @@ def archive_thumbnails_ajax(request,       inst, proposal):  # user,
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    print("in archive thumnbails ajax")
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     data = thumbnails_ajax(inst, proposal)
-    # print("data:", data)
-    print("proposal:", proposal)
+
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
@@ -383,7 +378,6 @@ def archive_thumbnails_query_ajax(request):  # ,       insts):  # user,
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    print("in archive thumnbails query ajax")
     # Ensure the instrument is correctly capitalized
     insts_list = []
     for inst in anomaly_query_config.INSTRUMENTS_CHOSEN:

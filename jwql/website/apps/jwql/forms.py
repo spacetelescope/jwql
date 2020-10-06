@@ -90,17 +90,6 @@ class DynamicAnomalyFormSIMPLE(BaseForm):
                                             initial="NIRSpec", validators=[InputRequired('Instrument is required!')])
                                             # 'instrument', default="NIRSpec", 
 
-    def instrument_is_valid(self):
-        valid = self.is_valid()
-        print("errors", self.errors)
-        print(valid)
-        print(self.cleaned_data)
-        instrument = self.cleaned_data #['instrument']
-        if instrument in JWST_INSTRUMENT_NAMES_MIXEDCASE:
-            return True
-        else:
-            return False
-
     def _clean_form(self):
         try:
             cleaned_data = self.clean()

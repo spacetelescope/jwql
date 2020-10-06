@@ -28,8 +28,6 @@ CURRENT_ANOMALIES = ['cosmic_ray_shower', 'diffraction_spike', 'excessive_satura
 # Instruments selected by user in query_anomaly
 INSTRUMENTS_CHOSEN = ["No instruments selected"]
 
-print("INSTRUMENTS_CHOSEN", INSTRUMENTS_CHOSEN)
-
 # Observing modes selected by user in query_anomaly
 OBSERVING_MODES_CHOSEN = ["No observing modes selected"]
 
