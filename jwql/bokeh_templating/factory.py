@@ -66,7 +66,7 @@ def mapping_factory(tool, element_type):
     for an example of how this function is used.
     """
 
-    def mapping_constructor(loader, node): #docstring added below
+    def mapping_constructor(loader, node):  # docstring added below
         fmt = tool.formats.get(element_type, {})
         value = loader.construct_mapping(node, deep=True)
         ref = value.pop("ref", "")
@@ -216,9 +216,10 @@ def figure_constructor(tool, loader, node):
                 figure.js_on_event(*event)
 
     for element in elements:
-        key = element.pop('kind')
+        key = element.pop('kind', 'diamond')
         shape = {'line': ('Line', figure.line),
                  'circle': ('Circle', figure.circle),
+                 'step': ('Step', figure.step),
                  'diamond': ('Diamond', figure.diamond),
                  'triangle': ('Triangle', figure.triangle),
                  'square': ('Square', figure.square),
