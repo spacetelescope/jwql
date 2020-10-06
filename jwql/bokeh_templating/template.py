@@ -1,10 +1,6 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jul 20 09:49:53 2018
+#! /usr/bin/env python
 
-@author: gkanarek
-This module defines the ``BokehTemplate`` class, which can be subclassed
+"""This module defines the ``BokehTemplate`` class, which can be subclassed
 to create a Bokeh web app with a YAML templating file.
 
 
