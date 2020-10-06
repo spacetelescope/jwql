@@ -78,28 +78,6 @@ class BaseForm(forms.Form):
     resolve_submit = SubmitField('Resolve Target')
 
 
-class DynamicAnomalyFormSIMPLE(BaseForm):
-    """test to see if calculate_submit will work"""
-
-    # calculate_submit = SubmitField()
-
-    # instrument = forms.MultipleChoiceField(required=False,
-    #                 choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE])
-
-    instrument = forms.MultipleChoiceField(choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
-                                            initial="NIRSpec", validators=[InputRequired('Instrument is required!')])
-                                            # 'instrument', default="NIRSpec", 
-
-    def _clean_form(self):
-        try:
-            cleaned_data = self.clean()
-        except ValidationError as e:
-            self.add_error(None, e)
-        else:
-            if cleaned_data is not None:
-                self.cleaned_data = cleaned_data
-
-
 class DynamicAnomalyForm(BaseForm):
     """Form validation for the anomaly viewing tool"""
 
