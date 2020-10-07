@@ -856,7 +856,6 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
         thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
 
         thumbnail_list.extend(thumbnails)
-        print("thumbnail_list sample:", thumbnail_list[:10])
 
     # Get subset of preview images that match the filenames
     thumbnails_subset = [os.path.basename(item) for item in thumbnail_list if
@@ -870,10 +869,8 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
         rootname = thumbnail.split("_")[0]+"_"+thumbnail.split("_")[1]+"_"+thumbnail.split("_")[2]+"_"+thumbnail.split("_")[3]
         try:
             instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[thumbnail.split("_")[3][:3]]
-            print('instrument:', instrument )
             thumbnail_anomalies = get_current_flagged_anomalies(rootname, instrument)
             if thumbnail_anomalies:
-                print('thumbnail_anomalies:', thumbnail_anomalies)
                 for anomaly in anomalies:
                     if anomaly in thumbnail_anomalies:
                         print(thumbnail, "contains an anomaly selected in the query")
@@ -881,7 +878,7 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
         except KeyError:
             print("Error with thumbnail: ", thumbnail)
 
-    return list(set(final_subset))  # This will be none at the moment because of error flagging anomalies, which depends on login issue
+    return list(set(final_subset))
     # return thumbnails_subset  # return any thumbnails matching all but anomaly criteria
 
  

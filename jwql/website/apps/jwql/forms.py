@@ -77,6 +77,19 @@ class BaseForm(forms.Form):
     # Submit button
     resolve_submit = SubmitField('Resolve Target')
 
+def form_format(string):
+    """Take a string of format lower_case and change it to UPPER CASE"""
+    upper_case = string.upper()
+    split_string = upper_case.replace("_", " ")
+    
+    return split_string
+
+def unform_format(string):
+    """Take a string of format UPPER CASE and change it to lower_case"""
+    lower_case = string.lower()
+    unsplit_string = lower_case.replace(" ", "_")
+    
+    return unsplit_string
 
 class DynamicAnomalyForm(BaseForm):
     """Form validation for the anomaly viewing tool"""
@@ -88,24 +101,24 @@ class DynamicAnomalyForm(BaseForm):
     aperture_list = []
     for instrument in FULL_FRAME_APERTURES.keys():
         for aperture in FULL_FRAME_APERTURES[instrument]:
-            item = [aperture, aperture]
+            item = [form_format(aperture), form_format(aperture)]
             aperture_list.append(item)
 
     miri_aperture_list = []
     for aperture in FULL_FRAME_APERTURES['MIRI']:
-        miri_aperture_list.append([aperture, aperture])
+        miri_aperture_list.append([form_format(aperture), form_format(aperture)])
 
     nirspec_aperture_list = []
     for aperture in FULL_FRAME_APERTURES['NIRSPEC']:
-        nirspec_aperture_list.append([aperture, aperture])
+        nirspec_aperture_list.append([form_format(aperture), form_format(aperture)])
     
     nircam_aperture_list = []
     for aperture in FULL_FRAME_APERTURES['NIRCAM']:
-        nircam_aperture_list.append([aperture, aperture])
+        nircam_aperture_list.append([form_format(aperture), form_format(aperture)])
 
     niriss_aperture_list = []
     for aperture in FULL_FRAME_APERTURES['NIRISS']:
-        niriss_aperture_list.append([aperture, aperture])
+        niriss_aperture_list.append([form_format(aperture), form_format(aperture)])
 
     # Generate dynamic lists of filters to use in forms
     filter_list = []
@@ -113,64 +126,73 @@ class DynamicAnomalyForm(BaseForm):
         # # if instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:   # eg ['nirspec']: selects relevant filters, but not specific to chosen instruments
         filters_per_inst = FILTERS_PER_INSTRUMENT[instrument]
         for filter in filters_per_inst:
+            filter = form_format(filter)
             filter_list.append([filter, filter]) if [filter, filter] not in filter_list else filter_list
     
     miri_filter_list = []
     for filter in FILTERS_PER_INSTRUMENT['miri']:
+        filter = form_format(filter)
         miri_filter_list.append([filter, filter])
     
     nirspec_filter_list = []
     for filter in FILTERS_PER_INSTRUMENT['nirspec']:
+        filter = form_format(filter)
         nirspec_filter_list.append([filter, filter])
 
     niriss_filter_list = []
     for filter in FILTERS_PER_INSTRUMENT['niriss']:
+        filter = form_format(filter)
         niriss_filter_list.append([filter, filter])
     
     nircam_filter_list = []
     for filter in FILTERS_PER_INSTRUMENT['nircam']:
+        filter = form_format(filter)
         nircam_filter_list.append([filter, filter])
 
     # Generate dynamic lists of observing modes to use in forms
     miri_obsmode_list = []
     for obsmode in OBSERVING_MODE_PER_INSTRUMENT['miri']:
+        obsmode = form_format(obsmode)
         miri_obsmode_list.append([obsmode, obsmode])
 
     niriss_obsmode_list = []
     for obsmode in OBSERVING_MODE_PER_INSTRUMENT['niriss']:
+        obsmode = form_format(obsmode)
         niriss_obsmode_list.append([obsmode, obsmode])
     
     nircam_obsmode_list = []
     for obsmode in OBSERVING_MODE_PER_INSTRUMENT['nircam']:
+        obsmode = form_format(obsmode)
         nircam_obsmode_list.append([obsmode, obsmode])
     
     nirspec_obsmode_list = []
     for obsmode in OBSERVING_MODE_PER_INSTRUMENT['nirspec']:
+        obsmode = form_format(obsmode)
         nirspec_obsmode_list.append([obsmode, obsmode])
 
     # Generate dynamic lists of anomalies to use in forms
     miri_anomalies_list = []
     for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
         if 'miri' in ANOMALIES_PER_INSTRUMENT[anomaly]:
-            item = [anomaly, anomaly]
+            item = [form_format(anomaly), form_format(anomaly)]
             miri_anomalies_list.append(item)
 
     nircam_anomalies_list = []
     for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
         if 'nircam' in ANOMALIES_PER_INSTRUMENT[anomaly]:
-            item = [anomaly, anomaly]
+            item = [form_format(anomaly), form_format(anomaly)]
             nircam_anomalies_list.append(item)
 
     niriss_anomalies_list = []
     for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
         if 'niriss' in ANOMALIES_PER_INSTRUMENT[anomaly]:
-            item = [anomaly, anomaly]
+            item = [form_format(anomaly), form_format(anomaly)]
             niriss_anomalies_list.append(item)
     
     nirspec_anomalies_list = []
     for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
         if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]:
-            item = [anomaly, anomaly]
+            item = [form_format(anomaly), form_format(anomaly)]
             nirspec_anomalies_list.append(item)
 
     # Anomaly Parameters
