@@ -197,7 +197,7 @@ def api_landing(request):
 
 
 # @auth_required
-def archived_proposals(request, inst): #request, user, inst):
+def archived_proposals(request, user, inst): #request, user, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -224,7 +224,7 @@ def archived_proposals(request, inst): #request, user, inst):
 
 
 # @auth_required
-def archived_proposals_ajax(request, inst): # request, user, inst):
+def archived_proposals_ajax(request, user, inst): # request, user, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -260,7 +260,7 @@ def archived_proposals_ajax(request, inst): # request, user, inst):
 
 
 # @auth_required
-def archive_thumbnails(request, inst, proposal):  # request, user, inst, proposal):
+def archive_thumbnails(request, user, inst, proposal):  # request, user, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -291,7 +291,7 @@ def archive_thumbnails(request, inst, proposal):  # request, user, inst, proposa
 
 
 # @auth_required
-def archive_thumbnails_ajax(request, inst, proposal):  # request, user, inst, proposal):
+def archive_thumbnails_ajax(request, user, inst, proposal):  # request, user, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -347,7 +347,7 @@ def dashboard(request):
 
 
 # @auth_info
-def engineering_database(request): # request, user):
+def engineering_database(request, user): # request, user):
     """Generate the EDB page.
 
     Parameters
@@ -746,7 +746,7 @@ def view_header(request, inst, filename):
 
 
 # @auth_required
-def view_image(request, inst, file_root, rewrite=False): # request, user, inst, file_root, rewrite=False):
+def view_image(request, user, inst, file_root, rewrite=False):
     """Generate the image view page
 
     Parameters
