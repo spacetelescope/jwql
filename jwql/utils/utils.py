@@ -550,3 +550,18 @@ def update_monitor_table(module, start_time, log_file):
     new_entry['log_file'] = os.path.basename(log_file)
 
     Monitor.__table__.insert().execute(new_entry)
+
+
+def query_format(string):
+    """Take a string of format lower_case and change it to UPPER CASE"""
+    upper_case = string.upper()
+    split_string = upper_case.replace("_", " ")
+    
+    return split_string
+
+def query_unformat(string):
+    """Take a string of format UPPER CASE and change it to lower_case"""
+    lower_case = string.lower()
+    unsplit_string = lower_case.replace(" ", "_")
+    
+    return unsplit_string

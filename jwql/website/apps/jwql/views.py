@@ -54,6 +54,7 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import OBSERVING_MODE_PER_INSTRUMENT
 from jwql.utils.utils import get_base_url
 from jwql.utils.utils import get_config
+from jwql.utils.utils import query_unformat
 
 from .data_containers import data_trending
 from .data_containers import get_acknowledgements
@@ -73,7 +74,6 @@ from .data_containers import thumbnails_query_ajax
 from .forms import AnomalySubmitForm
 from .forms import DynamicAnomalyForm
 from .forms import FileSearchForm
-from .forms import unform_format
 from .oauth import auth_info, auth_required
 
 from jwql.utils import anomaly_query_config
@@ -90,25 +90,25 @@ def dynamic_anomaly(request):
         if form.is_valid():
             print("form.cleaned_data", form.cleaned_data)
 
-            miri_filters = [unform_format(i) for i in form.cleaned_data['miri_filt']]
-            miri_apers = [unform_format(i) for i in form.cleaned_data['miri_aper']]
-            miri_obsmode = [unform_format(i) for i in form.cleaned_data['miri_obsmode']]
-            miri_anomalies = [unform_format(i) for i in form.cleaned_data['miri_anomalies']]
+            miri_filters = [query_unformat(i) for i in form.cleaned_data['miri_filt']]
+            miri_apers = [query_unformat(i) for i in form.cleaned_data['miri_aper']]
+            miri_obsmode = [query_unformat(i) for i in form.cleaned_data['miri_obsmode']]
+            miri_anomalies = [query_unformat(i) for i in form.cleaned_data['miri_anomalies']]
 
-            nirspec_filters = [unform_format(i) for i in form.cleaned_data['nirspec_filt']]
-            nirspec_apers = [unform_format(i) for i in form.cleaned_data['nirspec_aper']]
-            nirspec_obsmode = [unform_format(i) for i in form.cleaned_data['nirspec_obsmode']]
-            nirspec_anomalies = [unform_format(i) for i in form.cleaned_data['nirspec_anomalies']]
+            nirspec_filters = [query_unformat(i) for i in form.cleaned_data['nirspec_filt']]
+            nirspec_apers = [query_unformat(i) for i in form.cleaned_data['nirspec_aper']]
+            nirspec_obsmode = [query_unformat(i) for i in form.cleaned_data['nirspec_obsmode']]
+            nirspec_anomalies = [query_unformat(i) for i in form.cleaned_data['nirspec_anomalies']]
 
-            niriss_filters = [unform_format(i) for i in form.cleaned_data['niriss_filt']]
-            niriss_apers = [unform_format(i) for i in form.cleaned_data['niriss_aper']]
-            niriss_obsmode = [unform_format(i) for i in form.cleaned_data['niriss_obsmode']]
-            niriss_anomalies = [unform_format(i) for i in form.cleaned_data['niriss_anomalies']]
+            niriss_filters = [query_unformat(i) for i in form.cleaned_data['niriss_filt']]
+            niriss_apers = [query_unformat(i) for i in form.cleaned_data['niriss_aper']]
+            niriss_obsmode = [query_unformat(i) for i in form.cleaned_data['niriss_obsmode']]
+            niriss_anomalies = [query_unformat(i) for i in form.cleaned_data['niriss_anomalies']]
 
-            nircam_filters = [unform_format(i) for i in form.cleaned_data['nircam_filt']]
-            nircam_apers = [unform_format(i) for i in form.cleaned_data['nircam_aper']]
-            nircam_obsmode = [unform_format(i) for i in form.cleaned_data['nircam_obsmode']]
-            nircam_anomalies = [unform_format(i) for i in form.cleaned_data['nircam_anomalies']]
+            nircam_filters = [query_unformat(i) for i in form.cleaned_data['nircam_filt']]
+            nircam_apers = [query_unformat(i) for i in form.cleaned_data['nircam_aper']]
+            nircam_obsmode = [query_unformat(i) for i in form.cleaned_data['nircam_obsmode']]
+            nircam_anomalies = [query_unformat(i) for i in form.cleaned_data['nircam_anomalies']]
 
             all_filters = []
             for instrument_filters in [miri_filters, nirspec_filters, niriss_filters, nircam_filters]:
