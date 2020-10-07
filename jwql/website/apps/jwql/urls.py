@@ -69,7 +69,8 @@ urlpatterns = [
     path('nirspec/nirspec_data_trending/', views.nirspec_data_trending, name='nirspec_data_trending'),
 
     # Common monitor views
-    re_path(r'^(?P<inst>({}))/.+_monitor/$'.format(instruments), monitor_views.dark_monitor, name='dark_monitor'),
+    re_path(r'^(?P<inst>({}))/+dark_monitor/$'.format(instruments), monitor_views.dark_monitor, name='dark_monitor'),
+    re_path(r'^(?P<inst>({}))/+readnoise_monitor/$'.format(instruments), monitor_views.readnoise_monitor, name='readnoise_monitor'),
 
     # Main site views
     path('about/', views.about, name='about'),
