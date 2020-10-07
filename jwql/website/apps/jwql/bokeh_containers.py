@@ -218,3 +218,60 @@ def dark_monitor_tabs(instrument):
     script, div = components(tabs)
 
     return div, script
+
+
+def readnoise_monitor_tabs(instrument):
+    """Creates the various tabs of the readnoise monitor results page.
+
+    Parameters
+    ----------
+    instrument : str
+        The JWST instrument of interest (e.g. ``nircam``).
+
+    Returns
+    -------
+    div : str
+        The HTML div to render readnoise monitor plots
+    script : str
+        The JS script to render readnoise monitor plots
+    """
+
+    # Make a separate tab for each aperture
+    tabs = []
+    for aperture in FULL_FRAME_APERTURES[instrument.upper()]:
+
+        # Make a separate plot for each amp
+        plots = []
+        for amp in ['1', '2', '3', '4']:
+            monitor_template = monitor_pages.ReadnoiseMonitor()
+            monitor_template.input_parameters = (instrument, aperture, amp)
+            readnoise_plot = monitor_template.refs['mean_readnoise_figure']
+            readnoise_plot.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
+            plots.append(readnoise_plot)
+
+        # Add the readnoise difference image
+        readnoise_diff_image = monitor_template.refs['readnoise_diff_image']
+        readnoise_diff_image.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
+        plots.append(readnoise_diff_image)
+
+        # Add the readnoise difference histogram
+        readnoise_diff_hist = monitor_template.refs['readnoise_diff_hist']
+        plots.append(readnoise_diff_hist)
+
+        # Put the mean readnoise plots on the top row, and the difference image and
+        # histogram on the second row.
+        readnoise_layout = layout(
+            plots[0:4],
+            plots[4:6],
+        )
+        readnoise_layout.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
+        readnoise_tab = Panel(child=readnoise_layout, title=aperture)
+        tabs.append(readnoise_tab)
+
+    # Build tabs
+    tabs = Tabs(tabs=tabs)
+
+    # Return tab HTML and JavaScript to web app
+    script, div = components(tabs)
+
+    return div, script
