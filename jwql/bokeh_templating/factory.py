@@ -66,7 +66,7 @@ def mapping_factory(tool, element_type):
     for an example of how this function is used.
     """
 
-    def mapping_constructor(loader, node): #docstring added below
+    def mapping_constructor(loader, node):  # docstring added below
         fmt = tool.formats.get(element_type, {})
         value = loader.construct_mapping(node, deep=True)
         ref = value.pop("ref", "")
