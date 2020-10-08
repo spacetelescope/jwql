@@ -77,6 +77,7 @@ urlpatterns = [
     path('api/', views.api_landing, name='api'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('edb/', views.engineering_database, name='edb'),
+    path('download_table/<str:tablename>', views.export, name='download_table'),
     path('query_anomaly/', views.query_anomaly, name='query_anomaly'),
     path('query_anomaly_2/', views.query_anomaly_2, name='query_anomaly_2'),
     path('query_anomaly_3/', views.query_anomaly_3, name='query_anomaly_3'),
