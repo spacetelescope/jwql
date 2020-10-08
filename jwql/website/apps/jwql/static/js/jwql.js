@@ -478,7 +478,7 @@ function update_thumbnail_array(data) {
         } else {
             content += '<a href="/' + filename_dict.inst + '/' + rootname + '/">';
         }
-        
+        console.log(data.inst);
         content += '<a href="/' + data.inst + '/' + rootname + '/">';
         content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="this.src=/static/img/imagenotfound.png">';
         content += '<div class="thumbnail-color-fill" ></div>';

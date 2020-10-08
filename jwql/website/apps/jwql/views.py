@@ -72,6 +72,11 @@ from .data_containers import get_jwqldb_table_view_components
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import AnomalySubmitForm
+from .forms import FGSAnomalySubmitForm
+from .forms import MIRIAnomalySubmitForm
+from .forms import NIRCamAnomalySubmitForm
+from .forms import NIRISSAnomalySubmitForm
+from .forms import NIRSpecAnomalySubmitForm
 from .forms import DynamicAnomalyForm
 from .forms import FileSearchForm
 from .oauth import auth_info, auth_required
@@ -696,7 +701,18 @@ def view_image(request,       inst, file_root, rewrite=False):   # user,
     current_anomalies = get_current_flagged_anomalies(file_root, inst)
 
     # Create a form instance
-    form = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+    # form = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+
+    if inst == 'FGS':
+        form = FGSAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+    if inst == 'MIRI':
+        form = MIRIAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+    if inst == 'NIRCam':
+        form = NIRCamAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+    if inst == 'NIRISS':
+        form = NIRISSAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+    if inst == 'NIRSpec':
+        form = NIRSpecAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
 
     # If this is a POST request, process the form data
     if request.method == 'POST':

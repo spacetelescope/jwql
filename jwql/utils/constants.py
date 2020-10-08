@@ -76,7 +76,40 @@ ANOMALIES_PER_INSTRUMENT = {
     'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
 
 # Defines the possible anomalies (with rendered name) to flag through the web app
-ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT]
+ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage" 
+                                                           else (anomaly, "Dominant MSA Leakage")
+                                                           for anomaly in ANOMALIES_PER_INSTRUMENT]
+
+ANOMALY_CHOICES_FGS = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage" 
+                                                           else (anomaly, "Dominant MSA Leakage")
+                                                           for anomaly in ANOMALIES_PER_INSTRUMENT
+                                                           if 'fgs' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+
+ANOMALY_CHOICES_MIRI = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage" 
+                                                           else (anomaly, "Dominant MSA Leakage")
+                                                           for anomaly in ANOMALIES_PER_INSTRUMENT
+                                                           if 'miri' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+
+ANOMALY_CHOICES_NIRCAM = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage" 
+                                                           else (anomaly, "Dominant MSA Leakage")
+                                                           for anomaly in ANOMALIES_PER_INSTRUMENT
+                                                           if 'nircam' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+
+ANOMALY_CHOICES_NIRISS = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage" 
+                                                           else (anomaly, "Dominant MSA Leakage")
+                                                           for anomaly in ANOMALIES_PER_INSTRUMENT
+                                                           if 'niriss' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+
+ANOMALY_CHOICES_NIRSPEC = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage" 
+                                                           else (anomaly, "Dominant MSA Leakage")
+                                                           for anomaly in ANOMALIES_PER_INSTRUMENT
+                                                           if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+ANOMALY_CHOICES_PER_INSTRUMENT = {'fgs': ANOMALY_CHOICES_FGS,
+                                  'miri': ANOMALY_CHOICES_MIRI,
+                                  'nircam': ANOMALY_CHOICES_NIRCAM,
+                                  'niriss': ANOMALY_CHOICES_NIRISS,
+                                  'nirspec': ANOMALY_CHOICES_NIRSPEC
+                                }
 
 # Possible exposure types for dark current data
 DARK_EXP_TYPES = {'nircam': ['NRC_DARK'],
