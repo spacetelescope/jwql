@@ -1,0 +1,86 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Mean Readnoise vs Time Figures
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &mean_readnoise_source
+    ref: "mean_readnoise_source"
+    data:
+        time: []
+        time_iso: []
+        mean_rn: []
+        filename: []
+        nints: []
+        ngroups: []
+- !Range1d: &mean_readnoise_xr
+    ref: "mean_readnoise_xr"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &mean_readnoise_yr
+    ref: "mean_readnoise_yr"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &mean_readnoise_figure
+    ref: "mean_readnoise_figure"
+    title: "Amp 1"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "Mean readnoise [DN]"
+    x_range: *mean_readnoise_xr
+    y_range: *mean_readnoise_yr
+    height: 800
+    width: 800
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'mean_rn', 'size': 6, 'source': *mean_readnoise_source}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Readnoise Difference Image
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &diff_source
+    ref: "diff_source"
+    data:
+        dh: [1]
+        dw: [1]
+        image: [[[1,0], [0, 1]]]
+- !Figure: &readnoise_diff_image
+    ref: "readnoise_diff_image"
+    title: 'Readnoise difference with pipeline reference file'
+    height: 700
+    width: 700
+    elements:
+        - {"kind": "image", "image": "image", "x": 0, "y": 0, "dh": 'dh', "dw": 'dh', "source": *diff_source}
+    tools: ""
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Readnoise Difference Histogram
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &diff_hist_source
+    ref: "diff_hist_source"
+    data:
+        n: []
+        bin_centers: []
+- !Range1d: &diff_hist_xr
+    ref: "diff_hist_xr"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &diff_hist_yr
+    ref: "diff_hist_yr"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &readnoise_diff_hist
+    ref: "readnoise_diff_hist"
+    x_axis_label: "Readnoise Difference [DN]"
+    y_axis_label: "Number of Pixels"
+    x_range: *diff_hist_xr
+    y_range: *diff_hist_yr
+    height: 300
+    width: 300
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'bin_centers', 'y': 'n', 'size': 4, 'source': *diff_hist_source}
+
+# Document structure
+# - !Document:
+#     - !row:
+#         - *mean_readnoise_figure
