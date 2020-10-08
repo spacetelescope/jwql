@@ -66,7 +66,7 @@ def mapping_factory(tool, element_type):
     for an example of how this function is used.
     """
 
-    def mapping_constructor(loader, node): #docstring added below
+    def mapping_constructor(loader, node):  # docstring added below
         fmt = tool.formats.get(element_type, {})
         value = loader.construct_mapping(node, deep=True)
         ref = value.pop("ref", "")
@@ -177,6 +177,7 @@ def document_constructor(tool, loader, node):
         curdoc().add_root(element)
     tool.document = curdoc()
     yield tool.document
+
 
 def figure_constructor(tool, loader, node):
     """ A YAML constructor for Bokeh Figure objects, which are
