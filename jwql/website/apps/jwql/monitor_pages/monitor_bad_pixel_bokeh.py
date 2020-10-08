@@ -51,25 +51,25 @@ class BadPixelMonitor(BokehTemplate):
         self.pre_init()
         self.post_init()
 
-    def bad_pixel_history(self, bad_type):
+    def bad_pixel_history(self, bad_pixel_type):
         """Use the database to construct information on the total number
         of a given type of bad pixels over time
 
         Parameters
         ----------
-        bad_type : str
+        bad_pixel_type : str
             The flavor of bad pixel (e.g. 'hot')
 
         Returns
         -------
-        num_bad : numpy.ndarray
+        num_bad_pixels : numpy.ndarray
             1D array of the number of bad pixels
 
         dates : datetime.datetime
-            1D array of dates/times corresponding to num_bad
+            1D array of dates/times corresponding to num_bad_pixels
         """
         # Find all the rows corresponding to the requested type of bad pixel
-        rows = [row for row in self.badpixel_table if row.type == bad_type]
+        rows = [row for row in self.bad_pixel_table if row.type == bad_pixel_type]
 
         # Extract the dates and number of bad pixels from each entry
         dates = [row.obs_mid_time for row in rows]
@@ -86,13 +86,13 @@ class BadPixelMonitor(BokehTemplate):
 
         # Sum the number of bad pixels found from the earliest entry up to
         # each new entry
-        num_bad = [np.sum(num[0:i]) for i in range(1, len(num)+1)]
+        num_bad_pixels = [np.sum(num[0:i]) for i in range(1, len(num)+1)]
 
-        return num_bad, dates
+        return num_bad_pixels, dates
 
     def _badpix_image(self):
-        """Update bokeh objects with sample image data.
-        """
+        """Update bokeh objects with sample image data."""
+
         # Open the mean dark current file and get the data
         with fits.open(self.image_file) as hdulist:
             data = hdulist[1].data
@@ -126,13 +126,13 @@ class BadPixelMonitor(BokehTemplate):
         self.refs['badpix_map_figure'].title.text_font_size = "20px"
 
 
-    def most_recent_coords(self, bad_type):
+    def most_recent_coords(self, bad_pixel_type):
         """Return the coordinates of the bad pixels in the most recent
         database entry for the given bad pixel type
 
         Parameters
         ----------
-        bad_type : str
+        bad_pixel_type : str
             The flavor of bad pixel (e.g. 'hot')
 
         Returns
@@ -142,7 +142,7 @@ class BadPixelMonitor(BokehTemplate):
             coordinates
         """
         # Find all the rows corresponding to the requested type of bad pixel
-        rows = [row for row in self.badpixel_table if row.type == bad_type]
+        rows = [row for row in self.bad_pixel_table if row.type == bad_pixel_type]
 
         # Extract the dates, number of bad pixels, and files used from each entry
         dates = [row.obs_mid_time for row in rows]
@@ -221,15 +221,15 @@ class BadPixelMonitor(BokehTemplate):
         """
         self.bad_history = {}
         self.bad_latest = {}
-        for bad_type in BAD_PIXEL_TYPES:
-            matching_rows = [row for row in self.badpixel_table if row.type == bad_type]
+        for bad_pixel_type in BAD_PIXEL_TYPES:
+            matching_rows = [row for row in self.bad_pixel_table if row.type == bad_pixel_type]
             if len(matching_rows) != 0:
                 real_data = True
                 times = [row.obs_mid_time for row in matching_rows]
                 num = np.array([len(row.x_coord) for row in matching_rows])
 
                 latest_row = times.index(max(times))
-                self.bad_latest[bad_type] = (max(times), matching_rows[latest_row].x_coord, matching_rows[latest_row].y_coord)
+                self.bad_latest[bad_pixel_type] = (max(times), matching_rows[latest_row].x_coord, matching_rows[latest_row].y_coord)
 
             # If there are no records of a certain type of bad pixel, then
             # fall back to a default date and 0 bad pixels. Remember that
@@ -242,13 +242,13 @@ class BadPixelMonitor(BokehTemplate):
                 badpix_x = [1000, 999]
                 badpix_y = [1000, 999]
                 num = np.array([0, 0])
-                self.bad_latest[bad_type] = (max(times), badpix_x, badpix_y)
+                self.bad_latest[bad_pixel_type] = (max(times), badpix_x, badpix_y)
 
             hover_values = np.array([datetime.datetime.strftime(t, "%d-%b-%Y") for t in times])
-            self.bad_history[bad_type] = (times, num, hover_values)
+            self.bad_history[bad_pixel_type] = (times, num, hover_values)
 
             #if real_data:
-            #    raise ValueError(bad_type, self.bad_history[bad_type])
+            #    raise ValueError(bad_pixel_type, self.bad_history[bad_pixel_type])
 
 
     def identify_tables(self):
@@ -265,13 +265,12 @@ class BadPixelMonitor(BokehTemplate):
         self.identify_tables()
 
         # Query database for all data with a matching aperture
-        self.badpixel_table = session.query(self.pixel_table) \
+        self.bad_pixel_table = session.query(self.pixel_table) \
             .filter(self.pixel_table.detector == self.detector) \
             .all()
 
     def load_dummy_data(self):
-        """Create dummy data for Bokeh plot development
-        """
+        """Create dummy data for Bokeh plot development"""
         import datetime
 
         # Populate a dictionary with the number of bad pixels vs time for
@@ -282,10 +281,10 @@ class BadPixelMonitor(BokehTemplate):
         # bad pixels found in the most recent search
         self.bad_history = {}
         self.bad_latest = {}
-        for i, badtype in enumerate(BAD_PIXEL_TYPES):
+        for i, bad_pixel_type in enumerate(BAD_PIXEL_TYPES):
 
             # Comment out while waiting for populated database tables
-            #num, times = self.bad_pixel_history(badtype)
+            #num, times = self.bad_pixel_history(bad_pixel_type)
             delta = 10 * i
 
             # Placeholders while we wait for a populated database
@@ -294,8 +293,8 @@ class BadPixelMonitor(BokehTemplate):
             num = np.arange(10)
             hover_values = np.array([datetime.datetime.strftime(t, "%d-%b-%Y") for t in times])
 
-            self.bad_history[badtype] = (times, num, hover_values)
-            self.bad_latest[badtype] = (datetime.datetime(1999, 12, 31), [500+delta, 501+delta, 502+delta], [4, 4, 4])
+            self.bad_history[bad_pixel_type] = (times, num, hover_values)
+            self.bad_latest[bad_pixel_type] = (datetime.datetime(1999, 12, 31), [500+delta, 501+delta, 502+delta], [4, 4, 4])
 
     def most_recent_data(self):
         """Get the bad pixel type and coordinates associated with the most
@@ -305,17 +304,17 @@ class BadPixelMonitor(BokehTemplate):
         self.latest_bad_from_dark_type = []
         self.latest_bad_from_dark_x = []
         self.latest_bad_from_dark_y = []
-        dark_times = [self.bad_latest[bad_type][0] for bad_type in DARKS_BAD_PIXEL_TYPES]
+        dark_times = [self.bad_latest[bad_pixel_type][0] for bad_pixel_type in DARKS_BAD_PIXEL_TYPES]
         if len(dark_times) > 0:
             self.most_recent_dark_date = max(dark_times)
         else:
             self.most_recent_dark_date = datetime.datetime(1999, 10, 31)
 
-        for bad_type in DARKS_BAD_PIXEL_TYPES:
-            if self.bad_latest[bad_type][0] == self.most_recent_dark_date:
-                self.latest_bad_from_dark_type.extend([bad_type] * len(self.bad_latest[bad_type][1]))
-                self.latest_bad_from_dark_x.extend(self.bad_latest[bad_type][1])
-                self.latest_bad_from_dark_y.extend(self.bad_latest[bad_type][2])
+        for bad_pixel_type in DARKS_BAD_PIXEL_TYPES:
+            if self.bad_latest[bad_pixel_type][0] == self.most_recent_dark_date:
+                self.latest_bad_from_dark_type.extend([bad_pixel_type] * len(self.bad_latest[bad_pixel_type][1]))
+                self.latest_bad_from_dark_x.extend(self.bad_latest[bad_pixel_type][1])
+                self.latest_bad_from_dark_y.extend(self.bad_latest[bad_pixel_type][2])
 
         self.latest_bad_from_dark_type = np.array(self.latest_bad_from_dark_type)
         self.latest_bad_from_dark_x = np.array(self.latest_bad_from_dark_x)
@@ -326,16 +325,16 @@ class BadPixelMonitor(BokehTemplate):
         self.latest_bad_from_flat_y = []
 
         self.latest_bad_from_flat = [[], [], []]
-        flat_times = [self.bad_latest[bad_type][0] for bad_type in FLATS_BAD_PIXEL_TYPES]
+        flat_times = [self.bad_latest[bad_pixel_type][0] for bad_pixel_type in FLATS_BAD_PIXEL_TYPES]
         if len(flat_times) > 1:
             self.most_recent_flat_date = max(flat_times)
         else:
             self.most_recent_flat_date = datetime.datetime(1999, 10, 31)
-        for bad_type in FLATS_BAD_PIXEL_TYPES:
-            if self.bad_latest[bad_type][0] == self.most_recent_flat_date:
-                self.latest_bad_from_flat_type.extend([bad_type] * len(self.bad_latest[bad_type][1]))
-                self.latest_bad_from_flat_x.extend(self.bad_latest[bad_type][1])
-                self.latest_bad_from_flat_y.extend(self.bad_latest[bad_type][2])
+        for bad_pixel_type in FLATS_BAD_PIXEL_TYPES:
+            if self.bad_latest[bad_pixel_type][0] == self.most_recent_flat_date:
+                self.latest_bad_from_flat_type.extend([bad_pixel_type] * len(self.bad_latest[bad_pixel_type][1]))
+                self.latest_bad_from_flat_x.extend(self.bad_latest[bad_pixel_type][1])
+                self.latest_bad_from_flat_y.extend(self.bad_latest[bad_pixel_type][2])
 
         self.latest_bad_from_flat_type = np.array(self.latest_bad_from_flat_type)
         self.latest_bad_from_flat_x = np.array(self.latest_bad_from_flat_x)
@@ -364,27 +363,27 @@ class BadPixelMonitor(BokehTemplate):
         """Update the plot properties for the plots of the number of bad
         pixels versus time
         """
-        for bad_type in BAD_PIXEL_TYPES:
-            bad_type_lc = bad_type.lower()
+        for bad_pixel_type in BAD_PIXEL_TYPES:
+            bad_pixel_type_lc = bad_pixel_type.lower()
 
             # Define y ranges of bad pixel v. time plot
-            buffer_size = 0.05 * (max(self.bad_history[bad_type][1]) - min(self.bad_history[bad_type][1]))
+            buffer_size = 0.05 * (max(self.bad_history[bad_pixel_type][1]) - min(self.bad_history[bad_pixel_type][1]))
             if buffer_size == 0:
                 buffer_size = 1
-            self.refs['{}_history_yrange'.format(bad_type_lc)].start = min(self.bad_history[bad_type][1]) - buffer_size
-            self.refs['{}_history_yrange'.format(bad_type_lc)].end = max(self.bad_history[bad_type][1]) + buffer_size
+            self.refs['{}_history_yrange'.format(bad_pixel_type_lc)].start = min(self.bad_history[bad_pixel_type][1]) - buffer_size
+            self.refs['{}_history_yrange'.format(bad_pixel_type_lc)].end = max(self.bad_history[bad_pixel_type][1]) + buffer_size
 
             # Define x range of bad_pixel v. time plot
-            horizontal_half_buffer = (max(self.bad_history[bad_type][0]) - min(self.bad_history[bad_type][0])) * 0.05
+            horizontal_half_buffer = (max(self.bad_history[bad_pixel_type][0]) - min(self.bad_history[bad_pixel_type][0])) * 0.05
             if horizontal_half_buffer == 0:
                 horizontal_half_buffer = 1.  # day
-            self.refs['{}_history_xrange'.format(bad_type_lc)].start = min(self.bad_history[bad_type][0]) - horizontal_half_buffer
-            self.refs['{}_history_xrange'.format(bad_type_lc)].end = max(self.bad_history[bad_type][0]) + horizontal_half_buffer
+            self.refs['{}_history_xrange'.format(bad_pixel_type_lc)].start = min(self.bad_history[bad_pixel_type][0]) - horizontal_half_buffer
+            self.refs['{}_history_xrange'.format(bad_pixel_type_lc)].end = max(self.bad_history[bad_pixel_type][0]) + horizontal_half_buffer
 
             # Add a title
-            self.refs['{}_history_figure'.format(bad_type.lower())].title.text = '{}: {} pixels'.format(self._aperture, bad_type)
-            self.refs['{}_history_figure'.format(bad_type.lower())].title.align = "center"
-            self.refs['{}_history_figure'.format(bad_type.lower())].title.text_font_size = "20px"
+            self.refs['{}_history_figure'.format(bad_pixel_type.lower())].title.text = '{}: {} pixels'.format(self._aperture, bad_pixel_type)
+            self.refs['{}_history_figure'.format(bad_pixel_type.lower())].title.align = "center"
+            self.refs['{}_history_figure'.format(bad_pixel_type.lower())].title.text_font_size = "20px"
 
 # Uncomment the line below when testing via the command line:
 # bokeh serve --show monitor_badpixel_bokeh.py
