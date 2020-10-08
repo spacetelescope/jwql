@@ -38,7 +38,7 @@ from jwql.utils.utils import get_config
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
-def badpixel_monitor(request, inst):
+def bad_pixel_monitor(request, inst):
     """Generate the dark monitor page for a given instrument
 
     Parameters
@@ -57,9 +57,9 @@ def badpixel_monitor(request, inst):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    tabs_components = bokeh_containers.badpixel_monitor_tabs(inst)
+    tabs_components = bokeh_containers.bad_pixel_monitor_tabs(inst)
 
-    template = "badpixel_monitor.html"
+    template = "bad_pixel_monitor.html"
 
     context = {
         'inst': inst,
