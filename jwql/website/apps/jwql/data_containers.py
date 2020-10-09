@@ -876,6 +876,9 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
                         final_subset.append(thumbnail)
         except KeyError:
             print("Error with thumbnail: ", thumbnail)
+    if final_subset is None:
+        print("No images matched anomaly selection")
+        final_subset = thumbnails_subset
 
     return list(set(final_subset))
     # return thumbnails_subset  # thumbnails matching all but anomaly criteria
@@ -1152,12 +1155,13 @@ def thumbnails_query_ajax(rootnames, insts):
 
     # Initialize dictionary that will contain all needed data
     data_dict = {}
-    data_dict['inst'] = "DUMMY_INSTRUMENT"  # dummy variable at the moment to allow view_image to work properly when thumbnail is selected
+    # dummy variable for view_image when thumbnail is selected
+    data_dict['inst'] = "DUMMY_INSTRUMENT"
     data_dict['file_data'] = {}
 
     # Gather data for each rootname
     for rootname in rootnames:
-        # adjust to fit expected format, particularly for get_filenames_by_rootname()
+        # fit expected format for get_filenames_by_rootname()
         rootname=rootname.split("_")[0]+'_'+rootname.split("_")[1]+'_'+rootname.split("_")[2]+'_'+rootname.split("_")[3]
 
         # Parse filename
@@ -1189,7 +1193,7 @@ def thumbnails_query_ajax(rootnames, insts):
         data_dict['file_data'][rootname]['expstart'] = get_expstart(rootname)
         data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for
                                                         filename in available_files]
-        data_dict['file_data'][rootname]['prop'] = rootname[2:7] # added to file_data rather than entire dict
+        data_dict['file_data'][rootname]['prop'] = rootname[2:7]
 
     # Extract information for sorting with dropdown menus
     detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for

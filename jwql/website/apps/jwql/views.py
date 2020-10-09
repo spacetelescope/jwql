@@ -45,13 +45,8 @@ from django.shortcuts import render
 from django.shortcuts import redirect
 
 from jwql.database.database_interface import load_connection
-from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
-from jwql.utils.constants import FILTERS_PER_INSTRUMENT
-from jwql.utils.constants import FULL_FRAME_APERTURES
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 from jwql.utils.constants import MONITORS
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.constants import OBSERVING_MODE_PER_INSTRUMENT
 from jwql.utils.utils import get_base_url
 from jwql.utils.utils import get_config
 from jwql.utils.utils import query_unformat
@@ -71,7 +66,6 @@ from .data_containers import random_404_page
 from .data_containers import get_jwqldb_table_view_components
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
-from .forms import AnomalySubmitForm
 from .forms import FGSAnomalySubmitForm
 from .forms import MIRIAnomalySubmitForm
 from .forms import NIRCamAnomalySubmitForm
@@ -134,7 +128,6 @@ def dynamic_anomaly(request):
             for instrument_anomalies in [miri_anomalies, nirspec_anomalies, niriss_anomalies, nircam_anomalies]:
                 for anomaly in instrument_anomalies:
                     all_anomalies.append(anomaly) if anomaly not in all_anomalies else all_anomalies
-
 
             anomaly_query_config.INSTRUMENTS_CHOSEN = form.cleaned_data['instrument']
             anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = all_anomalies
@@ -290,9 +283,6 @@ def archived_proposals_ajax(request,      inst):   # user,
     filepaths = get_filenames_by_instrument(inst)
     all_filenames = [os.path.basename(f) for f in filepaths]
     proposal_info = get_proposal_info(filepaths)
-    
-    # all_filenames = [os.path.basename(f) for f in anomaly_query_config.THUMBNAILS]
-    # proposal_info = get_proposal_info(anomaly_query_config.THUMBNAILS)
 
     context = {'inst': inst,
                'all_filenames': all_filenames,
@@ -590,14 +580,17 @@ def query_submit(request):
     obs_modes = anomaly_query_config.OBSERVING_MODES_CHOSEN
     anomalies = anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
     print("getting thumbnails")
-    thumbnails = get_thumbnails_all_instruments(insts, apers, filts, exptime_min, exptime_max, obs_modes, anomalies)
+    thumbnails = get_thumbnails_all_instruments(insts, apers, filts, 
+                                                exptime_min, exptime_max, 
+                                                obs_modes, anomalies)
     anomaly_query_config.THUMBNAILS = thumbnails
 
     # get information about thumbnails for thumbnail viewer
     proposal_info = get_proposal_info(thumbnails)
 
     context = {'inst': '',
-               'anomalies_chosen_from_current_anomalies': anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
+               'anomalies_chosen_from_current_anomalies': 
+                     anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
                'apertures_chosen': apers,
                'filters_chosen': filts,
                'inst_list_chosen': insts,
@@ -699,8 +692,6 @@ def view_image(request,       inst, file_root, rewrite=False):   # user,
     current_anomalies = get_current_flagged_anomalies(file_root, inst)
 
     # Create a form instance
-    # form = AnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-
     if inst == 'FGS':
         form = FGSAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
     if inst == 'MIRI':
