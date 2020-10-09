@@ -35,19 +35,6 @@ from django.conf import settings
 import numpy as np
 from operator import itemgetter
 
-
-# astroquery.mast import that depends on value of auth_mast
-# this import has to be made before any other import of astroquery.mast
-from jwql.utils.utils import get_config, filename_parser, check_config_for_key
-check_config_for_key('auth_mast')
-auth_mast = get_config()['auth_mast']
-mast_flavour = '.'.join(auth_mast.split('.')[1:])
-from astropy import config
-conf = config.get_config('astroquery')
-conf['mast'] = {'server': 'https://{}'.format(mast_flavour)}
-from astroquery.mast import Mast
-from jwedb.edb_interface import mnemonic_inventory
-
 from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
@@ -62,6 +49,17 @@ from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
 from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
 
+# astroquery.mast import that depends on value of auth_mast
+# this import has to be made before any other import of astroquery.mast
+from jwql.utils.utils import get_config, filename_parser, check_config_for_key
+check_config_for_key('auth_mast')
+auth_mast = get_config()['auth_mast']
+mast_flavour = '.'.join(auth_mast.split('.')[1:])
+from astropy import config
+conf = config.get_config('astroquery')
+conf['mast'] = {'server': 'https://{}'.format(mast_flavour)}
+from astroquery.mast import Mast
+from jwedb.edb_interface import mnemonic_inventory
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -172,8 +170,8 @@ def get_current_flagged_anomalies(rootname, instrument):
     """
 
     table_dict = {}
-    for instrument in JWST_INSTRUMENT_NAMES_MIXEDCASE:
-        table_dict[instrument.lower()] = getattr(di, '{}Anomaly'.format(JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument]))
+    # for instrument in JWST_INSTRUMENT_NAMES_MIXEDCASE:
+    table_dict[instrument.lower()] = getattr(di, '{}Anomaly'.format(JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]))
 
     table = table_dict[instrument.lower()]
     query = di.session.query(table).filter(table.rootname == rootname).order_by(table.flag_date.desc()).limit(1)
@@ -826,7 +824,7 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
         given instrument.
     """
     skip = False
-    if skip == True:
+    if skip:
         thumbnails = ['jw95175001001_02103_00001_nrs2_rate_integ0.thumb', 'jw95175001001_02104_00002_nrs1_rate_integ0.thumb', 'jw95175001001_02101_00001_nrs2_rate_integ0.thumb', 'jw95175001001_02104_00001_nrs2_rate_integ0.thumb']
         return thumbnails
     # Make sure instruments are of the proper format (e.g. "Nircam")
@@ -839,9 +837,9 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
-        params = {"columns" : "*",
-                  "filters" : [{"paramName": ["detector", "filter", "effexptm"],
-                              "values":     [apertures, filters, {"min" : effexptm_min, "max" : effexptm_max}]}]}
+        params = {"columns": "*",
+                  "filters": [{"paramName": ["detector", "filter", "effexptm"],
+                               "values":     [apertures, filters, {"min": effexptm_min, "max": effexptm_max}]}]}
 
         response = Mast.service_request_async(service, params)
         print("response:", response)
@@ -859,9 +857,10 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
 
     # Get subset of preview images that match the filenames
     thumbnails_subset = [os.path.basename(item) for item in thumbnail_list if
-                os.path.basename(item).split('_integ')[0] in filenames]
+                         os.path.basename(item).split('_integ')[0] in filenames]
 
-    thumbnails_subset = list(set(thumbnails_subset))  # Eliminate any duplicates
+    # Eliminate any duplicates
+    thumbnails_subset = list(set(thumbnails_subset))
 
     # Determine whether or not queried anomalies are flagged
     final_subset = []
@@ -879,9 +878,9 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
             print("Error with thumbnail: ", thumbnail)
 
     return list(set(final_subset))
-    # return thumbnails_subset  # return any thumbnails matching all but anomaly criteria
+    # return thumbnails_subset  # thumbnails matching all but anomaly criteria
 
- 
+
 def get_jwqldb_table_view_components(request):
     """Renders view for JWQLDB table viewer.
 

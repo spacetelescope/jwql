@@ -596,23 +596,21 @@ def query_submit(request):
     # get information about thumbnails for thumbnail viewer
     proposal_info = get_proposal_info(thumbnails)
 
-    context = { 'inst': '',
-           #    'inst': "miri",   # Use with UPDATE_THUMBNAILS_PAGE instead of UPDATE_THUMBNAILS_QUERY_PAGE 
-           #    'prop': "jw05191001001_01101_00002",   # Use with UPDATE_THUMBNAILS_PAGE instead of UPDATE_THUMBNAILS_QUERY_PAGE
-                'anomalies_chosen_from_current_anomalies': anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
-                'apertures_chosen': apers,
-                'filters_chosen': filts,
-                'inst_list_chosen': insts,
-                'observing_modes_chosen': obs_modes,
-                'thumbnails': thumbnails,
-                'base_url': get_base_url(),
-                'rootnames': thumbnails,
-                'thumbnail_data':  {'inst': "Queried Anomalies",
-                                    'all_filenames': thumbnails,
-                                    'num_proposals': proposal_info['num_proposals'],
-                                    'thumbnails': {'proposals': proposal_info['proposals'],
-                                                   'thumbnail_paths': proposal_info['thumbnail_paths'],
-                                                   'num_files': proposal_info['num_files']}}
+    context = {'inst': '',
+               'anomalies_chosen_from_current_anomalies': anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
+               'apertures_chosen': apers,
+               'filters_chosen': filts,
+               'inst_list_chosen': insts,
+               'observing_modes_chosen': obs_modes,
+               'thumbnails': thumbnails,
+               'base_url': get_base_url(),
+               'rootnames': thumbnails,
+               'thumbnail_data':  {'inst': "Queried Anomalies",
+                                   'all_filenames': thumbnails,
+                                   'num_proposals': proposal_info['num_proposals'],
+                                   'thumbnails': {'proposals': proposal_info['proposals'],
+                                                  'thumbnail_paths': proposal_info['thumbnail_paths'],
+                                                  'num_files': proposal_info['num_files']}}
               }
 
     return render(request, template, context)
@@ -713,7 +711,6 @@ def view_image(request,       inst, file_root, rewrite=False):   # user,
         form = NIRISSAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
     if inst == 'NIRSpec':
         form = NIRSpecAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-
     # If this is a POST request, process the form data
     if request.method == 'POST':
         anomaly_choices = dict(request.POST)['anomaly_choices']

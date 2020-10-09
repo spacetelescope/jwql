@@ -65,7 +65,6 @@ from jwql.utils.utils import get_config, filename_parser
 from jwql.utils.utils import query_format
 
 from wtforms import SubmitField, StringField
-from wtforms.validators import InputRequired, ValidationError
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
@@ -265,6 +264,7 @@ class AnomalySubmitForm(forms.Form):
         data_dict['rootname'] = rootname
         data_dict['flag_date'] = datetime.datetime.now()
         data_dict['user'] = 'TEMPORARY_USER'  # user
+
         for choice in anomaly_choices:
             data_dict[choice] = True
         if 'guider' in rootname:
@@ -399,7 +399,6 @@ class NIRCamAnomalySubmitForm(forms.Form):
             data_dict[choice] = True
         di.engine.execute(di.NIRCamAnomaly.__table__.insert(), data_dict)
 
-
     def clean_anomalies(self):
 
         anomalies = self.cleaned_data['anomaly_choices']
@@ -438,7 +437,6 @@ class NIRISSAnomalySubmitForm(forms.Form):
         for choice in anomaly_choices:
             data_dict[choice] = True
         di.engine.execute(di.NIRISSAnomaly.__table__.insert(), data_dict)
-
 
     def clean_anomalies(self):
 
