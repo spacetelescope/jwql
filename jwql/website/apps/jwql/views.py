@@ -413,10 +413,50 @@ def dashboard(request):
     db = generalDashboard()
     pie_graph = db.dashboard_instrument_pie_chart()
     files_graph = db.dashboard_files_per_day()
+    filetype_bar = db.dashboard_filetype_bar_chart()
 
     p = layout([
-        [files_graph],[pie_graph]
-        ]) 
+        [files_graph],[pie_graph, filetype_bar]
+        ],sizing_mode='stretch_width') 
+    script, div = components(p)
+
+    context =  {'inst': '',
+               'script': script,
+               'div': div}
+
+    return render(request, template, context)
+
+
+def daily_trending(request):
+    """Generate the daily dashbaord page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    from jwql.website.apps.jwql.bokeh_dashboard import generalDashboard
+    from bokeh.plotting import figure, output_file, show 
+    from bokeh.embed import components
+    from bokeh.layouts import column, layout
+    import numpy as np
+
+    template = 'daily_trending.html'
+
+    db = generalDashboard()
+    pie_graph = db.dashboard_instrument_pie_chart()
+    files_graph = db.dashboard_files_per_day()
+    filetype_bar = db.dashboard_filetype_bar_chart()
+
+    p = layout([
+        [files_graph],[pie_graph, filetype_bar]
+        ],sizing_mode='stretch_width') 
     script, div = components(p)
 
     context =  {'inst': '',
