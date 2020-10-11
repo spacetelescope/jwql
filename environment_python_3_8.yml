@@ -12,7 +12,7 @@ dependencies:
 - nodejs=10.13.0
 - numpy=1.18.5
 - numpydoc=1.1.0
-- pandas=1.1.0
+- pandas=1.1.1
 - pip=20.2.2
 - postgresql=12.2
 - psycopg2=2.8.5
@@ -29,12 +29,12 @@ dependencies:
   - astroquery==0.4.1
   - authlib==0.14.3
   - bokeh>=1.0,<1.4
-  - codecov==2.1.8
-  - crds==7.5.0.0
+  - codecov==2.1.9
+  - crds==10.0.0
   - jwedb==0.0.6
+  - jwst==0.17.1
   - pysiaf==0.9.0
   - pysqlite3==0.4.3
   - sqlalchemy==1.3.19
   - stsci_rtd_theme==0.0.2
-  - git+https://github.com/spacetelescope/jwst@0.16.2
   - git+https://github.com/spacetelescope/jwst_reffiles
