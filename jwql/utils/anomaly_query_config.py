@@ -18,24 +18,23 @@ Use
 """
 
 # Apertures selected by user in query_anomaly_2
-APERTURES_CHOSEN = ["No apertures selected"]
+APERTURES_CHOSEN = {}
 
 # Anomalies available to select after instruments are selected in query_anomaly
 # Default is all anomalies common to all instruments
-CURRENT_ANOMALIES = ['cosmic_ray_shower', 'diffraction_spike', 'excessive_saturation',
-                     'guidestar_failure', 'persistence', 'other']
+CURRENT_ANOMALIES = {}
 
 # Instruments selected by user in query_anomaly
-INSTRUMENTS_CHOSEN = ["No instruments selected"]
+INSTRUMENTS_CHOSEN = []
 
 # Observing modes selected by user in query_anomaly
-OBSERVING_MODES_CHOSEN = ["No observing modes selected"]
+OBSERVING_MODES_CHOSEN = {}
 
 # Anomalies selected by user in query_anomaly
-ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = ["No anomalies selected"]
+ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = {}
 
 # Filters selected by user in query_anomaly
-FILTERS_CHOSEN = ["No filters selected"]
+FILTERS_CHOSEN = {}
 
 # Minimum exposure time selected by user in query_anomaly. Corresponds to EFFEXPTM in MAST.
 EXPTIME_MIN = ['0']  # select all as default

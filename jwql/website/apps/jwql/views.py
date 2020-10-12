@@ -109,25 +109,44 @@ def dynamic_anomaly(request):
             nircam_obsmode = [query_unformat(i) for i in form.cleaned_data['nircam_obsmode']]
             nircam_anomalies = [query_unformat(i) for i in form.cleaned_data['nircam_anomalies']]
 
-            all_filters = []
-            for instrument_filters in [miri_filters, nirspec_filters, niriss_filters, nircam_filters]:
-                for filter in instrument_filters:
-                    all_filters.append(filter) if filter not in all_filters else all_filters
+            all_filters = {}
+            all_filters['miri'] = miri_filters
+            all_filters['nirspec'] = nirspec_filters
+            all_filters['niriss'] = niriss_filters
+            all_filters['nircam'] = nircam_filters
             
-            all_apers = []
-            for instrument_apers in [miri_apers, nirspec_apers, niriss_apers, nircam_apers]:
-                for aper in instrument_apers:
-                    all_apers.append(aper) if aper not in all_apers else all_apers
+            all_apers = {}
+            all_apers['miri'] = miri_apers
+            all_apers['nirspec'] = nirspec_apers
+            all_apers['niriss'] = niriss_apers
+            all_apers['nircam'] = nircam_apers
 
-            all_obsmodes = []
-            for instrument_obsmode in [miri_obsmode, nirspec_obsmode, niriss_obsmode, nircam_obsmode]:
-                for obsmode in instrument_obsmode:
-                    all_obsmodes.append(obsmode) if obsmode not in all_obsmodes else all_obsmodes
+            all_obsmodes = {}
+            all_obsmodes['miri'] = miri_obsmode
+            all_obsmodes['nirspec'] = nirspec_obsmode
+            all_obsmodes['niriss'] = niriss_obsmode
+            all_obsmodes['nircam'] = nircam_obsmode
+            
+            all_anomalies = {}
+            all_anomalies['miri'] = miri_anomalies
+            all_anomalies['nirspec'] = nirspec_anomalies
+            all_anomalies['niriss'] = niriss_anomalies
+            all_anomalies['nircam'] = nircam_anomalies
 
-            all_anomalies = []
-            for instrument_anomalies in [miri_anomalies, nirspec_anomalies, niriss_anomalies, nircam_anomalies]:
-                for anomaly in instrument_anomalies:
-                    all_anomalies.append(anomaly) if anomaly not in all_anomalies else all_anomalies
+            # all_apers = []
+            # for instrument_apers in [miri_apers, nirspec_apers, niriss_apers, nircam_apers]:
+            #     for aper in instrument_apers:
+            #         all_apers.append(aper) if aper not in all_apers else all_apers
+
+            # all_obsmodes = []
+            # for instrument_obsmode in [miri_obsmode, nirspec_obsmode, niriss_obsmode, nircam_obsmode]:
+            #     for obsmode in instrument_obsmode:
+            #         all_obsmodes.append(obsmode) if obsmode not in all_obsmodes else all_obsmodes
+
+            # all_anomalies = []
+            # for instrument_anomalies in [miri_anomalies, nirspec_anomalies, niriss_anomalies, nircam_anomalies]:
+            #     for anomaly in instrument_anomalies:
+            #         all_anomalies.append(anomaly) if anomaly not in all_anomalies else all_anomalies
 
             anomaly_query_config.INSTRUMENTS_CHOSEN = form.cleaned_data['instrument']
             anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = all_anomalies

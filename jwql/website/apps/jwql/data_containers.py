@@ -823,15 +823,12 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
         A list of thumbnails available in the filesystem for the
         given instrument.
     """
-    skip = False
-    if skip:
-        thumbnails = ['jw95175001001_02103_00001_nrs2_rate_integ0.thumb', 'jw95175001001_02104_00002_nrs1_rate_integ0.thumb', 'jw95175001001_02101_00001_nrs2_rate_integ0.thumb', 'jw95175001001_02104_00001_nrs2_rate_integ0.thumb']
-        return thumbnails
-    # Make sure instruments are of the proper format (e.g. "Nircam")
+
     thumbnail_list = []
     filenames = []
     for inst in instruments:
         print("Working on ", inst)
+        # Make sure instruments are of the proper format (e.g. "Nircam")
         instrument = inst[0].upper()+inst[1:].lower()
 
         # Query MAST for all rootnames for the instrument
@@ -839,7 +836,7 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
 
         params = {"columns": "*",
                   "filters": [{"paramName": ["detector", "filter", "effexptm"],
-                               "values":     [apertures, filters, {"min": effexptm_min, "max": effexptm_max}]}]}
+                               "values":     [apertures[inst.lower()], filters[inst.lower()], {"min": effexptm_min, "max": effexptm_max}]}]}
 
         response = Mast.service_request_async(service, params)
         print("response:", response)
