@@ -598,10 +598,9 @@ def query_submit(request):
     exptime_max = anomaly_query_config.EXPTIME_MAX
     obs_modes = anomaly_query_config.OBSERVING_MODES_CHOSEN
     anomalies = anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
-    print("getting thumbnails")
-    thumbnails = get_thumbnails_all_instruments(insts, apers, filts, 
-                                                exptime_min, exptime_max, 
-                                                obs_modes, anomalies)
+    thumbnails = get_thumbnails_all_instruments(insts, apers, filts,
+                                                obs_modes, exptime_min, 
+                                                exptime_max, anomalies)
     anomaly_query_config.THUMBNAILS = thumbnails
 
     # get information about thumbnails for thumbnail viewer

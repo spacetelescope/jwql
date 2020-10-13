@@ -827,29 +827,54 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
     thumbnail_list = []
     filenames = []
     for inst in instruments:
-        print("Working on ", inst)
+        print("Retrieving thumbnails for", inst)
         # Make sure instruments are of the proper format (e.g. "Nircam")
         instrument = inst[0].upper()+inst[1:].lower()
 
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
-        params = {"columns": "*",
-                  "filters": [{"paramName": ["detector", "filter", "effexptm"],
-                               "values":     [apertures[inst.lower()], filters[inst.lower()], {"min": effexptm_min, "max": effexptm_max}]}]}
+        # params = {"columns": "*",
+        #           "filters": [{"paramName": "apername", "filter", "effexptm",
+        #                        "values":    [apertures[inst.lower()], filters[inst.lower()], {"min": effexptm_min, "max": effexptm_max}]}]}
+
+        params = {"columns":"*",
+                  "filters":[{"paramName":"apername",
+                              "values": [apertures[inst.lower()]]}]} 
 
         response = Mast.service_request_async(service, params)
-        print("response:", response)
         results = response[0].json()['data']
 
-        # Parse the results to get the rootnames
+        # Further filter results and parse to get rootnames
         for result in results:
-            filename = result['filename'].split('.')[0]
-            filenames.append(filename)
+            if observing_modes[inst.lower()]:
+                if result['exp_type'] in observing_modes[inst.lower()]:
+                    if effexptm_max:
+                        if result['effexptm'] < int(effexptm_max):
+                            if effexptm_min:
+                                if result['effexptm'] > int(effexptm_min):
+                                    filename = result['filename'].split('.')[0]
+                                    filenames.append(filename)
+                    else:
+                        if effexptm_min:
+                            if result['effexptm'] > int(effexptm_min):
+                                filename = result['filename'].split('.')[0]
+                                filenames.append(filename)
+            else:
+                if effexptm_max:
+                    if result['effexptm'] < int(effexptm_max):
+                        if effexptm_min:
+                            if result['effexptm'] > int(effexptm_min):
+                                filename = result['filename'].split('.')[0]
+                                filenames.append(filename)
+                else:
+                    if effexptm_min:
+                        if result['effexptm'] > int(effexptm_min):
+                            filename = result['filename'].split('.')[0]
+                            filenames.append(filename)
 
         # Get list of all thumbnails
         thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
-
         thumbnail_list.extend(thumbnails)
 
     # Get subset of preview images that match the filenames
