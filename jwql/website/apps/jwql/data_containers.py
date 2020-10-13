@@ -34,6 +34,7 @@ from astropy.time import Time
 from django.conf import settings
 import numpy as np
 from operator import itemgetter
+import pandas as pd
 
 from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
@@ -67,6 +68,51 @@ PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_image
 THUMBNAIL_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'thumbnails')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
+
+
+def build_table(tablename):
+    """Create Pandas dataframe from JWQLDB table.
+
+    Parameters
+    ----------
+    tablename : str
+        Name of JWQL database table name.
+
+    Returns
+    -------
+    table_meta_data : pandas.DataFrame
+        Pandas data frame version of JWQL database table.
+    """
+    # Make dictionary of tablename : class object
+    # This matches what the user selects in the select element
+    # in the webform to the python object on the backend.
+    tables_of_interest = {}
+    for item in di.__dict__.keys():
+        table = getattr(di, item)
+        if hasattr(table, '__tablename__'):
+            tables_of_interest[table.__tablename__] = table
+
+    session, _, _, _ = load_connection(get_config()['connection_string'])
+    table_object = tables_of_interest[tablename]  # Select table object
+
+    result = session.query(table_object)
+
+    # Turn query result into list of dicts
+    result_dict = [row.__dict__ for row in result.all()]
+    column_names = table_object.__table__.columns.keys()
+
+    # Build list of column data based on column name.
+    data = []
+    for column in column_names:
+        column_data = list(map(itemgetter(column), result_dict))
+        data.append(column_data)
+
+    data = dict(zip(column_names, data))
+
+    # Build table.
+    table_meta_data = pd.DataFrame(data)
+
+    return table_meta_data
 
 
 def data_trending():
@@ -656,6 +702,35 @@ def get_instrument_proposals(instrument):
     return proposals
 
 
+def get_jwqldb_table_view_components(request):
+    """Renders view for JWQLDB table viewer.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    table_data : pandas.DataFrame
+        Pandas data frame of JWQL database table
+    table_name : str
+        Name of database table selected by user
+    """
+
+    if 'make_table_view' in request.POST:
+        table_name = request.POST['db_table_select']
+        table_data = build_table(table_name)
+
+        return table_data, table_name
+    else:
+        # When coming from home/monitor views
+        table_data = None
+        table_name = None
+
+    return table_data, table_name
+
+
 def get_preview_images_by_instrument(inst):
     """Return a list of preview images available in the filesystem for
     the given instrument.
@@ -826,6 +901,7 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
 
     thumbnail_list = []
     filenames = []
+    
     for inst in instruments:
         print("Retrieving thumbnails for", inst)
         # Make sure instruments are of the proper format (e.g. "Nircam")
@@ -1003,7 +1079,7 @@ def get_jwqldb_table_view_components(request):
         # Build table.
         table_to_display = Table(data, names=column_names)
         table_to_display.show_in_browser(jsviewer=True, max_lines=-1)  # Negative max_lines shows all lines avaliable.
-
+        
 
 def get_thumbnails_by_instrument(inst):
     """Return a list of thumbnails available in the filesystem for the

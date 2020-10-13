@@ -104,6 +104,11 @@ ANOMALY_CHOICES_PER_INSTRUMENT = {'fgs': ANOMALY_CHOICES_FGS,
                                   'nirspec': ANOMALY_CHOICES_NIRSPEC
                                 }
 
+# Bad pixel types by the type of data used to find them
+BAD_PIXEL_TYPES = ['DEAD', 'HOT', 'LOW_QE', 'RC', 'OPEN', 'ADJ_OPEN', 'TELEGRAPH', 'OTHER_BAD_PIXEL']
+DARKS_BAD_PIXEL_TYPES = ['HOT',  'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
+FLATS_BAD_PIXEL_TYPES = ['DEAD', 'OPEN', 'ADJ_OPEN', 'LOW_QE']
+
 # Possible exposure types for dark current data
 DARK_EXP_TYPES = {'nircam': ['NRC_DARK'],
                   'niriss': ['NIS_DARK'],
@@ -134,7 +139,7 @@ FILTERS_PER_INSTRUMENT = {'miri': ['F560W', 'F770W', 'F1000W', 'F1065C', 'F1130W
                                      'F356W', 'F380M', 'F430M', 'F444W', 'F480M'],
                           'nirspec': ['CLEAR', 'F070LP', 'F100LP', 'F170LP', 'F290LP']}
 
-FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R', 'WFSS128C', 'WFSS64C']
+FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
 
 # Names of full-frame apertures for all instruments
 FULL_FRAME_APERTURES = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',
@@ -142,7 +147,8 @@ FULL_FRAME_APERTURES = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NR
                                    'NRCB4_FULL', 'NRCB5_FULL', 'NRCALONG', 'NRCBLONG'],
                         'NIRISS': ['NIS_CEN'],
                         'NIRSPEC': ['NRS1_FULL', 'NRS2_FULL'],
-                        'MIRI': ['MIRIM_FULL']
+                        'MIRI': ['MIRIM_FULL'],
+                        'FGS': ['FGS1_FULL', 'FGS2_FULL']
                         }
 
 # Possible suffix types for nominal files
@@ -189,10 +195,10 @@ JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
 
 # Available monitor names and their location for each JWST instrument
 MONITORS = {
-    'fgs': [('Bad Pixel Monitor', '#')],
+    'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor')],
     'miri': [('Dark Current Monitor', '#'),
              ('Data Trending', '/miri/miri_data_trending'),
-             ('Bad Pixel Monitor', '#'),
+             ('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
              ('Cosmic Ray Monitor', '#'),
              ('Photometry Monitor', '#'),
              ('TA Failure Monitor', '#'),
@@ -200,15 +206,17 @@ MONITORS = {
              ('Filter and Calibration Lamp Monitor', '#'),
              ('Thermal Emission Monitor', '#')],
     'nircam': [('Bias Monitor', '#'),
-               ('Readnoise Monitor', '#'),
+               ('Readnoise Monitor', '/nircam/readnoise_monitor'),
                ('Gain Level Monitor', '#'),
                ('Mean Dark Current Rate Monitor', '/nircam/dark_monitor'),
+               ('Bad Pixel Monitor', '/nircam/bad_pixel_monitor'),
                ('Photometric Stability Monitor', '#')],
-    'niriss': [('Bad Pixel Monitor', '#'),
-               ('Readnoise Monitor', '#'),
+    'niriss': [('Bad Pixel Monitor', '/niriss/bad_pixel_monitor'),
+               ('Readnoise Monitor', '/niriss/readnoise_monitor'),
                ('AMI Calibrator Monitor', '#'),
                ('TSO RMS Monitor', '#')],
     'nirspec': [('Optical Short Monitor', '#'),
+                ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Target Acquisition Monitor', '#'),
                 ('Data Trending', '/nirspec/nirspec_data_trending'),
                 ('Detector Health Monitor', '#'),
