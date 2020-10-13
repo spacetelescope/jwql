@@ -884,9 +884,6 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
     # Eliminate any duplicates
     thumbnails_subset = list(set(thumbnails_subset))
 
-    import pdb
-    pdb.set_trace()
-
     # Determine whether or not queried anomalies are flagged
     final_subset = []
     for thumbnail in thumbnails_subset:
