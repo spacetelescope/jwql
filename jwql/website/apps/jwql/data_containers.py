@@ -884,6 +884,9 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
     # Eliminate any duplicates
     thumbnails_subset = list(set(thumbnails_subset))
 
+    import pdb
+    pdb.set_trace()
+
     # Determine whether or not queried anomalies are flagged
     final_subset = []
     for thumbnail in thumbnails_subset:
@@ -892,12 +895,21 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
             instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[thumbnail.split("_")[3][:3]]
             thumbnail_anomalies = get_current_flagged_anomalies(rootname, instrument)
             if thumbnail_anomalies:
-                for anomaly in anomalies:
-                    if anomaly in thumbnail_anomalies:
+                for anomaly in anomalies[instrument.lower()]:
+                    if anomaly.lower() in thumbnail_anomalies:
                         print(thumbnail, "contains an anomaly selected in the query")
                         final_subset.append(thumbnail)
         except KeyError:
-            print("Error with thumbnail: ", thumbnail)
+            try:
+                instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[thumbnail.split("_")[2][:3]]
+                thumbnail_anomalies = get_current_flagged_anomalies(rootname, instrument)
+                if thumbnail_anomalies:
+                    for anomaly in anomalies[instrument.lower()]:
+                        if anomaly.lower() in thumbnail_anomalies:
+                            print(thumbnail, "contains an anomaly selected in the query")
+                            final_subset.append(thumbnail)
+            except KeyError:
+                print("Error with thumbnail: ", thumbnail)
     if final_subset is None:
         print("No images matched anomaly selection")
         final_subset = thumbnails_subset
