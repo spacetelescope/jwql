@@ -87,8 +87,6 @@ def dynamic_anomaly(request):
 
     if request.method == 'POST':
         if form.is_valid():
-            print("form.cleaned_data", form.cleaned_data)
-
             miri_filters = [query_unformat(i) for i in form.cleaned_data['miri_filt']]
             miri_apers = [query_unformat(i) for i in form.cleaned_data['miri_aper']]
             miri_obsmode = [query_unformat(i) for i in form.cleaned_data['miri_obsmode']]

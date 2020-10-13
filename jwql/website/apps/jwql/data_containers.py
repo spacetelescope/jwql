@@ -834,10 +834,6 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
-        # params = {"columns": "*",
-        #           "filters": [{"paramName": "apername", "filter", "effexptm",
-        #                        "values":    [apertures[inst.lower()], filters[inst.lower()], {"min": effexptm_min, "max": effexptm_max}]}]}
-
         params = {"columns":"*",
                   "filters":[{"paramName":"apername",
                               "values": [apertures[inst.lower()]]}]} 
@@ -853,11 +849,37 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
                         if result['effexptm'] < int(effexptm_max):
                             if effexptm_min:
                                 if result['effexptm'] > int(effexptm_min):
+                                    if filters:
+                                        if result['filter'] in filters[inst.lower()]:
+                                            filename = result['filename'].split('.')[0]
+                                            filenames.append(filename)
+                                    else:
+                                        filename = result['filename'].split('.')[0]
+                                        filenames.append(filename)
+                            else: 
+                                if filters:
+                                    if result['filter'] in filters[inst.lower()]:
+                                        filename = result['filename'].split('.')[0]
+                                        filenames.append(filename)
+                                else:
                                     filename = result['filename'].split('.')[0]
                                     filenames.append(filename)
                     else:
                         if effexptm_min:
                             if result['effexptm'] > int(effexptm_min):
+                                if filters:
+                                    if result['filter'] in filters[inst.lower()]:
+                                        filename = result['filename'].split('.')[0]
+                                        filenames.append(filename)
+                                else:
+                                    filename = result['filename'].split('.')[0]
+                                    filenames.append(filename)
+                        else: 
+                            if filters:
+                                if result['filter'] in filters[inst.lower()]:
+                                    filename = result['filename'].split('.')[0]
+                                    filenames.append(filename)
+                            else:
                                 filename = result['filename'].split('.')[0]
                                 filenames.append(filename)
             else:
@@ -865,11 +887,37 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
                     if result['effexptm'] < int(effexptm_max):
                         if effexptm_min:
                             if result['effexptm'] > int(effexptm_min):
+                                if filters:
+                                    if result['filter'] in filters[inst.lower()]:
+                                        filename = result['filename'].split('.')[0]
+                                        filenames.append(filename)
+                                else:
+                                    filename = result['filename'].split('.')[0]
+                                    filenames.append(filename)
+                        else:
+                            if filters:
+                                if result['filter'] in filters[inst.lower()]:
+                                    filename = result['filename'].split('.')[0]
+                                    filenames.append(filename)
+                            else:
                                 filename = result['filename'].split('.')[0]
                                 filenames.append(filename)
                 else:
                     if effexptm_min:
                         if result['effexptm'] > int(effexptm_min):
+                            if filters:
+                                if result['filter'] in filters[inst.lower()]:
+                                    filename = result['filename'].split('.')[0]
+                                    filenames.append(filename)
+                            else:
+                                filename = result['filename'].split('.')[0]
+                                filenames.append(filename)
+                    else:
+                        if filters:
+                            if result['filter'] in filters[inst.lower()]:
+                                filename = result['filename'].split('.')[0]
+                                filenames.append(filename)
+                        else:
                             filename = result['filename'].split('.')[0]
                             filenames.append(filename)
 
