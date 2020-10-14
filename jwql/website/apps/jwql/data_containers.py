@@ -955,9 +955,11 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
                             final_subset.append(thumbnail)
             except KeyError:
                 print("Error with thumbnail: ", thumbnail)
-    if final_subset is None:
+    if not final_subset:
         print("No images matched anomaly selection")
         final_subset = thumbnails_subset
+        if not final_subset:
+            final_subset = thumbnails[:10]
 
     return list(set(final_subset))
     # return thumbnails_subset  # thumbnails matching all but anomaly criteria
@@ -1235,7 +1237,7 @@ def thumbnails_query_ajax(rootnames, insts):
     # Initialize dictionary that will contain all needed data
     data_dict = {}
     # dummy variable for view_image when thumbnail is selected
-    data_dict['inst'] = "DUMMY_INSTRUMENT"
+    data_dict['inst'] = "all"
     data_dict['file_data'] = {}
 
     # Gather data for each rootname
