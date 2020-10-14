@@ -76,7 +76,7 @@ def register_oauth():
         'mast_auth',
         client_id='{}'.format(client_id),
         client_secret='{}'.format(client_secret),
-        access_token_url='https://{}/oauth/access_token?client_secret={}'.format(auth_mast, client_secret),
+        access_token_url='https://{}/oauth/token'.format(auth_mast),
         access_token_params=None,
         refresh_token_url=None,
         authorize_url='https://{}/oauth/authorize'.format(auth_mast),
