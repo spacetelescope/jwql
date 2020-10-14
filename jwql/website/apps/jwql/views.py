@@ -76,11 +76,6 @@ from .forms import NIRSpecAnomalySubmitForm
 from .forms import DynamicAnomalyForm
 from .data_containers import build_table
 from .forms import AnomalyForm
-from .forms import AnomalySubmitForm
-from .forms import ApertureForm
-from .forms import EarlyDateForm
-from .forms import ExptimeMaxForm
-from .forms import ExptimeMinForm
 from .forms import FileSearchForm
 from .oauth import auth_info, auth_required
 
@@ -139,21 +134,6 @@ def dynamic_anomaly(request):
             all_anomalies['nirspec'] = nirspec_anomalies
             all_anomalies['niriss'] = niriss_anomalies
             all_anomalies['nircam'] = nircam_anomalies
-
-            # all_apers = []
-            # for instrument_apers in [miri_apers, nirspec_apers, niriss_apers, nircam_apers]:
-            #     for aper in instrument_apers:
-            #         all_apers.append(aper) if aper not in all_apers else all_apers
-
-            # all_obsmodes = []
-            # for instrument_obsmode in [miri_obsmode, nirspec_obsmode, niriss_obsmode, nircam_obsmode]:
-            #     for obsmode in instrument_obsmode:
-            #         all_obsmodes.append(obsmode) if obsmode not in all_obsmodes else all_obsmodes
-
-            # all_anomalies = []
-            # for instrument_anomalies in [miri_anomalies, nirspec_anomalies, niriss_anomalies, nircam_anomalies]:
-            #     for anomaly in instrument_anomalies:
-            #         all_anomalies.append(anomaly) if anomaly not in all_anomalies else all_anomalies
 
             anomaly_query_config.INSTRUMENTS_CHOSEN = form.cleaned_data['instrument']
             anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = all_anomalies
