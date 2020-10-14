@@ -22,6 +22,49 @@
          <body>
             {{ div | safe }}
             {{ script | safe }}
+
+            <hr>
+            <table id="jwqltable" class="display" style="width:100%">
+                <thead>
+                    <tr>
+                        {% for column in table_columns %}
+                            <th>{{ column }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in table_rows %}
+                        <tr>
+                            {% for value in row %}
+                                <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        {% for column in table_columns %}
+                            <th>{{ column }}</th>
+                        {% endfor %}
+                    </tr>
+                </tfoot>
+            </table>
+            
+            <!-- JS for datatables rendering and sorting with DataTables. -->
+            <style>
+                table.dataTable td  {
+                max-width: 150px;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                }
+            </style>
+
+            <script>
+                $(document).ready(function() {
+                    $('#jwqltable').DataTable();
+                } );
+            </script>
         </body>
 
     </main>

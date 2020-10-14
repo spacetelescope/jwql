@@ -38,6 +38,7 @@ Dependencies
 """
 
 import csv
+import numpy as np
 import os
 
 from django.http import JsonResponse
@@ -57,6 +58,8 @@ from jwql.utils.utils import get_config
 from jwql.utils.utils import query_unformat
 from jwql.website.apps.jwql.data_containers import get_jwqldb_table_view_components
 
+from .bokeh_dashboard import generalDashboard
+from .data_containers import build_table
 from .data_containers import data_trending
 from .data_containers import get_acknowledgements
 from .data_containers import get_current_flagged_anomalies
@@ -402,27 +405,25 @@ def dashboard(request):
         Outgoing response sent to the webpage
     """
 
-    from jwql.website.apps.jwql.bokeh_dashboard import generalDashboard
-    from bokeh.plotting import figure, output_file, show 
-    from bokeh.embed import components
-    from bokeh.layouts import column, layout
-    import numpy as np
-
     template = 'dashboard.html'
 
     db = generalDashboard()
     pie_graph = db.dashboard_instrument_pie_chart()
     files_graph = db.dashboard_files_per_day()
     filetype_bar = db.dashboard_filetype_bar_chart()
-
+    
     p = layout([
         [files_graph],[pie_graph, filetype_bar]
         ],sizing_mode='stretch_width') 
     script, div = components(p)
 
+    table_meta = build_table('monitor')
+
     context =  {'inst': '',
                'script': script,
-               'div': div}
+               'div': div,
+               'table_columns': table_meta.columns.values,
+               'table_rows': table_meta.values}
 
     return render(request, template, context)
 
