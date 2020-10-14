@@ -660,6 +660,9 @@ def query_submit(request):
     # get information about thumbnails for thumbnail viewer
     proposal_info = get_proposal_info(thumbnails)
 
+    import pdb
+    pdb.set_trace()
+
     context = {'inst': '',
                'anomalies_chosen_from_current_anomalies': 
                      anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
