@@ -418,6 +418,7 @@ def dashboard(request):
     script, div = components(p)
 
     table_meta = build_table('monitor')
+    table_meta.drop(columns='affected_tables')
 
     context =  {'inst': '',
                'script': script,
