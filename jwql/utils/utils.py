@@ -561,7 +561,7 @@ def query_format(string):
 
 
 def query_unformat(string):
-    """Take a string of format UPPER CASE and change it to lower_case"""
+    """Take a string of format UPPER CASE and change it to UPPER_CASE"""
     # lower_case = string.lower()
     unsplit_string = string.replace(" ", "_")
 

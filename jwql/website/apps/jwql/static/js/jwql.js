@@ -473,7 +473,7 @@ function update_thumbnail_array(data) {
 
         // Build div content
         content = '<div class="thumbnail" detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
-        if (data.inst!="DUMMY_INSTRUMENT") {
+        if (data.inst!="all") {
             content += '<a href="/' + data.inst + '/' + rootname + '/">';
         } else {
             content += '<a href="/' + filename_dict.inst + '/' + rootname + '/">';
