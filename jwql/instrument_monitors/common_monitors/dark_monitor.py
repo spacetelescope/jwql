@@ -140,8 +140,9 @@ def mast_query_darks(instrument, aperture, start_date, end_date):
 
         query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
                                                   add_filters=parameters, return_data=True, caom=False)
-        if len(query['data']) > 0:
-            query_results.extend(query['data'])
+        if 'data' in query.keys():
+            if len(query['data']) > 0:
+                query_results.extend(query['data'])
 
     return query_results
 
