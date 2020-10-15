@@ -41,7 +41,7 @@ Dependencies
 import os
 import requests
 
-from authlib.django.client import OAuth
+from authlib.integrations.django_client import OAuth
 from django.shortcuts import redirect, render
 
 import jwql
