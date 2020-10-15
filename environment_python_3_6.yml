@@ -31,7 +31,7 @@ dependencies:
 - pip:
   - asdf==2.7.1
   - astropy==4.0.1
-  - authlib==0.14.3
+  - authlib==0.15.1
   - codecov==2.1.9
   - crds==10.0.0
   - jwedb>=0.0.3

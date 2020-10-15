@@ -8,6 +8,7 @@ Authors
 
     - Matthew Bourque
     - Christian Mesh
+    - Ben Falk
 
 Use
 ---
@@ -41,8 +42,7 @@ Dependencies
 import os
 import requests
 
-#from authlib.integrations.django_client import OAuth
-from authlib.django.client import OAuth
+from authlib.integrations.django_client import OAuth
 from django.shortcuts import redirect, render
 
 import jwql
@@ -110,10 +110,7 @@ def authorize(request):
         Outgoing response sent to the webpage
     """
 
-    print(request)
-
     # Get auth.mast token
-    print(JWQL_OAUTH.__dict__)
     token = JWQL_OAUTH.mast_auth.authorize_access_token(
         request, headers={'Accept': 'application/json'}
     )
