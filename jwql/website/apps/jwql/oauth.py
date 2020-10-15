@@ -41,7 +41,8 @@ Dependencies
 import os
 import requests
 
-from authlib.integrations.django_client import OAuth
+#from authlib.integrations.django_client import OAuth
+from authlib.django.client import OAuth
 from django.shortcuts import redirect, render
 
 import jwql
@@ -263,7 +264,7 @@ def login(request, user):
     # Redirect to oauth login
     global PREV_PAGE
     PREV_PAGE = request.META.get('HTTP_REFERER')
-    redirect_uri = os.path.join(get_base_url(), 'authorize')
+    redirect_uri = os.path.join('https://dljwql.stsci.edu/authorize')
 
     return JWQL_OAUTH.mast_auth.authorize_redirect(request, redirect_uri)
 
