@@ -88,8 +88,6 @@ def register_oauth():
 
     return oauth
 
-     nd'token_placement': 'header',
-
 
 JWQL_OAUTH = register_oauth()
 
