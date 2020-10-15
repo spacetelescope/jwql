@@ -71,7 +71,10 @@ def register_oauth():
 
     # Register with auth.mast
     oauth = OAuth()
-    client_kwargs = {'scope': 'mast:user:info'}
+    client_kwargs = {
+        'scope': 'mast:user:info',
+        'token_endpoint_auth_method': 'client_secret_basic',
+        'token_placement': 'header'}
     oauth.register(
         'mast_auth',
         client_id='{}'.format(client_id),
@@ -84,6 +87,8 @@ def register_oauth():
         client_kwargs=client_kwargs)
 
     return oauth
+
+     nd'token_placement': 'header',
 
 
 JWQL_OAUTH = register_oauth()
