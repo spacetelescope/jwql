@@ -111,9 +111,7 @@ def authorize(request):
     """
 
     # Get auth.mast token
-    token = JWQL_OAUTH.mast_auth.authorize_access_token(
-        request, headers={'Accept': 'application/json'}
-    )
+    token = JWQL_OAUTH.mast_auth.authorize_access_token(request)
 
     # Determine domain
     base_url = get_base_url()
