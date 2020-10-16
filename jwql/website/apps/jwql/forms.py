@@ -99,7 +99,7 @@ class AnomalyQueryForm(BaseForm):
     nirspec_aperture_list = []
     for aperture in FULL_FRAME_APERTURES['NIRSPEC']:
         nirspec_aperture_list.append([query_format(aperture), query_format(aperture)])
-    
+
     nircam_aperture_list = []
     for aperture in FULL_FRAME_APERTURES['NIRCAM']:
         nircam_aperture_list.append([query_format(aperture), query_format(aperture)])
@@ -116,12 +116,12 @@ class AnomalyQueryForm(BaseForm):
         for filt in filters_per_inst:
             filt = query_format(filt)
             filter_list.append([filt, filt]) if [filt, filt] not in filter_list else filter_list
-    
+
     miri_filter_list = []
     for filt in FILTERS_PER_INSTRUMENT['miri']:
         filt = query_format(filt)
         miri_filter_list.append([filt, filt])
-    
+
     nirspec_filter_list = []
     for filt in FILTERS_PER_INSTRUMENT['nirspec']:
         filt = query_format(filt)
@@ -131,7 +131,7 @@ class AnomalyQueryForm(BaseForm):
     for filt in FILTERS_PER_INSTRUMENT['niriss']:
         filt = query_format(filt)
         niriss_filter_list.append([filt, filt])
-    
+
     nircam_filter_list = []
     for filt in FILTERS_PER_INSTRUMENT['nircam']:
         filt = query_format(filt)
@@ -147,12 +147,12 @@ class AnomalyQueryForm(BaseForm):
     for obsmode in OBSERVING_MODE_PER_INSTRUMENT['niriss']:
         obsmode = query_format(obsmode)
         niriss_obsmode_list.append([obsmode, obsmode])
-    
+
     nircam_obsmode_list = []
     for obsmode in OBSERVING_MODE_PER_INSTRUMENT['nircam']:
         obsmode = query_format(obsmode)
         nircam_obsmode_list.append([obsmode, obsmode])
-    
+
     nirspec_obsmode_list = []
     for obsmode in OBSERVING_MODE_PER_INSTRUMENT['nirspec']:
         obsmode = query_format(obsmode)
@@ -176,7 +176,7 @@ class AnomalyQueryForm(BaseForm):
         if 'niriss' in ANOMALIES_PER_INSTRUMENT[anomaly]:
             item = [query_format(anomaly), query_format(anomaly)]
             niriss_anomalies_list.append(item)
-    
+
     nirspec_anomalies_list = []
     for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
         if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]:
@@ -185,33 +185,33 @@ class AnomalyQueryForm(BaseForm):
 
     # Anomaly Parameters
     instrument = forms.MultipleChoiceField(required=False,
-                                      choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
-                                      widget=forms.CheckboxSelectMultiple)  #had () before...
+                                           choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
+                                           widget=forms.CheckboxSelectMultiple)
     aperture = forms.MultipleChoiceField(required=False, choices=aperture_list, widget=forms.CheckboxSelectMultiple)
     filt = forms.MultipleChoiceField(required=False, choices=filter_list, widget=forms.CheckboxSelectMultiple)
     early_date = forms.DateField(required=False, initial="eg, 2021-10-02 12:04:39 or 2021-10-02")
     late_date = forms.DateField(required=False, initial="eg, 2021-11-25 14:30:59 or 2021-11-25")
     exp_time_max = forms.DecimalField(required=False, initial="685")
     exp_time_min = forms.DecimalField(required=False, initial="680")
-    
-    miri_aper = forms.MultipleChoiceField(required=False, choices = miri_aperture_list, widget=forms.CheckboxSelectMultiple)
-    nirspec_aper = forms.MultipleChoiceField(required=False, choices = nirspec_aperture_list, widget=forms.CheckboxSelectMultiple)
+
+    miri_aper = forms.MultipleChoiceField(required=False, choices=miri_aperture_list, widget=forms.CheckboxSelectMultiple)
+    nirspec_aper = forms.MultipleChoiceField(required=False, choices=nirspec_aperture_list, widget=forms.CheckboxSelectMultiple)
     niriss_aper = forms.MultipleChoiceField(required=False, choices=niriss_aperture_list, widget=forms.CheckboxSelectMultiple)
     nircam_aper = forms.MultipleChoiceField(required=False, choices=nircam_aperture_list, widget=forms.CheckboxSelectMultiple)
 
     # should use something like 'nirpsec_filt', choices=[...] in order to choose particular series to show up
-    miri_filt = forms.MultipleChoiceField(required=False, choices = miri_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('lrs', 'LRS')])
-    nirspec_filt = forms.MultipleChoiceField(required=False, choices = nirspec_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('f070lp_g140h', 'F070LP/G140H'), ('f100lp_g140h', 'F100LP/G140H'), ('f070lp_g140m', 'F070LP/G140M'), ('f100lp_g140m', 'F100LP/G140M'), ('f170lp_g235h', 'F170LP/G235H'), ('f170lp_g235m', 'F170LP/G235M'), ('f290lp_g395h', 'F290LP/G395H'), ('f290lp_g395m', 'F290LP/G395M')])
+    miri_filt = forms.MultipleChoiceField(required=False, choices=miri_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('lrs', 'LRS')])
+    nirspec_filt = forms.MultipleChoiceField(required=False, choices=nirspec_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('f070lp_g140h', 'F070LP/G140H'), ('f100lp_g140h', 'F100LP/G140H'), ('f070lp_g140m', 'F070LP/G140M'), ('f100lp_g140m', 'F100LP/G140M'), ('f170lp_g235h', 'F170LP/G235H'), ('f170lp_g235m', 'F170LP/G235M'), ('f290lp_g395h', 'F290LP/G395H'), ('f290lp_g395m', 'F290LP/G395M')])
     niriss_filt = forms.MultipleChoiceField(required=False, choices=niriss_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('soss', 'SOSS')])
     nircam_filt = forms.MultipleChoiceField(required=False, choices=nircam_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('f322w2', 'F322W2'), ('f444w', 'F444W'), ('f277w', 'F277W')])
-    
-    miri_obsmode= forms.MultipleChoiceField(required=False, choices = miri_obsmode_list, widget=forms.CheckboxSelectMultiple)
-    nirspec_obsmode = forms.MultipleChoiceField(required=False, choices = nirspec_obsmode_list, widget=forms.CheckboxSelectMultiple)
+
+    miri_obsmode= forms.MultipleChoiceField(required=False, choices=miri_obsmode_list, widget=forms.CheckboxSelectMultiple)
+    nirspec_obsmode = forms.MultipleChoiceField(required=False, choices=nirspec_obsmode_list, widget=forms.CheckboxSelectMultiple)
     niriss_obsmode = forms.MultipleChoiceField(required=False, choices=niriss_obsmode_list, widget=forms.CheckboxSelectMultiple)
     nircam_obsmode = forms.MultipleChoiceField(required=False, choices=nircam_obsmode_list, widget=forms.CheckboxSelectMultiple)
 
-    miri_anomalies= forms.MultipleChoiceField(required=False, choices = miri_anomalies_list, widget=forms.CheckboxSelectMultiple)
-    nirspec_anomalies = forms.MultipleChoiceField(required=False, choices = nirspec_anomalies_list, widget=forms.CheckboxSelectMultiple)
+    miri_anomalies= forms.MultipleChoiceField(required=False, choices=miri_anomalies_list, widget=forms.CheckboxSelectMultiple)
+    nirspec_anomalies = forms.MultipleChoiceField(required=False, choices=nirspec_anomalies_list, widget=forms.CheckboxSelectMultiple)
     niriss_anomalies = forms.MultipleChoiceField(required=False, choices=niriss_anomalies_list, widget=forms.CheckboxSelectMultiple)
     nircam_anomalies = forms.MultipleChoiceField(required=False, choices=nircam_anomalies_list, widget=forms.CheckboxSelectMultiple)
 

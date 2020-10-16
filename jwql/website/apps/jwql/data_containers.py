@@ -900,18 +900,18 @@ def get_thumbnails_all_instruments(parameters):
 
     thumbnail_list = []
     filenames = []
-    
+
     for inst in parameters['instruments']:
         print("Retrieving thumbnails for", inst)
         # Make sure instruments are of the proper format (e.g. "Nircam")
-        instrument = inst[0].upper()+inst[1:].lower()
+        instrument = inst[0].upper() + inst[1:].lower()
 
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
-        params = {"columns":"*",
-                  "filters":[{"paramName":"apername",
-                              "values": [parameters['apertures'][inst.lower()]]}]} 
+        params = {"columns": "*",
+                  "filters": [{"paramName": "apername",
+                              "values": [parameters['apertures'][inst.lower()]]}]}
 
         response = Mast.service_request_async(service, params)
         results = response[0].json()['data']
@@ -931,7 +931,7 @@ def get_thumbnails_all_instruments(parameters):
                                     else:
                                         filename = result['filename'].split('.')[0]
                                         filenames.append(filename)
-                            else: 
+                            else:
                                 if filters:
                                     if result['filter'] in filters[inst.lower()]:
                                         filename = result['filename'].split('.')[0]
@@ -949,7 +949,7 @@ def get_thumbnails_all_instruments(parameters):
                                 else:
                                     filename = result['filename'].split('.')[0]
                                     filenames.append(filename)
-                        else: 
+                        else:
                             if filters:
                                 if result['filter'] in filters[inst.lower()]:
                                     filename = result['filename'].split('.')[0]
@@ -1276,7 +1276,7 @@ def thumbnails_query_ajax(rootnames, insts):
     # Gather data for each rootname
     for rootname in rootnames:
         # fit expected format for get_filenames_by_rootname()
-        rootname=rootname.split("_")[0]+'_'+rootname.split("_")[1]+'_'+rootname.split("_")[2]+'_'+rootname.split("_")[3]
+        rootname = rootname.split("_")[0] + '_' + rootname.split("_")[1] + '_' + rootname.split("_")[2] + '_' + rootname.split("_")[3]
 
         # Parse filename
         try:

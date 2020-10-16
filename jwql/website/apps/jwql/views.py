@@ -116,7 +116,7 @@ def anomaly_query(request):
             all_filters['nirspec'] = nirspec_filters
             all_filters['niriss'] = niriss_filters
             all_filters['nircam'] = nircam_filters
-            
+
             all_apers = {}
             all_apers['miri'] = miri_apers
             all_apers['nirspec'] = nirspec_apers
@@ -128,7 +128,7 @@ def anomaly_query(request):
             all_obsmodes['nirspec'] = nirspec_obsmode
             all_obsmodes['niriss'] = niriss_obsmode
             all_obsmodes['nircam'] = nircam_obsmode
-            
+
             all_anomalies = {}
             all_anomalies['miri'] = miri_anomalies
             all_anomalies['nirspec'] = nirspec_anomalies
@@ -237,7 +237,7 @@ def about(request):
 
     return render(request, template, context)
 
-  
+
 def api_landing(request):
     """Generate the ``api`` page
 
@@ -257,7 +257,7 @@ def api_landing(request):
 
     return render(request, template, context)
 
-  
+
 @auth_required
 def archived_proposals(request, user, inst):
     """Generate the page listing all archived proposals in the database
@@ -666,7 +666,7 @@ def query_submit(request):
     proposal_info = get_proposal_info(thumbnails)
 
     context = {'inst': '',
-               'anomalies_chosen_from_current_anomalies': 
+               'anomalies_chosen_from_current_anomalies':
                      anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
                'apertures_chosen': apertures,
                'filters_chosen': filters,
@@ -675,10 +675,10 @@ def query_submit(request):
                'thumbnails': thumbnails,
                'base_url': get_base_url(),
                'rootnames': thumbnails,
-               'thumbnail_data':  {'inst': "Queried Anomalies",
-                                   'all_filenames': thumbnails,
-                                   'num_proposals': proposal_info['num_proposals'],
-                                   'thumbnails': {'proposals': proposal_info['proposals'],
+               'thumbnail_data': {'inst': "Queried Anomalies",
+                                  'all_filenames': thumbnails,
+                                  'num_proposals': proposal_info['num_proposals'],
+                                  'thumbnails': {'proposals': proposal_info['proposals'],
                                                   'thumbnail_paths': proposal_info['thumbnail_paths'],
                                                   'num_files': proposal_info['num_files']}}
               }
@@ -783,7 +783,7 @@ def view_image(request, user, inst, file_root, rewrite=False):
     if request.method == 'POST':
         anomaly_choices = dict(request.POST)['anomaly_choices']
         if form.is_valid():
-            form.update_anomaly_table(file_root,          anomaly_choices)     #  user['ezid'],
+            form.update_anomaly_table(file_root, user['ezid'], anomaly_choices)
 
     # Build the context
     context = {'inst': inst,
@@ -847,7 +847,7 @@ def view_all_images(request, user, file_root, rewrite=False):
     if request.method == 'POST':
         anomaly_choices = dict(request.POST)['anomaly_choices']
         if form.is_valid():
-            form.update_anomaly_table(file_root,          anomaly_choices)     #  user['ezid'],
+            form.update_anomaly_table(file_root, user['ezid'], anomaly_choices)
 
     # Build the context
     context = {'inst': inst,

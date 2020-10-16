@@ -76,7 +76,7 @@ ANOMALIES_PER_INSTRUMENT = {
     'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
 
 # Defines the possible anomalies (with rendered name) to flag through the web app
-ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage" 
+ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage"
                                                            else (anomaly, "Dominant MSA Leakage")
                                                            for anomaly in ANOMALIES_PER_INSTRUMENT]
 
@@ -92,7 +92,7 @@ ANOMALY_CHOICES_NIRCAM = [(anomaly, inflection.titleize(anomaly)) for anomaly in
 ANOMALY_CHOICES_NIRISS = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
                                                                   if 'niriss' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
-ANOMALY_CHOICES_NIRSPEC = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage" 
+ANOMALY_CHOICES_NIRSPEC = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage"
                                                            else (anomaly, "Dominant MSA Leakage")
                                                            for anomaly in ANOMALIES_PER_INSTRUMENT
                                                            if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]]
@@ -106,7 +106,7 @@ ANOMALY_CHOICES_PER_INSTRUMENT = {'fgs': ANOMALY_CHOICES_FGS,
 
 # Bad pixel types by the type of data used to find them
 BAD_PIXEL_TYPES = ['DEAD', 'HOT', 'LOW_QE', 'RC', 'OPEN', 'ADJ_OPEN', 'TELEGRAPH', 'OTHER_BAD_PIXEL']
-DARKS_BAD_PIXEL_TYPES = ['HOT',  'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
+DARKS_BAD_PIXEL_TYPES = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
 FLATS_BAD_PIXEL_TYPES = ['DEAD', 'OPEN', 'ADJ_OPEN', 'LOW_QE']
 
 # Possible exposure types for dark current data
@@ -246,15 +246,15 @@ NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami']
 
 # Dictionary of observing modes available for each instrument
 OBSERVING_MODE_PER_INSTRUMENT = {'fgs': ['FGS_DARK', 'FGS_FOCUS', 'FGS_IMAGE', 'FGS_INTFLAT', 'FGS_SKYFLAT'],
-                                 'miri': ['MIR_IMAGE', 'MIR_TACQ', 'MIR_LYOT', 'MIR_4QPM', 'MIR_LRS-FIXEDSLIT', 
-                                          'MIR_LRS-SLITLESS', 'MIR_MRS', 'MIR_DARKIMG', 'MIR_DARKMRS', 'MIR_DARKALL', 
+                                 'miri': ['MIR_IMAGE', 'MIR_TACQ', 'MIR_LYOT', 'MIR_4QPM', 'MIR_LRS-FIXEDSLIT',
+                                          'MIR_LRS-SLITLESS', 'MIR_MRS', 'MIR_DARKIMG', 'MIR_DARKMRS', 'MIR_DARKALL',
                                           'MIR_FLATIMAGE', 'MIR_FLATMRS', 'MIR_CORONCAL'],
-                                 'nircam': ['NRC_IMAGE', 'NRC_WFSS', 'NRC_TACQ', 'NRC_CORON', 'NRC_FOCUS', 'NRC_DARK', 
-                                            'NRC_FLAT', 'NRC_GRISM', 'NRC_LED', 'NRC_TSIMAGE', 'NRC_TSGRISM', 
+                                 'nircam': ['NRC_IMAGE', 'NRC_WFSS', 'NRC_TACQ', 'NRC_CORON', 'NRC_FOCUS', 'NRC_DARK',
+                                            'NRC_FLAT', 'NRC_GRISM', 'NRC_LED', 'NRC_TSIMAGE', 'NRC_TSGRISM',
                                             'NRC_TACONFIRM', 'NRC_WFSC'],
                                  'niriss': ['NIS_AMI', 'NIS_DARK', 'NIS_EXTCAL', 'NIS_FOCUS', 'NIS_IMAGE', 'NIS_LAMP',
                                             'NIS_SOSS', 'NIS_WFSS', 'NIS_TACQ', 'NIS_TACONFIRM'],
-                                 'nirspec': ['NRS_AUTOFLAT', 'NRS_AUTOWAVE', 'NRS_BRIGHTOBJ', 'NRS_CONFIRM', 
+                                 'nirspec': ['NRS_AUTOFLAT', 'NRS_AUTOWAVE', 'NRS_BRIGHTOBJ', 'NRS_CONFIRM',
                                              'NRS_DARK', 'NRS_FIXEDSLIT', 'NRS_FOCUS', 'NRS_IFU', 'NRS_IMAGE',
                                              'NRS_LAMP', 'NRS_MIMF', 'NRS_MSASPEC', 'NRS_TACONFIRM', 'NRS_TACQ',
                                              'NRS_TASLIT']}
