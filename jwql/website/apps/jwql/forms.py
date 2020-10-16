@@ -113,29 +113,29 @@ class DynamicAnomalyForm(BaseForm):
     for instrument in FILTERS_PER_INSTRUMENT.keys():
         # # if instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:   # eg ['nirspec']: selects relevant filters, but not specific to chosen instruments
         filters_per_inst = FILTERS_PER_INSTRUMENT[instrument]
-        for filter in filters_per_inst:
-            filter = query_format(filter)
-            filter_list.append([filter, filter]) if [filter, filter] not in filter_list else filter_list
+        for filt in filters_per_inst:
+            filt = query_format(filt)
+            filter_list.append([filt, filt]) if [filt, filt] not in filter_list else filter_list
     
     miri_filter_list = []
-    for filter in FILTERS_PER_INSTRUMENT['miri']:
-        filter = query_format(filter)
-        miri_filter_list.append([filter, filter])
+    for filt in FILTERS_PER_INSTRUMENT['miri']:
+        filt = query_format(filte)
+        miri_filter_list.append([filt, filt])
     
     nirspec_filter_list = []
-    for filter in FILTERS_PER_INSTRUMENT['nirspec']:
-        filter = query_format(filter)
-        nirspec_filter_list.append([filter, filter])
+    for filt in FILTERS_PER_INSTRUMENT['nirspec']:
+        filt = query_format(filt)
+        nirspec_filter_list.append([filt, filt])
 
     niriss_filter_list = []
-    for filter in FILTERS_PER_INSTRUMENT['niriss']:
-        filter = query_format(filter)
-        niriss_filter_list.append([filter, filter])
+    for filt in FILTERS_PER_INSTRUMENT['niriss']:
+        filt = query_format(filt)
+        niriss_filter_list.append([filt, filt])
     
     nircam_filter_list = []
-    for filter in FILTERS_PER_INSTRUMENT['nircam']:
-        filter = query_format(filter)
-        nircam_filter_list.append([filter, filter])
+    for filt in FILTERS_PER_INSTRUMENT['nircam']:
+        filt = query_format(filt)
+        nircam_filter_list.append([filt, filt])
 
     # Generate dynamic lists of observing modes to use in forms
     miri_obsmode_list = []
@@ -188,7 +188,7 @@ class DynamicAnomalyForm(BaseForm):
                                       choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
                                       widget=forms.CheckboxSelectMultiple)  #had () before...
     aperture = forms.MultipleChoiceField(required=False, choices=aperture_list, widget=forms.CheckboxSelectMultiple)
-    filter = forms.MultipleChoiceField(required=False, choices=filter_list, widget=forms.CheckboxSelectMultiple)
+    filt = forms.MultipleChoiceField(required=False, choices=filter_list, widget=forms.CheckboxSelectMultiple)
     early_date = forms.DateField(required=False, initial="eg, 2021-10-02 12:04:39 or 2021-10-02")
     late_date = forms.DateField(required=False, initial="eg, 2021-11-25 14:30:59 or 2021-11-25")
     exp_time_max = forms.DecimalField(required=False, initial="57404.70")

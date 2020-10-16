@@ -16,30 +16,30 @@ Use
 
         from jwql.utils.query_config import CHOSEN_INSTRUMENTS
 """
+# Anomalies selected by user in dynamic_anomaly
+ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = {}
 
-# Apertures selected by user in query_anomaly_2
+# Apertures selected by user in dynamic_anomaly
 APERTURES_CHOSEN = {}
 
-# Anomalies available to select after instruments are selected in query_anomaly
+# Anomalies available to select after instruments are selected in dynamic_anomaly
 # Default is all anomalies common to all instruments
 CURRENT_ANOMALIES = {}
 
-# Instruments selected by user in query_anomaly
-INSTRUMENTS_CHOSEN = []
-
-# Observing modes selected by user in query_anomaly
-OBSERVING_MODES_CHOSEN = {}
-
-# Anomalies selected by user in query_anomaly
-ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = {}
-
-# Filters selected by user in query_anomaly
-FILTERS_CHOSEN = {}
-
-# Minimum exposure time selected by user in query_anomaly. Corresponds to EFFEXPTM in MAST.
-EXPTIME_MIN = ['0']  # select all as default
-
-# Maximum exposure time selected by user in query_anomaly. Corresponds to EFFEXPTM in MAST.
+# Maximum exposure time selected by user in dynamic_anomaly. Corresponds to EFFEXPTM in MAST.
 EXPTIME_MAX = ['999999999999999']   # select all as default
 
+# Minimum exposure time selected by user in dynamic_anomaly. Corresponds to EFFEXPTM in MAST.
+EXPTIME_MIN = ['0']  # select all as default
+
+# Filters selected by user in dynamic_anomaly
+FILTERS_CHOSEN = {}
+
+# Instruments selected by user in dynamic_anomaly
+INSTRUMENTS_CHOSEN = []
+
+# Observing modes selected by user in dynamic_anomaly
+OBSERVING_MODES_CHOSEN = {}
+
+# Thumbnails selected by user in dynamic_anomaly
 THUMBNAILS = []

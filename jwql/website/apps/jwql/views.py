@@ -397,15 +397,14 @@ def archive_thumbnails_query_ajax(request):  # ,       insts):  # user,
         Outgoing response sent to the webpage
     """
     # Ensure the instrument is correctly capitalized
-    insts_list = []
-    for inst in anomaly_query_config.INSTRUMENTS_CHOSEN:
-        inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-        insts_list.append(inst)
+    instruments_list = []
+    for instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:
+        instrument = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
+        instruments_list.append(instrument)
 
     rootnames = anomaly_query_config.THUMBNAILS
-    data = thumbnails_query_ajax(rootnames, insts_list)
+    data = thumbnails_query_ajax(rootnames, instruments_list)
 
-    # return JsonResponse({'instrument_datasets': [nirspec_data, nircam_data]}, json_dumps_params={'indent': 2})
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
@@ -645,31 +644,28 @@ def query_submit(request):
 
     template = 'query_submit.html'
 
-    insts = anomaly_query_config.INSTRUMENTS_CHOSEN
-    apers = anomaly_query_config.APERTURES_CHOSEN
-    filts = anomaly_query_config.FILTERS_CHOSEN
-    exptime_min = anomaly_query_config.EXPTIME_MIN
-    exptime_max = anomaly_query_config.EXPTIME_MAX
-    obs_modes = anomaly_query_config.OBSERVING_MODES_CHOSEN
+    instruments = anomaly_query_config.INSTRUMENTS_CHOSEN
+    apertures = anomaly_query_config.APERTURES_CHOSEN
+    filters = anomaly_query_config.FILTERS_CHOSEN
+    exposure_time_min = anomaly_query_config.EXPTIME_MIN
+    exposure_time_max = anomaly_query_config.EXPTIME_MAX
+    observing_modes = anomaly_query_config.OBSERVING_MODES_CHOSEN
     anomalies = anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
-    thumbnails = get_thumbnails_all_instruments(insts, apers, filts,
-                                                obs_modes, exptime_min, 
-                                                exptime_max, anomalies)
+    thumbnails = get_thumbnails_all_instruments(instruments, apertures, filters,
+                                                observing_modes, exposure_time_min, 
+                                                exposure_time_max, anomalies)
     anomaly_query_config.THUMBNAILS = thumbnails
 
     # get information about thumbnails for thumbnail viewer
     proposal_info = get_proposal_info(thumbnails)
 
-    import pdb
-    pdb.set_trace()
-
     context = {'inst': '',
                'anomalies_chosen_from_current_anomalies': 
                      anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
-               'apertures_chosen': apers,
-               'filters_chosen': filts,
-               'inst_list_chosen': insts,
-               'observing_modes_chosen': obs_modes,
+               'apertures_chosen': apertures,
+               'filters_chosen': filters,
+               'inst_list_chosen': instruments,
+               'observing_modes_chosen': observing_modes,
                'thumbnails': thumbnails,
                'base_url': get_base_url(),
                'rootnames': thumbnails,

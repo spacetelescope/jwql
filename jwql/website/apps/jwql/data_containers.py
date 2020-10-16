@@ -216,7 +216,6 @@ def get_current_flagged_anomalies(rootname, instrument):
     """
 
     table_dict = {}
-    # for instrument in JWST_INSTRUMENT_NAMES_MIXEDCASE:
     table_dict[instrument.lower()] = getattr(di, '{}Anomaly'.format(JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]))
 
     table = table_dict[instrument.lower()]
@@ -1011,7 +1010,8 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
     # Determine whether or not queried anomalies are flagged
     final_subset = []
     for thumbnail in thumbnails_subset:
-        rootname = thumbnail.split("_")[0]+"_"+thumbnail.split("_")[1]+"_"+thumbnail.split("_")[2]+"_"+thumbnail.split("_")[3]
+        components = thumbnail.split('_')
+        rootname = '{}_{}_{}_{}'.format(components[0], components[1], components[2], components[3])
         try:
             instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[thumbnail.split("_")[3][:3]]
             thumbnail_anomalies = get_current_flagged_anomalies(rootname, instrument)

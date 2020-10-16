@@ -144,7 +144,7 @@ FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
 # Names of full-frame apertures for all instruments
 FULL_FRAME_APERTURES = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',
                                    'NRCA5_FULL', 'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL',
-                                   'NRCB4_FULL', 'NRCB5_FULL', 'NRCALONG', 'NRCBLONG'],
+                                   'NRCB4_FULL', 'NRCB5_FULL'],
                         'NIRISS': ['NIS_CEN'],
                         'NIRSPEC': ['NRS1_FULL', 'NRS2_FULL'],
                         'MIRI': ['MIRIM_FULL'],
@@ -243,15 +243,6 @@ NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'S
 
 # Possible suffix types for AMI files
 NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami']
-
-# Dictionary of observing modes available for each instrument
-# OBSERVING_MODE_PER_INSTRUMENT = {'miri': ['Imaging', '4QPM Coronagraphic Imaging',
-#                                           'Lyot Coronagraphic Imaging', 'LRS', 'MRS'],
-#                                  'nircam': ['Imaging', 'Coronagraphic Imaging', 'WFSS',
-#                                             'Time-Series Imaging', 'Grism Time Series'],
-#                                  'niriss': ['WFSS', 'SOSS', 'AMI', 'Imaging'],
-#                                  'nirspec': ['Multi-Object Spectroscopy', 'IFU Spectroscopy',
-#                                              'Fixed Slit Spectroscopy', 'Bright Object Time Series']}
 
 # Dictionary of observing modes available for each instrument
 OBSERVING_MODE_PER_INSTRUMENT = {'fgs': ['FGS_DARK', 'FGS_FOCUS', 'FGS_IMAGE', 'FGS_INTFLAT', 'FGS_SKYFLAT'],
