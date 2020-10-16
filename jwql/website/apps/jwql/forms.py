@@ -79,7 +79,7 @@ class BaseForm(forms.Form):
     resolve_submit = SubmitField('Resolve Target')
 
 
-class DynamicAnomalyForm(BaseForm):
+class AnomalyQueryForm(BaseForm):
     """Form validation for the anomaly viewing tool"""
 
     # Form submits

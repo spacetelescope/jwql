@@ -73,7 +73,7 @@ from .forms import MIRIAnomalySubmitForm
 from .forms import NIRCamAnomalySubmitForm
 from .forms import NIRISSAnomalySubmitForm
 from .forms import NIRSpecAnomalySubmitForm
-from .forms import DynamicAnomalyForm
+from .forms import AnomalyQueryForm
 from .data_containers import build_table
 from .forms import AnomalyForm
 from .forms import FileSearchForm
@@ -84,10 +84,10 @@ from jwql.utils import anomaly_query_config
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
-def dynamic_anomaly(request):
+def anomaly_query(request):
     """The anomaly query form page"""
 
-    form = DynamicAnomalyForm(request.POST or None)
+    form = AnomalyQueryForm(request.POST or None)
 
     if request.method == 'POST':
         if form.is_valid():
@@ -147,7 +147,7 @@ def dynamic_anomaly(request):
 
     context = {'form': form,
                'inst': ''}
-    template = 'dynamic_anomaly.html'
+    template = 'anomaly_query.html'
 
     return render(request, template, context)
 
