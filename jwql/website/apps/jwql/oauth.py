@@ -8,6 +8,7 @@ Authors
 
     - Matthew Bourque
     - Christian Mesh
+    - Ben Falk
 
 Use
 ---
@@ -41,8 +42,9 @@ Dependencies
 import os
 import requests
 
-from authlib.django.client import OAuth
+from authlib.integrations.django_client import OAuth
 from django.shortcuts import redirect, render
+from django.urls import reverse
 
 import jwql
 from jwql.utils.constants import MONITORS
@@ -71,14 +73,15 @@ def register_oauth():
 
     # Register with auth.mast
     oauth = OAuth()
-    client_kwargs = {'scope': 'mast:user:info'}
+    client_kwargs = {
+        'scope': 'mast:user:info',
+        'token_endpoint_auth_method': 'client_secret_basic',
+        'token_placement': 'header'}
     oauth.register(
         'mast_auth',
         client_id='{}'.format(client_id),
         client_secret='{}'.format(client_secret),
-        access_token_url='https://{}/oauth/access_token?client_secret={}'.format(
-            auth_mast, client_secret
-        ),
+        access_token_url='https://{}/oauth/token'.format(auth_mast),
         access_token_params=None,
         refresh_token_url=None,
         authorize_url='https://{}/oauth/authorize'.format(auth_mast),
@@ -109,9 +112,7 @@ def authorize(request):
     """
 
     # Get auth.mast token
-    token = JWQL_OAUTH.mast_auth.authorize_access_token(
-        request, headers={'Accept': 'application/json'}
-    )
+    token = JWQL_OAUTH.mast_auth.authorize_access_token(request)
 
     # Determine domain
     base_url = get_base_url()
@@ -259,7 +260,7 @@ def login(request, user):
     # Redirect to oauth login
     global PREV_PAGE
     PREV_PAGE = request.META.get('HTTP_REFERER')
-    redirect_uri = os.path.join(get_base_url(), 'authorize')
+    redirect_uri = f"{get_base_url()}{reverse('jwql:authorize')}"
 
     return JWQL_OAUTH.mast_auth.authorize_redirect(request, redirect_uri)
 

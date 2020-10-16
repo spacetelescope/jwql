@@ -20,6 +20,7 @@ REQUIRES = [
     'bokeh>=1.0,<1.4',
     'codecov',
     'crds',
+    'cryptography',
     'django>=2.0,<3.0',
     'flake8',
     'inflection',
