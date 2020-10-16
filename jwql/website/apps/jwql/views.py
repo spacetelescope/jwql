@@ -651,9 +651,15 @@ def query_submit(request):
     exposure_time_max = anomaly_query_config.EXPTIME_MAX
     observing_modes = anomaly_query_config.OBSERVING_MODES_CHOSEN
     anomalies = anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
-    thumbnails = get_thumbnails_all_instruments(instruments, apertures, filters,
-                                                observing_modes, exposure_time_min, 
-                                                exposure_time_max, anomalies)
+    parameters = {}
+    parameters['instruments'] = instruments
+    parameters['apertures'] = apertures
+    parameters['filters'] = filters
+    parameters['observing_modes'] = observing_modes
+    parameters['exposure_time_min'] = exposure_time_min
+    parameters['exposure_time_max'] = exposure_time_max
+    parameters['anomalies'] = anomalies
+    thumbnails = get_thumbnails_all_instruments(parameters)
     anomaly_query_config.THUMBNAILS = thumbnails
 
     # get information about thumbnails for thumbnail viewer

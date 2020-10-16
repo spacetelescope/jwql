@@ -870,26 +870,21 @@ def get_proposal_info(filepaths):
     return proposal_info
 
 
-def get_thumbnails_all_instruments(instruments, apertures, filters, observing_modes, effexptm_min, effexptm_max, anomalies):
+def get_thumbnails_all_instruments(parameters):
     """Return a list of thumbnails available in the filesystem for all
     instruments given requested MAST parameters and queried anomalies.
 
     Parameters
     ----------
-    instruments: list
-        A list of selected instruments used to refine MAST query
-    apertures: list
-        A list of selected apertures used to refine MAST query
-    filters: list
-        A list of selected filters used to refine MAST query
-    observing_modes: list
-        A list of selected observing_modes used to refine MAST query
-    effexptm_min: float
-        Minimum exposure time used to refine MAST query
-    effexptm_max: float
-        Maximum exposure time used to refine MAST query 
-    anomalies: list
-        A list of seleted anomalies used to determine relevant thumbnails
+    parameters: dict
+        A dictionary containing the following keys, some of which are dictionaries:
+            instruments
+            apertures
+            filters
+            observing_modes
+            effexptm_min
+            effexptm_max
+            anomalies
 
     Returns
     -------
@@ -898,10 +893,15 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
         given instrument.
     """
 
+    filters = parameters['filters']
+    effexptm_min = parameters['exposure_time_min']
+    effexptm_max = parameters['exposure_time_max']
+    anomalies = parameters['anomalies']
+
     thumbnail_list = []
     filenames = []
     
-    for inst in instruments:
+    for inst in parameters['instruments']:
         print("Retrieving thumbnails for", inst)
         # Make sure instruments are of the proper format (e.g. "Nircam")
         instrument = inst[0].upper()+inst[1:].lower()
@@ -911,15 +911,15 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
 
         params = {"columns":"*",
                   "filters":[{"paramName":"apername",
-                              "values": [apertures[inst.lower()]]}]} 
+                              "values": [parameters['apertures'][inst.lower()]]}]} 
 
         response = Mast.service_request_async(service, params)
         results = response[0].json()['data']
 
         # Further filter results and parse to get rootnames
         for result in results:
-            if observing_modes[inst.lower()]:
-                if result['exp_type'] in observing_modes[inst.lower()]:
+            if parameters['observing_modes'][inst.lower()]:
+                if result['exp_type'] in parameters['observing_modes'][inst.lower()]:
                     if effexptm_max:
                         if result['effexptm'] < int(effexptm_max):
                             if effexptm_min:
@@ -1038,7 +1038,6 @@ def get_thumbnails_all_instruments(instruments, apertures, filters, observing_mo
             final_subset = thumbnails[:10]
 
     return list(set(final_subset))
-    # return thumbnails_subset  # thumbnails matching all but anomaly criteria
 
 
 def get_jwqldb_table_view_components(request):

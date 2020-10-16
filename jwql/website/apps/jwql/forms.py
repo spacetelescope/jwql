@@ -119,7 +119,7 @@ class DynamicAnomalyForm(BaseForm):
     
     miri_filter_list = []
     for filt in FILTERS_PER_INSTRUMENT['miri']:
-        filt = query_format(filte)
+        filt = query_format(filt)
         miri_filter_list.append([filt, filt])
     
     nirspec_filter_list = []
@@ -191,8 +191,8 @@ class DynamicAnomalyForm(BaseForm):
     filt = forms.MultipleChoiceField(required=False, choices=filter_list, widget=forms.CheckboxSelectMultiple)
     early_date = forms.DateField(required=False, initial="eg, 2021-10-02 12:04:39 or 2021-10-02")
     late_date = forms.DateField(required=False, initial="eg, 2021-11-25 14:30:59 or 2021-11-25")
-    exp_time_max = forms.DecimalField(required=False, initial="57404.70")
-    exp_time_min = forms.DecimalField(required=False, initial="57404.04")
+    exp_time_max = forms.DecimalField(required=False, initial="685")
+    exp_time_min = forms.DecimalField(required=False, initial="680")
     
     miri_aper = forms.MultipleChoiceField(required=False, choices = miri_aperture_list, widget=forms.CheckboxSelectMultiple)
     nirspec_aper = forms.MultipleChoiceField(required=False, choices = nirspec_aperture_list, widget=forms.CheckboxSelectMultiple)
