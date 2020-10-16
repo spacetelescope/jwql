@@ -243,7 +243,7 @@ class AnomalySubmitForm(forms.Form):
     anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES,
                                                 widget=forms.CheckboxSelectMultiple())
 
-    def update_anomaly_table(self, rootname,       anomaly_choices):   # user,
+    def update_anomaly_table(self, rootname, user, anomaly_choices):
         """Updated the ``anomaly`` table of the database with flagged
         anomaly information
 
@@ -263,7 +263,7 @@ class AnomalySubmitForm(forms.Form):
         data_dict = {}
         data_dict['rootname'] = rootname
         data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = 'TEMPORARY_USER'  # user
+        data_dict['user'] = user
 
         for choice in anomaly_choices:
             data_dict[choice] = True
@@ -296,7 +296,7 @@ class FGSAnomalySubmitForm(forms.Form):
     anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT['fgs'],
                                                 widget=forms.CheckboxSelectMultiple())
 
-    def update_anomaly_table(self, rootname,       anomaly_choices):   # user,
+    def update_anomaly_table(self, rootname, user, anomaly_choices):
         """Updated the ``anomaly`` table of the database with flagged
         anomaly information
 
@@ -316,7 +316,7 @@ class FGSAnomalySubmitForm(forms.Form):
         data_dict = {}
         data_dict['rootname'] = rootname
         data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = 'TEMPORARY_USER'  # user
+        data_dict['user'] = user
         for choice in anomaly_choices:
             data_dict[choice] = True
             di.engine.execute(di.FGSAnomaly.__table__.insert(), data_dict)
@@ -335,7 +335,7 @@ class MIRIAnomalySubmitForm(forms.Form):
     anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT['miri'],
                                                 widget=forms.CheckboxSelectMultiple())
 
-    def update_anomaly_table(self, rootname,       anomaly_choices):   # user,
+    def update_anomaly_table(self, rootname, user, anomaly_choices):
         """Updated the ``anomaly`` table of the database with flagged
         anomaly information
 
@@ -355,7 +355,7 @@ class MIRIAnomalySubmitForm(forms.Form):
         data_dict = {}
         data_dict['rootname'] = rootname
         data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = 'TEMPORARY_USER'  # user
+        data_dict['user'] = user
         for choice in anomaly_choices:
             data_dict[choice] = True
         di.engine.execute(di.MIRIAnomaly.__table__.insert(), data_dict)
@@ -374,7 +374,7 @@ class NIRCamAnomalySubmitForm(forms.Form):
     anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT['nircam'],
                                                 widget=forms.CheckboxSelectMultiple())
 
-    def update_anomaly_table(self, rootname,       anomaly_choices):   # user,
+    def update_anomaly_table(self, rootname, user, anomaly_choices):
         """Updated the ``anomaly`` table of the database with flagged
         anomaly information
 
@@ -394,7 +394,7 @@ class NIRCamAnomalySubmitForm(forms.Form):
         data_dict = {}
         data_dict['rootname'] = rootname
         data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = 'TEMPORARY_USER'  # user
+        data_dict['user'] = user
         for choice in anomaly_choices:
             data_dict[choice] = True
         di.engine.execute(di.NIRCamAnomaly.__table__.insert(), data_dict)
@@ -413,7 +413,7 @@ class NIRISSAnomalySubmitForm(forms.Form):
     anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT['niriss'],
                                                 widget=forms.CheckboxSelectMultiple())
 
-    def update_anomaly_table(self, rootname,       anomaly_choices):   # user,
+    def update_anomaly_table(self, rootname, user, anomaly_choices):
         """Updated the ``anomaly`` table of the database with flagged
         anomaly information
 
@@ -433,7 +433,7 @@ class NIRISSAnomalySubmitForm(forms.Form):
         data_dict = {}
         data_dict['rootname'] = rootname
         data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = 'TEMPORARY_USER'  # user
+        data_dict['user'] = user
         for choice in anomaly_choices:
             data_dict[choice] = True
         di.engine.execute(di.NIRISSAnomaly.__table__.insert(), data_dict)
@@ -452,7 +452,7 @@ class NIRSpecAnomalySubmitForm(forms.Form):
     anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT['nirspec'],
                                                 widget=forms.CheckboxSelectMultiple())
 
-    def update_anomaly_table(self, rootname,       anomaly_choices):   # user,
+    def update_anomaly_table(self, rootname, user, anomaly_choices):
         """Updated the ``anomaly`` table of the database with flagged
         anomaly information
 
@@ -472,7 +472,7 @@ class NIRSpecAnomalySubmitForm(forms.Form):
         data_dict = {}
         data_dict['rootname'] = rootname
         data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = 'TEMPORARY_USER'  # user
+        data_dict['user'] = user
         for choice in anomaly_choices:
             data_dict[choice] = True
         di.engine.execute(di.NIRSpecAnomaly.__table__.insert(), data_dict)
