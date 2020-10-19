@@ -1,20 +1,5 @@
 #! /usr/bin/env python
 
-<<<<<<< Updated upstream
-"""
-
-"""
-
-import os
-import logging
-
-from astroquery.mast import Mast
-from jwst import datamodels
-#from bokeh.charts import Donut
-#from bokeh.embed import components
-
-# Functions for logging
-=======
 """This module contains code for the cosmic ray monitor, which currently checks
 the number and magnitude of jumps in all observations performed with MIRI.
 
@@ -46,45 +31,19 @@ Use
 
 # Functions for logging
 import logging
->>>>>>> Stashed changes
 from jwql.utils.logging_functions import configure_logging
 from jwql.utils.logging_functions import log_info
 from jwql.utils.logging_functions import log_fail
 
-<<<<<<< Updated upstream
-# Function for setting permissions of files/directories
-#from jwql.permissions.permissions import set_permissions
-
-# Function for parsing filenames
-from jwql.utils.utils import filename_parser
-
-# Objects for hard-coded information
-from jwql.utils.utils import get_config
-from jwql.utils.constants import JWST_DATAPRODUCTS, JWST_INSTRUMENT_NAMES
-
-#My imports
-from jwql.jwql_monitors import monitor_mast
-from astropy.time import Time
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
-=======
 # Funtions for database interaction
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils.constants import JWST_DATAPRODUCTS
->>>>>>> Stashed changes
+
 from jwql.database.database_interface import session
 from jwql.database.database_interface import MIRICosmicRayQueryHistory
 from jwql.database.database_interface import MIRICosmicRayStats
 from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
-<<<<<<< Updated upstream
-from pysiaf import Siaf
-from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
-import os
-from astropy.io import fits
-import numpy as np
-from jwql.instrument_monitors import pipeline_tools
-import shutil
-=======
 
 # Functions for file manipulation
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config
@@ -100,41 +59,23 @@ import numpy as np
 import shutil
 import julian
 import datetime
->>>>>>> Stashed changes
-
 
 @log_fail
 @log_info
 def cosmic_ray_monitor():
-<<<<<<< Updated upstream
     """ 
     The main function of the ``monitor_template`` module.
-=======
-    """
->>>>>>> Stashed changes
     Queries MAST for new MIRI data and copies it to a working 
     directory where it is run through the JWST pipeline. The output of the 'jump'
     and 'rate' steps is used to determine the number and magnitudes of cosmic rays
     which is then saved to the database.
-<<<<<<< Updated upstream
-    
-    
-    
-    
-=======
->>>>>>> Stashed changes
     """
     
     logging.info('Begin logging for cosmic_ray_monitor')
 
     aperture = 'MIRIM_FULL'
-<<<<<<< Updated upstream
-    query_table = eval('MIRICosmicRayQueryHistory')
-    stats_table = eval('MIRICosmicRayStats')
-=======
     query_table = MIRICosmicRayQueryHistory
     stats_table = MIRICosmicRayStats
->>>>>>> Stashed changes
     
     #We start by querying MAST for new data
     start_date = most_recent_search(aperture, query_table)
@@ -142,15 +83,10 @@ def cosmic_ray_monitor():
     logging.info('\tMost recent query: {}'.format(start_date))
     
     new_entries = query_mast(start_date, end_date)
-<<<<<<< Updated upstream
     
-    new_filenames = ['jw04192001001_01101_00001_MIRIMAGE_uncal.fits']
-=======
-
     #for testing purposes only
     new_filenames = get_config()['local_test_data']
 
->>>>>>> Stashed changes
     #for file_entry in new_entries['data']:
     #    try:
     #        new_filenames.append(filesystem_path(file_entry['filename']))
@@ -162,16 +98,11 @@ def cosmic_ray_monitor():
      
     #Next we copy new files to the working directory
     output_dir = os.path.join(get_config()['outputs'], 'cosmic_ray_monitor')
-<<<<<<< Updated upstream
-    data_dir = '/Users/mengesser/Documents/MIRI-JWQL-Monitors/'#os.path.join(output_dir,'data')
-=======
 
     data_dir = get_config()['local_test_dir'] #for testing purposes only
-
     #data_dir =  os.path.join(output_dir,'data')
->>>>>>> Stashed changes
+
     ensure_dir_exists(data_dir)
-    
     cosmic_ray_files, not_copied = copy_files(new_filenames, data_dir)
     
     for file_name in cosmic_ray_files:
@@ -179,14 +110,10 @@ def cosmic_ray_monitor():
             dir_name = file_name[51:76] #Gets the observation identifier. Should be constant?
             obs_dir = os.path.join(data_dir, dir_name)
             ensure_dir_exists(obs_dir)
-<<<<<<< Updated upstream
-            
-=======
 
             head = fits.getheader(file_name)
             nints = head['NINTS']
 
->>>>>>> Stashed changes
             try:
                 shutil.copy2(file_name, obs_dir)
             except:
@@ -201,34 +128,19 @@ def cosmic_ray_monitor():
             steps = pipeline_tools.steps_to_run(MIRI_steps,completed_steps)
             
             try:
-<<<<<<< Updated upstream
-                pipeline_tools.run_calwebb_detector1_steps(file,steps,steps)
-=======
                 pipeline_tools.calwebb_detector1_save_jump(file, obs_dir, ramp_fit=True, save_fitopt=False)
->>>>>>> Stashed changes
             except:
                 logging.info('Failed to complete pipeline steps on {}.'.format(file))
 
-
-            #Temporarily, we need to move the rateints file to the new folder manually
-<<<<<<< Updated upstream
-            f = 'rateint_fitopt.fits'
-            shutil.move(os.path.join(data_dir, f), os.path.join(obs_dir, f))
-=======
-            #f = 'rateint_fitopt.fits'
-            #shutil.move(os.path.join(data_dir, f), os.path.join(obs_dir, f))
->>>>>>> Stashed changes
 
             #Next we analyze the cosmic rays in the new data
             for output_file in os.listdir(obs_dir):
                 
                 if 'jump' in output_file:
                     jump_file = os.path.join(obs_dir,output_file)
-<<<<<<< Updated upstream
-                
+
                 if 'rateint' in output_file:
                     rate_file = os.path.join(obs_dir,output_file)
-=======
 
                 if nints == 1:
                     if '0_ramp_fit' in output_file:
@@ -237,7 +149,6 @@ def cosmic_ray_monitor():
                 elif nints > 1:
                     if '1_ramp_fit' in output_file:
                         rate_file = os.path.join(obs_dir,output_file)
->>>>>>> Stashed changes
 
             try:
                 jump_head, jump_data, jump_dq = get_jump_data(jump_file)
@@ -249,28 +160,7 @@ def cosmic_ray_monitor():
             except:
                 logging.info('Could not open rate file: {}'.format(rate_file))
 
-<<<<<<< Updated upstream
-            jump_locs = get_jump_locs(jump_dq)
-            jump_locs_pre = group_before(jump_locs)
 
-            eff_time = jump_head['EFFEXPTM']
-
-            cosmic_ray_num = len(jump_locs)
-            #cosmic_ray_rate = get_cr_rate(jump_locs, eff_time)
-            cosmic_ray_mags = get_cr_mags(jump_locs, jump_locs_pre, rate_data, jump_data, jump_head)
-
-            #Insert new data into database
-            cosmic_ray_db_entry = {'aperture': aperture,
-                                     'source_files': file_name,
-                                     'obs_start_time': start_time,
-                                     'obs_end_time': end_time,
-                                     'jump_count': cosmic_ray_num,
-                                     'magnitude': cosmic_ray_mags
-                                     }
-            stats_table.__table__.insert().execute(cosmic_ray_db_entry)
-                
-def get_cr_mags(jump_locs, jump_locs_pre, rateints, jump_data, jump_head):
-=======
             jump_locs = get_jump_locs(jump_dq,nints)
             jump_locs_pre = group_before(jump_locs,nints)
 
@@ -303,7 +193,6 @@ def get_cr_mags(jump_locs, jump_locs_pre, rateints, jump_data, jump_head):
                 logging.info("Could not insert entry into database. \n")
                 
 def get_cr_mags(jump_locs, jump_locs_pre, rateints, jump_data, jump_head, nints):
->>>>>>> Stashed changes
     """
     Computes a list of magnitudes using the coordinate of the detected jump compared to 
     the magnitude of the same pixel in the group prior to the jump. 
@@ -333,13 +222,8 @@ def get_cr_mags(jump_locs, jump_locs_pre, rateints, jump_data, jump_head, nints)
     
     mags = []
     for coord, coord_gb in zip(jump_locs, jump_locs_pre):
-<<<<<<< Updated upstream
-        mags.append(magnitude(coord, coord_gb, rateints, jump_data, jump_head))
-        
-=======
         mags.append(magnitude(coord, coord_gb, rateints, jump_data, jump_head, nints))
 
->>>>>>> Stashed changes
     return mags 
 
 def get_cr_rate(jump_locs, t):
@@ -392,11 +276,7 @@ def get_jump_data(jump_filename):
     
     return head, data, dq  
 
-<<<<<<< Updated upstream
-def get_jump_locs(dq):
-=======
 def get_jump_locs(dq,nints):
->>>>>>> Stashed changes
     """
     Uses the data quality array to find the location of all jumps in the data.
     
@@ -414,33 +294,6 @@ def get_jump_locs(dq,nints):
     temp = np.where(dq==4)
     
     jump_locs = []
-<<<<<<< Updated upstream
-    for i in range(len(temp[0])):
-        jump_locs.append((temp[0][i],temp[1][i],temp[2][i],temp[3][i]))
-        
-    return jump_locs
-
-def group_before(jump_locs):
-    """
-    Creates a list of coordinates one group before given jump coordinates.
-    
-    Parameters:
-    ----------
-    jump_locs: list
-        List of coordinates to a pixel marked with a jump.
-        
-    Returns:
-    -------
-    jump_locs_pre: list
-        List of matching coordinates one group before jump_locs.
-    
-    """
-    jump_locs_pre = []
-    for coord in jump_locs:
-        jump_locs_pre.append((coord[0],coord[1]-1,coord[2],coord[3]))
-        
-    return jump_locs_pre
-=======
 
     if nints > 1:
         for i in range(len(temp[0])):
@@ -450,7 +303,6 @@ def group_before(jump_locs):
             jump_locs.append((temp[0][i],temp[1][i],temp[2][i]))
         
     return jump_locs
->>>>>>> Stashed changes
 
 def get_rate_data(rate_filename):
     """
@@ -470,10 +322,6 @@ def get_rate_data(rate_filename):
     data = fits.getdata(rate_filename)
     
     return data
-
-<<<<<<< Updated upstream
-def magnitude(coord, coord_gb, rateints, data, head):
-=======
 
 def group_before(jump_locs, nints):
     """
@@ -502,7 +350,6 @@ def group_before(jump_locs, nints):
     return jump_locs_pre
 
 def magnitude(coord, coord_gb, rateints, data, head, nints):
->>>>>>> Stashed changes
     """
     Calculates the magnitude of a list of jumps given their coordinates
     in an array of pixels.
@@ -526,13 +373,6 @@ def magnitude(coord, coord_gb, rateints, data, head, nints):
     cr_mag: 
     
     """
-<<<<<<< Updated upstream
-    
-    rate = rateints[coord[0]][coord[2]][coord[3]]
-    grouptime = head['TGROUP']
-    cr_mag = data[coord] - data[coord_gb] - rate*grouptime
-    
-=======
 
     grouptime = head['TGROUP']
 
@@ -545,7 +385,6 @@ def magnitude(coord, coord_gb, rateints, data, head, nints):
         rate = rateints[coord[0]][coord[-2]][coord[-1]]
         cr_mag = data[coord] - data[coord_gb] - rate * grouptime
 
->>>>>>> Stashed changes
     return cr_mag
 
 def most_recent_search(aperture, query_table):

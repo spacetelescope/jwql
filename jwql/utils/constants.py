@@ -59,7 +59,7 @@ ANOMALIES_PER_INSTRUMENT = {
     'excessive_saturation': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
     'guidestar_failure': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
     'persistence': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
-    #anomalies affecting multiple instruments:
+    # anomalies affecting multiple instruments:
     'crosstalk': ['fgs', 'nircam', 'niriss', 'nirspec'],
     'data_transfer_error': ['fgs', 'nircam', 'niriss', 'nirspec'],
     'ghost': ['fgs', 'nircam', 'niriss', 'nirspec'],
@@ -80,7 +80,7 @@ ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMAL
 
 # Bad pixel types by the type of data used to find them
 BAD_PIXEL_TYPES = ['DEAD', 'HOT', 'LOW_QE', 'RC', 'OPEN', 'ADJ_OPEN', 'TELEGRAPH', 'OTHER_BAD_PIXEL']
-DARKS_BAD_PIXEL_TYPES = ['HOT',  'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
+DARKS_BAD_PIXEL_TYPES = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
 FLATS_BAD_PIXEL_TYPES = ['DEAD', 'OPEN', 'ADJ_OPEN', 'LOW_QE']
 
 # Possible exposure types for dark current data
@@ -232,5 +232,5 @@ TIME_SERIES_SUFFIX_TYPES = ['phot', 'whtlt']
 
 # Concatenate all suffix types (ordered to ensure successful matching)
 FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
-                    TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
-                    NIRISS_AMI_SUFFIX_TYPES
+                TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
+                NIRISS_AMI_SUFFIX_TYPES

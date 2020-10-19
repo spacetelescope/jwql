@@ -7,12 +7,11 @@ from jwql.database.database_interface import MIRICosmicRayQueryHistory
 
 def define_test_data(nints):
     if nints == 1:
-        data = np.ones((2,5,10,10))
-        rate_data = np.ones((10,10))
+        data = np.ones((2, 5, 10, 10))
+        rate_data = np.ones((10, 10))
     else:
-        data = np.ones((2,5,10,10))
-        rate_data = np.ones((2,10,10))
-
+        data = np.ones((2, 5, 10, 10))
+        rate_data = np.ones((2, 10, 10))
 
     file = "jw00000000000_00000_00000_MIRIMAGE_uncal.fits"
     aperture = "MIRIM_FULL"
@@ -50,15 +49,15 @@ def test_get_cr_rate():
 
 
 def test_group_before():
-    jump_locs = [(2,1,1)]
+    jump_locs = [(2, 1, 1)]
     nints = 1
 
-    assert crm.group_before(jump_locs, nints) == [(1,1,1)]
+    assert crm.group_before(jump_locs, nints) == [(1, 1, 1)]
 
-    jump_locs = [(1,2,1,1)]
+    jump_locs = [(1, 2, 1, 1)]
     nints = 2
 
-    assert crm.group_before(jump_locs, nints) == [(1,1,1,1)]
+    assert crm.group_before(jump_locs, nints) == [(1, 1, 1, 1)]
 
 
 def test_magnitude():
@@ -66,23 +65,23 @@ def test_magnitude():
     nints = 5
     data, rate_data, file, aperture = define_test_data(nints)
     head = fits.getheader(file)
-    coord = (1,2,1,1)
-    coord_gb = (1,1,1,1)
+    coord = (1, 2, 1, 1)
+    coord_gb = (1, 1, 1, 1)
     mag = crm.magnitude(coord, coord_gb, rate_data, data, head, nints)
     assert mag == -2.77504
 
     nints = 1
     data, rate_data, file, aperture = define_test_data(nints)
-    coord = (1,1,1)
-    coord_gb = (0,1,1)
+    coord = (1, 1, 1)
+    coord_gb = (0, 1, 1)
     mag = crm.magnitude(coord, coord_gb, rate_data, data, head, nints)
     assert mag == -2.77504
 
 
 def test_get_cr_mags():
 
-    jump_locs = [(2,1,1)]
-    jump_locs_pre = [(1,1,1)]
+    jump_locs = [(2, 1, 1)]
+    jump_locs_pre = [(1, 1, 1)]
     nints = 1
     data, rate_data, file, aperture = define_test_data(nints)
     head = fits.getheader(file)
@@ -90,8 +89,8 @@ def test_get_cr_mags():
     mags = crm.get_cr_mags(jump_locs, jump_locs_pre, rate_data, data, head, nints)
     assert mags == [-2.77504]
 
-    jump_locs = [(1,2,1,1)]
-    jump_locs_pre = [(1,1,1,1)]
+    jump_locs = [(1, 2, 1, 1)]
+    jump_locs_pre = [(1, 1, 1, 1)]
     nints = 5
     data, rate_data, file, aperture = define_test_data(nints)
 
