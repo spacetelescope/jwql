@@ -1,3 +1,22 @@
+#! /usr/bin/env python
+
+"""Tests for the cosmic ray monitor module.
+    
+    Authors
+    -------
+    
+    - Mike Engesser
+    
+    Use
+    ---
+    
+    These tests can be run via the command line (omit the ``-s`` to
+    suppress verbose output to stdout):
+    ::
+    
+    pytest -s test_cosmic_ray_monitor.py
+    """
+
 import pytest
 import cosmic_ray_monitor as crm
 import numpy as np
