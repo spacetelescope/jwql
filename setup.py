@@ -2,16 +2,15 @@ import numpy as np
 from setuptools import setup
 from setuptools import find_packages
 
-VERSION = '0.23.0'
+VERSION = '0.24.0'
 
 AUTHORS = 'Matthew Bourque, Lauren Chambers, Misty Cracraft, Mike Engesser, Mees Fix, Joe Filippazzo, Bryan Hilbert, '
 AUTHORS += 'Graham Kanarek, Teagan King, Catherine Martlin, Maria Pena-Guerrero, Johannes Sahlmann, Ben Sunnquist'
 
 DESCRIPTION = 'The James Webb Space Telescope Quicklook Project'
 
-DEPENDENCY_LINKS = ['git+https://github.com/spacetelescope/jwst@0.16.2',
-                    'git+https://github.com/spacetelescope/jwst_reffiles#egg=jwst_reffiles'
-                    ]
+DEPENDENCY_LINKS = ['git+https://github.com/spacetelescope/jwst_reffiles#egg=jwst_reffiles']
+
 REQUIRES = [
     'asdf>=2.3.3',
     'astropy>=3.2.1',
@@ -28,6 +27,7 @@ REQUIRES = [
     'jinja2',
     'jsonschema',
     'jwedb>=0.0.3',
+    'jwst',
     'matplotlib',
     'nodejs',
     'numpy',
