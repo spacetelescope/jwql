@@ -1,3 +1,55 @@
+0.24.0 (2020-10-20)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Added API documentation for Bias, Bad Pixel, and Readnoise Monitors
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Added webpage that describes how to use the JWQL web app API
+- Added webpage that enables a user to query the ``jwqldb`` database contents
+- Enabled more search options and aesthetic improvements for anomaly query webpage
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Added support for Python versions 3.7 and 3.8
+- Added unit tests for Readnoise Monitor
+- Added unit tests for Bias Monitor
+- Added unit tests for Bad Pixel Monitor
+- Added unit tests for ``bokeh`` templating library
+- Added webpage for displaying Readnoise Monitor results with ``bokeh`` plots
+- Added webpage for displaying Bad Pixel Monitor results with ``bokeh`` plots
+
+
+Bug Fixes
+---------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Updated broken links to JWST instrument JDox pages
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Fixed various issues that was cuasing authentication through ``auth.mast`` to fail
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Fixed bug that was causing Dark Monitor to crash on recently added apertures from ``pysiaf``
+- Fixed several bugs in ``bokeh`` templating library
+- Fixed bug that was causing unit tests for ``permissions.py`` to fail
+- Fixed bug that was causing ``most_recent_search`` function in Dark Monitor to fail
+
+
 0.23.0 (2020-07-01)
 ===================
 

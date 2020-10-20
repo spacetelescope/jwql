@@ -140,8 +140,9 @@ def mast_query_darks(instrument, aperture, start_date, end_date):
 
         query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
                                                   add_filters=parameters, return_data=True, caom=False)
-        if len(query['data']) > 0:
-            query_results.extend(query['data'])
+        if 'data' in query.keys():
+            if len(query['data']) > 0:
+                query_results.extend(query['data'])
 
     return query_results
 
@@ -440,31 +441,20 @@ class Dark():
             Date (in MJD) of the ending range of the previous MAST query
             where the dark monitor was run.
         """
+        query = session.query(self.query_table).filter(self.query_table.aperture==self.aperture). \
+                                                filter(self.query_table.run_monitor==True)
 
-        sub_query = session.query(self.query_table.aperture,
-                                  func.max(self.query_table.end_time_mjd).label('maxdate')
-                                  ).group_by(self.query_table.aperture).subquery('t2')
+        dates = np.zeros(0)
+        for instance in query:
+            dates = np.append(dates, instance.end_time_mjd)
 
-        # Note that "self.query_table.run_monitor == True" below is
-        # intentional. Switching = to "is" results in an error in the query.
-        query = session.query(self.query_table).join(
-            sub_query,
-            and_(
-                self.query_table.aperture == self.aperture,
-                self.query_table.end_time_mjd == sub_query.c.maxdate,
-                self.query_table.run_monitor == True
-            )
-        ).all()
-
-        query_count = len(query)
+        query_count = len(dates)
         if query_count == 0:
             query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
                          .format(self.aperture, query_result)))
-        elif query_count > 1:
-            raise ValueError('More than one "most recent" query?')
         else:
-            query_result = query[0].end_time_mjd
+            query_result = np.max(dates)
 
         return query_result
 
