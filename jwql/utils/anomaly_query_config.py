@@ -16,25 +16,30 @@ Use
 
         from jwql.utils.query_config import CHOSEN_INSTRUMENTS
 """
+# Anomalies selected by user in anomaly_query
+ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = {}
 
-# Apertures selected by user in query_anomaly_2
-APERTURES_CHOSEN = ["No apertures selected"]
+# Apertures selected by user in anomaly_query
+APERTURES_CHOSEN = {}
 
-# Anomalies available to select after instruments are selected in query_anomaly
+# Anomalies available to select after instruments are selected in anomaly_query
 # Default is all anomalies common to all instruments
-CURRENT_ANOMALIES = ['cosmic_ray_shower', 'diffraction_spike', 'excessive_saturation',
-                     'guidestar_failure', 'persistence', 'other']
+CURRENT_ANOMALIES = {}
 
-# Instruments selected by user in query_anomaly
-INSTRUMENTS_CHOSEN = ["No instruments selected"]
+# Maximum exposure time selected by user in anomaly_query. Corresponds to EFFEXPTM in MAST.
+EXPTIME_MAX = ['999999999999999']   # select all as default
 
-print("INSTRUMENTS_CHOSEN", INSTRUMENTS_CHOSEN)
+# Minimum exposure time selected by user in anomaly_query. Corresponds to EFFEXPTM in MAST.
+EXPTIME_MIN = ['0']  # select all as default
 
-# Observing modes selected by user
-OBSERVING_MODES_CHOSEN = ["No observing modes selected"]
+# Filters selected by user in anomaly_query
+FILTERS_CHOSEN = {}
 
-# Anomalies selected by user in query_anomaly_3
-ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = ["No anomalies selected"]
+# Instruments selected by user in anomaly_query
+INSTRUMENTS_CHOSEN = []
 
-# Filters selected by user in query_anomaly_2
-FILTERS_CHOSEN = ["No filters selected"]
+# Observing modes selected by user in anomaly_query
+OBSERVING_MODES_CHOSEN = {}
+
+# Thumbnails selected by user in anomaly_query
+THUMBNAILS = []

@@ -676,36 +676,29 @@ class BadPixels():
         """
         if file_type.lower() == 'dark':
             mjd_field = self.query_table.dark_end_time_mjd
+            run_field = self.query_table.run_bpix_from_darks
         elif file_type.lower() == 'flat':
             mjd_field = self.query_table.flat_end_time_mjd
+            run_field = self.query_table.run_bpix_from_flats
 
-        sub_query = session.query(self.query_table.aperture,
-                                  func.max(mjd_field).label('maxdate')
-                                  ).group_by(self.query_table.aperture).subquery('t2')
+        query = session.query(self.query_table).filter(self.query_table.aperture==self.aperture). \
+                                                filter(run_field==True)
 
-        # Note that "self.query_table.run_monitor == True" below is
-        # intentional. Switching = to "is" results in an error in the query.
-        query = session.query(self.query_table).join(
-            sub_query,
-            and_(
-                self.query_table.aperture == self.aperture,
-                mjd_field == sub_query.c.maxdate,
-                self.query_table.run_monitor == True
-            )
-        ).all()
+        dates = np.zeros(0)
+        if file_type.lower() == 'dark':
+            for instance in query:
+                dates = np.append(dates, instance.dark_end_time_mjd)
+        elif file_type.lower() == 'flat':
+            for instance in query:
+                dates = np.append(dates, instance.flat_end_time_mjd)
 
-        query_count = len(query)
+        query_count = len(dates)
         if query_count == 0:
             query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
                          .format(self.aperture, query_result)))
-        elif query_count > 1:
-            raise ValueError('More than one "most recent" query?')
         else:
-            if file_type.lower() == 'dark':
-                query_result = query[0].dark_end_time_mjd
-            elif file_type.lower() == 'flat':
-                query_result = query[0].flat_end_time_mjd
+            query_result = np.max(dates)
 
         return query_result
 
