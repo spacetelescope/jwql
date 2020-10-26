@@ -60,13 +60,39 @@
                 text-overflow: ellipsis;
                 overflow: hidden;
                 }
+
+                .red {
+                    background-color: #e77057 !important;
+                  }
+                .yellow{
+                    background-color: #f5f25d !important;
+                }
+                .green{
+                    background-color: #57e79f !important;
+                }
             </style>
 
             <script>
+                $(document).ready( function () {
+                    var table = $('#jwqltable').DataTable({
+                        "createdRow": function( row, data, dataIndex ) {
+                               if ( data[4] == "FAILURE" ) {        
+                           $(row).addClass('red');
+                        } else if ( data[4] == "SUCCESS" ) {        
+                            $(row).addClass('green');
+                        } else if ( data[4] == "None" ) {        
+                            $(row).addClass('yellow');
+                         } 
+                      }
+                    });
+                  } );
+            </script>
+            <!-- <script>
                 $(document).ready(function() {
                     $('#jwqltable').DataTable();
                 } );
-            </script>
+            </script> -->
+
         </body>
 
     </main>
