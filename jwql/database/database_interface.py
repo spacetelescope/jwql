@@ -28,6 +28,7 @@ Authors
     - Bryan Hilbert
     - Misty Cracraft
     - Sara Ogaz
+    - Maria A. Pena-Guerrero
 
 Use
 ---
@@ -425,6 +426,12 @@ NIRCamReadnoiseQueryHistory = monitor_orm_factory('nircam_readnoise_query_histor
 NIRCamReadnoiseStats = monitor_orm_factory('nircam_readnoise_stats')
 NIRISSReadnoiseQueryHistory = monitor_orm_factory('niriss_readnoise_query_history')
 NIRISSReadnoiseStats = monitor_orm_factory('niriss_readnoise_stats')
+NIRSpecReadnoiseQueryHistory = monitor_orm_factory('nirspec_readnoise_query_history')
+NIRSpecReadnoiseStats = monitor_orm_factory('nirspec_readnoise_stats')
+FGSReadnoiseQueryHistory = monitor_orm_factory('fgs_readnoise_query_history')
+FGSReadnoiseStats = monitor_orm_factory('fgs_readnoise_stats')
+NIRISSBiasQueryHistory = monitor_orm_factory('niriss_bias_query_history')
+NIRISSBiasStats = monitor_orm_factory('niriss_bias_stats')
 
 if __name__ == '__main__':
 
