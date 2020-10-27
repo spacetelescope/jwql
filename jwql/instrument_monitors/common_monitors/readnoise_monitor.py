@@ -18,9 +18,10 @@ the sigma-clipped mean and standard deviation, are recorded in the
 ``<Instrument>ReadnoiseStats`` database table. A png version of these
 difference images is also saved for visual inspection.
 
-Author
+Authors
 ------
     - Ben Sunnquist
+    - Maria A. Pena-Guerrero
 
 Use
 ---
@@ -54,7 +55,7 @@ from pysiaf import Siaf
 from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
-from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats, NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats
+from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats, NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats, NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats, FGSReadnoiseQueryHistory, FGSReadnoiseStats
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
 from jwql.utils import instrument_properties
@@ -518,7 +519,8 @@ class Readnoise():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in ['nircam', 'niriss']:
+        #for instrument in ['nircam', 'niriss']:
+        for instrument in ['nircam', 'niriss', 'nirspec', 'fgs']:
             self.instrument = instrument
 
             # Identify which database tables to use

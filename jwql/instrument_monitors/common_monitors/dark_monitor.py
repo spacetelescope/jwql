@@ -39,10 +39,11 @@ The histogram itself as well as the best-fit Gaussian and double
 Gaussian parameters are saved to the DarkDarkCurrent database table.
 
 
-Author
+Authors
 ------
 
     - Bryan Hilbert
+    - Maria A. Pena-Guerrero
 
 Use
 ---
@@ -537,6 +538,13 @@ class Dark():
         # Run pipeline steps on files, generating slope files
         slope_files = []
         for filename in file_list:
+        
+            # make sure the file is not empty or corrupt
+            try:
+                fits.getheader(filename)
+            except OSError:
+                logging.info('File is empty or corrupt. Skipping: {}'.format(filename))
+                continue
 
             completed_steps = pipeline_tools.completed_pipeline_steps(filename)
             steps_to_run = pipeline_tools.steps_to_run(required_steps, completed_steps)
@@ -782,6 +790,11 @@ class Dark():
 
                     # Copy files from filesystem
                     dark_files, not_copied = copy_files(new_filenames, self.data_dir)
+                    
+                    # check that list is not empty
+                    if len(dark_files) == 0:
+                        logging.info('No dark files found for this aperture. Skipping monitor for this aperture.')
+                        continue
 
                     logging.info('\tNew_filenames: {}'.format(new_filenames))
                     logging.info('\tData dir: {}'.format(self.data_dir))
