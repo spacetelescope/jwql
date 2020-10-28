@@ -808,7 +808,7 @@ class Dark():
                 else:
                     logging.info(('\tDark monitor skipped. {} new dark files for {}, {}. {} new files are '
                                   'required to run dark current monitor.').format(
-                        len(new_entries), instrument, aperture, file_count_threshold[0]))
+                        len(new_entries), instrument, aperture, file_count_threshold))
                     monitor_run = False
 
                 # Update the query history
