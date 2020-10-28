@@ -411,25 +411,23 @@ def dashboard(request):
     pie_graph = db.dashboard_instrument_pie_chart()
     files_graph = db.dashboard_files_per_day()
     filetype_bar = db.dashboard_filetype_bar_chart()
-    
+    table_columns, table_values = db.dashboard_monitor_tracking()
+
     p = layout([
         [files_graph],[pie_graph, filetype_bar]
         ],sizing_mode='stretch_width') 
     script, div = components(p)
 
-    table_meta = build_table('monitor')
-    table_meta.drop(columns='affected_tables')
-
     context =  {'inst': '',
                'script': script,
                'div': div,
-               'table_columns': table_meta.columns.values,
-               'table_rows': table_meta.values}
+               'table_columns': table_columns,
+               'table_rows': table_values}
 
     return render(request, template, context)
 
 
-def daily_trending(request):
+def daily_trending(request, date):
     """Generate the daily dashbaord page
 
     Parameters
@@ -451,19 +449,21 @@ def daily_trending(request):
 
     template = 'daily_trending.html'
 
-    db = generalDashboard()
+    db = generalDashboard(date=date)
     pie_graph = db.dashboard_instrument_pie_chart()
-    files_graph = db.dashboard_files_per_day()
     filetype_bar = db.dashboard_filetype_bar_chart()
+    table_columns, table_values = db.dashboard_monitor_tracking()
 
-    p = layout([
-        [files_graph],[pie_graph, filetype_bar]
+    p = layout([[pie_graph, filetype_bar]
         ],sizing_mode='stretch_width') 
     script, div = components(p)
 
     context =  {'inst': '',
                'script': script,
-               'div': div}
+               'div': div,
+               'date': date,
+               'table_columns': table_columns,
+               'table_rows': table_values}
 
     return render(request, template, context)
 
