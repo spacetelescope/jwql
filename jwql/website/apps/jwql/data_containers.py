@@ -925,8 +925,8 @@ def get_thumbnails_all_instruments(parameters):
                               ]}
 
 
-        # response = Mast.service_request_async(service, params)
-        # results = response[0].json()['data']
+        response = Mast.service_request_async(service, params)
+        results = response[0].json()['data']
         
         # for result in results:
         #     filename = result['filename'].split('.')[0]
