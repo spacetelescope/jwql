@@ -24,6 +24,7 @@ dependencies:
 - setuptools=49.6.0
 - sphinx=3.2.1
 - twine=2.0.0
+- wtforms=2.3.3
 - pip:
   - asdf==2.7.1
   - astropy==4.0.1.post1
