@@ -556,13 +556,13 @@ def get_header_info(filename):
     Parameters
     ----------
     filename : str
-        The name of the file of interest (e.g.
-        ``'jw86600008001_02101_00007_guider2_uncal.fits'``).
+        The name of the file of interest, without the extension
+        (e.g. ``'jw86600008001_02101_00007_guider2_uncal'``).
 
     Returns
     -------
-    header : str
-        The primary FITS header for the given ``file``.
+    header_info : dict
+        The FITS headers of the extensions in the given ``file``.
     """
 
     # Initialize dictionary to store header information

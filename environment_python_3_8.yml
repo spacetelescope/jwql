@@ -3,7 +3,7 @@ channels:
 - http://ssb.stsci.edu/astroconda
 dependencies:
 - authlib=0.15.2
-- django=3.0.3
+- django=2.2.5
 - flake8=3.8.3
 - inflection=0.3.1
 - ipython=7.16.1
@@ -24,6 +24,7 @@ dependencies:
 - setuptools=49.6.0
 - sphinx=3.2.1
 - twine=2.0.0
+- wtforms=2.3.3
 - pip:
   - asdf==2.7.1
   - astropy==4.1
