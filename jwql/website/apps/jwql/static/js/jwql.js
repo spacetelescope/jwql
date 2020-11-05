@@ -431,6 +431,7 @@ function update_header_display(extension, num_extensions) {
  * @param {String} type - The type of the count (e.g. "activities")
  */
 function update_show_count(count, type) {
+    console.log("in update show count")
     content = 'Showing ' + count + '/' + count + ' ' + type;
     content += '<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">';
     content += '<span class="help-tip mx-2">i</span></a>';
@@ -529,9 +530,13 @@ function update_thumbnails_query_page(base_url) {
         url: base_url + '/ajax/query_submit/',
         success: function(data){
             // Perform various updates to divs
+            console.log("in function")
             update_show_count(Object.keys(data.file_data).length, 'activities');
+            console.log("here2")
             update_thumbnail_array(data);
+            console.log("here3")
             update_filter_options(data);
+            console.log("here4")
             update_sort_options(data);
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";

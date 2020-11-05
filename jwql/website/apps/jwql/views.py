@@ -93,22 +93,30 @@ def anomaly_query(request):
         if form.is_valid():
             miri_filters = [query_unformat(i) for i in form.cleaned_data['miri_filt']]
             miri_apers = [query_unformat(i) for i in form.cleaned_data['miri_aper']]
-            miri_obsmode = [query_unformat(i) for i in form.cleaned_data['miri_obsmode']]
+            miri_detector = [query_unformat(i) for i in form.cleaned_data['miri_detector']]
+            miri_exptype = [query_unformat(i) for i in form.cleaned_data['miri_exptype']]
+            miri_readpatt = [query_unformat(i) for i in form.cleaned_data['miri_readpatt']]
             miri_anomalies = [query_unformat(i) for i in form.cleaned_data['miri_anomalies']]
 
             nirspec_filters = [query_unformat(i) for i in form.cleaned_data['nirspec_filt']]
             nirspec_apers = [query_unformat(i) for i in form.cleaned_data['nirspec_aper']]
-            nirspec_obsmode = [query_unformat(i) for i in form.cleaned_data['nirspec_obsmode']]
+            nirspec_detector = [query_unformat(i) for i in form.cleaned_data['nirspec_detector']]
+            nirspec_exptype = [query_unformat(i) for i in form.cleaned_data['nirspec_exptype']]
+            nirspec_readpatt = [query_unformat(i) for i in form.cleaned_data['nirspec_readpatt']]
             nirspec_anomalies = [query_unformat(i) for i in form.cleaned_data['nirspec_anomalies']]
 
             niriss_filters = [query_unformat(i) for i in form.cleaned_data['niriss_filt']]
             niriss_apers = [query_unformat(i) for i in form.cleaned_data['niriss_aper']]
-            niriss_obsmode = [query_unformat(i) for i in form.cleaned_data['niriss_obsmode']]
+            niriss_detector = [query_unformat(i) for i in form.cleaned_data['niriss_detector']]
+            niriss_exptype = [query_unformat(i) for i in form.cleaned_data['niriss_exptype']]
+            niriss_readpatt = [query_unformat(i) for i in form.cleaned_data['niriss_readpatt']]
             niriss_anomalies = [query_unformat(i) for i in form.cleaned_data['niriss_anomalies']]
 
             nircam_filters = [query_unformat(i) for i in form.cleaned_data['nircam_filt']]
             nircam_apers = [query_unformat(i) for i in form.cleaned_data['nircam_aper']]
-            nircam_obsmode = [query_unformat(i) for i in form.cleaned_data['nircam_obsmode']]
+            nircam_detector = [query_unformat(i) for i in form.cleaned_data['nircam_detector']]
+            nircam_exptype = [query_unformat(i) for i in form.cleaned_data['nircam_exptype']]
+            nircam_readpatt = [query_unformat(i) for i in form.cleaned_data['nircam_readpatt']]
             nircam_anomalies = [query_unformat(i) for i in form.cleaned_data['nircam_anomalies']]
 
             all_filters = {}
@@ -123,11 +131,11 @@ def anomaly_query(request):
             all_apers['niriss'] = niriss_apers
             all_apers['nircam'] = nircam_apers
 
-            all_obsmodes = {}
-            all_obsmodes['miri'] = miri_obsmode
-            all_obsmodes['nirspec'] = nirspec_obsmode
-            all_obsmodes['niriss'] = niriss_obsmode
-            all_obsmodes['nircam'] = nircam_obsmode
+            all_detectors = {}
+            all_detectors['miri'] = miri_detector
+            all_detectors['nirspec'] = nirspec_detector
+            all_detectors['niriss'] = niriss_detector
+            all_detectors['nircam'] = nircam_detector
 
             all_anomalies = {}
             all_anomalies['miri'] = miri_anomalies
@@ -135,13 +143,27 @@ def anomaly_query(request):
             all_anomalies['niriss'] = niriss_anomalies
             all_anomalies['nircam'] = nircam_anomalies
 
+            all_exptypes = {}
+            all_exptypes['miri'] = miri_exptype
+            all_exptypes['nirspec'] = nirspec_exptype
+            all_exptypes['niriss'] = niriss_exptype
+            all_exptypes['nircam'] = nircam_exptype
+
+            all_readpatts = {}
+            all_readpatts['miri'] = miri_readpatt
+            all_readpatts['nirspec'] = nirspec_readpatt
+            all_readpatts['niriss'] = niriss_readpatt
+            all_readpatts['nircam'] = nircam_readpatt
+
             anomaly_query_config.INSTRUMENTS_CHOSEN = form.cleaned_data['instrument']
             anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = all_anomalies
             anomaly_query_config.APERTURES_CHOSEN = all_apers
             anomaly_query_config.FILTERS_CHOSEN = all_filters
             anomaly_query_config.EXPTIME_MIN = str(form.cleaned_data['exp_time_min'])
             anomaly_query_config.EXPTIME_MAX = str(form.cleaned_data['exp_time_max'])
-            anomaly_query_config.OBSERVING_MODES_CHOSEN = all_obsmodes
+            anomaly_query_config.DETECTORS_CHOSEN = all_detectors
+            anomaly_query_config.EXPTYPES_CHOSEN = all_exptypes
+            anomaly_query_config.READPATTS_CHOSEN = all_readpatts
 
             return redirect('/query_submit')
 
@@ -396,6 +418,10 @@ def archive_thumbnails_query_ajax(request, user):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
+    import pdb
+    pdb.set_trace()
+    
     # Ensure the instrument is correctly capitalized
     instruments_list = []
     for instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:
@@ -403,6 +429,11 @@ def archive_thumbnails_query_ajax(request, user):
         instruments_list.append(instrument)
 
     rootnames = anomaly_query_config.THUMBNAILS
+
+    print("in archive thumbnails query ajax")
+    import pdb
+    pdb.set_trace()
+
     data = thumbnails_query_ajax(rootnames, instruments_list)
 
     return JsonResponse(data, json_dumps_params={'indent': 2})
@@ -649,15 +680,19 @@ def query_submit(request):
     filters = anomaly_query_config.FILTERS_CHOSEN
     exposure_time_min = anomaly_query_config.EXPTIME_MIN
     exposure_time_max = anomaly_query_config.EXPTIME_MAX
-    observing_modes = anomaly_query_config.OBSERVING_MODES_CHOSEN
+    detectors = anomaly_query_config.DETECTORS_CHOSEN
     anomalies = anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
+    readpatts = anomaly_query_config.READPATTS_CHOSEN
+    exptypes = anomaly_query_config.EXPTYPES_CHOSEN
     parameters = {}
     parameters['instruments'] = instruments
     parameters['apertures'] = apertures
     parameters['filters'] = filters
-    parameters['observing_modes'] = observing_modes
+    parameters['detectors'] = detectors
     parameters['exposure_time_min'] = exposure_time_min
     parameters['exposure_time_max'] = exposure_time_max
+    parameters['exposure_types'] = exptypes
+    parameters['read_patterns'] = readpatts
     parameters['anomalies'] = anomalies
     thumbnails = get_thumbnails_all_instruments(parameters)
     anomaly_query_config.THUMBNAILS = thumbnails
@@ -671,7 +706,7 @@ def query_submit(request):
                'apertures_chosen': apertures,
                'filters_chosen': filters,
                'inst_list_chosen': instruments,
-               'observing_modes_chosen': observing_modes,
+               'detectors_chosen': detectors,
                'thumbnails': thumbnails,
                'base_url': get_base_url(),
                'rootnames': thumbnails,

@@ -881,7 +881,7 @@ def get_thumbnails_all_instruments(parameters):
             instruments
             apertures
             filters
-            observing_modes
+            detector
             effexptm_min
             effexptm_max
             anomalies
@@ -893,13 +893,15 @@ def get_thumbnails_all_instruments(parameters):
         given instrument.
     """
 
-    filters = parameters['filters']
-    effexptm_min = parameters['exposure_time_min']
-    effexptm_max = parameters['exposure_time_max']
+    # filters = parameters['filters']
+    # effexptm_min = parameters['exposure_time_min']
+    # effexptm_max = parameters['exposure_time_max']
     anomalies = parameters['anomalies']
 
     thumbnail_list = []
     filenames = []
+
+    return ['jw95175001001_02103_00001_nrs2_rate_integ0.thumb']  ## TEMPORARY!!
 
     for inst in parameters['instruments']:
         print("Retrieving thumbnails for", inst)
@@ -911,106 +913,31 @@ def get_thumbnails_all_instruments(parameters):
 
         params = {"columns": "*",
                   "filters": [{"paramName": "apername",
-                              "values": [parameters['apertures'][inst.lower()]]
-                            #   },
-                            #   {"paramName": "obsmode",
-                            #    "values": [parameters['observing_modes'][inst.lower()]]
-                            #   },
-                            #   {"paramName": "filter",
-                            #    "values": [parameters['filters'][inst.lower()]]
-                            #   },
+                              "values": parameters['apertures'][inst.lower()]
+                              },
+                              {"paramName": "detector",
+                               "values": parameters['detectors'][inst.lower()]
+                              },
+                              {"paramName": "filter",
+                               "values": parameters['filters'][inst.lower()]
+                              },
                             #   {"paramName": "effexptm",
                             #    "values": {"min": effexptm_min, "max": effexptm_max}
+                            #   },
+                              {"paramName": "exp_type",
+                               "values": parameters['exposure_types'][inst.lower()]
+                              },
+                              {"paramName": "readpatt",
+                               "values": parameters['read_patterns'][inst.lower()]
                               }
                               ]}
 
-
         response = Mast.service_request_async(service, params)
         results = response[0].json()['data']
-        
-        # for result in results:
-        #     filename = result['filename'].split('.')[0]
-        #     filenames.append(filename)
 
-        # Further filter results and parse to get rootnames
         for result in results:
-            if parameters['observing_modes'][inst.lower()]:
-                if result['exp_type'] in parameters['observing_modes'][inst.lower()]:
-                    if effexptm_max:
-                        if result['effexptm'] < int(effexptm_max):
-                            if effexptm_min:
-                                if result['effexptm'] > int(effexptm_min):
-                                    if filters:
-                                        if result['filter'] in filters[inst.lower()]:
-                                            filename = result['filename'].split('.')[0]
-                                            filenames.append(filename)
-                                    else:
-                                        filename = result['filename'].split('.')[0]
-                                        filenames.append(filename)
-                            else:
-                                if filters:
-                                    if result['filter'] in filters[inst.lower()]:
-                                        filename = result['filename'].split('.')[0]
-                                        filenames.append(filename)
-                                else:
-                                    filename = result['filename'].split('.')[0]
-                                    filenames.append(filename)
-                    else:
-                        if effexptm_min:
-                            if result['effexptm'] > int(effexptm_min):
-                                if filters:
-                                    if result['filter'] in filters[inst.lower()]:
-                                        filename = result['filename'].split('.')[0]
-                                        filenames.append(filename)
-                                else:
-                                    filename = result['filename'].split('.')[0]
-                                    filenames.append(filename)
-                        else:
-                            if filters:
-                                if result['filter'] in filters[inst.lower()]:
-                                    filename = result['filename'].split('.')[0]
-                                    filenames.append(filename)
-                            else:
-                                filename = result['filename'].split('.')[0]
-                                filenames.append(filename)
-            else:
-                if effexptm_max:
-                    if result['effexptm'] < int(effexptm_max):
-                        if effexptm_min:
-                            if result['effexptm'] > int(effexptm_min):
-                                if filters:
-                                    if result['filter'] in filters[inst.lower()]:
-                                        filename = result['filename'].split('.')[0]
-                                        filenames.append(filename)
-                                else:
-                                    filename = result['filename'].split('.')[0]
-                                    filenames.append(filename)
-                        else:
-                            if filters:
-                                if result['filter'] in filters[inst.lower()]:
-                                    filename = result['filename'].split('.')[0]
-                                    filenames.append(filename)
-                            else:
-                                filename = result['filename'].split('.')[0]
-                                filenames.append(filename)
-                else:
-                    if effexptm_min:
-                        if result['effexptm'] > int(effexptm_min):
-                            if filters:
-                                if result['filter'] in filters[inst.lower()]:
-                                    filename = result['filename'].split('.')[0]
-                                    filenames.append(filename)
-                            else:
-                                filename = result['filename'].split('.')[0]
-                                filenames.append(filename)
-                    else:
-                        if filters:
-                            if result['filter'] in filters[inst.lower()]:
-                                filename = result['filename'].split('.')[0]
-                                filenames.append(filename)
-                        else:
-                            filename = result['filename'].split('.')[0]
-                            filenames.append(filename)
+            filename = result['filename'].split('.')[0]
+            filenames.append(filename)
 
         # Get list of all thumbnails
         thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
@@ -1047,9 +974,6 @@ def get_thumbnails_all_instruments(parameters):
                             final_subset.append(thumbnail)
             except KeyError:
                 print("Error with thumbnail: ", thumbnail)
-    
-    import pdb
-    pdb.set_trace()
 
     if not final_subset:
         print("No images matched anomaly selection")
@@ -1286,6 +1210,11 @@ def thumbnails_query_ajax(rootnames, insts):
     data_dict : dict
         Dictionary of data needed for the ``thumbnails`` template
     """
+    
+    
+    import pdb
+    pdb.set_trace()
+
 
     # Initialize dictionary that will contain all needed data
     data_dict = {}

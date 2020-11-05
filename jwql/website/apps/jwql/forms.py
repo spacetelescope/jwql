@@ -53,14 +53,16 @@ from jwedb.edb_interface import is_valid_mnemonic
 
 from jwql.database import database_interface as di
 from jwql.utils.constants import ANOMALY_CHOICES
+from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT
 from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
+from jwql.utils.constants import APERTURES_PER_INSTRUMENT
+from jwql.utils.constants import DETECTOR_PER_INSTRUMENT
+from jwql.utils.constants import EXP_TYPE_PER_INSTRUMENT
 from jwql.utils.constants import FILTERS_PER_INSTRUMENT
-from jwql.utils.constants import FULL_FRAME_APERTURES
 from jwql.utils.constants import GENERIC_SUFFIX_TYPES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
-from jwql.utils.constants import OBSERVING_MODE_PER_INSTRUMENT
-from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT
+from jwql.utils.constants import READPATT_PER_INSTRUMENT
 from jwql.utils.utils import get_config, filename_parser
 from jwql.utils.utils import query_format
 
@@ -87,25 +89,25 @@ class AnomalyQueryForm(BaseForm):
 
     # Generate dynamic lists of apertures to use in forms
     aperture_list = []
-    for instrument in FULL_FRAME_APERTURES.keys():
-        for aperture in FULL_FRAME_APERTURES[instrument]:
+    for instrument in APERTURES_PER_INSTRUMENT.keys():
+        for aperture in APERTURES_PER_INSTRUMENT[instrument]:
             item = [query_format(aperture), query_format(aperture)]
             aperture_list.append(item)
 
     miri_aperture_list = []
-    for aperture in FULL_FRAME_APERTURES['MIRI']:
+    for aperture in APERTURES_PER_INSTRUMENT['MIRI']:
         miri_aperture_list.append([query_format(aperture), query_format(aperture)])
 
     nirspec_aperture_list = []
-    for aperture in FULL_FRAME_APERTURES['NIRSPEC']:
+    for aperture in APERTURES_PER_INSTRUMENT['NIRSPEC']:
         nirspec_aperture_list.append([query_format(aperture), query_format(aperture)])
 
     nircam_aperture_list = []
-    for aperture in FULL_FRAME_APERTURES['NIRCAM']:
+    for aperture in APERTURES_PER_INSTRUMENT['NIRCAM']:
         nircam_aperture_list.append([query_format(aperture), query_format(aperture)])
 
     niriss_aperture_list = []
-    for aperture in FULL_FRAME_APERTURES['NIRISS']:
+    for aperture in APERTURES_PER_INSTRUMENT['NIRISS']:
         niriss_aperture_list.append([query_format(aperture), query_format(aperture)])
 
     # Generate dynamic lists of filters to use in forms
@@ -137,26 +139,68 @@ class AnomalyQueryForm(BaseForm):
         filt = query_format(filt)
         nircam_filter_list.append([filt, filt])
 
-    # Generate dynamic lists of observing modes to use in forms
-    miri_obsmode_list = []
-    for obsmode in OBSERVING_MODE_PER_INSTRUMENT['miri']:
-        obsmode = query_format(obsmode)
-        miri_obsmode_list.append([obsmode, obsmode])
+    # Generate dynamic lists of detectors to use in forms
+    miri_detector_list = []
+    for detector in DETECTOR_PER_INSTRUMENT['miri']:
+        detector = query_format(detector)
+        miri_detector_list.append([detector, detector])
 
-    niriss_obsmode_list = []
-    for obsmode in OBSERVING_MODE_PER_INSTRUMENT['niriss']:
-        obsmode = query_format(obsmode)
-        niriss_obsmode_list.append([obsmode, obsmode])
+    niriss_detector_list = []
+    for detector in DETECTOR_PER_INSTRUMENT['niriss']:
+        detector = query_format(detector)
+        niriss_detector_list.append([detector, detector])
 
-    nircam_obsmode_list = []
-    for obsmode in OBSERVING_MODE_PER_INSTRUMENT['nircam']:
-        obsmode = query_format(obsmode)
-        nircam_obsmode_list.append([obsmode, obsmode])
+    nircam_detector_list = []
+    for detector in DETECTOR_PER_INSTRUMENT['nircam']:
+        detector = query_format(detector)
+        nircam_detector_list.append([detector, detector])
 
-    nirspec_obsmode_list = []
-    for obsmode in OBSERVING_MODE_PER_INSTRUMENT['nirspec']:
-        obsmode = query_format(obsmode)
-        nirspec_obsmode_list.append([obsmode, obsmode])
+    nirspec_detector_list = []
+    for detector in DETECTOR_PER_INSTRUMENT['nirspec']:
+        detector = query_format(detector)
+        nirspec_detector_list.append([detector, detector])
+
+    # Generate dynamic lists of read patterns to use in forms
+    miri_readpatt_list = []
+    for readpatt in READPATT_PER_INSTRUMENT['miri']:
+        readpatt = query_format(readpatt)
+        miri_readpatt_list.append([readpatt, readpatt])
+
+    niriss_readpatt_list = []
+    for readpatt in READPATT_PER_INSTRUMENT['niriss']:
+        readpatt = query_format(readpatt)
+        niriss_readpatt_list.append([readpatt, readpatt])
+
+    nircam_readpatt_list = []
+    for readpatt in READPATT_PER_INSTRUMENT['nircam']:
+        readpatt = query_format(readpatt)
+        nircam_readpatt_list.append([readpatt, readpatt])
+
+    nirspec_readpatt_list = []
+    for readpatt in READPATT_PER_INSTRUMENT['nirspec']:
+        readpatt = query_format(readpatt)
+        nirspec_readpatt_list.append([readpatt, readpatt])
+
+    # Generate dynamic lists of exposure types to use in forms
+    miri_exptype_list = []
+    for exptype in EXP_TYPE_PER_INSTRUMENT['miri']:
+        exptype = query_format(exptype)
+        miri_exptype_list.append([exptype, exptype])
+
+    niriss_exptype_list = []
+    for exptype in EXP_TYPE_PER_INSTRUMENT['niriss']:
+        exptype = query_format(exptype)
+        niriss_exptype_list.append([exptype, exptype])
+
+    nircam_exptype_list = []
+    for exptype in EXP_TYPE_PER_INSTRUMENT['nircam']:
+        exptype = query_format(exptype)
+        nircam_exptype_list.append([exptype, exptype])
+
+    nirspec_exptype_list = []
+    for exptype in EXP_TYPE_PER_INSTRUMENT['nirspec']:
+        exptype = query_format(exptype)
+        nirspec_exptype_list.append([exptype, exptype])
 
     # Generate dynamic lists of anomalies to use in forms
     miri_anomalies_list = []
@@ -199,23 +243,32 @@ class AnomalyQueryForm(BaseForm):
     niriss_aper = forms.MultipleChoiceField(required=False, choices=niriss_aperture_list, widget=forms.CheckboxSelectMultiple)
     nircam_aper = forms.MultipleChoiceField(required=False, choices=nircam_aperture_list, widget=forms.CheckboxSelectMultiple)
 
-    # should use something like 'nirpsec_filt', choices=[...] in order to choose particular series to show up
     miri_filt = forms.MultipleChoiceField(required=False, choices=miri_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('lrs', 'LRS')])
     nirspec_filt = forms.MultipleChoiceField(required=False, choices=nirspec_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('f070lp_g140h', 'F070LP/G140H'), ('f100lp_g140h', 'F100LP/G140H'), ('f070lp_g140m', 'F070LP/G140M'), ('f100lp_g140m', 'F100LP/G140M'), ('f170lp_g235h', 'F170LP/G235H'), ('f170lp_g235m', 'F170LP/G235M'), ('f290lp_g395h', 'F290LP/G395H'), ('f290lp_g395m', 'F290LP/G395M')])
     niriss_filt = forms.MultipleChoiceField(required=False, choices=niriss_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('soss', 'SOSS')])
     nircam_filt = forms.MultipleChoiceField(required=False, choices=nircam_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('f322w2', 'F322W2'), ('f444w', 'F444W'), ('f277w', 'F277W')])
 
-    miri_obsmode= forms.MultipleChoiceField(required=False, choices=miri_obsmode_list, widget=forms.CheckboxSelectMultiple)
-    nirspec_obsmode = forms.MultipleChoiceField(required=False, choices=nirspec_obsmode_list, widget=forms.CheckboxSelectMultiple)
-    niriss_obsmode = forms.MultipleChoiceField(required=False, choices=niriss_obsmode_list, widget=forms.CheckboxSelectMultiple)
-    nircam_obsmode = forms.MultipleChoiceField(required=False, choices=nircam_obsmode_list, widget=forms.CheckboxSelectMultiple)
+    miri_detector= forms.MultipleChoiceField(required=False, choices=miri_detector_list, widget=forms.CheckboxSelectMultiple)
+    nirspec_detector = forms.MultipleChoiceField(required=False, choices=nirspec_detector_list, widget=forms.CheckboxSelectMultiple)
+    niriss_detector = forms.MultipleChoiceField(required=False, choices=niriss_detector_list, widget=forms.CheckboxSelectMultiple)
+    nircam_detector = forms.MultipleChoiceField(required=False, choices=nircam_detector_list, widget=forms.CheckboxSelectMultiple)
 
     miri_anomalies= forms.MultipleChoiceField(required=False, choices=miri_anomalies_list, widget=forms.CheckboxSelectMultiple)
     nirspec_anomalies = forms.MultipleChoiceField(required=False, choices=nirspec_anomalies_list, widget=forms.CheckboxSelectMultiple)
     niriss_anomalies = forms.MultipleChoiceField(required=False, choices=niriss_anomalies_list, widget=forms.CheckboxSelectMultiple)
     nircam_anomalies = forms.MultipleChoiceField(required=False, choices=nircam_anomalies_list, widget=forms.CheckboxSelectMultiple)
 
-    anomalies = forms.MultipleChoiceField(required=False, choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())
+    miri_readpatt= forms.MultipleChoiceField(required=False, choices=miri_readpatt_list, widget=forms.CheckboxSelectMultiple)
+    nirspec_readpatt = forms.MultipleChoiceField(required=False, choices=nirspec_readpatt_list, widget=forms.CheckboxSelectMultiple)
+    niriss_readpatt = forms.MultipleChoiceField(required=False, choices=niriss_readpatt_list, widget=forms.CheckboxSelectMultiple)
+    nircam_readpatt = forms.MultipleChoiceField(required=False, choices=nircam_readpatt_list, widget=forms.CheckboxSelectMultiple)
+
+    miri_exptype= forms.MultipleChoiceField(required=False, choices=miri_exptype_list, widget=forms.CheckboxSelectMultiple)
+    nirspec_exptype = forms.MultipleChoiceField(required=False, choices=nirspec_exptype_list, widget=forms.CheckboxSelectMultiple)
+    niriss_exptype = forms.MultipleChoiceField(required=False, choices=niriss_exptype_list, widget=forms.CheckboxSelectMultiple)
+    nircam_exptype = forms.MultipleChoiceField(required=False, choices=nircam_exptype_list, widget=forms.CheckboxSelectMultiple)
+
+    # anomalies = forms.MultipleChoiceField(required=False, choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())
 
     def clean_inst(self):
 
