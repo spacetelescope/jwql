@@ -399,8 +399,8 @@ def archive_thumbnails_ajax(request, user, inst, proposal):
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
-@auth_required
-def archive_thumbnails_query_ajax(request, user):
+# @auth_required
+def archive_thumbnails_query_ajax(request): #, user):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -418,9 +418,6 @@ def archive_thumbnails_query_ajax(request, user):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-
-    import pdb
-    pdb.set_trace()
     
     # Ensure the instrument is correctly capitalized
     instruments_list = []
@@ -429,10 +426,6 @@ def archive_thumbnails_query_ajax(request, user):
         instruments_list.append(instrument)
 
     rootnames = anomaly_query_config.THUMBNAILS
-
-    print("in archive thumbnails query ajax")
-    import pdb
-    pdb.set_trace()
 
     data = thumbnails_query_ajax(rootnames, instruments_list)
 
