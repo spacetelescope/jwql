@@ -10,6 +10,7 @@
 [![Build Status](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/badge/icon)](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/)
 [![Documentation Status](https://readthedocs.org/projects/jwql/badge/?version=latest)](https://jwql.readthedocs.io/en/latest/?badge=latest)
 [![STScI](https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat)](http://www.stsci.edu)
+[![DOI](https://zenodo.org/badge/109727729.svg)](https://zenodo.org/badge/latestdoi/109727729)
 [![codecov](https://codecov.io/gh/spacetelescope/jwql/branch/develop/graph/badge.svg)](https://codecov.io/gh/spacetelescope/jwql)
 
 
@@ -104,6 +105,16 @@ The package should now appear if you run `conda list jwql`.
 ### Configuration File
 
 Much of the `jwql` software depends on the existence of a `config.json` file within the `utils` directory.  This file contains data that may be unique to users and/or contain sensitive information.  Please see the [Config File wiki page](https://github.com/spacetelescope/jwql/wiki/Config-file) for instructions on how to provide this file.
+
+
+## Citation
+
+If you use `JWQL` for work/research presented in a publication (whether directly,
+or as a dependency to another package), we recommend and encourage the following acknowledgment:
+
+  This research made use of the open source Python package JWQL (Bourque et al, 2020).
+
+where (Bourque et al, 2020) is a citation of the Zenodo record available using the DOI badge above. By using the `Export` box in the lower right corner of the Zenodo page, you can export the citation in the format most convenient for you.
 
 
 ## Software Contributions
