@@ -580,7 +580,8 @@ def get_header_info(filename):
         header_info[ext] = {}
 
         # Get header
-        header = fits.getheader(fits_filepath, ext=ext)
+        #header = fits.getheader(fits_filepath, ext=ext)
+        header = hdulist[ext].header
 
         # Determine the extension name
         if ext == 0:
@@ -599,7 +600,9 @@ def get_header_info(filename):
     hdulist.close()
 
     # Build tables
-    for ext in header_info:
+    #for ext in header_info:
+    for ext in [0]:
+        print('Working on ext: {}'.format(ext))
         table = Table([header_info[ext]['keywords'], header_info[ext]['values']], names=('Key', 'Value'))
         temp_path_for_html = os.path.join(tempfile.mkdtemp(), '{}_table.html'.format(header_info[ext]['EXTNAME']))
         with open(temp_path_for_html, 'w') as f:
