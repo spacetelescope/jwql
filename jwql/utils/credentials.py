@@ -41,11 +41,6 @@ def get_mast_token(request=None):
         print('Authenticated with Astroquery MAST magic')
         return None
     else:
-        if request is not None:
-            token = str(request.POST.get('access_token'))
-            if token != 'None':
-                print('Authenticated with cached MAST token.')
-                return token
         try:
             # check if token is available via config file
             check_config_for_key('mast_token')

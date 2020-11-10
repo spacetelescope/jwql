@@ -16,7 +16,6 @@ Use
 ---
 
     This module is intended to be executed from the command line:
-
     ::
 
         python monitor_filesystem.py
