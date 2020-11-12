@@ -599,14 +599,13 @@ def get_header_info(filename):
     hdulist.close()
 
     # Build tables
-    #for ext in header_info:
-    for ext in [0]:
-        print('Working on ext: {}'.format(ext))
+    for ext in header_info:
         table = Table([header_info[ext]['keywords'], header_info[ext]['values']], names=('Key', 'Value'))
         temp_path_for_html = os.path.join(tempfile.mkdtemp(), '{}_table.html'.format(header_info[ext]['EXTNAME']))
         with open(temp_path_for_html, 'w') as f:
             table.write(f, format='jsviewer', jskwargs={'display_length': 20})
         header_info[ext]['table'] = open(temp_path_for_html, 'r').read()
+        os.remove(temp_path_for_html)
 
     return header_info
 
