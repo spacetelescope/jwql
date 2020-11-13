@@ -573,8 +573,7 @@ def get_header_info(filename):
     hdulist = fits.open(fits_filepath)
 
     # Extract header information from file
-    #for ext in range(0, len(hdulist)):
-    for ext in range(0, 1):
+    for ext in range(0, len(hdulist)):
 
         # Initialize dictionary to store header information for particular extension
         header_info[ext] = {}
