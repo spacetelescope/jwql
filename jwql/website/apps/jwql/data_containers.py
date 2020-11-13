@@ -603,7 +603,8 @@ def get_header_info(filename):
         #table = Table([header_info[ext]['keywords'], header_info[ext]['values']], names=('Key', 'Value'))
         temp_path_for_html = os.path.join(tempfile.mkdtemp(), '{}_table.html'.format(header_info[ext]['EXTNAME']))
 
-
+        print(temp_path_for_html)
+        stop
 
         # Find where these temporary files are being placed. I think we have a pile of temporary
         # files that need to be deleted in order to solve this issue
