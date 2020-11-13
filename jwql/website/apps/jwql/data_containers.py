@@ -573,13 +573,13 @@ def get_header_info(filename):
     hdulist = fits.open(fits_filepath)
 
     # Extract header information from file
-    for ext in range(0, len(hdulist)):
+    #for ext in range(0, len(hdulist)):
+    for ext in range(0, 1):
 
         # Initialize dictionary to store header information for particular extension
         header_info[ext] = {}
 
         # Get header
-        #header = fits.getheader(fits_filepath, ext=ext)
         header = hdulist[ext].header
 
         # Determine the extension name
@@ -594,14 +594,6 @@ def get_header_info(filename):
         header_info[ext]['values'] = []
         for key in header_info[ext]['keywords']:
             header_info[ext]['values'].append(hdulist[ext].header[key])
-
-
-
-        #XXXXXXTest to see if server can see my code changes
-        header_info[0]['values'][7] = 'my_file.fits'
-
-
-
 
     # Close the file
     hdulist.close()
