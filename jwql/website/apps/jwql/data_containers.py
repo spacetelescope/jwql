@@ -606,7 +606,8 @@ def get_header_info(filename):
 
         # Find where these temporary files are being placed. I think we have a pile of temporary
         # files that need to be deleted in order to solve this issue
-        header_info[ext]['values'][7] = temp_path_for_html
+        header_info[ext]['keywords'][0] = 'MY_TEST'
+        header_info[ext]['values'][0] = temp_path_for_html
 
 
         with open(temp_path_for_html, 'w') as f:
