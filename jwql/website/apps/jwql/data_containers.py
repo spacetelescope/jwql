@@ -574,6 +574,7 @@ def get_header_info(filename):
 
     # Extract header information from file
     for ext in range(0, len(hdulist)):
+    #for ext in range(0, 1):
 
         # Initialize dictionary to store header information for particular extension
         header_info[ext] = {}
@@ -599,13 +600,27 @@ def get_header_info(filename):
 
     # Build tables
     for ext in header_info:
-        table = Table([header_info[ext]['keywords'], header_info[ext]['values']], names=('Key', 'Value'))
-        temp_path_for_html = os.path.join(tempfile.mkdtemp(), '{}_table.html'.format(header_info[ext]['EXTNAME']))
+        #table = Table([header_info[ext]['keywords'], header_info[ext]['values']], names=('Key', 'Value'))
 
-        with open(temp_path_for_html, 'w') as f:
-            table.write(f, format='jsviewer', jskwargs={'display_length': 20})
-        header_info[ext]['table'] = open(temp_path_for_html, 'r').read()
-        os.remove(temp_path_for_html)
+        # Better use of temporary files
+        #with tempfile.TemporaryFile(mode='r+') as f:
+        #    table.write(f, format='jsviewer', jskwargs={'display_length': 20})
+        #    f.seek(0)
+        #    header_info[ext]['table'] = f.read()
+
+
+
+
+        # Try the new table viewer
+        data_dict = {}
+        data_dict['Keyword'] = header_info[ext]['keywords']
+        data_dict['Value'] = header_info[ext]['values']
+        header_info[ext]['table'] = pd.DataFrame(data_dict)
+        header_info[ext]['table_rows'] = header_info[ext]['table'].values
+        header_info[ext]['table_columns'] = header_info[ext]['table'].columns.values
+
+
+
 
     return header_info
 
