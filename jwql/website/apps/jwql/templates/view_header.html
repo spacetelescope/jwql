@@ -109,7 +109,9 @@
     <!-- JS for datatables rendering and sorting with DataTables. -->
     <script>
         $(document).ready(function() {
-            $('#jwqltable').DataTable();
+            $('#jwqltable').DataTable( {
+                "order": []
+            });
         } );
     </script>
 
