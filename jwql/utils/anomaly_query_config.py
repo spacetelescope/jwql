@@ -41,6 +41,9 @@ EXPTYPES_CHOSEN = {}
 # Filters selected by user in anomaly_query
 FILTERS_CHOSEN = {}
 
+# Gratings selected by user in anomaly_query
+GRATINGS_CHOSEN = {}
+
 # Instruments selected by user in anomaly_query
 INSTRUMENTS_CHOSEN = []
 

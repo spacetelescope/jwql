@@ -189,6 +189,13 @@ GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d'
                         'x1dints', 'x1d', 's2d', 's3d', 'dark', 'crfints',
                         'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat']
 
+# Gratings available for each instrument
+GRATING_PER_INSTRUMENT = {'miri':    [],
+                           'nircam':  [],
+                           'niriss':  [],
+                           'nirspec': ['G140M', 'G235M', 'G395M', 'G140H', 'G235H', 'G395H', 'PRISM']
+                           }
+
 # Possible suffix types for guider exposures
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
 

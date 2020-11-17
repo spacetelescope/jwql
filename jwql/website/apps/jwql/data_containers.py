@@ -894,21 +894,21 @@ def get_thumbnails_all_instruments(parameters):
     """
 
     # TEMPORARY RETURN
-    return ['jw95175001001_02103_00001_nrs2_rate_integ0.thumb', 
-            'jw93135333001_02106_00001_mirifulong_rateints_integ1.thumb',
-            'jw00322001004_02101_00001_nrcblong_trapsfilled_integ2.thumb',
-            'jw93135335001_02105_00001_mirifulong_rateints_integ2.thumb',
-            'jw93135333001_02106_00001_mirifulong_rate_integ0.thumb',
-            'jw93135327001_02105_00001_mirifulong_rateints_integ2.thumb',
-            'jw00322001004_02101_00001_nrcblong_trapsfilled_integ0.thumb',
-            'jw95175001001_02104_00001_nrs2_rate_integ0.thumb',
-            'jw93135335001_02105_00001_mirifulong_rateints_integ1.thumb',
-            'jw00322001004_02101_00001_nrcblong_trapsfilled_integ1.thumb',
-            'jw95175001001_02101_00001_nrs2_rate_integ0.thumb',
-            'jw93135327001_02105_00001_mirifulong_rateints_integ1.thumb',
-            'jw93135327001_02105_00001_mirifulong_rate_integ0.thumb',
-            'jw93135327001_02105_00001_mirifulong_rateints_integ0.thumb',
-            'jw00322001004_02101_00001_nrcblong_rate_integ0.thumb']
+    # return ['jw95175001001_02103_00001_nrs2_rate_integ0.thumb', 
+    #         'jw93135333001_02106_00001_mirifulong_rateints_integ1.thumb',
+    #         'jw00322001004_02101_00001_nrcblong_trapsfilled_integ2.thumb',
+    #         'jw93135335001_02105_00001_mirifulong_rateints_integ2.thumb',
+    #         'jw93135333001_02106_00001_mirifulong_rate_integ0.thumb',
+    #         'jw93135327001_02105_00001_mirifulong_rateints_integ2.thumb',
+    #         'jw00322001004_02101_00001_nrcblong_trapsfilled_integ0.thumb',
+    #         'jw95175001001_02104_00001_nrs2_rate_integ0.thumb',
+    #         'jw93135335001_02105_00001_mirifulong_rateints_integ1.thumb',
+    #         'jw00322001004_02101_00001_nrcblong_trapsfilled_integ1.thumb',
+    #         'jw95175001001_02101_00001_nrs2_rate_integ0.thumb',
+    #         'jw93135327001_02105_00001_mirifulong_rateints_integ1.thumb',
+    #         'jw93135327001_02105_00001_mirifulong_rate_integ0.thumb',
+    #         'jw93135327001_02105_00001_mirifulong_rateints_integ0.thumb',
+    #         'jw00322001004_02101_00001_nrcblong_rate_integ0.thumb']
 
 
     # filters = parameters['filters']
@@ -919,6 +919,8 @@ def get_thumbnails_all_instruments(parameters):
     thumbnail_list = []
     filenames = []
 
+    if parameters['instruments']==None:
+        thumbnails = []
     for inst in parameters['instruments']:
         print("Retrieving thumbnails for", inst)
         # Make sure instruments are of the proper format (e.g. "Nircam")
@@ -939,6 +941,9 @@ def get_thumbnails_all_instruments(parameters):
                               },
                             #   {"paramName": "effexptm",
                             #    "values": {"min": effexptm_min, "max": effexptm_max}
+                            #   },
+                            #   {"paramName": "grating",
+                            #    "values": parameters['gratings'][inst.lower()]
                             #   },
                               {"paramName": "exp_type",
                                "values": parameters['exposure_types'][inst.lower()]

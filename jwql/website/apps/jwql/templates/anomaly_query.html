@@ -36,6 +36,7 @@
                 $("#nirspec_detector").show();
                 $("#nirspec_readpatt").show();
                 $("#nirspec_exptype").show();
+                $("#nirspec_grating").show();
                 $("#nirspec_anomalies").show();
             }
             if (document.getElementById("id_instrument_1").checked==false){
@@ -68,6 +69,7 @@
                 $("#nirspec_detector").hide();
                 $("#nirspec_readpatt").hide();
                 $("#nirspec_exptype").hide();
+                $("#nirspec_grating").hide();
                 $("#nirspec_anomalies").hide();
             }
         });
@@ -103,12 +105,12 @@
                 <div style="display: flex">
                     <section class="col-sm-2">
                         <div class="form-control" id='miri_aper'>
-                        MIRI Aperture(s)
-                            <div>
+                        <span id="helpBlock" class="help-block">MIRI Aperture(s)</span>
                             {% for field in form.miri_aper %}
-                                    {{ field }}
+                                <div class="row-1">
+                                    {{ field }} 
+                                </div>
                             {% endfor %}
-                            </div>
                         </div>
                     </section>
                     <section class="col-md-2">
@@ -127,7 +129,7 @@
                         <span id="helpBlock" class="help-block">MIRI Detector</span>
                             {% for field in form.miri_detector %}
                                 <div class="row-1">
-                                    {{ field        }} 
+                                    {{ field }} 
                                 </div>
                             {% endfor %}
                             <div class="input-group-addon" style='width:60px'></div>
@@ -138,7 +140,7 @@
                         <span id="helpBlock" class="help-block">MIRI Read Pattern</span>
                             {% for field in form.miri_readpatt %}
                                 <div class="row-1">
-                                    {{ field        }} 
+                                    {{ field }} 
                                 </div>
                             {% endfor %}
                             <div class="input-group-addon" style='width:60px'></div>
@@ -149,7 +151,7 @@
                         <span id="helpBlock" class="help-block">MIRI Exposure Type</span>
                             {% for field in form.miri_exptype %}
                                 <div class="row-1">
-                                    {{ field        }} 
+                                    {{ field }} 
                                 </div>
                             {% endfor %}
                             <div class="input-group-addon" style='width:60px'></div>
@@ -171,10 +173,10 @@
                 <div style="display: flex">
                     <section class="col-sm-2">
                         <div class="form-control" class="row-2" id='nircam_aper'>
-                        NIRCam Aperture(s)
+                        <span id="helpBlock" class="help-block">NIRCam Aperture(s)</span>
                             {% for field in form.nircam_aper %}
-                                <div class="row-sm-10">
-                                    {{ field        }} 
+                                <div class="row-1">
+                                    {{ field }} 
                                 </div>
                             {% endfor %}
                             <div class="input-group-addon" style='width:60px'></div>
@@ -240,9 +242,9 @@
                 <div style="display: flex">
                     <section class="col-sm-2">
                         <div class="form-control"  class="row-3" id='niriss_aper'>
-                        NIRISS Aperture(s)
+                        <span id="helpBlock" class="help-block">NIRISS Aperture(s)</span>
                             {% for field in form.niriss_aper %}
-                                <div class="row-sm-10">
+                                <div class="row-1">
                                     {{ field }} 
                                 </div>
                             {% endfor %}
@@ -309,9 +311,11 @@
                 <div style="display: flex">
                     <section class="col-sm-2">
                         <div class="form-control" id='nirspec_aper'>
-                        NIRSpec Aperture(s)
+                        <span id="helpBlock" class="help-block">NIRSpec Aperture(s)</span>
                             {% for field in form.nirspec_aper %}
+                                <div class="row-1">
                                     {{ field }} 
+                                </div>
                             {% endfor %}
                             <div class="input-group-addon" style='width:60px'></div>
                         </div>
@@ -364,6 +368,17 @@
                         <div class="form-control" id='nirspec_anomalies'>
                         <span id="helpBlock" class="help-block">NIRSpec Anomalies</span>
                             {% for field in form.nirspec_anomalies %}
+                                <div class="row-sm-10">
+                                    {{ field }} 
+                                </div>
+                            {% endfor %}
+                            <div class="input-group-addon" style='width:60px'></div>
+                        </div>
+                    </section>
+                    <section class="col-md-2">
+                        <div class="form-control" id='nirspec_grating'>
+                        <span id="helpBlock" class="help-block">NIRSpec Grating</span>
+                            {% for field in form.nirspec_grating %}
                                 <div class="row-sm-10">
                                     {{ field }} 
                                 </div>

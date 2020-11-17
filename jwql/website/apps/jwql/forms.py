@@ -60,6 +60,7 @@ from jwql.utils.constants import DETECTOR_PER_INSTRUMENT
 from jwql.utils.constants import EXP_TYPE_PER_INSTRUMENT
 from jwql.utils.constants import FILTERS_PER_INSTRUMENT
 from jwql.utils.constants import GENERIC_SUFFIX_TYPES
+from jwql.utils.constants import GRATING_PER_INSTRUMENT
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.constants import READPATT_PER_INSTRUMENT
@@ -202,6 +203,30 @@ class AnomalyQueryForm(BaseForm):
         exptype = query_format(exptype)
         nirspec_exptype_list.append([exptype, exptype])
 
+    # Generate dynamic lists of grating options to use in forms
+    miri_grating_list = []
+    for grating in GRATING_PER_INSTRUMENT['miri']:
+        grating = query_format(grating)
+        miri_grating_list.append([grating, grating])
+
+    niriss_grating_list = []
+    for grating in GRATING_PER_INSTRUMENT['niriss']:
+        grating = query_format(grating)
+        niriss_grating_list.append([grating, grating])
+
+    nircam_grating_list = []
+    for grating in GRATING_PER_INSTRUMENT['nircam']:
+        grating = query_format(grating)
+        nircam_grating_list.append([grating, grating])
+
+    nirspec_grating_list = []
+    for grating in GRATING_PER_INSTRUMENT['nirspec']:
+        grating = query_format(grating)
+        nirspec_grating_list.append([grating, grating])
+
+
+
+
     # Generate dynamic lists of anomalies to use in forms
     miri_anomalies_list = []
     for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
@@ -267,6 +292,11 @@ class AnomalyQueryForm(BaseForm):
     nirspec_exptype = forms.MultipleChoiceField(required=False, choices=nirspec_exptype_list, widget=forms.CheckboxSelectMultiple)
     niriss_exptype = forms.MultipleChoiceField(required=False, choices=niriss_exptype_list, widget=forms.CheckboxSelectMultiple)
     nircam_exptype = forms.MultipleChoiceField(required=False, choices=nircam_exptype_list, widget=forms.CheckboxSelectMultiple)
+
+    miri_grating= forms.MultipleChoiceField(required=False, choices=miri_grating_list, widget=forms.CheckboxSelectMultiple)
+    nirspec_grating = forms.MultipleChoiceField(required=False, choices=nirspec_grating_list, widget=forms.CheckboxSelectMultiple)
+    niriss_grating = forms.MultipleChoiceField(required=False, choices=niriss_grating_list, widget=forms.CheckboxSelectMultiple)
+    nircam_grating = forms.MultipleChoiceField(required=False, choices=nircam_grating_list, widget=forms.CheckboxSelectMultiple)
 
     # anomalies = forms.MultipleChoiceField(required=False, choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())
 
@@ -384,9 +414,23 @@ class FGSAnomalySubmitForm(forms.Form):
 class MIRIAnomalySubmitForm(forms.Form):
     """A multiple choice field for specifying flagged anomalies."""
 
+
+    def __init__(self, instrument, initial, retrieval_type):
+        self.instrument = instrument
+        # self.initial = initial
+        self.retrieval_type = retrieval_type
+        super(MIRIAnomalySubmitForm, self).__init__()  #self.instrument , initial ## why not set initial if these are present???
+        self.fields['anomaly_choices']=forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT[self.instrument], widget=forms.CheckboxSelectMultiple())
+        # self.fields['anomaly_choices'].initial=initial # {'anomaly_choices': initial['anomaly_choices'][5:]}    # initial now  includes 'id', 'rootname', 'flag_date', 'user', and doesn't keep checked
+        self.initial['anomaly_choices']=initial
+        self.request = retrieval_type
+        print(self.fields['anomaly_choices'].initial)
+        
     # Define anomaly choice field
-    anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT['miri'],
-                                                widget=forms.CheckboxSelectMultiple())
+    # anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT['miri'],
+    #                                             widget=forms.CheckboxSelectMultiple())  #, initial=initial
+    
+
 
     def update_anomaly_table(self, rootname, user, anomaly_choices):
         """Updated the ``anomaly`` table of the database with flagged
@@ -411,8 +455,16 @@ class MIRIAnomalySubmitForm(forms.Form):
         data_dict['user'] = user
         for choice in anomaly_choices:
             data_dict[choice] = True
-        di.engine.execute(di.MIRIAnomaly.__table__.insert(), data_dict)
-
+        if self.instrument=='fgs':
+            di.engine.execute(di.FGSAnomaly.__table__.insert(), data_dict)
+        elif self.instrument=='nirspec':
+            di.engine.execute(di.NIRSpecAnomaly.__table__.insert(), data_dict)
+        elif self.instrument=='miri':
+            di.engine.execute(di.MIRIAnomaly.__table__.insert(), data_dict)
+        elif self.instrument=='niriss':
+            di.engine.execute(di.NIRISSAnomaly.__table__.insert(), data_dict)
+        elif self.instrument=='nircam':
+            di.engine.execute(di.NIRCamAnomaly.__table__.insert(), data_dict)
     def clean_anomalies(self):
 
         anomalies = self.cleaned_data['anomaly_choices']

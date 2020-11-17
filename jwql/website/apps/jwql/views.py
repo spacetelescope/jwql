@@ -96,6 +96,7 @@ def anomaly_query(request):
             miri_detector = [query_unformat(i) for i in form.cleaned_data['miri_detector']]
             miri_exptype = [query_unformat(i) for i in form.cleaned_data['miri_exptype']]
             miri_readpatt = [query_unformat(i) for i in form.cleaned_data['miri_readpatt']]
+            miri_grating = [query_unformat(i) for i in form.cleaned_data['miri_grating']]
             miri_anomalies = [query_unformat(i) for i in form.cleaned_data['miri_anomalies']]
 
             nirspec_filters = [query_unformat(i) for i in form.cleaned_data['nirspec_filt']]
@@ -103,6 +104,7 @@ def anomaly_query(request):
             nirspec_detector = [query_unformat(i) for i in form.cleaned_data['nirspec_detector']]
             nirspec_exptype = [query_unformat(i) for i in form.cleaned_data['nirspec_exptype']]
             nirspec_readpatt = [query_unformat(i) for i in form.cleaned_data['nirspec_readpatt']]
+            nirspec_grating = [query_unformat(i) for i in form.cleaned_data['nirspec_grating']]
             nirspec_anomalies = [query_unformat(i) for i in form.cleaned_data['nirspec_anomalies']]
 
             niriss_filters = [query_unformat(i) for i in form.cleaned_data['niriss_filt']]
@@ -110,6 +112,7 @@ def anomaly_query(request):
             niriss_detector = [query_unformat(i) for i in form.cleaned_data['niriss_detector']]
             niriss_exptype = [query_unformat(i) for i in form.cleaned_data['niriss_exptype']]
             niriss_readpatt = [query_unformat(i) for i in form.cleaned_data['niriss_readpatt']]
+            niriss_grating = [query_unformat(i) for i in form.cleaned_data['niriss_grating']]
             niriss_anomalies = [query_unformat(i) for i in form.cleaned_data['niriss_anomalies']]
 
             nircam_filters = [query_unformat(i) for i in form.cleaned_data['nircam_filt']]
@@ -117,6 +120,7 @@ def anomaly_query(request):
             nircam_detector = [query_unformat(i) for i in form.cleaned_data['nircam_detector']]
             nircam_exptype = [query_unformat(i) for i in form.cleaned_data['nircam_exptype']]
             nircam_readpatt = [query_unformat(i) for i in form.cleaned_data['nircam_readpatt']]
+            nircam_grating = [query_unformat(i) for i in form.cleaned_data['nircam_grating']]
             nircam_anomalies = [query_unformat(i) for i in form.cleaned_data['nircam_anomalies']]
 
             all_filters = {}
@@ -155,6 +159,12 @@ def anomaly_query(request):
             all_readpatts['niriss'] = niriss_readpatt
             all_readpatts['nircam'] = nircam_readpatt
 
+            all_gratings = {}
+            all_gratings['miri'] = miri_grating
+            all_gratings['nirspec'] = nirspec_grating
+            all_gratings['niriss'] = niriss_grating
+            all_gratings['nircam'] = nircam_grating
+
             anomaly_query_config.INSTRUMENTS_CHOSEN = form.cleaned_data['instrument']
             anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = all_anomalies
             anomaly_query_config.APERTURES_CHOSEN = all_apers
@@ -164,6 +174,7 @@ def anomaly_query(request):
             anomaly_query_config.DETECTORS_CHOSEN = all_detectors
             anomaly_query_config.EXPTYPES_CHOSEN = all_exptypes
             anomaly_query_config.READPATTS_CHOSEN = all_readpatts
+            anomaly_query_config.GRATINGS_CHOSEN = all_gratings
 
             return redirect('/query_submit')
 
@@ -280,8 +291,8 @@ def api_landing(request):
     return render(request, template, context)
 
 
-@auth_required
-def archived_proposals(request, user, inst):
+# @auth_required
+def archived_proposals(request,      inst):    #user,
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -307,8 +318,8 @@ def archived_proposals(request, user, inst):
     return render(request, template, context)
 
 
-@auth_required
-def archived_proposals_ajax(request, user, inst):
+# @auth_required
+def archived_proposals_ajax(request,       inst):   #user,
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -342,8 +353,8 @@ def archived_proposals_ajax(request, user, inst):
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-@auth_required
-def archive_thumbnails(request, user, inst, proposal):
+# @auth_required
+def archive_thumbnails(request,  inst, proposal):     #user,
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -372,8 +383,8 @@ def archive_thumbnails(request, user, inst, proposal):
     return render(request, template, context)
 
 
-@auth_required
-def archive_thumbnails_ajax(request, user, inst, proposal):
+# @auth_required
+def archive_thumbnails_ajax(request,      inst, proposal):  #user,
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -677,6 +688,7 @@ def query_submit(request):
     anomalies = anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
     readpatts = anomaly_query_config.READPATTS_CHOSEN
     exptypes = anomaly_query_config.EXPTYPES_CHOSEN
+    gratings = anomaly_query_config.GRATINGS_CHOSEN
     parameters = {}
     parameters['instruments'] = instruments
     parameters['apertures'] = apertures
@@ -686,6 +698,7 @@ def query_submit(request):
     parameters['exposure_time_max'] = exposure_time_max
     parameters['exposure_types'] = exptypes
     parameters['read_patterns'] = readpatts
+    parameters['gratings'] = gratings
     parameters['anomalies'] = anomalies
     thumbnails = get_thumbnails_all_instruments(parameters)
     anomaly_query_config.THUMBNAILS = thumbnails
@@ -764,8 +777,8 @@ def view_header(request, inst, filename):
     return render(request, template, context)
 
 
-@auth_required
-def view_image(request, user, inst, file_root, rewrite=False):
+# @auth_required
+def view_image(request,     inst, file_root, rewrite=False):  # user, 
     """Generate the image view page
 
     Parameters
@@ -799,8 +812,15 @@ def view_image(request, user, inst, file_root, rewrite=False):
     # Create a form instance
     if inst == 'FGS':
         form = FGSAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+
+
+    ### USING MIRI FORM AS TEST ###
+    # this is what would ideally work
     if inst == 'MIRI':
-        form = MIRIAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+        form = MIRIAnomalySubmitForm(inst.lower(), {'anomaly_choices': current_anomalies}, request.POST or None)
+
+    # if inst == 'MIRI':  # this does work without the form init
+    #     form = MIRIAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
     if inst == 'NIRCam':
         form = NIRCamAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
     if inst == 'NIRISS':
@@ -811,7 +831,8 @@ def view_image(request, user, inst, file_root, rewrite=False):
     if request.method == 'POST':
         anomaly_choices = dict(request.POST)['anomaly_choices']
         if form.is_valid():
-            form.update_anomaly_table(file_root, user['ezid'], anomaly_choices)
+            # user['ezid'] = "TEMPORARY"
+            form.update_anomaly_table(file_root, "user['ezid']", anomaly_choices)
 
     # Build the context
     context = {'inst': inst,
@@ -826,8 +847,8 @@ def view_image(request, user, inst, file_root, rewrite=False):
     return render(request, template, context)
 
 
-@auth_required
-def view_all_images(request, user, file_root, rewrite=False):
+# @auth_required
+def view_all_images(request,        file_root, rewrite=False):  #user,
     """Generate the image view page
 
     Parameters
