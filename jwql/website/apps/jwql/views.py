@@ -286,8 +286,8 @@ def api_landing(request):
     return render(request, template, context)
 
 
-# @auth_required
-def archived_proposals(request,      inst):    #user,
+@auth_required
+def archived_proposals(request, user, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -313,8 +313,8 @@ def archived_proposals(request,      inst):    #user,
     return render(request, template, context)
 
 
-# @auth_required
-def archived_proposals_ajax(request,       inst):   #user,
+@auth_required
+def archived_proposals_ajax(request, user, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -348,8 +348,8 @@ def archived_proposals_ajax(request,       inst):   #user,
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-# @auth_required
-def archive_thumbnails(request,  inst, proposal):     #user,
+@auth_required
+def archive_thumbnails(request, user, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -378,8 +378,8 @@ def archive_thumbnails(request,  inst, proposal):     #user,
     return render(request, template, context)
 
 
-# @auth_required
-def archive_thumbnails_ajax(request,      inst, proposal):  #user,
+@auth_required
+def archive_thumbnails_ajax(request, user, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -405,8 +405,8 @@ def archive_thumbnails_ajax(request,      inst, proposal):  #user,
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
-# @auth_required
-def archive_thumbnails_query_ajax(request): #, user):
+@auth_required
+def archive_thumbnails_query_ajax(request, user):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -772,8 +772,8 @@ def view_header(request, inst, filename):
     return render(request, template, context)
 
 
-# @auth_required
-def view_image(request,     inst, file_root, rewrite=False):  # user, 
+@auth_required
+def view_image(request, user, inst, file_root, rewrite=False): 
     """Generate the image view page
 
     Parameters
@@ -811,8 +811,7 @@ def view_image(request,     inst, file_root, rewrite=False):  # user,
     if request.method == 'POST':
         anomaly_choices = dict(request.POST)['anomaly_choices']
         if form.is_valid():
-            # user['ezid'] = "TEMPORARY"
-            form.update_anomaly_table(file_root, "user['ezid']", anomaly_choices)
+            form.update_anomaly_table(file_root, user['ezid'], anomaly_choices)
 
     # Build the context
     context = {'inst': inst,

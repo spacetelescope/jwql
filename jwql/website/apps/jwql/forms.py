@@ -303,12 +303,9 @@ class InstrumentAnomalySubmitForm(forms.Form):
     """A multiple choice field for specifying flagged anomalies."""
 
     def __init__(self, *args, **kwargs):
-        # print(kwargs['initial']['anomaly_choices'])
-        # initial = {'anomaly_choices': kwargs.pop('initial')['anomaly_choices'][5:]} # get rid of first four: 'id', 'rootname', 'flag_date', 'user'
         instrument = kwargs.pop('instrument')
         super(InstrumentAnomalySubmitForm, self).__init__(*args, **kwargs)
         self.fields['anomaly_choices']=forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT[instrument], widget=forms.CheckboxSelectMultiple())
-        # self.fields['anomaly_choices'].initial = initial['anomaly_choices']
         self.instrument = instrument
 
 
@@ -412,8 +409,7 @@ class FileSearchForm(forms.Form):
 
         # If they searched for a fileroot...
         elif self.search_type == 'fileroot':
-            # See if there are any matching fileroots and, if so, what
-            # instrument they are for
+            # See if there are any matching fileroots and, if so, what instrument they are for
             search_string = os.path.join(FILESYSTEM_DIR, search[:7], '{}*.fits'.format(search))
             all_files = glob.glob(search_string)
 
