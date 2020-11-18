@@ -89,12 +89,6 @@ class AnomalyQueryForm(BaseForm):
     calculate_submit = SubmitField()
 
     # Generate dynamic lists of apertures to use in forms
-    # aperture_list = []
-    # for instrument in APERTURES_PER_INSTRUMENT.keys():
-    #     for aperture in APERTURES_PER_INSTRUMENT[instrument]:
-    #         item = [query_format(aperture), query_format(aperture)]
-            # aperture_list.append(item)
-
     miri_aperture_list = []
     for aperture in APERTURES_PER_INSTRUMENT['MIRI']:
         miri_aperture_list.append([query_format(aperture), query_format(aperture)])
@@ -112,13 +106,6 @@ class AnomalyQueryForm(BaseForm):
         niriss_aperture_list.append([query_format(aperture), query_format(aperture)])
 
     # Generate dynamic lists of filters to use in forms
-    # filter_list = []
-    # for instrument in FILTERS_PER_INSTRUMENT.keys():
-    #     filters_per_inst = FILTERS_PER_INSTRUMENT[instrument]
-    #     for filt in filters_per_inst:
-    #         filt = query_format(filt)
-    #         filter_list.append([filt, filt]) if [filt, filt] not in filter_list else filter_list
-
     miri_filter_list = []
     for filt in FILTERS_PER_INSTRUMENT['miri']:
         filt = query_format(filt)

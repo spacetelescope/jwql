@@ -392,9 +392,8 @@ function update_filter_options(data) {
 
         for (var j = 0; j < filter_options.length; j++) {
             content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + dropdown_key_list + '\', \'' + num_rootnames + '\');">' + filter_options[j] + '</a>';
-        
-        
         };
+
         content += '</div>';
         content += '</div></div>';
     };

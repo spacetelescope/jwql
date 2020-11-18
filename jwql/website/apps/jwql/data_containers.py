@@ -893,25 +893,6 @@ def get_thumbnails_all_instruments(parameters):
         given instrument.
     """
 
-    # TEMPORARY RETURN
-    # return ['jw95175001001_02103_00001_nrs2_rate_integ0.thumb', 
-    #         'jw93135333001_02106_00001_mirifulong_rateints_integ1.thumb',
-    #         'jw00322001004_02101_00001_nrcblong_trapsfilled_integ2.thumb',
-    #         'jw93135335001_02105_00001_mirifulong_rateints_integ2.thumb',
-    #         'jw93135333001_02106_00001_mirifulong_rate_integ0.thumb',
-    #         'jw93135327001_02105_00001_mirifulong_rateints_integ2.thumb',
-    #         'jw00322001004_02101_00001_nrcblong_trapsfilled_integ0.thumb',
-    #         'jw95175001001_02104_00001_nrs2_rate_integ0.thumb',
-    #         'jw93135335001_02105_00001_mirifulong_rateints_integ1.thumb',
-    #         'jw00322001004_02101_00001_nrcblong_trapsfilled_integ1.thumb',
-    #         'jw95175001001_02101_00001_nrs2_rate_integ0.thumb',
-    #         'jw93135327001_02105_00001_mirifulong_rateints_integ1.thumb',
-    #         'jw93135327001_02105_00001_mirifulong_rate_integ0.thumb',
-    #         'jw93135327001_02105_00001_mirifulong_rateints_integ0.thumb',
-    #         'jw00322001004_02101_00001_nrcblong_rate_integ0.thumb']
-
-
-    # filters = parameters['filters']
     # effexptm_min = parameters['exposure_time_min']
     # effexptm_max = parameters['exposure_time_max']
     anomalies = parameters['anomalies']
@@ -1277,13 +1258,10 @@ def thumbnails_query_ajax(rootnames, insts):
     # Extract information for sorting with dropdown menus
     detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for
                  rootname in list(data_dict['file_data'].keys())]
-
-    # NEW
     instruments = [data_dict['file_data'][rootname]['inst'].lower() for
                  rootname in list(data_dict['file_data'].keys())]
     proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for
                  rootname in list(data_dict['file_data'].keys())]
-
 
     dropdown_menus = {'instrument': instruments,
                       'detector': detectors,
