@@ -68,11 +68,7 @@ from .data_containers import random_404_page
 from .data_containers import get_jwqldb_table_view_components
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
-from .forms import FGSAnomalySubmitForm
-from .forms import MIRIAnomalySubmitForm
-from .forms import NIRCamAnomalySubmitForm
-from .forms import NIRISSAnomalySubmitForm
-from .forms import NIRSpecAnomalySubmitForm
+from .forms import InstrumentAnomalySubmitForm
 from .forms import AnomalyQueryForm
 from .data_containers import build_table
 from .forms import AnomalyForm
@@ -810,23 +806,8 @@ def view_image(request,     inst, file_root, rewrite=False):  # user,
     current_anomalies = get_current_flagged_anomalies(file_root, inst)
 
     # Create a form instance
-    if inst == 'FGS':
-        form = FGSAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+    form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
 
-
-    ### USING MIRI FORM AS TEST ###
-    # this is what would ideally work
-    if inst == 'MIRI':
-        form = MIRIAnomalySubmitForm(inst.lower(), {'anomaly_choices': current_anomalies}, request.POST or None)
-
-    # if inst == 'MIRI':  # this does work without the form init
-    #     form = MIRIAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    if inst == 'NIRCam':
-        form = NIRCamAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    if inst == 'NIRISS':
-        form = NIRISSAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    if inst == 'NIRSpec':
-        form = NIRSpecAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
     # If this is a POST request, process the form data
     if request.method == 'POST':
         anomaly_choices = dict(request.POST)['anomaly_choices']
@@ -882,21 +863,13 @@ def view_all_images(request,        file_root, rewrite=False):  #user,
     current_anomalies = get_current_flagged_anomalies(file_root, inst)
 
     # Create a form instance
-    if inst == 'FGS':
-        form = FGSAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    if inst == 'MIRI':
-        form = MIRIAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    if inst == 'NIRCam':
-        form = NIRCamAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    if inst == 'NIRISS':
-        form = NIRISSAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    if inst == 'NIRSpec':
-        form = NIRSpecAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
+    form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
+
     # If this is a POST request, process the form data
     if request.method == 'POST':
         anomaly_choices = dict(request.POST)['anomaly_choices']
         if form.is_valid():
-            form.update_anomaly_table(file_root, user['ezid'], anomaly_choices)
+            form.update_anomaly_table(file_root, "user['ezid']", anomaly_choices)  ## TEMPORARY
 
     # Build the context
     context = {'inst': inst,

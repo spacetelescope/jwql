@@ -372,64 +372,17 @@ class AnomalySubmitForm(forms.Form):
         return anomalies
 
 
-class FGSAnomalySubmitForm(forms.Form):
+class InstrumentAnomalySubmitForm(forms.Form):
     """A multiple choice field for specifying flagged anomalies."""
 
-    # Define anomaly choice field
-    anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT['fgs'],
-                                                widget=forms.CheckboxSelectMultiple())
-
-    def update_anomaly_table(self, rootname, user, anomaly_choices):
-        """Updated the ``anomaly`` table of the database with flagged
-        anomaly information
-
-        Parameters
-        ----------
-        rootname : str
-            The rootname of the image to flag (e.g.
-            ``jw86600008001_02101_00001_guider2``)
-        user : str
-            The ``ezid`` of the authenticated user that is flagging the
-            anomaly
-        anomaly_choices : list
-            A list of anomalies that are to be flagged (e.g.
-            ``['snowball', 'crosstalk']``)
-        """
-
-        data_dict = {}
-        data_dict['rootname'] = rootname
-        data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = user
-        for choice in anomaly_choices:
-            data_dict[choice] = True
-            di.engine.execute(di.FGSAnomaly.__table__.insert(), data_dict)
-
-    def clean_anomalies(self):
-
-        anomalies = self.cleaned_data['anomaly_choices']
-
-        return anomalies
-
-
-class MIRIAnomalySubmitForm(forms.Form):
-    """A multiple choice field for specifying flagged anomalies."""
-
-
-    def __init__(self, instrument, initial, retrieval_type):
+    def __init__(self, *args, **kwargs):
+        # print(kwargs['initial']['anomaly_choices'])
+        # initial = {'anomaly_choices': kwargs.pop('initial')['anomaly_choices'][5:]} # get rid of first four: 'id', 'rootname', 'flag_date', 'user'
+        instrument = kwargs.pop('instrument')
+        super(InstrumentAnomalySubmitForm, self).__init__(*args, **kwargs)
+        self.fields['anomaly_choices']=forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT[instrument], widget=forms.CheckboxSelectMultiple())
+        # self.fields['anomaly_choices'].initial = initial['anomaly_choices']
         self.instrument = instrument
-        # self.initial = initial
-        self.retrieval_type = retrieval_type
-        super(MIRIAnomalySubmitForm, self).__init__()  #self.instrument , initial ## why not set initial if these are present???
-        self.fields['anomaly_choices']=forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT[self.instrument], widget=forms.CheckboxSelectMultiple())
-        # self.fields['anomaly_choices'].initial=initial # {'anomaly_choices': initial['anomaly_choices'][5:]}    # initial now  includes 'id', 'rootname', 'flag_date', 'user', and doesn't keep checked
-        self.initial['anomaly_choices']=initial
-        self.request = retrieval_type
-        print(self.fields['anomaly_choices'].initial)
-        
-    # Define anomaly choice field
-    # anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT['miri'],
-    #                                             widget=forms.CheckboxSelectMultiple())  #, initial=initial
-    
 
 
     def update_anomaly_table(self, rootname, user, anomaly_choices):
@@ -465,123 +418,6 @@ class MIRIAnomalySubmitForm(forms.Form):
             di.engine.execute(di.NIRISSAnomaly.__table__.insert(), data_dict)
         elif self.instrument=='nircam':
             di.engine.execute(di.NIRCamAnomaly.__table__.insert(), data_dict)
-    def clean_anomalies(self):
-
-        anomalies = self.cleaned_data['anomaly_choices']
-
-        return anomalies
-
-
-class NIRCamAnomalySubmitForm(forms.Form):
-    """A multiple choice field for specifying flagged anomalies."""
-
-    # Define anomaly choice field
-    anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT['nircam'],
-                                                widget=forms.CheckboxSelectMultiple())
-
-    def update_anomaly_table(self, rootname, user, anomaly_choices):
-        """Updated the ``anomaly`` table of the database with flagged
-        anomaly information
-
-        Parameters
-        ----------
-        rootname : str
-            The rootname of the image to flag (e.g.
-            ``jw86600008001_02101_00001_guider2``)
-        user : str
-            The ``ezid`` of the authenticated user that is flagging the
-            anomaly
-        anomaly_choices : list
-            A list of anomalies that are to be flagged (e.g.
-            ``['snowball', 'crosstalk']``)
-        """
-
-        data_dict = {}
-        data_dict['rootname'] = rootname
-        data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = user
-        for choice in anomaly_choices:
-            data_dict[choice] = True
-        di.engine.execute(di.NIRCamAnomaly.__table__.insert(), data_dict)
-
-    def clean_anomalies(self):
-
-        anomalies = self.cleaned_data['anomaly_choices']
-
-        return anomalies
-
-
-class NIRISSAnomalySubmitForm(forms.Form):
-    """A multiple choice field for specifying flagged anomalies."""
-
-    # Define anomaly choice field
-    anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT['niriss'],
-                                                widget=forms.CheckboxSelectMultiple())
-
-    def update_anomaly_table(self, rootname, user, anomaly_choices):
-        """Updated the ``anomaly`` table of the database with flagged
-        anomaly information
-
-        Parameters
-        ----------
-        rootname : str
-            The rootname of the image to flag (e.g.
-            ``jw86600008001_02101_00001_guider2``)
-        user : str
-            The ``ezid`` of the authenticated user that is flagging the
-            anomaly
-        anomaly_choices : list
-            A list of anomalies that are to be flagged (e.g.
-            ``['snowball', 'crosstalk']``)
-        """
-
-        data_dict = {}
-        data_dict['rootname'] = rootname
-        data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = user
-        for choice in anomaly_choices:
-            data_dict[choice] = True
-        di.engine.execute(di.NIRISSAnomaly.__table__.insert(), data_dict)
-
-    def clean_anomalies(self):
-
-        anomalies = self.cleaned_data['anomaly_choices']
-
-        return anomalies
-
-
-class NIRSpecAnomalySubmitForm(forms.Form):
-    """A multiple choice field for specifying flagged anomalies."""
-
-    # Define anomaly choice field
-    anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT['nirspec'],
-                                                widget=forms.CheckboxSelectMultiple())
-
-    def update_anomaly_table(self, rootname, user, anomaly_choices):
-        """Updated the ``anomaly`` table of the database with flagged
-        anomaly information
-
-        Parameters
-        ----------
-        rootname : str
-            The rootname of the image to flag (e.g.
-            ``jw86600008001_02101_00001_guider2``)
-        user : str
-            The ``ezid`` of the authenticated user that is flagging the
-            anomaly
-        anomaly_choices : list
-            A list of anomalies that are to be flagged (e.g.
-            ``['snowball', 'crosstalk']``)
-        """
-
-        data_dict = {}
-        data_dict['rootname'] = rootname
-        data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = user
-        for choice in anomaly_choices:
-            data_dict[choice] = True
-        di.engine.execute(di.NIRSpecAnomaly.__table__.insert(), data_dict)
-
     def clean_anomalies(self):
 
         anomalies = self.cleaned_data['anomaly_choices']
