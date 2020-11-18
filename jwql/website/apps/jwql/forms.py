@@ -89,11 +89,11 @@ class AnomalyQueryForm(BaseForm):
     calculate_submit = SubmitField()
 
     # Generate dynamic lists of apertures to use in forms
-    aperture_list = []
-    for instrument in APERTURES_PER_INSTRUMENT.keys():
-        for aperture in APERTURES_PER_INSTRUMENT[instrument]:
-            item = [query_format(aperture), query_format(aperture)]
-            aperture_list.append(item)
+    # aperture_list = []
+    # for instrument in APERTURES_PER_INSTRUMENT.keys():
+    #     for aperture in APERTURES_PER_INSTRUMENT[instrument]:
+    #         item = [query_format(aperture), query_format(aperture)]
+            # aperture_list.append(item)
 
     miri_aperture_list = []
     for aperture in APERTURES_PER_INSTRUMENT['MIRI']:
@@ -112,13 +112,12 @@ class AnomalyQueryForm(BaseForm):
         niriss_aperture_list.append([query_format(aperture), query_format(aperture)])
 
     # Generate dynamic lists of filters to use in forms
-    filter_list = []
-    for instrument in FILTERS_PER_INSTRUMENT.keys():
-        # # if instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:   # eg ['nirspec']: selects relevant filters, but not specific to chosen instruments
-        filters_per_inst = FILTERS_PER_INSTRUMENT[instrument]
-        for filt in filters_per_inst:
-            filt = query_format(filt)
-            filter_list.append([filt, filt]) if [filt, filt] not in filter_list else filter_list
+    # filter_list = []
+    # for instrument in FILTERS_PER_INSTRUMENT.keys():
+    #     filters_per_inst = FILTERS_PER_INSTRUMENT[instrument]
+    #     for filt in filters_per_inst:
+    #         filt = query_format(filt)
+    #         filter_list.append([filt, filt]) if [filt, filt] not in filter_list else filter_list
 
     miri_filter_list = []
     for filt in FILTERS_PER_INSTRUMENT['miri']:
@@ -224,9 +223,6 @@ class AnomalyQueryForm(BaseForm):
         grating = query_format(grating)
         nirspec_grating_list.append([grating, grating])
 
-
-
-
     # Generate dynamic lists of anomalies to use in forms
     miri_anomalies_list = []
     for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
@@ -256,10 +252,8 @@ class AnomalyQueryForm(BaseForm):
     instrument = forms.MultipleChoiceField(required=False,
                                            choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
                                            widget=forms.CheckboxSelectMultiple)
-    aperture = forms.MultipleChoiceField(required=False, choices=aperture_list, widget=forms.CheckboxSelectMultiple)
-    filt = forms.MultipleChoiceField(required=False, choices=filter_list, widget=forms.CheckboxSelectMultiple)
-    early_date = forms.DateField(required=False, initial="eg, 2021-10-02 12:04:39 or 2021-10-02")
-    late_date = forms.DateField(required=False, initial="eg, 2021-11-25 14:30:59 or 2021-11-25")
+    # early_date = forms.DateField(required=False, initial="eg, 2021-10-02 12:04:39 or 2021-10-02")
+    # late_date = forms.DateField(required=False, initial="eg, 2021-11-25 14:30:59 or 2021-11-25")
     exp_time_max = forms.DecimalField(required=False, initial="685")
     exp_time_min = forms.DecimalField(required=False, initial="680")
 
@@ -298,78 +292,11 @@ class AnomalyQueryForm(BaseForm):
     niriss_grating = forms.MultipleChoiceField(required=False, choices=niriss_grating_list, widget=forms.CheckboxSelectMultiple)
     nircam_grating = forms.MultipleChoiceField(required=False, choices=nircam_grating_list, widget=forms.CheckboxSelectMultiple)
 
-    # anomalies = forms.MultipleChoiceField(required=False, choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())
-
     def clean_inst(self):
 
         inst = self.cleaned_data['instrument']
 
         return inst
-
-
-class AnomalyForm(forms.Form):
-    """Creates a ``AnomalyForm`` object that allows for anomaly input
-    in a form field."""
-    query = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())  # Update depending on chosen instruments
-
-    def clean_anomalies(self):
-
-        anomalies = self.cleaned_data['query']
-
-        return anomalies
-
-
-class AnomalySubmitForm(forms.Form):
-    """A multiple choice field for specifying flagged anomalies."""
-
-    # Define anomaly choice field
-    anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES,
-                                                widget=forms.CheckboxSelectMultiple())
-
-    def update_anomaly_table(self, rootname, user, anomaly_choices):
-        """Updated the ``anomaly`` table of the database with flagged
-        anomaly information
-
-        Parameters
-        ----------
-        rootname : str
-            The rootname of the image to flag (e.g.
-            ``jw86600008001_02101_00001_guider2``)
-        user : str
-            The ``ezid`` of the authenticated user that is flagging the
-            anomaly
-        anomaly_choices : list
-            A list of anomalies that are to be flagged (e.g.
-            ``['snowball', 'crosstalk']``)
-        """
-
-        data_dict = {}
-        data_dict['rootname'] = rootname
-        data_dict['flag_date'] = datetime.datetime.now()
-        data_dict['user'] = user
-
-        for choice in anomaly_choices:
-            data_dict[choice] = True
-        if 'guider' in rootname:
-            di.engine.execute(di.FGSAnomaly.__table__.insert(), data_dict)
-        elif "nrs" in rootname:
-            di.engine.execute(di.NIRSpecAnomaly.__table__.insert(), data_dict)
-        elif "miri" in rootname:
-            di.engine.execute(di.MIRIAnomaly.__table__.insert(), data_dict)
-        elif "nis" in rootname:
-            di.engine.execute(di.NIRISSAnomaly.__table__.insert(), data_dict)
-        elif "nrc" in rootname:
-            di.engine.execute(di.NIRCamAnomaly.__table__.insert(), data_dict)
-        else:
-            print("cannot determine instrument anomaly corresponds to")
-        #  '{}Anomaly'.format(JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument]
-        # no attribute 'Anomaly'
-
-    def clean_anomalies(self):
-
-        anomalies = self.cleaned_data['anomaly_choices']
-
-        return anomalies
 
 
 class InstrumentAnomalySubmitForm(forms.Form):

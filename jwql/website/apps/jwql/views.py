@@ -71,7 +71,6 @@ from .data_containers import thumbnails_query_ajax
 from .forms import InstrumentAnomalySubmitForm
 from .forms import AnomalyQueryForm
 from .data_containers import build_table
-from .forms import AnomalyForm
 from .forms import FileSearchForm
 from .oauth import auth_info, auth_required
 
@@ -814,62 +813,6 @@ def view_image(request,     inst, file_root, rewrite=False):  # user,
         if form.is_valid():
             # user['ezid'] = "TEMPORARY"
             form.update_anomaly_table(file_root, "user['ezid']", anomaly_choices)
-
-    # Build the context
-    context = {'inst': inst,
-               'prop_id': file_root[2:7],
-               'file_root': file_root,
-               'jpg_files': image_info['all_jpegs'],
-               'fits_files': image_info['all_files'],
-               'suffixes': image_info['suffixes'],
-               'num_ints': image_info['num_ints'],
-               'form': form}
-
-    return render(request, template, context)
-
-
-# @auth_required
-def view_all_images(request,        file_root, rewrite=False):  #user,
-    """Generate the image view page
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    user : dict
-        A dictionary of user credentials.
-    inst : str
-        Name of JWST instrument
-    file_root : str
-        FITS filename of selected image in filesystem
-    rewrite : bool, optional
-        Regenerate the jpg preview of `file` if it already exists?
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-
-    inst = JWST_INSTRUMENT_NAMES_SHORTHAND[file_root.split("_")[-1][:3]]
-
-    # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-
-    template = 'view_image.html'
-    image_info = get_image_info(file_root, rewrite)
-
-    # Determine current flagged anomalies
-    current_anomalies = get_current_flagged_anomalies(file_root, inst)
-
-    # Create a form instance
-    form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
-
-    # If this is a POST request, process the form data
-    if request.method == 'POST':
-        anomaly_choices = dict(request.POST)['anomaly_choices']
-        if form.is_valid():
-            form.update_anomaly_table(file_root, "user['ezid']", anomaly_choices)  ## TEMPORARY
 
     # Build the context
     context = {'inst': inst,
