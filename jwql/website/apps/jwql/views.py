@@ -412,9 +412,11 @@ def dashboard(request):
     files_graph = db.dashboard_files_per_day()
     filetype_bar = db.dashboard_filetype_bar_chart()
     table_columns, table_values = db.dashboard_monitor_tracking()
+    grating_plot = db.dashboard_exposure_count_by_filter()
+    anomaly_plot = db.dashboard_anomaly_per_instrument()
 
     p = layout([
-        [files_graph],[pie_graph, filetype_bar]
+        [files_graph],[pie_graph, filetype_bar],[grating_plot, anomaly_plot]
         ],sizing_mode='stretch_width') 
     script, div = components(p)
 
@@ -453,9 +455,10 @@ def daily_trending(request, date):
     pie_graph = db.dashboard_instrument_pie_chart()
     filetype_bar = db.dashboard_filetype_bar_chart()
     table_columns, table_values = db.dashboard_monitor_tracking()
+    grating_plot = db.dashboard_exposure_count_by_filter()
 
-    p = layout([[pie_graph, filetype_bar]
-        ],sizing_mode='stretch_width') 
+    p = layout([[pie_graph, filetype_bar]],
+        sizing_mode='stretch_width') 
     script, div = components(p)
 
     context =  {'inst': '',

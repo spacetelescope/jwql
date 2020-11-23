@@ -163,3 +163,75 @@ class generalDashboard:
         table_columns = data.columns.values
 
         return table_columns, table_values
+
+
+    def dashboard_exposure_count_by_filter(self):
+
+        import numpy as np
+        from jwql.utils.constants import FILTERS_PER_INSTRUMENT
+        # Query filesystem_instrument
+        # Get unique file types (Science, Cal, Dark, etc)
+        # Get number of files per type
+        # Make histogram/bar chart
+
+        def _make_panel(data, filters, instrument):
+            # filetypes = data.filetype.unique()
+            p = figure(x_range=filters, title="File Types Counts by Filter", plot_width=850)
+            p.vbar(x=filters, top=data, width=0.9, color='#6C5B7B')
+            p.xaxis.major_label_orientation = pi/4
+            tab = Panel(child=p, title=instrument)
+            
+            return tab
+
+        def _count_filetypes(data):
+            print('count up filetypes')
+            # filetypes = data.filetype.unique() # x 
+            # filetype_count = [data.filetype.str.count('ft').sum() for ft in filetypes] # top
+
+        # data = build_table('filesystem_instrument')
+        # if not pd.isnull(self.date):
+            # dt = Timedelta(1, units='days')
+            # data = data[(data['start_time']>=self.date) & (data['start_time']<=self.date+dt)]
+
+        # for instrument in data.instrument.unique():
+
+        figures = [_make_panel(np.random.rand(len(FILTERS_PER_INSTRUMENT[instrument]))*10e7, FILTERS_PER_INSTRUMENT[instrument], instrument) for instrument in FILTERS_PER_INSTRUMENT]
+        
+        tabs = Tabs(tabs=figures)
+
+        return tabs
+
+    def dashboard_anomaly_per_instrument(self):
+
+        import numpy as np
+        from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT
+        # Query filesystem_instrument
+        # Get unique file types (Science, Cal, Dark, etc)
+        # Get number of files per type
+        # Make histogram/bar chart
+
+        def _make_panel(data, anomalies, instrument):
+            # filetypes = data.filetype.unique()
+            p = figure(x_range=anomalies, title="Anomaly By Instrument", plot_width=850)
+            p.vbar(x=anomalies, top=data, width=0.9, color='#6C5B7B')
+            p.xaxis.major_label_orientation = pi/4
+            tab = Panel(child=p, title=instrument)
+            
+            return tab
+
+        def _count_filetypes(data):
+            print('count up filetypes')
+            # filetypes = data.filetype.unique() # x 
+            # filetype_count = [data.filetype.str.count('ft').sum() for ft in filetypes] # top
+
+        # data = build_table('filesystem_instrument')
+        # if not pd.isnull(self.date):
+            # dt = Timedelta(1, units='days')
+            # data = data[(data['start_time']>=self.date) & (data['start_time']<=self.date+dt)]
+
+        # for instrument in data.instrument.unique():
+
+        figures = [_make_panel(np.random.rand(len(ANOMALY_CHOICES_PER_INSTRUMENT[instrument]))*10e7, ANOMALY_CHOICES_PER_INSTRUMENT[instrument], instrument) for instrument in ANOMALY_CHOICES_PER_INSTRUMENT]
+        tabs = Tabs(tabs=figures)
+
+        return tabs
