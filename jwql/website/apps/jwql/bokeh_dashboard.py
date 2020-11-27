@@ -38,19 +38,12 @@ class generalDashboard:
         """
 
         import numpy as np
-
+        from jwql.utils.constants import GENERIC_SUFFIX_TYPES, GUIDER_SUFFIX_TYPES
         # Query filesystem_instrument
         # Get unique file types (Science, Cal, Dark, etc)
         # Get number of files per type
         # Make histogram/bar chart
 
-        def _make_panel(data, filetypes, instrument):
-            # filetypes = data.filetype.unique()
-            p = figure(x_range=filetypes, title="File Types Counts", plot_width=850)
-            p.vbar(x=filetypes, top=data, width=0.9, color='#6C5B7B')
-            tab = Panel(child=p, title=instrument)
-            
-            return tab
 
         def _count_filetypes(data):
             print('count up filetypes')
@@ -63,17 +56,15 @@ class generalDashboard:
             # data = data[(data['start_time']>=self.date) & (data['start_time']<=self.date+dt)]
 
         # for instrument in data.instrument.unique():
+        title = 'File Types per Instrument'
+        figures = []
+        for instrument in ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']:
+            if instrument != 'fgs':
+                figures.append(self.make_panel(GENERIC_SUFFIX_TYPES, np.random.rand(len(GENERIC_SUFFIX_TYPES))*10e7, instrument, title, 'Filetypes'))
+            else:
+               figures.append(self.make_panel(GUIDER_SUFFIX_TYPES, np.random.rand(len(GENERIC_SUFFIX_TYPES))*10e7, instrument, title, 'Filetypes'))
 
-        filetypes = ['sci', 'cal', 'dark']
-
-        tab1 = _make_panel(np.random.rand(3)*10e7, filetypes, 'All')
-        tab2 = _make_panel(np.random.rand(3)*10e7, filetypes, 'NIRCAM')
-        tab3 = _make_panel(np.random.rand(3)*10e7, filetypes, 'NIRSPEC')
-        tab4 = _make_panel(np.random.rand(3)*10e7, filetypes, 'MIRI')
-        tab5 = _make_panel(np.random.rand(3)*10e7, filetypes, 'NIRISS')
-        tab6 = _make_panel(np.random.rand(3)*10e7, filetypes, 'FGS')
-
-        tabs = Tabs(tabs=[tab1, tab2, tab3, tab4, tab5, tab6])
+        tabs = Tabs(tabs=figures)
 
         return tabs
 
@@ -124,28 +115,45 @@ class generalDashboard:
         """Scatter of number of files per day added to JWQLDB
         """
 
-        data = {'dates':[date(2020, 10, i+1) for i in range(30)],
-                'numfiles':[i + randint(40, 150) for i in range(30)]}
-        data['datestr'] = [date.strftime("%Y-%m-%d") for date in data['dates']]
+        source = build_table('filesystem_general')
+        date_times = [pd.to_datetime(datetime).date() for datetime in source['date'].values]
+        # data = {'dates':[date(2020, 10, i+1) for i in range(30)],
+        #         'numfiles':[i + randint(40, 150) for i in range(30)]}
+        source['datestr'] = [date_time.strftime("%Y-%m-%d") for date_time in date_times]
 
-        df = pd.DataFrame(data, columns=['dates', 'numfiles', 'datestr'])
-        source = ColumnDataSource(df)
-        p = figure(title="Number of Files Added by Day", tools="hover,tap", tooltips="@datestr: @numfiles")
-        p.line(x='dates', y='numfiles', source=source, color='#6C5B7B', line_dash='dashed', line_width=3)
+        # df = pd.DataFrame(data, columns=['dates', 'numfiles', 'datestr'])
+        # source = ColumnDataSource(df)
+        p1 = figure(title="Number of Files Added by Day", tools="hover,tap", tooltips="@datestr: @total_file_count", plot_width=1700, x_axis_label='Date', y_axis_label='Number of Files Added')
+        p1.line(x='date', y='total_file_count', source=source, color='#6C5B7B', line_dash='dashed', line_width=3)
+        tab1 = Panel(child=p1, title='Files Per Day')
+
+        p2 = figure(title="Available & Used Storage", tools="hover,tap", tooltips="@datestr: @total_file_count", plot_width=1700, x_axis_label='Date', y_axis_label='Storage Space [Terabytes?]')
+        p2.line(x='date', y='available', source=source, color='#F8B195', line_dash='dashed', line_width=3, legend='Available Storage')
+        p2.line(x='date', y='used', source=source, color='#355C7D', line_dash='dashed', line_width=3, legend='Used Storage')
+        tab2 = Panel(child=p2, title='Storage')
 
         url = "http://127.0.0.1:8000/daily_trending/@datestr"
-        taptool = p.select(type=TapTool)
+        taptool = p1.select(type=TapTool)
         taptool.callback = OpenURL(url=url)
 
-        p.xaxis.formatter=DatetimeTickFormatter(
+        p1.xaxis.formatter=DatetimeTickFormatter(
                 hours=["%d %B %Y"],
                 days=["%d %B %Y"],
                 months=["%d %B %Y"],
                 years=["%d %B %Y"],
             )
-        p.xaxis.major_label_orientation = pi/4
+        p1.xaxis.major_label_orientation = pi/4
 
-        return p
+        p2.xaxis.formatter=DatetimeTickFormatter(
+                hours=["%d %B %Y"],
+                days=["%d %B %Y"],
+                months=["%d %B %Y"],
+                years=["%d %B %Y"],
+            )
+        p2.xaxis.major_label_orientation = pi/4
+
+        tabs = Tabs(tabs=[tab1, tab2]) 
+        return tabs
 
 
     def dashboard_monitor_tracking(self):
@@ -165,6 +173,18 @@ class generalDashboard:
         return table_columns, table_values
 
 
+    def make_panel(self, x, top, instrument, title, x_axis_label):
+            # filetypes = data.filetype.unique()
+            s = pd.Series(dict(zip(x, top))).reset_index(name='top').rename(columns={'index':'x'})
+            source = ColumnDataSource(s)
+            p = figure(x_range=x, title=title, plot_width=850, tools="hover", tooltips="@x: @top", x_axis_label=x_axis_label)
+            p.vbar(x='x', top='top', source=source, width=0.9, color='#6C5B7B')
+            p.xaxis.major_label_orientation = pi/4
+            tab = Panel(child=p, title=instrument)
+
+            return tab
+
+
     def dashboard_exposure_count_by_filter(self):
 
         import numpy as np
@@ -173,15 +193,6 @@ class generalDashboard:
         # Get unique file types (Science, Cal, Dark, etc)
         # Get number of files per type
         # Make histogram/bar chart
-
-        def _make_panel(data, filters, instrument):
-            # filetypes = data.filetype.unique()
-            p = figure(x_range=filters, title="File Types Counts by Filter", plot_width=850)
-            p.vbar(x=filters, top=data, width=0.9, color='#6C5B7B')
-            p.xaxis.major_label_orientation = pi/4
-            tab = Panel(child=p, title=instrument)
-            
-            return tab
 
         def _count_filetypes(data):
             print('count up filetypes')
@@ -194,12 +205,13 @@ class generalDashboard:
             # data = data[(data['start_time']>=self.date) & (data['start_time']<=self.date+dt)]
 
         # for instrument in data.instrument.unique():
+        title = 'File Counts Per Filter'
+        figures = [self.make_panel(FILTERS_PER_INSTRUMENT[instrument], np.random.rand(len(FILTERS_PER_INSTRUMENT[instrument]))*10e7, instrument, title, 'Filters') for instrument in FILTERS_PER_INSTRUMENT]
 
-        figures = [_make_panel(np.random.rand(len(FILTERS_PER_INSTRUMENT[instrument]))*10e7, FILTERS_PER_INSTRUMENT[instrument], instrument) for instrument in FILTERS_PER_INSTRUMENT]
-        
         tabs = Tabs(tabs=figures)
 
         return tabs
+
 
     def dashboard_anomaly_per_instrument(self):
 
@@ -210,14 +222,8 @@ class generalDashboard:
         # Get number of files per type
         # Make histogram/bar chart
 
-        def _make_panel(data, anomalies, instrument):
-            # filetypes = data.filetype.unique()
-            p = figure(x_range=anomalies, title="Anomaly By Instrument", plot_width=850)
-            p.vbar(x=anomalies, top=data, width=0.9, color='#6C5B7B')
-            p.xaxis.major_label_orientation = pi/4
-            tab = Panel(child=p, title=instrument)
-            
-            return tab
+        # query_name = {instrument: list(zip(*ANOMALY_CHOICES_PER_INSTRUMENT[instrument]))[0] for instrument in ANOMALY_CHOICES_PER_INSTRUMENT}
+        display_name = {instrument: list(zip(*ANOMALY_CHOICES_PER_INSTRUMENT[instrument]))[1] for instrument in ANOMALY_CHOICES_PER_INSTRUMENT}
 
         def _count_filetypes(data):
             print('count up filetypes')
@@ -230,8 +236,8 @@ class generalDashboard:
             # data = data[(data['start_time']>=self.date) & (data['start_time']<=self.date+dt)]
 
         # for instrument in data.instrument.unique():
-
-        figures = [_make_panel(np.random.rand(len(ANOMALY_CHOICES_PER_INSTRUMENT[instrument]))*10e7, ANOMALY_CHOICES_PER_INSTRUMENT[instrument], instrument) for instrument in ANOMALY_CHOICES_PER_INSTRUMENT]
+        title = 'Anomaly Type By Instrument'
+        figures = [self.make_panel(display_name[instrument], np.random.rand(len(display_name[instrument]))*10e7, instrument, title, 'Anomaly Type') for instrument in display_name]
         tabs = Tabs(tabs=figures)
 
         return tabs
