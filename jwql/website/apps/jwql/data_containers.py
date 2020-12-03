@@ -893,8 +893,6 @@ def get_thumbnails_all_instruments(parameters):
         given instrument.
     """
 
-    # effexptm_min = parameters['exposure_time_min']
-    # effexptm_max = parameters['exposure_time_max']
     anomalies = parameters['anomalies']
 
     thumbnail_list = []
@@ -920,12 +918,6 @@ def get_thumbnails_all_instruments(parameters):
                               {"paramName": "filter",
                                "values": parameters['filters'][inst.lower()]
                                },
-                              #   {"paramName": "effexptm",
-                              #    "values": {"min": effexptm_min, "max": effexptm_max}
-                              #   },
-                              #   {"paramName": "grating",
-                              #    "values": parameters['gratings'][inst.lower()]
-                              #   },
                               {"paramName": "exp_type",
                                "values": parameters['exposure_types'][inst.lower()]
                                },

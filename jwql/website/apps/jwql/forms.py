@@ -88,196 +88,87 @@ class AnomalyQueryForm(BaseForm):
     # Form submits
     calculate_submit = SubmitField()
 
-    # Generate dynamic lists of apertures to use in forms
-    miri_aperture_list = []
-    for aperture in APERTURES_PER_INSTRUMENT['MIRI']:
-        miri_aperture_list.append([query_format(aperture), query_format(aperture)])
-
-    nirspec_aperture_list = []
-    for aperture in APERTURES_PER_INSTRUMENT['NIRSPEC']:
-        nirspec_aperture_list.append([query_format(aperture), query_format(aperture)])
-
-    nircam_aperture_list = []
-    for aperture in APERTURES_PER_INSTRUMENT['NIRCAM']:
-        nircam_aperture_list.append([query_format(aperture), query_format(aperture)])
-
-    niriss_aperture_list = []
-    for aperture in APERTURES_PER_INSTRUMENT['NIRISS']:
-        niriss_aperture_list.append([query_format(aperture), query_format(aperture)])
-
-    # Generate dynamic lists of filters to use in forms
-    miri_filter_list = []
-    for filt in FILTERS_PER_INSTRUMENT['miri']:
-        filt = query_format(filt)
-        miri_filter_list.append([filt, filt])
-
-    nirspec_filter_list = []
-    for filt in FILTERS_PER_INSTRUMENT['nirspec']:
-        filt = query_format(filt)
-        nirspec_filter_list.append([filt, filt])
-
-    niriss_filter_list = []
-    for filt in FILTERS_PER_INSTRUMENT['niriss']:
-        filt = query_format(filt)
-        niriss_filter_list.append([filt, filt])
-
-    nircam_filter_list = []
-    for filt in FILTERS_PER_INSTRUMENT['nircam']:
-        filt = query_format(filt)
-        nircam_filter_list.append([filt, filt])
-
-    # Generate dynamic lists of detectors to use in forms
-    miri_detector_list = []
-    for detector in DETECTOR_PER_INSTRUMENT['miri']:
-        detector = query_format(detector)
-        miri_detector_list.append([detector, detector])
-
-    niriss_detector_list = []
-    for detector in DETECTOR_PER_INSTRUMENT['niriss']:
-        detector = query_format(detector)
-        niriss_detector_list.append([detector, detector])
-
-    nircam_detector_list = []
-    for detector in DETECTOR_PER_INSTRUMENT['nircam']:
-        detector = query_format(detector)
-        nircam_detector_list.append([detector, detector])
-
-    nirspec_detector_list = []
-    for detector in DETECTOR_PER_INSTRUMENT['nirspec']:
-        detector = query_format(detector)
-        nirspec_detector_list.append([detector, detector])
-
-    # Generate dynamic lists of read patterns to use in forms
-    miri_readpatt_list = []
-    for readpatt in READPATT_PER_INSTRUMENT['miri']:
-        readpatt = query_format(readpatt)
-        miri_readpatt_list.append([readpatt, readpatt])
-
-    niriss_readpatt_list = []
-    for readpatt in READPATT_PER_INSTRUMENT['niriss']:
-        readpatt = query_format(readpatt)
-        niriss_readpatt_list.append([readpatt, readpatt])
-
-    nircam_readpatt_list = []
-    for readpatt in READPATT_PER_INSTRUMENT['nircam']:
-        readpatt = query_format(readpatt)
-        nircam_readpatt_list.append([readpatt, readpatt])
-
-    nirspec_readpatt_list = []
-    for readpatt in READPATT_PER_INSTRUMENT['nirspec']:
-        readpatt = query_format(readpatt)
-        nirspec_readpatt_list.append([readpatt, readpatt])
-
-    # Generate dynamic lists of exposure types to use in forms
-    miri_exptype_list = []
-    for exptype in EXP_TYPE_PER_INSTRUMENT['miri']:
-        exptype = query_format(exptype)
-        miri_exptype_list.append([exptype, exptype])
-
-    niriss_exptype_list = []
-    for exptype in EXP_TYPE_PER_INSTRUMENT['niriss']:
-        exptype = query_format(exptype)
-        niriss_exptype_list.append([exptype, exptype])
-
-    nircam_exptype_list = []
-    for exptype in EXP_TYPE_PER_INSTRUMENT['nircam']:
-        exptype = query_format(exptype)
-        nircam_exptype_list.append([exptype, exptype])
-
-    nirspec_exptype_list = []
-    for exptype in EXP_TYPE_PER_INSTRUMENT['nirspec']:
-        exptype = query_format(exptype)
-        nirspec_exptype_list.append([exptype, exptype])
-
-    # Generate dynamic lists of grating options to use in forms
-    miri_grating_list = []
-    for grating in GRATING_PER_INSTRUMENT['miri']:
-        grating = query_format(grating)
-        miri_grating_list.append([grating, grating])
-
-    niriss_grating_list = []
-    for grating in GRATING_PER_INSTRUMENT['niriss']:
-        grating = query_format(grating)
-        niriss_grating_list.append([grating, grating])
-
-    nircam_grating_list = []
-    for grating in GRATING_PER_INSTRUMENT['nircam']:
-        grating = query_format(grating)
-        nircam_grating_list.append([grating, grating])
-
-    nirspec_grating_list = []
-    for grating in GRATING_PER_INSTRUMENT['nirspec']:
-        grating = query_format(grating)
-        nirspec_grating_list.append([grating, grating])
-
-    # Generate dynamic lists of anomalies to use in forms
-    miri_anomalies_list = []
-    for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
-        if 'miri' in ANOMALIES_PER_INSTRUMENT[anomaly]:
-            item = [query_format(anomaly), query_format(anomaly)]
-            miri_anomalies_list.append(item)
-
-    nircam_anomalies_list = []
-    for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
-        if 'nircam' in ANOMALIES_PER_INSTRUMENT[anomaly]:
-            item = [query_format(anomaly), query_format(anomaly)]
-            nircam_anomalies_list.append(item)
-
-    niriss_anomalies_list = []
-    for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
-        if 'niriss' in ANOMALIES_PER_INSTRUMENT[anomaly]:
-            item = [query_format(anomaly), query_format(anomaly)]
-            niriss_anomalies_list.append(item)
-
-    nirspec_anomalies_list = []
-    for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
-        if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]:
-            item = [query_format(anomaly), query_format(anomaly)]
-            nirspec_anomalies_list.append(item)
+    # Generate lists of form options for each instrument
+    params = {}
+    for instrument in ['miri', 'niriss', 'nircam', 'nirspec']:
+        params[instrument] = {}
+        params[instrument]['aperture_list'] = []
+        params[instrument]['filter_list'] = []
+        params[instrument]['detector_list'] = []
+        params[instrument]['readpatt_list'] = []
+        params[instrument]['exptype_list'] = []
+        params[instrument]['grating_list'] = []
+        params[instrument]['anomalies_list'] = []
+        # Generate dynamic lists of apertures to use in forms
+        for aperture in APERTURES_PER_INSTRUMENT[instrument.upper()]:
+            params[instrument]['aperture_list'].append([query_format(aperture), query_format(aperture)])
+        # Generate dynamic lists of filters to use in forms
+        for filt in FILTERS_PER_INSTRUMENT[instrument]:
+            filt = query_format(filt)
+            params[instrument]['filter_list'].append([filt, filt])
+        # Generate dynamic lists of detectors to use in forms
+        for detector in DETECTOR_PER_INSTRUMENT[instrument]:
+            detector = query_format(detector)
+            params[instrument]['detector_list'].append([detector, detector])
+        # Generate dynamic lists of read patterns to use in forms
+        for readpatt in READPATT_PER_INSTRUMENT[instrument]:
+            readpatt = query_format(readpatt)
+            params[instrument]['readpatt_list'].append([readpatt, readpatt])
+        # Generate dynamic lists of exposure types to use in forms
+        for exptype in EXP_TYPE_PER_INSTRUMENT[instrument]:
+            exptype = query_format(exptype)
+            params[instrument]['exptype_list'].append([exptype, exptype])
+        # Generate dynamic lists of grating options to use in forms
+        for grating in GRATING_PER_INSTRUMENT[instrument]:
+            grating = query_format(grating)
+            params[instrument]['grating_list'].append([grating, grating])
+        # Generate dynamic lists of anomalies to use in forms
+        for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
+            if instrument in ANOMALIES_PER_INSTRUMENT[anomaly]:
+                item = [query_format(anomaly), query_format(anomaly)]
+                params[instrument]['anomalies_list'].append(item)
 
     # Anomaly Parameters
     instrument = forms.MultipleChoiceField(required=False,
                                            choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
                                            widget=forms.CheckboxSelectMultiple)
-    # early_date = forms.DateField(required=False, initial="eg, 2021-10-02 12:04:39 or 2021-10-02")
-    # late_date = forms.DateField(required=False, initial="eg, 2021-11-25 14:30:59 or 2021-11-25")
     exp_time_max = forms.DecimalField(required=False, initial="685")
     exp_time_min = forms.DecimalField(required=False, initial="680")
 
-    miri_aper = forms.MultipleChoiceField(required=False, choices=miri_aperture_list, widget=forms.CheckboxSelectMultiple)
-    nirspec_aper = forms.MultipleChoiceField(required=False, choices=nirspec_aperture_list, widget=forms.CheckboxSelectMultiple)
-    niriss_aper = forms.MultipleChoiceField(required=False, choices=niriss_aperture_list, widget=forms.CheckboxSelectMultiple)
-    nircam_aper = forms.MultipleChoiceField(required=False, choices=nircam_aperture_list, widget=forms.CheckboxSelectMultiple)
+    miri_aper = forms.MultipleChoiceField(required=False, choices=params['miri']['aperture_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_aper = forms.MultipleChoiceField(required=False, choices=params['nirspec']['aperture_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_aper = forms.MultipleChoiceField(required=False, choices=params['niriss']['aperture_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_aper = forms.MultipleChoiceField(required=False, choices=params['nircam']['aperture_list'], widget=forms.CheckboxSelectMultiple)
 
-    miri_filt = forms.MultipleChoiceField(required=False, choices=miri_filter_list, widget=forms.CheckboxSelectMultiple)
-    nirspec_filt = forms.MultipleChoiceField(required=False, choices=nirspec_filter_list, widget=forms.CheckboxSelectMultiple)
-    niriss_filt = forms.MultipleChoiceField(required=False, choices=niriss_filter_list, widget=forms.CheckboxSelectMultiple)
-    nircam_filt = forms.MultipleChoiceField(required=False, choices=nircam_filter_list, widget=forms.CheckboxSelectMultiple)
+    miri_filt = forms.MultipleChoiceField(required=False, choices=params['miri']['filter_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_filt = forms.MultipleChoiceField(required=False, choices=params['nirspec']['filter_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_filt = forms.MultipleChoiceField(required=False, choices=params['niriss']['filter_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_filt = forms.MultipleChoiceField(required=False, choices=params['nircam']['filter_list'], widget=forms.CheckboxSelectMultiple)
 
-    miri_detector = forms.MultipleChoiceField(required=False, choices=miri_detector_list, widget=forms.CheckboxSelectMultiple)
-    nirspec_detector = forms.MultipleChoiceField(required=False, choices=nirspec_detector_list, widget=forms.CheckboxSelectMultiple)
-    niriss_detector = forms.MultipleChoiceField(required=False, choices=niriss_detector_list, widget=forms.CheckboxSelectMultiple)
-    nircam_detector = forms.MultipleChoiceField(required=False, choices=nircam_detector_list, widget=forms.CheckboxSelectMultiple)
+    miri_detector = forms.MultipleChoiceField(required=False, choices=params['miri']['detector_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_detector = forms.MultipleChoiceField(required=False, choices=params['nirspec']['detector_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_detector = forms.MultipleChoiceField(required=False, choices=params['niriss']['detector_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_detector = forms.MultipleChoiceField(required=False, choices=params['nircam']['detector_list'], widget=forms.CheckboxSelectMultiple)
 
-    miri_anomalies = forms.MultipleChoiceField(required=False, choices=miri_anomalies_list, widget=forms.CheckboxSelectMultiple)
-    nirspec_anomalies = forms.MultipleChoiceField(required=False, choices=nirspec_anomalies_list, widget=forms.CheckboxSelectMultiple)
-    niriss_anomalies = forms.MultipleChoiceField(required=False, choices=niriss_anomalies_list, widget=forms.CheckboxSelectMultiple)
-    nircam_anomalies = forms.MultipleChoiceField(required=False, choices=nircam_anomalies_list, widget=forms.CheckboxSelectMultiple)
+    miri_anomalies = forms.MultipleChoiceField(required=False, choices=params['miri']['anomalies_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_anomalies = forms.MultipleChoiceField(required=False, choices=params['nirspec']['anomalies_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_anomalies = forms.MultipleChoiceField(required=False, choices=params['niriss']['anomalies_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_anomalies = forms.MultipleChoiceField(required=False, choices=params['nircam']['anomalies_list'], widget=forms.CheckboxSelectMultiple)
 
-    miri_readpatt = forms.MultipleChoiceField(required=False, choices=miri_readpatt_list, widget=forms.CheckboxSelectMultiple)
-    nirspec_readpatt = forms.MultipleChoiceField(required=False, choices=nirspec_readpatt_list, widget=forms.CheckboxSelectMultiple)
-    niriss_readpatt = forms.MultipleChoiceField(required=False, choices=niriss_readpatt_list, widget=forms.CheckboxSelectMultiple)
-    nircam_readpatt = forms.MultipleChoiceField(required=False, choices=nircam_readpatt_list, widget=forms.CheckboxSelectMultiple)
+    miri_readpatt = forms.MultipleChoiceField(required=False, choices=params['miri']['readpatt_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_readpatt = forms.MultipleChoiceField(required=False, choices=params['nirspec']['readpatt_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_readpatt = forms.MultipleChoiceField(required=False, choices=params['niriss']['readpatt_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_readpatt = forms.MultipleChoiceField(required=False, choices=params['nircam']['readpatt_list'], widget=forms.CheckboxSelectMultiple)
 
-    miri_exptype = forms.MultipleChoiceField(required=False, choices=miri_exptype_list, widget=forms.CheckboxSelectMultiple)
-    nirspec_exptype = forms.MultipleChoiceField(required=False, choices=nirspec_exptype_list, widget=forms.CheckboxSelectMultiple)
-    niriss_exptype = forms.MultipleChoiceField(required=False, choices=niriss_exptype_list, widget=forms.CheckboxSelectMultiple)
-    nircam_exptype = forms.MultipleChoiceField(required=False, choices=nircam_exptype_list, widget=forms.CheckboxSelectMultiple)
+    miri_exptype = forms.MultipleChoiceField(required=False, choices=params['miri']['exptype_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_exptype = forms.MultipleChoiceField(required=False, choices=params['nirspec']['exptype_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_exptype = forms.MultipleChoiceField(required=False, choices=params['niriss']['exptype_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_exptype = forms.MultipleChoiceField(required=False, choices=params['nircam']['exptype_list'], widget=forms.CheckboxSelectMultiple)
 
-    miri_grating = forms.MultipleChoiceField(required=False, choices=miri_grating_list, widget=forms.CheckboxSelectMultiple)
-    nirspec_grating = forms.MultipleChoiceField(required=False, choices=nirspec_grating_list, widget=forms.CheckboxSelectMultiple)
-    niriss_grating = forms.MultipleChoiceField(required=False, choices=niriss_grating_list, widget=forms.CheckboxSelectMultiple)
-    nircam_grating = forms.MultipleChoiceField(required=False, choices=nircam_grating_list, widget=forms.CheckboxSelectMultiple)
+    miri_grating = forms.MultipleChoiceField(required=False, choices=params['miri']['grating_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_grating = forms.MultipleChoiceField(required=False, choices=params['nirspec']['grating_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_grating = forms.MultipleChoiceField(required=False, choices=params['niriss']['grating_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_grating = forms.MultipleChoiceField(required=False, choices=params['nircam']['grating_list'], widget=forms.CheckboxSelectMultiple)
 
     def clean_inst(self):
 

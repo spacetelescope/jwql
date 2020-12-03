@@ -86,79 +86,26 @@ def anomaly_query(request):
 
     if request.method == 'POST':
         if form.is_valid():
-            miri_filters = [query_unformat(i) for i in form.cleaned_data['miri_filt']]
-            miri_apers = [query_unformat(i) for i in form.cleaned_data['miri_aper']]
-            miri_detector = [query_unformat(i) for i in form.cleaned_data['miri_detector']]
-            miri_exptype = [query_unformat(i) for i in form.cleaned_data['miri_exptype']]
-            miri_readpatt = [query_unformat(i) for i in form.cleaned_data['miri_readpatt']]
-            miri_grating = [query_unformat(i) for i in form.cleaned_data['miri_grating']]
-            miri_anomalies = [query_unformat(i) for i in form.cleaned_data['miri_anomalies']]
+            query_configs = {}
+            for instrument in ['miri', 'nirspec', 'niriss', 'nircam']:
+                query_configs[instrument] = {}
+                query_configs[instrument]['filters'] = [query_unformat(i) for i in form.cleaned_data['{}_filt'.format(instrument)]]
+                query_configs[instrument]['apertures'] = [query_unformat(i) for i in form.cleaned_data['{}_aper'.format(instrument)]]
+                query_configs[instrument]['detectors'] = [query_unformat(i) for i in form.cleaned_data['{}_detector'.format(instrument)]]
+                query_configs[instrument]['exptypes'] = [query_unformat(i) for i in form.cleaned_data['{}_exptype'.format(instrument)]]
+                query_configs[instrument]['readpatts'] = [query_unformat(i) for i in form.cleaned_data['{}_readpatt'.format(instrument)]]
+                query_configs[instrument]['gratings'] = [query_unformat(i) for i in form.cleaned_data['{}_grating'.format(instrument)]]
+                query_configs[instrument]['anomalies'] = [query_unformat(i) for i in form.cleaned_data['{}_anomalies'.format(instrument)]]
 
-            nirspec_filters = [query_unformat(i) for i in form.cleaned_data['nirspec_filt']]
-            nirspec_apers = [query_unformat(i) for i in form.cleaned_data['nirspec_aper']]
-            nirspec_detector = [query_unformat(i) for i in form.cleaned_data['nirspec_detector']]
-            nirspec_exptype = [query_unformat(i) for i in form.cleaned_data['nirspec_exptype']]
-            nirspec_readpatt = [query_unformat(i) for i in form.cleaned_data['nirspec_readpatt']]
-            nirspec_grating = [query_unformat(i) for i in form.cleaned_data['nirspec_grating']]
-            nirspec_anomalies = [query_unformat(i) for i in form.cleaned_data['nirspec_anomalies']]
-
-            niriss_filters = [query_unformat(i) for i in form.cleaned_data['niriss_filt']]
-            niriss_apers = [query_unformat(i) for i in form.cleaned_data['niriss_aper']]
-            niriss_detector = [query_unformat(i) for i in form.cleaned_data['niriss_detector']]
-            niriss_exptype = [query_unformat(i) for i in form.cleaned_data['niriss_exptype']]
-            niriss_readpatt = [query_unformat(i) for i in form.cleaned_data['niriss_readpatt']]
-            niriss_grating = [query_unformat(i) for i in form.cleaned_data['niriss_grating']]
-            niriss_anomalies = [query_unformat(i) for i in form.cleaned_data['niriss_anomalies']]
-
-            nircam_filters = [query_unformat(i) for i in form.cleaned_data['nircam_filt']]
-            nircam_apers = [query_unformat(i) for i in form.cleaned_data['nircam_aper']]
-            nircam_detector = [query_unformat(i) for i in form.cleaned_data['nircam_detector']]
-            nircam_exptype = [query_unformat(i) for i in form.cleaned_data['nircam_exptype']]
-            nircam_readpatt = [query_unformat(i) for i in form.cleaned_data['nircam_readpatt']]
-            nircam_grating = [query_unformat(i) for i in form.cleaned_data['nircam_grating']]
-            nircam_anomalies = [query_unformat(i) for i in form.cleaned_data['nircam_anomalies']]
-
-            all_filters = {}
-            all_filters['miri'] = miri_filters
-            all_filters['nirspec'] = nirspec_filters
-            all_filters['niriss'] = niriss_filters
-            all_filters['nircam'] = nircam_filters
-
-            all_apers = {}
-            all_apers['miri'] = miri_apers
-            all_apers['nirspec'] = nirspec_apers
-            all_apers['niriss'] = niriss_apers
-            all_apers['nircam'] = nircam_apers
-
-            all_detectors = {}
-            all_detectors['miri'] = miri_detector
-            all_detectors['nirspec'] = nirspec_detector
-            all_detectors['niriss'] = niriss_detector
-            all_detectors['nircam'] = nircam_detector
-
-            all_anomalies = {}
-            all_anomalies['miri'] = miri_anomalies
-            all_anomalies['nirspec'] = nirspec_anomalies
-            all_anomalies['niriss'] = niriss_anomalies
-            all_anomalies['nircam'] = nircam_anomalies
-
-            all_exptypes = {}
-            all_exptypes['miri'] = miri_exptype
-            all_exptypes['nirspec'] = nirspec_exptype
-            all_exptypes['niriss'] = niriss_exptype
-            all_exptypes['nircam'] = nircam_exptype
-
-            all_readpatts = {}
-            all_readpatts['miri'] = miri_readpatt
-            all_readpatts['nirspec'] = nirspec_readpatt
-            all_readpatts['niriss'] = niriss_readpatt
-            all_readpatts['nircam'] = nircam_readpatt
-
-            all_gratings = {}
-            all_gratings['miri'] = miri_grating
-            all_gratings['nirspec'] = nirspec_grating
-            all_gratings['niriss'] = niriss_grating
-            all_gratings['nircam'] = nircam_grating
+            all_filters, all_apers, all_detectors, all_exptypes, all_readpatts, all_gratings, all_anomalies = {}, {}, {}, {}, {}, {}, {}
+            for instrument in query_configs:
+                all_filters[instrument] = query_configs[instrument]['filters']
+                all_apers[instrument] = query_configs[instrument]['apertures']
+                all_detectors[instrument] = query_configs[instrument]['detectors']
+                all_exptypes[instrument] = query_configs[instrument]['exptypes']
+                all_readpatts[instrument] = query_configs[instrument]['readpatts']
+                all_gratings[instrument] = query_configs[instrument]['gratings']
+                all_anomalies[instrument] = query_configs[instrument]['anomalies']
 
             anomaly_query_config.INSTRUMENTS_CHOSEN = form.cleaned_data['instrument']
             anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = all_anomalies
@@ -674,27 +621,15 @@ def query_submit(request):
 
     template = 'query_submit.html'
 
-    instruments = anomaly_query_config.INSTRUMENTS_CHOSEN
-    apertures = anomaly_query_config.APERTURES_CHOSEN
-    filters = anomaly_query_config.FILTERS_CHOSEN
-    exposure_time_min = anomaly_query_config.EXPTIME_MIN
-    exposure_time_max = anomaly_query_config.EXPTIME_MAX
-    detectors = anomaly_query_config.DETECTORS_CHOSEN
-    anomalies = anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
-    readpatts = anomaly_query_config.READPATTS_CHOSEN
-    exptypes = anomaly_query_config.EXPTYPES_CHOSEN
-    gratings = anomaly_query_config.GRATINGS_CHOSEN
     parameters = {}
-    parameters['instruments'] = instruments
-    parameters['apertures'] = apertures
-    parameters['filters'] = filters
-    parameters['detectors'] = detectors
-    parameters['exposure_time_min'] = exposure_time_min
-    parameters['exposure_time_max'] = exposure_time_max
-    parameters['exposure_types'] = exptypes
-    parameters['read_patterns'] = readpatts
-    parameters['gratings'] = gratings
-    parameters['anomalies'] = anomalies
+    parameters['instruments'] = anomaly_query_config.INSTRUMENTS_CHOSEN
+    parameters['apertures'] = anomaly_query_config.APERTURES_CHOSEN
+    parameters['filters'] = anomaly_query_config.FILTERS_CHOSEN
+    parameters['detectors'] = anomaly_query_config.DETECTORS_CHOSEN
+    parameters['exposure_types'] = anomaly_query_config.EXPTYPES_CHOSEN
+    parameters['read_patterns'] = anomaly_query_config.READPATTS_CHOSEN
+    parameters['gratings'] = anomaly_query_config.GRATINGS_CHOSEN
+    parameters['anomalies'] = anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
     thumbnails = get_thumbnails_all_instruments(parameters)
     anomaly_query_config.THUMBNAILS = thumbnails
 
@@ -703,10 +638,10 @@ def query_submit(request):
 
     context = {'inst': '',
                'anomalies_chosen_from_current_anomalies': anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
-               'apertures_chosen': apertures,
-               'filters_chosen': filters,
-               'inst_list_chosen': instruments,
-               'detectors_chosen': detectors,
+               'apertures_chosen': anomaly_query_config.APERTURES_CHOSEN,
+               'filters_chosen': anomaly_query_config.FILTERS_CHOSEN,
+               'inst_list_chosen': anomaly_query_config.INSTRUMENTS_CHOSEN,
+               'detectors_chosen': anomaly_query_config.DETECTORS_CHOSEN,
                'thumbnails': thumbnails,
                'base_url': get_base_url(),
                'rootnames': thumbnails,
