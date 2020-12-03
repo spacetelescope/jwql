@@ -249,32 +249,32 @@ class AnomalyQueryForm(BaseForm):
     niriss_aper = forms.MultipleChoiceField(required=False, choices=niriss_aperture_list, widget=forms.CheckboxSelectMultiple)
     nircam_aper = forms.MultipleChoiceField(required=False, choices=nircam_aperture_list, widget=forms.CheckboxSelectMultiple)
 
-    miri_filt = forms.MultipleChoiceField(required=False, choices=miri_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('lrs', 'LRS')])
-    nirspec_filt = forms.MultipleChoiceField(required=False, choices=nirspec_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('f070lp_g140h', 'F070LP/G140H'), ('f100lp_g140h', 'F100LP/G140H'), ('f070lp_g140m', 'F070LP/G140M'), ('f100lp_g140m', 'F100LP/G140M'), ('f170lp_g235h', 'F170LP/G235H'), ('f170lp_g235m', 'F170LP/G235M'), ('f290lp_g395h', 'F290LP/G395H'), ('f290lp_g395m', 'F290LP/G395M')])
-    niriss_filt = forms.MultipleChoiceField(required=False, choices=niriss_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('soss', 'SOSS')])
-    nircam_filt = forms.MultipleChoiceField(required=False, choices=nircam_filter_list, widget=forms.CheckboxSelectMultiple) #choices=[('f322w2', 'F322W2'), ('f444w', 'F444W'), ('f277w', 'F277W')])
+    miri_filt = forms.MultipleChoiceField(required=False, choices=miri_filter_list, widget=forms.CheckboxSelectMultiple)
+    nirspec_filt = forms.MultipleChoiceField(required=False, choices=nirspec_filter_list, widget=forms.CheckboxSelectMultiple)
+    niriss_filt = forms.MultipleChoiceField(required=False, choices=niriss_filter_list, widget=forms.CheckboxSelectMultiple)
+    nircam_filt = forms.MultipleChoiceField(required=False, choices=nircam_filter_list, widget=forms.CheckboxSelectMultiple)
 
-    miri_detector= forms.MultipleChoiceField(required=False, choices=miri_detector_list, widget=forms.CheckboxSelectMultiple)
+    miri_detector = forms.MultipleChoiceField(required=False, choices=miri_detector_list, widget=forms.CheckboxSelectMultiple)
     nirspec_detector = forms.MultipleChoiceField(required=False, choices=nirspec_detector_list, widget=forms.CheckboxSelectMultiple)
     niriss_detector = forms.MultipleChoiceField(required=False, choices=niriss_detector_list, widget=forms.CheckboxSelectMultiple)
     nircam_detector = forms.MultipleChoiceField(required=False, choices=nircam_detector_list, widget=forms.CheckboxSelectMultiple)
 
-    miri_anomalies= forms.MultipleChoiceField(required=False, choices=miri_anomalies_list, widget=forms.CheckboxSelectMultiple)
+    miri_anomalies = forms.MultipleChoiceField(required=False, choices=miri_anomalies_list, widget=forms.CheckboxSelectMultiple)
     nirspec_anomalies = forms.MultipleChoiceField(required=False, choices=nirspec_anomalies_list, widget=forms.CheckboxSelectMultiple)
     niriss_anomalies = forms.MultipleChoiceField(required=False, choices=niriss_anomalies_list, widget=forms.CheckboxSelectMultiple)
     nircam_anomalies = forms.MultipleChoiceField(required=False, choices=nircam_anomalies_list, widget=forms.CheckboxSelectMultiple)
 
-    miri_readpatt= forms.MultipleChoiceField(required=False, choices=miri_readpatt_list, widget=forms.CheckboxSelectMultiple)
+    miri_readpatt = forms.MultipleChoiceField(required=False, choices=miri_readpatt_list, widget=forms.CheckboxSelectMultiple)
     nirspec_readpatt = forms.MultipleChoiceField(required=False, choices=nirspec_readpatt_list, widget=forms.CheckboxSelectMultiple)
     niriss_readpatt = forms.MultipleChoiceField(required=False, choices=niriss_readpatt_list, widget=forms.CheckboxSelectMultiple)
     nircam_readpatt = forms.MultipleChoiceField(required=False, choices=nircam_readpatt_list, widget=forms.CheckboxSelectMultiple)
 
-    miri_exptype= forms.MultipleChoiceField(required=False, choices=miri_exptype_list, widget=forms.CheckboxSelectMultiple)
+    miri_exptype = forms.MultipleChoiceField(required=False, choices=miri_exptype_list, widget=forms.CheckboxSelectMultiple)
     nirspec_exptype = forms.MultipleChoiceField(required=False, choices=nirspec_exptype_list, widget=forms.CheckboxSelectMultiple)
     niriss_exptype = forms.MultipleChoiceField(required=False, choices=niriss_exptype_list, widget=forms.CheckboxSelectMultiple)
     nircam_exptype = forms.MultipleChoiceField(required=False, choices=nircam_exptype_list, widget=forms.CheckboxSelectMultiple)
 
-    miri_grating= forms.MultipleChoiceField(required=False, choices=miri_grating_list, widget=forms.CheckboxSelectMultiple)
+    miri_grating = forms.MultipleChoiceField(required=False, choices=miri_grating_list, widget=forms.CheckboxSelectMultiple)
     nirspec_grating = forms.MultipleChoiceField(required=False, choices=nirspec_grating_list, widget=forms.CheckboxSelectMultiple)
     niriss_grating = forms.MultipleChoiceField(required=False, choices=niriss_grating_list, widget=forms.CheckboxSelectMultiple)
     nircam_grating = forms.MultipleChoiceField(required=False, choices=nircam_grating_list, widget=forms.CheckboxSelectMultiple)
@@ -294,7 +294,6 @@ class InstrumentAnomalySubmitForm(forms.Form):
         super(InstrumentAnomalySubmitForm, self).__init__(*args, **kwargs)
         self.fields['anomaly_choices']=forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT[instrument], widget=forms.CheckboxSelectMultiple())
         self.instrument = instrument
-
 
     def update_anomaly_table(self, rootname, user, anomaly_choices):
         """Updated the ``anomaly`` table of the database with flagged
@@ -329,6 +328,7 @@ class InstrumentAnomalySubmitForm(forms.Form):
             di.engine.execute(di.NIRISSAnomaly.__table__.insert(), data_dict)
         elif self.instrument=='nircam':
             di.engine.execute(di.NIRCamAnomaly.__table__.insert(), data_dict)
+
     def clean_anomalies(self):
 
         anomalies = self.cleaned_data['anomaly_choices']

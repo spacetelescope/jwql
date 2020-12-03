@@ -900,7 +900,7 @@ def get_thumbnails_all_instruments(parameters):
     thumbnail_list = []
     filenames = []
 
-    if parameters['instruments']==None:
+    if parameters['instruments'] is None:
         thumbnails = []
     for inst in parameters['instruments']:
         print("Retrieving thumbnails for", inst)
@@ -912,26 +912,26 @@ def get_thumbnails_all_instruments(parameters):
 
         params = {"columns": "*",
                   "filters": [{"paramName": "apername",
-                              "values": parameters['apertures'][inst.lower()]
-                              },
+                               "values": parameters['apertures'][inst.lower()]
+                               },
                               {"paramName": "detector",
                                "values": parameters['detectors'][inst.lower()]
-                              },
+                               },
                               {"paramName": "filter",
                                "values": parameters['filters'][inst.lower()]
-                              },
-                            #   {"paramName": "effexptm",
-                            #    "values": {"min": effexptm_min, "max": effexptm_max}
-                            #   },
-                            #   {"paramName": "grating",
-                            #    "values": parameters['gratings'][inst.lower()]
-                            #   },
+                               },
+                               #   {"paramName": "effexptm",
+                               #    "values": {"min": effexptm_min, "max": effexptm_max}
+                               #   },
+                               #   {"paramName": "grating",
+                               #    "values": parameters['gratings'][inst.lower()]
+                               #   },
                               {"paramName": "exp_type",
                                "values": parameters['exposure_types'][inst.lower()]
-                              },
+                               },
                               {"paramName": "readpatt",
                                "values": parameters['read_patterns'][inst.lower()]
-                              }
+                               }
                               ]}
 
         response = Mast.service_request_async(service, params)
@@ -1259,7 +1259,7 @@ def thumbnails_query_ajax(rootnames, insts):
     detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for
                  rootname in list(data_dict['file_data'].keys())]
     instruments = [data_dict['file_data'][rootname]['inst'].lower() for
-                 rootname in list(data_dict['file_data'].keys())]
+                   rootname in list(data_dict['file_data'].keys())]
     proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for
                  rootname in list(data_dict['file_data'].keys())]
 

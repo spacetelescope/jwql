@@ -424,7 +424,7 @@ def archive_thumbnails_query_ajax(request, user):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    
+
     # Ensure the instrument is correctly capitalized
     instruments_list = []
     for instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:
@@ -702,8 +702,7 @@ def query_submit(request):
     proposal_info = get_proposal_info(thumbnails)
 
     context = {'inst': '',
-               'anomalies_chosen_from_current_anomalies':
-                     anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
+               'anomalies_chosen_from_current_anomalies': anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
                'apertures_chosen': apertures,
                'filters_chosen': filters,
                'inst_list_chosen': instruments,
@@ -715,9 +714,9 @@ def query_submit(request):
                                   'all_filenames': thumbnails,
                                   'num_proposals': proposal_info['num_proposals'],
                                   'thumbnails': {'proposals': proposal_info['proposals'],
-                                                  'thumbnail_paths': proposal_info['thumbnail_paths'],
-                                                  'num_files': proposal_info['num_files']}}
-              }
+                                                 'thumbnail_paths': proposal_info['thumbnail_paths'],
+                                                 'num_files': proposal_info['num_files']}}
+               }
 
     return render(request, template, context)
 
@@ -773,7 +772,7 @@ def view_header(request, inst, filename):
 
 
 @auth_required
-def view_image(request, user, inst, file_root, rewrite=False): 
+def view_image(request, user, inst, file_root, rewrite=False):
     """Generate the image view page
 
     Parameters
