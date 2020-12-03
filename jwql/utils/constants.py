@@ -104,6 +104,16 @@ ANOMALY_CHOICES_PER_INSTRUMENT = {'fgs': ANOMALY_CHOICES_FGS,
                                   'nirspec': ANOMALY_CHOICES_NIRSPEC
                                   }
 
+APERTURES_PER_INSTRUMENT = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',
+                                       'NRCA5_FULL', 'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL',
+                                       'NRCB4_FULL', 'NRCB5_FULL'],
+                            'NIRISS': ['NIS_CEN', 'NIS_SOSSFULL', 'NIS_AMIFULL', 'NIS_SOSSTA', 'NIS_AMI1',
+                                       'NIS_SUBSTRIP256', 'NIS_SUBSTRIP96'],
+                            'NIRSPEC': ['NRS1_FULL', 'NRS2_FULL', 'NRS_FULL_MSA', 'NRS_FULL_IFU',
+                                        'NRS_S200A1_SLIT',  'NRS_S200A2_SLIT', 'NRS_S1600A1_SLIT'],
+                            'MIRI': ['MIRIM_FULL', 'MIRIM_MASKLYOT', 'MIRIM_SLITLESSPRISM', 'MIRIM_SUB256',
+                                     'MIRIM_SUB128', 'MIRIM_SLIT']}
+
 # Bad pixel types by the type of data used to find them
 BAD_PIXEL_TYPES = ['DEAD', 'HOT', 'LOW_QE', 'RC', 'OPEN', 'ADJ_OPEN', 'TELEGRAPH', 'OTHER_BAD_PIXEL']
 DARKS_BAD_PIXEL_TYPES = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
@@ -179,16 +189,6 @@ FULL_FRAME_APERTURES = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NR
                         'MIRI': ['MIRIM_FULL'],
                         'FGS': ['FGS1_FULL', 'FGS2_FULL']
                         }
-
-APERTURES_PER_INSTRUMENT = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',
-                                       'NRCA5_FULL', 'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL',
-                                       'NRCB4_FULL', 'NRCB5_FULL'],
-                            'NIRISS': ['NIS_CEN', 'NIS_SOSSFULL', 'NIS_AMIFULL', 'NIS_SOSSTA', 'NIS_AMI1',
-                                       'NIS_SUBSTRIP256', 'NIS_SUBSTRIP96'],
-                            'NIRSPEC': ['NRS1_FULL', 'NRS2_FULL', 'NRS_FULL_MSA', 'NRS_FULL_IFU',
-                                        'NRS_S200A1_SLIT',  'NRS_S200A2_SLIT', 'NRS_S1600A1_SLIT'],
-                            'MIRI': ['MIRIM_FULL', 'MIRIM_MASKLYOT', 'MIRIM_SLITLESSPRISM', 'MIRIM_SUB256',
-                                     'MIRIM_SUB128', 'MIRIM_SLIT']}
 
 # Possible suffix types for nominal files
 GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',
