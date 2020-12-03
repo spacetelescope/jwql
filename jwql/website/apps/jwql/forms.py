@@ -292,7 +292,7 @@ class InstrumentAnomalySubmitForm(forms.Form):
     def __init__(self, *args, **kwargs):
         instrument = kwargs.pop('instrument')
         super(InstrumentAnomalySubmitForm, self).__init__(*args, **kwargs)
-        self.fields['anomaly_choices']=forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT[instrument], widget=forms.CheckboxSelectMultiple())
+        self.fields['anomaly_choices'] = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT[instrument], widget=forms.CheckboxSelectMultiple())
         self.instrument = instrument
 
     def update_anomaly_table(self, rootname, user, anomaly_choices):
@@ -318,15 +318,15 @@ class InstrumentAnomalySubmitForm(forms.Form):
         data_dict['user'] = user
         for choice in anomaly_choices:
             data_dict[choice] = True
-        if self.instrument=='fgs':
+        if self.instrument == 'fgs':
             di.engine.execute(di.FGSAnomaly.__table__.insert(), data_dict)
-        elif self.instrument=='nirspec':
+        elif self.instrument == 'nirspec':
             di.engine.execute(di.NIRSpecAnomaly.__table__.insert(), data_dict)
-        elif self.instrument=='miri':
+        elif self.instrument == 'miri':
             di.engine.execute(di.MIRIAnomaly.__table__.insert(), data_dict)
-        elif self.instrument=='niriss':
+        elif self.instrument == 'niriss':
             di.engine.execute(di.NIRISSAnomaly.__table__.insert(), data_dict)
-        elif self.instrument=='nircam':
+        elif self.instrument == 'nircam':
             di.engine.execute(di.NIRCamAnomaly.__table__.insert(), data_dict)
 
     def clean_anomalies(self):
