@@ -523,7 +523,8 @@ class Readnoise():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in JWST_INSTRUMENT_NAMES:
+        #for instrument in JWST_INSTRUMENT_NAMES: #TODO
+        for instrument in ['miri', 'nirspec', 'fgs']: #TODO
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -533,7 +534,7 @@ class Readnoise():
             siaf = Siaf(self.instrument)
             possible_apertures = list(siaf.apertures)
 
-            for aperture in possible_apertures:
+            for aperture in possible_apertures[1:2]:#TODO
 
                 logging.info('\nWorking on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
@@ -557,7 +558,7 @@ class Readnoise():
                 # Get any new files to process
                 new_files = []
                 checked_files = []
-                for file_entry in new_entries:
+                for file_entry in new_entries[0:2]: #TODO
                     output_filename = os.path.join(self.data_dir, file_entry['filename'].replace('_dark', '_uncal'))
 
                     # Sometimes both the dark and uncal name of a file is picked up in new_entries
