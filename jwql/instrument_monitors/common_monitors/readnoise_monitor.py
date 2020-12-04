@@ -67,6 +67,7 @@ from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, initialize_instrument_monitor, update_monitor_table
 
+
 class Readnoise():
     """Class for executing the readnoise monitor.
 
@@ -261,7 +262,7 @@ class Readnoise():
         vmin, vmax = zscale.get_limits(image)
 
         # Plot the image
-        plt.figure(figsize=(12,12))
+        plt.figure(figsize=(12, 12))
         im = plt.imshow(image, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
         plt.colorbar(im, label='Readnoise Difference (most recent dark - reffile) [DN]')
         plt.title('{}'.format(outname))
@@ -380,8 +381,8 @@ class Readnoise():
             where the readnoise monitor was run.
         """
 
-        query = session.query(self.query_table).filter(and_(self.query_table.aperture==self.aperture,
-            self.query_table.run_monitor==True)).order_by(self.query_table.end_time_mjd).all()
+        query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
+            self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
 
         if len(query) == 0:
             query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
@@ -458,7 +459,7 @@ class Readnoise():
             # Find the difference between the current readnoise image and the pipeline readnoise reffile, and record image stats.
             # Sometimes, the pipeline readnoise reffile needs to be cutout to match the subarray.
             if readnoise.shape != pipeline_readnoise.shape:
-                pipeline_readnoise = pipeline_readnoise[self.substrt2-1:self.substrt2+self.subsize2-1, self.substrt1-1:self.substrt1+self.subsize1-1]
+                pipeline_readnoise = pipeline_readnoise[self.substrt2 - 1:self.substrt2 + self.subsize2 - 1, self.substrt1 - 1:self.substrt1 + self.subsize1 - 1]
             readnoise_diff = readnoise - pipeline_readnoise
             clipped = sigma_clip(readnoise_diff, sigma=3.0, maxiters=5)
             diff_image_mean, diff_image_stddev = np.nanmean(clipped), np.nanstd(clipped)
@@ -523,8 +524,8 @@ class Readnoise():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        #for instrument in JWST_INSTRUMENT_NAMES: #TODO
-        for instrument in ['miri', 'nirspec', 'fgs']: #TODO
+        #for instrument in JWST_INSTRUMENT_NAMES: # TODO
+        for instrument in ['miri', 'nirspec', 'fgs']:  # TODO
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -534,7 +535,7 @@ class Readnoise():
             siaf = Siaf(self.instrument)
             possible_apertures = list(siaf.apertures)
 
-            for aperture in possible_apertures[1:2]:#TODO
+            for aperture in possible_apertures[1:2]:  # TODO
 
                 logging.info('\nWorking on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
@@ -558,7 +559,7 @@ class Readnoise():
                 # Get any new files to process
                 new_files = []
                 checked_files = []
-                for file_entry in new_entries[0:2]: #TODO
+                for file_entry in new_entries[0:2]:  # TODO
                     output_filename = os.path.join(self.data_dir, file_entry['filename'].replace('_dark', '_uncal'))
 
                     # Sometimes both the dark and uncal name of a file is picked up in new_entries
@@ -612,6 +613,7 @@ class Readnoise():
                 logging.info('\tUpdated the query history table')
 
         logging.info('Readnoise Monitor completed successfully.')
+
 
 if __name__ == '__main__':
 
