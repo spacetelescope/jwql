@@ -41,7 +41,7 @@
     data:
         dh: [1]
         dw: [1]
-        image: [[[1,0], [0, 1]]]
+        image: [[[0,0], [0, 0]]]
 - !Figure: &readnoise_diff_image
     ref: "readnoise_diff_image"
     title: 'Readnoise difference with pipeline reference file'
