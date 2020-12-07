@@ -134,7 +134,7 @@ class ReadnoiseMonitor(BokehTemplate):
             diff_image_n = np.array(self.query_results[-1].diff_image_n)
             diff_image_bin_centers = np.array(self.query_results[-1].diff_image_bin_centers)
 
-            # Update the data and image sources for the figures 
+            # Update the data and image sources for the figures
             self.refs['diff_hist_source'].data = {'n': diff_image_n,
                                                   'bin_centers': diff_image_bin_centers}
             self.refs['readnoise_diff_image'].image_url(url=[diff_image_png], x=0, y=0, w=2048, h=2048, anchor="bottom_left")
@@ -151,6 +151,6 @@ class ReadnoiseMonitor(BokehTemplate):
         self.refs['readnoise_diff_image'].xgrid.grid_line_color = None
         self.refs['readnoise_diff_image'].ygrid.grid_line_color = None
         self.refs['readnoise_diff_image'].title.text_font_size = '30px'
-        
+
 
 ReadnoiseMonitor()
