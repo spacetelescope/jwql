@@ -525,7 +525,7 @@ class Readnoise():
 
         # Loop over all instruments
         #for instrument in JWST_INSTRUMENT_NAMES: # TODO
-        for instrument in ['miri', 'nirspec', 'fgs']:  # TODO
+        for instrument in ['nircam', 'fgs']:  # TODO
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -535,7 +535,7 @@ class Readnoise():
             siaf = Siaf(self.instrument)
             possible_apertures = list(siaf.apertures)
 
-            for aperture in possible_apertures[1:2]:  # TODO
+            for aperture in possible_apertures[12:13]:  # TODO
 
                 logging.info('\nWorking on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
@@ -559,7 +559,7 @@ class Readnoise():
                 # Get any new files to process
                 new_files = []
                 checked_files = []
-                for file_entry in new_entries[0:2]:  # TODO
+                for file_entry in new_entries[0:5]:  # TODO
                     output_filename = os.path.join(self.data_dir, file_entry['filename'].replace('_dark', '_uncal'))
 
                     # Sometimes both the dark and uncal name of a file is picked up in new_entries
@@ -582,7 +582,7 @@ class Readnoise():
                             logging.info('\t{} does not exist in JWQL filesystem, even though {} does'.format(uncal_filename, filename))
                         else:
                             num_groups = fits.getheader(uncal_filename)['NGROUPS']
-                            if num_groups > 10:  # skip processing if the file doesnt have enough groups to calculate the readnoise
+                            if num_groups > 1:  # skip processing if the file doesnt have enough groups to calculate the readnoise TODO change to 10
                                 shutil.copy(uncal_filename, self.data_dir)
                                 logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
                                 set_permissions(output_filename)
