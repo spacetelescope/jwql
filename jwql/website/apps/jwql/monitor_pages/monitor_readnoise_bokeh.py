@@ -108,10 +108,6 @@ class ReadnoiseMonitor(BokehTemplate):
                                                    'filename': self.filenames,
                                                    'nints': self.nints,
                                                    'ngroups': self.ngroups}
-        self.refs['mean_readnoise_xr'].start = self.expstarts.min() - timedelta(days=3)
-        self.refs['mean_readnoise_xr'].end = self.expstarts.max() + timedelta(days=3)
-        self.refs['mean_readnoise_yr'].start = self.readnoise_vals.min() - 1
-        self.refs['mean_readnoise_yr'].end = self.readnoise_vals.max() + 1
         self.refs['mean_readnoise_figure'].title.text = 'Amp {}'.format(self._amp)
         self.refs['mean_readnoise_figure'].hover.tooltips = [('file', '@filename'),
                                                              ('time', '@time_iso'),
@@ -120,30 +116,41 @@ class ReadnoiseMonitor(BokehTemplate):
                                                              ('readnoise', '@mean_rn')
                                                              ]
 
+        # Update plot limits if data exists
+        if len(self.query_results) != 0:
+            self.refs['mean_readnoise_xr'].start = self.expstarts.min() - timedelta(days=3)
+            self.refs['mean_readnoise_xr'].end = self.expstarts.max() + timedelta(days=3)
+            self.refs['mean_readnoise_yr'].start = self.readnoise_vals.min() - 1
+            self.refs['mean_readnoise_yr'].end = self.readnoise_vals.max() + 1
+
     def update_readnoise_diff_plots(self):
         """Updates the readnoise difference image and histogram"""
 
-        # Get the most recent data; the entries were sorted by time when
-        # loading the database, so the last entry will always be the most recent.
-        diff_image_png = self.query_results[-1].readnoise_diff_image
-        diff_image_n = np.array(self.query_results[-1].diff_image_n)
-        diff_image_bin_centers = np.array(self.query_results[-1].diff_image_bin_centers)
+        # Update the readnoise difference image and histogram figures if data exists
+        if len(self.query_results) != 0:
+            # Get the most recent data; the entries were sorted by time when
+            # loading the database, so the last entry will always be the most recent.
+            diff_image_png = self.query_results[-1].readnoise_diff_image
+            diff_image_n = np.array(self.query_results[-1].diff_image_n)
+            diff_image_bin_centers = np.array(self.query_results[-1].diff_image_bin_centers)
 
-        # Update the readnoise difference image
-        self.refs['readnoise_diff_image'].image_url(url=[diff_image_png], x=0, y=0, w=2048, h=2048, anchor="bottom_left")
+            # Update the data and image sources for the figures
+            self.refs['diff_hist_source'].data = {'n': diff_image_n,
+                                                  'bin_centers': diff_image_bin_centers}
+            self.refs['readnoise_diff_image'].image_url(url=[diff_image_png], x=0, y=0, w=2048, h=2048, anchor="bottom_left")
+
+            # Update the histogram limits
+            self.refs['diff_hist_xr'].start = diff_image_bin_centers.min()
+            self.refs['diff_hist_xr'].end = diff_image_bin_centers.max()
+            self.refs['diff_hist_yr'].start = diff_image_n.min()
+            self.refs['diff_hist_yr'].end = diff_image_n.max() + diff_image_n.max() * 0.05
+
+        # Set the readnoise difference image style
         self.refs['readnoise_diff_image'].xaxis.visible = False
         self.refs['readnoise_diff_image'].yaxis.visible = False
         self.refs['readnoise_diff_image'].xgrid.grid_line_color = None
         self.refs['readnoise_diff_image'].ygrid.grid_line_color = None
         self.refs['readnoise_diff_image'].title.text_font_size = '30px'
-
-        # Update the readnoise difference histogram
-        self.refs['diff_hist_source'].data = {'n': diff_image_n,
-                                              'bin_centers': diff_image_bin_centers}
-        self.refs['diff_hist_xr'].start = diff_image_bin_centers.min()
-        self.refs['diff_hist_xr'].end = diff_image_bin_centers.max()
-        self.refs['diff_hist_yr'].start = diff_image_n.min()
-        self.refs['diff_hist_yr'].end = diff_image_n.max() + diff_image_n.max() * 0.05
 
 
 ReadnoiseMonitor()
