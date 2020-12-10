@@ -53,12 +53,12 @@ import numpy as np
 from pysiaf import Siaf
 from sqlalchemy.sql.expression import and_
 
-from jwql.database.database_interface import session
+from jwql.database.database_interface import FGSReadnoiseQueryHistory, FGSReadnoiseStats
+from jwql.database.database_interface import MIRIReadnoiseQueryHistory, MIRIReadnoiseStats
 from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats
 from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats
 from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats
-from jwql.database.database_interface import MIRIReadnoiseQueryHistory, MIRIReadnoiseStats
-from jwql.database.database_interface import FGSReadnoiseQueryHistory, FGSReadnoiseStats
+from jwql.database.database_interface import session
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
 from jwql.utils import instrument_properties
@@ -524,8 +524,7 @@ class Readnoise():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        #for instrument in JWST_INSTRUMENT_NAMES: # TODO
-        for instrument in ['nircam', 'fgs']:  # TODO
+        for instrument in JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -535,7 +534,7 @@ class Readnoise():
             siaf = Siaf(self.instrument)
             possible_apertures = list(siaf.apertures)
 
-            for aperture in possible_apertures[12:13]:  # TODO
+            for aperture in possible_apertures:
 
                 logging.info('\nWorking on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
@@ -559,7 +558,7 @@ class Readnoise():
                 # Get any new files to process
                 new_files = []
                 checked_files = []
-                for file_entry in new_entries[0:5]:  # TODO
+                for file_entry in new_entries:
                     output_filename = os.path.join(self.data_dir, file_entry['filename'].replace('_dark', '_uncal'))
 
                     # Sometimes both the dark and uncal name of a file is picked up in new_entries
@@ -582,7 +581,7 @@ class Readnoise():
                             logging.info('\t{} does not exist in JWQL filesystem, even though {} does'.format(uncal_filename, filename))
                         else:
                             num_groups = fits.getheader(uncal_filename)['NGROUPS']
-                            if num_groups > 1:  # skip processing if the file doesnt have enough groups to calculate the readnoise TODO change to 10
+                            if num_groups > 10:  # skip processing if the file doesnt have enough groups to calculate the readnoise
                                 shutil.copy(uncal_filename, self.data_dir)
                                 logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
                                 set_permissions(output_filename)
