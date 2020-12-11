@@ -140,12 +140,16 @@ def amplifier_info(filename, omit_reference_pixels=True):
 
         # Adjust the minimum and maximum x and y values if they are within
         # the reference pixels
-        for key in amp_bounds:
+        for i,key in enumerate(amp_bounds):
             bounds = amp_bounds[key]
             prev_xmin, prev_xmax, prev_xstep = bounds[0]
             prev_ymin, prev_ymax, prev_ystep = bounds[1]
             if prev_xmin < xmin:
-                new_xmin = xmin
+                # Ensure the x start values remain interleaved for MIRI
+                if instrument.lower() == 'miri':
+                    new_xmin = xmin + i
+                else:
+                    new_xmin = xmin
             else:
                 new_xmin = prev_xmin
             if prev_ymin < ymin:
