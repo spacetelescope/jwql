@@ -82,6 +82,7 @@ urlpatterns = [
     path('query_submit/', views.query_submit, name='query_submit'),
     path('anomaly_query/', views.anomaly_query, name='anomaly_query'),
     path('table_viewer', views.jwqldb_table_viewer, name='table_viewer'),
+    path('table_viewer_monitor/<str:tablename_param>', views.jwqldb_table_viewer, name='table_viewer_monitor'),
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
     re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),

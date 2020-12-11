@@ -38,10 +38,12 @@ Dependencies
 """
 
 import csv
+import pandas as pd
 import os
 
 from django.http import JsonResponse
 from django.http import HttpRequest as request
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.shortcuts import redirect
 
@@ -80,6 +82,7 @@ from .forms import FileSearchForm
 from .oauth import auth_info, auth_required
 
 from jwql.utils import anomaly_query_config
+from jwql.website.apps.jwql.data_containers import get_jwqldb_table_view_components
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
@@ -528,7 +531,7 @@ def instrument(request, inst):
     return render(request, template, context)
 
 
-def jwqldb_table_viewer(request):
+def jwqldb_table_viewer(request, tablename_param=None):
     """Generate the JWQL Table Viewer view.
 
     Parameters
@@ -536,8 +539,8 @@ def jwqldb_table_viewer(request):
     request : HttpRequest object
         Incoming request from the webpage
 
-    user : dict
-        A dictionary of user credentials.
+    tablename_param : str
+        Table name parameter from URL
 
     Returns
     -------
@@ -545,7 +548,12 @@ def jwqldb_table_viewer(request):
         Outgoing response sent to the webpage
     """
 
-    table_meta, tablename = get_jwqldb_table_view_components(request)
+    if tablename_param == None:
+        table_meta, tablename = get_jwqldb_table_view_components(request)
+    else:
+        table_meta = build_table(tablename_param)
+        tablename = tablename_param
+
     _, _, engine, _ = load_connection(get_config()['connection_string'])
     all_jwql_tables = engine.table_names()
 
@@ -589,10 +597,21 @@ def jwqldb_table_viewer(request):
 
 
 def export(request, tablename):
-    import pandas as pd
-    import csv
-    from jwql.website.apps.jwql.data_containers import get_jwqldb_table_view_components
+    """Function to export and download data from JWQLDB Table Viewer
 
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    tablename : str
+        Name of table to download
+
+    Returns
+    -------
+    response : HttpResponse object
+        Outgoing response sent to the webpage
+    """
     table_meta = build_table(tablename)
 
     response = HttpResponse(content_type='text/csv')
