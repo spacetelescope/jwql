@@ -548,7 +548,7 @@ def jwqldb_table_viewer(request, tablename_param=None):
         Outgoing response sent to the webpage
     """
 
-    if tablename_param == None:
+    if tablename_param is None:
         table_meta, tablename = get_jwqldb_table_view_components(request)
     else:
         table_meta = build_table(tablename_param)
