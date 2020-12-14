@@ -41,7 +41,8 @@ REQUIRES = [
     'sphinx',
     'sqlalchemy',
     'stsci_rtd_theme',
-    'twine'
+    'twine',
+    'wtforms'
 ]
 
 setup(
