@@ -4,7 +4,7 @@ channels:
 dependencies:
 - astroquery=0.4
 - authlib=0.15.2
-- bokeh>=1.0,<1.4
+- bokeh>=2.2.3
 - django=2.2.5
 - drizzle=1.13
 - flake8=3.7.9
