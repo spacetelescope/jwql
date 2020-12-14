@@ -38,7 +38,6 @@ Dependencies
 """
 
 import csv
-import pandas as pd
 import os
 
 from django.http import JsonResponse
@@ -46,14 +45,17 @@ from django.http import HttpRequest as request
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.shortcuts import redirect
+import pandas as pd
 
 from jwql.database.database_interface import load_connection
+from jwql.utils import anomaly_query_config
 from jwql.utils.constants import MONITORS
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.utils import get_base_url
 from jwql.utils.utils import get_config
 from jwql.utils.utils import query_unformat
+from jwql.website.apps.jwql.data_containers import get_jwqldb_table_view_components
 
 from .data_containers import data_trending
 from .data_containers import get_acknowledgements
@@ -81,8 +83,7 @@ from .forms import AnomalyForm
 from .forms import FileSearchForm
 from .oauth import auth_info, auth_required
 
-from jwql.utils import anomaly_query_config
-from jwql.website.apps.jwql.data_containers import get_jwqldb_table_view_components
+
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
