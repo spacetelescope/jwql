@@ -59,7 +59,7 @@ ANOMALIES_PER_INSTRUMENT = {
     'excessive_saturation': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
     'guidestar_failure': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
     'persistence': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
-    #anomalies affecting multiple instruments:
+    # anomalies affecting multiple instruments:
     'crosstalk': ['fgs', 'nircam', 'niriss', 'nirspec'],
     'data_transfer_error': ['fgs', 'nircam', 'niriss', 'nirspec'],
     'ghost': ['fgs', 'nircam', 'niriss', 'nirspec'],
@@ -75,34 +75,44 @@ ANOMALIES_PER_INSTRUMENT = {
     # additional anomalies:
     'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
 
-# Defines the possible anomalies (with rendered name) to flag through the web app
+# Defines the possible anomalies to flag through the web app
 ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage"
-                                                           else (anomaly, "Dominant MSA Leakage")
-                                                           for anomaly in ANOMALIES_PER_INSTRUMENT]
+                   else (anomaly, "Dominant MSA Leakage")
+                   for anomaly in ANOMALIES_PER_INSTRUMENT]
 
 ANOMALY_CHOICES_FGS = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
-                                                               if 'fgs' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+                       if 'fgs' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
 ANOMALY_CHOICES_MIRI = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
-                                                                if 'miri' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+                        if 'miri' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
 ANOMALY_CHOICES_NIRCAM = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
-                                                                  if 'nircam' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+                          if 'nircam' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
 ANOMALY_CHOICES_NIRISS = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
-                                                                  if 'niriss' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+                          if 'niriss' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
 ANOMALY_CHOICES_NIRSPEC = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage"
-                                                           else (anomaly, "Dominant MSA Leakage")
-                                                           for anomaly in ANOMALIES_PER_INSTRUMENT
-                                                           if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+                           else (anomaly, "Dominant MSA Leakage")
+                           for anomaly in ANOMALIES_PER_INSTRUMENT
+                           if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
 ANOMALY_CHOICES_PER_INSTRUMENT = {'fgs': ANOMALY_CHOICES_FGS,
                                   'miri': ANOMALY_CHOICES_MIRI,
                                   'nircam': ANOMALY_CHOICES_NIRCAM,
                                   'niriss': ANOMALY_CHOICES_NIRISS,
                                   'nirspec': ANOMALY_CHOICES_NIRSPEC
-                                }
+                                  }
+
+APERTURES_PER_INSTRUMENT = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',
+                                       'NRCA5_FULL', 'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL',
+                                       'NRCB4_FULL', 'NRCB5_FULL'],
+                            'NIRISS': ['NIS_CEN', 'NIS_SOSSFULL', 'NIS_AMIFULL', 'NIS_SOSSTA', 'NIS_AMI1',
+                                       'NIS_SUBSTRIP256', 'NIS_SUBSTRIP96'],
+                            'NIRSPEC': ['NRS1_FULL', 'NRS2_FULL', 'NRS_FULL_MSA', 'NRS_FULL_IFU',
+                                        'NRS_S200A1_SLIT', 'NRS_S200A2_SLIT', 'NRS_S1600A1_SLIT'],
+                            'MIRI': ['MIRIM_FULL', 'MIRIM_MASKLYOT', 'MIRIM_SLITLESSPRISM', 'MIRIM_SUB256',
+                                     'MIRIM_SUB128', 'MIRIM_SLIT']}
 
 # Bad pixel types by the type of data used to find them
 BAD_PIXEL_TYPES = ['DEAD', 'HOT', 'LOW_QE', 'RC', 'OPEN', 'ADJ_OPEN', 'TELEGRAPH', 'OTHER_BAD_PIXEL']
@@ -116,10 +126,39 @@ DARK_EXP_TYPES = {'nircam': ['NRC_DARK'],
                   'nirspec': ['NRS_DARK'],
                   'fgs': ['FGS_DARK']}
 
+# Dictionary of observing modes available for each instrument
+DETECTOR_PER_INSTRUMENT = {'fgs': ['FGS_DARK', 'FGS_FOCUS', 'FGS_IMAGE',
+                                   'FGS_INTFLAT', 'FGS_SKYFLAT'],
+                           'miri': ['MIRIFULONG', 'MIRIFUSHORT', 'MIRIMAGE'],
+                           'nircam': ['NRCB4', 'NRCA4', 'NRCA2', 'NRCALONG',
+                                      'NRCBLONG', 'NRCB2', 'NRCB3', 'NRCA1',
+                                      'NRCA3', 'NRCB1'],
+                           'niriss': ['NIS'],
+                           'nirspec': ['NRS1', 'NRS2']}
+
+EXP_TYPE_PER_INSTRUMENT = {'fgs': [],
+                           'miri': ['MIR_FLATMRS', 'MIR_MRS', 'MIR_FLATIMAGE',
+                                    'MIR_DARK', 'MIR_LYOT', 'MIR_IMAGE',
+                                    'MIR_LRS-FIXEDSLIT', 'MIR_LRS-SLITLESS',
+                                    'MIR_CORONCAL', 'MIR_4QPM', 'MIR_FLATIMAGE-EXT',
+                                    'MIR_TACQ', 'MIR_DARKMRS',
+                                    'MIR_DARKIMG', 'MIR_FLATMRS-EXT', 'MIR_TACONFIRM'],
+                           'nircam': ['NRC_LED', 'NRC_DARK', 'NRC_CORON',
+                                      'NRC_IMAGE', 'NRC_FOCUS', 'NRC_TSGRISM',
+                                      'NRC_TSIMAGE', 'NRC_WFSS', 'NRC_TACQ',
+                                      'NRC_TACONFIRM', 'NRC_FLAT', 'NRC_GRISM'],
+                           'niriss': ['NIS_IMAGE', 'NIS_FOCUS', 'NIS_SOSS',
+                                      'NIS_AMI', 'NIS_LAMP', 'NIS_WFSS', 'NIS_DARK',
+                                      'NIS_EXTCAL', 'NIS_TACONFIRM', 'NIS_TACQ'],
+                           'nirspec': ['NRS_IFU', 'NRS_MSASPEC', 'NRS_BRIGHTOBJ', 'NRS_DARK',
+                                       'NRS_AUTOWAVE', 'NRS_LAMP', 'NRS_AUTOFLAT', 'NRS_IMAGE',
+                                       'NRS_CONFIRM', 'NRS_FIXEDSLIT', 'NRS_MIMF', 'NRS_FOCUS',
+                                       'NRS_TACONFIRM', 'NRS_WATA', 'NRS_MSATA']}
+
 EXPTYPES = {"nircam": {"imaging": "NRC_IMAGE", "ts_imaging": "NRC_TSIMAGE",
                        "wfss": "NRC_WFSS", "ts_grism": "NRC_TSGRISM"},
-            "niriss": {"imaging": "NIS_IMAGE", "ami": "NIS_IMAGE", "pom": "NIS_IMAGE",
-                       "wfss": "NIS_WFSS"},
+            "niriss": {"imaging": "NIS_IMAGE", "ami": "NIS_IMAGE",
+                       "pom": "NIS_IMAGE", "wfss": "NIS_WFSS"},
             "fgs": {"imaging": "FGS_IMAGE"}}
 
 FLAT_EXP_TYPES = {'nircam': ['NRC_FLAT'],
@@ -128,16 +167,16 @@ FLAT_EXP_TYPES = {'nircam': ['NRC_FLAT'],
                   'nirspec': ['NRS_AUTOFLAT', 'NRS_LAMP'],
                   'fgs': ['FGS_INTFLAT']}
 
-FILTERS_PER_INSTRUMENT = {'miri': ['F560W', 'F770W', 'F1000W', 'F1065C', 'F1130W', 'F1140C', 'F1280W',
-                                   'F1500W', 'F1550C', 'F1800W', 'F2100W', 'F2300C', 'F2550W'],
-                          'nircam': ['F070W', 'F090W', 'F115W', 'F140M', 'F150W', 'F150W2', 'F162M',
-                                     'F164N', 'F182M', 'F187N', 'F200W', 'F210M', 'F212N', 'F250M',
-                                     'F277W', 'F300M', 'F322W2', 'F323N', 'F335M', 'F356W', 'F360M',
-                                     'F405N', 'F410M', 'F430M', 'F444W', 'F460M', 'F466N', 'F470N',
-                                     'F480M'],
-                          'niriss': ['F090W', 'F115W', 'F140M', 'F150W', 'F185M', 'F200W', 'F227W',
-                                     'F356W', 'F380M', 'F430M', 'F444W', 'F480M'],
-                          'nirspec': ['CLEAR', 'F070LP', 'F100LP', 'F170LP', 'F290LP']}
+FILTERS_PER_INSTRUMENT = {'miri': ['F1000W', 'F1130W', 'F1280W', 'OPAQUE', 'F2300C', 'F560W', 'P750L',
+                                   'F1500W', 'F2550W', 'F770W', 'FLENS', 'FND', 'F2100W', 'F1800W',
+                                   'F1550C', 'F1140C', 'F2550WR', 'F1065C'],
+                          'nircam': ['F070W', 'F090W', 'F115W', 'F140M', 'F150W', 'F150W2', 'F182M',
+                                     'F187N', 'F200W', 'F210M', 'F212N', 'F250M', 'F277W', 'F300M',
+                                     'F322W2', 'F335M', 'F356W', 'F360M', 'F410M', 'F430M', 'F444W',
+                                     'F460M', 'F480M'],
+                          'niriss': ['CLEAR', 'F380M', 'F480M', 'GR150R', 'F430M', 'GR150C', 'F444W',
+                                     'F356W', 'F277W'],
+                          'nirspec': ['F290LP', 'F170LP', 'OPAQUE', 'F100LP', 'F070LP', 'F140X', 'CLEAR', 'F110W']}
 
 FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
 
@@ -155,6 +194,14 @@ FULL_FRAME_APERTURES = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NR
 GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',
                         'x1dints', 'x1d', 's2d', 's3d', 'dark', 'crfints',
                         'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat']
+
+# Gratings available for each instrument
+GRATING_PER_INSTRUMENT = {'miri': [],
+                          'nircam': [],
+                          'niriss': [],
+                          'nirspec': ['G140M', 'G235M', 'G395M', 'G140H',
+                                      'G235H', 'G395H', 'PRISM']
+                          }
 
 # Possible suffix types for guider exposures
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
@@ -244,20 +291,12 @@ NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'S
 # Possible suffix types for AMI files
 NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami']
 
-# Dictionary of observing modes available for each instrument
-OBSERVING_MODE_PER_INSTRUMENT = {'fgs': ['FGS_DARK', 'FGS_FOCUS', 'FGS_IMAGE', 'FGS_INTFLAT', 'FGS_SKYFLAT'],
-                                 'miri': ['MIR_IMAGE', 'MIR_TACQ', 'MIR_LYOT', 'MIR_4QPM', 'MIR_LRS-FIXEDSLIT',
-                                          'MIR_LRS-SLITLESS', 'MIR_MRS', 'MIR_DARKIMG', 'MIR_DARKMRS', 'MIR_DARKALL',
-                                          'MIR_FLATIMAGE', 'MIR_FLATMRS', 'MIR_CORONCAL'],
-                                 'nircam': ['NRC_IMAGE', 'NRC_WFSS', 'NRC_TACQ', 'NRC_CORON', 'NRC_FOCUS', 'NRC_DARK',
-                                            'NRC_FLAT', 'NRC_GRISM', 'NRC_LED', 'NRC_TSIMAGE', 'NRC_TSGRISM',
-                                            'NRC_TACONFIRM', 'NRC_WFSC'],
-                                 'niriss': ['NIS_AMI', 'NIS_DARK', 'NIS_EXTCAL', 'NIS_FOCUS', 'NIS_IMAGE', 'NIS_LAMP',
-                                            'NIS_SOSS', 'NIS_WFSS', 'NIS_TACQ', 'NIS_TACONFIRM'],
-                                 'nirspec': ['NRS_AUTOFLAT', 'NRS_AUTOWAVE', 'NRS_BRIGHTOBJ', 'NRS_CONFIRM',
-                                             'NRS_DARK', 'NRS_FIXEDSLIT', 'NRS_FOCUS', 'NRS_IFU', 'NRS_IMAGE',
-                                             'NRS_LAMP', 'NRS_MIMF', 'NRS_MSASPEC', 'NRS_TACONFIRM', 'NRS_TACQ',
-                                             'NRS_TASLIT']}
+READPATT_PER_INSTRUMENT = {'fgs': [],
+                           'miri': ['FAST', 'SLOW', 'FASTGRPAVG'],
+                           'nircam': ['RAPID', 'SHALLOW2', 'BRIGHT2', 'MEDIUM2', 'SHALLOW4',
+                                      'MEDIUM8', 'BRIGHT1', 'DEEP2', 'DEEP8'],
+                           'niriss': ['NISRAPID', 'NIS'],
+                           'nirspec': ['NRS', 'NRSRAPID', 'NRSRAPIDD2', 'NRSRAPIDD6']}
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 

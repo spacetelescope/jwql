@@ -8,12 +8,6 @@ template.py
     :members:
     :undoc-members:
 
-surface3d.py
------------------
-.. automodule:: jwql.bokeh_templating.surface3d
-    :members:
-    :undoc-members:
-
 keyword_map.py
 -----------------
 .. automodule:: jwql.bokeh_templating.keyword_map

@@ -26,20 +26,29 @@ APERTURES_CHOSEN = {}
 # Default is all anomalies common to all instruments
 CURRENT_ANOMALIES = {}
 
+# Observing modes selected by user in anomaly_query
+DETECTORS_CHOSEN = {}
+
 # Maximum exposure time selected by user in anomaly_query. Corresponds to EFFEXPTM in MAST.
 EXPTIME_MAX = ['999999999999999']   # select all as default
 
 # Minimum exposure time selected by user in anomaly_query. Corresponds to EFFEXPTM in MAST.
 EXPTIME_MIN = ['0']  # select all as default
 
+# Exposure types selected by user in anomaly_query
+EXPTYPES_CHOSEN = {}
+
 # Filters selected by user in anomaly_query
 FILTERS_CHOSEN = {}
+
+# Gratings selected by user in anomaly_query
+GRATINGS_CHOSEN = {}
 
 # Instruments selected by user in anomaly_query
 INSTRUMENTS_CHOSEN = []
 
-# Observing modes selected by user in anomaly_query
-OBSERVING_MODES_CHOSEN = {}
+# Read patterns selected by user in anomaly_query
+READPATTS_CHOSEN = {}
 
 # Thumbnails selected by user in anomaly_query
 THUMBNAILS = []
