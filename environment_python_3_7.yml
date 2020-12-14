@@ -5,7 +5,7 @@ dependencies:
 - astroquery=0.4
 - authlib=0.15.2
 - bokeh>=1.0,<1.4
-- django=2.2.5
+- django=3.1.4
 - flake8=3.8.3
 - inflection=0.3.1
 - ipython=7.16.1
