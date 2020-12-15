@@ -151,6 +151,3 @@ class ReadnoiseMonitor(BokehTemplate):
         self.refs['readnoise_diff_image'].xgrid.grid_line_color = None
         self.refs['readnoise_diff_image'].ygrid.grid_line_color = None
         self.refs['readnoise_diff_image'].title.text_font_size = '30px'
-
-
-ReadnoiseMonitor()
