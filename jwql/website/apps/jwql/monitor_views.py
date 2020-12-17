@@ -4,6 +4,7 @@ Authors
 -------
 
     - Lauren Chambers
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -89,11 +90,8 @@ def dark_monitor(request, inst):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    # Deal with the fact that only the NIRCam database is populated
-    if inst == 'NIRCam':
-        tabs_components = bokeh_containers.dark_monitor_tabs(inst)
-    else:
-        tabs_components = None
+    # Get the html and JS needed to render the dark tab plots
+    tabs_components = bokeh_containers.dark_monitor_tabs(inst)
 
     template = "dark_monitor.html"
 
@@ -137,3 +135,37 @@ def readnoise_monitor(request, inst):
 
     # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
+
+
+def bias_monitor(request, inst):
+    """Generate the bias monitor page for a given instrument
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # Ensure the instrument is correctly capitalized
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+
+    # Get the html and JS needed to render the bias tab plots
+    tabs_components = bokeh_containers.bias_monitor_tabs(inst)
+
+    template = "bias_monitor.html"
+
+    context = {
+        'inst': inst,
+        'tabs_components': tabs_components,
+    }
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
+

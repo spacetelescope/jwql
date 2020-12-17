@@ -23,7 +23,7 @@ import os
 import numpy as np
 
 from jwql.bokeh_templating import BokehTemplate
-from jwql.database.database_interface import session, NIRCamReadnoiseStats, NIRISSReadnoiseStats
+from jwql.database.database_interface import session, NIRCamReadnoiseStats, NIRISSReadnoiseStats, NIRSpecReadnoiseStats
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))

@@ -8,6 +8,7 @@ Authors
     - Bryan Hilbert
     - Ben Sunnquist
     - Teagan King
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -162,7 +163,9 @@ GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 
 # Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
     'dark_monitor': ['<instrument>_dark_dark_current', '<instrument>_dark_pixel_stats', '<instrument>_dark_query_history'],
-    'bad_pixel_monitor': ['<instrument>_bad_pixel_stats', '<instrument>_bad_pixel_query_history']}
+    'bad_pixel_monitor': ['<instrument>_bad_pixel_stats', '<instrument>_bad_pixel_query_history'],
+    'bias_monitor': ['<instrument>_bias_stats', '<instrument>_bias_query_history'],
+    'readnoise_monitor': ['<instrument>_readnoise_stats', '<instrument>_readnoise_query_history']},
 
 # JWST data products
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
@@ -217,6 +220,9 @@ MONITORS = {
                ('TSO RMS Monitor', '#')],
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
+                ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
+                ('Dark Monitor', '/nirspec/dark_monitor'),
+                ('Bias Monitor', '/nirspec/bias_monitor'),
                 ('Target Acquisition Monitor', '#'),
                 ('Data Trending', '/nirspec/nirspec_data_trending'),
                 ('Detector Health Monitor', '#'),

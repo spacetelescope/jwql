@@ -8,6 +8,7 @@ Authors
 -------
 
     - Gray Kanarek
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -202,14 +203,13 @@ def dark_monitor_tabs(instrument):
     line_tab = Panel(child=line_layout, title="Trending")
 
     # Mean dark image tab
-
-    # The three lines below work for displaying a single image
-    image = templates_all_apertures['NRCA3_FULL'].refs["mean_dark_image_figure"]
-    image.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-    image_layout = layout(image)
-    image.height = 250  # Not working
-    image_layout.sizing_mode = "scale_width"
-    image_tab = Panel(child=image_layout, title="Mean Dark Image")
+    for aperture in templates_all_apertures:
+        image = templates_all_apertures[aperture].refs["mean_dark_image_figure"]
+        image.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+        image_layout = layout(image)
+        image.height = 250
+        image_layout.sizing_mode = "scale_width"
+        image_tab = Panel(child=image_layout, title="Mean Dark Image")
 
     # Build tabs
     tabs = Tabs(tabs=[histogram_tab, line_tab, image_tab])
@@ -275,3 +275,63 @@ def readnoise_monitor_tabs(instrument):
     script, div = components(tabs)
 
     return div, script
+
+
+def bias_monitor_tabs(instrument):
+    """Creates the various tabs of the bias monitor results page.
+
+    Parameters
+    ----------
+    instrument : str
+        The JWST instrument of interest (e.g. ``nircam``).
+
+    Returns
+    -------
+    div : str
+        The HTML div to render bias monitor plots
+    script : str
+        The JS script to render bias monitor plots
+    """
+
+    # Make a separate tab for each aperture
+    tabs = []
+    for aperture in FULL_FRAME_APERTURES[instrument.upper()]:
+
+        # Make a separate plot for each amp
+        plots = []
+        for amp in ['1', '2', '3', '4']:
+            monitor_template = monitor_pages.BiasMonitor()
+            monitor_template.input_parameters = (instrument, aperture, amp)
+            bias_plot = monitor_template.refs['bias_figure']
+            bias_plot.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
+            plots.append(bias_plot)
+
+        # Add the bias difference image
+        bias_diff_image = monitor_template.refs['bias_diff_image']
+        bias_diff_image.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
+        plots.append(bias_diff_image)
+
+        # Add the bias difference histogram
+        bias_diff_hist = monitor_template.refs['bias_diff_hist']
+        plots.append(bias_diff_hist)
+
+        # Put the mean bias plots on the top row, and the difference image and
+        # histogram on the second row.
+        bias_layout = layout(
+            plots[0:4],
+            plots[4:6],
+        )
+        bias_layout.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
+        bias_tab = Panel(child=bias_layout, title=aperture)
+        tabs.append(bias_tab)
+
+    # Build tabs
+    tabs = Tabs(tabs=tabs)
+
+    # Return tab HTML and JavaScript to web app
+    script, div = components(tabs)
+
+    return div, script
+
+
+
