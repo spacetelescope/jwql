@@ -132,6 +132,7 @@ class ReadnoiseMonitor(BokehTemplate):
             # Get the most recent data; the entries were sorted by time when
             # loading the database, so the last entry will always be the most recent.
             diff_image_png = self.query_results[-1].readnoise_diff_image
+            diff_image_png = os.path.join('/static', '/'.join(diff_image_png.split('/')[-6:]))
             diff_image_n = np.array(self.query_results[-1].diff_image_n)
             diff_image_bin_centers = np.array(self.query_results[-1].diff_image_bin_centers)
 
