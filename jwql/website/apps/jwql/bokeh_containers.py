@@ -129,16 +129,14 @@ def bias_monitor_tabs(instrument):
     # Make a separate tab for each aperture
     tabs = []
     for aperture in FULL_FRAME_APERTURES[instrument.upper()]:
-        print(aperture)
+        monitor_template = monitor_pages.BiasMonitor()
+        monitor_template.input_parameters = (instrument, aperture)
 
-        # Make a separate plot for each amp and odd/even columns
+        # Add the mean bias vs time plots for each amp and odd/even columns
         plots = []
         for amp in ['1', '2', '3', '4']:
-            print(amp)
             for kind in ['even', 'odd']:
-                monitor_template = monitor_pages.BiasMonitor()
-                monitor_template.input_parameters = (instrument, aperture, amp, kind)
-                bias_plot = monitor_template.refs['mean_bias_figure']
+                bias_plot = monitor_template.refs['mean_bias_figure_amp{}_{}'.format(amp, kind)]
                 bias_plot.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
                 plots.append(bias_plot)
 
@@ -148,12 +146,10 @@ def bias_monitor_tabs(instrument):
         plots.append(calibrated_image)
 
         # Add the collapsed row/column plots
-        collapsed_row_plot = monitor_template.refs['collapsed_rows_figure']
-        collapsed_col_plot = monitor_template.refs['collapsed_cols_figure']
-        collapsed_row_plot.sizing_mode = 'scale_width'
-        collapsed_col_plot.sizing_mode = 'scale_width'
-        plots.append(collapsed_row_plot)
-        plots.append(collapsed_col_plot)
+        for direction in ['rows', 'columns']:
+            collapsed_plot = monitor_template.refs['collapsed_{}_figure'.format(direction)]
+            collapsed_plot.sizing_mode = 'scale_width'
+            plots.append(collapsed_plot)
 
         # Put the mean bias plots on the top 2 rows, and the calibrated image
         # on the bottom row.

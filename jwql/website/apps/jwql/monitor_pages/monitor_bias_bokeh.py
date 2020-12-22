@@ -35,11 +35,11 @@ class BiasMonitor(BokehTemplate):
     # do not want to invoke the setter unless all are updated
     @property
     def input_parameters(self):
-        return (self._instrument, self._aperture, self._amp, self._kind)
+        return (self._instrument, self._aperture)
 
     @input_parameters.setter
     def input_parameters(self, info):
-        self._instrument, self._aperture, self._amp, self._kind = info
+        self._instrument, self._aperture = info
         self.pre_init()
         self.post_init()
 
@@ -69,12 +69,9 @@ class BiasMonitor(BokehTemplate):
         try:
             dummy_instrument = self._instrument
             dummy_aperture = self._aperture
-            dummy_amp = self._amp
         except AttributeError:
             self._instrument = 'NIRCam'
             self._aperture = ''
-            self._amp = ''
-            self._kind = ''
 
         self._embed = True
         self.format_string = None
@@ -85,75 +82,14 @@ class BiasMonitor(BokehTemplate):
         # Load the bias data
         self.load_data()
 
-        # Get the relevant plotting data
-        self.bias_vals = np.array([getattr(result, 'amp{}_{}_med'.format(self._amp, self._kind)) for result in self.query_results])
-        self.expstarts_iso = np.array([result.expstart for result in self.query_results])
-        self.expstarts = np.array([datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f') for date in self.expstarts_iso])
-        self.filenames = [os.path.basename(result.uncal_filename).replace('_uncal.fits', '') for result in self.query_results]
-
-        # Update the mean bias figure
-        self.update_mean_bias_figure()
+        # Update the mean bias over time figures
+        self.update_mean_bias_figures()
 
         # Update the calibrated 0th group image
         self.update_calibrated_image()
 
         # Update the calibrated collapsed values figures
-        self.update_collapsed_rows_figure()
-        self.update_collapsed_cols_figure()
-
-    def update_mean_bias_figure(self):
-        """Updates the mean bias bokeh plot"""
-
-        # Update the mean bias vs time plot
-        self.refs['mean_bias_source'].data = {'time': self.expstarts,
-                                              'time_iso': self.expstarts_iso,
-                                              'mean_bias': self.bias_vals,
-                                              'filename': self.filenames}
-        self.refs['mean_bias_figure'].title.text = 'Amp {} {}'.format(self._amp, self._kind.capitalize())
-        self.refs['mean_bias_figure'].hover.tooltips = [('file', '@filename'),
-                                                        ('time', '@time_iso'),
-                                                        ('bias level', '@mean_bias')]
-
-        # Update plot limits if data exists
-        if len(self.query_results) != 0:
-            self.refs['mean_bias_xr'].start = self.expstarts.min() - timedelta(days=3)
-            self.refs['mean_bias_xr'].end = self.expstarts.max() + timedelta(days=3)
-            self.refs['mean_bias_yr'].start = self.bias_vals.min() - 10
-            self.refs['mean_bias_yr'].end = self.bias_vals.max() + 10
-
-    def update_collapsed_cols_figure(self):
-        """Updates the calibrated collapsed columns figure"""
-
-        if len(self.query_results) != 0:
-            # Get the most recent data; the entries were sorted by time when
-            # loading the database, so the last entry will always be the most recent.
-            collapsed_cols = np.array(self.query_results[-1].collapsed_columns)
-            cols = np.arange(len(collapsed_cols))
-
-            self.refs['collapsed_cols_source'].data = {'column': cols,
-                                                       'signal': collapsed_cols}
-
-            self.refs['collapsed_cols_xr'].start = cols.min()
-            self.refs['collapsed_cols_xr'].end = cols.max()
-            self.refs['collapsed_cols_yr'].start = collapsed_cols.min() - 10
-            self.refs['collapsed_cols_yr'].end = collapsed_cols.max() + 10
-
-    def update_collapsed_rows_figure(self):
-        """Updates the calibrated collapsed rows figure"""
-
-        if len(self.query_results) != 0:
-            # Get the most recent data; the entries were sorted by time when
-            # loading the database, so the last entry will always be the most recent.
-            collapsed_rows = np.array(self.query_results[-1].collapsed_rows)
-            rows = np.arange(len(collapsed_rows))
-
-            self.refs['collapsed_rows_source'].data = {'row': rows,
-                                                       'signal': collapsed_rows}
-
-            self.refs['collapsed_rows_xr'].start = rows.min()
-            self.refs['collapsed_rows_xr'].end = rows.max()
-            self.refs['collapsed_rows_yr'].start = collapsed_rows.min() - 10
-            self.refs['collapsed_rows_yr'].end = collapsed_rows.max() + 10
+        self.update_collapsed_vals_figures()
 
     def update_calibrated_image(self):
         """Updates the calibrated 0th group image"""
@@ -174,3 +110,49 @@ class BiasMonitor(BokehTemplate):
         self.refs['cal_image'].xgrid.grid_line_color = None
         self.refs['cal_image'].ygrid.grid_line_color = None
         self.refs['cal_image'].title.text_font_size = '30px'
+
+    def update_collapsed_vals_figures(self):
+        """Updates the calibrated median-collapsed row and column figures"""
+
+        if len(self.query_results) != 0:
+            for direction in ['rows', 'columns']:
+                # Get the most recent data; the entries were sorted by time when
+                # loading the database, so the last entry will always be the most recent.
+                vals = np.array(self.query_results[-1].__dict__['collapsed_{}'.format(direction)])
+                x_vals = np.arange(len(vals))
+
+                # Update the figure data and limits
+                self.refs['collapsed_{}_source'.format(direction)].data = {'x_vals': x_vals,
+                                                                           'signal': vals}
+                self.refs['collapsed_{}_xr'.format(direction)].start = x_vals.min()
+                self.refs['collapsed_{}_xr'.format(direction)].end = x_vals.max()
+                self.refs['collapsed_{}_yr'.format(direction)].start = vals.min() - 10
+                self.refs['collapsed_{}_yr'.format(direction)].end = vals.max() + 10
+
+    def update_mean_bias_figures(self):
+        """Updates the mean bias over time bokeh plots"""
+
+        # Get the dark exposures and their starts times
+        filenames = [os.path.basename(result.uncal_filename).replace('_uncal.fits', '') for result in self.query_results]
+        expstarts_iso = np.array([result.expstart for result in self.query_results])
+        expstarts = np.array([datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f') for date in expstarts_iso])
+
+        # Update the mean bias figures for all amps and odd/even columns
+        for amp in ['1', '2', '3', '4']:
+            for kind in ['odd', 'even']:
+                bias_vals = np.array([getattr(result, 'amp{}_{}_med'.format(amp, kind)) for result in self.query_results])
+                self.refs['mean_bias_source_amp{}_{}'.format(amp, kind)].data = {'time': expstarts,
+                                                                                 'time_iso': expstarts_iso,
+                                                                                 'mean_bias': bias_vals,
+                                                                                 'filename': filenames}
+                self.refs['mean_bias_figure_amp{}_{}'.format(amp, kind)].title.text = 'Amp {} {}'.format(amp, kind.capitalize())
+                self.refs['mean_bias_figure_amp{}_{}'.format(amp, kind)].hover.tooltips = [('file', '@filename'),
+                                                                                           ('time', '@time_iso'),
+                                                                                           ('bias level', '@mean_bias')]
+
+                # Update plot limits if data exists
+                if len(bias_vals) != 0:
+                    self.refs['mean_bias_xr_amp{}_{}'.format(amp, kind)].start = expstarts.min() - timedelta(days=3)
+                    self.refs['mean_bias_xr_amp{}_{}'.format(amp, kind)].end = expstarts.max() + timedelta(days=3)
+                    self.refs['mean_bias_yr_amp{}_{}'.format(amp, kind)].start = bias_vals.min() - 10
+                    self.refs['mean_bias_yr_amp{}_{}'.format(amp, kind)].end = bias_vals.max() + 10
