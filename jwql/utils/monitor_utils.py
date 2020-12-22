@@ -64,7 +64,6 @@ def update_monitor_table(module, start_time, log_file):
     new_entry['start_time'] = start_time
     new_entry['end_time'] = datetime.datetime.now()
     new_entry['status'] = get_log_status(log_file)
-    new_entry['affected_tables'] = INSTRUMENT_MONITOR_DATABASE_TABLES[module]
     new_entry['log_file'] = os.path.basename(log_file)
 
     Monitor.__table__.insert().execute(new_entry)
