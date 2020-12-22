@@ -267,7 +267,7 @@
     ref: "cal_image"
     title: 'Calibrated Zeroth Group of Most Recent Dark'
     height: 800
-    width: 850
+    width: 800
     elements:
         - {"kind": "image", "image": "image", "x": 0, "y": 0, "dh": 'dh', "dw": 'dh', "source": *cal_data}
     tools: ""
@@ -295,8 +295,8 @@
     y_axis_label: "Median Signal [DN]"
     x_range: *collapsed_columns_pixel_range
     y_range: *collapsed_columns_signal_range
-    height: 260
-    width: 775
+    height: 500
+    width: 800
     tools: "hover, wheel_zoom, pan, reset"
     elements:
         - {'kind': 'circle', 'x': 'pixel', 'y': 'signal', 'size': 3, 'source': *collapsed_columns_source}
@@ -320,15 +320,15 @@
     bounds: 'auto'
 - !Figure: &collapsed_rows_figure
     ref: "collapsed_rows_figure"
-    x_axis_label: "Median Signal [DN]"
-    y_axis_label: "Row #"
-    x_range: *collapsed_rows_signal_range
-    y_range: *collapsed_rows_pixel_range
-    height: 800
-    width: 260
+    x_axis_label: "Row #"
+    y_axis_label: "Median Signal [DN]"
+    x_range: *collapsed_rows_pixel_range
+    y_range: *collapsed_rows_signal_range
+    height: 500
+    width: 800
     tools: "hover, wheel_zoom, pan, reset"
     elements:
-        - {'kind': 'circle', 'x': 'signal', 'y': 'pixel', 'size': 3, 'source': *collapsed_rows_source}
+        - {'kind': 'circle', 'x': 'pixel', 'y': 'signal', 'size': 3, 'source': *collapsed_rows_source}
 
 # Document structure
 # - !Document:

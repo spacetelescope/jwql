@@ -22,7 +22,7 @@ Use
 import os
 
 from bokeh.embed import components
-from bokeh.layouts import gridplot, layout
+from bokeh.layouts import layout
 from bokeh.models.widgets import Tabs, Panel
 
 from . import monitor_pages
@@ -148,15 +148,16 @@ def bias_monitor_tabs(instrument):
         # Add the collapsed row/column plots
         for direction in ['rows', 'columns']:
             collapsed_plot = monitor_template.refs['collapsed_{}_figure'.format(direction)]
-            #calibrated_image.sizing_mode = 'scale_width'
+            collapsed_plot.sizing_mode = 'scale_width'
             plots.append(collapsed_plot)
 
-        # Put the mean bias plots on the top 2 rows, and the calibrated image with
-        # the corresponding collapsed row/column plots surrounding it below.
+        # Put the mean bias plots on the top 2 rows, the calibrated image on the
+        # third row, and the collapsed row/column plots on the bottom row.
         bias_layout = layout(
             plots[0:8][::2],
             plots[0:8][1::2],
-            gridplot([[plots[9], plots[8]], [None, plots[10]]])
+            plots[8:9],
+            plots[9:11]
         )
         bias_layout.sizing_mode = 'scale_width'
         bias_tab = Panel(child=bias_layout, title=aperture)

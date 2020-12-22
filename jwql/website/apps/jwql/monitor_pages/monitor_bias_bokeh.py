@@ -124,24 +124,14 @@ class BiasMonitor(BokehTemplate):
                 self.refs['collapsed_{}_source'.format(direction)].data = {'pixel': pixels,
                                                                            'signal': vals}
 
-                # Get the signal limits
+                # Update the signal and pixel limits
                 clipped = sigma_clip(vals)
                 mean, stddev = np.nanmean(clipped), np.nanstd(clipped)
                 thresh_low, thresh_high = mean - 5 * stddev, mean + 5 * stddev
-
-                # Update the signal and pixel limits; flip signal axis for collapsed rows plot. The
-                # pixel limits are slightly different to line up with the image, which isn't perfectly
-                # square due to the colorbar.
-                if direction == 'rows':
-                    self.refs['collapsed_{}_pixel_range'.format(direction)].start = pixels.min() - 190
-                    self.refs['collapsed_{}_pixel_range'.format(direction)].end = pixels.max() + 190
-                    self.refs['collapsed_{}_signal_range'.format(direction)].end = thresh_low
-                    self.refs['collapsed_{}_signal_range'.format(direction)].start = thresh_high
-                else:
-                    self.refs['collapsed_{}_pixel_range'.format(direction)].start = pixels.min() - 250
-                    self.refs['collapsed_{}_pixel_range'.format(direction)].end = pixels.max() + 250
-                    self.refs['collapsed_{}_signal_range'.format(direction)].start = thresh_low
-                    self.refs['collapsed_{}_signal_range'.format(direction)].end = thresh_high
+                self.refs['collapsed_{}_pixel_range'.format(direction)].start = pixels.min() - 10
+                self.refs['collapsed_{}_pixel_range'.format(direction)].end = pixels.max() + 10
+                self.refs['collapsed_{}_signal_range'.format(direction)].start = thresh_low
+                self.refs['collapsed_{}_signal_range'.format(direction)].end = thresh_high
 
     def update_mean_bias_figures(self):
         """Updates the mean bias over time bokeh plots"""
