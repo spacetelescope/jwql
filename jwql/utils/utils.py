@@ -311,7 +311,7 @@ def filename_parser(filename):
                 filename_dict['instrument'] = 'fgs'
             elif 'detector' in filename_dict.keys():
                 filename_dict['instrument'] = JWST_INSTRUMENT_NAMES_SHORTHAND[
-                    filename_dict['detector'][:3]
+                    filename_dict['detector'][:3].lower()
                 ]
 
     # Raise error if unable to parse the filename

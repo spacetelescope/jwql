@@ -16,11 +16,11 @@ REQUIRES = [
     'astropy>=3.2.1',
     'astroquery>=0.3.9',
     'authlib',
-    'bokeh>=1.0,<1.4',
+    'bokeh',
     'codecov',
     'crds',
     'cryptography',
-    'django>=2.0,<3.0',
+    'django',
     'flake8',
     'inflection',
     'ipython',
@@ -41,7 +41,8 @@ REQUIRES = [
     'sphinx',
     'sqlalchemy',
     'stsci_rtd_theme',
-    'twine'
+    'twine',
+    'wtforms'
 ]
 
 setup(

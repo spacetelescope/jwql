@@ -2,8 +2,9 @@ channels:
 - defaults
 - http://ssb.stsci.edu/astroconda
 dependencies:
-- authlib=0.15.1
-- django=3.0.3
+- authlib=0.15.2
+- bokeh=2.2.3
+- django=3.1.4
 - flake8=3.8.3
 - inflection=0.3.1
 - ipython=7.16.1
@@ -24,14 +25,14 @@ dependencies:
 - setuptools=49.6.0
 - sphinx=3.2.1
 - twine=2.0.0
+- wtforms=2.3.3
 - pip:
   - asdf==2.7.1
-  - astropy==4.0.1.post1
+  - astropy==4.1
   - astroquery==0.4.1
-  - bokeh>=1.0,<1.4
-  - codecov==2.1.9
-  - crds==10.0.0
-  - cryptography==3.1.1
+  - codecov==2.1.10
+  - crds==10.1.0
+  - cryptography==3.2.1
   - jwedb==0.0.6
   - jwst==0.17.1
   - pysiaf==0.9.0
