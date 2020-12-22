@@ -260,14 +260,14 @@
 - !ColumnDataSource: &cal_data
     ref: "cal_data"
     data:
-        dh: [1]
-        dw: [1]
+        dh: [0]
+        dw: [0]
         image: [[[0,0], [0, 0]]]
 - !Figure: &cal_image
     ref: "cal_image"
     title: 'Calibrated Zeroth Group of Most Recent Dark'
-    height: 700
-    width: 700
+    height: 800
+    width: 850
     elements:
         - {"kind": "image", "image": "image", "x": 0, "y": 0, "dh": 'dh', "dw": 'dh', "source": *cal_data}
     tools: ""
@@ -277,15 +277,15 @@
 - !ColumnDataSource: &collapsed_columns_source
     ref: "collapsed_columns_source"
     data:
-        x_vals: []
+        pixel: []
         signal: []
-- !Range1d: &collapsed_columns_xr
-    ref: "collapsed_columns_xr"
+- !Range1d: &collapsed_columns_pixel_range
+    ref: "collapsed_columns_pixel_range"
     start: 0
     end: 10
     bounds: 'auto'
-- !Range1d: &collapsed_columns_yr
-    ref: "collapsed_columns_yr"
+- !Range1d: &collapsed_columns_signal_range
+    ref: "collapsed_columns_signal_range"
     start: 0
     end: 10
     bounds: 'auto'
@@ -293,42 +293,42 @@
     ref: "collapsed_columns_figure"
     x_axis_label: "Column #"
     y_axis_label: "Median Signal [DN]"
-    x_range: *collapsed_columns_xr
-    y_range: *collapsed_columns_yr
-    height: 800
-    width: 800
+    x_range: *collapsed_columns_pixel_range
+    y_range: *collapsed_columns_signal_range
+    height: 260
+    width: 775
     tools: "hover, wheel_zoom, pan, reset"
     elements:
-        - {'kind': 'circle', 'x': 'x_vals', 'y': 'signal', 'size': 3, 'source': *collapsed_columns_source}
+        - {'kind': 'circle', 'x': 'pixel', 'y': 'signal', 'size': 3, 'source': *collapsed_columns_source}
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Collapsed Rows Figure
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 - !ColumnDataSource: &collapsed_rows_source
     ref: "collapsed_rows_source"
     data:
-        x_vals: []
+        pixel: []
         signal: []
-- !Range1d: &collapsed_rows_xr
-    ref: "collapsed_rows_xr"
+- !Range1d: &collapsed_rows_pixel_range
+    ref: "collapsed_rows_pixel_range"
     start: 0
     end: 10
     bounds: 'auto'
-- !Range1d: &collapsed_rows_yr
-    ref: "collapsed_rows_yr"
+- !Range1d: &collapsed_rows_signal_range
+    ref: "collapsed_rows_signal_range"
     start: 0
     end: 10
     bounds: 'auto'
 - !Figure: &collapsed_rows_figure
     ref: "collapsed_rows_figure"
-    x_axis_label: "Row #"
-    y_axis_label: "Median Signal [DN]"
-    x_range: *collapsed_rows_xr
-    y_range: *collapsed_rows_yr
+    x_axis_label: "Median Signal [DN]"
+    y_axis_label: "Row #"
+    x_range: *collapsed_rows_signal_range
+    y_range: *collapsed_rows_pixel_range
     height: 800
-    width: 800
+    width: 260
     tools: "hover, wheel_zoom, pan, reset"
     elements:
-        - {'kind': 'circle', 'x': 'x_vals', 'y': 'signal', 'size': 3, 'source': *collapsed_rows_source}
+        - {'kind': 'circle', 'x': 'signal', 'y': 'pixel', 'size': 3, 'source': *collapsed_rows_source}
 
 # Document structure
 # - !Document:

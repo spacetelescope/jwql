@@ -14,12 +14,13 @@ Use
 
         from jwql.website.apps.jwql import monitor_pages
         monitor_template = monitor_pages.BiasMonitor()
-        monitor_template.input_parameters = ('NIRCam', 'NRCA1_FULL', '1', 'even')
+        monitor_template.input_parameters = ('NIRCam', 'NRCA1_FULL')
 """
 
 from datetime import datetime, timedelta
 import os
 
+from astropy.stats import sigma_clip
 import numpy as np
 
 from jwql.bokeh_templating import BokehTemplate
@@ -94,7 +95,6 @@ class BiasMonitor(BokehTemplate):
     def update_calibrated_image(self):
         """Updates the calibrated 0th group image"""
 
-        # Update the calibrated 0th group image if data exists
         if len(self.query_results) != 0:
             # Get the most recent data; the entries were sorted by time when
             # loading the database, so the last entry will always be the most recent.
@@ -102,9 +102,10 @@ class BiasMonitor(BokehTemplate):
             cal_image_png = os.path.join('/static', '/'.join(cal_image_png.split('/')[-6:]))
 
             # Update the image source for the figure
-            self.refs['cal_image'].image_url(url=[cal_image_png], x=0, y=0, w=2048, h=2048, anchor="bottom_left")
+            self.refs['cal_image'].image_url(url=[cal_image_png], x=0, y=0, w=2000, h=2000, anchor="bottom_left")
 
         # Update the calibrated image style
+        self.refs['cal_image'].title.align = 'center'
         self.refs['cal_image'].xaxis.visible = False
         self.refs['cal_image'].yaxis.visible = False
         self.refs['cal_image'].xgrid.grid_line_color = None
@@ -119,15 +120,28 @@ class BiasMonitor(BokehTemplate):
                 # Get the most recent data; the entries were sorted by time when
                 # loading the database, so the last entry will always be the most recent.
                 vals = np.array(self.query_results[-1].__dict__['collapsed_{}'.format(direction)])
-                x_vals = np.arange(len(vals))
-
-                # Update the figure data and limits
-                self.refs['collapsed_{}_source'.format(direction)].data = {'x_vals': x_vals,
+                pixels = np.arange(len(vals))
+                self.refs['collapsed_{}_source'.format(direction)].data = {'pixel': pixels,
                                                                            'signal': vals}
-                self.refs['collapsed_{}_xr'.format(direction)].start = x_vals.min()
-                self.refs['collapsed_{}_xr'.format(direction)].end = x_vals.max()
-                self.refs['collapsed_{}_yr'.format(direction)].start = vals.min() - 10
-                self.refs['collapsed_{}_yr'.format(direction)].end = vals.max() + 10
+
+                # Get the signal limits
+                clipped = sigma_clip(vals)
+                mean, stddev = np.nanmean(clipped), np.nanstd(clipped)
+                thresh_low, thresh_high = mean - 5 * stddev, mean + 5 * stddev
+
+                # Update the signal and pixel limits; flip signal axis for collapsed rows plot. The
+                # pixel limits are slightly different to line up with the image, which isn't perfectly
+                # square due to the colorbar.
+                if direction == 'rows':
+                    self.refs['collapsed_{}_pixel_range'.format(direction)].start = pixels.min() - 190
+                    self.refs['collapsed_{}_pixel_range'.format(direction)].end = pixels.max() + 190
+                    self.refs['collapsed_{}_signal_range'.format(direction)].end = thresh_low
+                    self.refs['collapsed_{}_signal_range'.format(direction)].start = thresh_high
+                else:
+                    self.refs['collapsed_{}_pixel_range'.format(direction)].start = pixels.min() - 250
+                    self.refs['collapsed_{}_pixel_range'.format(direction)].end = pixels.max() + 250
+                    self.refs['collapsed_{}_signal_range'.format(direction)].start = thresh_low
+                    self.refs['collapsed_{}_signal_range'.format(direction)].end = thresh_high
 
     def update_mean_bias_figures(self):
         """Updates the mean bias over time bokeh plots"""
