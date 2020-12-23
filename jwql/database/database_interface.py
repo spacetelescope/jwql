@@ -219,7 +219,6 @@ class Monitor(base):
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=True)
     status = Column(Enum('SUCCESS', 'FAILURE', name='monitor_status'), nullable=True)
-    affected_tables = Column(ARRAY(String, dimensions=1), nullable=True)
     log_file = Column(String(), nullable=False)
 
 
