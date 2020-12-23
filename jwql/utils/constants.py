@@ -242,10 +242,12 @@ JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
 
 # Available monitor names and their location for each JWST instrument
 MONITORS = {
-    'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor')],
+    'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor'),
+            ('Readnoise Monitor', '/fgs/readnoise_monitor')],
     'miri': [('Dark Current Monitor', '#'),
              ('Data Trending', '/miri/miri_data_trending'),
              ('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
+             ('Readnoise Monitor', '/miri/readnoise_monitor'),
              ('Cosmic Ray Monitor', '#'),
              ('Photometry Monitor', '#'),
              ('TA Failure Monitor', '#'),
@@ -264,6 +266,7 @@ MONITORS = {
                ('TSO RMS Monitor', '#')],
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
+                ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
                 ('Target Acquisition Monitor', '#'),
                 ('Data Trending', '/nirspec/nirspec_data_trending'),
                 ('Detector Health Monitor', '#'),

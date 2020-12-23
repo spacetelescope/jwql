@@ -23,7 +23,8 @@ import os
 import numpy as np
 
 from jwql.bokeh_templating import BokehTemplate
-from jwql.database.database_interface import session, NIRCamReadnoiseStats, NIRISSReadnoiseStats
+from jwql.database.database_interface import session
+from jwql.database.database_interface import FGSReadnoiseStats, MIRIReadnoiseStats, NIRCamReadnoiseStats, NIRISSReadnoiseStats, NIRSpecReadnoiseStats
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -72,8 +73,8 @@ class ReadnoiseMonitor(BokehTemplate):
             dummy_amp = self._amp
         except AttributeError:
             self._instrument = 'NIRCam'
-            self._aperture = 'NRCA1_FULL'
-            self._amp = '1'
+            self._aperture = ''
+            self._amp = ''
 
         self._embed = True
         self.format_string = None
@@ -126,26 +127,25 @@ class ReadnoiseMonitor(BokehTemplate):
     def update_readnoise_diff_plots(self):
         """Updates the readnoise difference image and histogram"""
 
-        # Update the readnoise difference image and histogram figures if data exists
+        # Update the readnoise difference image and histogram, if data exists
         if len(self.query_results) != 0:
             # Get the most recent data; the entries were sorted by time when
             # loading the database, so the last entry will always be the most recent.
             diff_image_png = self.query_results[-1].readnoise_diff_image
+            diff_image_png = os.path.join('/static', '/'.join(diff_image_png.split('/')[-6:]))
             diff_image_n = np.array(self.query_results[-1].diff_image_n)
             diff_image_bin_centers = np.array(self.query_results[-1].diff_image_bin_centers)
 
-            # Update the data and image sources for the figures
+            # Update the readnoise difference image and histogram
+            self.refs['readnoise_diff_image'].image_url(url=[diff_image_png], x=0, y=0, w=2048, h=2048, anchor="bottom_left")
             self.refs['diff_hist_source'].data = {'n': diff_image_n,
                                                   'bin_centers': diff_image_bin_centers}
-            self.refs['readnoise_diff_image'].image_url(url=[diff_image_png], x=0, y=0, w=2048, h=2048, anchor="bottom_left")
-
-            # Update the histogram limits
             self.refs['diff_hist_xr'].start = diff_image_bin_centers.min()
             self.refs['diff_hist_xr'].end = diff_image_bin_centers.max()
             self.refs['diff_hist_yr'].start = diff_image_n.min()
             self.refs['diff_hist_yr'].end = diff_image_n.max() + diff_image_n.max() * 0.05
 
-        # Set the readnoise difference image style
+        # Update the readnoise difference image style
         self.refs['readnoise_diff_image'].xaxis.visible = False
         self.refs['readnoise_diff_image'].yaxis.visible = False
         self.refs['readnoise_diff_image'].xgrid.grid_line_color = None
