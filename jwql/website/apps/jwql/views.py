@@ -444,6 +444,35 @@ def engineering_database(request, user):
     return render(request, template, context)
 
 
+def export(request, tablename):
+    """Function to export and download data from JWQLDB Table Viewer
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    tablename : str
+        Name of table to download
+
+    Returns
+    -------
+    response : HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    table_meta = build_table(tablename)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="{}.csv"'.format(tablename)
+
+    writer = csv.writer(response)
+    writer.writerow(table_meta.columns.values)
+    for _, row in table_meta.iterrows():
+        writer.writerow(row.values)
+
+    return response
+
+
 def home(request):
     """Generate the home page
 
@@ -572,35 +601,6 @@ def jwqldb_table_viewer(request, tablename_param=None):
             'table_name': tablename}
 
     return render(request, template, context)
-
-
-def export(request, tablename):
-    """Function to export and download data from JWQLDB Table Viewer
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-
-    tablename : str
-        Name of table to download
-
-    Returns
-    -------
-    response : HttpResponse object
-        Outgoing response sent to the webpage
-    """
-    table_meta = build_table(tablename)
-
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="{}.csv"'.format(tablename)
-
-    writer = csv.writer(response)
-    writer.writerow(table_meta.columns.values)
-    for _, row in table_meta.iterrows():
-        writer.writerow(row.values)
-
-    return response
 
 
 def not_found(request, *kwargs):
