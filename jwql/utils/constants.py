@@ -252,7 +252,7 @@ MONITORS = {
              ('Blind Pointing Accuracy Monitor', '#'),
              ('Filter and Calibration Lamp Monitor', '#'),
              ('Thermal Emission Monitor', '#')],
-    'nircam': [('Bias Monitor', '#'),
+    'nircam': [('Bias Monitor', '/nircam/bias_monitor'),
                ('Readnoise Monitor', '/nircam/readnoise_monitor'),
                ('Gain Level Monitor', '#'),
                ('Mean Dark Current Rate Monitor', '/nircam/dark_monitor'),
