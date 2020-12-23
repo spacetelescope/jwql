@@ -94,6 +94,22 @@
 	          		<li class="nav-item active">
 	            		<a class="nav-link" href={{ url('jwql:dashboard') }}>Dashboard<span class="sr-only">(current)</span></a>
 	          		</li>
+					 <!--JWQLDB-->
+					<li class="nav-item active">
+	            		<a class="nav-link" href={{ url('jwql:jwqldb') }}>JWQLDB<span class="sr-only">(current)</span></a>
+					  </li>
+		      		<!--EDB-->
+		      		<li class="nav-item active">
+	            		<a class="nav-link" href={{ url('jwql:edb') }}>EDB<span class="sr-only">(current)</span></a>
+					  </li>
+					 <!--API-->
+					<li class="nav-item active">
+	            		<a class="nav-link" href={{ url('jwql:api') }}>API<span class="sr-only">(current)</span></a>
+	          		</li>
+	          		<!--Documentation-->
+		      		<li class="nav-item active">
+	            		<a class="nav-link" href="https://jwql.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer">Documentation<span class="sr-only">(current)</span></a>
+	          		</li>
 	          		{% for inst_key, inst_tools in tools.items() %}
 						<li class="dropdown">
 							<!--Show dropdown links when navbar is NOT collapsed-->
@@ -129,18 +145,6 @@
 							</div>
 						</li>
 		      		{% endfor %}
-		      		<li class="nav-item active">
-	            		<a class="nav-link" href={{ url('jwql:edb') }}>EDB<span class="sr-only">(current)</span></a>
-					  </li>
-					<li class="nav-item active">
-	            		<a class="nav-link" href={{ url('jwql:table_viewer') }}>JWQLDB<span class="sr-only">(current)</span></a>
-					  </li>
-					<li class="nav-item active">
-	            		<a class="nav-link" href={{ url('jwql:api') }}>API<span class="sr-only">(current)</span></a>
-	          		</li>
-		      		<li class="nav-item active">
-	            		<a class="nav-link" href="https://jwql.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer">Documentation<span class="sr-only">(current)</span></a>
-	          		</li>
 
 					<!--GitHub Link-->
 					<!--Show GitHub link when navbar is NOT collapsed-->
@@ -235,7 +239,7 @@
               href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/styles/default.min.css">
         <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
         <script>hljs.initHighlightingOnLoad();</script>
-		
+
 		<!-- Needed javascript -->
 	    <!-- IMPORTANT: Needed for rendering Datatables in JWQLDB Viewer -->
 		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.21/af-2.3.5/b-1.6.2/b-colvis-1.6.2/b-html5-1.6.2/b-print-1.6.2/cr-1.5.2/fc-3.3.1/fh-3.1.7/kt-2.5.2/r-2.2.5/rg-1.1.2/rr-1.2.7/sl-1.3.1/datatables.min.css"/>
