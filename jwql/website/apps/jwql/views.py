@@ -79,7 +79,6 @@ from .forms import FileSearchForm
 from .oauth import auth_info, auth_required
 
 
-
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
