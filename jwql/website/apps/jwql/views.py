@@ -42,16 +42,20 @@ import os
 
 from django.http import JsonResponse
 from django.http import HttpRequest as request
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.shortcuts import redirect
+import pandas as pd
 
 from jwql.database.database_interface import load_connection
+from jwql.utils import anomaly_query_config
 from jwql.utils.constants import MONITORS
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.utils import get_base_url
 from jwql.utils.utils import get_config
 from jwql.utils.utils import query_unformat
+from jwql.website.apps.jwql.data_containers import get_jwqldb_table_view_components
 
 from .data_containers import data_trending
 from .data_containers import get_acknowledgements
@@ -74,7 +78,6 @@ from .data_containers import build_table
 from .forms import FileSearchForm
 from .oauth import auth_info, auth_required
 
-from jwql.utils import anomaly_query_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
@@ -440,6 +443,35 @@ def engineering_database(request, user):
     return render(request, template, context)
 
 
+def export(request, tablename):
+    """Function to export and download data from JWQLDB Table Viewer
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    tablename : str
+        Name of table to download
+
+    Returns
+    -------
+    response : HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    table_meta = build_table(tablename)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="{}.csv"'.format(tablename)
+
+    writer = csv.writer(response)
+    writer.writerow(table_meta.columns.values)
+    for _, row in table_meta.iterrows():
+        writer.writerow(row.values)
+
+    return response
+
+
 def home(request):
     """Generate the home page
 
@@ -505,7 +537,7 @@ def instrument(request, inst):
     return render(request, template, context)
 
 
-def jwqldb_table_viewer(request):
+def jwqldb_table_viewer(request, tablename_param=None):
     """Generate the JWQL Table Viewer view.
 
     Parameters
@@ -513,8 +545,8 @@ def jwqldb_table_viewer(request):
     request : HttpRequest object
         Incoming request from the webpage
 
-    user : dict
-        A dictionary of user credentials.
+    tablename_param : str
+        Table name parameter from URL
 
     Returns
     -------
@@ -522,7 +554,12 @@ def jwqldb_table_viewer(request):
         Outgoing response sent to the webpage
     """
 
-    table_meta, tablename = get_jwqldb_table_view_components(request)
+    if tablename_param is None:
+        table_meta, tablename = get_jwqldb_table_view_components(request)
+    else:
+        table_meta = build_table(tablename_param)
+        tablename = tablename_param
+
     _, _, engine, _ = load_connection(get_config()['connection_string'])
     all_jwql_tables = engine.table_names()
 
@@ -563,24 +600,6 @@ def jwqldb_table_viewer(request):
             'table_name': tablename}
 
     return render(request, template, context)
-
-
-def export(request, tablename):
-    import pandas as pd
-    import csv
-    from jwql.website.apps.jwql.data_containers import get_jwqldb_table_view_components
-
-    table_meta = build_table(tablename)
-
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="{}.csv"'.format(tablename)
-
-    writer = csv.writer(response)
-    writer.writerow(table_meta.columns.values)
-    for _, row in table_meta.iterrows():
-        writer.writerow(row.values)
-
-    return response
 
 
 def not_found(request, *kwargs):
