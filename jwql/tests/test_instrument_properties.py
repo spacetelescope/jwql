@@ -38,32 +38,34 @@ def test_amplifier_info():
     data_dir = os.path.join(get_config()['test_dir'], 'dark_monitor')
 
     fullframe = instrument_properties.amplifier_info(os.path.join(data_dir, 'test_image_ff.fits'))
-    fullframe_truth = (4, {'1': [(4, 4), (512, 2044)],
-                           '2': [(512, 4), (1024, 2044)],
-                           '3': [(1024, 4), (1536, 2044)],
-                           '4': [(1536, 4), (2044, 2044)]})
+    fullframe_truth = (4, {'1': [(4, 512, 1), (4, 2044, 1)],
+                           '2': [(512, 1024, 1), (4, 2044, 1)],
+                           '3': [(1024, 1536, 1), (4, 2044, 1)],
+                           '4': [(1536, 2044, 1), (4, 2044, 1)]})
+
     assert fullframe == fullframe_truth
 
     fullframe = instrument_properties.amplifier_info(os.path.join(data_dir, 'test_image_ff.fits'), omit_reference_pixels=False)
-    fullframe_truth = (4, {'1': [(0, 0), (512, 2048)],
-                           '2': [(512, 0), (1024, 2048)],
-                           '3': [(1024, 0), (1536, 2048)],
-                           '4': [(1536, 0), (2048, 2048)]})
+    fullframe_truth = (4, {'1': [(0, 512, 1), (0, 2048, 1)],
+                           '2': [(512, 1024, 1), (0, 2048, 1)],
+                           '3': [(1024, 1536, 1), (0, 2048, 1)],
+                           '4': [(1536, 2048, 1), (0, 2048, 1)]})
+
     assert fullframe == fullframe_truth
 
     subarray = instrument_properties.amplifier_info(os.path.join(data_dir, 'test_image_1.fits'))
-    subarray_truth = (1, {'1': [(0, 0), (10, 10)]})
+    subarray_truth = (1, {'1': [(0, 10, 1), (0, 10, 1)]})
     assert subarray == subarray_truth
 
     subarray_one = instrument_properties.amplifier_info(os.path.join(data_dir, 'test_image_grismstripe_one_amp.fits'))
-    subarray_one_truth = (1, {'1': [(4, 4), (2044, 64)]})
+    subarray_one_truth = (1, {'1': [(4, 2044, 1), (4, 64, 1)]})
     assert subarray_one == subarray_one_truth
 
     subarray_four = instrument_properties.amplifier_info(os.path.join(data_dir, 'test_image_grismstripe_four_amp.fits'))
-    subarray_four_truth = (4, {'1': [(4, 4), (512, 64)],
-                               '2': [(512, 4), (1024, 64)],
-                               '3': [(1024, 4), (1536, 64)],
-                               '4': [(1536, 4), (2044, 64)]})
+    subarray_four_truth = (4, {'1': [(4, 512, 1), (4, 64, 1)],
+                               '2': [(512, 1024, 1), (4, 64, 1)],
+                               '3': [(1024, 1536, 1), (4, 64, 1)],
+                               '4': [(1536, 2044, 1), (4, 64, 1)]})
     assert subarray_four == subarray_four_truth
 
 
