@@ -5,7 +5,7 @@ authlib==0.15.2
 bokeh==2.2.3
 codecov==2.1.11
 crds==10.3.1
-cryptography==3.2.1
+cryptography==3.3.1
 django==3.1.4
 flake8==3.8.4
 inflection==0.5.1
