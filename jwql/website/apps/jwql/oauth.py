@@ -207,7 +207,7 @@ def auth_required(fn):
     @auth_info
     def check_auth(request, user, **kwargs):
         """Check if the user is authenticated through ``auth.mast``.
-        If not, perform the authorization, uless the user is running
+        If not, perform the authorization, unless the user is running
         the web app locally, in which case authorization is bypassed.
 
         Parameters

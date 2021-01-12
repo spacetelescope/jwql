@@ -760,6 +760,12 @@ def view_image(request, user, inst, file_root, rewrite=False):
     # Create a form instance
     form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
 
+    # If user is running the web app locally and has not authenticated,
+    # then replace ezid with 'dev'
+    if '127.0.0.1' in get_base_url():
+        if user['ezid'] is None:
+            user['ezid'] = 'dev'
+
     # If this is a POST request, process the form data
     if request.method == 'POST':
         anomaly_choices = dict(request.POST)['anomaly_choices']
