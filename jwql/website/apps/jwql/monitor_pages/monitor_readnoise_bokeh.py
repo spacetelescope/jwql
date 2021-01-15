@@ -14,7 +14,7 @@ Use
 
         from jwql.website.apps.jwql import monitor_pages
         monitor_template = monitor_pages.ReadnoiseMonitor()
-        monitor_template.input_parameters = ('NIRCam', 'NRCA1_FULL', '1')
+        monitor_template.input_parameters = ('NIRCam', 'NRCA1_FULL')
 """
 
 from datetime import datetime, timedelta
@@ -36,11 +36,11 @@ class ReadnoiseMonitor(BokehTemplate):
     # do not want to invoke the setter unless all are updated
     @property
     def input_parameters(self):
-        return (self._instrument, self._aperture, self._amp)
+        return (self._instrument, self._aperture)
 
     @input_parameters.setter
     def input_parameters(self, info):
-        self._instrument, self._aperture, self._amp = info
+        self._instrument, self._aperture = info
         self.pre_init()
         self.post_init()
 
@@ -70,11 +70,9 @@ class ReadnoiseMonitor(BokehTemplate):
         try:
             dummy_instrument = self._instrument
             dummy_aperture = self._aperture
-            dummy_amp = self._amp
         except AttributeError:
             self._instrument = 'NIRCam'
             self._aperture = ''
-            self._amp = ''
 
         self._embed = True
         self.format_string = None
@@ -85,44 +83,44 @@ class ReadnoiseMonitor(BokehTemplate):
         # Load the readnoise data
         self.load_data()
 
-        # Get the relevant plotting data
-        self.readnoise_vals = np.array([getattr(result, 'amp{}_mean'.format(self._amp)) for result in self.query_results])
-        self.expstarts_iso = np.array([result.expstart for result in self.query_results])
-        self.expstarts = np.array([datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f') for date in self.expstarts_iso])
-        self.filenames = [os.path.basename(result.uncal_filename).replace('_uncal.fits', '') for result in self.query_results]
-        self.nints = [result.nints for result in self.query_results]
-        self.ngroups = [result.ngroups for result in self.query_results]
-
-        # Update the mean readnoise figure
-        self.update_mean_readnoise_figure()
+        # Update the mean readnoise figures
+        self.update_mean_readnoise_figures()
 
         # Update the readnoise difference image and histogram
         self.update_readnoise_diff_plots()
 
-    def update_mean_readnoise_figure(self):
-        """Updates the mean readnoise bokeh plot"""
+    def update_mean_readnoise_figures(self):
+        """Updates the mean readnoise bokeh plots"""
 
-        # Update the mean readnoise vs time plot
-        self.refs['mean_readnoise_source'].data = {'time': self.expstarts,
-                                                   'time_iso': self.expstarts_iso,
-                                                   'mean_rn': self.readnoise_vals,
-                                                   'filename': self.filenames,
-                                                   'nints': self.nints,
-                                                   'ngroups': self.ngroups}
-        self.refs['mean_readnoise_figure'].title.text = 'Amp {}'.format(self._amp)
-        self.refs['mean_readnoise_figure'].hover.tooltips = [('file', '@filename'),
-                                                             ('time', '@time_iso'),
-                                                             ('nints', '@nints'),
-                                                             ('ngroups', '@ngroups'),
-                                                             ('readnoise', '@mean_rn')
-                                                             ]
+        # Get the dark exposures info
+        filenames = [os.path.basename(result.uncal_filename).replace('_uncal.fits', '') for result in self.query_results]
+        expstarts_iso = np.array([result.expstart for result in self.query_results])
+        expstarts = np.array([datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f') for date in expstarts_iso])
+        nints = [result.nints for result in self.query_results]
+        ngroups = [result.ngroups for result in self.query_results]
 
-        # Update plot limits if data exists
-        if len(self.query_results) != 0:
-            self.refs['mean_readnoise_xr'].start = self.expstarts.min() - timedelta(days=3)
-            self.refs['mean_readnoise_xr'].end = self.expstarts.max() + timedelta(days=3)
-            self.refs['mean_readnoise_yr'].start = self.readnoise_vals.min() - 1
-            self.refs['mean_readnoise_yr'].end = self.readnoise_vals.max() + 1
+        # Update the mean readnoise figures for all amps
+        for amp in ['1', '2', '3', '4']:
+            readnoise_vals = np.array([getattr(result, 'amp{}_mean'.format(amp)) for result in self.query_results])
+            self.refs['mean_readnoise_source_amp{}'.format(amp)].data = {'time': expstarts,
+                                                                         'time_iso': expstarts_iso,
+                                                                         'mean_rn': readnoise_vals,
+                                                                         'filename': filenames,
+                                                                         'nints': nints,
+                                                                         'ngroups': ngroups}
+            self.refs['mean_readnoise_figure_amp{}'.format(amp)].title.text = 'Amp {}'.format(amp)
+            self.refs['mean_readnoise_figure_amp{}'.format(amp)].hover.tooltips = [('file', '@filename'),
+                                                                                   ('time', '@time_iso'),
+                                                                                   ('nints', '@nints'),
+                                                                                   ('ngroups', '@ngroups'),
+                                                                                   ('readnoise', '@mean_rn')]
+
+            # Update plot limits if data exists
+            if len(readnoise_vals) != 0:
+                self.refs['mean_readnoise_xr_amp{}'.format(amp)].start = expstarts.min() - timedelta(days=3)
+                self.refs['mean_readnoise_xr_amp{}'.format(amp)].end = expstarts.max() + timedelta(days=3)
+                self.refs['mean_readnoise_yr_amp{}'.format(amp)].start = readnoise_vals.min() - 1
+                self.refs['mean_readnoise_yr_amp{}'.format(amp)].end = readnoise_vals.max() + 1
 
     def update_readnoise_diff_plots(self):
         """Updates the readnoise difference image and histogram"""
@@ -150,4 +148,5 @@ class ReadnoiseMonitor(BokehTemplate):
         self.refs['readnoise_diff_image'].yaxis.visible = False
         self.refs['readnoise_diff_image'].xgrid.grid_line_color = None
         self.refs['readnoise_diff_image'].ygrid.grid_line_color = None
-        self.refs['readnoise_diff_image'].title.text_font_size = '30px'
+        self.refs['readnoise_diff_image'].title.text_font_size = '22px'
+        self.refs['readnoise_diff_image'].title.align = 'center'
