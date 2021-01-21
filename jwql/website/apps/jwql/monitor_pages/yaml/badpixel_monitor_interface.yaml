@@ -1,0 +1,417 @@
+# YAML file defining bokeh figures for the bad pixel monitor
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Dead Pixels v. Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &dead_history_source
+  ref: "dead_history_source"
+  data:
+    time: !self.bad_history['DEAD'][0]
+    dead_pixels: !self.bad_history['DEAD'][1]
+    time_labels: !self.bad_history['DEAD'][2]
+
+- !Range1d: &dead_history_xrange
+  ref: "dead_history_xrange"
+  start: 0
+  end: 1
+  bounds: 'auto'  #!!python/tuple [0, 1]
+
+- !Range1d: &dead_history_yrange
+  ref: "dead_history_yrange"
+  start: 0
+  end: 1
+  bounds: 'auto'  # !!python/tuple [-1, 1]
+
+- !Figure: &dead_history_figure
+  ref: "dead_history_figure"
+  x_axis_label: "Date"
+  x_axis_type: "datetime"
+  y_axis_label: "Number of DEAD pixels"
+  x_range: *dead_history_xrange
+  y_range: *dead_history_yrange
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset, save'
+  tooltips: "@time_labels Dead pix: @dead_pixels"
+  elements:
+    - {'kind': 'circle', 'x': 'time', 'y': 'dead_pixels', line_width: 5, 'source': *dead_history_source}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Hot Pixels v. Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &hot_history_source
+  ref: "hot_history_source"
+  data:
+    time: !self.bad_history['HOT'][0]
+    hot_pixels: !self.bad_history['HOT'][1]
+    time_labels: !self.bad_history['HOT'][2]
+
+- !Range1d: &hot_history_xrange
+  ref: "hot_history_xrange"
+  start: 0
+  end: 1
+  bounds: 'auto'  #!!python/tuple [0, 1]
+
+- !Range1d: &hot_history_yrange
+  ref: "hot_history_yrange"
+  start: 0
+  end: 1
+  bounds: 'auto'  #!!python/tuple [-1, 1]
+
+- !Figure: &hot_history_figure
+  ref: "hot_history_figure"
+  x_axis_label: "Date"
+  x_axis_type: "datetime"
+  y_axis_label: "Number of HOT pixels"
+  x_range: *hot_history_xrange
+  y_range: *hot_history_yrange
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset, save'
+  tooltips: "@time_labels Hot pix: @hot_pixels"
+  elements:
+    - {'kind': 'circle', 'x': 'time', 'y': 'hot_pixels', line_width: 5, 'source': *hot_history_source}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Low QE Pixels v. Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &low_qe_history_source
+  ref: "low_qe_history_source"
+  data:
+    time: !self.bad_history['LOW_QE'][0]
+    low_qe_pixels: !self.bad_history['LOW_QE'][1]
+    time_labels: !self.bad_history['LOW_QE'][2]
+
+- !Range1d: &low_qe_history_xrange
+  ref: "low_qe_history_xrange"
+  start: 0
+  end: 1
+  bounds: 'auto'  #!!python/tuple [0, 1]
+
+- !Range1d: &low_qe_history_yrange
+  ref: "low_qe_history_yrange"
+  start: 0
+  end: 1
+  bounds: 'auto'  #!!python/tuple [-1, 1]
+
+- !Figure: &low_qe_history_figure
+  ref: "low_qe_history_figure"
+  x_axis_label: "Date"
+  x_axis_type: "datetime"
+  y_axis_label: "Number of LOW QE pixels"
+  x_range: *low_qe_history_xrange
+  y_range: *low_qe_history_yrange
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset, save'
+  tooltips: "@time_labels Low QE pix: @low_qe_pixels"
+  elements:
+    - {'kind': 'circle', 'x': 'time', 'y': 'low_qe_pixels', line_width: 5, 'source': *low_qe_history_source}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Open Pixels v. Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &open_history_source
+  ref: "open_history_source"
+  data:
+    time: !self.bad_history['OPEN'][0]
+    open_pixels: !self.bad_history['OPEN'][1]
+    time_labels: !self.bad_history['OPEN'][2]
+
+- !Range1d: &open_history_xrange
+  ref: "open_history_xrange"
+  start: 0
+  end: 1
+  bounds: 'auto'  #!!python/tuple [0, 1]
+
+- !Range1d: &open_history_yrange
+  ref: "open_history_yrange"
+  start: 0
+  end: 1
+  bounds: 'auto'  #!!python/tuple [-1, 1]
+
+- !Figure: &open_history_figure
+  ref: "open_history_figure"
+  x_axis_label: "Date"
+  x_axis_type: "datetime"
+  y_axis_label: "Number of OPEN pixels"
+  x_range: *open_history_xrange
+  y_range: *open_history_yrange
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset, save'
+  tooltips: "@time_labels Open pix: @open_pixels"
+  elements:
+    - {'kind': 'circle', 'x': 'time', 'y': 'open_pixels', line_width: 5, 'source': *open_history_source}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Open Adj Pixels v. Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &adj_open_history_source
+  ref: "adj_open_history_source"
+  data:
+    time: !self.bad_history['ADJ_OPEN'][0]
+    adj_open_pixels: !self.bad_history['ADJ_OPEN'][1]
+    time_labels: !self.bad_history['ADJ_OPEN'][2]
+
+- !Range1d: &adj_open_history_xrange
+  ref: "adj_open_history_xrange"
+  start: 0
+  end: 1
+  bounds: 'auto'  #!!python/tuple [0, 1]
+
+- !Range1d: &adj_open_history_yrange
+  ref: "adj_open_history_yrange"
+  start: 0
+  end: 1
+  bounds: 'auto'  #!!python/tuple [-1, 1]
+
+- !Figure: &adj_open_history_figure
+  ref: "adj_open_history_figure"
+  x_axis_label: "Date"
+  x_axis_type: "datetime"
+  y_axis_label: "Number of OPEN ADJACENT pixels"
+  x_range: *adj_open_history_xrange
+  y_range: *adj_open_history_yrange
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset, save'
+  tooltips: "@time_labels Adj open pix: @adj_open_pixels"
+  elements:
+    - {'kind': 'circle', 'x': 'time', 'y': 'adj_open_pixels', line_width: 5, 'source': *adj_open_history_source}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# RC Pixels v. Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &rc_history_source
+  ref: "rc_history_source"
+  data:
+    time: !self.bad_history['RC'][0]
+    rc_pixels: !self.bad_history['RC'][1]
+    time_labels: !self.bad_history['RC'][2]
+
+- !Range1d: &rc_history_xrange
+  ref: "rc_history_xrange"
+  start: 0
+  end: 1
+  bounds: 'auto'  #!!python/tuple [0, 1]
+
+- !Range1d: &rc_history_yrange
+  ref: "rc_history_yrange"
+  start: 0
+  end: 1
+  bounds: 'auto'  #!!python/tuple [-1, 1]
+
+- !Figure: &rc_history_figure
+  ref: "rc_history_figure"
+  x_axis_label: "Date"
+  x_axis_type: "datetime"
+  y_axis_label: "Number of RC pixels"
+  x_range: *rc_history_xrange
+  y_range: *rc_history_yrange
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset, save'
+  tooltips: "@time_labels RC pix: @rc_pixels"
+  elements:
+    - {'kind': 'circle', 'x': 'time', 'y': 'rc_pixels', line_width: 5, 'source': *rc_history_source}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Other Bad Pixels v. Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &other_bad_pixel_history_source
+  ref: "other_bad_pixel_history_source"
+  data:
+    time: !self.bad_history['OTHER_BAD_PIXEL'][0]
+    other_bad_pixel_pixels: !self.bad_history['OTHER_BAD_PIXEL'][1]
+    time_labels: !self.bad_history['OTHER_BAD_PIXEL'][2]
+
+- !Range1d: &other_bad_pixel_history_xrange
+  ref: "other_bad_pixel_history_xrange"
+  start: 0
+  end: 1
+  bounds: 'auto'  #!!python/tuple [0, 1]
+
+- !Range1d: &other_bad_pixel_history_yrange
+  ref: "other_bad_pixel_history_yrange"
+  start: 0
+  end: 1
+  bounds: 'auto'  #!!python/tuple [-1, 1]
+
+- !Figure: &other_bad_pixel_history_figure
+  ref: "other_bad_pixel_history_figure"
+  x_axis_label: "Date"
+  x_axis_type: "datetime"
+  y_axis_label: "Number of OTHER BAD pixels"
+  x_range: *other_bad_pixel_history_xrange
+  y_range: *other_bad_pixel_history_yrange
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset, save'
+  tooltips: '@time_labels Other bad pix: @other_bad_pixel_pixels'
+  elements:
+    - {'kind': 'circle', 'x': 'time', 'y': 'other_bad_pixel_pixels', line_width: 5, 'source': *other_bad_pixel_history_source}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Telegraph Pixels v. Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &telegraph_history_source
+  ref: "telegraph_history_source"
+  data:
+    time: !self.bad_history['TELEGRAPH'][0]
+    telegraph_pixels: !self.bad_history['TELEGRAPH'][1]
+    time_labels: !self.bad_history['TELEGRAPH'][2]
+
+- !Range1d: &telegraph_history_xrange
+  ref: "telegraph_history_xrange"
+  start: 0
+  end: 1
+  bounds: 'auto'  #!!python/tuple [0, 1]
+
+- !Range1d: &telegraph_history_yrange
+  ref: "telegraph_history_yrange"
+  start: 0
+  end: 1
+  bounds: 'auto'  #!!python/tuple [-1, 1]
+
+- !Figure: &telegraph_history_figure
+  ref: "telegraph_history_figure"
+  x_axis_label: "Date"
+  x_axis_type: "datetime"
+  y_axis_label: "Number of TELEGRAPH pixels"
+  x_range: *telegraph_history_xrange
+  y_range: *telegraph_history_yrange
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset, save'
+  tooltips: "@time_labels Telegraph pix: @telegraph_pixels"
+  elements:
+    - {'kind': 'circle', 'x': 'time', 'y': 'telegraph_pixels', line_width: 5, 'source': *telegraph_history_source}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Show positions of bad pixels found in darks
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &dark_position_source
+  ref: "dark_position_source"
+  data:
+    bad_type: !self.latest_bad_from_dark_type
+    x_coord: !self.latest_bad_from_dark_x
+    y_coord: !self.latest_bad_from_dark_y
+
+- !Range1d: &dark_position_xrange
+  ref: "dark_position_xrange"
+  start: 0
+  end: 2047
+
+- !Range1d: &dark_position_yrange
+  ref: "dark_position_yrange"
+  start: 0
+  end: 2047
+
+- !CDSView: &figure_hot_view
+    source: *dark_position_source
+    filters:
+        - !GroupFilter:
+            column_name: "bad_type"
+            group: "HOT"
+
+- !CDSView: &figure_rc_view
+    source: *dark_position_source
+    filters:
+        - !GroupFilter:
+            column_name: "bad_type"
+            group: "RC"
+
+- !CDSView: &figure_other_view
+    source: *dark_position_source
+    filters:
+        - !GroupFilter:
+            column_name: "bad_type"
+            group: "OTHER_BAD_PIXEL"
+
+- !CDSView: &figure_telegraph_view
+    source: *dark_position_source
+    filters:
+        - !GroupFilter:
+            column_name: "bad_type"
+            group: "TELEGRAPH"
+
+- !Figure: &dark_position_figure
+  ref: "dark_position_figure"
+  x_axis_label: "X (pixel)"
+  y_axis_label: "Y (pixel)"
+  x_range: *dark_position_xrange
+  y_range: *dark_position_yrange
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset, save'
+  tooltips: "(x,y): (@x_coord, @y_coord) Type: @bad_type"
+  elements:
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source, 'color': 'red', 'alpha': 0.5, 'legend': 'Hot', 'size': 6, 'view': *figure_hot_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source, 'color': 'blue', 'alpha': 0.5, 'legend': 'RC', 'size': 6, 'view': *figure_rc_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source, 'color': 'green', 'alpha': 0.5, 'legend': 'Other', 'size': 6, 'view': *figure_other_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *dark_position_source, 'color': 'black', 'alpha': 0.5, 'legend': 'Telegraph', 'size': 6, 'view': *figure_telegraph_view}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Show positions of bad pixels found in flats
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &flat_position_source
+  ref: "flat_position_source"
+  data:
+    bad_type: !self.latest_bad_from_flat_type
+    x_coord: !self.latest_bad_from_flat_x
+    y_coord: !self.latest_bad_from_flat_y
+
+- !Range1d: &flat_position_xrange
+  ref: "flat_position_xrange"
+  start: 0
+  end: 2047
+
+- !Range1d: &flat_position_yrange
+  ref: "flat_position_yrange"
+  start: 0
+  end: 2047
+
+- !CDSView: &figure_dead_view
+    source: *flat_position_source
+    filters:
+        - !GroupFilter:
+            column_name: "bad_type"
+            group: "DEAD"
+
+- !CDSView: &figure_open_view
+    source: *flat_position_source
+    filters:
+        - !GroupFilter:
+            column_name: "bad_type"
+            group: "OPEN"
+
+- !CDSView: &figure_adj_open_view
+    source: *flat_position_source
+    filters:
+        - !GroupFilter:
+            column_name: "bad_type"
+            group: "ADJ_OPEN"
+
+- !CDSView: &figure_low_qe_view
+    source: *flat_position_source
+    filters:
+        - !GroupFilter:
+            column_name: "bad_type"
+            group: "LOW_QE"
+
+- !Figure: &flat_position_figure
+  ref: "flat_position_figure"
+  x_axis_label: "X (pixel)"
+  y_axis_label: "Y (pixel)"
+  x_range: *flat_position_xrange
+  y_range: *flat_position_yrange
+  tools: 'hover, zoom_in, zoom_out, box_zoom, pan, reset, save'
+  tooltips: "(x, y): (@x_coord, @y_coord) Type: @bad_type"
+  elements:
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'red', 'alpha': 0.5, 'legend': 'Dead', 'size': 6, 'view': *figure_dead_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'blue', 'alpha': 0.5, 'legend': 'Open', 'size': 6, 'view': *figure_open_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'green', 'alpha': 0.5, 'legend': 'Adj Open', 'size': 6, 'view': *figure_adj_open_view}
+    - {'kind': 'circle', 'x': 'x_coord', 'y': 'y_coord', 'source': *flat_position_source, 'color': 'black', 'alpha': 0.5, 'legend': 'Low QE', 'size': 6, 'view': *figure_low_qe_view}
+
+
+#- !Document:
+#  - !row:
+#    - *dark_position_figure
+#    - *flat_position_figure
+#  - !row:
+#    - *dead_history_figure
+#    - *hot_history_figure
+#  - !row:
+#    - *low_qe_history_figure
+#    - *rc_history_figure
+#  - !row:
+#    - *open_history_figure
+#    - *adj_open_history_figure
+#  - !row:
+#    - *telegraph_history_figure
+#    - *other_bad_pixel_history_figure

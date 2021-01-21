@@ -123,13 +123,15 @@ def test_file_group(test_file):
     # attempt to retrieve a group name different from default
     group_index = 0
     test_group = grp.getgrgid(os.getgroups()[group_index]).gr_name
+    test_group_2 = grp.getgrgid(os.getgroups()[group_index+1]).gr_name
 
+    # Change the file group
     set_permissions(test_file, group=test_group, owner=owner)
     assert has_permissions(test_file, group=test_group, owner=owner)
 
-    # return to default group
-    set_permissions(test_file, owner=owner, group=group)
-    assert has_permissions(test_file, owner=owner, group=group)
+    # Change to another group
+    set_permissions(test_file, owner=owner, group=test_group_2)
+    assert has_permissions(test_file, owner=owner, group=test_group_2)
 
 
 def test_file_permissions(test_file):

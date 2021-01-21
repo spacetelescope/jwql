@@ -431,7 +431,6 @@ function update_header_display(extension, num_extensions) {
  * @param {String} type - The type of the count (e.g. "activities")
  */
 function update_show_count(count, type) {
-
     content = 'Showing ' + count + '/' + count + ' ' + type;
     content += '<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">';
     content += '<span class="help-tip mx-2">i</span></a>';
@@ -474,6 +473,11 @@ function update_thumbnail_array(data) {
 
         // Build div content
         content = '<div class="thumbnail" detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
+        if (data.inst!="all") {
+            content += '<a href="/' + data.inst + '/' + rootname + '/">';
+        } else {
+            content += '<a href="/' + filename_dict.inst + '/' + rootname + '/">';
+        }
         content += '<a href="/' + data.inst + '/' + rootname + '/">';
         content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="this.src=/static/img/imagenotfound.png">';
         content += '<div class="thumbnail-color-fill" ></div>';
@@ -503,13 +507,32 @@ function update_thumbnails_page(inst, proposal, base_url) {
     $.ajax({
         url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/',
         success: function(data){
-
             // Perform various updates to divs
             update_show_count(Object.keys(data.file_data).length, 'activities');
             update_thumbnail_array(data);
             update_filter_options(data);
             update_sort_options(data);
 
+            // Replace loading screen with the proposal array div
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("thumbnail-array").style.display = "block";
+        }});
+};
+
+/**
+ * Updates various components on the thumbnails anomaly query page
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ * @param {List} rootnames
+ */
+function update_thumbnails_query_page(base_url) {
+    $.ajax({
+        url: base_url + '/ajax/query_submit/',
+        success: function(data){
+            // Perform various updates to divs
+            update_show_count(Object.keys(data.file_data).length, 'activities');
+            update_thumbnail_array(data);
+            update_filter_options(data);
+            update_sort_options(data);
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
             document.getElementById("thumbnail-array").style.display = "block";
