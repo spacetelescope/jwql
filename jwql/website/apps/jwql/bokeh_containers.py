@@ -301,32 +301,36 @@ def readnoise_monitor_tabs(instrument):
     # Make a separate tab for each aperture
     tabs = []
     for aperture in FULL_FRAME_APERTURES[instrument.upper()]:
+        monitor_template = monitor_pages.ReadnoiseMonitor()
+        monitor_template.input_parameters = (instrument, aperture)
 
-        # Make a separate plot for each amp
+        # Add the mean readnoise vs time plots for each amp
         plots = []
         for amp in ['1', '2', '3', '4']:
-            monitor_template = monitor_pages.ReadnoiseMonitor()
-            monitor_template.input_parameters = (instrument, aperture, amp)
-            readnoise_plot = monitor_template.refs['mean_readnoise_figure']
+            readnoise_plot = monitor_template.refs['mean_readnoise_figure_amp{}'.format(amp)]
             readnoise_plot.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
             plots.append(readnoise_plot)
 
         # Add the readnoise difference image
         readnoise_diff_image = monitor_template.refs['readnoise_diff_image']
-        readnoise_diff_image.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
+        readnoise_diff_image.sizing_mode = 'scale_width'
+        readnoise_diff_image.margin = (0, 100, 0, 100)  # Add space around sides of figure
         plots.append(readnoise_diff_image)
 
         # Add the readnoise difference histogram
         readnoise_diff_hist = monitor_template.refs['readnoise_diff_hist']
+        readnoise_diff_hist.sizing_mode = 'scale_width'
+        readnoise_diff_hist.margin = (0, 190, 0, 190)
         plots.append(readnoise_diff_hist)
 
-        # Put the mean readnoise plots on the top row, and the difference image and
-        # histogram on the second row.
+        # Put the mean readnoise plots on the top row, the difference image on the
+        # second row, and the difference histogram on the bottom row.
         readnoise_layout = layout(
             plots[0:4],
-            plots[4:6]
+            plots[4:5],
+            plots[5:6]
         )
-        readnoise_layout.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
+        readnoise_layout.sizing_mode = 'scale_width'
         readnoise_tab = Panel(child=readnoise_layout, title=aperture)
         tabs.append(readnoise_tab)
 
