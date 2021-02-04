@@ -44,25 +44,22 @@ class generalDashboard:
         # Get number of files per type
         # Make histogram/bar chart
 
+        data = build_table('filesystem_instrument')
+        if not pd.isnull(self.date):
+            dt = Timedelta(1, unit='d')
+            print(self.date, dt, self.date+dt)
+            data = data[(data['date']>=self.date) & (data['date']<=self.date+dt)]
 
-        def _count_filetypes(data):
-            print('count up filetypes')
-            # filetypes = data.filetype.unique() # x 
-            # filetype_count = [data.filetype.str.count('ft').sum() for ft in filetypes] # top
-
-        # data = build_table('filesystem_instrument')
-        # if not pd.isnull(self.date):
-            # dt = Timedelta(1, units='days')
-            # data = data[(data['start_time']>=self.date) & (data['start_time']<=self.date+dt)]
 
         # for instrument in data.instrument.unique():
         title = 'File Types per Instrument'
         figures = []
+
+        data = data.groupby(['instrument', 'filetype', 'count']).size().reset_index(name='group_count')
+        print(data)
         for instrument in ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']:
-            if instrument != 'fgs':
-                figures.append(self.make_panel(GENERIC_SUFFIX_TYPES, np.random.rand(len(GENERIC_SUFFIX_TYPES))*10e7, instrument, title, 'Filetypes'))
-            else:
-               figures.append(self.make_panel(GUIDER_SUFFIX_TYPES, np.random.rand(len(GENERIC_SUFFIX_TYPES))*10e7, instrument, title, 'Filetypes'))
+            instrument_data = data[data['instrument'] == instrument]
+            figures.append(self.make_panel(instrument_data['filetype'], instrument_data['count'], instrument, title, 'Filetypes'))
 
         tabs = Tabs(tabs=figures)
 
@@ -117,12 +114,8 @@ class generalDashboard:
 
         source = build_table('filesystem_general')
         date_times = [pd.to_datetime(datetime).date() for datetime in source['date'].values]
-        # data = {'dates':[date(2020, 10, i+1) for i in range(30)],
-        #         'numfiles':[i + randint(40, 150) for i in range(30)]}
         source['datestr'] = [date_time.strftime("%Y-%m-%d") for date_time in date_times]
 
-        # df = pd.DataFrame(data, columns=['dates', 'numfiles', 'datestr'])
-        # source = ColumnDataSource(df)
         p1 = figure(title="Number of Files Added by Day", tools="hover,tap", tooltips="@datestr: @total_file_count", plot_width=1700, x_axis_label='Date', y_axis_label='Number of Files Added')
         p1.line(x='date', y='total_file_count', source=source, color='#6C5B7B', line_dash='dashed', line_width=3)
         tab1 = Panel(child=p1, title='Files Per Day')
