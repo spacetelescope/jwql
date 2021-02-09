@@ -532,8 +532,7 @@ def generate_preview_images():
     logging.info("Beginning the script run")
 
     # Process programs in parallel
-    program_list = ['jw00600', 'jw00722', 'jw00602', 'jw00605', 'jw00721']
-    # program_list = [os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], '*'))]
+    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], '*'))]
     pool = multiprocessing.Pool(processes=int(get_config()['cores']))
     pool.map(process_program, program_list)
     pool.close()
