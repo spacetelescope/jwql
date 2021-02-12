@@ -9,7 +9,6 @@
 {% block content %}
 
     <main role="main" class='dashboard'>
-
         <h1 style="text-align: center">JWQL Dashboard</h1>
         <hr>
 
@@ -18,78 +17,91 @@
             statistics for the JWQL filesystem as well as the status of the instrument monitors. The figures below are interactive and some provide
             more detailed information if you hover over them and will take you to other landing pages within the application if clicked.
         </p>
+        <hr>
+        <h4>Select Time Delta</h4>
+        <form action="" method="post" id="time_delta_select">
+            {{ csrf_input }}
+            <select name="timedelta" id="timedelta">
+                {% for dt in time_deltas %}
+                    <option value='{{ dt }}'>{{ dt }}</option>
+                {% endfor %}
+            </select> 
 
-         <body>
-            {{ div | safe }}
-            {{ script | safe }}
-            
-            <br>
-            <h3>JWQL Monitor Status</h3>
-            <hr>
-            <table id="jwqltable" class="display" style="width:100%">
-                <thead>
-                    <tr>
-                        {% for column in table_columns %}
-                            <th>{{ column }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in table_rows %}
+            <button name=time_delta_value class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
+
+            <br><br>
+
+            <body>
+                {{ div | safe }}
+                {{ script | safe }}
+                
+                <br>
+                <h3>JWQL Monitor Status</h3>
+                <hr>
+                <table id="jwqltable" class="display" style="width:100%">
+                    <thead>
                         <tr>
-                            {% for value in row %}
-                                <td>{{ value }}</td>
+                            {% for column in table_columns %}
+                                <th>{{ column }}</th>
                             {% endfor %}
                         </tr>
-                    {% endfor %}
-                </tbody>
-                <tfoot>
-                    <tr>
-                        {% for column in table_columns %}
-                            <th>{{ column }}</th>
+                    </thead>
+                    <tbody>
+                        {% for row in table_rows %}
+                            <tr>
+                                {% for value in row %}
+                                    <td>{{ value }}</td>
+                                {% endfor %}
+                            </tr>
                         {% endfor %}
-                    </tr>
-                </tfoot>
-            </table>
-            
-            <!-- JS for datatables rendering and sorting with DataTables. -->
-            <style>
-                table.dataTable td  {
-                max-width: 150px;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            {% for column in table_columns %}
+                                <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </tfoot>
+                </table>
 
-                .red {
-                    background-color: #e77057 !important;
-                  }
-                .yellow{
-                    background-color: #f5f25d !important;
-                }
-                .green{
-                    background-color: #57e79f !important;
-                }
-            </style>
+                <!-- JS for datatables rendering and sorting with DataTables. -->
+                <style>
+                    table.dataTable td  {
+                    max-width: 150px;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    }
 
-            <script>
-                $(document).ready( function () {
-                    var table = $('#jwqltable').DataTable({
-                        "order": [[ 2, "desc" ]],
-                        "createdRow": function( row, data, dataIndex ) {
-                        if ( data[4] == "FAILURE" ) {        
-                            $(row).addClass('red');
-                        } else if ( data[4] == "SUCCESS" ) {        
-                            $(row).addClass('green');
-                        } else if ( data[4] == "None" ) {        
-                            $(row).addClass('yellow');
-                         }
-                      }
-                    });
-                  } );
-            </script>
-        </body>
+                    .red {
+                        background-color: #e77057 !important;
+                    }
+                    .yellow{
+                        background-color: #f5f25d !important;
+                    }
+                    .green{
+                        background-color: #57e79f !important;
+                    }
+                </style>
 
+                <script>
+                    $(document).ready( function () {
+                        var table = $('#jwqltable').DataTable({
+                            "order": [[ 2, "desc" ]],
+                            "createdRow": function( row, data, dataIndex ) {
+                            if ( data[4] == "FAILURE" ) {
+                                $(row).addClass('red');
+                            } else if ( data[4] == "SUCCESS" ) {
+                                $(row).addClass('green');
+                            } else if ( data[4] == "None" ) {
+                                $(row).addClass('yellow');
+                            }
+                        }
+                        });
+                    } );
+                </script>
+            </body>
+        </form>
     </main>
 
 {% endblock %}

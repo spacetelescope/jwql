@@ -230,7 +230,7 @@ def get_current_flagged_anomalies(rootname, instrument):
     return current_anomalies
 
 
-def get_dashboard_components():
+def get_dashboard_components(request):
     """Build and return dictionaries containing components and html
     needed for the dashboard.
 
@@ -242,56 +242,80 @@ def get_dashboard_components():
         A dictionary containing full HTML needed for the dashboard.
     """
 
-    output_dir = get_config()['outputs']
-    name_dict = {'': '',
-                 'monitor_mast': 'Database Monitor',
-                 'monitor_filesystem': 'Filesystem Monitor'}
+    from jwql.website.apps.jwql.bokeh_dashboard import generalDashboard
 
-    # Run the cron job monitor to produce an updated table
-    monitor_cron_jobs.status(production_mode=True)
+    if 'time_delta_value' in request.POST:
+        time_delta_value = request.POST['timedelta']
 
-    # Build dictionary of Bokeh components from files in the output directory
-    dashboard_components = {}
-    for dir_name, _, file_list in os.walk(output_dir):
-        monitor_name = os.path.basename(dir_name)
+        if time_delta_value == 'All Time':
+            time_delta = None
+        else:
+            time_delta_options = {'All Time': None,
+                                '1 Day': pd.DateOffset(days=1),
+                                '1 Month': pd.DateOffset(months=1),
+                                '1 Week': pd.DateOffset(weeks=1),
+                                '1 Year': pd.DateOffset(years=1)}
+            time_delta = time_delta_options[time_delta_value]
 
-        # Only continue if the dashboard knows how to build that monitor
-        if monitor_name in name_dict.keys():
-            formatted_monitor_name = name_dict[monitor_name]
-            dashboard_components[formatted_monitor_name] = {}
-            for fname in file_list:
-                if 'component' in fname:
-                    full_fname = '{}/{}'.format(monitor_name, fname)
-                    plot_name = fname.split('_component')[0]
+        dashboard = generalDashboard(delta_t=time_delta)
 
-                    # Generate formatted plot name
-                    formatted_plot_name = plot_name.title().replace('_', ' ')
-                    for lowercase, mixed_case in JWST_INSTRUMENT_NAMES_MIXEDCASE.items():
-                        formatted_plot_name = formatted_plot_name.replace(lowercase.capitalize(),
-                                                                          mixed_case)
-                    formatted_plot_name = formatted_plot_name.replace('Jwst', 'JWST')
-                    formatted_plot_name = formatted_plot_name.replace('Caom', 'CAOM')
+        return dashboard
+    else:
+        # When coming from home/monitor views
+        dashboard = generalDashboard(delta_t=None)
 
-                    # Get the div
-                    html_file = full_fname.split('.')[0] + '.html'
-                    with open(os.path.join(output_dir, html_file), 'r') as f:
-                        div = f.read()
+        return dashboard
 
-                    # Get the script
-                    js_file = full_fname.split('.')[0] + '.js'
-                    with open(os.path.join(output_dir, js_file), 'r') as f:
-                        script = f.read()
+    # output_dir = get_config()['outputs']
+    # name_dict = {'': '',
+    #              'monitor_mast': 'Database Monitor',
+    #              'monitor_filesystem': 'Filesystem Monitor'}
 
-                    # Save to dictionary
-                    dashboard_components[formatted_monitor_name][formatted_plot_name] = [div, script]
+    # # Run the cron job monitor to produce an updated table
+    # monitor_cron_jobs.status(production_mode=True)
 
-    # Add HTML that cannot be saved as components to the dictionary
-    with open(os.path.join(output_dir, 'monitor_cron_jobs', 'cron_status_table.html'), 'r') as f:
-        cron_status_table_html = f.read()
-    dashboard_html = {}
-    dashboard_html['Cron Job Monitor'] = cron_status_table_html
+    # # Build dictionary of Bokeh components from files in the output directory
+    # dashboard_components = {}
+    # for dir_name, _, file_list in os.walk(output_dir):
+    #     monitor_name = os.path.basename(dir_name)
 
-    return dashboard_components, dashboard_html
+    #     # Only continue if the dashboard knows how to build that monitor
+    #     if monitor_name in name_dict.keys():
+    #         formatted_monitor_name = name_dict[monitor_name]
+    #         dashboard_components[formatted_monitor_name] = {}
+    #         for fname in file_list:
+    #             if 'component' in fname:
+    #                 full_fname = '{}/{}'.format(monitor_name, fname)
+    #                 plot_name = fname.split('_component')[0]
+
+    #                 # Generate formatted plot name
+    #                 formatted_plot_name = plot_name.title().replace('_', ' ')
+    #                 for lowercase, mixed_case in JWST_INSTRUMENT_NAMES_MIXEDCASE.items():
+    #                     formatted_plot_name = formatted_plot_name.replace(lowercase.capitalize(),
+    #                                                                       mixed_case)
+    #                 formatted_plot_name = formatted_plot_name.replace('Jwst', 'JWST')
+    #                 formatted_plot_name = formatted_plot_name.replace('Caom', 'CAOM')
+
+    #                 # Get the div
+    #                 html_file = full_fname.split('.')[0] + '.html'
+    #                 with open(os.path.join(output_dir, html_file), 'r') as f:
+    #                     div = f.read()
+
+    #                 # Get the script
+    #                 js_file = full_fname.split('.')[0] + '.js'
+    #                 with open(os.path.join(output_dir, js_file), 'r') as f:
+    #                     script = f.read()
+
+    #                 # Save to dictionary
+    #                 dashboard_components[formatted_monitor_name][formatted_plot_name] = [div, script]
+
+    # # Add HTML that cannot be saved as components to the dictionary
+    # with open(os.path.join(output_dir, 'monitor_cron_jobs', 'cron_status_table.html'), 'r') as f:
+    #     cron_status_table_html = f.read()
+    # dashboard_html = {}
+    # dashboard_html['Cron Job Monitor'] = cron_status_table_html
+
+    # return dashboard_components, dashboard_html
 
 
 def get_edb_components(request):

@@ -405,9 +405,12 @@ def dashboard(request):
         Outgoing response sent to the webpage
     """
 
+    from bokeh.layouts import column, layout
+    from bokeh.embed import components
+
     template = 'dashboard.html'
 
-    db = generalDashboard()
+    db = get_dashboard_components(request)
     pie_graph = db.dashboard_instrument_pie_chart()
     files_graph = db.dashboard_files_per_day()
     filetype_bar = db.dashboard_filetype_bar_chart()
@@ -420,11 +423,14 @@ def dashboard(request):
         ],sizing_mode='stretch_width') 
     script, div = components(p)
 
+    time_deltas = ['All Time', '1 Day', '1 Week', '1 Month', '1 Year']
+
     context =  {'inst': '',
                'script': script,
                'div': div,
                'table_columns': table_columns,
-               'table_rows': table_values}
+               'table_rows': table_values,
+               'time_deltas':time_deltas}
 
     return render(request, template, context)
 
