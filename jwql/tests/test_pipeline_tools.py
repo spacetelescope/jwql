@@ -23,11 +23,13 @@ import pytest
 
 import numpy as np
 
-from jwql.instrument_monitors import pipeline_tools
-from jwql.utils.utils import get_config
 
-# Determine if tests are being run on jenkins
+# Determine if tests are being run on github actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
+
+if ON_GITHUB_ACTIONS:
+    from jwql.instrument_monitors import pipeline_tools
+    from jwql.utils.utils import get_config
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
