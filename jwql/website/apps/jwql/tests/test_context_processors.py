@@ -21,6 +21,8 @@ Use
 
 from django.test import TestCase
 from django.test.client import Client
+import os
+from unittest import skipIf
 
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
 

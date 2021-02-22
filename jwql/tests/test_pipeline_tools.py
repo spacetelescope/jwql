@@ -6,7 +6,7 @@ Authors
 -------
 
     - Bryan Hilbert
-
+``
 Use
 ---
 
