@@ -25,7 +25,7 @@ import os
 import pytest
 
 # Skip testing this module if on Jenkins
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
 try:
     from jwql.website.apps.jwql import data_containers
     from jwql.utils.utils import get_config
@@ -33,7 +33,7 @@ except:
     pass
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_acknowledgements():
     """Tests the ``get_acknowledgements`` function."""
 
@@ -42,7 +42,7 @@ def test_get_acknowledgements():
     assert len(acknowledgements) > 0
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_all_proposals():
     """Tests the ``get_all_proposals`` function."""
 
@@ -62,7 +62,7 @@ def test_get_dashboard_components():
     assert len(dashboard_html) > 0
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_expstart():
     """Tests the ``get_expstart`` function."""
 
@@ -70,7 +70,7 @@ def test_get_expstart():
     assert isinstance(expstart, float)
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_filenames_by_instrument():
     """Tests the ``get_filenames_by_instrument`` function."""
 
@@ -79,7 +79,7 @@ def test_get_filenames_by_instrument():
     assert len(filepaths) > 0
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_filenames_by_proposal():
     """Tests the ``get_filenames_by_proposal`` function."""
 
@@ -88,7 +88,7 @@ def test_get_filenames_by_proposal():
     assert len(filenames) > 0
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_filenames_by_rootname():
     """Tests the ``get_filenames_by_rootname`` function."""
 
@@ -97,7 +97,7 @@ def test_get_filenames_by_rootname():
     assert len(filenames) > 0
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_header_info():
     """Tests the ``get_header_info`` function."""
 
@@ -106,7 +106,7 @@ def test_get_header_info():
     assert len(header) > 0
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_image_info():
     """Tests the ``get_image_info`` function."""
 
@@ -119,7 +119,7 @@ def test_get_image_info():
         assert key in image_info
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_instrument_proposals():
     """Tests the ``get_instrument_proposals`` function."""
 
@@ -128,7 +128,7 @@ def test_get_instrument_proposals():
     assert len(proposals) > 0
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_preview_images_by_instrument():
     """Tests the ``get_preview_images_by_instrument`` function."""
 
@@ -137,7 +137,7 @@ def test_get_preview_images_by_instrument():
     assert len(preview_images) > 0
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_preview_images_by_proposal():
     """Tests the ``get_preview_images_by_proposal`` function."""
 
@@ -146,7 +146,7 @@ def test_get_preview_images_by_proposal():
     assert len(preview_images) > 0
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_preview_images_by_rootname():
     """Tests the ``get_preview_images_by_rootname`` function."""
 
@@ -155,7 +155,7 @@ def test_get_preview_images_by_rootname():
     assert len(preview_images) > 0
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_proposal_info():
     """Tests the ``get_proposal_info`` function."""
 
@@ -169,7 +169,7 @@ def test_get_proposal_info():
         assert key in proposal_info
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_thumbnails_by_instrument():
     """Tests the ``get_thumbnails_by_instrument`` function."""
 
@@ -178,7 +178,7 @@ def test_get_thumbnails_by_instrument():
     assert len(preview_images) > 0
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_thumbnails_by_proposal():
     """Tests the ``get_thumbnails_by_proposal`` function."""
 
@@ -187,7 +187,7 @@ def test_get_thumbnails_by_proposal():
     assert len(preview_images) > 0
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_thumbnails_by_rootname():
     """Tests the ``get_thumbnails_by_rootname`` function."""
 
@@ -196,7 +196,7 @@ def test_get_thumbnails_by_rootname():
     assert len(preview_images) > 0
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_thumbnails_ajax():
     """Tests the ``get_thumbnails_ajax`` function."""
 

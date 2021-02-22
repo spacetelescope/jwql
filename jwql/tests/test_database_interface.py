@@ -24,15 +24,18 @@ import pytest
 import random
 import string
 
-from jwql.database import database_interface as di
 from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
-from jwql.utils.utils import get_config
+
 
 # Determine if tests are being run on jenkins
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
+
+if not ON_GITHUB_ACTIONS:
+    from jwql.utils.utils import get_config
+    from jwql.database import database_interface as di
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to development database server.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to development database server.')
 def test_all_tables_exist():
     """Test that the table ORMs defined in ``database_interface``
     actually exist as tables in the database"""
@@ -71,7 +74,7 @@ def test_anomaly_orm_factory():
         assert item in table_attributes
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to development database server.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to development database server.')
 def test_anomaly_records():
     """Test to see that new records can be entered"""
 
@@ -91,7 +94,7 @@ def test_anomaly_records():
     assert ghosts.data_frame.iloc[0]['ghost'] == True
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to development database server.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to development database server.')
 def test_load_connections():
     """Test to see that a connection to the database can be
     established"""

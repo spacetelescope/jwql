@@ -29,7 +29,7 @@ from jwql.utils.utils import get_base_url
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 
 # Determine if tests are being run on jenkins
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
 
 # Determine if the local server is running
 try:
@@ -85,7 +85,7 @@ def test_api_views(url):
     """
 
     # Build full URL
-    if not ON_JENKINS:
+    if not ON_GITHUB_ACTIONS:
         base_url = get_base_url()
     else:
         base_url = 'https://dljwql.stsci.edu'

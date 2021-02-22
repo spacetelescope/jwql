@@ -22,11 +22,13 @@ import os
 from pathlib import Path
 import pytest
 
-from jwql.utils.utils import copy_files, get_config, filename_parser, \
-    filesystem_path, _validate_config
 
 # Determine if tests are being run on jenkins
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
+
+if not ON_GITHUB_ACTIONS:
+    from jwql.utils.utils import copy_files, get_config, filename_parser, \
+    filesystem_path, _validate_config
 
 FILENAME_PARSER_TEST_DATA = [
 
@@ -248,7 +250,7 @@ FILENAME_PARSER_TEST_DATA = [
 ]
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_copy_files():
     """Test that files are copied successfully"""
 
@@ -273,7 +275,7 @@ def test_copy_files():
     os.remove(copied_file)
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_config():
     """Assert that the ``get_config`` function successfully creates a
     dictionary.
@@ -298,7 +300,7 @@ def test_filename_parser(filename, solution):
     assert filename_parser(filename) == solution
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_filename_parser_whole_filesystem():
     """Test the filename_parser on all files currently in the filesystem."""
     # Get all files
@@ -336,7 +338,7 @@ def test_filename_parser_nonJWST():
         filename_parser(filename)
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_filesystem_path():
     """Test that a file's location in the filesystem is returned"""
 

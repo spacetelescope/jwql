@@ -23,12 +23,13 @@ import pytest
 
 import numpy as np
 
-from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats
-from jwql.instrument_monitors.common_monitors import readnoise_monitor
-from jwql.utils.utils import get_config
 
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
 
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+if not ON_GITHUB_ACTIONS:
+    from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats
+    from jwql.instrument_monitors.common_monitors import readnoise_monitor
+    from jwql.utils.utils import get_config
 
 
 def test_determine_pipeline_steps():
@@ -69,7 +70,7 @@ def test_get_amp_stats():
     assert amp_stats == amp_stats_truth
 
 
-@pytest.mark.skipif(ON_JENKINS,
+@pytest.mark.skipif(ON_GITHUB_ACTIONS,
                     reason='Requires access to central storage.')
 def test_get_metadata():
     """Test retrieval of metadata from input file"""

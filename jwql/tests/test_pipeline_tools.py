@@ -27,10 +27,10 @@ from jwql.instrument_monitors import pipeline_tools
 from jwql.utils.utils import get_config
 
 # Determine if tests are being run on jenkins
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_completed_pipeline_steps():
     """Test that the list of completed pipeline steps for a file is
     correct
@@ -120,7 +120,7 @@ def test_get_pipeline_steps():
     assert miri_req_steps == miri_dict
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_image_stack():
     """Test stacking of slope images"""
 

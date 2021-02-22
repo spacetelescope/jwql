@@ -24,13 +24,13 @@ import shutil
 from astropy.io import fits
 import numpy as np
 
-from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats
-from jwql.instrument_monitors.common_monitors import bias_monitor
-from jwql.utils.utils import get_config
 
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
 
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
-
+if not ON_GITHUB_ACTIONS:
+    from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats
+    from jwql.instrument_monitors.common_monitors import bias_monitor
+    from jwql.utils.utils import get_config
 
 def test_collapse_image():
     """Test that the image is collapsed correctly along its axes"""
@@ -49,7 +49,7 @@ def test_collapse_image():
     assert np.all(collapsed_columns == collapsed_columns_truth)
 
 
-@pytest.mark.skipif(ON_JENKINS,
+@pytest.mark.skipif(ON_GITHUB_ACTIONS,
                     reason='Requires access to central storage.')
 def test_extract_zeroth_group():
     """Test the zeroth group file creation"""
