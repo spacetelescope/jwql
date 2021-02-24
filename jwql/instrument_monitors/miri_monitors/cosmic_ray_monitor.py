@@ -317,7 +317,6 @@ class CosmicRay:
 
         return cr_mag
 
-
     def most_recent_search(self):
         """Adapted from Dark Monitor (Bryan Hilbert)
 
@@ -352,8 +351,6 @@ class CosmicRay:
             query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
                           .format(self.aperture, query_result)))
-        #elif query_count > 1:
-         #   raise ValueError('More than one "most recent" query?')
         else:
             query_result = query[0].end_time_mjd
 
@@ -473,9 +470,6 @@ class CosmicRay:
 
                 # Get a list of possible apertures
                 possible_apertures = list(Siaf(instrument).apernames)
-
-                # Use this line instead to save time while testing
-                #possible_apertures = ['MIRIM_FULL', 'NRCB4_FULL']
 
                 for aperture in possible_apertures:
 

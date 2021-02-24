@@ -6,7 +6,7 @@ Use
 ---
     This module can be used from the command line as such:
     ::
-       
+
 """
 
 import os
@@ -25,6 +25,7 @@ from jwql.bokeh_templating import BokehTemplate
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
+
 class CosmicRayMonitor(BokehTemplate):
 
     # Combine instrument and aperture into a single property because we
@@ -38,7 +39,6 @@ class CosmicRayMonitor(BokehTemplate):
         self._instrument, self._aperture = info
         self.pre_init()
         self.post_init()
-
 
     def pre_init(self):
         # Start with default values for instrument and aperture because
@@ -63,41 +63,37 @@ class CosmicRayMonitor(BokehTemplate):
         # Get dates and coordinates of the most recent entries
         #self.most_recent_data()
 
-
     def post_init(self):
         self._update_cosmic_ray_v_time()
         self._update_cosmic_ray_histogram()
-        
-        
+
     def get_histogram_data(self):
         """Get data required to create cosmic ray histogram from the
         database query.
         """
-        
+
         last_hist_index = -1
         hist = plt.hist(self.mags[last_hist_index])
-                   
-        self.bin_left = np.array( [bar.get_x() for bar in hist[2]] )
+
+        self.bin_left = np.array([bar.get_x() for bar in hist[2]])
         self.amplitude = [bar.get_height() for bar in hist[2]]
         self.bottom = [bar.get_y() for bar in hist[2]]
         deltas = self.bin_left[1:] - self.bin_left[0: -1]
         self.bin_width = np.append(deltas[0], deltas)
-        
 
     def get_history_data(self):
         """Extract data on the history of cosmic ray numbers from the
         database query result
         """
         self.cosmic_ray_history = {}
-        
+
         self.times = [row.obs_end_time for row in self.cosmic_ray_table]
         self.num = [row.jump_count for row in self.cosmic_ray_table]
-                            
+
         self.mags = [row.magnitude for row in self.cosmic_ray_table]
-                            
+
         hover_values = np.array([datetime.datetime.strftime(t, "%d-%b-%Y") for t in self.times])
         self.cosmic_ray_history['Cosmic Rays'] = (self.times, self.num, hover_values)
-
 
     def identify_tables(self):
         """Determine which database tables as associated with
@@ -105,7 +101,6 @@ class CosmicRayMonitor(BokehTemplate):
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self._instrument.lower()]
         self.query_table = eval('{}CosmicRayQueryHistory'.format(mixed_case_name))
         self.stats_table = eval('{}CosmicRayStats'.format(mixed_case_name))
-
 
     def load_data(self):
         """Query the database tables to get data"""
@@ -118,12 +113,11 @@ class CosmicRayMonitor(BokehTemplate):
             .filter(self.stats_table.aperture == self._aperture) \
             .all()
 
-
     def most_recent_data(self):
         """Get the cosmic ray magnitudes associated with the most
         recent run of the monitor.
         """
-        
+
         cosmic_ray_times = [row.obs_end_time for row in self.cosmic_ray_table]
 
         if len(cosmic_ray_times) > 0:
@@ -131,12 +125,11 @@ class CosmicRayMonitor(BokehTemplate):
         else:
             self.most_recent_obs = datetime.datetime(1999, 10, 31)
 
-
     def _update_cosmic_ray_v_time(self):
-        """Update the plot properties for the plots of the number of cosmic rays 
+        """Update the plot properties for the plots of the number of cosmic rays
         versus time.
         """
-        
+
         self.refs['cosmic_ray_x_range'].start = min(self.times)
         self.refs['cosmic_ray_x_range'].end = max(self.times)
         self.refs['cosmic_ray_y_range'].start = min(self.num)
@@ -145,24 +138,21 @@ class CosmicRayMonitor(BokehTemplate):
         self.refs['cosmic_ray_history_figure'].title.text = 'MIRIM_FULL Cosmic Ray History'
         self.refs['cosmic_ray_history_figure'].title.align = "center"
         self.refs['cosmic_ray_history_figure'].title.text_font_size = "20px"
-        
-    
+
     def _update_cosmic_ray_histogram():
-        
+
         mags = [row.magnitude for row in self.cosmic_ray_table]
-        
+
         self.refs['hist_x_range'].start = 0
         self.refs['hist_x_range'].end = max(mags)
-        
+
         self.refs['hist_y_range'].start = 0
         self.refs['hist_y_range'].end = max(mags)
-    
+
         self.refs['cosmic_ray_histogram'].title.text = 'MIRIM_FULL Cosmic Ray Intensities'
         self.refs['cosmic_ray_histogram'].title.align = "center"
         self.refs['cosmic_ray_histogram'].title.text_font_size = "20px"
 
-        
-        
 # Uncomment the line below when testing via the command line:
 # bokeh serve --show monitor_cosmic_rays_bokeh.py
 CosmicRayMonitor()
