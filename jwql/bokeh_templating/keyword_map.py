@@ -35,9 +35,17 @@ Dependencies
 from bokeh import layouts, models, palettes, plotting, transform
 from inspect import getmembers, isclass, isfunction
 
+<<<<<<< Updated upstream
 bokeh_sequences = {}
 bokeh_mappings = {}  # Note that abstract base classes *are* included
 
+=======
+#from .surface3d import Surface3d
+
+bokeh_sequences = {}
+#bokeh_mappings = {"Surface3d": Surface3d}  # Note that abstract base classes *are* included
+bokeh_mappings = {}
+>>>>>>> Stashed changes
 
 def _parse_module(module):
     """
