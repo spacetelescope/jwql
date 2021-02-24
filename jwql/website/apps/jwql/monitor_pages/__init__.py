@@ -1,4 +1,5 @@
-from .monitor_badpixel_bokeh import BadPixelMonitor
+from .monitor_bad_pixel_bokeh import BadPixelMonitor
+from .monitor_bias_bokeh import BiasMonitor
 from .monitor_cosmic_rays_bokeh import CosmicRayMonitor
 from .monitor_dark_bokeh import DarkMonitor
 from .monitor_filesystem_bokeh import MonitorFilesystem

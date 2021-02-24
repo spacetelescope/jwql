@@ -207,7 +207,8 @@ def auth_required(fn):
     @auth_info
     def check_auth(request, user, **kwargs):
         """Check if the user is authenticated through ``auth.mast``.
-        If not, perform the authorization.
+        If not, perform the authorization, unless the user is running
+        the web app locally, in which case authorization is bypassed.
 
         Parameters
         ----------
@@ -222,15 +223,25 @@ def auth_required(fn):
             The decorated function
         """
 
-        # If user is currently anonymous, require a login
-        if user['ezid']:
+        # Determine domain
+        base_url = get_base_url()
+        if '127.0.0.1' in base_url:
+            domain = '127.0.0.1'
+        else:
+            domain = base_url.split('//')[-1]
 
+        # If running web app locally, the user does not need to be authenticated
+        if domain == '127.0.0.1':
             return fn(request, user, **kwargs)
 
+        # If the user has an ezid, then they are already authenticated
+        elif user['ezid']:
+            return fn(request, user, **kwargs)
+
+        # Otherwise, the user is not authenticated and can't continue
         else:
             template = 'not_authenticated.html'
             context = {'inst': ''}
-
             return render(request, template, context)
 
     return check_auth

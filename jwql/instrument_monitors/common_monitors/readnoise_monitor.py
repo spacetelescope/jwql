@@ -53,15 +53,20 @@ import numpy as np
 from pysiaf import Siaf
 from sqlalchemy.sql.expression import and_
 
+from jwql.database.database_interface import FGSReadnoiseQueryHistory, FGSReadnoiseStats
+from jwql.database.database_interface import MIRIReadnoiseQueryHistory, MIRIReadnoiseStats
+from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats
+from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats
+from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats
 from jwql.database.database_interface import session
-from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats, NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
 from jwql.utils import instrument_properties
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, initialize_instrument_monitor, update_monitor_table
+
 
 class Readnoise():
     """Class for executing the readnoise monitor.
@@ -257,7 +262,7 @@ class Readnoise():
         vmin, vmax = zscale.get_limits(image)
 
         # Plot the image
-        plt.figure(figsize=(12,12))
+        plt.figure(figsize=(12, 12))
         im = plt.imshow(image, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
         plt.colorbar(im, label='Readnoise Difference (most recent dark - reffile) [DN]')
         plt.title('{}'.format(outname))
@@ -376,8 +381,8 @@ class Readnoise():
             where the readnoise monitor was run.
         """
 
-        query = session.query(self.query_table).filter(and_(self.query_table.aperture==self.aperture,
-            self.query_table.run_monitor==True)).order_by(self.query_table.end_time_mjd).all()
+        query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
+            self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
 
         if len(query) == 0:
             query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
@@ -453,7 +458,8 @@ class Readnoise():
 
             # Find the difference between the current readnoise image and the pipeline readnoise reffile, and record image stats.
             # Sometimes, the pipeline readnoise reffile needs to be cutout to match the subarray.
-            pipeline_readnoise = pipeline_readnoise[self.substrt2-1:self.substrt2+self.subsize2-1, self.substrt1-1:self.substrt1+self.subsize1-1]
+            if readnoise.shape != pipeline_readnoise.shape:
+                pipeline_readnoise = pipeline_readnoise[self.substrt2 - 1:self.substrt2 + self.subsize2 - 1, self.substrt1 - 1:self.substrt1 + self.subsize1 - 1]
             readnoise_diff = readnoise - pipeline_readnoise
             clipped = sigma_clip(readnoise_diff, sigma=3.0, maxiters=5)
             diff_image_mean, diff_image_stddev = np.nanmean(clipped), np.nanstd(clipped)
@@ -518,7 +524,7 @@ class Readnoise():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in ['nircam', 'niriss']:
+        for instrument in JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -575,7 +581,7 @@ class Readnoise():
                             logging.info('\t{} does not exist in JWQL filesystem, even though {} does'.format(uncal_filename, filename))
                         else:
                             num_groups = fits.getheader(uncal_filename)['NGROUPS']
-                            if num_groups > 1:  # skip processing if the file doesnt have enough groups to calculate the readnoise; TODO change to 10 before incorporating MIRI
+                            if num_groups > 10:  # skip processing if the file doesnt have enough groups to calculate the readnoise
                                 shutil.copy(uncal_filename, self.data_dir)
                                 logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
                                 set_permissions(output_filename)
@@ -606,6 +612,7 @@ class Readnoise():
                 logging.info('\tUpdated the query history table')
 
         logging.info('Readnoise Monitor completed successfully.')
+
 
 if __name__ == '__main__':
 

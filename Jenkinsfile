@@ -27,7 +27,7 @@ if (utils.scm_checkout()) return
 
 // Establish OS and Python version variables for the matrix
 matrix_os = ["linux-stable"] // (Note that Jenkins can only be run with Linux, not MacOSX/Windows)
-matrix_python = ["3.6", "3.7", "3.8"]
+matrix_python = ["3.7", "3.8"]
 
 // Set up the matrix of builds
 matrix = []
