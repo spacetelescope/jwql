@@ -81,10 +81,10 @@ Next, activate the `base` or `root` environment (depending on your version of `c
 source activate base/root
 ```
 
-Lastly, create the `jwql` environment via the `environment_python_3_6.yml` file:
+Lastly, create the `jwql` environment via the `environment_python_3_7.yml` file:
 
 ```
-conda env create -f environment_python_3_6.yml --name jwql-3.7
+conda env create -f environment_python_3_7.yml --name jwql-3.7
 ```
 
 ### Package Installation
