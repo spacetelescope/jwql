@@ -1,271 +1,169 @@
 # Panel 1: Trending all visits
 # Common data source
 - !ColumnDataSource: &offsets_trend_source
-    ref: "offsets_trend_source"
+    ref: "trend_source"
     data:
-        obsdate: []
-        v2_off: []
-        v3_off: []
+        visit: []
+        oss_v2: []
+        oss_v2_lo: []
+        oss_v2_hi: []
+        oss_v3: []
+        oss_v3_lo: []
+        oss_v3_hi: []
+        rep_v2: []
+        rep_v2_lo: []
+        rep_v2_hi: []
+        rep_v3: []
+        rep_v3_lo: []
+        rep_v3_hi: []
+        rep_theta: [] #these aren't being used yet
+        rep_theta_lo: []
+        rep_theta_hi: []
+        oss_theta: []
+        oss_theta_lo: []
+        oss_theta_hi: []
+    selection_on_change: ['indices', !self.select_visit ]
 # V2/V3 offsets trending figure
 - !Range1d: &v2v3_offsets_trend_xr
-    ref: "v2v3_offsets_trend_xr"
+    ref: "v2_offsets_trend_range"
     start: 0
     end: 1
     bounds: !!python/tuple [0, 1]
 - !Range1d: &v2v3_offsets_trend_yr
-    ref: "v2v3_offsets_trend_yr"
+    ref: "v3_offsets_trend_range"
     start: 0
     end: 1
     bounds: !!python/tuple [0, 1]
-!Figure: &v2v3_offsets_trend_fig
+# Whisker models for error bars
+- !Whisker: &rep_v2_err
+    dimension: 'width'
+    source: *offsets_trend_source
+    base: 'rep_v3'
+    lower: 'rep_v2_lo'
+    upper: 'rep_v2_hi'
+- !Whisker: &rep_v3_err
+    dimension: 'height'
+    source: *offsets_trend_source
+    base: 'rep_v2'
+    lower: 'rep_v3_lo'
+    upper: 'rep_v3_hi'
+- !Whisker: &oss_v2_err
+    dimension: 'width'
+    source: *offsets_trend_source
+    base: 'oss_v3'
+    lower: 'oss_v2_lo'
+    upper: 'oss_v2_hi'
+- !Whisker: &oss_v3_err
+    dimension: 'height'
+    source: *offsets_trend_source
+    base: 'oss_v2'
+    lower: 'oss_v3_lo'
+    upper: 'oss_v3_hi'
+# Actual figure
+- !Figure: &v2v3_offsets_trend_fig
     ref: "v2v3_offsets_trend_fig"
     title: "NIRSpec MSA Pointing"
-    height: 800
-    width: 800
+    height: 700
+    width: 700
     x_axis_label: "V2 offset (arcsec)"
     y_axis_label: "V3 offset (arcsec)"
     x_range: *v2v3_offsets_trend_xr
     y_range: *v2v3_offsets_trend_yr
-    elements:
-        - {'kind': 'x', 'x': 'v2_off', 'y': 'v3_off', 'source': *offsets_trend_source, 'size': 6}
-# Offsets vs time trending figure
-- !Range1d: &time_offsets_trend_xr
-    ref: "time_offsets_trend_xr"
-    start: 0
-    end: 1
-    bounds: !!python/tuple [0, 1]
-- !Range1d: &time_offsets_trend_yr
-    ref: "time_offsets_trend_yr"
-    start: 0
-    end: 1
-    bounds: !!python/tuple [0, 1]
-!Figure: &time_offsets_trend_fig
-    ref: "time_offsets_trend_fig"
-    title: "NIRSpec MSA Pointing"
-    height: 800
-    width: 800
-    x_axis_label: "V2 offset (arcsec)"
-    y_axis_label: "V3 offset (arcsec)"
-    x_range: *v2v3_offsets_trend_xr
-    y_range: *v2v3_offsets_trend_yr
-    elements:
-        - {'kind': 'x', 'x': 'v2_off', 'y': 'v3_off', 'source': *offsets_trend_source, 'size': 6}
-# Panel 2: individual selected visit
-# Select a postage stamp by tapping on it using a TapTool
-- !ColumnDataSource: &dummy_tap
-    ref: "dummy_tap"
-    data:
-        value: []
-    on_change: ['data', !self.select_stamp ]
-# Primary V2/V3 offsets figure
-- !ColumnDataSource: &offsets_source
-    ref: "offsets_source"
-    data:
-        dv2: []
-        dv3: []
-        v2m: []
-        v3m: []
-        v2d: []
-        v3d: []
-        v2l: []
-        v3l: []
-        refstar_no: []
-    selection_on_change: ['indices', !self.select_stamp ]
-- !Range1d: &offsets_xr
-    ref: "offsets_xr"
-    start: 0
-    end: 1
-    bounds: !!python/tuple [0, 1]
-- !Range1d: &offsets_yr
-    ref: "offsets_yr"
-    start: 0
-    end: 1
-    bounds: !!python/tuple [0, 1]
-- !Figure: &offsets_visit_fig
-    ref: "offsets_visit_fig"
-    title: "V2/V3 Offsets"
-    height: 800
-    width: 800
-    x_axis_label: "V2_desired - V2_measured"
-    y_axis_label: "V3_desired - V3_measured"
-    x_range: *offsets_xr
-    y_range: *offsets_yr
-    #tools: [ *offsets_tap ]
     tools: "tap,wheel_zoom"
     elements:
-        - {'kind': 'circle', 'x': 'dv2', 'y': 'dv3', 'source': *offsets_source, 'size': 6}
-# Common objects for all postage stamp figures
-- !ColumnDataSource: &stamp_source
-    ref: "stamp_source"
-    data:
-        x: [0]
-        y: [0]
-        dh: [1]
-        dw: [1]
-        slope1: [[[1,0], [0, 1]]]
-        slope2: [[[1,0], [0, 1]]]
-        crj: [[[1,0], [0, 1]]]
-        bkg: [[[1,0], [0, 1]]]
-        flat: [[[1,0], [0, 1]]]
-- !ColumnDataSource: &checkbox_source
-    ref: "checkbox_source"
-    data:
-        l: [0]
-        r: [1]
-        t: [1]
-        b: [1]
-        x: [0]
-        y: [1]
-- !Range1d: &stamp_xr
-    ref: "stamp_xr"
+        - {'kind': 'circle', 'x': 'oss_v2', 'y': 'oss_v3', 'source': *offsets_trend_source, 'size': 6, 'color': 'orange', 'legend_label': 'OSS'}
+        - {'kind': 'circle', 'x': 'rep_v2', 'y': 'rep_v3', 'source': *offsets_trend_source, 'size': 6, 'color': 'green', 'legend_label': 'replica'}
+        - {'kind': 'layout', 'obj': *oss_v2_err}
+        - {'kind': 'layout', 'obj': *oss_v3_err}
+        - {'kind': 'layout', 'obj': *rep_v2_err}
+        - {'kind': 'layout', 'obj': *rep_v3_err}
+# Offsets vs time trending figure
+- !FactorRange: &visit_offsets_trend_xr
+    ref: "visit_offsets_trend_xr"
+    factors: []
+- !Range1d: &visit_offsets_trend_yr
+    ref: "visit_offsets_trend_yr"
     start: 0
     end: 1
     bounds: !!python/tuple [0, 1]
-- !Range1d: &stamp_yr
-    ref: "stamp_yr"
-    start: 0
-    end: 1
-    bounds: !!python/tuple [0, 1]
-# slope1 stamp figure
-- !LinearColorMapper: &slope1_mapper
-    ref: "slope1_mapper"
-    palette: "Plasma256"
-    low: 0.
-    high: 1.
-- !ColorBar: &slope1_cbar
-    color_mapper: *slope1_mapper
-    location: !!python/tuple [0, 0]
-- !Figure: &slope1_fig
-    ref: "slope1_fig"
-    title: "slope1 stamp"
-    x_axis_label: "Col = SIAF det Y"
-    y_axis_label: "Row = SIAF det X"
-    x_range: *stamp_xr
-    y_range: *stamp_yr
-    tools: ""
-    height: 300
-    width: 400
+# Whisker models for error bars
+- !Whisker: &rep_v2_err_time
+    ref: "rep_v2_err_time"
+    dimension: 'height'
+    source: *offsets_trend_source
+    base: 'visit'
+    lower: 'rep_v2_lo'
+    upper: 'rep_v2_hi'
+- !Whisker: &rep_v3_err_time
+    ref: "rep_v3_err_time"
+    dimension: 'height'
+    source: *offsets_trend_source
+    base: 'visit'
+    lower: 'rep_v3_lo'
+    upper: 'rep_v3_hi'
+- !Whisker: &oss_v2_err_time
+    ref: "oss_v2_err_time"
+    dimension: 'height'
+    source: *offsets_trend_source
+    base: 'visit'
+    lower: 'oss_v2_lo'
+    upper: 'oss_v2_hi'
+- !Whisker: &oss_v3_err_time
+    ref: "oss_v3_err_time"
+    dimension: 'height'
+    source: *offsets_trend_source
+    base: 'visit'
+    lower: 'oss_v3_lo'
+    upper: 'oss_v3_hi'
+- !Figure: &time_offsets_trend_fig
+    ref: "time_offsets_trend_fig"
+    title: "NIRSpec MSA Pointing"
+    height: 700
+    width: 700
+    x_axis_label: "Visit ID"
+    y_axis_label: "Offset (arcsec)"
+    x_range: *visit_offsets_trend_xr
+    y_range: *visit_offsets_trend_yr
+    tools: "tap,wheel_zoom"
     elements:
-        - {"kind": "image", "image": "slope1", "x": "x", "y": "y", "dh": "dh", "dw": "dw", "source": *stamp_source, "color_mapper": *slope1_mapper}
-        - {"kind": "layout", "obj": *slope1_cbar, "place": "right"}
-        - {"kind": "quad", "left": "l", "right": "r", "top": "t", "bottom": "b", "source": *checkbox_source, "fill_alpha": 0., "line_color": "cyan"}
-        - {"kind": "x", "x": "x", "y": "y", "source": *checkbox_source, "color": "cyan", "size": 5}
-# slope2 stamp figure
-- !LinearColorMapper: &slope2_mapper
-    ref: "slope2_mapper"
-    palette: "Plasma256"
-    low: 0.
-    high: 1.
-- !ColorBar: &slope2_cbar
-    color_mapper: *slope2_mapper
-    location: !!python/tuple [0, 0]
-- !Figure: &slope2_fig
-    ref: "slope2_fig"
-    title: "slope2 stamp"
-    x_axis_label: "Col = SIAF det Y"
-    y_axis_label: "Row = SIAF det X"
-    tools: ""
-    height: 300
-    width: 400
-    x_range: *stamp_xr
-    y_range: *stamp_yr
-    elements:
-        - {"kind": "image", "image": "slope2", "x": "x", "y": "y", "dh": "dh", "dw": "dw", "source": *stamp_source, "color_mapper": *slope2_mapper}
-        - {"kind": "layout", "obj": *slope2_cbar, "place": "right"}
-        - {"kind": "quad", "left": "l", "right": "r", "top": "t", "bottom": "b", "source": *checkbox_source, "fill_alpha": 0., "line_color": "cyan"}
-        - {"kind": "x", "x": "x", "y": "y", "source": *checkbox_source, "color": "cyan", "size": 5}
-# crj stamp figure
-- !LinearColorMapper: &crj_mapper
-    ref: "crj_mapper"
-    palette: "Plasma256"
-    low: 0.
-    high: 1.
-- !ColorBar: &crj_cbar
-    color_mapper: *crj_mapper
-    location: !!python/tuple [0, 0]
-- !Figure: &crj_fig
-    ref: "crj_fig"
-    title: "crj stamp"
-    x_axis_label: "Col = SIAF det Y"
-    y_axis_label: "Row = SIAF det X"
-    tools: ""
-    height: 300
-    width: 400
-    x_range: *stamp_xr
-    y_range: *stamp_yr
-    elements:
-        - {"kind": "image", "image": "crj", "x": "x", "y": "y", "dh": "dh", "dw": "dw", "source": *stamp_source, "color_mapper": *crj_mapper}
-        - {"kind": "layout", "obj": *crj_cbar, "place": "right"}
-        - {"kind": "quad", "left": "l", "right": "r", "top": "t", "bottom": "b", "source": *checkbox_source, "fill_alpha": 0., "line_color": "cyan"}
-        - {"kind": "x", "x": "x", "y": "y", "source": *checkbox_source, "color": "cyan", "size": 5}
-# bkg_subtracted stamp figure
-- !LinearColorMapper: &bkg_mapper
-    ref: "bkg_mapper"
-    palette: "Plasma256"
-    low: 0.
-    high: 1.
-- !ColorBar: &bkg_cbar
-    color_mapper: *bkg_mapper
-    location: !!python/tuple [0, 0]
-- !Figure: &bkg_fig
-    ref: "bkg_fig"
-    title: "bkg_subtracted stamp"
-    x_axis_label: "Col = SIAF det Y"
-    y_axis_label: "Row = SIAF det X"
-    tools: ""
-    height: 300
-    width: 400
-    x_range: *stamp_xr
-    y_range: *stamp_yr
-    elements:
-        - {"kind": "image", "image": "bkg", "x": "x", "y": "y", "dh": "dh", "dw": "dw", "source": *stamp_source, "color_mapper": *bkg_mapper}
-        - {"kind": "layout", "obj": *bkg_cbar, "place": "right"}
-        - {"kind": "quad", "left": "l", "right": "r", "top": "t", "bottom": "b", "source": *checkbox_source, "fill_alpha": 0., "line_color": "cyan"}
-        - {"kind": "x", "x": "x", "y": "y", "source": *checkbox_source, "color": "cyan", "size": 5}
-# stamp_flat stamp figure
-- !LinearColorMapper: &flat_mapper
-    ref: "flat_mapper"
-    palette: "Greys256"
-    low: 0.
-    high: 1.
-- !ColorBar: &flat_cbar
-    color_mapper: *flat_mapper
-    location: !!python/tuple [0, 0]
-- !Figure: &flat_fig
-    ref: "flat_fig"
-    title: "stamp_flat stamp"
-    x_axis_label: "Col = SIAF det Y"
-    y_axis_label: "Row = SIAF det X"
-    tools: ""
-    height: 300
-    width: 400
-    x_range: *stamp_xr
-    y_range: *stamp_yr
-    elements:
-        - {"kind": "image", "image": "flat", "x": "x", "y": "y", "dh": "dh", "dw": "dw", "source": *stamp_source, "color_mapper": *flat_mapper}
-        - {"kind": "layout", "obj": *flat_cbar, "place": "right"}
-        - {"kind": "quad", "left": "l", "right": "r", "top": "t", "bottom": "b", "source": *checkbox_source, "fill_alpha": 0., "line_color": "cyan"}
-        - {"kind": "x", "x": "x", "y": "y", "source": *checkbox_source, "color": "cyan", "size": 5}
-- !Div: &output_div
-    ref: "output_div"
-    text: ""
-# Document structure
-- !Document:
-    - !Tabs:
-        tabs:
-            - !Panel:
-                title: "Trending"
-                child:
-                    !column:
+        - {'kind': 'circle', 'x': 'visit', 'y': 'oss_v2', 'source': *offsets_trend_source, 'size': 6, 'color': 'red', 'legend_label': 'V2 (OSS)', "name": "oss_v2"}
+        - {'kind': 'circle', 'x': 'visit', 'y': 'oss_v3', 'source': *offsets_trend_source, 'size': 6, 'color': 'orange', 'legend_label': 'V3 (OSS)', "name": "oss_v3"}
+        - {'kind': 'circle', 'x': 'visit', 'y': 'rep_v2', 'source': *offsets_trend_source, 'size': 6, 'color': 'blue', 'legend_label': 'V2 (replica)', "name": "rep_v2"}
+        - {'kind': 'circle', 'x': 'visit', 'y': 'rep_v3', 'source': *offsets_trend_source, 'size': 6, 'color': 'green', 'legend_label': 'V3 (replica)', "name": "rep_v3"}
+        - {'kind': 'layout', 'obj': *oss_v2_err_time}
+        - {'kind': 'layout', 'obj': *oss_v3_err_time}
+        - {'kind': 'layout', 'obj': *rep_v2_err_time}
+        - {'kind': 'layout', 'obj': *rep_v3_err_time}
+# Open detail tabs:
+- !Select: &visit_select
+    ref: "visit_select"
+    value: ""
+    options: !self.available_visits
+    on_change: ["value", !self.select_visit ]
+- !Button: &detail_button
+    ref: "detail_button"
+    label: "Open visit tab"
+    disabled: true
+    on_click: !self.open_visit_panel
+# Tabs widget
+- !Tabs: &msata_tabs
+    ref: "msata_tabs"
+    sizing_mode: "stretch_width"
+    tabs:
+        - !Panel:
+            title: "Trending"
+            child:
+                !column:
+                    - !row:
+                        - !Div:
+                            text: "Select a visit:"
+                        - *visit_select
+                        - *detail_button
+                    - !row:
                         - *v2v3_offsets_trend_fig
                         - *time_offsets_trend_fig
-            - !Panel:
-                title: "No Visit Selected"
-                disabled: !self.is_visit_selected
-                child:
-                    !layout:
-                        - [*offsets_visit_fig]
-                        - [*slope1_fig, *slope2_fig, *crj_fig]
-                        - [*bkg_fig, *flat_fig, *output_div]
-                        - [*residuals_plot]
-                        - [*output_table]
+    
+# Document structure
+- !Document:
+    - *msata_tabs
+            
