@@ -33,6 +33,7 @@ dependencies:
   - asdf==2.7.1
   - astroquery==0.4.1
   - crds==10.1.0
+  - julian==0.14
   - jwedb==0.0.6
   - jwst==0.17.1
   - pysiaf==0.9.0

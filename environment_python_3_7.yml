@@ -35,6 +35,7 @@ dependencies:
 - pip:
   - asdf==2.7.1
   - crds==10.1.0
+  - julian==0.14
   - jwedb==0.0.6
   - jwst==0.17.1
   - pysqlite3==0.4.3
