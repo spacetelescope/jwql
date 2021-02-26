@@ -1,27 +1,32 @@
 """This module contains code for the cosmic ray monitor Bokeh plots.
-Author
-------
+
+Authors
+-------
+
     - Mike Engesser
 Use
 ---
-    This module can be used from the command line as such:
+
+    This module is intended to be imported and use as such:
     ::
 
+        from jwql.website.apps.jwql import monitor_pages
+        monitor_template = monitor_pages.CosmicRayMonitor()
 """
 
+import datetime
 import os
 
 from astropy.io import fits
 from astropy.time import Time
-import datetime
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
+from jwql.bokeh_templating import BokehTemplate
 from jwql.database.database_interface import session
 from jwql.database.database_interface import MIRICosmicRayQueryHistory, MIRICosmicRayStats
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config, filesystem_path
-from jwql.bokeh_templating import BokehTemplate
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -88,12 +93,12 @@ class CosmicRayMonitor(BokehTemplate):
         self.cosmic_ray_history = {}
 
         self.times = [row.obs_end_time for row in self.cosmic_ray_table]
-        self.num = [row.jump_count for row in self.cosmic_ray_table]
+        self.count = [row.jump_count for row in self.cosmic_ray_table]
 
         self.mags = [row.magnitude for row in self.cosmic_ray_table]
 
         hover_values = np.array([datetime.datetime.strftime(t, "%d-%b-%Y") for t in self.times])
-        self.cosmic_ray_history['Cosmic Rays'] = (self.times, self.num, hover_values)
+        self.cosmic_ray_history['Cosmic Rays'] = (self.times, self.count, hover_values)
 
     def identify_tables(self):
         """Determine which database tables as associated with
@@ -132,8 +137,8 @@ class CosmicRayMonitor(BokehTemplate):
 
         self.refs['cosmic_ray_x_range'].start = min(self.times)
         self.refs['cosmic_ray_x_range'].end = max(self.times)
-        self.refs['cosmic_ray_y_range'].start = min(self.num)
-        self.refs['cosmic_ray_y_range'].end = max(self.num)
+        self.refs['cosmic_ray_y_range'].start = min(self.count)
+        self.refs['cosmic_ray_y_range'].end = max(self.count)
 
         self.refs['cosmic_ray_history_figure'].title.text = 'MIRIM_FULL Cosmic Ray History'
         self.refs['cosmic_ray_history_figure'].title.align = "center"
@@ -152,6 +157,7 @@ class CosmicRayMonitor(BokehTemplate):
         self.refs['cosmic_ray_histogram'].title.text = 'MIRIM_FULL Cosmic Ray Intensities'
         self.refs['cosmic_ray_histogram'].title.align = "center"
         self.refs['cosmic_ray_histogram'].title.text_font_size = "20px"
+
 
 # Uncomment the line below when testing via the command line:
 # bokeh serve --show monitor_cosmic_rays_bokeh.py

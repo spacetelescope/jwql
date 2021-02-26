@@ -90,8 +90,8 @@ class CosmicRay:
         ``NRCA1_FULL``)
 
     query_table : sqlalchemy table
-        Table containing the history of cosmic ray monitor queries to MAST
-        for each instrument/aperture combination
+        Table containing the history of cosmic ray monitor queries to
+        MAST for each instrument/aperture combination
 
     stats_table : sqlalchemy table
         Table containing cosmic ray analysis results. Number and
@@ -108,7 +108,162 @@ class CosmicRay:
     """
 
     def __init__(self):
-        """Initialize an instance of the ``Cosmic_Ray`` class."""
+        """Initialize an instance of the ``CosmicRay`` class."""
+
+    def get_cr_mags(self, jump_locations, jump_locations_pre, rateints, jump_data, jump_head):
+        """Gets the magnitude of each cosmic ray.
+
+        Computes a list of magnitudes using the coordinate of the
+        detected jump compared to the magnitude of the same pixel in
+        the group prior to the jump.
+
+        Parameters
+        ----------
+        jump_locations : list
+            List of coordinates to a pixel marked with a jump.
+
+        jump_locations_pre : list
+            List of matching coordinates one group before
+            ``jump_locations``.
+
+        rateints : ndarray obj
+            Array in ``DN/s``.
+
+        jump_data :
+
+        jump_head :
+
+        Returns
+        -------
+        mags : list
+            A list of cosmic ray magnitudes corresponding to each jump.
+        """
+
+        mags = []
+        for coord, coord_gb in zip(jump_locations, jump_locations_pre):
+            mags.append(self.magnitude(coord, coord_gb, rateints, jump_data, jump_head))
+
+        return mags
+
+    def get_cr_rate(self, jump_locations, time):
+        """Computes the rate of cosmic ray impacts in a given time.
+
+        Parameters
+        ----------
+        jump_locations : list
+            List of coordinates to a pixel marked with a jump.
+
+        time : int or float
+            Time over which to compute the rate.  Nominally the
+            effective exposure time.
+        """
+
+        return len(jump_locations) / time
+
+    def get_jump_data(self, jump_filename):
+        """Opens and reads a given ``.FITS`` file containing cosmic
+        rays.
+
+        Parameters
+        ----------
+        jump_filename : str
+            Path to file.
+
+        Returns
+        -------
+        header : FITS header
+            Header containing file information
+
+        data : obj
+            FITS data
+
+        dq : ndarray obj
+            Data Quality array containing jump flags.
+        """
+
+        hdu = fits.open(jump_filename)
+
+        header = hdu[0].header
+        data = hdu[1].data
+
+        dq = hdu[3].data
+
+        hdu.close()
+
+        return header, data, dq
+
+    def get_jump_locations(self, dq):
+        """Uses the data quality array to find the location of all
+        jumps in the data.
+
+        Parameters
+        ----------
+        dq : ndarray obj
+            Data Quality array containing jump flags.
+
+        Returns
+        -------
+        jump_locations : list
+            List of coordinates to a pixel marked with a jump.
+        """
+
+        flag_locations = np.where(dq == 4)
+
+        jump_locations = []
+
+        if self.nints > 1:
+            for i in range(len(flag_locations[0])):
+                jump_locations.append((flag_locations[0][i], flag_locations[1][i], flag_locations[2][i], flag_locations[3][i]))
+        else:
+            for i in range(len(flag_locations[0])):
+                jump_locations.append((flag_locations[0][i], flag_locations[1][i], flag_locations[2][i]))
+
+        return jump_locations
+
+    def get_rate_data(self, rate_filename):
+        """Opens and reads a given rate ``.FITS`` file.
+
+        Parameters
+        ----------
+        rate_filename : str
+            Path to file.
+
+        Returns:
+        -------
+        data : obj
+            FITS data
+        """
+
+        data = fits.getdata(rate_filename)
+
+        return data
+
+    def group_before(self, jump_locations):
+        """Creates a list of coordinates one group before given jump
+        coordinates.
+
+        Parameters
+        ----------
+        jump_locations : list
+            List of coordinates to a pixel marked with a jump.
+
+        Returns
+        -------
+        jump_locations_pre : list
+            List of matching coordinates one group before
+            ``jump_locations``.
+        """
+
+        jump_locations_pre = []
+
+        if self.nints > 1:
+            for coord in jump_locations:
+                jump_locations_pre.append((coord[0], coord[1] - 1, coord[2], coord[3]))
+        else:
+            for coord in jump_locations:
+                jump_locations_pre.append((coord[0] - 1, coord[1], coord[2]))
+
+        return jump_locations_pre
 
     def identify_tables(self):
         """Determine which database tables to use for a run of the
@@ -123,208 +278,52 @@ class CosmicRay:
         self.query_table = eval('{}CosmicRayQueryHistory'.format(mixed_case_name))
         self.stats_table = eval('{}CosmicRayStats'.format(mixed_case_name))
 
-    def get_cr_mags(self, jump_locs, jump_locs_pre, rateints, jump_data, jump_head):
-        """Gets the magnitude of each cosmic ray.
-
-        Computes a list of magnitudes using the coordinate of the
-        detected jump compared to the magnitude of the same pixel in
-        the group prior to the jump.
-
-        Parameters:
-        ----------
-
-        jump_locs: list
-            List of coordinates to a pixel marked with a jump.
-
-        jump_locs_pre: list
-            List of matching coordinates one group before jump_locs.
-
-        head: FITS header
-            Header containing file information.
-
-        rateints: ndarray
-            Array in DN/s.
-
-        Returns:
-        -------
-
-        mags: list
-            A list of cosmic ray magnitudes corresponding to each jump.
-
-        """
-
-        mags = []
-        for coord, coord_gb in zip(jump_locs, jump_locs_pre):
-            mags.append(self.magnitude(coord, coord_gb, rateints, jump_data, jump_head))
-
-        return mags
-
-    def get_cr_rate(self, jump_locs, time):
-        """Computes the rate of cosmic ray impacts in a given time.
-
-        Parameters:
-        ----------
-        jump_locs: list
-            List of coordinates to a pixel marked with a jump.
-
-        t: int or float
-            Time over which to compute the rate.
-            Nominally the effective exposure time.
-
-        """
-
-        return len(jump_locs) / time
-
-    def get_jump_data(self, jump_filename):
-        """Opens and reads a given .FITS file containing cosmic rays.
-
-        Parameters:
-        ----------
-        jump_filename: str
-            Path to file.
-
-        Returns:
-        -------
-        head: FITS header
-            Header containing file information
-
-        data: NoneType
-            FITS data
-
-        dq: ndarray
-            Data Quality array containing jump flags.
-
-        """
-
-        hdu = fits.open(jump_filename)
-
-        head = hdu[0].header
-        data = hdu[1].data
-
-        dq = hdu[3].data
-
-        hdu.close()
-
-        return head, data, dq
-
-    def get_jump_locs(self, dq):
-        """Uses the data quality array to find the location of all
-        jumps in the data.
-
-        Parameters:
-        ----------
-        dq: ndarray
-            Data Quality array containing jump flags.
-
-        Returns:
-        -------
-        jump_locs: list
-            List of coordinates to a pixel marked with a jump.
-        """
-
-        temp = np.where(dq == 4)
-
-        jump_locs = []
-
-        if self.nints > 1:
-            for i in range(len(temp[0])):
-                jump_locs.append((temp[0][i], temp[1][i], temp[2][i], temp[3][i]))
-        else:
-            for i in range(len(temp[0])):
-                jump_locs.append((temp[0][i], temp[1][i], temp[2][i]))
-
-        return jump_locs
-
-    def get_rate_data(self, rate_filename):
-        """Opens and reads a given .FITS file.
-
-        Parameters:
-        ----------
-        rate_filename: str
-            Path to file.
-
-        Returns:
-        -------
-        data: NoneType
-            FITS data
-        """
-
-        data = fits.getdata(rate_filename)
-
-        return data
-
-    def group_before(self, jump_locs):
-        """Creates a list of coordinates one group before given jump
-        coordinates.
-
-        Parameters:
-        ----------
-        jump_locs: list
-            List of coordinates to a pixel marked with a jump.
-
-        Returns:
-        -------
-        jump_locs_pre: list
-            List of matching coordinates one group before jump_locs.
-        """
-
-        jump_locs_pre = []
-
-        if self.nints > 1:
-            for coord in jump_locs:
-                jump_locs_pre.append((coord[0], coord[1] - 1, coord[2], coord[3]))
-        else:
-            for coord in jump_locs:
-                jump_locs_pre.append((coord[0] - 1, coord[1], coord[2]))
-
-        return jump_locs_pre
-
-    def magnitude(self, coord, coord_gb, rateints, data, head):
+    def magnitude(self, coord, coord_gb, rateints, data, header):
         """Calculates the magnitude of a list of jumps given their
         coordinates in an array of pixels.
 
-        Parameters:
+        Parameters
         ----------
-        coord: tuple
+        coord : tuple
             Coordinate of jump.
 
-        coord_gb: tuple
+        coord_gb : tuple
             Coordinate of jump pixel one group before.
 
-        head: FITS header
+        header : FITS header
             Header containing file information.
 
-        rateints: ndarray
-            Array in DN/s.
+        rateints : ndarray
+            Array in ``DN/s``.
 
-        Returns:
+        Returns
         -------
-        cr_mag: float
+        cr_mag : float
             the magnitude of the cosmic ray
         """
 
-        grouptime = head['TGROUP']
+        group_time = header['TGROUP']
 
         if self.nints == 1:
             rate = rateints[coord[-2]][coord[-1]]
             cr_mag = data[0][coord[0]][coord[1]][coord[2]] \
                      - data[0][coord_gb[0]][coord_gb[1]][coord_gb[2]] \
-                     - rate * grouptime
+                     - rate * group_time
 
         else:
             rate = rateints[coord[0]][coord[-2]][coord[-1]]
-            cr_mag = data[coord] - data[coord_gb] - rate * grouptime
+            cr_mag = data[coord] - data[coord_gb] - rate * group_time
 
         return cr_mag
 
     def most_recent_search(self):
-        """Adapted from Dark Monitor (Bryan Hilbert)
+        """Adapted from the Dark Monitor (Bryan Hilbert)
 
-        Query the query history database and return the information
-        on the most recent query for the given ``aperture_name`` where
-        the cosmic ray monitor was executed.
+        Query the query history table in the ``jwqldb`` database and
+        return the information on the most recent query for the given
+        ``aperture_name`` where the cosmic ray monitor was executed.
 
-        Returns:
+        Returns
         -------
         query_result : float
             Date (in MJD) of the ending range of the previous MAST
@@ -363,46 +362,47 @@ class CosmicRay:
         Parameters
         ----------
         file_list : list
-        List of filenames (including full paths) to the cosmic ray
-        files
+            List of filenames (including full paths) to the cosmic ray
+            files
         """
 
         for file_name in file_list:
+
+            # Only process uncal files
             if 'uncal' in file_name:
-                dir_name = '_'.join(file_name.split('_')[:4])  # file_name[51:76]
 
-                self.obs_dir = os.path.join(self.data_dir, dir_name)
-                ensure_dir_exists(self.obs_dir)
+                # Define some useful parameters
+                dir_name = '_'.join(file_name.split('_')[:4])  # aka file_name[51:76]
+                self.nints = fits.getheader(file_name)['NINTS']
 
-                head = fits.getheader(file_name)
-                self.nints = head['NINTS']
-
+                # Ensure the directory to the data exists.  If so, copy over files
+                observation_dir = os.path.join(self.data_dir, dir_name)
+                ensure_dir_exists(observation_dir)
                 try:
-                    copy_files([file_name], self.obs_dir)
+                    copy_files([file_name], observation_dir)
                 except:
                     logging.info('Failed to copy {} to observation dir.'.format(file_name))
 
                 # Next we run the pipeline on the files to get the proper outputs
-                uncal_file = os.path.join(self.obs_dir, os.path.basename(file_name))
-
+                uncal_file = os.path.join(observation_dir, os.path.basename(file_name))
                 try:
-                    pipeline_tools.calwebb_detector1_save_jump(uncal_file, self.obs_dir, ramp_fit=True, save_fitopt=False)
+                    pipeline_tools.calwebb_detector1_save_jump(uncal_file, observation_dir, ramp_fit=True, save_fitopt=False)
                 except:
                     logging.info('Failed to complete pipeline steps on {}.'.format(uncal_file))
 
                 # Next we analyze the cosmic rays in the new data
-                for output_file in os.listdir(self.obs_dir):
+                for output_file in os.listdir(observation_dir):
 
                     if 'jump' in output_file:
-                        jump_file = os.path.join(self.obs_dir, output_file)
+                        jump_file = os.path.join(observation_dir, output_file)
 
                     if self.nints == 1:
                         if '0_ramp_fit' in output_file:
-                            rate_file = os.path.join(self.obs_dir, output_file)
+                            rate_file = os.path.join(observation_dir, output_file)
 
                     elif self.nints > 1:
                         if '1_ramp_fit' in output_file:
-                            rate_file = os.path.join(self.obs_dir, output_file)
+                            rate_file = os.path.join(observation_dir, output_file)
 
                 try:
                     jump_head, jump_data, jump_dq = self.get_jump_data(jump_file)
@@ -414,8 +414,8 @@ class CosmicRay:
                 except:
                     logging.info('Could not open rate file: {}'.format(rate_file))
 
-                jump_locs = self.get_jump_locs(jump_dq)
-                jump_locs_pre = self.group_before(jump_locs)
+                jump_locations = self.get_jump_locations(jump_dq)
+                jump_locations_pre = self.group_before(jump_locations)
 
                 eff_time = jump_head['EFFEXPTM']
 
@@ -425,9 +425,9 @@ class CosmicRay:
                 start_time = julian.from_jd(obs_start_time, fmt='mjd')
                 end_time = julian.from_jd(obs_end_time, fmt='mjd')
 
-                cosmic_ray_num = len(jump_locs)
-                # cosmic_ray_rate = get_cr_rate(jump_locs, eff_time)
-                cosmic_ray_mags = self.get_cr_mags(jump_locs, jump_locs_pre, rate_data, jump_data, jump_head)
+                cosmic_ray_num = len(jump_locations)
+                # cosmic_ray_rate = get_cr_rate(jump_locations, eff_time)
+                cosmic_ray_mags = self.get_cr_mags(jump_locations, jump_locations_pre, rate_data, jump_data, jump_head)
 
                 # Insert new data into database
                 try:
@@ -440,10 +440,31 @@ class CosmicRay:
                                            'magnitude': cosmic_ray_mags
                                            }
                     self.stats_table.__table__.insert().execute(cosmic_ray_db_entry)
-
                     logging.info("Successfully inserted into database. \n")
                 except:
                     logging.info("Could not insert entry into database. \n")
+
+    def query_mast(self):
+        """Use ``astroquery`` to search MAST for cosmic ray data
+
+        Parameters:
+        ----------
+        start_date : float
+            Starting date for the search in MJD
+        end_date : float
+            Ending date for the search in MJD
+
+        Returns
+        -------
+        result : list
+            List of dictionaries containing the query results
+        """
+
+        data_product = JWST_DATAPRODUCTS
+        parameters = {"date_obs_mjd": {"min": self.query_start, "max": self.query_end}, "apername": self.aperture}
+        result = monitor_mast.instrument_inventory(self.instrument, data_product, add_filters=parameters, return_data=True)
+
+        return result
 
     @log_fail
     @log_info
@@ -462,7 +483,10 @@ class CosmicRay:
         self.query_end = Time.now().mjd
 
         for instrument in JWST_INSTRUMENT_NAMES:
+
+            # Currently only supports MIRI and NIRCam
             if instrument == 'miri' or instrument == 'nircam':
+
                 self.instrument = instrument
 
                 # Identify which tables to use
@@ -521,33 +545,9 @@ class CosmicRay:
                     self.query_table.__table__.insert().execute(new_entry)
                     logging.info('\tUpdated the query history table')
 
-    def query_mast(self):
-        """Use astroquery to search MAST for cosmic ray data
-
-        Parameters:
-        ----------
-        start_date : float
-            Starting date for the search in MJD
-        end_date : float
-            Ending date for the search in MJD
-
-        Returns
-        -------
-        result : list
-            List of dictionaries containing the query results
-        """
-
-        data_product = JWST_DATAPRODUCTS
-        parameters = {"date_obs_mjd": {"min": self.query_start, "max": self.query_end}, "apername": self.aperture}
-
-        result = monitor_mast.instrument_inventory(self.instrument, data_product,
-                                                   add_filters=parameters,
-                                                   return_data=True)
-
-        return result
-
 
 if __name__ == '__main__':
+
     # Configure logging
     module = os.path.basename(__file__).strip('.py')
     configure_logging(module)
