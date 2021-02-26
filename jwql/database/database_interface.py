@@ -428,6 +428,8 @@ MIRIReadnoiseQueryHistory = monitor_orm_factory('miri_readnoise_query_history')
 MIRIReadnoiseStats = monitor_orm_factory('miri_readnoise_stats')
 FGSReadnoiseQueryHistory = monitor_orm_factory('fgs_readnoise_query_history')
 FGSReadnoiseStats = monitor_orm_factory('fgs_readnoise_stats')
+NIRCamCosmicRayQueryHistory = monitor_orm_factory('nircam_cosmic_ray_query_history')
+NIRCamCosmicRayStats = monitor_orm_factory('nircam_cosmic_ray_stats')
 MIRICosmicRayQueryHistory = monitor_orm_factory('miri_cosmic_ray_query_history')
 MIRICosmicRayStats = monitor_orm_factory('miri_cosmic_ray_stats')
 
