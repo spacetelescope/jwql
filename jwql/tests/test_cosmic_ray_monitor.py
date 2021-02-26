@@ -14,20 +14,27 @@
     suppress verbose output to stdout):
     ::
 
-    pytest -s test_cosmic_ray_monitor.py
+        pytest -s test_cosmic_ray_monitor.py
     """
 
-# Third Party Imports
+import os
+
 from astropy.io import fits
 import numpy as np
 import pytest
 
-# Local Imports
-from cosmic_ray_monitor import Cosmic_Ray
+from jwql.instrument_monitors.miri_monitors.cosmic_ray_monitor import CosmicRay
 from jwql.database.database_interface import MIRICosmicRayQueryHistory
-
+from jwql.utils.utils import get_config
 
 def define_test_data(nints):
+    """Define the data to test with.
+
+    Parameters
+    ----------
+    nints : int
+        The number of integrations
+    """
     if nints == 1:
         data = np.ones((2, 5, 10, 10))
         rate_data = np.ones((10, 10))
@@ -35,108 +42,134 @@ def define_test_data(nints):
         data = np.ones((2, 5, 10, 10))
         rate_data = np.ones((2, 10, 10))
 
-    file = "jw00000000000_00000_00000_MIRIMAGE_uncal.fits"
-    aperture = "MIRIM_FULL"
+    filesystem = get_config()['filesystem']
+    filename = os.path.join(filesystem, 'jw00608', 'jw00608002001_02101_00001_mirimage_rate.fits')
+    aperture = 'MIRIM_FULL'
 
-    return data, rate_data, file, aperture
+    return data, rate_data, filename, aperture
 
 
 def test_get_jump_data():
-    _ = define_test_data(2)
-    file = _[2]
+    """Test the ``get_jumpy_data`` function"""
 
-    head, data, dq = Cosmic_Ray.get_jump_data(file)
+    cr = CosmicRay()
+    _, _, filename, _ = define_test_data(2)
 
-    assert type(head) == fits.header.Header
+    header, data, dq = cr.get_jump_data(filename)
+
+    assert type(header) == fits.header.Header
     assert type(data) == np.ndarray
     assert type(dq) == np.ndarray
 
 
 def test_get_rate_data():
-    _ = define_test_data(1)
-    file = _[2]
+    """Test the ``get_rate_data`` function"""
 
-    data = Cosmic_Ray.get_rate_data(file)
+    cr = CosmicRay()
+    _, _, filename, _ = define_test_data(2)
+
+    data = cr.get_rate_data(filename)
 
     assert type(data) == np.ndarray
 
 
 def test_get_cr_rate():
-    jump_locs = np.arange(100).tolist()
-    t = 5
+    """Test the ``get_cr_rate`` function"""
 
-    rate = Cosmic_Ray.get_cr_rate(jump_locs, t)
+    cr = CosmicRay()
+    jump_locations = np.arange(100).tolist()
+    time = 5
+
+    rate = cr.get_cr_rate(jump_locations, time)
 
     assert rate == 20.0
 
 
 def test_group_before():
-    jump_locs = [(2, 1, 1)]
-    nints = 1
+    """Test the ``group_before`` function"""
 
-    assert Cosmic_Ray.group_before(jump_locs, nints) == [(1, 1, 1)]
+    cr = CosmicRay()
 
-    jump_locs = [(1, 2, 1, 1)]
-    nints = 2
+    jump_locations = [(2, 1, 1)]
+    cr.nints = 1
 
-    assert Cosmic_Ray.group_before(jump_locs, nints) == [(1, 1, 1, 1)]
+    assert cr.group_before(jump_locations) == [(1, 1, 1)]
+
+    jump_locations = [(1, 2, 1, 1)]
+    cr.nints = 2
+
+    assert cr.group_before(jump_locations) == [(1, 1, 1, 1)]
 
 
 def test_magnitude():
+    """Test the ``magnitude`` method"""
 
-    nints = 5
-    data, rate_data, file, aperture = define_test_data(nints)
-    head = fits.getheader(file)
+    cr = CosmicRay()
+
+    cr.nints = 5
+    data, rate_data, filename, aperture = define_test_data(cr.nints)
+    header = fits.getheader(filename)
     coord = (1, 2, 1, 1)
     coord_gb = (1, 1, 1, 1)
-    mag = Cosmic_Ray.magnitude(coord, coord_gb, rate_data, data, head, nints)
+    mag = cr.magnitude(coord, coord_gb, rate_data, data, header)
     assert mag == -2.77504
 
-    nints = 1
-    data, rate_data, file, aperture = define_test_data(nints)
+    cr.nints = 1
+    data, rate_data, filename, aperture = define_test_data(cr.nints)
     coord = (1, 1, 1)
     coord_gb = (0, 1, 1)
-    mag = Cosmic_Ray.magnitude(coord, coord_gb, rate_data, data, head, nints)
+    mag = cr.magnitude(coord, coord_gb, rate_data, data, header)
     assert mag == -2.77504
 
 
 def test_get_cr_mags():
+    """Test the ``get_cr_mags`` function"""
 
-    jump_locs = [(2, 1, 1)]
-    jump_locs_pre = [(1, 1, 1)]
-    nints = 1
-    data, rate_data, file, aperture = define_test_data(nints)
-    head = fits.getheader(file)
+    cr = CosmicRay()
 
-    mags = Cosmic_Ray.get_cr_mags(jump_locs, jump_locs_pre, rate_data, data, head, nints)
+    jump_locations = [(2, 1, 1)]
+    jump_locations_pre = [(1, 1, 1)]
+    cr.nints = 1
+    data, rate_data, filename, aperture = define_test_data(cr.nints)
+    header = fits.getheader(filename)
+
+    mags = cr.get_cr_mags(jump_locations, jump_locations_pre, rate_data, data, header)
     assert mags == [-2.77504]
 
-    jump_locs = [(1, 2, 1, 1)]
-    jump_locs_pre = [(1, 1, 1, 1)]
-    nints = 5
-    data, rate_data, file, aperture = define_test_data(nints)
+    jump_locations = [(1, 2, 1, 1)]
+    jump_locations_pre = [(1, 1, 1, 1)]
+    cr.nints = 5
+    data, rate_data, filename, aperture = define_test_data(cr.nints)
 
-    mags = Cosmic_Ray.get_cr_mags(jump_locs, jump_locs_pre, rate_data, data, head, nints)
+    mags = cr.get_cr_mags(jump_locations, jump_locations_pre, rate_data, data, header)
     assert mags == [-2.77504]
 
 
 def test_most_recent_search():
+    """Test the ``most_recent_search`` function"""
 
-    _ = define_test_data(1)
-    aperture = _[3]
+    cr = CosmicRay()
+    _, _, _, aperture = define_test_data(1)
 
-    query_table = MIRICosmicRayQueryHistory
+    cr.aperture = aperture
+    cr.query_table = MIRICosmicRayQueryHistory
 
-    result = Cosmic_Ray.most_recent_search(aperture,query_table)
+    result = cr.most_recent_search()
 
-    assert result == 57357.0
+    assert isinstance(result, float)
 
 
 def test_query_mast():
+    """Test the ``query_mast`` function"""
 
-    start_date = 57357.0
-    end_date = 57405.0
+    cr = CosmicRay()
+    _, _, _, aperture = define_test_data(1)
 
-    result = Cosmic_Ray.query_mast(start_date, end_date)
+    cr.aperture = aperture
+    cr.instrument = 'miri'
+    cr.query_start = 57357.0
+    cr.query_end = 57405.0
+
+    result = cr.query_mast()
 
     assert len(result) == 5
