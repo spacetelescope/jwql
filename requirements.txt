@@ -2,7 +2,7 @@ asdf==2.7.1
 astropy==4.2
 astroquery==0.4.1
 authlib==0.15.3
-bokeh==2.2.3
+bokeh==2.3.0
 codecov==2.1.11
 crds==10.3.5
 cryptography==3.3.2
