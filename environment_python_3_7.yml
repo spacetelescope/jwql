@@ -5,7 +5,7 @@ dependencies:
 - astropy==4.0.2
 - astroquery=0.4
 - authlib=0.15.3
-- bokeh=2.3.0
+- bokeh=2.2.3
 - codecov==2.1.11
 - cryptography==3.3.1
 - django=3.1.7
