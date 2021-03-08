@@ -394,7 +394,9 @@ class CosmicRay:
                 for output_file in os.listdir(observation_dir):
 
                     if 'jump' in output_file:
-                        jump_file = os.path.join(observation_dir, output_file)
+                        jump_filename = os.path.join(observation_dir, output_file)
+                    else:
+                        jump_filename = None
 
                     if self.nints == 1:
                         if '0_ramp_fit' in output_file:
@@ -405,9 +407,9 @@ class CosmicRay:
                             rate_file = os.path.join(observation_dir, output_file)
 
                 try:
-                    jump_head, jump_data, jump_dq = self.get_jump_data(jump_file)
+                    jump_head, jump_data, jump_dq = self.get_jump_data(jump_filename)
                 except:
-                    logging.info('Could not open jump file: {}'.format(jump_file))
+                    logging.info('Could not open jump file: {}'.format(jump_filename))
 
                 try:
                     rate_data = self.get_rate_data(rate_file)
