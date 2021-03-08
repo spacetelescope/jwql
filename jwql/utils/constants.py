@@ -292,7 +292,7 @@ NIRCAM_SHORTWAVE_DETECTORS = ['NRCA1', 'NRCA2', 'NRCA3', 'NRCA4',
 NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 
 # Possible suffix types for AMI files
-NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami']
+NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami', 'psf-amiavg']
 
 READPATT_PER_INSTRUMENT = {'fgs': [],
                            'miri': ['FAST', 'SLOW', 'FASTGRPAVG'],
@@ -306,7 +306,10 @@ SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISM
 # Possible suffix types for time-series exposures
 TIME_SERIES_SUFFIX_TYPES = ['phot', 'whtlt']
 
+# Possible suffix types for WFS&C files
+WFSC_SUFFIX_TYPES = ['wfscmb']
+
 # Concatenate all suffix types (ordered to ensure successful matching)
 FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
                     TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
-                    NIRISS_AMI_SUFFIX_TYPES
+                    NIRISS_AMI_SUFFIX_TYPES + WFSC_SUFFIX_TYPES
