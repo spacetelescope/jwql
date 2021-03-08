@@ -401,10 +401,14 @@ class CosmicRay:
                     if self.nints == 1:
                         if '0_ramp_fit' in output_file:
                             rate_file = os.path.join(observation_dir, output_file)
+                        else:
+                            rate_file = None
 
                     elif self.nints > 1:
                         if '1_ramp_fit' in output_file:
                             rate_file = os.path.join(observation_dir, output_file)
+                        else:
+                            rate_file = None
 
                 try:
                     jump_head, jump_data, jump_dq = self.get_jump_data(jump_filename)
