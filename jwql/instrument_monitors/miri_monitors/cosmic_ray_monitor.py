@@ -393,6 +393,7 @@ class CosmicRay:
                 # Next we analyze the cosmic rays in the new data
                 for output_file in os.listdir(observation_dir):
 
+                    logging.info('output file')
                     logging.info(output_file)
 
                     if 'jump' in output_file:
