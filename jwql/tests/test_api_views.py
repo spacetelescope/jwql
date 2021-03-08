@@ -21,7 +21,6 @@ Use
 import http
 import json
 import os
-from unittest import skipIf
 from urllib import request, error
 
 import pytest
@@ -74,7 +73,7 @@ for rootname in rootnames:
     urls.append('api/{}/thumbnails/'.format(rootname))  # thumbnails_by_rootname
 
 
-@skipIf(ON_GITHUB_ACTIONS, "Can't access webpage without VPN access")
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, "Can't access webpage without VPN access")
 @pytest.mark.parametrize('url', urls)
 def test_api_views(url):
     """Test to see if the given ``url`` returns a populated JSON object
