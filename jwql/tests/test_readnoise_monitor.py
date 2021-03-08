@@ -32,6 +32,8 @@ if not ON_GITHUB_ACTIONS:
     from jwql.utils.utils import get_config
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS,
+                    reason='Requires VPN network access')
 def test_determine_pipeline_steps():
     """Test the correct pipeline steps are called"""
 
@@ -51,6 +53,8 @@ def test_determine_pipeline_steps():
     assert pipeline_steps == pipeline_steps_truth
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS,
+                    reason='Requires VPN network access')
 def test_get_amp_stats():
     """Test amp stat calculations"""
 
@@ -93,6 +97,8 @@ def test_get_metadata():
     assert monitor.expstart == '2016-01-18T04:35:14.523'
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS,
+                    reason='Requires VPN network access')
 def test_identify_tables():
     """Be sure the correct database tables are identified"""
 
@@ -104,6 +110,8 @@ def test_identify_tables():
     assert monitor.stats_table == eval('NIRCamReadnoiseStats')
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS,
+                    reason='Requires VPN network access')
 def test_make_readnoise_image():
     """Test readnoise image creation"""
 
@@ -119,6 +127,8 @@ def test_make_readnoise_image():
     assert np.all(readnoise == readnoise_truth)
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS,
+                    reason='Requires VPN network access')
 def test_make_histogram():
     """Test histogram creation"""
 

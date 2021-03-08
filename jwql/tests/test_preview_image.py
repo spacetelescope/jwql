@@ -33,7 +33,7 @@ from jwql.utils.utils import get_config, ensure_dir_exists
 # directory to be created and populated during tests running
 TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'preview_image_test')
 
-# Determine if tests are being run on jenkins
+# Determine if tests are being run on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
 
 

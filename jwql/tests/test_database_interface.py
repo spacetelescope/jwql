@@ -27,7 +27,7 @@ import string
 from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
 
 
-# Determine if tests are being run on jenkins
+# Determine if tests are being run on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
 
 if not ON_GITHUB_ACTIONS:
@@ -59,6 +59,8 @@ def test_all_tables_exist():
         assert table in existing_tables
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS,
+                    reason='Requires VPN network access')
 def test_anomaly_orm_factory():
     """Test that the ``anomaly_orm_factory`` function successfully
     creates an ORM and contains the appropriate columns"""
@@ -74,6 +76,8 @@ def test_anomaly_orm_factory():
         assert item in table_attributes
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS,
+                    reason='Requires VPN network access')
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to development database server.')
 def test_anomaly_records():
     """Test to see that new records can be entered"""
@@ -106,6 +110,8 @@ def test_load_connections():
     assert str(type(meta)) == "<class 'sqlalchemy.sql.schema.MetaData'>"
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS,
+                    reason='Requires VPN network access')
 def test_monitor_orm_factory():
     """Test that the ``monitor_orm_factory`` function successfully
     creates an ORM and contains the appropriate columns"""

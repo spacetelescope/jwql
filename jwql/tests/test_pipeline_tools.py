@@ -27,7 +27,7 @@ import numpy as np
 # Determine if tests are being run on github actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
 
-if ON_GITHUB_ACTIONS:
+if not ON_GITHUB_ACTIONS:
     from jwql.instrument_monitors import pipeline_tools
     from jwql.utils.utils import get_config
 
@@ -68,6 +68,7 @@ def test_completed_pipeline_steps():
     assert completed_steps == true_completed
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Drizzle import issue with python 3.8')
 def test_get_pipeline_steps():
     """Test that the proper pipeline steps are returned for an
     instrument
@@ -139,6 +140,7 @@ def test_image_stack():
     assert exptimes == [[10.5], [10.5], [10.5]]
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Drizzle import issue with python 3.8')
 def test_steps_to_run():
     """Test that the dictionaries for steps required and steps completed
     are correctly combined to create a dictionary of pipeline steps to

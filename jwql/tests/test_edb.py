@@ -23,7 +23,7 @@ import os
 from astropy.time import Time
 import pytest
 
-# Determine if tests are being run on jenkins
+# Determine if tests are being run on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
 
 

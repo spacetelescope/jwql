@@ -21,6 +21,7 @@ Use
 import http
 import json
 import os
+from unittest import skipIf
 from urllib import request, error
 
 import pytest
@@ -28,7 +29,7 @@ import pytest
 from jwql.utils.utils import get_base_url
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 
-# Determine if tests are being run on jenkins
+# Determine if tests are being run on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
 
 # Determine if the local server is running
@@ -73,6 +74,7 @@ for rootname in rootnames:
     urls.append('api/{}/thumbnails/'.format(rootname))  # thumbnails_by_rootname
 
 
+@skipIf(ON_GITHUB_ACTIONS, "Can't access webpage without VPN access")
 @pytest.mark.parametrize('url', urls)
 def test_api_views(url):
     """Test to see if the given ``url`` returns a populated JSON object

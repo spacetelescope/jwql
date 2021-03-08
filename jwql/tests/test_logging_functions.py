@@ -27,7 +27,7 @@ from jwql.utils import logging_functions
 from jwql.utils.logging_functions import configure_logging, log_fail, log_info, make_log_file
 from jwql.utils.utils import get_config
 
-# Determine if tests are being run on jenkins
+# Determine if tests are being run on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
 
 

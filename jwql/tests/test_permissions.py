@@ -29,7 +29,7 @@ from jwql.utils.permissions import set_permissions, has_permissions, \
 # directory to be created and populated during tests running
 TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'permission_test')
 
-# Determine if tests are being run on jenkins
+# Determine if tests are being run on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
 
 

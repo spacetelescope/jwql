@@ -24,7 +24,7 @@ import os
 
 import pytest
 
-# Skip testing this module if on Jenkins
+# Skip testing this module if on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
 try:
     from jwql.website.apps.jwql import data_containers
