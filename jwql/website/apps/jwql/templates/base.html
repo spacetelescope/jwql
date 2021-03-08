@@ -136,9 +136,7 @@
 								<div class="dropdown-divider"></div>
 								<a class='dropdown-heading mx-3'>Monitors</a>
 									{% for monitor_name, monitor_url in inst_tools %}
-										{% if monitor_url == '#' %}
-											<a class="dropdown-item disabled-dropdown" href="{{ monitor_url }}">{{ monitor_name }}</a>
-										{% else %}
+										{% if not monitor_url == '#' %}
 											<a class="dropdown-item" href="{{ monitor_url }}">{{ monitor_name }}</a>
 										{% endif %}
 									{% endfor %}
