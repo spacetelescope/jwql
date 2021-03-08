@@ -54,7 +54,7 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MI
 from jwql.utils.logging_functions import configure_logging
 from jwql.utils.logging_functions import log_info
 from jwql.utils.logging_functions import log_fail
-from jwql.utils.utils import copy_files, ensure_dir_exists, get_config
+from jwql.utils.utils import copy_files, ensure_dir_exists, filesystem_path, get_config
 
 
 class CosmicRay:
@@ -502,48 +502,48 @@ class CosmicRay:
 
                     self.aperture = aperture
 
-                    # We start by querying MAST for new data
+                    # Query MAST for new data
                     self.query_start = self.most_recent_search()
-
                     logging.info('\tMost recent query: {}'.format(self.query_start))
-
                     new_entries = self.query_mast()
+                    new_filenames = []
 
-                    # for testing purposes only
-                    new_filenames = get_config()['local_test_data']
+                    if not new_entries['data']:
+                        logging.info('\tNo new data to process')
 
-                    # for file_entry in new_entries['data']:
-                    #    try:
-                    #        new_filenames.append(filesystem_path(file_entry['filename']))
-                    #    except FileNotFoundError:
-                    #        logging.info('\t{} not found in target directory'.format(file_entry['filename']))
-                    #    except ValueError:
-                    #        logging.info(
-                    #            '\tProvided file {} does not follow JWST naming conventions.'.format(file_entry['filename']))
+                    else:
+                        for file_entry in new_entries['data']:
+                            try:
+                                new_filenames.append(filesystem_path(file_entry['filename']))
+                            except FileNotFoundError:
+                                logging.info('\t{} not found in target directory'.format(file_entry['filename']))
+                            except ValueError:
+                                logging.info(
+                                    '\tProvided file {} does not follow JWST naming conventions.'.format(file_entry['filename']))
 
-                    # Next we copy new files to the working directory
-                    output_dir = os.path.join(get_config()['outputs'], 'cosmic_ray_monitor')
+                        # Next we copy new files to the working directory
+                        output_dir = os.path.join(get_config()['outputs'], 'cosmic_ray_monitor')
 
-                    self.data_dir = get_config()['local_test_dir']  # for testing purposes only
+                        # self.data_dir = get_config()['local_test_dir']  # for testing purposes only
 
-                    # self.data_dir =  os.path.join(output_dir,'data')
-                    ensure_dir_exists(self.data_dir)
+                        self.data_dir =  os.path.join(output_dir,'data')
+                        ensure_dir_exists(self.data_dir)
 
-                    cosmic_ray_files, not_copied = copy_files(new_filenames, self.data_dir)
+                        cosmic_ray_files, not_copied = copy_files(new_filenames, self.data_dir)
 
-                    self.process(cosmic_ray_files)
+                        self.process(cosmic_ray_files)
 
-                    monitor_run = True
+                        monitor_run = True
 
-                    new_entry = {'instrument': self.instrument,
-                                 'aperture': self.aperture,
-                                 'start_time_mjd': self.query_start,
-                                 'end_time_mjd': self.query_end,
-                                 'files_found': len(new_entries),
-                                 'run_monitor': monitor_run,
-                                 'entry_date': datetime.datetime.now()}
-                    self.query_table.__table__.insert().execute(new_entry)
-                    logging.info('\tUpdated the query history table')
+                        new_entry = {'instrument': self.instrument,
+                                     'aperture': self.aperture,
+                                     'start_time_mjd': self.query_start,
+                                     'end_time_mjd': self.query_end,
+                                     'files_found': len(new_entries),
+                                     'run_monitor': monitor_run,
+                                     'entry_date': datetime.datetime.now()}
+                        self.query_table.__table__.insert().execute(new_entry)
+                        logging.info('\tUpdated the query history table')
 
 
 if __name__ == '__main__':
