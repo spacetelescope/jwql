@@ -42,16 +42,20 @@ import os
 
 from django.http import JsonResponse
 from django.http import HttpRequest as request
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.shortcuts import redirect
+import pandas as pd
 
 from jwql.database.database_interface import load_connection
+from jwql.utils import anomaly_query_config
 from jwql.utils.constants import MONITORS
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.utils import get_base_url
 from jwql.utils.utils import get_config
 from jwql.utils.utils import query_unformat
+from jwql.website.apps.jwql.data_containers import get_jwqldb_table_view_components
 
 from .data_containers import data_trending
 from .data_containers import get_acknowledgements
@@ -68,18 +72,12 @@ from .data_containers import random_404_page
 from .data_containers import get_jwqldb_table_view_components
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
-from .forms import FGSAnomalySubmitForm
-from .forms import MIRIAnomalySubmitForm
-from .forms import NIRCamAnomalySubmitForm
-from .forms import NIRISSAnomalySubmitForm
-from .forms import NIRSpecAnomalySubmitForm
+from .forms import InstrumentAnomalySubmitForm
 from .forms import AnomalyQueryForm
 from .data_containers import build_table
-from .forms import AnomalyForm
 from .forms import FileSearchForm
 from .oauth import auth_info, auth_required
 
-from jwql.utils import anomaly_query_config
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
@@ -91,49 +89,26 @@ def anomaly_query(request):
 
     if request.method == 'POST':
         if form.is_valid():
-            miri_filters = [query_unformat(i) for i in form.cleaned_data['miri_filt']]
-            miri_apers = [query_unformat(i) for i in form.cleaned_data['miri_aper']]
-            miri_obsmode = [query_unformat(i) for i in form.cleaned_data['miri_obsmode']]
-            miri_anomalies = [query_unformat(i) for i in form.cleaned_data['miri_anomalies']]
+            query_configs = {}
+            for instrument in ['miri', 'nirspec', 'niriss', 'nircam']:
+                query_configs[instrument] = {}
+                query_configs[instrument]['filters'] = [query_unformat(i) for i in form.cleaned_data['{}_filt'.format(instrument)]]
+                query_configs[instrument]['apertures'] = [query_unformat(i) for i in form.cleaned_data['{}_aper'.format(instrument)]]
+                query_configs[instrument]['detectors'] = [query_unformat(i) for i in form.cleaned_data['{}_detector'.format(instrument)]]
+                query_configs[instrument]['exptypes'] = [query_unformat(i) for i in form.cleaned_data['{}_exptype'.format(instrument)]]
+                query_configs[instrument]['readpatts'] = [query_unformat(i) for i in form.cleaned_data['{}_readpatt'.format(instrument)]]
+                query_configs[instrument]['gratings'] = [query_unformat(i) for i in form.cleaned_data['{}_grating'.format(instrument)]]
+                query_configs[instrument]['anomalies'] = [query_unformat(i) for i in form.cleaned_data['{}_anomalies'.format(instrument)]]
 
-            nirspec_filters = [query_unformat(i) for i in form.cleaned_data['nirspec_filt']]
-            nirspec_apers = [query_unformat(i) for i in form.cleaned_data['nirspec_aper']]
-            nirspec_obsmode = [query_unformat(i) for i in form.cleaned_data['nirspec_obsmode']]
-            nirspec_anomalies = [query_unformat(i) for i in form.cleaned_data['nirspec_anomalies']]
-
-            niriss_filters = [query_unformat(i) for i in form.cleaned_data['niriss_filt']]
-            niriss_apers = [query_unformat(i) for i in form.cleaned_data['niriss_aper']]
-            niriss_obsmode = [query_unformat(i) for i in form.cleaned_data['niriss_obsmode']]
-            niriss_anomalies = [query_unformat(i) for i in form.cleaned_data['niriss_anomalies']]
-
-            nircam_filters = [query_unformat(i) for i in form.cleaned_data['nircam_filt']]
-            nircam_apers = [query_unformat(i) for i in form.cleaned_data['nircam_aper']]
-            nircam_obsmode = [query_unformat(i) for i in form.cleaned_data['nircam_obsmode']]
-            nircam_anomalies = [query_unformat(i) for i in form.cleaned_data['nircam_anomalies']]
-
-            all_filters = {}
-            all_filters['miri'] = miri_filters
-            all_filters['nirspec'] = nirspec_filters
-            all_filters['niriss'] = niriss_filters
-            all_filters['nircam'] = nircam_filters
-
-            all_apers = {}
-            all_apers['miri'] = miri_apers
-            all_apers['nirspec'] = nirspec_apers
-            all_apers['niriss'] = niriss_apers
-            all_apers['nircam'] = nircam_apers
-
-            all_obsmodes = {}
-            all_obsmodes['miri'] = miri_obsmode
-            all_obsmodes['nirspec'] = nirspec_obsmode
-            all_obsmodes['niriss'] = niriss_obsmode
-            all_obsmodes['nircam'] = nircam_obsmode
-
-            all_anomalies = {}
-            all_anomalies['miri'] = miri_anomalies
-            all_anomalies['nirspec'] = nirspec_anomalies
-            all_anomalies['niriss'] = niriss_anomalies
-            all_anomalies['nircam'] = nircam_anomalies
+            all_filters, all_apers, all_detectors, all_exptypes, all_readpatts, all_gratings, all_anomalies = {}, {}, {}, {}, {}, {}, {}
+            for instrument in query_configs:
+                all_filters[instrument] = query_configs[instrument]['filters']
+                all_apers[instrument] = query_configs[instrument]['apertures']
+                all_detectors[instrument] = query_configs[instrument]['detectors']
+                all_exptypes[instrument] = query_configs[instrument]['exptypes']
+                all_readpatts[instrument] = query_configs[instrument]['readpatts']
+                all_gratings[instrument] = query_configs[instrument]['gratings']
+                all_anomalies[instrument] = query_configs[instrument]['anomalies']
 
             anomaly_query_config.INSTRUMENTS_CHOSEN = form.cleaned_data['instrument']
             anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES = all_anomalies
@@ -141,7 +116,10 @@ def anomaly_query(request):
             anomaly_query_config.FILTERS_CHOSEN = all_filters
             anomaly_query_config.EXPTIME_MIN = str(form.cleaned_data['exp_time_min'])
             anomaly_query_config.EXPTIME_MAX = str(form.cleaned_data['exp_time_max'])
-            anomaly_query_config.OBSERVING_MODES_CHOSEN = all_obsmodes
+            anomaly_query_config.DETECTORS_CHOSEN = all_detectors
+            anomaly_query_config.EXPTYPES_CHOSEN = all_exptypes
+            anomaly_query_config.READPATTS_CHOSEN = all_readpatts
+            anomaly_query_config.GRATINGS_CHOSEN = all_gratings
 
             return redirect('/query_submit')
 
@@ -396,6 +374,7 @@ def archive_thumbnails_query_ajax(request, user):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     instruments_list = []
     for instrument in anomaly_query_config.INSTRUMENTS_CHOSEN:
@@ -403,6 +382,7 @@ def archive_thumbnails_query_ajax(request, user):
         instruments_list.append(instrument)
 
     rootnames = anomaly_query_config.THUMBNAILS
+
     data = thumbnails_query_ajax(rootnames, instruments_list)
 
     return JsonResponse(data, json_dumps_params={'indent': 2})
@@ -461,6 +441,35 @@ def engineering_database(request, user):
                'edb_components': edb_components}
 
     return render(request, template, context)
+
+
+def export(request, tablename):
+    """Function to export and download data from JWQLDB Table Viewer
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    tablename : str
+        Name of table to download
+
+    Returns
+    -------
+    response : HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    table_meta = build_table(tablename)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="{}.csv"'.format(tablename)
+
+    writer = csv.writer(response)
+    writer.writerow(table_meta.columns.values)
+    for _, row in table_meta.iterrows():
+        writer.writerow(row.values)
+
+    return response
 
 
 def home(request):
@@ -528,7 +537,7 @@ def instrument(request, inst):
     return render(request, template, context)
 
 
-def jwqldb_table_viewer(request):
+def jwqldb_table_viewer(request, tablename_param=None):
     """Generate the JWQL Table Viewer view.
 
     Parameters
@@ -536,8 +545,8 @@ def jwqldb_table_viewer(request):
     request : HttpRequest object
         Incoming request from the webpage
 
-    user : dict
-        A dictionary of user credentials.
+    tablename_param : str
+        Table name parameter from URL
 
     Returns
     -------
@@ -545,7 +554,12 @@ def jwqldb_table_viewer(request):
         Outgoing response sent to the webpage
     """
 
-    table_meta, tablename = get_jwqldb_table_view_components(request)
+    if tablename_param is None:
+        table_meta, tablename = get_jwqldb_table_view_components(request)
+    else:
+        table_meta = build_table(tablename_param)
+        tablename = tablename_param
+
     _, _, engine, _ = load_connection(get_config()['connection_string'])
     all_jwql_tables = engine.table_names()
 
@@ -588,24 +602,6 @@ def jwqldb_table_viewer(request):
     return render(request, template, context)
 
 
-def export(request, tablename):
-    import pandas as pd
-    import csv
-    from jwql.website.apps.jwql.data_containers import get_jwqldb_table_view_components
-
-    table_meta = build_table(tablename)
-
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="{}.csv"'.format(tablename)
-
-    writer = csv.writer(response)
-    writer.writerow(table_meta.columns.values)
-    for _, row in table_meta.iterrows():
-        writer.writerow(row.values)
-
-    return response
-
-
 def not_found(request, *kwargs):
     """Generate a ``not_found`` page
 
@@ -644,21 +640,15 @@ def query_submit(request):
 
     template = 'query_submit.html'
 
-    instruments = anomaly_query_config.INSTRUMENTS_CHOSEN
-    apertures = anomaly_query_config.APERTURES_CHOSEN
-    filters = anomaly_query_config.FILTERS_CHOSEN
-    exposure_time_min = anomaly_query_config.EXPTIME_MIN
-    exposure_time_max = anomaly_query_config.EXPTIME_MAX
-    observing_modes = anomaly_query_config.OBSERVING_MODES_CHOSEN
-    anomalies = anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
     parameters = {}
-    parameters['instruments'] = instruments
-    parameters['apertures'] = apertures
-    parameters['filters'] = filters
-    parameters['observing_modes'] = observing_modes
-    parameters['exposure_time_min'] = exposure_time_min
-    parameters['exposure_time_max'] = exposure_time_max
-    parameters['anomalies'] = anomalies
+    parameters['instruments'] = anomaly_query_config.INSTRUMENTS_CHOSEN
+    parameters['apertures'] = anomaly_query_config.APERTURES_CHOSEN
+    parameters['filters'] = anomaly_query_config.FILTERS_CHOSEN
+    parameters['detectors'] = anomaly_query_config.DETECTORS_CHOSEN
+    parameters['exposure_types'] = anomaly_query_config.EXPTYPES_CHOSEN
+    parameters['read_patterns'] = anomaly_query_config.READPATTS_CHOSEN
+    parameters['gratings'] = anomaly_query_config.GRATINGS_CHOSEN
+    parameters['anomalies'] = anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
     thumbnails = get_thumbnails_all_instruments(parameters)
     anomaly_query_config.THUMBNAILS = thumbnails
 
@@ -666,12 +656,11 @@ def query_submit(request):
     proposal_info = get_proposal_info(thumbnails)
 
     context = {'inst': '',
-               'anomalies_chosen_from_current_anomalies':
-                     anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
-               'apertures_chosen': apertures,
-               'filters_chosen': filters,
-               'inst_list_chosen': instruments,
-               'observing_modes_chosen': observing_modes,
+               'anomalies_chosen_from_current_anomalies': anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
+               'apertures_chosen': anomaly_query_config.APERTURES_CHOSEN,
+               'filters_chosen': anomaly_query_config.FILTERS_CHOSEN,
+               'inst_list_chosen': anomaly_query_config.INSTRUMENTS_CHOSEN,
+               'detectors_chosen': anomaly_query_config.DETECTORS_CHOSEN,
                'thumbnails': thumbnails,
                'base_url': get_base_url(),
                'rootnames': thumbnails,
@@ -679,9 +668,9 @@ def query_submit(request):
                                   'all_filenames': thumbnails,
                                   'num_proposals': proposal_info['num_proposals'],
                                   'thumbnails': {'proposals': proposal_info['proposals'],
-                                                  'thumbnail_paths': proposal_info['thumbnail_paths'],
-                                                  'num_files': proposal_info['num_files']}}
-              }
+                                                 'thumbnail_paths': proposal_info['thumbnail_paths'],
+                                                 'num_files': proposal_info['num_files']}}
+               }
 
     return render(request, template, context)
 
@@ -769,80 +758,14 @@ def view_image(request, user, inst, file_root, rewrite=False):
     current_anomalies = get_current_flagged_anomalies(file_root, inst)
 
     # Create a form instance
-    if inst == 'FGS':
-        form = FGSAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    if inst == 'MIRI':
-        form = MIRIAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    if inst == 'NIRCam':
-        form = NIRCamAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    if inst == 'NIRISS':
-        form = NIRISSAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    if inst == 'NIRSpec':
-        form = NIRSpecAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    # If this is a POST request, process the form data
-    if request.method == 'POST':
-        anomaly_choices = dict(request.POST)['anomaly_choices']
-        if form.is_valid():
-            form.update_anomaly_table(file_root, user['ezid'], anomaly_choices)
+    form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
 
-    # Build the context
-    context = {'inst': inst,
-               'prop_id': file_root[2:7],
-               'file_root': file_root,
-               'jpg_files': image_info['all_jpegs'],
-               'fits_files': image_info['all_files'],
-               'suffixes': image_info['suffixes'],
-               'num_ints': image_info['num_ints'],
-               'form': form}
+    # If user is running the web app locally and has not authenticated,
+    # then replace ezid with 'dev'
+    if '127.0.0.1' in get_base_url():
+        if user['ezid'] is None:
+            user['ezid'] = 'dev'
 
-    return render(request, template, context)
-
-
-@auth_required
-def view_all_images(request, user, file_root, rewrite=False):
-    """Generate the image view page
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    user : dict
-        A dictionary of user credentials.
-    inst : str
-        Name of JWST instrument
-    file_root : str
-        FITS filename of selected image in filesystem
-    rewrite : bool, optional
-        Regenerate the jpg preview of `file` if it already exists?
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-
-    inst = JWST_INSTRUMENT_NAMES_SHORTHAND[file_root.split("_")[-1][:3]]
-
-    # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-
-    template = 'view_image.html'
-    image_info = get_image_info(file_root, rewrite)
-
-    # Determine current flagged anomalies
-    current_anomalies = get_current_flagged_anomalies(file_root, inst)
-
-    # Create a form instance
-    if inst == 'FGS':
-        form = FGSAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    if inst == 'MIRI':
-        form = MIRIAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    if inst == 'NIRCam':
-        form = NIRCamAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    if inst == 'NIRISS':
-        form = NIRISSAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
-    if inst == 'NIRSpec':
-        form = NIRSpecAnomalySubmitForm(request.POST or None, initial={'anomaly_choices': current_anomalies})
     # If this is a POST request, process the form data
     if request.method == 'POST':
         anomaly_choices = dict(request.POST)['anomaly_choices']

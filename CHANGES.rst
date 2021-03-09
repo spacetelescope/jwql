@@ -1,3 +1,50 @@
+0.25.0 (2020-12-31)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Added project citation information to ``README``, along with a Zenodo badge
+- Added API Documentation for ``bokeh`` templating software
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Reorganized and made aesthetic improvements to instrument landing pages to be more user-friendly
+- Enabled more dynamic search options and aesthetic improvements for anomaly query webpage
+- Added web app view for displaying a particular table of the ``jwqldb`` database
+- Added webpage for displaying Bias Monitor results with ``bokeh`` plots
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Changed ``utils.credentials.py`` to always authenticate a MAST user with a user-identified token in the ``config.json`` file, instead of using a cached token, which was sometimes causes errors
+- Updated software to support the latest versions of ``django`` and ``bokeh``
+- Removed ``affected_tables`` column of ``monitor`` database table, as it stored redundant information
+- Updated the Readnoise Monitor to work for all JWST instruments
+
+
+Bug Fixes
+---------
+
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Fixed bug in Readnoise Monitor webpage that was causing the web app and ``jwql`` database to hang
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Fixed bug that was causing the ``test_amplifier_info()`` test in ``test_instrument_properties.py`` to fail; truth values were updated to reflect a change in the format of the returned dictionaries from the ``amplifier_info()`` function
+- Fixed bug in ``get_header_info()`` that was causing ``test_data_containers.py`` to fail; the function expected the filename without the FITS extension, and the returned header info is in a dictionary (not a string)
+- Fixed bug in ``test_utils.py``, and changed ``utils.py`` to make it robust in matching upper and lowercase detector names
+- Updated ``utils.instrument_properties`` fix MIRI amplifier bounds calculation when omitting reference pixels
+
+
 0.24.0 (2020-10-20)
 ===================
 
@@ -15,6 +62,8 @@ Web Application
 - Added webpage that describes how to use the JWQL web app API
 - Added webpage that enables a user to query the ``jwqldb`` database contents
 - Enabled more search options and aesthetic improvements for anomaly query webpage
+- Added webpage for displaying Readnoise Monitor results with ``bokeh`` plots
+- Added webpage for displaying Bad Pixel Monitor results with ``bokeh`` plots
 
 ``jwql`` Repository
 ~~~~~~~~~~~~~~~~~~~
@@ -24,8 +73,6 @@ Web Application
 - Added unit tests for Bias Monitor
 - Added unit tests for Bad Pixel Monitor
 - Added unit tests for ``bokeh`` templating library
-- Added webpage for displaying Readnoise Monitor results with ``bokeh`` plots
-- Added webpage for displaying Bad Pixel Monitor results with ``bokeh`` plots
 
 
 Bug Fixes
