@@ -24,14 +24,13 @@ import numpy as np
 
 from jwql.utils import instrument_properties
 
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 if not ON_GITHUB_ACTIONS:
     from jwql.utils.utils import get_config
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS,
-                    reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_amplifier_info():
     """Test that the correct number of amplifiers are found for a given
     file

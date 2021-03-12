@@ -30,7 +30,7 @@ from jwql.utils.permissions import set_permissions, has_permissions, \
 TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'permission_test')
 
 # Determine if tests are being run on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 @pytest.fixture(scope="module")
@@ -102,7 +102,6 @@ def test_file(test_dir=TEST_DIRECTORY):
         os.rmdir(test_dir)
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_file_group(test_file):
     """Create a file with the standard permissions ``('-rw-r--r--')``
     and default group.

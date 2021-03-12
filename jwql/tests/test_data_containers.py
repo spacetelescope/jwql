@@ -25,15 +25,11 @@ import os
 import pytest
 
 # Skip testing this module if on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
-try:
-    from jwql.website.apps.jwql import data_containers
-    from jwql.utils.utils import get_config
-except:
-    pass
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+from jwql.website.apps.jwql import data_containers
+from jwql.utils.utils import get_config
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_acknowledgements():
     """Tests the ``get_acknowledgements`` function."""
 

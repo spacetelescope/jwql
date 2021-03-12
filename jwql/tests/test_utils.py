@@ -22,13 +22,12 @@ import os
 from pathlib import Path
 import pytest
 
+from jwql.utils.utils import copy_files, get_config, filename_parser, filesystem_path, _validate_config
+
 
 # Determine if tests are being run on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
-if not ON_GITHUB_ACTIONS:
-    from jwql.utils.utils import copy_files, get_config, filename_parser, \
-    filesystem_path, _validate_config
 
 FILENAME_PARSER_TEST_DATA = [
 
@@ -250,7 +249,6 @@ FILENAME_PARSER_TEST_DATA = [
 ]
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_copy_files():
     """Test that files are copied successfully"""
 
@@ -283,7 +281,7 @@ def test_get_config():
     settings = get_config()
     assert isinstance(settings, dict)
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+
 @pytest.mark.parametrize('filename, solution', FILENAME_PARSER_TEST_DATA)
 def test_filename_parser(filename, solution):
     """Generate a dictionary with parameters from a JWST filename.
@@ -328,8 +326,6 @@ def test_filename_parser_whole_filesystem():
     assert not fail, failure_msg
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS,
-                    reason='Requires VPN network access')
 def test_filename_parser_nonJWST():
     """Attempt to generate a file parameter dictionary from a file
     that is not formatted in the JWST naming convention. Ensure the
@@ -351,8 +347,7 @@ def test_filesystem_path():
     assert check == location
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS,
-                    reason='Requires VPN network access')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_validate_config():
     """Test that the config validator works."""
     # Make sure a bad config raises an error

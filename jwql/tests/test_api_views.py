@@ -29,7 +29,7 @@ from jwql.utils.utils import get_base_url
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 
 # Determine if tests are being run on Github Actions
-ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 urls = []
 
@@ -66,6 +66,7 @@ for rootname in rootnames:
     urls.append('api/{}/thumbnails/'.format(rootname))  # thumbnails_by_rootname
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason="Can't access webpage without VPN access")  # Can be removed once public-facing server exists
 @pytest.mark.parametrize('url', urls)
 def test_api_views(url):
     """Test to see if the given ``url`` returns a populated JSON object
@@ -81,7 +82,7 @@ def test_api_views(url):
     if not ON_GITHUB_ACTIONS:
         base_url = get_base_url()  # For running unit tests locally
     else:
-        base_url = 'https://dljwql.stsci.edu'
+        base_url = 'https://jwql.stsci.edu'  # Once this actually exists, remove skipif
 
     url = '{}/{}'.format(base_url, url)
 
