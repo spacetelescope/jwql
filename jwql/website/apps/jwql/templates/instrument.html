@@ -42,8 +42,8 @@
 						  Images
 						</button>
 						<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-						  <a class="dropdown-item" href={{ url('jwql:unlooked', args=[inst]) }}>Unlooked Images (Currently Unavailable)</a>
-						  <a class="dropdown-item" href="#">Image Anomalies (Currently Unavailable)</a>
+						  <!-- <a class="dropdown-item" href={{ url('jwql:unlooked', args=[inst]) }}>Unlooked Images (Currently Unavailable)</a> -->
+						  <!-- <a class="dropdown-item" href="#">Image Anomalies (Currently Unavailable)</a> -->
 						  <a class="dropdown-item" href={{ url('jwql:archive', args=[inst]) }}>Archived Images</a>
 						</div>
 					</div>
@@ -65,9 +65,7 @@
 							{% for key, inst_tools in tools.items() %}
 								{% if key == inst.lower() %}
 									{% for monitor_name, monitor_url in inst_tools %}
-										{% if monitor_url == '#' %}
-											<a class="dropdown-item" href="#">{{ monitor_name }} (Currently Unavailable)</a>
-										{% else %}
+										{% if not monitor_url == '#' %}
 											<a class="dropdown-item" href="{{ monitor_url }}">{{ monitor_name }}</a>
 										{% endif %}
 									{% endfor %}
