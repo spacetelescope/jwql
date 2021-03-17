@@ -21,11 +21,17 @@ Use
 
 from django.test import TestCase
 from django.test.client import Client
+import os
+from unittest import skipIf
 
-from jwql.website.apps.jwql import context_processors
-from jwql.utils.utils import get_base_url
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~')
+
+if not ON_GITHUB_ACTIONS:
+    from jwql.website.apps.jwql import context_processors
+    from jwql.utils.utils import get_base_url
 
 
+@skipIf(ON_GITHUB_ACTIONS, "Can't access webpage without VPN access")
 class TestBaseContext(TestCase):
     def test_base_context(self):
         """Tests the ``base_context`` function."""
