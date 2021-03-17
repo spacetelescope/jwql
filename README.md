@@ -5,9 +5,9 @@
 # The JWST Quicklook Application (`JWQL`)
 
 [![Current Release](https://img.shields.io/github/release/spacetelescope/jwql.svg)](https://github.com/spacetelescope/jwql/releases/latest/)
-[![PyPI - License](https://img.shields.io/pypi/l/Django.svg)](https://github.com/spacetelescope/jwql/blob/master/LICENSE)
+[![PyPI - License](https://img.shields.io/pypi/l/Django.svg)](https://github.com/spacetelescope/jwql/blob/main/LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.6-blue.svg)](https://www.python.org/)
-[![Build Status](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/badge/icon)](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/)
+[![Build Status](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/main/badge/icon)](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/main/)
 [![Documentation Status](https://readthedocs.org/projects/jwql/badge/?version=latest)](https://jwql.readthedocs.io/en/latest/?badge=latest)
 [![STScI](https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat)](http://www.stsci.edu)
 [![codecov](https://codecov.io/gh/spacetelescope/jwql/branch/develop/graph/badge.svg)](https://codecov.io/gh/spacetelescope/jwql)
@@ -108,7 +108,7 @@ Much of the `jwql` software depends on the existence of a `config.json` file wit
 
 ## Software Contributions
 
-There are two current pages to review before you begin contributing to the `jwql` development. The first is our [style guide](https://github.com/spacetelescope/jwql/blob/master/style_guide/README.md) and the second is our [suggested git workflow page](https://github.com/spacetelescope/jwql/wiki/git-&-GitHub-workflow-for-contributing), which contains an in-depth explanation of the workflow.
+There are two current pages to review before you begin contributing to the `jwql` development. The first is our [style guide](https://github.com/spacetelescope/jwql/blob/main/style_guide/README.md) and the second is our [suggested git workflow page](https://github.com/spacetelescope/jwql/wiki/git-&-GitHub-workflow-for-contributing), which contains an in-depth explanation of the workflow.
 
 Contributors are also encouraged to check out the [Checklist for Contributors Guide](https://github.com/spacetelescope/jwql/wiki/Checklist-for-Contributors-and-Reviewers-of-Pull-Requests) to ensure the pull request contains all of the necessary changes.
 
@@ -136,7 +136,7 @@ Users who wish to report an issue or request a new feature may do so through the
 
 ## Code of Conduct
 
-Users and contributors to the `jwql` repository should adhere to the [Code of Conduct](https://github.com/spacetelescope/jwql/blob/master/CODE_OF_CONDUCT.md).  Any issues or violations pertaining to the Code of Conduct should be brought to the attention of a `jwql` team member or to `jwql@stsci.edu`.
+Users and contributors to the `jwql` repository should adhere to the [Code of Conduct](https://github.com/spacetelescope/jwql/blob/main/CODE_OF_CONDUCT.md).  Any issues or violations pertaining to the Code of Conduct should be brought to the attention of a `jwql` team member or to `jwql@stsci.edu`.
 
 ## Questions
 
