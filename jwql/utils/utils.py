@@ -326,13 +326,15 @@ def filename_parser(filename):
     return filename_dict
 
 
-def filesystem_path(filename):
+def filesystem_path(filename, check_existence=True):
     """Return the full path to a given file in the filesystem
 
     Parameters
     ----------
     filename : str
         File to locate (e.g. ``jw86600006001_02101_00008_guider1_cal.fits``)
+    check_existence : boolean
+        Check to see if the file exists in the expected lcoation
 
     Returns
     -------
@@ -340,19 +342,20 @@ def filesystem_path(filename):
         Full path to the given file, including filename
     """
 
-    filesystem_base = get_config()["filesystem"]
+    filesystem_base = get_config()['filesystem']
 
     # Subdirectory name is based on the proposal ID
     subdir = 'jw{}'.format(filename_parser(filename)['program_id'])
     full_path = os.path.join(filesystem_base, subdir, filename)
 
     # Check to see if the file exists
-    if os.path.isfile(full_path):
-        return full_path
-    else:
-        raise FileNotFoundError(
-            '{} is not in the predicted location: {}'.format(filename, full_path)
-        )
+    if check_existence:
+        if not os.path.isfile(full_path):
+            raise FileNotFoundError(
+                '{} is not in the predicted location: {}'.format(filename, full_path)
+            )
+
+    return full_path
 
 
 def get_base_url():
