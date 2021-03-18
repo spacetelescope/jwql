@@ -42,7 +42,7 @@ from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.jwql_monitors import monitor_cron_jobs
-from jwql.utils.utils import ensure_dir_exists
+from jwql.utils.utils import ensure_dir_exists, filesystem_path
 from jwql.utils.constants import MONITORS
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
@@ -487,19 +487,25 @@ def get_filenames_by_instrument(instrument):
         instrument.
     """
 
-    # Query files from MAST database
-    # filepaths, filenames = DatabaseConnection('MAST', instrument=instrument).\
-    #     get_files_for_instrument(instrument)
+    # Query for files from astroquery.Mast
+    instrument_match = {'FGS': 'Fgs',
+                        'MIRI': 'Miri',
+                        'NIRCam': 'Nircam',
+                        'NIRISS': 'Niriss',
+                        'NIRSpec': 'Nirspec'}
+    service = "Mast.Jwst.Filtered.{}".format(instrument_match[instrument])
+    params = {"columns":"*","filters":[]}
+    response = Mast.service_request_async(service,params)
+    result = response[0].json()
+    filenames = [item['filename'] for item in result['data']]
 
-    # Find all of the matching files in filesytem
-    # (TEMPORARY WHILE THE MAST STUFF IS BEING WORKED OUT)
-    instrument_match = {'FGS': 'guider',
-                        'MIRI': 'mir',
-                        'NIRCam': 'nrc',
-                        'NIRISS': 'nis',
-                        'NIRSpec': 'nrs'}
-    search_filepath = os.path.join(FILESYSTEM_DIR, '*', '*.fits')
-    filepaths = [f for f in glob.glob(search_filepath) if instrument_match[instrument] in f]
+    # Determine locations to the files
+    filepaths = []
+    for filename in filenames:
+        try:
+            filepaths.append(filesystem_path(filename, check_existence=False))
+        except ValueError:
+            print('Unable to determine filepath for {}'.format(filename))
 
     return filepaths
 
