@@ -6,8 +6,8 @@
 
 [![Current Release](https://img.shields.io/github/release/spacetelescope/jwql.svg)](https://github.com/spacetelescope/jwql/releases/latest/)
 [![PyPI - License](https://img.shields.io/pypi/l/Django.svg)](https://github.com/spacetelescope/jwql/blob/master/LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.6-blue.svg)](https://www.python.org/)
-[![Build Status](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/badge/icon)](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/)
+[![Python](https://img.shields.io/badge/Python-3.7-blue.svg)](https://www.python.org/)
+[![Build Status](https://github.com/spacetelescope/jwql/workflows/JWQL%20CI/badge.svg)](https://github.com/spacetelescope/jwql/actions)
 [![Documentation Status](https://readthedocs.org/projects/jwql/badge/?version=latest)](https://jwql.readthedocs.io/en/latest/?badge=latest)
 [![STScI](https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat)](http://www.stsci.edu)
 [![DOI](https://zenodo.org/badge/109727729.svg)](https://zenodo.org/badge/latestdoi/109727729)
@@ -44,7 +44,7 @@ Getting `jwql` up and running on your own computer requires four steps, detailed
 
 ### Prerequisites
 
-It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.6.  Downloads and installation instructions are  available here:
+It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.7.  Downloads and installation instructions are  available here:
 
 - [Miniconda](https://conda.io/miniconda.html)
 - [Anaconda](https://www.continuum.io/downloads)
@@ -81,10 +81,10 @@ Next, activate the `base` or `root` environment (depending on your version of `c
 source activate base/root
 ```
 
-Lastly, create the `jwql` environment via the `environment_python_3_6.yml` file:
+Lastly, create the `jwql` environment via the `environment_python_3_7.yml` file:
 
 ```
-conda env create -f environment_python_3_6.yml --name jwql-3.6
+conda env create -f environment_python_3_7.yml --name jwql-3.7
 ```
 
 ### Package Installation

@@ -33,8 +33,8 @@ from jwql.utils.utils import get_config, ensure_dir_exists
 # directory to be created and populated during tests running
 TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'preview_image_test')
 
-# Determine if tests are being run on jenkins
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+# Determine if tests are being run on Github Actions
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 @pytest.fixture(scope="module")
@@ -76,7 +76,7 @@ def get_test_fits_files():
         List of filepaths to FITS files
     """
     # Get the files from central store
-    if not ON_JENKINS:
+    if not ON_GITHUB_ACTIONS:
         filenames = glob.glob(os.path.join(get_config()['test_dir'], '*.fits'))
         assert len(filenames) > 0
         return filenames
@@ -86,7 +86,7 @@ def get_test_fits_files():
         return []
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 @pytest.mark.parametrize('filename', get_test_fits_files())
 def test_make_image(test_directory, filename):
     """Use PreviewImage.make_image to create preview images of a sample

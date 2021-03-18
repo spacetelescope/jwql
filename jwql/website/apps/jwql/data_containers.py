@@ -48,24 +48,27 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
-from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
 
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 from jwql.utils.utils import get_config, filename_parser, check_config_for_key
-check_config_for_key('auth_mast')
-auth_mast = get_config()['auth_mast']
-mast_flavour = '.'.join(auth_mast.split('.')[1:])
-from astropy import config
-conf = config.get_config('astroquery')
-conf['mast'] = {'server': 'https://{}'.format(mast_flavour)}
+if not ON_GITHUB_ACTIONS:
+    from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
+    check_config_for_key('auth_mast')
+    auth_mast = get_config()['auth_mast']
+    mast_flavour = '.'.join(auth_mast.split('.')[1:])
+    from astropy import config
+    conf = config.get_config('astroquery')
+    conf['mast'] = {'server': 'https://{}'.format(mast_flavour)}
 from astroquery.mast import Mast
 from jwedb.edb_interface import mnemonic_inventory
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
-PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_images')
-THUMBNAIL_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'thumbnails')
+if not ON_GITHUB_ACTIONS:
+    FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
+    PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_images')
+    THUMBNAIL_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'thumbnails')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
