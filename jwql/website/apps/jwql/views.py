@@ -37,15 +37,17 @@ Dependencies
     placed in the ``jwql/utils/`` directory.
 """
 
+from bokeh.layouts import column, layout
+from bokeh.embed import components
+from bokeh.plotting import figure, output_file, show 
 import csv
-import numpy as np
-import os
-
 from django.http import JsonResponse
 from django.http import HttpRequest as request
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.shortcuts import redirect
+import numpy as np
+import os
 import pandas as pd
 
 from jwql.database.database_interface import load_connection
@@ -56,9 +58,8 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.utils import get_base_url
 from jwql.utils.utils import get_config
 from jwql.utils.utils import query_unformat
-from jwql.website.apps.jwql.data_containers import get_jwqldb_table_view_components
 
-from .bokeh_dashboard import generalDashboard
+from .bokeh_dashboard import GeneralDashboard
 from .data_containers import build_table
 from .data_containers import data_trending
 from .data_containers import get_acknowledgements
@@ -405,9 +406,6 @@ def dashboard(request):
         Outgoing response sent to the webpage
     """
 
-    from bokeh.layouts import column, layout
-    from bokeh.embed import components
-
     template = 'dashboard.html'
 
     db = get_dashboard_components(request)
@@ -431,51 +429,6 @@ def dashboard(request):
                'table_columns': table_columns,
                'table_rows': table_values,
                'time_deltas':time_deltas}
-
-    return render(request, template, context)
-
-
-def daily_trending(request, date):
-    """Generate the daily dashbaord page
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-
-    from jwql.website.apps.jwql.bokeh_dashboard import generalDashboard
-    from bokeh.plotting import figure, output_file, show 
-    from bokeh.embed import components
-    from bokeh.layouts import column, layout
-    import numpy as np
-
-    template = 'daily_trending.html'
-
-    db = generalDashboard(date=date)
-    pie_graph = db.dashboard_instrument_pie_chart()
-    files_graph = db.dashboard_files_per_day()
-    filetype_bar = db.dashboard_filetype_bar_chart()
-    table_columns, table_values = db.dashboard_monitor_tracking()
-    grating_plot = db.dashboard_exposure_count_by_filter()
-    anomaly_plot = db.dashboard_anomaly_per_instrument()
-
-    p = layout([
-        [pie_graph, filetype_bar],[grating_plot, anomaly_plot]
-        ],sizing_mode='stretch_width') 
-    script, div = components(p)
-
-    context =  {'inst': '',
-               'script': script,
-               'div': div,
-               'date': date,
-               'table_columns': table_columns,
-               'table_rows': table_values}
 
     return render(request, template, context)
 

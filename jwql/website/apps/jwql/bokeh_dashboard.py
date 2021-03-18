@@ -1,13 +1,35 @@
-"""Containers for Bokeh Dashboard
+"""Bokeh based dashboard to monitor the status of the JWQL Application.
+The dashboard tracks a variety of metrics including number of total files per day,
+number of files per instrument, filesystem storage space etc.
+
+The dashboard also includes a timestamp parameter. This allows users to narrow 
+metrics displayed by the dashboard to within a specific date range.
+
+Authors
+-------
+
+    - Mees B. Fix
+
+Use
+---
+
+    The dashboard can be called from a python environment via the
+    following import statements:
+    ::
+
+      from bokeh_dashboard impoer GeneralDashboard
+      from monitor_template import secondary_function
+
+Dependencies
+------------
+
+    The user must have a configuration file named ``config.json``
+    placed in the ``utils`` directory.
+
 """
 from datetime import date
 from datetime import datetime as dt
 from math import pi
-from operator import itemgetter
-from random import randint
-
-import pandas as pd
-# from pandas._libs.tslibs.timestamps import Timestamp, Timedelta
 
 from bokeh.embed import components
 from bokeh.io import output_file, show
@@ -20,13 +42,18 @@ from bokeh.models import TapTool, OpenURL
 from bokeh.models.widgets import DataTable, DateFormatter, TableColumn, Panel, Tabs
 from bokeh.layouts import grid, column, row, layout
 
+from operator import itemgetter
+from random import randint
+import pandas as pd
+
 from jwql.database.database_interface import load_connection
-from jwql.utils.utils import get_config
+from jwql.utils.utils import get_config, FILTERS_PER_INSTRUMENT
+from jwql.utils.utils import get_base_url
 from jwql.database.database_interface import Monitor, FilesystemInstrument
 from jwql.website.apps.jwql.data_containers import build_table
 
 
-class generalDashboard:
+class GeneralDashboard:
 
     def __init__(self, delta_t=None):
         self.name = 'jwqldb_general_dashboard'
@@ -74,31 +101,38 @@ class generalDashboard:
         if not pd.isnull(self.delta_t):
             data = data[(data['date']>=self.date - self.delta_t) & (data['date']<=self.date)]
 
-        x = {'nircam': data.instrument.str.count('nircam').sum(),
-             'nirspec': data.instrument.str.count('nirspec').sum(),
-             'niriss': data.instrument.str.count('niriss').sum(),
-             'miri': data.instrument.str.count('miri').sum(),
-             'fgs': data.instrument.str.count('fgs').sum()}
+        try:
+            file_counts = {'nircam': data.instrument.str.count('nircam').sum(),
+                           'nirspec': data.instrument.str.count('nirspec').sum(),
+                           'niriss': data.instrument.str.count('niriss').sum(),
+                           'miri': data.instrument.str.count('miri').sum(),
+                           'fgs': data.instrument.str.count('fgs').sum()}
+        except AttributeError:
+            file_counts = {'nircam': 0,
+                           'nirspec': 0,
+                           'niriss': 0,
+                           'miri': 0,
+                           'fgs': 0}
 
-        data = pd.Series(x).reset_index(name='value').rename(columns={'index':'instrument'})
+        data = pd.Series(file_counts).reset_index(name='value').rename(columns={'index':'instrument'})
         data['angle'] = data['value']/data['value'].sum() * 2*pi
         data['color'] = ['#F8B195', '#F67280', '#C06C84', '#6C5B7B', '#355C7D']
-        p = figure(title="Number of Files Per Instruments", toolbar_location=None,
+        plot = figure(title="Number of Files Per Instruments", toolbar_location=None,
                 tools="hover,tap", tooltips="@instrument: @value", x_range=(-0.5, 1.0))
 
-        p.wedge(x=0, y=1, radius=0.4,
+        plot.wedge(x=0, y=1, radius=0.4,
                 start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
                 line_color="white", color='color', legend='instrument', source=data)
 
-        url = "http://127.0.0.1:8000/@instrument"
-        taptool = p.select(type=TapTool)
+        url = "{}/@instrument".format(get_base_url())
+        taptool = plot.select(type=TapTool)
         taptool.callback = OpenURL(url=url)
         
-        p.axis.axis_label=None
-        p.axis.visible=False
-        p.grid.grid_line_color = None
+        plot.axis.axis_label=None
+        plot.axis.visible=False
+        plot.grid.grid_line_color = None
 
-        return p
+        return plot
 
 
     def dashboard_files_per_day(self):
@@ -158,36 +192,18 @@ class generalDashboard:
 
 
     def make_panel(self, x, top, instrument, title, x_axis_label):
-            # filetypes = data.filetype.unique()
-            s = pd.Series(dict(zip(x, top))).reset_index(name='top').rename(columns={'index':'x'})
-            source = ColumnDataSource(s)
-            p = figure(x_range=x, title=title, plot_width=850, tools="hover", tooltips="@x: @top", x_axis_label=x_axis_label)
-            p.vbar(x='x', top='top', source=source, width=0.9, color='#6C5B7B')
-            p.xaxis.major_label_orientation = pi/4
-            tab = Panel(child=p, title=instrument)
+        # filetypes = data.filetype.unique()
+        data = pd.Series(dict(zip(x, top))).reset_index(name='top').rename(columns={'index':'x'})
+        source = ColumnDataSource(data)
+        plot = figure(x_range=x, title=title, plot_width=850, tools="hover", tooltips="@x: @top", x_axis_label=x_axis_label)
+        plot.vbar(x='x', top='top', source=source, width=0.9, color='#6C5B7B')
+        plot.xaxis.major_label_orientation = pi/4
+        tab = Panel(child=p, title=instrument)
 
-            return tab
+        return tab
 
 
     def dashboard_exposure_count_by_filter(self):
-
-        import numpy as np
-        from jwql.utils.constants import FILTERS_PER_INSTRUMENT
-        # Query filesystem_instrument
-        # Get unique file types (Science, Cal, Dark, etc)
-        # Get number of files per type
-        # Make histogram/bar chart
-
-        def _count_filetypes(data):
-            print('count up filetypes')
-            # filetypes = data.filetype.unique() # x 
-            # filetype_count = [data.filetype.str.count('ft').sum() for ft in filetypes] # top
-
-        # data = build_table('filesystem_instrument')
-        # if not pd.isnull(self.date):
-            # dt = Timedelta(1, units='days')
-            # data = data[(data['start_time']>=self.date) & (data['start_time']<=self.date+dt)]
-
         # for instrument in data.instrument.unique():
         title = 'File Counts Per Filter'
         figures = [self.make_panel(FILTERS_PER_INSTRUMENT[instrument], np.random.rand(len(FILTERS_PER_INSTRUMENT[instrument]))*10e7, instrument, title, 'Filters') for instrument in FILTERS_PER_INSTRUMENT]
