@@ -65,9 +65,9 @@ from jwedb.edb_interface import mnemonic_inventory
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 if not ON_GITHUB_ACTIONS:
-    FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
-    PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_images')
-    THUMBNAIL_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'thumbnails')
+    FILESYSTEM_DIR = os.path.join(get_config()['filesystem'])
+    PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['preview_image_filesystem'])
+    THUMBNAIL_FILESYSTEM = os.path.join(get_config()['thumbnail_filesystem'])
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
@@ -497,7 +497,7 @@ def get_filenames_by_instrument(instrument):
 
     # Query for files from astroquery.Mast
     service = INSTRUMENT_SERVICE_MATCH[instrument]
-    params = {"columns":"*","filters":[]}
+    params = {"columns":"filename","filters":[]}
     response = Mast.service_request_async(service,params)
     result = response[0].json()
     filenames = [item['filename'] for item in result['data']]
@@ -851,16 +851,28 @@ def get_proposal_info(filepaths):
     num_files = []
 
     proposals = list(set([f.split('/')[-1][2:7] for f in filepaths]))
-    thumbnail_dir = os.path.join(get_config()['jwql_dir'], 'thumbnails')
 
-    for proposal in proposals:
-        thumbnail_search_filepath = os.path.join(thumbnail_dir, 'jw{}'.format(proposal), 'jw{}*rate*.thumb'.format(proposal))
-        thumbnail = glob.glob(thumbnail_search_filepath)
-        num_files.append(len(thumbnail))
-        if len(thumbnail) > 0:
-            thumbnail = thumbnail[0]
-            thumbnail = '/'.join(thumbnail.split('/')[-2:])
-        thumbnail_paths.append(thumbnail)
+    # Current solution
+    # for proposal in proposals:
+    #     thumbnail_search_filepath = os.path.join(THUMBNAIL_FILESYSTEM, 'jw{}'.format(proposal), 'jw{}*rate*.thumb'.format(proposal))
+    #     thumbnail = glob.glob(thumbnail_search_filepath)
+    #     num_files.append(len(thumbnail))
+    #     if len(thumbnail) > 0:
+    #         thumbnail = thumbnail[0]
+    #         thumbnail = '/'.join(thumbnail.split('/')[-2:])
+    #     thumbnail_paths.append(thumbnail)
+    # print(thumbnail_paths)
+
+    # Hard coded thumbnail path solution
+    proposals, thumbnail_paths, num_files = [], [], []
+    for filepath in filepaths:
+        proposal = filepath.split('/')[-1][2:7]
+        if proposal not in proposals:
+            thumbnail_paths.append(os.path.join('jw{}'.format(proposal), 'jw{}.thumb'.format(proposal)))
+            files_for_proposal = [item for item in filepaths if 'jw{}'.format(proposal) in item]
+            num_files.append(len(files_for_proposal))
+            proposals.append(proposal)
+    print(thumbnail_paths)
 
     # Put the various information into a dictionary of results
     proposal_info = {}
