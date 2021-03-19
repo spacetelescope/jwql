@@ -280,7 +280,6 @@ def archived_proposals_ajax(request, user, inst):
 
     # Get list of all files for the given instrument
     filenames = get_filenames_by_instrument(inst)
-    print('got filenames')
 
     # Determine locations to the files
     filepaths = []
@@ -289,11 +288,9 @@ def archived_proposals_ajax(request, user, inst):
             filepaths.append(filesystem_path(filename, check_existence=False))
         except ValueError:
             print('Unable to determine filepath for {}'.format(filename))
-    print('got filepaths')
 
     # Gather information about the proposals for the given instrument
     proposal_info = get_proposal_info(filepaths)
-    print('got proposal info')
 
     context = {'inst': inst,
                'all_filenames': filenames,
