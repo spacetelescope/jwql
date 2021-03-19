@@ -43,6 +43,8 @@ from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES_SHORTH
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
 
 def _validate_config(config_file_dict):
     """Check that the config.json file contains all the needed entries with
@@ -141,7 +143,8 @@ def get_config():
 
     return settings
 
-FILESYSTEM = get_config()['filesystem']
+if not ON_GITHUB_ACTIONS:
+    FILESYSTEM = get_config()['filesystem']
 
 
 def copy_files(files, out_dir):
