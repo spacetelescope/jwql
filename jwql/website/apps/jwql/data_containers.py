@@ -42,7 +42,7 @@ from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.jwql_monitors import monitor_cron_jobs
-from jwql.utils.utils import ensure_dir_exists, filesystem_path
+from jwql.utils.utils import ensure_dir_exists
 from jwql.utils.constants import MONITORS
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
@@ -472,8 +472,7 @@ def get_expstart(rootname):
 
 
 def get_filenames_by_instrument(instrument):
-    """Returns a list of paths to files that match the given
-    ``instrument``.
+    """Returns a list of filenames that match the given ``instrument``.
 
     Parameters
     ----------
@@ -482,9 +481,8 @@ def get_filenames_by_instrument(instrument):
 
     Returns
     -------
-    filepaths : list
-        A list of full paths to the files that match the given
-        instrument.
+    filenames : list
+        A list of files that match the given instrument.
     """
 
     # Query for files from astroquery.Mast
@@ -499,15 +497,7 @@ def get_filenames_by_instrument(instrument):
     result = response[0].json()
     filenames = [item['filename'] for item in result['data']]
 
-    # Determine locations to the files
-    filepaths = []
-    for filename in filenames:
-        try:
-            filepaths.append(filesystem_path(filename, check_existence=False))
-        except ValueError:
-            print('Unable to determine filepath for {}'.format(filename))
-
-    return filepaths
+    return filenames
 
 
 def get_filenames_by_proposal(proposal):
@@ -850,24 +840,21 @@ def get_proposal_info(filepaths):
         proposal(s) and files corresponding to the given ``filepaths``.
     """
 
-    proposals = list(set([f.split('/')[-1][2:7] for f in filepaths]))
-    thumbnail_dir = os.path.join(get_config()['jwql_dir'], 'thumbnails')
+    # Initialize some containers
     thumbnail_paths = []
     num_files = []
+
+    proposals = list(set([f.split('/')[-1][2:7] for f in filepaths]))
+    thumbnail_dir = os.path.join(get_config()['jwql_dir'], 'thumbnails')
+
     for proposal in proposals:
-        thumbnail_search_filepath = os.path.join(
-            thumbnail_dir, 'jw{}'.format(proposal), 'jw{}*rate*.thumb'.format(proposal)
-        )
+        thumbnail_search_filepath = os.path.join(thumbnail_dir, 'jw{}'.format(proposal), 'jw{}*rate*.thumb'.format(proposal))
         thumbnail = glob.glob(thumbnail_search_filepath)
+        num_files.append(len(thumbnail))
         if len(thumbnail) > 0:
             thumbnail = thumbnail[0]
             thumbnail = '/'.join(thumbnail.split('/')[-2:])
         thumbnail_paths.append(thumbnail)
-
-        fits_search_filepath = os.path.join(
-            FILESYSTEM_DIR, 'jw{}'.format(proposal), 'jw{}*.fits'.format(proposal)
-        )
-        num_files.append(len(glob.glob(fits_search_filepath)))
 
     # Put the various information into a dictionary of results
     proposal_info = {}
