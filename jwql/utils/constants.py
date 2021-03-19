@@ -211,6 +211,13 @@ INSTRUMENT_MONITOR_DATABASE_TABLES = {
     'dark_monitor': ['<instrument>_dark_dark_current', '<instrument>_dark_pixel_stats', '<instrument>_dark_query_history'],
     'bad_pixel_monitor': ['<instrument>_bad_pixel_stats', '<instrument>_bad_pixel_query_history']}
 
+INSTRUMENT_SERVICE_MATCH = {
+    'FGS': 'Mast.Jwst.Filtered.Fgs',
+    'MIRI': 'Mast.Jwst.Filtered.Miri',
+    'NIRCam': 'Mast.Jwst.Filtered.Nircam',
+    'NIRISS': 'Mast.Jwst.Filtered.Niriss',
+    'NIRSpec': 'Mast.Jwst.Filtered.Nirspec'}
+
 # JWST data products
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
                      'EVENTLIST', 'CUBE', 'CATALOG', 'ENGINEERING', 'NULL']

@@ -44,8 +44,7 @@ from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as
 from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.utils import ensure_dir_exists
 from jwql.utils.constants import MONITORS
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.constants import INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
 
@@ -449,15 +448,17 @@ def get_edb_components(request):
     return edb_components
 
 
-def get_expstart(rootname):
+def get_expstart(instrument, rootname):
     """Return the exposure start time (``expstart``) for the given
-    group of files.
+    ``rootname``.
 
     The ``expstart`` is gathered from a query to the
     ``astroquery.mast`` service.
 
     Parameters
     ----------
+    instrument : str
+        The instrument of interest (e.g. `FGS`).
     rootname : str
         The rootname of the observation of interest (e.g.
         ``jw86700006001_02101_00006_guider1``).
@@ -468,7 +469,16 @@ def get_expstart(rootname):
         The exposure start time of the observation (in MJD).
     """
 
-    return 5000.00
+    file_set_name = '_'.join(rootname.split('_')[:-1])
+    service = INSTRUMENT_SERVICE_MATCH[instrument]
+    params = {
+        'columns':'filename, expstart',
+        'filters':[{'paramName':'fileSetName', 'values':[file_set_name]}]}
+    response = Mast.service_request_async(service, params)
+    result = response[0].json()
+    expstart = min([item['expstart'] for item in result['data']])
+
+    return expstart
 
 
 def get_filenames_by_instrument(instrument):
@@ -486,12 +496,7 @@ def get_filenames_by_instrument(instrument):
     """
 
     # Query for files from astroquery.Mast
-    instrument_match = {'FGS': 'Fgs',
-                        'MIRI': 'Miri',
-                        'NIRCam': 'Nircam',
-                        'NIRISS': 'Niriss',
-                        'NIRSpec': 'Nirspec'}
-    service = "Mast.Jwst.Filtered.{}".format(instrument_match[instrument])
+    service = INSTRUMENT_SERVICE_MATCH[instrument]
     params = {"columns":"*","filters":[]}
     response = Mast.service_request_async(service,params)
     result = response[0].json()
@@ -524,8 +529,8 @@ def get_filenames_by_proposal(proposal):
 
 
 def get_filenames_by_rootname(rootname):
-    """Return a list of filenames available in the filesystem that
-    are part of the given ``rootname``.
+    """Return a list of filenames that are part of the given
+    ``rootname``.
 
     Parameters
     ----------
@@ -540,6 +545,7 @@ def get_filenames_by_rootname(rootname):
     """
 
     proposal = rootname.split('_')[0].split('jw')[-1][0:5]
+
     filenames = sorted(glob.glob(os.path.join(
         FILESYSTEM_DIR,
         'jw{}'.format(proposal),
@@ -1120,10 +1126,10 @@ def thumbnails_ajax(inst, proposal=None):
     """
 
     # Get the available files for the instrument
-    filepaths = get_filenames_by_instrument(inst)
+    filenames = get_filenames_by_instrument(inst)
 
     # Get set of unique rootnames
-    rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filepaths])
+    rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
 
     # If the proposal is specified (i.e. if the page being loaded is
     # an archive page), only collect data for given proposal
@@ -1154,23 +1160,19 @@ def thumbnails_ajax(inst, proposal=None):
                              'visit_group': rootname[14:16]}
 
         # Get list of available filenames
-        available_files = get_filenames_by_rootname(rootname)
+        available_files = [item for item in filenames if rootname in item]
 
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
-        data_dict['file_data'][rootname]['expstart'] = get_expstart(rootname)
-        data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for
-                                                        filename in available_files]
+        data_dict['file_data'][rootname]['expstart'] = get_expstart(inst, rootname)
+        data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for filename in available_files]
 
     # Extract information for sorting with dropdown menus
-    # (Don't include the proposal as a sorting parameter if the
-    # proposal has already been specified)
-    detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for
-                 rootname in list(data_dict['file_data'].keys())]
-    proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for
-                 rootname in list(data_dict['file_data'].keys())]
+    # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
+    detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for rootname in list(data_dict['file_data'].keys())]
+    proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for rootname in list(data_dict['file_data'].keys())]
     if proposal is not None:
         dropdown_menus = {'detector': detectors}
     else:
