@@ -850,20 +850,7 @@ def get_proposal_info(filepaths):
     thumbnail_paths = []
     num_files = []
 
-    proposals = list(set([f.split('/')[-1][2:7] for f in filepaths]))
-
-    # Current solution
-    # for proposal in proposals:
-    #     thumbnail_search_filepath = os.path.join(THUMBNAIL_FILESYSTEM, 'jw{}'.format(proposal), 'jw{}*rate*.thumb'.format(proposal))
-    #     thumbnail = glob.glob(thumbnail_search_filepath)
-    #     num_files.append(len(thumbnail))
-    #     if len(thumbnail) > 0:
-    #         thumbnail = thumbnail[0]
-    #         thumbnail = '/'.join(thumbnail.split('/')[-2:])
-    #     thumbnail_paths.append(thumbnail)
-    # print(thumbnail_paths)
-
-    # Hard coded thumbnail path solution
+    # Gather thumbnails and counts for proposals
     proposals, thumbnail_paths, num_files = [], [], []
     for filepath in filepaths:
         proposal = filepath.split('/')[-1][2:7]
@@ -872,7 +859,6 @@ def get_proposal_info(filepaths):
             files_for_proposal = [item for item in filepaths if 'jw{}'.format(proposal) in item]
             num_files.append(len(files_for_proposal))
             proposals.append(proposal)
-    print(thumbnail_paths)
 
     # Put the various information into a dictionary of results
     proposal_info = {}
