@@ -1169,8 +1169,14 @@ def thumbnails_ajax(inst, proposal=None):
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
-    detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for rootname in list(data_dict['file_data'].keys())]
-    proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for rootname in list(data_dict['file_data'].keys())]
+    detectors, proposals = [], []
+    for rootname in list(data_dict['file_data'].keys()):
+        proposals.append(data_dict['file_data'][rootname]['filename_dict']['program_id'])
+        try:  # Some rootnames cannot parse out detectors
+            detectors.append(data_dict['file_data'][rootname]['filename_dict']['detector'])
+        except KeyError:
+            pass
+
     if proposal is not None:
         dropdown_menus = {'detector': detectors}
     else:
