@@ -472,8 +472,8 @@ def get_expstart(instrument, rootname):
     file_set_name = '_'.join(rootname.split('_')[:-1])
     service = INSTRUMENT_SERVICE_MATCH[instrument]
     params = {
-        'columns':'filename, expstart',
-        'filters':[{'paramName':'fileSetName', 'values':[file_set_name]}]}
+        'columns': 'filename, expstart',
+        'filters': [{'paramName': 'fileSetName', 'values': [file_set_name]}]}
     response = Mast.service_request_async(service, params)
     result = response[0].json()
     expstart = min([item['expstart'] for item in result['data']])
@@ -497,8 +497,8 @@ def get_filenames_by_instrument(instrument):
 
     # Query for files from astroquery.Mast
     service = INSTRUMENT_SERVICE_MATCH[instrument]
-    params = {"columns":"filename","filters":[]}
-    response = Mast.service_request_async(service,params)
+    params = {"columns": "filename", "filters": []}
+    response = Mast.service_request_async(service, params)
     result = response[0].json()
     filenames = [item['filename'] for item in result['data']]
 
