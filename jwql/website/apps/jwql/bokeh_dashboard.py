@@ -47,7 +47,8 @@ from random import randint
 import pandas as pd
 
 from jwql.database.database_interface import load_connection
-from jwql.utils.utils import get_config, FILTERS_PER_INSTRUMENT
+from jwql.utils.constants import FILTERS_PER_INSTRUMENT
+from jwql.utils.utils import get_config
 from jwql.utils.utils import get_base_url
 from jwql.database.database_interface import Monitor, FilesystemInstrument
 from jwql.website.apps.jwql.data_containers import build_table
