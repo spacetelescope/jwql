@@ -48,7 +48,6 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
-from jwql.website.apps.jwql.bokeh_dashboard import GeneralDashboard
 
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
@@ -245,6 +244,8 @@ def get_dashboard_components(request):
     dashboard_html : dict
         A dictionary containing full HTML needed for the dashboard.
     """
+
+    from jwql.website.apps.jwql.bokeh_dashboard import GeneralDashboard
 
     if 'time_delta_value' in request.POST:
         time_delta_value = request.POST['timedelta']
