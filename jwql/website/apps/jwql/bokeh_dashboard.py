@@ -63,7 +63,18 @@ class GeneralDashboard:
 
 
     def dashboard_filetype_bar_chart(self):
-        """Build bar chart of files based off of type"""
+        """Build bar chart of files based off of type
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        tabs : bokeh.models.widgets.widget.Widget
+            A figure with tabs for each instrument. 
+
+        """
 
         # Make Pandas DF for filesystem_instrument
         # If time delta exists, filter data based on that.
@@ -91,7 +102,17 @@ class GeneralDashboard:
 
 
     def dashboard_instrument_pie_chart(self):
-        """Create piechart showing number of files per instrument"""
+        """Create piechart showing number of files per instrument
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        plot : bokeh.plotting.figure
+            Pie chart figure
+        """
 
         # Replace with jwql.website.apps.jwql.data_containers.build_table
         data = build_table('filesystem_instrument')
@@ -133,7 +154,17 @@ class GeneralDashboard:
 
 
     def dashboard_files_per_day(self):
-        """Scatter of number of files per day added to ``JWQLDB``"""
+        """Scatter of number of files per day added to ``JWQLDB``
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        tabs : bokeh.models.widgets.widget.Widget
+            A figure with tabs for each instrument. 
+        """
 
         source = build_table('filesystem_general')
         if not pd.isnull(self.delta_t):
@@ -174,7 +205,20 @@ class GeneralDashboard:
 
     def dashboard_monitor_tracking(self):
         """Build bokeh table to show status and when monitors were
-        run."""
+        run.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        table_columns : numpy.ndarray
+            Numpy array of column names from monitor table.
+
+        table_values : numpy.ndarray
+            Numpy array of column values from monitor table.
+        """
 
         data = build_table('monitor')
 
@@ -188,11 +232,31 @@ class GeneralDashboard:
         return table_columns, table_values
 
 
-    def make_panel(self, x, top, instrument, title, x_axis_label):
+    def make_panel(self, x_value, top, instrument, title, x_axis_label):
+        """Make tab panel for tablulated figure.
+
+        Parameters
+        ----------
+        x_value : str
+            Name of value for bar chart.
+        top : int
+            Sum associated with x_label
+        instrument : str
+            Title for the tab
+        title : str
+            Figure title
+        x_axis_label : str
+            Name of the x axis.
+
+        Returns
+        -------
+        tab : bokeh.models.widgets.widget.Widget
+            Return single instrument panel 
+        """
         # filetypes = data.filetype.unique()
-        data = pd.Series(dict(zip(x, top))).reset_index(name='top').rename(columns={'index':'x'})
+        data = pd.Series(dict(zip(x_value, top))).reset_index(name='top').rename(columns={'index':'x'})
         source = ColumnDataSource(data)
-        plot = figure(x_range=x, title=title, plot_width=850, tools="hover", tooltips="@x: @top", x_axis_label=x_axis_label)
+        plot = figure(x_range=x_value, title=title, plot_width=850, tools="hover", tooltips="@x: @top", x_axis_label=x_axis_label)
         plot.vbar(x='x', top='top', source=source, width=0.9, color='#6C5B7B')
         plot.xaxis.major_label_orientation = pi/4
         tab = Panel(child=plot, title=instrument)
@@ -201,6 +265,17 @@ class GeneralDashboard:
 
 
     def dashboard_exposure_count_by_filter(self):
+        """Create figure for number of files per filter for each JWST instrument.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        tabs : bokeh.models.widgets.widget.Widget
+            A figure with tabs for each instrument. 
+        """
         # for instrument in data.instrument.unique():
         title = 'File Counts Per Filter'
         figures = [self.make_panel(FILTERS_PER_INSTRUMENT[instrument], np.random.rand(len(FILTERS_PER_INSTRUMENT[instrument]))*10e7, instrument, title, 'Filters') for instrument in FILTERS_PER_INSTRUMENT]
@@ -211,6 +286,17 @@ class GeneralDashboard:
 
 
     def dashboard_anomaly_per_instrument(self):
+        """Create figure for number of anamolies for each JWST instrument.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        tabs : bokeh.models.widgets.widget.Widget
+            A figure with tabs for each instrument.
+        """
         from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT
         # Set title and figures list to make panels
         title = 'Anamoly Types per Instrument'
