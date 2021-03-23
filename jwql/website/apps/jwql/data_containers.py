@@ -265,7 +265,7 @@ def get_dashboard_components(request):
         return dashboard
     else:
         # When coming from home/monitor views
-        dashboard = generalDashboard(delta_t=None)
+        dashboard = GeneralDashboard(delta_t=None)
 
         return dashboard
 
