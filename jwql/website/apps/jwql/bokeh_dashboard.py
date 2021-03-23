@@ -1,9 +1,11 @@
 """Bokeh based dashboard to monitor the status of the JWQL Application.
-The dashboard tracks a variety of metrics including number of total files per day,
-number of files per instrument, filesystem storage space etc.
+The dashboard tracks a variety of metrics including number of total
+files per day, number of files per instrument, filesystem storage space,
+etc.
 
-The dashboard also includes a timestamp parameter. This allows users to narrow 
-metrics displayed by the dashboard to within a specific date range.
+The dashboard also includes a timestamp parameter. This allows users to
+narrow metrics displayed by the dashboard to within a specific date
+range.
 
 Authors
 -------
@@ -27,30 +29,26 @@ Dependencies
     placed in the ``utils`` directory.
 
 """
+
 from datetime import date
 from datetime import datetime as dt
 from math import pi
+from operator import itemgetter
+from random import randint
 
 from bokeh.embed import components
 from bokeh.io import output_file, show
+from bokeh.layouts import grid, column, row, layout, widgetbox
+from bokeh.models import ColumnDataSource, DatetimeTickFormatter, OpenURL, TapTool
+from bokeh.models.widgets import DataTable, DateFormatter, TableColumn, Panel, Tabs
 from bokeh.plotting import figure
 from bokeh.transform import cumsum
-from bokeh.layouts import widgetbox
-from bokeh.models import ColumnDataSource
-from bokeh.models import DatetimeTickFormatter
-from bokeh.models import TapTool, OpenURL
-from bokeh.models.widgets import DataTable, DateFormatter, TableColumn, Panel, Tabs
-from bokeh.layouts import grid, column, row, layout
-
-from operator import itemgetter
-from random import randint
+import numpy as np
 import pandas as pd
 
-from jwql.database.database_interface import load_connection
+from jwql.database.database_interface import FilesystemInstrument, load_connection, Monitor
 from jwql.utils.constants import FILTERS_PER_INSTRUMENT
-from jwql.utils.utils import get_config
-from jwql.utils.utils import get_base_url
-from jwql.database.database_interface import Monitor, FilesystemInstrument
+from jwql.utils.utils import get_base_url, get_config
 from jwql.website.apps.jwql.data_containers import build_table
 
 
@@ -65,8 +63,7 @@ class GeneralDashboard:
 
 
     def dashboard_filetype_bar_chart(self):
-        """Build bar chart of files based off of type
-        """
+        """Build bar chart of files based off of type"""
 
         # Make Pandas DF for filesystem_instrument
         # If time delta exists, filter data based on that.
@@ -83,7 +80,7 @@ class GeneralDashboard:
 
         # For unique instrument values, loop through data
         # Find all entries for instrument/filetype combo
-        # Make figure and append it to list. 
+        # Make figure and append it to list.
         for instrument in data.instrument.unique():
             index = data_by_filetype["instrument"] == instrument
             figures.append(self.make_panel(data_by_filetype['filetype'][index], data_by_filetype['count'][index], instrument, title, 'File Type'))
@@ -94,8 +91,7 @@ class GeneralDashboard:
 
 
     def dashboard_instrument_pie_chart(self):
-        """Create piechart showing number of files per instrument
-        """
+        """Create piechart showing number of files per instrument"""
 
         # Replace with jwql.website.apps.jwql.data_containers.build_table
         data = build_table('filesystem_instrument')
@@ -128,7 +124,7 @@ class GeneralDashboard:
         url = "{}/@instrument".format(get_base_url())
         taptool = plot.select(type=TapTool)
         taptool.callback = OpenURL(url=url)
-        
+
         plot.axis.axis_label=None
         plot.axis.visible=False
         plot.grid.grid_line_color = None
@@ -137,13 +133,12 @@ class GeneralDashboard:
 
 
     def dashboard_files_per_day(self):
-        """Scatter of number of files per day added to JWQLDB
-        """
+        """Scatter of number of files per day added to ``JWQLDB``"""
 
         source = build_table('filesystem_general')
         if not pd.isnull(self.delta_t):
             source = source[(source['date']>=self.date - self.delta_t) & (source['date']<=self.date)]
-        
+
         date_times = [pd.to_datetime(datetime).date() for datetime in source['date'].values]
         source['datestr'] = [date_time.strftime("%Y-%m-%d") for date_time in date_times]
 
@@ -172,13 +167,14 @@ class GeneralDashboard:
             )
         p2.xaxis.major_label_orientation = pi/4
 
-        tabs = Tabs(tabs=[tab1, tab2]) 
+        tabs = Tabs(tabs=[tab1, tab2])
+
         return tabs
 
 
     def dashboard_monitor_tracking(self):
-        """Build bokeh table to show status and when monitors were run.
-        """
+        """Build bokeh table to show status and when monitors were
+        run."""
 
         data = build_table('monitor')
 
@@ -199,7 +195,7 @@ class GeneralDashboard:
         plot = figure(x_range=x, title=title, plot_width=850, tools="hover", tooltips="@x: @top", x_axis_label=x_axis_label)
         plot.vbar(x='x', top='top', source=source, width=0.9, color='#6C5B7B')
         plot.xaxis.major_label_orientation = pi/4
-        tab = Panel(child=p, title=instrument)
+        tab = Panel(child=plot, title=instrument)
 
         return tab
 
@@ -222,7 +218,7 @@ class GeneralDashboard:
 
         # For unique instrument values, loop through data
         # Find all entries for instrument/filetype combo
-        # Make figure and append it to list. 
+        # Make figure and append it to list.
         for instrument in ANOMALY_CHOICES_PER_INSTRUMENT.keys():
             data = build_table('{}_anomaly'.format(instrument))
             data = data.drop(columns=['id', 'rootname', 'user'])
