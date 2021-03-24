@@ -16,6 +16,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Security check - Bandit
+        uses: ./
+        with:
+          python_version: ${{ matrix.python-version }}
+          project_path: .
+          ignore_failure: true
 
       - uses: conda-incubator/setup-miniconda@v2
         with:
