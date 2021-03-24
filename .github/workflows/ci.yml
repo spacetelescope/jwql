@@ -16,16 +16,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Security check - Bandit
-        uses: ./
-        with:
-          python_version: ${{ matrix.python-version }}
-          project_path: .
-          ignore_failure: true
 
       - uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: jwql-${{ matrix.python-version }}
+
+      - name: Python security check using Bandit
+        uses: Joel-hanson/bandit-report-artifacts@V1
 
       - name: Build jwql conda environment and run tests
         shell: bash -l {0}
