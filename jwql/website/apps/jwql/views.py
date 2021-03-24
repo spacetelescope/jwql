@@ -41,21 +41,14 @@ import csv
 import os
 
 from django.http import JsonResponse
-from django.http import HttpRequest as request
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.shortcuts import redirect
-import pandas as pd
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
-from jwql.utils.constants import MONITORS
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
-from jwql.utils.utils import get_base_url
-from jwql.utils.utils import get_config
-from jwql.utils.utils import query_unformat
-from jwql.website.apps.jwql.data_containers import get_jwqldb_table_view_components
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS
+from jwql.utils.utils import filesystem_path, get_base_url, get_config, query_unformat
 
 from .data_containers import data_trending
 from .data_containers import get_acknowledgements
@@ -282,14 +275,22 @@ def archived_proposals_ajax(request, user, inst):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    # For each proposal, get the first available thumbnail and determine
-    # how many files there are
-    filepaths = get_filenames_by_instrument(inst)
-    all_filenames = [os.path.basename(f) for f in filepaths]
+    # Get list of all files for the given instrument
+    filenames = get_filenames_by_instrument(inst)
+
+    # Determine locations to the files
+    filepaths = []
+    for filename in filenames:
+        try:
+            filepaths.append(filesystem_path(filename, check_existence=False))
+        except ValueError:
+            print('Unable to determine filepath for {}'.format(filename))
+
+    # Gather information about the proposals for the given instrument
     proposal_info = get_proposal_info(filepaths)
 
     context = {'inst': inst,
-               'all_filenames': all_filenames,
+               'all_filenames': filenames,
                'num_proposals': proposal_info['num_proposals'],
                'thumbnails': {'proposals': proposal_info['proposals'],
                               'thumbnail_paths': proposal_info['thumbnail_paths'],
