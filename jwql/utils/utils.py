@@ -74,9 +74,9 @@ def _validate_config(config_file_dict):
                     "password": {"type": "string"},
                     "host": {"type": "string"},
                     "port": {"type": "string"}
-                    },
-                    "required": ['engine', 'name', 'user', 'password', 'host', 'port']
-                 },
+                },
+                "required": ['engine', 'name', 'user', 'password', 'host', 'port']
+            },
             "filesystem": {"type": "string"},
             "preview_image_filesystem": {"type": "string"},
             "thumbnail_filesystem": {"type": "string"},
@@ -105,7 +105,7 @@ def _validate_config(config_file_dict):
         jsonschema.validate(instance=config_file_dict, schema=schema)
     except jsonschema.ValidationError as e:
         raise jsonschema.ValidationError(
-            'Provided config.json does not match the ' + \
+            'Provided config.json does not match the '
             'required JSON schema: {}'.format(e.message)
         )
 
@@ -142,6 +142,7 @@ def get_config():
     _validate_config(settings)
 
     return settings
+
 
 if not ON_GITHUB_ACTIONS:
     FILESYSTEM = get_config()['filesystem']
