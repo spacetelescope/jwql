@@ -21,8 +21,9 @@ jobs:
         with:
           activate-environment: jwql-${{ matrix.python-version }}
 
-      - name: Python security check using Bandit
-        uses: Joel-hanson/bandit-report-artifacts@V1
+      - name: Bandit Check
+        uses: jpetrucciani/bandit-check@1.6.2
+
 
       - name: Build jwql conda environment and run tests
         shell: bash -l {0}
