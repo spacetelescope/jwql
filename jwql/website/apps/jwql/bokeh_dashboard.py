@@ -27,28 +27,20 @@ Dependencies
 
     The user must have a configuration file named ``config.json``
     placed in the ``utils`` directory.
-
 """
 
-from datetime import date
 from datetime import datetime as dt
 from math import pi
-from operator import itemgetter
-from random import randint
 
-from bokeh.embed import components
-from bokeh.io import output_file, show
-from bokeh.layouts import grid, column, row, layout, widgetbox
 from bokeh.models import ColumnDataSource, DatetimeTickFormatter, OpenURL, TapTool
-from bokeh.models.widgets import DataTable, DateFormatter, TableColumn, Panel, Tabs
+from bokeh.models.widgets import Panel, Tabs
 from bokeh.plotting import figure
 from bokeh.transform import cumsum
 import numpy as np
 import pandas as pd
 
-from jwql.database.database_interface import FilesystemInstrument, load_connection, Monitor
 from jwql.utils.constants import FILTERS_PER_INSTRUMENT
-from jwql.utils.utils import get_base_url, get_config
+from jwql.utils.utils import get_base_url
 from jwql.website.apps.jwql.data_containers import build_table
 
 
@@ -61,7 +53,6 @@ class GeneralDashboard:
         now = dt.now()
         self.date = pd.Timestamp('{}-{}-{}'.format(now.year, now.month, now.day))
 
-
     def dashboard_filetype_bar_chart(self):
         """Build bar chart of files based off of type
 
@@ -72,7 +63,7 @@ class GeneralDashboard:
         Returns
         -------
         tabs : bokeh.models.widgets.widget.Widget
-            A figure with tabs for each instrument. 
+            A figure with tabs for each instrument.
 
         """
 
@@ -80,7 +71,7 @@ class GeneralDashboard:
         # If time delta exists, filter data based on that.
         data = build_table('filesystem_instrument')
         if not pd.isnull(self.delta_t):
-            data = data[(data['date']>=(self.date - self.delta_t)) & (data['date']<=self.date)]
+            data = data[(data['date'] >= (self.date - self.delta_t)) & (data['date'] <= self.date)]
 
         # Set title and figures list to make panels
         title = 'File Types per Instrument'
@@ -100,7 +91,6 @@ class GeneralDashboard:
 
         return tabs
 
-
     def dashboard_instrument_pie_chart(self):
         """Create piechart showing number of files per instrument
 
@@ -117,7 +107,7 @@ class GeneralDashboard:
         # Replace with jwql.website.apps.jwql.data_containers.build_table
         data = build_table('filesystem_instrument')
         if not pd.isnull(self.delta_t):
-            data = data[(data['date']>=self.date - self.delta_t) & (data['date']<=self.date)]
+            data = data[(data['date'] >= self.date - self.delta_t) & (data['date'] <= self.date)]
 
         try:
             file_counts = {'nircam': data.instrument.str.count('nircam').sum(),
@@ -132,26 +122,25 @@ class GeneralDashboard:
                            'miri': 0,
                            'fgs': 0}
 
-        data = pd.Series(file_counts).reset_index(name='value').rename(columns={'index':'instrument'})
+        data = pd.Series(file_counts).reset_index(name='value').rename(columns={'index': 'instrument'})
         data['angle'] = data['value']/data['value'].sum() * 2*pi
         data['color'] = ['#F8B195', '#F67280', '#C06C84', '#6C5B7B', '#355C7D']
         plot = figure(title="Number of Files Per Instruments", toolbar_location=None,
-                tools="hover,tap", tooltips="@instrument: @value", x_range=(-0.5, 1.0))
+                      tools="hover,tap", tooltips="@instrument: @value", x_range=(-0.5, 1.0))
 
         plot.wedge(x=0, y=1, radius=0.4,
-                start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
-                line_color="white", color='color', legend='instrument', source=data)
+                   start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
+                   line_color="white", color='color', legend='instrument', source=data)
 
         url = "{}/@instrument".format(get_base_url())
         taptool = plot.select(type=TapTool)
         taptool.callback = OpenURL(url=url)
 
-        plot.axis.axis_label=None
-        plot.axis.visible=False
+        plot.axis.axis_label = None
+        plot.axis.visible = False
         plot.grid.grid_line_color = None
 
         return plot
-
 
     def dashboard_files_per_day(self):
         """Scatter of number of files per day added to ``JWQLDB``
@@ -163,12 +152,12 @@ class GeneralDashboard:
         Returns
         -------
         tabs : bokeh.models.widgets.widget.Widget
-            A figure with tabs for each instrument. 
+            A figure with tabs for each instrument.
         """
 
         source = build_table('filesystem_general')
         if not pd.isnull(self.delta_t):
-            source = source[(source['date']>=self.date - self.delta_t) & (source['date']<=self.date)]
+            source = source[(source['date'] >= self.date - self.delta_t) & (source['date'] <= self.date)]
 
         date_times = [pd.to_datetime(datetime).date() for datetime in source['date'].values]
         source['datestr'] = [date_time.strftime("%Y-%m-%d") for date_time in date_times]
@@ -182,7 +171,7 @@ class GeneralDashboard:
         p2.line(x='date', y='used', source=source, color='#355C7D', line_dash='dashed', line_width=3, legend='Used Storage')
         tab2 = Panel(child=p2, title='Storage')
 
-        p1.xaxis.formatter=DatetimeTickFormatter(
+        p1.xaxis.formatter = DatetimeTickFormatter(
                 hours=["%d %B %Y"],
                 days=["%d %B %Y"],
                 months=["%d %B %Y"],
@@ -190,7 +179,7 @@ class GeneralDashboard:
             )
         p1.xaxis.major_label_orientation = pi/4
 
-        p2.xaxis.formatter=DatetimeTickFormatter(
+        p2.xaxis.formatter = DatetimeTickFormatter(
                 hours=["%d %B %Y"],
                 days=["%d %B %Y"],
                 months=["%d %B %Y"],
@@ -201,7 +190,6 @@ class GeneralDashboard:
         tabs = Tabs(tabs=[tab1, tab2])
 
         return tabs
-
 
     def dashboard_monitor_tracking(self):
         """Build bokeh table to show status and when monitors were
@@ -223,14 +211,13 @@ class GeneralDashboard:
         data = build_table('monitor')
 
         if not pd.isnull(self.delta_t):
-            data = data[(data['start_time']>=self.date - self.delta_t) & (data['start_time']<=self.date)]
+            data = data[(data['start_time'] >= self.date - self.delta_t) & (data['start_time'] <= self.date)]
 
         # data = data.drop(columns='affected_tables')
         table_values = data.sort_values(by='start_time', ascending=False).values
         table_columns = data.columns.values
 
         return table_columns, table_values
-
 
     def make_panel(self, x_value, top, instrument, title, x_axis_label):
         """Make tab panel for tablulated figure.
@@ -251,10 +238,10 @@ class GeneralDashboard:
         Returns
         -------
         tab : bokeh.models.widgets.widget.Widget
-            Return single instrument panel 
+            Return single instrument panel
         """
         # filetypes = data.filetype.unique()
-        data = pd.Series(dict(zip(x_value, top))).reset_index(name='top').rename(columns={'index':'x'})
+        data = pd.Series(dict(zip(x_value, top))).reset_index(name='top').rename(columns={'index': 'x'})
         source = ColumnDataSource(data)
         plot = figure(x_range=x_value, title=title, plot_width=850, tools="hover", tooltips="@x: @top", x_axis_label=x_axis_label)
         plot.vbar(x='x', top='top', source=source, width=0.9, color='#6C5B7B')
@@ -262,7 +249,6 @@ class GeneralDashboard:
         tab = Panel(child=plot, title=instrument)
 
         return tab
-
 
     def dashboard_exposure_count_by_filter(self):
         """Create figure for number of files per filter for each JWST instrument.
@@ -274,7 +260,7 @@ class GeneralDashboard:
         Returns
         -------
         tabs : bokeh.models.widgets.widget.Widget
-            A figure with tabs for each instrument. 
+            A figure with tabs for each instrument.
         """
         # for instrument in data.instrument.unique():
         title = 'File Counts Per Filter'
@@ -283,7 +269,6 @@ class GeneralDashboard:
         tabs = Tabs(tabs=figures)
 
         return tabs
-
 
     def dashboard_anomaly_per_instrument(self):
         """Create figure for number of anamolies for each JWST instrument.
@@ -309,7 +294,7 @@ class GeneralDashboard:
             data = build_table('{}_anomaly'.format(instrument))
             data = data.drop(columns=['id', 'rootname', 'user'])
             if not pd.isnull(self.delta_t) and not data.empty:
-                data = data[(data['flag_date']>=(self.date - self.delta_t)) & (data['flag_date']<=self.date)]
+                data = data[(data['flag_date'] >= (self.date - self.delta_t)) & (data['flag_date'] <= self.date)]
             summed_anamoly_columns = data.sum(axis=0).to_frame(name='counts')
             figures.append(self.make_panel(summed_anamoly_columns.index.values, summed_anamoly_columns['counts'], instrument, title, 'Anomaly Type'))
 
