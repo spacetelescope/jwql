@@ -123,7 +123,7 @@ class GeneralDashboard:
                            'fgs': 0}
 
         data = pd.Series(file_counts).reset_index(name='value').rename(columns={'index': 'instrument'})
-        data['angle'] = data['value']/data['value'].sum() * 2*pi
+        data['angle'] = data['value'] / data['value'].sum() * 2 * pi
         data['color'] = ['#F8B195', '#F67280', '#C06C84', '#6C5B7B', '#355C7D']
         plot = figure(title="Number of Files Per Instruments", toolbar_location=None,
                       tools="hover,tap", tooltips="@instrument: @value", x_range=(-0.5, 1.0))
@@ -177,7 +177,7 @@ class GeneralDashboard:
                 months=["%d %B %Y"],
                 years=["%d %B %Y"],
             )
-        p1.xaxis.major_label_orientation = pi/4
+        p1.xaxis.major_label_orientation = pi / 4
 
         p2.xaxis.formatter = DatetimeTickFormatter(
                 hours=["%d %B %Y"],
@@ -185,7 +185,7 @@ class GeneralDashboard:
                 months=["%d %B %Y"],
                 years=["%d %B %Y"],
             )
-        p2.xaxis.major_label_orientation = pi/4
+        p2.xaxis.major_label_orientation = pi / 4
 
         tabs = Tabs(tabs=[tab1, tab2])
 
@@ -245,7 +245,7 @@ class GeneralDashboard:
         source = ColumnDataSource(data)
         plot = figure(x_range=x_value, title=title, plot_width=850, tools="hover", tooltips="@x: @top", x_axis_label=x_axis_label)
         plot.vbar(x='x', top='top', source=source, width=0.9, color='#6C5B7B')
-        plot.xaxis.major_label_orientation = pi/4
+        plot.xaxis.major_label_orientation = pi / 4
         tab = Panel(child=plot, title=instrument)
 
         return tab
@@ -264,7 +264,7 @@ class GeneralDashboard:
         """
         # for instrument in data.instrument.unique():
         title = 'File Counts Per Filter'
-        figures = [self.make_panel(FILTERS_PER_INSTRUMENT[instrument], np.random.rand(len(FILTERS_PER_INSTRUMENT[instrument]))*10e7, instrument, title, 'Filters') for instrument in FILTERS_PER_INSTRUMENT]
+        figures = [self.make_panel(FILTERS_PER_INSTRUMENT[instrument], np.random.rand(len(FILTERS_PER_INSTRUMENT[instrument])) * 10e7, instrument, title, 'Filters') for instrument in FILTERS_PER_INSTRUMENT]
 
         tabs = Tabs(tabs=figures)
 
