@@ -40,16 +40,18 @@ Dependencies
 import csv
 import os
 
-from django.http import JsonResponse
-from django.http import HttpResponse
-from django.shortcuts import render
-from django.shortcuts import redirect
+from bokeh.layouts import layout
+from bokeh.embed import components
+from django.http import HttpResponse, JsonResponse
+from django.http import HttpRequest as request
+from django.shortcuts import redirect, render
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS
 from jwql.utils.utils import filesystem_path, get_base_url, get_config, query_unformat
 
+from .data_containers import build_table
 from .data_containers import data_trending
 from .data_containers import get_acknowledgements
 from .data_containers import get_current_flagged_anomalies
@@ -404,15 +406,26 @@ def dashboard(request):
     """
 
     template = 'dashboard.html'
-    output_dir = get_config()['outputs']
-    dashboard_components, dashboard_html = get_dashboard_components()
+
+    db = get_dashboard_components(request)
+    pie_graph = db.dashboard_instrument_pie_chart()
+    files_graph = db.dashboard_files_per_day()
+    filetype_bar = db.dashboard_filetype_bar_chart()
+    table_columns, table_values = db.dashboard_monitor_tracking()
+    grating_plot = db.dashboard_exposure_count_by_filter()
+    anomaly_plot = db.dashboard_anomaly_per_instrument()
+
+    plot = layout([[files_graph], [pie_graph, filetype_bar], [grating_plot, anomaly_plot]], sizing_mode='stretch_width')
+    script, div = components(plot)
+
+    time_deltas = ['All Time', '1 Day', '1 Week', '1 Month', '1 Year']
 
     context = {'inst': '',
-               'outputs': output_dir,
-               'filesystem_html': os.path.join(output_dir, 'monitor_filesystem',
-                                               'filesystem_monitor.html'),
-               'dashboard_components': dashboard_components,
-               'dashboard_html': dashboard_html}
+               'script': script,
+               'div': div,
+               'table_columns': table_columns,
+               'table_rows': table_values,
+               'time_deltas': time_deltas}
 
     return render(request, template, context)
 
