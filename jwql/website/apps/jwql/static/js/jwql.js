@@ -374,9 +374,8 @@ function update_archive_page(inst, base_url) {
  * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
  */
 function update_filter_options(data) {
-
+    content = 'Filter by:'
     for (var i = 0; i < Object.keys(data.dropdown_menus).length; i++) {
-
         // Parse out useful variables
         filter_type = Object.keys(data.dropdown_menus)[i];
         filter_options = Array.from(new Set(data.dropdown_menus[filter_type]));
@@ -384,8 +383,8 @@ function update_filter_options(data) {
         dropdown_key_list = Object.keys(data.dropdown_menus);
 
         // Build div content
-        content = '<div class="mr-4">';
-        content += 'Show only ' + filter_type + ':';
+        content += '<div style="display: flex">';
+        content += '<div class="mr-4">';
         content += '<div class="dropdown">';
         content += '<button class="btn btn-primary dropdown-toggle" type="button" id="' + filter_type + '_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> All ' + filter_type + 's </button>';
         content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
@@ -395,6 +394,7 @@ function update_filter_options(data) {
             content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + dropdown_key_list + '\', \'' + num_rootnames + '\');">' + filter_options[j] + '</a>';
         };
 
+        content += '</div>';
         content += '</div></div>';
     };
 
@@ -472,13 +472,13 @@ function update_thumbnail_array(data) {
         filename_dict = file.filename_dict;
 
         // Build div content
-        content = '<div class="thumbnail" detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
         if (data.inst!="all") {
+            content = '<div class="thumbnail" instrument = ' + data.inst + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
             content += '<a href="/' + data.inst + '/' + rootname + '/">';
         } else {
-            content += '<a href="/' + filename_dict.inst + '/' + rootname + '/">';
+            content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
+            content += '<a href="/' + filename_dict.instrument + '/' + rootname + '/">';
         }
-        content += '<a href="/' + data.inst + '/' + rootname + '/">';
         content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="this.src=/static/img/imagenotfound.png">';
         content += '<div class="thumbnail-color-fill" ></div>';
         content += '<div class="thumbnail-info">';

@@ -82,7 +82,7 @@ from sqlalchemy.types import ARRAY
 from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT, FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
 from jwql.utils.utils import get_config
 
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 # Monkey patch Query with data_frame method
@@ -139,8 +139,8 @@ def load_connection(connection_string):
     return session, base, engine, meta
 
 
-# Import a global session.  If running from readthedocs or Jenkins, pass a dummy connection string
-if 'build' and 'project' in socket.gethostname() or ON_JENKINS:
+# Import a global session.  If running from readthedocs or GitHub Actions, pass a dummy connection string
+if 'build' and 'project' in socket.gethostname() or ON_GITHUB_ACTIONS:
     dummy_connection_string = 'postgresql+psycopg2://account:password@hostname:0000/db_name'
     session, base, engine, meta = load_connection(dummy_connection_string)
 else:
@@ -219,7 +219,6 @@ class Monitor(base):
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=True)
     status = Column(Enum('SUCCESS', 'FAILURE', name='monitor_status'), nullable=True)
-    affected_tables = Column(ARRAY(String, dimensions=1), nullable=True)
     log_file = Column(String(), nullable=False)
 
 
@@ -423,6 +422,12 @@ NIRCamReadnoiseQueryHistory = monitor_orm_factory('nircam_readnoise_query_histor
 NIRCamReadnoiseStats = monitor_orm_factory('nircam_readnoise_stats')
 NIRISSReadnoiseQueryHistory = monitor_orm_factory('niriss_readnoise_query_history')
 NIRISSReadnoiseStats = monitor_orm_factory('niriss_readnoise_stats')
+NIRSpecReadnoiseQueryHistory = monitor_orm_factory('nirspec_readnoise_query_history')
+NIRSpecReadnoiseStats = monitor_orm_factory('nirspec_readnoise_stats')
+MIRIReadnoiseQueryHistory = monitor_orm_factory('miri_readnoise_query_history')
+MIRIReadnoiseStats = monitor_orm_factory('miri_readnoise_stats')
+FGSReadnoiseQueryHistory = monitor_orm_factory('fgs_readnoise_query_history')
+FGSReadnoiseStats = monitor_orm_factory('fgs_readnoise_stats')
 
 if __name__ == '__main__':
 
