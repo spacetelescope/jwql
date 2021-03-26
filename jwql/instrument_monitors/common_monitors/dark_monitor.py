@@ -772,7 +772,7 @@ class Dark():
                         monitor_run = False
                     else:
                         logging.info(("\tFilesystem search for the files identified by MAST has returned {} files.")
-                                    .format(len(new_filenames)))
+                                     .format(len(new_filenames)))
                         monitor_run = True
 
                     if monitor_run:
@@ -797,7 +797,7 @@ class Dark():
                 else:
                     logging.info(('\tDark monitor skipped. MAST query has returned {} new dark files for '
                                   '{}, {}. {} new files are required to run dark current monitor.')
-                                  .format(len(new_entries), instrument, aperture, file_count_threshold[0]))
+                                 .format(len(new_entries), instrument, aperture, file_count_threshold[0]))
                     monitor_run = False
 
                 # Update the query history
@@ -993,8 +993,8 @@ class Dark():
             degrees_of_freedom = len(hist) - 3.
             total_pix = np.sum(hist[positive])
             p_i = gauss_fit[positive] / total_pix
-            gaussian_chi_squared[key] = (np.sum((hist[positive] - (total_pix * p_i) ** 2) / (total_pix * p_i))
-                                         / degrees_of_freedom)
+            gaussian_chi_squared[key] = (np.sum((hist[positive] - (total_pix * p_i) ** 2) / (total_pix * p_i)) /
+                                        degrees_of_freedom)
 
             # Double Gaussian fit only for full frame data (and only for
             # NIRISS, NIRCam at the moment.)
