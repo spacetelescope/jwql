@@ -1,9 +1,11 @@
+
 """This module contains code for the bias monitor Bokeh plots.
 
 Author
 ------
 
     - Ben Sunnquist
+    - Maria A. Pena-Guerrero
 
 Use
 ---

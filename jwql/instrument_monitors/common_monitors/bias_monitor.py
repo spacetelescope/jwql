@@ -7,19 +7,20 @@ the pipeline superbias subtraction over time.
 For each instrument, the 0th group of full-frame dark exposures is
 saved to a fits file. The median signal levels in these images are
 recorded in the ``<Instrument>BiasStats`` database table for the
-odd/even columns of each amp.
+odd/even rows/columns of each amp.
 
 Next, these images are run through the jwst pipeline up through the
 reference pixel correction step. These calibrated images are saved
 to a fits file as well as a png file for visual inspection of the
-quality of the pipeline calibration. The median-collpsed row and
-column values, as well as the sigma-clipped mean and standard
-deviation of these images, are recorded in the
-``<Instrument>BiasStats`` database table.
+quality of the pipeline calibration. A histogram distribution of 
+these images, as well as the sigma-clipped mean and standard
+deviation, are recorded in the ``<Instrument>BiasStats`` database 
+table.
 
 Author
 ------
     - Ben Sunnquist
+    - Maria A. Pena-Guerrero
 
 Use
 ---
@@ -38,11 +39,6 @@ from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
 from astropy.visualization import ZScaleInterval
-from jwst.dq_init import DQInitStep
-from jwst.group_scale import GroupScaleStep
-from jwst.refpix import RefPixStep
-from jwst.saturation import SaturationStep
-from jwst.superbias import SuperBiasStep
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -100,27 +96,37 @@ class Bias():
     def __init__(self):
         """Initialize an instance of the ``Bias`` class."""
 
-    def collapse_image(self, image):
-        """Median-collapse the rows and columns of an image.
-
-        Parameters
-        ----------
-        image : numpy.ndarray
-            2D array on which to calculate statistics
+    def determine_pipeline_steps(self):
+        """Determines the necessary JWST pipelines steps to run on a
+        given dark file.
 
         Returns
         -------
-        collapsed_rows : numpy.ndarray
-            1D array of the collapsed row values
-
-        collapsed_columns : numpy.ndarray
-            1D array of the collapsed column values
+        pipeline_steps : collections.OrderedDict
+            The pipeline steps to run.
         """
 
-        collapsed_rows = np.nanmedian(image, axis=1)
-        collapsed_columns = np.nanmedian(image, axis=0)
+        pipeline_steps = OrderedDict({})
 
-        return collapsed_rows, collapsed_columns
+        # Determine if the file needs group_scale step run
+        if self.read_pattern not in pipeline_tools.GROUPSCALE_READOUT_PATTERNS:
+            pipeline_steps['group_scale'] = False
+        else:
+            pipeline_steps['group_scale'] = True
+
+        # Run the DQ step on all files
+        pipeline_steps['dq_init'] = True
+
+        # Only run the superbias step for NIR instruments
+        if self.instrument != 'miri':
+            pipeline_steps['superbias'] = True
+        else:
+            pipeline_steps['superbias'] = False
+
+        # Run the refpix step on all files
+        pipeline_steps['refpix'] = True
+
+        return pipeline_steps
 
     def extract_zeroth_group(self, filename):
         """Extracts the 0th group of a fits image and outputs it into
@@ -183,7 +189,7 @@ class Bias():
 
     def get_amp_medians(self, image, amps):
         """Calculates the median in the input image for each amplifier
-        and for odd and even columns separately.
+        and for odd and even rows/columns separately.
 
         Parameters
         ----------
@@ -208,11 +214,17 @@ class Bias():
             x_start, x_end, x_step = amps[key][0]
             y_start, y_end, y_step = amps[key][1]
 
-            # Find median value of both even and odd columns for this amp
-            amp_med_even = np.nanmedian(image[y_start: y_end, x_start: x_end][:, 1::2])
-            amp_medians['amp{}_even_med'.format(key)] = amp_med_even
-            amp_med_odd = np.nanmedian(image[y_start: y_end, x_start: x_end][:, ::2])
-            amp_medians['amp{}_odd_med'.format(key)] = amp_med_odd
+            # Find median value of both even and odd rows/columns for this amp
+            if self.instrument == 'niriss':
+                amp_med_even = np.nanmedian(image[y_start: y_end, x_start: x_end][1::2, :])
+                amp_medians['amp{}_even_med'.format(key)] = amp_med_even
+                amp_med_odd = np.nanmedian(image[y_start: y_end, x_start: x_end][::2, :])
+                amp_medians['amp{}_odd_med'.format(key)] = amp_med_odd
+            else:
+                amp_med_even = np.nanmedian(image[y_start: y_end, x_start: x_end][:, 1::2])
+                amp_medians['amp{}_even_med'.format(key)] = amp_med_even
+                amp_med_odd = np.nanmedian(image[y_start: y_end, x_start: x_end][:, ::2])
+                amp_medians['amp{}_odd_med'.format(key)] = amp_med_odd
 
         return amp_medians
 
@@ -269,42 +281,56 @@ class Bias():
 
         return output_filename
 
+    def make_histogram(self, data):
+        """Creates a histogram of the input data and returns the bin
+        centers and the counts in each bin.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            The input data.
+
+        Returns
+        -------
+        counts : numpy.ndarray
+            The counts in each histogram bin.
+
+        bin_centers : numpy.ndarray
+            The histogram bin centers.
+        """
+
+        # Calculate the histogram range as that within 5 sigma from the mean
+        data = data.flatten()
+        clipped = sigma_clip(data, sigma=3.0, maxiters=5)
+        mean, stddev = np.nanmean(clipped), np.nanstd(clipped)
+        lower_thresh, upper_thresh = mean - 4 * stddev, mean + 4 * stddev
+
+        # Make the histogram
+        counts, bin_edges = np.histogram(data, bins='auto', range=(lower_thresh, upper_thresh))
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+        return counts, bin_centers
+
     def most_recent_search(self):
         """Query the query history database and return the information
         on the most recent query for the given ``aperture_name`` where
-        the bias monitor was executed.
+        the readnoise monitor was executed.
 
         Returns
         -------
         query_result : float
             Date (in MJD) of the ending range of the previous MAST query
-            where the bias monitor was run.
+            where the readnoise monitor was run.
         """
 
-        sub_query = session.query(
-            self.query_table.aperture,
-            func.max(self.query_table.end_time_mjd).label('maxdate')
-            ).group_by(self.query_table.aperture).subquery('t2')
+        query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
+            self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
 
-        # Note that "self.query_table.run_monitor == True" below is
-        # intentional. Switching = to "is" results in an error in the query.
-        query = session.query(self.query_table).join(
-            sub_query,
-            and_(
-                self.query_table.aperture == self.aperture,
-                self.query_table.end_time_mjd == sub_query.c.maxdate,
-                self.query_table.run_monitor == True
-            )
-        ).all()
-
-        query_count = len(query)
-        if query_count == 0:
+        if len(query) == 0:
             query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, query_result)))
-        elif query_count > 1:
-            raise ValueError('More than one "most recent" query?')
         else:
-            query_result = query[0].end_time_mjd
+            query_result = query[-1].end_time_mjd
 
         return query_result
 
@@ -329,20 +355,20 @@ class Bias():
                 logging.info('\t{} already exists in the bias database table.'.format(filename))
                 continue
 
-            # Get the exposure start time of this file
-            expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'], fits.getheader(filename, 0)['TIME-OBS'])
+            # Get relevant header info for this file
+            self.read_pattern = fits.getheader(filename, 0)['READPATT']
+            self.expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'], fits.getheader(filename, 0)['TIME-OBS'])
 
-            # Determine if the file needs group_scale in pipeline run
-            read_pattern = fits.getheader(filename, 0)['READPATT']
-            if read_pattern not in pipeline_tools.GROUPSCALE_READOUT_PATTERNS:
-                group_scale = False
-            else:
-                group_scale = True
-
-            # Run the file through the pipeline up through the refpix step
+            # Run the file through the necessary pipeline steps
+            pipeline_steps = self.determine_pipeline_steps()
             logging.info('\tRunning pipeline on {}'.format(filename))
-            processed_file = self.run_early_pipeline(filename, odd_even_rows=False, odd_even_columns=True, use_side_ref_pixels=True, group_scale=group_scale)
-            logging.info('\tPipeline complete. Output: {}'.format(processed_file))
+            try:
+                processed_file = pipeline_tools.run_calwebb_detector1_steps(filename, pipeline_steps)
+                logging.info('\tPipeline complete. Output: {}'.format(processed_file))
+                set_permissions(processed_file)
+            except:
+                logging.info('\tPipeline processing failed for {}'.format(filename))
+                continue
 
             # Find amplifier boundaries so per-amp statistics can be calculated
             _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)
@@ -355,14 +381,11 @@ class Bias():
             amp_medians = self.get_amp_medians(uncal_data, amp_bounds)
             logging.info('\tCalculated uncalibrated image stats: {}'.format(amp_medians))
 
-            # Calculate image statistics and the collapsed row/column values
-            # in the calibrated image
+            # Calculate image statistics on the calibrated image
             cal_data = fits.getdata(processed_file, 'SCI')[0, 0, :, :]
-            dq = fits.getdata(processed_file, 'PIXELDQ')
-            mean, median, stddev = sigma_clipped_stats(cal_data[dq==0], sigma=3.0, maxiters=5)
+            mean, median, stddev = sigma_clipped_stats(cal_data, sigma=3.0, maxiters=5)
+            counts, bin_centers = self.make_histogram(cal_data)
             logging.info('\tCalculated calibrated image stats: {:.3f} +/- {:.3f}'.format(mean, stddev))
-            collapsed_rows, collapsed_columns = self.collapse_image(cal_data)
-            logging.info('\tCalculated collapsed row/column values of calibrated image.')
 
             # Save a png of the calibrated image for visual inspection
             logging.info('\tCreating png of calibrated image')
@@ -375,12 +398,12 @@ class Bias():
                              'uncal_filename': filename,
                              'cal_filename': processed_file,
                              'cal_image': output_png,
-                             'expstart': expstart,
+                             'expstart': self.expstart,
                              'mean': float(mean),
                              'median': float(median),
                              'stddev': float(stddev),
-                             'collapsed_rows': collapsed_rows.astype(float),
-                             'collapsed_columns': collapsed_columns.astype(float),
+                             'counts': counts.astype(float),
+                             'bin_centers': bin_centers.astype(float),
                              'entry_date': datetime.datetime.now()
                             }
             for key in amp_medians.keys():
@@ -405,7 +428,7 @@ class Bias():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in ['nircam']:
+        for instrument in ['nircam', 'niriss', 'nirspec']:
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -472,58 +495,6 @@ class Bias():
                 logging.info('\tUpdated the query history table')
 
         logging.info('Bias Monitor completed successfully.')
-
-    def run_early_pipeline(self, filename, odd_even_rows=False, odd_even_columns=True,
-                           use_side_ref_pixels=True, group_scale=False):
-        """Runs the early steps of the jwst pipeline (dq_init, saturation,
-        superbias, refpix) on uncalibrated files and outputs the result.
-
-        Parameters
-        ----------
-        filename : str
-            File on which to run the pipeline steps
-
-        odd_even_rows : bool
-            Option to treat odd and even rows separately during refpix step
-
-        odd_even_columns : bools
-            Option to treat odd and even columns separately during refpix step
-
-        use_side_ref_pixels : bool
-            Option to perform the side refpix correction during refpix step
-
-        group_scale : bool
-            Option to rescale pixel values to correct for instances where
-            on-board frame averaging did not result in the proper values
-
-        Returns
-        -------
-        output_filename : str
-            The full path to the calibrated file
-        """
-
-        output_filename = filename.replace('_uncal', '').replace('.fits', '_superbias_refpix.fits')
-
-        if not os.path.isfile(output_filename):
-            # Run the group_scale and dq_init steps on the input file
-            if group_scale:
-                model = GroupScaleStep.call(filename)
-                model = DQInitStep.call(model)
-            else:
-                model = DQInitStep.call(filename)
-
-            # Run the saturation and superbias steps
-            model = SaturationStep.call(model)
-            model = SuperBiasStep.call(model)
-
-            # Run the refpix step and save the output
-            model = RefPixStep.call(model, odd_even_rows=odd_even_rows, odd_even_columns=odd_even_columns, use_side_ref_pixels=use_side_ref_pixels)
-            model.save(output_filename)
-            set_permissions(output_filename)
-        else:
-            logging.info('\t{} already exists'.format(output_filename))
-
-        return output_filename
 
 
 if __name__ == '__main__':
