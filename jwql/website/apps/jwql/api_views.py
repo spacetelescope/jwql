@@ -26,6 +26,7 @@ Authors
 -------
 
     - Matthew Bourque
+    - Teagan King
 
 Use
 ---
@@ -36,7 +37,7 @@ Use
         from django.urls import path
         from . import api_views
         urlpatterns = [path('web/path/to/view/',
-                             api_views.view_name, name='view_name')]
+                            api_views.view_name, name='view_name')]
 
 References
 ----------
@@ -56,7 +57,6 @@ from .data_containers import get_preview_images_by_rootname
 from .data_containers import get_thumbnails_by_instrument
 from .data_containers import get_thumbnails_by_proposal
 from .data_containers import get_thumbnails_by_rootname
-from .oauth import auth_required
 
 
 def all_proposals(request):
@@ -216,7 +216,7 @@ def thumbnails_by_instrument(request, inst):
         Incoming request from the webpage
     inst : str
         The instrument of interest.  The name of the instrument must
-        mach one of the following: (``nircam``, ``NIRCam``, ``niriss``,
+        match one of the following: (``nircam``, ``NIRCam``, ``niriss``,
         ``NIRISS``, ``nirspec``, ``NIRSpec``, ``miri``, ``MIRI``,
         ``fgs``, ``FGS``).
 

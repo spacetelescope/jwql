@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>{{ inst }} Bad Pixel Monitor- JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+
+		<h1>{{ inst }} Bad Pixel Monitor</h1>
+		<hr>
+
+		<div width=100%>
+			<!--Add Bokeh HTML-->
+			{{ tabs_components[0] | safe }}
+		</div>
+
+		<!--Add Bokeh scripts-->
+		{{ tabs_components[1] | safe }}
+
+		<h1>{{ inst }} Bad Pixel Stats Table</h1>
+		<hr>
+
+		<a href="{{'/jwqldb/%s_bad_pixel_stats'%inst.lower()}}" name=test_link class="btn btn-primary my-2" type="submit">Bad Pixel Stats</a>
+	</main>
+
+{% endblock %}

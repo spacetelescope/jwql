@@ -11,7 +11,7 @@ It is assumed that the reader of this style guide has read and is familiar with 
 
 - The [PEP8 Style Guide for Python Code](https://www.python.org/dev/peps/pep-0008/)
 - The [PEP257 Docstring Conventions Style Guide](https://www.python.org/dev/peps/pep-0257/)
-- The [`numpydoc` docstring convention](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt)
+- The [`numpydoc` docstring convention](https://numpydoc.readthedocs.io/en/latest/format.html)
 
 
 Workflow

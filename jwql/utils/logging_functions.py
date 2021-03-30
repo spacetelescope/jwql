@@ -10,8 +10,9 @@ Authors
 -------
 
     - Catherine Martlin
-    - Alex Viana (WFC3 QL Version)
+    - Alex Viana (wfc3ql Version)
     - Matthew Bourque
+    - Jason Neal
 
 Use
 ---
@@ -59,6 +60,7 @@ import logging
 import os
 import pwd
 import socket
+import subprocess
 import sys
 import time
 import traceback
@@ -166,7 +168,7 @@ def make_log_file(module):
 
     # For production
     if user == admin_account and socket.gethostname()[0] == 'p':
-        log_file = os.path.join(log_path, 'prod', module, filename)
+        log_file = os.path.join(log_path, 'ops', module, filename)
 
     # For test
     elif user == admin_account and socket.gethostname()[0] == 't':
@@ -236,13 +238,16 @@ def log_info(func):
             except (ImportError, AttributeError) as err:
                 logging.warning(err)
 
-        logging.info('')
+        environment = subprocess.check_output(['conda', 'env', 'export'], universal_newlines=True)
+        logging.info('Environment:')
+        for line in environment.split('\n'):
+            logging.info(line)
 
         # Call the function and time it
-        t1_cpu = time.clock()
+        t1_cpu = time.perf_counter()
         t1_time = time.time()
         func(*args, **kwargs)
-        t2_cpu = time.clock()
+        t2_cpu = time.perf_counter()
         t2_time = time.time()
 
         # Log execution time

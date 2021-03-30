@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+    <!-- Custom styles and scripts for this template -->
+    <style type="text/css">
+        div#thumbnail-array { display: block; }
+    </style>
+
+    <title>Queried Thumbnails - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+
+    	<!-- Page title -->
+        <h3 id='title'>Images of Queried Instruments</h3>
+
+    	<!-- Show Count -->
+    	<p id='img_show_count'></p>
+    	<hr>
+
+    	<!-- Filter and sort options -->
+		<div class="d-flex flex-row">
+			<div class="mr-4" id="thumbnail-filter"></div>
+			<div class="mx-4 mr-5 ml-auto" id="thumbnail-sort"></div>
+		</div> 
+
+		<hr>
+
+        <!-- Loading animation -->
+        <div id="loading">
+            <div class="lds-css ng-scope">
+                <div style="width:100%;height:100%" class="lds-magnify">
+                    <div>
+                        <div>
+                            <div>
+                            </div>
+                            <div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                Loading ...
+            </div>
+        </div>
+
+        <!-- Display the data -->
+        <div id='thumbnail-array'></div>
+        <a id="no_thumbnails_msg" style='display: none'>No data match the selected criteria.</a>
+
+	</main>
+
+    <script>update_thumbnails_query_page('{{base_url}}');</script>
+   
+
+{% endblock %}
+

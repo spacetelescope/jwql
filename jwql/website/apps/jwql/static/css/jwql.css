@@ -409,6 +409,37 @@ li:hover .nav-link, .navbar-brand:hover {
   margin-bottom: 1rem;
 }
 
+.slider{
+  -webkit-appearance: none;
+  width: 250px;
+  height: 15px;
+  background: #BEC4D4;
+  outline: none;
+}
+
+/* slider style for Chrome/Safari/Opera/Edge */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 30px;
+  background: #C85108;
+  cursor: pointer;
+}
+
+/* slider style for Firefox */
+.slider::-moz-range-thumb {
+  width: 15px;
+  height: 30px;
+  background: #C85108;
+  cursor: pointer;
+}
+
+/* remove slider outline for Firefox */
+.slider::-moz-focus-outer {
+    border: 0;
+    }
+
 .row .row {
   margin-top: 1rem;
   margin-bottom: 0;

@@ -1,3 +1,193 @@
+0.26.0 (2021-03-30)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Included badges for GitHub Actions in ``README.md``
+- Replaced Jenkins support with GitHub Actions for CI testing
+- Removed Python 3.6 support
+
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Allow local developers to bypass ``auth.mast`` authentication
+- Added cosmic ray monitor, unit test code, and relevant database files
+- Removed unsupported options including image anomalies, unlooked images and monitors that haven't been implemented
+- Improved loading times for web app archive pages by generating a representative thumbnail with ``generate_proposal_thumbnail.py``, using ``astroquery.Mast`` rather than scraping filesystem, adding optional checks that file paths exist
+- Implemented JWQL Dashboard View
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Updated the call to the JWST pipeline RSCD step
+- Added GitHub Actions
+
+
+Bug Fixes
+---------
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Improved loading times of readnoise monitor webpage
+- Fixed broken bokeh CDN links
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Dark monitor exits gracefully when there are not enough files in the filesystem
+- Fixed filename parsing for WFS&C and AMI products
+- Adjusted generation of preview images such that images are created for all file types
+- Update ops naming convention in log directory
+
+
+
+0.25.0 (2020-12-31)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Added project citation information to ``README``, along with a Zenodo badge
+- Added API Documentation for ``bokeh`` templating software
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Reorganized and made aesthetic improvements to instrument landing pages to be more user-friendly
+- Enabled more dynamic search options and aesthetic improvements for anomaly query webpage
+- Added web app view for displaying a particular table of the ``jwqldb`` database
+- Added webpage for displaying Bias Monitor results with ``bokeh`` plots
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Changed ``utils.credentials.py`` to always authenticate a MAST user with a user-identified token in the ``config.json`` file, instead of using a cached token, which was sometimes causes errors
+- Updated software to support the latest versions of ``django`` and ``bokeh``
+- Removed ``affected_tables`` column of ``monitor`` database table, as it stored redundant information
+- Updated the Readnoise Monitor to work for all JWST instruments
+
+
+Bug Fixes
+---------
+
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Fixed bug in Readnoise Monitor webpage that was causing the web app and ``jwql`` database to hang
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Fixed bug that was causing the ``test_amplifier_info()`` test in ``test_instrument_properties.py`` to fail; truth values were updated to reflect a change in the format of the returned dictionaries from the ``amplifier_info()`` function
+- Fixed bug in ``get_header_info()`` that was causing ``test_data_containers.py`` to fail; the function expected the filename without the FITS extension, and the returned header info is in a dictionary (not a string)
+- Fixed bug in ``test_utils.py``, and changed ``utils.py`` to make it robust in matching upper and lowercase detector names
+- Updated ``utils.instrument_properties`` fix MIRI amplifier bounds calculation when omitting reference pixels
+
+
+0.24.0 (2020-10-20)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Added API documentation for Bias, Bad Pixel, and Readnoise Monitors
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Added webpage that describes how to use the JWQL web app API
+- Added webpage that enables a user to query the ``jwqldb`` database contents
+- Enabled more search options and aesthetic improvements for anomaly query webpage
+- Added webpage for displaying Readnoise Monitor results with ``bokeh`` plots
+- Added webpage for displaying Bad Pixel Monitor results with ``bokeh`` plots
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Added support for Python versions 3.7 and 3.8
+- Added unit tests for Readnoise Monitor
+- Added unit tests for Bias Monitor
+- Added unit tests for Bad Pixel Monitor
+- Added unit tests for ``bokeh`` templating library
+
+
+Bug Fixes
+---------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Updated broken links to JWST instrument JDox pages
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Fixed various issues that was cuasing authentication through ``auth.mast`` to fail
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Fixed bug that was causing Dark Monitor to crash on recently added apertures from ``pysiaf``
+- Fixed several bugs in ``bokeh`` templating library
+- Fixed bug that was causing unit tests for ``permissions.py`` to fail
+- Fixed bug that was causing ``most_recent_search`` function in Dark Monitor to fail
+
+
+0.23.0 (2020-07-01)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- The ``jwql_web_app`` PowerPoint presentation has been updated
+- The bokeh templating software now has full API documentation
+- Updated ``README`` and About webpage to reflect changes to development team members
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Added webpage to view FITS headers of each extension for a given dataset
+- Added webpage for displaying Dark Monitor results with ``bokeh`` plots
+- Added webpage for viewing contents of a given JWQL database table
+- Added webpage for querying and displaying anomaly results
+- Added slider bar for easily navigating through integrations in preview image display
+- The list of anomalies one can flag in a preview image is now instrument specific
+
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- The ``jwql-3.6`` conda environment now uses the ``astroconda`` channel instead of ``astroconda-dev``
+- Added Bias Monitor module, which currently monitors the bias levels for NIRCam
+- Added Readnoise Monitor module, which monitors readnoise for all instruments except FGS
+- Added Bad Pixel Monitor module, which tracks bad pixels for all instruments
+- Cron job logs now include a print out of the complete ``conda`` environment being used
+
+
+Bug Fixes
+---------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Fixed broken link to ``numpydoc`` docstring convention in Style Guide
+
+
 0.22.0 (2019-08-26)
 ===================
 

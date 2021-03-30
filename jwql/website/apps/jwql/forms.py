@@ -11,6 +11,7 @@ Authors
     - Lauren Chambers
     - Johannes Sahlmann
     - Matthew Bourque
+    - Teagan King
 
 Use
 ---
@@ -39,7 +40,6 @@ Dependencies
 ------------
     The user must have a configuration file named ``config.json``
     placed in the ``jwql/utils/`` directory.
-
 """
 
 import datetime
@@ -52,17 +52,139 @@ from django.shortcuts import redirect
 from jwedb.edb_interface import is_valid_mnemonic
 
 from jwql.database import database_interface as di
-from jwql.utils.constants import ANOMALY_CHOICES, JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.constants import ANOMALY_CHOICES
+from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT
+from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
+from jwql.utils.constants import APERTURES_PER_INSTRUMENT
+from jwql.utils.constants import DETECTOR_PER_INSTRUMENT
+from jwql.utils.constants import EXP_TYPE_PER_INSTRUMENT
+from jwql.utils.constants import FILTERS_PER_INSTRUMENT
+from jwql.utils.constants import GENERIC_SUFFIX_TYPES
+from jwql.utils.constants import GRATING_PER_INSTRUMENT
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.constants import READPATT_PER_INSTRUMENT
 from jwql.utils.utils import get_config, filename_parser
+from jwql.utils.utils import query_format
+
+from wtforms import SubmitField, StringField
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
-class AnomalySubmitForm(forms.Form):
+class BaseForm(forms.Form):
+    """A generic form with target resolve built in"""
+    # Target Resolve
+    targname = StringField('targname', default='')
+    target_url = StringField('target_url', default='')
+
+    # Submit button
+    resolve_submit = SubmitField('Resolve Target')
+
+
+class AnomalyQueryForm(BaseForm):
+    """Form validation for the anomaly viewing tool"""
+
+    # Form submits
+    calculate_submit = SubmitField()
+
+    # Generate lists of form options for each instrument
+    params = {}
+    for instrument in ['miri', 'niriss', 'nircam', 'nirspec']:
+        params[instrument] = {}
+        params[instrument]['aperture_list'] = []
+        params[instrument]['filter_list'] = []
+        params[instrument]['detector_list'] = []
+        params[instrument]['readpatt_list'] = []
+        params[instrument]['exptype_list'] = []
+        params[instrument]['grating_list'] = []
+        params[instrument]['anomalies_list'] = []
+        # Generate dynamic lists of apertures to use in forms
+        for aperture in APERTURES_PER_INSTRUMENT[instrument.upper()]:
+            params[instrument]['aperture_list'].append([query_format(aperture), query_format(aperture)])
+        # Generate dynamic lists of filters to use in forms
+        for filt in FILTERS_PER_INSTRUMENT[instrument]:
+            filt = query_format(filt)
+            params[instrument]['filter_list'].append([filt, filt])
+        # Generate dynamic lists of detectors to use in forms
+        for detector in DETECTOR_PER_INSTRUMENT[instrument]:
+            detector = query_format(detector)
+            params[instrument]['detector_list'].append([detector, detector])
+        # Generate dynamic lists of read patterns to use in forms
+        for readpatt in READPATT_PER_INSTRUMENT[instrument]:
+            readpatt = query_format(readpatt)
+            params[instrument]['readpatt_list'].append([readpatt, readpatt])
+        # Generate dynamic lists of exposure types to use in forms
+        for exptype in EXP_TYPE_PER_INSTRUMENT[instrument]:
+            exptype = query_format(exptype)
+            params[instrument]['exptype_list'].append([exptype, exptype])
+        # Generate dynamic lists of grating options to use in forms
+        for grating in GRATING_PER_INSTRUMENT[instrument]:
+            grating = query_format(grating)
+            params[instrument]['grating_list'].append([grating, grating])
+        # Generate dynamic lists of anomalies to use in forms
+        for anomaly in ANOMALIES_PER_INSTRUMENT.keys():
+            if instrument in ANOMALIES_PER_INSTRUMENT[anomaly]:
+                item = [query_format(anomaly), query_format(anomaly)]
+                params[instrument]['anomalies_list'].append(item)
+
+    # Anomaly Parameters
+    instrument = forms.MultipleChoiceField(required=False,
+                                           choices=[(inst, JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]) for inst in JWST_INSTRUMENT_NAMES_MIXEDCASE],
+                                           widget=forms.CheckboxSelectMultiple)
+    exp_time_max = forms.DecimalField(required=False, initial="685")
+    exp_time_min = forms.DecimalField(required=False, initial="680")
+
+    miri_aper = forms.MultipleChoiceField(required=False, choices=params['miri']['aperture_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_aper = forms.MultipleChoiceField(required=False, choices=params['nirspec']['aperture_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_aper = forms.MultipleChoiceField(required=False, choices=params['niriss']['aperture_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_aper = forms.MultipleChoiceField(required=False, choices=params['nircam']['aperture_list'], widget=forms.CheckboxSelectMultiple)
+
+    miri_filt = forms.MultipleChoiceField(required=False, choices=params['miri']['filter_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_filt = forms.MultipleChoiceField(required=False, choices=params['nirspec']['filter_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_filt = forms.MultipleChoiceField(required=False, choices=params['niriss']['filter_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_filt = forms.MultipleChoiceField(required=False, choices=params['nircam']['filter_list'], widget=forms.CheckboxSelectMultiple)
+
+    miri_detector = forms.MultipleChoiceField(required=False, choices=params['miri']['detector_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_detector = forms.MultipleChoiceField(required=False, choices=params['nirspec']['detector_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_detector = forms.MultipleChoiceField(required=False, choices=params['niriss']['detector_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_detector = forms.MultipleChoiceField(required=False, choices=params['nircam']['detector_list'], widget=forms.CheckboxSelectMultiple)
+
+    miri_anomalies = forms.MultipleChoiceField(required=False, choices=params['miri']['anomalies_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_anomalies = forms.MultipleChoiceField(required=False, choices=params['nirspec']['anomalies_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_anomalies = forms.MultipleChoiceField(required=False, choices=params['niriss']['anomalies_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_anomalies = forms.MultipleChoiceField(required=False, choices=params['nircam']['anomalies_list'], widget=forms.CheckboxSelectMultiple)
+
+    miri_readpatt = forms.MultipleChoiceField(required=False, choices=params['miri']['readpatt_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_readpatt = forms.MultipleChoiceField(required=False, choices=params['nirspec']['readpatt_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_readpatt = forms.MultipleChoiceField(required=False, choices=params['niriss']['readpatt_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_readpatt = forms.MultipleChoiceField(required=False, choices=params['nircam']['readpatt_list'], widget=forms.CheckboxSelectMultiple)
+
+    miri_exptype = forms.MultipleChoiceField(required=False, choices=params['miri']['exptype_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_exptype = forms.MultipleChoiceField(required=False, choices=params['nirspec']['exptype_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_exptype = forms.MultipleChoiceField(required=False, choices=params['niriss']['exptype_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_exptype = forms.MultipleChoiceField(required=False, choices=params['nircam']['exptype_list'], widget=forms.CheckboxSelectMultiple)
+
+    miri_grating = forms.MultipleChoiceField(required=False, choices=params['miri']['grating_list'], widget=forms.CheckboxSelectMultiple)
+    nirspec_grating = forms.MultipleChoiceField(required=False, choices=params['nirspec']['grating_list'], widget=forms.CheckboxSelectMultiple)
+    niriss_grating = forms.MultipleChoiceField(required=False, choices=params['niriss']['grating_list'], widget=forms.CheckboxSelectMultiple)
+    nircam_grating = forms.MultipleChoiceField(required=False, choices=params['nircam']['grating_list'], widget=forms.CheckboxSelectMultiple)
+
+    def clean_inst(self):
+
+        inst = self.cleaned_data['instrument']
+
+        return inst
+
+
+class InstrumentAnomalySubmitForm(forms.Form):
     """A multiple choice field for specifying flagged anomalies."""
 
-    # Define anomaly choice field
-    anomaly_choices = forms.MultipleChoiceField(choices=ANOMALY_CHOICES, widget=forms.CheckboxSelectMultiple())
+    def __init__(self, *args, **kwargs):
+        instrument = kwargs.pop('instrument')
+        super(InstrumentAnomalySubmitForm, self).__init__(*args, **kwargs)
+        self.fields['anomaly_choices'] = forms.MultipleChoiceField(choices=ANOMALY_CHOICES_PER_INSTRUMENT[instrument], widget=forms.CheckboxSelectMultiple())
+        self.instrument = instrument
 
     def update_anomaly_table(self, rootname, user, anomaly_choices):
         """Updated the ``anomaly`` table of the database with flagged
@@ -87,7 +209,22 @@ class AnomalySubmitForm(forms.Form):
         data_dict['user'] = user
         for choice in anomaly_choices:
             data_dict[choice] = True
-        di.engine.execute(di.Anomaly.__table__.insert(), data_dict)
+        if self.instrument == 'fgs':
+            di.engine.execute(di.FGSAnomaly.__table__.insert(), data_dict)
+        elif self.instrument == 'nirspec':
+            di.engine.execute(di.NIRSpecAnomaly.__table__.insert(), data_dict)
+        elif self.instrument == 'miri':
+            di.engine.execute(di.MIRIAnomaly.__table__.insert(), data_dict)
+        elif self.instrument == 'niriss':
+            di.engine.execute(di.NIRISSAnomaly.__table__.insert(), data_dict)
+        elif self.instrument == 'nircam':
+            di.engine.execute(di.NIRCamAnomaly.__table__.insert(), data_dict)
+
+    def clean_anomalies(self):
+
+        anomalies = self.cleaned_data['anomaly_choices']
+
+        return anomalies
 
 
 class FileSearchForm(forms.Form):
@@ -112,8 +249,8 @@ class FileSearchForm(forms.Form):
         -------
         str
             The cleaned data input into the "search" field
-
         """
+
         # Get the cleaned search data
         search = self.cleaned_data['search']
 
@@ -140,8 +277,8 @@ class FileSearchForm(forms.Form):
                     instrument = filename_parser(file)['instrument']
                     all_instruments.append(instrument)
                 if len(set(all_instruments)) > 1:
-                    raise forms.ValidationError('Cannot return result for proposal with multiple '
-                                                'instruments ({}).'
+                    raise forms.ValidationError('Cannot return result for proposal with '
+                                                'multiple instruments ({}).'
                                                 .format(', '.join(set(all_instruments))))
 
                 self.instrument = all_instruments[0]
@@ -150,8 +287,7 @@ class FileSearchForm(forms.Form):
 
         # If they searched for a fileroot...
         elif self.search_type == 'fileroot':
-            # See if there are any matching fileroots and, if so, what
-            # instrument they are for
+            # See if there are any matching fileroots and, if so, what instrument they are for
             search_string = os.path.join(FILESYSTEM_DIR, search[:7], '{}*.fits'.format(search))
             all_files = glob.glob(search_string)
 
@@ -175,8 +311,8 @@ class FileSearchForm(forms.Form):
         -------
         bool
             Is the search term formatted like a fileroot?
-
         """
+
         try:
             self.fileroot_dict = filename_parser(search)
             return True
@@ -192,6 +328,7 @@ class FileSearchForm(forms.Form):
             Outgoing redirect response sent to the webpage
 
         """
+
         # Process the data in form.cleaned_data as required
         search = self.cleaned_data['search']
         proposal_string = '{:05d}'.format(int(search))
@@ -203,6 +340,23 @@ class FileSearchForm(forms.Form):
         # If they searched for a file root
         elif self.search_type == 'fileroot':
             return redirect('/{}/{}'.format(self.instrument, search))
+
+
+class FiletypeForm(forms.Form):
+    """Creates a ``FiletypeForm`` object that allows for ``filetype``
+    input in a form field."""
+
+    file_type_list = []
+    for filetype in GENERIC_SUFFIX_TYPES:
+        item = [filetype, filetype]
+        file_type_list.append(item)
+    filetype = forms.MultipleChoiceField(required=False, choices=file_type_list, widget=forms.CheckboxSelectMultiple)
+
+    def clean_filetypes(self):
+
+        file_types = self.cleaned_data['filetype']
+
+        return file_types
 
 
 class MnemonicSearchForm(forms.Form):
@@ -302,8 +456,8 @@ class MnemonicQueryForm(forms.Form):
         -------
         str
             The cleaned data input into the "search" field
-
         """
+
         # Stop now if not logged in
         if not self.logged_in:
             raise forms.ValidationError('Could not log into MAST. Please login or provide MAST '
@@ -327,14 +481,15 @@ class MnemonicQueryForm(forms.Form):
         -------
         str
            The cleaned data input into the start_time field
-
         """
+
         start_time = self.cleaned_data['start_time']
         try:
             Time(start_time, format='iso')
         except ValueError:
             raise forms.ValidationError('Invalid start time {}. Please enter a time in iso format, '
                                         'e.g. {}'.format(start_time, self.default_start_time))
+
         return self.cleaned_data['start_time']
 
     def clean_end_time(self):
@@ -344,8 +499,8 @@ class MnemonicQueryForm(forms.Form):
         -------
         str
            The cleaned data input into the end_time field
-
         """
+
         end_time = self.cleaned_data['end_time']
         try:
             Time(end_time, format='iso')

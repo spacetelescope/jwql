@@ -12,6 +12,7 @@ Authors
     - Lauren Chambers
     - Matthew Bourque
     - Johannes Sahlmann
+    - Teagan King
 
 Use
 ---
@@ -44,6 +45,7 @@ from django.urls import path
 from django.urls import re_path
 
 from . import api_views
+from . import monitor_views
 from . import oauth
 from . import views
 
@@ -60,24 +62,37 @@ urlpatterns = [
     path('logout/', oauth.logout, name='logout'),
     path('authorize/', oauth.authorize, name='authorize'),
 
-    # NIRSpec views
+    # MIRI-specific views
+    path('miri/miri_data_trending/', views.miri_data_trending, name='miri_data_trending'),
+
+    # NIRSpec-specific views
     path('nirspec/nirspec_data_trending/', views.nirspec_data_trending, name='nirspec_data_trending'),
 
-    # MIRI views
-    path('miri/miri_data_trending/', views.miri_data_trending, name='miri_data_trending'),
+    # Common monitor views
+    re_path(r'^(?P<inst>({}))/dark_monitor/$'.format(instruments), monitor_views.dark_monitor, name='dark_monitor'),
+    re_path(r'^(?P<inst>({}))/bad_pixel_monitor/$'.format(instruments), monitor_views.bad_pixel_monitor, name='bad_pixel_monitor'),
+    re_path(r'^(?P<inst>({}))/bias_monitor/$'.format(instruments), monitor_views.bias_monitor, name='bias_monitor'),
+    re_path(r'^(?P<inst>({}))/readnoise_monitor/$'.format(instruments), monitor_views.readnoise_monitor, name='readnoise_monitor'),
 
     # Main site views
     path('about/', views.about, name='about'),
+    path('anomaly_query/', views.anomaly_query, name='anomaly_query'),
+    path('api/', views.api_landing, name='api'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('download_table/<str:tablename>', views.export, name='download_table'),
     path('edb/', views.engineering_database, name='edb'),
+    path('jwqldb/', views.jwqldb_table_viewer, name='jwqldb'),
+    path('jwqldb/<str:tablename_param>', views.jwqldb_table_viewer, name='jwqldb_table_viewer'),
+    path('query_submit/', views.query_submit, name='query_submit'),
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
     re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),
     re_path(r'^(?P<inst>({}))/(?P<file_root>[\w]+)/$'.format(instruments), views.view_image, name='view_image'),
-    re_path(r'^(?P<inst>({}))/(?P<file>.+)/hdr/$'.format(instruments), views.view_header, name='view_header'),
+    re_path(r'^(?P<inst>({}))/(?P<filename>.+)/header/$'.format(instruments), views.view_header, name='view_header'),
     re_path(r'^(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/$'.format(instruments), views.archive_thumbnails, name='archive_thumb'),
 
     # AJAX views
+    re_path('ajax/query_submit/', views.archive_thumbnails_query_ajax, name='archive_thumb_query_ajax'),
     re_path(r'^ajax/(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals_ajax, name='archive_ajax'),
     re_path(r'^ajax/(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/$'.format(instruments), views.archive_thumbnails_ajax, name='archive_thumb_ajax'),
 

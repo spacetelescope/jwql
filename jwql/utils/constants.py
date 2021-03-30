@@ -4,6 +4,10 @@ Authors
 -------
 
     - Johannes Sahlmann
+    - Matthew Bourque
+    - Bryan Hilbert
+    - Ben Sunnquist
+    - Teagan King
 
 Use
 ---
@@ -47,26 +51,172 @@ AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 512, 1), (0, 2048, 1)],
                                  '3': [(2, 1032, 4), (0, 1024, 1)],
                                  '4': [(3, 1032, 4), (0, 1024, 1)]}}
 
+# Dictionary describing instruments to which anomalies apply
+ANOMALIES_PER_INSTRUMENT = {
+    # anomalies affecting all instruments:
+    'cosmic_ray_shower': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'diffraction_spike': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'excessive_saturation': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'guidestar_failure': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    'persistence': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec'],
+    # anomalies affecting multiple instruments:
+    'crosstalk': ['fgs', 'nircam', 'niriss', 'nirspec'],
+    'data_transfer_error': ['fgs', 'nircam', 'niriss', 'nirspec'],
+    'ghost': ['fgs', 'nircam', 'niriss', 'nirspec'],
+    'snowball': ['fgs', 'nircam', 'niriss', 'nirspec'],
+    # instrument-specific anomalies:
+    'column_pull_up': ['miri'],
+    'dominant_msa_leakage': ['nirspec'],
+    'dragons_breath': ['nircam'],
+    'glow': ['miri'],
+    'internal_reflection': ['miri'],
+    'optical_short': ['nirspec'],  # Only for MOS observations
+    'row_pull_down': ['miri'],
+    # additional anomalies:
+    'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
 
 # Defines the possible anomalies to flag through the web app
-ANOMALIES = ['snowball', 'cosmic_ray_shower', 'crosstalk', 'data_transfer_error', 'diffraction_spike',
-             'excessive_saturation', 'ghost', 'guidestar_failure', 'persistence', 'satellite_trail', 'other']
+ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage"
+                   else (anomaly, "Dominant MSA Leakage")
+                   for anomaly in ANOMALIES_PER_INSTRUMENT]
 
-# Defines the possible anomalies (with rendered name) to flag through the web app
-ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES]
+ANOMALY_CHOICES_FGS = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
+                       if 'fgs' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
-FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R', 'WFSS128C', 'WFSS64C']
+ANOMALY_CHOICES_MIRI = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
+                        if 'miri' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+
+ANOMALY_CHOICES_NIRCAM = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
+                          if 'nircam' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+
+ANOMALY_CHOICES_NIRISS = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
+                          if 'niriss' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+
+ANOMALY_CHOICES_NIRSPEC = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage"
+                           else (anomaly, "Dominant MSA Leakage")
+                           for anomaly in ANOMALIES_PER_INSTRUMENT
+                           if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+
+ANOMALY_CHOICES_PER_INSTRUMENT = {'fgs': ANOMALY_CHOICES_FGS,
+                                  'miri': ANOMALY_CHOICES_MIRI,
+                                  'nircam': ANOMALY_CHOICES_NIRCAM,
+                                  'niriss': ANOMALY_CHOICES_NIRISS,
+                                  'nirspec': ANOMALY_CHOICES_NIRSPEC
+                                  }
+
+APERTURES_PER_INSTRUMENT = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',
+                                       'NRCA5_FULL', 'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL',
+                                       'NRCB4_FULL', 'NRCB5_FULL'],
+                            'NIRISS': ['NIS_CEN', 'NIS_SOSSFULL', 'NIS_AMIFULL', 'NIS_SOSSTA', 'NIS_AMI1',
+                                       'NIS_SUBSTRIP256', 'NIS_SUBSTRIP96'],
+                            'NIRSPEC': ['NRS1_FULL', 'NRS2_FULL', 'NRS_FULL_MSA', 'NRS_FULL_IFU',
+                                        'NRS_S200A1_SLIT', 'NRS_S200A2_SLIT', 'NRS_S1600A1_SLIT'],
+                            'MIRI': ['MIRIM_FULL', 'MIRIM_MASKLYOT', 'MIRIM_SLITLESSPRISM', 'MIRIM_SUB256',
+                                     'MIRIM_SUB128', 'MIRIM_SLIT']}
+
+# Bad pixel types by the type of data used to find them
+BAD_PIXEL_TYPES = ['DEAD', 'HOT', 'LOW_QE', 'RC', 'OPEN', 'ADJ_OPEN', 'TELEGRAPH', 'OTHER_BAD_PIXEL']
+DARKS_BAD_PIXEL_TYPES = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
+FLATS_BAD_PIXEL_TYPES = ['DEAD', 'OPEN', 'ADJ_OPEN', 'LOW_QE']
+
+# Possible exposure types for dark current data
+DARK_EXP_TYPES = {'nircam': ['NRC_DARK'],
+                  'niriss': ['NIS_DARK'],
+                  'miri': ['MIR_DARKIMG', 'MIR_DARKMRS', 'MIR_DARKALL'],
+                  'nirspec': ['NRS_DARK'],
+                  'fgs': ['FGS_DARK']}
+
+# Dictionary of observing modes available for each instrument
+DETECTOR_PER_INSTRUMENT = {'fgs': ['FGS_DARK', 'FGS_FOCUS', 'FGS_IMAGE',
+                                   'FGS_INTFLAT', 'FGS_SKYFLAT'],
+                           'miri': ['MIRIFULONG', 'MIRIFUSHORT', 'MIRIMAGE'],
+                           'nircam': ['NRCB4', 'NRCA4', 'NRCA2', 'NRCALONG',
+                                      'NRCBLONG', 'NRCB2', 'NRCB3', 'NRCA1',
+                                      'NRCA3', 'NRCB1'],
+                           'niriss': ['NIS'],
+                           'nirspec': ['NRS1', 'NRS2']}
+
+EXP_TYPE_PER_INSTRUMENT = {'fgs': [],
+                           'miri': ['MIR_FLATMRS', 'MIR_MRS', 'MIR_FLATIMAGE',
+                                    'MIR_DARK', 'MIR_LYOT', 'MIR_IMAGE',
+                                    'MIR_LRS-FIXEDSLIT', 'MIR_LRS-SLITLESS',
+                                    'MIR_CORONCAL', 'MIR_4QPM', 'MIR_FLATIMAGE-EXT',
+                                    'MIR_TACQ', 'MIR_DARKMRS',
+                                    'MIR_DARKIMG', 'MIR_FLATMRS-EXT', 'MIR_TACONFIRM'],
+                           'nircam': ['NRC_LED', 'NRC_DARK', 'NRC_CORON',
+                                      'NRC_IMAGE', 'NRC_FOCUS', 'NRC_TSGRISM',
+                                      'NRC_TSIMAGE', 'NRC_WFSS', 'NRC_TACQ',
+                                      'NRC_TACONFIRM', 'NRC_FLAT', 'NRC_GRISM'],
+                           'niriss': ['NIS_IMAGE', 'NIS_FOCUS', 'NIS_SOSS',
+                                      'NIS_AMI', 'NIS_LAMP', 'NIS_WFSS', 'NIS_DARK',
+                                      'NIS_EXTCAL', 'NIS_TACONFIRM', 'NIS_TACQ'],
+                           'nirspec': ['NRS_IFU', 'NRS_MSASPEC', 'NRS_BRIGHTOBJ', 'NRS_DARK',
+                                       'NRS_AUTOWAVE', 'NRS_LAMP', 'NRS_AUTOFLAT', 'NRS_IMAGE',
+                                       'NRS_CONFIRM', 'NRS_FIXEDSLIT', 'NRS_MIMF', 'NRS_FOCUS',
+                                       'NRS_TACONFIRM', 'NRS_WATA', 'NRS_MSATA']}
+
+EXPTYPES = {"nircam": {"imaging": "NRC_IMAGE", "ts_imaging": "NRC_TSIMAGE",
+                       "wfss": "NRC_WFSS", "ts_grism": "NRC_TSGRISM"},
+            "niriss": {"imaging": "NIS_IMAGE", "ami": "NIS_IMAGE",
+                       "pom": "NIS_IMAGE", "wfss": "NIS_WFSS"},
+            "fgs": {"imaging": "FGS_IMAGE"}}
+
+FLAT_EXP_TYPES = {'nircam': ['NRC_FLAT'],
+                  'niriss': ['NIS_LAMP'],
+                  'miri': ['MIR_FLATIMAGE', 'MIR_FLATMRS'],
+                  'nirspec': ['NRS_AUTOFLAT', 'NRS_LAMP'],
+                  'fgs': ['FGS_INTFLAT']}
+
+FILTERS_PER_INSTRUMENT = {'miri': ['F1000W', 'F1130W', 'F1280W', 'OPAQUE', 'F2300C', 'F560W', 'P750L',
+                                   'F1500W', 'F2550W', 'F770W', 'FLENS', 'FND', 'F2100W', 'F1800W',
+                                   'F1550C', 'F1140C', 'F2550WR', 'F1065C'],
+                          'nircam': ['F070W', 'F090W', 'F115W', 'F140M', 'F150W', 'F150W2', 'F182M',
+                                     'F187N', 'F200W', 'F210M', 'F212N', 'F250M', 'F277W', 'F300M',
+                                     'F322W2', 'F335M', 'F356W', 'F360M', 'F410M', 'F430M', 'F444W',
+                                     'F460M', 'F480M'],
+                          'niriss': ['CLEAR', 'F380M', 'F480M', 'GR150R', 'F430M', 'GR150C', 'F444W',
+                                     'F356W', 'F277W'],
+                          'nirspec': ['F290LP', 'F170LP', 'OPAQUE', 'F100LP', 'F070LP', 'F140X', 'CLEAR', 'F110W']}
+
+FOUR_AMP_SUBARRAYS = ['WFSS128R', 'WFSS64R']
+
+# Names of full-frame apertures for all instruments
+FULL_FRAME_APERTURES = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',
+                                   'NRCA5_FULL', 'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL',
+                                   'NRCB4_FULL', 'NRCB5_FULL'],
+                        'NIRISS': ['NIS_CEN'],
+                        'NIRSPEC': ['NRS1_FULL', 'NRS2_FULL'],
+                        'MIRI': ['MIRIM_FULL'],
+                        'FGS': ['FGS1_FULL', 'FGS2_FULL']
+                        }
 
 # Possible suffix types for nominal files
 GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',
                         'x1dints', 'x1d', 's2d', 's3d', 'dark', 'crfints',
                         'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat']
 
+# Gratings available for each instrument
+GRATING_PER_INSTRUMENT = {'miri': [],
+                          'nircam': [],
+                          'niriss': [],
+                          'nirspec': ['G140M', 'G235M', 'G395M', 'G140H',
+                                      'G235H', 'G395H', 'PRISM']
+                          }
+
 # Possible suffix types for guider exposures
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
 
+# Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
-    'dark_monitor': ['nircam_dark_dark_current', 'nircam_dark_pixel_stats', 'nircam_dark_query_history']}
+    'dark_monitor': ['<instrument>_dark_dark_current', '<instrument>_dark_pixel_stats', '<instrument>_dark_query_history'],
+    'bad_pixel_monitor': ['<instrument>_bad_pixel_stats', '<instrument>_bad_pixel_query_history']}
+
+INSTRUMENT_SERVICE_MATCH = {
+    'FGS': 'Mast.Jwst.Filtered.Fgs',
+    'MIRI': 'Mast.Jwst.Filtered.Miri',
+    'NIRCam': 'Mast.Jwst.Filtered.Nircam',
+    'NIRISS': 'Mast.Jwst.Filtered.Niriss',
+    'NIRSpec': 'Mast.Jwst.Filtered.Nirspec'}
 
 # JWST data products
 JWST_DATAPRODUCTS = ['IMAGE', 'SPECTRUM', 'SED', 'TIMESERIES', 'VISIBILITY',
@@ -99,26 +249,31 @@ JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
 
 # Available monitor names and their location for each JWST instrument
 MONITORS = {
-    'fgs': [('Bad Pixel Monitor', '#')],
+    'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor'),
+            ('Readnoise Monitor', '/fgs/readnoise_monitor')],
     'miri': [('Dark Current Monitor', '#'),
              ('Data Trending', '/miri/miri_data_trending'),
-             ('Bad Pixel Monitor', '#'),
+             ('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
+             ('Readnoise Monitor', '/miri/readnoise_monitor'),
              ('Cosmic Ray Monitor', '#'),
              ('Photometry Monitor', '#'),
              ('TA Failure Monitor', '#'),
              ('Blind Pointing Accuracy Monitor', '#'),
              ('Filter and Calibration Lamp Monitor', '#'),
              ('Thermal Emission Monitor', '#')],
-    'nircam': [('Bias Monitor', '#'),
-               ('Readnoise Monitor', '#'),
+    'nircam': [('Bias Monitor', '/nircam/bias_monitor'),
+               ('Readnoise Monitor', '/nircam/readnoise_monitor'),
                ('Gain Level Monitor', '#'),
-               ('Mean Dark Current Rate Monitor', '#'),
+               ('Mean Dark Current Rate Monitor', '/nircam/dark_monitor'),
+               ('Bad Pixel Monitor', '/nircam/bad_pixel_monitor'),
                ('Photometric Stability Monitor', '#')],
-    'niriss': [('Bad Pixel Monitor', '#'),
-               ('Readnoise Monitor', '#'),
+    'niriss': [('Bad Pixel Monitor', '/niriss/bad_pixel_monitor'),
+               ('Readnoise Monitor', '/niriss/readnoise_monitor'),
                ('AMI Calibrator Monitor', '#'),
                ('TSO RMS Monitor', '#')],
     'nirspec': [('Optical Short Monitor', '#'),
+                ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
+                ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
                 ('Target Acquisition Monitor', '#'),
                 ('Data Trending', '/nirspec/nirspec_data_trending'),
                 ('Detector Health Monitor', '#'),
@@ -144,14 +299,24 @@ NIRCAM_SHORTWAVE_DETECTORS = ['NRCA1', 'NRCA2', 'NRCA3', 'NRCA4',
 NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 
 # Possible suffix types for AMI files
-NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami']
+NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami', 'psf-amiavg']
+
+READPATT_PER_INSTRUMENT = {'fgs': [],
+                           'miri': ['FAST', 'SLOW', 'FASTGRPAVG'],
+                           'nircam': ['RAPID', 'SHALLOW2', 'BRIGHT2', 'MEDIUM2', 'SHALLOW4',
+                                      'MEDIUM8', 'BRIGHT1', 'DEEP2', 'DEEP8'],
+                           'niriss': ['NISRAPID', 'NIS'],
+                           'nirspec': ['NRS', 'NRSRAPID', 'NRSRAPIDD2', 'NRSRAPIDD6']}
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 
 # Possible suffix types for time-series exposures
 TIME_SERIES_SUFFIX_TYPES = ['phot', 'whtlt']
 
+# Possible suffix types for WFS&C files
+WFSC_SUFFIX_TYPES = ['wfscmb']
+
 # Concatenate all suffix types (ordered to ensure successful matching)
 FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
                     TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
-                    NIRISS_AMI_SUFFIX_TYPES
+                    NIRISS_AMI_SUFFIX_TYPES + WFSC_SUFFIX_TYPES

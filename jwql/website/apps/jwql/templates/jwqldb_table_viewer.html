@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>Interactive Database Viewer - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+    	<h2>Explore JWQL database tables through the web browser</h2><hr>
+
+        <p align="justify">
+            This page allows users to interactively explore the JWQL database tables.  Simply select a table from the dropdown menu.
+        </p><br>
+
+        <form action="" method="post" id="view_db_table">
+            {{ csrf_input }}
+            <!--DB TABLE DROPDOWN-->
+            <h4>Select JWQL Database Table</h4>
+            <div class="db_table_select">
+                <select name="db_table_select" id="db_table_select">
+                    {% for instrument in all_jwql_tables %}
+                    <optgroup label="{{ instrument }}">
+                        {% for table in all_jwql_tables[instrument] %}
+                            <option value="{{ table }}">{{ table }}</option>
+                        {% endfor %}
+                    {% if tablename %}
+                        <option value="{{ tablename }}" selected>{{ tablename }}</option>
+                    {% endif %}
+                    </optgroup>
+                    {% endfor %}
+                </select>
+            </div>
+            <button name=make_table_view class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
+            <br><br>
+
+            <!-- If tablename is passed, render table. -->
+            <!-- Table is not rendered when coming from home/monitor views -->
+            {% if table_name %}
+                <h4> {{ table_name|safe }} </h4><hr>
+                <a href="{{ '/download_table/%s'%table_name }}" name=download_data class="btn btn-primary my-2" type="submit" value="{{ tablename }}">Download Data</a>
+                <table id="jwqltable" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            {% for column in table_columns %}
+                                <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in table_rows %}
+                            <tr>
+                                {% for value in row %}
+                                    <td>{{ value }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            {% for column in table_columns %}
+                                <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </tfoot>
+                </table>
+            {% endif %}
+        </form>
+
+	</main>
+
+    <!-- JS for datatables rendering and sorting with DataTables. -->
+    <style>
+          table.dataTable td  {
+            max-width: 150px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+          }
+    </style>
+
+    <script>
+        $(document).ready(function() {
+            $('#jwqltable').DataTable();
+        } );
+    </script>
+
+{% endblock %}

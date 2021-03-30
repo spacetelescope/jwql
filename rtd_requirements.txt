@@ -1,0 +1,3 @@
+pygments==2.8.0
+pytest==6.2.2
+git+https://github.com/spacetelescope/jwst@stable
