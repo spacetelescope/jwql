@@ -6,7 +6,7 @@ New Features
 
 Project & API Documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- Included badges for GitHub Actions in README.md
+- Included badges for GitHub Actions in ``README.md``
 - Replaced Jenkins support with GitHub Actions for CI testing
 - Removed Python 3.6 support
 
@@ -14,10 +14,10 @@ Project & API Documentation
 Web Application
 ~~~~~~~~~~~~~~~
 
-- Allow local developers to bypass `auth.mast` authentication
+- Allow local developers to bypass ``auth.mast`` authentication
 - Added cosmic ray monitor, unit test code, and relevant database files
 - Removed unsupported options including image anomalies, unlooked images and monitors that haven't been implemented
-- Improved loading times for web app archive pages by generating a representative thumbnail with generate_proposal_thumbnail.py, using astroquery.Mast rather than scraping filesystem, adding optional checks that file paths exist
+- Improved loading times for web app archive pages by generating a representative thumbnail with ``generate_proposal_thumbnail.py``, using ``astroquery.Mast`` rather than scraping filesystem, adding optional checks that file paths exist
 - Implemented JWQL Dashboard View
 
 ``jwql`` Repository
