@@ -46,7 +46,7 @@ Notes
 
     Any monitoring script written for ``jwql`` must adhere to the
     ``jwql`` style guide located at:
-    https://github.com/spacetelescope/jwql/blob/master/style_guide/README.md
+    https://github.com/spacetelescope/jwql/blob/main/style_guide/README.md
 """
 
 import os
