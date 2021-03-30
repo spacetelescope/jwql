@@ -7,7 +7,8 @@ New Features
 Project & API Documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - Included badges for GitHub Actions in README.md
-- Updated yaml environment file names to reflect updates in supported python environment
+- Replaced Jenkins support with GitHub Actions for CI testing
+- Removed Python 3.6 support
 
 
 Web Application
