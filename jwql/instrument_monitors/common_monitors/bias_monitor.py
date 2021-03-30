@@ -74,23 +74,23 @@ class Bias():
     Attributes
     ----------
     output_dir : str
-        Path into which outputs will be placed
+        Path into which outputs will be placed.
 
     data_dir : str
-        Path into which new dark files will be copied to be worked on
+        Path into which new dark files will be copied to be worked on.
 
     query_start : float
-        MJD start date to use for querying MAST
+        MJD start date to use for querying MAST.
 
     query_end : float
-        MJD end date to use for querying MAST
+        MJD end date to use for querying MAST.
 
     instrument : str
-        Name of instrument used to collect the dark current data
+        Name of instrument used to collect the dark current data.
 
     aperture : str
         Name of the aperture used for the dark current (e.g.
-        ``NRCA1_FULL``)
+        ``NRCA1_FULL``).
     """
 
     def __init__(self):
@@ -102,15 +102,15 @@ class Bias():
         Parameters
         ----------
         image : numpy.ndarray
-            2D array on which to calculate statistics
+            2D array on which to calculate statistics.
 
         Returns
         -------
         collapsed_rows : numpy.ndarray
-            1D array of the collapsed row values
+            1D array of the collapsed row values.
 
         collapsed_columns : numpy.ndarray
-            1D array of the collapsed column values
+            1D array of the collapsed column values.
         """
 
         collapsed_rows = np.nanmedian(image, axis=1)
@@ -162,7 +162,7 @@ class Bias():
         Returns
         -------
         output_filename : str
-            The full path to the output file
+            The full path to the output file.
         """
 
         output_filename = os.path.join(self.data_dir, os.path.basename(filename).replace('.fits', '_0thgroup.fits'))
@@ -191,12 +191,12 @@ class Bias():
         Parameters
         ----------
         filename : str
-            The full path to the uncal filename
+            The full path to the uncal filename.
 
         Returns
         -------
         file_exists : bool
-            ``True`` if filename exists in the bias stats database
+            ``True`` if filename exists in the bias stats database.
         """
 
         query = session.query(self.stats_table)
@@ -216,18 +216,18 @@ class Bias():
         Parameters
         ----------
         image : numpy.ndarray
-            2D array on which to calculate statistics
+            2D array on which to calculate statistics.
 
         amps : dict
             Dictionary containing amp boundary coordinates (output from
             ``amplifier_info`` function)
-            ``amps[key] = [(xmin, xmax, xstep), (ymin, ymax, ystep)]``
+            ``amps[key] = [(xmin, xmax, xstep), (ymin, ymax, ystep)]``.
 
         Returns
         -------
         amp_medians : dict
             Median values for each amp. Keys are ramp numbers as
-            strings with even/odd designation (e.g. ``'1_even'``)
+            strings with even/odd designation (e.g. ``'1_even'``).
         """
 
         amp_medians = {}
@@ -237,7 +237,7 @@ class Bias():
             y_start, y_end, y_step = amps[key][1]
 
             # Find median value of both even and odd rows/columns for this amp
-            if self.instrument == 'niriss':
+            if self.instrument != 'nircam':
                 amp_med_even = np.nanmedian(image[y_start: y_end, x_start: x_end][1::2, :])
                 amp_medians['amp{}_even_med'.format(key)] = amp_med_even
                 amp_med_odd = np.nanmedian(image[y_start: y_end, x_start: x_end][::2, :])
@@ -265,15 +265,15 @@ class Bias():
         Parameters
         ----------
         image : numpy.ndarray
-            2D image array
+            2D image array.
 
         outname : str
-            The name given to the output png file
+            The name given to the output png file.
 
         Returns
         -------
         output_filename : str
-            The full path to the output png file
+            The full path to the output png file.
         """
 
         output_filename = os.path.join(self.data_dir, '{}.png'.format(outname))
@@ -364,7 +364,7 @@ class Bias():
         ----------
         file_list : list
             List of filenames (including full paths) to the dark current
-            files
+            files.
         """
 
         for filename in file_list:
