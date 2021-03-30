@@ -1,3 +1,47 @@
+0.26.0 (2021-03-30)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Allow local developers to bypass `auth.mast` authentication
+
+
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+
+
+Bug Fixes
+---------
+
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Improved loading times of readnoise moniotor webpage
+
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
 0.25.0 (2020-12-31)
 ===================
 
