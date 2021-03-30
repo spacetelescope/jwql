@@ -6,39 +6,42 @@ New Features
 
 Project & API Documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+- Included badges for GitHub Actions in README.md
+- Updated yaml environment file names to reflect updates in supported python environment
 
 
 Web Application
 ~~~~~~~~~~~~~~~
 
 - Allow local developers to bypass `auth.mast` authentication
-
-
+- Added cosmic ray monitor, unit test code, and relevant database files
+- Removed unsupported options including image anomalies, unlooked images and monitors that haven't been implemented
+- Improved loading times for web app archive pages by generating a representative thumbnail with generate_proposal_thumbnail.py, using astroquery.Mast rather than scraping filesystem, adding optional checks that file paths exist
+- Implemented JWQL Dashboard View
 
 ``jwql`` Repository
 ~~~~~~~~~~~~~~~~~~~
 
+- Updated the call to the JWST pipeline RSCD step
+- Added GitHub Actions
 
 
 Bug Fixes
 ---------
 
-
 Web Application
 ~~~~~~~~~~~~~~~
 
-- Improved loading times of readnoise moniotor webpage
-
-
-Project & API Documentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+- Improved loading times of readnoise monitor webpage
+- Fixed broken bokeh CDN links
 
 ``jwql`` Repository
 ~~~~~~~~~~~~~~~~~~~
 
-
+- Dark monitor exits gracefully when there are not enough files in the filesystem
+- Fixed filename parsing for WFS&C and AMI products
+- Adjusted generation of preview images such that images are created for all file types
+- Update ops naming convention in log directory
 
 
 
