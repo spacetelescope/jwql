@@ -13,9 +13,9 @@ Next, these images are run through the jwst pipeline up through the
 reference pixel correction step. These calibrated images are saved
 to a fits file as well as a png file for visual inspection of the
 quality of the pipeline calibration. A histogram distribution of 
-these images, as well as the sigma-clipped mean and standard
-deviation, are recorded in the ``<Instrument>BiasStats`` database 
-table.
+these images, as well as their collapsed row/column and sigma-clipped 
+mean and standard deviation values, are recorded in the 
+``<Instrument>BiasStats`` database table.
 
 Author
 ------
@@ -95,6 +95,28 @@ class Bias():
 
     def __init__(self):
         """Initialize an instance of the ``Bias`` class."""
+
+    def collapse_image(self, image):
+        """Median-collapse the rows and columns of an image.
+
+        Parameters
+        ----------
+        image : numpy.ndarray
+            2D array on which to calculate statistics
+
+        Returns
+        -------
+        collapsed_rows : numpy.ndarray
+            1D array of the collapsed row values
+
+        collapsed_columns : numpy.ndarray
+            1D array of the collapsed column values
+        """
+
+        collapsed_rows = np.nanmedian(image, axis=1)
+        collapsed_columns = np.nanmedian(image, axis=0)
+
+        return collapsed_rows, collapsed_columns
 
     def determine_pipeline_steps(self):
         """Determines the necessary JWST pipelines steps to run on a
@@ -384,6 +406,7 @@ class Bias():
             # Calculate image statistics on the calibrated image
             cal_data = fits.getdata(processed_file, 'SCI')[0, 0, :, :]
             mean, median, stddev = sigma_clipped_stats(cal_data, sigma=3.0, maxiters=5)
+            collapsed_rows, collapsed_columns = self.collapse_image(cal_data)
             counts, bin_centers = self.make_histogram(cal_data)
             logging.info('\tCalculated calibrated image stats: {:.3f} +/- {:.3f}'.format(mean, stddev))
 
@@ -402,6 +425,8 @@ class Bias():
                              'mean': float(mean),
                              'median': float(median),
                              'stddev': float(stddev),
+                             'collapsed_rows': collapsed_rows.astype(float),
+                             'collapsed_columns': collapsed_columns.astype(float),
                              'counts': counts.astype(float),
                              'bin_centers': bin_centers.astype(float),
                              'entry_date': datetime.datetime.now()

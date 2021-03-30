@@ -31,6 +31,23 @@ from jwql.utils.utils import get_config
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
+def test_collapse_image():
+    """Test that the image is collapsed correctly along its axes"""
+
+    monitor = bias_monitor.Bias()
+
+    # Create test data and its corresponding collapsed arrays
+    image = np.arange(100).reshape(10, 10)
+    collapsed_rows_truth = np.arange(4.5, 95, 10)
+    collapsed_columns_truth = np.arange(45, 55)
+
+    # Find the collapsed arrays using the bias monitor
+    collapsed_rows, collapsed_columns = monitor.collapse_image(image)
+
+    assert np.all(collapsed_rows == collapsed_rows_truth)
+    assert np.all(collapsed_columns == collapsed_columns_truth)
+
+
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_extract_zeroth_group():
     """Test the zeroth group file creation"""
