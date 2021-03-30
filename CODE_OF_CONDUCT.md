@@ -57,5 +57,5 @@ Project maintainers who do not follow or enforce the Code of Conduct in good fai
 This Code of Conduct is adapted from several existing code of conducts:
 
 - The [Contributor Covenant](http://contributor-covenant.org), version 1.4, available at [http://contributor-covenant.org/version/1/4](http://contributor-covenant.org/version/1/4/)
-- The [`stsci-package-template` code of conduct](https://github.com/spacetelescope/stsci-package-template/blob/master/CODE_OF_CONDUCT.md)
+- The [`stsci-package-template` code of conduct](https://github.com/spacetelescope/stsci-package-template/blob/main/CODE_OF_CONDUCT.md)
 - The [`scipy` code of conduct](https://docs.scipy.org/doc/scipy/reference/dev/conduct/code_of_conduct.html)
