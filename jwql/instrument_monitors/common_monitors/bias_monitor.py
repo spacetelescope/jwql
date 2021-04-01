@@ -170,17 +170,14 @@ class Bias():
         # Write a new fits file containing the primary and science
         # headers from the input file, as well as the 0th group
         # data of the first integration
-        if not os.path.isfile(output_filename):
-            hdu = fits.open(filename)
-            new_hdu = fits.HDUList([hdu['PRIMARY'], hdu['SCI']])
-            new_hdu['SCI'].data = hdu['SCI'].data[0:1, 0:1, :, :]
-            new_hdu.writeto(output_filename)
-            hdu.close()
-            new_hdu.close()
-            set_permissions(output_filename)
-            logging.info('\t{} created'.format(output_filename))
-        else:
-            logging.info('\t{} already exists'.format(output_filename))
+        hdu = fits.open(filename)
+        new_hdu = fits.HDUList([hdu['PRIMARY'], hdu['SCI']])
+        new_hdu['SCI'].data = hdu['SCI'].data[0:1, 0:1, :, :]
+        new_hdu.writeto(output_filename, overwrite=True)
+        hdu.close()
+        new_hdu.close()
+        set_permissions(output_filename)
+        logging.info('\t{} created'.format(output_filename))
 
         return output_filename
 
@@ -278,28 +275,26 @@ class Bias():
 
         output_filename = os.path.join(self.data_dir, '{}.png'.format(outname))
 
-        if not os.path.isfile(output_filename):
-            # Get image scale limits
-            z = ZScaleInterval()
-            vmin, vmax = z.get_limits(image)
+        # Get image scale limits
+        z = ZScaleInterval()
+        vmin, vmax = z.get_limits(image)
 
-            # Plot the image
-            plt.figure(figsize=(12,12))
-            ax = plt.gca()
-            im = ax.imshow(image, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
-            ax.set_title('{}'.format(outname))
+        # Plot the image
+        plt.figure(figsize=(12,12))
+        ax = plt.gca()
+        im = ax.imshow(image, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
+        ax.set_title('{}'.format(outname))
 
-            # Make the colorbar
-            divider = make_axes_locatable(ax)
-            cax = divider.append_axes("right", size="5%", pad=0.4)
-            cbar = plt.colorbar(im, cax=cax)
-            cbar.set_label('Signal [DN]')
+        # Make the colorbar
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.4)
+        cbar = plt.colorbar(im, cax=cax)
+        cbar.set_label('Signal [DN]')
 
-            plt.savefig(output_filename, bbox_inches='tight', dpi=200)
-            set_permissions(output_filename)
-            logging.info('\t{} created'.format(output_filename))
-        else:
-            logging.info('\t{} already exists'.format(output_filename))
+        # Save the image
+        plt.savefig(output_filename, bbox_inches='tight', dpi=200)
+        set_permissions(output_filename)
+        logging.info('\t{} created'.format(output_filename))
 
         return output_filename
 
@@ -369,13 +364,6 @@ class Bias():
 
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
-
-            # Skip processing if an entry for this file already exists in
-            # the bias stats database.
-            file_exists = self.file_exists_in_database(filename)
-            if file_exists:
-                logging.info('\t{} already exists in the bias database table.'.format(filename))
-                continue
 
             # Get relevant header info for this file
             self.read_pattern = fits.getheader(filename, 0)['READPATT']
@@ -453,7 +441,7 @@ class Bias():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in ['nircam', 'niriss', 'nirspec']:
+        for instrument in ['nircam']:  # TODO test ['nircam', 'niriss', 'nirspec']
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -463,7 +451,7 @@ class Bias():
             siaf = Siaf(self.instrument)
             possible_apertures = [aperture for aperture in siaf.apertures if siaf[aperture].AperType=='FULLSCA']
 
-            for aperture in possible_apertures:
+            for aperture in possible_apertures[0:1]: # TODO test
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
@@ -484,10 +472,19 @@ class Bias():
                 if len(new_entries) > 0:
                     ensure_dir_exists(self.data_dir)
 
-                # Save the 0th group image from each new file in the output directory;
-                # some dont exist in JWQL filesystem.
+                # Get any new files to process
                 new_files = []
-                for file_entry in new_entries:
+                for file_entry in new_entries[0:1]:  # TODO test
+                    output_filename = os.path.join(self.data_dir, file_entry['filename'])
+                    output_filename = output_filename.replace('_uncal.fits', '_uncal_0thgroup.fits').replace('_dark.fits', '_uncal_0thgroup.fits')
+
+                    # Dont process files that already exist in the bias stats database
+                    file_exists = self.file_exists_in_database(output_filename)
+                    if file_exists:
+                        logging.info('\t{} already exists in the bias database table.'.format(output_filename))
+                        continue
+
+                    # Save the 0th group image from each new file in the output directory; some dont exist in JWQL filesystem.
                     try:
                         filename = filesystem_path(file_entry['filename'])
                         uncal_filename = filename.replace('_dark', '_uncal')

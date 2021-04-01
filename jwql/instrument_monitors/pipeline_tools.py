@@ -33,7 +33,7 @@ from jwst.persistence import PersistenceStep
 from jwst.pipeline.calwebb_detector1 import Detector1Pipeline
 from jwst.ramp_fitting import RampFitStep
 from jwst.refpix import RefPixStep
-from jwst.rscd import RscdStep
+from jwst.rscd import RSCD_Step
 from jwst.saturation import SaturationStep
 from jwst.superbias import SuperBiasStep
 
@@ -50,7 +50,7 @@ PIPELINE_STEP_MAPPING = {'dq_init': DQInitStep, 'dark_current': DarkCurrentStep,
                          'firstframe': FirstFrameStep, 'group_scale': GroupScaleStep,
                          'ipc': IPCStep, 'jump': JumpStep, 'lastframe': LastFrameStep,
                          'linearity': LinearityStep, 'persistence': PersistenceStep,
-                         'rate': RampFitStep, 'refpix': RefPixStep, 'rscd': RscdStep,
+                         'rate': RampFitStep, 'refpix': RefPixStep, 'rscd': RSCD_Step,
                          'saturation': SaturationStep, 'superbias': SuperBiasStep}
 
 # Readout patterns that have nframes != a power of 2. These readout patterns
