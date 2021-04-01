@@ -31,12 +31,13 @@ Use
         python bias_monitor.py
 """
 
+from collections import OrderedDict
 import datetime
 import logging
 import os
 
 from astropy.io import fits
-from astropy.stats import sigma_clipped_stats
+from astropy.stats import sigma_clip, sigma_clipped_stats
 from astropy.time import Time
 from astropy.visualization import ZScaleInterval
 import matplotlib
@@ -45,7 +46,6 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 from pysiaf import Siaf
-from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
@@ -280,10 +280,10 @@ class Bias():
         vmin, vmax = z.get_limits(image)
 
         # Plot the image
-        plt.figure(figsize=(12,12))
+        plt.figure(figsize=(12, 12))
         ax = plt.gca()
         im = ax.imshow(image, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
-        ax.set_title('{}'.format(outname))
+        ax.set_title(outname.split('_uncal')[0])
 
         # Make the colorbar
         divider = make_axes_locatable(ax)
@@ -331,13 +331,13 @@ class Bias():
     def most_recent_search(self):
         """Query the query history database and return the information
         on the most recent query for the given ``aperture_name`` where
-        the readnoise monitor was executed.
+        the bias monitor was executed.
 
         Returns
         -------
         query_result : float
             Date (in MJD) of the ending range of the previous MAST query
-            where the readnoise monitor was run.
+            where the bias monitor was run.
         """
 
         query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
@@ -400,7 +400,7 @@ class Bias():
 
             # Save a png of the calibrated image for visual inspection
             logging.info('\tCreating png of calibrated image')
-            output_png = self.image_to_png(cal_data, outname=os.path.basename(processed_file).replace('.fits',''))
+            output_png = self.image_to_png(cal_data, outname=os.path.basename(processed_file).replace('.fits', ''))
 
             # Construct new entry for this file for the bias database table.
             # Can't insert values with numpy.float32 datatypes into database
@@ -449,7 +449,7 @@ class Bias():
 
             # Get a list of all possible full-frame apertures for this instrument
             siaf = Siaf(self.instrument)
-            possible_apertures = [aperture for aperture in siaf.apertures if siaf[aperture].AperType=='FULLSCA']
+            possible_apertures = [aperture for aperture in siaf.apertures if siaf[aperture].AperType == 'FULLSCA']
 
             for aperture in possible_apertures[0:1]: # TODO test
 
