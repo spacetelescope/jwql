@@ -34,6 +34,7 @@ FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
+
 def bad_pixel_monitor_tabs(instrument):
     """Creates the various tabs of the bad pixel monitor results page.
 

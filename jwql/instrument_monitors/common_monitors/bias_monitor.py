@@ -12,9 +12,9 @@ odd/even rows/columns of each amp.
 Next, these images are run through the jwst pipeline up through the
 reference pixel correction step. These calibrated images are saved
 to a fits file as well as a png file for visual inspection of the
-quality of the pipeline calibration. A histogram distribution of 
-these images, as well as their collapsed row/column and sigma-clipped 
-mean and standard deviation values, are recorded in the 
+quality of the pipeline calibration. A histogram distribution of
+these images, as well as their collapsed row/column and sigma-clipped
+mean and standard deviation values, are recorded in the
 ``<Instrument>BiasStats`` database table.
 
 Author
@@ -57,6 +57,7 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, initialize_instrument_monitor, update_monitor_table
+
 
 class Bias():
     """Class for executing the bias monitor.
