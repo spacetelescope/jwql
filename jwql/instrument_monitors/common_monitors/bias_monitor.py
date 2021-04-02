@@ -451,7 +451,7 @@ class Bias():
             siaf = Siaf(self.instrument)
             possible_apertures = [aperture for aperture in siaf.apertures if siaf[aperture].AperType == 'FULLSCA']
 
-            for aperture in possible_apertures[0:2]: # TODO test
+            for aperture in possible_apertures:
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
@@ -474,7 +474,7 @@ class Bias():
 
                 # Get any new files to process
                 new_files = []
-                for file_entry in new_entries[-2:]:  # TODO test
+                for file_entry in new_entries:
                     output_filename = os.path.join(self.data_dir, file_entry['filename'])
                     output_filename = output_filename.replace('_uncal.fits', '_uncal_0thgroup.fits').replace('_dark.fits', '_uncal_0thgroup.fits')
 
