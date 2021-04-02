@@ -270,7 +270,8 @@ MONITORS = {
     'niriss': [('Bad Pixel Monitor', '/niriss/bad_pixel_monitor'),
                ('Readnoise Monitor', '/niriss/readnoise_monitor'),
                ('AMI Calibrator Monitor', '#'),
-               ('TSO RMS Monitor', '#')],
+               ('TSO RMS Monitor', '#'),
+               ('Bias Monitor', '/niriss/bias_monitor')],
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
@@ -280,7 +281,8 @@ MONITORS = {
                 ('Ref Pix Monitor', '#'),
                 ('Internal Lamp Monitor', '#'),
                 ('Instrument Model Updates', '#'),
-                ('Failed-open Shutter Monitor', '#')]}
+                ('Failed-open Shutter Monitor', '#'),
+                ('Bias Monitor', '/nirspec/bias_monitor')]}
 
 # Possible suffix types for coronograph exposures
 NIRCAM_CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']
