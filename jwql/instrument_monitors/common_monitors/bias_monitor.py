@@ -474,7 +474,7 @@ class Bias():
 
                 # Get any new files to process
                 new_files = []
-                for file_entry in new_entries[0:2]:  # TODO test
+                for file_entry in new_entries[-2:]:  # TODO test
                     output_filename = os.path.join(self.data_dir, file_entry['filename'])
                     output_filename = output_filename.replace('_uncal.fits', '_uncal_0thgroup.fits').replace('_dark.fits', '_uncal_0thgroup.fits')
 
