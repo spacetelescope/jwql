@@ -49,7 +49,7 @@ from pysiaf import Siaf
 from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
-from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats
+from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory, NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
 from jwql.utils import instrument_properties
@@ -441,7 +441,7 @@ class Bias():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in ['nircam']:  # TODO test ['nircam', 'niriss', 'nirspec']
+        for instrument in ['nircam', 'niriss', 'nirspec']:
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -451,7 +451,7 @@ class Bias():
             siaf = Siaf(self.instrument)
             possible_apertures = [aperture for aperture in siaf.apertures if siaf[aperture].AperType == 'FULLSCA']
 
-            for aperture in possible_apertures[0:1]: # TODO test
+            for aperture in possible_apertures[0:2]: # TODO test
 
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
@@ -474,7 +474,7 @@ class Bias():
 
                 # Get any new files to process
                 new_files = []
-                for file_entry in new_entries[0:1]:  # TODO test
+                for file_entry in new_entries[0:2]:  # TODO test
                     output_filename = os.path.join(self.data_dir, file_entry['filename'])
                     output_filename = output_filename.replace('_uncal.fits', '_uncal_0thgroup.fits').replace('_dark.fits', '_uncal_0thgroup.fits')
 
