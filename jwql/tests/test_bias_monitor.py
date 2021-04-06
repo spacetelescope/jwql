@@ -108,7 +108,7 @@ def test_identify_tables():
 def test_make_histogram():
     """Test histogram creation"""
 
-    monitor = readnoise_monitor.Bias()
+    monitor = bias_monitor.Bias()
 
     # Create test data and its corresponding histogram stats
     data = np.zeros((100, 100))
