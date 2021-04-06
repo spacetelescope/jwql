@@ -23,11 +23,11 @@ import os
 from astropy.time import Time
 import pytest
 
-# Determine if tests are being run on jenkins
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+# Determine if tests are being run on Github Actions
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_mnemonic():
     """Test the query of a single mnemonic."""
     from jwql.edb.engineering_database import get_mnemonic
@@ -40,7 +40,7 @@ def test_get_mnemonic():
     assert len(mnemonic.data) == mnemonic.meta['paging']['rows']
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_mnemonic_info():
     """Test retrieval of mnemonic info."""
     from jwql.edb.engineering_database import get_mnemonic_info
@@ -50,7 +50,7 @@ def test_get_mnemonic_info():
     assert 'subsystem' in info.keys()
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_mnemonics():
     """Test the query of a list of mnemonics."""
     from jwql.edb.engineering_database import get_mnemonics

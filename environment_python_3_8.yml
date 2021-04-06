@@ -24,6 +24,7 @@ dependencies:
 - pytest=6.2.2
 - pytest-cov=2.11.1
 - python=3.8.5
+- pyyaml=5.4.1
 - scipy=1.6.1
 - setuptools=52.0.0
 - sphinx=3.5.1

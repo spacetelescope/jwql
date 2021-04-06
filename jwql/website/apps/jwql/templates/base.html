@@ -18,16 +18,13 @@
 		<link href="https://fonts.googleapis.com/css?family=Oswald:700|Overpass" rel="stylesheet">
 		<link href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" rel="stylesheet" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
 
-		<!-- Add bokeh files -->
-    	<link href="https://cdn.pydata.org/bokeh/release/bokeh-{{ bokeh_version }}.min.css" rel="stylesheet" type="text/css">
-
 		<!-- Needed javascript -->
 		<!-- IMPORTANT: jQuery first, then popper, then Bootstrap -->
 		<script src="{{ static('js/jquery-3.3.1.min.js') }}?{% now 'U' %}"></script>
 		<script src="{{ static('js/tinysort.min.js') }}?{% now 'U' %}"></script>
-	    <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-{{ bokeh_version }}.min.js"></script>
-	    <script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-{{ bokeh_version }}.min.js"></script>
-		<script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-gl-{{ bokeh_version }}.min.js"></script>
+	    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-{{ bokeh_version }}.min.js"></script>
+	    <script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-{{ bokeh_version }}.min.js"></script>
+		<script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-{{ bokeh_version }}.min.js"></script>
 		<script src="{{ static('js/jwql.js') }}?{% now 'U' %}"></script>
 
 		{% block preamble %}
@@ -130,15 +127,13 @@
 
 							<div class="dropdown-menu" aria-labelledby="dropdown-{{ inst_key }}">
 								<a class='dropdown-heading mx-3'>Images</a>
-								<a class="dropdown-item disabled-dropdown" href='#'>Unlooked Images</a>
-								<a class="dropdown-item disabled-dropdown" href="#">Image Anomalies</a>
+								<!-- <a class="dropdown-item disabled-dropdown" href='#'>Unlooked Images</a> -->
+								<!-- <a class="dropdown-item disabled-dropdown" href="#">Image Anomalies</a> -->
 								<a class="dropdown-item" href={{ url('jwql:archive', args=[inst_key]) }}>Archived Images</a>
 								<div class="dropdown-divider"></div>
 								<a class='dropdown-heading mx-3'>Monitors</a>
 									{% for monitor_name, monitor_url in inst_tools %}
-										{% if monitor_url == '#' %}
-											<a class="dropdown-item disabled-dropdown" href="{{ monitor_url }}">{{ monitor_name }}</a>
-										{% else %}
+										{% if not monitor_url == '#' %}
 											<a class="dropdown-item" href="{{ monitor_url }}">{{ monitor_name }}</a>
 										{% endif %}
 									{% endfor %}

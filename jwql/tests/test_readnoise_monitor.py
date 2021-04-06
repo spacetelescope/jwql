@@ -28,7 +28,7 @@ from jwql.instrument_monitors.common_monitors import readnoise_monitor
 from jwql.utils.utils import get_config
 
 
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 def test_determine_pipeline_steps():
@@ -69,8 +69,7 @@ def test_get_amp_stats():
     assert amp_stats == amp_stats_truth
 
 
-@pytest.mark.skipif(ON_JENKINS,
-                    reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_metadata():
     """Test retrieval of metadata from input file"""
 

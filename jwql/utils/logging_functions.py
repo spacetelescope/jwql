@@ -168,7 +168,7 @@ def make_log_file(module):
 
     # For production
     if user == admin_account and socket.gethostname()[0] == 'p':
-        log_file = os.path.join(log_path, 'prod', module, filename)
+        log_file = os.path.join(log_path, 'ops', module, filename)
 
     # For test
     elif user == admin_account and socket.gethostname()[0] == 't':
