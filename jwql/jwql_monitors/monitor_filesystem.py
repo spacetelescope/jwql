@@ -81,7 +81,7 @@ def gather_statistics(general_results_dict, instrument_results_dict):
         A dictionary for the ``filesystem_instrument`` database table
     """
 
-    logging.info('Searching filesystem...')
+    logging.info('Gathering stats for filesystem')
 
     for filesystem in [PROPRIETARY_FILESYSTEM, PUBLIC_FILESYSTEM]:
         for dirpath, _, files in os.walk(FILESYSTEM):
@@ -119,7 +119,7 @@ def gather_statistics(general_results_dict, instrument_results_dict):
     general_results_dict['total_file_size'] = general_results_dict['total_file_size'] / (2**40)
     general_results_dict['fits_file_size'] = general_results_dict['fits_file_size'] / (2**40)
 
-    logging.info('{} fits files found in filesystem'.format(general_results_dict['fits_file_count']))
+    logging.info('\t{} fits files found in filesystem'.format(general_results_dict['fits_file_count']))
 
     return general_results_dict, instrument_results_dict
 
@@ -166,7 +166,7 @@ def get_area_stats(central_storage_dict):
     central_storage_dict : dict
         A dictionary for the ``central_storage`` database table
     """
-    logging.info('Searching central storage system...')
+    logging.info('Gathering stats for central storage area')
 
     arealist = ['logs', 'outputs', 'test', 'preview_images', 'thumbnails', 'all']
     counteddirs = []
@@ -184,7 +184,7 @@ def get_area_stats(central_storage_dict):
         else:
             fullpath = os.path.join(CENTRAL, area)
 
-        logging.info('Searching directory {}'.format(fullpath))
+        logging.info('\tSearching directory {}'.format(fullpath))
         counteddirs.append(fullpath)
 
         # to get df stats, use -k to get 1024 byte blocks
@@ -204,7 +204,7 @@ def get_area_stats(central_storage_dict):
             subdirs = [f.path for f in os.scandir(fullpath) if f.is_dir()]
             for onedir in subdirs:
                 if onedir not in counteddirs:
-                    logging.info('Searching directory {}'.format(onedir))
+                    logging.info('\tSearching directory {}'.format(onedir))
                     for dirpath, _, files in os.walk(onedir):
                         for filename in files:
                             file_path = os.path.join(dirpath, filename)
@@ -227,7 +227,6 @@ def get_area_stats(central_storage_dict):
             use = used / (1024 ** 4)
         central_storage_dict[area]['used'] = use
 
-    logging.info('Finished searching central storage system')
     return central_storage_dict
 
 
@@ -270,8 +269,6 @@ def monitor_filesystem():
     to database tables, and generates plots.
     """
 
-    logging.info('Beginning filesystem monitoring.')
-
     # Initialize dictionaries for database input
     general_results_dict, instrument_results_dict, central_storage_dict = initialize_results_dicts()
 
@@ -289,8 +286,6 @@ def monitor_filesystem():
 
     # Create the plots
     plot_filesystem_stats()
-
-    logging.info("Completed.")
 
 
 def plot_by_filetype(plot_type, instrument):
@@ -446,7 +441,7 @@ def plot_filesystem_stats():
     Plot various filesystem statistics using ``bokeh`` and save them to
     the output directory.
     """
-    logging.info('Starting plots.')
+    logging.info('Creating results plots')
 
     p1 = plot_total_file_counts()
     p2 = plot_filesystem_size()
@@ -469,7 +464,7 @@ def plot_filesystem_stats():
     output_file(outfile)
     save(grid)
     set_permissions(outfile)
-    logging.info('Saved plot of all statistics to {}'.format(outfile))
+    logging.info('\tSaved plot of all statistics to {}'.format(outfile))
 
     # Save each plot's components
     for plot in plot_list:
@@ -489,9 +484,7 @@ def plot_filesystem_stats():
             f.close()
         set_permissions(script_outfile)
 
-        logging.info('Saved components files: {}_component.html and {}_component.js'.format(plot_name, plot_name))
-
-    logging.info('Filesystem statistics plotting complete.')
+        logging.info('\tSaved components files: {}_component.html and {}_component.js'.format(plot_name, plot_name))
 
 
 def plot_total_file_counts():
@@ -532,7 +525,7 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
         A dictionary for the ``central_storage`` database table
 
     """
-    logging.info('Updating databases.')
+    logging.info('\tUpdating the database')
 
     engine.execute(FilesystemGeneral.__table__.insert(), general_results_dict)
     session.commit()
