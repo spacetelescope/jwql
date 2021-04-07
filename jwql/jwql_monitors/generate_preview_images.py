@@ -528,9 +528,6 @@ def generate_preview_images():
     """The main function of the ``generate_preview_image`` module.
     See module docstring for further details."""
 
-    # Begin logging
-    logging.info("Beginning the script run")
-
     # Process programs in parallel
     program_list = [os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], 'public', 'jw*'))]
     program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', 'jw*'))])
@@ -636,13 +633,14 @@ def process_program(program):
     """
 
     # Group together common exposures
-    logging.info('Processing {}'.format(program))
     logging.info('')
+    logging.info('Processing {}'.format(program))
     filenames = glob.glob(os.path.join(get_config()['filesystem'], 'public', program, '*/*.fits'))
     filenames.extend(glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', program, '*/*.fits')))
     filenames = list(set(filenames))
     grouped_filenames = group_filenames(filenames)
     logging.info('Found {} filenames'.format(len(filenames)))
+    logging.info('')
 
     for file_list in grouped_filenames:
         filename = file_list[0]
@@ -658,18 +656,18 @@ def process_program(program):
         # Check to see if the preview images already exist and skip if they do
         file_exists = check_existence(file_list, preview_output_directory)
         if file_exists:
-            logging.info("JPG already exists for {}, skipping.".format(filename))
+            logging.info("\tJPG already exists for {}, skipping.".format(filename))
             continue
 
         # Create the output directories if necessary
         if not os.path.exists(preview_output_directory):
             os.makedirs(preview_output_directory)
             permissions.set_permissions(preview_output_directory)
-            logging.info('Created directory {}'.format(preview_output_directory))
+            logging.info('\tCreated directory {}'.format(preview_output_directory))
         if not os.path.exists(thumbnail_output_directory):
             os.makedirs(thumbnail_output_directory)
             permissions.set_permissions(thumbnail_output_directory)
-            logging.info('Created directory {}'.format(thumbnail_output_directory))
+            logging.info('\tCreated directory {}'.format(thumbnail_output_directory))
 
         # If the exposure contains more than one file (because more
         # than one detector was used), then create a mosaic
@@ -678,7 +676,7 @@ def process_program(program):
         if numfiles > 1:
             try:
                 mosaic_image, mosaic_dq = create_mosaic(file_list)
-                logging.info('Created mosiac for:')
+                logging.info('\tCreated mosiac for:')
                 for item in file_list:
                     logging.info('\t{}'.format(item))
             except (ValueError, FileNotFoundError) as error:
@@ -709,7 +707,7 @@ def process_program(program):
                 im.file = dummy_file
 
             im.make_image(max_img_size=max_size)
-            logging.info('Created preview image and thumbnail for: {}'.format(filename))
+            logging.info('\tCreated preview image and thumbnail for: {}'.format(filename))
         except ValueError as error:
             logging.warning(error)
 
