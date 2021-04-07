@@ -633,8 +633,8 @@ def process_program(program):
     """
 
     # Group together common exposures
-    filenames = glob.glob(os.path.join(get_config()['filesystem'], 'public', program, '*.fits'))
-    filenames.extend(glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', program, '*.fits')))
+    filenames = glob.glob(os.path.join(get_config()['filesystem'], 'public', program, '*/*.fits'))
+    filenames.extend(glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', program, '*/*.fits')))
     filenames = list(set(filenames))
     grouped_filenames = group_filenames(filenames)
     logging.info('Found {} filenames for program {}'.format(len(filenames), program))
