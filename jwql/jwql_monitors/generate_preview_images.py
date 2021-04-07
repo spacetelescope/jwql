@@ -532,7 +532,9 @@ def generate_preview_images():
     logging.info("Beginning the script run")
 
     # Process programs in parallel
-    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], '*'))]
+    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], 'public', '*'))]
+    program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', '*'))])
+    program_list = list(set(program_list))
     pool = multiprocessing.Pool(processes=int(get_config()['cores']))
     pool.map(process_program, program_list)
     pool.close()
@@ -611,7 +613,7 @@ def group_filenames(filenames):
                         subgroup.append(file_to_match)
 
             else:
-                # filename_dict['filename_type'] may be 'guider' or 'time_series', for instance. Treat individually.  
+                # filename_dict['filename_type'] may be 'guider' or 'time_series', for instance. Treat individually.
                 matched_names.append(filename)
                 subgroup.append(filename)
 
@@ -631,7 +633,9 @@ def process_program(program):
     """
 
     # Group together common exposures
-    filenames = glob.glob(os.path.join(get_config()['filesystem'], program, '*.fits'))
+    filenames = glob.glob(os.path.join(get_config()['filesystem'], 'public', program, '*.fits'))
+    filenames.extend(glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', program, '*.fits')))
+    filenames = list(set(filenames))
     grouped_filenames = group_filenames(filenames)
     logging.info('Found {} filenames'.format(len(filenames)))
 
