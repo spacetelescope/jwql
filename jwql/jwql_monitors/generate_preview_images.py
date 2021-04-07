@@ -532,8 +532,8 @@ def generate_preview_images():
     logging.info("Beginning the script run")
 
     # Process programs in parallel
-    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], 'public', '*'))]
-    program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', '*'))])
+    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], 'public', 'jw*'))]
+    program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', 'jw*'))])
     program_list = list(set(program_list))
     pool = multiprocessing.Pool(processes=int(get_config()['cores']))
     pool.map(process_program, program_list)
@@ -637,7 +637,7 @@ def process_program(program):
     filenames.extend(glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', program, '*.fits')))
     filenames = list(set(filenames))
     grouped_filenames = group_filenames(filenames)
-    logging.info('Found {} filenames'.format(len(filenames)))
+    logging.info('Found {} filenames for program {}'.format(len(filenames), program))
 
     for file_list in grouped_filenames:
         filename = file_list[0]
