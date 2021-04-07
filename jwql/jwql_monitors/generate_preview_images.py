@@ -579,7 +579,10 @@ def group_filenames(filenames):
         subgroup = []
 
         # Generate string to be matched with other filenames
-        filename_dict = filename_parser(os.path.basename(filename))
+        try:
+            filename_dict = filename_parser(os.path.basename(filename))
+        except ValueError:
+            break
 
         # If the filename was already involved in a match, then skip
         if filename not in matched_names:
@@ -633,11 +636,13 @@ def process_program(program):
     """
 
     # Group together common exposures
+    logging.info('Processing {}'.format(program))
+    logging.info('')
     filenames = glob.glob(os.path.join(get_config()['filesystem'], 'public', program, '*/*.fits'))
     filenames.extend(glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', program, '*/*.fits')))
     filenames = list(set(filenames))
     grouped_filenames = group_filenames(filenames)
-    logging.info('Found {} filenames for program {}'.format(len(filenames), program))
+    logging.info('Found {} filenames'.format(len(filenames)))
 
     for file_list in grouped_filenames:
         filename = file_list[0]
