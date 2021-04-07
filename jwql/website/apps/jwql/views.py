@@ -49,7 +49,7 @@ from django.shortcuts import redirect, render
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS
-from jwql.utils.utils import filesystem_path, get_base_url, get_config, query_unformat
+from jwql.utils.utils import combine_header_tables, filesystem_path, get_base_url, get_config, query_unformat
 
 from .data_containers import build_table
 from .data_containers import data_trending
@@ -734,7 +734,8 @@ def view_header(request, inst, filename):
     context = {'inst': inst,
                'filename': filename,
                'file_root': file_root,
-               'header_info': get_header_info(filename)}
+               'header_info': get_header_info(filename),
+               'all_headers_table': combine_header_tables(get_header_info(filename))}
 
     return render(request, template, context)
 
