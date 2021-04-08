@@ -2,7 +2,7 @@ channels:
 - defaults
 - http://ssb.stsci.edu/astroconda
 dependencies:
-- astropy==4.0.2
+- astropy==4.2
 - astroquery=0.4
 - authlib=0.15.3
 - bokeh=2.2.3
