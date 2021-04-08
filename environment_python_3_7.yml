@@ -29,7 +29,7 @@ dependencies:
 - pyyaml=5.4.1
 - scipy=1.6.2
 - setuptools=52.0.0
-- sphinx=3.5.3
+- sphinx=3.5.1
 - sqlalchemy=1.4.4
 - twine=3.3.0
 - wtforms=2.3.3
