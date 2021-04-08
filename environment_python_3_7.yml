@@ -11,14 +11,14 @@ dependencies:
 - django=3.1.7
 - flake8=3.9.0
 - inflection=0.5.1
-- ipython=7.20.0
+- ipython=7.22.0
 - jinja2=2.11.3
 - jsonschema=3.2.0
 - matplotlib=3.2.2
 - nodejs=10.13.0
 - numpy=1.18.5
 - numpydoc=1.1.0
-- pandas=1.2.2
+- pandas=1.2.3
 - pip=20.3.3
 - postgresql=12.2
 - psycopg2=2.8.6
@@ -29,7 +29,7 @@ dependencies:
 - pyyaml=5.4.1
 - scipy=1.6.1
 - setuptools=52.0.0
-- sphinx=3.5.1
+- sphinx=3.5.3
 - sqlalchemy=1.3.21
 - twine=3.3.0
 - wtforms=2.3.3
