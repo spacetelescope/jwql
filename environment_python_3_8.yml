@@ -6,9 +6,9 @@ dependencies:
 - authlib=0.15.3
 - bokeh=2.3.0
 - codecov==2.1.11
-- cryptography==3.3.1
+- cryptography==3.4.7
 - django=3.1.7
-- flake8=3.8.4
+- flake8=3.9.0
 - inflection=0.5.1
 - ipython=7.20.0
 - jinja2=2.11.3
