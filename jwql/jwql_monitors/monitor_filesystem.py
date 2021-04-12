@@ -20,7 +20,7 @@ Use
 
         python monitor_filesystem.py
 
-    The user must have a ``config.json`` file in the ``utils``
+    The user must have a ``config.json`` file in the ``jwql``
     directory with the following keys:
       - ``filesystem`` - The path to the filesystem
       - ``outputs`` - The path to where the output plots will be
@@ -30,7 +30,7 @@ Dependencies
 ------------
 
     The user must have a configuration file named ``config.json``
-    placed in the ``utils`` directory.
+    placed in the ``jwql`` directory.
 """
 
 from collections import defaultdict

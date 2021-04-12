@@ -104,7 +104,7 @@ The package should now appear if you run `conda list jwql`.
 
 ### Configuration File
 
-Much of the `jwql` software depends on the existence of a `config.json` file within the `utils` directory.  This file contains data that may be unique to users and/or contain sensitive information.  Please see the [Config File wiki page](https://github.com/spacetelescope/jwql/wiki/Config-file) for instructions on how to provide this file.
+Much of the `jwql` software depends on the existence of a `config.json` file within the `jwql` directory.  This file contains data that may be unique to users and/or contain sensitive information.  Please see the [Config File wiki page](https://github.com/spacetelescope/jwql/wiki/Config-file) for instructions on how to provide this file.
 
 
 ## Citation
