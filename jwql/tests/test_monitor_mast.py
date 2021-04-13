@@ -18,7 +18,6 @@ Use
 """
 
 from astroquery.mast import Mast
-import pytest
 
 from jwql.jwql_monitors import monitor_mast as mm
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES

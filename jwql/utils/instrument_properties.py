@@ -140,7 +140,7 @@ def amplifier_info(filename, omit_reference_pixels=True):
 
         # Adjust the minimum and maximum x and y values if they are within
         # the reference pixels
-        for i,key in enumerate(amp_bounds):
+        for i, key in enumerate(amp_bounds):
             bounds = amp_bounds[key]
             prev_xmin, prev_xmax, prev_xstep = bounds[0]
             prev_ymin, prev_ymax, prev_ystep = bounds[1]

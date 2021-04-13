@@ -84,6 +84,7 @@ DEFAULT_GROUP = 'jwql_dev'
 # set the default mode for DEFAULT_OWNER
 DEFAULT_MODE = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP # equivalent to '?rwxr-x---'
 
+
 def get_group_string(pathname):
     """Return the group of ``pathname`` in string representation.
 

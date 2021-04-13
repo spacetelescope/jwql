@@ -23,7 +23,6 @@ import pytest
 
 import numpy as np
 
-from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats
 from jwql.instrument_monitors.common_monitors import readnoise_monitor
 from jwql.utils.utils import get_config
 

@@ -117,7 +117,6 @@ def test_file_group(test_file):
     """
     # Get owner and group on the current system.
     owner = get_owner_string(test_file)
-    group = get_group_string(test_file)
 
     # attempt to retrieve a group name different from default
     group_index = 0

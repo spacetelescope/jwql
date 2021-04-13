@@ -49,7 +49,7 @@ def bar_chart(dataframe, groupcol, datacols=None, **kwargs):
     plt : obj
         The generated bokeh.figure object
     """
-    
+
     # Get the groups
     groups = list(dataframe[groupcol])
 
