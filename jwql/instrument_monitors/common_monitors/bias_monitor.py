@@ -53,7 +53,6 @@ from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
-from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
 from jwql.utils import instrument_properties
@@ -61,6 +60,7 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, initialize_instrument_monitor, update_monitor_table
+
 
 class Bias():
     """Class for executing the bias monitor.
@@ -250,7 +250,7 @@ class Bias():
             vmin, vmax = z.get_limits(image)
 
             # Plot the image
-            plt.figure(figsize=(12,12))
+            plt.figure(figsize=(12, 12))
             ax = plt.gca()
             im = ax.imshow(image, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
             ax.set_title('{}'.format(outname))
@@ -359,7 +359,7 @@ class Bias():
             # in the calibrated image
             cal_data = fits.getdata(processed_file, 'SCI')[0, 0, :, :]
             dq = fits.getdata(processed_file, 'PIXELDQ')
-            mean, median, stddev = sigma_clipped_stats(cal_data[dq==0], sigma=3.0, maxiters=5)
+            mean, median, stddev = sigma_clipped_stats(cal_data[dq == 0], sigma=3.0, maxiters=5)
             logging.info('\tCalculated calibrated image stats: {:.3f} +/- {:.3f}'.format(mean, stddev))
             collapsed_rows, collapsed_columns = self.collapse_image(cal_data)
             logging.info('\tCalculated collapsed row/column values of calibrated image.')
@@ -382,7 +382,7 @@ class Bias():
                              'collapsed_rows': collapsed_rows.astype(float),
                              'collapsed_columns': collapsed_columns.astype(float),
                              'entry_date': datetime.datetime.now()
-                            }
+                             }
             for key in amp_medians.keys():
                 bias_db_entry[key] = float(amp_medians[key])
 

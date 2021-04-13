@@ -82,15 +82,8 @@ from astropy.time import Time
 from jwst.datamodels import dqflags
 from jwst_reffiles.bad_pixel_mask import bad_pixel_mask
 import numpy as np
-from sqlalchemy import func
-from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
-from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats
-from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSBadPixelStats
-from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats
-from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
-from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors import pipeline_tools
 from jwql.utils import crds_tools, instrument_properties
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
@@ -225,6 +218,7 @@ def exclude_crds_mask_pix(bad_pix, existing_bad_pix):
         but not ``existing_bad_pix``
     """
     return bad_pix - (bad_pix & existing_bad_pix)
+
 
 def locate_rate_files(uncal_files):
     """Given a list of uncal (raw) files, generate a list of
@@ -675,10 +669,8 @@ class BadPixels():
             where the dark monitor was run.
         """
         if file_type.lower() == 'dark':
-            mjd_field = self.query_table.dark_end_time_mjd
             run_field = self.query_table.run_bpix_from_darks
         elif file_type.lower() == 'flat':
-            mjd_field = self.query_table.flat_end_time_mjd
             run_field = self.query_table.run_bpix_from_flats
 
         query = session.query(self.query_table).filter(self.query_table.aperture==self.aperture). \
@@ -873,7 +865,7 @@ class BadPixels():
             baseline_badpix_mask = fits.getdata(baseline_file)
 
         # Exclude hot and dead pixels in the current bad pixel mask
-        #new_hot_pix = self.exclude_existing_badpix(new_hot_pix, 'hot')
+        # new_hot_pix = self.exclude_existing_badpix(new_hot_pix, 'hot')
         new_since_reffile = exclude_crds_mask_pix(badpix_map, baseline_badpix_mask)
 
         # Create a list of the new instances of each type of bad pixel

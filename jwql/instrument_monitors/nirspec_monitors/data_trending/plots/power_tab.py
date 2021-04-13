@@ -47,18 +47,11 @@ Dependencies
     User must provide database "miri_database.db"
 
 """
-import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.sql_interface as sql
 import jwql.instrument_monitors.nirspec_monitors.data_trending.plots.plot_functions as pf
 from bokeh.models import LinearAxis, Range1d
 from bokeh.plotting import figure
-from bokeh.models.widgets import Panel, Tabs, Div
-from bokeh.models import ColumnDataSource, HoverTool
-from bokeh.layouts import WidgetBox, gridplot, Column
-
-import pandas as pd
-import numpy as np
-
-from astropy.time import Time
+from bokeh.models.widgets import Panel, Div
+from bokeh.layouts import Column
 
 
 def ice_power(conn, start, end):
@@ -78,38 +71,40 @@ def ice_power(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 700,
-                x_axis_type = 'datetime',
-                y_range = [-20, 20],
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=700,
+               x_axis_type='datetime',
+               y_range=[-20, 20],
+               output_backend="webgl",
+               x_axis_label='Date',
+               y_axis_label='Voltage (V)')
 
     p.grid.visible = True
     p.title.text = "ICE Power Parameters"
     pf.add_basic_layout(p)
 
-    p.extra_y_ranges = {"current": Range1d(start = 0, end=0.8)}
-    #a = pf.add_to_plot(p, "In_VOlt", "GP_ZPSVOLT", start, end, conn, color = "red")
-    b = pf.add_to_plot(p, "ICE A current", "SE_ZINRSICEA", start, end, conn, color = "blue", y_axis="current")
-    c = pf.add_to_plot(p, "P15V", "INRSH_HK_P15V", start, end, conn, color = "red")
-    d = pf.add_to_plot(p, "N15V", "INRSH_HK_N15V", start, end, conn, color = "orange")
-    e = pf.add_to_plot(p, "VMOTOR", "INRSH_HK_VMOTOR", start, end, conn, color = "burlywood")
-    f = pf.add_to_plot(p, "P5V", "INRSH_HK_P5V", start, end, conn, color = "green")
-    g = pf.add_to_plot(p, "2P5V", "INRSH_HK_2P5V", start, end, conn, color = "darkgreen")
-    h = pf.add_to_plot(p, "ADCTGAIN", "INRSH_HK_ADCTGAIN", start, end, conn, color = "brown")
-    i = pf.add_to_plot(p, "ADCOFFSET", "INRSH_HK_ADCTOFFSET", start, end, conn, color = "navy")
-    p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (A)", axis_label_text_color = "blue"), 'right')
+    p.extra_y_ranges = {"current": Range1d(start=0, end=0.8)}
+    #a = pf.add_to_plot(p, "In_VOlt", "GP_ZPSVOLT", start, end, conn, color="red")
+    b = pf.add_to_plot(p, "ICE A current", "SE_ZINRSICEA", start, end, conn, color="blue", y_axis="current")
+    c = pf.add_to_plot(p, "P15V", "INRSH_HK_P15V", start, end, conn, color="red")
+    d = pf.add_to_plot(p, "N15V", "INRSH_HK_N15V", start, end, conn, color="orange")
+    e = pf.add_to_plot(p, "VMOTOR", "INRSH_HK_VMOTOR", start, end, conn, color="burlywood")
+    f = pf.add_to_plot(p, "P5V", "INRSH_HK_P5V", start, end, conn, color="green")
+    g = pf.add_to_plot(p, "2P5V", "INRSH_HK_2P5V", start, end, conn, color="darkgreen")
+    h = pf.add_to_plot(p, "ADCTGAIN", "INRSH_HK_ADCTGAIN", start, end, conn, color="brown")
+    i = pf.add_to_plot(p, "ADCOFFSET", "INRSH_HK_ADCTOFFSET", start, end, conn, color="navy")
+    p.add_layout(LinearAxis(y_range_name="current", axis_label="Current (A)", axis_label_text_color="blue"), 'right')
 
-    pf.add_hover_tool(p,[b,c,d,e,g,f,h,i])
+    pf.add_hover_tool(p, [b, c, d, e, g, f, h, i])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
     p.legend.orientation = "horizontal"
 
     return p
+
 
 def mce_power(conn, start, end):
     '''Create specific plot and return plot object
@@ -128,19 +123,20 @@ def mce_power(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 400,
-                x_axis_type = 'datetime',
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Current (A)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=400,
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date',
+               y_axis_label='Current (A)')
 
     p.grid.visible = True
     p.title.text = "MCE Power Parameters"
     pf.add_basic_layout(p)
 
-    b = pf.add_to_plot(p, "MCE A current", "SE_ZINRSMCEA", start, end, conn, color = "blue")
+    b = pf.add_to_plot(p, "MCE A current", "SE_ZINRSMCEA", start, end, conn, color="blue")
 
     pf.add_hover_tool(p,[b])
 
@@ -148,6 +144,7 @@ def mce_power(conn, start, end):
     p.legend.click_policy = "hide"
 
     return p
+
 
 def fpe_power(conn, start, end):
     '''Create specific plot and return plot object
@@ -166,37 +163,36 @@ def fpe_power(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 700,
-                y_range = [-30,280],
-                x_axis_type = 'datetime',
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=700,
+               y_range=[-30, 280],
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date',
+               y_axis_label='Voltage (V)')
 
     p.grid.visible = True
     p.title.text = "FPE Power Parameters"
     pf.add_basic_layout(p)
 
+    p.extra_y_ranges = {"current": Range1d(start=0, end=0.8)}
+    # a = pf.add_to_plot(p, "In_VOlt", "GP_ZPSVOLT", start, end, conn, color="red")
+    b = pf.add_to_plot(p, "FPE A current", "SE_ZINRSFPEA", start, end, conn, color="blue", y_axis="current")
+    c = pf.add_to_plot(p, "P12C", "INRSD_ALG_ACC_P12C", start, end, conn, color="red")
+    d = pf.add_to_plot(p, "N15V", "INRSH_HK_N15V", start, end, conn, color="orange")
+    e = pf.add_to_plot(p, "N12C", "INRSD_ALG_ACC_N12C", start, end, conn, color="burlywood")
+    f = pf.add_to_plot(p, "1D5", "INRSD_ALG_ACC_3D3_1D5_C", start, end, conn, color="green")
+    g = pf.add_to_plot(p, "Chassis", "INRSD_ALG_CHASSIS", start, end, conn, color="purple")
+    p.add_layout(LinearAxis(y_range_name="current", axis_label="Current (A)", axis_label_text_color="blue"), 'right')
 
-    p.extra_y_ranges = {"current": Range1d(start = 0, end=0.8)}
-    #a = pf.add_to_plot(p, "In_VOlt", "GP_ZPSVOLT", start, end, conn, color = "red")
-    b = pf.add_to_plot(p, "FPE A current", "SE_ZINRSFPEA", start, end, conn, color = "blue", y_axis="current")
-    c = pf.add_to_plot(p, "P12C", "INRSD_ALG_ACC_P12C", start, end, conn, color = "red")
-    d = pf.add_to_plot(p, "N15V", "INRSH_HK_N15V", start, end, conn, color = "orange")
-    e = pf.add_to_plot(p, "N12C", "INRSD_ALG_ACC_N12C", start, end, conn, color = "burlywood")
-    f = pf.add_to_plot(p, "1D5", "INRSD_ALG_ACC_3D3_1D5_C", start, end, conn, color = "green")
-    g = pf.add_to_plot(p, "Chassis", "INRSD_ALG_CHASSIS", start, end, conn, color = "purple")
-    p.add_layout(LinearAxis(y_range_name = "current", axis_label = "Current (A)", axis_label_text_color = "blue"), 'right')
-
-    pf.add_hover_tool(p,[b,c,d,e,f,g])
+    pf.add_hover_tool(p, [b, c, d, e, f, g])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
 
     return p
-
 
 
 def power_plots(conn, start, end):
@@ -299,6 +295,6 @@ def power_plots(conn, start, end):
 
     layout = Column(descr, plot1, plot2, plot3)
 
-    tab = Panel(child = layout, title = "POWER")
+    tab = Panel(child=layout, title="POWER")
 
     return tab

@@ -60,9 +60,10 @@ Dependencies
 from datetime import datetime
 import os
 import socket
-
 import pandas as pd
-from sqlalchemy import Boolean, Column, DateTime, Integer, MetaData, String, Table
+
+from sqlalchemy import Boolean
+from sqlalchemy import Column
 from sqlalchemy import create_engine
 from sqlalchemy import Date
 from sqlalchemy import DateTime
@@ -74,12 +75,13 @@ from sqlalchemy import String
 from sqlalchemy import Time
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
 from sqlalchemy.types import ARRAY
 
-from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT, FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
+from jwql.utils.constants import FILE_SUFFIX_TYPES
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 from jwql.utils.utils import get_config
 
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')

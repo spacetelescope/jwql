@@ -53,11 +53,6 @@ import numpy as np
 from pysiaf import Siaf
 from sqlalchemy.sql.expression import and_
 
-from jwql.database.database_interface import FGSReadnoiseQueryHistory, FGSReadnoiseStats
-from jwql.database.database_interface import MIRIReadnoiseQueryHistory, MIRIReadnoiseStats
-from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats
-from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats
-from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats
 from jwql.database.database_interface import session
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
@@ -361,11 +356,12 @@ class Readnoise():
             else:
                 cds_stack = np.concatenate((cds_stack, cds), axis=0)
 
-        # Calculate the readnoise by taking the clipped stddev through the CDS stack
+        # Calculate readnoise by taking the clipped stddev through CDS stack
         logging.info('\tCreating readnoise image')
         clipped = sigma_clip(cds_stack, sigma=3.0, maxiters=3, axis=0)
         readnoise = np.std(clipped, axis=0)
-        readnoise = readnoise.filled(fill_value=np.nan)  # converts masked array to normal array and fills missing data
+        # converts masked array to normal array and fills missing data
+        readnoise = readnoise.filled(fill_value=np.nan)
 
         return readnoise
 

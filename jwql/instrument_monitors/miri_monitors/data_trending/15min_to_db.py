@@ -25,22 +25,22 @@ Notes
     For developement only
 '''
 
-import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as mn
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.csv_to_AstropyTable as apt
 from jwql.instrument_monitors.miri_monitors.data_trending.utils.process_data import once_a_day_routine
-from jwql.utils.utils import get_config, filename_parser
+from jwql.utils.utils import get_config
 
 import statistics
 import os
 import glob
 
-#set _location_ variable
+# set _location_ variable
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-#point to the directory where your files are located!
+# point to the directory where your files are located!
 directory = os.path.join(get_config()['outputs'], 'miri_data_trending', 'trainings_data_15min', '*.CSV')
 paths = glob.glob(directory)
+
 
 def process_file(conn, path):
     '''Parse CSV file, process data within and put to DB
@@ -53,16 +53,16 @@ def process_file(conn, path):
         defines file to read
     '''
 
-    #import mnemonic data and append dict to variable below
+    # import mnemonic data and append dict to variable below
     m_raw_data = apt.mnemonics(path)
 
-    #process raw data with once a day routine
+    # process raw data with once a day routine
     processed_data = once_a_day_routine(m_raw_data)
 
-    #push extracted and filtered data to temporary database
+    # push extracted and filtered data to temporary database
     for key, value in processed_data.items():
 
-        #abbreviate data table
+        # abbreviate data table
         m = m_raw_data.mnemonic(key)
 
         if key == "SE_ZIMIRICEA":
@@ -86,21 +86,23 @@ def process_file(conn, path):
             dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
             sql.add_data(conn, key, dataset)
 
+
 def main():
-    #generate paths
+    # generate paths
     DATABASE_LOCATION = os.path.join(get_config()['jwql_dir'], 'database')
     DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'miri_database.db')
 
-    #connect to temporary database
+    # connect to temporary database
     conn = sql.create_connection(DATABASE_FILE)
 
-    #process every csv file in directory folder
+    # process every csv file in directory folder
     for path in paths:
         process_file(conn, path)
 
-    #close connection
+    # close connection
     sql.close_connection(conn)
     print("done")
+
 
 if __name__ == "__main__":
     main()
