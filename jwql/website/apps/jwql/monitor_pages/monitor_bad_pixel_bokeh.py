@@ -24,6 +24,11 @@ import datetime
 import numpy as np
 
 from jwql.database.database_interface import session
+from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats
+from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSBadPixelStats
+from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats
+from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
+from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.utils.constants import BAD_PIXEL_TYPES, DARKS_BAD_PIXEL_TYPES, FLATS_BAD_PIXEL_TYPES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import filesystem_path
 from jwql.bokeh_templating import BokehTemplate

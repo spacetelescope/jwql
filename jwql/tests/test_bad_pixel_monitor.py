@@ -23,6 +23,11 @@ import pytest
 
 from jwst.datamodels import dqflags
 
+from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats
+from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSBadPixelStats
+from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats
+from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
+from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors.common_monitors import bad_pixel_monitor
 
 # Determine if tests are being run on Github Actions

@@ -24,6 +24,7 @@ import shutil
 from astropy.io import fits
 import numpy as np
 
+from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats
 from jwql.instrument_monitors.common_monitors import bias_monitor
 from jwql.utils.utils import get_config
 

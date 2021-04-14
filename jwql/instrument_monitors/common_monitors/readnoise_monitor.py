@@ -49,6 +49,11 @@ import numpy as np
 from pysiaf import Siaf
 from sqlalchemy.sql.expression import and_
 
+from jwql.database.database_interface import FGSReadnoiseQueryHistory, FGSReadnoiseStats
+from jwql.database.database_interface import MIRIReadnoiseQueryHistory, MIRIReadnoiseStats
+from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats
+from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats
+from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats
 from jwql.database.database_interface import session
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
