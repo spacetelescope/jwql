@@ -84,6 +84,11 @@ from jwst_reffiles.bad_pixel_mask import bad_pixel_mask
 import numpy as np
 
 from jwql.database.database_interface import session
+from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats
+from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSBadPixelStats
+from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats
+from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
+from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors import pipeline_tools
 from jwql.utils import crds_tools, instrument_properties
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, \

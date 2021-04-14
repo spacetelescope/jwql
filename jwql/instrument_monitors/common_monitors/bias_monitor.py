@@ -53,6 +53,7 @@ from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
+from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats
 from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
 from jwql.utils import instrument_properties
