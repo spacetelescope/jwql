@@ -42,10 +42,6 @@ from astropy.stats import sigma_clip
 from astropy.time import Time
 from astropy.visualization import ZScaleInterval
 import crds
-from jwst.dq_init import DQInitStep
-from jwst.group_scale import GroupScaleStep
-from jwst.refpix import RefPixStep
-from jwst.superbias import SuperBiasStep
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -340,7 +336,7 @@ class Readnoise():
             The 2D readnoise image.
         """
 
-        # Create a stack of correlated double sampling (CDS) images using the input
+        # Create a stack of correlated double sampling (CDS) images using input
         # ramp data, combining multiple integrations if necessary.
         logging.info('\tCreating stack of CDS difference frames')
         num_ints, num_groups, num_y, num_x = data.shape
@@ -488,7 +484,7 @@ class Readnoise():
                                   'diff_image_n': diff_image_n.astype(float),
                                   'diff_image_bin_centers': diff_image_bin_centers.astype(float),
                                   'entry_date': datetime.datetime.now()
-                                 }
+                                  }
             for key in amp_stats.keys():
                 if isinstance(amp_stats[key], (int, float)):
                     readnoise_db_entry[key] = float(amp_stats[key])

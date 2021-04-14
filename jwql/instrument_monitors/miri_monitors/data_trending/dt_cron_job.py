@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 ''' Cron Job for miri datatrending -> populates database
 
-    This module holds functions to connect with the engineering database in order
-    to grab and process data for the specific miri database. The scrips queries
-    a daily 15 min chunk and a whole day dataset. These contain several mnemonics
-    defined in ''mnemonics.py''. The queried data gets processed and stored in
-    an auxiliary database.
+    This module holds functions to connect with the engineering database
+    in order to grab and process data for the specific miri database. The
+    script queries a daily 15 min chunk and a whole day dataset. These
+    contain several mnemonics defined in ''mnemonics.py''. The queried data
+    gets processed and stored in an auxiliary database.
 
 Authors
 -------
@@ -75,7 +75,7 @@ def process_day_sample(conn, m_raw_data):
                     dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
                     sql.add_data(conn, key, dataset)
 
-    #########################################################################################
+    ###########################################################################
     for pos in mn.fw_positions:
         try:
             data = FW[pos]

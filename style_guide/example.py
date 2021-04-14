@@ -185,6 +185,6 @@ if __name__ == '__main__':
     module = os.path.basename(__file__).strip('.py')
     configure_logging(module)
 
-    args = parse_args() # type: argparse.Namespace
+    args = parse_args()  # type: argparse.Namespace
 
     my_main_function(args.path, args.filter)

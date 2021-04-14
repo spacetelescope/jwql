@@ -152,7 +152,7 @@ def bias_monitor_tabs(instrument):
             collapsed_plot.sizing_mode = 'scale_width'
             plots.append(collapsed_plot)
 
-        # Put the mean bias plots on the top 2 rows, the calibrated image on the
+        # Put the mean bias plots on the top 2 rows, the calibrated image on
         # third row, and the collapsed row/column plots on the bottom row.
         bias_layout = layout(
             plots[0:8][::2],
@@ -324,8 +324,8 @@ def readnoise_monitor_tabs(instrument):
         readnoise_diff_hist.margin = (0, 190, 0, 190)
         plots.append(readnoise_diff_hist)
 
-        # Put the mean readnoise plots on the top row, the difference image on the
-        # second row, and the difference histogram on the bottom row.
+        # Put mean readnoise plots on the top row, difference image on the
+        # second row, and difference histogram on the bottom row.
         readnoise_layout = layout(
             plots[0:4],
             plots[4:5],

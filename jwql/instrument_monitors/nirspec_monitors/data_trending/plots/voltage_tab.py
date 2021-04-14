@@ -128,6 +128,7 @@ def gain_volt(conn, start, end):
     p.legend.orientation = "horizontal"
     return p
 
+
 def offset_volt(conn, start, end):
     '''Create specific plot and return plot object
     Parameters

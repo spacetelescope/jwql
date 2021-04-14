@@ -300,7 +300,8 @@ class Bias():
         query_count = len(query)
         if query_count == 0:
             query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
-            logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, query_result)))
+            logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
+                          .format(self.aperture, query_result)))
         elif query_count > 1:
             raise ValueError('More than one "most recent" query?')
         else:
@@ -330,7 +331,8 @@ class Bias():
                 continue
 
             # Get the exposure start time of this file
-            expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'], fits.getheader(filename, 0)['TIME-OBS'])
+            expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'],
+                                      fits.getheader(filename, 0)['TIME-OBS'])
 
             # Determine if the file needs group_scale in pipeline run
             read_pattern = fits.getheader(filename, 0)['READPATT']
@@ -366,7 +368,7 @@ class Bias():
 
             # Save a png of the calibrated image for visual inspection
             logging.info('\tCreating png of calibrated image')
-            output_png = self.image_to_png(cal_data, outname=os.path.basename(processed_file).replace('.fits',''))
+            output_png = self.image_to_png(cal_data, outname=os.path.basename(processed_file).replace('.fits', ''))
 
             # Construct new entry for this file for the bias database table.
             # Can't insert values with numpy.float32 datatypes into database
@@ -420,9 +422,9 @@ class Bias():
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
 
-                # Locate the record of the most recent MAST search; use this time
-                # (plus a 30 day buffer to catch any missing files from the previous
-                # run) as the start time in the new MAST search.
+                # Locate the record of most recent MAST search; use this time
+                # (plus a 30 day buffer to catch any missing files from
+                # previous run) as the start time in the new MAST search.
                 most_recent_search = self.most_recent_search()
                 self.query_start = most_recent_search - 30
 
@@ -436,7 +438,7 @@ class Bias():
                 if len(new_entries) > 0:
                     ensure_dir_exists(self.data_dir)
 
-                # Save the 0th group image from each new file in the output directory;
+                # Save 0th group image from each new file in output directory;
                 # some dont exist in JWQL filesystem.
                 new_files = []
                 for file_entry in new_entries:

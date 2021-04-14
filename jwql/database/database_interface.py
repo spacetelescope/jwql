@@ -141,7 +141,8 @@ def load_connection(connection_string):
     return session, base, engine, meta
 
 
-# Import a global session.  If running from readthedocs or GitHub Actions, pass a dummy connection string
+# Import a global session.  If running from readthedocs or GitHub Actions,
+# pass a dummy connection string
 if 'build' and 'project' in socket.gethostname() or ON_GITHUB_ACTIONS:
     dummy_connection_string = 'postgresql+psycopg2://account:password@hostname:0000/db_name'
     session, base, engine, meta = load_connection(dummy_connection_string)
@@ -186,7 +187,7 @@ class FilesystemInstrument(base):
 
     @property
     def colnames(self):
-        """A list of all the column names in this table EXCEPT the date column"""
+        """A list of all column names in this table EXCEPT the date column"""
         # Get the columns
         a_list = [col for col, val in self.__dict__.items()
                   if not isinstance(val, datetime)]

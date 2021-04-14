@@ -164,7 +164,8 @@ def amplifier_info(filename, omit_reference_pixels=True):
                 new_ymax = ymax
             else:
                 new_ymax = prev_ymax
-            amp_bounds[key] = [(new_xmin, new_xmax, prev_xstep), (new_ymin, new_ymax, prev_ystep)]
+            amp_bounds[key] = [(new_xmin, new_xmax, prev_xstep),
+                               (new_ymin, new_ymax, prev_ystep)]
 
     return num_amps, amp_bounds
 

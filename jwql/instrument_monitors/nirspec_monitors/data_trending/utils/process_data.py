@@ -191,7 +191,8 @@ def once_a_day_routine(mnemonic_data):
     Parameters
     ----------
     mnemonic_data : dict
-        dict holds time and value in a astropy table with correspining identifier as key
+        dict holds time and value in an astropy table
+        with correspining identifier as key
     Return
     ------
     return_data : dict
@@ -250,7 +251,8 @@ def whole_day_routine(mnemonic_data):
     Parameters
     ----------
     mnemonic_data : dict
-        dict holds time and value in a astropy table with correspining identifier as key
+        dict holds time and value in an astropy table
+        with correspining identifier as key
 
     Return
     ------
@@ -306,7 +308,8 @@ def wheelpos_routine(mnemonic_data):
     Parameters
     ----------
     mnemonic_data : dict
-        dict holds time and value in a astropy table with correspining identifier as key
+        dict holds time and value in an astropy table
+        with correspining identifier as key
     Return
     ------
     FW : dict
@@ -337,5 +340,5 @@ def wheelpos_routine(mnemonic_data):
     return FW, GWX, GWY
 
 
-if __name__ =='__main__':
+if __name__ == '__main__':
     pass

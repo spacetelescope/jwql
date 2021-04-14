@@ -91,8 +91,8 @@ class mnemonics:
             print('{} not in list'.format(name))
 
     # looks for given mnemonic in given table
-    # returns list containing astropy tables with sorted mnemonics and engineering values
-    # adds useful meta data to Table
+    # returns list containing astropy tables with sorted mnemonics and
+    # engineering values adds useful meta data to Table
     def sort_mnemonic(self, mnemonic, table):
         """Looks for all values in table with identifier "mnemonic"
            Converts time string to mjd format
@@ -116,7 +116,7 @@ class mnemonics:
             try:
                 if item['Telemetry Mnemonic'] == mnemonic:
                     # convert time string to mjd format
-                    temp = item['Secondary Time'].replace('/','-').replace(' ', 'T')
+                    temp = item['Secondary Time'].replace('/', '-').replace(' ', 'T')
                     t = Time(temp, format='isot')
 
                     temp1.append(t.mjd)

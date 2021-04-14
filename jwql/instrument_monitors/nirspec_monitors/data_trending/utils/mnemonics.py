@@ -38,7 +38,7 @@ mnemonic_cond_3 = [
 
 # menmonics applicable when CAA is powered
 # INRSH_CAA_PWRF_ST = ON
-mnemonic_caa= [
+mnemonic_caa = [
 "IGDP_NRSI_C_CAAL1_TEMP",
 "IGDP_NRSI_C_CAAL2_TEMP",
 "IGDP_NRSI_C_CAAL3_TEMP",

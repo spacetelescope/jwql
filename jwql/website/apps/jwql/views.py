@@ -413,7 +413,8 @@ def dashboard(request):
     grating_plot = db.dashboard_exposure_count_by_filter()
     anomaly_plot = db.dashboard_anomaly_per_instrument()
 
-    plot = layout([[files_graph], [pie_graph, filetype_bar], [grating_plot, anomaly_plot]], sizing_mode='stretch_width')
+    plot = layout([[files_graph], [pie_graph, filetype_bar],
+                   [grating_plot, anomaly_plot]], sizing_mode='stretch_width')
     script, div = components(plot)
 
     time_deltas = ['All Time', '1 Day', '1 Week', '1 Month', '1 Year']

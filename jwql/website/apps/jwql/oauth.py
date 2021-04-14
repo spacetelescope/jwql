@@ -230,7 +230,7 @@ def auth_required(fn):
         else:
             domain = base_url.split('//')[-1]
 
-        # If running web app locally, the user does not need to be authenticated
+        # If running web app locally, user does not need to be authenticated
         if domain == '127.0.0.1':
             return fn(request, user, **kwargs)
 

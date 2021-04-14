@@ -503,8 +503,8 @@ class Dark():
 
         # Determine which pipeline steps need to be executed
         required_steps = pipeline_tools.get_pipeline_steps(self.instrument)
-        logging.info('\tRequired calwebb1_detector pipeline steps to have the data in the '
-                     'correct format:')
+        logging.info('\tRequired calwebb1_detector pipeline steps to have'
+                     'data in correct format:')
         for item in required_steps:
             logging.info('\t\t{}: {}'.format(item, required_steps[item]))
 
@@ -727,7 +727,7 @@ class Dark():
                 logging.info('')
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
 
-                # Find the appropriate threshold for the number of new files needed
+                # Find appropriate threshold for the number of new files needed
                 match = aperture == limits['Aperture']
                 file_count_threshold = limits['Threshold'][match]
 
@@ -989,7 +989,7 @@ class Dark():
             total_pix = np.sum(hist[positive])
             p_i = gauss_fit[positive] / total_pix
             gaussian_chi_squared[key] = (np.sum((hist[positive] - (total_pix * p_i) ** 2) / (total_pix * p_i)) /
-                                        degrees_of_freedom)
+                                         degrees_of_freedom)
 
             # Double Gaussian fit only for full frame data (and only for
             # NIRISS, NIRCam at the moment.)

@@ -29,12 +29,7 @@ import utils.sql_interface as sql
 from utils.process_data import whole_day_routine, wheelpos_routine
 from jwql.utils.engineering_database import query_single_mnemonic
 
-import pandas as pd
-import numpy as np
 import statistics
-import sqlite3
-
-from astropy.time import Time
 
 
 def process_daysample(conn, m_raw_data):
@@ -47,11 +42,11 @@ def process_daysample(conn, m_raw_data):
         defines path to the files
     '''
 
-    #process raw data with once a day routine
+    # process raw data with once a day routine
     return_data, lamp_data = whole_day_routine(m_raw_data)
     FW, GWX, GWY = wheelpos_routine(m_raw_data)
 
-    #put all data to a database that uses a condition
+    # put all data to a database that uses a condition
     for key, value in return_data.items():
         m = m_raw_data.mnemonic(key)
         length = len(value)
@@ -60,15 +55,14 @@ def process_daysample(conn, m_raw_data):
         dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
         sql.add_data(conn, key, dataset)
 
-
-    #add rest of the data to database -> no conditions applied
+    # add rest of the data to database -> no conditions applied
     for identifier in mn.mnemSet_day:
         m = m_raw_data.mnemonic(identifier)
         temp = []
-        #look for all values that fit to the given conditions
+        # look for all values that fit to the given conditions
         for element in m:
             temp.append(float(element['value']))
-        #return None if no applicable data was found
+        # return None if no applicable data was found
         if len(temp) > 2:
             length = len(temp)
             mean = statistics.mean(temp)
@@ -77,7 +71,7 @@ def process_daysample(conn, m_raw_data):
             print('No data for {}'.format(identifier))
         del temp
 
-    #add lamp data to database -> distiction over lamps
+    # add lamp data to database -> distiction over lamps
     for key, values in lamp_data.items():
         for data in values:
             dataset_volt = (data[0], data[1], data[5], data[6], data[7])
@@ -86,7 +80,7 @@ def process_daysample(conn, m_raw_data):
             sql.add_data(conn, 'LAMP_{}_CURR'.format(key), dataset_curr)
 
 
-    #add wheeldata to database
+    # add wheeldata to database
     for key, values in FW.items():
         for data in values:
             sql.add_wheel_data(conn, 'INRSI_C_FWA_POSITION_{}'.format(key), data)
@@ -110,10 +104,10 @@ def process_15minsample(conn, m_raw_data):
         defines path to the files
     '''
 
-    #process raw data with once a day routine
+    # process raw data with once a day routine
     returndata = once_a_day_routine(m_raw_data)
 
-    #put all data in a database that uses a condition
+    # put all data in a database that uses a condition
     for key, value in returndata.items():
         m = m_raw_data.mnemonic(key)
         length = len(value)
@@ -122,18 +116,18 @@ def process_15minsample(conn, m_raw_data):
         dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
         sql.add_data(conn, key, dataset)
 
-    #add rest of the data to database
+    # add rest of the data to database
     for identifier in mn.mnemSet_15min:
 
         m = m_raw_data.mnemonic(identifier)
 
         temp = []
 
-        #look for all values that fit to the given conditions
+        # look for all values that fit to the given conditions
         for element in m:
             temp.append(float(element['value']))
 
-        #return None if no applicable data was found
+        # return None if no applicable data was found
         if len(temp) > 2:
             length = len(temp)
             mean = statistics.mean(temp)
@@ -150,6 +144,7 @@ def process_15minsample(conn, m_raw_data):
 
         del temp
 
+
 def main():
 
     '''
@@ -164,33 +159,19 @@ def main():
     assert len(mnemonic.data) == mnemonic.meta['paging']['rows']
     '''
 
-
     for mnemonic in mn.mnemonic_set_15min:
-        whole_day.update(mnemonic = query_single_mnemonic(mnemonic, start, end))
+        whole_day.update(mnemonic=query_single_mnemonic(mnemonic, start, end))
 
-
-    #configure start and end time for query
-    #
-    #
-    #
-    #
-
-    #query table start and end from engineering_database
-    #
-    #
-    #
-    #
-    #return table_day, table_15min
-    #generate paths
+    # generate paths
     DATABASE_LOCATION = os.path.join(get_config()['jwql_dir'], 'database')
     DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'nirspec_database.db')
 
-    #connect to temporary database
+    # connect to temporary database
     conn = sql.create_connection(DATABASE_FILE)
 
     process_daysample(conn, table_day)
     process_15minsample(conn, table_15min)
 
-    #close connection
+    # close connection
     sql.close_connection(conn)
     print("done")

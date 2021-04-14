@@ -137,7 +137,7 @@ class BadPixelMonitor(BokehTemplate):
         # Find all the rows corresponding to the requested type of bad pixel
         rows = [row for row in self.bad_pixel_table if row.type == bad_pixel_type]
 
-        # Extract the dates, number of bad pixels, and files used from each entry
+        # Extract dates, number of bad pixels, and files used from each entry
         dates = [row.obs_mid_time for row in rows]
         coords = [row.coordinates for row in rows]
         files = [row.source_files[0] for row in rows]
@@ -195,8 +195,8 @@ class BadPixelMonitor(BokehTemplate):
         # Get dates and coordinates of the most recent entries
         self.most_recent_data()
 
-        # This shows that for e.g. NRCA2_FULL, the data are what we expect, but somehow the plot
-        # is not showing it!!!!!!!!
+        # This shows that for e.g. NRCA2_FULL, the data are what we expect,
+        # but somehow the plot is not showing it!!!!!!!!
         # if self._aperture != 'NRCA1_FULL':
         #    raise ValueError(self._aperture, self.latest_bad_from_dark_type, self.latest_bad_from_dark_x, self.latest_bad_from_dark_y)
 

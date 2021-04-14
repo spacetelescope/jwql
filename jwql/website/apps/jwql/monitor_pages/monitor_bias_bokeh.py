@@ -117,7 +117,7 @@ class BiasMonitor(BokehTemplate):
 
         if len(self.query_results) != 0:
             for direction in ['rows', 'columns']:
-                # Get the most recent data; the entries were sorted by time when
+                # Get most recent data; the entries were sorted by time when
                 # loading the database, so the last entry will always be the most recent.
                 vals = np.array(self.query_results[-1].__dict__['collapsed_{}'.format(direction)])
                 pixels = np.arange(len(vals))

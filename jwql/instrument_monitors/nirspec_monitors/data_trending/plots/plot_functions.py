@@ -59,13 +59,11 @@ def add_hover_tool(p, rend):
     from bokeh.models import HoverTool
 
     # activate HoverTool for scatter plot
-    hover_tool = HoverTool(tooltips=
-    [
-        ('Name', '$name'),
-        ('Count', '@data_points'),
-        ('Mean', '@average'),
-        ('Deviation', '@deviation'),
-    ], renderers=rend)
+    hover_tool = HoverTool(tooltips=[('Name', '$name'),
+                                     ('Count', '@data_points'),
+                                     ('Mean', '@average'),
+                                     ('Deviation', '@deviation'),
+                                     ], renderers=rend)
     # append hover tool
     p.tools.append(hover_tool)
 

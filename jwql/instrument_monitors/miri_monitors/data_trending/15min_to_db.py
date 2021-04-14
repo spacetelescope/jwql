@@ -2,11 +2,11 @@
 ''' Auxiliary module to populate database
 
     This module was used throughout development to populate the database. Since
-    the EDB had no valid data during implementation we had to download data elsewhere.
-    The downloaded data is in .CSV format and can easily be read by the program.
-    After import and sorting the process_file function extracts the useful part and
-    pushes it to the auxiliary database. This function can be implemented in the
-    final cron job.
+    the EDB had no valid data during implementation, we had to download data
+    elsewhere. The downloaded data is in .CSV format and can easily be read
+    by the program. After import and sorting the process_file function extracts
+    the useful part and pushes it to the auxiliary database. This function can
+    be implemented in the final cron job.
 
 Authors
 -------
@@ -15,10 +15,9 @@ Authors
 
 Use
 ---
-    make sure "directory" points to a folder where useable 15min-samples are storedself.
-    make sure you already ran .utils/sql_interface.py in order to create a empty database
-    with prepared tables.
-    Run the module form the command line.
+    Make sure "directory" points to a folder where useable 15min-samples are storedself.
+    Make sure you already ran .utils/sql_interface.py in order to create an
+    empty database with prepared tables. Run the module from the command line.
 
 Notes
 -----

@@ -332,7 +332,7 @@ def fpe_fpa_plots(conn, start, end):
             ASIC (1,2) VDDA Current<br>
         </td>
       </tr>
-      
+
     </table>
     </body>
     """, width=1100)

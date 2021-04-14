@@ -2,10 +2,10 @@
 """Module generates conditions over one or more mnemonics
 
 The modules purpose is to return True/False for any times by reference of
-certain conditions. If for instance the condition "x>1" over a defined period of
-time is needed, the module looks for all elements where the condition applies
-and where it does not apply. This generates two lists, which contain the "start"
-and "end" times of the condition.
+certain conditions. If for instance the condition "x>1" over a defined period
+of time is needed, the module looks for all elements where the condition
+applies and where it does not apply. This generates two lists, which contain
+the "start" and "end" times of the condition.
 A futher function combines the start- and endtimes to time-tuples between which
 the condition is known as TRUE. A "state" function returns True/False for an
 exact time attribute, whereby the condition is represented in binary form.
@@ -230,8 +230,8 @@ class equal(condition):
         self.stringval = stringval
         condition.cond_time_pairs.append((self.cond_true_time()))
 
-    # generates a list of time-touples (start_time, end_time) that mark the beginning and end of
-    # wheather the condition is true or not
+    # generates a list of time-touples (start_time, end_time) that mark
+    # the beginning and end of whether the condition is true or not
     def cond_true_time(self):
         """Filters all values that are equal to a given comparison value
         if equal: Primary time -> temp_start
@@ -284,8 +284,8 @@ class unequal(condition):
         self.value = value
         condition.cond_time_pairs.append((self.cond_true_time()))
 
-    # generates a list of time-touples (start_time, end_time) that mark the beginning and end of
-    # whether the condition is true or not
+    # generates a list of time-touples (start_time, end_time) that mark
+    # the beginning and end of whether the condition is true or not
     def cond_true_time(self):
         """Filters all values that are equal to a given comparison value
         if equal: Primary time -> temp_start
@@ -398,5 +398,5 @@ class smaller(condition):
         return time_p
 
 
-if __name__ =='__main__':
+if __name__ == '__main__':
     pass
