@@ -43,7 +43,6 @@ import os
 from bokeh.layouts import layout
 from bokeh.embed import components
 from django.http import HttpResponse, JsonResponse
-from django.http import HttpRequest as request
 from django.shortcuts import redirect, render
 
 from jwql.database.database_interface import load_connection
@@ -69,7 +68,6 @@ from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import InstrumentAnomalySubmitForm
 from .forms import AnomalyQueryForm
-from .data_containers import build_table
 from .forms import FileSearchForm
 from .oauth import auth_info, auth_required
 

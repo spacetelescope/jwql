@@ -20,18 +20,12 @@ Use
 import os
 
 from astropy.io import fits
-from astropy.time import Time
 import datetime
 import numpy as np
 
 from jwql.database.database_interface import session
-from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats
-from jwql.database.database_interface import NIRISSBadPixelQueryHistory, NIRISSBadPixelStats
-from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPixelStats
-from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
-from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.utils.constants import BAD_PIXEL_TYPES, DARKS_BAD_PIXEL_TYPES, FLATS_BAD_PIXEL_TYPES, JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.utils import get_config, filesystem_path
+from jwql.utils.utils import filesystem_path
 from jwql.bokeh_templating import BokehTemplate
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -125,7 +119,6 @@ class BadPixelMonitor(BokehTemplate):
         self.refs['badpix_map_figure'].title.align = "center"
         self.refs['badpix_map_figure'].title.text_font_size = "20px"
 
-
     def most_recent_coords(self, bad_pixel_type):
         """Return the coordinates of the bad pixels in the most recent
         database entry for the given bad pixel type
@@ -171,7 +164,6 @@ class BadPixelMonitor(BokehTemplate):
         # Return the list of coordinates for the most recent entry
         return coords[-1]
 
-
     def pre_init(self):
         # Start with default values for instrument and aperture because
         # BokehTemplate's __init__ method does not allow input arguments
@@ -198,18 +190,15 @@ class BadPixelMonitor(BokehTemplate):
         self.load_data()
         self.get_history_data()
         # For development, while the database tables are empty
-        #self.load_dummy_data()
+        # self.load_dummy_data()
 
         # Get dates and coordinates of the most recent entries
         self.most_recent_data()
 
-
         # This shows that for e.g. NRCA2_FULL, the data are what we expect, but somehow the plot
         # is not showing it!!!!!!!!
-        #if self._aperture != 'NRCA1_FULL':
+        # if self._aperture != 'NRCA1_FULL':
         #    raise ValueError(self._aperture, self.latest_bad_from_dark_type, self.latest_bad_from_dark_x, self.latest_bad_from_dark_y)
-
-
 
     def post_init(self):
         self._update_badpix_v_time()
@@ -247,9 +236,8 @@ class BadPixelMonitor(BokehTemplate):
             hover_values = np.array([datetime.datetime.strftime(t, "%d-%b-%Y") for t in times])
             self.bad_history[bad_pixel_type] = (times, num, hover_values)
 
-            #if real_data:
+            # if real_data:
             #    raise ValueError(bad_pixel_type, self.bad_history[bad_pixel_type])
-
 
     def identify_tables(self):
         """Determine which database tables as associated with
@@ -284,7 +272,7 @@ class BadPixelMonitor(BokehTemplate):
         for i, bad_pixel_type in enumerate(BAD_PIXEL_TYPES):
 
             # Comment out while waiting for populated database tables
-            #num, times = self.bad_pixel_history(bad_pixel_type)
+            # num, times = self.bad_pixel_history(bad_pixel_type)
             delta = 10 * i
 
             # Placeholders while we wait for a populated database
@@ -387,4 +375,4 @@ class BadPixelMonitor(BokehTemplate):
 
 # Uncomment the line below when testing via the command line:
 # bokeh serve --show monitor_badpixel_bokeh.py
-#BadPixelMonitor()
+# BadPixelMonitor()

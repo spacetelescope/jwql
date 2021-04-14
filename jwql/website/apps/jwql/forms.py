@@ -52,7 +52,6 @@ from django.shortcuts import redirect
 from jwedb.edb_interface import is_valid_mnemonic
 
 from jwql.database import database_interface as di
-from jwql.utils.constants import ANOMALY_CHOICES
 from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT
 from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
 from jwql.utils.constants import APERTURES_PER_INSTRUMENT
