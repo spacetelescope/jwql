@@ -23,6 +23,7 @@ jobs:
 
       - name: Bandit Check
         uses: jpetrucciani/bandit-check@1.6.2
+        continue-on-error: true
         if: runner.os == 'Linux'
 
       - name: Build jwql conda environment and run tests
