@@ -34,6 +34,7 @@ FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
+
 def bad_pixel_monitor_tabs(instrument):
     """Creates the various tabs of the bad pixel monitor results page.
 
@@ -143,21 +144,30 @@ def bias_monitor_tabs(instrument):
         # Add the calibrated 0th group image
         calibrated_image = monitor_template.refs['cal_image']
         calibrated_image.sizing_mode = 'scale_width'
+        calibrated_image.margin = (0, 100, 0, 100)  # Add space around sides of figure
         plots.append(calibrated_image)
 
+        # Add the calibrated 0th group histogram
+        if instrument == 'NIRISS':
+            calibrated_hist = monitor_template.refs['cal_hist']
+            calibrated_hist.sizing_mode = 'scale_width'
+            calibrated_hist.margin = (0, 190, 0, 190)
+            plots.append(calibrated_hist)
+
         # Add the collapsed row/column plots
-        for direction in ['rows', 'columns']:
-            collapsed_plot = monitor_template.refs['collapsed_{}_figure'.format(direction)]
-            collapsed_plot.sizing_mode = 'scale_width'
-            plots.append(collapsed_plot)
+        if instrument != 'NIRISS':
+            for direction in ['rows', 'columns']:
+                collapsed_plot = monitor_template.refs['collapsed_{}_figure'.format(direction)]
+                collapsed_plot.sizing_mode = 'scale_width'
+                plots.append(collapsed_plot)
 
         # Put the mean bias plots on the top 2 rows, the calibrated image on the
-        # third row, and the collapsed row/column plots on the bottom row.
+        # third row, and the remaining plots on the bottom row.
         bias_layout = layout(
             plots[0:8][::2],
             plots[0:8][1::2],
             plots[8:9],
-            plots[9:11]
+            plots[9:]
         )
         bias_layout.sizing_mode = 'scale_width'
         bias_tab = Panel(child=bias_layout, title=aperture)
