@@ -1216,7 +1216,7 @@ def thumbnails_query_ajax(rootnames, insts):
             print("Warning: assuming instrument is MIRI")
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
-        data_dict['file_data'][rootname]['expstart'] = get_expstart(rootname)
+        data_dict['file_data'][rootname]['expstart'] = get_expstart(data_dict['file_data'][rootname]['inst'], rootname)
         data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for
                                                         filename in available_files]
         data_dict['file_data'][rootname]['prop'] = rootname[2:7]
