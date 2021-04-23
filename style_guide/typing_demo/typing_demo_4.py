@@ -15,4 +15,4 @@ def get_favorite_number():
 
 
 num = get_favorite_number()
-print("Twice your favorite number is", num*2)
+print("Twice your favorite number is", num * 2)

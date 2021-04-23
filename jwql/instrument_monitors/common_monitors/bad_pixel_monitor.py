@@ -91,8 +91,8 @@ from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpe
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors import pipeline_tools
 from jwql.utils import crds_tools, instrument_properties
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
-                                 FLAT_EXP_TYPES, DARK_EXP_TYPES
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import FLAT_EXP_TYPES, DARK_EXP_TYPES
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.mast_utils import mast_query
 from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
@@ -685,8 +685,8 @@ class BadPixels():
         elif file_type.lower() == 'flat':
             run_field = self.query_table.run_bpix_from_flats
 
-        query = session.query(self.query_table).filter(self.query_table.aperture==self.aperture). \
-                                                filter(run_field==True)
+        query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture). \
+                              filter(run_field == True)
 
         dates = np.zeros(0)
         if file_type.lower() == 'dark':
@@ -888,7 +888,7 @@ class BadPixels():
             logging.info('\tFound {} new {} pixels'.format(len(bad_location_list[0]), bad_type))
 
             if bad_type in badpix_types_from_flats:
-                self.add_bad_pix(bad_location_list, bad_type, illuminated_slope_files, 
+                self.add_bad_pix(bad_location_list, bad_type, illuminated_slope_files,
                                  min_illum_time, mid_illum_time, max_illum_time, baseline_file)
             elif bad_type in badpix_types_from_darks:
                 self.add_bad_pix(bad_location_list, bad_type, dark_slope_files,
@@ -958,7 +958,7 @@ class BadPixels():
                     lamp = 'LINE2'
 
                 # What lamp is most appropriate for FGS?
-                #if self.instrument == 'fgs':
+                # if self.instrument == 'fgs':
                 #    lamp = 'G2LAMP1'
 
                 logging.info('')

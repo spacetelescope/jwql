@@ -121,7 +121,7 @@ def test_file_group(test_file):
     # attempt to retrieve a group name different from default
     group_index = 0
     test_group = grp.getgrgid(os.getgroups()[group_index]).gr_name
-    test_group_2 = grp.getgrgid(os.getgroups()[group_index+1]).gr_name
+    test_group_2 = grp.getgrgid(os.getgroups()[group_index + 1]).gr_name
 
     # Change the file group
     set_permissions(test_file, group=test_group, owner=owner)

@@ -26,6 +26,7 @@ def ive_got_your_number(num: int) -> bool:
     else:
         return "Jenny don't change your number"
 
+
 ive_got_your_number("jenny")  # no runtime error
 ive_got_your_number(555_1212)  # no runtime error
 

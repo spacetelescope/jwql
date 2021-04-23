@@ -18,7 +18,7 @@ a_bool: bool = True
 a_string: str = "jwql"
 a_list: List[int] = [1]
 a_set: Set[int] = {1, 2, 3}
-a_dict: Dict[str, bool] = {'jwql':True}  # Have to specify both keys and values
+a_dict: Dict[str, bool] = {'jwql': True}  # Have to specify both keys and values
 
 # For python versions prior to 3.6, the variable annotation syntax uses comments:
 #    annotated_variable = 1 # type: int

@@ -85,7 +85,7 @@ class BadPixelMonitor(BokehTemplate):
 
         # Sum the number of bad pixels found from the earliest entry up to
         # each new entry
-        num_bad_pixels = [np.sum(num[0:i]) for i in range(1, len(num)+1)]
+        num_bad_pixels = [np.sum(num[0:i]) for i in range(1, len(num) + 1)]
 
         return num_bad_pixels, dates
 
@@ -287,7 +287,7 @@ class BadPixelMonitor(BokehTemplate):
             hover_values = np.array([datetime.datetime.strftime(t, "%d-%b-%Y") for t in times])
 
             self.bad_history[bad_pixel_type] = (times, num, hover_values)
-            self.bad_latest[bad_pixel_type] = (datetime.datetime(1999, 12, 31), [500+delta, 501+delta, 502+delta], [4, 4, 4])
+            self.bad_latest[bad_pixel_type] = (datetime.datetime(1999, 12, 31), [500 + delta, 501 + delta, 502 + delta], [4, 4, 4])
 
     def most_recent_data(self):
         """Get the bad pixel type and coordinates associated with the most

@@ -441,8 +441,8 @@ class Dark():
             Date (in MJD) of the ending range of the previous MAST query
             where the dark monitor was run.
         """
-        query = session.query(self.query_table).filter(self.query_table.aperture==self.aperture). \
-                                                filter(self.query_table.run_monitor==True)
+        query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture). \
+                              filter(self.query_table.run_monitor == True)
 
         dates = np.zeros(0)
         for instance in query:
@@ -993,8 +993,7 @@ class Dark():
             degrees_of_freedom = len(hist) - 3.
             total_pix = np.sum(hist[positive])
             p_i = gauss_fit[positive] / total_pix
-            gaussian_chi_squared[key] = (np.sum((hist[positive] - (total_pix * p_i) ** 2) / (total_pix * p_i)) /
-                                         degrees_of_freedom)
+            gaussian_chi_squared[key] = (np.sum((hist[positive] - (total_pix * p_i) ** 2) / (total_pix * p_i)) / degrees_of_freedom)
 
             # Double Gaussian fit only for full frame data (and only for
             # NIRISS, NIRCam at the moment.)
@@ -1018,10 +1017,10 @@ class Dark():
 
         logging.info('\tMean dark rate by amplifier: {}'.format(amp_means))
         logging.info('\tStandard deviation of dark rate by amplifier: {}'.format(amp_means))
-        logging.info('\tBest-fit Gaussian parameters [amplitude, peak, width]'.format(gaussian_params))
+        logging.info('\tBest-fit Gaussian parameters [amplitude, peak, width]: {}'.format(gaussian_params))
         logging.info('\tReduced chi-squared associated with Gaussian fit: {}'.format(gaussian_chi_squared))
         logging.info('\tBest-fit double Gaussian parameters [amplitude1, peak1, width1, amplitude2, peak2, '
-                     'width2]'.format(double_gaussian_params))
+                     'width2]: {}'.format(double_gaussian_params))
         logging.info('\tReduced chi-squared associated with double Gaussian fit: {}'
                      .format(double_gaussian_chi_squared))
 

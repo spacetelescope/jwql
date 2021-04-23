@@ -115,11 +115,11 @@ def authorize(request):
     token = JWQL_OAUTH.mast_auth.authorize_access_token(request)
 
     # Determine domain
-    base_url = get_base_url()
-    if '127' in base_url:
-        domain = '127.0.0.1'
-    else:
-        domain = base_url.split('//')[-1]
+    # base_url = get_base_url()
+    # if '127' in base_url:
+    #     domain = '127.0.0.1'
+    # else:
+    #     domain = base_url.split('//')[-1]
 
     # Set secure cookie parameters
     cookie_args = {}

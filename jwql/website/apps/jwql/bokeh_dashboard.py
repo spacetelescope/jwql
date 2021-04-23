@@ -172,18 +172,18 @@ class GeneralDashboard:
         tab2 = Panel(child=p2, title='Storage')
 
         p1.xaxis.formatter = DatetimeTickFormatter(
-                hours=["%d %B %Y"],
-                days=["%d %B %Y"],
-                months=["%d %B %Y"],
-                years=["%d %B %Y"],
+            hours=["%d %B %Y"],
+            days=["%d %B %Y"],
+            months=["%d %B %Y"],
+            years=["%d %B %Y"],
             )
         p1.xaxis.major_label_orientation = pi / 4
 
         p2.xaxis.formatter = DatetimeTickFormatter(
-                hours=["%d %B %Y"],
-                days=["%d %B %Y"],
-                months=["%d %B %Y"],
-                years=["%d %B %Y"],
+            hours=["%d %B %Y"],
+            days=["%d %B %Y"],
+            months=["%d %B %Y"],
+            years=["%d %B %Y"],
             )
         p2.xaxis.major_label_orientation = pi / 4
 

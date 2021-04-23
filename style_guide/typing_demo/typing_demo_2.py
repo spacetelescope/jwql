@@ -27,6 +27,7 @@ def do_mutate(mut_dict: MutableMapping[Any, Any]) -> Set[Any]:
     mut_dict['jwql'] = True
     return set(mut_dict.keys())
 
+
 # Variables can be annotated without initializing
 stream: IO[str]
 print(__annotations__['stream'])

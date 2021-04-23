@@ -416,7 +416,7 @@ class Bias():
 
             # Get a list of all possible full-frame apertures for this instrument
             siaf = Siaf(self.instrument)
-            possible_apertures = [aperture for aperture in siaf.apertures if siaf[aperture].AperType=='FULLSCA']
+            possible_apertures = [aperture for aperture in siaf.apertures if siaf[aperture].AperType == 'FULLSCA']
 
             for aperture in possible_apertures:
 
