@@ -282,10 +282,9 @@ class Bias():
             where the bias monitor was run.
         """
 
-        sub_query = session.query(
-            self.query_table.aperture,
-            func.max(self.query_table.end_time_mjd).label('maxdate')
-            ).group_by(self.query_table.aperture).subquery('t2')
+        sub_query = session.query(self.query_table.aperture,
+                                  func.max(self.query_table.end_time_mjd).label('maxdate')
+                                  ).group_by(self.query_table.aperture).subquery('t2')
 
         # Note that "self.query_table.run_monitor == True" below is
         # intentional. Switching = to "is" results in an error in the query.

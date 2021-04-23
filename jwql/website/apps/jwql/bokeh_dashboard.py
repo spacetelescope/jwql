@@ -171,20 +171,18 @@ class GeneralDashboard:
         p2.line(x='date', y='used', source=source, color='#355C7D', line_dash='dashed', line_width=3, legend='Used Storage')
         tab2 = Panel(child=p2, title='Storage')
 
-        p1.xaxis.formatter = DatetimeTickFormatter(
-            hours=["%d %B %Y"],
-            days=["%d %B %Y"],
-            months=["%d %B %Y"],
-            years=["%d %B %Y"],
-            )
+        p1.xaxis.formatter = DatetimeTickFormatter(hours=["%d %B %Y"],
+                                                   days=["%d %B %Y"],
+                                                   months=["%d %B %Y"],
+                                                   years=["%d %B %Y"],
+                                                   )
         p1.xaxis.major_label_orientation = pi / 4
 
-        p2.xaxis.formatter = DatetimeTickFormatter(
-            hours=["%d %B %Y"],
-            days=["%d %B %Y"],
-            months=["%d %B %Y"],
-            years=["%d %B %Y"],
-            )
+        p2.xaxis.formatter = DatetimeTickFormatter(hours=["%d %B %Y"],
+                                                   days=["%d %B %Y"],
+                                                   months=["%d %B %Y"],
+                                                   years=["%d %B %Y"],
+                                                   )
         p2.xaxis.major_label_orientation = pi / 4
 
         tabs = Tabs(tabs=[tab1, tab2])

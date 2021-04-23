@@ -30,7 +30,7 @@ an_empty_tuple: Tuple[()] = ()
 
 # For heterogeneous non-tuples, use Union.
 a_heterogeneous_list: List[Union[int, bool, str]] = [1, True, "jwql"]
-a_heterogeneous_dict: Dict[Union[str, int], Union[bool, int]] = {"jwql": True, 1:1}
+a_heterogeneous_dict: Dict[Union[str, int], Union[bool, int]] = {"jwql": True, 1: 1}
 
 # If a value can be None, use Optional
 maybe_a_string: Optional[str] = "jwql" if not a_bool else None
