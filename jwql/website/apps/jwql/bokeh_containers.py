@@ -63,9 +63,9 @@ def bad_pixel_monitor_tabs(instrument):
         monitor_template.aperture_info = (instrument, aperture)
         templates_all_apertures[aperture] = monitor_template
 
-    #for reference - here are the bad pixel types
-    #badpix_types_from_flats = ['DEAD', 'LOW_QE', 'OPEN', 'ADJ_OPEN']
-    #badpix_types_from_darks = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
+    # for reference - here are the bad pixel types
+    # badpix_types_from_flats = ['DEAD', 'LOW_QE', 'OPEN', 'ADJ_OPEN']
+    # badpix_types_from_darks = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
 
     # We loop over detectors here, and create one tab per detector, rather
     # than one tab for each plot type, as is done with the dark monitor
@@ -333,8 +333,8 @@ def readnoise_monitor_tabs(instrument):
         readnoise_diff_hist.margin = (0, 190, 0, 190)
         plots.append(readnoise_diff_hist)
 
-        # Put the mean readnoise plots on the top row, the difference image on the
-        # second row, and the difference histogram on the bottom row.
+        # Put mean readnoise plots on the top row, difference image on the
+        # second row, and difference histogram on the bottom row.
         readnoise_layout = layout(
             plots[0:4],
             plots[4:5],

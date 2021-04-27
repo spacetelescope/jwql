@@ -49,15 +49,14 @@ class mnemonics:
 
         print('{} was imported - {} lines'.format(import_path, length))
 
-        #look for every mnmonic given in mnemonicy.py
+        # look for every mnmonic given in mnemonicy.py
         for mnemonic_name in mn.mnemonic_set_query:
             temp = self.sort_mnemonic(mnemonic_name, imported_data)
-            #append temp to dict with related mnemonic
-            if temp != None:
-                self.__mnemonic_dict.update({mnemonic_name:temp})
+            # append temp to dict with related mnemonic
+            if temp is not None:
+                self.__mnemonic_dict.update({mnemonic_name: temp})
             else:
                 warnings.warn("fatal error")
-
 
     def import_CSV(self, path):
         """imports csv sheet and converts it to AstropyTable
@@ -70,12 +69,11 @@ class mnemonics:
         imported_data : AstropyTable
             container for imported data
         """
-        #read data from given *CSV file
-        imported_data=Table.read(path, format='ascii.basic', delimiter=',')
+        # read data from given *CSV file
+        imported_data = Table.read(path, format='ascii.basic', delimiter=',')
         return imported_data
 
-
-    #returns table of single mnemonic
+    # returns table of single mnemonic
     def mnemonic(self, name):
         """Returns table of one single mnemonic
         Parameters
@@ -92,10 +90,9 @@ class mnemonics:
         except KeyError:
             print('{} not in list'.format(name))
 
-
-    #looks for given mnemonic in given table
-    #returns list containing astropy tables with sorted mnemonics and engineering values
-    #adds useful meta data to Table
+    # looks for given mnemonic in given table
+    # returns list containing astropy tables with sorted mnemonics and
+    # engineering values adds useful meta data to Table
     def sort_mnemonic(self, mnemonic, table):
         """Looks for all values in table with identifier "mnemonic"
            Converts time string to mjd format
@@ -114,12 +111,12 @@ class mnemonics:
         temp1: float = []
         temp2 = []
 
-        #appends present mnemonic data to temp arrays temp1 and temp2
+        # appends present mnemonic data to temp arrays temp1 and temp2
         for item in table:
             try:
                 if item['Telemetry Mnemonic'] == mnemonic:
-                    #convert time string to mjd format
-                    temp = item['Secondary Time'].replace('/','-').replace(' ','T')
+                    # convert time string to mjd format
+                    temp = item['Secondary Time'].replace('/', '-').replace(' ', 'T')
                     t = Time(temp, format='isot')
 
                     temp1.append(t.mjd)
@@ -130,22 +127,23 @@ class mnemonics:
         description = ('time','value')
         data = [temp1, temp2]
 
-        #add some meta data
+        # add some meta data
         if len(temp1) > 0:
             date_start = temp1[0]
             date_end = temp1[len(temp1)-1]
-            info = {'start':date_start, 'end':date_end}
+            info = {'start': date_start, 'end': date_end}
         else:
-            info = {"n":"n"}
+            info = {"n": "n"}
 
-        #add name of mnemonic to meta data of list
+        # add name of mnemonic to meta data of list
         info['mnemonic'] = mnemonic
         info['len'] = len(temp1)
 
-        #table to return
-        mnemonic_table = Table(data, names = description, \
-                        dtype = ('f8','str'), meta = info)
+        # table to return
+        mnemonic_table = Table(data, names=description,
+                               dtype=('f8', 'str'), meta=info)
         return mnemonic_table
 
-if __name__ =='__main__':
+
+if __name__ == '__main__':
     pass

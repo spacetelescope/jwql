@@ -419,7 +419,7 @@ class Bias():
                              'counts': counts.astype(float),
                              'bin_centers': bin_centers.astype(float),
                              'entry_date': datetime.datetime.now()
-                            }
+                             }
             for key in amp_medians.keys():
                 bias_db_entry[key] = float(amp_medians[key])
 
@@ -457,9 +457,9 @@ class Bias():
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
                 self.aperture = aperture
 
-                # Locate the record of the most recent MAST search; use this time
-                # (plus a 30 day buffer to catch any missing files from the previous
-                # run) as the start time in the new MAST search.
+                # Locate the record of most recent MAST search; use this time
+                # (plus a 30 day buffer to catch any missing files from
+                # previous run) as the start time in the new MAST search.
                 most_recent_search = self.most_recent_search()
                 self.query_start = most_recent_search - 30
 

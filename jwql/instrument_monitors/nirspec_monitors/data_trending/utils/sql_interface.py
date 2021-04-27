@@ -27,7 +27,8 @@ import sqlite3
 from sqlite3 import Error
 
 import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.mnemonics as m
-from jwql.utils.utils import get_config, filename_parser
+from jwql.utils.utils import get_config
+
 
 def create_connection(db_file):
     '''Sets up a connection or builds database
@@ -74,13 +75,13 @@ def add_data(conn, mnemonic, data):
 
     c = conn.cursor()
 
-    #check if data already exists (start_time as identifier)
+    # check if data already exists (start_time as identifier)
     c.execute('SELECT id from {} WHERE start_time= {}'.format(mnemonic, data[0]))
     temp = c.fetchall()
 
     if len(temp) == 0:
         c.execute('INSERT INTO {} (start_time,end_time,data_points,average,deviation) \
-                VALUES (?,?,?,?,?)'.format(mnemonic),data)
+                VALUES (?,?,?,?,?)'.format(mnemonic), data)
         conn.commit()
     else:
         print('data for {} already exists'.format(mnemonic))
@@ -100,13 +101,13 @@ def add_wheel_data(conn, mnemonic, data):
 
     c = conn.cursor()
 
-    #check if data already exists (start_time)
+    # check if data already exists (start_time)
     c.execute('SELECT id from {} WHERE timestamp = {}'.format(mnemonic, data[0]))
     temp = c.fetchall()
 
     if len(temp) == 0:
         c.execute('INSERT INTO {} (timestamp, value) \
-                VALUES (?,?)'.format(mnemonic),data)
+                VALUES (?,?)'.format(mnemonic), data)
         conn.commit()
     else:
         print('data already exists')
@@ -117,13 +118,13 @@ def main():
 
     __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-    #generate paths
+    # generate paths
     DATABASE_LOCATION = os.path.join(get_config()['jwql_dir'], 'database')
     DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'nirspec_database.db')
 
     conn = create_connection(DATABASE_FILE)
 
-    c=conn.cursor()
+    c = conn.cursor()
 
     for mnemonic in m.mnemonic_set_database:
         try:
@@ -154,7 +155,8 @@ def main():
     conn.commit()
     close_connection(conn)
 
-#sets up database if called as main
+
+# sets up database if called as main
 if __name__ == "__main__":
     main()
     print("sql_interface.py done")

@@ -21,11 +21,9 @@ Use
 import glob
 import os
 import re
-import sys
 
 import bokeh
 from pandas import DataFrame
-import pytest
 
 from jwql.utils.plotting import bar_chart
 

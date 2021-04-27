@@ -39,23 +39,15 @@ Dependencies
     User must provide database "nirpsec_database.db"
 
 """
-import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.sql_interface as sql
 import jwql.instrument_monitors.nirspec_monitors.data_trending.plots.plot_functions as pf
-from bokeh.models import LinearAxis, Range1d
 from bokeh.plotting import figure
-from bokeh.models.widgets import Panel, Tabs, Div
-from bokeh.models import ColumnDataSource, HoverTool
-from bokeh.layouts import WidgetBox, gridplot, Column
-
-import pandas as pd
-import numpy as np
-
-from astropy.time import Time
+from bokeh.models.widgets import Panel, Div
+from bokeh.layouts import Column
 
 
 def ref_volt(conn, start, end):
     '''Create specific plot and return plot object
-    
+
     Parameters
     ----------
     conn : DBobject
@@ -70,23 +62,24 @@ def ref_volt(conn, start, end):
         Bokeh plot
     '''
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 500,
-                x_axis_type = 'datetime',
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=500,
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date',
+               y_axis_label='Voltage (V)')
 
     p.grid.visible = True
     p.title.text = "Ref Voltages"
     pf.add_basic_layout(p)
 
-    a = pf.add_to_plot(p, "FWA_MOTOR_VREF", "INRSH_FWA_MOTOR_VREF", start, end, conn, color = "green")
-    b = pf.add_to_plot(p, "GWA_MOTOR_VREF", "INRSH_GWA_MOTOR_VREF", start, end, conn, color = "blue")
-    c = pf.add_to_plot(p, "OA_VREF", "INRSH_OA_VREF", start, end, conn, color = "red")
+    a = pf.add_to_plot(p, "FWA_MOTOR_VREF", "INRSH_FWA_MOTOR_VREF", start, end, conn, color="green")
+    b = pf.add_to_plot(p, "GWA_MOTOR_VREF", "INRSH_GWA_MOTOR_VREF", start, end, conn, color="blue")
+    c = pf.add_to_plot(p, "OA_VREF", "INRSH_OA_VREF", start, end, conn, color="red")
 
-    pf.add_hover_tool(p,[a,b,c])
+    pf.add_hover_tool(p, [a, b, c])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -111,29 +104,30 @@ def gain_volt(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 500,
-                x_axis_type = 'datetime',
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=500,
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date',
+               y_axis_label='Voltage (V)')
 
     p.grid.visible = True
     p.title.text = "ADCMAIN"
     pf.add_basic_layout(p)
 
-    a = pf.add_to_plot(p, "FWA_ADCMGAIN", "INRSH_FWA_ADCMGAIN", start, end, conn, color = "green")
-    b = pf.add_to_plot(p, "GWA_ADCMGAIN", "INRSH_GWA_ADCMGAIN", start, end, conn, color = "blue")
-    c = pf.add_to_plot(p, "RMA_ADCMGAIN", "INRSH_RMA_ADCMGAIN", start, end, conn, color = "red")
+    a = pf.add_to_plot(p, "FWA_ADCMGAIN", "INRSH_FWA_ADCMGAIN", start, end, conn, color="green")
+    b = pf.add_to_plot(p, "GWA_ADCMGAIN", "INRSH_GWA_ADCMGAIN", start, end, conn, color="blue")
+    c = pf.add_to_plot(p, "RMA_ADCMGAIN", "INRSH_RMA_ADCMGAIN", start, end, conn, color="red")
 
-
-    #pf.add_hover_tool(p,[a,b,c])
+    # pf.add_hover_tool(p,[a,b,c])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
     p.legend.orientation = "horizontal"
     return p
+
 
 def offset_volt(conn, start, end):
     '''Create specific plot and return plot object
@@ -152,24 +146,25 @@ def offset_volt(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 500,
-                x_axis_type = 'datetime',
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Voltage (V)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=500,
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date',
+               y_axis_label='Voltage (V)')
 
     p.grid.visible = True
     p.title.text = "OFFSET"
     pf.add_basic_layout(p)
 
-    a = pf.add_to_plot(p, "GWA_ADCMOFFSET", "INRSH_GWA_ADCMOFFSET", start, end, conn, color = "blue")
-    b = pf.add_to_plot(p, "FWA_ADCMOFFSET", "INRSH_FWA_ADCMOFFSET", start, end, conn, color = "green")
-    c = pf.add_to_plot(p, "OA_VREFOFF", "INRSH_OA_VREFOFF", start, end, conn, color = "orange")
-    d = pf.add_to_plot(p, "RMA_ADCMOFFSET", "INRSH_RMA_ADCMOFFSET", start, end, conn, color = "red")
+    a = pf.add_to_plot(p, "GWA_ADCMOFFSET", "INRSH_GWA_ADCMOFFSET", start, end, conn, color="blue")
+    b = pf.add_to_plot(p, "FWA_ADCMOFFSET", "INRSH_FWA_ADCMOFFSET", start, end, conn, color="green")
+    c = pf.add_to_plot(p, "OA_VREFOFF", "INRSH_OA_VREFOFF", start, end, conn, color="orange")
+    d = pf.add_to_plot(p, "RMA_ADCMOFFSET", "INRSH_RMA_ADCMOFFSET", start, end, conn, color="red")
 
-    pf.add_hover_tool(p,[a,b,c,d])
+    pf.add_hover_tool(p, [a, b, c, d])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -258,6 +253,6 @@ def volt_plots(conn, start, end):
 
     layout = Column(descr, plot1, plot2, plot3)
 
-    tab = Panel(child = layout, title = "REF VOLTAGES")
+    tab = Panel(child=layout, title="REF VOLTAGES")
 
     return tab

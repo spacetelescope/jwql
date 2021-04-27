@@ -99,7 +99,6 @@ class DatabaseConnection:
         self.service = "Mast.Jwst.Filtered." + instrument
         print(self.service)
 
-
     def get_files_for_instrument(self, instrument):
         """Given an instrument, query the database for all filenames
         and paths associated with said instrument
