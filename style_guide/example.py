@@ -73,7 +73,7 @@ from jwql.utils.logging_functions import configure_logging, log_info, log_fail, 
 
 # Global variables should be avoided, but if used should be named with
 # all-caps
-A_GLOBAL_VARIABLE = 'foo' # type: str
+A_GLOBAL_VARIABLE = 'foo'  # type: str
 
 
 @log_fail
@@ -94,15 +94,15 @@ def my_main_function(path: str, filter: str) -> None:
 
     logging.info('Using {} as an input file'.format(path))
 
-    an_int = 1 # type: int
-    a_float = 3.14 # type: float
-    a_bool = True # type: bool
-    a_list = ['Dog', 'Cat', 'Turtle', False, 7] # type: List[Union[str, bool, int]]
-    a_tuple = ('Dog', 'Cat', 'Turtle', False, 7) # type: Tuple[str, str, str, bool, int]
-    a_dict = {'key1': 'value1', 'key2': 'value2'} # type: Dict[str, str]
-    an_obj = object() # type: object
+    an_int = 1  # type: int
+    a_float = 3.14  # type: float
+    a_bool = True  # type: bool
+    a_list = ['Dog', 'Cat', 'Turtle', False, 7]  # type: List[Union[str, bool, int]]
+    a_tuple = ('Dog', 'Cat', 'Turtle', False, 7)  # type: Tuple[str, str, str, bool, int]
+    a_dict = {'key1': 'value1', 'key2': 'value2'}  # type: Dict[str, str]
+    an_obj = object()  # type: object
 
-    result = some_other_function(an_int, a_float, a_bool, a_list, a_tuple, a_dict, an_obj) # type: Optional[int]
+    result = some_other_function(an_int, a_float, a_bool, a_list, a_tuple, a_dict, an_obj)  # type: Optional[int]
 
     logging.info(result)
 
@@ -117,11 +117,11 @@ def parse_args() -> argparse.Namespace:
     """
 
     # Create help strings
-    path_help = 'The path to the input file.' # type: str
-    filter_help = 'The filter to process (e.g. "F606W").' # type: str
+    path_help = 'The path to the input file.'  # type: str
+    filter_help = 'The filter to process (e.g. "F606W").'  # type: str
 
     # Add arguments
-    parser = argparse.ArgumentParser() # type: argparse.ArgumentParser
+    parser = argparse.ArgumentParser()  # type: argparse.ArgumentParser
     parser.add_argument('path',
                         type=str,
                         default=os.getcwd(),
@@ -134,7 +134,7 @@ def parse_args() -> argparse.Namespace:
                         help=filter_help)
 
     # Parse args
-    args = parser.parse_args() # type: argparse.Namespace
+    args = parser.parse_args()  # type: argparse.Namespace
 
     return args
 
@@ -185,6 +185,6 @@ if __name__ == '__main__':
     module = os.path.basename(__file__).strip('.py')
     configure_logging(module)
 
-    args = parse_args() # type: argparse.Namespace
+    args = parse_args()  # type: argparse.Namespace
 
     my_main_function(args.path, args.filter)

@@ -29,17 +29,16 @@ import jwql.instrument_monitors.miri_monitors.data_trending.utils.mnemonics as m
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
 import jwql.instrument_monitors.miri_monitors.data_trending.utils.csv_to_AstropyTable as apt
 from jwql.instrument_monitors.miri_monitors.data_trending.utils.process_data import whole_day_routine, wheelpos_routine
-from jwql.utils.utils import get_config, filename_parser
+from jwql.utils.utils import get_config
 
 import os
 import glob
 import statistics
-import sqlite3
 
-#set _location_ variable
+# set _location_ variable
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
-#files with data to initially fill the database
+# files with data to initially fill the database
 directory = os.path.join(get_config()['outputs'], 'miri_data_trending', 'trainings_data_day', '*.CSV')
 paths = glob.glob(directory)
 
@@ -58,14 +57,14 @@ def process_file(conn, path):
     m_raw_data = apt.mnemonics(path)
 
     cond3, FW_volt, GW14_volt, GW23_volt, CCC_volt = whole_day_routine(m_raw_data)
-    FW, GW14, GW23, CCC= wheelpos_routine(m_raw_data)
+    FW, GW14, GW23, CCC = wheelpos_routine(m_raw_data)
 
-    #put data from con3 to database
+    # put data from con3 to database
     for key, value in cond3.items():
 
         m = m_raw_data.mnemonic(key)
 
-        if value != None:
+        if value is not None:
             if len(value) > 2:
                 if key == "SE_ZIMIRICEA":
                     length = len(value)
@@ -87,7 +86,6 @@ def process_file(conn, path):
                     deviation = statistics.stdev(value)
                     dataset = (float(m.meta['start']), float(m.meta['end']), length, mean, deviation)
                     sql.add_data(conn, key, dataset)
-
 
     #########################################################################################
     for pos in mn.fw_positions:
@@ -120,19 +118,20 @@ def process_file(conn, path):
 
 
 def main():
-    #point to database
+    # point to database
     DATABASE_LOCATION = os.path.join(get_config()['jwql_dir'], 'database')
     DATABASE_FILE = os.path.join(DATABASE_LOCATION, 'miri_database.db')
 
-    #connect to temporary database
+    # connect to temporary database
     conn = sql.create_connection(DATABASE_FILE)
 
-    #process all files found ind folder "directory"
+    # process all files found ind folder "directory"
     for path in paths:
         process_file(conn, path)
 
     sql.close_connection(conn)
     print("done")
+
 
 if __name__ == "__main__":
     main()
