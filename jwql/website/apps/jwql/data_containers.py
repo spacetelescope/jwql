@@ -453,13 +453,17 @@ def get_expstart(instrument, rootname):
     return expstart
 
 
-def get_filenames_by_instrument(instrument):
+def get_filenames_by_instrument(instrument, restriction='all'):
     """Returns a list of filenames that match the given ``instrument``.
 
     Parameters
     ----------
     instrument : str
         The instrument of interest (e.g. `FGS`).
+    restriction : str
+        If ``all``, all filenames will be returned.  If ``public``,
+        only publicly-available filenames will be returned.  If
+        ``proprietary``, only proprietary filenames will be returned.
 
     Returns
     -------
@@ -467,12 +471,22 @@ def get_filenames_by_instrument(instrument):
         A list of files that match the given instrument.
     """
 
-    # Query for files from astroquery.Mast
     service = INSTRUMENT_SERVICE_MATCH[instrument]
-    params = {"columns": "filename", "filters": []}
+
+    # Query for filenames
+    params = {"columns": "filename, isRestricted", "filters": []}
     response = Mast.service_request_async(service, params)
     result = response[0].json()
-    filenames = [item['filename'] for item in result['data']]
+
+    # Determine filenames to return based on restriction parameter
+    if restriction == 'all':
+        filenames = [item['filename'] for item in result['data']]
+    elif restriction == 'public':
+        filenames = [item['filename'] for item in result['data'] if item['isRestricted'] is False]
+    elif restriction == 'proprietary':
+        filenames = [item['filename'] for item in result['data'] if item['isRestricted'] is True]
+    else:
+        raise KeyError('{} is not a valid restriction level.  Use "all", "public", or "proprietary".'.format(restruction))
 
     return filenames
 
