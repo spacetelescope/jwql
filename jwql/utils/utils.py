@@ -449,11 +449,11 @@ def filesystem_path(filename, check_existence=True):
     # Subdirectory name is based on the proposal ID
     subdir1 = 'jw{}'.format(filename[2:7])
     subdir2 = 'jw{}'.format(filename[2:13])
-    full_path = os.path.join(FILESYSTEM, subdir1, subdir2, filename)
+    full_path = os.path.join(subdir1, subdir2, filename)
 
     # Check to see if the file exists
     if check_existence:
-        if not os.path.isfile(full_path):
+        if not os.path.isfile(os.path.join(FILESYSTEM, 'public', full_path)) and not os.path.isfile(os.path.join(FILESYSTEM, 'proprietary', full_path)):
             raise FileNotFoundError('{} is not in the predicted location: {}'.format(filename, full_path))
 
     return full_path
