@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 
-"""This module takes a collection of JWST FITS files and copies the
+"""This module takes a collection of JWST FITS files and moves the
 files into a MAST-data-cache-like filesystem.
 
 The files that the module will process is provided by the
 ``old_filesysem`` key in the ``config.json`` file.  The files will be
-copied into the directory provided by the ``filesystem`` key in the
+moved into the directory provided by the ``filesystem`` key in the
 ``config.json`` file.
 
 For example, the file
@@ -27,9 +27,10 @@ Use
 """
 
 import os
+import shutil
 
-from jwql.utils.utils import filename_parser
-from jwql.utils.utils import copy_files, get_config, ensure_dir_exists
+from jwql.utils.permissions import set_permissions
+from jwql.utils.utils import copy_files, get_config, ensure_dir_exists, filename_parser
 
 
 def organize_filesystem():
@@ -57,12 +58,15 @@ def organize_filesystem():
             except KeyError:  # Some filenames do not have a program_id/observation/visit structure
                 break
 
+            # Build complete destination location
+            dst = os.path.join(destination_directory, os.path.basename(src))
+
             # Create parent directories if necessary
             ensure_dir_exists(destination_directory)
 
-            # Copy the file over
-            success, failed = copy_files([src], destination_directory)
-            print('\tCopied {} to {}'.format(src, destination_directory))
+            # Move the file over
+            #shutil.move(src, dst)
+            print('\tMoved {} to {}'.format(src, dst))
 
 
 if __name__ == '__main__':
