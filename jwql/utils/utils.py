@@ -447,8 +447,9 @@ def filesystem_path(filename, check_existence=True):
     """
 
     # Subdirectory name is based on the proposal ID
-    subdir = 'jw{}'.format(filename[2:7])
-    full_path = os.path.join(FILESYSTEM, subdir, filename)
+    subdir1 = 'jw{}'.format(filename[2:7])
+    subdir2 = 'jw{}'.format(filename[2:13])
+    full_path = os.path.join(FILESYSTEM, subdir1, subdir2, filename)
 
     # Check to see if the file exists
     if check_existence:
