@@ -431,7 +431,11 @@ def filename_parser(filename):
 
 
 def filesystem_path(filename, check_existence=True):
-    """Return the full path to a given file in the filesystem
+    """Return the path to a given file in the filesystem.
+
+    The full path is returned if ``check_existence`` is True, otherwise
+    only the path relative to the ``filesystem`` key in the ``config.json``
+    file is returned.
 
     Parameters
     ----------
@@ -453,7 +457,13 @@ def filesystem_path(filename, check_existence=True):
 
     # Check to see if the file exists
     if check_existence:
-        if not os.path.isfile(os.path.join(FILESYSTEM, 'public', full_path)) and not os.path.isfile(os.path.join(FILESYSTEM, 'proprietary', full_path)):
+        full_path_public = os.path.join(FILESYSTEM, 'public', full_path)
+        full_path_proprietary = os.path.join(FILESYSTEM, 'proprietary', full_path)
+        if os.path.isfile(full_path_public):
+            full_path = full_path_public
+        elif os.path.isfile(full_path_proprietary):
+            full_path = full_path_proprietary
+        else:
             raise FileNotFoundError('{} is not in the predicted location: {}'.format(filename, full_path))
 
     return full_path
