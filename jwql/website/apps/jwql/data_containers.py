@@ -488,7 +488,7 @@ def get_filenames_by_instrument(instrument, restriction='all'):
     elif restriction == 'proprietary':
         filenames = [item['filename'] for item in result['data'] if item['isRestricted'] is True]
     else:
-        raise KeyError('{} is not a valid restriction level.  Use "all", "public", or "proprietary".'.format(restruction))
+        raise KeyError('{} is not a valid restriction level.  Use "all", "public", or "proprietary".'.format(restriction))
 
     return filenames
 
@@ -510,7 +510,7 @@ def get_filenames_by_proposal(proposal):
 
     proposal_string = '{:05d}'.format(int(proposal))
     filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', 'jw{}'.format(proposal_string), '*/*'))
-    filename.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', 'jw{}'.format(proposal_string), '*/*')))
+    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', 'jw{}'.format(proposal_string), '*/*')))
     filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
