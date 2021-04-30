@@ -195,7 +195,7 @@ class PreviewImage():
                 for exten in hdulist:
                     try:
                         extnames.append(exten.header['EXTNAME'])
-                    except:
+                    except KeyError:
                         pass
                 if ext in extnames:
                     dimensions = len(hdulist[ext].data.shape)
