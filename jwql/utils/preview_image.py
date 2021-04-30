@@ -124,7 +124,7 @@ class PreviewImage():
         """
         Create a difference image from the data. Use last group minus
         first group in order to maximize signal to noise. With 4D
-        input, make a separate difference image for each integration.
+        input, make a a difference image for only one integration.
 
         Parameters
         ----------
@@ -137,7 +137,7 @@ class PreviewImage():
             3D ``numpy`` ``ndarray`` containing the difference image(s)
             from the input exposure
         """
-        return data[:, -1, :, :] - data[:, 0, :, :]
+        return data[0, -1, :, :] - data[0, 0, :, :]
 
     def find_limits(self, data, pixmap, clipperc):
         """
@@ -359,46 +359,43 @@ class PreviewImage():
         if len(shape) == 4:
             # Create difference image(s)
             diff_img = self.difference_image(self.data)
-        elif len(shape) < 4:
+        elif len(shape) == 3:
+            diff_img = self.data[0, :, :]
+        elif len(shape) == 2:
             diff_img = self.data
 
-        # If there are multiple integrations in the file,
-        # work on one integration at a time from here onwards
+        # Make sure that diff_imag is now a 2D array
         ndim = len(diff_img.shape)
-        if ndim == 2:
-            diff_img = np.expand_dims(diff_img, axis=0)
-        nint, ny, nx = diff_img.shape
+        if ndim != 2:
+            raise ValueError('Expecting a 2D difference image to create the preview image.')
 
-        for i in range(nint):
-            frame = diff_img[i, :, :]
+        # Find signal limits for the display
+        minval, maxval = self.find_limits(diff_img, self.dq,
+                                          self.clip_percent)
 
-            # Find signal limits for the display
-            minval, maxval = self.find_limits(frame, self.dq,
-                                              self.clip_percent)
+        # Create preview image matplotlib object
+        indir, infile = os.path.split(self.file)
+        suffix = '_integ{}.{}'.format(i, self.output_format)
+        if self.preview_output_directory is None:
+            outdir = indir
+        else:
+            outdir = self.preview_output_directory
+        outfile = os.path.join(outdir, infile.split('.')[0] + suffix)
+        self.make_figure(diff_img, i, minval, maxval, self.scaling.lower(),
+                         maxsize=max_img_size, thumbnail=False)
+        self.save_image(outfile, thumbnail=False)
+        plt.close()
 
-            # Create preview image matplotlib object
-            indir, infile = os.path.split(self.file)
-            suffix = '_integ{}.{}'.format(i, self.output_format)
-            if self.preview_output_directory is None:
-                outdir = indir
-            else:
-                outdir = self.preview_output_directory
-            outfile = os.path.join(outdir, infile.split('.')[0] + suffix)
-            self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
-                             maxsize=max_img_size, thumbnail=False)
-            self.save_image(outfile, thumbnail=False)
-            plt.close()
-
-            # Create thumbnail image matplotlib object
-            if self.thumbnail_output_directory is None:
-                outdir = indir
-            else:
-                outdir = self.thumbnail_output_directory
-            outfile = os.path.join(outdir, infile.split('.')[0] + suffix)
-            self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
-                             maxsize=max_img_size, thumbnail=True)
-            self.save_image(outfile, thumbnail=True)
-            plt.close()
+        # Create thumbnail image matplotlib object
+        if self.thumbnail_output_directory is None:
+            outdir = indir
+        else:
+            outdir = self.thumbnail_output_directory
+        outfile = os.path.join(outdir, infile.split('.')[0] + suffix)
+        self.make_figure(diff_img, i, minval, maxval, self.scaling.lower(),
+                         maxsize=max_img_size, thumbnail=True)
+        self.save_image(outfile, thumbnail=True)
+        plt.close()
 
     def save_image(self, fname, thumbnail=False):
         """
