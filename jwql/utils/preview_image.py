@@ -84,7 +84,7 @@ class PreviewImage():
 
     Methods
     -------
-    difference_image(data)
+    difference_image()
         Create a difference image from the data
     find_limits(data, pixmap, clipperc)
         Find the min and max signal levels after clipping by
@@ -120,16 +120,11 @@ class PreviewImage():
         # Read in file
         self.data, self.dq = self.get_data(self.file, extension)
 
-    def difference_image(self, data):
+    def difference_image(self):
         """
         Create a difference image from the data. Use last group minus
         first group in order to maximize signal to noise. With 4D
         input, make a a difference image for only one integration.
-
-        Parameters
-        ----------
-        data : obj
-            4D ``numpy`` ``ndarray`` array of floats
 
         Returns
         -------
@@ -137,7 +132,7 @@ class PreviewImage():
             3D ``numpy`` ``ndarray`` containing the difference image(s)
             from the input exposure
         """
-        return data[0, -1, :, :] - data[0, 0, :, :]
+        return self.data[0, -1, :, :] - self.data[0, 0, :, :]
 
     def find_limits(self, data, pixmap, clipperc):
         """
@@ -358,7 +353,7 @@ class PreviewImage():
 
         if len(shape) == 4:
             # Create difference image(s)
-            diff_img = self.difference_image(self.data)
+            diff_img = self.difference_image()
         elif len(shape) == 3:
             diff_img = self.data[0, :, :]
         elif len(shape) == 2:

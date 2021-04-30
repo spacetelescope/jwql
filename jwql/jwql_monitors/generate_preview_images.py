@@ -297,7 +297,9 @@ def create_mosaic(filenames):
         image = PreviewImage(filename, "SCI")  # Now have image.data, image.dq
         data_dim = len(image.data.shape)
         if data_dim == 4:
-            diff_im = image.difference_image(image.data)
+            diff_im = image.difference_image()
+        elif data_dim == 3:
+            diff_im = image.data[0, :, :]
         else:
             diff_im = image.data
         data.append(diff_im)
