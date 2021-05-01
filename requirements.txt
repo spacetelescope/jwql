@@ -1,5 +1,5 @@
 asdf==2.7.1
-astropy==4.0.2
+astropy==4.2.1
 astroquery==0.4.1
 authlib==0.15.3
 bokeh==2.3.0
