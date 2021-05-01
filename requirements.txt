@@ -24,7 +24,7 @@ pysiaf==0.10.0
 pytest==6.2.3
 pytest-cov==2.11.1
 scipy==1.6.3
-sphinx==3.5.3
+sphinx==3.5.4
 sqlalchemy==1.4.4
 stsci_rtd_theme==0.0.2
 twine==3.3.0
