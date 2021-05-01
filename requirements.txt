@@ -16,7 +16,7 @@ jwedb>=0.0.6
 jwst==1.1.0
 matplotlib==3.4.1
 nodejs==10.13.0
-numpy==1.20.1
+numpy==1.20.2
 numpydoc==1.1.0
 pandas==1.2.3
 psycopg2==2.8.6
