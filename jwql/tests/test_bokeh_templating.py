@@ -21,7 +21,7 @@ class TestTemplate(BokehTemplate):
     A minimal BokehTemplate app for testing purposes. This is adapted from
     the example included in the ``bokeh_template`` package.
     """
-    
+
     _embed = True
 
     def pre_init(self):

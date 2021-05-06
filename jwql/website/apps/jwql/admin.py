@@ -29,4 +29,5 @@ class ImageDataAdmin(admin.ModelAdmin):
     list_display = ('filename', 'inst', 'pub_date')
     list_filter = ['pub_date']
 
+
 admin.site.register(ImageData, ImageDataAdmin)

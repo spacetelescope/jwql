@@ -119,7 +119,7 @@ where (Bourque et al, 2020) is a citation of the Zenodo record available using t
 
 ## Software Contributions
 
-There are two current pages to review before you begin contributing to the `jwql` development. The first is our [style guide](https://github.com/spacetelescope/jwql/blob/master/style_guide/README.md) and the second is our [suggested git workflow page](https://github.com/spacetelescope/jwql/wiki/git-&-GitHub-workflow-for-contributing), which contains an in-depth explanation of the workflow.
+There are two current pages to review before you begin contributing to the `jwql` development. The first is our [style guide](https://github.com/spacetelescope/jwql/blob/main/style_guide/README.md) and the second is our [suggested git workflow page](https://github.com/spacetelescope/jwql/wiki/git-&-GitHub-workflow-for-contributing), which contains an in-depth explanation of the workflow.
 
 Contributors are also encouraged to check out the [Checklist for Contributors Guide](https://github.com/spacetelescope/jwql/wiki/Checklist-for-Contributors-and-Reviewers-of-Pull-Requests) to ensure the pull request contains all of the necessary changes.
 
@@ -147,7 +147,7 @@ Users who wish to report an issue or request a new feature may do so through the
 
 ## Code of Conduct
 
-Users and contributors to the `jwql` repository should adhere to the [Code of Conduct](https://github.com/spacetelescope/jwql/blob/master/CODE_OF_CONDUCT.md).  Any issues or violations pertaining to the Code of Conduct should be brought to the attention of a `jwql` team member or to `jwql@stsci.edu`.
+Users and contributors to the `jwql` repository should adhere to the [Code of Conduct](https://github.com/spacetelescope/jwql/blob/main/CODE_OF_CONDUCT.md).  Any issues or violations pertaining to the Code of Conduct should be brought to the attention of a `jwql` team member or to `jwql@stsci.edu`.
 
 ## Questions
 

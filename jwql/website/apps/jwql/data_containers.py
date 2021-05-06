@@ -41,11 +41,9 @@ from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
-from jwql.jwql_monitors import monitor_cron_jobs
 from jwql.utils.utils import ensure_dir_exists
 from jwql.utils.constants import MONITORS
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.constants import INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
 
@@ -66,9 +64,9 @@ from jwedb.edb_interface import mnemonic_inventory
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 if not ON_GITHUB_ACTIONS:
-    FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
-    PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_images')
-    THUMBNAIL_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'thumbnails')
+    FILESYSTEM_DIR = os.path.join(get_config()['filesystem'])
+    PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['preview_image_filesystem'])
+    THUMBNAIL_FILESYSTEM = os.path.join(get_config()['thumbnail_filesystem'])
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
@@ -233,7 +231,7 @@ def get_current_flagged_anomalies(rootname, instrument):
     return current_anomalies
 
 
-def get_dashboard_components():
+def get_dashboard_components(request):
     """Build and return dictionaries containing components and html
     needed for the dashboard.
 
@@ -245,56 +243,29 @@ def get_dashboard_components():
         A dictionary containing full HTML needed for the dashboard.
     """
 
-    output_dir = get_config()['outputs']
-    name_dict = {'': '',
-                 'monitor_mast': 'Database Monitor',
-                 'monitor_filesystem': 'Filesystem Monitor'}
+    from jwql.website.apps.jwql.bokeh_dashboard import GeneralDashboard
 
-    # Run the cron job monitor to produce an updated table
-    monitor_cron_jobs.status(production_mode=True)
+    if 'time_delta_value' in request.POST:
+        time_delta_value = request.POST['timedelta']
 
-    # Build dictionary of Bokeh components from files in the output directory
-    dashboard_components = {}
-    for dir_name, _, file_list in os.walk(output_dir):
-        monitor_name = os.path.basename(dir_name)
+        if time_delta_value == 'All Time':
+            time_delta = None
+        else:
+            time_delta_options = {'All Time': None,
+                                  '1 Day': pd.DateOffset(days=1),
+                                  '1 Month': pd.DateOffset(months=1),
+                                  '1 Week': pd.DateOffset(weeks=1),
+                                  '1 Year': pd.DateOffset(years=1)}
+            time_delta = time_delta_options[time_delta_value]
 
-        # Only continue if the dashboard knows how to build that monitor
-        if monitor_name in name_dict.keys():
-            formatted_monitor_name = name_dict[monitor_name]
-            dashboard_components[formatted_monitor_name] = {}
-            for fname in file_list:
-                if 'component' in fname:
-                    full_fname = '{}/{}'.format(monitor_name, fname)
-                    plot_name = fname.split('_component')[0]
+        dashboard = GeneralDashboard(delta_t=time_delta)
 
-                    # Generate formatted plot name
-                    formatted_plot_name = plot_name.title().replace('_', ' ')
-                    for lowercase, mixed_case in JWST_INSTRUMENT_NAMES_MIXEDCASE.items():
-                        formatted_plot_name = formatted_plot_name.replace(lowercase.capitalize(),
-                                                                          mixed_case)
-                    formatted_plot_name = formatted_plot_name.replace('Jwst', 'JWST')
-                    formatted_plot_name = formatted_plot_name.replace('Caom', 'CAOM')
+        return dashboard
+    else:
+        # When coming from home/monitor views
+        dashboard = GeneralDashboard(delta_t=None)
 
-                    # Get the div
-                    html_file = full_fname.split('.')[0] + '.html'
-                    with open(os.path.join(output_dir, html_file), 'r') as f:
-                        div = f.read()
-
-                    # Get the script
-                    js_file = full_fname.split('.')[0] + '.js'
-                    with open(os.path.join(output_dir, js_file), 'r') as f:
-                        script = f.read()
-
-                    # Save to dictionary
-                    dashboard_components[formatted_monitor_name][formatted_plot_name] = [div, script]
-
-    # Add HTML that cannot be saved as components to the dictionary
-    with open(os.path.join(output_dir, 'monitor_cron_jobs', 'cron_status_table.html'), 'r') as f:
-        cron_status_table_html = f.read()
-    dashboard_html = {}
-    dashboard_html['Cron Job Monitor'] = cron_status_table_html
-
-    return dashboard_components, dashboard_html
+        return dashboard
 
 
 def get_edb_components(request):
@@ -449,15 +420,17 @@ def get_edb_components(request):
     return edb_components
 
 
-def get_expstart(rootname):
+def get_expstart(instrument, rootname):
     """Return the exposure start time (``expstart``) for the given
-    group of files.
+    ``rootname``.
 
     The ``expstart`` is gathered from a query to the
     ``astroquery.mast`` service.
 
     Parameters
     ----------
+    instrument : str
+        The instrument of interest (e.g. `FGS`).
     rootname : str
         The rootname of the observation of interest (e.g.
         ``jw86700006001_02101_00006_guider1``).
@@ -468,12 +441,20 @@ def get_expstart(rootname):
         The exposure start time of the observation (in MJD).
     """
 
-    return 5000.00
+    file_set_name = '_'.join(rootname.split('_')[:-1])
+    service = INSTRUMENT_SERVICE_MATCH[instrument]
+    params = {
+        'columns': 'filename, expstart',
+        'filters': [{'paramName': 'fileSetName', 'values': [file_set_name]}]}
+    response = Mast.service_request_async(service, params)
+    result = response[0].json()
+    expstart = min([item['expstart'] for item in result['data']])
+
+    return expstart
 
 
 def get_filenames_by_instrument(instrument):
-    """Returns a list of paths to files that match the given
-    ``instrument``.
+    """Returns a list of filenames that match the given ``instrument``.
 
     Parameters
     ----------
@@ -482,26 +463,18 @@ def get_filenames_by_instrument(instrument):
 
     Returns
     -------
-    filepaths : list
-        A list of full paths to the files that match the given
-        instrument.
+    filenames : list
+        A list of files that match the given instrument.
     """
 
-    # Query files from MAST database
-    # filepaths, filenames = DatabaseConnection('MAST', instrument=instrument).\
-    #     get_files_for_instrument(instrument)
+    # Query for files from astroquery.Mast
+    service = INSTRUMENT_SERVICE_MATCH[instrument]
+    params = {"columns": "filename", "filters": []}
+    response = Mast.service_request_async(service, params)
+    result = response[0].json()
+    filenames = [item['filename'] for item in result['data']]
 
-    # Find all of the matching files in filesytem
-    # (TEMPORARY WHILE THE MAST STUFF IS BEING WORKED OUT)
-    instrument_match = {'FGS': 'guider',
-                        'MIRI': 'mir',
-                        'NIRCam': 'nrc',
-                        'NIRISS': 'nis',
-                        'NIRSpec': 'nrs'}
-    search_filepath = os.path.join(FILESYSTEM_DIR, '*', '*.fits')
-    filepaths = [f for f in glob.glob(search_filepath) if instrument_match[instrument] in f]
-
-    return filepaths
+    return filenames
 
 
 def get_filenames_by_proposal(proposal):
@@ -528,8 +501,8 @@ def get_filenames_by_proposal(proposal):
 
 
 def get_filenames_by_rootname(rootname):
-    """Return a list of filenames available in the filesystem that
-    are part of the given ``rootname``.
+    """Return a list of filenames that are part of the given
+    ``rootname``.
 
     Parameters
     ----------
@@ -544,6 +517,7 @@ def get_filenames_by_rootname(rootname):
     """
 
     proposal = rootname.split('_')[0].split('jw')[-1][0:5]
+
     filenames = sorted(glob.glob(os.path.join(
         FILESYSTEM_DIR,
         'jw{}'.format(proposal),
@@ -844,24 +818,19 @@ def get_proposal_info(filepaths):
         proposal(s) and files corresponding to the given ``filepaths``.
     """
 
-    proposals = list(set([f.split('/')[-1][2:7] for f in filepaths]))
-    thumbnail_dir = os.path.join(get_config()['jwql_dir'], 'thumbnails')
+    # Initialize some containers
     thumbnail_paths = []
     num_files = []
-    for proposal in proposals:
-        thumbnail_search_filepath = os.path.join(
-            thumbnail_dir, 'jw{}'.format(proposal), 'jw{}*rate*.thumb'.format(proposal)
-        )
-        thumbnail = glob.glob(thumbnail_search_filepath)
-        if len(thumbnail) > 0:
-            thumbnail = thumbnail[0]
-            thumbnail = '/'.join(thumbnail.split('/')[-2:])
-        thumbnail_paths.append(thumbnail)
 
-        fits_search_filepath = os.path.join(
-            FILESYSTEM_DIR, 'jw{}'.format(proposal), 'jw{}*.fits'.format(proposal)
-        )
-        num_files.append(len(glob.glob(fits_search_filepath)))
+    # Gather thumbnails and counts for proposals
+    proposals, thumbnail_paths, num_files = [], [], []
+    for filepath in filepaths:
+        proposal = filepath.split('/')[-1][2:7]
+        if proposal not in proposals:
+            thumbnail_paths.append(os.path.join('jw{}'.format(proposal), 'jw{}.thumb'.format(proposal)))
+            files_for_proposal = [item for item in filepaths if 'jw{}'.format(proposal) in item]
+            num_files.append(len(files_for_proposal))
+            proposals.append(proposal)
 
     # Put the various information into a dictionary of results
     proposal_info = {}
@@ -1127,10 +1096,10 @@ def thumbnails_ajax(inst, proposal=None):
     """
 
     # Get the available files for the instrument
-    filepaths = get_filenames_by_instrument(inst)
+    filenames = get_filenames_by_instrument(inst)
 
     # Get set of unique rootnames
-    rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filepaths])
+    rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
 
     # If the proposal is specified (i.e. if the page being loaded is
     # an archive page), only collect data for given proposal
@@ -1161,23 +1130,25 @@ def thumbnails_ajax(inst, proposal=None):
                              'visit_group': rootname[14:16]}
 
         # Get list of available filenames
-        available_files = get_filenames_by_rootname(rootname)
+        available_files = [item for item in filenames if rootname in item]
 
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
-        data_dict['file_data'][rootname]['expstart'] = get_expstart(rootname)
-        data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for
-                                                        filename in available_files]
+        data_dict['file_data'][rootname]['expstart'] = get_expstart(inst, rootname)
+        data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for filename in available_files]
 
     # Extract information for sorting with dropdown menus
-    # (Don't include the proposal as a sorting parameter if the
-    # proposal has already been specified)
-    detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for
-                 rootname in list(data_dict['file_data'].keys())]
-    proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for
-                 rootname in list(data_dict['file_data'].keys())]
+    # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
+    detectors, proposals = [], []
+    for rootname in list(data_dict['file_data'].keys()):
+        proposals.append(data_dict['file_data'][rootname]['filename_dict']['program_id'])
+        try:  # Some rootnames cannot parse out detectors
+            detectors.append(data_dict['file_data'][rootname]['filename_dict']['detector'])
+        except KeyError:
+            pass
+
     if proposal is not None:
         dropdown_menus = {'detector': detectors}
     else:
@@ -1245,7 +1216,7 @@ def thumbnails_query_ajax(rootnames, insts):
             print("Warning: assuming instrument is MIRI")
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
-        data_dict['file_data'][rootname]['expstart'] = get_expstart(rootname)
+        data_dict['file_data'][rootname]['expstart'] = get_expstart(data_dict['file_data'][rootname]['inst'], rootname)
         data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for
                                                         filename in available_files]
         data_dict['file_data'][rootname]['prop'] = rootname[2:7]

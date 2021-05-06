@@ -441,8 +441,8 @@ class Dark():
             Date (in MJD) of the ending range of the previous MAST query
             where the dark monitor was run.
         """
-        query = session.query(self.query_table).filter(self.query_table.aperture==self.aperture). \
-                                                filter(self.query_table.run_monitor==True)
+        query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture). \
+                              filter(self.query_table.run_monitor == True)
 
         dates = np.zeros(0)
         for instance in query:
@@ -508,8 +508,8 @@ class Dark():
 
         # Determine which pipeline steps need to be executed
         required_steps = pipeline_tools.get_pipeline_steps(self.instrument)
-        logging.info('\tRequired calwebb1_detector pipeline steps to have the data in the '
-                     'correct format:')
+        logging.info('\tRequired calwebb1_detector pipeline steps to have'
+                     'data in correct format:')
         for item in required_steps:
             logging.info('\t\t{}: {}'.format(item, required_steps[item]))
 
@@ -732,7 +732,7 @@ class Dark():
                 logging.info('')
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
 
-                # Find the appropriate threshold for the number of new files needed
+                # Find appropriate threshold for the number of new files needed
                 match = aperture == limits['Aperture']
                 file_count_threshold = limits['Threshold'][match]
 
@@ -750,7 +750,7 @@ class Dark():
                 # Check to see if there are enough new files to meet the
                 # monitor's signal-to-noise requirements
                 if len(new_entries) >= file_count_threshold:
-                    logging.info('\tSufficient new dark files found for {}, {} to run the dark monitor.'
+                    logging.info('\tMAST query has returned sufficient new dark files for {}, {} to run the dark monitor.'
                                  .format(self.instrument, self.aperture))
 
                     # Get full paths to the files
@@ -762,29 +762,42 @@ class Dark():
                             logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
                                             .format(file_entry['filename']))
 
-                    # Set up directories for the copied data
-                    ensure_dir_exists(os.path.join(self.output_dir, 'data'))
-                    self.data_dir = os.path.join(self.output_dir,
-                                                 'data/{}_{}'.format(self.instrument.lower(),
-                                                                     self.aperture.lower()))
-                    ensure_dir_exists(self.data_dir)
+                    # If it turns out that the monitor doesn't find enough
+                    # of the files returned by the MAST query to meet the threshold,
+                    # then the monitor will not be run
+                    if len(new_filenames) < file_count_threshold:
+                        logging.info(("\tFilesystem search for the files identified by MAST has returned {} files. "
+                                      "This is less than the required minimum number of files ({}) necessary to run "
+                                      "the monitor. Quitting.").format(len(new_filenames), file_count_threshold))
+                        monitor_run = False
+                    else:
+                        logging.info(("\tFilesystem search for the files identified by MAST has returned {} files.")
+                                     .format(len(new_filenames)))
+                        monitor_run = True
 
-                    # Copy files from filesystem
-                    dark_files, not_copied = copy_files(new_filenames, self.data_dir)
+                    if monitor_run:
+                        # Set up directories for the copied data
+                        ensure_dir_exists(os.path.join(self.output_dir, 'data'))
+                        self.data_dir = os.path.join(self.output_dir,
+                                                     'data/{}_{}'.format(self.instrument.lower(),
+                                                                         self.aperture.lower()))
+                        ensure_dir_exists(self.data_dir)
 
-                    logging.info('\tNew_filenames: {}'.format(new_filenames))
-                    logging.info('\tData dir: {}'.format(self.data_dir))
-                    logging.info('\tCopied to working dir: {}'.format(dark_files))
-                    logging.info('\tNot copied: {}'.format(not_copied))
+                        # Copy files from filesystem
+                        dark_files, not_copied = copy_files(new_filenames, self.data_dir)
 
-                    # Run the dark monitor
-                    self.process(dark_files)
-                    monitor_run = True
+                        logging.info('\tNew_filenames: {}'.format(new_filenames))
+                        logging.info('\tData dir: {}'.format(self.data_dir))
+                        logging.info('\tCopied to working dir: {}'.format(dark_files))
+                        logging.info('\tNot copied: {}'.format(not_copied))
+
+                        # Run the dark monitor
+                        self.process(dark_files)
 
                 else:
-                    logging.info(('\tDark monitor skipped. {} new dark files for {}, {}. {} new files are '
-                                  'required to run dark current monitor.').format(
-                        len(new_entries), instrument, aperture, file_count_threshold[0]))
+                    logging.info(('\tDark monitor skipped. MAST query has returned {} new dark files for '
+                                  '{}, {}. {} new files are required to run dark current monitor.')
+                                 .format(len(new_entries), instrument, aperture, file_count_threshold[0]))
                     monitor_run = False
 
                 # Update the query history
@@ -980,8 +993,7 @@ class Dark():
             degrees_of_freedom = len(hist) - 3.
             total_pix = np.sum(hist[positive])
             p_i = gauss_fit[positive] / total_pix
-            gaussian_chi_squared[key] = (np.sum((hist[positive] - (total_pix * p_i) ** 2) / (total_pix * p_i))
-                                         / degrees_of_freedom)
+            gaussian_chi_squared[key] = (np.sum((hist[positive] - (total_pix * p_i) ** 2) / (total_pix * p_i)) / degrees_of_freedom)
 
             # Double Gaussian fit only for full frame data (and only for
             # NIRISS, NIRCam at the moment.)
@@ -1005,10 +1017,10 @@ class Dark():
 
         logging.info('\tMean dark rate by amplifier: {}'.format(amp_means))
         logging.info('\tStandard deviation of dark rate by amplifier: {}'.format(amp_means))
-        logging.info('\tBest-fit Gaussian parameters [amplitude, peak, width]'.format(gaussian_params))
+        logging.info('\tBest-fit Gaussian parameters [amplitude, peak, width]: {}'.format(gaussian_params))
         logging.info('\tReduced chi-squared associated with Gaussian fit: {}'.format(gaussian_chi_squared))
         logging.info('\tBest-fit double Gaussian parameters [amplitude1, peak1, width1, amplitude2, peak2, '
-                     'width2]'.format(double_gaussian_params))
+                     'width2]: {}'.format(double_gaussian_params))
         logging.info('\tReduced chi-squared associated with double Gaussian fit: {}'
                      .format(double_gaussian_chi_squared))
 

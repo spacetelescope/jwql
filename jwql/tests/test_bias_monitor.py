@@ -77,6 +77,7 @@ def test_get_amp_medians():
     """Test that the amp medians are calculated correctly"""
 
     monitor = bias_monitor.Bias()
+    monitor.instrument = 'nircam'
 
     # Create test data and its corresponding amp medians
     image = np.arange(144).reshape(12, 12)
@@ -102,3 +103,21 @@ def test_identify_tables():
 
     assert monitor.query_table == eval('NIRCamBiasQueryHistory')
     assert monitor.stats_table == eval('NIRCamBiasStats')
+
+
+def test_make_histogram():
+    """Test histogram creation"""
+
+    monitor = bias_monitor.Bias()
+
+    # Create test data and its corresponding histogram stats
+    data = np.zeros((100, 100))
+    counts_truth = [10000]
+    bin_centers_truth = [0.0]
+
+    # Find the histogram stats of the test data using the bias monitor
+    counts, bin_centers = monitor.make_histogram(data)
+    counts, bin_centers = list(counts), list(bin_centers)
+
+    assert counts == counts_truth
+    assert bin_centers == bin_centers_truth

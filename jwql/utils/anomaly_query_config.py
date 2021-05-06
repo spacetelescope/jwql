@@ -29,10 +29,12 @@ CURRENT_ANOMALIES = {}
 # Observing modes selected by user in anomaly_query
 DETECTORS_CHOSEN = {}
 
-# Maximum exposure time selected by user in anomaly_query. Corresponds to EFFEXPTM in MAST.
+# Maximum exposure time selected by user in anomaly_query.
+# Corresponds to EFFEXPTM in MAST.
 EXPTIME_MAX = ['999999999999999']   # select all as default
 
-# Minimum exposure time selected by user in anomaly_query. Corresponds to EFFEXPTM in MAST.
+# Minimum exposure time selected by user in anomaly_query.
+# Corresponds to EFFEXPTM in MAST.
 EXPTIME_MIN = ['0']  # select all as default
 
 # Exposure types selected by user in anomaly_query
