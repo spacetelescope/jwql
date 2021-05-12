@@ -611,7 +611,7 @@ def group_filenames(filenames):
                         subgroup.append(file_to_match)
 
             else:
-                # filename_dict['filename_type'] may be 'guider' or 'time_series', for instance. Treat individually.  
+                # filename_dict['filename_type'] may be 'guider' or 'time_series', for instance. Treat individually.
                 matched_names.append(filename)
                 subgroup.append(filename)
 

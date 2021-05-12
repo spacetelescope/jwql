@@ -149,7 +149,7 @@ class MonitorFilesystem(BokehTemplate):
             if new_sizes:
                 stype_dict = {'dates': new_sizes['timestamp'].datetime64}
                 stype_dict.update({x: new_sizes[y].data / (1024.**3)
-                    for x, y in zip(self.types_y, self.allowed_types)})
+                                  for x, y in zip(self.types_y, self.allowed_types)})
                 self.refs['source_sizes'].data = stype_dict
 
         if not self.statistics:

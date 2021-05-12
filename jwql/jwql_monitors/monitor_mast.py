@@ -249,8 +249,6 @@ def monitor_mast():
     """
     logging.info('Beginning database monitoring.')
 
-    outputs_dir = os.path.join(get_config()['outputs'], 'monitor_mast')
-
     # Perform inventory of the JWST service
     jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
                    dataproducts=['image', 'spectrum', 'cube'],
