@@ -195,7 +195,7 @@ class PreviewImage():
                 for exten in hdulist:
                     try:
                         extnames.append(exten.header['EXTNAME'])
-                    except:
+                    except KeyError:
                         pass
                 if ext in extnames:
                     dimensions = len(hdulist[ext].data.shape)
@@ -389,16 +389,18 @@ class PreviewImage():
             self.save_image(outfile, thumbnail=False)
             plt.close()
 
-            # Create thumbnail image matplotlib object
-            if self.thumbnail_output_directory is None:
-                outdir = indir
-            else:
-                outdir = self.thumbnail_output_directory
-            outfile = os.path.join(outdir, infile.split('.')[0] + suffix)
-            self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
-                             maxsize=max_img_size, thumbnail=True)
-            self.save_image(outfile, thumbnail=True)
-            plt.close()
+            # Create thumbnail image matplotlib object, only for the
+            # first integration
+            if i == 0:
+                if self.thumbnail_output_directory is None:
+                    outdir = indir
+                else:
+                    outdir = self.thumbnail_output_directory
+                outfile = os.path.join(outdir, infile.split('.')[0] + suffix)
+                self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
+                                 maxsize=max_img_size, thumbnail=True)
+                self.save_image(outfile, thumbnail=True)
+                plt.close()
 
     def save_image(self, fname, thumbnail=False):
         """
