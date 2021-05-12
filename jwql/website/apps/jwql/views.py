@@ -40,23 +40,17 @@ Dependencies
 import csv
 import os
 
-from django.http import JsonResponse
-from django.http import HttpRequest as request
-from django.http import HttpResponse
-from django.shortcuts import render
-from django.shortcuts import redirect
-import pandas as pd
+from bokeh.layouts import layout
+from bokeh.embed import components
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect, render
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
-from jwql.utils.constants import MONITORS
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
-from jwql.utils.utils import get_base_url
-from jwql.utils.utils import get_config
-from jwql.utils.utils import query_unformat
-from jwql.website.apps.jwql.data_containers import get_jwqldb_table_view_components
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS
+from jwql.utils.utils import filesystem_path, get_base_url, get_config, query_unformat
 
+from .data_containers import build_table
 from .data_containers import data_trending
 from .data_containers import get_acknowledgements
 from .data_containers import get_current_flagged_anomalies
@@ -74,7 +68,6 @@ from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import InstrumentAnomalySubmitForm
 from .forms import AnomalyQueryForm
-from .data_containers import build_table
 from .forms import FileSearchForm
 from .oauth import auth_info, auth_required
 
@@ -282,14 +275,22 @@ def archived_proposals_ajax(request, user, inst):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    # For each proposal, get the first available thumbnail and determine
-    # how many files there are
-    filepaths = get_filenames_by_instrument(inst)
-    all_filenames = [os.path.basename(f) for f in filepaths]
+    # Get list of all files for the given instrument
+    filenames = get_filenames_by_instrument(inst)
+
+    # Determine locations to the files
+    filepaths = []
+    for filename in filenames:
+        try:
+            filepaths.append(filesystem_path(filename, check_existence=False))
+        except ValueError:
+            print('Unable to determine filepath for {}'.format(filename))
+
+    # Gather information about the proposals for the given instrument
     proposal_info = get_proposal_info(filepaths)
 
     context = {'inst': inst,
-               'all_filenames': all_filenames,
+               'all_filenames': filenames,
                'num_proposals': proposal_info['num_proposals'],
                'thumbnails': {'proposals': proposal_info['proposals'],
                               'thumbnail_paths': proposal_info['thumbnail_paths'],
@@ -403,15 +404,27 @@ def dashboard(request):
     """
 
     template = 'dashboard.html'
-    output_dir = get_config()['outputs']
-    dashboard_components, dashboard_html = get_dashboard_components()
+
+    db = get_dashboard_components(request)
+    pie_graph = db.dashboard_instrument_pie_chart()
+    files_graph = db.dashboard_files_per_day()
+    filetype_bar = db.dashboard_filetype_bar_chart()
+    table_columns, table_values = db.dashboard_monitor_tracking()
+    grating_plot = db.dashboard_exposure_count_by_filter()
+    anomaly_plot = db.dashboard_anomaly_per_instrument()
+
+    plot = layout([[files_graph], [pie_graph, filetype_bar],
+                   [grating_plot, anomaly_plot]], sizing_mode='stretch_width')
+    script, div = components(plot)
+
+    time_deltas = ['All Time', '1 Day', '1 Week', '1 Month', '1 Year']
 
     context = {'inst': '',
-               'outputs': output_dir,
-               'filesystem_html': os.path.join(output_dir, 'monitor_filesystem',
-                                               'filesystem_monitor.html'),
-               'dashboard_components': dashboard_components,
-               'dashboard_html': dashboard_html}
+               'script': script,
+               'div': div,
+               'table_columns': table_columns,
+               'table_rows': table_values,
+               'time_deltas': time_deltas}
 
     return render(request, template, context)
 

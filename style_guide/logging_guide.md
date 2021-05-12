@@ -1,7 +1,7 @@
 Logging Style Guide for `jwql` Instrument Monitors
 ==================================================
 
-This document serves as a style guide for adding logging to `jwql` instrument monitor software.  Any monitoring contribution to the `jwql` code repository should be checked against this guide to ensure proper usage of logging functions, and any violation of this and the style guide should be fixed before the code is committed to the `master` or `develop` branches.  Please refer to the accompanying [`example.py`](https://github.com/spacetelescope/jwql/blob/master/style_guide/example.py) script for a example code that abides by the style guide and the logging guide.
+This document serves as a style guide for adding logging to `jwql` instrument monitor software.  Any monitoring contribution to the `jwql` code repository should be checked against this guide to ensure proper usage of logging functions, and any violation of this and the style guide should be fixed before the code is committed to the `main` or `develop` branches.  Please refer to the accompanying [`example.py`](https://github.com/spacetelescope/jwql/blob/main/style_guide/example.py) script for a example code that abides by the style guide and the logging guide.
 
 
 Introduction

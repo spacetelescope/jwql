@@ -43,6 +43,110 @@ from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES_SHORTH
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
+
+def _validate_config(config_file_dict):
+    """Check that the config.json file contains all the needed entries with
+    expected data types
+
+    Parameters
+    ----------
+    config_file_dict : dict
+        The configuration JSON file loaded as a dictionary
+
+    Notes
+    -----
+    See here for more information on JSON schemas:
+        https://json-schema.org/learn/getting-started-step-by-step.html
+    """
+    # Define the schema for config.json
+    schema = {
+        "type": "object",  # Must be a JSON object
+        "properties": {  # List all the possible entries and their types
+            "connection_string": {"type": "string"},
+            "database": {
+                "type": "object",
+                "properties": {
+                    "engine": {"type": "string"},
+                    "name": {"type": "string"},
+                    "user": {"type": "string"},
+                    "password": {"type": "string"},
+                    "host": {"type": "string"},
+                    "port": {"type": "string"}
+                },
+                "required": ['engine', 'name', 'user', 'password', 'host', 'port']
+            },
+            "filesystem": {"type": "string"},
+            "preview_image_filesystem": {"type": "string"},
+            "thumbnail_filesystem": {"type": "string"},
+            "outputs": {"type": "string"},
+            "jwql_dir": {"type": "string"},
+            "admin_account": {"type": "string"},
+            "log_dir": {"type": "string"},
+            "test_dir": {"type": "string"},
+            "test_data": {"type": "string"},
+            "setup_file": {"type": "string"},
+            "auth_mast": {"type": "string"},
+            "client_id": {"type": "string"},
+            "client_secret": {"type": "string"},
+            "mast_token": {"type": "string"},
+        },
+        # List which entries are needed (all of them)
+        "required": ["connection_string", "database", "filesystem",
+                     "preview_image_filesystem", "thumbnail_filesystem",
+                     "outputs", "jwql_dir", "admin_account", "log_dir",
+                     "test_dir", "test_data", "setup_file", "auth_mast",
+                     "client_id", "client_secret", "mast_token"]
+    }
+
+    # Test that the provided config file dict matches the schema
+    try:
+        jsonschema.validate(instance=config_file_dict, schema=schema)
+    except jsonschema.ValidationError as e:
+        raise jsonschema.ValidationError(
+            'Provided config.json does not match the '
+            'required JSON schema: {}'.format(e.message)
+        )
+
+
+def get_config():
+    """Return a dictionary that holds the contents of the ``jwql``
+    config file.
+
+    Returns
+    -------
+    settings : dict
+        A dictionary that holds the contents of the config file.
+    """
+    config_file_location = os.path.join(__location__, 'config.json')
+
+    # Make sure the file exists
+    if not os.path.isfile(config_file_location):
+        raise FileNotFoundError('The JWQL package requires a configuration file (config.json) '
+                                'to be placed within the jwql/utils directory. '
+                                'This file is missing. Please read the relevant wiki page '
+                                '(https://github.com/spacetelescope/jwql/wiki/'
+                                'Config-file) for more information.')
+
+    with open(config_file_location, 'r') as config_file_object:
+        try:
+            # Load it with JSON
+            settings = json.load(config_file_object)
+        except json.JSONDecodeError as e:
+            # Raise a more helpful error if there is a formatting problem
+            raise ValueError('Incorrectly formatted config.json file. '
+                             'Please fix JSON formatting: {}'.format(e))
+
+    # Ensure the file has all the needed entries with expected data types
+    _validate_config(settings)
+
+    return settings
+
+
+if not ON_GITHUB_ACTIONS:
+    FILESYSTEM = get_config()['filesystem']
+
 
 def copy_files(files, out_dir):
     """Copy a given file to a given directory. Only try to copy the file
@@ -326,13 +430,15 @@ def filename_parser(filename):
     return filename_dict
 
 
-def filesystem_path(filename):
+def filesystem_path(filename, check_existence=True):
     """Return the full path to a given file in the filesystem
 
     Parameters
     ----------
     filename : str
         File to locate (e.g. ``jw86600006001_02101_00008_guider1_cal.fits``)
+    check_existence : boolean
+        Check to see if the file exists in the expected lcoation
 
     Returns
     -------
@@ -340,19 +446,16 @@ def filesystem_path(filename):
         Full path to the given file, including filename
     """
 
-    filesystem_base = get_config()["filesystem"]
-
     # Subdirectory name is based on the proposal ID
-    subdir = 'jw{}'.format(filename_parser(filename)['program_id'])
-    full_path = os.path.join(filesystem_base, subdir, filename)
+    subdir = 'jw{}'.format(filename[2:7])
+    full_path = os.path.join(FILESYSTEM, subdir, filename)
 
     # Check to see if the file exists
-    if os.path.isfile(full_path):
-        return full_path
-    else:
-        raise FileNotFoundError(
-            '{} is not in the predicted location: {}'.format(filename, full_path)
-        )
+    if check_existence:
+        if not os.path.isfile(full_path):
+            raise FileNotFoundError('{} is not in the predicted location: {}'.format(filename, full_path))
+
+    return full_path
 
 
 def get_base_url():
@@ -378,40 +481,6 @@ def get_base_url():
     return base_url
 
 
-def get_config():
-    """Return a dictionary that holds the contents of the ``jwql``
-    config file.
-
-    Returns
-    -------
-    settings : dict
-        A dictionary that holds the contents of the config file.
-    """
-    config_file_location = os.path.join(__location__, 'config.json')
-
-    # Make sure the file exists
-    if not os.path.isfile(config_file_location):
-        raise FileNotFoundError('The JWQL package requires a configuration file (config.json) '
-                                'to be placed within the jwql/utils directory. '
-                                'This file is missing. Please read the relevant wiki page '
-                                '(https://github.com/spacetelescope/jwql/wiki/'
-                                'Config-file) for more information.')
-
-    with open(config_file_location, 'r') as config_file_object:
-        try:
-            # Load it with JSON
-            settings = json.load(config_file_object)
-        except json.JSONDecodeError as e:
-            # Raise a more helpful error if there is a formatting problem
-            raise ValueError('Incorrectly formatted config.json file. '
-                             'Please fix JSON formatting: {}'.format(e))
-
-    # Ensure the file has all the needed entries with expected data types
-    _validate_config(settings)
-
-    return settings
-
-
 def check_config_for_key(key):
     """Check that the config.json file contains the specified key
     and that the entry is not empty
@@ -435,70 +504,6 @@ def check_config_for_key(key):
             'Please complete the `{}` field in your config.json. '.format(key)
             + ' See the relevant wiki page (https://github.com/spacetelescope/'
             'jwql/wiki/Config-file) for more information.'
-        )
-
-
-def _validate_config(config_file_dict):
-    """Check that the config.json file contains all the needed entries with
-    expected data types
-
-    Parameters
-    ----------
-    config_file_dict : dict
-        The configuration JSON file loaded as a dictionary
-
-    Notes
-    -----
-    See here for more information on JSON schemas:
-        https://json-schema.org/learn/getting-started-step-by-step.html
-    """
-    # Define the schema for config.json
-    schema = {
-        "type": "object",  # Must be a JSON object
-        "properties": {  # List all the possible entries and their types
-            "connection_string": {"type": "string"},
-            "database": {
-                "type": "object",
-                "properties": {
-                    "engine": {"type": "string"},
-                    "name": {"type": "string"},
-                    "user": {"type": "string"},
-                    "password": {"type": "string"},
-                    "host": {"type": "string"},
-                    "port": {"type": "string"}
-                    },
-                    "required": ['engine', 'name', 'user', 'password', 'host', 'port']
-                 },
-            "filesystem": {"type": "string"},
-            "preview_image_filesystem": {"type": "string"},
-            "thumbnail_filesystem": {"type": "string"},
-            "outputs": {"type": "string"},
-            "jwql_dir": {"type": "string"},
-            "admin_account": {"type": "string"},
-            "log_dir": {"type": "string"},
-            "test_dir": {"type": "string"},
-            "test_data": {"type": "string"},
-            "setup_file": {"type": "string"},
-            "auth_mast": {"type": "string"},
-            "client_id": {"type": "string"},
-            "client_secret": {"type": "string"},
-            "mast_token": {"type": "string"},
-        },
-        # List which entries are needed (all of them)
-        "required": ["connection_string", "database", "filesystem",
-                     "preview_image_filesystem", "thumbnail_filesystem",
-                     "outputs", "jwql_dir", "admin_account", "log_dir",
-                     "test_dir", "test_data", "setup_file", "auth_mast",
-                     "client_id", "client_secret", "mast_token"]
-    }
-
-    # Test that the provided config file dict matches the schema
-    try:
-        jsonschema.validate(instance=config_file_dict, schema=schema)
-    except jsonschema.ValidationError as e:
-        raise jsonschema.ValidationError(
-            'Provided config.json does not match the ' + \
-            'required JSON schema: {}'.format(e.message)
         )
 
 

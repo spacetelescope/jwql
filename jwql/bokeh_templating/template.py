@@ -149,7 +149,8 @@ class BokehTemplate(object):
         if self.pre_init is not None:
             if signature(self.pre_init).parameters:
                 # If we try to call pre_init with keyword parameters when none
-                # are included, it will throw an error; thus, we use inspect.signature
+                # are included, it will throw an error
+                # thus, we use inspect.signature
                 self.pre_init(**kwargs)
             else:
                 self.pre_init()
