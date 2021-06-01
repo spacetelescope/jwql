@@ -4,7 +4,7 @@ astroquery==0.4.2
 authlib==0.15.3
 bokeh==2.3.2
 codecov==2.1.11
-crds==10.3.11
+crds==11.0.2
 cryptography==3.4.7
 django==3.1.7
 flake8==3.9.0
