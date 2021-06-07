@@ -58,8 +58,8 @@ def test_gaussian1d_fit():
 
     assert np.isclose(peak[0], mean_value, atol=0.0035, rtol=0.)
     assert np.isclose(width[0], sigma_value, atol=0.0035, rtol=0.)
-    assert ((mean_value <= peak[0]+7*peak[1]) & (mean_value >= peak[0]-7*peak[1]))
-    assert ((sigma_value <= width[0]+7*width[1]) & (sigma_value >= width[0]-7*width[1]))
+    assert ((mean_value <= peak[0] + 7 * peak[1]) & (mean_value >= peak[0] - 7 * peak[1]))
+    assert ((sigma_value <= width[0] + 7 * width[1]) & (sigma_value >= width[0] - 7 * width[1]))
 
 
 def test_mean_image():

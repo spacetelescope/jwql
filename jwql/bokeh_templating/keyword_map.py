@@ -44,7 +44,7 @@ def _parse_module(module):
     Sort the members of a module into dictionaries of functions (sequences)
     and classes (mappings).
     """
-    
+
     def accessible_member(name, member):
         return (not name.startswith("_")) and (module.__name__ in member.__module__)
 

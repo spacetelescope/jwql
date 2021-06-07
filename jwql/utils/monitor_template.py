@@ -70,7 +70,6 @@ from jwql.utils.utils import filename_parser
 
 # Objects for hard-coded information
 from jwql.utils.utils import get_config
-from jwql.utils.constants import JWST_DATAPRODUCTS, JWST_INSTRUMENT_NAMES
 
 
 @log_fail

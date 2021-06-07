@@ -43,7 +43,6 @@ import os
 from bokeh.layouts import layout
 from bokeh.embed import components
 from django.http import HttpResponse, JsonResponse
-from django.http import HttpRequest as request
 from django.shortcuts import redirect, render
 
 from jwql.database.database_interface import load_connection
@@ -69,7 +68,6 @@ from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import InstrumentAnomalySubmitForm
 from .forms import AnomalyQueryForm
-from .data_containers import build_table
 from .forms import FileSearchForm
 from .oauth import auth_info, auth_required
 
@@ -415,7 +413,8 @@ def dashboard(request):
     grating_plot = db.dashboard_exposure_count_by_filter()
     anomaly_plot = db.dashboard_anomaly_per_instrument()
 
-    plot = layout([[files_graph], [pie_graph, filetype_bar], [grating_plot, anomaly_plot]], sizing_mode='stretch_width')
+    plot = layout([[files_graph], [pie_graph, filetype_bar],
+                   [grating_plot, anomaly_plot]], sizing_mode='stretch_width')
     script, div = components(plot)
 
     time_deltas = ['All Time', '1 Day', '1 Week', '1 Month', '1 Year']
