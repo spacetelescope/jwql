@@ -123,12 +123,17 @@ def get_config():
     settings : dict
         A dictionary that holds the contents of the config file.
     """
-    config_file_location = os.path.join(__location__, 'config.json')
+    if os.environ.get('READTHEDOCS') == 'True':
+        # ReadTheDocs should use the example configuration file rather than the complete configuration file
+        config_file_location = os.path.join(__location__, 'example_config.json')
+    else:
+        # Users should complete their own configuration file and store it in the main jwql directory
+        config_file_location = os.path.join(__location__, 'config.json')
 
     # Make sure the file exists
     if not os.path.isfile(config_file_location):
         raise FileNotFoundError('The JWQL package requires a configuration file (config.json) '
-                                'to be placed within the jwql/utils directory. '
+                                'to be placed within the main jwql directory. '
                                 'This file is missing. Please read the relevant wiki page '
                                 '(https://github.com/spacetelescope/jwql/wiki/'
                                 'Config-file) for more information.')
