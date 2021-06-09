@@ -123,9 +123,12 @@ def get_config():
     settings : dict
         A dictionary that holds the contents of the config file.
     """
+
+    print("DEBUG: os.environ.get('READTHEDOCS'):", os.environ.get('READTHEDOCS'))
     if os.environ.get('READTHEDOCS') == 'True':
         # ReadTheDocs should use the example configuration file rather than the complete configuration file
         config_file_location = os.path.join(__location__, 'example_config.json')
+        print("DEBUG: config_file_location:", config_file_location)
     else:
         # Users should complete their own configuration file and store it in the main jwql directory
         config_file_location = os.path.join(__location__, 'config.json')
