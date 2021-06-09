@@ -6,7 +6,7 @@ bokeh==2.3.2
 codecov==2.1.11
 crds==10.3.11
 cryptography==3.4.7
-django==3.1.7
+django==3.1.10
 flake8==3.9.2
 inflection==0.5.1
 ipython==7.23.0
