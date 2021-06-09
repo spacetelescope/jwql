@@ -39,14 +39,14 @@ Dependencies
 ------------
 
     The user must have a configuration file named ``config.json``
-    placed in the ``utils`` directory.
+    placed in the ``jwql`` directory.
 
 Notes
 -----
 
     Any monitoring script written for ``jwql`` must adhere to the
     ``jwql`` style guide located at:
-    https://github.com/spacetelescope/jwql/blob/master/style_guide/README.md
+    https://github.com/spacetelescope/jwql/blob/main/style_guide/README.md
 """
 
 import os
@@ -70,7 +70,6 @@ from jwql.utils.utils import filename_parser
 
 # Objects for hard-coded information
 from jwql.utils.utils import get_config
-from jwql.utils.constants import JWST_DATAPRODUCTS, JWST_INSTRUMENT_NAMES
 
 
 @log_fail

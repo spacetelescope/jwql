@@ -8,6 +8,7 @@ Authors
 
     - Matthew Bourque
     - Christian Mesh
+    - Ben Falk
 
 Use
 ---
@@ -35,14 +36,15 @@ References
 Dependencies
 ------------
     The user must have a configuration file named ``config.json``
-    placed in the ``jwql/utils/`` directory.
+    placed in the ``jwql`` directory.
 """
 
 import os
 import requests
 
-from authlib.django.client import OAuth
+from authlib.integrations.django_client import OAuth
 from django.shortcuts import redirect, render
+from django.urls import reverse
 
 import jwql
 from jwql.utils.constants import MONITORS
@@ -71,14 +73,15 @@ def register_oauth():
 
     # Register with auth.mast
     oauth = OAuth()
-    client_kwargs = {'scope': 'mast:user:info'}
+    client_kwargs = {
+        'scope': 'mast:user:info',
+        'token_endpoint_auth_method': 'client_secret_basic',
+        'token_placement': 'header'}
     oauth.register(
         'mast_auth',
         client_id='{}'.format(client_id),
         client_secret='{}'.format(client_secret),
-        access_token_url='https://{}/oauth/access_token?client_secret={}'.format(
-            auth_mast, client_secret
-        ),
+        access_token_url='https://{}/oauth/token'.format(auth_mast),
         access_token_params=None,
         refresh_token_url=None,
         authorize_url='https://{}/oauth/authorize'.format(auth_mast),
@@ -109,16 +112,14 @@ def authorize(request):
     """
 
     # Get auth.mast token
-    token = JWQL_OAUTH.mast_auth.authorize_access_token(
-        request, headers={'Accept': 'application/json'}
-    )
+    token = JWQL_OAUTH.mast_auth.authorize_access_token(request)
 
     # Determine domain
-    base_url = get_base_url()
-    if '127' in base_url:
-        domain = '127.0.0.1'
-    else:
-        domain = base_url.split('//')[-1]
+    # base_url = get_base_url()
+    # if '127' in base_url:
+    #     domain = '127.0.0.1'
+    # else:
+    #     domain = base_url.split('//')[-1]
 
     # Set secure cookie parameters
     cookie_args = {}
@@ -206,7 +207,8 @@ def auth_required(fn):
     @auth_info
     def check_auth(request, user, **kwargs):
         """Check if the user is authenticated through ``auth.mast``.
-        If not, perform the authorization.
+        If not, perform the authorization, unless the user is running
+        the web app locally, in which case authorization is bypassed.
 
         Parameters
         ----------
@@ -221,15 +223,25 @@ def auth_required(fn):
             The decorated function
         """
 
-        # If user is currently anonymous, require a login
-        if user['ezid']:
+        # Determine domain
+        base_url = get_base_url()
+        if '127.0.0.1' in base_url:
+            domain = '127.0.0.1'
+        else:
+            domain = base_url.split('//')[-1]
 
+        # If running web app locally, user does not need to be authenticated
+        if domain == '127.0.0.1':
             return fn(request, user, **kwargs)
 
+        # If the user has an ezid, then they are already authenticated
+        elif user['ezid']:
+            return fn(request, user, **kwargs)
+
+        # Otherwise, the user is not authenticated and can't continue
         else:
             template = 'not_authenticated.html'
             context = {'inst': ''}
-
             return render(request, template, context)
 
     return check_auth
@@ -259,7 +271,7 @@ def login(request, user):
     # Redirect to oauth login
     global PREV_PAGE
     PREV_PAGE = request.META.get('HTTP_REFERER')
-    redirect_uri = os.path.join(get_base_url(), 'authorize')
+    redirect_uri = f"{get_base_url()}{reverse('jwql:authorize')}"
 
     return JWQL_OAUTH.mast_auth.authorize_redirect(request, redirect_uri)
 

@@ -4,70 +4,104 @@
 
 	<title>Dashboard - JWQL</title>
 
-
-    {% for monitor_name, plots in dashboard_components.items() %}
-        {% for plot_name, components in plots.items() %}
-            {{ components[1] | safe}}
-        {% endfor %}
-    {% endfor %}
-
 {% endblock %}
 
 {% block content %}
 
     <main role="main" class='dashboard'>
-
         <h1 style="text-align: center">JWQL Dashboard</h1>
         <hr>
 
-
-        <div class="row justify-content-md-center">
-        {% for monitor_name, plot in dashboard_html.items() %}
-            {{ plot | safe }}
-        {% endfor %}
-        </div>
-
-
-        <div class="container-fluid">
-            <div class="row justify-content-md-center">
-            {% for monitor_name, plots in dashboard_components.items() %}
-                {% for plot_name, components in plots.items() %}
-                    <div class="col-xl-6 col-12 plot-column">
-
-                        <!--Plot selection menus-->
-                        <div class="d-flex">
-                            <span class="dropdown">
-                              <button class="btn btn-primary dropdown-toggle" type="button" id="{{monitor_name}}_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{monitor_name}}</button>
-                              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                {% for monitor_name, plots in dashboard_components.items() %}
-                                    <a class="dropdown-item" href="#" >{{monitor_name}}</a>
-                                {% endfor %}
-                              </div>
-                            </span>
-
-                            <span class="dropdown ml-1">
-                              <button class="btn btn-primary dropdown-toggle" type="button" id="{{monitor_name}}_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{plot_name}}</button>
-                              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                {% for plot_name, components in plots.items() %}
-                                    <a class="dropdown-item" href="#" >{{plot_name}}</a>
-                                {% endfor %}
-                              </div>
-                            </span>
-
-                            {# <span class='plot-header ml-1'></span> #}
-                        </div>
-
-                        <!--Bokeh plot divs-->
-                        <span class='plot-container px-1'>
-                            {{  components[0] | safe }}
-                        </span>
-
-                    </div>
+        <p>
+            The JWQL dashboard provides users with a "high level" status of our systems and tools. Here we provide some analytics and 
+            statistics for the JWQL filesystem as well as the status of the instrument monitors. The figures below are interactive and some provide
+            more detailed information if you hover over them and will take you to other landing pages within the application if clicked.
+        </p>
+        <hr>
+        <h4>Select Time Delta</h4>
+        <form action="" method="post" id="time_delta_select">
+            {{ csrf_input }}
+            <select name="timedelta" id="timedelta">
+                {% for dt in time_deltas %}
+                    <option value='{{ dt }}'>{{ dt }}</option>
                 {% endfor %}
-            {% endfor %}
-            </div>
-        </div>
+            </select> 
 
-	</main>
+            <button name=time_delta_value class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
+
+            <br><br>
+
+            <body>
+                {{ div | safe }}
+                {{ script | safe }}
+                
+                <br>
+                <h3>JWQL Monitor Status</h3>
+                <hr>
+                <table id="jwqltable" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            {% for column in table_columns %}
+                                <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in table_rows %}
+                            <tr>
+                                {% for value in row %}
+                                    <td>{{ value }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            {% for column in table_columns %}
+                                <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <!-- JS for datatables rendering and sorting with DataTables. -->
+                <style>
+                    table.dataTable td  {
+                    max-width: 150px;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    }
+
+                    .red {
+                        background-color: #e77057 !important;
+                    }
+                    .yellow{
+                        background-color: #f5f25d !important;
+                    }
+                    .green{
+                        background-color: #57e79f !important;
+                    }
+                </style>
+
+                <script>
+                    $(document).ready( function () {
+                        var table = $('#jwqltable').DataTable({
+                            "order": [[ 2, "desc" ]],
+                            "createdRow": function( row, data, dataIndex ) {
+                            if ( data[4] == "FAILURE" ) {
+                                $(row).addClass('red');
+                            } else if ( data[4] == "SUCCESS" ) {
+                                $(row).addClass('green');
+                            } else if ( data[4] == "None" ) {
+                                $(row).addClass('yellow');
+                            }
+                        }
+                        });
+                    } );
+                </script>
+            </body>
+        </form>
+    </main>
 
 {% endblock %}

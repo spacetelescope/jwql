@@ -33,7 +33,7 @@ from jwst.persistence import PersistenceStep
 from jwst.pipeline.calwebb_detector1 import Detector1Pipeline
 from jwst.ramp_fitting import RampFitStep
 from jwst.refpix import RefPixStep
-from jwst.rscd import RSCD_Step
+from jwst.rscd import RscdStep
 from jwst.saturation import SaturationStep
 from jwst.superbias import SuperBiasStep
 
@@ -50,7 +50,7 @@ PIPELINE_STEP_MAPPING = {'dq_init': DQInitStep, 'dark_current': DarkCurrentStep,
                          'firstframe': FirstFrameStep, 'group_scale': GroupScaleStep,
                          'ipc': IPCStep, 'jump': JumpStep, 'lastframe': LastFrameStep,
                          'linearity': LinearityStep, 'persistence': PersistenceStep,
-                         'rate': RampFitStep, 'refpix': RefPixStep, 'rscd': RSCD_Step,
+                         'rate': RampFitStep, 'refpix': RefPixStep, 'rscd': RscdStep,
                          'saturation': SaturationStep, 'superbias': SuperBiasStep}
 
 # Readout patterns that have nframes != a power of 2. These readout patterns
@@ -282,13 +282,13 @@ def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True, save_fito
 
     # Check to see if the jump version of the requested file is already
     # present
-    run_jump =  not os.path.isfile(jump_output)
+    run_jump = not os.path.isfile(jump_output)
 
     if ramp_fit:
         model.ramp_fit.save_results = True
-        #model.save_results = True
+        # model.save_results = True
         model.output_dir = output_dir
-        #pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', 'rate'))
+        # pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', 'rate'))
         pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', '0_ramp_fit'))
         run_slope = not os.path.isfile(pipe_output)
         if save_fitopt:

@@ -1,7 +1,7 @@
 *.pyc
 *.fits
 *.ipynb_checkpoints/
-/jwql/utils/config.json
+config.json
 build/
 dist/
 jwql.egg-info/

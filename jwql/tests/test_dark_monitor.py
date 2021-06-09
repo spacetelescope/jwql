@@ -26,7 +26,7 @@ import numpy as np
 from jwql.instrument_monitors.common_monitors import dark_monitor
 from jwql.utils.utils import get_config
 
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 def test_find_hot_dead_pixels():
@@ -54,8 +54,7 @@ def test_find_hot_dead_pixels():
     assert np.all(dead[1] == np.array([6, 3]))
 
 
-@pytest.mark.skipif(ON_JENKINS,
-                    reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_metadata():
     """Test retrieval of metadata from input file"""
 
@@ -99,7 +98,7 @@ def test_mast_query_darks():
                        'jw82600016001_02102_00001_nrca1_dark.fits']
 
     assert len(query) == 14
-    assert apernames == [aperture]*len(query)
+    assert apernames == [aperture] * len(query)
     assert filenames == truth_filenames
 
 

@@ -86,18 +86,10 @@ Dependencies
     User must provide database "nirspec_database.db"
 
 """
-import jwql.instrument_monitors.nirspec_monitors.data_trending.utils.sql_interface as sql
 import jwql.instrument_monitors.nirspec_monitors.data_trending.plots.plot_functions as pf
-from bokeh.models import LinearAxis, Range1d
 from bokeh.plotting import figure
-from bokeh.models.widgets import Panel, Tabs, Div
-from bokeh.models import ColumnDataSource, HoverTool
-from bokeh.layouts import WidgetBox, gridplot, Column
-
-import pandas as pd
-import numpy as np
-
-from astropy.time import Time
+from bokeh.models.widgets import Panel, Div
+from bokeh.layouts import Column
 
 
 def irsu_temp(conn, start, end):
@@ -117,35 +109,37 @@ def irsu_temp(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 700,
-                x_axis_type = 'datetime',
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Temperature (K)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=700,
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date',
+               y_axis_label='Temperature (K)')
 
     p.grid.visible = True
     p.title.text = "IRSU monitored Temperatures"
     pf.add_basic_layout(p)
 
-    a = pf.add_to_plot(p, "75A", "SI_GZCTS75A", start, end, conn, color = "red")
-    b = pf.add_to_plot(p, "68A", "SI_GZCTS68A", start, end, conn, color = "green")
-    c = pf.add_to_plot(p, "81A", "SI_GZCTS81A", start, end, conn, color = "blue")
-    d = pf.add_to_plot(p, "80A", "SI_GZCTS80A", start, end, conn, color = "orange")
-    e = pf.add_to_plot(p, "76A", "SI_GZCTS76A", start, end, conn, color = "brown")
-    f = pf.add_to_plot(p, "79A", "SI_GZCTS79A", start, end, conn, color = "cyan")
-    g = pf.add_to_plot(p, "77A", "SI_GZCTS77A", start, end, conn, color = "darkmagenta")
-    h = pf.add_to_plot(p, "78A", "SI_GZCTS78A ", start, end, conn, color = "burlywood")
-    i = pf.add_to_plot(p, "69A", "SI_GZCTS69A ", start, end, conn, color = "chocolate")
+    a = pf.add_to_plot(p, "75A", "SI_GZCTS75A", start, end, conn, color="red")
+    b = pf.add_to_plot(p, "68A", "SI_GZCTS68A", start, end, conn, color="green")
+    c = pf.add_to_plot(p, "81A", "SI_GZCTS81A", start, end, conn, color="blue")
+    d = pf.add_to_plot(p, "80A", "SI_GZCTS80A", start, end, conn, color="orange")
+    e = pf.add_to_plot(p, "76A", "SI_GZCTS76A", start, end, conn, color="brown")
+    f = pf.add_to_plot(p, "79A", "SI_GZCTS79A", start, end, conn, color="cyan")
+    g = pf.add_to_plot(p, "77A", "SI_GZCTS77A", start, end, conn, color="darkmagenta")
+    h = pf.add_to_plot(p, "78A", "SI_GZCTS78A ", start, end, conn, color="burlywood")
+    i = pf.add_to_plot(p, "69A", "SI_GZCTS69A ", start, end, conn, color="chocolate")
 
-    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i])
+    pf.add_hover_tool(p, [a, b, c, d, e, f, g, h, i])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
     p.legend.orientation = "horizontal"
 
     return p
+
 
 def fpe_temp(conn, start, end):
     '''Create specific plot and return plot object
@@ -164,36 +158,38 @@ def fpe_temp(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 700,
-                x_axis_type = 'datetime',
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Temperature (K)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=700,
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date',
+               y_axis_label='Temperature (K)')
 
     p.grid.visible = True
     p.title.text = "FPE Temperatures"
     pf.add_basic_layout(p)
 
-    a = pf.add_to_plot(p, "CAM", "IGDP_NRSI_C_CAM_TEMP", start, end, conn, color = "red")
-    b = pf.add_to_plot(p, "COL", "IGDP_NRSI_C_COL_TEMP", start, end, conn, color = "green")
-    c = pf.add_to_plot(p, "COM1", "IGDP_NRSI_C_COM1_TEMP", start, end, conn, color = "blue")
-    d = pf.add_to_plot(p, "FOR", "IGDP_NRSI_C_FOR_TEMP", start, end, conn, color = "darkorange")
-    e = pf.add_to_plot(p, "IFU", "IGDP_NRSI_C_IFU_TEMP", start, end, conn, color = "cyan")
-    f = pf.add_to_plot(p, "BP1", "IGDP_NRSI_C_BP1_TEMP", start, end, conn, color = "darkmagenta")
-    g = pf.add_to_plot(p, "BP2", "IGDP_NRSI_C_BP2_TEMP", start, end, conn, color = "burlywood")
-    h = pf.add_to_plot(p, "BP3", "IGDP_NRSI_C_BP3_TEMP", start, end, conn, color = "brown")
-    i = pf.add_to_plot(p, "BP4", "IGDP_NRSI_C_BP4_TEMP", start, end, conn, color = "chocolate")
-    j = pf.add_to_plot(p, "RMA", "IGDP_NRSI_C_RMA_TEMP", start, end, conn, color = "darkgreen")
+    a = pf.add_to_plot(p, "CAM", "IGDP_NRSI_C_CAM_TEMP", start, end, conn, color="red")
+    b = pf.add_to_plot(p, "COL", "IGDP_NRSI_C_COL_TEMP", start, end, conn, color="green")
+    c = pf.add_to_plot(p, "COM1", "IGDP_NRSI_C_COM1_TEMP", start, end, conn, color="blue")
+    d = pf.add_to_plot(p, "FOR", "IGDP_NRSI_C_FOR_TEMP", start, end, conn, color="darkorange")
+    e = pf.add_to_plot(p, "IFU", "IGDP_NRSI_C_IFU_TEMP", start, end, conn, color="cyan")
+    f = pf.add_to_plot(p, "BP1", "IGDP_NRSI_C_BP1_TEMP", start, end, conn, color="darkmagenta")
+    g = pf.add_to_plot(p, "BP2", "IGDP_NRSI_C_BP2_TEMP", start, end, conn, color="burlywood")
+    h = pf.add_to_plot(p, "BP3", "IGDP_NRSI_C_BP3_TEMP", start, end, conn, color="brown")
+    i = pf.add_to_plot(p, "BP4", "IGDP_NRSI_C_BP4_TEMP", start, end, conn, color="chocolate")
+    j = pf.add_to_plot(p, "RMA", "IGDP_NRSI_C_RMA_TEMP", start, end, conn, color="darkgreen")
 
-    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j])
+    pf.add_hover_tool(p, [a, b, c, d, e, f, g, h, i, j])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
     p.legend.orientation = "horizontal"
 
     return p
+
 
 def caal_temp(conn, start, end):
     '''Create specific plot and return plot object
@@ -212,32 +208,34 @@ def caal_temp(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 700,
-                x_axis_type = 'datetime',
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Temperature (K)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=700,
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date',
+               y_axis_label='Temperature (K)')
 
     p.grid.visible = True
     p.title.text = "CAA Lamps / FWA, GWA"
     pf.add_basic_layout(p)
 
-    a = pf.add_to_plot(p, "CAAL1", "IGDP_NRSI_C_CAAL1_TEMP", start, end, conn, color = "darkblue")
-    b = pf.add_to_plot(p, "CAAL2", "IGDP_NRSI_C_CAAL2_TEMP", start, end, conn, color = "magenta")
-    c = pf.add_to_plot(p, "CAAL3", "IGDP_NRSI_C_CAAL3_TEMP", start, end, conn, color = "mediumaquamarine")
-    d = pf.add_to_plot(p, "CAAL4", "IGDP_NRSI_C_CAAL4_TEMP", start, end, conn, color = "goldenrod")
-    e = pf.add_to_plot(p, "FWA", "IGDP_NRSI_C_FWA_TEMP", start, end, conn, color = "darkseagreen")
-    f = pf.add_to_plot(p, "GWA", "IGDP_NRSI_C_GWA_TEMP", start, end, conn, color = "darkkhaki")
+    a = pf.add_to_plot(p, "CAAL1", "IGDP_NRSI_C_CAAL1_TEMP", start, end, conn, color="darkblue")
+    b = pf.add_to_plot(p, "CAAL2", "IGDP_NRSI_C_CAAL2_TEMP", start, end, conn, color="magenta")
+    c = pf.add_to_plot(p, "CAAL3", "IGDP_NRSI_C_CAAL3_TEMP", start, end, conn, color="mediumaquamarine")
+    d = pf.add_to_plot(p, "CAAL4", "IGDP_NRSI_C_CAAL4_TEMP", start, end, conn, color="goldenrod")
+    e = pf.add_to_plot(p, "FWA", "IGDP_NRSI_C_FWA_TEMP", start, end, conn, color="darkseagreen")
+    f = pf.add_to_plot(p, "GWA", "IGDP_NRSI_C_GWA_TEMP", start, end, conn, color="darkkhaki")
 
-    pf.add_hover_tool(p,[a,b,c,d,e,f])
+    pf.add_hover_tool(p, [a, b, c, d, e, f])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
     p.legend.orientation = "horizontal"
 
     return p
+
 
 def box_temp(conn, start, end):
     '''Create specific plot and return plot object
@@ -256,29 +254,31 @@ def box_temp(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 700,
-                x_axis_type = 'datetime',
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Temperature (K)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=700,
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date',
+               y_axis_label='Temperature (K)')
 
     p.grid.visible = True
     p.title.text = "Box Temperatures"
     pf.add_basic_layout(p)
 
-    a = pf.add_to_plot(p, "ALG_TEMP", "IGDP_NRSD_ALG_TEMP", start, end, conn, color = "red")
-    b = pf.add_to_plot(p, "HK_TEMP1", "INRSH_HK_TEMP1", start, end, conn, color = "green")
-    c = pf.add_to_plot(p, "HK_TEMP2", "INRSH_HK_TEMP2", start, end, conn, color = "blue")
+    a = pf.add_to_plot(p, "ALG_TEMP", "IGDP_NRSD_ALG_TEMP", start, end, conn, color="red")
+    b = pf.add_to_plot(p, "HK_TEMP1", "INRSH_HK_TEMP1", start, end, conn, color="green")
+    c = pf.add_to_plot(p, "HK_TEMP2", "INRSH_HK_TEMP2", start, end, conn, color="blue")
 
-    pf.add_hover_tool(p,[a,b,c])
+    pf.add_hover_tool(p, [a, b, c])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
     p.legend.orientation = "horizontal"
 
     return p
+
 
 def mce_internal_temp(conn, start, end):
     '''Create specific plot and return plot object
@@ -297,36 +297,38 @@ def mce_internal_temp(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 700,
-                x_axis_type = 'datetime',
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Temperature (K)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=700,
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date',
+               y_axis_label='Temperature (K)')
 
     p.grid.visible = True
     p.title.text = "MCE internal Temperatures"
     pf.add_basic_layout(p)
 
-    a = pf.add_to_plot(p, "PCA_TMP1", "INRSM_MCE_PCA_TMP1", start, end, conn, color = "green")
-    b = pf.add_to_plot(p, "PCA_TMP2", "INRSM_MCE_PCA_TMP2", start, end, conn, color = "blue")
-    c = pf.add_to_plot(p, "FPGA_AIC", "INRSM_MCE_AIC_TMP_FPGA", start, end, conn, color = "brown")
-    d = pf.add_to_plot(p, "ADC_AIC", "INRSM_MCE_AIC_TMP_ADC", start, end, conn, color = "red")
-    e = pf.add_to_plot(p, "VREG_AIC", "INRSM_MCE_AIC_TMP_VREG", start, end, conn, color = "hotpink")
-    f = pf.add_to_plot(p, "FPGA_MDAC", "INRSM_MCE_MDAC_TMP_FPGA", start, end, conn, color = "cadetblue")
-    g = pf.add_to_plot(p, "OSC_MDAC", "INRSM_MCE_MDAC_TMP_OSC", start, end, conn, color = "navy")
-    h = pf.add_to_plot(p, "BRD_MDAC", "INRSM_MCE_MDAC_TMP_BRD", start, end, conn, color = "darkgreen")
-    i = pf.add_to_plot(p, "PHA_MDAC", "INRSM_MCE_MDAC_TMP_PHA", start, end, conn, color = "magenta")
-    j = pf.add_to_plot(p, "PHB_MDAC", "INRSM_MCE_MDAC_TMP_PHB", start, end, conn, color = "orange")
+    a = pf.add_to_plot(p, "PCA_TMP1", "INRSM_MCE_PCA_TMP1", start, end, conn, color="green")
+    b = pf.add_to_plot(p, "PCA_TMP2", "INRSM_MCE_PCA_TMP2", start, end, conn, color="blue")
+    c = pf.add_to_plot(p, "FPGA_AIC", "INRSM_MCE_AIC_TMP_FPGA", start, end, conn, color="brown")
+    d = pf.add_to_plot(p, "ADC_AIC", "INRSM_MCE_AIC_TMP_ADC", start, end, conn, color="red")
+    e = pf.add_to_plot(p, "VREG_AIC", "INRSM_MCE_AIC_TMP_VREG", start, end, conn, color="hotpink")
+    f = pf.add_to_plot(p, "FPGA_MDAC", "INRSM_MCE_MDAC_TMP_FPGA", start, end, conn, color="cadetblue")
+    g = pf.add_to_plot(p, "OSC_MDAC", "INRSM_MCE_MDAC_TMP_OSC", start, end, conn, color="navy")
+    h = pf.add_to_plot(p, "BRD_MDAC", "INRSM_MCE_MDAC_TMP_BRD", start, end, conn, color="darkgreen")
+    i = pf.add_to_plot(p, "PHA_MDAC", "INRSM_MCE_MDAC_TMP_PHA", start, end, conn, color="magenta")
+    j = pf.add_to_plot(p, "PHB_MDAC", "INRSM_MCE_MDAC_TMP_PHB", start, end, conn, color="orange")
 
-    pf.add_hover_tool(p,[a,b,c,d,e,f,g,h,i,j])
+    pf.add_hover_tool(p, [a, b, c, d, e, f, g, h, i, j])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
     p.legend.orientation = "horizontal"
 
     return p
+
 
 def msa_temp(conn, start, end):
     '''Create specific plot and return plot object
@@ -345,32 +347,34 @@ def msa_temp(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 700,
-                x_axis_type = 'datetime',
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Temperature (K)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=700,
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date',
+               y_axis_label='Temperature (K)')
 
     p.grid.visible = True
     p.title.text = "MSA Temperatures"
     pf.add_basic_layout(p)
 
-    a = pf.add_to_plot(p, "Q1_TEMP", "INRSM_Q1_TMP_A", start, end, conn, color = "green")
-    b = pf.add_to_plot(p, "Q2_TEMP", "INRSM_Q2_TMP_A", start, end, conn, color = "red")
-    c = pf.add_to_plot(p, "Q3_TEMP", "INRSM_Q3_TMP_A", start, end, conn, color = "blue")
-    d = pf.add_to_plot(p, "Q4_TEMP", "INRSM_Q4_TMP_A", start, end, conn, color = "brown")
-    e = pf.add_to_plot(p, "MECH_MTR", "INRSM_MECH_MTR_TMP_A", start, end, conn, color = "orange")
-    f = pf.add_to_plot(p, "LL_MTR", "INRSM_LL_MTR_TMP_A", start, end, conn, color = "darkmagenta")
-    g = pf.add_to_plot(p, "MSA", "INRSM_MSA_TMP_A", start, end, conn, color = "indigo")
+    a = pf.add_to_plot(p, "Q1_TEMP", "INRSM_Q1_TMP_A", start, end, conn, color="green")
+    b = pf.add_to_plot(p, "Q2_TEMP", "INRSM_Q2_TMP_A", start, end, conn, color="red")
+    c = pf.add_to_plot(p, "Q3_TEMP", "INRSM_Q3_TMP_A", start, end, conn, color="blue")
+    d = pf.add_to_plot(p, "Q4_TEMP", "INRSM_Q4_TMP_A", start, end, conn, color="brown")
+    e = pf.add_to_plot(p, "MECH_MTR", "INRSM_MECH_MTR_TMP_A", start, end, conn, color="orange")
+    f = pf.add_to_plot(p, "LL_MTR", "INRSM_LL_MTR_TMP_A", start, end, conn, color="darkmagenta")
+    g = pf.add_to_plot(p, "MSA", "INRSM_MSA_TMP_A", start, end, conn, color="indigo")
 
-    pf.add_hover_tool(p,[a,b,c,d,e,f,g])
+    pf.add_hover_tool(p, [a, b, c, d, e, f, g])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
 
     return p
+
 
 def fpa_temp(conn, start, end):
     '''Create specific plot and return plot object
@@ -389,23 +393,24 @@ def fpa_temp(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 700,
-                x_axis_type = 'datetime',
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Temperature (K)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=700,
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date',
+               y_axis_label='Temperature (K)')
 
     p.grid.visible = True
     p.title.text = "FPA Temperatures"
     pf.add_basic_layout(p)
 
-    a = pf.add_to_plot(p, "ALG_FPA", "IGDP_NRSD_ALG_FPA_TEMP", start, end, conn, color = "green")
-    b = pf.add_to_plot(p, "ALG_A1", "IGDP_NRSD_ALG_A1_TEMP", start, end, conn, color = "red")
-    c = pf.add_to_plot(p, "ALG_A2", "IGDP_NRSD_ALG_A2_TEMP", start, end, conn, color = "blue")
+    a = pf.add_to_plot(p, "ALG_FPA", "IGDP_NRSD_ALG_FPA_TEMP", start, end, conn, color="green")
+    b = pf.add_to_plot(p, "ALG_A1", "IGDP_NRSD_ALG_A1_TEMP", start, end, conn, color="red")
+    c = pf.add_to_plot(p, "ALG_A2", "IGDP_NRSD_ALG_A2_TEMP", start, end, conn, color="blue")
 
-    pf.add_hover_tool(p,[a,b,c])
+    pf.add_hover_tool(p, [a, b, c])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -430,22 +435,23 @@ def heat_strap_temp(conn, start, end):
     '''
 
     # create a new plot with a title and axis labels
-    p = figure( tools = "pan,wheel_zoom,box_zoom,reset,save",
-                toolbar_location = "above",
-                plot_width = 1120,
-                plot_height = 700,
-                x_axis_type = 'datetime',
-                output_backend = "webgl",
-                x_axis_label = 'Date', y_axis_label='Temperature (K)')
+    p = figure(tools="pan,wheel_zoom,box_zoom,reset,save",
+               toolbar_location="above",
+               plot_width=1120,
+               plot_height=700,
+               x_axis_type='datetime',
+               output_backend="webgl",
+               x_axis_label='Date',
+               y_axis_label='Temperature (K)')
 
     p.grid.visible = True
     p.title.text = "Heat Strap Temperatures (Trim heaters)"
     pf.add_basic_layout(p)
 
-    a = pf.add_to_plot(p, "74A", "SI_GZCTS74A", start, end, conn, color = "green")
-    b = pf.add_to_plot(p, "67A", "SI_GZCTS67A", start, end, conn, color = "red")
+    a = pf.add_to_plot(p, "74A", "SI_GZCTS74A", start, end, conn, color="green")
+    b = pf.add_to_plot(p, "67A", "SI_GZCTS67A", start, end, conn, color="red")
 
-    pf.add_hover_tool(p,[a,b])
+    pf.add_hover_tool(p, [a, b])
 
     p.legend.location = "bottom_right"
     p.legend.click_policy = "hide"
@@ -637,6 +643,6 @@ def temperature_plots(conn, start, end):
 
     layout = Column(descr, plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8)
 
-    tab = Panel(child = layout, title = "TEMPERATURE")
+    tab = Panel(child=layout, title="TEMPERATURE")
 
     return tab

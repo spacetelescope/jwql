@@ -374,9 +374,8 @@ function update_archive_page(inst, base_url) {
  * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
  */
 function update_filter_options(data) {
-
+    content = 'Filter by:'
     for (var i = 0; i < Object.keys(data.dropdown_menus).length; i++) {
-
         // Parse out useful variables
         filter_type = Object.keys(data.dropdown_menus)[i];
         filter_options = Array.from(new Set(data.dropdown_menus[filter_type]));
@@ -384,8 +383,8 @@ function update_filter_options(data) {
         dropdown_key_list = Object.keys(data.dropdown_menus);
 
         // Build div content
-        content = '<div class="mr-4">';
-        content += 'Show only ' + filter_type + ':';
+        content += '<div style="display: flex">';
+        content += '<div class="mr-4">';
         content += '<div class="dropdown">';
         content += '<button class="btn btn-primary dropdown-toggle" type="button" id="' + filter_type + '_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> All ' + filter_type + 's </button>';
         content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
@@ -395,6 +394,7 @@ function update_filter_options(data) {
             content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + dropdown_key_list + '\', \'' + num_rootnames + '\');">' + filter_options[j] + '</a>';
         };
 
+        content += '</div>';
         content += '</div></div>';
     };
 
@@ -431,7 +431,6 @@ function update_header_display(extension, num_extensions) {
  * @param {String} type - The type of the count (e.g. "activities")
  */
 function update_show_count(count, type) {
-
     content = 'Showing ' + count + '/' + count + ' ' + type;
     content += '<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">';
     content += '<span class="help-tip mx-2">i</span></a>';
@@ -473,8 +472,13 @@ function update_thumbnail_array(data) {
         filename_dict = file.filename_dict;
 
         // Build div content
-        content = '<div class="thumbnail" detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
-        content += '<a href="/' + data.inst + '/' + rootname + '/">';
+        if (data.inst!="all") {
+            content = '<div class="thumbnail" instrument = ' + data.inst + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
+            content += '<a href="/' + data.inst + '/' + rootname + '/">';
+        } else {
+            content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
+            content += '<a href="/' + filename_dict.instrument + '/' + rootname + '/">';
+        }
         content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="this.src=/static/img/imagenotfound.png">';
         content += '<div class="thumbnail-color-fill" ></div>';
         content += '<div class="thumbnail-info">';
@@ -503,13 +507,32 @@ function update_thumbnails_page(inst, proposal, base_url) {
     $.ajax({
         url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/',
         success: function(data){
-
             // Perform various updates to divs
             update_show_count(Object.keys(data.file_data).length, 'activities');
             update_thumbnail_array(data);
             update_filter_options(data);
             update_sort_options(data);
 
+            // Replace loading screen with the proposal array div
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("thumbnail-array").style.display = "block";
+        }});
+};
+
+/**
+ * Updates various components on the thumbnails anomaly query page
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ * @param {List} rootnames
+ */
+function update_thumbnails_query_page(base_url) {
+    $.ajax({
+        url: base_url + '/ajax/query_submit/',
+        success: function(data){
+            // Perform various updates to divs
+            update_show_count(Object.keys(data.file_data).length, 'activities');
+            update_thumbnail_array(data);
+            update_filter_options(data);
+            update_sort_options(data);
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
             document.getElementById("thumbnail-array").style.display = "block";

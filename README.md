@@ -6,10 +6,11 @@
 
 [![Current Release](https://img.shields.io/github/release/spacetelescope/jwql.svg)](https://github.com/spacetelescope/jwql/releases/latest/)
 [![PyPI - License](https://img.shields.io/pypi/l/Django.svg)](https://github.com/spacetelescope/jwql/blob/master/LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.6-blue.svg)](https://www.python.org/)
-[![Build Status](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/badge/icon)](https://ssbjenkins.stsci.edu/job/STScI/job/jwql/job/master/)
+[![Python](https://img.shields.io/badge/Python-3.7-blue.svg)](https://www.python.org/)
+[![Build Status](https://github.com/spacetelescope/jwql/workflows/JWQL%20CI/badge.svg)](https://github.com/spacetelescope/jwql/actions)
 [![Documentation Status](https://readthedocs.org/projects/jwql/badge/?version=latest)](https://jwql.readthedocs.io/en/latest/?badge=latest)
 [![STScI](https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat)](http://www.stsci.edu)
+[![DOI](https://zenodo.org/badge/109727729.svg)](https://zenodo.org/badge/latestdoi/109727729)
 [![codecov](https://codecov.io/gh/spacetelescope/jwql/branch/develop/graph/badge.svg)](https://codecov.io/gh/spacetelescope/jwql)
 
 
@@ -21,7 +22,7 @@ The JWST Quicklook Application (`JWQL`) is a database-driven web application and
 
 Official API documentation can be found on [ReadTheDocs](https://jwql.readthedocs.io)
 
-The `jwql` application is currently under heavy development.  The `1.0` release is expected in 2019.  Currently, a development version of the web application can be found at [https://dljwql.stsci.edu](https://dljwql.stsci.edu).
+The `jwql` application is currently under heavy development.  The `1.0` release is expected in 2021.  Currently, a development version of the web application can be found at [https://dljwql.stsci.edu](https://dljwql.stsci.edu).
 
 ## Installation for Users
 
@@ -43,7 +44,7 @@ Getting `jwql` up and running on your own computer requires four steps, detailed
 
 ### Prerequisites
 
-It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.6.  Downloads and installation instructions are  available here:
+It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.7.  Downloads and installation instructions are  available here:
 
 - [Miniconda](https://conda.io/miniconda.html)
 - [Anaconda](https://www.continuum.io/downloads)
@@ -80,10 +81,10 @@ Next, activate the `base` or `root` environment (depending on your version of `c
 source activate base/root
 ```
 
-Lastly, create the `jwql` environment via the `environment_python_3_6.yml` file:
+Lastly, create the `jwql` environment via the `environment_python_3_7.yml` file:
 
 ```
-conda env create -f environment_python_3_6.yml --name jwql-3.6
+conda env create -f environment_python_3_7.yml --name jwql-3.7
 ```
 
 ### Package Installation
@@ -103,12 +104,22 @@ The package should now appear if you run `conda list jwql`.
 
 ### Configuration File
 
-Much of the `jwql` software depends on the existence of a `config.json` file within the `utils` directory.  This file contains data that may be unique to users and/or contain sensitive information.  Please see the [Config File wiki page](https://github.com/spacetelescope/jwql/wiki/Config-file) for instructions on how to provide this file.
+Much of the `jwql` software depends on the existence of a `config.json` file within the `jwql` directory.  This file contains data that may be unique to users and/or contain sensitive information.  Please see the [Config File wiki page](https://github.com/spacetelescope/jwql/wiki/Config-file) for instructions on how to provide this file.
+
+
+## Citation
+
+If you use `JWQL` for work/research presented in a publication (whether directly,
+or as a dependency to another package), we recommend and encourage the following acknowledgment:
+
+  This research made use of the open source Python package JWQL (Bourque et al, 2020).
+
+where (Bourque et al, 2020) is a citation of the Zenodo record available using the DOI badge above. By using the `Export` box in the lower right corner of the Zenodo page, you can export the citation in the format most convenient for you.
 
 
 ## Software Contributions
 
-There are two current pages to review before you begin contributing to the `jwql` development. The first is our [style guide](https://github.com/spacetelescope/jwql/blob/master/style_guide/README.md) and the second is our [suggested git workflow page](https://github.com/spacetelescope/jwql/wiki/git-&-GitHub-workflow-for-contributing), which contains an in-depth explanation of the workflow.
+There are two current pages to review before you begin contributing to the `jwql` development. The first is our [style guide](https://github.com/spacetelescope/jwql/blob/main/style_guide/README.md) and the second is our [suggested git workflow page](https://github.com/spacetelescope/jwql/wiki/git-&-GitHub-workflow-for-contributing), which contains an in-depth explanation of the workflow.
 
 Contributors are also encouraged to check out the [Checklist for Contributors Guide](https://github.com/spacetelescope/jwql/wiki/Checklist-for-Contributors-and-Reviewers-of-Pull-Requests) to ensure the pull request contains all of the necessary changes.
 
@@ -136,7 +147,7 @@ Users who wish to report an issue or request a new feature may do so through the
 
 ## Code of Conduct
 
-Users and contributors to the `jwql` repository should adhere to the [Code of Conduct](https://github.com/spacetelescope/jwql/blob/master/CODE_OF_CONDUCT.md).  Any issues or violations pertaining to the Code of Conduct should be brought to the attention of a `jwql` team member or to `jwql@stsci.edu`.
+Users and contributors to the `jwql` repository should adhere to the [Code of Conduct](https://github.com/spacetelescope/jwql/blob/main/CODE_OF_CONDUCT.md).  Any issues or violations pertaining to the Code of Conduct should be brought to the attention of a `jwql` team member or to `jwql@stsci.edu`.
 
 ## Questions
 
@@ -177,7 +188,8 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Van Dixon (INS)
 - Tom Donaldson (DMD) [@tomdonaldson](https://github.com/tomdonaldson)
 - Kim DuPrie (DMD)
-- Jonathan Eisenhamer (DMD) [@stscieisenhamer](https://githublcom/stscieisenhamer)
+- Jonathan Eisenhamer (DMD) [@stscieisenhamer](https://github.com/stscieisenhamer)
+- Ben Falk (DMD) [@falkben](https://github.com/falkben)
 - Ann Feild (OPO)
 - Mike Fox (DSMO) [@mfox22](https://github.com/mfox22)
 - Scott Friedman (INS)

@@ -25,6 +25,8 @@ file_dir = os.path.dirname(os.path.realpath(__file__))
 class TestBokehApp(BokehTemplate):
     """This is a minimal ``BokehTemplate`` app."""
 
+    _embed = True
+
     def pre_init(self):
         """Before creating the Bokeh interface (by parsing the interface
         file), we must initialize our ``a`` and ``b`` variables, and set

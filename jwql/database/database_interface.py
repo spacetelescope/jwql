@@ -54,15 +54,16 @@ Dependencies
 ------------
 
     The user must have a configuration file named ``config.json``
-    placed in the ``utils`` directory.
+    placed in the ``jwql`` directory.
 """
 
 from datetime import datetime
 import os
 import socket
-
 import pandas as pd
-from sqlalchemy import Boolean, Column, DateTime, Integer, MetaData, String, Table
+
+from sqlalchemy import Boolean
+from sqlalchemy import Column
 from sqlalchemy import create_engine
 from sqlalchemy import Date
 from sqlalchemy import DateTime
@@ -74,15 +75,16 @@ from sqlalchemy import String
 from sqlalchemy import Time
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
 from sqlalchemy.types import ARRAY
 
-from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT, FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
+from jwql.utils.constants import FILE_SUFFIX_TYPES
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 from jwql.utils.utils import get_config
 
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 # Monkey patch Query with data_frame method
@@ -139,8 +141,9 @@ def load_connection(connection_string):
     return session, base, engine, meta
 
 
-# Import a global session.  If running from readthedocs or Jenkins, pass a dummy connection string
-if 'build' and 'project' in socket.gethostname() or ON_JENKINS:
+# Import a global session.  If running from readthedocs or GitHub Actions,
+# pass a dummy connection string
+if 'build' and 'project' in socket.gethostname() or ON_GITHUB_ACTIONS:
     dummy_connection_string = 'postgresql+psycopg2://account:password@hostname:0000/db_name'
     session, base, engine, meta = load_connection(dummy_connection_string)
 else:
@@ -184,7 +187,7 @@ class FilesystemInstrument(base):
 
     @property
     def colnames(self):
-        """A list of all the column names in this table EXCEPT the date column"""
+        """A list of all column names in this table EXCEPT the date column"""
         # Get the columns
         a_list = [col for col, val in self.__dict__.items()
                   if not isinstance(val, datetime)]
@@ -219,7 +222,6 @@ class Monitor(base):
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=True)
     status = Column(Enum('SUCCESS', 'FAILURE', name='monitor_status'), nullable=True)
-    affected_tables = Column(ARRAY(String, dimensions=1), nullable=True)
     log_file = Column(String(), nullable=False)
 
 
@@ -409,6 +411,10 @@ FGSDarkPixelStats = monitor_orm_factory('fgs_dark_pixel_stats')
 FGSDarkDarkCurrent = monitor_orm_factory('fgs_dark_dark_current')
 NIRCamBiasQueryHistory = monitor_orm_factory('nircam_bias_query_history')
 NIRCamBiasStats = monitor_orm_factory('nircam_bias_stats')
+NIRISSBiasQueryHistory = monitor_orm_factory('niriss_bias_query_history')
+NIRISSBiasStats = monitor_orm_factory('niriss_bias_stats')
+NIRSpecBiasQueryHistory = monitor_orm_factory('nirspec_bias_query_history')
+NIRSpecBiasStats = monitor_orm_factory('nirspec_bias_stats')
 NIRCamBadPixelQueryHistory = monitor_orm_factory('nircam_bad_pixel_query_history')
 NIRCamBadPixelStats = monitor_orm_factory('nircam_bad_pixel_stats')
 NIRISSBadPixelQueryHistory = monitor_orm_factory('niriss_bad_pixel_query_history')
@@ -423,6 +429,12 @@ NIRCamReadnoiseQueryHistory = monitor_orm_factory('nircam_readnoise_query_histor
 NIRCamReadnoiseStats = monitor_orm_factory('nircam_readnoise_stats')
 NIRISSReadnoiseQueryHistory = monitor_orm_factory('niriss_readnoise_query_history')
 NIRISSReadnoiseStats = monitor_orm_factory('niriss_readnoise_stats')
+NIRSpecReadnoiseQueryHistory = monitor_orm_factory('nirspec_readnoise_query_history')
+NIRSpecReadnoiseStats = monitor_orm_factory('nirspec_readnoise_stats')
+MIRIReadnoiseQueryHistory = monitor_orm_factory('miri_readnoise_query_history')
+MIRIReadnoiseStats = monitor_orm_factory('miri_readnoise_stats')
+FGSReadnoiseQueryHistory = monitor_orm_factory('fgs_readnoise_query_history')
+FGSReadnoiseStats = monitor_orm_factory('fgs_readnoise_stats')
 
 if __name__ == '__main__':
 

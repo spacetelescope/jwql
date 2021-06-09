@@ -24,6 +24,7 @@ import os
 from astropy.io import fits
 from astropy.time import Time
 from bokeh.models.tickers import LogTicker
+from datetime import datetime
 import numpy as np
 
 from jwql.database.database_interface import session
@@ -57,11 +58,15 @@ class DarkMonitor(BokehTemplate):
         """Update bokeh objects with mean dark image data."""
 
         # Open the mean dark current file and get the data
-        mean_dark_image_file = self.pixel_table[-1].mean_dark_image_file
-        mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
-        mean_dark_image_path = os.path.join(mean_slope_dir, mean_dark_image_file)
-        with fits.open(mean_dark_image_path) as hdulist:
-            data = hdulist[1].data
+        if len(self.pixel_table) != 0:
+            mean_dark_image_file = self.pixel_table[-1].mean_dark_image_file
+            mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
+            mean_dark_image_path = os.path.join(mean_slope_dir, mean_dark_image_file)
+            with fits.open(mean_dark_image_path) as hdulist:
+                data = hdulist[1].data
+        else:
+            # Cover the case where the database is empty
+            data = np.zeros((10, 10))
 
         # Update the plot with the data and boundaries
         y_size, x_size = np.shape(data)
@@ -110,19 +115,28 @@ class DarkMonitor(BokehTemplate):
 
         # Data for mean dark versus time plot
         datetime_stamps = [row.obs_mid_time for row in self.dark_table]
-        times = Time(datetime_stamps, format='datetime', scale='utc')  # Convert to MJD
-        self.timestamps = times.mjd
-        self.dark_current = [row.mean for row in self.dark_table]
 
         # Data for dark current histogram plot (full detector)
         # Just show the last histogram, which is the one most recently
         # added to the database
         last_hist_index = -1
+
+        # Return dummy data if the database was empty
+        if len(datetime_stamps) == 0:
+            datetime_stamps = [datetime(2014, 1, 1, 12, 0, 0), datetime(2014, 1, 2, 12, 0, 0)]
+            self.dark_current = [0., 0.1]
+            self.full_dark_bin_center = np.array([0., 0.01, 0.02])
+            self.full_dark_amplitude = [0., 1., 0.]
+        else:
+            self.dark_current = [row.mean for row in self.dark_table]
+            self.full_dark_bin_center = np.array([row.hist_dark_values for
+                                                 row in self.dark_table])[last_hist_index]
+            self.full_dark_amplitude = [row.hist_amplitudes for
+                                        row in self.dark_table][last_hist_index]
+
+        times = Time(datetime_stamps, format='datetime', scale='utc')  # Convert to MJD
+        self.timestamps = times.mjd
         self.last_timestamp = datetime_stamps[last_hist_index].isoformat()
-        self.full_dark_bin_center = np.array([row.hist_dark_values for
-                                              row in self.dark_table])[last_hist_index]
-        self.full_dark_amplitude = [row.hist_amplitudes for
-                                    row in self.dark_table][last_hist_index]
         self.full_dark_bottom = np.zeros(len(self.full_dark_amplitude))
         deltas = self.full_dark_bin_center[1:] - self.full_dark_bin_center[0: -1]
         self.full_dark_bin_width = np.append(deltas[0], deltas)

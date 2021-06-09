@@ -4,7 +4,7 @@
 
     <!-- Custom styles and scripts for this template -->
     <style type="text/css">
-        div#thumbnail-array { display: none; }
+        div#thumbnail-array { display: block; }
     </style>
 
     <title>Queried Thumbnails - JWQL</title>
@@ -17,53 +17,21 @@
 
     	<!-- Page title -->
         <h3 id='title'>Images of Queried Instruments</h3>
-        
-        This page will provide thumbnails of images that satisfy your request.
-        The anomaly query forms are still under development. 
-        <div>
-            We have recognized the request to view images from the following instruments: {{inst_list_chosen}}.
-        </div>
-
-        <div>
-            The anomalies that correspond with those instruments are the following: {{current_anomalies}}.
-        </div>
-
-        <div>
-            The anomalies chosen from the relevant set are the following: {{anomalies_chosen_from_current_anomalies}}
-        </div>
-
-        <div>
-            The requested filters are the following: {{filters_chosen}}
-        </div>
-
-        <div>
-            The requested apertures are the following: {{apertures_chosen}}
-        </div>
-
-        <div>
-            The requested observing modes are the following: {{observing_modes_chosen}}
-        </div>
-
-        thumbnails list: {{thumbnails}}
-
-
-        <!-- {{base_url}} -->
-    	<!-- <script>determine_page_title('{{ inst }}','{{ prop }}');</script> -->
 
     	<!-- Show Count -->
-    	<!-- <p id='img_show_count'></p>
-    	<hr> -->
+    	<p id='img_show_count'></p>
+    	<hr>
 
     	<!-- Filter and sort options -->
-		<!-- <div class="d-flex flex-row"> -->
-			<!-- <div class="mr-4" id="thumbnail-filter"></div> -->
-			<!-- <div class="mx-4 mr-5 ml-auto" id="thumbnail-sort"></div> -->
-		<!-- </div> -->
+		<div class="d-flex flex-row">
+			<div class="mr-4" id="thumbnail-filter"></div>
+			<div class="mx-4 mr-5 ml-auto" id="thumbnail-sort"></div>
+		</div> 
 
-		<!-- <hr> -->
+		<hr>
 
         <!-- Loading animation -->
-        <!-- <div id="loading">
+        <div id="loading">
             <div class="lds-css ng-scope">
                 <div style="width:100%;height:100%" class="lds-magnify">
                     <div>
@@ -77,15 +45,16 @@
                 </div>
                 Loading ...
             </div>
-        </div> -->
+        </div>
 
         <!-- Display the data -->
-        <!-- <div id='thumbnail-array'></div>
-        <a id="no_thumbnails_msg" style='display: none'>No data match the selected criteria.</a> -->
+        <div id='thumbnail-array'></div>
+        <a id="no_thumbnails_msg" style='display: none'>No data match the selected criteria.</a>
 
-	<!-- </main> -->
+	</main>
 
-	<!-- <script>update_thumbnails_page('{{inst_list}}', '{{prop}}', '{{base_url}}');</script> -->
+    <script>update_thumbnails_query_page('{{base_url}}');</script>
+   
 
-<!-- {% endblock %} -->
+{% endblock %}
 
