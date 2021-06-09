@@ -701,10 +701,10 @@ def process_program(program):
             # insert it and it's associated DQ array into the
             # instance of PreviewImage. Also set the input
             # filename to indicate that we have mosaicked data
-            # if numfiles != 1:
-            #     im.data = mosaic_image
-            #     im.dq = mosaic_dq
-            #     im.file = dummy_file
+            if numfiles > 1:
+                im.data = mosaic_image
+                im.dq = mosaic_dq
+                im.file = dummy_file
 
             im.make_image(max_img_size=max_size)
             logging.info('\tCreated preview image and thumbnail for: {}'.format(filename))
