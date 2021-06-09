@@ -493,6 +493,51 @@ def get_base_url():
     return base_url
 
 
+<<<<<<< HEAD
+=======
+def get_config():
+    """Return a dictionary that holds the contents of the ``jwql``
+    config file.
+
+    Returns
+    -------
+    settings : dict
+        A dictionary that holds the contents of the config file.
+    """
+    print("DEBUG: os.environ.get('READTHEDOCS'):", os.environ.get('READTHEDOCS'))
+    if os.environ.get('READTHEDOCS') == 'True':
+        # ReadTheDocs should use example config file rather than complete config file
+        config_name = 'example_config.json'
+    else:
+        # Users should complete their own config file and store it in the main jwql directory
+        config_name = 'config.json'
+
+    config_file_location = os.path.join(__location__, config_name)
+
+    # Make sure the file exists
+    if not os.path.isfile(config_file_location):
+        raise FileNotFoundError("""The JWQL package requires a configuration file ({})
+                                to be placed within the main jwql directory.
+                                This file is missing. Please read the relevant wiki page
+                                (https://github.com/spacetelescope/jwql/wiki/'
+                                Config-file) for more information.""".format(config_name))
+
+    with open(config_file_location, 'r') as config_file_object:
+        try:
+            # Load it with JSON
+            settings = json.load(config_file_object)
+        except json.JSONDecodeError as e:
+            # Raise a more helpful error if there is a formatting problem
+            raise ValueError('Incorrectly formatted config.json file. '
+                             'Please fix JSON formatting: {}'.format(e))
+
+    # Ensure the file has all the needed entries with expected data types
+    _validate_config(settings)
+
+    return settings
+
+
+>>>>>>> test-readthedocs
 def check_config_for_key(key):
     """Check that the config.json file contains the specified key
     and that the entry is not empty
