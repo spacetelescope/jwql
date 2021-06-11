@@ -22,14 +22,8 @@
 # sys.path.insert(0, os.path.abspath('.'))
 import stsci_rtd_theme
 import jwql
-import os
-import django
 
 # -- General configuration ------------------------------------------------
-
-# Setup Django env variable for sphinx
-os.environ['DJANGO_SETTINGS_MODULE'] = 'jwql.settings'
-django.setup()
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
