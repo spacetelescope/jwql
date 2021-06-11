@@ -132,6 +132,8 @@ def get_config():
 
     # Make sure the file exists
     if not os.path.isfile(config_file_location):
+        print(config_file_location)
+        print(os.listdir(os.path.dirname(config_file_location)))
         raise FileNotFoundError('The JWQL package requires a configuration file (config.json) '
                                 'to be placed within the main jwql directory. '
                                 'This file is missing. Please read the relevant wiki page '
