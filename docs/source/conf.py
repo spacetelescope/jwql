@@ -28,7 +28,7 @@ import django
 # -- General configuration ------------------------------------------------
 
 # Setup Django env variable for sphinx
-os.environ['DJANGO_SETTINGS_MODULE'] = 'training.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'jwql.settings'
 django.setup()
 
 # If your documentation needs a minimal Sphinx version, state it here.
