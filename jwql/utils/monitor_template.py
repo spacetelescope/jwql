@@ -6,7 +6,7 @@ monitoring scripts and to demonstrate how to format them to fully
 utilize the ``jwql`` framework.
 
 Each monitoring script must be executable from the command line (i.e.
-have a ``if '__name__' == '__main__' section), as well as have a "main"
+have a ``if '__name__' == '__main__'`` section), as well as have a "main"
 function that calls all other functions, methods, or modules (i.e.
 the entirety of the code is executed within the scope of the main
 function), as shown in this example.
