@@ -58,12 +58,10 @@ from bokeh.embed import components
 from bokeh.plotting import figure
 
 # Functions for logging
-from jwql.logging.logging_functions import configure_logging
-from jwql.logging.logging_functions import log_info
-from jwql.logging.logging_functions import log_fail
+from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 
 # Function for setting permissions of files/directories
-from jwql.permissions.permissions import set_permissions
+from jwql.utils.permissions import set_permissions
 
 # Function for parsing filenames
 from jwql.utils.utils import filename_parser
