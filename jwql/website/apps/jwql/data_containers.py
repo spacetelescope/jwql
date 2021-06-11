@@ -69,7 +69,7 @@ from astroquery.mast import Mast
 from jwedb.edb_interface import mnemonic_inventory
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-if not ON_GITHUB_ACTIONS:
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     FILESYSTEM_DIR = os.path.join(get_config()['filesystem'])
     PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['preview_image_filesystem'])
     THUMBNAIL_FILESYSTEM = os.path.join(get_config()['thumbnail_filesystem'])
