@@ -3,6 +3,7 @@ include LICENSE
 include environment_python_3_5.yml
 include environment_python_3_6.yml
 include setup.py
+include jwql/example_config.json
 
 recursive-include notebooks *
 recursive-include style_guide *
