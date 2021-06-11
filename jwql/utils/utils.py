@@ -125,7 +125,7 @@ def get_config():
     """
     if os.environ.get('READTHEDOCS') == 'True':
         # ReadTheDocs should use the example configuration file rather than the complete configuration file
-        config_file_location = os.path.join(__location__, 'jwql', 'example_config.json')
+        config_file_location = os.path.join(__location__, 'example_config.json')
     else:
         # Users should complete their own configuration file and store it in the main jwql directory
         config_file_location = os.path.join(__location__, 'config.json')
