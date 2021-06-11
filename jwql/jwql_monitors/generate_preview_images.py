@@ -680,6 +680,7 @@ def process_program(program):
                 for item in file_list:
                     logging.info('\t{}'.format(item))
             except (ValueError, FileNotFoundError) as error:
+                mosaic_image, mosaic_dq = None, None
                 logging.error(error)
             dummy_file = create_dummy_filename(file_list)
             if numfiles in [2, 4]:
@@ -701,7 +702,7 @@ def process_program(program):
             # insert it and it's associated DQ array into the
             # instance of PreviewImage. Also set the input
             # filename to indicate that we have mosaicked data
-            if numfiles > 1:
+            if numfiles > 1 and mosaic_image is not None:
                 im.data = mosaic_image
                 im.dq = mosaic_dq
                 im.file = dummy_file
