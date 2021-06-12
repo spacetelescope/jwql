@@ -25,6 +25,11 @@ import jwql
 
 # -- General configuration ------------------------------------------------
 
+# Configure Django for autodoc usage
+import django
+
+django.setup()
+
 # If your documentation needs a minimal Sphinx version, state it here.
 #
 # needs_sphinx = '1.0'
