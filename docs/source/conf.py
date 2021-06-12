@@ -27,7 +27,9 @@ import jwql
 
 # Configure Django for autodoc usage
 import django
+from django.conf import settings
 
+settings.configure(LOGGING_CONFIG=None)
 django.setup()
 
 # If your documentation needs a minimal Sphinx version, state it here.
