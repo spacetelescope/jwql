@@ -132,14 +132,12 @@ def get_config():
 
     # Make sure the file exists
     if not os.path.isfile(config_file_location):
-        tmpdir = os.path.dirname(config_file_location)
-        raise FileNotFoundError('CONFG FILE LOCATION IS: {}\n'
-                                'FILES IN THIS LOCATION: {}\n'
-                                'The JWQL package requires a configuration file (config.json) '
+        base_config = os.path.basename(config_file_location)
+        raise FileNotFoundError('The JWQL package requires a configuration file ({}) '
                                 'to be placed within the main jwql directory. '
                                 'This file is missing. Please read the relevant wiki page '
                                 '(https://github.com/spacetelescope/jwql/wiki/'
-                                'Config-file) for more information.'.format(config_file_location, sorted(os.listdir(tmpdir))))
+                                'Config-file) for more information.'.format(base_config))
 
     with open(config_file_location, 'r') as config_file_object:
         try:
