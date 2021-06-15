@@ -36,8 +36,7 @@ Use
     ::
         from django.urls import path
         from . import api_views
-        urlpatterns = [path('web/path/to/view/',
-                            api_views.view_name, name='view_name')]
+        urlpatterns = [path('web/path/to/view/', api_views.view_name, name='view_name')]
 
 References
 ----------

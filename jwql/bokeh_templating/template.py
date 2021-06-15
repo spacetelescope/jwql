@@ -235,7 +235,7 @@ class BokehTemplate(object):
             function should accept a multi-line string, and return a
             python object.
 
-        Usage
+        Notes
         -----
         This classmethod should be used to register a new constructor
         *before* creating & instantiating a subclass of BokehTemplate :
@@ -273,7 +273,7 @@ class BokehTemplate(object):
             function should accept a multi-line string, and return a
             python object.
 
-        Usage
+        Notes
         -----
         This classmethod should be used to register a new constructor
         *before* creating & instantiating a subclass of BokehTemplate :

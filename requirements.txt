@@ -2,12 +2,12 @@ asdf==2.7.1
 astropy==4.2.1
 astroquery==0.4.1
 authlib==0.15.3
-bokeh==2.3.1
+bokeh==2.3.2
 codecov==2.1.11
 crds==10.3.11
 cryptography==3.4.7
 django==3.1.7
-flake8==3.9.0
+flake8==3.9.2
 inflection==0.5.1
 ipython==7.23.0
 jinja2==2.11.3

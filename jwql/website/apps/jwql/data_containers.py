@@ -50,8 +50,14 @@ from jwql.utils.credentials import get_mast_token
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
+# Determine if the code is being run as part of a Readthedocs build
+ON_READTHEDOCS = False
+if 'READTHEDOCS' in os.environ:
+    ON_READTHEDOCS = os.environ['READTHEDOCS']
+
 from jwql.utils.utils import get_config, filename_parser, check_config_for_key
-if not ON_GITHUB_ACTIONS:
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
     check_config_for_key('auth_mast')
     auth_mast = get_config()['auth_mast']
@@ -63,7 +69,7 @@ from astroquery.mast import Mast
 from jwedb.edb_interface import mnemonic_inventory
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-if not ON_GITHUB_ACTIONS:
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     FILESYSTEM_DIR = os.path.join(get_config()['filesystem'])
     PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['preview_image_filesystem'])
     THUMBNAIL_FILESYSTEM = os.path.join(get_config()['thumbnail_filesystem'])

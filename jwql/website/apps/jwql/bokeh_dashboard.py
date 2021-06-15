@@ -26,7 +26,7 @@ Dependencies
 ------------
 
     The user must have a configuration file named ``config.json``
-    placed in the ``utils`` directory.
+    placed in the ``jwql`` directory.
 """
 
 from datetime import datetime as dt
