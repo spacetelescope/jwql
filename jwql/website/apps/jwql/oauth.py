@@ -52,6 +52,11 @@ from jwql.utils.utils import get_base_url, get_config, check_config_for_key
 
 PREV_PAGE = '/'
 
+# Determine if the code is being run as part of a Readthedocs build
+ON_READTHEDOCS = False
+if 'READTHEDOCS' in os.environ:
+    ON_READTHEDOCS = os.environ['READTHEDOCS']
+
 
 def register_oauth():
     """Register the ``jwql`` application with the ``auth.mast``
@@ -90,9 +95,10 @@ def register_oauth():
 
     return oauth
 
-
-JWQL_OAUTH = register_oauth()
-
+if not ON_READTHEDOCS:
+    JWQL_OAUTH = register_oauth()
+else:
+    JWQL_OAUTH = []
 
 def authorize(request):
     """Spawn the authentication process for the user

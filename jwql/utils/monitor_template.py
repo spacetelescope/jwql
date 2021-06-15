@@ -6,7 +6,7 @@ monitoring scripts and to demonstrate how to format them to fully
 utilize the ``jwql`` framework.
 
 Each monitoring script must be executable from the command line (i.e.
-have a ``if '__name__' == '__main__' section), as well as have a "main"
+have a ``if '__name__' == '__main__'`` section), as well as have a "main"
 function that calls all other functions, methods, or modules (i.e.
 the entirety of the code is executed within the scope of the main
 function), as shown in this example.
@@ -54,16 +54,14 @@ import logging
 
 from astroquery.mast import Mast
 from jwst import datamodels
-from bokeh.charts import Donut
 from bokeh.embed import components
+from bokeh.plotting import figure
 
 # Functions for logging
-from jwql.logging.logging_functions import configure_logging
-from jwql.logging.logging_functions import log_info
-from jwql.logging.logging_functions import log_fail
+from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 
 # Function for setting permissions of files/directories
-from jwql.permissions.permissions import set_permissions
+from jwql.utils.permissions import set_permissions
 
 # Function for parsing filenames
 from jwql.utils.utils import filename_parser
@@ -120,7 +118,9 @@ def monitor_template_main():
     set_permissions('some_filename.fits')
 
     # Example of creating and exporting a Bokeh plot
-    plt = Donut(im.data, plot_width=600, plot_height=600)
+    ylen, xlen = im.data.shape
+    plt = figure(x_range=(0, xlen), y_range=(0, ylen))
+    plt.image(image=[im.data], x=0, y=0, dw=2, dh=2, palette="Spectral11")
     plt.sizing_mode = 'stretch_both'  # Necessary for responsive sizing on web app
     script, div = components(plt)
 

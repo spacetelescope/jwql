@@ -27,12 +27,6 @@ test_calculations.py
     :members:
     :undoc-members:
 
-test_context_processors.py
---------------------------
-.. automodule:: jwql.tests.test_context_processors
-    :members:
-    :undoc-members:
-
 test_dark_monitor.py
 --------------------
 .. automodule:: jwql.tests.test_dark_monitor

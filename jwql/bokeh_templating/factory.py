@@ -60,7 +60,7 @@ def mapping_factory(tool, element_type):
       constructor for a Bokeh ``Slider`` widget, designated by the
       ``!Slider`` tag in the YAML template file.
 
-    Usage
+    Notes
     -----
     See the ``BokehTemplate`` class implementation in ``template.py``
     for an example of how this function is used.
@@ -136,7 +136,7 @@ def sequence_factory(tool, element_type):
       constructor for a Bokeh ``Slider`` widget, designated by the
       ``!Slider`` tag in the YAML template file.
 
-    Usage
+    Notes
     -----
     See the ``BokehTemplate`` class implementation in ``template.py``
     for an example of how this function is used.

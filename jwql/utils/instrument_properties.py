@@ -176,8 +176,8 @@ def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
     direction is opposite to that in NIRCam, so we switch ``xdim`` and
     ``ydim`` so that we can keep a single equation.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     instrument : str
         Name of the instrument being simulated
 
@@ -199,8 +199,8 @@ def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
         Time to sample a pixel, in seconds. For NIRCam/NIRISS/FGS
         this is 10 microseconds = 1e-5 seconds
 
-    Returns:
-    --------
+    Returns
+    -------
     frametime : float
         Readout time in seconds for the frame
     """
@@ -269,8 +269,8 @@ def get_obstime(filename):
 def mean_time(times):
     """Given a list of datetime objects, calculate the mean time
 
-    Paramters
-    ---------
+    Parameters
+    ---------_
     times : list
         List of datetime objects
 
