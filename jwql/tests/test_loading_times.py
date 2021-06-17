@@ -38,6 +38,10 @@ urls.append('')
 urls.append('about/')
 urls.append('edb/')
 
+# Instrument monitor URLs
+urls.extend(['{}/bias_monitor'.format(instrument) for instrument in ['nircam', 'niriss', 'nirspec']])
+urls.extend(['{}/readnoise_monitor'.format(instrument) for instrument in ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']])
+
 # Specific URLs
 test_mappings = [('fgs', '86700', 'jw86600007001_02101_00001_guider2'),
                  ('miri', '98012', 'jw98012001001_02102_00001_mirimage'),
