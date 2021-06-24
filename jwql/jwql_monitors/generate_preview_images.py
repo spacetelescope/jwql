@@ -579,6 +579,7 @@ def group_filenames(filenames):
         try:
             filename_dict = filename_parser(os.path.basename(filename))
         except ValueError:
+            logging.warning('Could not parse filename for {}'.format(os.path.basename(filename)))
             break
 
         # If the filename was already involved in a match, then skip
