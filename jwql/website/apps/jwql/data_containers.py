@@ -41,7 +41,7 @@ from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
-from jwql.utils.utils import ensure_dir_exists
+from jwql.utils.utils import ensure_dir_exists, filesystem_path
 from jwql.utils.constants import MONITORS
 from jwql.utils.constants import INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
@@ -198,7 +198,9 @@ def get_all_proposals():
         filesystem
     """
 
-    proposals = glob.glob(os.path.join(FILESYSTEM_DIR, '*'))
+    proposals = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', '*'))
+    proposals.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', '*')))
+    proposals = sorted(list(set(proposals)))
     proposals = [proposal.split('jw')[-1] for proposal in proposals]
     proposals = [proposal for proposal in proposals if len(proposal) == 5]
 
@@ -459,13 +461,17 @@ def get_expstart(instrument, rootname):
     return expstart
 
 
-def get_filenames_by_instrument(instrument):
+def get_filenames_by_instrument(instrument, restriction='all'):
     """Returns a list of filenames that match the given ``instrument``.
 
     Parameters
     ----------
     instrument : str
         The instrument of interest (e.g. `FGS`).
+    restriction : str
+        If ``all``, all filenames will be returned.  If ``public``,
+        only publicly-available filenames will be returned.  If
+        ``proprietary``, only proprietary filenames will be returned.
 
     Returns
     -------
@@ -473,12 +479,22 @@ def get_filenames_by_instrument(instrument):
         A list of files that match the given instrument.
     """
 
-    # Query for files from astroquery.Mast
     service = INSTRUMENT_SERVICE_MATCH[instrument]
-    params = {"columns": "filename", "filters": []}
+
+    # Query for filenames
+    params = {"columns": "filename, isRestricted", "filters": []}
     response = Mast.service_request_async(service, params)
     result = response[0].json()
-    filenames = [item['filename'] for item in result['data']]
+
+    # Determine filenames to return based on restriction parameter
+    if restriction == 'all':
+        filenames = [item['filename'] for item in result['data']]
+    elif restriction == 'public':
+        filenames = [item['filename'] for item in result['data'] if item['isRestricted'] is False]
+    elif restriction == 'proprietary':
+        filenames = [item['filename'] for item in result['data'] if item['isRestricted'] is True]
+    else:
+        raise KeyError('{} is not a valid restriction level.  Use "all", "public", or "proprietary".'.format(restriction))
 
     return filenames
 
@@ -499,9 +515,9 @@ def get_filenames_by_proposal(proposal):
     """
 
     proposal_string = '{:05d}'.format(int(proposal))
-    filenames = sorted(glob.glob(os.path.join(
-        FILESYSTEM_DIR, 'jw{}'.format(proposal_string), '*')))
-    filenames = [os.path.basename(filename) for filename in filenames]
+    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', 'jw{}'.format(proposal_string), '*/*'))
+    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', 'jw{}'.format(proposal_string), '*/*')))
+    filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
 
@@ -522,13 +538,12 @@ def get_filenames_by_rootname(rootname):
         A list of filenames associated with the given ``rootname``.
     """
 
-    proposal = rootname.split('_')[0].split('jw')[-1][0:5]
+    proposal_dir = rootname[0:7]
+    observation_dir = rootname.split('_')[0]
 
-    filenames = sorted(glob.glob(os.path.join(
-        FILESYSTEM_DIR,
-        'jw{}'.format(proposal),
-        '{}*'.format(rootname))))
-    filenames = [os.path.basename(filename) for filename in filenames]
+    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*'.format(rootname)))
+    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*'.format(rootname))))
+    filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
 
@@ -552,7 +567,7 @@ def get_header_info(filename):
     header_info = {}
 
     # Open the file
-    fits_filepath = os.path.join(FILESYSTEM_DIR, filename[:7], '{}.fits'.format(filename))
+    fits_filepath = filesystem_path(filename)
     hdulist = fits.open(fits_filepath)
 
     # Extract header information from file
@@ -617,22 +632,22 @@ def get_image_info(file_root, rewrite):
     image_info['suffixes'] = []
     image_info['num_ints'] = {}
 
-    preview_dir = os.path.join(get_config()['jwql_dir'], 'preview_images')
-
     # Find all of the matching files
-    dirname = file_root[:7]
-    search_filepath = os.path.join(FILESYSTEM_DIR, dirname, file_root + '*.fits')
-    image_info['all_files'] = glob.glob(search_filepath)
+    proposal_dir = file_root[:7]
+    observation_dir = file_root[:13]
+    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*.fits'.format(file_root)))
+    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*.fits'.format(file_root))))
+    image_info['all_files'] = filenames
 
-    for file in image_info['all_files']:
+    for filename in image_info['all_files']:
 
         # Get suffix information
-        suffix = os.path.basename(file).split('_')[4].split('.')[0]
+        suffix = os.path.basename(filename).split('_')[4].split('.')[0]
         image_info['suffixes'].append(suffix)
 
         # Determine JPEG file location
-        jpg_dir = os.path.join(preview_dir, dirname)
-        jpg_filename = os.path.basename(os.path.splitext(file)[0] + '_integ0.jpg')
+        jpg_dir = os.path.join(get_config()['preview_image_filesystem'], proposal_dir)
+        jpg_filename = os.path.basename(os.path.splitext(filename)[0] + '_integ0.jpg')
         jpg_filepath = os.path.join(jpg_dir, jpg_filename)
 
         # Check that a jpg does not already exist. If it does (and rewrite=False),
@@ -644,13 +659,12 @@ def get_image_info(file_root, rewrite):
         else:
             if not os.path.exists(jpg_dir):
                 os.makedirs(jpg_dir)
-            im = PreviewImage(file, 'SCI')
+            im = PreviewImage(filename, 'SCI')
             im.output_directory = jpg_dir
             im.make_image()
 
         # Record how many integrations there are per filetype
-        search_jpgs = os.path.join(preview_dir, dirname,
-                                   file_root + '_{}_integ*.jpg'.format(suffix))
+        search_jpgs = os.path.join(get_config()['preview_image_filesystem'], observation_dir, '{}_{}_integ*.jpg'.format(file_root, suffix))
         num_jpgs = len(glob.glob(search_jpgs))
         image_info['num_ints'][suffix] = num_jpgs
 

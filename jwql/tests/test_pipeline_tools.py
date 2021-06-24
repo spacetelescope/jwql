@@ -42,8 +42,7 @@ def test_completed_pipeline_steps():
         File to be checked
     """
 
-    filename = os.path.join(get_config()['filesystem'], 'jw00312',
-                            'jw00312002001_02102_00001_nrcb4_rateints.fits')
+    filename = os.path.join(get_config()['filesystem'], 'public', 'jw00312', 'jw00312002001', 'jw00312002001_02102_00001_nrcb4_rateints.fits')
     completed_steps = pipeline_tools.completed_pipeline_steps(filename)
     true_completed = OrderedDict([('group_scale', False),
                                   ('dq_init', True),

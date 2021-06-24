@@ -47,22 +47,11 @@ def test_get_all_proposals():
     assert len(proposals) > 0
 
 
-@pytest.mark.xfail
-def test_get_dashboard_components():
-    """Tests the ``get_dashboard_components`` function."""
-
-    dashboard_components, dashboard_html = data_containers.get_dashboard_components()
-    assert isinstance(dashboard_components, dict)
-    assert isinstance(dashboard_html, dict)
-    assert len(dashboard_components) > 0
-    assert len(dashboard_html) > 0
-
-
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_expstart():
     """Tests the ``get_expstart`` function."""
 
-    expstart = data_containers.get_expstart('jw86700006001_02101_00006_guider1')
+    expstart = data_containers.get_expstart('FGS', 'jw00624008002_06201_00002_guider2')
     assert isinstance(expstart, float)
 
 
@@ -97,7 +86,7 @@ def test_get_filenames_by_rootname():
 def test_get_header_info():
     """Tests the ``get_header_info`` function."""
 
-    header = data_containers.get_header_info('jw86600008001_02101_00007_guider2_uncal')
+    header = data_containers.get_header_info('jw86600008001_02101_00007_guider2_uncal.fits')
     assert isinstance(header, dict)
     assert len(header) > 0
 
@@ -155,7 +144,7 @@ def test_get_preview_images_by_rootname():
 def test_get_proposal_info():
     """Tests the ``get_proposal_info`` function."""
 
-    filepaths = glob.glob(os.path.join(get_config()['filesystem'], 'jw88600', '*.fits'))
+    filepaths = glob.glob(os.path.join(get_config()['filesystem'], 'jw00300', '*.fits'))
     proposal_info = data_containers.get_proposal_info(filepaths)
 
     assert isinstance(proposal_info, dict)

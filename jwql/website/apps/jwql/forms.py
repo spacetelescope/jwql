@@ -267,9 +267,10 @@ class FileSearchForm(forms.Form):
             # See if there are any matching proposals and, if so, what
             # instrument they are for
             proposal_string = '{:05d}'.format(int(search))
-            search_string = os.path.join(FILESYSTEM_DIR, 'jw{}'.format(proposal_string),
-                                         '*{}*.fits'.format(proposal_string))
-            all_files = glob.glob(search_string)
+            search_string_public = os.path.join(FILESYSTEM_DIR, 'public', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
+            search_string_proprietary = os.path.join(FILESYSTEM_DIR, 'proprietary', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
+            all_files = glob.glob(search_string_public)
+            all_files.extend(glob.glob(search_string_proprietary))
             if len(all_files) > 0:
                 all_instruments = []
                 for file in all_files:
@@ -287,8 +288,10 @@ class FileSearchForm(forms.Form):
         # If they searched for a fileroot...
         elif self.search_type == 'fileroot':
             # See if there are any matching fileroots and, if so, what instrument they are for
-            search_string = os.path.join(FILESYSTEM_DIR, search[:7], '{}*.fits'.format(search))
-            all_files = glob.glob(search_string)
+            search_string_public = os.path.join(FILESYSTEM_DIR, 'public', search[:7], search[:13], '{}*.fits'.format(search))
+            search_string_proprietary = os.path.join(FILESYSTEM_DIR, 'proprietary', search[:7], search[:13], '{}*.fits'.format(search))
+            all_files = glob.glob(search_string_public)
+            all_files.extend(glob.glob(search_string_proprietary))
 
             if len(all_files) == 0:
                 raise forms.ValidationError('Fileroot {} not in the filesystem.'.format(search))

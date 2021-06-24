@@ -441,7 +441,11 @@ def filename_parser(filename):
 
 
 def filesystem_path(filename, check_existence=True):
-    """Return the full path to a given file in the filesystem
+    """Return the path to a given file in the filesystem.
+
+    The full path is returned if ``check_existence`` is True, otherwise
+    only the path relative to the ``filesystem`` key in the ``config.json``
+    file is returned.
 
     Parameters
     ----------
@@ -457,12 +461,19 @@ def filesystem_path(filename, check_existence=True):
     """
 
     # Subdirectory name is based on the proposal ID
-    subdir = 'jw{}'.format(filename[2:7])
-    full_path = os.path.join(FILESYSTEM, subdir, filename)
+    subdir1 = 'jw{}'.format(filename[2:7])
+    subdir2 = 'jw{}'.format(filename[2:13])
+    full_path = os.path.join(subdir1, subdir2, filename)
 
     # Check to see if the file exists
     if check_existence:
-        if not os.path.isfile(full_path):
+        full_path_public = os.path.join(FILESYSTEM, 'public', full_path)
+        full_path_proprietary = os.path.join(FILESYSTEM, 'proprietary', full_path)
+        if os.path.isfile(full_path_public):
+            full_path = full_path_public
+        elif os.path.isfile(full_path_proprietary):
+            full_path = full_path_proprietary
+        else:
             raise FileNotFoundError('{} is not in the predicted location: {}'.format(filename, full_path))
 
     return full_path
