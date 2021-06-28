@@ -323,6 +323,8 @@ class PreviewImage():
                     dig = 2
                 elif delta < 1:
                     dig = 3
+                else:
+                    dig = 2
                 format_string = "%.{}f".format(dig)
                 tlabelstr = [format_string % number for number in tlabelflt]
                 cbar = fig.colorbar(cax, ticks=tickvals)
