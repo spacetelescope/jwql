@@ -23,7 +23,7 @@ psycopg2==2.9.1
 pysiaf==0.11.0
 pytest==6.2.4
 pytest-cov==2.12.1
-scipy==1.6.3
+scipy==1.7.0
 sphinx==3.5.4
 sqlalchemy==1.4.12
 stsci_rtd_theme==0.0.2
