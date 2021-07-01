@@ -1,6 +1,6 @@
 asdf==2.8.1
 astropy==4.2.1
-astroquery==0.4.1
+astroquery==0.4.2
 authlib==0.15.3
 bokeh==2.3.2
 codecov==2.1.11
