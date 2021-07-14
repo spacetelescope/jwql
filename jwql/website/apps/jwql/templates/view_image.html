@@ -24,7 +24,7 @@
 
     	<!-- Allow the user to change the file type that is being displayed -->
     	View File Type:
-    	<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank">
+    	<a href="https://jwst-pipeline.readthedocs.io/en/stable/jwst/introduction.html#pipeline-step-suffix-definitions" target="_blank">
 	      	<span class="help-tip mx-1">i</span>
 	    </a><br>
 	    <form class="my-2" action="change_filetype(value, {{file_root}}, {{num_ints}}, {{inst}})">
@@ -34,10 +34,11 @@
 		</form>
 		<br>
 
-		<!-- View Header and proposal information -->
+		<!-- Buttons for viewing header, downloading files -->
     	<p>
 	    	<a id="view_header" class="btn btn-primary mx-2" role="button" href="">View Header</a>
-	    	<a class="btn btn-primary mx-2 disabled" role="button" href="#"> View Proposal {{ file_root[2:7] }} in APT</a>
+            <a id="download_fits" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}' download>Download FITS</a>
+            <a id="download_jpg" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ jpg }}' download>Download JPEG</a>
 	    </p>
 
         <div class="row">
@@ -45,7 +46,6 @@
             <!-- Display the image and integration buttons/slider -->
     	    <div class="col-xl-9 text-center">
     		    <span class="image_preview">
-    		    	<a id="int_count">Displaying integration 1/1</a><br>
     		    	<img id="image_viewer"
                          src='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}_cal_integ0.jpg'
                          alt='{{ file_root }}_cal_integ0.jpg'
@@ -105,11 +105,6 @@
         }
         </script>
 
-		<!-- Download the images? -->
-	    <p>
-	    	<a id="download_fits" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}' download>Download FITS</a>
-	    	<a id="download_jpg" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ jpg }}' download>Download JPEG</a>
-	    </p>
 
 	    <!-- Determine which filetype should be shown on load -->
 	    {% if 'cal' in suffixes %}
