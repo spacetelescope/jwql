@@ -374,9 +374,11 @@ class PreviewImage():
         # If there are 10 integrations or less, make image for every integration
         # If there are more than 20 integrations, then make image for every 10th integration
         if nint <= 10:
-             integration_range = range(nint)
+            integration_range = range(nint)
+        elif 11 <= nint <= 100:
+            integration_range = range(0, nint, 10)
         else:
-             integration_range = range(0, nint, 10)
+            integration_range = range(0, nint, 100)
 
         for i in integration_range:
             frame = diff_img[i, :, :]
