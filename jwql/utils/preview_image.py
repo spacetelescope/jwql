@@ -371,7 +371,14 @@ class PreviewImage():
             diff_img = np.expand_dims(diff_img, axis=0)
         nint, ny, nx = diff_img.shape
 
-        for i in range(nint):
+        # If there are 10 integrations or less, make image for every integration
+        # If there are more than 20 integrations, then make image for every 10th integration
+        if nint <= 10:
+             integration_range = range(nint)
+        else:
+             integration_range = range(0, nint, 10)
+
+        for i in integration_range:
             frame = diff_img[i, :, :]
 
             # Find signal limits for the display
