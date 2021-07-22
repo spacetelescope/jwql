@@ -716,7 +716,7 @@ def process_program(program):
 
             im.make_image(max_img_size=max_size)
             logging.info('\tCreated preview image and thumbnail for: {}'.format(filename))
-        except ValueError as error:
+        except (ValueError, AttributeError) as error:
             logging.warning(error)
 
 
