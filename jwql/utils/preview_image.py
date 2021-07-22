@@ -372,7 +372,8 @@ class PreviewImage():
         nint, ny, nx = diff_img.shape
 
         # If there are 10 integrations or less, make image for every integration
-        # If there are more than 20 integrations, then make image for every 10th integration
+        # If there are more than 10 integrations, then make image for every 10th integration
+        # If there are more than 100 integrations, then make image for every 100th integration
         if nint <= 10:
             integration_range = range(nint)
         elif 11 <= nint <= 100:
