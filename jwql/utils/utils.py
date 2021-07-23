@@ -21,10 +21,8 @@ References
     https://gist.github.com/jhunkeler/f08783ca2da7bfd1f8e9ee1d207da5ff
 
     Various documentation related to JWST filename conventions:
-    - https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products
     - https://innerspace.stsci.edu/pages/viewpage.action?pageId=94092600
     - https://innerspace.stsci.edu/pages/viewpage.action?spaceKey=SCSB&title=JWST+Science+Data+Products
-    - https://jwst-docs.stsci.edu/display/JDAT/Understanding+Associations?q=association%20candidate
     - https://jwst-pipeline.readthedocs.io/en/stable/jwst/introduction.html#pipeline-step-suffix-definitions
     - JWST TR JWST-STScI-004800, SM-12
  """
