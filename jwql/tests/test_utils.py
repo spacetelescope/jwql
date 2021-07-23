@@ -32,7 +32,7 @@ ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner'
 FILENAME_PARSER_TEST_DATA = [
 
     # Test full path
-    ('/test/dir/to/the/file/jw90002/jw90002001001_02102_00001_nis_rateints.fits',
+    ('/test/dir/to/the/file/public/jw90002/jw90002001001/jw90002001001_02102_00001_nis_rateints.fits',
      {'activity': '02',
       'detector': 'nis',
       'exposure_id': '00001',
@@ -306,8 +306,9 @@ def test_filename_parser_whole_filesystem():
     all_files = []
     for dir_name, _, file_list in os.walk(filesystem_dir):
         for file in file_list:
-            if file.endswith('.fits'):
-                all_files.append(os.path.join(dir_name, file))
+            if 'public' in file or 'proprietary' in file:
+              if file.endswith('.fits'):
+                  all_files.append(os.path.join(dir_name, file))
 
     # Run the filename_parser on all files
     bad_filenames = []
@@ -342,7 +343,7 @@ def test_filesystem_path():
 
     filename = 'jw96003001001_02201_00001_nrca1_dark.fits'
     check = filesystem_path(filename)
-    location = os.path.join(get_config()['filesystem'], 'jw96003', filename)
+    location = os.path.join(get_config()['filesystem'], 'public', 'jw96003', 'jw96003001001', filename)
 
     assert check == location
 

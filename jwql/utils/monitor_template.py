@@ -103,7 +103,10 @@ def monitor_template_main():
 
     # Example of locating a dataset in the filesystem
     filesystem = get_config()['filesystem']
-    dataset = os.path.join(filesystem, 'jw{}'.format(filename_dict['program_id']),
+    dataset = os.path.join(filesystem,
+                           'public',
+                           'jw{}'.format(filename_dict['program_id']),
+                           'jw{}{}{}'.format(filename_dict['program_id'], filename_dict['observation'], filename_dict['visit']),
                            filename_of_interest)
 
     # Example of reading in dataset using jwst.datamodels
