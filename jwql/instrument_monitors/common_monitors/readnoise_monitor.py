@@ -444,14 +444,14 @@ class Readnoise():
 
             # Get the current JWST Readnoise Reference File data
             parameters = self.make_crds_parameter_dict()
-            reffile_mapping = crds.getreferences(parameters, reftypes=['readnoise'])
-            readnoise_file = reffile_mapping['readnoise']
-            if 'NOT FOUND' in readnoise_file:
-                logging.warning('\tNo pipeline readnoise reffile match for this file - assuming all zeros.')
-                pipeline_readnoise = np.zeros(readnoise.shape)
-            else:
+            try:
+                reffile_mapping = crds.getreferences(parameters, reftypes=['readnoise'])
+                readnoise_file = reffile_mapping['readnoise']
                 logging.info('\tPipeline readnoise reffile is {}'.format(readnoise_file))
                 pipeline_readnoise = fits.getdata(readnoise_file)
+            except:
+                logging.warning('\tError retrieving pipeline readnoise reffile - assuming all zeros.')
+                pipeline_readnoise = np.zeros(readnoise.shape)
 
             # Find the difference between the current readnoise image and the pipeline readnoise reffile, and record image stats.
             # Sometimes, the pipeline readnoise reffile needs to be cutout to match the subarray.
