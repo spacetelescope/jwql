@@ -355,6 +355,60 @@ class CosmicRay:
 
         return query_result
 
+    def possible_apers(self, inst):
+        """Return possible apertures to check for cosmic rays
+
+        Parameters:
+        ----------
+        inst: str
+            The name of the instrument of interest
+
+        Returns:
+        -------
+        apers: list
+            A list of possible apertures to check for the given
+            instrument
+        """
+        if inst.lower() == 'nircam':
+            apers = ['NRCA1_FULL',
+                     'NRCA2_FULL',
+                     'NRCA3_FULL',
+                     'NRCA4_FULL',
+                     'NRCA5_FULL',
+
+                     'NRCB1_FULL',
+                     'NRCB2_FULL',
+                     'NRCB3_FULL',
+                     'NRCB4_FULL',
+                     'NRCB5_FULL']
+
+        if inst.lower() == 'miri':
+            apers = ['MIRIM_FULL',
+                     'MIRIM_ILLUM',
+                     'MIRIM_BRIGHTSKY',
+                     'MIRIM_SUB256',
+                     'MIRIM_SUB128',
+                     'MIRIM_SUB64',
+                     'MIRIM_CORON1065',
+                     'MIRIM_CORON1140',
+                     'MIRIM_CORON1550',
+                     'MIRIM_CORONLYOT',
+                     'MIRIM_SLITLESSPRISM',
+                     'MIRIFU_CHANNEL1A',
+                     'MIRIFU_CHANNEL1B'
+                     'MIRIFU_CHANNEL1C',
+                     'MIRIFU_CHANNEL2A',
+                     'MIRIFU_CHANNEL2B'
+                     'MIRIFU_CHANNEL2C',
+                     'MIRIFU_CHANNEL3A',
+                     'MIRIFU_CHANNEL3B'
+                     'MIRIFU_CHANNEL3C',
+                     'MIRIFU_CHANNEL4A',
+                     'MIRIFU_CHANNEL4B',
+                     'MIRIFU_CHANNEL4C']
+
+        return apers
+
     def process(self, file_list):
         """The main method for processing files. See module docstrings
         for further details.
@@ -382,6 +436,7 @@ class CosmicRay:
                     copy_files([file_name], observation_dir)
                 except:
                     logging.info('Failed to copy {} to observation dir.'.format(file_name))
+                    pass
 
                 # Next we run the pipeline on the files to get the proper outputs
                 uncal_file = os.path.join(observation_dir, os.path.basename(file_name))
@@ -389,6 +444,7 @@ class CosmicRay:
                     pipeline_tools.calwebb_detector1_save_jump(uncal_file, observation_dir, ramp_fit=True, save_fitopt=False)
                 except:
                     logging.info('Failed to complete pipeline steps on {}.'.format(uncal_file))
+                    pass
 
                 # Next we analyze the cosmic rays in the new data
                 for output_file in os.listdir(observation_dir):
@@ -502,7 +558,7 @@ class CosmicRay:
                 self.identify_tables()
 
                 # Get a list of possible apertures
-                possible_apertures = list(Siaf(instrument).apernames)
+                possible_apertures = self.possible_apers(instrument)
 
                 for aperture in possible_apertures:
 
@@ -533,9 +589,7 @@ class CosmicRay:
                         # Next we copy new files to the working directory
                         output_dir = os.path.join(get_config()['outputs'], 'cosmic_ray_monitor')
 
-                        # self.data_dir = get_config()['local_test_dir']  # for testing purposes only
-
-                        self.data_dir =  os.path.join(output_dir,'data')
+                        self.data_dir = os.path.join(output_dir,'data')
                         ensure_dir_exists(self.data_dir)
 
                         cosmic_ray_files, not_copied = copy_files(new_filenames, self.data_dir)
