@@ -21,10 +21,8 @@ References
     https://gist.github.com/jhunkeler/f08783ca2da7bfd1f8e9ee1d207da5ff
 
     Various documentation related to JWST filename conventions:
-    - https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products
     - https://innerspace.stsci.edu/pages/viewpage.action?pageId=94092600
     - https://innerspace.stsci.edu/pages/viewpage.action?spaceKey=SCSB&title=JWST+Science+Data+Products
-    - https://jwst-docs.stsci.edu/display/JDAT/Understanding+Associations?q=association%20candidate
     - https://jwst-pipeline.readthedocs.io/en/stable/jwst/introduction.html#pipeline-step-suffix-definitions
     - JWST TR JWST-STScI-004800, SM-12
  """
@@ -41,7 +39,7 @@ import jsonschema
 from jwql.utils import permissions
 from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES_SHORTHAND
 
-__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+__location__ = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
@@ -64,6 +62,10 @@ def _validate_config(config_file_dict):
     schema = {
         "type": "object",  # Must be a JSON object
         "properties": {  # List all the possible entries and their types
+            "admin_account": {"type": "string"},
+            "auth_mast": {"type": "string"},
+            "client_id": {"type": "string"},
+            "client_secret": {"type": "string"},
             "connection_string": {"type": "string"},
             "database": {
                 "type": "object",
@@ -77,20 +79,20 @@ def _validate_config(config_file_dict):
                 },
                 "required": ['engine', 'name', 'user', 'password', 'host', 'port']
             },
-            "filesystem": {"type": "string"},
-            "preview_image_filesystem": {"type": "string"},
-            "thumbnail_filesystem": {"type": "string"},
-            "outputs": {"type": "string"},
+
             "jwql_dir": {"type": "string"},
-            "admin_account": {"type": "string"},
+            "jwql_version": {"type": "string"},
+            "server_type": {"type": "string"},
             "log_dir": {"type": "string"},
-            "test_dir": {"type": "string"},
-            "test_data": {"type": "string"},
-            "setup_file": {"type": "string"},
-            "auth_mast": {"type": "string"},
-            "client_id": {"type": "string"},
-            "client_secret": {"type": "string"},
             "mast_token": {"type": "string"},
+            "outputs": {"type": "string"},
+            "preview_image_filesystem": {"type": "string"},
+            "filesystem": {"type": "string"},
+            "setup_file": {"type": "string"},
+            "test_data": {"type": "string"},
+            "test_dir": {"type": "string"},
+            "thumbnail_filesystem": {"type": "string"},
+            "cores": {"type": "string"}
         },
         # List which entries are needed (all of them)
         "required": ["connection_string", "database", "filesystem",
@@ -119,15 +121,21 @@ def get_config():
     settings : dict
         A dictionary that holds the contents of the config file.
     """
-    config_file_location = os.path.join(__location__, 'config.json')
+    if os.environ.get('READTHEDOCS') == 'True':
+        # ReadTheDocs should use the example configuration file rather than the complete configuration file
+        config_file_location = os.path.join(__location__, 'jwql', 'example_config.json')
+    else:
+        # Users should complete their own configuration file and store it in the main jwql directory
+        config_file_location = os.path.join(__location__, 'jwql', 'config.json')
 
     # Make sure the file exists
     if not os.path.isfile(config_file_location):
-        raise FileNotFoundError('The JWQL package requires a configuration file (config.json) '
-                                'to be placed within the jwql/utils directory. '
+        base_config = os.path.basename(config_file_location)
+        raise FileNotFoundError('The JWQL package requires a configuration file ({}) '
+                                'to be placed within the main jwql directory. '
                                 'This file is missing. Please read the relevant wiki page '
                                 '(https://github.com/spacetelescope/jwql/wiki/'
-                                'Config-file) for more information.')
+                                'Config-file) for more information.'.format(base_config))
 
     with open(config_file_location, 'r') as config_file_object:
         try:
@@ -431,7 +439,11 @@ def filename_parser(filename):
 
 
 def filesystem_path(filename, check_existence=True):
-    """Return the full path to a given file in the filesystem
+    """Return the path to a given file in the filesystem.
+
+    The full path is returned if ``check_existence`` is True, otherwise
+    only the path relative to the ``filesystem`` key in the ``config.json``
+    file is returned.
 
     Parameters
     ----------
@@ -447,12 +459,19 @@ def filesystem_path(filename, check_existence=True):
     """
 
     # Subdirectory name is based on the proposal ID
-    subdir = 'jw{}'.format(filename[2:7])
-    full_path = os.path.join(FILESYSTEM, subdir, filename)
+    subdir1 = 'jw{}'.format(filename[2:7])
+    subdir2 = 'jw{}'.format(filename[2:13])
+    full_path = os.path.join(subdir1, subdir2, filename)
 
     # Check to see if the file exists
     if check_existence:
-        if not os.path.isfile(full_path):
+        full_path_public = os.path.join(FILESYSTEM, 'public', full_path)
+        full_path_proprietary = os.path.join(FILESYSTEM, 'proprietary', full_path)
+        if os.path.isfile(full_path_public):
+            full_path = full_path_public
+        elif os.path.isfile(full_path_proprietary):
+            full_path = full_path_proprietary
+        else:
             raise FileNotFoundError('{} is not in the predicted location: {}'.format(filename, full_path))
 
     return full_path

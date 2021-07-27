@@ -36,6 +36,11 @@ TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'preview_image_test')
 # Determine if tests are being run on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
+# Determine if the code is being run as part of a Readthedocs build
+ON_READTHEDOCS = False
+if 'READTHEDOCS' in os.environ:
+    ON_READTHEDOCS = os.environ['READTHEDOCS']
+
 
 @pytest.fixture(scope="module")
 def test_directory(test_dir=TEST_DIRECTORY):
@@ -76,7 +81,7 @@ def get_test_fits_files():
         List of filepaths to FITS files
     """
     # Get the files from central store
-    if not ON_GITHUB_ACTIONS:
+    if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
         filenames = glob.glob(os.path.join(get_config()['test_dir'], '*.fits'))
         assert len(filenames) > 0
         return filenames

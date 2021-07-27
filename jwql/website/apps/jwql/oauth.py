@@ -36,7 +36,7 @@ References
 Dependencies
 ------------
     The user must have a configuration file named ``config.json``
-    placed in the ``jwql/utils/`` directory.
+    placed in the ``jwql`` directory.
 """
 
 import os
@@ -51,6 +51,11 @@ from jwql.utils.constants import MONITORS
 from jwql.utils.utils import get_base_url, get_config, check_config_for_key
 
 PREV_PAGE = '/'
+
+# Determine if the code is being run as part of a Readthedocs build
+ON_READTHEDOCS = False
+if 'READTHEDOCS' in os.environ:
+    ON_READTHEDOCS = os.environ['READTHEDOCS']
 
 
 def register_oauth():
@@ -90,9 +95,10 @@ def register_oauth():
 
     return oauth
 
-
-JWQL_OAUTH = register_oauth()
-
+if not ON_READTHEDOCS:
+    JWQL_OAUTH = register_oauth()
+else:
+    JWQL_OAUTH = []
 
 def authorize(request):
     """Spawn the authentication process for the user
@@ -115,11 +121,11 @@ def authorize(request):
     token = JWQL_OAUTH.mast_auth.authorize_access_token(request)
 
     # Determine domain
-    base_url = get_base_url()
-    if '127' in base_url:
-        domain = '127.0.0.1'
-    else:
-        domain = base_url.split('//')[-1]
+    # base_url = get_base_url()
+    # if '127' in base_url:
+    #     domain = '127.0.0.1'
+    # else:
+    #     domain = base_url.split('//')[-1]
 
     # Set secure cookie parameters
     cookie_args = {}
@@ -230,7 +236,7 @@ def auth_required(fn):
         else:
             domain = base_url.split('//')[-1]
 
-        # If running web app locally, the user does not need to be authenticated
+        # If running web app locally, user does not need to be authenticated
         if domain == '127.0.0.1':
             return fn(request, user, **kwargs)
 

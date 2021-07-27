@@ -9,8 +9,6 @@ AUTHORS += 'Graham Kanarek, Teagan King, Catherine Martlin, Maria Pena-Guerrero,
 
 DESCRIPTION = 'The James Webb Space Telescope Quicklook Project'
 
-DEPENDENCY_LINKS = ['git+https://github.com/spacetelescope/jwst_reffiles#egg=jwst_reffiles']
-
 REQUIRES = [
     'asdf>=2.3.3',
     'astropy>=3.2.1',
@@ -29,6 +27,7 @@ REQUIRES = [
     'julian',
     'jwedb>=0.0.3',
     'jwst',
+    'jwst_reffiles',
     'matplotlib',
     'nodejs',
     'numpy',
@@ -58,7 +57,6 @@ setup(
     classifiers=['Programming Language :: Python'],
     packages=find_packages(),
     install_requires=REQUIRES,
-    dependency_links=DEPENDENCY_LINKS,
     include_package_data=True,
     include_dirs=[np.get_include()],
 )

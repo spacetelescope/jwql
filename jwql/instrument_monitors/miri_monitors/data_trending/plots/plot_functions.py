@@ -16,14 +16,8 @@ Dependencies
 ------------
 
 """
-import jwql.instrument_monitors.miri_monitors.data_trending.utils.sql_interface as sql
-from bokeh.plotting import figure
-from bokeh.models import BoxAnnotation, LinearAxis, Range1d
-from bokeh.embed import components
-from bokeh.models.widgets import Panel, Tabs
-from bokeh.models import ColumnDataSource, HoverTool, DatetimeTickFormatter, DatetimeTicker, SingleIntervalTicker
-from bokeh.models.formatters import TickFormatter
-from bokeh.models.tools import PanTool, SaveTool
+from bokeh.models import BoxAnnotation
+from bokeh.models import ColumnDataSource
 
 import pandas as pd
 import numpy as np
@@ -51,6 +45,7 @@ def pol_regression(x, y, rank):
     y_poly = f(x)
     return y_poly
 
+
 def add_hover_tool(p, rend):
     ''' Append hover tool to plot
     parameters
@@ -63,18 +58,19 @@ def add_hover_tool(p, rend):
 
     from bokeh.models import HoverTool
 
-    #activate HoverTool for scatter plot
-    hover_tool = HoverTool( tooltips =
+    # activate HoverTool for scatter plot
+    hover_tool = HoverTool(tooltips=
     [
         ('Name', '$name'),
         ('Count', '@data_points'),
         ('Mean', '@average'),
         ('Deviation', '@deviation'),
-    ], renderers = rend)
-    #append hover tool
+    ], renderers=rend)
+    # append hover tool
     p.tools.append(hover_tool)
 
-def add_limit_box(p, lower, upper, alpha = 0.1, color="green"):
+
+def add_limit_box(p, lower, upper, alpha=0.1, color="green"):
     ''' Adds box to plot
     Parameters
     ----------
@@ -89,10 +85,11 @@ def add_limit_box(p, lower, upper, alpha = 0.1, color="green"):
     color : str
         filling color
     '''
-    box = BoxAnnotation(bottom = lower, top = upper, fill_alpha = alpha, fill_color = color)
+    box = BoxAnnotation(bottom=lower, top=upper, fill_alpha=alpha, fill_color=color)
     p.add_layout(box)
 
-def add_to_plot(p, legend, mnemonic, start, end, conn, y_axis= "default", color="red", err='n'):
+
+def add_to_plot(p, legend, mnemonic, start, end, conn, y_axis="default", color="red", err='n'):
     '''Add scatter and line to certain plot and activates hoover tool
     Parameters
     ----------
@@ -118,27 +115,27 @@ def add_to_plot(p, legend, mnemonic, start, end, conn, y_axis= "default", color=
         used for applying hovertools o plots
     '''
 
-    #convert given start and end time to astropy time
+    # convert given start and end time to astropy time
     start_str = str(Time(start).mjd)
     end_str = str(Time(end).mjd)
 
-    #prepare and execute sql query
+    # prepare and execute sql query
     sql_c = "SELECT * FROM "+mnemonic+" WHERE start_time BETWEEN "+start_str+" AND "+end_str+" ORDER BY start_time"
     temp = pd.read_sql_query(sql_c, conn)
 
-    #put data into Dataframe and define ColumnDataSource for each plot
-    reg = pd.DataFrame({'reg' : pol_regression(temp['start_time'], temp['average'],3)})
-    temp = pd.concat([temp, reg], axis = 1)
-    temp['start_time'] = pd.to_datetime( Time(temp['start_time'], format = "mjd").datetime )
+    # put data into Dataframe and define ColumnDataSource for each plot
+    reg = pd.DataFrame({'reg': pol_regression(temp['start_time'], temp['average'], 3)})
+    temp = pd.concat([temp, reg], axis=1)
+    temp['start_time'] = pd.to_datetime(Time(temp['start_time'], format="mjd").datetime)
     plot_data = ColumnDataSource(temp)
 
-    #plot data
-    p.line(x = "start_time", y = "average", color = color, y_range_name = y_axis, legend = legend, source = plot_data)
-    scat = p.scatter(x = "start_time", y = "average", color = color, name = mnemonic, y_range_name = y_axis, legend = legend, source = plot_data)
+    # plot data
+    p.line(x="start_time", y="average", color=color, y_range_name=y_axis, legend=legend, source=plot_data)
+    scat = p.scatter(x="start_time", y="average", color=color, name=mnemonic, y_range_name=y_axis, legend=legend, source=plot_data)
 
-    #generate error lines if wished
+    # generate error lines if wished
     if err != 'n':
-        #generate error bars
+        # generate error bars
         err_xs = []
         err_ys = []
 
@@ -147,11 +144,12 @@ def add_to_plot(p, legend, mnemonic, start, end, conn, y_axis= "default", color=
             err_ys.append((item['average'] - item['deviation'], item['average'] + item['deviation']))
 
         # plot them
-        p.multi_line(err_xs, err_ys, color = color, legend = legend)
+        p.multi_line(err_xs, err_ys, color=color, legend=legend)
 
     return scat
 
-def add_to_wplot(p, legend, mnemonic, start, end, conn, nominal, color = "red"):
+
+def add_to_wplot(p, legend, mnemonic, start, end, conn, nominal, color="red"):
     '''Add line plot to figure (for wheelpositions)
     Parameters
     ----------
@@ -177,15 +175,16 @@ def add_to_wplot(p, legend, mnemonic, start, end, conn, nominal, color = "red"):
     sql_c = "SELECT * FROM "+mnemonic+" WHERE timestamp BETWEEN "+start_str+" AND "+end_str+" ORDER BY timestamp"
     temp = pd.read_sql_query(sql_c, conn)
 
-    #normalize values
+    # normalize values
     temp['value'] -= nominal
-    #temp['value'] -= 1
+    # temp['value'] -= 1
 
-    temp['timestamp'] = pd.to_datetime( Time(temp['timestamp'], format = "mjd").datetime )
+    temp['timestamp'] = pd.to_datetime(Time(temp['timestamp'], format="mjd").datetime)
     plot_data = ColumnDataSource(temp)
 
-    p.line(x = "timestamp", y = "value", color = color, legend = legend, source = plot_data)
-    p.scatter(x = "timestamp", y = "value", color = color, legend = legend, source = plot_data)
+    p.line(x="timestamp", y="value", color=color, legend=legend, source=plot_data)
+    p.scatter(x="timestamp", y="value", color=color, legend=legend, source=plot_data)
+
 
 def add_basic_layout(p):
     '''Add basic layout to certain plot
@@ -200,7 +199,7 @@ def add_basic_layout(p):
     p.background_fill_color = "#efefef"
 
     p.xaxis.axis_label_text_font_size = "14pt"
-    p.xaxis.axis_label_text_color ='#2D353C'
+    p.xaxis.axis_label_text_color = '#2D353C'
     p.yaxis.axis_label_text_font_size = "14pt"
     p.yaxis.axis_label_text_color = '#2D353C'
 

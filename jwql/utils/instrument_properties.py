@@ -140,7 +140,7 @@ def amplifier_info(filename, omit_reference_pixels=True):
 
         # Adjust the minimum and maximum x and y values if they are within
         # the reference pixels
-        for i,key in enumerate(amp_bounds):
+        for i, key in enumerate(amp_bounds):
             bounds = amp_bounds[key]
             prev_xmin, prev_xmax, prev_xstep = bounds[0]
             prev_ymin, prev_ymax, prev_ystep = bounds[1]
@@ -164,7 +164,8 @@ def amplifier_info(filename, omit_reference_pixels=True):
                 new_ymax = ymax
             else:
                 new_ymax = prev_ymax
-            amp_bounds[key] = [(new_xmin, new_xmax, prev_xstep), (new_ymin, new_ymax, prev_ystep)]
+            amp_bounds[key] = [(new_xmin, new_xmax, prev_xstep),
+                               (new_ymin, new_ymax, prev_ystep)]
 
     return num_amps, amp_bounds
 
@@ -175,8 +176,8 @@ def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
     direction is opposite to that in NIRCam, so we switch ``xdim`` and
     ``ydim`` so that we can keep a single equation.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     instrument : str
         Name of the instrument being simulated
 
@@ -198,8 +199,8 @@ def calc_frame_time(instrument, aperture, xdim, ydim, amps, sample_time=1.e-5):
         Time to sample a pixel, in seconds. For NIRCam/NIRISS/FGS
         this is 10 microseconds = 1e-5 seconds
 
-    Returns:
-    --------
+    Returns
+    -------
     frametime : float
         Readout time in seconds for the frame
     """
@@ -268,8 +269,8 @@ def get_obstime(filename):
 def mean_time(times):
     """Given a list of datetime objects, calculate the mean time
 
-    Paramters
-    ---------
+    Parameters
+    ---------_
     times : list
         List of datetime objects
 

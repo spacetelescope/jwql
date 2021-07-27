@@ -1,9 +1,11 @@
+
 """This module contains code for the bias monitor Bokeh plots.
 
 Author
 ------
 
     - Ben Sunnquist
+    - Maria A. Pena-Guerrero
 
 Use
 ---
@@ -24,7 +26,7 @@ from astropy.stats import sigma_clip
 import numpy as np
 
 from jwql.bokeh_templating import BokehTemplate
-from jwql.database.database_interface import session, NIRCamBiasStats
+from jwql.database.database_interface import session, NIRCamBiasStats, NIRISSBiasStats, NIRSpecBiasStats
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -89,8 +91,30 @@ class BiasMonitor(BokehTemplate):
         # Update the calibrated 0th group image
         self.update_calibrated_image()
 
+        # Update the histogram of the calibrated 0th group image
+        if self._instrument == 'NIRISS':
+            self.update_calibrated_histogram()
+
         # Update the calibrated collapsed values figures
-        self.update_collapsed_vals_figures()
+        if self._instrument != 'NIRISS':
+            self.update_collapsed_vals_figures()
+
+    def update_calibrated_histogram(self):
+        """Updates the calibrated 0th group histogram"""
+
+        if len(self.query_results) != 0:
+            # Get the most recent data; the entries were sorted by time when
+            # loading the database, so the last entry will always be the most recent.
+            counts = np.array(self.query_results[-1].counts)
+            bin_centers = np.array(self.query_results[-1].bin_centers)
+
+            # Update the calibrated image histogram
+            self.refs['cal_hist_source'].data = {'counts': counts,
+                                                 'bin_centers': bin_centers}
+            self.refs['cal_hist_xr'].start = bin_centers.min()
+            self.refs['cal_hist_xr'].end = bin_centers.max()
+            self.refs['cal_hist_yr'].start = counts.min()
+            self.refs['cal_hist_yr'].end = counts.max() + counts.max() * 0.05
 
     def update_calibrated_image(self):
         """Updates the calibrated 0th group image"""
@@ -102,36 +126,33 @@ class BiasMonitor(BokehTemplate):
             cal_image_png = os.path.join('/static', '/'.join(cal_image_png.split('/')[-6:]))
 
             # Update the image source for the figure
-            self.refs['cal_image'].image_url(url=[cal_image_png], x=0, y=0, w=2000, h=2000, anchor="bottom_left")
+            self.refs['cal_image'].image_url(url=[cal_image_png], x=0, y=0, w=2048, h=2048, anchor="bottom_left")
 
         # Update the calibrated image style
-        self.refs['cal_image'].title.align = 'center'
         self.refs['cal_image'].xaxis.visible = False
         self.refs['cal_image'].yaxis.visible = False
         self.refs['cal_image'].xgrid.grid_line_color = None
         self.refs['cal_image'].ygrid.grid_line_color = None
-        self.refs['cal_image'].title.text_font_size = '30px'
+        self.refs['cal_image'].title.text_font_size = '22px'
+        self.refs['cal_image'].title.align = 'center'
 
     def update_collapsed_vals_figures(self):
         """Updates the calibrated median-collapsed row and column figures"""
 
         if len(self.query_results) != 0:
             for direction in ['rows', 'columns']:
-                # Get the most recent data; the entries were sorted by time when
+                # Get most recent data; the entries were sorted by time when
                 # loading the database, so the last entry will always be the most recent.
                 vals = np.array(self.query_results[-1].__dict__['collapsed_{}'.format(direction)])
                 pixels = np.arange(len(vals))
                 self.refs['collapsed_{}_source'.format(direction)].data = {'pixel': pixels,
                                                                            'signal': vals}
 
-                # Update the signal and pixel limits
-                clipped = sigma_clip(vals)
-                mean, stddev = np.nanmean(clipped), np.nanstd(clipped)
-                thresh_low, thresh_high = mean - 5 * stddev, mean + 5 * stddev
+                # Update the pixel and signal limits
                 self.refs['collapsed_{}_pixel_range'.format(direction)].start = pixels.min() - 10
                 self.refs['collapsed_{}_pixel_range'.format(direction)].end = pixels.max() + 10
-                self.refs['collapsed_{}_signal_range'.format(direction)].start = thresh_low
-                self.refs['collapsed_{}_signal_range'.format(direction)].end = thresh_high
+                self.refs['collapsed_{}_signal_range'.format(direction)].start = vals[4:2044].min() - 10  # excluding refpix
+                self.refs['collapsed_{}_signal_range'.format(direction)].end = vals[4:2044].max() + 10
 
     def update_mean_bias_figures(self):
         """Updates the mean bias over time bokeh plots"""
@@ -158,5 +179,5 @@ class BiasMonitor(BokehTemplate):
                 if len(bias_vals) != 0:
                     self.refs['mean_bias_xr_amp{}_{}'.format(amp, kind)].start = expstarts.min() - timedelta(days=3)
                     self.refs['mean_bias_xr_amp{}_{}'.format(amp, kind)].end = expstarts.max() + timedelta(days=3)
-                    self.refs['mean_bias_yr_amp{}_{}'.format(amp, kind)].start = bias_vals.min() - 10
-                    self.refs['mean_bias_yr_amp{}_{}'.format(amp, kind)].end = bias_vals.max() + 10
+                    self.refs['mean_bias_yr_amp{}_{}'.format(amp, kind)].start = bias_vals.min() - 20
+                    self.refs['mean_bias_yr_amp{}_{}'.format(amp, kind)].end = bias_vals.max() + 20

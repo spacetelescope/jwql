@@ -60,7 +60,7 @@ def mapping_factory(tool, element_type):
       constructor for a Bokeh ``Slider`` widget, designated by the
       ``!Slider`` tag in the YAML template file.
 
-    Usage
+    Notes
     -----
     See the ``BokehTemplate`` class implementation in ``template.py``
     for an example of how this function is used.
@@ -74,7 +74,7 @@ def mapping_factory(tool, element_type):
         selection_callback = value.pop("selection_on_change", [])
         onclick = value.pop("on_click", None)
         fmt.update(value)
-        # convert the "range" YAML keyword of a slider into something Bokeh can read
+        # convert "range" YAML keyword of slider into something Bokeh can read
         if element_type == "Slider":
             fmt["start"], fmt["end"], fmt["step"] = fmt.pop("range", [0, 1, 0.1])
 
@@ -103,10 +103,10 @@ def mapping_factory(tool, element_type):
 
     mapping_constructor.__name__ = element_type.lower() + '_' + mapping_constructor.__name__
     mapping_constructor.__doc__ = """
-        A YAML constructor for the ``{et}`` Bokeh object. This will create a ``{et}``
-        object wherever the ``!{et}`` tag appears in the YAML template file.
-        If a ``ref`` tag is specified, the object will then be stored in the
-        ``BokehTemplate.refs`` dictionary.
+        A YAML constructor for the ``{et}`` Bokeh object. This will create a
+        ``{et}`` object wherever the ``!{et}`` tag appears in the YAML template
+        file. If a ``ref`` tag is specified, the object will then be stored in
+        the ``BokehTemplate.refs`` dictionary.
 
         This constructor is used for mappings -- i.e., classes or functions
         which primarily have keyword arguments in their signatures. If
@@ -136,7 +136,7 @@ def sequence_factory(tool, element_type):
       constructor for a Bokeh ``Slider`` widget, designated by the
       ``!Slider`` tag in the YAML template file.
 
-    Usage
+    Notes
     -----
     See the ``BokehTemplate`` class implementation in ``template.py``
     for an example of how this function is used.
@@ -150,10 +150,10 @@ def sequence_factory(tool, element_type):
 
     sequence_constructor.__name__ = element_type.lower() + '_' + sequence_constructor.__name__
     sequence_constructor.__doc__ = """
-        A YAML constructor for the ``{et}`` Bokeh object. This will create a ``{et}``
-        object wherever the ``!{et}`` tag appears in the YAML template file.
-        If a ``ref`` tag is specified, the object will then be stored in the
-        ``BokehTemplate.refs`` dictionary.
+        A YAML constructor for the ``{et}`` Bokeh object. This will create a
+        ``{et}`` object wherever the ``!{et}`` tag appears in the YAML template
+        file. If a ``ref`` tag is specified, the object will then be stored in
+        the ``BokehTemplate.refs`` dictionary.
 
         This constructor is used for sequences -- i.e., classes or functions
         which have only positional arguments in their signatures (which for

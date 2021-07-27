@@ -195,7 +195,7 @@ class PreviewImage():
                 for exten in hdulist:
                     try:
                         extnames.append(exten.header['EXTNAME'])
-                    except:
+                    except KeyError:
                         pass
                 if ext in extnames:
                     dimensions = len(hdulist[ext].data.shape)
@@ -323,6 +323,8 @@ class PreviewImage():
                     dig = 2
                 elif delta < 1:
                     dig = 3
+                else:
+                    dig = 2
                 format_string = "%.{}f".format(dig)
                 tlabelstr = [format_string % number for number in tlabelflt]
                 cbar = fig.colorbar(cax, ticks=tickvals)
@@ -369,7 +371,17 @@ class PreviewImage():
             diff_img = np.expand_dims(diff_img, axis=0)
         nint, ny, nx = diff_img.shape
 
-        for i in range(nint):
+        # If there are 10 integrations or less, make image for every integration
+        # If there are more than 10 integrations, then make image for every 10th integration
+        # If there are more than 100 integrations, then make image for every 100th integration
+        if nint <= 10:
+            integration_range = range(nint)
+        elif 11 <= nint <= 100:
+            integration_range = range(0, nint, 10)
+        else:
+            integration_range = range(0, nint, 100)
+
+        for i in integration_range:
             frame = diff_img[i, :, :]
 
             # Find signal limits for the display
@@ -389,16 +401,18 @@ class PreviewImage():
             self.save_image(outfile, thumbnail=False)
             plt.close()
 
-            # Create thumbnail image matplotlib object
-            if self.thumbnail_output_directory is None:
-                outdir = indir
-            else:
-                outdir = self.thumbnail_output_directory
-            outfile = os.path.join(outdir, infile.split('.')[0] + suffix)
-            self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
-                             maxsize=max_img_size, thumbnail=True)
-            self.save_image(outfile, thumbnail=True)
-            plt.close()
+            # Create thumbnail image matplotlib object, only for the
+            # first integration
+            if i == 0:
+                if self.thumbnail_output_directory is None:
+                    outdir = indir
+                else:
+                    outdir = self.thumbnail_output_directory
+                outfile = os.path.join(outdir, infile.split('.')[0] + suffix)
+                self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
+                                 maxsize=max_img_size, thumbnail=True)
+                self.save_image(outfile, thumbnail=True)
+                plt.close()
 
     def save_image(self, fname, thumbnail=False):
         """
@@ -425,6 +439,6 @@ class PreviewImage():
         if thumbnail:
             thumb_fname = fname.replace('.jpg', '.thumb')
             os.rename(fname, thumb_fname)
-            logging.info('Saved image to {}'.format(thumb_fname))
+            logging.info('\tSaved image to {}'.format(thumb_fname))
         else:
-            logging.info('Saved image to {}'.format(fname))
+            logging.info('\tSaved image to {}'.format(fname))
