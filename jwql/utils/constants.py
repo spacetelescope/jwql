@@ -110,7 +110,8 @@ APERTURES_PER_INSTRUMENT = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL',
                             'NIRISS': ['NIS_CEN', 'NIS_SOSSFULL', 'NIS_AMIFULL', 'NIS_SOSSTA', 'NIS_AMI1',
                                        'NIS_SUBSTRIP256', 'NIS_SUBSTRIP96'],
                             'NIRSPEC': ['NRS1_FULL', 'NRS2_FULL', 'NRS_FULL_MSA', 'NRS_FULL_IFU',
-                                        'NRS_S200A1_SLIT', 'NRS_S200A2_SLIT', 'NRS_S1600A1_SLIT'],
+                                        'NRS_S200A1_SLIT', 'NRS_S200A2_SLIT', 'NRS_S400A1_SLIT',
+                                        'NRS_S1600A1_SLIT', 'NRS_S200B1_SLIT'],
                             'MIRI': ['MIRIM_FULL', 'MIRIM_MASKLYOT', 'MIRIM_SLITLESSPRISM', 'MIRIM_SUB256',
                                      'MIRIM_SUB128', 'MIRIM_SLIT']}
 
