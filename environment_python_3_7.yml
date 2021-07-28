@@ -1,9 +1,7 @@
 channels:
 - defaults
-- http://ssb.stsci.edu/astroconda
 dependencies:
 - astropy==4.2.1
-- astroquery=0.4
 - authlib=0.15.4
 - bokeh=2.3.2
 - codecov==2.1.11
@@ -22,7 +20,6 @@ dependencies:
 - pip=21.0.1
 - postgresql=12.2
 - psycopg2=2.8.6
-- pysiaf=0.11.0
 - python=3.7.10
 - pytest=6.2.3
 - pytest-cov=2.11.1
@@ -35,9 +32,11 @@ dependencies:
 - wtforms=2.3.3
 - pip:
   - asdf==2.8.1
+  - astroquery=0.4
   - crds==11.0.4
   - jwedb==0.0.6
   - jwst==1.2.3
+  - pysiaf=0.11.0
   - pysqlite3==0.4.3
   - stsci_rtd_theme==0.0.2
   - git+https://github.com/spacetelescope/jwst_reffiles
