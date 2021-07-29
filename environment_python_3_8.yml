@@ -1,6 +1,5 @@
 channels:
 - defaults
-- http://ssb.stsci.edu/astroconda
 dependencies:
 - astropy==4.0.2
 - authlib=0.15.4
