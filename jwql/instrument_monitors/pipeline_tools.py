@@ -216,7 +216,7 @@ def run_calwebb_detector1_steps(input_file, steps):
                 model = PIPELINE_STEP_MAPPING[step_name].call(model)
             suffix = step_name
     output_filename = input_file.replace('.fits', '_{}.fits'.format(suffix))
-     if suffix != 'rate':
+    if suffix != 'rate':
         # Make sure the dither_points metadata entry is at integer (was a string
         # prior to jwst v1.2.1, so some input data still have the string entry.
         # If we don't change that to an integer before saving the new file, the
