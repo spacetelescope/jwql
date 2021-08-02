@@ -43,7 +43,7 @@ def define_test_data(nints):
         rate_data = np.ones((2, 10, 10))
 
     filesystem = get_config()['filesystem']
-    filename = os.path.join(filesystem, 'public', 'jw00608', 'jw00608002001', 'jw00608002001_02101_00001_mirimage_rate.fits')
+    filename = os.path.join(filesystem, 'public', 'jw00623', 'jw00623087001', 'jw00623087001_07101_00001_mirimage_rate.fits')
     aperture = 'MIRIM_FULL'
 
     return data, rate_data, filename, aperture
@@ -112,14 +112,14 @@ def test_magnitude():
     coord = (1, 2, 1, 1)
     coord_gb = (1, 1, 1, 1)
     mag = cr.magnitude(coord, coord_gb, rate_data, data, header)
-    assert mag == -0.15904
+    assert mag == -2.77504
 
     cr.nints = 1
     data, rate_data, filename, aperture = define_test_data(cr.nints)
     coord = (1, 1, 1)
     coord_gb = (0, 1, 1)
     mag = cr.magnitude(coord, coord_gb, rate_data, data, header)
-    assert mag == -0.15904
+    assert mag == -2.77504
 
 
 def test_get_cr_mags():
@@ -134,7 +134,7 @@ def test_get_cr_mags():
     header = fits.getheader(filename)
 
     mags = cr.get_cr_mags(jump_locations, jump_locations_pre, rate_data, data, header)
-    assert mags == [-0.15904]
+    assert mags == [-2.77504]
 
     jump_locations = [(1, 2, 1, 1)]
     jump_locations_pre = [(1, 1, 1, 1)]
@@ -142,7 +142,7 @@ def test_get_cr_mags():
     data, rate_data, filename, aperture = define_test_data(cr.nints)
 
     mags = cr.get_cr_mags(jump_locations, jump_locations_pre, rate_data, data, header)
-    assert mags == [-0.15904]
+    assert mags == [-2.77504]
 
 
 def test_most_recent_search():
