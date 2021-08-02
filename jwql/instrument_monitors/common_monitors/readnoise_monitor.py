@@ -444,19 +444,28 @@ class Readnoise():
 
             # Get the current JWST Readnoise Reference File data
             parameters = self.make_crds_parameter_dict()
-            reffile_mapping = crds.getreferences(parameters, reftypes=['readnoise'])
-            readnoise_file = reffile_mapping['readnoise']
-            if 'NOT FOUND' in readnoise_file:
-                logging.warning('\tNo pipeline readnoise reffile match for this file - assuming all zeros.')
-                pipeline_readnoise = np.zeros(readnoise.shape)
-            else:
+            try:
+                reffile_mapping = crds.getreferences(parameters, reftypes=['readnoise'])
+                readnoise_file = reffile_mapping['readnoise']
                 logging.info('\tPipeline readnoise reffile is {}'.format(readnoise_file))
                 pipeline_readnoise = fits.getdata(readnoise_file)
+            except:
+                logging.warning('\tError retrieving pipeline readnoise reffile - assuming all zeros.')
+                pipeline_readnoise = np.zeros(readnoise.shape)
 
             # Find the difference between the current readnoise image and the pipeline readnoise reffile, and record image stats.
             # Sometimes, the pipeline readnoise reffile needs to be cutout to match the subarray.
             if readnoise.shape != pipeline_readnoise.shape:
-                pipeline_readnoise = pipeline_readnoise[self.substrt2 - 1:self.substrt2 + self.subsize2 - 1, self.substrt1 - 1:self.substrt1 + self.subsize1 - 1]
+                try:
+                    p_substrt1, p_substrt2 = fits.getheader(readnoise_file)['SUBSTRT1'], fits.getheader(readnoise_file)['SUBSTRT2']
+                except KeyError:
+                    p_substrt1, p_substrt2 = 1, 1
+                x1, y1 = self.substrt1 - p_substrt1, self.substrt2 - p_substrt2
+                x2, y2 = x1 + self.subsize1, y1 + self.subsize2
+                pipeline_readnoise = pipeline_readnoise[y1:y2, x1:x2]
+                if pipeline_readnoise.shape != readnoise.shape:
+                    logging.warning('\tError cutting out pipeline readnoise - assuming all zeros.')
+                    pipeline_readnoise = np.zeros(readnoise.shape)
             readnoise_diff = readnoise - pipeline_readnoise
             clipped = sigma_clip(readnoise_diff, sigma=3.0, maxiters=5)
             diff_image_mean, diff_image_stddev = np.nanmean(clipped), np.nanstd(clipped)
