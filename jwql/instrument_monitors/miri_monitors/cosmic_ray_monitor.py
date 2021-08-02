@@ -469,30 +469,32 @@ class CosmicRay:
                         else:
                             rate_file = None
 
-                try:
+                if jump_filename:
+
                     jump_head, jump_data, jump_dq = self.get_jump_data(jump_filename)
-                except:
-                    logging.info('Could not open jump file: {}'.format(jump_filename))
+                    jump_locations = self.get_jump_locations(jump_dq)
+                    jump_locations_pre = self.group_before(jump_locations)
 
-                try:
+                    # Get observation time info
+                    eff_time = jump_head['EFFEXPTM']
+                    obs_start_time = jump_head['EXPSTART']
+                    obs_end_time = jump_head['EXPEND']
+                    start_time = julian.from_jd(obs_start_time, fmt='mjd')
+                    end_time = julian.from_jd(obs_end_time, fmt='mjd')
+
+                    cosmic_ray_num = len(jump_locations)
+                    # cosmic_ray_rate = get_cr_rate(jump_locations, eff_time)
+
+                else:
+                    break
+
+                if rate_file:
                     rate_data = self.get_rate_data(rate_file)
-                except:
-                    logging.info('Could not open rate file: {}'.format(rate_file))
+                else:
+                    rate_data = None
 
-                jump_locations = self.get_jump_locations(jump_dq)
-                jump_locations_pre = self.group_before(jump_locations)
-
-                eff_time = jump_head['EFFEXPTM']
-
-                # Get observation time info
-                obs_start_time = jump_head['EXPSTART']
-                obs_end_time = jump_head['EXPEND']
-                start_time = julian.from_jd(obs_start_time, fmt='mjd')
-                end_time = julian.from_jd(obs_end_time, fmt='mjd')
-
-                cosmic_ray_num = len(jump_locations)
-                # cosmic_ray_rate = get_cr_rate(jump_locations, eff_time)
-                cosmic_ray_mags = self.get_cr_mags(jump_locations, jump_locations_pre, rate_data, jump_data, jump_head)
+                if jump_data and rate_data:
+                    cosmic_ray_mags = self.get_cr_mags(jump_locations, jump_locations_pre, rate_data, jump_data, jump_head)
 
                 # Insert new data into database
                 try:
