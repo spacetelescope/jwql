@@ -27,6 +27,9 @@ from jwql.instrument_monitors.miri_monitors.cosmic_ray_monitor import CosmicRay
 from jwql.database.database_interface import MIRICosmicRayQueryHistory
 from jwql.utils.utils import get_config
 
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
+
 def define_test_data(nints):
     """Define the data to test with.
 
@@ -49,6 +52,7 @@ def define_test_data(nints):
     return data, rate_data, filename, aperture
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_jump_data():
     """Test the ``get_jumpy_data`` function"""
 
@@ -62,6 +66,7 @@ def test_get_jump_data():
     assert type(dq) == np.ndarray
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_rate_data():
     """Test the ``get_rate_data`` function"""
 
@@ -101,6 +106,7 @@ def test_group_before():
     assert cr.group_before(jump_locations) == [(1, 1, 1, 1)]
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_magnitude():
     """Test the ``magnitude`` method"""
 
@@ -122,6 +128,7 @@ def test_magnitude():
     assert mag == -2.77504
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_cr_mags():
     """Test the ``get_cr_mags`` function"""
 
@@ -145,6 +152,7 @@ def test_get_cr_mags():
     assert mags == [-2.77504]
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_most_recent_search():
     """Test the ``most_recent_search`` function"""
 
@@ -159,6 +167,7 @@ def test_most_recent_search():
     assert isinstance(result, float)
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_query_mast():
     """Test the ``query_mast`` function"""
 
