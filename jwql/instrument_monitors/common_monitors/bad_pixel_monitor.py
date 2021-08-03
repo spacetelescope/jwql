@@ -6,10 +6,19 @@ The monitor calls the ``bad_pixel_mask.py`` module in the
 ``spacetelescope/jwst_reffiles`` package in order to identify bad
 pixels. (``https://github.com/spacetelescope/jwst_reffiles``)
 
-The definitions of the bad pixel types to be searched for are given
+The bad pixel mnemonics to be searched for are given
 in the jwst package:
 ``https://jwst-pipeline.readthedocs.io/en/stable/jwst/references_general/
 references_general.html#data-quality-flags``
+
+The algorithms used to identify the various types of bad pixels were
+developed by the JWST Calibration Reference File Generation Tools working
+group, which was under the Calibration Working Group. This working group
+contained representatives from all instruments, and worked to identify
+common algorithms that all instruments could use to generate information
+to be placed in reference files. Details on the algorithms used here to
+identify bad pixels are detailed here:
+``https://outerspace.stsci.edu/display/JWSTCC/Algorithm+details%3A+DQ+Init``
 
 The bad pixel search is composed of two different parts, each of which
 can be run independently.
