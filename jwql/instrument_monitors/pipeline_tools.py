@@ -21,6 +21,7 @@ import numpy as np
 import os
 
 from astropy.io import fits
+from jwst import datamodels
 from jwst.dq_init import DQInitStep
 from jwst.dark_current import DarkCurrentStep
 from jwst.firstframe import FirstFrameStep
