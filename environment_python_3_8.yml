@@ -1,9 +1,9 @@
 channels:
 - defaults
 dependencies:
-- astropy==4.0.2
+- astropy==4.2.1
 - authlib=0.15.4
-- bokeh=2.3.2
+- bokeh=2.3.3
 - codecov==2.1.11
 - cryptography==3.4.7
 - django=3.2.4
@@ -16,7 +16,7 @@ dependencies:
 - nodejs=10.13.0
 - numpy=1.18.5
 - numpydoc=1.1.0
-- pandas=1.2.3
+- pandas=1.2.4
 - pip=20.3.3
 - postgresql=12.2
 - psycopg2=2.8.6
@@ -26,17 +26,17 @@ dependencies:
 - pyyaml=5.4.1
 - scipy=1.6.2
 - setuptools=52.0.0
-- sphinx=3.5.3
+- sphinx=4.0.2
+- sqlalchemy==1.4.22
 - twine=3.3.0
 - wtforms=2.3.3
 - pip:
   - asdf==2.8.1
-  - astroquery==0.4.2
+  - astroquery==0.4.3
   - crds==11.0.4
   - jwedb==0.0.6
-  - jwst==1.2.3
+  - jwst==1.3.0
   - pysiaf==0.11.0
   - pysqlite3==0.4.3
-  - sqlalchemy==1.4.4
   - stsci_rtd_theme==0.0.2
   - git+https://github.com/spacetelescope/jwst_reffiles
