@@ -456,7 +456,12 @@ def get_expstart(instrument, rootname):
         'filters': [{'paramName': 'fileSetName', 'values': [file_set_name]}]}
     response = Mast.service_request_async(service, params)
     result = response[0].json()
-    expstart = min([item['expstart'] for item in result['data']])
+    if result['data'] == []:
+        expstart = 0
+        print("WARNING: no data")
+        # RETURN NO DATA ERROR
+    else:
+        expstart = min([item['expstart'] for item in result['data']])
 
     return expstart
 
@@ -900,23 +905,42 @@ def get_thumbnails_all_instruments(parameters):
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
-        params = {"columns": "*",
-                  "filters": [{"paramName": "apername",
-                               "values": parameters['apertures'][inst.lower()]
-                               },
-                              {"paramName": "detector",
-                               "values": parameters['detectors'][inst.lower()]
-                               },
-                              {"paramName": "filter",
-                               "values": parameters['filters'][inst.lower()]
-                               },
-                              {"paramName": "exp_type",
-                               "values": parameters['exposure_types'][inst.lower()]
-                               },
-                              {"paramName": "readpatt",
-                               "values": parameters['read_patterns'][inst.lower()]
-                               }
-                              ]}
+        if inst != "Nircam":
+            params = {"columns": "*",
+                      "filters": [{"paramName": "pps_aper",
+                                   "values": parameters['apertures'][inst.lower()]
+                                   },
+                                  {"paramName": "detector",
+                                   "values": parameters['detectors'][inst.lower()]
+                                   },
+                                  {"paramName": "filter",
+                                   "values": parameters['filters'][inst.lower()]
+                                   },
+                                  {"paramName": "exp_type",
+                                   "values": parameters['exposure_types'][inst.lower()]
+                                   },
+                                  {"paramName": "readpatt",
+                                   "values": parameters['read_patterns'][inst.lower()]
+                                   }
+                                  ]}
+        else:
+            params = {"columns": "*",
+                      "filters": [{"paramName": "apername",
+                                   "values": parameters['apertures'][inst.lower()]
+                                   },
+                                  {"paramName": "detector",
+                                   "values": parameters['detectors'][inst.lower()]
+                                   },
+                                  {"paramName": "filter",
+                                   "values": parameters['filters'][inst.lower()]
+                                   },
+                                  {"paramName": "exp_type",
+                                   "values": parameters['exposure_types'][inst.lower()]
+                                   },
+                                  {"paramName": "readpatt",
+                                   "values": parameters['read_patterns'][inst.lower()]
+                                   }
+                                  ]}
 
         response = Mast.service_request_async(service, params)
         results = response[0].json()['data']
@@ -932,6 +956,11 @@ def get_thumbnails_all_instruments(parameters):
     # Get subset of preview images that match the filenames
     thumbnails_subset = [os.path.basename(item) for item in thumbnail_list if
                          os.path.basename(item).split('_integ')[0] in filenames]
+
+    # items exist in filenames that correspond with expected results; however, those thumbnails do not exist...
+    for a_file in filenames:
+        if a_file not in [os.path.basename(item).split('_integ')[0] for item in thumbnail_list]:
+            print(a_file + " not in thumbnail filesystem")
 
     # Eliminate any duplicates
     thumbnails_subset = list(set(thumbnails_subset))
@@ -1208,7 +1237,11 @@ def thumbnails_query_ajax(rootnames, insts):
     # Gather data for each rootname
     for rootname in rootnames:
         # fit expected format for get_filenames_by_rootname()
-        rootname = rootname.split("_")[0] + '_' + rootname.split("_")[1] + '_' + rootname.split("_")[2] + '_' + rootname.split("_")[3]
+        try:
+            rootname = rootname.split("_")[0] + '_' + rootname.split("_")[1] + '_' + rootname.split("_")[2] + '_' + rootname.split("_")[3]
+        except IndexError:
+            # rootname = rootname.split(".thumb")[0]
+            continue
 
         # Parse filename
         try:
@@ -1230,7 +1263,7 @@ def thumbnails_query_ajax(rootnames, insts):
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
         try:
-            data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[JWST_INSTRUMENT_NAMES_SHORTHAND[rootname[26:29]]]
+            data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[JWST_INSTRUMENT_NAMES_SHORTHAND[rootname.split("/")[-1][26:29]]]
         except KeyError:
             data_dict['file_data'][rootname]['inst'] = "MIRI"
             print("Warning: assuming instrument is MIRI")

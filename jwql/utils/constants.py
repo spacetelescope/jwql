@@ -107,13 +107,14 @@ ANOMALY_CHOICES_PER_INSTRUMENT = {'fgs': ANOMALY_CHOICES_FGS,
 APERTURES_PER_INSTRUMENT = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',
                                        'NRCA5_FULL', 'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL',
                                        'NRCB4_FULL', 'NRCB5_FULL'],
-                            'NIRISS': ['NIS_CEN', 'NIS_SOSSFULL', 'NIS_AMIFULL', 'NIS_SOSSTA', 'NIS_AMI1',
-                                       'NIS_SUBSTRIP256', 'NIS_SUBSTRIP96'],
-                            'NIRSPEC': ['NRS1_FULL', 'NRS2_FULL', 'NRS_FULL_MSA', 'NRS_FULL_IFU',
-                                        'NRS_S200A1_SLIT', 'NRS_S200A2_SLIT', 'NRS_S400A1_SLIT',
-                                        'NRS_S1600A1_SLIT', 'NRS_S200B1_SLIT'],
-                            'MIRI': ['MIRIM_FULL', 'MIRIM_MASKLYOT', 'MIRIM_SLITLESSPRISM', 'MIRIM_SUB256',
-                                     'MIRIM_SUB128', 'MIRIM_SLIT']}
+                            'NIRISS': ['NIS_CEN', 'NIS_SOSSFULL', 'NIS_AMIFULL', 'NIS_AMI1',
+                                       'NIS_SUBSTRIP256', 'NIS_SUBSTRIP96',
+                                       'NIS_SUB64', 'NIS_SUB128', 'NIS_SUB256'],
+                            'NIRSPEC': ['NRS_FULL_MSA', 'NRS_FULL_IFU', 'NRS_S200A1_SLIT', 'NRS_S200A2_SLIT',
+                                        'NRS_S400A1_SLIT', 'NRS_S1600A1_SLIT', 'NRS_S200B1_SLIT'],
+                            'MIRI': ['MIRIM_SUB64', 'MIRIM_SUB128', 'MIRIM_SUB256', 'MIRIM_MASK1140',
+                                     'MIRIM_MASK1065', 'MIRIM_MASK1550',' MIRIM_MASKLYOT',
+                                     'MIRIM_BRIGHTSKY', 'MIRIM_SLITLESSPRISM']}
 
 # Bad pixel types by the type of data used to find them
 BAD_PIXEL_TYPES = ['DEAD', 'HOT', 'LOW_QE', 'RC', 'OPEN', 'ADJ_OPEN', 'TELEGRAPH', 'OTHER_BAD_PIXEL']

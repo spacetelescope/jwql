@@ -672,7 +672,9 @@ def query_submit(request):
     parameters['read_patterns'] = anomaly_query_config.READPATTS_CHOSEN
     parameters['gratings'] = anomaly_query_config.GRATINGS_CHOSEN
     parameters['anomalies'] = anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
+    # when parameters only contains nirspec as instrument, thumbnails still ends up being all niriss data
     thumbnails = get_thumbnails_all_instruments(parameters)
+
     anomaly_query_config.THUMBNAILS = thumbnails
 
     # get information about thumbnails for thumbnail viewer
