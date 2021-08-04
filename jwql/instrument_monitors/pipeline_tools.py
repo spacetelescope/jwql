@@ -216,7 +216,7 @@ def run_calwebb_detector1_steps(input_file, steps):
                 model = PIPELINE_STEP_MAPPING[step_name].call(model)
             suffix = step_name
     output_filename = input_file.replace('.fits', '_{}.fits'.format(suffix))
-     if suffix != 'rate':
+    if suffix != 'rate':
         # Make sure the dither_points metadata entry is at integer (was a string
         # prior to jwst v1.2.1, so some input data still have the string entry.
         # If we don't change that to an integer before saving the new file, the
@@ -276,7 +276,22 @@ def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True, save_fito
     input_file_only = os.path.basename(input_file)
 
     # Find the instrument used to collect the data
-    instrument = fits.getheader(input_file)['INSTRUME'].lower()
+    datamodel = datamodels.open(input_file)
+    instrument = datamodel.meta.instrument.name.lower()
+
+    # If the data pre-date jwst version 1.2.1, then they will have
+    # the NUMDTHPT keyword (with string value of the number of dithers)
+    # rather than the newer NRIMDTPT keyword (with an integer value of
+    # the number of dithers). If so, we need to update the file here so
+    # that it doesn't cause the pipeline to crash later. Both old and
+    # new keywords are mapped to the model.meta.dither.dither_points
+    # metadata entry. So we should be able to focus on that.
+    if isinstance(datamodel.meta.dither.dither_points, str):
+        # If we have a string, change it to an integer
+        datamodel.meta.dither.dither_points = int(datamodel.meta.dither.dither_points)
+    elif datamodel.meta.dither.dither_points is None:
+        # If the information is missing completely, put in a dummy value
+        datamodel.meta.dither.dither_points = 1
 
     # Switch to calling the pipeline rather than individual steps,
     # and use the run() method so that we can set parameters
@@ -323,7 +338,7 @@ def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True, save_fito
     # Call the pipeline if any of the files at the requested calibration
     # states are not present in the output directory
     if run_jump or (ramp_fit and run_slope) or (save_fitopt and run_fitopt):
-        model.run(input_file)
+        model.run(datamodel)
     else:
         print(("Files with all requested calibration states for {} already present in "
                "output directory. Skipping pipeline call.".format(input_file)))
