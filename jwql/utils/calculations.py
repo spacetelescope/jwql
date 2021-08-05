@@ -100,7 +100,15 @@ def gaussian1d_fit(x_values, y_values, params):
     model_gauss = models.Gaussian1D(amplitude=params[0], mean=params[1], stddev=params[2])
     fitter_gauss = fitting.LevMarLSQFitter()
     best_fit = fitter_gauss(model_gauss, x_values, y_values)
-    cov_diag = np.diag(fitter_gauss.fit_info['param_cov'])
+
+    # If the fit was good, we use the covariance matrix to get uncertainties
+    if fitter_gauss.fit_info['param_cov'] is not None:
+        cov_diag = np.diag(fitter_gauss.fit_info['param_cov'])
+    else:
+        # One case where we may end up here is if the number of bins
+        # in the histogram is less than the number of parameters in
+        # the fit
+        cov_diag = [0., 0., 0.]
 
     # Arrange each parameter into (best_fit_value, uncertainty) tuple
     amplitude = (best_fit.amplitude.value, np.sqrt(cov_diag[0]))

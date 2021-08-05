@@ -978,6 +978,14 @@ class Dark():
 
             hist, bin_edges = np.histogram(image[indexes[0], indexes[1]], bins='auto',
                                            range=(lower_bound, upper_bound))
+
+            # If the number of bins is smaller than the number of paramters
+            # to be fit, then we need to increase the number of bins
+            if len(bin_edges) < 3:
+                logging.info('\tToo few histogram bins in initial fit. Forcing 10 bins.')
+                hist, bin_edges = np.histogram(image[indexes[0], indexes[1]], bins=10,
+                                           range=(lower_bound, upper_bound))
+
             bin_centers = (bin_edges[1:] + bin_edges[0: -1]) / 2.
             initial_params = [np.max(hist), amp_mean, amp_stdev]
 
