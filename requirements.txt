@@ -21,9 +21,9 @@ numpydoc==1.1.0
 pandas==1.2.4
 psycopg2==2.9.1
 pysiaf==0.11.0
-pytest==6.2.4
-pytest-cov==2.12.1
-scipy==1.7.0
+pytest==6.2.3
+pytest-cov==2.11.1
+scipy==1.6.2
 sphinx==4.0.2
 sqlalchemy==1.4.22
 stsci_rtd_theme==0.0.2
