@@ -42,7 +42,7 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES_UPPERCASE
 
 # Define the fits header keyword that accompanies each step
 PIPE_KEYWORDS = {'S_GRPSCL': 'group_scale', 'S_DQINIT': 'dq_init', 'S_SATURA': 'saturation',
-                 'S_IPC': 'ipc', 'S_REFPIX': 'refpix', 'S_SUPERB': 'superbias',
+                 'S_REFPIX': 'refpix', 'S_SUPERB': 'superbias',
                  'S_PERSIS': 'persistence', 'S_DARK': 'dark_current', 'S_LINEAR': 'linearity',
                  'S_FRSTFR': 'firstframe', 'S_LASTFR': 'lastframe', 'S_RSCD': 'rscd',
                  'S_JUMP': 'jump', 'S_RAMP': 'rate'}
@@ -305,6 +305,9 @@ def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True, save_fito
 
     # Default CR rejection threshold is too low
     model.jump.rejection_threshold = 15
+
+    # Turn off IPC step until it is put in the right place
+    model.ipc.skip = True
 
     model.jump.save_results = True
     model.jump.output_dir = output_dir
