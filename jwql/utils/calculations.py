@@ -66,9 +66,12 @@ def double_gaussian_fit(x_values, y_values, input_params):
     sigma : numpy.ndarray
         Uncertainties on the parameters
     """
-
-    params, cov = curve_fit(double_gaussian, x_values, y_values, input_params)
-    sigma = np.sqrt(np.diag(cov))
+    try:
+        params, cov = curve_fit(double_gaussian, x_values, y_values, input_params)
+        sigma = np.sqrt(np.diag(cov))
+    except RuntimeError:
+        params = np.zeros(6)
+        sigma = np.zeros(6)
 
     return params, sigma
 

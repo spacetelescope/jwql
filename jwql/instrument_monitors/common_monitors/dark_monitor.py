@@ -981,7 +981,7 @@ class Dark():
 
             # If the number of bins is smaller than the number of paramters
             # to be fit, then we need to increase the number of bins
-            if len(bin_edges) < 3:
+            if len(bin_edges) < 7:
                 logging.info('\tToo few histogram bins in initial fit. Forcing 10 bins.')
                 hist, bin_edges = np.histogram(image[indexes[0], indexes[1]], bins=10,
                                            range=(lower_bound, upper_bound))
