@@ -277,7 +277,7 @@ def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True, save_fito
     input_file_only = os.path.basename(input_file)
 
     # Find the instrument used to collect the data
-    datamodel = datamodels.open(input_file)
+    datamodel = datamodels.RampModel(input_file)
     instrument = datamodel.meta.instrument.name.lower()
 
     # If the data pre-date jwst version 1.2.1, then they will have

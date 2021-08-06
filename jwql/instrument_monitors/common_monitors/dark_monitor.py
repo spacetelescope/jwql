@@ -734,7 +734,13 @@ class Dark():
 
                 # Find appropriate threshold for the number of new files needed
                 match = aperture == limits['Aperture']
-                file_count_threshold = limits['Threshold'][match]
+
+                # If the aperture is not listed in the threshold file, we need
+                # a default
+                if not np.any(match):
+                    file_count_threshold = 30
+                else:
+                    file_count_threshold = limits['Threshold'][match]
 
                 # Locate the record of the most recent MAST search
                 self.aperture = aperture
