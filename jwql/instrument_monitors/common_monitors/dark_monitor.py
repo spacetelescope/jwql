@@ -770,6 +770,28 @@ class Dark():
                             logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
                                             .format(file_entry['filename']))
 
+                    # In some (unusual) cases, there are files in MAST with the correct aperture name
+                    # but incorrect array sizes. Make sure that the new files all have the expected
+                    # aperture size
+                    temp_filenames = []
+                    bad_size_filenames = []
+                    expected_ap = Siaf(instrument)[aperture]
+                    expected_xsize = expected_ap.XDetSize
+                    expected_ysize = expected_ap.YDetSize
+                    for new_file in new_filenames:
+                        with fits.open(new_file) as hdulist:
+                            xsize = hdulist[0].header['SUBSIZE1']
+                            ysize = hdulist[0].header['SUBSIZE2']
+                        if xsize == expected_xsize and ysize == expected_ysize:
+                            temp_filenames.append(new_file)
+                        else:
+                            bad_size_filenames.append(new_file)
+                    if len(temp_filenames) != len(new_filenames):
+                        logging.info('\tSome files returned by MAST have unexpected aperture sizes. These files will be ignored: ')
+                        for badfile in bad_size_filenames:
+                            logging.info('\t\t{}'.format(badfile))
+                    new_filenames = deepcopy(temp_filenames)
+
                     # If it turns out that the monitor doesn't find enough
                     # of the files returned by the MAST query to meet the threshold,
                     # then the monitor will not be run
