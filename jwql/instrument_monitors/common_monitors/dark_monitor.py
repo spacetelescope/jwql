@@ -738,11 +738,11 @@ class Dark():
                 # If the aperture is not listed in the threshold file, we need
                 # a default
                 if not np.any(match):
-                    file_count_threshold = np.array([30])
+                    file_count_threshold = 30
                     logging.warning(('\tAperture {} is not present in the threshold file. Continuing '
                                      'with the default threshold of 30 files.'.format(aperture)))
                 else:
-                    file_count_threshold = limits['Threshold'][match]
+                    file_count_threshold = limits['Threshold'][match][0]
 
                 # Locate the record of the most recent MAST search
                 self.aperture = aperture
@@ -805,7 +805,7 @@ class Dark():
                 else:
                     logging.info(('\tDark monitor skipped. MAST query has returned {} new dark files for '
                                   '{}, {}. {} new files are required to run dark current monitor.')
-                                 .format(len(new_entries), instrument, aperture, file_count_threshold[0]))
+                                 .format(len(new_entries), instrument, aperture, file_count_threshold))
                     monitor_run = False
 
                 # Update the query history
