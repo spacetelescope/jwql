@@ -1063,7 +1063,7 @@ class Dark():
                      .format(double_gaussian_chi_squared))
 
         return (amp_means, amp_stdevs, gaussian_params, gaussian_chi_squared, double_gaussian_params,
-                double_gaussian_chi_squared, hist.astype(np.float), bin_centers)
+                double_gaussian_chi_squared, hist.astype(float), bin_centers)
 
 
 if __name__ == '__main__':
