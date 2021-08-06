@@ -579,7 +579,7 @@ def group_filenames(filenames):
         try:
             filename_dict = filename_parser(os.path.basename(filename))
         except ValueError:
-            logging.warning('Could not parse filename for {}'.format(os.path.basename(filename)))
+            logging.warning('Could not parse filename for {}'.format(filename))
             break
 
         # If the filename was already involved in a match, then skip
@@ -633,12 +633,18 @@ def process_program(program):
         The program identifier (e.g. ``88600``)
     """
 
-    # Group together common exposures
     logging.info('')
     logging.info('Processing {}'.format(program))
+
+    # Gather files to process
     filenames = glob.glob(os.path.join(get_config()['filesystem'], 'public', program, '*/*.fits'))
     filenames.extend(glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', program, '*/*.fits')))
     filenames = list(set(filenames))
+
+    # Ignore "original" files
+    filenames = [item for item in filenames if '_original.fits' not in item]
+
+    # Group together common exposures
     grouped_filenames = group_filenames(filenames)
     logging.info('Found {} filenames'.format(len(filenames)))
     logging.info('')
@@ -710,7 +716,7 @@ def process_program(program):
 
             im.make_image(max_img_size=max_size)
             logging.info('\tCreated preview image and thumbnail for: {}'.format(filename))
-        except ValueError as error:
+        except (ValueError, AttributeError) as error:
             logging.warning(error)
 
 
