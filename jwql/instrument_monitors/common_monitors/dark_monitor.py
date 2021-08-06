@@ -739,6 +739,8 @@ class Dark():
                 # a default
                 if not np.any(match):
                     file_count_threshold = 30
+                    logging.warning(('\tAperture {} is not present in the threshold file. Continuing '
+                                     'with the default threshold of 30 files.'.format(aperture)))
                 else:
                     file_count_threshold = limits['Threshold'][match]
 
