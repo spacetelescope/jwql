@@ -456,8 +456,8 @@ class Dark():
         query_count = len(dates)
         if query_count == 0:
             query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
-            logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
-                         .format(self.aperture, query_result)))
+            logging.info(('\tNo query history for {} with {}. Beginning search date will be set to {}.'
+                         .format(self.aperture, self.readpatt, query_result)))
         else:
             query_result = np.max(dates)
 
