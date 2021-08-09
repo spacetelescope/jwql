@@ -723,8 +723,7 @@ class Dark():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        #for instrument in JWST_INSTRUMENT_NAMES:
-        for instrument in ['nirspec']:
+        for instrument in JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
 
             # Identify which database tables to use
