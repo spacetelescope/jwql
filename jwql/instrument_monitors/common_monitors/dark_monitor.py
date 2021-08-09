@@ -446,7 +446,7 @@ class Dark():
             where the dark monitor was run.
         """
         query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture,
-                                                       self.query_table.readpattern = self.readpatt). \
+                                                       self.query_table.readpattern == self.readpatt). \
                               filter(self.query_table.run_monitor == True)
 
         dates = np.zeros(0)
