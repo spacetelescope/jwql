@@ -789,8 +789,8 @@ class Dark():
                         temp_filenames = []
                         bad_size_filenames = []
                         expected_ap = Siaf(instrument)[aperture]
-                        expected_xsize = expected_ap.XDetSize
-                        expected_ysize = expected_ap.YDetSize
+                        expected_xsize = expected_ap.XSciSize
+                        expected_ysize = expected_ap.YSciSize
                         for new_file in new_filenames:
                             with fits.open(new_file) as hdulist:
                                 xsize = hdulist[0].header['SUBSIZE1']

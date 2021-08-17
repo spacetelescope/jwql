@@ -39,6 +39,7 @@ from jwst.saturation import SaturationStep
 from jwst.superbias import SuperBiasStep
 
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_UPPERCASE
+import pysiaf
 
 # Define the fits header keyword that accompanies each step
 PIPE_KEYWORDS = {'S_GRPSCL': 'group_scale', 'S_DQINIT': 'dq_init', 'S_SATURA': 'saturation',
@@ -57,6 +58,56 @@ PIPELINE_STEP_MAPPING = {'dq_init': DQInitStep, 'dark_current': DarkCurrentStep,
 # Readout patterns that have nframes != a power of 2. These readout patterns
 # require the group_scale pipeline step to be run.
 GROUPSCALE_READOUT_PATTERNS = ['NRSIRS2']
+
+
+def aperture_size_check(filenames, instrument_name, aperture_name):
+    """Check that the aperture size in a science file is consistent with
+    what is listed in the SUBARRAY header keyword. The motivation for this
+    check comes from NIRCam ASIC Tuning data, where file apertures are listed
+    as FULL, but the data are in fact SUBSTRIPE256. Note that at the moment
+    this function will only work for a subset of apertures, because the mapping
+    of SUBARRAY header keyword value to pysiaf-recognized aperture name is
+    not always straightforward. Initially, this function is being built only
+    to support checking files listed as full frame.
+
+    Parameters
+    ----------
+    filenames : list
+        List of files to be checked
+
+    instrument_name : str
+        JWST instrument name
+
+    aperture_name : str
+        Name of the aperture, in order to load the proper SIAF information
+
+    Returns
+    -------
+    consistent_files : list
+        List of files where the array size matches that implied by the metadata
+    """
+    siaf = pysiaf.Siaf(instrument_name)
+
+    consistent_files = []
+    for filename in filenames:
+        model = datamodels.open(filename)
+
+        # If the basic formula for aperture name does not produce a name recognized by
+        # pysiaf, then skip the check and assume the file is ok. This should only be the
+        # case for lesser-used apertures. For our purposes here, where we are focusing
+        # on full frame apertures, it should be ok.
+        try:
+            siaf_ap = siaf(aperture_name)
+        except KeyError:
+            consistent_files.append(filename)
+            continue
+
+        # Compare the data array size with the expected size from SIAF
+        array_size_y, array_size_x = model.data.shape[-2:]
+        if ((array_size_y == siaf_ap.YSciSize) & (array_size_x == siaf_ap.XSciSize)):
+            consistent_files.append(filename)
+
+    return consistent_files
 
 
 def completed_pipeline_steps(filename):
