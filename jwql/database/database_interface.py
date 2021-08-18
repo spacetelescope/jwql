@@ -77,6 +77,7 @@ from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
+from sqlalchemy.sql import text
 from sqlalchemy.types import ARRAY
 
 from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
@@ -439,3 +440,8 @@ FGSReadnoiseStats = monitor_orm_factory('fgs_readnoise_stats')
 if __name__ == '__main__':
 
     base.metadata.create_all(engine)
+
+    # GRANT READ ACCESS TO jwqldb_user_read
+    with engine.connect() as conn:
+        raw_sql = text("""GRANT SELECT ON ALL TABLES IN SCHEMA public TO 'jwqldb_user_read';""")
+        conn.execute(raw_sql)
