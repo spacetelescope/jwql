@@ -97,7 +97,7 @@ def aperture_size_check(filenames, instrument_name, aperture_name):
         # case for lesser-used apertures. For our purposes here, where we are focusing
         # on full frame apertures, it should be ok.
         try:
-            siaf_ap = siaf(aperture_name)
+            siaf_ap = siaf[aperture_name]
         except KeyError:
             consistent_files.append(filename)
             continue
