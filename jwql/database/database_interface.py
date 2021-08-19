@@ -389,6 +389,22 @@ def monitor_orm_factory(class_name):
     return type(class_name, (base,), data_dict)
 
 
+def set_read_permissions():
+    """Set read permissions for db tables
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    None
+    """
+    with engine.connect() as conn:
+        raw_sql = text("""GRANT SELECT ON ALL TABLES IN SCHEMA public TO jwqldb_user_read;""")
+        conn.execute(raw_sql)
+
+
 # Create tables from ORM factory
 NIRCamAnomaly = anomaly_orm_factory('nircam_anomaly')
 NIRISSAnomaly = anomaly_orm_factory('niriss_anomaly')
@@ -438,10 +454,4 @@ FGSReadnoiseQueryHistory = monitor_orm_factory('fgs_readnoise_query_history')
 FGSReadnoiseStats = monitor_orm_factory('fgs_readnoise_stats')
 
 if __name__ == '__main__':
-
     base.metadata.create_all(engine)
-
-    # GRANT READ ACCESS TO jwqldb_user_read
-    with engine.connect() as conn:
-        raw_sql = text("""GRANT SELECT ON ALL TABLES IN SCHEMA public TO 'jwqldb_user_read';""")
-        conn.execute(raw_sql)
