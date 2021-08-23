@@ -390,19 +390,13 @@ def monitor_orm_factory(class_name):
 
 
 def set_read_permissions():
-    """Set read permissions for db tables
+    """Set read permissions for db tables"""
 
-    Parameters
-    ----------
-    None
-
-    Returns
-    -------
-    None
-    """
-    with engine.connect() as conn:
-        raw_sql = text("""GRANT SELECT ON ALL TABLES IN SCHEMA public TO jwqldb_user_read;""")
-        conn.execute(raw_sql)
+    db_username = get_config()['database']['user']
+    db_username = '_'.join(db_username.split('_')[:-1])
+    db_account = '{}_read'.format(db_username)
+    command = 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO {};'.format(db_account)
+    engine.execute(command)
 
 
 # Create tables from ORM factory
