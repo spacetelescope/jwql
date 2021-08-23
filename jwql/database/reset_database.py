@@ -24,7 +24,7 @@ Dependencies
     ``postgresql+psycopg2://user:password@host:port/database``.
 """
 
-from jwql.database.database_interface import base
+from jwql.database.database_interface import base, set_read_permissions
 from jwql.utils.utils import get_config
 
 
@@ -42,4 +42,5 @@ if __name__ == '__main__':
     if response.lower() == 'y':
         base.metadata.drop_all()
         base.metadata.create_all()
+        set_read_permissions()
         print('\nDatabase instance {} has been reset'.format(connection_string))
