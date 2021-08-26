@@ -85,7 +85,7 @@ from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesyst
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
 
 
-def mast_query_darks(instrument, aperture, readpatt, start_date, end_date):
+def mast_query_darks(instrument, aperture, start_date, end_date, readpatt=None):
     """Use ``astroquery`` to search MAST for dark current data
 
     Parameters
@@ -96,15 +96,15 @@ def mast_query_darks(instrument, aperture, readpatt, start_date, end_date):
     aperture : str
         Detector aperture to search for (e.g. ``NRCA1_FULL``)
 
-    readpatt : str
-        Readout pattern to search for (e.g. ``RAPID``). If None,
-        readout pattern will not be added to the query parameters.
-
     start_date : float
         Starting date for the search in MJD
 
     end_date : float
         Ending date for the search in MJD
+
+    readpatt : str
+        Readout pattern to search for (e.g. ``RAPID``). If None,
+        readout pattern will not be added to the query parameters.
 
     Returns
     -------
@@ -768,7 +768,7 @@ class Dark():
 
                     # Query MAST using the aperture and the time of the
                     # most recent previous search as the starting time
-                    new_entries = mast_query_darks(instrument, aperture, self.readpatt, self.query_start, self.query_end)
+                    new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end, readpatt=self.readpatt)
                     logging.info('\tAperture: {}, Readpattern: {}, new entries: {}'.format(self.aperture, self.readpatt,
                                                                                            len(new_entries)))
 
