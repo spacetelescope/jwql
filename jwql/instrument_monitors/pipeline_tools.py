@@ -60,7 +60,7 @@ PIPELINE_STEP_MAPPING = {'dq_init': DQInitStep, 'dark_current': DarkCurrentStep,
 GROUPSCALE_READOUT_PATTERNS = ['NRSIRS2']
 
 
-def aperture_size_check(filenames, instrument_name, aperture_name):
+def aperture_size_check(mast_dicts, instrument_name, aperture_name):
     """Check that the aperture size in a science file is consistent with
     what is listed in the SUBARRAY header keyword. The motivation for this
     check comes from NIRCam ASIC Tuning data, where file apertures are listed
@@ -72,8 +72,8 @@ def aperture_size_check(filenames, instrument_name, aperture_name):
 
     Parameters
     ----------
-    filenames : list
-        List of files to be checked
+    mast_dicts : list
+        List of file metadata dictionaries, as returned from a MAST query
 
     instrument_name : str
         JWST instrument name
@@ -84,26 +84,25 @@ def aperture_size_check(filenames, instrument_name, aperture_name):
     Returns
     -------
     consistent_files : list
-        List of files where the array size matches that implied by the metadata
+        List of metadata dictionaries where the array size in the metadata matches
+        that retrieved from SIAF
     """
+    consistent_files = []
     siaf = pysiaf.Siaf(instrument_name)
 
-    consistent_files = []
-    for filename in filenames:
-        model = datamodels.open(filename)
+    # If the basic formula for aperture name does not produce a name recognized by
+    # pysiaf, then skip the check and assume the file is ok. This should only be the
+    # case for lesser-used apertures. For our purposes here, where we are focusing
+    # on full frame apertures, it should be ok.
+    try:
+        siaf_ap = siaf[aperture_name]
+    except KeyError:
+        consistent_files.extend(mast_dicts)
+        return consistent_files
 
-        # If the basic formula for aperture name does not produce a name recognized by
-        # pysiaf, then skip the check and assume the file is ok. This should only be the
-        # case for lesser-used apertures. For our purposes here, where we are focusing
-        # on full frame apertures, it should be ok.
-        try:
-            siaf_ap = siaf[aperture_name]
-        except KeyError:
-            consistent_files.append(filename)
-            continue
-
-        # Compare the data array size with the expected size from SIAF
-        array_size_y, array_size_x = model.data.shape[-2:]
+    # Most cases will end up here. Compare SIAF aperture size to that in the metadata
+    for mast_dict in mast_dicts:
+        array_size_y, array_size_x = mast_dict['subsize2'], mast_dict['subsize1']
         if ((array_size_y == siaf_ap.YSciSize) & (array_size_x == siaf_ap.XSciSize)):
             consistent_files.append(filename)
 
