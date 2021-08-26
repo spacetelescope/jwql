@@ -97,7 +97,8 @@ def mast_query_darks(instrument, aperture, readpatt, start_date, end_date):
         Detector aperture to search for (e.g. ``NRCA1_FULL``)
 
     readpatt : str
-        Readout pattern to search for (e.g. ``RAPID``)
+        Readout pattern to search for (e.g. ``RAPID``). If None,
+        readout pattern will not be added to the query parameters.
 
     start_date : float
         Starting date for the search in MJD
@@ -140,7 +141,10 @@ def mast_query_darks(instrument, aperture, readpatt, start_date, end_date):
         # Create dictionary of parameters to add
         parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
                       "apername": aperture, "exp_type": template_name,
-                      "readpatt": readpatt}
+                     }
+
+        if readpatt is not None:
+            parameters["readpatt"] = readpatt
 
         query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
                                                   add_filters=parameters, return_data=True, caom=False)
