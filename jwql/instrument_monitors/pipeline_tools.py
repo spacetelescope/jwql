@@ -104,7 +104,7 @@ def aperture_size_check(mast_dicts, instrument_name, aperture_name):
     for mast_dict in mast_dicts:
         array_size_y, array_size_x = mast_dict['subsize2'], mast_dict['subsize1']
         if ((array_size_y == siaf_ap.YSciSize) & (array_size_x == siaf_ap.XSciSize)):
-            consistent_files.append(filename)
+            consistent_files.append(mast_dict)
 
     return consistent_files
 
