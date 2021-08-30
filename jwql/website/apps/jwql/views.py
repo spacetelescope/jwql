@@ -47,7 +47,7 @@ from django.shortcuts import redirect, render
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT
 from jwql.utils.utils import filesystem_path, get_base_url, get_config, query_unformat
 
 from .data_containers import build_table
@@ -546,13 +546,8 @@ def instrument(request, inst):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'instrument.html'
-    url_dict = {'fgs': 'https://jwst-docs.stsci.edu/jwst-observatory-hardware/fine-guidance-sensor',
-                'miri': 'https://jwst-docs.stsci.edu/mid-infrared-instrument',
-                'niriss': 'https://jwst-docs.stsci.edu/near-infrared-imager-and-slitless-spectrograph',
-                'nirspec': 'https://jwst-docs.stsci.edu/near-infrared-spectrograph',
-                'nircam': 'https://jwst-docs.stsci.edu/near-infrared-camera'}
 
-    doc_url = url_dict[inst.lower()]
+    doc_url = URL_DICT[inst.lower()]
 
     context = {'inst': inst,
                'doc_url': doc_url}
