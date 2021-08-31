@@ -323,7 +323,7 @@ FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
                     TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
                     NIRISS_AMI_SUFFIX_TYPES + WFSC_SUFFIX_TYPES
 
-#Instrument Documentation Links
+# Instrument Documentation Links
 URL_DICT = {'fgs': 'https://jwst-docs.stsci.edu/jwst-observatory-hardware/fine-guidance-sensor',
             'miri': 'https://jwst-docs.stsci.edu/mid-infrared-instrument',
             'niriss': 'https://jwst-docs.stsci.edu/near-infrared-imager-and-slitless-spectrograph',
