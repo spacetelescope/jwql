@@ -56,6 +56,12 @@ settings.py
     :members:
     :undoc-members:
 
+urls.py
+-------
+.. automodule:: jwql.website.apps.jwql.urls
+    :members:
+    :undoc-members:
+
 views.py
 --------
 .. automodule:: jwql.website.apps.jwql.views
