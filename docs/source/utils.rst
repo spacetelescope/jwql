@@ -32,12 +32,6 @@ credentials.py
     :members:
     :undoc-members:
 
-edb.py
-------
-.. automodule:: jwql.utils.edb
-    :members:
-    :undoc-members:
-
 instrument_properties.py
 ------------------------
 .. automodule:: jwql.utils.instrument_properties
