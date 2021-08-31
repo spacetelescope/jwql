@@ -38,6 +38,12 @@ manage.py
     :members:
     :undoc-members:
 
+monitor_views.py
+----------------
+.. automodule:: jwql.website.apps.jwql.monitor_views
+    :members:
+    :undoc-members:
+
 oauth.py
 --------
 .. automodule:: jwql.website.apps.jwql.oauth
