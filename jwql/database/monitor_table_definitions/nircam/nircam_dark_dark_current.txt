@@ -1,5 +1,6 @@
 APERTURE, string
 AMPLIFIER, string
+READPATTERN, string
 MEAN, float
 STDEV, float
 SOURCE_FILES, string_array_1d
