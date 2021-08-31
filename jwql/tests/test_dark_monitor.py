@@ -91,9 +91,9 @@ def test_mast_query_darks():
                        'jw82600016001_02103_00004_nrca1_dark.fits',
                        'jw82600016001_02103_00003_nrca1_dark.fits']
 
-    assert len(query) == 7
-    assert apernames == [aperture] * len(query)
-    assert filenames == truth_filenames
+    assert len(query) >= 7
+    for truth_filename in truth_filenames:
+        assert truth_filename in filenames
 
 
 def test_noise_check():
