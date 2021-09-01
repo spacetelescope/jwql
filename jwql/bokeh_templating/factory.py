@@ -21,8 +21,8 @@ Use
     directly; users should subclass the ``BokehTemplate`` class found in
     ``template.py`` instead. However, they can be used as a model for
     creating new constructors for user-defined tags, which can then be
-    registered using the `BokehTemplate.register_mapping_constructor``
-    and `BokehTemplate.register_sequence_constructor`` classmethods.
+    registered using the ``BokehTemplate.register_mapping_constructor``
+    and ``BokehTemplate.register_sequence_constructor`` classmethods.
 
 Dependencies
 ------------
