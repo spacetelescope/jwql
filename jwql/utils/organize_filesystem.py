@@ -9,7 +9,7 @@ moved into the directory provided by the ``filesystem`` key in the
 ``config.json`` file.
 
 For example, the file
-``<old_filesystem>/jw00312/jw00312002001_02102_00001_nrcb4_rateints.fits`
+``<old_filesystem>/jw00312/jw00312002001_02102_00001_nrcb4_rateints.fits``
  will be placed in the directory ``<filesystem>/jw00312/jw00312002001/``.
 
 Authors
