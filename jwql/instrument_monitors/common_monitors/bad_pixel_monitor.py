@@ -1023,7 +1023,10 @@ class BadPixels():
 
                 if new_flat_entries:
                     new_flat_entries = self.filter_query_results(new_flat_entries, datatype='flat')
-                    flat_uncal_files = locate_uncal_files(new_flat_entries)
+                    apcheck_flat_entries = pipeline_tools.aperture_size_check(new_flat_entries, instrument, aperture)
+                    lost_to_bad_metadata = len(new_flat_entries) - len(apcheck_flat_entries)
+                    logging.info('{} flat field files ignored due to inconsistency in array size and metadata.'.format(lost_to_bad_metadata))
+                    flat_uncal_files = locate_uncal_files(apcheck_flat_entries)
                     flat_uncal_files, run_flats = check_for_sufficient_files(flat_uncal_files, instrument, aperture, flat_file_count_threshold, 'flats')
                     flat_rate_files, flat_rate_files_to_copy = locate_rate_files(flat_uncal_files)
                 else:
@@ -1032,7 +1035,10 @@ class BadPixels():
 
                 if new_dark_entries:
                     new_dark_entries = self.filter_query_results(new_dark_entries, datatype='dark')
-                    dark_uncal_files = locate_uncal_files(new_dark_entries)
+                    apcheck_dark_entries = pipeline_tools.aperture_size_check(new_dark_entries, instrument, aperture)
+                    lost_to_bad_metadata = len(new_dark_entries) - len(apcheck_dark_entries)
+                    logging.info('{} dark files ignored due to inconsistency in array size and metadata.'.format(lost_to_bad_metadata))
+                    dark_uncal_files = locate_uncal_files(apcheck_dark_entries)
                     dark_uncal_files, run_darks = check_for_sufficient_files(dark_uncal_files, instrument, aperture, dark_file_count_threshold, 'darks')
                     dark_rate_files, dark_rate_files_to_copy = locate_rate_files(dark_uncal_files)
                 else:

@@ -74,10 +74,14 @@ class BokehTemplate(object):
 
     Methods
     -------
-    ``_mapping_factory``, ``_sequence_factory``,
-    ``_figure_constructor``, and ``_document_constructor`` are imported
-    from ``bokeh_templating.factory``, used by the interface parser to
-    construct Bokeh widgets.
+    _mapping_factory()
+        Used by the interface parser to construct Bokeh widgets
+    _sequence_factory()
+        Used by the interface parser to construct Bokeh widgets
+    _figure_constructor()
+        Used by the interface parser to construct Bokeh widgets
+    _document_constructor()
+        Used by the interface parser to construct Bokeh widgets
     """
 
     # Each of these functions has a ``tool`` argument, which becomes ``self``

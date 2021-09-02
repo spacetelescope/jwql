@@ -32,8 +32,8 @@ Use
 ---
 
     This module is called in ``urls.py`` as such:
-
     ::
+
         from django.urls import path
         from . import api_views
         urlpatterns = [path('web/path/to/view/', api_views.view_name, name='view_name')]
