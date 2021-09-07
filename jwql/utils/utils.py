@@ -500,6 +500,42 @@ def get_base_url():
     return base_url
 
 
+def get_instrument_from_filename(filename):
+    """Return the instrument for a given filename
+
+    Parameters
+    ----------
+    filename: str
+        name of thumbnail filename
+
+    Returns
+    -------
+    instrument: str
+        name of instrument used in filename
+    """
+    try:
+        instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[filename.split("_")[3][:3]]
+    except KeyError:
+        try:
+            instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[filename.split("_")[2][:3]]
+        except KeyError:
+            try:
+                instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[filename.split("-")[1].split("_")[2][:3]]
+            except KeyError:
+                if filename.split("-")[1].split("_")[2][:6] == "niriss":
+                    instrument = "niriss"
+                elif filename.split("-")[1].split("_")[2][:6] == "nircam":
+                    instrument = "nircam"
+                elif filename.split("-")[1].split("_")[2][:7] == "nirspec":
+                    instrument = "nirspec"
+                elif filename.split("-")[1].split("_")[2][:4] == "miri":
+                    instrument = "miri"
+                else:
+                    print("Error retrieving instrument from filename, assuming miri")
+                    instrument = "miri"
+    return instrument
+
+
 def check_config_for_key(key):
     """Check that the config.json file contains the specified key
     and that the entry is not empty

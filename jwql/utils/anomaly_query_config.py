@@ -54,3 +54,6 @@ READPATTS_CHOSEN = {}
 
 # Thumbnails selected by user in anomaly_query
 THUMBNAILS = []
+
+# Include all of the parameters selected by user in anomaly query
+PARAMETERS = {}

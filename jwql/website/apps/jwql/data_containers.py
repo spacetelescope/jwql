@@ -41,7 +41,7 @@ from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
-from jwql.utils.utils import ensure_dir_exists, filesystem_path
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_instrument_from_filename
 from jwql.utils.constants import MONITORS
 from jwql.utils.constants import INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
@@ -892,7 +892,6 @@ def get_thumbnails_all_instruments(parameters):
 
     anomalies = parameters['anomalies']
 
-    thumbnail_list = []
     filenames = []
 
     if parameters['instruments'] is None:
@@ -905,62 +904,83 @@ def get_thumbnails_all_instruments(parameters):
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
+        if parameters['apertures'][inst.lower()] == []:
+            apertures = '*'
+        else:
+            apertures = parameters['apertures'][inst.lower()]
+        if parameters['detectors'][inst.lower()] == []:
+            detectors = '*'
+        else:
+            detectors = parameters['detectors'][inst.lower()]
+        if parameters['filters'][inst.lower()] == []:
+            filters = '*'
+        else:
+            filters = parameters['filters'][inst.lower()]
+        if parameters['read_patterns'][inst.lower()] == []:
+            read_patterns = '*'
+        else:
+            read_patterns = parameters['read_patterns'][inst.lower()]
+        if parameters['filters'][inst.lower()] == []:
+            filters = '*'
+        else:
+            filters = parameters['filters'][inst.lower()]
+        if parameters['exposure_types'][inst.lower()] == []:
+            exposure_types = '*'
+        else:
+            exposure_types = parameters['exposure_types'][inst.lower()]
+
         if inst != "Nircam":
             params = {"columns": "*",
                       "filters": [{"paramName": "pps_aper",
-                                   "values": parameters['apertures'][inst.lower()]
+                                   "values": apertures
                                    },
                                   {"paramName": "detector",
-                                   "values": parameters['detectors'][inst.lower()]
+                                   "values": detectors
                                    },
                                   {"paramName": "filter",
-                                   "values": parameters['filters'][inst.lower()]
+                                   "values": filters
                                    },
                                   {"paramName": "exp_type",
-                                   "values": parameters['exposure_types'][inst.lower()]
+                                   "values": exposure_types
                                    },
                                   {"paramName": "readpatt",
-                                   "values": parameters['read_patterns'][inst.lower()]
+                                   "values": read_patterns
                                    }
                                   ]}
         else:
             params = {"columns": "*",
                       "filters": [{"paramName": "apername",
-                                   "values": parameters['apertures'][inst.lower()]
+                                   "values": apertures
                                    },
                                   {"paramName": "detector",
-                                   "values": parameters['detectors'][inst.lower()]
+                                   "values": detectors
                                    },
                                   {"paramName": "filter",
-                                   "values": parameters['filters'][inst.lower()]
+                                   "values": filters
                                    },
                                   {"paramName": "exp_type",
-                                   "values": parameters['exposure_types'][inst.lower()]
+                                   "values": exposure_types
                                    },
                                   {"paramName": "readpatt",
-                                   "values": parameters['read_patterns'][inst.lower()]
+                                   "values": read_patterns
                                    }
                                   ]}
 
         response = Mast.service_request_async(service, params)
         results = response[0].json()['data']
 
-        for result in results:
-            filename = result['filename'].split('.')[0]
-            filenames.append(filename)
+        inst_filenames = [result['filename'].split('.')[0] for result in results]
+        filenames.extend(inst_filenames)
 
-        # Get list of all thumbnails
-        thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
-        thumbnail_list.extend(thumbnails)
+        if inst_filenames == []:
+            print("warning: no filenames in query for {}".format(instrument))
+
+    # Get list of all thumbnails
+    thumbnail_list = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
 
     # Get subset of preview images that match the filenames
     thumbnails_subset = [os.path.basename(item) for item in thumbnail_list if
                          os.path.basename(item).split('_integ')[0] in filenames]
-
-    # items exist in filenames that correspond with expected results; however, those thumbnails do not exist...
-    for a_file in filenames:
-        if a_file not in [os.path.basename(item).split('_integ')[0] for item in thumbnail_list]:
-            print(a_file + " not in thumbnail filesystem")
 
     # Eliminate any duplicates
     thumbnails_subset = list(set(thumbnails_subset))
@@ -969,32 +989,26 @@ def get_thumbnails_all_instruments(parameters):
     final_subset = []
     for thumbnail in thumbnails_subset:
         components = thumbnail.split('_')
-        rootname = '{}_{}_{}_{}'.format(components[0], components[1], components[2], components[3])
+        rootname = ''.join((components[0], '_', components[1], '_', components[2], '_', components[3]))
         try:
-            instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[thumbnail.split("_")[3][:3]]
+            instrument = get_instrument_from_filename(thumbnail)
             thumbnail_anomalies = get_current_flagged_anomalies(rootname, instrument)
             if thumbnail_anomalies:
                 for anomaly in anomalies[instrument.lower()]:
                     if anomaly.lower() in thumbnail_anomalies:
-                        print(thumbnail, "contains an anomaly selected in the query")
+                        # thumbnail contains an anomaly selected in the query
                         final_subset.append(thumbnail)
         except KeyError:
-            try:
-                instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[thumbnail.split("_")[2][:3]]
-                thumbnail_anomalies = get_current_flagged_anomalies(rootname, instrument)
-                if thumbnail_anomalies:
-                    for anomaly in anomalies[instrument.lower()]:
-                        if anomaly.lower() in thumbnail_anomalies:
-                            print(thumbnail, "contains an anomaly selected in the query")
-                            final_subset.append(thumbnail)
-            except KeyError:
-                print("Error with thumbnail: ", thumbnail)
+            print("Error with thumbnail: ", thumbnail)
 
     if not final_subset:
         print("No images matched anomaly selection")
+        # if no anomalies matched selection (or no anomalies were selected),
+        # then return all thumbnails that match other selections
         final_subset = thumbnails_subset
         if not final_subset:
-            final_subset = thumbnails[:10]
+            # return the first ten thumbnails in the filesystem
+            final_subset = [os.path.basename(item) for item in thumbnail_list[:10]]
 
     return list(set(final_subset))
 
@@ -1167,6 +1181,10 @@ def thumbnails_ajax(inst, proposal=None):
         # Parse filename
         try:
             filename_dict = filename_parser(rootname)
+            if 'detector' not in filename_dict.keys():
+                # this keyword is expected in thumbnails_query_ajax() for generating filterable dropdown menus
+                filename_dict['detector'] = 'Unknown'
+
         except ValueError:
             # Temporary workaround for noncompliant files in filesystem
             filename_dict = {'activity': rootname[17:19],
@@ -1185,7 +1203,10 @@ def thumbnails_ajax(inst, proposal=None):
         data_dict['file_data'][rootname] = {}
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
-        data_dict['file_data'][rootname]['expstart'] = get_expstart(inst, rootname)
+        try:
+            data_dict['file_data'][rootname]['expstart'] = get_expstart(inst, rootname)
+        except:
+            print("issue with get_expstart... for {}".format(rootname))
         data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for filename in available_files]
 
     # Extract information for sorting with dropdown menus
@@ -1211,14 +1232,12 @@ def thumbnails_ajax(inst, proposal=None):
     return data_dict
 
 
-def thumbnails_query_ajax(rootnames, insts):
+def thumbnails_query_ajax(rootnames):
     """Generate a page that provides data necessary to render the
     ``thumbnails`` template.
 
     Parameters
     ----------
-    insts : list of strings
-        Name of JWST instrument
     proposal : list of strings (optional)
         Number of APT proposal to filter
 
@@ -1263,7 +1282,7 @@ def thumbnails_query_ajax(rootnames, insts):
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
         try:
-            data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[JWST_INSTRUMENT_NAMES_SHORTHAND[rootname.split("/")[-1][26:29]]]
+            data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[get_instrument_from_filename(rootname)]
         except KeyError:
             data_dict['file_data'][rootname]['inst'] = "MIRI"
             print("Warning: assuming instrument is MIRI")
@@ -1275,8 +1294,19 @@ def thumbnails_query_ajax(rootnames, insts):
         data_dict['file_data'][rootname]['prop'] = rootname[2:7]
 
     # Extract information for sorting with dropdown menus
-    detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for
-                 rootname in list(data_dict['file_data'].keys())]
+    try:
+        detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for
+                    rootname in list(data_dict['file_data'].keys())]
+    except KeyError:
+        detectors = []
+        for rootname in list(data_dict['file_data'].keys()):
+            try:
+                detector = data_dict['file_data'][rootname]['filename_dict']['detector']
+                detectors.append(detector) if detector not in detectors else detectors
+            except KeyError:
+                detector = 'Unknown'
+                detectors.append(detector) if detector not in detectors else detectors
+
     instruments = [data_dict['file_data'][rootname]['inst'].lower() for
                    rootname in list(data_dict['file_data'].keys())]
     proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for
