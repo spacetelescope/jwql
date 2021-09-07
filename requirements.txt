@@ -3,10 +3,10 @@ astropy==4.3.1
 astroquery==0.4.3
 authlib==0.15.4
 bokeh==2.3.3
-codecov==2.1.12
-crds==11.3.1
-cryptography==3.4.8
-django==3.2.7
+codecov==2.1.11
+crds==11.0.4
+cryptography==3.4.7
+django==3.1.7
 flake8==3.9.2
 inflection==0.5.1
 ipython==7.27.0
