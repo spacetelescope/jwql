@@ -1,7 +1,7 @@
 channels:
 - defaults
 dependencies:
-- astropy==4.2.1
+- astropy==4.3.1
 - authlib=0.15.4
 - bokeh=2.3.3
 - codecov==2.1.11
