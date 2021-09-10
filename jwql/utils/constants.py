@@ -130,9 +130,7 @@ DARK_EXP_TYPES = {'nircam': ['NRC_DARK'],
                   'fgs': ['FGS_DARK']}
 
 # Dictionary of observing modes available for each instrument
-DETECTOR_PER_INSTRUMENT = {'fgs': ['FGS_DARK', 'FGS_FOCUS', 'FGS_IMAGE',
-                                   'FGS_INTFLAT', 'FGS_SKYFLAT'],
-                           'miri': ['MIRIFULONG', 'MIRIFUSHORT', 'MIRIMAGE'],
+DETECTOR_PER_INSTRUMENT = {'miri': ['MIRIFULONG', 'MIRIFUSHORT', 'MIRIMAGE'],
                            'nircam': ['NRCB4', 'NRCA4', 'NRCA2', 'NRCALONG',
                                       'NRCBLONG', 'NRCB2', 'NRCB3', 'NRCA1',
                                       'NRCA3', 'NRCB1'],
