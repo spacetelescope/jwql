@@ -459,7 +459,6 @@ def get_expstart(instrument, rootname):
     if result['data'] == []:
         expstart = 0
         print("WARNING: no data")
-        # RETURN NO DATA ERROR
     else:
         expstart = min([item['expstart'] for item in result['data']])
 
@@ -895,7 +894,6 @@ def get_thumbnails_all_instruments(parameters):
     filenames = []
 
     for inst in parameters['instruments']:
-        print("Retrieving thumbnails for", inst)
         # Make sure instruments are of the proper format (e.g. "Nircam")
         instrument = inst[0].upper() + inst[1:].lower()
 
@@ -951,9 +949,6 @@ def get_thumbnails_all_instruments(parameters):
         inst_filenames = [result['filename'].split('.')[0] for result in results]
         filenames.extend(inst_filenames)
 
-        if inst_filenames == []:
-            print("warning: no filenames in query for {}".format(instrument))
-
     # Get list of all thumbnails
     thumbnail_list = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
 
@@ -966,28 +961,24 @@ def get_thumbnails_all_instruments(parameters):
 
     # Determine whether or not queried anomalies are flagged
     final_subset = []
-    for thumbnail in thumbnails_subset:
-        components = thumbnail.split('_')
-        rootname = ''.join((components[0], '_', components[1], '_', components[2], '_', components[3]))
-        try:
-            instrument = get_instrument_from_filename(thumbnail)
-            thumbnail_anomalies = get_current_flagged_anomalies(rootname, instrument)
-            if thumbnail_anomalies:
-                for anomaly in anomalies[instrument.lower()]:
-                    if anomaly.lower() in thumbnail_anomalies:
-                        # thumbnail contains an anomaly selected in the query
-                        final_subset.append(thumbnail)
-        except KeyError:
-            print("Error with thumbnail: ", thumbnail)
-
-    if not final_subset:
-        print("No images matched anomaly selection")
-        # if no anomalies matched selection (or no anomalies were selected),
-        # then return all thumbnails that match other selections
+    
+    if anomalies != {'miri': [], 'nirspec': [], 'niriss': [], 'nircam': [], 'fgs': []}:
+        for thumbnail in thumbnails_subset:
+            components = thumbnail.split('_')
+            rootname = ''.join((components[0], '_', components[1], '_', components[2], '_', components[3]))
+            try:
+                instrument = get_instrument_from_filename(thumbnail)
+                thumbnail_anomalies = get_current_flagged_anomalies(rootname, instrument)
+                if thumbnail_anomalies:
+                    for anomaly in anomalies[instrument.lower()]:
+                        if anomaly.lower() in thumbnail_anomalies:
+                            # thumbnail contains an anomaly selected in the query
+                            final_subset.append(thumbnail)
+            except KeyError:
+                print("Error with thumbnail: ", thumbnail)
+    else:
+        # if no anomalies are flagged, return all thumbnails from query
         final_subset = thumbnails_subset
-        if not final_subset:
-            # return the first ten thumbnails in the filesystem
-            final_subset = [os.path.basename(item) for item in thumbnail_list[:10]]
 
     return list(set(final_subset))
 
@@ -1217,8 +1208,8 @@ def thumbnails_query_ajax(rootnames):
 
     Parameters
     ----------
-    proposal : list of strings (optional)
-        Number of APT proposal to filter
+    rootnames : list of strings (optional)
+        Rootname of APT proposal to filter
 
     Returns
     -------
@@ -1231,7 +1222,6 @@ def thumbnails_query_ajax(rootnames):
     # dummy variable for view_image when thumbnail is selected
     data_dict['inst'] = "all"
     data_dict['file_data'] = {}
-
     # Gather data for each rootname
     for rootname in rootnames:
         # fit expected format for get_filenames_by_rootname()
