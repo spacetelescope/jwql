@@ -902,42 +902,48 @@ def get_thumbnails_all_instruments(parameters):
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
-        if inst != "Nircam":
-            params = {"columns": "*",
-                      "filters": [{"paramName": "pps_aper",
-                                   "values": parameters['apertures'][inst.lower()]
-                                   },
-                                  {"paramName": "detector",
-                                   "values": parameters['detectors'][inst.lower()]
-                                   },
-                                  {"paramName": "filter",
-                                   "values": parameters['filters'][inst.lower()]
-                                   },
-                                  {"paramName": "exp_type",
-                                   "values": parameters['exposure_types'][inst.lower()]
-                                   },
-                                  {"paramName": "readpatt",
-                                   "values": parameters['read_patterns'][inst.lower()]
-                                   }
-                                  ]}
+        if (parameters['apertures'][inst.lower()] == []) and (parameters['detectors'][inst.lower()] == []) \
+            and (parameters['filters'][inst.lower()] == []) and (parameters['exposure_types'][inst.lower()] == []) \
+            and (parameters['read_patterns'][inst.lower()] == []):
+                params = {"columns": "*",
+                          "filters": []}
         else:
-            params = {"columns": "*",
-                      "filters": [{"paramName": "apername",
-                                   "values": parameters['apertures'][inst.lower()]
-                                   },
-                                  {"paramName": "detector",
-                                   "values": parameters['detectors'][inst.lower()]
-                                   },
-                                  {"paramName": "filter",
-                                   "values": parameters['filters'][inst.lower()]
-                                   },
-                                  {"paramName": "exp_type",
-                                   "values": parameters['exposure_types'][inst.lower()]
-                                   },
-                                  {"paramName": "readpatt",
-                                   "values": parameters['read_patterns'][inst.lower()]
-                                   }
-                                  ]}
+            if inst != "Nircam":
+                params = {"columns": "*",
+                        "filters": [{"paramName": "pps_aper",
+                                    "values": parameters['apertures'][inst.lower()]
+                                    },
+                                    {"paramName": "detector",
+                                    "values": parameters['detectors'][inst.lower()]
+                                    },
+                                    {"paramName": "filter",
+                                    "values": parameters['filters'][inst.lower()]
+                                    },
+                                    {"paramName": "exp_type",
+                                    "values": parameters['exposure_types'][inst.lower()]
+                                    },
+                                    {"paramName": "readpatt",
+                                    "values": parameters['read_patterns'][inst.lower()]
+                                    }
+                                    ]}
+            else:
+                params = {"columns": "*",
+                        "filters": [{"paramName": "apername",
+                                    "values": parameters['apertures'][inst.lower()]
+                                    },
+                                    {"paramName": "detector",
+                                    "values": parameters['detectors'][inst.lower()]
+                                    },
+                                    {"paramName": "filter",
+                                    "values": parameters['filters'][inst.lower()]
+                                    },
+                                    {"paramName": "exp_type",
+                                    "values": parameters['exposure_types'][inst.lower()]
+                                    },
+                                    {"paramName": "readpatt",
+                                    "values": parameters['read_patterns'][inst.lower()]
+                                    }
+                                    ]}
 
         response = Mast.service_request_async(service, params)
         results = response[0].json()['data']
