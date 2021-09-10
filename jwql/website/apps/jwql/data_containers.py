@@ -1232,7 +1232,6 @@ def thumbnails_query_ajax(rootnames):
         try:
             rootname = rootname.split("_")[0] + '_' + rootname.split("_")[1] + '_' + rootname.split("_")[2] + '_' + rootname.split("_")[3]
         except IndexError:
-            # rootname = rootname.split(".thumb")[0]
             continue
 
         # Parse filename
