@@ -894,8 +894,6 @@ def get_thumbnails_all_instruments(parameters):
 
     filenames = []
 
-    if parameters['instruments'] is None:
-        thumbnails = []
     for inst in parameters['instruments']:
         print("Retrieving thumbnails for", inst)
         # Make sure instruments are of the proper format (e.g. "Nircam")
@@ -904,65 +902,40 @@ def get_thumbnails_all_instruments(parameters):
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
-        if parameters['apertures'][inst.lower()] == []:
-            apertures = '*'
-        else:
-            apertures = parameters['apertures'][inst.lower()]
-        if parameters['detectors'][inst.lower()] == []:
-            detectors = '*'
-        else:
-            detectors = parameters['detectors'][inst.lower()]
-        if parameters['filters'][inst.lower()] == []:
-            filters = '*'
-        else:
-            filters = parameters['filters'][inst.lower()]
-        if parameters['read_patterns'][inst.lower()] == []:
-            read_patterns = '*'
-        else:
-            read_patterns = parameters['read_patterns'][inst.lower()]
-        if parameters['filters'][inst.lower()] == []:
-            filters = '*'
-        else:
-            filters = parameters['filters'][inst.lower()]
-        if parameters['exposure_types'][inst.lower()] == []:
-            exposure_types = '*'
-        else:
-            exposure_types = parameters['exposure_types'][inst.lower()]
-
         if inst != "Nircam":
             params = {"columns": "*",
                       "filters": [{"paramName": "pps_aper",
-                                   "values": apertures
+                                   "values": parameters['apertures'][inst.lower()]
                                    },
                                   {"paramName": "detector",
-                                   "values": detectors
+                                   "values": parameters['detectors'][inst.lower()]
                                    },
                                   {"paramName": "filter",
-                                   "values": filters
+                                   "values": parameters['filters'][inst.lower()]
                                    },
                                   {"paramName": "exp_type",
-                                   "values": exposure_types
+                                   "values": parameters['exposure_types'][inst.lower()]
                                    },
                                   {"paramName": "readpatt",
-                                   "values": read_patterns
+                                   "values": parameters['read_patterns'][inst.lower()]
                                    }
                                   ]}
         else:
             params = {"columns": "*",
                       "filters": [{"paramName": "apername",
-                                   "values": apertures
+                                   "values": parameters['apertures'][inst.lower()]
                                    },
                                   {"paramName": "detector",
-                                   "values": detectors
+                                   "values": parameters['detectors'][inst.lower()]
                                    },
                                   {"paramName": "filter",
-                                   "values": filters
+                                   "values": parameters['filters'][inst.lower()]
                                    },
                                   {"paramName": "exp_type",
-                                   "values": exposure_types
+                                   "values": parameters['exposure_types'][inst.lower()]
                                    },
                                   {"paramName": "readpatt",
-                                   "values": read_patterns
+                                   "values": parameters['read_patterns'][inst.lower()]
                                    }
                                   ]}
 
