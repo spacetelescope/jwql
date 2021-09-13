@@ -54,7 +54,8 @@ from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import filename_parser
-from jwql.utils.utils import get_config
+from jwql.utils.utils import get_config, initialize_instrument_monitor
+from jwql.utils.monitor_utils import update_monitor_table
 
 FILESYSTEM = get_config()['filesystem']
 PROPRIETARY_FILESYSTEM = os.path.join(FILESYSTEM, 'proprietary')
@@ -559,6 +560,7 @@ if __name__ == '__main__':
 
     # Configure logging
     module = os.path.basename(__file__).strip('.py')
-    configure_logging(module)
+    start_time, log_file = initialize_instrument_monitor(module)
 
     monitor_filesystem()
+    update_monitor_table(module, start_time, log_file)

@@ -29,6 +29,7 @@ References
 
 import datetime
 import getpass
+import glob
 import json
 import os
 import re
@@ -438,7 +439,7 @@ def filename_parser(filename):
     return filename_dict
 
 
-def filesystem_path(filename, check_existence=True):
+def filesystem_path(filename, check_existence=True, search=None):
     """Return the path to a given file in the filesystem.
 
     The full path is returned if ``check_existence`` is True, otherwise
@@ -451,6 +452,10 @@ def filesystem_path(filename, check_existence=True):
         File to locate (e.g. ``jw86600006001_02101_00008_guider1_cal.fits``)
     check_existence : boolean
         Check to see if the file exists in the expected lcoation
+    search : str
+        A search term to use in a ``glob.glob`` statement if the full
+        filename is unkown (e.g. ``*rate.fits``).  In this case, the first
+        element of the list of returned values is chosen as the filename.
 
     Returns
     -------
@@ -461,6 +466,16 @@ def filesystem_path(filename, check_existence=True):
     # Subdirectory name is based on the proposal ID
     subdir1 = 'jw{}'.format(filename[2:7])
     subdir2 = 'jw{}'.format(filename[2:13])
+
+    if search:
+        full_subdir = os.path.join(subdir1, subdir2, '{}{}'.format(filename, search))
+        filenames_found = glob.glob(os.path.join(FILESYSTEM, 'public', full_subdir))
+        filenames_found.extend(glob.glob(os.path.join(FILESYSTEM, 'proprietary', full_subdir)))
+        if len(filenames_found) > 0:
+            filename = os.path.basename(filenames_found[0])
+        else:
+            raise FileNotFoundError('{} did not yeild any files in predicted location {}'.format(search, full_subdir))
+
     full_path = os.path.join(subdir1, subdir2, filename)
 
     # Check to see if the file exists
@@ -585,31 +600,6 @@ def initialize_instrument_monitor(module):
     log_file = configure_logging(module)
 
     return start_time, log_file
-
-
-def update_monitor_table(module, start_time, log_file):
-    """Update the ``monitor`` database table with information about
-    the instrument monitor run
-
-    Parameters
-    ----------
-    module : str
-        The module name (e.g. ``dark_monitor``)
-    start_time : datetime object
-        The start time of the monitor
-    log_file : str
-        The path to where the log file is stored
-    """
-
-    from jwql.database.database_interface import Monitor
-
-    new_entry = {}
-    new_entry['monitor_name'] = module
-    new_entry['start_time'] = start_time
-    new_entry['end_time'] = datetime.datetime.now()
-    new_entry['log_file'] = os.path.basename(log_file)
-
-    Monitor.__table__.insert().execute(new_entry)
 
 
 def query_format(string):

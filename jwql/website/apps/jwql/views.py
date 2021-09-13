@@ -727,7 +727,7 @@ def view_header(request, inst, filename):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'view_header.html'
-    file_root = '_'.join(filename.split('_')[:-1])
+    file_root = '_'.join(filename.split('_'))
 
     context = {'inst': inst,
                'filename': filename,
