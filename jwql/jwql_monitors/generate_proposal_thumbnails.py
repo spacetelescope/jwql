@@ -31,8 +31,8 @@ import os
 import shutil
 
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
-from jwql.utils.utils import get_config
-
+from jwql.utils.utils import get_config, initialize_instrument_monitor
+from jwql.utils.monitor_utils import update_monitor_table
 
 @log_fail
 @log_info
@@ -55,6 +55,7 @@ def generate_proposal_thumbnails():
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    configure_logging(module)
+    start_time, log_file = initialize_instrument_monitor(module)
 
     generate_proposal_thumbnails()
+    update_monitor_table(module, start_time, log_file)
