@@ -24,12 +24,13 @@ import pytest
 import time
 import urllib.request
 
+from jwql.utils.constants import MONITORS
 from jwql.utils.utils import get_base_url
 
 TIME_CONSTRAINT = 30  # seconds
 
-# Determine if tests are being run on jenkins
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+# Determine if tests are being run on Github Actions
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 urls = []
 
@@ -37,6 +38,12 @@ urls = []
 urls.append('')
 urls.append('about/')
 urls.append('edb/')
+
+# Instrument monitor URLs
+for instrument in MONITORS:
+    for monitor, monitor_url in MONITORS[instrument]:
+        if monitor_url != '#':
+            urls.append(monitor_url[1:])
 
 # Specific URLs
 test_mappings = [('fgs', '86700', 'jw86600007001_02101_00001_guider2'),
@@ -52,7 +59,7 @@ for mapping in test_mappings:
     urls.append('{}/{}/'.format(instrument, rootname))
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason="Can't access webpage without VPN access")  # Can be removed once public-facing server exists
 @pytest.mark.parametrize('url', urls)
 def test_loading_times(url):
     """Test to see if the given ``url`` returns a webpage successfully

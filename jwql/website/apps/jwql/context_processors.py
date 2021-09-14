@@ -26,7 +26,7 @@ Use
 import bokeh
 
 import jwql
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, URL_DICT
 
 from .oauth import auth_info
 
@@ -53,5 +53,6 @@ def base_context(request, user):
     context['user'] = user
     context['version'] = jwql.__version__
     context['bokeh_version'] = bokeh.__version__
+    context['url_dict'] = URL_DICT
 
     return context

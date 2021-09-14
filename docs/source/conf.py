@@ -25,6 +25,13 @@ import jwql
 
 # -- General configuration ------------------------------------------------
 
+# Configure Django for autodoc usage
+import django
+from django.conf import settings
+
+settings.configure(LOGGING_CONFIG=None)
+django.setup()
+
 # If your documentation needs a minimal Sphinx version, state it here.
 #
 # needs_sphinx = '1.0'
@@ -51,7 +58,7 @@ source_suffix = '.rst'
 # The master toctree document.
 master_doc = 'index'
 
-# Numpy doc setting, right now this supresses some warnings, not exactly sure why?
+# Numpy doc setting, currently supresses some warnings, not exactly sure why?
 numpydoc_show_class_members = False
 
 # General information about the project.
@@ -77,8 +84,8 @@ release = jwql.__version__
 # Usually you set "language" from the command line for these cases.
 language = None
 
-# This is a fix for warnings because of sphinx-autodoc interaction for classes, however it removes
-# method table from the docs.
+# This is a fix for warnings because of sphinx-autodoc interaction for classes,
+# however it removes method table from the docs.
 numpydoc_show_class_members = False
 
 # List of patterns, relative to source directory, that match files and

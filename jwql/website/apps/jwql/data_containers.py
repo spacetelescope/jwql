@@ -41,31 +41,38 @@ from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
-from jwql.jwql_monitors import monitor_cron_jobs
-from jwql.utils.utils import ensure_dir_exists
+from jwql.utils.utils import ensure_dir_exists, filesystem_path
 from jwql.utils.constants import MONITORS
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.constants import INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
-from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
 
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
+# Determine if the code is being run as part of a Readthedocs build
+ON_READTHEDOCS = False
+if 'READTHEDOCS' in os.environ:
+    ON_READTHEDOCS = os.environ['READTHEDOCS']
+
 from jwql.utils.utils import get_config, filename_parser, check_config_for_key
-check_config_for_key('auth_mast')
-auth_mast = get_config()['auth_mast']
-mast_flavour = '.'.join(auth_mast.split('.')[1:])
-from astropy import config
-conf = config.get_config('astroquery')
-conf['mast'] = {'server': 'https://{}'.format(mast_flavour)}
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
+    check_config_for_key('auth_mast')
+    auth_mast = get_config()['auth_mast']
+    mast_flavour = '.'.join(auth_mast.split('.')[1:])
+    from astropy import config
+    conf = config.get_config('astroquery')
+    conf['mast'] = {'server': 'https://{}'.format(mast_flavour)}
 from astroquery.mast import Mast
 from jwedb.edb_interface import mnemonic_inventory
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
-PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'preview_images')
-THUMBNAIL_FILESYSTEM = os.path.join(get_config()['jwql_dir'], 'thumbnails')
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    FILESYSTEM_DIR = os.path.join(get_config()['filesystem'])
+    PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['preview_image_filesystem'])
+    THUMBNAIL_FILESYSTEM = os.path.join(get_config()['thumbnail_filesystem'])
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
@@ -191,7 +198,9 @@ def get_all_proposals():
         filesystem
     """
 
-    proposals = glob.glob(os.path.join(FILESYSTEM_DIR, '*'))
+    proposals = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', '*'))
+    proposals.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', '*')))
+    proposals = sorted(list(set(proposals)))
     proposals = [proposal.split('jw')[-1] for proposal in proposals]
     proposals = [proposal for proposal in proposals if len(proposal) == 5]
 
@@ -230,7 +239,7 @@ def get_current_flagged_anomalies(rootname, instrument):
     return current_anomalies
 
 
-def get_dashboard_components():
+def get_dashboard_components(request):
     """Build and return dictionaries containing components and html
     needed for the dashboard.
 
@@ -242,56 +251,29 @@ def get_dashboard_components():
         A dictionary containing full HTML needed for the dashboard.
     """
 
-    output_dir = get_config()['outputs']
-    name_dict = {'': '',
-                 'monitor_mast': 'Database Monitor',
-                 'monitor_filesystem': 'Filesystem Monitor'}
+    from jwql.website.apps.jwql.bokeh_dashboard import GeneralDashboard
 
-    # Run the cron job monitor to produce an updated table
-    monitor_cron_jobs.status(production_mode=True)
+    if 'time_delta_value' in request.POST:
+        time_delta_value = request.POST['timedelta']
 
-    # Build dictionary of Bokeh components from files in the output directory
-    dashboard_components = {}
-    for dir_name, _, file_list in os.walk(output_dir):
-        monitor_name = os.path.basename(dir_name)
+        if time_delta_value == 'All Time':
+            time_delta = None
+        else:
+            time_delta_options = {'All Time': None,
+                                  '1 Day': pd.DateOffset(days=1),
+                                  '1 Month': pd.DateOffset(months=1),
+                                  '1 Week': pd.DateOffset(weeks=1),
+                                  '1 Year': pd.DateOffset(years=1)}
+            time_delta = time_delta_options[time_delta_value]
 
-        # Only continue if the dashboard knows how to build that monitor
-        if monitor_name in name_dict.keys():
-            formatted_monitor_name = name_dict[monitor_name]
-            dashboard_components[formatted_monitor_name] = {}
-            for fname in file_list:
-                if 'component' in fname:
-                    full_fname = '{}/{}'.format(monitor_name, fname)
-                    plot_name = fname.split('_component')[0]
+        dashboard = GeneralDashboard(delta_t=time_delta)
 
-                    # Generate formatted plot name
-                    formatted_plot_name = plot_name.title().replace('_', ' ')
-                    for lowercase, mixed_case in JWST_INSTRUMENT_NAMES_MIXEDCASE.items():
-                        formatted_plot_name = formatted_plot_name.replace(lowercase.capitalize(),
-                                                                          mixed_case)
-                    formatted_plot_name = formatted_plot_name.replace('Jwst', 'JWST')
-                    formatted_plot_name = formatted_plot_name.replace('Caom', 'CAOM')
+        return dashboard
+    else:
+        # When coming from home/monitor views
+        dashboard = GeneralDashboard(delta_t=None)
 
-                    # Get the div
-                    html_file = full_fname.split('.')[0] + '.html'
-                    with open(os.path.join(output_dir, html_file), 'r') as f:
-                        div = f.read()
-
-                    # Get the script
-                    js_file = full_fname.split('.')[0] + '.js'
-                    with open(os.path.join(output_dir, js_file), 'r') as f:
-                        script = f.read()
-
-                    # Save to dictionary
-                    dashboard_components[formatted_monitor_name][formatted_plot_name] = [div, script]
-
-    # Add HTML that cannot be saved as components to the dictionary
-    with open(os.path.join(output_dir, 'monitor_cron_jobs', 'cron_status_table.html'), 'r') as f:
-        cron_status_table_html = f.read()
-    dashboard_html = {}
-    dashboard_html['Cron Job Monitor'] = cron_status_table_html
-
-    return dashboard_components, dashboard_html
+        return dashboard
 
 
 def get_edb_components(request):
@@ -446,15 +428,17 @@ def get_edb_components(request):
     return edb_components
 
 
-def get_expstart(rootname):
+def get_expstart(instrument, rootname):
     """Return the exposure start time (``expstart``) for the given
-    group of files.
+    ``rootname``.
 
     The ``expstart`` is gathered from a query to the
     ``astroquery.mast`` service.
 
     Parameters
     ----------
+    instrument : str
+        The instrument of interest (e.g. `FGS`).
     rootname : str
         The rootname of the observation of interest (e.g.
         ``jw86700006001_02101_00006_guider1``).
@@ -465,40 +449,54 @@ def get_expstart(rootname):
         The exposure start time of the observation (in MJD).
     """
 
-    return 5000.00
+    file_set_name = '_'.join(rootname.split('_')[:-1])
+    service = INSTRUMENT_SERVICE_MATCH[instrument]
+    params = {
+        'columns': 'filename, expstart',
+        'filters': [{'paramName': 'fileSetName', 'values': [file_set_name]}]}
+    response = Mast.service_request_async(service, params)
+    result = response[0].json()
+    expstart = min([item['expstart'] for item in result['data']])
+
+    return expstart
 
 
-def get_filenames_by_instrument(instrument):
-    """Returns a list of paths to files that match the given
-    ``instrument``.
+def get_filenames_by_instrument(instrument, restriction='all'):
+    """Returns a list of filenames that match the given ``instrument``.
 
     Parameters
     ----------
     instrument : str
         The instrument of interest (e.g. `FGS`).
+    restriction : str
+        If ``all``, all filenames will be returned.  If ``public``,
+        only publicly-available filenames will be returned.  If
+        ``proprietary``, only proprietary filenames will be returned.
 
     Returns
     -------
-    filepaths : list
-        A list of full paths to the files that match the given
-        instrument.
+    filenames : list
+        A list of files that match the given instrument.
     """
 
-    # Query files from MAST database
-    # filepaths, filenames = DatabaseConnection('MAST', instrument=instrument).\
-    #     get_files_for_instrument(instrument)
+    service = INSTRUMENT_SERVICE_MATCH[instrument]
 
-    # Find all of the matching files in filesytem
-    # (TEMPORARY WHILE THE MAST STUFF IS BEING WORKED OUT)
-    instrument_match = {'FGS': 'guider',
-                        'MIRI': 'mir',
-                        'NIRCam': 'nrc',
-                        'NIRISS': 'nis',
-                        'NIRSpec': 'nrs'}
-    search_filepath = os.path.join(FILESYSTEM_DIR, '*', '*.fits')
-    filepaths = [f for f in glob.glob(search_filepath) if instrument_match[instrument] in f]
+    # Query for filenames
+    params = {"columns": "filename, isRestricted", "filters": []}
+    response = Mast.service_request_async(service, params)
+    result = response[0].json()
 
-    return filepaths
+    # Determine filenames to return based on restriction parameter
+    if restriction == 'all':
+        filenames = [item['filename'] for item in result['data']]
+    elif restriction == 'public':
+        filenames = [item['filename'] for item in result['data'] if item['isRestricted'] is False]
+    elif restriction == 'proprietary':
+        filenames = [item['filename'] for item in result['data'] if item['isRestricted'] is True]
+    else:
+        raise KeyError('{} is not a valid restriction level.  Use "all", "public", or "proprietary".'.format(restriction))
+
+    return filenames
 
 
 def get_filenames_by_proposal(proposal):
@@ -517,16 +515,16 @@ def get_filenames_by_proposal(proposal):
     """
 
     proposal_string = '{:05d}'.format(int(proposal))
-    filenames = sorted(glob.glob(os.path.join(
-        FILESYSTEM_DIR, 'jw{}'.format(proposal_string), '*')))
-    filenames = [os.path.basename(filename) for filename in filenames]
+    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', 'jw{}'.format(proposal_string), '*/*'))
+    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', 'jw{}'.format(proposal_string), '*/*')))
+    filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
 
 
 def get_filenames_by_rootname(rootname):
-    """Return a list of filenames available in the filesystem that
-    are part of the given ``rootname``.
+    """Return a list of filenames that are part of the given
+    ``rootname``.
 
     Parameters
     ----------
@@ -540,12 +538,12 @@ def get_filenames_by_rootname(rootname):
         A list of filenames associated with the given ``rootname``.
     """
 
-    proposal = rootname.split('_')[0].split('jw')[-1][0:5]
-    filenames = sorted(glob.glob(os.path.join(
-        FILESYSTEM_DIR,
-        'jw{}'.format(proposal),
-        '{}*'.format(rootname))))
-    filenames = [os.path.basename(filename) for filename in filenames]
+    proposal_dir = rootname[0:7]
+    observation_dir = rootname.split('_')[0]
+
+    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*'.format(rootname)))
+    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*'.format(rootname))))
+    filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
 
@@ -569,7 +567,7 @@ def get_header_info(filename):
     header_info = {}
 
     # Open the file
-    fits_filepath = os.path.join(FILESYSTEM_DIR, filename[:7], '{}.fits'.format(filename))
+    fits_filepath = filesystem_path(filename, search='*_rate.fits')
     hdulist = fits.open(fits_filepath)
 
     # Extract header information from file
@@ -651,22 +649,22 @@ def get_image_info(file_root, rewrite):
     image_info['suffixes'] = []
     image_info['num_ints'] = {}
 
-    preview_dir = os.path.join(get_config()['jwql_dir'], 'preview_images')
-
     # Find all of the matching files
-    dirname = file_root[:7]
-    search_filepath = os.path.join(FILESYSTEM_DIR, dirname, file_root + '*.fits')
-    image_info['all_files'] = glob.glob(search_filepath)
+    proposal_dir = file_root[:7]
+    observation_dir = file_root[:13]
+    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*.fits'.format(file_root)))
+    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*.fits'.format(file_root))))
+    image_info['all_files'] = filenames
 
-    for file in image_info['all_files']:
+    for filename in image_info['all_files']:
 
         # Get suffix information
-        suffix = os.path.basename(file).split('_')[4].split('.')[0]
+        suffix = os.path.basename(filename).split('_')[4].split('.')[0]
         image_info['suffixes'].append(suffix)
 
         # Determine JPEG file location
-        jpg_dir = os.path.join(preview_dir, dirname)
-        jpg_filename = os.path.basename(os.path.splitext(file)[0] + '_integ0.jpg')
+        jpg_dir = os.path.join(get_config()['preview_image_filesystem'], proposal_dir)
+        jpg_filename = os.path.basename(os.path.splitext(filename)[0] + '_integ0.jpg')
         jpg_filepath = os.path.join(jpg_dir, jpg_filename)
 
         # Check that a jpg does not already exist. If it does (and rewrite=False),
@@ -678,13 +676,12 @@ def get_image_info(file_root, rewrite):
         else:
             if not os.path.exists(jpg_dir):
                 os.makedirs(jpg_dir)
-            im = PreviewImage(file, 'SCI')
+            im = PreviewImage(filename, 'SCI')
             im.output_directory = jpg_dir
             im.make_image()
 
         # Record how many integrations there are per filetype
-        search_jpgs = os.path.join(preview_dir, dirname,
-                                   file_root + '_{}_integ*.jpg'.format(suffix))
+        search_jpgs = os.path.join(get_config()['preview_image_filesystem'], observation_dir, '{}_{}_integ*.jpg'.format(file_root, suffix))
         num_jpgs = len(glob.glob(search_jpgs))
         image_info['num_ints'][suffix] = num_jpgs
 
@@ -858,24 +855,19 @@ def get_proposal_info(filepaths):
         proposal(s) and files corresponding to the given ``filepaths``.
     """
 
-    proposals = list(set([f.split('/')[-1][2:7] for f in filepaths]))
-    thumbnail_dir = os.path.join(get_config()['jwql_dir'], 'thumbnails')
+    # Initialize some containers
     thumbnail_paths = []
     num_files = []
-    for proposal in proposals:
-        thumbnail_search_filepath = os.path.join(
-            thumbnail_dir, 'jw{}'.format(proposal), 'jw{}*rate*.thumb'.format(proposal)
-        )
-        thumbnail = glob.glob(thumbnail_search_filepath)
-        if len(thumbnail) > 0:
-            thumbnail = thumbnail[0]
-            thumbnail = '/'.join(thumbnail.split('/')[-2:])
-        thumbnail_paths.append(thumbnail)
 
-        fits_search_filepath = os.path.join(
-            FILESYSTEM_DIR, 'jw{}'.format(proposal), 'jw{}*.fits'.format(proposal)
-        )
-        num_files.append(len(glob.glob(fits_search_filepath)))
+    # Gather thumbnails and counts for proposals
+    proposals, thumbnail_paths, num_files = [], [], []
+    for filepath in filepaths:
+        proposal = filepath.split('/')[-1][2:7]
+        if proposal not in proposals:
+            thumbnail_paths.append(os.path.join('jw{}'.format(proposal), 'jw{}.thumb'.format(proposal)))
+            files_for_proposal = [item for item in filepaths if 'jw{}'.format(proposal) in item]
+            num_files.append(len(files_for_proposal))
+            proposals.append(proposal)
 
     # Put the various information into a dictionary of results
     proposal_info = {}
@@ -898,7 +890,7 @@ def get_thumbnails_all_instruments(parameters):
             instruments
             apertures
             filters
-            observing_modes
+            detector
             effexptm_min
             effexptm_max
             anomalies
@@ -910,14 +902,13 @@ def get_thumbnails_all_instruments(parameters):
         given instrument.
     """
 
-    filters = parameters['filters']
-    effexptm_min = parameters['exposure_time_min']
-    effexptm_max = parameters['exposure_time_max']
     anomalies = parameters['anomalies']
 
     thumbnail_list = []
     filenames = []
 
+    if parameters['instruments'] is None:
+        thumbnails = []
     for inst in parameters['instruments']:
         print("Retrieving thumbnails for", inst)
         # Make sure instruments are of the proper format (e.g. "Nircam")
@@ -928,90 +919,28 @@ def get_thumbnails_all_instruments(parameters):
 
         params = {"columns": "*",
                   "filters": [{"paramName": "apername",
-                              "values": [parameters['apertures'][inst.lower()]]}]}
+                               "values": parameters['apertures'][inst.lower()]
+                               },
+                              {"paramName": "detector",
+                               "values": parameters['detectors'][inst.lower()]
+                               },
+                              {"paramName": "filter",
+                               "values": parameters['filters'][inst.lower()]
+                               },
+                              {"paramName": "exp_type",
+                               "values": parameters['exposure_types'][inst.lower()]
+                               },
+                              {"paramName": "readpatt",
+                               "values": parameters['read_patterns'][inst.lower()]
+                               }
+                              ]}
 
         response = Mast.service_request_async(service, params)
         results = response[0].json()['data']
 
-        # Further filter results and parse to get rootnames
         for result in results:
-            if parameters['observing_modes'][inst.lower()]:
-                if result['exp_type'] in parameters['observing_modes'][inst.lower()]:
-                    if effexptm_max:
-                        if result['effexptm'] < int(effexptm_max):
-                            if effexptm_min:
-                                if result['effexptm'] > int(effexptm_min):
-                                    if filters:
-                                        if result['filter'] in filters[inst.lower()]:
-                                            filename = result['filename'].split('.')[0]
-                                            filenames.append(filename)
-                                    else:
-                                        filename = result['filename'].split('.')[0]
-                                        filenames.append(filename)
-                            else:
-                                if filters:
-                                    if result['filter'] in filters[inst.lower()]:
-                                        filename = result['filename'].split('.')[0]
-                                        filenames.append(filename)
-                                else:
-                                    filename = result['filename'].split('.')[0]
-                                    filenames.append(filename)
-                    else:
-                        if effexptm_min:
-                            if result['effexptm'] > int(effexptm_min):
-                                if filters:
-                                    if result['filter'] in filters[inst.lower()]:
-                                        filename = result['filename'].split('.')[0]
-                                        filenames.append(filename)
-                                else:
-                                    filename = result['filename'].split('.')[0]
-                                    filenames.append(filename)
-                        else:
-                            if filters:
-                                if result['filter'] in filters[inst.lower()]:
-                                    filename = result['filename'].split('.')[0]
-                                    filenames.append(filename)
-                            else:
-                                filename = result['filename'].split('.')[0]
-                                filenames.append(filename)
-            else:
-                if effexptm_max:
-                    if result['effexptm'] < int(effexptm_max):
-                        if effexptm_min:
-                            if result['effexptm'] > int(effexptm_min):
-                                if filters:
-                                    if result['filter'] in filters[inst.lower()]:
-                                        filename = result['filename'].split('.')[0]
-                                        filenames.append(filename)
-                                else:
-                                    filename = result['filename'].split('.')[0]
-                                    filenames.append(filename)
-                        else:
-                            if filters:
-                                if result['filter'] in filters[inst.lower()]:
-                                    filename = result['filename'].split('.')[0]
-                                    filenames.append(filename)
-                            else:
-                                filename = result['filename'].split('.')[0]
-                                filenames.append(filename)
-                else:
-                    if effexptm_min:
-                        if result['effexptm'] > int(effexptm_min):
-                            if filters:
-                                if result['filter'] in filters[inst.lower()]:
-                                    filename = result['filename'].split('.')[0]
-                                    filenames.append(filename)
-                            else:
-                                filename = result['filename'].split('.')[0]
-                                filenames.append(filename)
-                    else:
-                        if filters:
-                            if result['filter'] in filters[inst.lower()]:
-                                filename = result['filename'].split('.')[0]
-                                filenames.append(filename)
-                        else:
-                            filename = result['filename'].split('.')[0]
-                            filenames.append(filename)
+            filename = result['filename'].split('.')[0]
+            filenames.append(filename)
 
         # Get list of all thumbnails
         thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
@@ -1048,6 +977,7 @@ def get_thumbnails_all_instruments(parameters):
                             final_subset.append(thumbnail)
             except KeyError:
                 print("Error with thumbnail: ", thumbnail)
+
     if not final_subset:
         print("No images matched anomaly selection")
         final_subset = thumbnails_subset
@@ -1203,10 +1133,10 @@ def thumbnails_ajax(inst, proposal=None):
     """
 
     # Get the available files for the instrument
-    filepaths = get_filenames_by_instrument(inst)
+    filenames = get_filenames_by_instrument(inst)
 
     # Get set of unique rootnames
-    rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filepaths])
+    rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
 
     # If the proposal is specified (i.e. if the page being loaded is
     # an archive page), only collect data for given proposal
@@ -1237,23 +1167,25 @@ def thumbnails_ajax(inst, proposal=None):
                              'visit_group': rootname[14:16]}
 
         # Get list of available filenames
-        available_files = get_filenames_by_rootname(rootname)
+        available_files = [item for item in filenames if rootname in item]
 
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
-        data_dict['file_data'][rootname]['expstart'] = get_expstart(rootname)
-        data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for
-                                                        filename in available_files]
+        data_dict['file_data'][rootname]['expstart'] = get_expstart(inst, rootname)
+        data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for filename in available_files]
 
     # Extract information for sorting with dropdown menus
-    # (Don't include the proposal as a sorting parameter if the
-    # proposal has already been specified)
-    detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for
-                 rootname in list(data_dict['file_data'].keys())]
-    proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for
-                 rootname in list(data_dict['file_data'].keys())]
+    # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
+    detectors, proposals = [], []
+    for rootname in list(data_dict['file_data'].keys()):
+        proposals.append(data_dict['file_data'][rootname]['filename_dict']['program_id'])
+        try:  # Some rootnames cannot parse out detectors
+            detectors.append(data_dict['file_data'][rootname]['filename_dict']['detector'])
+        except KeyError:
+            pass
+
     if proposal is not None:
         dropdown_menus = {'detector': detectors}
     else:
@@ -1321,7 +1253,7 @@ def thumbnails_query_ajax(rootnames, insts):
             print("Warning: assuming instrument is MIRI")
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
-        data_dict['file_data'][rootname]['expstart'] = get_expstart(rootname)
+        data_dict['file_data'][rootname]['expstart'] = get_expstart(data_dict['file_data'][rootname]['inst'], rootname)
         data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for
                                                         filename in available_files]
         data_dict['file_data'][rootname]['prop'] = rootname[2:7]
@@ -1329,7 +1261,14 @@ def thumbnails_query_ajax(rootnames, insts):
     # Extract information for sorting with dropdown menus
     detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for
                  rootname in list(data_dict['file_data'].keys())]
-    dropdown_menus = {'detector': detectors}
+    instruments = [data_dict['file_data'][rootname]['inst'].lower() for
+                   rootname in list(data_dict['file_data'].keys())]
+    proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for
+                 rootname in list(data_dict['file_data'].keys())]
+
+    dropdown_menus = {'instrument': instruments,
+                      'detector': detectors,
+                      'proposal': proposals}
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus

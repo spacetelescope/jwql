@@ -22,16 +22,17 @@ import os
 from pathlib import Path
 import pytest
 
-from jwql.utils.utils import copy_files, get_config, filename_parser, \
-    filesystem_path, _validate_config
+from jwql.utils.utils import copy_files, get_config, filename_parser, filesystem_path, _validate_config
 
-# Determine if tests are being run on jenkins
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+
+# Determine if tests are being run on Github Actions
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
 
 FILENAME_PARSER_TEST_DATA = [
 
     # Test full path
-    ('/test/dir/to/the/file/jw90002/jw90002001001_02102_00001_nis_rateints.fits',
+    ('/test/dir/to/the/file/public/jw90002/jw90002001001/jw90002001001_02102_00001_nis_rateints.fits',
      {'activity': '02',
       'detector': 'nis',
       'exposure_id': '00001',
@@ -248,7 +249,6 @@ FILENAME_PARSER_TEST_DATA = [
 ]
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_copy_files():
     """Test that files are copied successfully"""
 
@@ -273,7 +273,7 @@ def test_copy_files():
     os.remove(copied_file)
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_config():
     """Assert that the ``get_config`` function successfully creates a
     dictionary.
@@ -298,7 +298,7 @@ def test_filename_parser(filename, solution):
     assert filename_parser(filename) == solution
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_filename_parser_whole_filesystem():
     """Test the filename_parser on all files currently in the filesystem."""
     # Get all files
@@ -306,8 +306,9 @@ def test_filename_parser_whole_filesystem():
     all_files = []
     for dir_name, _, file_list in os.walk(filesystem_dir):
         for file in file_list:
-            if file.endswith('.fits'):
-                all_files.append(os.path.join(dir_name, file))
+            if 'public' in file or 'proprietary' in file:
+              if file.endswith('.fits'):
+                  all_files.append(os.path.join(dir_name, file))
 
     # Run the filename_parser on all files
     bad_filenames = []
@@ -336,17 +337,18 @@ def test_filename_parser_nonJWST():
         filename_parser(filename)
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_filesystem_path():
     """Test that a file's location in the filesystem is returned"""
 
     filename = 'jw96003001001_02201_00001_nrca1_dark.fits'
     check = filesystem_path(filename)
-    location = os.path.join(get_config()['filesystem'], 'jw96003', filename)
+    location = os.path.join(get_config()['filesystem'], 'public', 'jw96003', 'jw96003001001', filename)
 
     assert check == location
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_validate_config():
     """Test that the config validator works."""
     # Make sure a bad config raises an error
@@ -360,6 +362,10 @@ def test_validate_config():
 
     # Make sure a good config does not!
     good_config_dict = {
+        "admin_account": "",
+        "auth_mast": "",
+        "client_id": "",
+        "client_secret": "",
         "connection_string": "",
         "database": {
             "engine": "",
@@ -369,20 +375,19 @@ def test_validate_config():
             "host": "",
             "port": ""
         },
-        "filesystem": "",
-        "preview_image_filesystem": "",
-        "thumbnail_filesystem": "",
-        "outputs": "",
         "jwql_dir": "",
-        "admin_account": "",
+        "jwql_version": "",
+        "server_type": "",
         "log_dir": "",
-        "test_dir": "",
-        "test_data": "",
+        "mast_token": "",
+        "outputs": "",
+        "preview_image_filesystem": "",
+        "filesystem": "",
         "setup_file": "",
-        "auth_mast": "",
-        "client_id": "",
-        "client_secret": "",
-        "mast_token": ""
+        "test_data": "",
+        "test_dir": "",
+        "thumbnail_filesystem": "",
+        "cores": ""
     }
 
     is_valid = _validate_config(good_config_dict)

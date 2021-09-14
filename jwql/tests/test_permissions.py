@@ -29,8 +29,8 @@ from jwql.utils.permissions import set_permissions, has_permissions, \
 # directory to be created and populated during tests running
 TEST_DIRECTORY = os.path.join(os.environ['HOME'], 'permission_test')
 
-# Determine if tests are being run on jenkins
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+# Determine if tests are being run on Github Actions
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 @pytest.fixture(scope="module")
@@ -102,7 +102,6 @@ def test_file(test_dir=TEST_DIRECTORY):
         os.rmdir(test_dir)
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
 def test_file_group(test_file):
     """Create a file with the standard permissions ``('-rw-r--r--')``
     and default group.
@@ -118,12 +117,11 @@ def test_file_group(test_file):
     """
     # Get owner and group on the current system.
     owner = get_owner_string(test_file)
-    group = get_group_string(test_file)
 
     # attempt to retrieve a group name different from default
     group_index = 0
     test_group = grp.getgrgid(os.getgroups()[group_index]).gr_name
-    test_group_2 = grp.getgrgid(os.getgroups()[group_index+1]).gr_name
+    test_group_2 = grp.getgrgid(os.getgroups()[group_index + 1]).gr_name
 
     # Change the file group
     set_permissions(test_file, group=test_group, owner=owner)

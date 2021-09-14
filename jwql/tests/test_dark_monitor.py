@@ -26,7 +26,7 @@ import numpy as np
 from jwql.instrument_monitors.common_monitors import dark_monitor
 from jwql.utils.utils import get_config
 
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 def test_find_hot_dead_pixels():
@@ -54,8 +54,7 @@ def test_find_hot_dead_pixels():
     assert np.all(dead[1] == np.array([6, 3]))
 
 
-@pytest.mark.skipif(ON_JENKINS,
-                    reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_metadata():
     """Test retrieval of metadata from input file"""
 
@@ -77,30 +76,24 @@ def test_mast_query_darks():
 
     instrument = 'NIRCAM'
     aperture = 'NRCA1_FULL'
+    readpatt = 'BRIGHT2'
     start_date = Time("2016-01-01T00:00:00").mjd
     end_date = Time("2018-01-01T00:00:00").mjd
-    query = dark_monitor.mast_query_darks(instrument, aperture, start_date, end_date)
+    query = dark_monitor.mast_query_darks(instrument, aperture, readpatt, start_date, end_date)
     apernames = [entry['apername'] for entry in query]
     filenames = [entry['filename'] for entry in query]
 
-    truth_filenames = ['jw96003001001_02201_00001_nrca1_dark.fits',
-                       'jw82600013001_02102_00002_nrca1_dark.fits',
-                       'jw82600013001_02101_00001_nrca1_dark.fits',
-                       'jw82600013001_02103_00003_nrca1_dark.fits',
+    truth_filenames = ['jw82600013001_02103_00003_nrca1_dark.fits',
                        'jw82600013001_02103_00001_nrca1_dark.fits',
                        'jw82600013001_02103_00002_nrca1_dark.fits',
-                       'jw82600016001_02101_00002_nrca1_dark.fits',
-                       'jw82600016001_02101_00001_nrca1_dark.fits',
-                       'jw82600013001_02102_00001_nrca1_dark.fits',
                        'jw82600016001_02103_00002_nrca1_dark.fits',
                        'jw82600016001_02103_00001_nrca1_dark.fits',
                        'jw82600016001_02103_00004_nrca1_dark.fits',
-                       'jw82600016001_02103_00003_nrca1_dark.fits',
-                       'jw82600016001_02102_00001_nrca1_dark.fits']
+                       'jw82600016001_02103_00003_nrca1_dark.fits']
 
-    assert len(query) == 14
-    assert apernames == [aperture]*len(query)
-    assert filenames == truth_filenames
+    assert len(query) >= 7
+    for truth_filename in truth_filenames:
+        assert truth_filename in filenames
 
 
 def test_noise_check():

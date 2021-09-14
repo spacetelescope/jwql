@@ -25,14 +25,14 @@ import random
 import string
 
 from jwql.database import database_interface as di
-from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
 from jwql.utils.utils import get_config
 
-# Determine if tests are being run on jenkins
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+
+# Determine if tests are being run on Github Actions
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to development database server.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to development database server.')
 def test_all_tables_exist():
     """Test that the table ORMs defined in ``database_interface``
     actually exist as tables in the database"""
@@ -71,27 +71,27 @@ def test_anomaly_orm_factory():
         assert item in table_attributes
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to development database server.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to development database server.')
 def test_anomaly_records():
     """Test to see that new records can be entered"""
 
     # Add some data
-    random_rootname = ''.join(random.SystemRandom().choice(string.ascii_lowercase + \
-                                                           string.ascii_uppercase + \
+    random_rootname = ''.join(random.SystemRandom().choice(string.ascii_lowercase +
+                                                           string.ascii_uppercase +
                                                            string.digits) for _ in range(10))
     di.session.add(di.FGSAnomaly(rootname=random_rootname,
-                              flag_date=datetime.datetime.today(),
-                              user='test', ghost=True))
+                                 flag_date=datetime.datetime.today(),
+                                 user='test', ghost=True))
     di.session.commit()
 
     # Test the ghosts column
     ghosts = di.session.query(di.FGSAnomaly)\
         .filter(di.FGSAnomaly.rootname == random_rootname)\
         .filter(di.FGSAnomaly.ghost == "True")
-    assert ghosts.data_frame.iloc[0]['ghost'] == True
+    assert ghosts.data_frame.iloc[0]['ghost'] is True
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to development database server.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to development database server.')
 def test_load_connections():
     """Test to see that a connection to the database can be
     established"""

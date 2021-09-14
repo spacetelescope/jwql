@@ -21,6 +21,7 @@ import numpy as np
 import os
 
 from astropy.io import fits
+from jwst import datamodels
 from jwst.dq_init import DQInitStep
 from jwst.dark_current import DarkCurrentStep
 from jwst.firstframe import FirstFrameStep
@@ -33,15 +34,16 @@ from jwst.persistence import PersistenceStep
 from jwst.pipeline.calwebb_detector1 import Detector1Pipeline
 from jwst.ramp_fitting import RampFitStep
 from jwst.refpix import RefPixStep
-from jwst.rscd import RSCD_Step
+from jwst.rscd import RscdStep
 from jwst.saturation import SaturationStep
 from jwst.superbias import SuperBiasStep
 
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_UPPERCASE
+import pysiaf
 
 # Define the fits header keyword that accompanies each step
 PIPE_KEYWORDS = {'S_GRPSCL': 'group_scale', 'S_DQINIT': 'dq_init', 'S_SATURA': 'saturation',
-                 'S_IPC': 'ipc', 'S_REFPIX': 'refpix', 'S_SUPERB': 'superbias',
+                 'S_REFPIX': 'refpix', 'S_SUPERB': 'superbias',
                  'S_PERSIS': 'persistence', 'S_DARK': 'dark_current', 'S_LINEAR': 'linearity',
                  'S_FRSTFR': 'firstframe', 'S_LASTFR': 'lastframe', 'S_RSCD': 'rscd',
                  'S_JUMP': 'jump', 'S_RAMP': 'rate'}
@@ -50,12 +52,61 @@ PIPELINE_STEP_MAPPING = {'dq_init': DQInitStep, 'dark_current': DarkCurrentStep,
                          'firstframe': FirstFrameStep, 'group_scale': GroupScaleStep,
                          'ipc': IPCStep, 'jump': JumpStep, 'lastframe': LastFrameStep,
                          'linearity': LinearityStep, 'persistence': PersistenceStep,
-                         'rate': RampFitStep, 'refpix': RefPixStep, 'rscd': RSCD_Step,
+                         'rate': RampFitStep, 'refpix': RefPixStep, 'rscd': RscdStep,
                          'saturation': SaturationStep, 'superbias': SuperBiasStep}
 
 # Readout patterns that have nframes != a power of 2. These readout patterns
 # require the group_scale pipeline step to be run.
 GROUPSCALE_READOUT_PATTERNS = ['NRSIRS2']
+
+
+def aperture_size_check(mast_dicts, instrument_name, aperture_name):
+    """Check that the aperture size in a science file is consistent with
+    what is listed in the SUBARRAY header keyword. The motivation for this
+    check comes from NIRCam ASIC Tuning data, where file apertures are listed
+    as FULL, but the data are in fact SUBSTRIPE256. Note that at the moment
+    this function will only work for a subset of apertures, because the mapping
+    of SUBARRAY header keyword value to pysiaf-recognized aperture name is
+    not always straightforward. Initially, this function is being built only
+    to support checking files listed as full frame.
+
+    Parameters
+    ----------
+    mast_dicts : list
+        List of file metadata dictionaries, as returned from a MAST query
+
+    instrument_name : str
+        JWST instrument name
+
+    aperture_name : str
+        Name of the aperture, in order to load the proper SIAF information
+
+    Returns
+    -------
+    consistent_files : list
+        List of metadata dictionaries where the array size in the metadata matches
+        that retrieved from SIAF
+    """
+    consistent_files = []
+    siaf = pysiaf.Siaf(instrument_name)
+
+    # If the basic formula for aperture name does not produce a name recognized by
+    # pysiaf, then skip the check and assume the file is ok. This should only be the
+    # case for lesser-used apertures. For our purposes here, where we are focusing
+    # on full frame apertures, it should be ok.
+    try:
+        siaf_ap = siaf[aperture_name]
+    except KeyError:
+        consistent_files.extend(mast_dicts)
+        return consistent_files
+
+    # Most cases will end up here. Compare SIAF aperture size to that in the metadata
+    for mast_dict in mast_dicts:
+        array_size_y, array_size_x = mast_dict['subsize2'], mast_dict['subsize1']
+        if ((array_size_y == siaf_ap.YSciSize) & (array_size_x == siaf_ap.XSciSize)):
+            consistent_files.append(mast_dict)
+
+    return consistent_files
 
 
 def completed_pipeline_steps(filename):
@@ -217,8 +268,22 @@ def run_calwebb_detector1_steps(input_file, steps):
             suffix = step_name
     output_filename = input_file.replace('.fits', '_{}.fits'.format(suffix))
     if suffix != 'rate':
+        # Make sure the dither_points metadata entry is at integer (was a string
+        # prior to jwst v1.2.1, so some input data still have the string entry.
+        # If we don't change that to an integer before saving the new file, the
+        # jwst package will crash.
+        try:
+            model.meta.dither.dither_points = int(model.meta.dither.dither_points)
+        except TypeError:
+            # If the dither_points entry is not populated, then ignore this change
+            pass
         model.save(output_filename)
     else:
+        try:
+            model[0].meta.dither.dither_points = int(model[0].meta.dither.dither_points)
+        except TypeError:
+            # If the dither_points entry is not populated, then ignore this change
+            pass
         model[0].save(output_filename)
 
     return output_filename
@@ -262,7 +327,22 @@ def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True, save_fito
     input_file_only = os.path.basename(input_file)
 
     # Find the instrument used to collect the data
-    instrument = fits.getheader(input_file)['INSTRUME'].lower()
+    datamodel = datamodels.RampModel(input_file)
+    instrument = datamodel.meta.instrument.name.lower()
+
+    # If the data pre-date jwst version 1.2.1, then they will have
+    # the NUMDTHPT keyword (with string value of the number of dithers)
+    # rather than the newer NRIMDTPT keyword (with an integer value of
+    # the number of dithers). If so, we need to update the file here so
+    # that it doesn't cause the pipeline to crash later. Both old and
+    # new keywords are mapped to the model.meta.dither.dither_points
+    # metadata entry. So we should be able to focus on that.
+    if isinstance(datamodel.meta.dither.dither_points, str):
+        # If we have a string, change it to an integer
+        datamodel.meta.dither.dither_points = int(datamodel.meta.dither.dither_points)
+    elif datamodel.meta.dither.dither_points is None:
+        # If the information is missing completely, put in a dummy value
+        datamodel.meta.dither.dither_points = 1
 
     # Switch to calling the pipeline rather than individual steps,
     # and use the run() method so that we can set parameters
@@ -276,19 +356,22 @@ def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True, save_fito
     # Default CR rejection threshold is too low
     model.jump.rejection_threshold = 15
 
+    # Turn off IPC step until it is put in the right place
+    model.ipc.skip = True
+
     model.jump.save_results = True
     model.jump.output_dir = output_dir
     jump_output = os.path.join(output_dir, input_file_only.replace('uncal', 'jump'))
 
     # Check to see if the jump version of the requested file is already
     # present
-    run_jump =  not os.path.isfile(jump_output)
+    run_jump = not os.path.isfile(jump_output)
 
     if ramp_fit:
         model.ramp_fit.save_results = True
-        #model.save_results = True
+        # model.save_results = True
         model.output_dir = output_dir
-        #pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', 'rate'))
+        # pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', 'rate'))
         pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', '0_ramp_fit'))
         run_slope = not os.path.isfile(pipe_output)
         if save_fitopt:
@@ -309,7 +392,7 @@ def calwebb_detector1_save_jump(input_file, output_dir, ramp_fit=True, save_fito
     # Call the pipeline if any of the files at the requested calibration
     # states are not present in the output directory
     if run_jump or (ramp_fit and run_slope) or (save_fitopt and run_fitopt):
-        model.run(input_file)
+        model.run(datamodel)
     else:
         print(("Files with all requested calibration states for {} already present in "
                "output directory. Skipping pipeline call.".format(input_file)))

@@ -23,13 +23,14 @@ import pytest
 import numpy as np
 
 from jwql.utils import instrument_properties
-from jwql.utils.utils import get_config
 
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
+if not ON_GITHUB_ACTIONS:
+    from jwql.utils.utils import get_config
 
 
-@pytest.mark.skipif(ON_JENKINS,
-                    reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_amplifier_info():
     """Test that the correct number of amplifiers are found for a given
     file
@@ -77,7 +78,7 @@ def test_calc_frame_time():
     nrc_fullframe = instrument_properties.calc_frame_time('nircam', 'NRCA1_FULL', 2048, 2048, 4)
     nrc_160 = instrument_properties.calc_frame_time('nircam', 'NRCA1_SUB160', 160, 160, 1)
     nrs_fullframe = instrument_properties.calc_frame_time('niriss', 'NIS_CEN', 2048, 2048, 4)
-    #nrs_some_subarra = instrument_properies.calc_frame_time('niriss', '????', ??, ??, ?)
+    # nrs_some_subarra = instrument_properies.calc_frame_time('niriss', '????', ??, ??, ?)
 
     print('STILL NEED TO ADD FRAMETIME CALCS FOR MIRI AND NIRSPEC TO THE CALC_FRAME_TIME_FUNCTION')
     print('CONFIRM NIRCAMSUB160 TIME ON JDOX')

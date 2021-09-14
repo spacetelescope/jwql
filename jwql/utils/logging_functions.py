@@ -43,7 +43,7 @@ Dependencies
 ------------
 
     The user must have a configuration file named ``config.json``
-    placed in the ``utils`` directory and it must contain keys for
+    placed in the ``jwql`` directory and it must contain keys for
     ``log_dir`` and ``admin_account``.
 
 References
@@ -168,7 +168,7 @@ def make_log_file(module):
 
     # For production
     if user == admin_account and socket.gethostname()[0] == 'p':
-        log_file = os.path.join(log_path, 'prod', module, filename)
+        log_file = os.path.join(log_path, 'ops', module, filename)
 
     # For test
     elif user == admin_account and socket.gethostname()[0] == 't':

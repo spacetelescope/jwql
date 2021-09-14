@@ -26,11 +26,12 @@ import numpy as np
 from jwql.instrument_monitors import pipeline_tools
 from jwql.utils.utils import get_config
 
-# Determine if tests are being run on jenkins
-ON_JENKINS = '/home/jenkins' in os.path.expanduser('~')
+
+# Determine if tests are being run on github actions
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_completed_pipeline_steps():
     """Test that the list of completed pipeline steps for a file is
     correct
@@ -41,8 +42,7 @@ def test_completed_pipeline_steps():
         File to be checked
     """
 
-    filename = os.path.join(get_config()['filesystem'], 'jw00312',
-                            'jw00312002001_02102_00001_nrcb4_rateints.fits')
+    filename = os.path.join(get_config()['filesystem'], 'public', 'jw00312', 'jw00312002001', 'jw00312002001_02102_00001_nrcb4_rateints.fits')
     completed_steps = pipeline_tools.completed_pipeline_steps(filename)
     true_completed = OrderedDict([('group_scale', False),
                                   ('dq_init', True),
@@ -66,6 +66,7 @@ def test_completed_pipeline_steps():
     assert completed_steps == true_completed
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Drizzle import issue with python 3.8')
 def test_get_pipeline_steps():
     """Test that the proper pipeline steps are returned for an
     instrument
@@ -120,7 +121,7 @@ def test_get_pipeline_steps():
     assert miri_req_steps == miri_dict
 
 
-@pytest.mark.skipif(ON_JENKINS, reason='Requires access to central storage.')
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_image_stack():
     """Test stacking of slope images"""
 
@@ -137,6 +138,7 @@ def test_image_stack():
     assert exptimes == [[10.5], [10.5], [10.5]]
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Drizzle import issue with python 3.8')
 def test_steps_to_run():
     """Test that the dictionaries for steps required and steps completed
     are correctly combined to create a dictionary of pipeline steps to

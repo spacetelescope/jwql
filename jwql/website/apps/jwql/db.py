@@ -14,8 +14,8 @@ Authors
 Use
 ---
     This module can be used as such:
-
     ::
+
         from db import DatabaseConnection
         db_connect = DatabaseConnection()
         data = db_connect.get_filenames_for_instrument('NIRCam')
@@ -98,7 +98,6 @@ class DatabaseConnection:
         # Define the service name for the given instrument
         self.service = "Mast.Jwst.Filtered." + instrument
         print(self.service)
-
 
     def get_files_for_instrument(self, instrument):
         """Given an instrument, query the database for all filenames

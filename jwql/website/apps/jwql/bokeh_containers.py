@@ -34,6 +34,7 @@ FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
+
 def bad_pixel_monitor_tabs(instrument):
     """Creates the various tabs of the bad pixel monitor results page.
 
@@ -62,9 +63,9 @@ def bad_pixel_monitor_tabs(instrument):
         monitor_template.aperture_info = (instrument, aperture)
         templates_all_apertures[aperture] = monitor_template
 
-    #for reference - here are the bad pixel types
-    #badpix_types_from_flats = ['DEAD', 'LOW_QE', 'OPEN', 'ADJ_OPEN']
-    #badpix_types_from_darks = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
+    # for reference - here are the bad pixel types
+    # badpix_types_from_flats = ['DEAD', 'LOW_QE', 'OPEN', 'ADJ_OPEN']
+    # badpix_types_from_darks = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
 
     # We loop over detectors here, and create one tab per detector, rather
     # than one tab for each plot type, as is done with the dark monitor
@@ -103,6 +104,77 @@ def bad_pixel_monitor_tabs(instrument):
 
     # Build tabs
     tabs = Tabs(tabs=all_tabs)
+
+    # Return tab HTML and JavaScript to web app
+    script, div = components(tabs)
+
+    return div, script
+
+
+def bias_monitor_tabs(instrument):
+    """Creates the various tabs of the bias monitor results page.
+
+    Parameters
+    ----------
+    instrument : str
+        The JWST instrument of interest (e.g. ``nircam``).
+
+    Returns
+    -------
+    div : str
+        The HTML div to render bias monitor plots
+    script : str
+        The JS script to render bias monitor plots
+    """
+
+    # Make a separate tab for each aperture
+    tabs = []
+    for aperture in FULL_FRAME_APERTURES[instrument.upper()]:
+        monitor_template = monitor_pages.BiasMonitor()
+        monitor_template.input_parameters = (instrument, aperture)
+
+        # Add the mean bias vs time plots for each amp and odd/even columns
+        plots = []
+        for amp in ['1', '2', '3', '4']:
+            for kind in ['even', 'odd']:
+                bias_plot = monitor_template.refs['mean_bias_figure_amp{}_{}'.format(amp, kind)]
+                bias_plot.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
+                plots.append(bias_plot)
+
+        # Add the calibrated 0th group image
+        calibrated_image = monitor_template.refs['cal_image']
+        calibrated_image.sizing_mode = 'scale_width'
+        calibrated_image.margin = (0, 100, 0, 100)  # Add space around sides of figure
+        plots.append(calibrated_image)
+
+        # Add the calibrated 0th group histogram
+        if instrument == 'NIRISS':
+            calibrated_hist = monitor_template.refs['cal_hist']
+            calibrated_hist.sizing_mode = 'scale_width'
+            calibrated_hist.margin = (0, 190, 0, 190)
+            plots.append(calibrated_hist)
+
+        # Add the collapsed row/column plots
+        if instrument != 'NIRISS':
+            for direction in ['rows', 'columns']:
+                collapsed_plot = monitor_template.refs['collapsed_{}_figure'.format(direction)]
+                collapsed_plot.sizing_mode = 'scale_width'
+                plots.append(collapsed_plot)
+
+        # Put the mean bias plots on the top 2 rows, the calibrated image on the
+        # third row, and the remaining plots on the bottom row.
+        bias_layout = layout(
+            plots[0:8][::2],
+            plots[0:8][1::2],
+            plots[8:9],
+            plots[9:]
+        )
+        bias_layout.sizing_mode = 'scale_width'
+        bias_tab = Panel(child=bias_layout, title=aperture)
+        tabs.append(bias_tab)
+
+    # Build tabs
+    tabs = Tabs(tabs=tabs)
 
     # Return tab HTML and JavaScript to web app
     script, div = components(tabs)
@@ -239,32 +311,36 @@ def readnoise_monitor_tabs(instrument):
     # Make a separate tab for each aperture
     tabs = []
     for aperture in FULL_FRAME_APERTURES[instrument.upper()]:
+        monitor_template = monitor_pages.ReadnoiseMonitor()
+        monitor_template.input_parameters = (instrument, aperture)
 
-        # Make a separate plot for each amp
+        # Add the mean readnoise vs time plots for each amp
         plots = []
         for amp in ['1', '2', '3', '4']:
-            monitor_template = monitor_pages.ReadnoiseMonitor()
-            monitor_template.input_parameters = (instrument, aperture, amp)
-            readnoise_plot = monitor_template.refs['mean_readnoise_figure']
+            readnoise_plot = monitor_template.refs['mean_readnoise_figure_amp{}'.format(amp)]
             readnoise_plot.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
             plots.append(readnoise_plot)
 
         # Add the readnoise difference image
         readnoise_diff_image = monitor_template.refs['readnoise_diff_image']
-        readnoise_diff_image.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
+        readnoise_diff_image.sizing_mode = 'scale_width'
+        readnoise_diff_image.margin = (0, 100, 0, 100)  # Add space around sides of figure
         plots.append(readnoise_diff_image)
 
         # Add the readnoise difference histogram
         readnoise_diff_hist = monitor_template.refs['readnoise_diff_hist']
+        readnoise_diff_hist.sizing_mode = 'scale_width'
+        readnoise_diff_hist.margin = (0, 190, 0, 190)
         plots.append(readnoise_diff_hist)
 
-        # Put the mean readnoise plots on the top row, and the difference image and
-        # histogram on the second row.
+        # Put mean readnoise plots on the top row, difference image on the
+        # second row, and difference histogram on the bottom row.
         readnoise_layout = layout(
             plots[0:4],
-            plots[4:6],
+            plots[4:5],
+            plots[5:6]
         )
-        readnoise_layout.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
+        readnoise_layout.sizing_mode = 'scale_width'
         readnoise_tab = Panel(child=readnoise_layout, title=aperture)
         tabs.append(readnoise_tab)
 

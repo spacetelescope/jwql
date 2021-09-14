@@ -1,0 +1,28 @@
+{
+    "admin_account" : "",
+    "auth_mast" : "",
+    "client_id" : "",
+    "client_secret" : "",
+    "connection_string" : "",
+    "database" : {
+        "engine" : "",
+        "name" : "",
+        "user" : "",
+        "password" : "",
+        "host" : "",
+        "port" : ""
+    },
+    "jwql_dir" : "",
+    "jwql_version": "",
+    "server_type": "",
+    "log_dir" : "",
+    "mast_token" : "",
+    "outputs" : "",
+    "preview_image_filesystem" : "",
+    "filesystem" : "",
+    "setup_file" : "",
+    "test_data" : "",
+    "test_dir" : "",
+    "thumbnail_filesystem" : "",
+    "cores" : ""
+}
