@@ -81,7 +81,7 @@ function change_int(file_root, num_ints, method, direction = 'right') {
     var integration = Number(suffix[suffix.length - 1][5]);
     var suffix = suffix[suffix.length - 2];
     var program = file_root.slice(0,7);
-    
+
     // Find the total number of integrations for the current image
     var num_ints = num_ints.replace(/'/g, '"');
     var num_ints = JSON.parse(num_ints)[suffix];
@@ -432,7 +432,7 @@ function update_header_display(extension, num_extensions) {
  */
 function update_show_count(count, type) {
     content = 'Showing ' + count + '/' + count + ' ' + type;
-    content += '<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">';
+    content += '<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/science_products.html" target="_blank" style="color: black">';
     content += '<span class="help-tip mx-2">i</span></a>';
     $("#img_show_count")[0].innerHTML = content;
 };
