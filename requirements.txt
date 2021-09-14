@@ -1,5 +1,5 @@
 asdf==2.8.1
-astropy==4.2.1
+astropy==4.3.1
 astroquery==0.4.3
 authlib==0.15.4
 bokeh==2.3.3
@@ -19,14 +19,15 @@ matplotlib==3.4.2
 nodejs==10.13.0
 numpy==1.21.1
 numpydoc==1.1.0
-pandas==1.2.4
+pandas==1.3.2
 psycopg2==2.9.1
 pysiaf==0.11.0
 pytest==6.2.3
-pytest-cov==2.11.1
-scipy==1.6.2
+pytest-cov==2.12.1
+scipy==1.7.1
 sphinx==4.0.2
 sqlalchemy==1.4.22
+stdatamodels==0.2.3
 stsci_rtd_theme==0.0.2
 twine==3.3.0
 wtforms==2.3.3

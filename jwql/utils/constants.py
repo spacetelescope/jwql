@@ -252,7 +252,7 @@ MONITORS = {
     'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor'),
             ('Readnoise Monitor', '/fgs/readnoise_monitor')],
     'miri': [('Dark Current Monitor', '#'),
-             ('Data Trending', '/miri/miri_data_trending'),
+             ('Data Trending', '#'),
              ('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
              ('Cosmic Ray Monitor', '/miri/cosmic_ray_monitor'),
              ('Readnoise Monitor', '/miri/readnoise_monitor'),
@@ -272,12 +272,12 @@ MONITORS = {
                ('Readnoise Monitor', '/niriss/readnoise_monitor'),
                ('AMI Calibrator Monitor', '#'),
                ('TSO RMS Monitor', '#'),
-               ('Bias Monitor', '/niriss/bias_monitor')],
+               ('Bias Monitor', '#')],
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
                 ('Target Acquisition Monitor', '#'),
-                ('Data Trending', '/nirspec/nirspec_data_trending'),
+                ('Data Trending', '#'),
                 ('Detector Health Monitor', '#'),
                 ('Ref Pix Monitor', '#'),
                 ('Internal Lamp Monitor', '#'),
@@ -304,6 +304,14 @@ NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'S
 # Possible suffix types for AMI files
 NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami', 'psf-amiavg']
 
+# RAPID-style readout patterns for each instrument. Added so we can
+# differentiate in MAST searches for e.g. the dark current monitor
+RAPID_READPATTERNS = {'fgs': ['FGSRAPID'],
+                      'miri': ['FAST', 'SLOW'],
+                      'nircam': ['RAPID'],
+                      'niriss': ['NISRAPID'],
+                      'nirspec': ['NRSRAPID', 'NRSIRS2RAPID']}
+
 READPATT_PER_INSTRUMENT = {'fgs': [],
                            'miri': ['FAST', 'SLOW', 'FASTGRPAVG'],
                            'nircam': ['RAPID', 'SHALLOW2', 'BRIGHT2', 'MEDIUM2', 'SHALLOW4',
@@ -323,3 +331,10 @@ WFSC_SUFFIX_TYPES = ['wfscmb']
 FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
                     TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
                     NIRISS_AMI_SUFFIX_TYPES + WFSC_SUFFIX_TYPES
+
+# Instrument Documentation Links
+URL_DICT = {'fgs': 'https://jwst-docs.stsci.edu/jwst-observatory-hardware/fine-guidance-sensor',
+            'miri': 'https://jwst-docs.stsci.edu/mid-infrared-instrument',
+            'niriss': 'https://jwst-docs.stsci.edu/near-infrared-imager-and-slitless-spectrograph',
+            'nirspec': 'https://jwst-docs.stsci.edu/near-infrared-spectrograph',
+            'nircam': 'https://jwst-docs.stsci.edu/near-infrared-camera'}

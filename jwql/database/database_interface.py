@@ -77,6 +77,7 @@ from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
+from sqlalchemy.sql import text
 from sqlalchemy.types import ARRAY
 
 from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
@@ -388,6 +389,16 @@ def monitor_orm_factory(class_name):
     return type(class_name, (base,), data_dict)
 
 
+def set_read_permissions():
+    """Set read permissions for db tables"""
+
+    db_username = get_config()['database']['user']
+    db_username = '_'.join(db_username.split('_')[:-1])
+    db_account = '{}_read'.format(db_username)
+    command = 'GRANT SELECT ON ALL TABLES IN SCHEMA public TO {};'.format(db_account)
+    engine.execute(command)
+
+
 # Create tables from ORM factory
 NIRCamAnomaly = anomaly_orm_factory('nircam_anomaly')
 NIRISSAnomaly = anomaly_orm_factory('niriss_anomaly')
@@ -441,5 +452,4 @@ MIRICosmicRayQueryHistory = monitor_orm_factory('miri_cosmic_ray_query_history')
 MIRICosmicRayStats = monitor_orm_factory('miri_cosmic_ray_stats')
 
 if __name__ == '__main__':
-
     base.metadata.create_all(engine)
