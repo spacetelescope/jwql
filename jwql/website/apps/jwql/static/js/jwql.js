@@ -463,8 +463,6 @@ function update_sort_options(data) {
  */
 function update_thumbnail_array(data) {
 
-    console.log(data)
-
       // Add content to the thumbail array div
     for (var i = 0; i < Object.keys(data.file_data).length; i++) {
 
