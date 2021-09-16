@@ -906,42 +906,22 @@ def get_thumbnails_all_instruments(parameters):
                 params = {"columns": "*",
                           "filters": []}
         else:
-            if inst != "Nircam":
-                params = {"columns": "*",
-                        "filters": [{"paramName": "pps_aper",
-                                    "values": parameters['apertures'][inst.lower()]
-                                    },
-                                    {"paramName": "detector",
-                                    "values": parameters['detectors'][inst.lower()]
-                                    },
-                                    {"paramName": "filter",
-                                    "values": parameters['filters'][inst.lower()]
-                                    },
-                                    {"paramName": "exp_type",
-                                    "values": parameters['exposure_types'][inst.lower()]
-                                    },
-                                    {"paramName": "readpatt",
-                                    "values": parameters['read_patterns'][inst.lower()]
-                                    }
-                                    ]}
-            else:
-                params = {"columns": "*",
-                        "filters": [{"paramName": "apername",
-                                    "values": parameters['apertures'][inst.lower()]
-                                    },
-                                    {"paramName": "detector",
-                                    "values": parameters['detectors'][inst.lower()]
-                                    },
-                                    {"paramName": "filter",
-                                    "values": parameters['filters'][inst.lower()]
-                                    },
-                                    {"paramName": "exp_type",
-                                    "values": parameters['exposure_types'][inst.lower()]
-                                    },
-                                    {"paramName": "readpatt",
-                                    "values": parameters['read_patterns'][inst.lower()]
-                                    }
-                                    ]}
+            query_filters = []
+            if (parameters['apertures'][inst.lower()] != []):
+                if instrument != "Nircam":
+                    query_filters.append({"paramName": "pps_aper", "values": parameters['apertures'][inst.lower()]})
+                if instrument == "Nircam":
+                    query_filters.append({"paramName": "apername", "values": parameters['apertures'][inst.lower()]})
+            if (parameters['detectors'][inst.lower()] != []):
+                query_filters.append({"paramName": "detector", "values": parameters['detectors'][inst.lower()]})
+            if (parameters['filters'][inst.lower()] != []):
+                query_filters.append({"paramName": "filter", "values": parameters['filters'][inst.lower()]})
+            if (parameters['exposure_types'][inst.lower()] != []):
+                query_filters.append({"paramName": "exp_type", "values": parameters['exposure_types'][inst.lower()]})
+            if (parameters['read_patterns'][inst.lower()] != []):
+                query_filters.append({"paramName": "readpatt", "values": parameters['read_patterns'][inst.lower()]})
+            params = {"columns": "*",
+                      "filters": query_filters}
 
         response = Mast.service_request_async(service, params)
         results = response[0].json()['data']
