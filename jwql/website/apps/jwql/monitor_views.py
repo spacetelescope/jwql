@@ -103,7 +103,7 @@ def bias_monitor(request, inst):
     return render(request, template, context)
 
 
-def cosmic_ray_monitor(request, inst='MIRI'):
+def cosmic_ray_monitor(request, inst):
     """Generate the cosmic ray monitor page for a given instrument
 
     Parameters
@@ -119,7 +119,7 @@ def cosmic_ray_monitor(request, inst='MIRI'):
     """
 
     # Ensure the instrument is correctly capitalized
-    inst = 'MIRI' #other instruments not currently supported
+    inst = inst.upper()
 
     tabs_components = bokeh_containers.cosmic_ray_monitor_tabs(inst)
 

@@ -210,6 +210,7 @@ GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
     'dark_monitor': ['<instrument>_dark_dark_current', '<instrument>_dark_pixel_stats', '<instrument>_dark_query_history'],
     'bad_pixel_monitor': ['<instrument>_bad_pixel_stats', '<instrument>_bad_pixel_query_history']}
+    'cosmic_ray_monitor': ['<instrument>_cosmic_ray_stats', '<instrument>_cosmic_ray_query_history']}
 
 INSTRUMENT_SERVICE_MATCH = {
     'FGS': 'Mast.Jwst.Filtered.Fgs',
@@ -268,6 +269,7 @@ MONITORS = {
                ('Mean Dark Current Rate Monitor', '/nircam/dark_monitor'),
                ('Bad Pixel Monitor', '/nircam/bad_pixel_monitor'),
                ('Photometric Stability Monitor', '#')],
+               ('Cosmic Ray Monitor', '/nircam/cosmic_ray_monitor'),
     'niriss': [('Bad Pixel Monitor', '/niriss/bad_pixel_monitor'),
                ('Readnoise Monitor', '/niriss/readnoise_monitor'),
                ('AMI Calibrator Monitor', '#'),

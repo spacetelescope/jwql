@@ -181,7 +181,95 @@ def bias_monitor_tabs(instrument):
 
     return div, script
 
+def cosmic_ray_monitor_tabs(instrument):
+    """Creates the various tabs of the cosmic monitor results page.
 
+    Parameters
+    ----------
+    instrument : str
+        The JWST instrument of interest (e.g. ``nircam``).
+
+    Returns
+    -------
+    div : str
+        The HTML div to render cosmic ray monitor plots
+    script : str
+        The JS script to render cosmic ray monitor plots
+    """
+
+    full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
+
+    templates_all_apertures = {}
+    for aperture in full_apertures:
+
+        # Start with default values for instrument and aperture because
+        # BokehTemplate's __init__ method does not allow input arguments
+        monitor_template = monitor_pages.CosmicRayMonitor()
+
+        # Set instrument and monitor using CosmicRayMonitor's setters
+        monitor_template.aperture_info = (instrument, aperture)
+        templates_all_apertures[aperture] = monitor_template
+
+    # Histogram tab
+    histograms_all_apertures = []
+    for aperture_name, template in templates_all_apertures.items():
+        histogram = template.refs["cosmic_ray_histogram"]
+        histogram.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+        histograms_all_apertures.append(histogram)
+
+    if instrument == 'NIRCam':
+        a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = histograms_all_apertures
+        histogram_layout = layout(
+            [a2, a4, b3, b1],
+            [a1, a3, b4, b2],
+            [a5, b5]
+        )
+
+    elif instrument in ['MIRI']:
+        single_aperture = histograms_all_apertures[0]
+        histogram_layout = layout(
+            [single_aperture]
+        )
+
+    histogram_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+    histogram_tab = Panel(child=histogram_layout, title="Histogram")
+
+    # Cosmic Ray v. time tab
+    lines_all_apertures = []
+    for aperture_name, template in templates_all_apertures.items():
+        line = template.refs["cosmic_ray_history_figure"]
+        line.title.align = "center"
+        line.title.text_font_size = "20px"
+        line.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+        lines_all_apertures.append(line)
+
+    if instrument == 'NIRCam':
+        a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = lines_all_apertures
+        line_layout = layout(
+            [a2, a4, b3, b1],
+            [a1, a3, b4, b2],
+            [a5, b5]
+        )
+
+    elif instrument in ['MIRI']:
+        single_aperture = lines_all_apertures[0]
+        line_layout = layout(
+            [single_aperture]
+        )
+
+
+    line_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+    line_tab = Panel(child=line_layout, title="Trending")
+
+    # Build tabs
+    tabs = Tabs(tabs=[histogram_tab, line_tab])
+
+    # Return tab HTML and JavaScript to web app
+    script, div = components(tabs)
+
+    return div, script
+    
+    
 def dark_monitor_tabs(instrument):
     """Creates the various tabs of the dark monitor results page.
 

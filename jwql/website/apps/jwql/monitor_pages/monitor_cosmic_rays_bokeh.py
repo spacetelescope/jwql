@@ -25,6 +25,7 @@ import numpy as np
 from jwql.bokeh_templating import BokehTemplate
 from jwql.database.database_interface import session
 from jwql.database.database_interface import MIRICosmicRayQueryHistory, MIRICosmicRayStats
+from jwql.database.database_interface import NIRCamCosmicRayQueryHistory, NIRCamCosmicRayStats
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config, filesystem_path
 
@@ -140,7 +141,7 @@ class CosmicRayMonitor(BokehTemplate):
         self.refs['cosmic_ray_y_range'].start = min(self.count)
         self.refs['cosmic_ray_y_range'].end = max(self.count)
 
-        self.refs['cosmic_ray_history_figure'].title.text = 'MIRIM_FULL Cosmic Ray History'
+        self.refs['cosmic_ray_history_figure'].title.text = '{} Cosmic Ray History'.format(self.aperture)
         self.refs['cosmic_ray_history_figure'].title.align = "center"
         self.refs['cosmic_ray_history_figure'].title.text_font_size = "20px"
 
@@ -154,7 +155,7 @@ class CosmicRayMonitor(BokehTemplate):
         self.refs['hist_y_range'].start = 0
         self.refs['hist_y_range'].end = max(mags)
 
-        self.refs['cosmic_ray_histogram'].title.text = 'MIRIM_FULL Cosmic Ray Intensities'
+        self.refs['cosmic_ray_histogram'].title.text = '{}} Cosmic Ray Intensities'.format(self.aperture)
         self.refs['cosmic_ray_histogram'].title.align = "center"
         self.refs['cosmic_ray_histogram'].title.text_font_size = "20px"
 
