@@ -486,7 +486,7 @@ function update_thumbnail_array(data) {
         content += 'Observation: ' + filename_dict.observation + '<br>';
         content += 'Visit: ' + filename_dict.visit + '<br>';
         content += 'Detector: ' + filename_dict.detector + '<br>';
-        content += 'Exp_Start: ' + file.expstart.toFixed(2) + '<br>';
+        content += 'Exp_Start: ' + file.expstart_iso + '<br>';
         content += '</div></a></div>';
 
         // Add the content to the div
