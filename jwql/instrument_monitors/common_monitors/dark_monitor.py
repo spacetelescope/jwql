@@ -76,13 +76,36 @@ from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelSt
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils import calculations, instrument_properties
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, RAPID_READPATTERNS
+from jwql.utils.constants import ASIC_TEMPLATES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, \
+                                 RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
+
+
+def exclude_asic_tuning(mast_results):
+    """Given a list of file information from a MAST query, filter out
+    files taken during ASIC tuning, which will have bad data in terms
+    of results for the instrument monitors.
+
+    Parameters
+    ----------
+    mast_results : list
+        List of dictionaries containing a MAST query result
+
+    Returns
+    -------
+    filtered_results : list
+        Modified list with ASIC tuning entries removed
+    """
+    filtered_results = []
+    for mast_result in mast_results:
+        if mast_result['template'] not in ASIC_TEMPLATES:
+            filtered_results.append(mast_result)
+    return filtered_results
 
 
 def mast_query_darks(instrument, aperture, start_date, end_date, readpatt=None):
@@ -727,7 +750,7 @@ class Dark():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in JWST_INSTRUMENT_NAMES:
+        for instrument in ['nircam']: #JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -769,6 +792,10 @@ class Dark():
                     # Query MAST using the aperture and the time of the
                     # most recent previous search as the starting time
                     new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end, readpatt=self.readpatt)
+
+                    # Exclude ASIC tuning data
+                    new_extries = exclude_asic_tuning(new_entries)
+
                     logging.info('\tAperture: {}, Readpattern: {}, new entries: {}'.format(self.aperture, self.readpatt,
                                                                                            len(new_entries)))
 
