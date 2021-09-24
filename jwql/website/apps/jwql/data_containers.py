@@ -567,7 +567,7 @@ def get_header_info(filename):
     header_info = {}
 
     # Open the file
-    fits_filepath = filesystem_path(filename, search='*_rate.fits')
+    fits_filepath = filesystem_path(filename)
     hdulist = fits.open(fits_filepath)
 
     # Extract header information from file
