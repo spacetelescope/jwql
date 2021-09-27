@@ -1028,12 +1028,12 @@ class BadPixels():
                     new_flat_entries = exclude_asic_tuning(new_flat_entries)
                     len_no_asic = len(new_flat_entries)
                     num_asic = len_new_flats - len_no_asic
-                    logging.info("Filtering out ASIC tuning files removed {} flat files.".format(num_asic))
+                    logging.info("\tFiltering out ASIC tuning files removed {} flat files.".format(num_asic))
 
                     new_flat_entries = self.filter_query_results(new_flat_entries, datatype='flat')
                     apcheck_flat_entries = pipeline_tools.aperture_size_check(new_flat_entries, instrument, aperture)
                     lost_to_bad_metadata = len(new_flat_entries) - len(apcheck_flat_entries)
-                    logging.info('{} flat field files ignored due to inconsistency in array size and metadata.'.format(lost_to_bad_metadata))
+                    logging.info('\t{} flat field files ignored due to inconsistency in array size and metadata.'.format(lost_to_bad_metadata))
                     flat_uncal_files = locate_uncal_files(apcheck_flat_entries)
                     flat_uncal_files, run_flats = check_for_sufficient_files(flat_uncal_files, instrument, aperture, flat_file_count_threshold, 'flats')
                     flat_rate_files, flat_rate_files_to_copy = locate_rate_files(flat_uncal_files)
@@ -1047,12 +1047,12 @@ class BadPixels():
                     new_dark_entries = exclude_asic_tuning(new_dark_entries)
                     len_no_asic = len(new_dark_entries)
                     num_asic = len_new_darks - len_no_asic
-                    logging.info("Filtering out ASIC tuning files removed {} dark files.".format(num_asic))
+                    logging.info("\tFiltering out ASIC tuning files removed {} dark files.".format(num_asic))
 
                     new_dark_entries = self.filter_query_results(new_dark_entries, datatype='dark')
                     apcheck_dark_entries = pipeline_tools.aperture_size_check(new_dark_entries, instrument, aperture)
                     lost_to_bad_metadata = len(new_dark_entries) - len(apcheck_dark_entries)
-                    logging.info('{} dark files ignored due to inconsistency in array size and metadata.'.format(lost_to_bad_metadata))
+                    logging.info('\t{} dark files ignored due to inconsistency in array size and metadata.'.format(lost_to_bad_metadata))
                     dark_uncal_files = locate_uncal_files(apcheck_dark_entries)
                     dark_uncal_files, run_darks = check_for_sufficient_files(dark_uncal_files, instrument, aperture, dark_file_count_threshold, 'darks')
                     dark_rate_files, dark_rate_files_to_copy = locate_rate_files(dark_uncal_files)
