@@ -99,6 +99,7 @@ from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPi
 from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors import pipeline_tools
+from jwql.instrument_monitors.common_monitors.dark_monitor import exclude_asic_tuning
 from jwql.utils import crds_tools, instrument_properties
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import FLAT_EXP_TYPES, DARK_EXP_TYPES
@@ -1022,6 +1023,9 @@ class BadPixels():
                 # lists to align.
 
                 if new_flat_entries:
+                    # Exclude ASIC tuning data
+                    new_flat_entries = exclude_asic_tuning(new_flat_entries)
+
                     new_flat_entries = self.filter_query_results(new_flat_entries, datatype='flat')
                     apcheck_flat_entries = pipeline_tools.aperture_size_check(new_flat_entries, instrument, aperture)
                     lost_to_bad_metadata = len(new_flat_entries) - len(apcheck_flat_entries)
@@ -1034,6 +1038,9 @@ class BadPixels():
                     flat_uncal_files, flat_rate_files, flat_rate_files_to_copy = None, None, None
 
                 if new_dark_entries:
+                    # Exclude ASIC tuning data
+                    new_dark_entries = exclude_asic_tuning(new_dark_entries)
+
                     new_dark_entries = self.filter_query_results(new_dark_entries, datatype='dark')
                     apcheck_dark_entries = pipeline_tools.aperture_size_check(new_dark_entries, instrument, aperture)
                     lost_to_bad_metadata = len(new_dark_entries) - len(apcheck_dark_entries)

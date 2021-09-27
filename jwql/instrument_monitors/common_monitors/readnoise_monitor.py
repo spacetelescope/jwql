@@ -56,7 +56,7 @@ from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISS
 from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats
 from jwql.database.database_interface import session
 from jwql.instrument_monitors import pipeline_tools
-from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
+from jwql.instrument_monitors.common_monitors.dark_monitor import exclude_asic_tuning, mast_query_darks
 from jwql.utils import instrument_properties
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
@@ -554,6 +554,10 @@ class Readnoise():
                 # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
                 new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
+
+                # Exclude ASIC tuning data
+                new_entries = exclude_asic_tuning(new_entries)
+
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
                 # Set up a directory to store the data for this aperture

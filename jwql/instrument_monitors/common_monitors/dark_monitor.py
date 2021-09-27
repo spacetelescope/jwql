@@ -750,7 +750,7 @@ class Dark():
         self.query_end = Time.now().mjd
 
         # Loop over all instruments
-        for instrument in ['nircam']: #JWST_INSTRUMENT_NAMES:
+        for instrument in JWST_INSTRUMENT_NAMES:
             self.instrument = instrument
 
             # Identify which database tables to use
@@ -794,7 +794,7 @@ class Dark():
                     new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end, readpatt=self.readpatt)
 
                     # Exclude ASIC tuning data
-                    new_extries = exclude_asic_tuning(new_entries)
+                    new_entries = exclude_asic_tuning(new_entries)
 
                     logging.info('\tAperture: {}, Readpattern: {}, new entries: {}'.format(self.aperture, self.readpatt,
                                                                                            len(new_entries)))
