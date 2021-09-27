@@ -1024,7 +1024,11 @@ class BadPixels():
 
                 if new_flat_entries:
                     # Exclude ASIC tuning data
+                    len_new_flats = len(new_flat_entries)
                     new_flat_entries = exclude_asic_tuning(new_flat_entries)
+                    len_no_asic = len(new_flat_entries)
+                    num_asic = len_new_flats - len_no_asic
+                    logging.info("Filtering out ASIC tuning files removed {} flat files.".format(num_asic))
 
                     new_flat_entries = self.filter_query_results(new_flat_entries, datatype='flat')
                     apcheck_flat_entries = pipeline_tools.aperture_size_check(new_flat_entries, instrument, aperture)
@@ -1039,7 +1043,11 @@ class BadPixels():
 
                 if new_dark_entries:
                     # Exclude ASIC tuning data
+                    len_new_darks = len(new_dark_entries)
                     new_dark_entries = exclude_asic_tuning(new_dark_entries)
+                    len_no_asic = len(new_dark_entries)
+                    num_asic = len_new_darks - len_no_asic
+                    logging.info("Filtering out ASIC tuning files removed {} dark files.".format(num_asic))
 
                     new_dark_entries = self.filter_query_results(new_dark_entries, datatype='dark')
                     apcheck_dark_entries = pipeline_tools.aperture_size_check(new_dark_entries, instrument, aperture)

@@ -468,7 +468,11 @@ class Bias():
                 new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
 
                 # Exclude ASIC tuning data
+                len_new_darks = len(new_entries)
                 new_entries = exclude_asic_tuning(new_entries)
+                len_no_asic = len(new_entries)
+                num_asic = len_new_darks - len_no_asic
+                logging.info("Filtering out ASIC tuning files removed {} dark files.".format(num_asic))
 
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
