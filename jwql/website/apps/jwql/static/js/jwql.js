@@ -432,7 +432,7 @@ function update_header_display(extension, num_extensions) {
  */
 function update_show_count(count, type) {
     content = 'Showing ' + count + '/' + count + ' ' + type;
-    content += '<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">';
+    content += '<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/science_products.html" target="_blank" style="color: black">';
     content += '<span class="help-tip mx-2">i</span></a>';
     $("#img_show_count")[0].innerHTML = content;
 };
@@ -486,7 +486,7 @@ function update_thumbnail_array(data) {
         content += 'Observation: ' + filename_dict.observation + '<br>';
         content += 'Visit: ' + filename_dict.visit + '<br>';
         content += 'Detector: ' + filename_dict.detector + '<br>';
-        content += 'Exp_Start: ' + file.expstart.toFixed(2) + '<br>';
+        content += 'Exp_Start: ' + file.expstart_iso + '<br>';
         content += '</div></a></div>';
 
         // Add the content to the div
