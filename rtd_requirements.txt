@@ -1,4 +1,5 @@
+django==3.1.7
+jwst
 pygments==2.9.0
 pytest==6.2.4
 git+https://github.com/spacetelescope/jwst_reffiles
-git+https://github.com/spacetelescope/jwst@stable

@@ -14,8 +14,8 @@ Authors
 Use
 ---
     This module can be used as such:
-
     ::
+
         from db import DatabaseConnection
         db_connect = DatabaseConnection()
         data = db_connect.get_filenames_for_instrument('NIRCam')

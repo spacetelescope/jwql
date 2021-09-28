@@ -55,8 +55,9 @@ from jwql.instrument_monitors.common_monitors.dark_monitor import exclude_asic_t
 from jwql.utils import instrument_properties
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
+from jwql.utils.monitor_utils import update_monitor_table
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, initialize_instrument_monitor, update_monitor_table
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, initialize_instrument_monitor
 
 
 class Bias():

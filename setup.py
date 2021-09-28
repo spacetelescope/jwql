@@ -39,6 +39,7 @@ REQUIRES = [
     'scipy',
     'sphinx',
     'sqlalchemy',
+    'stdatamodels',
     'stsci_rtd_theme',
     'twine',
     'wtforms'

@@ -2,6 +2,12 @@
 utils
 *****
 
+anomaly_query_config.py
+-----------------------
+.. automodule:: jwql.utils.anomaly_query_config
+    :members:
+    :undoc-members:
+
 calculations.py
 ---------------
 .. automodule:: jwql.utils.calculations
@@ -11,6 +17,18 @@ calculations.py
 constants.py
 ------------
 .. automodule:: jwql.utils.constants
+    :members:
+    :undoc-members:
+
+crds_tools.py
+-------------
+.. automodule:: jwql.utils.crds_tools
+    :members:
+    :undoc-members:
+
+credentials.py
+--------------
+.. automodule:: jwql.utils.credentials
     :members:
     :undoc-members:
 
@@ -26,9 +44,27 @@ logging_functions.py
     :members:
     :undoc-members:
 
+mast_utils.py
+-------------
+.. automodule:: jwql.utils.mast_utils
+    :members:
+    :undoc-members:
+
 monitor_template.py
 -------------------
 .. automodule:: jwql.utils.monitor_template
+    :members:
+    :undoc-members:
+
+monitor_utils.py
+----------------
+.. automodule:: jwql.utils.monitor_utils
+    :members:
+    :undoc-members:
+
+organize_filesystem.py
+----------------------
+.. automodule:: jwql.utils.organize_filesystem
     :members:
     :undoc-members:
 

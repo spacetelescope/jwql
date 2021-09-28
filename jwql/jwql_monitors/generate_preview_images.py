@@ -38,7 +38,8 @@ from jwql.utils import permissions
 from jwql.utils.constants import NIRCAM_LONGWAVE_DETECTORS, NIRCAM_SHORTWAVE_DETECTORS
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.preview_image import PreviewImage
-from jwql.utils.utils import get_config, filename_parser
+from jwql.utils.utils import get_config, filename_parser, initialize_instrument_monitor
+from jwql.utils.monitor_utils import update_monitor_table
 
 # Size of NIRCam inter- and intra-module chip gaps
 SW_MOD_GAP = 1387  # pixels = int(43 arcsec / 0.031 arcsec/pixel)
@@ -723,6 +724,7 @@ def process_program(program):
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    configure_logging(module)
+    start_time, log_file = initialize_instrument_monitor(module)
 
     generate_preview_images()
+    update_monitor_table(module, start_time, log_file)
