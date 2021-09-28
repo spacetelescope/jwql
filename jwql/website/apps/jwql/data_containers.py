@@ -41,7 +41,7 @@ from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_instrument_from_filename
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, filename_parser
 from jwql.utils.constants import MONITORS
 from jwql.utils.constants import INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
@@ -947,7 +947,7 @@ def get_thumbnails_all_instruments(parameters):
             components = thumbnail.split('_')
             rootname = ''.join((components[0], '_', components[1], '_', components[2], '_', components[3]))
             try:
-                instrument = get_instrument_from_filename(thumbnail)
+                instrument = filename_parser(thumbnail)['instrument']
                 thumbnail_anomalies = get_current_flagged_anomalies(rootname, instrument)
                 if thumbnail_anomalies:
                     for anomaly in anomalies[instrument.lower()]:
@@ -1230,7 +1230,7 @@ def thumbnails_query_ajax(rootnames):
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
         try:
-            data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[get_instrument_from_filename(rootname)]
+            data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[filename_parser(rootname)['instrument']]
         except KeyError:
             data_dict['file_data'][rootname]['inst'] = "MIRI"
             print("Warning: assuming instrument is MIRI")
