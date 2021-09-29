@@ -83,7 +83,7 @@ def anomaly_query(request):
     if request.method == 'POST':
         if form.is_valid():
             query_configs = {}
-            for instrument in ['miri', 'nirspec', 'niriss', 'nircam']:
+            for instrument in ['miri', 'nirspec', 'niriss', 'nircam', 'fgs']:
                 query_configs[instrument] = {}
                 query_configs[instrument]['filters'] = [query_unformat(i) for i in form.cleaned_data['{}_filt'.format(instrument)]]
                 query_configs[instrument]['apertures'] = [query_unformat(i) for i in form.cleaned_data['{}_aper'.format(instrument)]]
@@ -269,7 +269,7 @@ def archived_proposals_ajax(request, user, inst):
 
     Returns
     -------
-    HttpResponse object
+    JsonResponse object
         Outgoing response sent to the webpage
     """
     # Ensure the instrument is correctly capitalized
@@ -355,7 +355,7 @@ def archive_thumbnails_ajax(request, user, inst, proposal):
 
     Returns
     -------
-    HttpResponse object
+    JsonResponse object
         Outgoing response sent to the webpage
     """
     # Ensure the instrument is correctly capitalized
@@ -382,7 +382,7 @@ def archive_thumbnails_query_ajax(request, user):
 
     Returns
     -------
-    HttpResponse object
+    JsonResponse object
         Outgoing response sent to the webpage
     """
 
@@ -392,9 +392,14 @@ def archive_thumbnails_query_ajax(request, user):
         instrument = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
         instruments_list.append(instrument)
 
-    rootnames = anomaly_query_config.THUMBNAILS
+    parameters = anomaly_query_config.PARAMETERS
 
-    data = thumbnails_query_ajax(rootnames, instruments_list)
+    # when parameters only contains nirspec as instrument, thumbnails still end up being all niriss data
+    thumbnails = get_thumbnails_all_instruments(parameters)
+
+    anomaly_query_config.THUMBNAILS = thumbnails
+
+    data = thumbnails_query_ajax(thumbnails)
 
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
@@ -667,27 +672,11 @@ def query_submit(request):
     parameters['read_patterns'] = anomaly_query_config.READPATTS_CHOSEN
     parameters['gratings'] = anomaly_query_config.GRATINGS_CHOSEN
     parameters['anomalies'] = anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
-    thumbnails = get_thumbnails_all_instruments(parameters)
-    anomaly_query_config.THUMBNAILS = thumbnails
 
-    # get information about thumbnails for thumbnail viewer
-    proposal_info = get_proposal_info(thumbnails)
+    anomaly_query_config.PARAMETERS = parameters
 
     context = {'inst': '',
-               'anomalies_chosen_from_current_anomalies': anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
-               'apertures_chosen': anomaly_query_config.APERTURES_CHOSEN,
-               'filters_chosen': anomaly_query_config.FILTERS_CHOSEN,
-               'inst_list_chosen': anomaly_query_config.INSTRUMENTS_CHOSEN,
-               'detectors_chosen': anomaly_query_config.DETECTORS_CHOSEN,
-               'thumbnails': thumbnails,
-               'base_url': get_base_url(),
-               'rootnames': thumbnails,
-               'thumbnail_data': {'inst': "Queried Anomalies",
-                                  'all_filenames': thumbnails,
-                                  'num_proposals': proposal_info['num_proposals'],
-                                  'thumbnails': {'proposals': proposal_info['proposals'],
-                                                 'thumbnail_paths': proposal_info['thumbnail_paths'],
-                                                 'num_files': proposal_info['num_files']}}
+               'base_url': get_base_url()
                }
 
     return render(request, template, context)
