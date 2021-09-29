@@ -571,7 +571,7 @@ def get_header_info(filename):
     header_info = {}
 
     # Open the file
-    fits_filepath = filesystem_path(filename)
+    fits_filepath = filesystem_path(filename, search='*_rate.fits')
     hdulist = fits.open(fits_filepath)
 
     # Extract header information from file
@@ -602,27 +602,12 @@ def get_header_info(filename):
 
     # Build tables
     for ext in header_info:
-        #table = Table([header_info[ext]['keywords'], header_info[ext]['values']], names=('Key', 'Value'))
-
-        # Better use of temporary files
-        #with tempfile.TemporaryFile(mode='r+') as f:
-        #    table.write(f, format='jsviewer', jskwargs={'display_length': 20})
-        #    f.seek(0)
-        #    header_info[ext]['table'] = f.read()
-
-
-
-
-        # Try the new table viewer
         data_dict = {}
         data_dict['Keyword'] = header_info[ext]['keywords']
         data_dict['Value'] = header_info[ext]['values']
         header_info[ext]['table'] = pd.DataFrame(data_dict)
         header_info[ext]['table_rows'] = header_info[ext]['table'].values
         header_info[ext]['table_columns'] = header_info[ext]['table'].columns.values
-
-
-
 
     return header_info
 
@@ -1170,11 +1155,12 @@ def thumbnails_ajax(inst, proposal=None):
         data_dict['file_data'][rootname] = {}
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
+        data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for filename in available_files]
         try:
             data_dict['file_data'][rootname]['expstart'] = get_expstart(inst, rootname)
             data_dict['file_data'][rootname]['expstart_iso'] = Time(data_dict['file_data'][rootname]['expstart'], format='mjd').iso.split('.')[0]
         except:
-            print("issue with get_expstart... for {}".format(rootname))
+            print("issue with get_expstart for {}".format(rootname))
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
