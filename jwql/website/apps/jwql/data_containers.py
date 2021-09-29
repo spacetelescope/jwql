@@ -1155,9 +1155,9 @@ def thumbnails_ajax(inst, proposal=None):
         data_dict['file_data'][rootname]['available_files'] = available_files
         try:
             data_dict['file_data'][rootname]['expstart'] = get_expstart(inst, rootname)
+            data_dict['file_data'][rootname]['expstart_iso'] = Time(data_dict['file_data'][rootname]['expstart'], format='mjd').iso.split('.')[0]
         except:
             print("issue with get_expstart... for {}".format(rootname))
-        data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for filename in available_files]
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)

@@ -1,3 +1,4 @@
+django==3.1.7
 jwst
 pygments==2.9.0
 pytest==6.2.4
