@@ -576,12 +576,13 @@ def get_header_info(filename):
 
     # Extract header information from file
     for ext in range(0, len(hdulist)):
+    #for ext in range(0, 1):
 
         # Initialize dictionary to store header information for particular extension
         header_info[ext] = {}
 
         # Get header
-        header = fits.getheader(fits_filepath, ext=ext)
+        header = hdulist[ext].header
 
         # Determine the extension name
         if ext == 0:
@@ -601,11 +602,12 @@ def get_header_info(filename):
 
     # Build tables
     for ext in header_info:
-        table = Table([header_info[ext]['keywords'], header_info[ext]['values']], names=('Key', 'Value'))
-        temp_path_for_html = os.path.join(tempfile.mkdtemp(), '{}_table.html'.format(header_info[ext]['EXTNAME']))
-        with open(temp_path_for_html, 'w') as f:
-            table.write(f, format='jsviewer', jskwargs={'display_length': 20})
-        header_info[ext]['table'] = open(temp_path_for_html, 'r').read()
+        data_dict = {}
+        data_dict['Keyword'] = header_info[ext]['keywords']
+        data_dict['Value'] = header_info[ext]['values']
+        header_info[ext]['table'] = pd.DataFrame(data_dict)
+        header_info[ext]['table_rows'] = header_info[ext]['table'].values
+        header_info[ext]['table_columns'] = header_info[ext]['table'].columns.values
 
     return header_info
 
@@ -1153,11 +1155,12 @@ def thumbnails_ajax(inst, proposal=None):
         data_dict['file_data'][rootname] = {}
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
+        data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for filename in available_files]
         try:
             data_dict['file_data'][rootname]['expstart'] = get_expstart(inst, rootname)
             data_dict['file_data'][rootname]['expstart_iso'] = Time(data_dict['file_data'][rootname]['expstart'], format='mjd').iso.split('.')[0]
         except:
-            print("issue with get_expstart... for {}".format(rootname))
+            print("issue with get_expstart for {}".format(rootname))
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
