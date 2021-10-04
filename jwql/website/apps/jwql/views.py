@@ -69,7 +69,6 @@ from .data_containers import thumbnails_query_ajax
 from .forms import InstrumentAnomalySubmitForm
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
-from .oauth import auth_info, auth_required
 
 
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
@@ -229,8 +228,7 @@ def api_landing(request):
     return render(request, template, context)
 
 
-@auth_required
-def archived_proposals(request, user, inst):
+def archived_proposals(request, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -256,8 +254,7 @@ def archived_proposals(request, user, inst):
     return render(request, template, context)
 
 
-@auth_required
-def archived_proposals_ajax(request, user, inst):
+def archived_proposals_ajax(request, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -309,8 +306,7 @@ def archived_proposals_ajax(request, user, inst):
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-@auth_required
-def archive_thumbnails(request, user, inst, proposal):
+def archive_thumbnails(request, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -339,8 +335,7 @@ def archive_thumbnails(request, user, inst, proposal):
     return render(request, template, context)
 
 
-@auth_required
-def archive_thumbnails_ajax(request, user, inst, proposal):
+def archive_thumbnails_ajax(request, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -366,8 +361,7 @@ def archive_thumbnails_ajax(request, user, inst, proposal):
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
-@auth_required
-def archive_thumbnails_query_ajax(request, user):
+def archive_thumbnails_query_ajax(request):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -444,16 +438,13 @@ def dashboard(request):
     return render(request, template, context)
 
 
-@auth_info
-def engineering_database(request, user):
+def engineering_database(request):
     """Generate the EDB page.
 
     Parameters
     ----------
     request : HttpRequest object
         Incoming request from the webpage
-    user : dict
-        A dictionary of user credentials.
 
     Returns
     -------
@@ -507,8 +498,6 @@ def home(request):
     ----------
     request : HttpRequest object
         Incoming request from the webpage
-    user : dict
-        A dictionary of user credentials.
 
     Returns
     -------
@@ -732,16 +721,13 @@ def view_header(request, inst, filename):
     return render(request, template, context)
 
 
-@auth_required
-def view_image(request, user, inst, file_root, rewrite=False):
+def view_image(request, inst, file_root, rewrite=False):
     """Generate the image view page
 
     Parameters
     ----------
     request : HttpRequest object
         Incoming request from the webpage
-    user : dict
-        A dictionary of user credentials.
     inst : str
         Name of JWST instrument
     file_root : str
@@ -767,17 +753,11 @@ def view_image(request, user, inst, file_root, rewrite=False):
     # Create a form instance
     form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
 
-    # If user is running the web app locally and has not authenticated,
-    # then replace ezid with 'dev'
-    if '127.0.0.1' in get_base_url():
-        if user['ezid'] is None:
-            user['ezid'] = 'dev'
-
     # If this is a POST request, process the form data
     if request.method == 'POST':
         anomaly_choices = dict(request.POST)['anomaly_choices']
         if form.is_valid():
-            form.update_anomaly_table(file_root, user['ezid'], anomaly_choices)
+            form.update_anomaly_table(file_root, 'unknown', anomaly_choices)
 
     # Build the context
     context = {'inst': inst,
