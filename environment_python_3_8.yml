@@ -2,13 +2,13 @@ channels:
 - defaults
 dependencies:
 - astropy=4.3.1
-- bokeh=2.4.0
+- bokeh=2.3.3
 - codecov=2.1.11
 - cryptography=3.4.7
 - django=3.2.5
 - flake8=3.9.2
 - inflection=0.5.1
-- ipython=7.28.0
+- ipython=7.27.0
 - jinja2=3.0.1
 - jsonschema=3.2.0
 - matplotlib=3.4.2
@@ -19,15 +19,15 @@ dependencies:
 - pip=21.0.1
 - postgresql=12.2
 - psycopg2=2.8.6
-- pytest=6.2.5
+- pytest=6.2.4
 - pytest-cov=2.12.1
 - python=3.8.5
 - pyyaml=5.4.1
 - scipy=1.7.1
 - setuptools=52.0.0
 - sphinx=4.2.0
-- sqlalchemy=1.4.25
-- twine=3.4.2
+- sqlalchemy=1.4.22
+- twine=3.4.1
 - wtforms=2.3.3
 - pip:
   - asdf==2.8.1
