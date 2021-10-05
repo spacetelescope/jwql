@@ -202,8 +202,7 @@ class InstrumentAnomalySubmitForm(forms.Form):
             The rootname of the image to flag (e.g.
             ``jw86600008001_02101_00001_guider2``)
         user : str
-            The ``ezid`` of the authenticated user that is flagging the
-            anomaly
+            The user that is flagging the anomaly
         anomaly_choices : list
             A list of anomalies that are to be flagged (e.g.
             ``['snowball', 'crosstalk']``)
