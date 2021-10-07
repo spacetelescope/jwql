@@ -355,7 +355,16 @@ function update_archive_page(inst, base_url) {
                 content += '<div class="proposal-color-fill" ></div>';
                 content += '<div class="proposal-info">';
                 content += '<h3>' + prop + '</h3>';
-                content += '<h6>' + n + ' Files</h6>';
+
+
+                $.ajax({
+                    url: base_url + '/ajax/' + inst + '/archive/' + prop + '/',
+                    success: function(prop_data){
+                        // Perform various updates to divs
+                        update_thumbnail_count(Object.keys(prop_data.file_data).length, 'activities');
+                    }});
+
+                //content += '<h6>' + n + ' Files</h6>';
                 content += '</div></a></div>';
 
                 // Add the content to the div
@@ -434,6 +443,16 @@ function update_show_count(count, type) {
     content = 'Showing ' + count + '/' + count + ' ' + type;
     content += '<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/science_products.html" target="_blank" style="color: black">';
     content += '<span class="help-tip mx-2">i</span></a>';
+    $("#img_show_count")[0].innerHTML = content;
+};
+
+/**
+ * Updates the img_show_count component
+ * @param {Integer} count - The count to display
+ * @param {String} type - The type of the count (e.g. "activities")
+ */
+function update_thumbnail_count(count, type) {
+    content = '<h6>' + count + ' Files</h6>';
     $("#img_show_count")[0].innerHTML = content;
 };
 
