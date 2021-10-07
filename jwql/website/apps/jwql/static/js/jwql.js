@@ -361,7 +361,8 @@ function update_archive_page(inst, base_url) {
                     url: base_url + '/ajax/' + inst + '/archive/' + prop + '/',
                     success: function(prop_data){
                         // Perform various updates to divs
-                        update_thumbnail_count(Object.keys(prop_data.file_data).length, 'activities');
+                        content += '<h6>' + Object.keys(prop_data.file_data).length + ' Files</h6>';
+                        //update_thumbnail_count(Object.keys(prop_data.file_data).length, 'activities');
                     }});
 
                 //content += '<h6>' + n + ' Files</h6>';
@@ -453,7 +454,7 @@ function update_show_count(count, type) {
  */
 function update_thumbnail_count(count, type) {
     content = '<h6>' + count + ' Files</h6>';
-    $("#img_show_count")[0].innerHTML = content;
+    $("#proposal-array")[0].innerHTML = content;
 };
 
 /**
