@@ -43,7 +43,7 @@ Dependencies
 ------------
 
     The user must have a configuration file named ``config.json``
-    placed in the ``utils`` directory and it must contain keys for
+    placed in the ``jwql`` directory and it must contain keys for
     ``log_dir`` and ``admin_account``.
 
 References

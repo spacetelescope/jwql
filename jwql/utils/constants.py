@@ -42,10 +42,10 @@ AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 512, 1), (0, 2048, 1)],
                                 '2': [(512, 1024, 1), (0, 2048, 1)],
                                 '3': [(1024, 1536, 1), (0, 2048, 1)],
                                 '4': [(1536, 2048, 1), (0, 2048, 1)]},
-                        'nirspec': {'1': [(0, 512, 1), (0, 2048, 1)],
-                                    '2': [(512, 1024, 1), (0, 2048, 1)],
-                                    '3': [(1024, 1536, 1), (0, 2048, 1)],
-                                    '4': [(1536, 2048, 1), (0, 2048, 1)]},
+                        'nirspec': {'1': [(0, 2048, 1), (0, 512, 1)],
+                                    '2': [(0, 2048, 1), (512, 1024, 1)],
+                                    '3': [(0, 2048, 1), (1024, 1536, 1)],
+                                    '4': [(0, 2048, 1), (1536, 2048, 1)]},
                         'miri': {'1': [(0, 1032, 4), (0, 1024, 1)],
                                  '2': [(1, 1032, 4), (0, 1024, 1)],
                                  '3': [(2, 1032, 4), (0, 1024, 1)],
@@ -107,12 +107,15 @@ ANOMALY_CHOICES_PER_INSTRUMENT = {'fgs': ANOMALY_CHOICES_FGS,
 APERTURES_PER_INSTRUMENT = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NRCA4_FULL',
                                        'NRCA5_FULL', 'NRCB1_FULL', 'NRCB2_FULL', 'NRCB3_FULL',
                                        'NRCB4_FULL', 'NRCB5_FULL'],
-                            'NIRISS': ['NIS_CEN', 'NIS_SOSSFULL', 'NIS_AMIFULL', 'NIS_SOSSTA', 'NIS_AMI1',
-                                       'NIS_SUBSTRIP256', 'NIS_SUBSTRIP96'],
-                            'NIRSPEC': ['NRS1_FULL', 'NRS2_FULL', 'NRS_FULL_MSA', 'NRS_FULL_IFU',
-                                        'NRS_S200A1_SLIT', 'NRS_S200A2_SLIT', 'NRS_S1600A1_SLIT'],
-                            'MIRI': ['MIRIM_FULL', 'MIRIM_MASKLYOT', 'MIRIM_SLITLESSPRISM', 'MIRIM_SUB256',
-                                     'MIRIM_SUB128', 'MIRIM_SLIT']}
+                            'NIRISS': ['NIS_CEN', 'NIS_SOSSFULL', 'NIS_AMIFULL', 'NIS_AMI1',
+                                       'NIS_SUBSTRIP256', 'NIS_SUBSTRIP96',
+                                       'NIS_SUB64', 'NIS_SUB128', 'NIS_SUB256'],
+                            'NIRSPEC': ['NRS_FULL_MSA', 'NRS_FULL_IFU', 'NRS_S200A1_SLIT', 'NRS_S200A2_SLIT',
+                                        'NRS_S400A1_SLIT', 'NRS_S1600A1_SLIT', 'NRS_S200B1_SLIT'],
+                            'MIRI': ['MIRIM_SUB64', 'MIRIM_SUB128', 'MIRIM_SUB256', 'MIRIM_MASK1140',
+                                     'MIRIM_MASK1065', 'MIRIM_MASK1550', 'MIRIM_MASKLYOT',
+                                     'MIRIM_BRIGHTSKY', 'MIRIM_SLITLESSPRISM'],
+                            'FGS': ['FGS1_FULL', 'FGS2_FULL']}
 
 # Bad pixel types by the type of data used to find them
 BAD_PIXEL_TYPES = ['DEAD', 'HOT', 'LOW_QE', 'RC', 'OPEN', 'ADJ_OPEN', 'TELEGRAPH', 'OTHER_BAD_PIXEL']
@@ -127,16 +130,16 @@ DARK_EXP_TYPES = {'nircam': ['NRC_DARK'],
                   'fgs': ['FGS_DARK']}
 
 # Dictionary of observing modes available for each instrument
-DETECTOR_PER_INSTRUMENT = {'fgs': ['FGS_DARK', 'FGS_FOCUS', 'FGS_IMAGE',
-                                   'FGS_INTFLAT', 'FGS_SKYFLAT'],
-                           'miri': ['MIRIFULONG', 'MIRIFUSHORT', 'MIRIMAGE'],
+DETECTOR_PER_INSTRUMENT = {'miri': ['MIRIFULONG', 'MIRIFUSHORT', 'MIRIMAGE'],
                            'nircam': ['NRCB4', 'NRCA4', 'NRCA2', 'NRCALONG',
                                       'NRCBLONG', 'NRCB2', 'NRCB3', 'NRCA1',
                                       'NRCA3', 'NRCB1'],
                            'niriss': ['NIS'],
-                           'nirspec': ['NRS1', 'NRS2']}
+                           'nirspec': ['NRS1', 'NRS2'],
+                           'fgs': ['GUIDER1', 'GUIDER2']}
 
-EXP_TYPE_PER_INSTRUMENT = {'fgs': [],
+EXP_TYPE_PER_INSTRUMENT = {'fgs': ['FGS_FOCUS', 'FGS_IMAGE', 'FGS_INTFLAT',
+                                   'FGS_SKYFLAT', 'FGS_DARK'],
                            'miri': ['MIR_FLATMRS', 'MIR_MRS', 'MIR_FLATIMAGE',
                                     'MIR_DARK', 'MIR_LYOT', 'MIR_IMAGE',
                                     'MIR_LRS-FIXEDSLIT', 'MIR_LRS-SLITLESS',
@@ -167,7 +170,8 @@ FLAT_EXP_TYPES = {'nircam': ['NRC_FLAT'],
                   'nirspec': ['NRS_AUTOFLAT', 'NRS_LAMP'],
                   'fgs': ['FGS_INTFLAT']}
 
-FILTERS_PER_INSTRUMENT = {'miri': ['F1000W', 'F1130W', 'F1280W', 'OPAQUE', 'F2300C', 'F560W', 'P750L',
+FILTERS_PER_INSTRUMENT = {'fgs': [],
+                          'miri': ['F1000W', 'F1130W', 'F1280W', 'OPAQUE', 'F2300C', 'F560W', 'P750L',
                                    'F1500W', 'F2550W', 'F770W', 'FLENS', 'FND', 'F2100W', 'F1800W',
                                    'F1550C', 'F1140C', 'F2550WR', 'F1065C'],
                           'nircam': ['F070W', 'F090W', 'F115W', 'F140M', 'F150W', 'F150W2', 'F182M',
@@ -196,7 +200,8 @@ GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d'
                         'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat']
 
 # Gratings available for each instrument
-GRATING_PER_INSTRUMENT = {'miri': [],
+GRATING_PER_INSTRUMENT = {'fgs': [],
+                          'miri': [],
                           'nircam': [],
                           'niriss': [],
                           'nirspec': ['G140M', 'G235M', 'G395M', 'G140H',
@@ -252,7 +257,7 @@ MONITORS = {
     'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor'),
             ('Readnoise Monitor', '/fgs/readnoise_monitor')],
     'miri': [('Dark Current Monitor', '#'),
-             ('Data Trending', '/miri/miri_data_trending'),
+             ('Data Trending', '#'),
              ('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
              ('Readnoise Monitor', '/miri/readnoise_monitor'),
              ('Cosmic Ray Monitor', '#'),
@@ -270,17 +275,19 @@ MONITORS = {
     'niriss': [('Bad Pixel Monitor', '/niriss/bad_pixel_monitor'),
                ('Readnoise Monitor', '/niriss/readnoise_monitor'),
                ('AMI Calibrator Monitor', '#'),
-               ('TSO RMS Monitor', '#')],
+               ('TSO RMS Monitor', '#'),
+               ('Bias Monitor', '#')],
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
                 ('Target Acquisition Monitor', '#'),
-                ('Data Trending', '/nirspec/nirspec_data_trending'),
+                ('Data Trending', '#'),
                 ('Detector Health Monitor', '#'),
                 ('Ref Pix Monitor', '#'),
                 ('Internal Lamp Monitor', '#'),
                 ('Instrument Model Updates', '#'),
-                ('Failed-open Shutter Monitor', '#')]}
+                ('Failed-open Shutter Monitor', '#'),
+                ('Bias Monitor', '/nirspec/bias_monitor')]}
 
 # Possible suffix types for coronograph exposures
 NIRCAM_CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']
@@ -301,7 +308,15 @@ NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'S
 # Possible suffix types for AMI files
 NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami', 'psf-amiavg']
 
-READPATT_PER_INSTRUMENT = {'fgs': [],
+# RAPID-style readout patterns for each instrument. Added so we can
+# differentiate in MAST searches for e.g. the dark current monitor
+RAPID_READPATTERNS = {'fgs': ['FGSRAPID'],
+                      'miri': ['FAST', 'SLOW'],
+                      'nircam': ['RAPID'],
+                      'niriss': ['NISRAPID'],
+                      'nirspec': ['NRSRAPID', 'NRSIRS2RAPID']}
+
+READPATT_PER_INSTRUMENT = {'fgs': ['FGS', 'FGSRAPID', 'FGS60', 'FGS840', 'FGS8370'],
                            'miri': ['FAST', 'SLOW', 'FASTGRPAVG'],
                            'nircam': ['RAPID', 'SHALLOW2', 'BRIGHT2', 'MEDIUM2', 'SHALLOW4',
                                       'MEDIUM8', 'BRIGHT1', 'DEEP2', 'DEEP8'],
@@ -320,3 +335,10 @@ WFSC_SUFFIX_TYPES = ['wfscmb']
 FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
                     TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
                     NIRISS_AMI_SUFFIX_TYPES + WFSC_SUFFIX_TYPES
+
+# Instrument Documentation Links
+URL_DICT = {'fgs': 'https://jwst-docs.stsci.edu/jwst-observatory-hardware/fine-guidance-sensor',
+            'miri': 'https://jwst-docs.stsci.edu/mid-infrared-instrument',
+            'niriss': 'https://jwst-docs.stsci.edu/near-infrared-imager-and-slitless-spectrograph',
+            'nirspec': 'https://jwst-docs.stsci.edu/near-infrared-spectrograph',
+            'nircam': 'https://jwst-docs.stsci.edu/near-infrared-camera'}

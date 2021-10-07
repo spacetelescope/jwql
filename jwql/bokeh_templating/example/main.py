@@ -24,7 +24,7 @@ file_dir = os.path.dirname(os.path.realpath(__file__))
 
 class TestBokehApp(BokehTemplate):
     """This is a minimal ``BokehTemplate`` app."""
-    
+
     _embed = True
 
     def pre_init(self):

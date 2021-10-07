@@ -26,13 +26,13 @@ Dependencies
 ------------
 
     The user must have a configuration file named ``config.json``
-    placed in the ``utils`` directory.
+    placed in the ``jwql`` directory.
 """
 
 from datetime import datetime as dt
 from math import pi
 
-from bokeh.models import ColumnDataSource, DatetimeTickFormatter, OpenURL, TapTool
+from bokeh.models import Axis, ColumnDataSource, DatetimeTickFormatter, OpenURL, TapTool
 from bokeh.models.widgets import Panel, Tabs
 from bokeh.plotting import figure
 from bokeh.transform import cumsum
@@ -42,6 +42,21 @@ import pandas as pd
 from jwql.utils.constants import FILTERS_PER_INSTRUMENT
 from jwql.utils.utils import get_base_url
 from jwql.website.apps.jwql.data_containers import build_table
+
+
+def disable_scientific_notation(figure):
+    """Disable y axis scientific notation.
+
+    Parameters
+    ----------
+    figure: bokeh figure object
+
+    Returns
+    -------
+    None
+    """
+    yaxis = figure.select(dict(type=Axis, layout="left"))[0]
+    yaxis.formatter.use_scientific = False
 
 
 class GeneralDashboard:
@@ -164,27 +179,27 @@ class GeneralDashboard:
 
         p1 = figure(title="Number of Files Added by Day", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=1700, x_axis_label='Date', y_axis_label='Number of Files Added')
         p1.line(x='date', y='total_file_count', source=source, color='#6C5B7B', line_dash='dashed', line_width=3)
+        disable_scientific_notation(p1)
         tab1 = Panel(child=p1, title='Files Per Day')
 
         p2 = figure(title="Available & Used Storage", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=1700, x_axis_label='Date', y_axis_label='Storage Space [Terabytes?]')
         p2.line(x='date', y='available', source=source, color='#F8B195', line_dash='dashed', line_width=3, legend='Available Storage')
         p2.line(x='date', y='used', source=source, color='#355C7D', line_dash='dashed', line_width=3, legend='Used Storage')
+        disable_scientific_notation(p2)
         tab2 = Panel(child=p2, title='Storage')
 
-        p1.xaxis.formatter = DatetimeTickFormatter(
-                hours=["%d %B %Y"],
-                days=["%d %B %Y"],
-                months=["%d %B %Y"],
-                years=["%d %B %Y"],
-            )
+        p1.xaxis.formatter = DatetimeTickFormatter(hours=["%d %B %Y"],
+                                                   days=["%d %B %Y"],
+                                                   months=["%d %B %Y"],
+                                                   years=["%d %B %Y"],
+                                                   )
         p1.xaxis.major_label_orientation = pi / 4
 
-        p2.xaxis.formatter = DatetimeTickFormatter(
-                hours=["%d %B %Y"],
-                days=["%d %B %Y"],
-                months=["%d %B %Y"],
-                years=["%d %B %Y"],
-            )
+        p2.xaxis.formatter = DatetimeTickFormatter(hours=["%d %B %Y"],
+                                                   days=["%d %B %Y"],
+                                                   months=["%d %B %Y"],
+                                                   years=["%d %B %Y"],
+                                                   )
         p2.xaxis.major_label_orientation = pi / 4
 
         tabs = Tabs(tabs=[tab1, tab2])
@@ -213,6 +228,8 @@ class GeneralDashboard:
         if not pd.isnull(self.delta_t):
             data = data[(data['start_time'] >= self.date - self.delta_t) & (data['start_time'] <= self.date)]
 
+        data['start_time'] = data['start_time'].map(lambda x: x.strftime('%m-%d-%Y %H:%M:%S'))
+        data['end_time'] = data['end_time'].map(lambda x: x.strftime('%m-%d-%Y %H:%M:%S'))
         # data = data.drop(columns='affected_tables')
         table_values = data.sort_values(by='start_time', ascending=False).values
         table_columns = data.columns.values
@@ -246,6 +263,7 @@ class GeneralDashboard:
         plot = figure(x_range=x_value, title=title, plot_width=850, tools="hover", tooltips="@x: @top", x_axis_label=x_axis_label)
         plot.vbar(x='x', top='top', source=source, width=0.9, color='#6C5B7B')
         plot.xaxis.major_label_orientation = pi / 4
+        disable_scientific_notation(plot)
         tab = Panel(child=plot, title=instrument)
 
         return tab

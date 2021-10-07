@@ -12,7 +12,7 @@
 {% block content %}
 
     <main role="main" class="container">
-    	<h2>Welcome to the JWQL application.</h2>
+    	<h2 style="text-align:center">The JWST Quicklook Application</h2>
         <hr>
 
     	<div class="instrument_select">
@@ -25,7 +25,7 @@
                         <div class="instrument_frame">
 
                             <span class="helper"></span><img src="{{ static('') }}img/{{ inst }}logo.png" 
-                                                             width=100px 
+                                                             width=150px
                                                              alt = " Logo link to {{ inst }}" 
                                                              title = " Logo link to {{ inst }}" >
                             <span class="helper"></span><span class='instrument-name'><br>{{ inst }}</span>
@@ -40,9 +40,9 @@
 
         <br>
         The JWST Quicklook Application (JWQL) is a database-driven web application and automation framework for use by the JWST instrument teams to monitor the health and stability of the JWST instruments.
-        Visit our <a href={{ url('jwql:about') }}>about page</a> to learn more about our project, goals, and developers.<br><br>
+        Visit our <a href={{ url('jwql:about') }}>about page</a> to learn more about the project.<br><br>
 
-        The JWQL application is currently under heavy development. The 1.0 release is expected in 2019.
+        The JWQL application is currently under heavy development. The 1.0 release is expected in the fall of 2021.
 
         <hr>
 
@@ -85,6 +85,12 @@
         <h4>Query the Archive for Anomalies</h4>
 
         <a role="button" class="btn btn-primary my-2" type="submit" href={{ url( 'jwql:anomaly_query' ) }}>Enter Query Form</a>
+
+        <hr>
+
+        <h4>Found a bug or have a feature request?</h4>
+
+        <a role="button" class="btn btn-primary my-2" type="submit" href="https://github.com/spacetelescope/jwql/issues/new/choose">Submit an Issue</a>
 
 	</main>
 

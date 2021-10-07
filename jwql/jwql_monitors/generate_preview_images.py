@@ -38,7 +38,8 @@ from jwql.utils import permissions
 from jwql.utils.constants import NIRCAM_LONGWAVE_DETECTORS, NIRCAM_SHORTWAVE_DETECTORS
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.preview_image import PreviewImage
-from jwql.utils.utils import get_config, filename_parser
+from jwql.utils.utils import get_config, filename_parser, initialize_instrument_monitor
+from jwql.utils.monitor_utils import update_monitor_table
 
 # Size of NIRCam inter- and intra-module chip gaps
 SW_MOD_GAP = 1387  # pixels = int(43 arcsec / 0.031 arcsec/pixel)
@@ -528,11 +529,10 @@ def generate_preview_images():
     """The main function of the ``generate_preview_image`` module.
     See module docstring for further details."""
 
-    # Begin logging
-    logging.info("Beginning the script run")
-
     # Process programs in parallel
-    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], '*'))]
+    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], 'public', 'jw*'))]
+    program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', 'jw*'))])
+    program_list = list(set(program_list))
     pool = multiprocessing.Pool(processes=int(get_config()['cores']))
     pool.map(process_program, program_list)
     pool.close()
@@ -577,7 +577,11 @@ def group_filenames(filenames):
         subgroup = []
 
         # Generate string to be matched with other filenames
-        filename_dict = filename_parser(os.path.basename(filename))
+        try:
+            filename_dict = filename_parser(os.path.basename(filename))
+        except ValueError:
+            logging.warning('Could not parse filename for {}'.format(filename))
+            break
 
         # If the filename was already involved in a match, then skip
         if filename not in matched_names:
@@ -611,7 +615,7 @@ def group_filenames(filenames):
                         subgroup.append(file_to_match)
 
             else:
-                # filename_dict['filename_type'] may be 'guider' or 'time_series', for instance. Treat individually.  
+                # filename_dict['filename_type'] may be 'guider' or 'time_series', for instance. Treat individually.
                 matched_names.append(filename)
                 subgroup.append(filename)
 
@@ -630,10 +634,21 @@ def process_program(program):
         The program identifier (e.g. ``88600``)
     """
 
+    logging.info('')
+    logging.info('Processing {}'.format(program))
+
+    # Gather files to process
+    filenames = glob.glob(os.path.join(get_config()['filesystem'], 'public', program, '*/*.fits'))
+    filenames.extend(glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', program, '*/*.fits')))
+    filenames = list(set(filenames))
+
+    # Ignore "original" files
+    filenames = [item for item in filenames if '_original.fits' not in item]
+
     # Group together common exposures
-    filenames = glob.glob(os.path.join(get_config()['filesystem'], program, '*.fits'))
     grouped_filenames = group_filenames(filenames)
     logging.info('Found {} filenames'.format(len(filenames)))
+    logging.info('')
 
     for file_list in grouped_filenames:
         filename = file_list[0]
@@ -649,18 +664,18 @@ def process_program(program):
         # Check to see if the preview images already exist and skip if they do
         file_exists = check_existence(file_list, preview_output_directory)
         if file_exists:
-            logging.info("JPG already exists for {}, skipping.".format(filename))
+            logging.info("\tJPG already exists for {}, skipping.".format(filename))
             continue
 
         # Create the output directories if necessary
         if not os.path.exists(preview_output_directory):
             os.makedirs(preview_output_directory)
             permissions.set_permissions(preview_output_directory)
-            logging.info('Created directory {}'.format(preview_output_directory))
+            logging.info('\tCreated directory {}'.format(preview_output_directory))
         if not os.path.exists(thumbnail_output_directory):
             os.makedirs(thumbnail_output_directory)
             permissions.set_permissions(thumbnail_output_directory)
-            logging.info('Created directory {}'.format(thumbnail_output_directory))
+            logging.info('\tCreated directory {}'.format(thumbnail_output_directory))
 
         # If the exposure contains more than one file (because more
         # than one detector was used), then create a mosaic
@@ -669,10 +684,11 @@ def process_program(program):
         if numfiles > 1:
             try:
                 mosaic_image, mosaic_dq = create_mosaic(file_list)
-                logging.info('Created mosiac for:')
+                logging.info('\tCreated mosiac for:')
                 for item in file_list:
                     logging.info('\t{}'.format(item))
             except (ValueError, FileNotFoundError) as error:
+                mosaic_image, mosaic_dq = None, None
                 logging.error(error)
             dummy_file = create_dummy_filename(file_list)
             if numfiles in [2, 4]:
@@ -694,20 +710,21 @@ def process_program(program):
             # insert it and it's associated DQ array into the
             # instance of PreviewImage. Also set the input
             # filename to indicate that we have mosaicked data
-            if numfiles != 1:
+            if numfiles > 1 and mosaic_image is not None:
                 im.data = mosaic_image
                 im.dq = mosaic_dq
                 im.file = dummy_file
 
             im.make_image(max_img_size=max_size)
-            logging.info('Created preview image and thumbnail for: {}'.format(filename))
-        except ValueError as error:
+            logging.info('\tCreated preview image and thumbnail for: {}'.format(filename))
+        except (ValueError, AttributeError) as error:
             logging.warning(error)
 
 
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    configure_logging(module)
+    start_time, log_file = initialize_instrument_monitor(module)
 
     generate_preview_images()
+    update_monitor_table(module, start_time, log_file)
