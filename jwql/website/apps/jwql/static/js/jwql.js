@@ -356,7 +356,7 @@ function update_archive_page(inst, base_url) {
                 content += '<div class="proposal-info">';
                 content += '<h3>' + prop + '</h3>';
 
-
+                /**
                 $.ajax({
                     url: base_url + '/ajax/' + inst + '/archive/' + prop + '/',
                     success: function(prop_data){
@@ -364,8 +364,8 @@ function update_archive_page(inst, base_url) {
                         content += '<h6>' + Object.keys(prop_data.file_data).length + ' Files</h6>';
                         //update_thumbnail_count(Object.keys(prop_data.file_data).length, 'activities');
                     }});
-
-                //content += '<h6>' + n + ' Files</h6>';
+                **/
+                content += '<h6>' + n + ' Files</h6>';
                 content += '</div></a></div>';
 
                 // Add the content to the div

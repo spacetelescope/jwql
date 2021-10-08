@@ -853,6 +853,31 @@ def get_proposal_info(filepaths):
     for filepath in filepaths:
         proposal = filepath.split('/')[-1][2:7]
         if proposal not in proposals:
+
+            # Get a list of all integ0.thumb files for the instrument
+            # Note that this assumes all filepaths will be for the same
+            # instrument.
+            instrument = os.path.basename(filepath).split('_')[3]
+            base_dir = os.path.dirname(filepath)
+
+            # both options below for all_thumbs are too slow. Could this be a
+            # symptom of my setup running the app locally, rather than a problem
+            # with getting file lists??
+            # Option 1
+            #all_thumbs = os.scandir(base_dir)
+
+            # Option 2
+            #all_thumbs = glob(os.path.join(base_dir, 'jw{}*{}*integ0.thumb'.format(proposal, isntrument)))
+
+            # Keep only one thumbnail for each exposure. (e.g. remove duplicates
+            # for uncal, rate, rateints, etc). We only want a count of exposures here
+            #unique_exps = []
+            #for filename in all_thumbs:
+            #    parts = filename.split('_')
+            #    unique_exps.append('{}_{}_{}'.format(parts[0], parts[1], parts[2]))
+            #unique_exps = list(set(unique_exps))
+            #num_files.append(len(unique_exps))
+
             thumbnail_paths.append(os.path.join('jw{}'.format(proposal), 'jw{}.thumb'.format(proposal)))
             files_for_proposal = [item for item in filepaths if 'jw{}'.format(proposal) in item]
             num_files.append(len(files_for_proposal))
@@ -943,7 +968,7 @@ def get_thumbnails_all_instruments(parameters):
 
     # Determine whether or not queried anomalies are flagged
     final_subset = []
-    
+
     if anomalies != {'miri': [], 'nirspec': [], 'niriss': [], 'nircam': [], 'fgs': []}:
         for thumbnail in thumbnails_subset:
             components = thumbnail.split('_')
