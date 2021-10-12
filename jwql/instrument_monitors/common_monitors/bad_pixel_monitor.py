@@ -99,13 +99,11 @@ from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPi
 from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors import pipeline_tools
-from jwql.instrument_monitors.common_monitors.dark_monitor import exclude_asic_tuning
-from jwql.utils import crds_tools, instrument_properties
+from jwql.utils import crds_tools, instrument_properties, monitor_utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import FLAT_EXP_TYPES, DARK_EXP_TYPES
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.mast_utils import mast_query
-from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
@@ -1025,7 +1023,7 @@ class BadPixels():
                 if new_flat_entries:
                     # Exclude ASIC tuning data
                     len_new_flats = len(new_flat_entries)
-                    new_flat_entries = exclude_asic_tuning(new_flat_entries)
+                    new_flat_entries = monitor_utils.exclude_asic_tuning(new_flat_entries)
                     len_no_asic = len(new_flat_entries)
                     num_asic = len_new_flats - len_no_asic
                     logging.info("\tFiltering out ASIC tuning files removed {} flat files.".format(num_asic))
@@ -1044,7 +1042,7 @@ class BadPixels():
                 if new_dark_entries:
                     # Exclude ASIC tuning data
                     len_new_darks = len(new_dark_entries)
-                    new_dark_entries = exclude_asic_tuning(new_dark_entries)
+                    new_dark_entries = monitor_utils.exclude_asic_tuning(new_dark_entries)
                     len_no_asic = len(new_dark_entries)
                     num_asic = len_new_darks - len_no_asic
                     logging.info("\tFiltering out ASIC tuning files removed {} dark files.".format(num_asic))
@@ -1107,9 +1105,9 @@ class BadPixels():
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    start_time, log_file = initialize_instrument_monitor(module)
+    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     monitor = BadPixels()
     monitor.run()
 
-    update_monitor_table(module, start_time, log_file)
+    monitor_utils.update_monitor_table(module, start_time, log_file)
