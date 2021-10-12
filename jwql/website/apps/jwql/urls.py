@@ -46,7 +46,6 @@ from django.urls import re_path
 
 from . import api_views
 from . import monitor_views
-from . import oauth
 from . import views
 
 app_name = 'jwql'
@@ -56,11 +55,6 @@ urlpatterns = [
 
     # Home
     path('', views.home, name='home'),
-
-    # Authentication
-    path('login/', oauth.login, name='login'),
-    path('logout/', oauth.logout, name='logout'),
-    path('authorize/', oauth.authorize, name='authorize'),
 
     # MIRI-specific views
     path('miri/miri_data_trending/', views.miri_data_trending, name='miri_data_trending'),

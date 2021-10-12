@@ -2,7 +2,7 @@ import numpy as np
 from setuptools import setup
 from setuptools import find_packages
 
-VERSION = '0.26.0'
+VERSION = '1.0.0'
 
 AUTHORS = 'Matthew Bourque, Lauren Chambers, Misty Cracraft, Mike Engesser, Mees Fix, Joe Filippazzo, Bryan Hilbert, '
 AUTHORS += 'Graham Kanarek, Teagan King, Catherine Martlin, Maria Pena-Guerrero, Johannes Sahlmann, Ben Sunnquist'
@@ -13,7 +13,6 @@ REQUIRES = [
     'asdf>=2.3.3',
     'astropy>=3.2.1',
     'astroquery>=0.3.9',
-    'authlib',
     'bokeh',
     'codecov',
     'crds',
@@ -39,6 +38,7 @@ REQUIRES = [
     'scipy',
     'sphinx',
     'sqlalchemy',
+    'stdatamodels',
     'stsci_rtd_theme',
     'twine',
     'wtforms'

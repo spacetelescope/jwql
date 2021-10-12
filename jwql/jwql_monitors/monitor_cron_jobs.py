@@ -38,7 +38,8 @@ from bokeh.models.widgets import DataTable, DateFormatter, HTMLTemplateFormatter
 
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import get_config
+from jwql.utils.utils import get_config, initialize_instrument_monitor
+from jwql.utils.monitor_utils import update_monitor_table
 
 
 def create_table(status_dict):
@@ -323,6 +324,7 @@ def success_check(filename):
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    configure_logging(module)
+    start_time, log_file = initialize_instrument_monitor(module)
 
     status()
+    update_monitor_table(module, start_time, log_file)
