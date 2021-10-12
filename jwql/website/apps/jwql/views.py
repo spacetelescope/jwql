@@ -273,8 +273,8 @@ def archived_proposals_ajax(request, inst):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     # Get list of all files for the given instrument
-    filenames_public = get_filenames_by_instrument(inst, restriction='public')[0:50]
-    filenames_proprietary = get_filenames_by_instrument(inst, restriction='proprietary')[0:50]
+    filenames_public = get_filenames_by_instrument(inst, restriction='public')
+    filenames_proprietary = get_filenames_by_instrument(inst, restriction='proprietary')
 
     # Determine locations to the files
     filenames = []
