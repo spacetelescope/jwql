@@ -71,9 +71,6 @@ from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
 
 
-FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
-
-
 def anomaly_query(request):
     """The anomaly query form page"""
 
@@ -281,14 +278,14 @@ def archived_proposals_ajax(request, inst):
     for filename in filenames_public:
         try:
             relative_filepath = filesystem_path(filename, check_existence=False)
-            full_filepath = os.path.join(FILESYSTEM_DIR, 'public', relative_filepath)
+            full_filepath = os.path.join(get_config()['filesystem'], 'public', relative_filepath)
             filenames.append(full_filepath)
         except ValueError:
             print('Unable to determine filepath for {}'.format(filename))
     for filename in filenames_proprietary:
         try:
             relative_filepath = filesystem_path(filename, check_existence=False)
-            full_filepath = os.path.join(FILESYSTEM_DIR, 'proprietary', relative_filepath)
+            full_filepath = os.path.join(get_config()['filesystem'], 'proprietary', relative_filepath)
             filenames.append(full_filepath)
         except ValueError:
             print('Unable to determine filepath for {}'.format(filename))
