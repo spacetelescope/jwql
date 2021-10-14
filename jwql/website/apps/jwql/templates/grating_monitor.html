@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>{{ inst }} Grating Wheel Monitor- JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+
+		<h1>{{ inst }} Grating Wheel Monitor</h1>
+		<hr>
+
+		<div width=100%>
+			<!--Add Bokeh HTML-->
+			{{ tabs_components[0] | safe }}
+		</div>
+
+		<!--Add Bokeh scripts-->
+		{{ tabs_components[1] | safe }}
+
+		<h1>{{ inst }} Grating Wheel Stats Table</h1>
+		<hr>
+
+		<a href="{{'/jwqldb/%s_grating_stats'%inst.lower()}}" name=test_link class="btn btn-primary my-2" type="submit">Grating Wheel Stats</a>
+	</main>
+
+{% endblock %}

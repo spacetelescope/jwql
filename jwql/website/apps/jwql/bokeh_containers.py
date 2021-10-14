@@ -26,7 +26,7 @@ from bokeh.layouts import layout
 from bokeh.models.widgets import Tabs, Panel
 
 from . import monitor_pages
-from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES
+from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES, GRATING_TELEMETRY
 from jwql.utils.utils import get_config
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -285,6 +285,50 @@ def dark_monitor_tabs(instrument):
 
     # Build tabs
     tabs = Tabs(tabs=[histogram_tab, line_tab, image_tab])
+
+    # Return tab HTML and JavaScript to web app
+    script, div = components(tabs)
+
+    return div, script
+
+
+def grating_monitor_tabs(instrument):
+    """Creates the various tabs of the grating wheel monitor results page.
+
+    Parameters
+    ----------
+    instrument : str
+        The JWST instrument of interest (e.g. ``nircam``).
+
+    Returns
+    -------
+    div : str
+        The HTML div to render grating wheel monitor plots
+    script : str
+        The JS script to render grating wheel monitor plots
+    """
+
+    # Make a separate tab for each aperture
+    tabs = []
+    for aperture in FULL_FRAME_APERTURES[instrument.upper()]:
+        monitor_template = monitor_pages.GratingMonitor()
+        monitor_template.input_parameters = (instrument, aperture)
+
+        # Add the telemetry vs time plots for grating wheel sensor telemetry value
+        plots = []
+        for telemetry in GRATING_TELEMETRY:
+            grating_plot = monitor_template.refs['figure_{}'.format(telemetry)]
+            grating_plot.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
+            plots.append(grating_plot)
+
+        # Put grating plots on the top row.
+        grating_layout = layout(plots[0:4])  # MAKE SURE ALL PLOTS ARE INCLUDED HERE
+        grating_layout.sizing_mode = 'scale_width'
+        grating_tab = Panel(child=grating_layout, title=aperture)
+        tabs.append(grating_tab)
+
+    # Build tabs
+    tabs = Tabs(tabs=tabs)
 
     # Return tab HTML and JavaScript to web app
     script, div = components(tabs)

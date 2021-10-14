@@ -139,6 +139,39 @@ def dark_monitor(request, inst):
     return render(request, template, context)
 
 
+def grating_monitor(request, inst):
+    """Generate the grating wheel monitor page for a given instrument
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # Ensure the instrument is correctly capitalized
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+
+    # Get the html and JS needed to render the grating wheel tab plots
+    tabs_components = bokeh_containers.grating_monitor_tabs(inst)
+
+    template = "grating_monitor.html"
+
+    context = {
+        'inst': inst,
+        'tabs_components': tabs_components,
+    }
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
+
+
 def readnoise_monitor(request, inst):
     """Generate the readnoise monitor page for a given instrument
 

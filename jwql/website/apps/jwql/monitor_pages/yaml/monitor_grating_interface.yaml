@@ -1,0 +1,170 @@
+# YAML file defining bokeh figures for the grating wheel monitor
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# INRSH_GWA_ADCMGAIN vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_INRSH_GWA_ADCMGAIN
+    ref: "source_INRSH_GWA_ADCMGAIN"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_INRSH_GWA_ADCMGAIN
+    ref: "gwa_x_INRSH_GWA_ADCMGAIN"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_INRSH_GWA_ADCMGAIN
+    ref: "gwa_y_INRSH_GWA_ADCMGAIN"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_INRSH_GWA_ADCMGAIN
+    ref: "figure_INRSH_GWA_ADCMGAIN"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "INRSH_GWA_ADCMGAIN [DN]"
+    x_range: *gwa_x_INRSH_GWA_ADCMGAIN
+    y_range: *gwa_y_INRSH_GWA_ADCMGAIN
+    height: 800
+    width: 800
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_INRSH_GWA_ADCMGAIN}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# INRSH_GWA_ADCMOFFSET vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_INRSH_GWA_ADCMOFFSET
+    ref: "source_INRSH_GWA_ADCMOFFSET"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_INRSH_GWA_ADCMOFFSET
+    ref: "gwa_x_INRSH_GWA_ADCMOFFSET"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_INRSH_GWA_ADCMOFFSET
+    ref: "gwa_y_INRSH_GWA_ADCMOFFSET"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_INRSH_GWA_ADCMOFFSET
+    ref: "figure_INRSH_GWA_ADCMOFFSET"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "INRSH_GWA_ADCMOFFSET [DN]"
+    x_range: *gwa_x_INRSH_GWA_ADCMOFFSET
+    y_range: *gwa_y_INRSH_GWA_ADCMOFFSET
+    height: 800
+    width: 800
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_INRSH_GWA_ADCMOFFSET}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# INRSH_GWA_MOTOR_VREF vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_INRSH_GWA_MOTOR_VREF
+    ref: "source_INRSH_GWA_MOTOR_VREF"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_INRSH_GWA_MOTOR_VREF
+    ref: "gwa_x_INRSH_GWA_MOTOR_VREF"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_INRSH_GWA_MOTOR_VREF
+    ref: "gwa_y_INRSH_GWA_MOTOR_VREF"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_INRSH_GWA_MOTOR_VREF
+    ref: "figure_INRSH_GWA_MOTOR_VREF"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "INRSH_GWA_MOTOR_VREF [DN]"
+    x_range: *gwa_x_INRSH_GWA_MOTOR_VREF
+    y_range: *gwa_y_INRSH_GWA_MOTOR_VREF
+    height: 800
+    width: 800
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_INRSH_GWA_MOTOR_VREF}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# INRSI_C_GWA_X_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_INRSI_C_GWA_X_POSITION
+    ref: "source_INRSI_C_GWA_X_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_INRSI_C_GWA_X_POSITION
+    ref: "gwa_x_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_INRSI_C_GWA_X_POSITION
+    ref: "gwa_y_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_INRSI_C_GWA_X_POSITION
+    ref: "figure_INRSI_C_GWA_X_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "INRSI_C_GWA_X_POSITION [DN]"
+    x_range: *gwa_x_INRSI_C_GWA_X_POSITION
+    y_range: *gwa_y_INRSI_C_GWA_X_POSITION
+    height: 800
+    width: 800
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_INRSI_C_GWA_X_POSITION}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# INRSI_C_GWA_Y_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_INRSI_C_GWA_Y_POSITION
+    ref: "source_INRSI_C_GWA_Y_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_x_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_y_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_INRSI_C_GWA_Y_POSITION
+    ref: "figure_INRSI_C_GWA_Y_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "INRSI_C_GWA_Y_POSITION [DN]"
+    x_range: *gwa_x_INRSI_C_GWA_Y_POSITION
+    y_range: *gwa_y_INRSI_C_GWA_Y_POSITION
+    height: 800
+    width: 800
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_INRSI_C_GWA_Y_POSITION}
+
+# Document structure
+# - !Document:
+#     - !row:
+#         - *grating_figure

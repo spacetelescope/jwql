@@ -1,0 +1,467 @@
+#! /usr/bin/env python
+
+"""This module contains code for the grating wheel monitor, which monitors
+the grating wheel positions over time. This code has been adapted from bias_monitor.py
+
+Author
+------
+    - Teagan King
+
+Use
+---
+    This module can be used from the command line as such:
+
+    ::
+
+        python grating_monitor.py
+"""
+
+from collections import OrderedDict
+import datetime
+import logging
+import os
+
+from astropy.io import fits
+from astropy.stats import sigma_clip, sigma_clipped_stats
+from astropy.time import Time
+from astropy.visualization import ZScaleInterval
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+import numpy as np
+from pysiaf import Siaf
+from sqlalchemy.sql.expression import and_
+
+from jwql.database.database_interface import session
+from jwql.database.database_interface import NIRSpecGratingQueryHistory, NIRSpecGratingStats
+from jwql.instrument_monitors import pipeline_tools
+from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
+from jwql.utils import instrument_properties
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.logging_functions import log_info, log_fail
+from jwql.utils.monitor_utils import update_monitor_table
+from jwql.utils.permissions import set_permissions
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, initialize_instrument_monitor
+
+
+class Grating():
+    """Class for executing the grating wheel monitor.
+
+    This class will search for a particular type of file in the file
+    system for each instrument and will run the monitor on these files.
+    The monitor will output the contents into a new file located in a
+    working directory. It will then perform statistical measurements
+    on these files in order to monitor the grating wheel telemetry
+    over time. Results are all saved to database tables.
+
+    Attributes
+    ----------
+    output_dir : str
+        Path into which outputs will be placed.
+
+    data_dir : str
+        Path into which new dark files will be copied to be worked on.
+
+    query_start : float
+        MJD start date to use for querying MAST.
+
+    query_end : float
+        MJD end date to use for querying MAST.
+
+    instrument : str
+        Name of instrument used to collect the data.
+
+    aperture : str
+        Name of the aperture used (e.g. ``NRS1``).
+    """
+
+    def __init__(self):
+        """Initialize an instance of the ``Grating`` class."""
+
+    def collapse_image(self, image):
+        """Median-collapse the rows and columns of an image.
+
+        Parameters
+        ----------
+        image : numpy.ndarray
+            2D array on which to calculate statistics.
+
+        Returns
+        -------
+        collapsed_rows : numpy.ndarray
+            1D array of the collapsed row values.
+
+        collapsed_columns : numpy.ndarray
+            1D array of the collapsed column values.
+        """
+
+        collapsed_rows = np.nanmedian(image, axis=1)
+        collapsed_columns = np.nanmedian(image, axis=0)
+
+        return collapsed_rows, collapsed_columns
+
+    def determine_pipeline_steps(self):
+        """Determines the necessary JWST pipelines steps to run on a
+        given dark file.
+
+        Returns
+        -------
+        pipeline_steps : collections.OrderedDict
+            The pipeline steps to run.
+        """
+
+        pipeline_steps = OrderedDict({})
+
+        # Determine if the file needs group_scale step run
+        if self.read_pattern not in pipeline_tools.GROUPSCALE_READOUT_PATTERNS:
+            pipeline_steps['group_scale'] = False
+        else:
+            pipeline_steps['group_scale'] = True
+
+        # Run the DQ step on all files
+        pipeline_steps['dq_init'] = True
+
+        # Only run the superbias step for NIR instruments
+        if self.instrument != 'miri':
+            pipeline_steps['superbias'] = True
+        else:
+            pipeline_steps['superbias'] = False
+
+        # Run the refpix step on all files
+        pipeline_steps['refpix'] = True
+
+        return pipeline_steps
+
+    def extract_zeroth_group(self, filename):
+        """Extracts the 0th group of a fits image and outputs it into
+        a new fits file.
+
+        Parameters
+        ----------
+        filename : str
+            The fits file from which the 0th group will be extracted.
+
+        Returns
+        -------
+        output_filename : str
+            The full path to the output file.
+        """
+
+        output_filename = os.path.join(self.data_dir, os.path.basename(filename).replace('.fits', '_0thgroup.fits'))
+
+        # Write a new fits file containing the primary and science
+        # headers from the input file, as well as the 0th group
+        # data of the first integration
+        hdu = fits.open(filename)
+        new_hdu = fits.HDUList([hdu['PRIMARY'], hdu['SCI']])
+        new_hdu['SCI'].data = hdu['SCI'].data[0:1, 0:1, :, :]
+        new_hdu.writeto(output_filename, overwrite=True)
+        hdu.close()
+        new_hdu.close()
+        set_permissions(output_filename)
+        logging.info('\t{} created'.format(output_filename))
+
+        return output_filename
+
+    def file_exists_in_database(self, filename):
+        """Checks if an entry for filename exists in the grating stats
+        database.
+
+        Parameters
+        ----------
+        filename : str
+            The full path to the uncal filename.
+
+        Returns
+        -------
+        file_exists : bool
+            ``True`` if filename exists in the grating stats database.
+        """
+
+        query = session.query(self.stats_table)
+        results = query.filter(self.stats_table.uncal_filename == filename).all()
+
+        if len(results) != 0:
+            file_exists = True
+        else:
+            file_exists = False
+
+        return file_exists
+
+    def identify_tables(self):
+        """Determine which database tables to use for a run of the grating wheel
+        monitor.
+        """
+
+        mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
+        self.query_table = eval('{}GratingQueryHistory'.format(mixed_case_name))
+        self.stats_table = eval('{}GratingStats'.format(mixed_case_name))
+
+    def image_to_png(self, image, outname):
+        """Ouputs an image array into a png file.
+
+        Parameters
+        ----------
+        image : numpy.ndarray
+            2D image array.
+
+        outname : str
+            The name given to the output png file.
+
+        Returns
+        -------
+        output_filename : str
+            The full path to the output png file.
+        """
+
+        output_filename = os.path.join(self.data_dir, '{}.png'.format(outname))
+
+        # Get image scale limits
+        z = ZScaleInterval()
+        vmin, vmax = z.get_limits(image)
+
+        # Plot the image
+        plt.figure(figsize=(12, 12))
+        ax = plt.gca()
+        im = ax.imshow(image, cmap='gray', origin='lower', vmin=vmin, vmax=vmax)
+        ax.set_title(outname.split('_uncal')[0])
+
+        # Make the colorbar
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.4)
+        cbar = plt.colorbar(im, cax=cax)
+        cbar.set_label('Signal [DN]')
+
+        # Save the image
+        plt.savefig(output_filename, bbox_inches='tight', dpi=200)
+        set_permissions(output_filename)
+        logging.info('\t{} created'.format(output_filename))
+
+        return output_filename
+
+    def make_histogram(self, data):
+        """Creates a histogram of the input data and returns the bin
+        centers and the counts in each bin.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            The input data.
+
+        Returns
+        -------
+        counts : numpy.ndarray
+            The counts in each histogram bin.
+
+        bin_centers : numpy.ndarray
+            The histogram bin centers.
+        """
+
+        # Calculate the histogram range as that within 5 sigma from the mean
+        data = data.flatten()
+        clipped = sigma_clip(data, sigma=3.0, maxiters=5)
+        mean, stddev = np.nanmean(clipped), np.nanstd(clipped)
+        lower_thresh, upper_thresh = mean - 4 * stddev, mean + 4 * stddev
+
+        # Make the histogram
+        counts, bin_edges = np.histogram(data, bins='auto', range=(lower_thresh, upper_thresh))
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+        return counts, bin_centers
+
+    def most_recent_search(self):
+        """Query the query history database and return the information
+        on the most recent query for the given ``aperture_name`` where
+        the grating wheel monitor was executed.
+
+        Returns
+        -------
+        query_result : float
+            Date (in MJD) of the ending range of the previous MAST query
+            where the grating wheel monitor was run.
+        """
+
+        query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
+            self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
+
+        if len(query) == 0:
+            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
+            logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, query_result)))
+        else:
+            query_result = query[-1].end_time_mjd
+
+        return query_result
+
+    def process(self, file_list):
+        """The main method for processing darks.  See module docstrings
+        for further details.
+
+        Parameters
+        ----------
+        file_list : list
+            List of filenames (including full paths) to the dark current
+            files.
+        """
+
+        for filename in file_list:
+            logging.info('\tWorking on file: {}'.format(filename))
+
+            # Get relevant header info for this file
+            self.read_pattern = fits.getheader(filename, 0)['READPATT']
+            self.expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'], fits.getheader(filename, 0)['TIME-OBS'])
+
+            # Run the file through the necessary pipeline steps
+            pipeline_steps = self.determine_pipeline_steps()
+            logging.info('\tRunning pipeline on {}'.format(filename))
+            try:
+                processed_file = pipeline_tools.run_calwebb_detector1_steps(filename, pipeline_steps)
+                logging.info('\tPipeline complete. Output: {}'.format(processed_file))
+                set_permissions(processed_file)
+            except:
+                logging.info('\tPipeline processing failed for {}'.format(filename))
+                continue
+
+            # Find amplifier boundaries so per-amp statistics can be calculated
+            _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)
+            logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
+
+            # # Get the uncalibrated 0th group data for this file
+            # uncal_data = fits.getdata(filename, 'SCI')[0, 0, :, :].astype(float)
+            # DETERMINE TELEMETRY VALUES AND INCLUDE THEM IN THE GRATING_DB_ENTRY
+
+            # Calculate image statistics on the calibrated image
+            cal_data = fits.getdata(processed_file, 'SCI')[0, 0, :, :]
+            mean, median, stddev = sigma_clipped_stats(cal_data, sigma=3.0, maxiters=5)
+            collapsed_rows, collapsed_columns = self.collapse_image(cal_data)
+            counts, bin_centers = self.make_histogram(cal_data)
+            logging.info('\tCalculated calibrated image stats: {:.3f} +/- {:.3f}'.format(mean, stddev))
+
+            # Save a png of the calibrated image for visual inspection
+            logging.info('\tCreating png of calibrated image')
+            output_png = self.image_to_png(cal_data, outname=os.path.basename(processed_file).replace('.fits', ''))
+
+            # Construct new entry for this file for the grating wheel database table.
+            # Can't insert values with numpy.float32 datatypes into database
+            # so need to change the datatypes of these values.
+            grating_db_entry = {'aperture': self.aperture,
+                                'uncal_filename': filename,
+                                'cal_filename': processed_file,
+                                'cal_image': output_png,
+                                'expstart': self.expstart,
+                                'mean': float(mean),
+                                'median': float(median),
+                                'stddev': float(stddev),
+                                'collapsed_rows': collapsed_rows.astype(float),
+                                'collapsed_columns': collapsed_columns.astype(float),
+                                'counts': counts.astype(float),
+                                'bin_centers': bin_centers.astype(float),
+                                'entry_date': datetime.datetime.now()
+                                }
+
+            # Add this new entry to the grating database table
+            self.stats_table.__table__.insert().execute(grating_db_entry)
+            logging.info('\tNew entry added to grating database table: {}'.format(grating_db_entry))
+
+    @log_fail
+    @log_info
+    def run(self):
+        """The main method.  See module docstrings for further details."""
+
+        logging.info('Begin logging for grating_monitor')
+
+        # Get the output directory and setup a directory to store the data
+        self.output_dir = os.path.join(get_config()['outputs'], 'grating_monitor')
+        ensure_dir_exists(os.path.join(self.output_dir, 'data'))
+
+        # Use the current time as the end time for MAST query
+        self.query_end = Time.now().mjd
+
+        # Loop over all instruments
+        for instrument in ['nirspec']:
+            self.instrument = instrument
+
+            # Identify which database tables to use
+            self.identify_tables()
+
+            # Get a list of all possible full-frame apertures for this instrument
+            siaf = Siaf(self.instrument)
+            possible_apertures = [aperture for aperture in siaf.apertures if siaf[aperture].AperType == 'FULLSCA']
+
+            for aperture in possible_apertures:
+
+                logging.info('Working on aperture {} in {}'.format(aperture, instrument))
+                self.aperture = aperture
+
+                # Locate the record of most recent MAST search; use this time
+                # (plus a 30 day buffer to catch any missing files from
+                # previous run) as the start time in the new MAST search.
+                most_recent_search = self.most_recent_search()
+                self.query_start = most_recent_search - 30
+
+                # Query MAST for new dark files for this instrument/aperture
+                logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
+                new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
+                logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
+
+                # Set up a directory to store the data for this aperture
+                self.data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
+                if len(new_entries) > 0:
+                    ensure_dir_exists(self.data_dir)
+
+                # Get any new files to process
+                new_files = []
+                for file_entry in new_entries:
+                    output_filename = os.path.join(self.data_dir, file_entry['filename'])
+                    output_filename = output_filename.replace('_uncal.fits', '_uncal_0thgroup.fits').replace('_dark.fits', '_uncal_0thgroup.fits')
+
+                    # Dont process files that already exist in the grating stats database
+                    file_exists = self.file_exists_in_database(output_filename)
+                    if file_exists:
+                        logging.info('\t{} already exists in the grating database table.'.format(output_filename))
+                        continue
+
+                    # Save the 0th group image from each new file in the output directory; some dont exist in JWQL filesystem.
+                    try:
+                        filename = filesystem_path(file_entry['filename'])
+                        uncal_filename = filename.replace('_dark', '_uncal')
+                        if not os.path.isfile(uncal_filename):
+                            logging.info('\t{} does not exist in JWQL filesystem, even though {} does'.format(uncal_filename, filename))
+                        else:
+                            new_file = self.extract_zeroth_group(uncal_filename)
+                            new_files.append(new_file)
+                    except FileNotFoundError:
+                        logging.info('\t{} does not exist in JWQL filesystem'.format(file_entry['filename']))
+
+                # Run the grating monitor on any new files
+                if len(new_files) > 0:
+                    self.process(new_files)
+                    monitor_run = True
+                else:
+                    logging.info('\tGrating monitor skipped. {} new dark files for {}, {}.'.format(len(new_files), instrument, aperture))
+                    monitor_run = False
+
+                # Update the query history
+                new_entry = {'instrument': instrument,
+                             'aperture': aperture,
+                             'start_time_mjd': self.query_start,
+                             'end_time_mjd': self.query_end,
+                             'entries_found': len(new_entries),
+                             'files_found': len(new_files),
+                             'run_monitor': monitor_run,
+                             'entry_date': datetime.datetime.now()}
+                self.query_table.__table__.insert().execute(new_entry)
+                logging.info('\tUpdated the query history table')
+
+        logging.info('Grating Monitor completed successfully.')
+
+
+if __name__ == '__main__':
+
+    module = os.path.basename(__file__).strip('.py')
+    start_time, log_file = initialize_instrument_monitor(module)
+
+    monitor = Grating()
+    monitor.run()
+
+    update_monitor_table(module, start_time, log_file)
