@@ -317,7 +317,8 @@ RAPID_READPATTERNS = {'fgs': ['FGSRAPID'],
                       'nirspec': ['NRSRAPID', 'NRSIRS2RAPID']}
 
 READPATT_PER_INSTRUMENT = {'fgs': ['FGS', 'FGSRAPID', 'FGS60', 'FGS840', 'FGS8370'],
-                           'miri': ['FAST', 'SLOW', 'FASTGRPAVG'],
+                           'miri': ['FAST', 'FASTR1', 'SLOW', 'SLOWR1', 'FASTGRPAVG',
+                           'FASTGRPAVG8', 'FASTGRPAVG16', 'FASTGRPAVG32', 'FASTGRPAVG64'],
                            'nircam': ['RAPID', 'SHALLOW2', 'BRIGHT2', 'MEDIUM2', 'SHALLOW4',
                                       'MEDIUM8', 'BRIGHT1', 'DEEP2', 'DEEP8'],
                            'niriss': ['NISRAPID', 'NIS'],
