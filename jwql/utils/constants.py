@@ -311,7 +311,9 @@ NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami', 'psf-amiavg']
 # RAPID-style readout patterns for each instrument. Added so we can
 # differentiate in MAST searches for e.g. the dark current monitor
 RAPID_READPATTERNS = {'fgs': ['FGSRAPID'],
-                      'miri': ['FAST', 'SLOW'],
+                      'miri': ['FAST', 'FASTR1', 'SLOW', 'SLOWR1', 'FASTGRPAVG',
+                               'FASTGRPAVG8', 'FASTGRPAVG16', 'FASTGRPAVG32',
+                               'FASTGRPAVG64'],
                       'nircam': ['RAPID'],
                       'niriss': ['NISRAPID'],
                       'nirspec': ['NRSRAPID', 'NRSIRS2RAPID']}
