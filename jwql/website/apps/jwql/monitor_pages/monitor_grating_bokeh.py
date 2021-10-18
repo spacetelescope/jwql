@@ -60,6 +60,7 @@ class GratingMonitor(BokehTemplate):
 
         # Query database for all data in grating wheel stats with a matching aperture,
         # and sort the data by exposure start time.
+        # FAILING HERE: (psycopg2.errors.UndefinedTable) relation "nirspec_grating_stats" does not exist
         self.query_results = session.query(self.stats_table) \
             .filter(self.stats_table.aperture == self._aperture) \
             .order_by(self.stats_table.expstart) \
