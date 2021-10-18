@@ -347,24 +347,12 @@ class Grating():
             grating_db_entry = {'aperture': self.aperture,
                                 'read_pattern': self.read_pattern,
                                 'expstart': self.expstart,
-                                'inrsh_gwa_adcmgain': "ADCMGAIN",
-                                'inrsh_gwa_adcmoffset': "ADCMOFFSET",
-                                'inrsh_gwa_motor_vref': "MOTOR_VREF",
-                                'inrsi_c_gwa_x_position': "X",
-                                'inrsi_c_gwa_y_position': "Y"
-
-                                # 'uncal_filename': filename,
-                                # 'cal_filename': processed_file,
-                                # 'cal_image': output_png,
-                                # 'expstart': self.expstart,
-                                # 'mean': float(mean),
-                                # 'median': float(median),
-                                # 'stddev': float(stddev),
-                                # 'collapsed_rows': collapsed_rows.astype(float),
-                                # 'collapsed_columns': collapsed_columns.astype(float),
-                                # 'counts': counts.astype(float),
-                                # 'bin_centers': bin_centers.astype(float),
-                                # 'entry_date': datetime.datetime.now()
+                                'inrsh_gwa_adcmgain': 10,
+                                'inrsh_gwa_adcmoffset': 10,
+                                'inrsh_gwa_motor_vref': 10,
+                                'inrsi_c_gwa_x_position': 10,
+                                'inrsi_c_gwa_y_position': 10,
+                                'run_monitor': False
                                 }
 
             # Add this new entry to the grating database table
