@@ -325,7 +325,8 @@ READPATT_PER_INSTRUMENT = {'fgs': ['FGS', 'FGSRAPID', 'FGS60', 'FGS840', 'FGS837
                            'nircam': ['RAPID', 'SHALLOW2', 'BRIGHT2', 'MEDIUM2', 'SHALLOW4',
                                       'MEDIUM8', 'BRIGHT1', 'DEEP2', 'DEEP8'],
                            'niriss': ['NISRAPID', 'NIS'],
-                           'nirspec': ['NRS', 'NRSRAPID', 'NRSRAPIDD2', 'NRSRAPIDD6']}
+                           'nirspec': ['NRS', 'NRSRAPID', 'NRSIRS2RAPID',
+                                       'NRSRAPIDD2', 'NRSRAPIDD6']}
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 
