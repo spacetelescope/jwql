@@ -1,8 +1,5 @@
 APERTURE, string
-DETECTOR, string
 READ_PATTERN, string
-NINTS, string
-NGROUPS, string
 EXPSTART, string
 INRSH_GWA_ADCMGAIN, float
 INRSH_GWA_ADCMOFFSET, float
