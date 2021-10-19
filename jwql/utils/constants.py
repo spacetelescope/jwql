@@ -315,17 +315,22 @@ NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami', 'psf-amiavg']
 # RAPID-style readout patterns for each instrument. Added so we can
 # differentiate in MAST searches for e.g. the dark current monitor
 RAPID_READPATTERNS = {'fgs': ['FGSRAPID'],
-                      'miri': ['FAST', 'SLOW'],
+                      'miri': ['FAST', 'FASTR1', 'SLOW', 'SLOWR1', 'FASTGRPAVG',
+                               'FASTGRPAVG8', 'FASTGRPAVG16', 'FASTGRPAVG32',
+                               'FASTGRPAVG64', 'FASTR100'],
                       'nircam': ['RAPID'],
                       'niriss': ['NISRAPID'],
                       'nirspec': ['NRSRAPID', 'NRSIRS2RAPID']}
 
 READPATT_PER_INSTRUMENT = {'fgs': ['FGS', 'FGSRAPID', 'FGS60', 'FGS840', 'FGS8370'],
-                           'miri': ['FAST', 'SLOW', 'FASTGRPAVG'],
+                           'miri': ['FAST', 'FASTR1', 'SLOW', 'SLOWR1', 'FASTGRPAVG',
+                                    'FASTGRPAVG8', 'FASTGRPAVG16', 'FASTGRPAVG32',
+                                    'FASTGRPAVG64', 'FASTR100'],
                            'nircam': ['RAPID', 'SHALLOW2', 'BRIGHT2', 'MEDIUM2', 'SHALLOW4',
                                       'MEDIUM8', 'BRIGHT1', 'DEEP2', 'DEEP8'],
                            'niriss': ['NISRAPID', 'NIS'],
-                           'nirspec': ['NRS', 'NRSRAPID', 'NRSRAPIDD2', 'NRSRAPIDD6']}
+                           'nirspec': ['NRS', 'NRSRAPID', 'NRSIRS2RAPID',
+                                       'NRSRAPIDD2', 'NRSRAPIDD6']}
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 
