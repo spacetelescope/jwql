@@ -29,8 +29,8 @@ import pandas as pd
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import get_config, initialize_instrument_monitor
-from jwql.utils.monitor_utils import update_monitor_table
+from jwql.utils.utils import get_config
+from jwql.utils import monitor_utils
 from jwql.utils.plotting import bar_chart
 
 
@@ -265,8 +265,8 @@ if __name__ == '__main__':
 
     # Configure logging
     module = os.path.basename(__file__).strip('.py')
-    start_time, log_file = initialize_instrument_monitor(module)
+    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     # Run the monitors
     monitor_mast()
-    update_monitor_table(module, start_time, log_file)
+    monitor_utils.update_monitor_table(module, start_time, log_file)
