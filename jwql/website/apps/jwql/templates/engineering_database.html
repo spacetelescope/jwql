@@ -23,7 +23,7 @@
                 <div class="mnemonic_name_search_col1">
                     <b><i>Submit a mnemonic identifier:</i></b>
                     <!--Load the EDB mnemonic search form from the view-->
-                    <form action="" method="post" id="mnemonic_name_search"><input type="hidden" name="access_token" value="{{ user.access_token }}" />
+                    <form action="" method="post" id="mnemonic_name_search"><input type="hidden" name="access_token" />
                         <!--Show any errors from a previous form submission-->
                         {% if edb_components['mnemonic_name_search_form'].errors %}
                             {% for field in edb_components['mnemonic_name_search_form'] %}
@@ -74,7 +74,7 @@
                 <b><i>Submit a mnemonic identifier with a time range to view the corresponding EDB records:</i></b>
 
                 <!--Load the EDB mnemonic search form from the view-->
-                <form action="" method="post" id="mnemonic_name_search"><input type="hidden" name="access_token" value="{{ user.access_token }}" />
+                <form action="" method="post" id="mnemonic_name_search"><input type="hidden" name="access_token" />
                     <!--Show any errors from a previous form submission-->
                     {% if edb_components['mnemonic_query_form'].errors %}
                         {% for field in edb_components['mnemonic_query_form'] %}
