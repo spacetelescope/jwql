@@ -156,7 +156,7 @@ def get_mnemonic(mnemonic_identifier, start_time, end_time):
     data = service.get_values(mnemonic_identifier, start_time, end_time, include_obstime=True)
     meta = service.get_meta(mnemonic_identifier)
 
-    dates = [datetime.strptime(row.obstime.iso,"%Y-%m-%d %H:%M:%S.%f") for row in data]
+    dates = [datetime.strptime(row.obstime.iso, "%Y-%m-%d %H:%M:%S.%f") for row in data]
     values = [row.value for row in data]
 
     data = {'dates': dates, 'euvalues': values}
