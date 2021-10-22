@@ -159,7 +159,7 @@ def get_mnemonic(mnemonic_identifier, start_time, end_time):
     dates = [datetime.strptime(row.obstime.iso,"%Y-%m-%d %H:%M:%S.%f") for row in data]
     values = [row.value for row in data]
 
-    data = {'dates': dates, 'euvalues':values}
+    data = {'dates': dates, 'euvalues': values}
     info = get_mnemonic_info(mnemonic_identifier)
 
     # create and return instance
