@@ -365,7 +365,9 @@ function update_archive_page(inst, base_url) {
             document.getElementById("loading").style.display = "none";
             document.getElementById("proposal-array").style.display = "block";
             };
-    }});
+        },
+        timeout: 60000
+    });
 };
 
 
