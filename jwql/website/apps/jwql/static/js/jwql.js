@@ -333,6 +333,10 @@ function sort_by_thumbnails(sort_type) {
 function update_archive_page(inst, base_url) {
     $.ajax({
         url: base_url + '/ajax/' + inst + '/archive/',
+        timeout: 60000,
+        error: function(){
+            console.log('error');
+        }
         success: function(data){
 
             // Update the number of proposals displayed
@@ -366,7 +370,6 @@ function update_archive_page(inst, base_url) {
             document.getElementById("proposal-array").style.display = "block";
             };
         },
-        timeout: 60000
     });
 };
 
