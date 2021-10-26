@@ -334,10 +334,7 @@ function update_archive_page(inst, base_url) {
     $.ajax({
         url: base_url + '/ajax/' + inst + '/archive/',
         timeout: 60000,
-        error: function(){
-            console.log('error');
-        }
-        success: function(data){
+    }).done(function(data){
 
             // Update the number of proposals displayed
             num_proposals = data.thumbnails.proposals.length;
@@ -369,9 +366,7 @@ function update_archive_page(inst, base_url) {
             document.getElementById("loading").style.display = "none";
             document.getElementById("proposal-array").style.display = "block";
             };
-        },
     });
-};
 
 
 /**
