@@ -87,8 +87,14 @@ class EdbMnemonic:
         self.requested_start_time = start_time
         self.requested_end_time = end_time
         self.data = data
-        self.data_start_time = np.min(self.data['dates'])
-        self.data_end_time = np.max(self.data['dates'])
+
+        if self.data['dates'] is None:
+            self.data_start_time = None
+            self.data_end_time = None
+        else:
+            self.data_start_time = np.min(self.data['dates'])
+            self.data_end_time = np.max(self.data['dates'])
+
         self.meta = meta
         self.info = info
 
@@ -159,7 +165,7 @@ def get_mnemonic(mnemonic_identifier, start_time, end_time):
     dates = [datetime.strptime(row.obstime.iso, "%Y-%m-%d %H:%M:%S.%f") for row in data]
     values = [row.value for row in data]
 
-    data = {'dates': dates, 'euvalues': values}
+    data = Table({'dates': dates, 'euvalues': values})
     info = get_mnemonic_info(mnemonic_identifier)
 
     # create and return instance
