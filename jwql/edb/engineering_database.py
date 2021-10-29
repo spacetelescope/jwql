@@ -88,12 +88,12 @@ class EdbMnemonic:
         self.requested_end_time = end_time
         self.data = data
 
-        if self.data['dates'] is None:
+        if len(self.data) == 0:
             self.data_start_time = None
             self.data_end_time = None
         else:
-            self.data_start_time = np.min(self.data['dates'])
-            self.data_end_time = np.max(self.data['dates'])
+            self.data_start_time = Time(np.min(self.data['dates']), scale='utc')
+            self.data_end_time = Time(np.max(self.data['dates']), scale='utc')
 
         self.meta = meta
         self.info = info
