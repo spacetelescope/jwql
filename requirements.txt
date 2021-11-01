@@ -24,7 +24,7 @@ pytest==6.2.5
 pytest-cov==3.0.0
 scipy==1.7.1
 sphinx==4.2.0
-sqlalchemy==1.4.22
+sqlalchemy==1.4.26
 stdatamodels==0.2.4
 stsci_rtd_theme==0.0.2
 twine==3.4.1
