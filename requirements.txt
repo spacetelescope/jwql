@@ -6,7 +6,7 @@ codecov==2.1.12
 crds==11.5.0
 cryptography==35.0.0
 django==3.2.9
-flake8==3.9.2
+flake8==4.0.1
 inflection==0.5.1
 ipython==7.27.0
 jinja2==3.0.1
