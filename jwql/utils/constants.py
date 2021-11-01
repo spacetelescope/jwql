@@ -117,6 +117,10 @@ APERTURES_PER_INSTRUMENT = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL',
                                      'MIRIM_BRIGHTSKY', 'MIRIM_SLITLESSPRISM'],
                             'FGS': ['FGS1_FULL', 'FGS2_FULL']}
 
+# Observing templates used for ASIC tuning. MAST query results that
+# have one of these templates will be ignored
+ASIC_TEMPLATES = ['ISIM ASIC Tuning']
+
 # Bad pixel types by the type of data used to find them
 BAD_PIXEL_TYPES = ['DEAD', 'HOT', 'LOW_QE', 'RC', 'OPEN', 'ADJ_OPEN', 'TELEGRAPH', 'OTHER_BAD_PIXEL']
 DARKS_BAD_PIXEL_TYPES = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
@@ -311,17 +315,22 @@ NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami', 'psf-amiavg']
 # RAPID-style readout patterns for each instrument. Added so we can
 # differentiate in MAST searches for e.g. the dark current monitor
 RAPID_READPATTERNS = {'fgs': ['FGSRAPID'],
-                      'miri': ['FAST', 'SLOW'],
+                      'miri': ['FAST', 'FASTR1', 'SLOW', 'SLOWR1', 'FASTGRPAVG',
+                               'FASTGRPAVG8', 'FASTGRPAVG16', 'FASTGRPAVG32',
+                               'FASTGRPAVG64', 'FASTR100'],
                       'nircam': ['RAPID'],
                       'niriss': ['NISRAPID'],
                       'nirspec': ['NRSRAPID', 'NRSIRS2RAPID']}
 
 READPATT_PER_INSTRUMENT = {'fgs': ['FGS', 'FGSRAPID', 'FGS60', 'FGS840', 'FGS8370'],
-                           'miri': ['FAST', 'SLOW', 'FASTGRPAVG'],
+                           'miri': ['FAST', 'FASTR1', 'SLOW', 'SLOWR1', 'FASTGRPAVG',
+                                    'FASTGRPAVG8', 'FASTGRPAVG16', 'FASTGRPAVG32',
+                                    'FASTGRPAVG64', 'FASTR100'],
                            'nircam': ['RAPID', 'SHALLOW2', 'BRIGHT2', 'MEDIUM2', 'SHALLOW4',
                                       'MEDIUM8', 'BRIGHT1', 'DEEP2', 'DEEP8'],
                            'niriss': ['NISRAPID', 'NIS'],
-                           'nirspec': ['NRS', 'NRSRAPID', 'NRSRAPIDD2', 'NRSRAPIDD6']}
+                           'nirspec': ['NRS', 'NRSRAPID', 'NRSIRS2RAPID',
+                                       'NRSRAPIDD2', 'NRSRAPIDD6']}
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 
