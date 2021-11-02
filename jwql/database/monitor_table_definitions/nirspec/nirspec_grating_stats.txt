@@ -1,4 +1,5 @@
 APERTURE, string
+UNCAL_FILENAME, string
 READ_PATTERN, string
 EXPSTART, string
 INRSH_GWA_ADCMGAIN, float

@@ -27,7 +27,7 @@ References
 import inflection
 
 # Each amplifier is represented by 2 tuples, the first for x coordinates
-# and the second for y coordinates. Within each tuple are value for
+# and the second for y coordinates. Within each tuple are values for
 # starting, ending, and step size. Step size is needed for MIRI, where
 # the pixels corresponding to the 4 amplifiers are interleaved.
 AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 512, 1), (0, 2048, 1)],
@@ -208,7 +208,14 @@ GRATING_PER_INSTRUMENT = {'fgs': [],
                                       'G235H', 'G395H', 'PRISM']
                           }
 
-GRATING_TELEMETRY = ['INRSH_GWA_ADCMGAIN', 'INRSH_GWA_ADCMOFFSET', 'INRSH_GWA_MOTOR_VREF', 'INRSI_C_GWA_X_POSITION', 'INRSI_C_GWA_Y_POSITION']
+# Dictionary with keys that are mnemonics used for grating wheel telemetry monitor
+# Corresponding limits are given for Lower Red, Lower Yellow, High Yellow, High Red,
+# Switch Low, and Switch High, respectively
+GRATING_TELEMETRY = {'INRSH_GWA_ADCMGAIN': [2.36, 2.39, 2.62, 2.65, 1.00, 3.00],
+                     'INRSH_GWA_ADCMOFFSET': [-0.0600, -0.0420, 0.0420, 0.0600, 1.00, 3.00],
+                     'INRSH_GWA_MOTOR_VREF': [-0.0600, -0.0420, 2.530, 2.55, 1.00, 3.00],
+                     'INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374, 1.00, 3.00],
+                     'INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374, 1.00, 3.00]}
 
 # Possible suffix types for guider exposures
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']

@@ -577,7 +577,6 @@ def get_header_info(filename):
 
     # Extract header information from file
     for ext in range(0, len(hdulist)):
-    #for ext in range(0, 1):
 
         # Initialize dictionary to store header information for particular extension
         header_info[ext] = {}

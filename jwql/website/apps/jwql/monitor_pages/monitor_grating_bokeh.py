@@ -19,6 +19,7 @@ Use
 """
 
 from datetime import datetime, timedelta
+from astropy.time import Time
 import os
 
 from astropy.stats import sigma_clip
@@ -60,11 +61,11 @@ class GratingMonitor(BokehTemplate):
 
         # Query database for all data in grating wheel stats with a matching aperture,
         # and sort the data by exposure start time.
-        # FAILING HERE: (psycopg2.errors.UndefinedTable) relation "nirspec_grating_stats" does not exist
-        self.query_results = session.query(self.stats_table) \
-            .filter(self.stats_table.aperture == self._aperture) \
-            .order_by(self.stats_table.expstart) \
-            .all()
+        # If monitor fails here because relation does not exist, need to reset database
+        self.query_results = session.query(self.stats_table).all() \
+            # .filter(self.stats_table.aperture == self._aperture) \
+            # .order_by(self.stats_table.expstart) #\
+            #.all()
 
     def pre_init(self):
 
@@ -87,32 +88,34 @@ class GratingMonitor(BokehTemplate):
         self.load_data()
 
         # Update the mean grating wheel over time figures
-        self.update_mean_grating_figures()
+        self.update_grating_figures()
 
-    def update_mean_grating_figures(self):
-        """Updates the mean bias over time bokeh plots"""
-
-        # POSSIBLY REPLACE DARK EXPOSURES WITH SOMETHING ELSE
-        # Get the dark exposures and their starts times
-        filenames = [os.path.basename(result.uncal_filename).replace('_uncal.fits', '') for result in self.query_results]
-        expstarts_iso = np.array([result.expstart for result in self.query_results])
-        expstarts = np.array([datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f') for date in expstarts_iso])
+    def update_grating_figures(self):
+        """Updates the grating telemetry over time bokeh plots"""
 
         # Update the figures for all GWA telemetry values
-        for telemetry in GRATING_TELEMETRY:
-            gwa_vals = np.array([getattr(result, '{}'.format(telemetry)) for result in self.query_results])
-            self.refs['source_{}'.format(telemetry)].data = {'time': expstarts,
-                                                             'time_iso': expstarts_iso,
-                                                             'gwa_vals': gwa_vals,
-                                                             'filename': filenames}
+        for telemetry in GRATING_TELEMETRY.keys():
+            # telemetry = telemetry.lower()
+            gwa_vals = np.array([getattr(result, '{}'.format(telemetry.lower())) for result in self.query_results])
+            # self.query_results is empty array...
+
+            # need to figure out why grating_monitor values aren't populating session.query(self.stats_table).filter(self.stats_table.aperture == self._aperture).order_by(self.stats_table.expstart).all()
+            # it seems like this is putting the right column labels in though, eg  self.stats_table.inrsi_c_gwa_y_position exists
+            times = []
+            for result in self.query_results:
+                times.append(float(result.expstart))
+            # import pdb
+            # pdb.set_trace()
+            gwa_vals[np.where(gwa_vals == None)] = 0.0  # temp fix to eliminate None's
+            self.refs['source_{}'.format(telemetry)].data = {'time': [datetime.now(), datetime.now()+timedelta(days=3), datetime.now()+timedelta(days=8)], #, #np.array(times), #[result.expstart] for result in self.query_results), # if self.query_results else [0.0,0.5,5.0],  # retreive from grating query data
+                                                             'gwa_vals': [0.0, 4.0, 0.9]}  # gwa_vals}
             self.refs['figure_{}'.format(telemetry)].title.text = '{}'.format(telemetry)
-            self.refs['figure_{}'.format(telemetry)].hover.tooltips = [('file', '@filename'),
-                                                                       ('time', '@time_iso'),
+            self.refs['figure_{}'.format(telemetry)].hover.tooltips = [('time', '@time'),
                                                                        ('gwa val', '@gwa_vals')]
 
             # Update plot limits if data exists
             if len(gwa_vals) != 0:
-                self.refs['gwa_x_{}'.format(telemetry)].start = expstarts.min() - timedelta(days=3)
-                self.refs['gwa_x_{}'.format(telemetry)].end = expstarts.max() + timedelta(days=3)
+                self.refs['gwa_x_{}'.format(telemetry)].start = datetime.now() - timedelta(days=3)
+                self.refs['gwa_x_{}'.format(telemetry)].end = datetime.now()
                 self.refs['gwa_y_{}'.format(telemetry)].start = gwa_vals.min() - 20
                 self.refs['gwa_y_{}'.format(telemetry)].end = gwa_vals.max() + 20

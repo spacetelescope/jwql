@@ -316,7 +316,7 @@ def grating_monitor_tabs(instrument):
 
         # Add the telemetry vs time plots for grating wheel sensor telemetry value
         plots = []
-        for telemetry in GRATING_TELEMETRY:
+        for telemetry in GRATING_TELEMETRY.keys():
             grating_plot = monitor_template.refs['figure_{}'.format(telemetry)]
             grating_plot.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
             plots.append(grating_plot)
@@ -332,6 +332,9 @@ def grating_monitor_tabs(instrument):
 
     # Return tab HTML and JavaScript to web app
     script, div = components(tabs)
+    # bad column name here ERROR:bokeh.core.validation.check:E-1001 (BAD_COLUMN_NAME):
+    # Glyph refers to nonexistent column name. This could either be due to a misspelling or typo,
+    # or due to an expected column being missing. : key "y" value "grating" [renderer: GlyphRenderer(id='1278', ...)]
 
     return div, script
 

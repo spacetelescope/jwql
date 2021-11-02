@@ -22,9 +22,11 @@ import logging
 import os
 
 from astropy.io import fits
-from astropy.stats import sigma_clip, sigma_clipped_stats
+from astropy.stats import sigma_clip
 from astropy.time import Time
 from astropy.visualization import ZScaleInterval
+from jwql.edb.engineering_database import get_mnemonic
+from jwql.edb.engineering_database import get_mnemonics
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -35,10 +37,8 @@ from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
 from jwql.database.database_interface import NIRSpecGratingQueryHistory, NIRSpecGratingStats
-from jwql.instrument_monitors import pipeline_tools
 from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
-from jwql.utils import instrument_properties
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, GRATING_TELEMETRY
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.monitor_utils import update_monitor_table
 from jwql.utils.permissions import set_permissions
@@ -78,60 +78,6 @@ class Grating():
 
     def __init__(self):
         """Initialize an instance of the ``Grating`` class."""
-
-    def collapse_image(self, image):
-        """Median-collapse the rows and columns of an image.
-
-        Parameters
-        ----------
-        image : numpy.ndarray
-            2D array on which to calculate statistics.
-
-        Returns
-        -------
-        collapsed_rows : numpy.ndarray
-            1D array of the collapsed row values.
-
-        collapsed_columns : numpy.ndarray
-            1D array of the collapsed column values.
-        """
-
-        collapsed_rows = np.nanmedian(image, axis=1)
-        collapsed_columns = np.nanmedian(image, axis=0)
-
-        return collapsed_rows, collapsed_columns
-
-    def determine_pipeline_steps(self):
-        """Determines the necessary JWST pipelines steps to run on a
-        given dark file.
-
-        Returns
-        -------
-        pipeline_steps : collections.OrderedDict
-            The pipeline steps to run.
-        """
-
-        pipeline_steps = OrderedDict({})
-
-        # Determine if the file needs group_scale step run
-        if self.read_pattern not in pipeline_tools.GROUPSCALE_READOUT_PATTERNS:
-            pipeline_steps['group_scale'] = False
-        else:
-            pipeline_steps['group_scale'] = True
-
-        # Run the DQ step on all files
-        pipeline_steps['dq_init'] = True
-
-        # Only run the superbias step for NIR instruments
-        if self.instrument != 'miri':
-            pipeline_steps['superbias'] = True
-        else:
-            pipeline_steps['superbias'] = False
-
-        # Run the refpix step on all files
-        pipeline_steps['refpix'] = True
-
-        return pipeline_steps
 
     def extract_zeroth_group(self, filename):
         """Extracts the 0th group of a fits image and outputs it into
@@ -281,7 +227,6 @@ class Grating():
             Date (in MJD) of the ending range of the previous MAST query
             where the grating wheel monitor was run.
         """
-
         query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
             self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
 
@@ -303,61 +248,42 @@ class Grating():
             List of filenames (including full paths) to the dark current
             files.
         """
+        start_telemetry_time = Time(Time.now(), format='decimalyear') - 300  # Use telemetry from previous 30 days
+        end_telemetry_time = Time(Time.now(), format='decimalyear')
 
-        for filename in file_list:
-            logging.info('\tWorking on file: {}'.format(filename))
+        # Construct new entry for this file for the grating wheel database table.
+        for telem in GRATING_TELEMETRY.keys():
+            mnemonic = get_mnemonic(telem, start_telemetry_time, end_telemetry_time)
+            for time in mnemonic.data['MJD']:
+                grating_db_entry = {'aperture': self.aperture,
+                                    'read_pattern': "temp",
+                                    'expstart': time,
+                                    'inrsh_gwa_adcmgain_time': mnemonic.data['euvalue'][np.where(mnemonic.data['MJD'] == time)],
+                                    'run_monitor': False,
+                                    'entry_date': datetime.datetime.now()  # need slightly different times to add to database
+                                    }
 
-            # Get relevant header info for this file
-            self.read_pattern = fits.getheader(filename, 0)['READPATT']
-            self.expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'], fits.getheader(filename, 0)['TIME-OBS'])
+                # Add this new entry to the grating database table
+                self.stats_table.__table__.insert().execute(grating_db_entry)
+                logging.info('\tNew entry added to grating database table: {}'.format(grating_db_entry))
 
-            # Run the file through the necessary pipeline steps
-            pipeline_steps = self.determine_pipeline_steps()
-            logging.info('\tRunning pipeline on {}'.format(filename))
-            try:
-                processed_file = pipeline_tools.run_calwebb_detector1_steps(filename, pipeline_steps)
-                logging.info('\tPipeline complete. Output: {}'.format(processed_file))
-                set_permissions(processed_file)
-            except:
-                logging.info('\tPipeline processing failed for {}'.format(filename))
-                continue
-
-            # Find amplifier boundaries so per-amp statistics can be calculated
-            _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)
-            logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
-
-            # # Get the uncalibrated 0th group data for this file
-            # uncal_data = fits.getdata(filename, 'SCI')[0, 0, :, :].astype(float)
-            # DETERMINE TELEMETRY VALUES AND INCLUDE THEM IN THE GRATING_DB_ENTRY
-
-            # Calculate image statistics on the calibrated image
-            cal_data = fits.getdata(processed_file, 'SCI')[0, 0, :, :]
-            mean, median, stddev = sigma_clipped_stats(cal_data, sigma=3.0, maxiters=5)
-            collapsed_rows, collapsed_columns = self.collapse_image(cal_data)
-            counts, bin_centers = self.make_histogram(cal_data)
-            logging.info('\tCalculated calibrated image stats: {:.3f} +/- {:.3f}'.format(mean, stddev))
-
-            # Save a png of the calibrated image for visual inspection
-            logging.info('\tCreating png of calibrated image')
-            output_png = self.image_to_png(cal_data, outname=os.path.basename(processed_file).replace('.fits', ''))
-
-            # Construct new entry for this file for the grating wheel database table.
-            # Can't insert values with numpy.float32 datatypes into database
-            # so need to change the datatypes of these values.
-            grating_db_entry = {'aperture': self.aperture,
-                                'read_pattern': self.read_pattern,
-                                'expstart': self.expstart,
-                                'inrsh_gwa_adcmgain': 10,
-                                'inrsh_gwa_adcmoffset': 10,
-                                'inrsh_gwa_motor_vref': 10,
-                                'inrsi_c_gwa_x_position': 10,
-                                'inrsi_c_gwa_y_position': 10,
-                                'run_monitor': False
-                                }
-
-            # Add this new entry to the grating database table
-            self.stats_table.__table__.insert().execute(grating_db_entry)
-            logging.info('\tNew entry added to grating database table: {}'.format(grating_db_entry))
+        # FAILS BECAUSE LISTS OF FLOATS NOT FLOATS...
+        # mnemonics = get_mnemonics(GRATING_TELEMETRY, start_telemetry_time, end_telemetry_time)
+        # grating_db_entry = {'aperture': self.aperture,
+        #                     'read_pattern': "temp",
+        #                     'expstart': "temp",
+        #                     'inrsh_gwa_adcmgain_time': mnemonics['INRSH_GWA_ADCMGAIN'].data['MJD'],
+        #                     'inrsh_gwa_adcmgain': mnemonics['INRSH_GWA_ADCMGAIN'].data['euvalue'],
+        #                     'inrsh_gwa_adcmoffset_time': mnemonics['INRSH_GWA_ADCMOFFSET'].data['MJD'],
+        #                     'inrsh_gwa_adcmoffset': mnemonics['INRSH_GWA_ADCMOFFSET'].data['euvalue'],
+        #                     'inrsh_gwa_motor_vref_time': mnemonics['INRSH_GWA_MOTOR_VREF'].data['MJD'],
+        #                     'inrsh_gwa_motor_vref': mnemonics['INRSH_GWA_MOTOR_VREF'].data['euvalue'],
+        #                     'inrsi_c_gwa_x_position_time': mnemonics['INRSI_C_GWA_X_POSITION'].data['MJD'],
+        #                     'inrsi_c_gwa_x_position': mnemonics['INRSI_C_GWA_X_POSITION'].data['euvalue'],
+        #                     'inrsi_c_gwa_y_position_time': mnemonics['INRSI_C_GWA_Y_POSITION'].data['MJD'],
+        #                     'inrsi_c_gwa_y_position': mnemonics['INRSI_C_GWA_Y_POSITION'].data['euvalue'],
+        #                     'run_monitor': False
+        #                     }
 
     @log_fail
     @log_info
@@ -373,81 +299,78 @@ class Grating():
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
 
-        # Loop over all instruments
-        for instrument in ['nirspec']:
-            self.instrument = instrument
+        self.instrument = 'nirspec'
 
-            # Identify which database tables to use
-            self.identify_tables()
+        # Identify which database tables to use
+        self.identify_tables()
 
-            # Get a list of all possible full-frame apertures for this instrument
-            siaf = Siaf(self.instrument)
-            possible_apertures = [aperture for aperture in siaf.apertures if siaf[aperture].AperType == 'FULLSCA']
+        # Get a list of all possible full-frame apertures for this instrument
+        siaf = Siaf(self.instrument)
+        possible_apertures = [aperture for aperture in siaf.apertures if siaf[aperture].AperType == 'FULLSCA']
 
-            for aperture in possible_apertures:
+        for aperture in possible_apertures:
+            logging.info('Working on aperture {} in {}'.format(aperture, self.instrument))
+            self.aperture = aperture
 
-                logging.info('Working on aperture {} in {}'.format(aperture, instrument))
-                self.aperture = aperture
+            # Locate the record of most recent MAST search; use this time
+            # (plus a 30 day buffer to catch any missing files from
+            # previous run) as the start time in the new MAST search.
+            most_recent_search = self.most_recent_search()
+            self.query_start = most_recent_search - 30
 
-                # Locate the record of most recent MAST search; use this time
-                # (plus a 30 day buffer to catch any missing files from
-                # previous run) as the start time in the new MAST search.
-                most_recent_search = self.most_recent_search()
-                self.query_start = most_recent_search - 30
+            # Query MAST for new dark files for this instrument/aperture
+            logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
+            new_entries = mast_query_darks(self.instrument, aperture, self.query_start, self.query_end)
+            logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
-                # Query MAST for new dark files for this instrument/aperture
-                logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
-                new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
-                logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
+            # Set up a directory to store the data for this aperture
+            self.data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
+            if len(new_entries) > 0:
+                ensure_dir_exists(self.data_dir)
 
-                # Set up a directory to store the data for this aperture
-                self.data_dir = os.path.join(self.output_dir, 'data/{}_{}'.format(self.instrument.lower(), self.aperture.lower()))
-                if len(new_entries) > 0:
-                    ensure_dir_exists(self.data_dir)
+            # Get any new files to process
+            new_files = []
+            for file_entry in new_entries:
+                output_filename = os.path.join(self.data_dir, file_entry['filename'])
+                output_filename = output_filename.replace('_uncal.fits', '_uncal_0thgroup.fits').replace('_dark.fits', '_uncal_0thgroup.fits')
 
-                # Get any new files to process
-                new_files = []
-                for file_entry in new_entries:
-                    output_filename = os.path.join(self.data_dir, file_entry['filename'])
-                    output_filename = output_filename.replace('_uncal.fits', '_uncal_0thgroup.fits').replace('_dark.fits', '_uncal_0thgroup.fits')
+                # Dont process files that already exist in the grating stats database
+                file_exists = self.file_exists_in_database(output_filename)
+                if file_exists:
+                    logging.info('\t{} already exists in the grating database table.'.format(output_filename))
+                    continue
 
-                    # Dont process files that already exist in the grating stats database
-                    file_exists = self.file_exists_in_database(output_filename)
-                    if file_exists:
-                        logging.info('\t{} already exists in the grating database table.'.format(output_filename))
-                        continue
+                # Save the 0th group image from each new file in the output directory; some dont exist in JWQL filesystem.
+                try:
+                    filename = filesystem_path(file_entry['filename'])
+                    uncal_filename = filename.replace('_dark', '_uncal')
+                    if not os.path.isfile(uncal_filename):
+                        logging.info('\t{} does not exist in JWQL filesystem, even though {} does'.format(uncal_filename, filename))
+                    else:
+                        new_file = self.extract_zeroth_group(uncal_filename)
+                        new_files.append(new_file)
+                except FileNotFoundError:
+                    logging.info('\t{} does not exist in JWQL filesystem'.format(file_entry['filename']))
+            # Run the grating monitor on any new files
+            # NEED TO CHANGE SUCH THAT MONITOR IS UPDATED WHEN NEW TELEMETRY IS AVAILABLE?
+            if len(new_files) > 0:
+                self.process(new_files)
+                monitor_run = True
+            else:
+                logging.info('\tGrating monitor skipped. {} new dark files for {}, {}.'.format(len(new_files), self.instrument, aperture))
+                monitor_run = False
 
-                    # Save the 0th group image from each new file in the output directory; some dont exist in JWQL filesystem.
-                    try:
-                        filename = filesystem_path(file_entry['filename'])
-                        uncal_filename = filename.replace('_dark', '_uncal')
-                        if not os.path.isfile(uncal_filename):
-                            logging.info('\t{} does not exist in JWQL filesystem, even though {} does'.format(uncal_filename, filename))
-                        else:
-                            new_file = self.extract_zeroth_group(uncal_filename)
-                            new_files.append(new_file)
-                    except FileNotFoundError:
-                        logging.info('\t{} does not exist in JWQL filesystem'.format(file_entry['filename']))
-
-                # Run the grating monitor on any new files
-                if len(new_files) > 0:
-                    self.process(new_files)
-                    monitor_run = True
-                else:
-                    logging.info('\tGrating monitor skipped. {} new dark files for {}, {}.'.format(len(new_files), instrument, aperture))
-                    monitor_run = False
-
-                # Update the query history
-                new_entry = {'instrument': instrument,
-                             'aperture': aperture,
-                             'start_time_mjd': self.query_start,
-                             'end_time_mjd': self.query_end,
-                             'entries_found': len(new_entries),
-                             'files_found': len(new_files),
-                             'run_monitor': monitor_run,
-                             'entry_date': datetime.datetime.now()}
-                self.query_table.__table__.insert().execute(new_entry)
-                logging.info('\tUpdated the query history table')
+            # Update the query history
+            new_entry = {'instrument': self.instrument,
+                         'aperture': aperture,
+                         'start_time_mjd': self.query_start,
+                         'end_time_mjd': self.query_end,
+                         'entries_found': len(new_entries),
+                         'files_found': len(new_files),
+                         'run_monitor': monitor_run,
+                         'entry_date': datetime.datetime.now()}
+            self.query_table.__table__.insert().execute(new_entry)
+            logging.info('\tUpdated the query history table')
 
         logging.info('Grating Monitor completed successfully.')
 
