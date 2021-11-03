@@ -107,11 +107,14 @@ class GratingMonitor(BokehTemplate):
             # import pdb
             # pdb.set_trace()
             gwa_vals[np.where(gwa_vals == None)] = 0.0  # temp fix to eliminate None's
-            self.refs['source_{}'.format(telemetry)].data = {'time': [datetime.now(), datetime.now()+timedelta(days=3), datetime.now()+timedelta(days=8)], #, #np.array(times), #[result.expstart] for result in self.query_results), # if self.query_results else [0.0,0.5,5.0],  # retreive from grating query data
-                                                             'gwa_vals': [0.0, 4.0, 0.9]}  # gwa_vals}
+            self.refs['source_{}'.format(telemetry)].data = {'time': [datetime.now(), datetime.now()-timedelta(days=1), datetime.now()-timedelta(days=2)],
+                                                             #, #np.array(times), #[result.expstart] for result in self.query_results), # if self.query_results else [0.0,0.5,5.0],  # retreive from grating query data
+                                                             'time_iso': [datetime.now(), datetime.now()-timedelta(days=1), datetime.now()-timedelta(days=8)],  # not actually used
+                                                             'grating': [0.0, 4.0, -9.9],
+                                                             'filename': ["tempfile1", "tempfile2", "tempfile3"]}  # gwa_vals}
             self.refs['figure_{}'.format(telemetry)].title.text = '{}'.format(telemetry)
             self.refs['figure_{}'.format(telemetry)].hover.tooltips = [('time', '@time'),
-                                                                       ('gwa val', '@gwa_vals')]
+                                                                       ('gwa val', '@grating')]
 
             # Update plot limits if data exists
             if len(gwa_vals) != 0:

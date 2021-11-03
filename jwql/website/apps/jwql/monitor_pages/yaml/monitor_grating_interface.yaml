@@ -23,7 +23,7 @@
     ref: "figure_INRSH_GWA_ADCMGAIN"
     x_axis_label: "Date"
     x_axis_type: "datetime"
-    y_axis_label: "INRSH_GWA_ADCMGAIN [DN]"
+    y_axis_label: "INRSH_GWA_ADCMGAIN [V]"
     x_range: *gwa_x_INRSH_GWA_ADCMGAIN
     y_range: *gwa_y_INRSH_GWA_ADCMGAIN
     height: 800
@@ -56,7 +56,7 @@
     ref: "figure_INRSH_GWA_ADCMOFFSET"
     x_axis_label: "Date"
     x_axis_type: "datetime"
-    y_axis_label: "INRSH_GWA_ADCMOFFSET [DN]"
+    y_axis_label: "INRSH_GWA_ADCMOFFSET [V]"
     x_range: *gwa_x_INRSH_GWA_ADCMOFFSET
     y_range: *gwa_y_INRSH_GWA_ADCMOFFSET
     height: 800
@@ -89,7 +89,7 @@
     ref: "figure_INRSH_GWA_MOTOR_VREF"
     x_axis_label: "Date"
     x_axis_type: "datetime"
-    y_axis_label: "INRSH_GWA_MOTOR_VREF [DN]"
+    y_axis_label: "INRSH_GWA_MOTOR_VREF [V]"
     x_range: *gwa_x_INRSH_GWA_MOTOR_VREF
     y_range: *gwa_y_INRSH_GWA_MOTOR_VREF
     height: 800
@@ -122,7 +122,7 @@
     ref: "figure_INRSI_C_GWA_X_POSITION"
     x_axis_label: "Date"
     x_axis_type: "datetime"
-    y_axis_label: "INRSI_C_GWA_X_POSITION [DN]"
+    y_axis_label: "INRSI_C_GWA_X_POSITION [mV]"
     x_range: *gwa_x_INRSI_C_GWA_X_POSITION
     y_range: *gwa_y_INRSI_C_GWA_X_POSITION
     height: 800
@@ -155,7 +155,7 @@
     ref: "figure_INRSI_C_GWA_Y_POSITION"
     x_axis_label: "Date"
     x_axis_type: "datetime"
-    y_axis_label: "INRSI_C_GWA_Y_POSITION [DN]"
+    y_axis_label: "INRSI_C_GWA_Y_POSITION [mV]"
     x_range: *gwa_x_INRSI_C_GWA_Y_POSITION
     y_range: *gwa_y_INRSI_C_GWA_Y_POSITION
     height: 800
