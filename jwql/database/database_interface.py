@@ -446,6 +446,11 @@ MIRIReadnoiseQueryHistory = monitor_orm_factory('miri_readnoise_query_history')
 MIRIReadnoiseStats = monitor_orm_factory('miri_readnoise_stats')
 FGSReadnoiseQueryHistory = monitor_orm_factory('fgs_readnoise_query_history')
 FGSReadnoiseStats = monitor_orm_factory('fgs_readnoise_stats')
+NIRCamEDBMnemonics = monitor_orm_factory('nircam_edb_mnemonics')
+MIRIEDBMnemonics = monitor_orm_factory('miri_edb_mnemonics')
+NIRISSEDBMnemonics = monitor_orm_factory('niriss_edb_mnemonics')
+FGSEDBMnemonics = monitor_orm_factory('fgs_edb_mnemonics')
+NIRSpecEDBMnemonics = monitor_orm_factory('nirspec_edb_mnemonics')
 
 if __name__ == '__main__':
     base.metadata.create_all(engine)
