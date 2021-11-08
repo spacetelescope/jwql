@@ -254,14 +254,24 @@ class Grating():
         # Construct new entry for this file for the grating wheel database table.
         for telem in GRATING_TELEMETRY.keys():
             mnemonic = get_mnemonic(telem, start_telemetry_time, end_telemetry_time)
+            other_telems = GRATING_TELEMETRY.keys()
+            other_telems_dict = {}
+            for telems in other_telems:
+                other_telems_dict[telems.lower()] = 0.0  # Change to None
+            other_telems_dict.pop(telem.lower())
             for time in mnemonic.data['MJD']:
-                grating_db_entry = {'aperture': self.aperture,
-                                    'read_pattern': "temp",
-                                    'expstart': time,
-                                    'inrsh_gwa_adcmgain_time': mnemonic.data['euvalue'][np.where(mnemonic.data['MJD'] == time)],
-                                    'run_monitor': False,
-                                    'entry_date': datetime.datetime.now()  # need slightly different times to add to database
-                                    }
+                try:
+                    grating_db_entry = {'aperture': self.aperture,
+                                        'read_pattern': "temporary",
+                                        'expstart': time,
+                                        telem.lower(): float(mnemonic.data['euvalue'][np.where(mnemonic.data['MJD'] == time)]),
+                                        'run_monitor': False,
+                                        'entry_date': datetime.datetime.now()  # need slightly different times to add to database
+                                        }
+                    grating_db_entry.update(other_telems_dict)
+                except TypeError:
+                    logging.warning("may be skipping a value with same entry_date. grating_db_entry: {}".format(grating_db_entry))
+                    continue   # if repeat entries?
 
                 # Add this new entry to the grating database table
                 self.stats_table.__table__.insert().execute(grating_db_entry)
@@ -353,7 +363,7 @@ class Grating():
                     logging.info('\t{} does not exist in JWQL filesystem'.format(file_entry['filename']))
             # Run the grating monitor on any new files
             # NEED TO CHANGE SUCH THAT MONITOR IS UPDATED WHEN NEW TELEMETRY IS AVAILABLE?
-            if len(new_files) > 0:
+            if len(new_files) == 0:  # WAS >  BUT NEED TO CHANGE!!
                 self.process(new_files)
                 monitor_run = True
             else:

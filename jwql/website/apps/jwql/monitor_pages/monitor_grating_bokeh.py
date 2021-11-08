@@ -16,6 +16,7 @@ Use
 
         from jwql.website.apps.jwql import monitor_pages
         monitor_template = monitor_pages.GratingMonitor()
+        monitor_template.input_parameters = ('NIRSpec', 'NRS1_FULL')
 """
 
 from datetime import datetime, timedelta
@@ -62,10 +63,10 @@ class GratingMonitor(BokehTemplate):
         # Query database for all data in grating wheel stats with a matching aperture,
         # and sort the data by exposure start time.
         # If monitor fails here because relation does not exist, need to reset database
-        self.query_results = session.query(self.stats_table).all() \
-            # .filter(self.stats_table.aperture == self._aperture) \
-            # .order_by(self.stats_table.expstart) #\
-            #.all()
+        self.query_results = session.query(self.stats_table) \
+            .filter(self.stats_table.aperture == self._aperture) \
+            .order_by(self.stats_table.expstart) \
+            .all()
 
     def pre_init(self):
 
@@ -95,30 +96,28 @@ class GratingMonitor(BokehTemplate):
 
         # Update the figures for all GWA telemetry values
         for telemetry in GRATING_TELEMETRY.keys():
-            # telemetry = telemetry.lower()
             gwa_vals = np.array([getattr(result, '{}'.format(telemetry.lower())) for result in self.query_results])
-            # self.query_results is empty array...
-
-            # need to figure out why grating_monitor values aren't populating session.query(self.stats_table).filter(self.stats_table.aperture == self._aperture).order_by(self.stats_table.expstart).all()
-            # it seems like this is putting the right column labels in though, eg  self.stats_table.inrsi_c_gwa_y_position exists
-            times = []
-            for result in self.query_results:
-                times.append(float(result.expstart))
-            # import pdb
-            # pdb.set_trace()
             gwa_vals[np.where(gwa_vals == None)] = 0.0  # temp fix to eliminate None's
-            self.refs['source_{}'.format(telemetry)].data = {'time': [datetime.now(), datetime.now()-timedelta(days=1), datetime.now()-timedelta(days=2)],
-                                                             #, #np.array(times), #[result.expstart] for result in self.query_results), # if self.query_results else [0.0,0.5,5.0],  # retreive from grating query data
-                                                             'time_iso': [datetime.now(), datetime.now()-timedelta(days=1), datetime.now()-timedelta(days=8)],  # not actually used
-                                                             'grating': [0.0, 4.0, -9.9],
-                                                             'filename': ["tempfile1", "tempfile2", "tempfile3"]}  # gwa_vals}
-            self.refs['figure_{}'.format(telemetry)].title.text = '{}'.format(telemetry)
-            self.refs['figure_{}'.format(telemetry)].hover.tooltips = [('time', '@time'),
-                                                                       ('gwa val', '@grating')]
+
+            if len(gwa_vals) != 0:  # SHOULD UPDATE WITHOUT IF STATEMENT
+                expstarts_iso = np.array([str(Time(Time(result.expstart, format='mjd'), format='iso')) for result in self.query_results])
+                expstarts = np.array([datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f') for date in expstarts_iso])
+
+                fake_filenames = []
+                for length in range(len(gwa_vals)):
+                    fake_filenames.append("file{}".format(length))
+                self.refs['source_{}'.format(telemetry)].data = {'time': expstarts,  # [datetime.now(), datetime.now()-timedelta(days=1), datetime.now()-timedelta(days=2)],
+                                                                 'time_iso': expstarts,   # SHOULD BE EXPSTARTS_ISO  # [datetime.now(), datetime.now()-timedelta(days=1), datetime.now()-timedelta(days=8)],  # not actually used
+                                                                 'grating': gwa_vals,
+                                                                 'filename': fake_filenames}
+
+                self.refs['figure_{}'.format(telemetry)].title.text = '{}'.format(telemetry)
+                self.refs['figure_{}'.format(telemetry)].hover.tooltips = [('time', '@time'),
+                                                                           ('gwa val', '@grating')]
 
             # Update plot limits if data exists
             if len(gwa_vals) != 0:
-                self.refs['gwa_x_{}'.format(telemetry)].start = datetime.now() - timedelta(days=3)
+                self.refs['gwa_x_{}'.format(telemetry)].start = datetime.now() - timedelta(days=300)
                 self.refs['gwa_x_{}'.format(telemetry)].end = datetime.now()
                 self.refs['gwa_y_{}'.format(telemetry)].start = gwa_vals.min() - 20
                 self.refs['gwa_y_{}'.format(telemetry)].end = gwa_vals.max() + 20
