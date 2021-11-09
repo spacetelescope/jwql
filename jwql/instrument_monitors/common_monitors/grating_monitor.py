@@ -257,7 +257,7 @@ class Grating():
             other_telems = GRATING_TELEMETRY.keys()
             other_telems_dict = {}
             for telems in other_telems:
-                other_telems_dict[telems.lower()] = 0.0  # Change to None
+                other_telems_dict[telems.lower()] = None
             other_telems_dict.pop(telem.lower())
             for time in mnemonic.data['MJD']:
                 try:

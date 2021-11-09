@@ -97,7 +97,6 @@ class GratingMonitor(BokehTemplate):
         # Update the figures for all GWA telemetry values
         for telemetry in GRATING_TELEMETRY.keys():
             gwa_vals = np.array([getattr(result, '{}'.format(telemetry.lower())) for result in self.query_results])
-            gwa_vals[np.where(gwa_vals == None)] = 0.0  # temp fix to eliminate None's
 
             if len(gwa_vals) != 0:  # SHOULD UPDATE WITHOUT IF STATEMENT
                 expstarts_iso = np.array([str(Time(Time(result.expstart, format='mjd'), format='iso')) for result in self.query_results])
@@ -116,8 +115,9 @@ class GratingMonitor(BokehTemplate):
                                                                            ('gwa val', '@grating')]
 
             # Update plot limits if data exists
-            if len(gwa_vals) != 0:
-                self.refs['gwa_x_{}'.format(telemetry)].start = datetime.now() - timedelta(days=300)
+            gwa_vals_cut = gwa_vals[np.where(gwa_vals!=None)]  # USE ABOVE AS WELL?
+            if len(gwa_vals_cut) != 0:
+                self.refs['gwa_x_{}'.format(telemetry)].start = datetime.now() - timedelta(days=100)
                 self.refs['gwa_x_{}'.format(telemetry)].end = datetime.now()
-                self.refs['gwa_y_{}'.format(telemetry)].start = gwa_vals.min() - 20
-                self.refs['gwa_y_{}'.format(telemetry)].end = gwa_vals.max() + 20
+                self.refs['gwa_y_{}'.format(telemetry)].start = gwa_vals_cut.min() - 0.5
+                self.refs['gwa_y_{}'.format(telemetry)].end = gwa_vals_cut.max() + 0.5
