@@ -321,23 +321,15 @@ def grating_monitor_tabs(instrument):
             grating_plot = monitor_template.refs['figure_{}'.format(telemetry)]
             grating_plot.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
 
-            # TEST OUT ADDING COLORED BOXES TO PLOTS
+            # Add colored boxes to plots indicating green, yellow, and red regions
+            # Grating Telemetry dictionary indices are in the following order:
             # Lower Red, Lower Yellow, High Yellow, High Red, Switch Low, and Switch High
-            
-            red_low_lower_threshold = GRATING_TELEMETRY[telemetry][4]
+            red_low_lower_threshold = GRATING_TELEMETRY[telemetry][0] - 100  # arbitrary box height to show red on rest of plot
             yellow_low_lower_threshold = GRATING_TELEMETRY[telemetry][0]
             green_lower_threshold = GRATING_TELEMETRY[telemetry][1]
-
             green_higher_threshold = GRATING_TELEMETRY[telemetry][2]
             yellow_high_higher_threshold = GRATING_TELEMETRY[telemetry][3]
-            red_high_higher_threshold = GRATING_TELEMETRY[telemetry][5]
-
-            # {'INRSH_GWA_ADCMGAIN': [2.36, 2.39, 2.62, 2.65, 1.00, 3.00],
-            # 'INRSH_GWA_ADCMOFFSET': [-0.0600, -0.0420, 0.0420, 0.0600, 1.00, 3.00],  # ****
-            # 'INRSH_GWA_MOTOR_VREF': [-0.0600, -0.0420, 2.530, 2.55, 1.00, 3.00],  # ****
-            # 'INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374, 1.00, 3.00],  # ****
-            # 'INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374, 1.00, 3.00]}  # ****
-
+            red_high_higher_threshold = GRATING_TELEMETRY[telemetry][3] + 100  # arbitrary box height to show red on rest of plot
             yellow_low_higher_threshold = green_lower_threshold
             yellow_high_lower_threshold = green_higher_threshold
             red_low_higher_threshold = yellow_low_lower_threshold
@@ -348,11 +340,11 @@ def grating_monitor_tabs(instrument):
             yellow_high = BoxAnnotation(bottom=yellow_high_lower_threshold, top=yellow_high_higher_threshold, fill_color='gold', fill_alpha=0.2)
             grating_plot.add_layout(yellow_high)
             yellow_low = BoxAnnotation(bottom=yellow_low_lower_threshold, top=yellow_low_higher_threshold, fill_color='gold', fill_alpha=0.2)
-            grating_plot.add_layout(yellow_low)          
+            grating_plot.add_layout(yellow_low)
             red_high = BoxAnnotation(bottom=red_high_lower_threshold, top=red_high_higher_threshold, fill_color='red', fill_alpha=0.1)
             grating_plot.add_layout(red_high)
-            # red_low = BoxAnnotation(bottom=red_low_lower_threshold, top=red_low_higher_threshold, fill_color='red', fill_alpha=0.1)
-            # grating_plot.add_layout(red_low)
+            red_low = BoxAnnotation(bottom=red_low_lower_threshold, top=red_low_higher_threshold, fill_color='red', fill_alpha=0.1)
+            grating_plot.add_layout(red_low)
 
             plots.append(grating_plot)
 
@@ -367,9 +359,6 @@ def grating_monitor_tabs(instrument):
 
     # Return tab HTML and JavaScript to web app
     script, div = components(tabs)
-    # bad column name here ERROR:bokeh.core.validation.check:E-1001 (BAD_COLUMN_NAME):
-    # Glyph refers to nonexistent column name. This could either be due to a misspelling or typo,
-    # or due to an expected column being missing. : key "y" value "grating" [renderer: GlyphRenderer(id='1278', ...)]
 
     return div, script
 
