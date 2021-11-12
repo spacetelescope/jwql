@@ -209,13 +209,26 @@ GRATING_PER_INSTRUMENT = {'fgs': [],
                           }
 
 # Dictionary with keys that are mnemonics used for grating wheel telemetry monitor
-# Corresponding limits are given for Lower Red, Lower Yellow, High Yellow, High Red,
-# Switch Low, and Switch High, respectively
-GRATING_TELEMETRY = {'INRSH_GWA_ADCMGAIN': [2.36, 2.39, 2.62, 2.65, 1.00, 3.00],
-                     'INRSH_GWA_ADCMOFFSET': [-0.0600, -0.0420, 0.0420, 0.0600, 1.00, 3.00],
-                     'INRSH_GWA_MOTOR_VREF': [-0.0600, -0.0420, 2.530, 2.55, 1.00, 3.00],
-                     'INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374, 1.00, 3.00],
-                     'INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374, 1.00, 3.00]}
+# Corresponding limits are given for Lower Red, Lower Yellow, High Yellow, High Red
+GRATING_TELEMETRY = {'INRSH_GWA_ADCMGAIN': [2.36, 2.39, 2.62, 2.65],
+                     'INRSH_GWA_ADCMOFFSET': [-0.0600, -0.0420, 0.0420, 0.0600],
+                     'INRSH_GWA_MOTOR_VREF': [-0.0600, -0.0420, 2.530, 2.55],
+                     'PRISM_INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374],
+                     'PRISM_INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374],
+                     'MIRROR_INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374],
+                     'MIRROR_INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374],
+                     'G140H_INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374],
+                     'G140H_INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374],
+                     'G235H_INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374],
+                     'G235H_INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374],
+                     'G395H_INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374],
+                     'G395H_INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374],
+                     'G140M_INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374],
+                     'G140M_INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374],
+                     'G235M_INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374],
+                     'G235M_INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374],
+                     'G395M_INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374],
+                     'G395M_INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374]}
 
 # Possible suffix types for guider exposures
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']

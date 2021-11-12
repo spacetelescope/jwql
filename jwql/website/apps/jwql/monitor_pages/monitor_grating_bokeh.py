@@ -40,11 +40,11 @@ class GratingMonitor(BokehTemplate):
     # do not want to invoke the setter unless all are updated
     @property
     def input_parameters(self):
-        return (self._instrument, self._aperture)
+        return (self._instrument)
 
     @input_parameters.setter
     def input_parameters(self, info):
-        self._instrument, self._aperture = info
+        self._instrument = info
         self.pre_init()
         self.post_init()
 
@@ -60,24 +60,21 @@ class GratingMonitor(BokehTemplate):
         # Determine which database tables are needed based on instrument
         self.identify_tables()
 
-        # Query database for all data in grating wheel stats with a matching aperture,
+        # Query database for all data in grating wheel stats,
         # and sort the data by exposure start time.
         # If monitor fails here because relation does not exist, need to reset database
         self.query_results = session.query(self.stats_table) \
-            .filter(self.stats_table.aperture == self._aperture) \
-            .order_by(self.stats_table.expstart) \
+            .order_by(self.stats_table.time) \
             .all()
 
     def pre_init(self):
 
-        # Start with default values for instrument and aperture because
+        # Start with default values for instrument because
         # BokehTemplate's __init__ method does not allow input arguments
         try:
             dummy_instrument = self._instrument
-            dummy_aperture = self._aperture
         except AttributeError:
             self._instrument = 'NIRSpec'
-            self._aperture = ''
 
         self._embed = True
         self.format_string = None
@@ -99,23 +96,23 @@ class GratingMonitor(BokehTemplate):
             gwa_vals = np.array([getattr(result, '{}'.format(telemetry.lower())) for result in self.query_results])
 
             if len(gwa_vals) != 0:  # SHOULD UPDATE WITHOUT IF STATEMENT
-                expstarts_iso = np.array([str(Time(Time(result.expstart, format='mjd'), format='iso')) for result in self.query_results])
-                expstarts = np.array([datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f') for date in expstarts_iso])
+                dates_iso = np.array([str(Time(Time(result.time, format='mjd'), format='iso')) for result in self.query_results])
+                dates = np.array([datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f') for date in dates_iso])
 
                 fake_filenames = []
                 for length in range(len(gwa_vals)):
                     fake_filenames.append("file{}".format(length))
-                self.refs['source_{}'.format(telemetry)].data = {'time': expstarts,  # [datetime.now(), datetime.now()-timedelta(days=1), datetime.now()-timedelta(days=2)],
-                                                                 'time_iso': expstarts,   # SHOULD BE EXPSTARTS_ISO  # [datetime.now(), datetime.now()-timedelta(days=1), datetime.now()-timedelta(days=8)],  # not actually used
+                self.refs['source_{}'.format(telemetry)].data = {'time': dates,
+                                                                 'time_iso': dates_iso,
                                                                  'grating': gwa_vals,
                                                                  'filename': fake_filenames}
 
                 self.refs['figure_{}'.format(telemetry)].title.text = '{}'.format(telemetry)
-                self.refs['figure_{}'.format(telemetry)].hover.tooltips = [('time', '@time'),
+                self.refs['figure_{}'.format(telemetry)].hover.tooltips = [('time', '@time_iso'),
                                                                            ('gwa val', '@grating')]
 
             # Update plot limits if data exists
-            gwa_vals_cut = gwa_vals[np.where(gwa_vals!=None)]  # USE ABOVE AS WELL?
+            gwa_vals_cut = gwa_vals[np.where(gwa_vals != None)]  # USE ABOVE AS WELL?
             if len(gwa_vals_cut) != 0:
                 self.refs['gwa_x_{}'.format(telemetry)].start = datetime.now() - timedelta(days=100)
                 self.refs['gwa_x_{}'.format(telemetry)].end = datetime.now()
