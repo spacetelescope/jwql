@@ -38,26 +38,19 @@ from jwql.utils.utils import ensure_dir_exists, get_config, initialize_instrumen
 class Grating():
     """Class for executing the grating wheel monitor.
 
-    This class will search for a particular type of file in the file
-    system for each instrument and will run the monitor on these files.
-    The monitor will output the contents into a new file located in a
-    working directory. It will then perform statistical measurements
-    on these files in order to monitor the grating wheel telemetry
-    over time. Results are all saved to database tables.
+    This class will search for a particular mnemonic for each
+    instrument and will run the monitor on these files. The monitor 
+    will perform statistical measurements and plot the mnemonic data
+    in order to monitor the grating wheel telemetry over time.
+    Results are all saved to database tables.
 
     Attributes
     ----------
-    output_dir : str
-        Path into which outputs will be placed.
-
-    data_dir : str
-        Path into which new dark files will be copied to be worked on.
-
     query_start : float
-        MJD start date to use for querying MAST.
+        MJD start date to use for querying EDB.
 
     query_end : float
-        MJD end date to use for querying MAST.
+        MJD end date to use for querying EDB.
 
     instrument : str
         Name of instrument used to collect the data.
@@ -96,18 +89,21 @@ class Grating():
         return query_result
 
     def process(self):
-        """The main method for processing darks.  See module docstrings
+        """The main method for processing telemetry.  See module docstrings
         for further details.
 
         """
 
-        start_telemetry_time = Time(Time(self.query_start, format='mjd'), format='decimalyear')
+        start_telemetry_time = Time(Time(self.query_start, format='mjd'), format='decimalyear')-10  # REMOVE 100!
         end_telemetry_time = Time(Time(self.query_end, format='mjd'), format='decimalyear')
+        # end_telemetry_time = Time(Time(Time.now(), format='mjd'), format='decimalyear')
         # grating_val gets bogged down if more than about a day
 
         # Construct new entry for this file for the grating wheel database table.
         retrieved_grat = False
         for telem in GRATING_TELEMETRY.keys():
+            # if telem in ['INRSH_GWA_ADCMGAIN', 'INRSH_GWA_ADCMOFFSET', 'INRSH_GWA_MOTOR_VREF']:
+            #     continue
             if 'POSITION' in telem:
                 grating = telem.split('_')[0]
                 telemetry = telem.replace(grating+"_", "")
@@ -118,26 +114,47 @@ class Grating():
                         grating_val = mnemonics['INRSI_GWA_MECH_POS']
                         retrieved_grat = True
                     except TypeError:
-                        print("type error because data was empty")
+                        type_error = True
+                        print("type error because data was empty; try using earlier start date if you want this to run. Data should be present already.")
+                        # FIGURE OUT HOW TO DEAL WITH THIS ERROR
             else:
                 try:
                     mnemonic = get_mnemonic(telem, start_telemetry_time, end_telemetry_time)
                 except TypeError:
-                    print("type error because data was empty")
+                    type_error = True
+                    print("type error because data was empty 2")
                     continue
             other_telems = GRATING_TELEMETRY.keys()
             other_telems_dict = {}
             for telems in other_telems:
                 other_telems_dict[telems.lower()] = None
             other_telems_dict.pop(telem.lower())
-            for time in mnemonic.data['MJD']:
-                if 'POSITION' in telem:
-                    min_distance = np.min(abs(grating_val.data['MJD']-time))
-                    if min_distance > 0.01:  # determine whether this is realistic time difference between data for voltage and grating value
-                        logging.warning("Grating retrieved may not match grating for which voltage is being determined")
-                    closest_location = np.where(abs(grating_val.data['MJD']-time) == min_distance)[0][0]
-                    grating_used = grating_val.data['euvalue'][closest_location]
-                    if grating_used == grating:
+            if type_error is False:
+                for time in mnemonic.data['MJD']:
+                    if 'POSITION' in telem:
+                        min_distance = np.min(abs(grating_val.data['MJD']-time))
+                        if min_distance > 0.01:  # determine whether this is realistic time difference between data for voltage and grating value
+                            logging.warning("Grating retrieved may not match grating for which voltage is being determined")
+                        closest_location = np.where(abs(grating_val.data['MJD']-time) == min_distance)[0][0]
+                        grating_used = grating_val.data['euvalue'][closest_location]
+                        if grating_used == grating:
+                            try:
+                                grating_db_entry = {'time': time,
+                                                    telem.lower(): float(mnemonic.data['euvalue'][np.where(mnemonic.data['MJD'] == time)]),
+                                                    'run_monitor': True,  # UPDATE
+                                                    'entry_date': datetime.datetime.now()  # need slightly different times to add to database
+                                                    }
+                                grating_db_entry.update(other_telems_dict)
+                                # Add this new entry to the grating database table
+                                self.stats_table.__table__.insert().execute(grating_db_entry)
+                                logging.info('\tNew entry added to grating database table: {}'.format(grating_db_entry))
+                            except TypeError:
+                                logging.warning("May be skipping a value with same entry_date")
+                                continue
+                        else:
+                            logging.warning("Not adding entry because data is for {} rather than {}".format(grating_used, grating))
+                            continue
+                    else:
                         try:
                             grating_db_entry = {'time': time,
                                                 telem.lower(): float(mnemonic.data['euvalue'][np.where(mnemonic.data['MJD'] == time)]),
@@ -149,25 +166,8 @@ class Grating():
                             self.stats_table.__table__.insert().execute(grating_db_entry)
                             logging.info('\tNew entry added to grating database table: {}'.format(grating_db_entry))
                         except TypeError:
-                            logging.warning("May be skipping a value with same entry_date")
+                            logging.warning("may be skipping a value with same entry_date.")
                             continue
-                    else:
-                        logging.warning("Not adding entry because data is for {} rather than {}".format(grating_used, grating))
-                        continue
-                else:
-                    try:
-                        grating_db_entry = {'time': time,
-                                            telem.lower(): float(mnemonic.data['euvalue'][np.where(mnemonic.data['MJD'] == time)]),
-                                            'run_monitor': True,  # UPDATE
-                                            'entry_date': datetime.datetime.now()  # need slightly different times to add to database
-                                            }
-                        grating_db_entry.update(other_telems_dict)
-                        # Add this new entry to the grating database table
-                        self.stats_table.__table__.insert().execute(grating_db_entry)
-                        logging.info('\tNew entry added to grating database table: {}'.format(grating_db_entry))
-                    except TypeError:
-                        logging.warning("may be skipping a value with same entry_date.")
-                        continue
 
     @log_fail
     @log_info
@@ -175,10 +175,6 @@ class Grating():
         """The main method.  See module docstrings for further details."""
 
         logging.info('Begin logging for grating_monitor')
-
-        # Get the output directory and setup a directory to store the data
-        self.output_dir = os.path.join(get_config()['outputs'], 'grating_monitor')
-        ensure_dir_exists(os.path.join(self.output_dir, 'data'))
 
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
