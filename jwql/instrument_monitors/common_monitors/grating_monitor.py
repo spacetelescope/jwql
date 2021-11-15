@@ -94,7 +94,7 @@ class Grating():
 
         """
 
-        start_telemetry_time = Time(Time(self.query_start, format='mjd'), format='decimalyear')-10  # REMOVE 100!
+        start_telemetry_time = Time(Time(self.query_start, format='mjd'), format='decimalyear')
         end_telemetry_time = Time(Time(self.query_end, format='mjd'), format='decimalyear')
         # end_telemetry_time = Time(Time(Time.now(), format='mjd'), format='decimalyear')
         # grating_val gets bogged down if more than about a day
