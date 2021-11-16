@@ -113,7 +113,7 @@ class condition:
         else:
             return None
 
-    def generate_time_pairs(start_times, end_times):
+    def generate_time_pairs(self, start_times, end_times):
         """Forms time pairs out of start times and end times
         Parameters
         ----------

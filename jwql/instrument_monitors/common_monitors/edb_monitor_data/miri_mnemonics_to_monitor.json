@@ -1,4 +1,21 @@
+see test_file.json for proposed final format
 {
+    "5_min": [
+        {
+            "name": "SOMETHING",
+            "description": "example of 5 min",
+            "dependency": [
+                {
+                    "name": "SAME",
+                    "relation": "brother",
+                    "threshold": 2
+                }
+            ],
+            "plot_data": "*SE_ZBUSVLT",
+            "plot_trendlines": [7.0, 7.57, 8.13],
+            "plot_category": "power"
+        }
+    ],
     "daily_means": [
         {
             "name": "SE_ZIMIRICEA",
@@ -1875,7 +1892,7 @@
             "plot_category": "temperature"
         }
     ],
-    "each_instance": [
+    "block_means": [
         {
             "name": "IMIR_HK_ICE_SEC_VOLT1",
             "description": "ICE secondary Voltage (HV) V1",
