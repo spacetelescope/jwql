@@ -754,8 +754,8 @@ def view_image(request, inst, file_root, rewrite=False):
     # Create a form instance
     form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
 
-    # If this is a POST request, process the form data
-    if request.method == 'POST':
+    # If this is a POST request and the form is filled out, process the form data
+    if request.method == 'POST' and 'anomaly_choices' in dict(request.POST):
         anomaly_choices = dict(request.POST)['anomaly_choices']
         if form.is_valid():
             form.update_anomaly_table(file_root, 'unknown', anomaly_choices)
