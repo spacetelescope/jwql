@@ -182,6 +182,12 @@
 			  <span aria-hidden="true">&times;</span>
 			</button>
 			{{ message }}
+			<script>
+				setTimeout(function () {
+					$('.alert').alert('close');
+				}, 5000);
+			</script>
+
 		  </div>
 		</div>
 		{% endfor %}
