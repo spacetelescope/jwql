@@ -43,6 +43,7 @@ import os
 from bokeh.layouts import layout
 from bokeh.embed import components
 from django.http import HttpResponse, JsonResponse
+from django.contrib import messages
 from django.shortcuts import redirect, render
 
 from jwql.database.database_interface import load_connection
@@ -758,6 +759,9 @@ def view_image(request, inst, file_root, rewrite=False):
         anomaly_choices = dict(request.POST)['anomaly_choices']
         if form.is_valid():
             form.update_anomaly_table(file_root, 'unknown', anomaly_choices)
+            messages.success(request, "Anomaly submitted successfully")
+        else:
+            messages.error(request, "Failed to submit anomaly")
 
     # Build the context
     context = {'inst': inst,
