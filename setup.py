@@ -17,7 +17,7 @@ REQUIRES = [
     'codecov',
     'crds',
     'cryptography',
-    'django',
+    'django<=3.1.7',
     'flake8',
     'inflection',
     'ipython',
