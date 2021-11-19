@@ -1,0 +1,71 @@
+#! /usr/bin/env python
+
+"""Do we really need this in a separate utils file?
+"""
+
+import astropy.units as u
+
+
+
+def get_averaging_time_duration(duration_string):
+    """Turn the string from the mnemonic json file that specifies the time
+    span to average the data over into an astropy quantity. This function
+    is intended to be called only for "time_interval" mnemonic types, where
+    the duration string is assumed to be of the form "X_UNIT", where X is
+    a number, and UNIT is a unit of time (e.g. sec, min, hour, day).
+
+    Parameters
+    ----------
+    duration_string : str
+        Length of time for the query
+
+    Returns
+    -------
+    time : astropy.units.quantity.Quantity
+    """
+    try:
+        length, unit = duration_string.split('_')
+        length = float(length)
+
+        if "min" in unit:
+            unit = u.minute
+        elif "sec" in unit:
+            unit = u.second
+        elif "hour" in unit:
+            unit = u.hour
+        elif "day" in unit:
+            unit = u.day
+        else:
+            raise ValueError(f"Unsupported time unit: {unit}")
+
+        time = length * unit
+
+    except ValueError:
+        raise ValueError(f"Unexpected/unsupported mnemonic duration string: {duration_string}")
+    return time
+
+
+def get_query_duration(mnemonic_type):
+    """Turn the string version of the EDB query duration into an astropy
+    quantity. Allowed duration_string values include "daily_means",
+    "every_change", "block_means", or "time_interval", or "none". These terms
+    describe more how the mnemonic's data will be processed after it is
+    retrieved, but we can map each mnemonic type to a length of time to
+    use for the EDB query.
+
+    Parameters
+    ----------
+    duration_string : str
+        Length of time for the query
+
+    Returns
+    -------
+    time : astropy.units.quantity.Quantity
+    """
+    if mnemonic_type.lower() == 'daily_means':
+        time = 15. * u.minute
+    elif mnemonic_type in ["every_change", "block_means", "time_interval", "none"]:
+        time = 1. * u.day
+    else:
+        raise ValueError(f"Unrecognized mnemonic type: {mnemonic_type}. Unsure what duration to use for EDB query.")
+    return time

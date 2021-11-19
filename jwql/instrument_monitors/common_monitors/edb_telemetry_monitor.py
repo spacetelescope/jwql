@@ -116,13 +116,117 @@ class EDBMnemonicMonitor():
                     }
         self.db_table.__table__.insert().execute(db_entry)
 
-    def calc_daily_stats(self, data):
+    def calc_block_stats(self, mnem_data, sigma=3):
+        """Calculate stats for a mnemonic where we want a mean value for
+        each block of good data, where blocks are separated by times where
+        the data are ignored.
+
+        Parameters
+        ----------
+        mnem_data : jwql.edb.engineering_database.EdbMnemonic
+            class instance
+
+        sigma : int
+            Number of sigma to use for sigma clipping
+
+        Returns
+        -------
+        mnem_data : jwql.edb.engineering_database.EdbMnemonic
+            Class instance with telemetry statistics added
+
+        move this to be an attribute of EdbMnemonic class
+        """
+        means = []
+        medians = []
+        stdevs = []
+        medtimes = []
+        for i, index in enumerate(mnem_data.blocks[0:-1]):
+            meanval, medianval, stdevval = sigma_clipped_stats(mnem_data.data["data"][index:mnem_data.blocks[i+1]], sigma=sigma)
+            medtimes.append(np.median(mnem_data.data["times"][index:mnem_data.blocks[i+1]]))
+
+            OR:
+        for time_tup in mnem_data.time_pairs:
+            good = np.where((mnem_data.data["times"] >= time_tup[0]) & (mnem_data.data["times"] < time_tup[1]))
+            meanval, medianval, stdevval = sigma_clipped_stats(mnem_data.data["data"][good], sigma=sigma)
+            medtimes.append(np.median(mnem_data.data["times"][good]))
+
+
+
+            means.append(meanval)
+            medians.append(medianval)
+            stdevs.append(stdevval)
+        mnem_data.mean = means
+        mnem_data.median = medians
+        mnem_data.stdev = stdevs
+        mnem_data.median_time = medtimes
+        return mnem_data
+
+    def calc_daily_stats(self, data, sigma=3):
         """Calculate the mean value for daily averaged data
+
+        Parameters
+        ----------
+        data : dict
+            "data" and "times" keys
+
+        sigma : int
+            Number of sigma to use for sigma clipping
+
+        move this to be an attribute of EdbMnemonic class
         """
         #mean_val = np.mean(data["data"])
         #c, low, upp = sigmaclip(a, fact, fact)
-        return sigma_clipped_stats(data["data"], sigma=3)
+        return sigma_clipped_stats(data["data"], sigma=sigma)
 
+    def calc_every_change_stats(self, mnem_data):
+        """Calculate stats for telemetry data for each
+        """
+        pass
+
+    def calc_timed_stats(self, mnem_data, bintime, sigma=3):
+        """Calculate stats for telemetry using time-based averaging.
+        This works on data that have potentially been filtered. How do
+        we treated any breaks in the data due to the filtering? Enforce
+        a new bin at each filtered block of data? Blindly average by
+        time and ignore any missing data due to filtering? The former
+        makes more sense to me
+
+        Parameters
+        ----------
+        mnem_data : jwql.edb.engineering_database.EdbMnemonic
+
+        bintime : astropy.time.Quantity
+
+        Returns
+        -------
+        all_means
+
+        all_meds
+
+        all_stdevs
+
+        all_times
+        """
+        what are the units of mnem_data.data["times"]?
+        all_means = []
+        all_meds = []
+        all_stdevs = []
+        all_times = []
+
+        minimal_delta = 1 * u.sec  # modify based on units of time
+        for i in range(len(mnem_data.blocks)-1):
+            block_min_time = mnem_data.data["times"][mnem_data.blocks[i]]
+            block_max_time = mnem_data.data["times"][mnem_data.blocks[i+1]]
+            bin_times = np.arange(block_min_time, block_max_time+minimal_delta, bintime)
+            all_times.extend((bin_times[1:] - bin_times[0:-1]) / 2.)  # for plotting later
+
+            for b_idx in range(len(bin_times)-1):
+                good_points = np.where((mnem_data.data["times"] >= bin_times[b_idx]) & (mnem_data.data["times"] < bin_times[b_idx+1]))
+                bin_mean, bin_med, bin_stdev = sigma_clipped_stats(mnem_data.data["data"][good_points], sigma=sigma)
+                all_means.append(bin_mean)
+                all_meds.append(bin_med)
+                all_stdevs.append(bin_stdev)
+        return all_means, all_meds, all_stdevs, all_times
 
     def filter_telemetry(self, data, dep_list):
         """
@@ -162,13 +266,69 @@ class EDBMnemonicMonitor():
         # Now find the mnemonic's data that during times when all conditions were met
         if len(all_conditions) > 0:
             full_condition = cond.condition(all_conditions)
-            filtered_data = cond.extract_data(full_condition, data.data)
+            filtered_data, block_indexes = cond.extract_data(full_condition, data.data)
 
         # Put the results into an instance of EdbMnemonic
         new_start_time = np.min(filtered_data["times"])
         new_end_time = np.max(filtered_data["times"])
-        filtered = EdbMnemonic(data.mnemonic_identifier, new_start_time, new_end_time, filtered_data, data.meta, data.info)
+        filtered = EdbMnemonic(data.mnemonic_identifier, new_start_time, new_end_time, filtered_data, data.meta, data.info, blocks=block_indexes)
         return filtered
+
+    def find_all_changes(self, mnem_data, dep_list):
+        """Identify indexes of data to create separate blocks for each value of the
+        condition. This is for the "every_change" mnemonics, where we want to create a
+        mean value for all telemetry data acquired for each value of some dependency
+        mnemonic.
+
+        For now, this function assumes that we only have one dependency. I'm not sure
+        how it would work with multiple dependencies.
+        """
+        if len(dep_list) > 1:
+            raise NotImplementedError("Not sure how to work with every_change data with multiple dependencies.")
+
+        dependency = self.query_results[dependency["name"]]
+
+        # Locate the times where the dependency value changed by a large amount
+        # Then for each block, calculate a sigma-clipped mean and stdev
+        first_diffs = np.abs(dependency.data["data"][1:] - dependency.data["data"][0:-1])
+        full_mean, full_med, full_dev = sigma_clipped_stats(first_diffs, sigma=3)
+        jumps = np.where(first_diffs >= threshold*full_dev)[0]
+
+        #OR:
+        #create a histogram of dependency["data"], find the peaks, and group points around those
+
+        # Add 1 so that the indexes refer to the first element of each block
+        jumps += 1
+
+        jump_times = dependency.data["times"][jumps]
+
+        # Do we need to calucate and save the mean values of the dependency at each block?
+        all_dep_means = []
+        all_dep_meds = []
+        all_dep_devs = []
+        all_dep_times = []
+        for i in range(len(jumps)-1):
+            dep_block = dependency.data["data"][jumps[i]:jumps[i+1]]
+            mean_dep_val, med_dep_val, dev_dep_val = sigma_clipped_stats(dep_block, sigma=3)
+            all_dep_means.append(mean_dep_val)
+            all_dep_meds.append(med_dep_val)
+            all_dep_devs.append(dev_dep_val)
+            all_dep_times.append(np.median(dependency.data["times"][jumps[i]:jumps[i+1]]))
+
+        # Now calculate the mean and stdev for the elements between each pair of jump times
+        all_means = []
+        all_meds = []
+        all_devs = []
+        all_times = []
+        for i in range(len(jump_times)):
+            block_points = np.where((mnem_data.data["times"] >= jump_times[i]) & (mnem_data.data["times"] < jump_times[i+1]))
+            mean_val, med_val, dev_val = sigma_clipped_stats(mnem_data.data["data"][block_points], sigma=3)
+            all_means.append(mean_val)
+            all_meds.append(med_val)
+            all_devs.append(dev_val)
+            all_times.append(np.median(mnem_data.data["times"][block_points]))
+
+
 
 
     def get_dependency_data(self, dependency, starttime, endtime):
@@ -202,31 +362,84 @@ class EDBMnemonicMonitor():
                 do we need to cut down the data here to the times of the mnemonic of interest?
 
 
-                matching_times = np.where((self.query_results[dependency["name"]]["times"] > starttime) and
-                                          (self.query_results[dependency["name"]]["times"] < endtime))
-                dep_mnemonic = {"times": self.query_results[dependency["name"]]["times"][matching_times],
-                                    "data": self.query_results[dependency["name"]]["data"][matching_times]}
+                matching_times = np.where((self.query_results[dependency["name"]].data["times"] > starttime) and
+                                          (self.query_results[dependency["name"]].data["times"] < endtime))
+                dep_mnemonic = {"times": self.query_results[dependency["name"]].data["times"][matching_times],
+                                    "data": self.query_results[dependency["name"]].data["data"][matching_times]}
             else:
-                # If we haven't yet queried the EDB for the dependency, or what we have
-                # doesn't cover the time range we need, then query the EDB.
+                # If what we have doesn't cover the time range we need, then query the EDB.
                 mnemonic_data = ed.get_mnemonic(dependency["name"], starttime, endtime)
-                dep_mnemonic = {"times": mnemonic_data["data"].data, "data": menmonic_data["data"].data}
+                dep_mnemonic = {"times": mnemonic_data.data["data"], "data": menmonic_data.data["data"]}
 
                 # This is to save the data so that we may avoid an EDB query next time
                 # Add the new data to the saved query results
-                all_times = np.append(self.query_results[dependency["name"]]["times"], mnemonic_data.data['times'])
-                all_data = np.append(self.query_results[dependency["name"]]["data"], mnemonic_data.data['data'])#[times_sorted]
+                all_times = np.append(self.query_results[dependency["name"]].data["times"], mnemonic_data.data['times'])
+                all_data = np.append(self.query_results[dependency["name"]].data["data"], mnemonic_data.data['data'])
 
                 # Save only the unique elements, in case we are adding overlapping data
                 final_times, unique_idx = np.unique(all_times, return_index=True)
-                self.query_results[dependency["name"]]["times"] = final_times
-                self.query_results[dependency["name"]]["data"] = all_data[unique_idx]
+                new_table = Table()
+                new_table["times"] = final_times
+                new_table["data"] = all_data[unique_idx]
+                self.query_results[dependency["name"]].data = new_table
         else:
-            mnemonic_data = ed.get_mnemonic(dependency["name"], starttime, endtime)
-            dep_mnemonic = {"times": mnemonic_data["data"].data, "data": menmonic_data["data"].data}
-            self.query_results[dependency["name"]]["times"] = mnemonic_data["data"].data
-            self.query_results[dependency["name"]]["data"] = menmonic_data["data"].data
+            self.query_results[dependency["name"]] = ed.get_mnemonic(dependency["name"], starttime, endtime)
+            dep_mnemonic = {"times": self.query_results[dependency["name"]].data["times"],
+                            "data": self.query_results[dependency["name"]].data["data"]}
         return dep_mnemonic
+
+    def get_mnemonic_info(name, starting_time, ending_time):
+        """Wrapper around the code to query the EDB, filter the result, and calculate
+        appropriate statistics for a single mnemonic
+
+        Parameters
+        ----------
+        name : dict
+            Dictionary of information about the mnemonic to be processed. Dictionary
+            as read in from the json file of mnemonics
+
+        starting_time : float
+            Beginning time for query in MJD
+
+        ending_time : float
+            Ending time for query in MJD
+
+        Returns
+        -------
+        good_mnemonic_data : jwql.edb.engineering_database.EdbMnemonic
+            EdbMnemonic instance containing filtered data for the given mnemonic
+        """
+        # Query the EDB. An astropy table is returned.
+        mnemonic_data = ed.get_mnemonic(mnemonic, starttime, endtime)
+
+        # Filter the data - good_mnemonic_data is an EdbMnemonic instance
+        good_mnemonic_data = filter_telemetry(mnemonic_data, mnemonic['dependency'])
+
+        if telem_type == "every_change":
+            self.find_all_changes(good_mnemonic_data, mnemonic['dependency'])
+
+        # If the filtered data contains enough entries, then proceed.
+        if len(good_mnemonic_data.data) > 0:
+            #we can make the daily mean, block mean, and timed mean methods of the EdbMnemonic class.
+            #what about every change? separate method here? new one there as well?
+            if telem_type == "daily_means":
+                mean_vals, median_vals, std_vals = self.calc_daily_stats(good_mnemonic_data["data"])
+                median_times = np.median(good_mnemonic_data["times"])
+            elif telem_type == "block_means":
+                mean_vals, median_vals, std_vals, median_times = self.calc_block_stats(good_mnemonic_data)
+            elif telem_type == "every_change":
+                mean_vals, std_vals, median_times = self.calc_every_change_stats(good_mnemonic_data)
+            elif telem_type == "time_interval":
+                stats_duration = utils.get_averaging_time_duration(mnemonic["mean_time_block"])
+                mean_vals, median_vals, std_vals, median_times = self.calc_timed_stats(good_mnemonic_data, stats_duration)
+            elif telem_type == "none":
+                # No averaging done
+                mean_vals = good_mnemonic_data["data"]
+                median_times = good_mnemonic_data["times"]
+            add means to EdbMnemonic class as an attribute
+            return good_mnemonic_data
+        else:
+            return None
 
     def identify_tables(self):
         """Determine which database tables to use for a run of the dark
@@ -305,164 +518,63 @@ class EDBMnemonicMonitor():
                 query_duration = utils.get_query_duration(telem_type)
 
                 for mnemonic in mnemonic_dict[telem_type]:
-                    # Find the end time of the previous query. In this case where we are querying over only
-                    # some subset of the day, set the previous query time to be the start of the previous
-                    # query. Given this, it is easy to simply add a day to the previous query time in order
-                    # to come up with the new query time.
-                    most_recent_search = self.most_recent_search(mnemonic['name'])
-                    starttime = most_recent_search + 1.  # THIS ASSUMES UNITS OF MJD, AND BAKES IN A 1-DAY CADENCE
 
-                    # Check for the case where, for whatever reason, there have been missed days. If so, we need
-                    # to run the calculations separately for each day. Should we query for the full time and then
-                    # filter, or query once per day? The latter is probably slower. Could the former turn into a
-                    # problem if e.g. someone wants to track a new mnemonic and it's been 100 days since the
-                    # default most recent search time?
-                    query_start_times = np.arange(startime, today, 1.)  # This again assumes MJD
-                    query_end_times = query_times +  query_duration
+                    if telem_type != 'none':
+                        # Find the end time of the previous query. In this case where we are querying over only
+                        # some subset of the day, set the previous query time to be the start of the previous
+                        # query. Given this, it is easy to simply add a day to the previous query time in order
+                        # to come up with the new query time.
+                        most_recent_search = self.most_recent_search(mnemonic['name'])
+                        starttime = most_recent_search + 1.  # THIS ASSUMES UNITS OF MJD, AND BAKES IN A 1-DAY CADENCE
+
+                        # Check for the case where, for whatever reason, there have been missed days. If so, we need
+                        # to run the calculations separately for each day. Should we query for the full time and then
+                        # filter, or query once per day? The latter is probably slower. Could the former turn into a
+                        # problem if e.g. someone wants to track a new mnemonic and it's been 100 days since the
+                        # default most recent search time?
+                        query_start_times = np.arange(startime, today, 1.)  # This again assumes MJD
+                        query_end_times = query_times +  query_duration
+
+                    else:
+                        # In the case where telemetry data have no averaging done, we do not store the data
+                        # in the JWQL database, in order to save space. So in this case, we will retrieve
+                        # all of the data from the EDB directly, from some default start time until the
+                        # present day.
+                        query_start_times = np.array([DEFAULT_EDB_QUERY_START_TIME])
+                        query_end_times = np.array([today.mjd])
 
                     # Make sure the end time of the final query is before the current time
                     if query_end_times[-1] > today:
-                        query_start_times = query_start_times[0:-1]
-                        query_end_times = query_end_times[0:-1]
+                        valid_end_times = query_end_times <= today
+                        query_start_times = query_start_times[valid_end_times]
+                        query_end_times = query_end_times[valid_end_times]
 
                     # Loop over the query times, and query the EDB
                     for starttime, endtime in zip(query_start_times, query_end_times):
 
-                        # Query the EDB. An astropy table is returned.
-                        mnemonic_data = ed.get_mnemonic(mnemonic, starttime, endtime)
+                        # This function wraps around the EDB query and telemetry filtering, and
+                        # averaging. In this way, when a user requests an updated plot for one of
+                        # the mnemonics whose data are not stored in the JWQL database, we can simply
+                        # call this function for that specific mnemonic
+                        mnemonic_info = self.get_mnemonic_info(mnemonic, starttime, endtime)
 
-                        # Filter the data - good_mnemonic_data is a dictionary with "times" and "data" keys
-                        good_mnemonic_data = filter_telemetry(mnemonic_data, mnemonic['dependency'])
-
-                        # If the filtered data contains enough entries, then proceed.
-                        if len(good_mnemonic_data.data) > 0:
-
-                            if telem_type == "daily_means":
-                                mean_vals, median_vals, std_vals = self.calc_daily_stats(good_mnemonic_data["data"])
-                                median_times = np.median(good_mnemonic_data["times"])
-                            elif telem_type == "block_means":
-                                mean_vals, median_vals, std_vals, median_times = self.calc_block_stats(good_mnemonic_data)
-                            elif telem_type == "every_change":
-                                mean_vals, std_vals, median_times = self.calc_every_change_stats(good_mnemonic_data)
-                            elif telem_type == "time_interval":
-                                stats_duration = utils.get_averaging_time_duration(mnemonic["mean_time_block"])
-                                mean_vals, std_vals, median_times = self.calc_timed_stats(good_mnemonic_data, stats_duration)
-                            elif telem_type == "none":
-                                # No averaging done
-                                mean_vals = good_mnemonic_data["data"]
-                                median_times = good_mnemonic_data["times"]
-                            # Save the averaged/smoothed data and dates/times to the edb_mnemonics_monitor database
-                            #      Just as with other monitors
-                            self.add_new_db_entry(mnemonic, median_time, mean_val, stdev_val)
+                        if mnemonic_info is not None:
+                            if telem_type != 'none':
+                                # Save the averaged/smoothed data and dates/times to the database,
+                                # but only for cases where we are averaging. For cases with no averaging
+                                # the database would get too large too quickly. In that case the monitor
+                                # will re-query the EDB for the entire history each time.
+                                self.add_new_db_entry(mnemonic, median_time, mean_val, stdev_val)
                         else:
                             pass
-                            # self.logger.info("Mnemonic {} has no data that match the requested conditions.".format(mnemonic))
+                            # self.logger.info(f"Mnemonic {mnemonic["name"]} has no data that match the requested conditions.")
 
-                    # Re-create the plot for the mnemonic, adding the new data
-                    # Can probably steal some of the data trending code for this
-
-                    # Display the plot on the web app
-
-
-            # "Each instance" mnemonics. For these, we query for the entire day. Then filter the data
-            # to keep that which conforms to the dependencies. For each block of data kept (i.e. each
-            # continuous block of time where the dependencies are satisfied), calculate a mean value.
-            # The result will be a mean value for each block of time.
-            for mnemonic in mnemonic_dict['each_instance']:
-                # Set the previous query time to be the start of the previous
-                # query. Given this, it is easy to simply add a day to the previous query time in order
-                # to come up with the new query time.
-                most_recent_search = self.most_recent_search(mnemonic['name'])
-                starttime = most_recent_search + 1.  # THIS ASSUMES UNITS OF MJD, AND BAKES IN A 1-DAY CADENCE
-
-                # Check for the case where, for whatever reason, there have been missed days. If so, we need
-                # to run the calculations separately for each day. Should we query for the full time and then
-                # filter, or query once per day? The latter is probably slower. Could the former turn into a
-                # problem if e.g. someone wants to track a new mnemonic and it's been 100 days since the
-                # default most recent search time?
-                query_start_times = np.arange(startime, today, 1.)  # This again assumes MJD
-                query_end_times = query_times + self.each_instance_delta[instrument]
-
-                # Make sure the end time of the final query is before the current time
-                if query_end_times[-1] > today:
-                    query_start_times = query_start_times[0:-1]
-                    query_end_times = query_end_times[0:-1]
-
-                # Loop over the query times, and query the EDB
-                for starttime, endtime in zip(query_start_times, query_end_times):
-
-                    # Query the EDB.
-                    mnemonic_data = ed.get_mnemonic(mnemonic, starttime, endtime)
-
-                    # Filter the data
-                    good_mnemonic_data = filter_each_instance_data(mnemonic_data, mnemonic['dependency'])
-
-                    # If the filtered data contains enough entries, then proceed.
-                    if len(good_mnemonic_data.data) > 0:
-                        mean_val, std_val = calc_stats(good_mnemonic_data.data)
-
-                        # Save the averaged/smoothed data and dates/times to the edb_mnemonics_monitor database
-                        #      Just as with other monitors
-                        self.add_new_db_entry(mnemonic, averaged_times, averaged_data)
-
-                    # Re-create the plot for the mnemonic, adding the new data
-                    # Can probably steal some of the data trending code for this
-
-                    # Display the plot on the web app
-
-
-            # "Every change" mnemonics. These are similar to the "each instance" mnemonics above, except
-            # that there is no filtering by dependency value. We break the data up into blocks again, but
-            # this time the end of one block and start of another is simply a change in the data value.
-            for mnemonic in mnemonic_dict['every_change']:
-                # Set the previous query time to be the start of the previous
-                # query. Given this, it is easy to simply add a day to the previous query time in order
-                # to come up with the new query time.
-                most_recent_search = self.most_recent_search(mnemonic['name'])
-                starttime = most_recent_search + 1.  # THIS ASSUMES UNITS OF MJD, AND BAKES IN A 1-DAY CADENCE
-
-                # Check for the case where, for whatever reason, there have been missed days. If so, we need
-                # to run the calculations separately for each day. Should we query for the full time and then
-                # filter, or query once per day? The latter is probably slower. Could the former turn into a
-                # problem if e.g. someone wants to track a new mnemonic and it's been 100 days since the
-                # default most recent search time?
-                query_start_times = np.arange(startime, today, 1.)  # This again assumes MJD
-                query_end_times = query_times + self.every_change_delta[instrument]
-
-                # Make sure the end time of the final query is before the current time
-                if query_end_times[-1] > today:
-                    query_start_times = query_start_times[0:-1]
-                    query_end_times = query_end_times[0:-1]
-
-                # Loop over the query times, and query the EDB
-                for starttime, endtime in zip(query_start_times, query_end_times):
-
-                    # Query the EDB.
-                    mnemonic_data = ed.get_mnemonic(mnemonic, starttime, endtime)
-
-                    # Filter the data
-                    good_mnemonic_data = filter_every_change_data(mnemonic_data, mnemonic['dependency'])
-
-                    # If the filtered data contains enough entries, then proceed.
-                    if len(good_mnemonic_data.data) > 0:
-                        mean_val, std_val = calc_stats(good_mnemonic_data.data)
-
-                        # Save the averaged/smoothed data and dates/times to the edb_mnemonics_monitor database
-                        #      Just as with other monitors
-                        self.add_new_db_entry(mnemonic, averaged_times, averaged_data)
-
-                    # Re-create the plot for the mnemonic, adding the new data
-                    # Can probably steal some of the data trending code for this
-
-                    # Display the plot on the web app
-
-
-
-
-
-
-
-
+                    # How will we prepare for plotting in the case of a mnemonic with no averaging?
+                    # If the data are not going to be save in the database, how will we get to it at
+                    # plot creation time? Maybe we create and populate a temporary database table?
+                    # Or create a plots here and save them to be rendered later?
+                    if telem_type == 'none':
+                        pass
 
 
 
