@@ -157,6 +157,32 @@ if not ON_GITHUB_ACTIONS:
     FILESYSTEM = get_config()['filesystem']
 
 
+def check_config_for_key(key):
+    """Check that the config.json file contains the specified key
+    and that the entry is not empty
+
+    Parameters
+    ----------
+    key : str
+        The configuration file key to verify
+    """
+    try:
+        get_config()[key]
+    except KeyError:
+        raise KeyError(
+            'The key `{}` is not present in config.json. Please add it.'.format(key)
+            + ' See the relevant wiki page (https://github.com/spacetelescope/'
+            'jwql/wiki/Config-file) for more information.'
+        )
+
+    if get_config()[key] == "":
+        raise ValueError(
+            'Please complete the `{}` field in your config.json. '.format(key)
+            + ' See the relevant wiki page (https://github.com/spacetelescope/'
+            'jwql/wiki/Config-file) for more information.'
+        )
+
+
 def copy_files(files, out_dir):
     """Copy a given file to a given directory. Only try to copy the file
     if it is not already present in the output directory.
@@ -193,58 +219,6 @@ def copy_files(files, out_dir):
             except:
                 failed.append(input_file)
     return success, failed
-
-
-def download_mast_data(query_results, output_dir):
-    """Example function for downloading MAST query results. From MAST
-    website (``https://mast.stsci.edu/api/v0/pyex.html``)
-
-    Parameters
-    ----------
-    query_results : list
-        List of dictionaries returned by a MAST query.
-
-    output_dir : str
-        Directory into which the files will be downlaoded
-    """
-
-    # Set up the https connection
-    server = 'mast.stsci.edu'
-    conn = httplib.HTTPSConnection(server)
-
-    # Dowload the products
-    print('Number of query results: {}'.format(len(query_results)))
-
-    for i in range(len(query_results)):
-
-        # Make full output file path
-        output_file = os.path.join(output_dir, query_results[i]['filename'])
-
-        print('Output file is {}'.format(output_file))
-
-        # Download the data
-        uri = query_results[i]['dataURI']
-
-        print('uri is {}'.format(uri))
-
-        conn.request("GET", "/api/v0/download/file?uri=" + uri)
-        resp = conn.getresponse()
-        file_content = resp.read()
-
-        # Save to file
-        with open(output_file, 'wb') as file_obj:
-            file_obj.write(file_content)
-
-        # Check for file
-        if not os.path.isfile(output_file):
-            print("ERROR: {} failed to download.".format(output_file))
-        else:
-            statinfo = os.stat(output_file)
-            if statinfo.st_size > 0:
-                print("DOWNLOAD COMPLETE: ", output_file)
-            else:
-                print("ERROR: {} file is empty.".format(output_file))
-    conn.close()
 
 
 def ensure_dir_exists(fullpath):
@@ -513,32 +487,6 @@ def get_base_url():
         base_url = 'http://127.0.0.1:8000'
 
     return base_url
-
-
-def check_config_for_key(key):
-    """Check that the config.json file contains the specified key
-    and that the entry is not empty
-
-    Parameters
-    ----------
-    key : str
-        The configuration file key to verify
-    """
-    try:
-        get_config()[key]
-    except KeyError:
-        raise KeyError(
-            'The key `{}` is not present in config.json. Please add it.'.format(key)
-            + ' See the relevant wiki page (https://github.com/spacetelescope/'
-            'jwql/wiki/Config-file) for more information.'
-        )
-
-    if get_config()[key] == "":
-        raise ValueError(
-            'Please complete the `{}` field in your config.json. '.format(key)
-            + ' See the relevant wiki page (https://github.com/spacetelescope/'
-            'jwql/wiki/Config-file) for more information.'
-        )
 
 
 def initialize_instrument_monitor(module):
