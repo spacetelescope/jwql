@@ -96,47 +96,58 @@ class Grating():
 
         start_telemetry_time = Time(Time(self.query_start, format='mjd'), format='decimalyear')
         end_telemetry_time = Time(Time(self.query_end, format='mjd'), format='decimalyear')
+        start_time = Time(Time('2019-01-16 00:00:00.000', format='iso'), format='decimalyear')
+        end_time = Time(Time('2019-01-17 00:01:00.000', format='iso'), format='decimalyear')
+        start_telemetry_time = start_time
+        end_telemetry_time = end_time
+
         # end_telemetry_time = Time(Time(Time.now(), format='mjd'), format='decimalyear')
         # grating_val gets bogged down if more than about a day
 
         # Construct new entry for this file for the grating wheel database table.
-        retrieved_grat = False
+        grating_val = mnemonic = get_mnemonic('INRSI_GWA_MECH_POS', start_telemetry_time, end_telemetry_time)
+        type_error = False
+        logging.info('starting telem loop')
         for telem in GRATING_TELEMETRY.keys():
-            # if telem in ['INRSH_GWA_ADCMGAIN', 'INRSH_GWA_ADCMOFFSET', 'INRSH_GWA_MOTOR_VREF']:
-            #     continue
             if 'POSITION' in telem:
                 grating = telem.split('_')[0]
                 telemetry = telem.replace(grating+"_", "")
-                if retrieved_grat is False:
-                    try:
-                        mnemonics = get_mnemonics([telemetry, 'INRSI_GWA_MECH_POS'], start_telemetry_time, end_telemetry_time)
-                        mnemonic = mnemonics[telemetry]
-                        grating_val = mnemonics['INRSI_GWA_MECH_POS']
-                        retrieved_grat = True
-                    except TypeError:
-                        type_error = True
-                        print("type error because data was empty; try using earlier start date if you want this to run. Data should be present already.")
-                        # FIGURE OUT HOW TO DEAL WITH THIS ERROR
             else:
-                try:
-                    mnemonic = get_mnemonic(telem, start_telemetry_time, end_telemetry_time)
-                except TypeError:
-                    type_error = True
-                    print("type error because data was empty 2")
-                    continue
+                telemetry = telem
+            try:
+                logging.info("querying mnemonic")
+                mnemonic = get_mnemonic(telemetry, start_telemetry_time, end_telemetry_time)
+            except TypeError:
+                type_error = True
+                logging.info("TypeError because data was empty; try using earlier start date to run grating_monitor. Data should be present already.")
+            # include placeholder values for other telemetry in order to insert into database
+            logging.info('including other telems')
             other_telems = GRATING_TELEMETRY.keys()
             other_telems_dict = {}
             for telems in other_telems:
                 other_telems_dict[telems.lower()] = None
             other_telems_dict.pop(telem.lower())
             if type_error is False:
+                logging.info("looping through times")
                 for time in mnemonic.data['MJD']:
                     if 'POSITION' in telem:
-                        min_distance = np.min(abs(grating_val.data['MJD']-time))
-                        if min_distance > 0.01:  # determine whether this is realistic time difference between data for voltage and grating value
-                            logging.warning("Grating retrieved may not match grating for which voltage is being determined")
-                        closest_location = np.where(abs(grating_val.data['MJD']-time) == min_distance)[0][0]
-                        grating_used = grating_val.data['euvalue'][closest_location]
+                        # Grating wheel x and y positions are recorded sporadically when the GWA is moved, whereas most telemetry is recorded on a regular time interval
+                        # Find the previous grating wheel value that was recorded closest to the time the mnemonic value was recorded
+                        # We expect the telemetry to be recorded within the past 14 days
+                        # see https://jira.stsci.edu/browse/JSDP-1810
+                        # Telemetry values that exhibit this behavior include INRSI_GWA_X_TILT_AVGED, INRSI_GWA_Y_TILT_AVGED,
+                        # INRSI_C_GWA_X_POSITION, INRSI_C_GWA_Y_POSITION, INRSI_C_GWA_X_POS_REC, INRSI_C_GWA_Y_POS_REC, INRSI_GWA_TILT_TEMP
+                        try:
+                            min_distance = np.min(grating_val.data['MJD'][np.where(grating_val.data['MJD'] > time)]-time)
+                            if min_distance > 14:
+                                logging.warning("Grating retrieved may not match grating for which voltage is being determined")
+                            closest_location = np.where((grating_val.data['MJD'] - time) == min_distance)[0][0]
+                            grating_used = grating_val.data['euvalue'][closest_location]
+                        except ValueError:
+                            logging.warning("Using next rather than previous gwa val")
+                            min_distance = np.min(abs(grating_val.data['MJD']-time))
+                            closest_location = np.where(abs(grating_val.data['MJD'] - time) == min_distance)[0][0]
+                            grating_used = grating_val.data['euvalue'][closest_location]
                         if grating_used == grating:
                             try:
                                 grating_db_entry = {'time': time,
@@ -168,6 +179,8 @@ class Grating():
                         except TypeError:
                             logging.warning("may be skipping a value with same entry_date.")
                             continue
+            else:
+                logging.warning("There was a TypeError causing this data entry to fail.")
 
     @log_fail
     @log_info
