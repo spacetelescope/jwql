@@ -62,7 +62,7 @@ def get_query_duration(mnemonic_type):
     -------
     time : astropy.units.quantity.Quantity
     """
-    if mnemonic_type.lower() == 'daily_means':
+    if mnemonic_type.lower() == "daily_means":
         time = 15. * u.minute
     elif mnemonic_type in ["every_change", "block_means", "time_interval", "none"]:
         time = 1. * u.day

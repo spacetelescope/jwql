@@ -50,15 +50,16 @@ Notes
 -----
 
 """
+from astropy.table import Table
 import numpy as np
 
 class condition:
     """Class to hold several subconditions"""
 
     # contains list of representative time pairs for each subcondition
-    time_pairs = []
+    #time_pairs = []
     # state of the condition
-    __state = False
+    #__state = False
 
     # initializes condition through condition set
     def __init__(self, cond_set):
@@ -69,6 +70,15 @@ class condition:
             list contains subconditions objects
         """
         self.cond_set = cond_set
+
+        # Different from the original version
+        self.time_pairs = []
+        self.__state = False
+
+    def __len__(self):
+        """Return the number of rows in the catalog
+        """
+        return len(self.cond_set)
 
     # destructor -> take care that all time_pairs are deleted!
     def __del__(self):
@@ -81,6 +91,181 @@ class condition:
         print('Available time pairs:')
         for times in self.time_pairs:
             print('list: '+str(times))
+
+    def extract_data(self, mnemonic):
+        """replace the original extract_data with something faster,
+        based on comparing boolean arrays, rather than looping over
+        elements of arrays
+        """
+        #condition is a list of conditions, each of which must have:
+        #time_pairs = [con.time_pars for con in conditions]
+
+        #now each element of the time_pairs list should be a list of tuples with (start, end)
+
+
+        ## Working example---
+        #mnemonic = {"MJD": np.arange(14), "data": np.array([12., 13., 13., 14, 12, 15, 13, 13, 13, 13, 10, 9, 13, 12])}
+        #cond1_times = [(1., 5), (8, 16.)]
+        #cond2_times = [(3., 6), (10, 14.)]
+        #cond3_times = [(4., 12.)]
+
+        # For each time tuple in each condition, find whether each element in mnemonic falls
+        # between the starting and ending times
+        #tf1 = [((mnemonic["MJD"] >= t[0]) & (mnemonic["MJD"] <= t[1])) for t in cond1_times]
+        #tf2 = [((mnemonic["MJD"] >= t[0]) & (mnemonic["MJD"] <= t[1])) for t in cond2_times]
+        #tf3 = [((mnemonic["MJD"] >= t[0]) & (mnemonic["MJD"] <= t[1])) for t in cond3_times]
+
+        # Now for each condition, combine the boolean arrays into a single array that describes
+        # whether each element of mnemonic falls within one of the time intervals
+        #tf1_flat = tf1[0] | tf1[1]
+        #tf2_flat = tf2[0] | tf2[1]
+        #tf3_flat = tf3  # because there is only one time interval here
+
+        # Now combine the boolean arrays into a single array that describes whether each element
+        # of mnemonic falls within one time interval of all conditions
+        #tf = tf1_flat & tf2_flat & tf3_flat
+        # Working example---
+        # Now, how to we generalize this for arbirary numbers of time intervals for each condition???
+
+
+        # Generalized code
+
+        # 2D matrix to hold boolean values for all conditions
+        tf_matrix = np.zeros((len(self.cond_set), len(mnemonic["MJD"]))).astype(bool)
+
+        # Loop over conditions
+        for i, cond in enumerate(self.cond_set):
+            # Check if any of the time pairs include None, which indicates no good data
+            if None in cond.time_pairs[0]:
+                return Table(names=('MJD', 'data')), None
+
+            # Find whether each mnemonic time falls within each of the good time blocks
+
+
+            print(mnemonic["MJD"].data)
+            print(cond.time_pairs)
+            #print(condition_list.cond_set[i].time_pairs)
+
+
+            tf_cond = [((mnemonic["MJD"].data >= times[0]) & (mnemonic["MJD"].data <= times[1])) for times in cond.time_pairs]
+            print(i)
+            print('tf_cond:', tf_cond)
+            if len(tf_cond) > 1:
+                # If there are multiple blocks of good time pairs, combine them
+                # into a 2D array (rather than list)
+                tf_2d = np.zeros((len(tf_cond), len(tf_cond[1]))).astype(bool)
+                for index in range(len(tf_cond)):
+                    tf_2d[index, :] = tf_cond[index]
+                print('tf_2d:', tf_2d)
+
+                # Flatten the 2D boolean array. If the mnemonic's time falls within any of
+                # the good time pairs, it should be True here
+                tf_flat = np.any(tf_2d, axis=0)
+                print('tf_flat:', tf_flat)
+            elif len(tf_cond) == 1:
+                # If there is only one block of good times, then no need to create
+                # a 2D array and flatten
+                tf_flat = np.array(tf_cond)
+            else:
+                print("uh oh. shouldn't be here.")
+            # Create a 2D boolean matrix that will hold the T/F values for all conditions
+            tf_matrix[i, :] = tf_flat
+            print('tf_matrix:', tf_matrix)
+
+        # Finally, if the mnemonic's time falls within a good time block for all of the
+        # conditions, then it is considered good.
+        tf = np.all(tf_matrix, axis=0)
+
+        # Extract the good data and save it in an array
+        good_data = Table()
+        good_data["MJD"] = mnemonic["MJD"][tf]
+        good_data["data"] = mnemonic["data"][tf]
+        self.extracted_data = good_data
+
+        # We need to keep data from distinct blocks of time separate, because we may
+        # need to calculate statistics for each good time block separately. Use tf to
+        # find blocks. Anywhere an F falls between some T's, we have a separate block.
+        # Save tuples of (start_time, end_time) for blocks.
+
+        # Add a False 0th element
+        tf_plus_false = np.insert(tf, 0, False)
+
+        # Now we need to find the indexes where the array switches from False to True.
+        # These will be the starting indexes of the blocks. (Remember to subtract 1 in
+        # order to account for the added False element)
+        switches = tf_plus_false.astype(int)[0:-1] - tf.astype(int)
+        switch_to_true = np.where(switches == -1)[0]
+        switch_to_false = np.where(switches == 1)[0]
+
+
+        # Add the final element to switch_to_false if the number of switches are not equal
+        # (i.e. if the data are good through the end of the array)
+        # NOT NEEDED, since the filtered_indexes loop works on the i-1 element of
+        # switch_to_false
+        #if len(switch_to_false) - len(switch_to_true) == 1:
+        #    switch_to_false = np.append(switch_to_false, -1, len(mnemonic["MJD"]))
+        #elif len(switch_to_false) - len(switch_to_true) == 0:
+        #    pass
+        #else:
+        #    raise ValueError("Number of switches of good to bad data are not consistent.")
+
+
+        # These indexes apply to the original data. Once we extract the good
+        # data using tf, we now need to adjust these indexes so that they
+        # apply to the extracted data.
+        filtered_indexes = []
+        for i in range(len(switch_to_true)):
+            if i == 0:
+                diff = switch_to_true[i]
+            else:
+                diff = switch_to_true[i] - switch_to_false[i-1]
+            switch_to_true -= diff
+            switch_to_false -= diff
+            filtered_indexes.append(switch_to_true[i])
+        self.block_indexes = filtered_indexes
+
+        #to_true_times = mnemonic["MJD"][switch_to_true]
+        #to_false_times = mnemonic["MJD"][switch_to_false]
+
+        # If the first transistion is True->False, then add the initial time entry
+        # as a transition to True, in order to help with creating time pairs later
+        #if to_false_times[0] < to_true_times[0]:
+        #    to_true_times = np.insert(to_true_times, 0, mnemonic["MJD"][0])
+
+        # If the last transision is False->True, then add the final time entry
+        # as a transition to False, in order to help with creating time pairs later
+        #if to_true_times[-1] > to_false_times[-1]:
+        #    to_false_times.append(mnemonic["MJD"][-1])
+
+        #if len(to_true_times) != len(to_false_times):
+        #    raise ValueError("Number of T/F transistions are not equal.")
+
+        # Now create a list of tupes of starting and ending times
+        #block_time_pairs = [(true_time, false_time) for true_time, false_time in zip(to_true_times, to_false_times)]
+
+        """
+        with added F to beginning
+
+        arr    FTTTTFFTTTFFFFT
+        shift  TTTTFFTTTFFFFT
+        diff   -000+0-00+000-
+        nozero 0 4 6 9 13
+        """
+
+
+        #for a mnemonic:
+        #    data = [2,3,2,4,3,5,3,2,3,4,3,2,4]
+        #    time = [1,2,5,6,8,9,10,11,12,23,24,25]
+        #    return this instead of time tuples? indexes_of_blocks = [0, 2, 4, 9]
+
+        # If the first transistion is True->False, then add the initial time entry
+        # as a transition to True, in order to help with creating time pairs later
+        # THIS IS NOT NEEDED IF WE PREPEND A FALSE TO TF ABOVE
+        #if switch_to_false[0] < switch_to_true[0]:
+        #    switch_to_true = np.insert(switch_to_true, 0, mnemonic["MJD"][0])
+
+        #return good_data, filtered_indexes
+
 
     # returns a interval if time is anywhere in between
     def get_interval(self, time):
@@ -164,9 +349,9 @@ class condition:
     """
 
 
-
+    """
     def generate_time_pairs(self, good_times, bad_times):
-        """Define blocks of time where a condition is true. Creates a list of
+        Define blocks of time where a condition is true. Creates a list of
         tuples of (start time, end time) where a condition is true, given a
         list of times where the condition is true and where it is false.
 
@@ -194,13 +379,19 @@ class condition:
         good_blocks : list
             List of 2-tuples, where each tuple contains the starting and ending
             time where the condition is True.
-        """
+
         # This is an attempt to replace the original generate_time_pairs above,
         # with an eye towards making it faster. Probably should end up doing some
         # tests to make sure that it really is faster.
         #add check to be sure no time is in both good and bad lists?
         good_times = list(sorted(set(good_times)))
         bad_times = list(sorted(set(bad_times)))
+
+
+        print('in generate_time_pairs:')
+        print(good_times)
+        print(bad_times)
+
 
         # Take care of the easy cases, where all times are good or all are bad
         if len(bad_times) == 0:
@@ -221,6 +412,10 @@ class condition:
         sort_idx = np.argsort(all_times)
         all_times = all_times[sort_idx]
 
+
+        print(all_times)
+
+
         # Create boolean arrays to match the time arrays. Combine in the same
         # way as the good and bad time lists above.
         good = [True] * len(good_times)
@@ -228,11 +423,18 @@ class condition:
         all_vals = np.array(good + bad)
         all_vals = all_vals[sort_idx]
 
+
+        print(all_vals)
+
         # Find the indexes where the value switches from one element to the next
         a_change_indexes = np.where(all_vals[:-1] != all_vals[1:])[0]
         change_indexes = a_change_indexes + 1
         change_indexes = np.insert(change_indexes, 0, 0)
         change_len = len(change_indexes) + 1
+
+
+        print(change_indexes)
+
 
         # Now create tuples of the start and end times where the values change
         # We need to know if the first element of the data is True or False,
@@ -250,14 +452,24 @@ class condition:
         # of tuples of only the good_times. i.e. we need to skip the blocks corresponding to
         # the bad_times.
         good_blocks = []
-        for counti, strt in enumerate(change_indexes[start_idx:len(change_indexes)-1:2]):
+        for counti, strt in enumerate(change_indexes[start_idx:len(change_indexes):2]):
             i = counti * 2 + counter_delta
+
+            print(counti, start_idx, strt, i, len(change_indexes))
+
             if i < (len(change_indexes) - 1):
+                print('initial', all_times[strt], all_times[change_indexes[i+1]-1])
                 good_blocks.append((all_times[strt], all_times[change_indexes[i+1]-1]))
             else:
+                print('final',all_times[strt], all_times[-1])
                 good_blocks.append((all_times[strt], all_times[-1]))
 
+
+
+        print('good_blocks:',good_blocks)
+
         return good_blocks
+    """
 
 
     def state(self, time):
@@ -309,25 +521,169 @@ class condition:
                 pass
 
 
-class equal(condition):
-    """Class to hold single "is equal" subcondition"""
 
-    # add attributes to function - start function "cond_time_pairs()"
+
+
+
+
+
+
+
+
+
+
+
+
+
+class relation():
+    """Base class for more specific relationship classes (e.g. equal)
+    """
+    def __init__(self):
+        self.time_pairs = []
+
+    def generate_time_pairs(self, good_times, bad_times):
+        """Define blocks of time where a condition is true. Creates a list of
+        tuples of (start time, end time) where a condition is true, given a
+        list of times where the condition is true and where it is false.
+
+        For example:
+        good_times = [2, 3, 4, 7, 8]
+        bad_times = [0, 1, 5, 6, 9, 10]
+
+        Will return:
+        [(2, 4), (7, 8)]
+
+        Can we do this with only good_times as input? Yes, if you can assume
+        that the delta between consecutive time entries is a constant. Perhaps
+        safer to look at bad_times as well.
+
+        Parameters
+        ----------
+        good_times : list
+            List of times where some condition is True
+
+        bad_times : list
+            List of times where some condition is False
+
+        Returns
+        -------
+        good_blocks : list
+            List of 2-tuples, where each tuple contains the starting and ending
+            time where the condition is True.
+        """
+        # This is an attempt to replace the original generate_time_pairs above,
+        # with an eye towards making it faster. Probably should end up doing some
+        # tests to make sure that it really is faster.
+        #add check to be sure no time is in both good and bad lists?
+        good_times = list(sorted(set(good_times)))
+        bad_times = list(sorted(set(bad_times)))
+
+
+        print('in generate_time_pairs:')
+        print(good_times)
+        print(bad_times)
+
+
+        # Take care of the easy cases, where all times are good or all are bad
+        if len(bad_times) == 0:
+            if len(good_times) > 0:
+                # All values are good
+                return [(good_times[0], good_times[-1])]
+            else:
+                # No good or bad values
+                raise ValueError("No good or bad values provided. Unable to create list of corresponding times.")
+        else:
+            if len(good_times) == 0:
+                # All values are bad
+                return [(None, None)]
+
+        # Now the case where there are both good and bad input times
+        # Combine and sort the good and bad times lists
+        all_times = np.array(good_times + bad_times)
+        sort_idx = np.argsort(all_times)
+        all_times = all_times[sort_idx]
+
+
+        print(all_times)
+
+
+        # Create boolean arrays to match the time arrays. Combine in the same
+        # way as the good and bad time lists above.
+        good = [True] * len(good_times)
+        bad = [False] * len(bad_times)
+        all_vals = np.array(good + bad)
+        all_vals = all_vals[sort_idx]
+
+
+        print(all_vals)
+
+        # Find the indexes where the value switches from one element to the next
+        a_change_indexes = np.where(all_vals[:-1] != all_vals[1:])[0]
+        change_indexes = a_change_indexes + 1
+        change_indexes = np.insert(change_indexes, 0, 0)
+        change_len = len(change_indexes) + 1
+
+
+        print(change_indexes)
+
+
+        # Now create tuples of the start and end times where the values change
+        # We need to know if the first element of the data is True or False,
+        # in order to get the index counters correct below. Note the we can use
+        # "if all_vals[0] == True:"" or "if all_vals[0]:"" here. I prefer the
+        # former, for readability.
+        if all_vals[0] == True:
+            start_idx = 0
+            counter_delta = 0
+        else:
+            start_idx = 1
+            counter_delta = 1
+
+        # We need to loop over EVERY OTHER change index, so that in the end we have a list
+        # of tuples of only the good_times. i.e. we need to skip the blocks corresponding to
+        # the bad_times.
+        good_blocks = []
+        for counti, strt in enumerate(change_indexes[start_idx:len(change_indexes):2]):
+            i = counti * 2 + counter_delta
+
+            print(counti, start_idx, strt, i, len(change_indexes))
+
+            if i < (len(change_indexes) - 1):
+                print('initial', all_times[strt], all_times[change_indexes[i+1]-1])
+                good_blocks.append((all_times[strt], all_times[change_indexes[i+1]-1]))
+            else:
+                print('final',all_times[strt], all_times[-1])
+                good_blocks.append((all_times[strt], all_times[-1]))
+
+
+
+        print('good_blocks:',good_blocks)
+
+        return good_blocks
+
+
+
+class equal(relation):
+    """Class to hold single "is equal" subcondition"""
     def __init__(self, mnemonic, value):
         """Initializes subconditon
         Parameters
         ----------
         mnemonic : dict
-            Dictionary for a single mnemonic. "times" key holds time values,
+            Dictionary for a single mnemonic. "MJD" key holds time values,
             and "data" key holds corresponding telemetry data values. Each
             should be a 1d numpy array.
 
         value : str or float or int
             Comparison value for equal statement
         """
+        relation.__init__(self)
+
         self.mnemonic = mnemonic
         self.value = value
-        condition.time_pairs.append((self.cond_true_time()))
+        self.mnemonic["data"] = np.array(self.mnemonic["data"])  # check if this is needed, might already be array as returned by EDB
+        self.mnemonic["MJD"] = np.array(self.mnemonic["MJD"])    # check if this is needed, might already be array as returned by EDB
+        self.time_pairs = self.cond_true_time()
 
     def cond_true_time(self):
         """Find all times whose values are equal to the given comparison value
@@ -340,30 +696,30 @@ class equal(condition):
         """
         good_points = np.where(self.mnemonic["data"] == self.value)[0]
         bad_points = np.where(self.mnemonic["data"] != self.value)[0]
-        good_time_values = self.mnemonic["times"][good_points]
-        bad_time_values = self.mnemonic["times"][bad_points]
+        good_time_values = self.mnemonic["MJD"][good_points]
+        bad_time_values = self.mnemonic["MJD"][bad_points]
         time_pairs = self.generate_time_pairs(good_time_values, bad_time_values)
         return time_pairs
 
 
-class greater_than(condition):
+class greater_than(relation):
     """Class to hold single "greater than" subcondition"""
-
-    # add attributes to function - start function "cond_time_pairs()"
     def __init__(self, mnemonic, value):
         """Initializes subconditon
         Parameters
         ----------
         mnemonic : dict
-            Dictionary for a single mnemonic. "times" key holds time values,
+            Dictionary for a single mnemonic. "MJD" key holds time values,
             and "data" key holds corresponding telemetry data values
 
         value : float
-            coparison value for equal statement
+            Comparison value for equal statement
         """
+        relation.__init__(self)
+
         self.mnemonic = mnemonic
         self.value = value
-        condition.cond_time_pairs.append((self.cond_true_time()))
+        self.time_pairs = self.cond_true_time()
 
     def cond_true_time(self):
         """Find all times whose corresponding values are greater than a
@@ -377,31 +733,28 @@ class greater_than(condition):
         """
         good_points = np.where(self.mnemonic["data"] > self.value)[0]
         bad_points = np.where(self.mnemonic["data"] <= self.value)[0]
-        good_time_values = self.mnemonic["times"][good_points]
-        bad_time_values = self.mnemonic["times"][bad_points]
-
-        time_pairs = condition.generate_time_pairs(good_time_values, bad_time_values)
+        good_time_values = self.mnemonic["MJD"][good_points]
+        bad_time_values = self.mnemonic["MJD"][bad_points]
+        time_pairs = self.generate_time_pairs(good_time_values, bad_time_values)
         return time_pairs
 
 
-class less_than(condition):
+class less_than(relation):
     """Class to hold single "greater than" subcondition"""
-
-    # add attributes to function - start function "cond_time_pairs()"
     def __init__(self, mnemonic, value):
         """Initializes subconditon
         Parameters
         ----------
         mnemonic : dict
-            Dictionary for a single mnemonic. "times" key holds time values,
+            Dictionary for a single mnemonic. "MJD" key holds time values,
             and "data" key holds corresponding telemetry data values
 
-        value : str
-            coparison value for equal statement
+        value : float
+            Coparison value for equal statement
         """
         self.mnemonic = mnemonic
         self.value = value
-        condition.cond_time_pairs.append((self.cond_true_time()))
+        self.time_pairs = self.cond_true_time()
 
     def cond_true_time(self):
         """Find all times whose corresponding values are less than a
@@ -415,37 +768,41 @@ class less_than(condition):
         """
         good_points = np.where(self.mnemonic["data"] < self.value)[0]
         bad_points = np.where(self.mnemonic["data"] >= self.value)[0]
-        good_time_values = self.mnemonic["times"][good_points]
-        bad_time_values = self.mnemonic["times"][bad_points]
-
-        time_pairs = condition.generate_time_pairs(good_time_values, bad_time_values)
+        good_time_values = self.mnemonic["MJD"][good_points]
+        bad_time_values = self.mnemonic["MJD"][bad_points]
+        time_pairs = self.generate_time_pairs(good_time_values, bad_time_values)
         return time_pairs
 
 
 
 
 def extract_data(condition_list, mnemonic):
-    """replace the original extract_data with something faster,
+    """
+    MOVED INTO condition class
+
+
+
+    replace the original extract_data with something faster,
     based on comparing boolean arrays, rather than looping over
     elements of arrays
     """
-    condition is a list of conditions, each of which must have:
-    time_pairs = [con.time_pars for con in conditions]
+    #condition is a list of conditions, each of which must have:
+    #time_pairs = [con.time_pars for con in conditions]
 
-    now each element of the time_pairs list should be a list of tuples with (start, end)
+    #now each element of the time_pairs list should be a list of tuples with (start, end)
 
 
     ## Working example---
-    #mnemonic = {"times": np.arange(14), "data": np.array([12., 13., 13., 14, 12, 15, 13, 13, 13, 13, 10, 9, 13, 12])}
+    #mnemonic = {"MJD": np.arange(14), "data": np.array([12., 13., 13., 14, 12, 15, 13, 13, 13, 13, 10, 9, 13, 12])}
     #cond1_times = [(1., 5), (8, 16.)]
     #cond2_times = [(3., 6), (10, 14.)]
     #cond3_times = [(4., 12.)]
 
     # For each time tuple in each condition, find whether each element in mnemonic falls
     # between the starting and ending times
-    #tf1 = [((mnemonic["times"] >= t[0]) & (mnemonic["times"] <= t[1])) for t in cond1_times]
-    #tf2 = [((mnemonic["times"] >= t[0]) & (mnemonic["times"] <= t[1])) for t in cond2_times]
-    #tf3 = [((mnemonic["times"] >= t[0]) & (mnemonic["times"] <= t[1])) for t in cond3_times]
+    #tf1 = [((mnemonic["MJD"] >= t[0]) & (mnemonic["MJD"] <= t[1])) for t in cond1_times]
+    #tf2 = [((mnemonic["MJD"] >= t[0]) & (mnemonic["MJD"] <= t[1])) for t in cond2_times]
+    #tf3 = [((mnemonic["MJD"] >= t[0]) & (mnemonic["MJD"] <= t[1])) for t in cond3_times]
 
     # Now for each condition, combine the boolean arrays into a single array that describes
     # whether each element of mnemonic falls within one of the time intervals
@@ -463,13 +820,23 @@ def extract_data(condition_list, mnemonic):
     # Generalized code
 
     # 2D matrix to hold boolean values for all conditions
-    tf_matrix = np.zeros((len(condition_list), len(mnemonic["times"]))).astype(bool)
+    tf_matrix = np.zeros((len(condition_list), len(mnemonic["MJD"]))).astype(bool)
 
     # Loop over conditions
-    for i, cond in enumerate(condition_list):
+    for i, cond in enumerate(condition_list.cond_set):
+        # Check if any of the time pairs include None, which indicates no good data
+        if None in cond.time_pairs[0]:
+            return Table(names=('MJD', 'data')), None
 
         # Find whether each mnemonic time falls within each of the good time blocks
-        tf_cond = [((mnemonic["times"] >= times[0]) & (mnemonic["times"] <= times[1])) for times in cond.time_pairs]
+
+
+        print(mnemonic["MJD"].data)
+        print(cond.time_pairs)
+        #print(condition_list.cond_set[i].time_pairs)
+
+
+        tf_cond = [((mnemonic["MJD"].data >= times[0]) & (mnemonic["MJD"].data <= times[1])) for times in cond.time_pairs]
         print(i)
         print('tf_cond:', tf_cond)
         if len(tf_cond) > 1:
@@ -500,19 +867,19 @@ def extract_data(condition_list, mnemonic):
 
     # Extract the good data and save it in an array
     good_data = Table()
-    good_data["times"] = mnemonic["times"][tf]
+    good_data["MJD"] = mnemonic["MJD"][tf]
     good_data["data"] = mnemonic["data"][tf]
 
-    do we need the info below??
-    we already have the time_pairs, which can be
-    used to break the data into blocks for averaging.
-    Maybe we dont need all this indexing stuff after all??
-    I guess it will be needed for the case of time-based averages,
-    on the assumption that we want to create bins based on time but also
-    avoid having bins cross blocks of invalid data? So if we are averaging
-    data every 30 minutes, but we have a 5 minute block of good data,
-    followed by 15 minutes of bad data, then 10 minutes of good data,
-    we want to treat the 5 minute and 10 minute periods of data separately???
+    #do we need the info below??
+    #we already have the time_pairs, which can be
+    #used to break the data into blocks for averaging.
+    #Maybe we dont need all this indexing stuff after all??
+    #I guess it will be needed for the case of time-based averages,
+    #on the assumption that we want to create bins based on time but also
+    #avoid having bins cross blocks of invalid data? So if we are averaging
+    #data every 30 minutes, but we have a 5 minute block of good data,
+    #followed by 15 minutes of bad data, then 10 minutes of good data,
+    #we want to treat the 5 minute and 10 minute periods of data separately???
 
     # We need to keep data from distinct blocks of time separate, because we may
     # need to calculate statistics for each good time block separately. Use tf to
@@ -535,7 +902,7 @@ def extract_data(condition_list, mnemonic):
     # NOT NEEDED, since the filtered_indexes loop works on the i-1 element of
     # switch_to_false
     #if len(switch_to_false) - len(switch_to_true) == 1:
-    #    switch_to_false = np.append(switch_to_false, -1, len(mnemonic["times"]))
+    #    switch_to_false = np.append(switch_to_false, -1, len(mnemonic["MJD"]))
     #elif len(switch_to_false) - len(switch_to_true) == 0:
     #    pass
     #else:
@@ -558,18 +925,18 @@ def extract_data(condition_list, mnemonic):
 
 
 
-    #to_true_times = mnemonic["times"][switch_to_true]
-    #to_false_times = mnemonic["times"][switch_to_false]
+    #to_true_times = mnemonic["MJD"][switch_to_true]
+    #to_false_times = mnemonic["MJD"][switch_to_false]
 
     # If the first transistion is True->False, then add the initial time entry
     # as a transition to True, in order to help with creating time pairs later
     #if to_false_times[0] < to_true_times[0]:
-    #    to_true_times = np.insert(to_true_times, 0, mnemonic["times"][0])
+    #    to_true_times = np.insert(to_true_times, 0, mnemonic["MJD"][0])
 
     # If the last transision is False->True, then add the final time entry
     # as a transition to False, in order to help with creating time pairs later
     #if to_true_times[-1] > to_false_times[-1]:
-    #    to_false_times.append(mnemonic["times"][-1])
+    #    to_false_times.append(mnemonic["MJD"][-1])
 
     #if len(to_true_times) != len(to_false_times):
     #    raise ValueError("Number of T/F transistions are not equal.")
@@ -596,7 +963,7 @@ def extract_data(condition_list, mnemonic):
     # as a transition to True, in order to help with creating time pairs later
     # THIS IS NOT NEEDED IF WE PREPEND A FALSE TO TF ABOVE
     #if switch_to_false[0] < switch_to_true[0]:
-    #    switch_to_true = np.insert(switch_to_true, 0, mnemonic["times"][0])
+    #    switch_to_true = np.insert(switch_to_true, 0, mnemonic["MJD"][0])
 
     return good_data, filtered_indexes
 
@@ -605,9 +972,9 @@ def extract_data(condition_list, mnemonic):
 
 
 
-
+"""
 def extract_data(condition, mnemonic):
-    """Extract data from a given mnemmonic if all of the requested
+    Extract data from a given mnemmonic if all of the requested
     conditions are satisfied.
 
     Parameters
@@ -622,7 +989,7 @@ def extract_data(condition, mnemonic):
     ------
     good_data : astropy.table.Table
         Data during times when all conditions are met
-    """
+
     extracted_times = []
     extracted_data = []
     good_data = Table()
@@ -634,15 +1001,185 @@ def extract_data(condition, mnemonic):
             extracted_data.append(float(element['data']))
 
 
-    HERE: produce a list of tuples where the final filtered data
-    has come from. Like the time_pairs list for a single condition
-    Or perhaps just a list of index numbers where the filtered data
-    has a break? we need to be able to calculate means over each block
-    later.
+    #HERE: produce a list of tuples where the final filtered data
+    #has come from. Like the time_pairs list for a single condition
+    #Or perhaps just a list of index numbers where the filtered data
+    #has a break? we need to be able to calculate means over each block
+    #later.
 
     good_data["data"] = extracted_data
-    good_data["times"] = extracted_times
+    good_data["MJD"] = extracted_times
     return good_data
+"""
+
+
+# Test case with a single relation class that uses exec()
+class relation_test():
+    """Base class for more specific relationship classes (e.g. equal)
+    """
+    def __init__(self, mnemonic, rel, value):
+        self.time_pairs = []
+        self.mnemonic = mnemonic
+        self.rel = rel
+        self.value = value
+        self.time_pairs = self.cond_true_time()
+
+    def cond_true_time(self):
+        """Find all times whose corresponding values are less than a
+        given comparison value
+
+        Return
+        ------
+        time_pairs : list
+            List of 2-tuples where each tuple contains the starting and
+            ending times of a block of data that matches the condition
+        """
+        if self.rel == '>':
+            opp = '<='
+        elif self.rel == '<':
+            opp = '>='
+        elif self.rel == '==':
+            opp = '!='
+        elif self.rel == '!=':
+            opp = '=='
+        elif self.rel == '<=':
+            opp = '>'
+        elif self.rel == '>=':
+            opp = '<'
+        else:
+            raise ValueError(f'Unrecognized relation: {self.rel}')
+
+        good_points = eval(f'np.where(self.mnemonic["data"] {self.rel} self.value)[0]')
+        bad_points = eval(f'np.where(self.mnemonic["data"] {opp} self.value)[0]')
+        good_time_values = self.mnemonic["MJD"][good_points]
+        bad_time_values = self.mnemonic["MJD"][bad_points]
+        time_pairs = self.generate_time_pairs(good_time_values, bad_time_values)
+        return time_pairs
+
+
+    def generate_time_pairs(self, good_times, bad_times):
+        """Define blocks of time where a condition is true. Creates a list of
+        tuples of (start time, end time) where a condition is true, given a
+        list of times where the condition is true and where it is false.
+
+        For example:
+        good_times = [2, 3, 4, 7, 8]
+        bad_times = [0, 1, 5, 6, 9, 10]
+
+        Will return:
+        [(2, 4), (7, 8)]
+
+        Can we do this with only good_times as input? Yes, if you can assume
+        that the delta between consecutive time entries is a constant. Perhaps
+        safer to look at bad_times as well.
+
+        Parameters
+        ----------
+        good_times : list
+            List of times where some condition is True
+
+        bad_times : list
+            List of times where some condition is False
+
+        Returns
+        -------
+        good_blocks : list
+            List of 2-tuples, where each tuple contains the starting and ending
+            time where the condition is True.
+        """
+        # This is an attempt to replace the original generate_time_pairs above,
+        # with an eye towards making it faster. Probably should end up doing some
+        # tests to make sure that it really is faster.
+        #add check to be sure no time is in both good and bad lists?
+        good_times = list(sorted(set(good_times)))
+        bad_times = list(sorted(set(bad_times)))
+
+
+        print('in generate_time_pairs:')
+        print(good_times)
+        print(bad_times)
+
+
+        # Take care of the easy cases, where all times are good or all are bad
+        if len(bad_times) == 0:
+            if len(good_times) > 0:
+                # All values are good
+                return [(good_times[0], good_times[-1])]
+            else:
+                # No good or bad values
+                raise ValueError("No good or bad values provided. Unable to create list of corresponding times.")
+        else:
+            if len(good_times) == 0:
+                # All values are bad
+                return [(None, None)]
+
+        # Now the case where there are both good and bad input times
+        # Combine and sort the good and bad times lists
+        all_times = np.array(good_times + bad_times)
+        sort_idx = np.argsort(all_times)
+        all_times = all_times[sort_idx]
+
+
+        print(all_times)
+
+
+        # Create boolean arrays to match the time arrays. Combine in the same
+        # way as the good and bad time lists above.
+        good = [True] * len(good_times)
+        bad = [False] * len(bad_times)
+        all_vals = np.array(good + bad)
+        all_vals = all_vals[sort_idx]
+
+
+        print(all_vals)
+
+        # Find the indexes where the value switches from one element to the next
+        a_change_indexes = np.where(all_vals[:-1] != all_vals[1:])[0]
+        change_indexes = a_change_indexes + 1
+        change_indexes = np.insert(change_indexes, 0, 0)
+        change_len = len(change_indexes) + 1
+
+
+        print(change_indexes)
+
+
+        # Now create tuples of the start and end times where the values change
+        # We need to know if the first element of the data is True or False,
+        # in order to get the index counters correct below. Note the we can use
+        # "if all_vals[0] == True:"" or "if all_vals[0]:"" here. I prefer the
+        # former, for readability.
+        if all_vals[0] == True:
+            start_idx = 0
+            counter_delta = 0
+        else:
+            start_idx = 1
+            counter_delta = 1
+
+        # We need to loop over EVERY OTHER change index, so that in the end we have a list
+        # of tuples of only the good_times. i.e. we need to skip the blocks corresponding to
+        # the bad_times.
+        good_blocks = []
+        for counti, strt in enumerate(change_indexes[start_idx:len(change_indexes):2]):
+            i = counti * 2 + counter_delta
+
+            print(counti, start_idx, strt, i, len(change_indexes))
+
+            if i < (len(change_indexes) - 1):
+                print('initial', all_times[strt], all_times[change_indexes[i+1]-1])
+                good_blocks.append((all_times[strt], all_times[change_indexes[i+1]-1]))
+            else:
+                print('final',all_times[strt], all_times[-1])
+                good_blocks.append((all_times[strt], all_times[-1]))
+
+
+
+        print('good_blocks:',good_blocks)
+
+        return good_blocks
+
+
+
+
 
 
 if __name__ == '__main__':
