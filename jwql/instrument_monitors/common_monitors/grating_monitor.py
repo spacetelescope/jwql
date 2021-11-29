@@ -103,7 +103,6 @@ class Grating():
         # Construct new entry for this file for the grating wheel database table.
         grating_val = get_mnemonic('INRSI_GWA_MECH_POS', start_telemetry_time, end_telemetry_time)
         type_error = False
-        logging.info('starting telem loop')
         for telem in GRATING_TELEMETRY.keys():
             if 'POSITION' in telem:
                 grating = telem.split('_')[0]
@@ -111,20 +110,19 @@ class Grating():
             else:
                 telemetry = telem
             try:
-                logging.info("querying mnemonic")
                 mnemonic = get_mnemonic(telemetry, start_telemetry_time, end_telemetry_time)
             except TypeError:
                 type_error = True
                 logging.info("TypeError because data was empty; try using earlier start date to run grating_monitor. Data should be present already.")
+
             # include placeholder values for other telemetry in order to insert into database
-            logging.info('including other telems')
             other_telems = GRATING_TELEMETRY.keys()
             other_telems_dict = {}
             for telems in other_telems:
                 other_telems_dict[telems.lower()] = None
             other_telems_dict.pop(telem.lower())
+
             if type_error is False:
-                logging.info("looping through times")
                 for time in mnemonic.data['MJD']:
                     if 'POSITION' in telem:
                         # Grating wheel x and y positions are recorded sporadically when the GWA is moved, whereas most telemetry is recorded on a regular time interval
@@ -148,7 +146,7 @@ class Grating():
                             try:
                                 grating_db_entry = {'time': time,
                                                     telem.lower(): float(mnemonic.data['euvalue'][np.where(mnemonic.data['MJD'] == time)]),
-                                                    'run_monitor': True,  # UPDATE
+                                                    'run_monitor': True,  # Update if monitor_run is set to False
                                                     'entry_date': datetime.datetime.now()  # need slightly different times to add to database
                                                     }
                                 grating_db_entry.update(other_telems_dict)
@@ -159,13 +157,13 @@ class Grating():
                                 logging.warning("May be skipping a value with same entry_date")
                                 continue
                         else:
-                            logging.warning("Not adding entry because data is for {} rather than {}".format(grating_used, grating))
+                            # Not adding entry because data is for a "grating_used" other than the "grating" specified
                             continue
                     else:
                         try:
                             grating_db_entry = {'time': time,
                                                 telem.lower(): float(mnemonic.data['euvalue'][np.where(mnemonic.data['MJD'] == time)]),
-                                                'run_monitor': True,  # UPDATE
+                                                'run_monitor': True,  # Update if monitor_run is set to False
                                                 'entry_date': datetime.datetime.now()  # need slightly different times to add to database
                                                 }
                             grating_db_entry.update(other_telems_dict)
@@ -194,17 +192,17 @@ class Grating():
         self.identify_tables()
 
         # Locate the record of most recent MAST search; use this time
-        # (plus a 30 day buffer to catch any missing files from
-        # previous run) as the start time in the new MAST search.
+        # as the start time in the new MAST search. Could include a 30 day
+        # buffer to catch any missing telemetry, but this would include
+        # quite a lot of extra data and increase run time.
         most_recent_search = self.most_recent_search()
-        self.query_start = most_recent_search  # MAYBE USE 30 DAYS BUFFER BEFORE THAT?
+        self.query_start = most_recent_search
         logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
 
         self.process()
         monitor_run = True
-        # else:  # DETERMINE CASE WHEN DON"T RUN MONITOR-- THERE SHOULD FREQUENTLY BE UPDATED TELEMETRY THOUGH
-        #     logging.info('\tGrating monitor skipped. {} new dark files for {}.'.format(len(new_files), self.instrument))
-        #     monitor_run = False
+        # If there is a case when we wouldn't want to run the monitor, it could be included here, with monitor_run set to False.
+        # However, we should be updating these plots on the daily schedule becuase the telemetry will be updated frequently.
 
         # Update the query history
         new_entry = {'instrument': self.instrument,
