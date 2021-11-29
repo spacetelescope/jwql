@@ -32,7 +32,7 @@ from jwql.database.database_interface import NIRSpecGratingQueryHistory, NIRSpec
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, GRATING_TELEMETRY
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.monitor_utils import update_monitor_table
-from jwql.utils.utils import ensure_dir_exists, get_config, initialize_instrument_monitor
+from jwql.utils.utils import initialize_instrument_monitor
 
 
 class Grating():
@@ -96,13 +96,9 @@ class Grating():
 
         start_telemetry_time = Time(Time(self.query_start, format='mjd'), format='decimalyear')
         end_telemetry_time = Time(Time(self.query_end, format='mjd'), format='decimalyear')
-        start_time = Time(Time('2019-01-16 00:00:00.000', format='iso'), format='decimalyear')
-        end_time = Time(Time('2019-01-17 00:01:00.000', format='iso'), format='decimalyear')
-        start_telemetry_time = start_time
-        end_telemetry_time = end_time
-
-        # end_telemetry_time = Time(Time(Time.now(), format='mjd'), format='decimalyear')
-        # grating_val gets bogged down if more than about a day
+        # note that grating_val gets bogged down if running over a long time period. Can run in smaller chunks of time, eg:
+        # start_telemetry_time = Time(Time('2019-01-28 00:00:00.000', format='iso'), format='decimalyear')
+        # end_telemetry_time = Time(Time('2019-02-15 00:01:00.000', format='iso'), format='decimalyear')
 
         # Construct new entry for this file for the grating wheel database table.
         grating_val = mnemonic = get_mnemonic('INRSI_GWA_MECH_POS', start_telemetry_time, end_telemetry_time)

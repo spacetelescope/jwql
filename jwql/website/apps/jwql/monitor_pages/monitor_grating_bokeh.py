@@ -23,7 +23,6 @@ from datetime import datetime, timedelta
 from astropy.time import Time
 import os
 
-from astropy.stats import sigma_clip
 import numpy as np
 
 from jwql.bokeh_templating import BokehTemplate
@@ -114,7 +113,12 @@ class GratingMonitor(BokehTemplate):
             # Update plot limits if data exists
             gwa_vals_cut = gwa_vals[np.where(gwa_vals != None)]  # USE ABOVE AS WELL?
             if len(gwa_vals_cut) != 0:
-                self.refs['gwa_x_{}'.format(telemetry)].start = datetime.now() - timedelta(days=100)
+                self.refs['gwa_x_{}'.format(telemetry)].start = datetime.now() - timedelta(days=3)
                 self.refs['gwa_x_{}'.format(telemetry)].end = datetime.now()
-                self.refs['gwa_y_{}'.format(telemetry)].start = gwa_vals_cut.min() - 0.5
-                self.refs['gwa_y_{}'.format(telemetry)].end = gwa_vals_cut.max() + 0.5
+                if telemetry in ['INRSH_GWA_ADCMGAIN', 'INRSH_GWA_ADCMOFFSET', 'INRSH_GWA_MOTOR_VREF']:
+                    self.refs['gwa_y_{}'.format(telemetry)].start = gwa_vals_cut.min() - 0.5
+                    self.refs['gwa_y_{}'.format(telemetry)].end = gwa_vals_cut.max() + 0.5
+                else:
+                    # Use wider y-range to see full green/yellow/red areas for x/y position telemetry
+                    self.refs['gwa_y_{}'.format(telemetry)].start = -400
+                    self.refs['gwa_y_{}'.format(telemetry)].end = 400

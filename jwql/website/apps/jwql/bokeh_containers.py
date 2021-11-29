@@ -348,7 +348,7 @@ def grating_monitor_tabs(instrument):
         plots.append(grating_plot)
 
     # Put grating plots on the top row.
-    grating_layout = layout(plots[0:18])
+    grating_layout = layout(plots[0:19])
     grating_layout.sizing_mode = 'scale_width'
     grating_tab = Panel(child=grating_layout, title="Grating Monitor Plots")
     tabs.append(grating_tab)
