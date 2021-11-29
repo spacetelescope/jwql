@@ -101,7 +101,7 @@ class Grating():
         # end_telemetry_time = Time(Time('2019-02-15 00:01:00.000', format='iso'), format='decimalyear')
 
         # Construct new entry for this file for the grating wheel database table.
-        grating_val = mnemonic = get_mnemonic('INRSI_GWA_MECH_POS', start_telemetry_time, end_telemetry_time)
+        grating_val = get_mnemonic('INRSI_GWA_MECH_POS', start_telemetry_time, end_telemetry_time)
         type_error = False
         logging.info('starting telem loop')
         for telem in GRATING_TELEMETRY.keys():
