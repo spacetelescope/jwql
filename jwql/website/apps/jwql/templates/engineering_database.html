@@ -174,7 +174,7 @@
                 {% endif %}
                 {% if edb_components['mnemonic_exploration_result'] %}
                     {% if edb_components['mnemonic_exploration_result'] != 'empty' %}
-                    <b><i>Query returned {{ edb_components['mnemonic_exploration_result'].n_rows }} matching rows in the EDB inventory containing {{ edb_components['mnemonic_exploration_result'].meta['paging']['rows']}} mnemonics.
+                    <b><i>Query returned {{ edb_components['mnemonic_exploration_result'].n_rows }} mnemonics matching input parameters out of {{ edb_components['mnemonic_exploration_result'].meta['paging']['rows']}} mnemonics total.
                     <a id="download_exploration_result" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}{{ edb_components["mnemonic_exploration_result"].file_for_download }}' download>Download table</a>
                     </i></b>
                 </div>
