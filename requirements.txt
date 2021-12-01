@@ -27,6 +27,6 @@ sphinx==4.3.1
 sqlalchemy==1.4.27
 stdatamodels==0.4.0
 stsci_rtd_theme==0.0.2
-twine==3.4.2
+twine==3.7.0
 wtforms==2.3.3
 git+https://github.com/spacetelescope/jwst_reffiles#egg=jwst_reffiles
