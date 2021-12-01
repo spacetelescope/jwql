@@ -8,7 +8,7 @@ cryptography==36.0.0
 django==3.2.9
 flake8==4.0.1
 inflection==0.5.1
-ipython==7.29.0
+ipython==7.30.0
 jinja2==3.0.2
 jsonschema==4.1.2
 jwedb>=0.0.6
