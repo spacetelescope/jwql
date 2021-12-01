@@ -1,6 +1,6 @@
 asdf==2.8.1
 astropy==5.0
-astroquery==0.4.3
+astroquery==0.4.4
 bokeh==2.4.1
 codecov==2.1.12
 crds==11.5.0
