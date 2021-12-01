@@ -4,7 +4,7 @@ astroquery==0.4.4
 bokeh==2.4.2
 codecov==2.1.12
 crds==11.5.0
-cryptography==35.0.0
+cryptography==36.0.0
 django<=3.1.7
 flake8==4.0.1
 inflection==0.5.1
