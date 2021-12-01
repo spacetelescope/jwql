@@ -456,8 +456,6 @@ def engineering_database(request):
 
     edb_components = get_edb_components(request)
 
-    print(edb_components['mnemonic_query_status'])
-
     template = 'engineering_database.html'
     context = {'inst': '',
                'edb_components': edb_components}

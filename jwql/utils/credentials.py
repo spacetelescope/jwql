@@ -5,6 +5,7 @@ Authors
 
     - Johannes Sahlmann
     - Lauren Chambers
+    - Mees Fix
 
 Use
 ---
@@ -20,7 +21,7 @@ import os
 
 from astroquery.mast import Mast
 
-from jwql.utils.utils import get_config, check_config_for_key
+from jwql.utils.utils import check_config_for_key, get_config
 
 
 def get_mast_base_url(request=None):
@@ -55,8 +56,8 @@ def get_mast_base_url(request=None):
 
 
 def get_mast_token(request=None):
-    """Return MAST token from either Astroquery.Mast, webpage cookies, the
-    JWQL configuration file, or an environment variable.
+    """Return MAST token from either Astroquery.Mast, webpage cookies,
+    the JWQL configuration file, or an environment variable.
 
     Parameters
     ----------
@@ -68,6 +69,7 @@ def get_mast_token(request=None):
     token : str or None
         User-specific MAST token string, if available
     """
+
     if Mast.authenticated():
         print('Authenticated with Astroquery MAST magic')
         return None

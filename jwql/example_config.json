@@ -1,6 +1,7 @@
 {
     "admin_account" : "",
     "auth_mast" : "",
+    "cores" : "",
     "client_id" : "",
     "client_secret" : "",
     "connection_string" : "",
@@ -12,18 +13,17 @@
         "host" : "",
         "port" : ""
     },
+    "filesystem" : "",
     "jwql_dir" : "",
     "jwql_version": "",
-    "server_type": "",
     "log_dir" : "",
-    "mast_token" : "",
     "mast_base_url" : "",
+    "mast_token" : "",
     "outputs" : "",
     "preview_image_filesystem" : "",
-    "filesystem" : "",
+    "server_type": "",
     "setup_file" : "",
     "test_data" : "",
     "test_dir" : "",
     "thumbnail_filesystem" : "",
-    "cores" : ""
 }
