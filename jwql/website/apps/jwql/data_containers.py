@@ -294,6 +294,7 @@ def get_edb_components(request):
     mnemonic_query_result = {}
     mnemonic_query_result_plot = None
     mnemonic_exploration_result = None
+    mnemonic_query_status = None
 
     # If this is a POST request, we need to process the form data
     if request.method == 'POST':
@@ -329,32 +330,37 @@ def get_edb_components(request):
 
                 if mnemonic_identifier is not None:
                     mnemonic_query_result = get_mnemonic(mnemonic_identifier, start_time, end_time)
-                    mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
 
-                    # generate table download in web app
-                    result_table = mnemonic_query_result.data
+                    if len(mnemonic_query_result.data) == 0:
+                        mnemonic_query_status = "QUERY RESULT RETURNED NO DATA FOR {} ON DATES {} - {}".format(mnemonic_identifier, start_time, end_time)
+                    else:
+                        mnemonic_query_status = 'SUCCESS'
+                        mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
 
-                    # save file locally to be available for download
-                    static_dir = os.path.join(settings.BASE_DIR, 'static')
-                    ensure_dir_exists(static_dir)
-                    file_name_root = 'mnemonic_query_result_table'
-                    file_for_download = '{}.csv'.format(file_name_root)
-                    path_for_download = os.path.join(static_dir, file_for_download)
+                        # generate table download in web app
+                        result_table = mnemonic_query_result.data
 
-                    # add meta data to saved table
-                    comments = []
-                    comments.append('DMS EDB query of {}:'.format(mnemonic_identifier))
-                    for key, value in mnemonic_query_result.info.items():
-                        comments.append('{} = {}'.format(key, str(value)))
-                    result_table.meta['comments'] = comments
-                    comments.append(' ')
-                    comments.append('Start time {}'.format(start_time.isot))
-                    comments.append('End time   {}'.format(end_time.isot))
-                    comments.append('Number of rows {}'.format(len(result_table)))
-                    comments.append(' ')
-                    result_table.write(path_for_download, format='ascii.fixed_width',
-                                       overwrite=True, delimiter=',', bookend=False)
-                    mnemonic_query_result.file_for_download = file_for_download
+                        # save file locally to be available for download
+                        static_dir = os.path.join(settings.BASE_DIR, 'static')
+                        ensure_dir_exists(static_dir)
+                        file_name_root = 'mnemonic_query_result_table'
+                        file_for_download = '{}.csv'.format(file_name_root)
+                        path_for_download = os.path.join(static_dir, file_for_download)
+
+                        # add meta data to saved table
+                        comments = []
+                        comments.append('DMS EDB query of {}:'.format(mnemonic_identifier))
+                        for key, value in mnemonic_query_result.info.items():
+                            comments.append('{} = {}'.format(key, str(value)))
+                        result_table.meta['comments'] = comments
+                        comments.append(' ')
+                        comments.append('Start time {}'.format(start_time.isot))
+                        comments.append('End time   {}'.format(end_time.isot))
+                        comments.append('Number of rows {}'.format(len(result_table)))
+                        comments.append(' ')
+                        result_table.write(path_for_download, format='ascii.fixed_width',
+                                        overwrite=True, delimiter=',', bookend=False)
+                        mnemonic_query_result.file_for_download = file_for_download
 
             # create forms for search fields not clicked
             mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
@@ -420,6 +426,7 @@ def get_edb_components(request):
     edb_components = {'mnemonic_query_form': mnemonic_query_form,
                       'mnemonic_query_result': mnemonic_query_result,
                       'mnemonic_query_result_plot': mnemonic_query_result_plot,
+                      'mnemonic_query_status': mnemonic_query_status,
                       'mnemonic_name_search_form': mnemonic_name_search_form,
                       'mnemonic_name_search_result': mnemonic_name_search_result,
                       'mnemonic_exploration_form': mnemonic_exploration_form,

@@ -428,8 +428,8 @@ class MnemonicQueryForm(forms.Form):
         default_end_time = now + TimeDelta(delta_day + range_day, format='jd')
     else:
         # example for testing
-        default_start_time = Time('2019-01-16 00:00:00.000', format='iso')
-        default_end_time = Time('2019-01-16 00:01:00.000', format='iso')
+        default_start_time = Time('2019-04-02 00:00:00.000', format='iso')
+        default_end_time = Time('2019-04-02 00:01:00.000', format='iso')
 
     default_mnemonic_identifier = 'IMIR_HK_ICE_SEC_VOLT4'
 
