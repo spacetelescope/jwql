@@ -48,6 +48,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "*SE_ZBUSVLT",
+            "nominal_trendlines": [7.57],
             "plot_trendlines": [7.0, 7.57, 8.13],
             "plot_category": "power"
         },

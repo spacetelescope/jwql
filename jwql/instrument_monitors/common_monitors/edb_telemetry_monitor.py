@@ -15,6 +15,7 @@ from astropy.time import Time
 from jwql.database.database_interface import NIRCamEDBMnemonics, NIRISSEDBMnemonics, MIRIEDBMnemonics, \
                                              FGSEDBMnemonics, NIRSpecEDBMnemonics
 from jwql.edb import engineering_database as ed
+from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import condition
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 
@@ -163,8 +164,8 @@ class EdbMnemonicMonitor():
         mnem_data.median_time = medtimes
         return mnem_data
 
-    def calc_daily_stats(self, data, sigma=3):
-        """Calculate the mean value for daily averaged data
+    def calc_full_stats(self, data, sigma=3):
+        """Calculate the mean/median/stdev of the data
 
         Parameters
         ----------
@@ -176,9 +177,36 @@ class EdbMnemonicMonitor():
 
         move this to be an attribute of EdbMnemonic class
         """
-        #mean_val = np.mean(data["data"])
-        #c, low, upp = sigmaclip(a, fact, fact)
         return sigma_clipped_stats(data["data"], sigma=sigma)
+
+
+    def calc_daily_stats(self, data, sigma=3):
+        """Calculate the statistics for each day in the data
+        contained in data["data"]. Should we add a check for a
+        case where the final block of time is <<1 day?
+
+        Parameters
+        ----------
+        data : dict
+            "data" and "MJD" keys
+
+        sigma : int
+            Number of sigma to use for sigma clipping
+
+        move this to be an attribute of EdbMnemonic class
+        """
+        min_date = np.min(data["MJD"])
+        limits = np.arange(np.min(data["MJD"]), np.max(data["MJD"])+0.001, 1)
+        means, meds, devs, times = [], [], [], []
+        for i in range(len(limits)):
+            good = np.where((data["MJD"] >= limits[i]) & (data["MJD"] < limits[i+1]))
+            avg, med, dev = sigma_clipped_stats(data["data"][good], sigma=sigma)
+            means.append(avg)
+            meds.append(med)
+            devs.append(dev)
+            times.append((limits[i+1] + limits[i]) / 2.)
+        return means, meds, devs, times
+
 
     def calc_every_change_stats(self, mnem_data):
         """Calculate stats for telemetry data for each
@@ -258,6 +286,10 @@ class EdbMnemonicMonitor():
             # Get the mnemonic times and values for the given start_time and end_time window.
             dep_mnemonic = self.get_dependency_data(dependency, data.start_time, data.end_time)
 
+
+            all_conditions.append(condition.relation_test(dep_mnemonic, dependency["relation"], dependency["threshold"]))
+
+            """
             # Add the condition to the conditions list
             if dependency["relation"] == '=':
 
@@ -273,17 +305,21 @@ class EdbMnemonicMonitor():
                 all_conditions.append(cond.less_than(dep_mnemonic, dependency["threshold"]))
             else:
                 raise ValueError("Unrecognized dependency relation for {}: {}".format(dependency["name"], dependency["relation"]))
+            """
 
         # Now find the mnemonic's data that during times when all conditions were met
-        if len(all_conditions) > 0:
-            full_condition = cond.condition(all_conditions)
-            filtered_data, block_indexes = cond.extract_data(full_condition, data.data)
+        full_condition = condition.condition(all_conditions)
+        full_condition.extract_data(data.data)
+        #filtered_data, block_indexes = cond.extract_data(full_condition, data.data)
 
         # Put the results into an instance of EdbMnemonic
-        new_start_time = np.min(filtered_data["MJD"])
-        new_end_time = np.max(filtered_data["MJD"])
-        filtered = EdbMnemonic(data.mnemonic_identifier, new_start_time, new_end_time, filtered_data, data.meta, data.info, blocks=block_indexes)
+        new_start_time = np.min(full_condition.extracted_data["MJD"])
+        new_end_time = np.max(full_condition.extracted_data["MJD"])
+        filtered = EdbMnemonic(data.mnemonic_identifier, new_start_time, new_end_time, full_condition.extracted_data,
+                               data.meta, data.info, blocks=full_condition.block_indexes)
         return filtered
+
+
 
     def find_all_changes(self, mnem_data, dep_list, threshold=3):
         """Identify indexes of data to create separate blocks for each value of the
@@ -350,8 +386,6 @@ class EdbMnemonicMonitor():
             all_devs.append(dev_val)
             all_times.append(np.median(mnem_data.data["MJD"][block_points]))
         return all_means, all_meds, all_devs, all_times, all_dep_means, all_dep_meds, all_dep_devs, all_dep_times
-
-
 
 
     def get_dependency_data(self, dependency, starttime, endtime):
@@ -431,11 +465,16 @@ class EdbMnemonicMonitor():
         # Query the EDB. An astropy table is returned.
         mnemonic_data = ed.get_mnemonic(mnemonic, starttime, endtime)
 
+        # Remove the first and last entries in the returned data, since MAST
+        # automatically includes the two points immediately outside the requested
+        # time range.
+        mnemonic_data = utils.remove_outer_points(mnemonic_data)
+
         # Filter the data - good_mnemonic_data is an EdbMnemonic instance
         if len(mnemonic['dependency']) > 0:
-            good_mnemonic_data = filter_telemetry(mnemonic_data, mnemonic['dependency'])
+            good_mnemonic_data = self.filter_telemetry(mnemonic_data, mnemonic['dependency'])
         else:
-            # No dependencies here. Keep all the data
+            # No dependencies. Keep all the data
             good_mnemonic_data = mnemonic_data
             good_mnemonic_data.blocks = [0]
 
@@ -447,8 +486,8 @@ class EdbMnemonicMonitor():
             #we can make the daily mean, block mean, and timed mean methods of the EdbMnemonic class.
             #what about every change? separate method here? new one there as well?
             if telem_type == "daily_means":
-                mean_vals, median_vals, std_vals = self.calc_daily_stats(good_mnemonic_data["data"])
-                median_times = np.median(good_mnemonic_data["MJD"])
+                mean_vals, median_vals, std_vals, time_vals = self.calc_daily_stats(good_mnemonic_data.data)
+                #median_times = np.median(good_mnemonic_data["MJD"])
             elif telem_type == "block_means":
                 mean_vals, median_vals, std_vals, median_times = self.calc_block_stats(good_mnemonic_data)
             elif telem_type == "every_change":
@@ -538,15 +577,15 @@ class EdbMnemonicMonitor():
                         # query. Given this, it is easy to simply add a day to the previous query time in order
                         # to come up with the new query time.
                         most_recent_search = self.most_recent_search(mnemonic['name'])
-                        starttime = most_recent_search + 1.  # THIS ASSUMES UNITS OF MJD, AND BAKES IN A 1-DAY CADENCE
+                        starttime = most_recent_search + query_duration
 
                         # Check for the case where, for whatever reason, there have been missed days. If so, we need
                         # to run the calculations separately for each day. Should we query for the full time and then
                         # filter, or query once per day? The latter is probably slower. Could the former turn into a
                         # problem if e.g. someone wants to track a new mnemonic and it's been 100 days since the
                         # default most recent search time?
-                        query_start_times = np.arange(startime, today, 1.)  # This again assumes MJD
-                        query_end_times = query_times +  query_duration
+                        query_start_times = np.arange(startime, today, query_duration)  # This again assumes MJD
+                        query_end_times = query_start_times +  query_duration
 
                     else:
                         # In the case where telemetry data have no averaging done, we do not store the data
@@ -583,11 +622,14 @@ class EdbMnemonicMonitor():
                             # self.logger.info(f"Mnemonic {mnemonic["name"]} has no data that match the requested conditions.")
 
                     # How will we prepare for plotting in the case of a mnemonic with no averaging?
-                    # If the data are not going to be save in the database, how will we get to it at
+                    # If the data are not going to be saved in the database, how will we get to it at
                     # plot creation time? Maybe we create and populate a temporary database table?
                     # Or create a plots here and save them to be rendered later?
                     if telem_type == 'none':
                         pass
+
+
+                    # Now, create and save the plot
 
 
 

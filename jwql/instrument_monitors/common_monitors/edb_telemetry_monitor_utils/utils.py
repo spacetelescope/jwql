@@ -69,3 +69,22 @@ def get_query_duration(mnemonic_type):
     else:
         raise ValueError(f"Unrecognized mnemonic type: {mnemonic_type}. Unsure what duration to use for EDB query.")
     return time
+
+
+def remove_outer_points(telemetry):  --> this should be an EdbMnemonic method, so that data start time can also be updated
+    """Strip the first and last data points from the input telemetry data. This is because
+    MAST includes the two datapoints immediately outside the requested time range.
+
+    Parameters
+    ----------
+    telemetry : jwql.edb.engineering_database.EDBMnemonic
+        Results from an EDB query.
+
+    Returns
+    -------
+    telemetry : jwql.edb.engineering_database.EDBMnemonic
+        EDBMnemonic object with first and last points removed
+    """
+    telemetry.data.remove_row(0)
+    telemetry.data.remove_row(-1)
+    #return telemetry

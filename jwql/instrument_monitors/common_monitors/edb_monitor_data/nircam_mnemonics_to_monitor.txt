@@ -1,10 +1,359 @@
-INRC_FB_ACE5_BOARD_TEMP
-IGDP_NRC_FA_ACE2_SCTEMP
-INRC_A_M_FAM_2_AS_DELTA
-INRC_A_M_FAM_1_BS_MTROC
+{
+    "daily_means": [
+        {
+            "name": "INRC_ICE_DC_VOL_P5_DIG",
+            "description": "ICE HK +5V voltage for digital electronics",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [4.99, 5.04],
+            "plot_trendlines": [4.5, 5.5],
+            "plot_category": "ice_voltage"
+        },
+        {
+            "name": "INRC_ICE_DC_VOL_P15_ALL",
+            "description": "ICE HK +15V voltage for all functions",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [13.9, 14.7],
+            "plot_trendlines": [11.5, 16.5],
+            "plot_category": "ice_voltage"
+        },
+        {
+            "name": "INRC_ICE_DC_VOL_N15_ALL",
+            "description": "ICE HK -15V voltage for all functions",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [-14.7, -13.9],
+            "plot_trendlines": [-16.5, -11.5],
+            "plot_category": "ice_voltage"
+        },
+        {
+            "name": "INRC_ICE_DC_VOL_P15_MOT",
+            "description": "ICE HK +15V voltage for FWA & PIL motor drive",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [13.9, 14.7],
+            "plot_trendlines": [11.5, 16.5],
+            "plot_category": "ice_voltage"
+        },
+        {
+            "name": "INRC_ICE_DC_VOL_N15_MOT",
+            "description": "ICE HK -15V voltage for FWA & PIL motor drive",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [-14.7, -13.9],
+            "plot_trendlines": [-16.5, -11.5],
+            "plot_category": "ice_voltage"
+        },
+        {
+            "name": "INRC_ICE_DC_VOL_P30_MOT",
+            "description": "ICE HK +15V voltage for FAM motor drive",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [13.6, 14.5],
+            "plot_trendlines": [12, 33],
+            "plot_category": "ice_voltage"
+        },
+        {
+            "name": "INRC_ICE_DC_VOL_N30_MOT",
+            "description": "ICE HK -15V voltage for FAM motor drive",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [-14.6, -13.7],
+            "plot_trendlines": [-33, -12],
+            "plot_category": "ice_voltage"
+        },
 
-FPA temperatures
-IGDP_NRC_FA_TMC2_LWMV_T
-IGDP_NRC_FA_TMC2_SWMV_T
-IGDP_NRC_FB_TMC1_LWMV_T
-IGDP_NRC_FB_TMC1_SWMV_T
+
+
+
+
+
+
+
+
+        {
+            "name": "SE_ZIMIRICEA",
+            "description": "ICE drive current (no ops)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "OFF",
+                    "threshold": 0
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "OFF",
+                    "threshold": 0
+                }
+            ],
+            "plot_data": "*SE_ZBUSVLT",
+            "plot_trendlines": [7.0, 7.57, 8.13],
+            "plot_category": "power",
+            "query_duration": "15 minutes"
+        },
+        {
+            "name": "SE_ZBUSVLT",
+            "description": "Drive voltage",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "OFF",
+                    "threshold": 0
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "OFF",
+                    "threshold": 0
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "OFF",
+                    "threshold": 0
+                }
+            ],
+            "plot_data": "none",
+            "plot_trendlines": [],
+            "plot_category": "voltage",
+            "query_duration": "15 minutes"
+        }
+    ],
+    "block_means": [
+        {
+            "name": "IMIR_HK_ICE_SEC_VOLT1",
+            "description": "ICE secondary Voltage (HV) V1",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": ">",
+                    "threshold": 25
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_trendlines": [39.11, 39.21, 39.31],
+            "plot_category": "voltage"
+        },
+        {
+            "name": "IMIR_HK_ICE_SEC_VOLT2",
+            "description": "ICE secondary Voltage (HV) V2",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": ">",
+                    "threshold": 25
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_trendlines": [78.99, 79.19, 79.39],
+            "plot_category": "voltage"
+        }
+    ],
+    "every_change": [
+        {
+            "name": "IMIR_HK_FW_POS_RATIO",
+            "description": "FW position sensor ratio",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_FW_CUR_POS",
+                    "relation": "none",
+                    "threshold": 0
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_trendlines": [-1.6, 1.6],
+            "plot_category": "wheel_ratios"
+        },
+        {
+            "name": "IMIR_HK_FW_CUR_POS",
+            "description": "FW commanded position",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_FW_CUR_POS",
+                    "relation": "none",
+                    "threshold": 0
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_trendlines": [-1.6, 1.6],
+            "plot_category": "wheel_ratios"
+        }
+    ],
+    "time_interval": [
+        {
+            "name": "SOMETHING",
+            "description": "ICE drive current (no ops)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                }
+            ],
+            "mean_time_block": "5 minute",
+            "plot_data": "nominal",
+            "plot_trendlines": [-1.6, 1.6],
+            "plot_category": "wheel_ratios",
+        }
+    ],
+    "none": [
+        {
+            "name": "SE_ZINRCICE1",
+            "description": "ICE1 current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_trendlines": [-9.99e35, 1.367],
+            "plot_category": "box_current"
+        },
+        {
+            "name": "SE_ZINRCICE2",
+            "description": "ICE2 current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_trendlines": [-9.99e35, 1.372],
+            "plot_category": "box_current"
+        },
+        {
+            "name": "SE_ZINRCFPAA",
+            "description": "FPE-AA current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_trendlines": [-9.99e35, 0.59],
+            "plot_category": "box_current"
+        },
+        {
+            "name": "SE_ZINRCFPBA",
+            "description": "FPE-BA current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_trendlines": [-9.99e35, 0.589],
+            "plot_category": "box_current"
+        },
+        {
+            "name": "SE_ZBUSVLT",
+            "description": "Bus voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_trendlines": [30.7, 31.7],
+            "plot_category": "box_current"
+        },
+
+
+        {
+            "name": "INRC_ICE_DC_CUR_P5_DIG",
+            "description": "ICE HK +5V current for digital electronics",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [0.4, 0.9],
+            "plot_trendlines": [-0.01, 1.408],
+            "plot_category": "ice_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_P15_ALL",
+            "description": "ICE HK +15V current for all functions",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [0.15, 0.35],
+            "plot_trendlines": [-0.01, 0.8426],
+            "plot_category": "ice_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_N15_ALL",
+            "description": "ICE HK -15V current for all functions",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [0.21, 0.35],
+            "plot_trendlines": [-0.01, 0.8426],
+            "plot_category": "ice_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_P15_MOT",
+            "description": "ICE HK +15V current for FWA & PIL motor drive",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [0.01, 0.34],
+            "plot_trendlines": [-0.1, 0.8426],
+            "plot_category": "ice_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_N15_MOT",
+            "description": "ICE HK -15V current for FWA & PIL motor drive",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [0., 0.34],
+            "plot_trendlines": [-0.1, 0.8426],
+            "plot_category": "ice_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_P30_MOT",
+            "description": "ICE HK +15V current for FAM motor drive",
+            "dependency": [ only when FAM is moved. need to find dependencies
+                            {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                }
+],
+            "plot_data": "nominal",
+            "nominal_trendlines": [0., 1.3],
+            "plot_trendlines": [-0.1, 0.8426],
+            "plot_category": "ice_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_N30_MOT",
+            "description": "ICE HK -15V current for FAM motor drive",
+            "dependency": [only when FAM is moved. need to find dependencies
+                            {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                }],
+            "plot_data": "nominal",
+            "nominal_trendlines": [0., 0.32],
+            "plot_trendlines": [-0.1, 0.8426],
+            "plot_category": "ice_current"
+        },
+
+
+
+
+
+
+
+
+    ]
+}
