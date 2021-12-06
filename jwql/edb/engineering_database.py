@@ -42,9 +42,9 @@ Notes
     data that include the datapoint preceding the requested start time
     and the datapoint that follows the requested end time.
 """
-
+import calendar
 from collections import OrderedDict
-from datetime import datetime
+from datetime import datetime, timedelta
 import warnings
 
 from astropy.table import Table
@@ -106,9 +106,21 @@ class EdbMnemonic:
             self.mnemonic_identifier, len(self.data), self.data_start_time.isot,
             self.data_end_time.isot)
 
-    def interpolate(self, times, **kwargs):
-        """Interpolate value at specified times."""
-        raise NotImplementedError
+    def interpolate(self, times):
+        """Interpolate data euvalues at specified datetimes.
+
+        Parameters
+        ----------
+        times : list
+            List of datetime objects describing the times to interpolate to
+        """
+        new_tab = Table()
+        interp_times = np.array([create_time_offset(ele, self.data["dates"][0]) for ele in times])
+        mnem_times = np.array([create_time_offset(ele, self.data["dates"][0]) for ele in self.data["dates"]])
+        new_tab["euvalues"] = np.interp(interp_times, mnem_times, self.data["euvalues"])
+        new_tab["dates"] = np.array([add_time_offset(ele, self.data["dates"][0]) for ele in interp_times])
+        self.data = new_tab
+
 
     def bokeh_plot(self, show_plot=False):
         """Make basic bokeh plot showing value as a function of time.
@@ -134,6 +146,45 @@ class EdbMnemonic:
             script, div = components(p1)
 
             return [div, script]
+
+
+def add_time_offset(offset, dt_obj):
+    """Add an offset to an input datetime object
+
+    Parameters
+    ----------
+    offset : float
+        Number of seconds to be added
+
+    dt_obj : datetime.datetime
+        Datetime object to which the seconds are added
+
+    Returns
+    -------
+    obj : datetime.datetime
+        Sum of the input datetime objects and the offset seconds.
+    """
+    return dt_obj + timedelta(seconds=offset)
+
+
+def create_time_offset(dt_obj, epoch):
+    """Subtract input epoch from a datetime object and return the
+    residual number of seconds
+
+    Paramters
+    ---------
+    dt_obj : datetime.datetime
+        Original datetiem object
+
+    epoch : datetime.datetime
+        Datetime to be subtracted from dt_obj
+
+    Returns
+    -------
+    obj : float
+        Number of seconds between dt_obj and epoch
+    """
+    return (dt_obj - epoch).total_seconds()
 
 
 def get_mnemonic(mnemonic_identifier, start_time, end_time):

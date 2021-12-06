@@ -71,7 +71,7 @@ def get_query_duration(mnemonic_type):
     return time
 
 
-def remove_outer_points(telemetry):  --> this should be an EdbMnemonic method, so that data start time can also be updated
+def remove_outer_points(telemetry):
     """Strip the first and last data points from the input telemetry data. This is because
     MAST includes the two datapoints immediately outside the requested time range.
 

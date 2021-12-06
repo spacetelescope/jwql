@@ -1,0 +1,160 @@
+{
+    "daily_means": [
+        {
+            "name": "INRC_ICE_DC_VOL_P5_DIG",
+            "description": "ICE HK +5V voltage for digital electronics",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [4.99, 5.04],
+            "plot_trendlines": [4.5, 5.5],
+            "plot_category": "ice_voltage"
+        },
+        {
+            "name": "INRC_ICE_DC_VOL_P15_ALL",
+            "description": "ICE HK +15V voltage for all functions",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [13.9, 14.7],
+            "plot_trendlines": [11.5, 16.5],
+            "plot_category": "ice_voltage"
+        },
+        {
+            "name": "INRC_ICE_DC_VOL_N15_ALL",
+            "description": "ICE HK -15V voltage for all functions",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [-14.7, -13.9],
+            "plot_trendlines": [-16.5, -11.5],
+            "plot_category": "ice_voltage"
+        },
+        {
+            "name": "INRC_ICE_DC_VOL_P15_MOT",
+            "description": "ICE HK +15V voltage for FWA & PIL motor drive",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [13.9, 14.7],
+            "plot_trendlines": [11.5, 16.5],
+            "plot_category": "ice_voltage"
+        },
+        {
+            "name": "INRC_ICE_DC_VOL_N15_MOT",
+            "description": "ICE HK -15V voltage for FWA & PIL motor drive",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [-14.7, -13.9],
+            "plot_trendlines": [-16.5, -11.5],
+            "plot_category": "ice_voltage"
+        },
+        {
+            "name": "INRC_ICE_DC_VOL_P30_MOT",
+            "description": "ICE HK +15V voltage for FAM motor drive",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [13.6, 14.5],
+            "plot_trendlines": [12, 33],
+            "plot_category": "ice_voltage"
+        },
+        {
+            "name": "INRC_ICE_DC_VOL_N30_MOT",
+            "description": "ICE HK -15V voltage for FAM motor drive",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [-14.6, -13.7],
+            "plot_trendlines": [-33, -12],
+            "plot_category": "ice_voltage"
+        }
+    ],
+    "block_means": [
+    ],
+    "every_change": [
+    ],
+    "time_interval": [
+    ],
+    "none": [
+        {
+            "name": "SE_ZINRCICE1",
+            "description": "ICE1 current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_trendlines": [-9.99e35, 1.367],
+            "plot_category": "box_current"
+        },
+        {
+            "name": "SE_ZINRCICE2",
+            "description": "ICE2 current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_trendlines": [-9.99e35, 1.372],
+            "plot_category": "box_current"
+        },
+        {
+            "name": "SE_ZINRCFPAA",
+            "description": "FPE-AA current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_trendlines": [-9.99e35, 0.59],
+            "plot_category": "box_current"
+        },
+        {
+            "name": "SE_ZINRCFPBA",
+            "description": "FPE-BA current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_trendlines": [-9.99e35, 0.589],
+            "plot_category": "box_current"
+        },
+        {
+            "name": "SE_ZBUSVLT",
+            "description": "Bus voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_trendlines": [30.7, 31.7],
+            "plot_category": "box_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_P5_DIG",
+            "description": "ICE HK +5V current for digital electronics",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [0.4, 0.9],
+            "plot_trendlines": [-0.01, 1.408],
+            "plot_category": "ice_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_P15_ALL",
+            "description": "ICE HK +15V current for all functions",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [0.15, 0.35],
+            "plot_trendlines": [-0.01, 0.8426],
+            "plot_category": "ice_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_N15_ALL",
+            "description": "ICE HK -15V current for all functions",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [0.21, 0.35],
+            "plot_trendlines": [-0.01, 0.8426],
+            "plot_category": "ice_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_P15_MOT",
+            "description": "ICE HK +15V current for FWA & PIL motor drive",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [0.01, 0.34],
+            "plot_trendlines": [-0.1, 0.8426],
+            "plot_category": "ice_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_N15_MOT",
+            "description": "ICE HK -15V current for FWA & PIL motor drive",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_trendlines": [0.0, 0.34],
+            "plot_trendlines": [-0.1, 0.8426],
+            "plot_category": "ice_current"
+        }
+    ]
+}
