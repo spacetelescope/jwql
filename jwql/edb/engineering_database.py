@@ -105,7 +105,7 @@ class EdbMnemonic:
 
         self.meta = meta
         self.info = info
-        self.blocks = blocks
+        self.blocks = np.array(blocks)
 
     def __add__(self, mnem):
         """Allow EdbMnemonic instances to be added (i.e. combine their data).
@@ -122,7 +122,11 @@ class EdbMnemonic:
         mnem : jwql.edb.engineering_database.EdbMnemonic
             Instance to be added to the current instance
         """
-        #new_tab = vstack([self.data, mnem.data])
+        # Do not combine two instances of different mnemonics
+        if self.info['tlmMnemonic'] != mnem.info['tlmMnemonic']:
+            raise ValueError((f'Unable to concatenate EdbMnemonic instances for {self.info["tlmMnemonic"]} '
+                              'and {mnem.info["tlmMnemonic"]}.'))
+
         if np.min(self.data["dates"]) < np.min(mnem.data["dates"]):
             early_dates = self.data["dates"].data
             late_dates = mnem.data["dates"].data
@@ -141,7 +145,7 @@ class EdbMnemonic:
         # Remove any duplicates, based on the dates entries
         # Keep track of the indexes of the removed rows, so that any blocks
         # information can be updated
-        all_dates = np.append(early, late)
+        all_dates = np.append(early_dates, late_dates)
         unique_dates, unq_idx = np.unique(all_dates, return_index=True)
 
         # Combine the data and keep only unique elements
@@ -152,7 +156,7 @@ class EdbMnemonic:
         # the overlap all occurs in a single continuous block at the beginning of
         # the later set of dates. It will not do the right thing if you ask it to
         # (e.g.) interleave two sets of dates.
-        overlap_len = len(unique_times) - len(all_dates)
+        overlap_len = len(unique_dates) - len(all_dates)
 
         # Shift the block values for the later instance to account for any removed
         # duplicate rows
@@ -168,11 +172,14 @@ class EdbMnemonic:
             else:
                 new_blocks = None
 
-        self.data = Table([unique_dates, unique_data], names=('dates', 'euvalues'))
-        self.blocks = new_blocks
+        new_data = Table([unique_dates, unique_data], names=('dates', 'euvalues'))
+        new_obj = EdbMnemonic(self.info['tlmMnemonic'], self.data_start_time, self.data_end_time,
+                              new_data, self.meta, self.info, blocks=new_blocks)
+        return new_obj
 
-        self.data_start_time = Time(np.min(self.data['dates']), scale='utc')
-        self.data_end_time = Time(np.max(self.data['dates']), scale='utc')
+    def __len__(self):
+        """Report the length of the data in the instance"""
+        return len(self.data["dates"])
 
     def __mul__(self, mnem):
         """Allow EdbMnemonic instances to be multiplied (i.e. combine their data).
@@ -181,18 +188,49 @@ class EdbMnemonic:
         will all be kept, and therefore self.blocks will remain correct after
         multiplication.
 
+        BLOCKS DO NEED TO BE UPDATED HERE, DUE TO POTENTIALLY LOSING EXTRAPOLATED ROWS!!!!
+
         Parameters
         ----------
         mnem : jwql.edb.engineering_database.EdbMnemonic
-            Instance to be added to the current instance
+            Instance to be multiplied into the current instance
         """
         # First, interpolate the data in mnem onto the same times as self.data
-        interp_mnem = mnem.interpolate(self, self.data["dates"])
-        self.data["euvalues"] = self.data["euvalues"] * interp_mnem.data["euvalues"]
-        combined_unit = (u.Unit(self.info['unit']) * u.Unit(mnem.unit['unit'])).compose()[0]
-        self.info['unit'] = f'{combined_unit}'
-        self.info['tlmMnemonic'] = f'{self.info['tlmMnemonic']} * {mnem.info['tlmMnemonic']}'
-        self.info['description'] = f'({self.info['description']}) * ({mnem.info['description']})'
+        mnem.interpolate(self.data["dates"])
+
+        # Extrapolation will not be done, so make sure that we account for any elements
+        # that were removed rather than extrapolated. Find all the dates for which
+        # data exists in both instances.
+        common_dates, self_idx, mnem_idx = np.intersect1d(self.data["dates"], mnem.data["dates"],
+                                                          return_indices=True)
+
+        # We should be able to keep blocks from the shorter of the two arrays.
+        # i.e. whichever array does not have elements removed in the intersection
+        # command above
+        if len(self_idx) == len(self.data):
+            use_blocks = self.blocks
+        elif len(mnem_idx) == len(mnem.data):
+            use_blocks = mnem.blocks
+        else:
+            raise ValueError('Both EdbMnemonic instances changed lengths when searching for the intersection.')
+
+        # Strip away any rows from the tables that are not common to both instances
+        self_data = self.data[self_idx]
+        mnem_data = mnem.data[mnem_idx]
+
+        # Mulitply
+        new_tab = Table()
+        new_tab["dates"] = common_dates
+        new_tab["euvalues"] = self_data["euvalues"] * mnem_data["euvalues"]
+
+        new_obj = EdbMnemonic(self.info['tlmMnemonic'], self.requested_start_time, self.requested_end_time,
+                              new_tab, self.meta, self.info, blocks=use_blocks)
+
+        combined_unit = (u.Unit(self.info['unit']) * u.Unit(mnem.info['unit'])).compose()[0]
+        new_obj.info['unit'] = f'{combined_unit}'
+        new_obj.info['tlmMnemonic'] = f'{self.info["tlmMnemonic"]} * {mnem.info["tlmMnemonic"]}'
+        new_obj.info['description'] = f'({self.info["description"]}) * ({mnem.info["description"]})'
+        return new_obj
 
     def __str__(self):
         """Return string describing the instance."""
@@ -251,14 +289,25 @@ class EdbMnemonic:
         ONLY CALCULATE STATS FOR THE FIRST 24 HOUR PERIOD.
         """
         min_date = np.min(self.data["dates"])
-        num_days = (np.max(self.data["dates"]) - min_date).days
+        date_range = np.max(self.data["dates"]) - min_date
+        num_days = date_range.days
+        num_seconds = date_range.seconds
 
         # If all the data are within a day, set num_days=1 in order to get
         # a starting and ending time within limits below
-        if num_days == 0:
-            num_days = 1
+        #if num_days == 0:
+        #    num_days = 1
+        # Perform the averaging over the final fraction of a day if there are
+        # entries beyond multiples of the 24 hour period
+        if num_seconds == 0:
+            # Case where the data span some exact number of days
+            range_days = num_days + 1
+        else:
+            # Case where the data span something other than an exact
+            # multiple of 24 hours
+            range_days = num_days + 2
 
-        limits = np.array([min_date + timedelta(days=x) for x in range(num_days+1)])
+        limits = np.array([min_date + timedelta(days=x) for x in range(range_days)])
         means, meds, devs, times = [], [], [], []
         for i in range(len(limits) - 1):
             good = np.where((self.data["dates"] >= limits[i]) & (self.data["dates"] < limits[i+1]))
@@ -304,16 +353,18 @@ class EdbMnemonic:
 
         new_tab["euvalues"] = np.interp(interp_times, mnem_times, self.data["euvalues"])
         new_tab["dates"] = np.array([add_time_offset(ele, self.data["dates"][0]) for ele in interp_times])
-        self.data = new_tab
+
 
         # Adjust any block values to account for the interpolated data
         new_blocks = []
         if self.blocks is not None:
             for index in self.blocks:
-                good = np.where(interp_times >= mnem_times[index])[0]
+                good = np.where(new_tab["dates"] >= self.data["dates"][index])[0]
+
                 if len(good) > 0:
                     new_blocks.append(good[0])
             self.blocks = np.array(new_blocks)
+            self.data = new_tab
 
     """
     def bokeh_plot(self, show_plot=False):
@@ -408,6 +459,7 @@ class EdbMnemonic:
         else:
             script, div = components(p1)
             return [div, script]
+
 
 def add_time_offset(offset, dt_obj):
     """Add an offset to an input datetime object
