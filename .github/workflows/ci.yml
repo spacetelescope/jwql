@@ -24,7 +24,7 @@ jobs:
       - name: Bandit Check
         uses: jpetrucciani/bandit-check@1.6.2
         with:
-          bandit_flags: '-c .bandit'
+          bandit_flags: '-c .bandit.yml'
         if: runner.os == 'Linux'
 
       - name: Build jwql conda environment and run tests
