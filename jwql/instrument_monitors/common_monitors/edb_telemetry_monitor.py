@@ -488,7 +488,14 @@ class EdbMnemonicMonitor():
         # Query the EDB. An astropy table is returned.
         print('querying edb for: ', mnemonic["name"], starting_time, ending_time, type(starting_time), type(ending_time))
 
-        mnemonic_data = ed.get_mnemonic(mnemonic["name"], starting_time, ending_time)
+        try:
+            mnemonic_data = ed.get_mnemonic(mnemonic["name"], starting_time, ending_time)
+        except HTTPError:
+            # Mnemonic not accessible. This is largely for development where we don't
+            # have access to all the mnemonics that we will in commissioning due to
+            # querying the d-string.
+            print(f'{mnemonic["name"]} not accessible with current search.')
+            return None
 
         # Remove the first and last entries in the returned data, since MAST
         # automatically includes the two points immediately outside the requested
