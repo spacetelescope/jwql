@@ -6,6 +6,28 @@
 import astropy.units as u
 
 
+def check_key(dictionary, key):
+    """Check if a given key exists in the input dictionary. If so, return the value
+    for that key. If not, return None.
+
+    Parameters
+    ----------
+    dictionary : dict
+        Dictionary
+
+    key : string
+        Key to search for
+
+    Returns
+    -------
+    obj: obj
+        Value associated with key, or None
+    """
+    try:
+        return dictionary[key]
+    except KeyError:
+        return None
+
 
 def get_averaging_time_duration(duration_string):
     """Turn the string from the mnemonic json file that specifies the time

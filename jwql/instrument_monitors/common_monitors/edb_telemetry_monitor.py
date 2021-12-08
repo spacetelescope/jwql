@@ -121,8 +121,9 @@ class EdbMnemonicMonitor():
                     }
         self.db_table.__table__.insert().execute(db_entry)
 
+    """
     def calc_block_stats(self, mnem_data, sigma=3):
-        """Calculate stats for a mnemonic where we want a mean value for
+        Calculate stats for a mnemonic where we want a mean value for
         each block of good data, where blocks are separated by times where
         the data are ignored.
 
@@ -140,7 +141,7 @@ class EdbMnemonicMonitor():
             Class instance with telemetry statistics added
 
         move this to be an attribute of EdbMnemonic class
-        """
+
         means = []
         medians = []
         stdevs = []
@@ -167,7 +168,7 @@ class EdbMnemonicMonitor():
         return mnem_data
 
     def calc_full_stats(self, data, sigma=3):
-        """Calculate the mean/median/stdev of the data
+        Calculate the mean/median/stdev of the data
 
         Parameters
         ----------
@@ -178,12 +179,13 @@ class EdbMnemonicMonitor():
             Number of sigma to use for sigma clipping
 
         move this to be an attribute of EdbMnemonic class
-        """
+
         return sigma_clipped_stats(data["data"], sigma=sigma)
 
 
+
     def calc_daily_stats(self, data, sigma=3):
-        """Calculate the statistics for each day in the data
+        Calculate the statistics for each day in the data
         contained in data["data"]. Should we add a check for a
         case where the final block of time is <<1 day?
 
@@ -197,7 +199,7 @@ class EdbMnemonicMonitor():
             Number of sigma to use for sigma clipping
 
         move this to be an attribute of EdbMnemonic class
-        """
+
         min_date = np.min(data["dates"])
         num_days = (np.max(data["dates"]) - min_date).days
 
@@ -217,7 +219,7 @@ class EdbMnemonicMonitor():
             times.append(limits[i] + (limits[i+1] - limits[i]) / 2.)
 
         return means, meds, devs, times
-
+    """
 
     def calc_every_change_stats(self, mnem_data):
         """Calculate stats for telemetry data for each
@@ -256,8 +258,8 @@ class EdbMnemonicMonitor():
 
         minimal_delta = 1 * u.sec  # modify based on units of time
         for i in range(len(mnem_data.blocks)-1):
-            block_min_time = mnem_data.data["MJD"][mnem_data.blocks[i]]
-            block_max_time = mnem_data.data["MJD"][mnem_data.blocks[i+1]]
+            block_min_time = mnem_data.data["dates"][mnem_data.blocks[i]]
+            block_max_time = mnem_data.data["dates"][mnem_data.blocks[i+1]]
             bin_times = np.arange(block_min_time, block_max_time+minimal_delta, bintime)
             all_times.extend((bin_times[1:] - bin_times[0:-1]) / 2.)  # for plotting later
 
@@ -416,36 +418,42 @@ class EdbMnemonicMonitor():
         Returns
         -------
         dep_mnemonic : dict
-            Data for the dependency mnemonic. Keys are "MJD" and "data"
+            Data for the dependency mnemonic. Keys are "dates" and "euvalues"
         """
         # If we have already queried the EDB for the dependency's data in the time
         # range of interest, then use that data rather than re-querying.
         if dependency["name"] in self.query_results:
 
             # We need the full time to be covered
-            if ((self.query_results[dependency["name"]].start_time <= starttime) and
-                (self.query_results[dependency["name"]].end_time >= endtime)):
+            if ((self.query_results[dependency["name"]].data_start_time <= starttime) and
+                (self.query_results[dependency["name"]].data_end_time >= endtime)):
 
                 matching_times = np.where((self.query_results[dependency["name"]].data["dates"] > starttime) and
                                           (self.query_results[dependency["name"]].data["dates"] < endtime))
                 dep_mnemonic = {"dates": self.query_results[dependency["name"]].data["dates"][matching_times],
-                                    "euvalues": self.query_results[dependency["name"]].data["euvalues"][matching_times]}
+                                "euvalues": self.query_results[dependency["name"]].data["euvalues"][matching_times]}
             else:
                 # If what we have doesn't cover the time range we need, then query the EDB.
                 mnemonic_data = ed.get_mnemonic(dependency["name"], starttime, endtime)
                 dep_mnemonic = {"dates": mnemonic_data.data["dates"], "euvalues": menmonic_data.data["euvalues"]}
 
                 # This is to save the data so that we may avoid an EDB query next time
-                # Add the new data to the saved query results
-                all_times = np.append(self.query_results[dependency["name"]].data["dates"], mnemonic_data.data["dates"])
-                all_data = np.append(self.query_results[dependency["name"]].data["euvalues"], mnemonic_data.data["euvalues"])
+                # Add the new data to the saved query results. This should also filter out
+                # any duplicate rows.
+                self.query_results[dependency["name"]] = self.query_results[dependency["name"]] + mnemonic_data
+
+                ################################
+                # These lines should be replaced now that EdbMnemonic has __add__ defined
+                #all_times = np.append(self.query_results[dependency["name"]].data["dates"], mnemonic_data.data["dates"])
+                #all_data = np.append(self.query_results[dependency["name"]].data["euvalues"], mnemonic_data.data["euvalues"])
 
                 # Save only the unique elements, in case we are adding overlapping data
-                final_times, unique_idx = np.unique(all_times, return_index=True)
-                new_table = Table()
-                new_table["dates"] = final_times
-                new_table["euvalues"] = all_data[unique_idx]
-                self.query_results[dependency["name"]].data = new_table
+                #final_times, unique_idx = np.unique(all_times, return_index=True)
+                #new_table = Table()
+                #new_table["dates"] = final_times
+                #new_table["euvalues"] = all_data[unique_idx]
+                #self.query_results[dependency["name"]].data = new_table
+                ################################
         else:
             self.query_results[dependency["name"]] = ed.get_mnemonic(dependency["name"], starttime, endtime)
             dep_mnemonic = {"dates": self.query_results[dependency["name"]].data["dates"],
@@ -627,44 +635,76 @@ class EdbMnemonicMonitor():
                         query_end_times = query_end_times[valid_end_times]
 
                     # Loop over the query times, and query the EDB
+                    initialized = False
                     for starttime, endtime in zip(query_start_times, query_end_times):
 
                         # This function wraps around the EDB query and telemetry filtering, and
                         # averaging. In this way, when a user requests an updated plot for one of
                         # the mnemonics whose data are not stored in the JWQL database, we can simply
                         # call this function for that specific mnemonic
-                        mnemonic_info = self.get_mnemonic_info(mnemonic, starttime, endtime, telem_type)
+                        mnemonic_day_info = self.get_mnemonic_info(mnemonic, starttime, endtime, telem_type)
 
                         if mnemonic_info is not None:
                             print(starttime, endtime)
-                            print(mnemonic_info.info)
-                            print(mnemonic_info.meta)
-                            print(mnemonic_info.data)
+                            print(mnemonic_day_info.info)
+                            print(mnemonic_day_info.meta)
+                            print(mnemonic_day_info.data)
                             stop
 
 
 
-                        if mnemonic_info is not None:
+                        if mnemonic_day_info is not None:
                             if telem_type != 'none':
                                 # Save the averaged/smoothed data and dates/times to the database,
                                 # but only for cases where we are averaging. For cases with no averaging
                                 # the database would get too large too quickly. In that case the monitor
                                 # will re-query the EDB for the entire history each time.
                                 #self.add_new_db_entry(mnemonic, median_time, mean_val, stdev_val)
-                                pass  # for testing. use line above IRL
+                                print('use line above IRL')
+
+                                # Add results for multiple days here.
+                                if not initialized:
+                                    mnemonic_info = deepcopy(mnemonic_day_info)
+                                    initialized = True
+                                else:
+                                    mnemonic_info = menonic_info + mnemonic_day_info
+
                         else:
                             pass
                             # self.logger.info(f"Mnemonic {mnemonic["name"]} has no data that match the requested conditions.")
 
-                    # How will we prepare for plotting in the case of a mnemonic with no averaging?
-                    # If the data are not going to be saved in the database, how will we get to it at
-                    # plot creation time? Maybe we create and populate a temporary database table?
-                    # Or create a plots here and save them to be rendered later?
-                    if telem_type == 'none':
-                        pass
+                    # Create and save plot
+                    nominal = utils.check_key("nominal_value")
+                    yellow = utils.check_key("yellow_limits")
+                    red = utils.check_key("red_limits")
 
+                    if mnemonic["plot_data"] == "nominal":
+                        mnemonic_info.bokeh_plot(save=True, out_dir=TELEMETRY_HTML_OUTPUT_DIR, nominal_value=nominal,
+                                                 yellow_limits=yellow, red_limits=red, save=True)
+                        #telemetry = mnemonic_info["uevalues"]
+                    elif '*' in mnemonic["plot_data"]:  # ("*SB_FJDKN")
+                        # Get the data for the mnemonic to be combined
+                        combine_mnemonic = mnemonic["plot_data"].split('*')[1]
+                        combine_data = self.get_dependency_data(combine_mnemonic, mnemonic_info.data_start_time, mnemonic_info.data_end_time)
+                        combine_obj = EdbMnemonic(combine_mnemonic, mnemonic_info.data_start_time, mnemonic_info.data_end_time,
+                                                  combine_data, self.query_results[combine_mnemonic].meta,
+                                                  self.query_results[combine_mnemonic].info)
 
-                    # Now, create and save the plot
+                        # Interpolate the new menmonic's data to be at the same times as self.mnemonic_info
+                        combined = self.mnemonic_info * combine_obj
+
+                        # Create a plot from the combined data
+                        combined.bokeh_plot(save=True, out_dir=TELEMETRY_HTML_OUTPUT_DIR, nominal_value=nominal,
+                                            yellow_limits=yellow, red_limits=red, save=True)
+                        #telemetry = mnemonic_info["uevalues"] * interpolated_data
+                    else:
+                        raise NotImplementedError(('The plot_data entry in the mnemonic dictionary can currently only '
+                                                   'be "nominal" or "*<MNEMONIC_NAME>", indicating that the current '
+                                                   'mnemonic should be plotted as the product of the mnemonic*<MNEMONIC_NAME>. '
+                                                   'e.g. for a mnemonic that reports current, plot the data as a power by '
+                                                   'multiplying with a mnemonic that reports voltage. No other mnemonic '
+                                                   'combination schemes have been implemented.'))
+
 
 
 
