@@ -22,7 +22,6 @@ import os
 
 from astropy.time import Time
 from jwql.edb.engineering_database import get_mnemonic
-from jwql.edb.engineering_database import get_mnemonics
 import matplotlib
 matplotlib.use('Agg')
 import numpy as np
@@ -39,7 +38,7 @@ class Grating():
     """Class for executing the grating wheel monitor.
 
     This class will search for a particular mnemonic for each
-    instrument and will run the monitor on these files. The monitor 
+    instrument and will run the monitor on these files. The monitor
     will perform statistical measurements and plot the mnemonic data
     in order to monitor the grating wheel telemetry over time.
     Results are all saved to database tables.
@@ -106,7 +105,7 @@ class Grating():
         for telem in GRATING_TELEMETRY.keys():
             if 'POSITION' in telem:
                 grating = telem.split('_')[0]
-                telemetry = telem.replace(grating+"_", "")
+                telemetry = telem.replace(grating + "_", "")
             else:
                 telemetry = telem
             try:
@@ -132,14 +131,14 @@ class Grating():
                         # Telemetry values that exhibit this behavior include INRSI_GWA_X_TILT_AVGED, INRSI_GWA_Y_TILT_AVGED,
                         # INRSI_C_GWA_X_POSITION, INRSI_C_GWA_Y_POSITION, INRSI_C_GWA_X_POS_REC, INRSI_C_GWA_Y_POS_REC, INRSI_GWA_TILT_TEMP
                         try:
-                            min_distance = np.min(grating_val.data['MJD'][np.where(grating_val.data['MJD'] > time)]-time)
+                            min_distance = np.min(grating_val.data['MJD'][np.where(grating_val.data['MJD'] > time)] - time)
                             if min_distance > 14:
                                 logging.warning("Grating retrieved may not match grating for which voltage is being determined")
                             closest_location = np.where((grating_val.data['MJD'] - time) == min_distance)[0][0]
                             grating_used = grating_val.data['euvalue'][closest_location]
                         except ValueError:
                             logging.warning("Using next rather than previous gwa val")
-                            min_distance = np.min(abs(grating_val.data['MJD']-time))
+                            min_distance = np.min(abs(grating_val.data['MJD'] - time))
                             closest_location = np.where(abs(grating_val.data['MJD'] - time) == min_distance)[0][0]
                             grating_used = grating_val.data['euvalue'][closest_location]
                         if grating_used == grating:
