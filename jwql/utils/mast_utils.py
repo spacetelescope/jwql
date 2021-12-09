@@ -230,13 +230,12 @@ def mast_query_miri(detector, aperture, templates, start_date, end_date):
     return query_results
 
 
-def retrieve_level_1b_mast_data(instrument, gs_omit, aperture=None, detector=None, filter_name=None,
-               pupil=None, grating=None, readpattern=None, lamp=None, fileSetName=None):
-    """Retrieve MAST data that includes level-1b products,
-    if level 3 data is already processed. This can be used
+def mast_retrieve_level_1b(instrument, gs_omit, aperture=None, detector=None,
+                           filter_name=None, pupil=None, grating=None,
+                           readpattern=None, lamp=None, fileSetName=None):
+    """Retrieve MAST data that includes level-1b products
+    if level-3 data is already processed. This can be used
     as an alternative to Mast.service_request_async.
-
-    Generate report of L-1b JWST holdings per program/instrument.
 
     The steps to query for and retrieve data files are:
     1. Set the configuration for the web service calls
@@ -256,7 +255,7 @@ def retrieve_level_1b_mast_data(instrument, gs_omit, aperture=None, detector=Non
         Omit associated guide-star data files?
     """
 
-    ret_columns = ['proposal_id', 'dataURL', 'obsid', 'obs_id']
+    # ret_columns = ['proposal_id', 'dataURL', 'obsid', 'obs_id']
 
     # set server endpoints --- ISN'T THIS ALREADY SET IN JWQL?
     server = 'https://mast.stsci.edu'
@@ -267,16 +266,17 @@ def retrieve_level_1b_mast_data(instrument, gs_omit, aperture=None, detector=Non
     JwstObs._portal_api_connection.MAST_BUNDLE_URL = server + "/jwst/api/v0.1/download/bundle"
 
     # Perform query for observations matching JWST instrument
-    columns = ','.join(ret_columns)
+    # columns = ','.join(ret_columns)
+    # Must use fields available in CAOM: https://mast.stsci.edu/api/v0/_c_a_o_mfields.html
     caom_service = 'Mast.Caom.Filtered.JwstOps'
     filters = [{"paramName": "obs_collection", "values": ["JWST"]},
                {"paramName": "instrument_name", "values": [instrument]}]
     # if detector is not None:
-    #     filters.append({"paramName": "detector", "values": [detector]})  # MAYBE THIS ONE PARTICULARLY HAS ISSUES?
+    #     filters.append({"paramName": "detector", "values": [detector]})
     # if aperture is not None:
     #     filters.append({"paramName": "apername", "values": [aperture]})
-    # if filter_name is not None:
-    #     filters.append({"paramName": "filter", "values": [filter_name]})
+    if filter_name is not None:  # USE KEYWORD FILTERS IF CAOM, FILTER IF JWST NIRSPEC QUERY
+        filters.append({"paramName": "filters", "values": [filter_name]})
     # if pupil is not None:
     #     filters.append({"paramName": "pupil", "values": [pupil]})
     # if grating is not None:
@@ -287,7 +287,7 @@ def retrieve_level_1b_mast_data(instrument, gs_omit, aperture=None, detector=Non
     #     filters.append({"paramName": "lamp", "values": [lamp]})
     # if fileSetName is not None:
     #     filters.append({"paramName": "fileSetName", "values": [fileSetName]})
-    caom_params = {"columns": columns,
+    caom_params = {"columns": "*",  # can replace with columns if want specific columns returned
                    "filters": filters}
 
     obsTable = JwstObs.service_request(caom_service, caom_params)
@@ -307,7 +307,7 @@ def retrieve_level_1b_mast_data(instrument, gs_omit, aperture=None, detector=Non
     else:
         print("No matching observations")
 
-    response = selected_products  # CHANGE THIS
+    response = selected_products  # May need to change format
 
     return response
 
@@ -340,6 +340,7 @@ def product_filter(table, prodList, gs_omit=True):
     return mask
 
 
-instrument = 'Nirspec'
-gs_omit = True
-retrieve_level_1b_mast_data(instrument, gs_omit, filter_name='F290LP', aperture='NRS_FULL_IFU')
+# instrument = 'Nirspec'
+# gs_omit = True
+# mast_retrieve_level_1b(instrument, gs_omit, filter_name='F290LP', grating='G140M',
+#                        aperture='NRS_FULL_IFU', detector='NRS1_FULL', readpattern='NRSRAPID')
