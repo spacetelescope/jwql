@@ -60,16 +60,3 @@ def test_mnemonics_retrieval():
     assert motor_vref == -0.0009155273999999999
     assert x_pos == 173.1699688
     assert y_pos == 98.6046408
-
-
-# def test_process():
-#     grating = grating_monitor.Grating()
-#     grating.query_start = SOME_TIME
-#     grating.query_end = SOME_TIME
-#     # dont' want to actually insert data into database table.. stats_table define as a test table? or
-#     # or set a test_value == True if in testing?
-#     # or separate part of this into another function and just retrieve the db_entry?
-
-# Test that a flag is raised if any plots have points in yellow/red zone (within a certain time frame)
-
-# Check input thresholds make sense, eg. time frame and limits? these are set in constants though
