@@ -24,7 +24,9 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES
 from jwql.utils.utils import get_config
 
 # Temporary until JWST operations: switch to test string for MAST request URL
-Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+if not ON_GITHUB_ACTIONS:
+    Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
 
 
 def test_astroquery_mast():
