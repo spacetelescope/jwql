@@ -33,6 +33,9 @@ from jwql.utils.utils import get_config
 from jwql.utils import monitor_utils
 from jwql.utils.plotting import bar_chart
 
+# Temporary until JWST operations: switch to test string for MAST request URL
+Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
+
 
 def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
                          add_filters=None, add_requests=None,
