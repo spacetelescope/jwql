@@ -27,6 +27,7 @@ jobs:
           path: "./jwql/"
           bandit_flags: "-c .bandit"
         continue-on-error: false
+        if: runner.os == 'Linux'
 
       - name: Build jwql conda environment and run tests
         shell: bash -l {0}
