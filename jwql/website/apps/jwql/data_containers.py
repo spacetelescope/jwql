@@ -1082,7 +1082,7 @@ def log_into_mast(request):
     access_token = str(get_mast_token(request))
 
     # authenticate with astroquery.mast if necessary
-    if access_token != 'None':
+    if access_token != 'None': # nosec
         Mast.login(token=access_token)
         return Mast.authenticated()
     else:
