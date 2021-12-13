@@ -1,8 +1,5 @@
 # Bandit configuration file for JWQL
 
-# (optional) list included tests here:
-tests: ['B201', 'B301']
-
 # (optional) list skipped tests here:
 skips: [B101 , B608, B307, B404, B602, B310]
 
