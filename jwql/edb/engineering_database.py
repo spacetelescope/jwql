@@ -45,6 +45,7 @@ Notes
 
 from collections import OrderedDict
 from datetime import datetime
+import os
 import warnings
 
 from astropy.table import Table
@@ -56,9 +57,15 @@ import numpy as np
 
 from jwst.lib.engdb_tools import ENGDB_Service
 from jwql.utils.credentials import get_mast_base_url, get_mast_token
+from jwql.utils.utils import get_config
 
 MAST_EDB_MNEMONIC_SERVICE = 'Mast.JwstEdb.Mnemonics'
 MAST_EDB_DICTIONARY_SERVICE = 'Mast.JwstEdb.Dictionary'
+
+# Temporary until JWST operations: switch to test string for MAST request URL
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+if not ON_GITHUB_ACTIONS:
+    Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
 
 
 class EdbMnemonic:

@@ -41,7 +41,7 @@ from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, filename_parser
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MONITORS
 from jwql.utils.constants import INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
@@ -75,6 +75,10 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     THUMBNAIL_FILESYSTEM = os.path.join(get_config()['thumbnail_filesystem'])
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
+
+# Temporary until JWST operations: switch to test string for MAST request URL
+if not ON_GITHUB_ACTIONS:
+    Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
 
 
 def build_table(tablename):
