@@ -77,7 +77,8 @@ PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
 # Temporary until JWST operations: switch to test string for MAST request URL
-Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
+if not ON_GITHUB_ACTIONS:
+    Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
 
 
 def build_table(tablename):
