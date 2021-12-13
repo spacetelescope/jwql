@@ -17,6 +17,8 @@ Use
         pytest -s test_monitor_mast.py
 """
 
+import os
+
 from astroquery.mast import Mast
 
 from jwql.jwql_monitors import monitor_mast as mm
