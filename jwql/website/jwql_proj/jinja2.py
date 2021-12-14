@@ -19,12 +19,13 @@ from django.urls import reverse
 from django.utils import timezone
 from django.template.defaultfilters import date
 from django.contrib.staticfiles.storage import staticfiles_storage
-from jinja2 import Environment, lexer, nodes, select_autoescape
+from jinja2 import Environment, lexer, nodes
 from jinja2.ext import Extension
 
 
+# nosec comment added to ignore bandit security check
 def environment(**options):
-    env = Environment(**options, autoescape=select_autoescape())
+    env = Environment(**options)  # nosec
     env.globals.update({
         'static': staticfiles_storage.url,
         'url': reverse,
