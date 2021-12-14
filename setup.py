@@ -13,6 +13,7 @@ REQUIRES = [
     'asdf>=2.3.3',
     'astropy>=3.2.1',
     'astroquery>=0.3.9',
+    'bandit',
     'bokeh',
     'codecov',
     'crds',

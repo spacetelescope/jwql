@@ -238,7 +238,8 @@ def log_info(func):
             except (ImportError, AttributeError) as err:
                 logging.warning(err)
 
-        environment = subprocess.check_output(['conda', 'env', 'export'], universal_newlines=True)
+        # nosec comment added to ignore bandit security check
+        environment = subprocess.check_output(['conda', 'env', 'export'], universal_newlines=True) # nosec
         logging.info('Environment:')
         for line in environment.split('\n'):
             logging.info(line)
