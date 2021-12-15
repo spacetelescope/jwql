@@ -53,7 +53,8 @@ from astropy.time import Time
 import astropy.units as u
 from astroquery.mast import Mast
 from bokeh.embed import components
-from bokeh.plotting import figure, show
+from bokeh.models import BoxAnnotation, DatetimeTickFormatter
+from bokeh.plotting import figure, output_file, show
 import numpy as np
 
 from jwst.lib.engdb_tools import ENGDB_Service
@@ -238,7 +239,7 @@ class EdbMnemonic:
             self.mnemonic_identifier, len(self.data), self.data_start_time.isot,
             self.data_end_time.isot)
 
-    def block_stats(self, mnem_data, sigma=3):
+    def block_stats(self, sigma=3):
         """Calculate stats for a mnemonic where we want a mean value for
         each block of good data, where blocks are separated by times where
         the data are ignored.
@@ -270,7 +271,6 @@ class EdbMnemonic:
         self.median = medians
         self.stdev = stdevs
         self.median_time = medtimes
-        return mnem_data
 
     def daily_stats(self, sigma=3):
         """Calculate the statistics for each day in the data
@@ -459,6 +459,54 @@ class EdbMnemonic:
         else:
             script, div = components(p1)
             return [div, script]
+
+
+def add_limit_boxes(fig, yellow=None, red=None):
+    """Add gree/yellow/red background colors
+
+    Parameters
+    ----------
+    fig : bokeh.plotting.figure
+        Bokeh figure of the telemetry values
+
+    yellow : list
+        2-element list of [low, high] values. If provided, the areas of the plot less than <low>
+        and greater than <high> will be given a yellow background, to indicate an area
+        of concern.
+
+    red : list
+        2-element list of [low, high] values. If provided, the areas of the plot less than <low>
+        and greater than <high> will be given a red background, to indicate values that
+        may indicate an error. It is assumed that the low value of red is less
+        than the low value of yellow, and that the high value of red is
+        greater than the high value of yellow.
+    """
+    if yellow is not None:
+        green = BoxAnnotation(bottom=yellow_limits[0], top=yellow_limits[1], fill_color='chartreuse', fill_alpha=0.2)
+        fig.add_layout(green)
+        if red is not None:
+            yellow_high = BoxAnnotation(bottom=yellow_limits[1], top=red_limits[1], fill_color='gold', fill_alpha=0.2)
+            fig.add_layout(yellow_high)
+            yellow_low = BoxAnnotation(bottom=red_limits[0], top=yellow_limits[0], fill_color='gold', fill_alpha=0.2)
+            fig.add_layout(yellow_low)
+            red_high = BoxAnnotation(bottom=red_limits[1], top=red_limits[1]+100, fill_color='red', fill_alpha=0.1)
+            fig.add_layout(red_high)
+            red_low = BoxAnnotation(bottom=red_limits[0]-100, top=red_limits[0], fill_color='red', fill_alpha=0.1)
+            fig.add_layout(red_low)
+        else:
+            yellow_high = BoxAnnotation(bottom=yellow_limits[1], top=yellow_limits[1] + 100, fill_color='gold', fill_alpha=0.2)
+            fig.add_layout(yellow_high)
+            yellow_low = BoxAnnotation(bottom=yellow_limits[0] - 100, top=yellow_limits[0], fill_color='gold', fill_alpha=0.2)
+            fig.add_layout(yellow_low)
+    else:
+        if red is not None:
+            green = BoxAnnotation(bottom=red_limits[0], top=red_limits[1], fill_color='chartreuse', fill_alpha=0.2)
+            fig.add_layout(green)
+            red_high = BoxAnnotation(bottom=red_limits[1], top=red_limits[1]+100, fill_color='red', fill_alpha=0.1)
+            fig.add_layout(red_high)
+            red_low = BoxAnnotation(bottom=red_limits[0]-100, top=red_limits[0], fill_color='red', fill_alpha=0.1)
+            fig.add_layout(red_low)
+    return fig
 
 
 def add_time_offset(offset, dt_obj):

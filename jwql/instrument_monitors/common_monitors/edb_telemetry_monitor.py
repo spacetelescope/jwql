@@ -19,7 +19,8 @@ from jwql.database.database_interface import NIRCamEDBMnemonics, NIRISSEDBMnemon
 from jwql.edb import engineering_database as ed
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import condition
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import EDB_LOOK_BACK_TIME, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.utils import get_config
 
 
 # To query the EDB for a single mnemonic
@@ -109,17 +110,26 @@ class EdbMnemonicMonitor():
     def __init__(self):
         self.query_results = {}
 
-    def add_new_db_entry(self, telem_name, times, data, query_time):
-        """
+    def add_new_db_entry(self, mnem, query_time):
+        """Add a new entry to the database table
+
+        Parameters
+        ----------
+        mnem : jwql.edb.engineering_database.EdbMnemonic
+            Mnemonic information
+
+        query_time : datetime.datetime
+            Start time of the query
         """
         # Construct new entry for dark database table
-        db_entry = {'mnemonic': telem_name,
+        db_entry = {'mnemonic': mnem.info["name"],
                     'latest_query': query_time,
-                    'times': times,
-                    'data': data,
+                    'times': mnem.median_times,
+                    'data': mnem.mean,
+                    'stdev': mnem.stdev,
                     'entry_date': datetime.datetime.now()
                     }
-        self.db_table.__table__.insert().execute(db_entry)
+        self.history_table.__table__.insert().execute(db_entry)
 
     """
     def calc_block_stats(self, mnem_data, sigma=3):
@@ -516,32 +526,44 @@ class EdbMnemonicMonitor():
 
         # If the filtered data contains enough entries, then proceed.
         if len(good_mnemonic_data.data) > 0:
+
+
+##############this has been moved elsewhere
             #we can make the daily mean, block mean, and timed mean methods of the EdbMnemonic class.
             #what about every change? separate method here? new one there as well?
-            if telemetry_type == "daily_means":
-                mean_vals, median_vals, std_vals, time_vals = self.calc_daily_stats(good_mnemonic_data.data)
-            elif telemetry_type == "block_means":
-                mean_vals, median_vals, std_vals, median_times = self.calc_block_stats(good_mnemonic_data)
-            elif telemetry_type == "every_change":
-                mean_vals, std_vals, median_times = self.calc_every_change_stats(good_mnemonic_data)
-            elif telemetry_type == "time_interval":
-                stats_duration = utils.get_averaging_time_duration(mnemonic["mean_time_block"])
-                mean_vals, median_vals, std_vals, median_times = self.calc_timed_stats(good_mnemonic_data, stats_duration)
-            elif telemetry_type == "none":
-                # No averaging done
-                mean_vals = good_mnemonic_data["data"]
-                median_times = good_mnemonic_data["MJD"]
-            #add means to EdbMnemonic class as an attribute
+            #if telemetry_type == "daily_means":
+            #    mean_vals, median_vals, std_vals, time_vals = self.calc_daily_stats(good_mnemonic_data.data)
+            #elif telemetry_type == "block_means":
+            #    mean_vals, median_vals, std_vals, median_times = self.calc_block_stats(good_mnemonic_data)
+            #elif telemetry_type == "every_change":
+            #    mean_vals, std_vals, median_times = self.calc_every_change_stats(good_mnemonic_data)
+            #elif telemetry_type == "time_interval":
+            #    stats_duration = utils.get_averaging_time_duration(mnemonic["mean_time_block"])
+            #    mean_vals, median_vals, std_vals, median_times = self.calc_timed_stats(good_mnemonic_data, stats_duration)
+            #elif telemetry_type == "none":
+            #    # No averaging done
+            #    mean_vals = good_mnemonic_data["euvalues"]
+            #    median_times = good_mnemonic_data["dates"]
+##############this has been moved elsewhere
+
             return good_mnemonic_data
         else:
             return None
 
-    def identify_tables(self):
+    def identify_tables(self, inst):
         """Determine which database tables to use for a run of the dark
         monitor
         """
-        mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
-        self.db_table = eval('{}EDBMnemonics'.format(mixed_case_name))
+        mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]
+        self.history_table = eval('{}EDBMnemonics'.format(mixed_case_name))
+
+    def load_data(self, mnemonic_name):
+        """Query the database tables to get data"""
+
+        # Query database for all data in NIRCamDarkDarkCurrent with a matching aperture
+        self.history_table = session.query(self.history_table) \
+            .filter(self.history_table.mnemonic == mnemonic_name) \
+            .all()
 
     def most_recent_search(self, telem_name):
         """Query the database and return the information
@@ -553,14 +575,14 @@ class EdbMnemonicMonitor():
         query_result : astropy.time.Time
             Date of the ending range of the previous query
         """
-        query = session.query(self.db_table).filter(self.db.mnemonic == telem_name).order_by(self.query_table.latest_query).all()
+        query = session.query(self.history_table).filter(self.history_table.mnemonic == telem_name).order_by(self.hisotry_table.latest_query).all()
 
         if len(query) == 0:
-            base_time = '2015-12-01'
-            query_result = Time(base_time)  # a.k.a. Dec 1, 2015 == CV3
+            base_time = '2021-08-01'
+            query_result = Time(base_time)
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.mnemonic, base_time)))
         else:
-            query_result = query[-1].latest_query
+            query_result = Time(query[-1].latest_query)
 
         return query_result
 
@@ -572,8 +594,20 @@ class EdbMnemonicMonitor():
         # in an effort to minimize the number of EDB queries and save time.
         self.query_results = {}
 
+        # The cadence with which the EDB is queried. This is different than the query
+        # duration. This is the cadence of the query starts, while the duration is the
+        # block of time to query over. For example, a cadence of 1 day and a duration
+        # of 15 minutes means that the EDB will be queried over 12:00am - 12:15am each
+        # day.
+        query_cadence = 1 * u.day
+
+        # Set up directory structure to hold the saved plots
+        config = get_config()
+        base_dir = os.path.join(config["outputs"], "edb_telemetry_monitor")
+
         # Loop over all instruments
         for instrument in ['nircam']:  #JWST_INSTRUMENT_NAMES:
+            plot_output_dir = os.path.join(base_dir, isntrument)
 
             # Read in a list of mnemonics that the instrument teams want to monitor
             #     From either a text file, or a edb_mnemonics_montior database table
@@ -584,7 +618,7 @@ class EdbMnemonicMonitor():
 
             # Check the edb_mnemonics_monitor database table to see the date of the previous query
             # as is done in other monitors
-            #self.identify_tables()
+            #self.identify_tables(instrument)
 
             # Query the EDB for all mnemonics for the period of time between the previous query and the current date
             # Use exsiting JWQL EDB code - as shown above (move to within the loop over mnemonics to allow
@@ -608,32 +642,34 @@ class EdbMnemonicMonitor():
                         # query. Given this, it is easy to simply add a day to the previous query time in order
                         # to come up with the new query time.
                         #most_recent_search = self.most_recent_search(mnemonic['name'])
-                        most_recent_search = Time('2021-09-01')  # for development
-                        starttime = most_recent_search + TimeDelta(query_duration)
+                        most_recent_search = Time('2021-12-13')  # for development
+                        starttime = most_recent_search + TimeDelta(query_cadence)
 
-                        # Check for the case where, for whatever reason, there have been missed days. If so, we need
-                        # to run the calculations separately for each day. Should we query for the full time and then
-                        # filter, or query once per day? The latter is probably slower. Could the former turn into a
-                        # problem if e.g. someone wants to track a new mnemonic and it's been 100 days since the
-                        # default most recent search time?
-                        query_start_times = []
-                        query_end_times = []
-                        time_range = int((today - starttime).to(u.day).value)
-                        # Create an array of starting and ending query times. Start times are once per day
-                        # between the previous query time and the present. End times are the start times
-                        # plus the query duration.
-                        for delta in range(time_range):
-                            tmp_start = starttime + TimeDelta(delta * u.day)
-                            query_start_times.append(tmp_start)
-                            query_end_times.append(tmp_start + TimeDelta(query_duration))
-
+                        # In this case we also need to retrieve the historical data from the database, so that
+                        # we can add the new data and create an updated plot
+                        self.load_data(mnemonic["name"])
                     else:
                         # In the case where telemetry data have no averaging done, we do not store the data
                         # in the JWQL database, in order to save space. So in this case, we will retrieve
                         # all of the data from the EDB directly, from some default start time until the
                         # present day.
-                        query_start_times = [DEFAULT_EDB_QUERY_START_TIME]
-                        query_end_times = [today.mjd]
+                        starttime = Time.now() - TimeDelta(EDB_LOOK_BACK_TIME, format='jd')
+
+                    # Check for the case where, for whatever reason, there have been missed days. If so, we need
+                    # to run the calculations separately for each day. Should we query for the full time and then
+                    # filter, or query once per day? The latter is probably slower. Could the former turn into a
+                    # problem if e.g. someone wants to track a new mnemonic and it's been 100 days since the
+                    # default most recent search time?
+                    query_start_times = []
+                    query_end_times = []
+                    time_range = int((today - starttime).to(u.day).value)
+                    # Create an array of starting and ending query times. Start times are once per day
+                    # between the previous query time and the present. End times are the start times
+                    # plus the query duration.
+                    for delta in range(time_range):
+                        tmp_start = starttime + TimeDelta(delta * u.day)
+                        query_start_times.append(tmp_start)
+                        query_end_times.append(tmp_start + TimeDelta(query_duration))
 
                     # Make sure the end time of the final query is before the current time
                     if query_end_times[-1] > today:
@@ -641,7 +677,8 @@ class EdbMnemonicMonitor():
                         query_start_times = query_start_times[valid_end_times]
                         query_end_times = query_end_times[valid_end_times]
 
-                    # Loop over the query times, and query the EDB
+                    # Loop over the query times, query the EDB, filter data, and store in
+                    # an EdbMnemonic object
                     initialized = False
                     for starttime, endtime in zip(query_start_times, query_end_times):
 
@@ -651,59 +688,69 @@ class EdbMnemonicMonitor():
                         # call this function for that specific mnemonic
                         mnemonic_day_info = self.get_mnemonic_info(mnemonic, starttime, endtime, telem_type)
 
-                        if mnemonic_info is not None:
-                            print(starttime, endtime)
-                            print(mnemonic_day_info.info)
-                            print(mnemonic_day_info.meta)
-                            print(mnemonic_day_info.data)
-                            stop
-
-
-
                         if mnemonic_day_info is not None:
-                            if telem_type != 'none':
-                                # Save the averaged/smoothed data and dates/times to the database,
-                                # but only for cases where we are averaging. For cases with no averaging
-                                # the database would get too large too quickly. In that case the monitor
-                                # will re-query the EDB for the entire history each time.
-                                #self.add_new_db_entry(mnemonic, median_time, mean_val, stdev_val)
-                                print('use line above IRL')
-
-                                # Add results for multiple days here.
-                                if not initialized:
-                                    mnemonic_info = deepcopy(mnemonic_day_info)
-                                    initialized = True
-                                else:
-                                    mnemonic_info = menonic_info + mnemonic_day_info
-
+                            # Add results for multiple days here. This needs to be done for both
+                            # averaged and non-averaged mnemonics
+                            if not initialized:
+                                mnemonic_info = deepcopy(mnemonic_day_info)
+                                initialized = True
+                            else:
+                                mnemonic_info = menonic_info + mnemonic_day_info
                         else:
                             pass
-                            # self.logger.info(f"Mnemonic {mnemonic["name"]} has no data that match the requested conditions.")
+
+                    # Now calculate statistics if this is a menmonic where averaging is to be done.
+                    if telemetry_type == "daily_means":
+                        mnemonic_info.calc_daily_stats()
+                    elif telemetry_type == "block_means":
+                        mnemonic_info.calc_block_stats()
+                    elif telemetry_type == "every_change":
+                        mnemonic_info.calc_every_change_stats()
+                    elif telemetry_type == "time_interval":
+                        stats_duration = utils.get_averaging_time_duration(mnemonic["mean_time_block"])
+                        mnemonic_info.calc_timed_stats(stats_duration)
+                    elif telemetry_type == "none":
+                        mnemonic_info.mean = 'No_averaging'
+
+                    # Save the averaged/smoothed data and dates/times to the database,
+                    # but only for cases where we are averaging. For cases with no averaging
+                    # the database would get too large too quickly. In that case the monitor
+                    # will re-query the EDB for the entire history each time.
+                    if telemetry_type != "none":
+                        self.add_new_db_entry(mnemonic_info, query_start_times[-1].datetime)
+                        print('use line above IRL. Be sure to add to databse before concatenating the historical and new data')
+
+                        # To make plotting easier, create a new EdbMnemonic instance and
+                        # populate it with the historical data combined (concatenated) with the
+                        # newly averaged data
+                        historical_data = EdbMnemonic(mnemonic["name"], self.history_table, stuff)
+                        mnemonic_info = mnemonic_info + historical_data
 
                     # Create and save plot
-                    nominal = utils.check_key("nominal_value")
-                    yellow = utils.check_key("yellow_limits")
-                    red = utils.check_key("red_limits")
+                    nominal = utils.check_key(mnemonic_info.info, "nominal_value")
+                    yellow = utils.check_key(mnemonic_info.info, "yellow_limits")
+                    red = utils.check_key(mnemonic_info.info, "red_limits")
 
                     if mnemonic["plot_data"] == "nominal":
-                        mnemonic_info.bokeh_plot(save=True, out_dir=TELEMETRY_HTML_OUTPUT_DIR, nominal_value=nominal,
-                                                 yellow_limits=yellow, red_limits=red, save=True)
-                        #telemetry = mnemonic_info["uevalues"]
-                    elif '*' in mnemonic["plot_data"]:  # ("*SB_FJDKN")
-                        # Get the data for the mnemonic to be combined
+                        _, _ = mnemonic_info.bokeh_plot(save=True, out_dir=plot_output_dir, nominal_value=nominal,
+                                                        yellow_limits=yellow, red_limits=red)
+                    elif '*' in mnemonic["plot_data"]:  # (e.g. "*SB_FJDKN")
+                        # Get the data for the mnemonic to be combined, place into an EdbMnemonic instance, and
+                        # filter with the same criteria used to filter the original mnemonic's data
                         combine_mnemonic = mnemonic["plot_data"].split('*')[1]
                         combine_data = self.get_dependency_data(combine_mnemonic, mnemonic_info.data_start_time, mnemonic_info.data_end_time)
+                        combine_tab = Table([combine_data["dates"], combine_data["euvalues"]], names=("dates", "euvalues"))
                         combine_obj = EdbMnemonic(combine_mnemonic, mnemonic_info.data_start_time, mnemonic_info.data_end_time,
-                                                  combine_data, self.query_results[combine_mnemonic].meta,
+                                                  combine_tab, self.query_results[combine_mnemonic].meta,
                                                   self.query_results[combine_mnemonic].info)
+                        filtered_combine_obj = self.filter_telemetry(combine_obj, mnemonic["dependency"])
 
                         # Interpolate the new menmonic's data to be at the same times as self.mnemonic_info
-                        combined = self.mnemonic_info * combine_obj
+                        combined = self.mnemonic_info * filtered_combine_obj
 
                         # Create a plot from the combined data
-                        combined.bokeh_plot(save=True, out_dir=TELEMETRY_HTML_OUTPUT_DIR, nominal_value=nominal,
-                                            yellow_limits=yellow, red_limits=red, save=True)
-                        #telemetry = mnemonic_info["uevalues"] * interpolated_data
+                        _, _ = combined.bokeh_plot(save=True, out_dir=plot_output_dir, nominal_value=nominal,
+                                                   yellow_limits=yellow, red_limits=red)
                     else:
                         raise NotImplementedError(('The plot_data entry in the mnemonic dictionary can currently only '
                                                    'be "nominal" or "*<MNEMONIC_NAME>", indicating that the current '
@@ -713,19 +760,4 @@ class EdbMnemonicMonitor():
                                                    'combination schemes have been implemented.'))
 
 
-
-
-# Other options:
-# A separate "previous query" time for each mnemonic?
-# Johannes built a function to query for many mnemonics but with a single start and end time
-# If no data are returned for a particular mnemonic, then skip all the updating. If data are
-# returned the next time, we should still be able to update the plot without having lost any
-# information. Using a single date will keep things simpler.
-#
-# BUT: what about a case where a team tracks a mnemonic for a while, then decides to stop, and
-# then returns to tracking it later? If we use a single previous query time, then that mnemonic
-# will end up with a hole in it's plot for the time that the mnemonic wasn't tracked. If we keep
-# a separate time for each mnemonic, then the plot will always be complete. The downsides of this
-# are that 1) we need to store more data in the database and 2) Now we need a separate query for
-# each mnemonic, which will probably slow things down
 

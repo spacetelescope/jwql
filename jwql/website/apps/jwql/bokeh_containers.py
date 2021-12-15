@@ -24,6 +24,8 @@ import os
 from bokeh.embed import components
 from bokeh.layouts import layout
 from bokeh.models.widgets import Tabs, Panel
+from bokeh.plotting import figure, output_file
+import numpy as np
 
 from . import monitor_pages
 from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES
@@ -36,6 +38,23 @@ REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
 def add_limit_boxes(fig, yellow=None, red=None):
     """Add gree/yellow/red background colors
+
+    Parameters
+    ----------
+    fig : bokeh.plotting.figure
+        Bokeh figure of the telemetry values
+
+    yellow : tup
+        2-Tuple of (low, high) values. If provided, the areas of the plot less than <low>
+        and greater than <high> will be given a yellow background, to indicate an area
+        of concern.
+
+    red : tup
+        2-Tuple of (low, high) values. If provided, the areas of the plot less than <low>
+        and greater than <high> will be given a red background, to indicate values that
+        may indicate an error. It is assumed that the low value of red is less
+        than the low value of yellow, and that the high value of red is
+        greater than the high value of yellow.
     """
     if yellow is not None:
         green = BoxAnnotation(bottom=yellow_limits[0], top=yellow_limits[1], fill_color='chartreuse', fill_alpha=0.2)
@@ -341,16 +360,53 @@ def edb_monitor_tabs(instrument):
     read in html files
 
 
-def generic_telemetry_plot(times, values, name=None, nominal_value=None, yellow_limits=None,
+def generic_telemetry_plot(times, values, name, nominal_value=None, yellow_limits=None,
                            red_limits=None, save=True):
-    """
+    """Create a value versus time plot of a single telemetry mnemonic. Optionally
+    add background colors corresponding to good (green), warning (yellow), and red
+    (error) values.
+
+    Parameters
+    ----------
+    times : list
+        List of datetime instances
+
+    values : list
+        Telemetry values
+
+    name : str
+        Name of the telemetry mnemonic (e.g. 'SE_ZINRCICE1')
+
+    nominal_value : float
+        Optional expected value for the mnemonic. If provided, a horizontal dashed line
+        at this value will be added to the plot.
+
+    yellow_limits : tup
+        Tuple of (low, high) values. If provided, the areas of the plot less than <low>
+        and greater than <high> will be given a yellow background, to indicate an area
+        of concern.
+
+    red_limits : tup
+        Tuple of (low, high) values. If provided, the areas of the plot less than <low>
+        and greater than <high> will be given a red background, to indicate values that
+        may indicate an error. It is assumed that the low value of red_limits is less
+        than the low value of yellow_limits, and that the high value of red_limits is
+        greater than the high value of yellow_limits.
+
+    save : bool
+        If True, save the plot to an html file.
+
+    Returns
+    -------
+    fig : bokeh.plotting.figure
+        Telemetry plot object
     """
     if save:
         output_file(f"telem_plot_{name}.html")
 
     fig = figure(width=400, height=400, x_axis_label='Date', y_axis_label='Voltage',
                x_axis_type='datetime')
-    fig.circle(times, data, size=4, color='navy', alpha=0.5)
+    fig.circle(times, values, size=4, color='navy', alpha=0.5)
 
     if nominal_value is not None:
         fig.line(times, np.repeat(nominal_value, len(times)), line_dash='dashed')
