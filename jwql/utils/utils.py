@@ -508,7 +508,7 @@ def get_base_url():
 
     username = getpass.getuser()
     if username == get_config()['admin_account']:
-        base_url = 'https://dljwql.stsci.edu'
+        base_url = 'https://{}.stsci.edu'.format(get_config()['server_name'])
     else:
         base_url = 'http://127.0.0.1:8000'
 
