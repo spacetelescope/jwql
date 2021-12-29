@@ -72,6 +72,7 @@ def test_get_metadata():
     assert monitor.frame_time == 10.5
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Currently no data in astroquery.mast.  This can be removed for JWST operations.')
 def test_mast_query_darks():
     """Test that the MAST query for darks is functional"""
 
