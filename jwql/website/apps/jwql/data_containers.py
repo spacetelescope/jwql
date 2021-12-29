@@ -460,13 +460,18 @@ def get_expstart(instrument, rootname):
         The exposure start time of the observation (in MJD).
     """
 
-    file_set_name = '_'.join(rootname.split('_')[:-1])
+    if '-seg' in rootname:
+        file_set_name = rootname.split('-')[0]
+    else:
+        file_set_name = '_'.join(rootname.split('_')[:-1])
+
     service = INSTRUMENT_SERVICE_MATCH[instrument]
     params = {
         'columns': 'filename, expstart',
         'filters': [{'paramName': 'fileSetName', 'values': [file_set_name]}]}
     response = Mast.service_request_async(service, params)
     result = response[0].json()
+
     if result['data'] == []:
         expstart = 0
         print("WARNING: no data")
