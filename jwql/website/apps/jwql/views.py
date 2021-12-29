@@ -295,7 +295,6 @@ def archived_proposals_ajax(request, inst):
     proposal_info = get_proposal_info(filenames)
 
     context = {'inst': inst,
-               'all_filenames': filenames,
                'num_proposals': proposal_info['num_proposals'],
                'thumbnails': {'proposals': proposal_info['proposals'],
                               'thumbnail_paths': proposal_info['thumbnail_paths'],

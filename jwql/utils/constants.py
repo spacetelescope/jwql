@@ -201,7 +201,7 @@ FULL_FRAME_APERTURES = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NR
 # Possible suffix types for nominal files
 GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',
                         'x1dints', 'x1d', 's2d', 's3d', 'dark', 'crfints',
-                        'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat']
+                        'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat', 'segm']
 
 # Gratings available for each instrument
 GRATING_PER_INSTRUMENT = {'fgs': [],
