@@ -363,7 +363,7 @@ def get_edb_components(request):
                         comments.append('Number of rows {}'.format(len(result_table)))
                         comments.append(' ')
                         result_table.write(path_for_download, format='ascii.fixed_width',
-                                        overwrite=True, delimiter=',', bookend=False)
+                                           overwrite=True, delimiter=',', bookend=False)
                         mnemonic_query_result.file_for_download = file_for_download
 
             # create forms for search fields not clicked
@@ -479,9 +479,19 @@ def get_expstart(instrument, rootname):
 def mast_query(instrument, colnames, filters=[]):
     """Query MAST and return data for the specified colnames, using
     the specified filters
+
+    instrument : str
+        Instrument name
+
+    colnames : str
+        List of column names, in a single, comma-delimited string for
+        the query to return
+
+    filters : list
+        List of filters to be applied
     """
     service = INSTRUMENT_SERVICE_MATCH[instrument]
-    params = {"columns": "filename, isRestricted", "filters": filters}
+    params = {"columns": colnames, "filters": filters}
     response = Mast.service_request_async(service, params)
     result = response[0].json()
     return result
@@ -588,7 +598,6 @@ def get_header_info(filename):
     header_info : dict
         The FITS headers of the extensions in the given ``file``.
     """
-
     # Initialize dictionary to store header information
     header_info = {}
 
@@ -1084,7 +1093,6 @@ def log_into_mast(request):
     ----------
     request : HttpRequest object
         Incoming request from the webpage
-
     """
     if Mast.authenticated():
         return True
