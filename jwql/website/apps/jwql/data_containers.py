@@ -476,7 +476,18 @@ def get_expstart(instrument, rootname):
     return expstart
 
 
-def get_filenames_by_instrument(instrument, restriction='all'):
+def mast_query(instrument, colnames, filters=[]):
+    """Query MAST and return data for the specified colnames, using
+    the specified filters
+    """
+    service = INSTRUMENT_SERVICE_MATCH[instrument]
+    params = {"columns": "filename, isRestricted", "filters": filters}
+    response = Mast.service_request_async(service, params)
+    result = response[0].json()
+    return result
+
+
+def get_filenames_by_instrument(instrument, restriction='all', query_file=None, query_response=None):
     """Returns a list of filenames that match the given ``instrument``.
 
     Parameters
@@ -493,13 +504,13 @@ def get_filenames_by_instrument(instrument, restriction='all'):
     filenames : list
         A list of files that match the given instrument.
     """
-
-    service = INSTRUMENT_SERVICE_MATCH[instrument]
-
-    # Query for filenames
-    params = {"columns": "filename, isRestricted", "filters": []}
-    response = Mast.service_request_async(service, params)
-    result = response[0].json()
+    if not query_file and not query_response:
+        result = mast_query(instrument, "filename, isRestricted")
+    elif query_response:
+        result = query_response
+    elif query_file:
+        with open(query_file) as fobj:
+            result = fobj.readlines()
 
     # Determine filenames to return based on restriction parameter
     if restriction == 'all':
@@ -954,7 +965,7 @@ def get_thumbnails_all_instruments(parameters):
 
     # Determine whether or not queried anomalies are flagged
     final_subset = []
-    
+
     if anomalies != {'miri': [], 'nirspec': [], 'niriss': [], 'nircam': [], 'fgs': []}:
         for thumbnail in thumbnails_subset:
             components = thumbnail.split('_')

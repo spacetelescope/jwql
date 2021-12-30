@@ -62,6 +62,7 @@ from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import get_thumbnails_all_instruments
+from .data_containers import mast_query
 from .data_containers import nirspec_trending
 from .data_containers import random_404_page
 from .data_containers import get_jwqldb_table_view_components
@@ -271,8 +272,9 @@ def archived_proposals_ajax(request, inst):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     # Get list of all files for the given instrument
-    filenames_public = get_filenames_by_instrument(inst, restriction='public')
-    filenames_proprietary = get_filenames_by_instrument(inst, restriction='proprietary')
+    filename_query = mast_query(inst, "filename, isRestricted")
+    filenames_public = get_filenames_by_instrument(inst, restriction='public', query_response=filename_query)
+    filenames_proprietary = get_filenames_by_instrument(inst, restriction='proprietary', query_response=filename_query)
 
     # Determine locations to the files
     filenames = []
