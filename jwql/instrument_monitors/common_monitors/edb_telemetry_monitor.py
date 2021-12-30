@@ -358,57 +358,29 @@ class EdbMnemonicMonitor():
 
         dependency = self.query_results[dep_list[0]["name"]]
 
-        # Locate the times where the dependency value changed by a large amount
-        # Then for each block, calculate a sigma-clipped mean and stdev
-        first_diffs = np.abs(dependency.data["data"].data[1:] - dependency.data["data"].data[0:-1])
-        full_mean, full_med, full_dev = sigma_clipped_stats(first_diffs, sigma=3)
-        jumps = np.where(first_diffs >= threshold*full_dev)[0]
+        # From a check of the data in the D-string EDB from rehearsals, it looks like the times
+        # associated with the mnemonic of interest and the dependency are the same. So no
+        # need to interpolate? We can just get indexes from the latter and apply them to
+        # the former? Add a test for this so we can catch if that's not true.
+        # First, find all the unique values of the dependency. This assumes that the depenedency
+        # values are strings, which is the case for the MIRI mnemonics originally requested
+        # for this every-change case.
 
+        # Make sure the data values for the dependency are strings.
+        if type(dependency.data["euvalues"][0]) != np.str_:
+            raise NotImplementedError("find_all_changes() is not set up to handle non-strings in the dependency data")
+        else:
+            change_indexes = np.where(dependency.data["euvalues"][:-1] != dependency.data["euvalues"][1:])[0]
 
+            # If dates differ between the mnemonic of interest and the dependency, then interpolate to match
+            if not np.all(dependency.data["dates"] == mnem_data.data["dates"]):
+                mnem_data.interpolate(dependency.data["dates"].data)
 
-        print(full_mean, full_med, full_dev, threshold*full_dev)
-        print(first_diffs)
-        print(jumps)
+            # Set blocks values
+            mnem_data.blocks = np.insert(change_indexes + 1, 0, 0)
+            mnem_data.every_change_values = dependency.data["euvalues"][mnem_data.blocks]
 
-
-
-        #OR:
-        #create a histogram of dependency["data"], find the peaks, and group points around those
-
-        # Add 1 so that the indexes refer to the first element of each block
-        jumps += 1
-        jump_times = dependency.data["MJD"][jumps]
-
-        print(jumps)
-        print(dependency.data["MJD"])
-        print(jump_times)
-
-        # Do we need to calucate and save the mean values of the dependency at each block?
-        all_dep_means = []
-        all_dep_meds = []
-        all_dep_devs = []
-        all_dep_times = []
-        for i in range(len(jumps)-1):
-            dep_block = dependency.data["data"][jumps[i]:jumps[i+1]]
-            mean_dep_val, med_dep_val, dev_dep_val = sigma_clipped_stats(dep_block, sigma=3)
-            all_dep_means.append(mean_dep_val)
-            all_dep_meds.append(med_dep_val)
-            all_dep_devs.append(dev_dep_val)
-            all_dep_times.append(np.median(dependency.data["MJD"][jumps[i]:jumps[i+1]]))
-
-        # Now calculate the mean and stdev for the elements between each pair of jump times
-        all_means = []
-        all_meds = []
-        all_devs = []
-        all_times = []
-        for i in range(len(jump_times)):
-            block_points = np.where((mnem_data.data["MJD"] >= jump_times[i]) & (mnem_data.data["MJD"] < jump_times[i+1]))
-            mean_val, med_val, dev_val = sigma_clipped_stats(mnem_data.data["data"][block_points], sigma=3)
-            all_means.append(mean_val)
-            all_meds.append(med_val)
-            all_devs.append(dev_val)
-            all_times.append(np.median(mnem_data.data["MJD"][block_points]))
-        return all_means, all_meds, all_devs, all_times, all_dep_means, all_dep_meds, all_dep_devs, all_dep_times
+        return mnem_data
 
 
     def get_dependency_data(self, dependency, starttime, endtime):
@@ -514,7 +486,7 @@ class EdbMnemonicMonitor():
         #mnemonic_data = utils.remove_outer_points(mnemonic_data)
 
         # Filter the data - good_mnemonic_data is an EdbMnemonic instance
-        if len(mnemonic["dependency"]) > 0:
+        if ((len(mnemonic["dependency"]) > 0) and (telemetry_type != "every_change")):
             good_mnemonic_data = self.filter_telemetry(mnemonic_data, mnemonic['dependency'])
         else:
             # No dependencies. Keep all the data
@@ -522,7 +494,9 @@ class EdbMnemonicMonitor():
             good_mnemonic_data.blocks = [0]
 
         if telemetry_type == "every_change":
-            self.find_all_changes(good_mnemonic_data, mnemonic['dependency'])
+            # Note that this adds good_mnemonic_data.every_change_values, which is not present
+            # in other modes, but will be needed for plotting
+            good_mnemonic_data = self.find_all_changes(good_mnemonic_data, mnemonic['dependency'])
 
         # If the filtered data contains enough entries, then proceed.
         if len(good_mnemonic_data.data) > 0:
