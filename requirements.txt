@@ -1,4 +1,4 @@
-asdf==2.8.1
+asdf==2.8.3
 astropy==4.3.1
 astroquery==0.4.3
 bandit==1.7.1
