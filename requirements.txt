@@ -1,6 +1,6 @@
 asdf==2.8.3
 astropy==5.0
-astroquery==0.4.3
+astroquery==0.4.5
 bandit==1.7.1
 bokeh==2.4.1
 codecov==2.1.12
