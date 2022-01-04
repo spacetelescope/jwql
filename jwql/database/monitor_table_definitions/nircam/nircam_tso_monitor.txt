@@ -1,0 +1,15 @@
+INSTRUMENT, string
+APERTURE, string
+FILTER, string
+DETECTOR, string
+OBSLABEL, string
+START_TIME_MJD, float
+END_TIME_MJD, float
+ACQ_FILE, string
+JIT_FILE, string
+WHTLT_FILE, string
+WHTLT_MJD, float_array_1d
+WHTLT_FLUX, float_array_1d
+OUT_OF_TRANSIT_MEDIAN_FLUX, float
+FILES_FOUND, integer
+RUN_MONITOR, bool
