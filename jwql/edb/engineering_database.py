@@ -45,16 +45,18 @@ Notes
 import calendar
 from collections import OrderedDict
 from datetime import datetime, timedelta
+import os
 import warnings
 
+from astropy.io import ascii
 from astropy.stats import sigma_clipped_stats
 from astropy.table import Table
 from astropy.time import Time
 import astropy.units as u
 from astroquery.mast import Mast
 from bokeh.embed import components
-from bokeh.models import BoxAnnotation, DatetimeTickFormatter
-from bokeh.plotting import figure, output_file, show
+from bokeh.models import BoxAnnotation, ColumnDataSource, DatetimeTickFormatter, HoverTool
+from bokeh.plotting import figure, output_file, show, save
 import numpy as np
 
 from jwst.lib.engdb_tools import ENGDB_Service
@@ -253,9 +255,18 @@ class EdbMnemonic:
         medians = []
         stdevs = []
         medtimes = []
-        for i, index in enumerate(self.blocks[0:-1]):
-            meanval, medianval, stdevval = sigma_clipped_stats(self.data["euvalues"][index:mnem_data.blocks[i+1]], sigma=sigma)
-            medtimes.append(calc_median_time(self.data["dates"][index:mnem_data.blocks[i+1]]))
+        if type(self.data["euvalues"].data[0]) not in [np.str_, str]:
+            for i, index in enumerate(self.blocks[0:-1]):
+                meanval, medianval, stdevval = sigma_clipped_stats(self.data["euvalues"].data[index:self.blocks[i+1]], sigma=sigma)
+                medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i+1]]))
+        else:
+            # If the data are strings, then set the mean to be the data value at the block index
+            for i, index in enumerate(self.blocks[0:-1]):
+                meanval = self.data["euvalues"].data[index]
+                medianval = meanval
+                stdevval = 0
+                medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i+1]]))
+
             #medtimes.append(np.median(self.data["dates"][index:mnem_data.blocks[i+1]]))
 
         #    OR:
@@ -358,7 +369,7 @@ class EdbMnemonic:
         # Adjust any block values to account for the interpolated data
         new_blocks = []
         if self.blocks is not None:
-            for index in self.blocks:
+            for index in self.blocks[0:-1]:
                 good = np.where(new_tab["dates"] >= self.data["dates"][index])[0]
 
                 if len(good) > 0:
@@ -394,14 +405,14 @@ class EdbMnemonic:
         """
 
 
-    def bokeh_plot(self, show_plot=False, save=False, out_dir='./', nominal_value=None, yellow_limits=None, red_limts=None):
+    def bokeh_plot(self, show_plot=False, savefig=False, out_dir='./', nominal_value=None, yellow_limits=None, red_limits=None):
         """Make basic bokeh plot showing value as a function of time.
         Paramters
         ---------
         show_plot : bool
             If True, show plot on screen rather than returning div and script
 
-        save : bool
+        savefig : bool
             If True, file is saved to html file
 
         out_dir : str
@@ -427,14 +438,36 @@ class EdbMnemonic:
         [div, script] : list
             List containing the div and js representations of figure.
         """
-        if save:
-            output_file(os.path.join(out_dir, f"telem_plot_{name}.html"))
 
-        fig = figure(tools='pan,box_zoom,reset,wheel_zoom,save,hover', x_axis_type='datetime',
+        source = ColumnDataSource(data={'x': self.data['dates'], 'y': self.data['euvalues']})
+
+        if savefig:
+            filename = os.path.join(out_dir, f"telem_plot_{self.mnemonic_identifier}.html")
+            print(f'\n\nSAVING HTML FILE TO: {filename}')
+
+        #HoverTool(tooltips=[('date', '@DateTime{%F}')],
+        #          formatters={'@DateTime': 'datetime'})
+
+        fig = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
                     title=self.mnemonic_identifier, x_axis_label='Time',
-                    y_axis_label=f'Value ({self.info["unit"]})')
-        fig.line(self.data['dates'], self.data['euvalues'], line_width=1, line_color='blue')
-        fig.circle(self.data['dates'], self.data['euvalues'], color='blue', alpha=0.5)
+                    y_axis_label=f'{self.info["unit"]}')
+        #data = fig.line(self.data['dates'], self.data['euvalues'], line_width=1, line_color='blue')
+        #fig.circle(self.data['dates'], self.data['euvalues'], color='blue', alpha=0.5)
+        data = fig.scatter(x='x', y='y', line_width=1, line_color='blue', source=source)
+        #fig.circle(x='x', y='y', color='blue', alpha=0.5, source=source)
+
+        #hover_tool = HoverTool(tooltips=[('count', '@data_points'),
+        #                                 ('mean', '@average'),
+        #                                 ('deviation', '@deviation'),
+        #                                ], mode='mouse', renderers=[data])
+
+        #hover_tool = HoverTool(tooltips=[
+        #    ('Value', '$y'),
+        #    ('Date', '$x'),
+        #], formatters = {"@x": "datetime"}) #, renderers=[line])
+
+        #hover_tool = HoverTool.formatters = {"@x": "datetime"}
+        #fig.tools.append(hover_tool)
 
         # If there is a nominal value provided, plot a dashed line for it
         if nominal_value is not None:
@@ -454,11 +487,34 @@ class EdbMnemonic:
                 )
         fig.xaxis.major_label_orientation = np.pi/4
 
+        hover_tool = HoverTool(tooltips=[('Value', '@y'),
+                                         ('Date', '@x')#,
+                                         #('Mean', ''),
+                                         #('Deviation', '@deviation'),
+                                        ], mode='mouse', renderers=[data])
+        hover_tool.formatters={'@x': 'datetime'}
+
+        fig.tools.append(hover_tool)
+
+        if savefig:
+            output_file(filename=filename, title=self.mnemonic_identifier)
+            save(fig)
+
         if show_plot:
-            show(p1)
+            show(fig)
         else:
-            script, div = components(p1)
+            script, div = components(fig)
             return [div, script]
+
+    def save_table(self, outname):
+        """Save the EdbMnemonic instance
+
+        Parameters
+        ----------
+        outname : str
+            Name of text file to save information into
+        """
+        ascii.write(self.data, outname, overwrite=True)
 
 
 def add_limit_boxes(fig, yellow=None, red=None):
@@ -482,29 +538,29 @@ def add_limit_boxes(fig, yellow=None, red=None):
         greater than the high value of yellow.
     """
     if yellow is not None:
-        green = BoxAnnotation(bottom=yellow_limits[0], top=yellow_limits[1], fill_color='chartreuse', fill_alpha=0.2)
+        green = BoxAnnotation(bottom=yellow[0], top=yellow[1], fill_color='chartreuse', fill_alpha=0.2)
         fig.add_layout(green)
         if red is not None:
-            yellow_high = BoxAnnotation(bottom=yellow_limits[1], top=red_limits[1], fill_color='gold', fill_alpha=0.2)
+            yellow_high = BoxAnnotation(bottom=yellow[1], top=red[1], fill_color='gold', fill_alpha=0.2)
             fig.add_layout(yellow_high)
-            yellow_low = BoxAnnotation(bottom=red_limits[0], top=yellow_limits[0], fill_color='gold', fill_alpha=0.2)
+            yellow_low = BoxAnnotation(bottom=red[0], top=yellow[0], fill_color='gold', fill_alpha=0.2)
             fig.add_layout(yellow_low)
-            red_high = BoxAnnotation(bottom=red_limits[1], top=red_limits[1]+100, fill_color='red', fill_alpha=0.1)
+            red_high = BoxAnnotation(bottom=red[1], top=red[1]+100, fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_high)
-            red_low = BoxAnnotation(bottom=red_limits[0]-100, top=red_limits[0], fill_color='red', fill_alpha=0.1)
+            red_low = BoxAnnotation(bottom=red[0]-100, top=red[0], fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_low)
         else:
-            yellow_high = BoxAnnotation(bottom=yellow_limits[1], top=yellow_limits[1] + 100, fill_color='gold', fill_alpha=0.2)
+            yellow_high = BoxAnnotation(bottom=yellow[1], top=yellow[1] + 100, fill_color='gold', fill_alpha=0.2)
             fig.add_layout(yellow_high)
-            yellow_low = BoxAnnotation(bottom=yellow_limits[0] - 100, top=yellow_limits[0], fill_color='gold', fill_alpha=0.2)
+            yellow_low = BoxAnnotation(bottom=yellow[0] - 100, top=yellow[0], fill_color='gold', fill_alpha=0.2)
             fig.add_layout(yellow_low)
     else:
         if red is not None:
-            green = BoxAnnotation(bottom=red_limits[0], top=red_limits[1], fill_color='chartreuse', fill_alpha=0.2)
+            green = BoxAnnotation(bottom=red[0], top=red[1], fill_color='chartreuse', fill_alpha=0.2)
             fig.add_layout(green)
-            red_high = BoxAnnotation(bottom=red_limits[1], top=red_limits[1]+100, fill_color='red', fill_alpha=0.1)
+            red_high = BoxAnnotation(bottom=red[1], top=red[1]+100, fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_high)
-            red_low = BoxAnnotation(bottom=red_limits[0]-100, top=red_limits[0], fill_color='red', fill_alpha=0.1)
+            red_low = BoxAnnotation(bottom=red[0]-100, top=red[0], fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_low)
     return fig
 

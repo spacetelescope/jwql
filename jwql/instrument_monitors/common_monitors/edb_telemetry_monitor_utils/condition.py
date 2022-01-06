@@ -51,6 +51,7 @@ Notes
 
 """
 from astropy.table import Table
+from copy import deepcopy  # only needed for development
 import numpy as np
 
 class condition:
@@ -104,16 +105,16 @@ class condition:
 
 
         ## Working example---
-        #mnemonic = {"MJD": np.arange(14), "data": np.array([12., 13., 13., 14, 12, 15, 13, 13, 13, 13, 10, 9, 13, 12])}
+        #mnemonic = {"dates": np.arange(14), "euvalues": np.array([12., 13., 13., 14, 12, 15, 13, 13, 13, 13, 10, 9, 13, 12])}
         #cond1_times = [(1., 5), (8, 16.)]
         #cond2_times = [(3., 6), (10, 14.)]
         #cond3_times = [(4., 12.)]
 
         # For each time tuple in each condition, find whether each element in mnemonic falls
         # between the starting and ending times
-        #tf1 = [((mnemonic["MJD"] >= t[0]) & (mnemonic["MJD"] <= t[1])) for t in cond1_times]
-        #tf2 = [((mnemonic["MJD"] >= t[0]) & (mnemonic["MJD"] <= t[1])) for t in cond2_times]
-        #tf3 = [((mnemonic["MJD"] >= t[0]) & (mnemonic["MJD"] <= t[1])) for t in cond3_times]
+        #tf1 = [((mnemonic["dates"] >= t[0]) & (mnemonic["dates"] <= t[1])) for t in cond1_times]
+        #tf2 = [((mnemonic["dates"] >= t[0]) & (mnemonic["dates"] <= t[1])) for t in cond2_times]
+        #tf3 = [((mnemonic["dates"] >= t[0]) & (mnemonic["dates"] <= t[1])) for t in cond3_times]
 
         # Now for each condition, combine the boolean arrays into a single array that describes
         # whether each element of mnemonic falls within one of the time intervals
@@ -128,40 +129,51 @@ class condition:
         # Now, how to we generalize this for arbirary numbers of time intervals for each condition???
 
 
+        # FOR DEVELOPMENT---------------
+        orig_mnem = deepcopy(mnemonic)
+        # FOR DEVELOPMENT---------------
+
+
         # Generalized code
 
         # 2D matrix to hold boolean values for all conditions
-        tf_matrix = np.zeros((len(self.cond_set), len(mnemonic["MJD"]))).astype(bool)
+        tf_matrix = np.zeros((len(self.cond_set), len(mnemonic["dates"]))).astype(bool)
 
         # Loop over conditions
         for i, cond in enumerate(self.cond_set):
             # Check if any of the time pairs include None, which indicates no good data
             if None in cond.time_pairs[0]:
-                return Table(names=('MJD', 'data')), None
+                return Table(names=('dates', 'euvalues')), None
 
             # Find whether each mnemonic time falls within each of the good time blocks
 
 
-            print(mnemonic["MJD"].data)
-            print(cond.time_pairs)
+            #print(mnemonic["dates"].data)
+            #print(cond.time_pairs)
             #print(condition_list.cond_set[i].time_pairs)
 
+            print(type(mnemonic))
+            print(mnemonic["dates"])
+            print(type(mnemonic["dates"]))
+            print(mnemonic["dates"].data)
 
-            tf_cond = [((mnemonic["MJD"].data >= times[0]) & (mnemonic["MJD"].data <= times[1])) for times in cond.time_pairs]
-            print(i)
-            print('tf_cond:', tf_cond)
+
+
+            tf_cond = [((mnemonic["dates"].data >= times[0]) & (mnemonic["dates"].data <= times[1])) for times in cond.time_pairs]
+            #print(i)
+            #print('tf_cond:', tf_cond)
             if len(tf_cond) > 1:
                 # If there are multiple blocks of good time pairs, combine them
                 # into a 2D array (rather than list)
                 tf_2d = np.zeros((len(tf_cond), len(tf_cond[1]))).astype(bool)
                 for index in range(len(tf_cond)):
                     tf_2d[index, :] = tf_cond[index]
-                print('tf_2d:', tf_2d)
+                #print('tf_2d:', tf_2d)
 
                 # Flatten the 2D boolean array. If the mnemonic's time falls within any of
                 # the good time pairs, it should be True here
                 tf_flat = np.any(tf_2d, axis=0)
-                print('tf_flat:', tf_flat)
+                #print('tf_flat:', tf_flat)
             elif len(tf_cond) == 1:
                 # If there is only one block of good times, then no need to create
                 # a 2D array and flatten
@@ -170,7 +182,7 @@ class condition:
                 print("uh oh. shouldn't be here.")
             # Create a 2D boolean matrix that will hold the T/F values for all conditions
             tf_matrix[i, :] = tf_flat
-            print('tf_matrix:', tf_matrix)
+            #print('tf_matrix:', tf_matrix)
 
         # Finally, if the mnemonic's time falls within a good time block for all of the
         # conditions, then it is considered good.
@@ -178,8 +190,8 @@ class condition:
 
         # Extract the good data and save it in an array
         good_data = Table()
-        good_data["MJD"] = mnemonic["MJD"][tf]
-        good_data["data"] = mnemonic["data"][tf]
+        good_data["dates"] = mnemonic["dates"][tf]
+        good_data["euvalues"] = mnemonic["euvalues"][tf]
         self.extracted_data = good_data
 
         # We need to keep data from distinct blocks of time separate, because we may
@@ -223,6 +235,43 @@ class condition:
             switch_to_false -= diff
             filtered_indexes.append(switch_to_true[i])
         self.block_indexes = filtered_indexes
+
+
+        # Add the index of the final element
+        self.block_indexes.append(len(good_data))
+
+        print("in condition:", len(good_data), len(mnemonic["dates"]))
+
+
+        print('BLOCK_INDEXES:', self.block_indexes)
+        print(len(mnemonic["dates"]))
+        #print(mnemonic["euvalues"].data)
+
+
+
+
+
+        if ((len(self.block_indexes) > 10) & (self.block_indexes[-1] == 7031)):
+            print(mnemonic.info)
+
+            print('tf: ')
+            for i in range(50):
+                print(i, tf[i])
+
+            print('switch to true)')
+            for i, t in enumerate(switch_to_true):
+                print(i, t)
+
+            print('switch to false)')
+            for i, f in enumerate(switch_to_false):
+                print(i, f)
+
+
+            for i in range(45):
+                print(i, mnemonic["euvalues"].data[i], orig_mnem["euvalues"].data[i])
+            #for i in range(45):
+            #    print(i, orig_mnem["euvalues"].data[i])
+
 
         #to_true_times = mnemonic["MJD"][switch_to_true]
         #to_false_times = mnemonic["MJD"][switch_to_false]
@@ -578,12 +627,6 @@ class relation():
         good_times = list(sorted(set(good_times)))
         bad_times = list(sorted(set(bad_times)))
 
-
-        print('in generate_time_pairs:')
-        print(good_times)
-        print(bad_times)
-
-
         # Take care of the easy cases, where all times are good or all are bad
         if len(bad_times) == 0:
             if len(good_times) > 0:
@@ -603,10 +646,6 @@ class relation():
         sort_idx = np.argsort(all_times)
         all_times = all_times[sort_idx]
 
-
-        print(all_times)
-
-
         # Create boolean arrays to match the time arrays. Combine in the same
         # way as the good and bad time lists above.
         good = [True] * len(good_times)
@@ -614,18 +653,11 @@ class relation():
         all_vals = np.array(good + bad)
         all_vals = all_vals[sort_idx]
 
-
-        print(all_vals)
-
         # Find the indexes where the value switches from one element to the next
         a_change_indexes = np.where(all_vals[:-1] != all_vals[1:])[0]
         change_indexes = a_change_indexes + 1
         change_indexes = np.insert(change_indexes, 0, 0)
         change_len = len(change_indexes) + 1
-
-
-        print(change_indexes)
-
 
         # Now create tuples of the start and end times where the values change
         # We need to know if the first element of the data is True or False,
@@ -646,18 +678,18 @@ class relation():
         for counti, strt in enumerate(change_indexes[start_idx:len(change_indexes):2]):
             i = counti * 2 + counter_delta
 
-            print(counti, start_idx, strt, i, len(change_indexes))
+            #print(counti, start_idx, strt, i, len(change_indexes))
 
             if i < (len(change_indexes) - 1):
-                print('initial', all_times[strt], all_times[change_indexes[i+1]-1])
+                #print('initial', all_times[strt], all_times[change_indexes[i+1]-1])
                 good_blocks.append((all_times[strt], all_times[change_indexes[i+1]-1]))
             else:
-                print('final',all_times[strt], all_times[-1])
+                #print('final',all_times[strt], all_times[-1])
                 good_blocks.append((all_times[strt], all_times[-1]))
 
 
 
-        print('good_blocks:',good_blocks)
+        #print('good_blocks:',good_blocks)
 
         return good_blocks
 
@@ -681,8 +713,8 @@ class equal(relation):
 
         self.mnemonic = mnemonic
         self.value = value
-        self.mnemonic["data"] = np.array(self.mnemonic["data"])  # check if this is needed, might already be array as returned by EDB
-        self.mnemonic["MJD"] = np.array(self.mnemonic["MJD"])    # check if this is needed, might already be array as returned by EDB
+        self.mnemonic["euvalues"] = np.array(self.mnemonic["euvalues"])  # check if this is needed, might already be array as returned by EDB
+        self.mnemonic["dates"] = np.array(self.mnemonic["dates"])    # check if this is needed, might already be array as returned by EDB
         self.time_pairs = self.cond_true_time()
 
     def cond_true_time(self):
@@ -694,10 +726,10 @@ class equal(relation):
             List of 2-tuples where each tuple contains the starting and
             ending times of a block of data that matches the condition
         """
-        good_points = np.where(self.mnemonic["data"] == self.value)[0]
-        bad_points = np.where(self.mnemonic["data"] != self.value)[0]
-        good_time_values = self.mnemonic["MJD"][good_points]
-        bad_time_values = self.mnemonic["MJD"][bad_points]
+        good_points = np.where(self.mnemonic["euvalues"] == self.value)[0]
+        bad_points = np.where(self.mnemonic["euvalues"] != self.value)[0]
+        good_time_values = self.mnemonic["dates"][good_points]
+        bad_time_values = self.mnemonic["dates"][bad_points]
         time_pairs = self.generate_time_pairs(good_time_values, bad_time_values)
         return time_pairs
 
@@ -731,10 +763,10 @@ class greater_than(relation):
             List of 2-tuples where each tuple contains the starting and
             ending times of a block of data that matches the condition
         """
-        good_points = np.where(self.mnemonic["data"] > self.value)[0]
-        bad_points = np.where(self.mnemonic["data"] <= self.value)[0]
-        good_time_values = self.mnemonic["MJD"][good_points]
-        bad_time_values = self.mnemonic["MJD"][bad_points]
+        good_points = np.where(self.mnemonic["euvalues"] > self.value)[0]
+        bad_points = np.where(self.mnemonic["euvalues"] <= self.value)[0]
+        good_time_values = self.mnemonic["dates"][good_points]
+        bad_time_values = self.mnemonic["dates"][bad_points]
         time_pairs = self.generate_time_pairs(good_time_values, bad_time_values)
         return time_pairs
 
@@ -766,10 +798,10 @@ class less_than(relation):
             List of 2-tuples where each tuple contains the starting and
             ending times of a block of data that matches the condition
         """
-        good_points = np.where(self.mnemonic["data"] < self.value)[0]
-        bad_points = np.where(self.mnemonic["data"] >= self.value)[0]
-        good_time_values = self.mnemonic["MJD"][good_points]
-        bad_time_values = self.mnemonic["MJD"][bad_points]
+        good_points = np.where(self.mnemonic["euvalues"] < self.value)[0]
+        bad_points = np.where(self.mnemonic["euvalues"] >= self.value)[0]
+        good_time_values = self.mnemonic["dates"][good_points]
+        bad_time_values = self.mnemonic["dates"][bad_points]
         time_pairs = self.generate_time_pairs(good_time_values, bad_time_values)
         return time_pairs
 
@@ -1020,9 +1052,29 @@ class relation_test():
     def __init__(self, mnemonic, rel, value):
         self.time_pairs = []
         self.mnemonic = mnemonic
-        self.rel = rel
         self.value = value
+
+        if rel == "=":
+            rel = "=="
+        self.rel = rel
+
         self.time_pairs = self.cond_true_time()
+
+        #print("\n\n\nTIME_PAIRS:")
+        #print(len(self.time_pairs))
+        #print(self.time_pairs)
+
+        if len(self.time_pairs) > 1:
+            goods1 = np.where(self.mnemonic["dates"] == self.time_pairs[0][0])[0]
+            goode1 = np.where(self.mnemonic["dates"] == self.time_pairs[0][1])[0]
+            goods2 = np.where(self.mnemonic["dates"] == self.time_pairs[1][0])[0]
+            goode2 = np.where(self.mnemonic["dates"] == self.time_pairs[1][1])[0]
+            #print(self.mnemonic["dates"].data[goods1], self.mnemonic["dates"].data[goode1], self.mnemonic["euvalues"].data[goods1], self.mnemonic["euvalues"].data[goode1])
+            #print(self.mnemonic["dates"].data[goods2], self.mnemonic["dates"].data[goode2], self.mnemonic["euvalues"].data[goods2], self.mnemonic["euvalues"].data[goode2])
+            #print(self.mnemonic["dates"].data[goode1+1], self.mnemonic["euvalues"].data[goode1+1])
+
+
+
 
     def cond_true_time(self):
         """Find all times whose corresponding values are less than a
@@ -1049,10 +1101,30 @@ class relation_test():
         else:
             raise ValueError(f'Unrecognized relation: {self.rel}')
 
-        good_points = eval(f'np.where(self.mnemonic["data"] {self.rel} self.value)[0]')
-        bad_points = eval(f'np.where(self.mnemonic["data"] {opp} self.value)[0]')
-        good_time_values = self.mnemonic["MJD"][good_points]
-        bad_time_values = self.mnemonic["MJD"][bad_points]
+        good_points = eval(f'np.where(self.mnemonic["euvalues"] {self.rel} self.value)[0]')
+        bad_points = eval(f'np.where(self.mnemonic["euvalues"] {opp} self.value)[0]')
+
+        #print('In cond_true_time in relation_test:')
+        #print(self.rel, self.value)
+        #print(self.mnemonic["euvalues"])
+
+
+
+
+
+
+
+        good_time_values = self.mnemonic["dates"][good_points]
+        bad_time_values = self.mnemonic["dates"][bad_points]
+
+        #try:
+        #    print('CHECK:')
+        #    print(self.mnemonic["dates"].data[2571:2574])
+        #    print(self.mnemonic["euvalues"].data[2571:2574])
+        #except:
+        #    pass
+
+
         time_pairs = self.generate_time_pairs(good_time_values, bad_time_values)
         return time_pairs
 
@@ -1091,14 +1163,22 @@ class relation_test():
         # with an eye towards making it faster. Probably should end up doing some
         # tests to make sure that it really is faster.
         #add check to be sure no time is in both good and bad lists?
+
+        #print('GOOD_TIMES:')
+        #print(len(good_times))
+        #print(good_times[2571:2574])
+        #print('BAD_TIMES:')
+        #print(bad_times.data[0:10])
+
+
         good_times = list(sorted(set(good_times)))
         bad_times = list(sorted(set(bad_times)))
 
 
-        print('in generate_time_pairs:')
-        print(good_times)
-        print(bad_times)
-
+        #print('in generate_time_pairs:')
+        #print(good_times[0:10])
+        #print('\n\n\n')
+        #print(bad_times[0:10])
 
         # Take care of the easy cases, where all times are good or all are bad
         if len(bad_times) == 0:
@@ -1120,7 +1200,8 @@ class relation_test():
         all_times = all_times[sort_idx]
 
 
-        print(all_times)
+        #print('ALL_TIMES')
+        #print(all_times)
 
 
         # Create boolean arrays to match the time arrays. Combine in the same
@@ -1130,8 +1211,8 @@ class relation_test():
         all_vals = np.array(good + bad)
         all_vals = all_vals[sort_idx]
 
-
-        print(all_vals)
+        #print('ALL_VALS:')
+        #print(all_vals)
 
         # Find the indexes where the value switches from one element to the next
         a_change_indexes = np.where(all_vals[:-1] != all_vals[1:])[0]
@@ -1139,8 +1220,13 @@ class relation_test():
         change_indexes = np.insert(change_indexes, 0, 0)
         change_len = len(change_indexes) + 1
 
+        #print('CHANGE_INDEXES:')
+        #print(change_indexes)
 
-        print(change_indexes)
+        #print(all_vals[change_indexes[1]-1:change_indexes[1]+2])
+        #print(all_times[change_indexes[1]-1:change_indexes[1]+2])
+        #print(good_times[2571:2574])
+        #print(bad_times[0:10])
 
 
         # Now create tuples of the start and end times where the values change
@@ -1165,15 +1251,16 @@ class relation_test():
             print(counti, start_idx, strt, i, len(change_indexes))
 
             if i < (len(change_indexes) - 1):
-                print('initial', all_times[strt], all_times[change_indexes[i+1]-1])
+                #print('initial', all_times[strt], all_times[change_indexes[i+1]-1])
                 good_blocks.append((all_times[strt], all_times[change_indexes[i+1]-1]))
             else:
-                print('final',all_times[strt], all_times[-1])
+                #print('final',all_times[strt], all_times[-1])
                 good_blocks.append((all_times[strt], all_times[-1]))
 
 
 
-        print('good_blocks:',good_blocks)
+        #print('good_blocks:',good_blocks)
+
 
         return good_blocks
 
