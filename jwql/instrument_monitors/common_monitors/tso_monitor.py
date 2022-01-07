@@ -49,8 +49,13 @@ import os
 from astropy.io import ascii, fits
 from astropy.modeling import models
 from astropy.time import Time
+from astropy.timeseries import LombScargle
+from jwst import datamodels
 import numpy as np
 from pysiaf import Siaf
+from scipy.interpolate import interp1d
+from scipy.ndimage import gaussian_filter1d
+from scipy.ndimage import median_filter
 from sqlalchemy import func
 from sqlalchemy.sql.expression import and_
 
@@ -70,10 +75,10 @@ from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesyst
 class tsoMonitor():
     """Class for executing the time series observaiton monitor.
     This class will search for new (since the previous instance of the
-    class) *photom.fits, *whtlt.ecsv, and *jit.fits files. Monitor will create plots depicting normalized 
-    flux vs time, surface plot depicting flux (using colors) as functions of integration number 
-    and wavelength, two plots depicting x and y positions vs time, plot of drift/jitter 
-    estimates vs Median absolute deviation (MAD) of 1D flux, and 2D image of target. Results 
+    class) *photom.fits, *whtlt.ecsv, and *jit.fits files. Monitor will create plots depicting normalized
+    flux vs time, surface plot depicting flux (using colors) as functions of integration number
+    and wavelength, two plots depicting x and y positions vs time, plot of drift/jitter
+    estimates vs Median absolute deviation (MAD) of 1D flux, and 2D image of target. Results
     are all saved to database tables.
 
     Parameters
@@ -96,40 +101,173 @@ class tsoMonitor():
         """Initialize an instance of the ``tsoMonitor`` class."""
 
 
+    def compute_out_of_transit_flux(self):
+        """Calculate the median out of transit flux.
+        """
+        # Extract very last times (corresponding to last segment):
+        uncal_data = datamodels.open(self.uncal_file)
+        times = uncal_data.int_times['int_mid_BJD_TDB'][-len(self.whtlt_flux):]
+
+        # Convert to seconds since first integration on this last segment:
+        times_seconds = (times - times[0]) * 24 * 3600.
+
+
     def identify_tables(self):
         """Determine which database tables to use for a run of the dark
         monitor
         """
+
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
         self.query_table = eval('{}TsoMonitor'.format(mixed_case_name))
 
 
-    def most_recent_search(self):
-        """Query the query history database and return the information
-        on the most recent query for the given ``aperture_name`` where
-        the dark monitor was executed.
+    def plot_acq_image(self):
+        """Plot 2D acq image.
+        """
+        print('plotting stuff here')
+
+
+    def plot_spectrum_trace_and_jitter(self):
+        """Plot the cross-correlation of the spectrum trace and jitter in the dispersion and x-dispersion directions.
+        """
+        print('plotting stuff here')
+
+
+    def plot_whitelight_curve(self):
+        """Plot whitelight curve (band integrated light flux) vs wavelength and flux normalized to the median out-of-transit
+        flux vs time.
+        """
+        print('plotting stuff here')
+
+
+    def plot_spectroscopic_lightcurves(self):
+        """A surface plot of all spectral light curves: flux of each spectral light curve vs data point number
+        with flux color bar.
+        """
+        print('plotting stuff here')
+
+
+    def plot_jitter(self):
+        """Plot V1, V2, V3 jitter vs time.
+        """
+        print('plotting stuff here')
+
+
+    def trace_spectrum(self, image, dqflags, xstart, ystart, profile_radius=20, nsigma = 100, gauss_filter_width=10, xend=None, y_tolerance = 5, verbose = False):
+        """
+        Function that non-parametrically traces NIRISS/SOSS spectra. First, to get the centroid at xstart and 
+        ystart, it convolves the spatial profile with a gaussian filter, finding its peak through usual flux-weighted 
+        centroiding. Next, this centroid is used as a starting point to find the centroid of the left column through 
+        the same algorithm. 
+        
+        Parameters
+        ----------
+
+        image: numpy.array
+            The image that wants to be traced.
+        dqflags: ndarray
+            The data quality flags for each pixel in the image. Only pixels with DQ flags of zero will be used 
+            in the centroiding.
+        xstart: float
+            The x-position (column) on which the tracing algorithm will be started
+        ystart: float
+            The estimated y-position (row) of the center of the trace. An estimate within 10-20 pixels is enough.
+        profile_radius: float
+            Expected radius of the profile measured from its center. Only this region will be used to estimate 
+            the centroids of the spectrum.
+        nsigma : float
+            Median filters are applied to each column in search of outliers. This number defines how many n-sigma above the noise level 
+            the residuals of the median filter and the image should be considered outliers.
+        gauss_filter_width: float
+            Width of the gaussian filter used to perform the centroiding of the first column
+        xend: int
+            x-position at which tracing ends. If none, trace all the columns left to xstart.
+        y_tolerance: float
+            When tracing, if the difference between the two difference centroids at two contiguous columns is larger than this, 
+            then assume tracing failed (e.g., cosmic ray).
+        verbose: boolean
+            If True, print error messages.
+
         Returns
         -------
-        query_result : float
-            Date (in MJD) of the ending range of the previous MAST query
-            where the dark monitor was run.
+
+        x : numpy.array
+            Columns at which the centroid is calculated.
+        y : numpy.array
+            Calculated centroids.
         """
-        query = session.query(self.query_table).filter(self.query_table.run_monitor == True,
-                                                       self.query_table.instrument == self.instrument)
+        def get_mad_sigma(x):
 
-        dates = np.zeros(0)
-        for instance in query:
-            dates = np.append(dates, instance.end_time_mjd)
+            x_median = np.nanmedian(x)
 
-        query_count = len(dates)
-        if query_count == 0:
-            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
-            logging.info(('\tNo query history for {} with {}. Beginning search date will be set to {}.'
-                         .format(self.aperture, self.readpatt, query_result)))
+            return 1.4826 * np.nanmedian( np.abs(x - x_median) )
+
+        # Define x-axis:
+        if xend is not None:
+            x = np.arange(xend, xstart + 1)
         else:
-            query_result = np.max(dates)
+            x = np.arange(0, xstart + 1)
+            
+        # Define y-axis:
+        y = np.arange(image.shape[0])
+        
+        # Define status of good/bad for each centroid:
+        status = np.full(len(x), True, dtype=bool)
+        
+        # Define array that will save centroids at each x:
+        ycentroids = np.zeros(len(x))
+        
+        for i in range(len(x))[::-1]:
+            xcurrent = x[i]
 
-        return query_result
+            # Perform median filter to identify nasty (i.e., cosmic rays) outliers in the column:
+            mf = median_filter(image[:,xcurrent], size = 5)
+            residuals = mf - image[:,xcurrent]
+            mad_sigma = get_mad_sigma(residuals)
+            column_nsigma = np.abs(residuals) / mad_sigma
+            
+            # Extract data-quality flags for current column; index good pixels --- mask nans as well:
+            idx_good = np.where((dqflags[:, xcurrent] == 0) & (~np.isnan(image[:, xcurrent]) & (column_nsigma < nsigma)))[0]        
+            idx_bad = np.where(~(dqflags[:, xcurrent] == 0) & (~np.isnan(image[:, xcurrent]) & (column_nsigma < nsigma)))[0]
+            
+            if len(idx_good) > 0:
+
+                # Replace bad values with the ones in the median filter:
+                column_data = np.copy(image[:, xcurrent])
+                column_data[idx_bad] = mf[idx_bad]
+
+                # Convolve column with a gaussian filter; remove median before convolving:
+                filtered_column = gaussian_filter1d(column_data - \
+                                                    np.median(column_data), gauss_filter_width)
+        
+                # Find centroid within profile_radius pixels of the initial guess:
+                idx = np.where(np.abs(y - ystart) < profile_radius)[0]
+                ycentroids[i] = np.sum(y[idx] * filtered_column[idx]) / np.sum(filtered_column[idx])
+
+                # Get the difference of the current centroid with the previous one (if any):
+                if xcurrent != x[-1]:
+
+                    previous_centroid = ycentroids[i + 1]
+                    difference = np.abs(previous_centroid - ycentroids[i])
+
+                    if (difference > y_tolerance):
+
+                        if verbose:
+                            print('Tracing failed at column',xcurrent,'; estimated centroid:',ycentroids[i],', previous one:',previous_centroid,'> than tolerance: ',y_tolerance,\
+                                '. Replacing with closest good trace position.')
+
+                        ycentroids[i] = previous_centroid
+                        
+
+                ystart = ycentroids[i]
+            else:
+                print(xcurrent,'is a bad column. Setting to previous centroid:')
+                ycentroids[i] = previous_centroid
+                status[i] = True
+        
+        # Return only good centroids:
+        idx_output = np.where(status)[0]
+        return x[idx_output], ycentroids[idx_output]
 
 
     @log_fail
@@ -153,21 +291,37 @@ class tsoMonitor():
             # Identify which database tables to use
             self.identify_tables()
 
-            self.query_start = self.most_recent_search()
+            self.query_start =  session.query(self.query_table).filter(func.max(self.query_table.end_time_mjd),
+                                                self.query_table.instrument == self.instrument)
 
-            new_files = self.query_tso_observations(instrument, self.query_start, self.query_end)
+            new_entries = self.query_tso_observations(instrument, self.query_start, self.query_end)
+
+            rootnames = list(set([row['fileSetName'] for row in new_entries]))
+
+            monitor_file_suffix = ('photom.fits', 'acq.fits', 'jit.fits', 'whtlt.ecsv')
+
 
             # Update the query history
             new_entry = {'instrument': instrument,
-                        'start_time_mjd': self.query_start,
-                        'end_time_mjd': self.query_end,
-                        'files_found': len(new_entries),
-                        'run_monitor': monitor_run,
-                        'entry_date': datetime.datetime.now()}
-            self.query_table.__table__.insert().execute(new_entry)
-            logging.info('\tUpdated the query history table')
+                         'aperture': self.aperture,
+                         'filter': self.filter,
+                         'detector': self.detector,
+                         'obslabel': self.obslabel,
+                         'start_time_mjd': self.query_start,
+                         'end_time_mjd': self.query_end,
+                         'photom_file': self.photom_file,
+                         'acq_file': self.acq_file,
+                         'jit_file': self.jit_file,
+                         'whtlt_file': self.whtlt_file,
+                         'whtlt_mjd': self.whtlt_mjd,
+                         'whtlt_flux':self.whtlt_flux,
+                         'out_of_transit_median_flux': self.out_of_transit_median_flux,
+                         'entry_date': datetime.datetime.now()}
 
-        logging.info('Dark Monitor completed successfully.')
+            self.query_table.__table__.insert().execute(new_entry)
+            logging.info('\tUpdated the tso monitor table')
+
+        logging.info('TSO Monitor completed successfully.')
 
 
     def query_tso_observations(self, instrument, query_start, query_end):
