@@ -240,35 +240,35 @@ class condition:
         # Add the index of the final element
         self.block_indexes.append(len(good_data))
 
-        print("in condition:", len(good_data), len(mnemonic["dates"]))
+        #print("in condition:", len(good_data), len(mnemonic["dates"]))
 
 
-        print('BLOCK_INDEXES:', self.block_indexes)
-        print(len(mnemonic["dates"]))
+        #print('BLOCK_INDEXES:', self.block_indexes)
+        #print(len(mnemonic["dates"]))
         #print(mnemonic["euvalues"].data)
 
 
 
 
 
-        if ((len(self.block_indexes) > 10) & (self.block_indexes[-1] == 7031)):
-            print(mnemonic.info)
+        #if ((len(self.block_indexes) > 10) & (self.block_indexes[-1] == 7031)):
+        #    print(mnemonic.info)
 
-            print('tf: ')
-            for i in range(50):
-                print(i, tf[i])
+        #    print('tf: ')
+        #    for i in range(50):
+        #        print(i, tf[i])
 
-            print('switch to true)')
-            for i, t in enumerate(switch_to_true):
-                print(i, t)
+        #    print('switch to true)')
+        #    for i, t in enumerate(switch_to_true):
+        #        print(i, t)
 
-            print('switch to false)')
-            for i, f in enumerate(switch_to_false):
-                print(i, f)
+        #    print('switch to false)')
+        #    for i, f in enumerate(switch_to_false):
+        #        print(i, f)
 
 
-            for i in range(45):
-                print(i, mnemonic["euvalues"].data[i], orig_mnem["euvalues"].data[i])
+        #    for i in range(45):
+        #        print(i, mnemonic["euvalues"].data[i], orig_mnem["euvalues"].data[i])
             #for i in range(45):
             #    print(i, orig_mnem["euvalues"].data[i])
 
@@ -863,26 +863,26 @@ def extract_data(condition_list, mnemonic):
         # Find whether each mnemonic time falls within each of the good time blocks
 
 
-        print(mnemonic["MJD"].data)
-        print(cond.time_pairs)
+        #print(mnemonic["MJD"].data)
+        #print(cond.time_pairs)
         #print(condition_list.cond_set[i].time_pairs)
 
 
         tf_cond = [((mnemonic["MJD"].data >= times[0]) & (mnemonic["MJD"].data <= times[1])) for times in cond.time_pairs]
-        print(i)
-        print('tf_cond:', tf_cond)
+        #print(i)
+        #print('tf_cond:', tf_cond)
         if len(tf_cond) > 1:
             # If there are multiple blocks of good time pairs, combine them
             # into a 2D array (rather than list)
             tf_2d = np.zeros((len(tf_cond), len(tf_cond[1]))).astype(bool)
             for index in range(len(tf_cond)):
                 tf_2d[index, :] = tf_cond[index]
-            print('tf_2d:', tf_2d)
+            #print('tf_2d:', tf_2d)
 
             # Flatten the 2D boolean array. If the mnemonic's time falls within any of
             # the good time pairs, it should be True here
             tf_flat = np.any(tf_2d, axis=0)
-            print('tf_flat:', tf_flat)
+            #print('tf_flat:', tf_flat)
         elif len(tf_cond) == 1:
             # If there is only one block of good times, then no need to create
             # a 2D array and flatten
@@ -891,7 +891,7 @@ def extract_data(condition_list, mnemonic):
             print("uh oh. shouldn't be here.")
         # Create a 2D boolean matrix that will hold the T/F values for all conditions
         tf_matrix[i, :] = tf_flat
-        print('tf_matrix:', tf_matrix)
+        #print('tf_matrix:', tf_matrix)
 
     # Finally, if the mnemonic's time falls within a good time block for all of the
     # conditions, then it is considered good.
@@ -1248,7 +1248,7 @@ class relation_test():
         for counti, strt in enumerate(change_indexes[start_idx:len(change_indexes):2]):
             i = counti * 2 + counter_delta
 
-            print(counti, start_idx, strt, i, len(change_indexes))
+            #print(counti, start_idx, strt, i, len(change_indexes))
 
             if i < (len(change_indexes) - 1):
                 #print('initial', all_times[strt], all_times[change_indexes[i+1]-1])

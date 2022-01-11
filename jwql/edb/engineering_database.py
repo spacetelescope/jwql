@@ -69,7 +69,7 @@ MAST_EDB_DICTIONARY_SERVICE = 'Mast.JwstEdb.Dictionary'
 class EdbMnemonic:
     """Class to hold and manipulate results of DMS EngDB queries."""
 
-    def __init__(self, mnemonic_identifier, start_time, end_time, data, meta, info, blocks=None):
+    def __init__(self, mnemonic_identifier, start_time, end_time, data, meta, info, blocks=[None]):
         """Populate attributes.
 
         Parameters
@@ -163,17 +163,17 @@ class EdbMnemonic:
 
         # Shift the block values for the later instance to account for any removed
         # duplicate rows
-        if late_blocks is not None:
+        if late_blocks[0] is not None:
             new_late_blocks = late_blocks - overlap_len
-            if early_blocks is None:
+            if early_blocks[0] is None:
                 new_blocks = new_late_blocks
             else:
                 new_blocks = np.append(early_blocks, new_late_blocks)
         else:
-            if early_blocks is not None:
+            if early_blocks[0] is not None:
                 new_blocks = early_blocks
             else:
-                new_blocks = None
+                new_blocks = [None]
 
         new_data = Table([unique_dates, unique_data], names=('dates', 'euvalues'))
         new_obj = EdbMnemonic(self.info['tlmMnemonic'], self.data_start_time, self.data_end_time,
@@ -332,6 +332,9 @@ class EdbMnemonic:
         self.stdev = devs
         self.median_times = times
 
+
+        print('MEDIAN_TIMES:', self.median_times)
+
     def full_stats(self, sigma=3):
         """Calculate the mean/median/stdev of the data
 
@@ -405,7 +408,8 @@ class EdbMnemonic:
         """
 
 
-    def bokeh_plot(self, show_plot=False, savefig=False, out_dir='./', nominal_value=None, yellow_limits=None, red_limits=None):
+    def bokeh_plot(self, show_plot=False, savefig=False, out_dir='./', nominal_value=None, yellow_limits=None,
+                   red_limits=None, xrange=(None, None), yrange=(None, None)):
         """Make basic bokeh plot showing value as a function of time.
         Paramters
         ---------
@@ -433,6 +437,12 @@ class EdbMnemonic:
             is considered worse than in the yellow region. If provided, the area of the plot outside
             of these two values will have a red background.
 
+        xrange : tuple
+            Tuple of min, max datetime values to use as the plot range in the x direction.
+
+        yrange : tuple
+            Tuple of min, max datetime values to use as the plot range in the y direction.
+
         Returns
         -------
         [div, script] : list
@@ -442,15 +452,15 @@ class EdbMnemonic:
         source = ColumnDataSource(data={'x': self.data['dates'], 'y': self.data['euvalues']})
 
         if savefig:
-            filename = os.path.join(out_dir, f"telem_plot_{self.mnemonic_identifier}.html")
+            filename = os.path.join(out_dir, f"telem_plot_{self.mnemonic_identifier.replace(' ','_')}.html")
             print(f'\n\nSAVING HTML FILE TO: {filename}')
 
         #HoverTool(tooltips=[('date', '@DateTime{%F}')],
         #          formatters={'@DateTime': 'datetime'})
 
         fig = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
-                    title=self.mnemonic_identifier, x_axis_label='Time',
-                    y_axis_label=f'{self.info["unit"]}')
+                     title=self.mnemonic_identifier, x_axis_label='Time',
+                     y_axis_label=f'{self.info["unit"]}')
         #data = fig.line(self.data['dates'], self.data['euvalues'], line_width=1, line_color='blue')
         #fig.circle(self.data['dates'], self.data['euvalues'], color='blue', alpha=0.5)
         data = fig.scatter(x='x', y='y', line_width=1, line_color='blue', source=source)
@@ -495,6 +505,16 @@ class EdbMnemonic:
         hover_tool.formatters={'@x': 'datetime'}
 
         fig.tools.append(hover_tool)
+
+        # Force the axes' range if requested
+        if xrange[0] is not None:
+            fig.x_range.start = xrange[0].timestamp()*1000.
+        if xrange[1] is not None:
+            fig.x_range.end = xrange[1].timestamp()*1000.
+        if yrange[0] is not None:
+            fig.y_range.start = yrange[0].timestamp()*1000.
+        if yrange[1] is not None:
+            fig.y_range.end = yrange[1].timestamp()*1000.
 
         if savefig:
             output_file(filename=filename, title=self.mnemonic_identifier)
