@@ -17,12 +17,16 @@ import astropy.units as u
 from bokeh.models import BoxAnnotation, ColumnDataSource, DatetimeTickFormatter, HoverTool
 from bokeh.plotting import figure, output_file, save, show
 from bokeh.palettes import Turbo256
-
-
-#from jwql.database.database_interface import NIRCamEDBDailyStats, NIRISSEDBDailyStats, \
-#                                             MIRIEDBDailyStats, FGSEDBDailyStats, \
-#                                             NIRSpecDBDailyStats
-
+from jwql.database.database_interface import NIRCamEDBDailyStats, NIRCamEDBBlockStats, \
+                                             NIRCamEDBTimeStats, NIRCamEDBEveryChangeStats, \
+                                             NIRISSEDBDailyStats, NIRISSEDBBlockStats, \
+                                             NIRISSEDBTimeStats, NIRISSEDBEveryChangeStats, \
+                                             MIRIEDBDailyStats, MIRIEDBBlockStats, \
+                                             MIRIEDBTimeStats, MIRIEDBEveryChangeStats, \
+                                             FGSEDBDailyStats, FGSEDBBlockStats, \
+                                             FGSEDBTimeStats, FGSEDBEveryChangeStats, \
+                                             NIRSpecEDBDailyStats, NIRSpecEDBBlockStats, \
+                                             NIRSpecEDBTimeStats, NIRSpecEDBEveryChangeStats
 from jwql.edb import engineering_database as ed
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import condition
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils
