@@ -126,9 +126,16 @@ class EdbMnemonic:
             Instance to be added to the current instance
         """
         # Do not combine two instances of different mnemonics
-        if self.info['tlmMnemonic'] != mnem.info['tlmMnemonic']:
+        #if self.info['tlmMnemonic'] != mnem.info['tlmMnemonic']:
+        if self.mnemonic_identifier != self.mnemonic_identifier:
             raise ValueError((f'Unable to concatenate EdbMnemonic instances for {self.info["tlmMnemonic"]} '
                               'and {mnem.info["tlmMnemonic"]}.'))
+
+        # Case where one instance has an empty data table
+        if len(self.data["dates"]) == 0:
+            return mnem
+        if len(mnem.data["dates"]) == 0:
+            return self
 
         if np.min(self.data["dates"]) < np.min(mnem.data["dates"]):
             early_dates = self.data["dates"].data
@@ -176,7 +183,7 @@ class EdbMnemonic:
                 new_blocks = [None]
 
         new_data = Table([unique_dates, unique_data], names=('dates', 'euvalues'))
-        new_obj = EdbMnemonic(self.info['tlmMnemonic'], self.data_start_time, self.data_end_time,
+        new_obj = EdbMnemonic(self.mnemonic_identifier, self.data_start_time, self.data_end_time,
                               new_data, self.meta, self.info, blocks=new_blocks)
         return new_obj
 
@@ -226,13 +233,16 @@ class EdbMnemonic:
         new_tab["dates"] = common_dates
         new_tab["euvalues"] = self_data["euvalues"] * mnem_data["euvalues"]
 
-        new_obj = EdbMnemonic(self.info['tlmMnemonic'], self.requested_start_time, self.requested_end_time,
+        new_obj = EdbMnemonic(self.mnemonic_identifier, self.requested_start_time, self.requested_end_time,
                               new_tab, self.meta, self.info, blocks=use_blocks)
 
-        combined_unit = (u.Unit(self.info['unit']) * u.Unit(mnem.info['unit'])).compose()[0]
-        new_obj.info['unit'] = f'{combined_unit}'
-        new_obj.info['tlmMnemonic'] = f'{self.info["tlmMnemonic"]} * {mnem.info["tlmMnemonic"]}'
-        new_obj.info['description'] = f'({self.info["description"]}) * ({mnem.info["description"]})'
+        try:
+            combined_unit = (u.Unit(self.info['unit']) * u.Unit(mnem.info['unit'])).compose()[0]
+            new_obj.info['unit'] = f'{combined_unit}'
+            new_obj.info['tlmMnemonic'] = f'{self.info["tlmMnemonic"]} * {mnem.info["tlmMnemonic"]}'
+            new_obj.info['description'] = f'({self.info["description"]}) * ({mnem.info["description"]})'
+        except KeyError:
+            pass
         return new_obj
 
     def __str__(self):
@@ -259,6 +269,9 @@ class EdbMnemonic:
             for i, index in enumerate(self.blocks[0:-1]):
                 meanval, medianval, stdevval = sigma_clipped_stats(self.data["euvalues"].data[index:self.blocks[i+1]], sigma=sigma)
                 medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i+1]]))
+                means.append(meanval)
+                medians.append(medianval)
+                stdevs.append(stdevval)
         else:
             # If the data are strings, then set the mean to be the data value at the block index
             for i, index in enumerate(self.blocks[0:-1]):
@@ -275,13 +288,13 @@ class EdbMnemonic:
         #    meanval, medianval, stdevval = sigma_clipped_stats(mnem_data.data["data"][good], sigma=sigma)
         #    medtimes.append(np.median(mnem_data.data["MJD"][good]))
 
-            means.append(meanval)
-            medians.append(medianval)
-            stdevs.append(stdevval)
+                means.append(meanval)
+                medians.append(medianval)
+                stdevs.append(stdevval)
         self.mean = means
         self.median = medians
         self.stdev = stdevs
-        self.median_time = medtimes
+        self.median_times = medtimes
 
     def daily_stats(self, sigma=3):
         """Calculate the statistics for each day in the data
@@ -455,29 +468,12 @@ class EdbMnemonic:
             filename = os.path.join(out_dir, f"telem_plot_{self.mnemonic_identifier.replace(' ','_')}.html")
             print(f'\n\nSAVING HTML FILE TO: {filename}')
 
-        #HoverTool(tooltips=[('date', '@DateTime{%F}')],
-        #          formatters={'@DateTime': 'datetime'})
-
         fig = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
                      title=self.mnemonic_identifier, x_axis_label='Time',
                      y_axis_label=f'{self.info["unit"]}')
         #data = fig.line(self.data['dates'], self.data['euvalues'], line_width=1, line_color='blue')
         #fig.circle(self.data['dates'], self.data['euvalues'], color='blue', alpha=0.5)
         data = fig.scatter(x='x', y='y', line_width=1, line_color='blue', source=source)
-        #fig.circle(x='x', y='y', color='blue', alpha=0.5, source=source)
-
-        #hover_tool = HoverTool(tooltips=[('count', '@data_points'),
-        #                                 ('mean', '@average'),
-        #                                 ('deviation', '@deviation'),
-        #                                ], mode='mouse', renderers=[data])
-
-        #hover_tool = HoverTool(tooltips=[
-        #    ('Value', '$y'),
-        #    ('Date', '$x'),
-        #], formatters = {"@x": "datetime"}) #, renderers=[line])
-
-        #hover_tool = HoverTool.formatters = {"@x": "datetime"}
-        #fig.tools.append(hover_tool)
 
         # If there is a nominal value provided, plot a dashed line for it
         if nominal_value is not None:
@@ -498,9 +494,7 @@ class EdbMnemonic:
         fig.xaxis.major_label_orientation = np.pi/4
 
         hover_tool = HoverTool(tooltips=[('Value', '@y'),
-                                         ('Date', '@x')#,
-                                         #('Mean', ''),
-                                         #('Deviation', '@deviation'),
+                                         ('Date', '@x{%d %b %Y %H:%M:%S}')
                                         ], mode='mouse', renderers=[data])
         hover_tool.formatters={'@x': 'datetime'}
 

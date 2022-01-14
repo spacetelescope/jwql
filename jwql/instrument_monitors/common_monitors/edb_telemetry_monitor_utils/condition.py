@@ -139,6 +139,14 @@ class condition:
         # 2D matrix to hold boolean values for all conditions
         tf_matrix = np.zeros((len(self.cond_set), len(mnemonic["dates"]))).astype(bool)
 
+
+
+        print('length of self.cond_set:')
+        print(len(self.cond_set))
+
+
+
+
         # Loop over conditions
         for i, cond in enumerate(self.cond_set):
             # Check if any of the time pairs include None, which indicates no good data
@@ -152,10 +160,10 @@ class condition:
             #print(cond.time_pairs)
             #print(condition_list.cond_set[i].time_pairs)
 
-            print(type(mnemonic))
-            print(mnemonic["dates"])
-            print(type(mnemonic["dates"]))
-            print(mnemonic["dates"].data)
+            #print(type(mnemonic))
+            #print(mnemonic["dates"])
+            #print(type(mnemonic["dates"]))
+            #print(mnemonic["dates"].data)
 
 
 

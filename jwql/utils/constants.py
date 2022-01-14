@@ -142,10 +142,9 @@ DETECTOR_PER_INSTRUMENT = {'miri': ['MIRIFULONG', 'MIRIFUSHORT', 'MIRIMAGE'],
                            'nirspec': ['NRS1', 'NRS2'],
                            'fgs': ['GUIDER1', 'GUIDER2']}
 
-# Look back time for EDB queries using mnemonics where no time averaging is done,
-# and therefore no information is saved in the database. This is the time before
-# the present that will serve as the beginning of the search time.
-EDB_LOOK_BACK_TIME = 14  # days.
+# Default time range to use for EDB monitor telemetry plots. The plots will
+# go from this starting time to the monitor run time, unless otherwise requested.
+EDB_DEFAULT_PLOT_RANGE = 14  # days.
 
 EXP_TYPE_PER_INSTRUMENT = {'fgs': ['FGS_FOCUS', 'FGS_IMAGE', 'FGS_INTFLAT',
                                    'FGS_SKYFLAT', 'FGS_DARK'],

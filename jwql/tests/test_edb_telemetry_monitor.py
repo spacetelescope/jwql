@@ -20,6 +20,7 @@ import numpy as np
 import os
 import pytest
 
+from astropy.stats import sigma_clipped_stats
 from astropy.table import Table
 from astropy.table.column import Column
 from astropy.time import Time, TimeDelta
@@ -99,10 +100,8 @@ def test_conditions():
     assert np.all(condition_3.extracted_data == expected_table)
     assert condition_3.block_indexes == [0, 2]
 
-
+"""
 def test_find_all_changes():
-    """
-    """
     inst = etm.EdbMnemonicMonitor()
 
     # Create test data
@@ -132,11 +131,11 @@ def test_find_all_changes():
     assert means == [35.1, 36.1, 37.05, 36.]
     assert meds == [35.1, 36.1, 37.05, 36.]
     assert devs == []
-    assert dep_means = [1., 2., 3., 2.]
-    assert dep_meds = [1., 2., 3., 2.]
-    assert dep_devs = [0., 0., 0., 0.]
+    assert dep_means == [1., 2., 3., 2.]
+    assert dep_meds == [1., 2., 3., 2.]
+    assert dep_devs == [0., 0., 0., 0.]
     This is not working well. Strategy for how to find different values in the condition may need to change.
-
+    """
 
 def test_multiple_conditions():
     """Test that filtering using multiple conditions is working as expected.
@@ -172,6 +171,57 @@ def test_multiple_conditions():
     expected_table = temp_data[2:6]
     assert np.all(condition.extracted_data == expected_table)
     assert condition.block_indexes == [0, 4]
+
+
+def test_organize_every_change():
+    """Test the reorganization of every_change data from an EdbMnemonic into something
+    easier to plot
+    """
+    basetime = Time('2021-04-06 14:00:00')
+    dates = np.array([basetime + TimeDelta(600*i, format='sec') for i in range(20)])
+    vals = np.array([300.5, 310.3, -250.5, -500.9, 32.2,
+                     300.1, 310.8, -250.2, -500.2, 32.7,
+                     300.2, 310.4, -250.6, -500.8, 32.3,
+                     300.4, 310.5, -250.4, -500.1, 32.9])
+    ec_vals = ["F2550W", 'F560W', 'F770W', 'F1000W','F1500W',
+               "F2550W", 'F560W', 'F770W', 'F1000W','F1500W',
+               "F2550W", 'F560W', 'F770W', 'F1000W','F1500W',
+               "F2550W", 'F560W', 'F770W', 'F1000W','F1500W']
+
+    m = Table()
+    m["dates"] = dates
+    m["euvalues"] = vals
+    mnem = EdbMnemonic('IMIR_HK_FW_POS_RATIO', Time('2021-04-06T00:00:00'), Time('2021-04-06T23:00:00'),
+                       m, {}, {"unit":"Pos Ratio"})
+    mnem.every_change_values = ec_vals
+    data = etm.organize_every_change(mnem)
+
+    f2550_idx = [0, 5, 10, 15]
+    f560_idx = [1, 6, 11, 16]
+    f770_idx = [2, 7, 12, 17]
+    f1000_idx = [3, 8, 13, 18]
+    f1500_idx = [4, 9, 14, 19]
+
+    f2550_vals = vals[f2550_idx]
+    f560_vals = vals[f560_idx]
+    f770_vals = vals[f770_idx]
+    f1000_vals = vals[f1000_idx]
+    f1500_vals = vals[f1500_idx]
+
+    f2550mean, _,  _ = sigma_clipped_stats(f2550_vals, sigma=3)
+    f560mean, _,  _ = sigma_clipped_stats(f560_vals, sigma=3)
+    f770mean, _,  _ = sigma_clipped_stats(f770_vals, sigma=3)
+    f1000mean, _,  _ = sigma_clipped_stats(f1000_vals, sigma=3)
+    f1500mean, _,  _ = sigma_clipped_stats(f1500_vals, sigma=3)
+    expected = {'F2550W': (np.array([e.datetime for e in dates[f2550_idx]]), f2550_vals, f2550mean),
+                'F560W': (np.array([e.datetime for e in dates[f560_idx]]), f560_vals, f560mean),
+                'F770W': (np.array([e.datetime for e in dates[f770_idx]]), f770_vals, f770mean),
+                'F1000W': (np.array([e.datetime for e in dates[f1000_idx]]), f1000_vals, f1000mean),
+                'F1500W': (np.array([e.datetime for e in dates[f1500_idx]]), f1500_vals, f1500mean)}
+    for key, val in expected.items():
+        assert np.all(val[0] == data[key][0])
+        assert np.all(val[1] == data[key][1])
+        assert np.all(val[2] == data[key][2])
 
 
 def test_remove_outer_points():
@@ -222,8 +272,3 @@ def test_key_check():
     d = {'key1': [1,2,3], 'key4': 'a'}
     assert etm_utils.check_key(d, 'key1') == d['key1']
     assert etm_utils.check_key(d, 'key2') == None
-
-
-
-
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
