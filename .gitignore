@@ -12,3 +12,4 @@ docs/source/api/
 htmlcov/
 *.sqlite3
 jwql/website/static/*.csv
+jwql/website/apps/jwql/static/*

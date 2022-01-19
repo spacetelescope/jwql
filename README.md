@@ -69,7 +69,7 @@ instead, and then proceed as stated.
 
 ### Environment Installation
 
-Following the download of the `jwql` repository, contributors can then install the `jwql` `conda` environment via the environment yaml file, which contains all of the dependencies for the project.  First, ensure that your version of `conda` is up to date:
+Following the download of the `jwql` repository, contributors can then install the `jwql` `conda` environment via the environment yaml file, which contains all of the dependencies for the project. First, if necessary, [install `conda`](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) Next, ensure that your version of `conda` is up to date:
 
 ```
 conda update conda
@@ -81,26 +81,20 @@ Next, activate the `base` or `root` environment (depending on your version of `c
 source activate base/root
 ```
 
-Lastly, create the `jwql` environment via the `environment_python_3_7.yml` file:
+**Note:** If you have added a step activating conda to your default terminal/shell (e.g. the `.bashrc`, `.zshrc`, or `.profile` file) then you don't need to do the above step.
+{: .note}
+
+Lastly, create the `jwql` environment via one of the `environment.yml` files (currently `environment_python_3_7.yml`, for python 3.7, and `environment_python_3.8.yml`, for python 3.8, are supported by `jwql`):
 
 ```
-conda env create -f environment_python_3_7.yml --name jwql-3.7
-```
-
-### Package Installation
-
-Next, you need to install the `jwql` package under development mode.  This can be accomplished either by running the `setup.py` script, or `pip install` with the `-e` option:
-
-```
-python setup.py develop
+conda env create -f environment_python_3_7.yml
 ```
 
 or
 
 ```
-pip install -e .
+conda env create -f environment_python_3.8.yml
 ```
-The package should now appear if you run `conda list jwql`.
 
 ### Configuration File
 
@@ -127,7 +121,7 @@ The following is a bare-bones example of a best work flow for contributing to th
 
 1. Create a fork off of the `spacetelescope` `jwql` repository.
 2. Make a local clone of your fork.
-3. Ensure your personal fork is pointing `upstream` properly.
+3. Ensure your personal fork is [pointing `upstream` properly](https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/configuring-a-remote-for-a-fork).
 4. Create a branch on that personal fork.
 5. Make your software changes.
 6. Push that branch to your personal GitHub repository (i.e. `origin`).
@@ -164,6 +158,7 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 - Teagan King (INS) [@tnking97](https://github.com/tnking97)
 - Maria Pena-Guerrero [@penaguerrero](https://github.com/penaguerrero)
 - Ben Sunnquist (INS) [@bsunnquist](https://github.com/bsunnquist)
+- Brian York (INS) [@york-stsci](https://github.com/york-stsci)
 
 ## Past Development Team Members
 - Lauren Chambers (INS) [@laurenmarietta](https://github.com/laurenmarietta)
