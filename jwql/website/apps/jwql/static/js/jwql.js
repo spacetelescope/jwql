@@ -43,10 +43,6 @@ function change_filetype(type, file_root, num_ints, inst) {
     document.getElementById("slider_range").max = num_ints[type]
     document.getElementById("slider_val").innerHTML = 1
 
-    // Update the number of integrations
-    var int_counter = document.getElementById("int_count");
-    int_counter.innerHTML = 'Displaying integration 1/' + num_ints[type];
-
     // Update the integration changing buttons
     if (num_ints[type] > 1) {
         document.getElementById("int_after").disabled = false;
@@ -55,8 +51,8 @@ function change_filetype(type, file_root, num_ints, inst) {
     }
 
     // Update the image download and header links
-    document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename + '.fits';
-    document.getElementById("download_jpg").href = jpg_filepath;
+    // document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename + '.fits';
+    // document.getElementById("download_jpg").href = jpg_filepath;
     document.getElementById("view_header").href = '/' + inst + '/' + fits_filename + '/header/';
 
     // Disable the "left" button, since this will be showing integ0
