@@ -24,7 +24,7 @@ function change_filetype(type, file_root, num_ints, inst) {
     var num_ints = JSON.parse(num_ints);
 
     // Propogate the text fields showing the filename and APT parameters
-    var fits_filename = file_root + '_' + type
+    var fits_filename = file_root + '_' + type;
     document.getElementById("jpg_filename").innerHTML = file_root + '_' + type + '_integ0.jpg';
     document.getElementById("fits_filename").innerHTML = fits_filename + '.fits';
     document.getElementById("proposal").innerHTML = file_root.slice(2,7);
@@ -33,15 +33,15 @@ function change_filetype(type, file_root, num_ints, inst) {
     document.getElementById("detector").innerHTML = file_root.split('_')[3];
 
     // Show the appropriate image
-    var img = document.getElementById("image_viewer")
+    var img = document.getElementById("image_viewer");
     var jpg_filepath = '/static/preview_images/' + file_root.slice(0,7) + '/' + file_root + '_' + type + '_integ0.jpg';
     img.src = jpg_filepath;
     img.alt = jpg_filepath;
 
     // Reset the slider values
-    document.getElementById("slider_range").value = 1
-    document.getElementById("slider_range").max = num_ints[type]
-    document.getElementById("slider_val").innerHTML = 1
+    document.getElementById("slider_range").value = 1;
+    document.getElementById("slider_range").max = num_ints[type];
+    document.getElementById("slider_val").innerHTML = 1;
 
     // Update the integration changing buttons
     if (num_ints[type] > 1) {
@@ -53,7 +53,7 @@ function change_filetype(type, file_root, num_ints, inst) {
     // Update the image download and header links
     // document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename + '.fits';
     // document.getElementById("download_jpg").href = jpg_filepath;
-    document.getElementById("view_header").href = '/' + inst + '/' + fits_filename + '/header/';
+    document.getElementById("view_header").href = '/' + inst + '/' + file_root + '/header-'+type+'/';
 
     // Disable the "left" button, since this will be showing integ0
     document.getElementById("int_before").disabled = true;

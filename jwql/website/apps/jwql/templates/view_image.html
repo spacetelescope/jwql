@@ -22,6 +22,9 @@
     	FITS Filename: <a id="fits_filename"></a><br>
     	JPG Filename: <a id="jpg_filename"></a><br><br>
 
+			<!-- Set meta data -->
+			<meta id="image-data" data-inst="{{inst}}" data-suffix="{{suffixes}}" data-fileroot="{{file_root}}" data-numints="{{num_ints}}">
+
     	<!-- Allow the user to change the file type that is being displayed -->
     	View File Type:
     	<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/product_types.html" target="_blank">
@@ -35,11 +38,11 @@
 		<br>
 
 		<!-- Buttons for viewing header, downloading files -->
-    	<p>
-	    	<a id="view_header" class="btn btn-primary mx-2" role="button" href="{{ url('jwql:view_header', args=[inst, file_root]) }}">View Header</a>
-            <!-- <a id="download_fits" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}' download>Download FITS</a>
-            <a id="download_jpg" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ jpg }}' download>Download JPEG</a> -->
-	    </p>
+		<p>
+			<a id="view_header" class="btn btn-primary mx-2" role="button" href="#" onclick="setHeaderUrl()">View Header</a>
+			<!-- <a id="download_fits" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}' download>Download FITS</a>
+			<a id="download_jpg" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ jpg }}' download>Download JPEG</a> -->
+		</p>
 
         <div class="row">
 
@@ -105,19 +108,42 @@
         }
         </script>
 
+				<!-- Functions to determine which filetype should be shown on load and set the filetype for the header button -->
+				<script type="text/javascript">
+					var inst = $('#image-data').data().inst;
+					var suffixes = $('#image-data').data().suffix.replace("[", "").replace("]", "").replaceAll("'", "").split(", ");
+					var file_root = $('#image-data').data().fileroot;
+					var num_ints = $('#image-data').data().numints;
 
-	    <!-- Determine which filetype should be shown on load -->
-	    {% if 'cal' in suffixes %}
-	    	<script>change_filetype('cal', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
-	    {% elif 'rate' in suffixes %}
-	    	<script>change_filetype('rate', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
-	    {% elif 'uncal' in suffixes %}
-	    	<script>change_filetype('uncal', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
-	    {% elif suffixes|length == 1 %}
-	    	<script>change_filetype('{{suffixes.0}}', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
-	    {% else %}
-	    	<a>Lauren needs to figure out what to do with these: {{suffixes}}</a>
-	    {% endif %}
+					function onLoad() {
+						if (suffixes.indexOf('cal') > -1){
+							var initial_file_type = 'cal';
+						}
+						else if (suffixes.indexOf('rate') > -1) {
+							var initial_file_type = 'rate';
+						}
+						else if (suffixes.indexOf('uncal') > -1) {
+							var initial_file_type = 'uncal';
+						}
+						else {
+							var initial_file_type = suffixes[0];
+						}
+						return initial_file_type
+					}
+
+					var initial_file_type = onLoad();
+					change_filetype(initial_file_type, file_root, num_ints, inst);
+
+					function setHeaderUrl() {
+						console.log('setHeaderUrl');
+							var file_type = document.querySelector('input[name=filetype]:checked').value;
+							if (file_type == null){
+									var file_type = onLoad();
+							}
+						}
+
+				</script>
+
 
 	</main>
 

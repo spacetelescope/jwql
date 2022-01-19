@@ -687,7 +687,7 @@ def unlooked_images(request, inst):
     pass
 
 
-def view_header(request, inst, filename):
+def view_header(request, inst, filename, filetype):
     """Generate the header view page
 
     Parameters
@@ -698,6 +698,8 @@ def view_header(request, inst, filename):
         Name of JWST instrument
     filename : str
         FITS filename of selected image in filesystem
+    filetype :str
+        Type of file (e.g. 'uncal')
 
     Returns
     -------
@@ -713,7 +715,7 @@ def view_header(request, inst, filename):
     context = {'inst': inst,
                'filename': filename,
                'file_root': file_root,
-               'header_info': get_header_info(filename)}
+               'header_info': get_header_info(filename, filetype)} # filetype goes in here
 
     return render(request, template, context)
 
