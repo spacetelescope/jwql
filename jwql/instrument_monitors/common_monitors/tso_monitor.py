@@ -50,8 +50,10 @@ from astropy.io import ascii, fits
 from astropy.modeling import models
 from astropy.time import Time
 from astropy.timeseries import LombScargle
+from glob import glob
 from jwst import datamodels
 import numpy as np
+import pandas as pd
 from pysiaf import Siaf
 from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter1d
@@ -65,7 +67,7 @@ from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils import calculations, instrument_properties, monitor_utils
 
-from jwql.utils.constants import JWST_DATAPRODUCTS, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import JWST_DATAPRODUCTS, JWST_INSTRUMENT_NAMES, DETECTOR_PER_INSTRUMENT
 
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
@@ -111,6 +113,8 @@ class tsoMonitor():
         # Convert to seconds since first integration on this last segment:
         times_seconds = (times - times[0]) * 24 * 3600.
 
+        # self.median_out_of_transit_flux = np.median(ootf)
+
 
     def identify_tables(self):
         """Determine which database tables to use for a run of the dark
@@ -153,123 +157,6 @@ class tsoMonitor():
         print('plotting stuff here')
 
 
-    def trace_spectrum(self, image, dqflags, xstart, ystart, profile_radius=20, nsigma = 100, gauss_filter_width=10, xend=None, y_tolerance = 5, verbose = False):
-        """
-        Function that non-parametrically traces NIRISS/SOSS spectra. First, to get the centroid at xstart and 
-        ystart, it convolves the spatial profile with a gaussian filter, finding its peak through usual flux-weighted 
-        centroiding. Next, this centroid is used as a starting point to find the centroid of the left column through 
-        the same algorithm. 
-        
-        Parameters
-        ----------
-
-        image: numpy.array
-            The image that wants to be traced.
-        dqflags: ndarray
-            The data quality flags for each pixel in the image. Only pixels with DQ flags of zero will be used 
-            in the centroiding.
-        xstart: float
-            The x-position (column) on which the tracing algorithm will be started
-        ystart: float
-            The estimated y-position (row) of the center of the trace. An estimate within 10-20 pixels is enough.
-        profile_radius: float
-            Expected radius of the profile measured from its center. Only this region will be used to estimate 
-            the centroids of the spectrum.
-        nsigma : float
-            Median filters are applied to each column in search of outliers. This number defines how many n-sigma above the noise level 
-            the residuals of the median filter and the image should be considered outliers.
-        gauss_filter_width: float
-            Width of the gaussian filter used to perform the centroiding of the first column
-        xend: int
-            x-position at which tracing ends. If none, trace all the columns left to xstart.
-        y_tolerance: float
-            When tracing, if the difference between the two difference centroids at two contiguous columns is larger than this, 
-            then assume tracing failed (e.g., cosmic ray).
-        verbose: boolean
-            If True, print error messages.
-
-        Returns
-        -------
-
-        x : numpy.array
-            Columns at which the centroid is calculated.
-        y : numpy.array
-            Calculated centroids.
-        """
-        def get_mad_sigma(x):
-
-            x_median = np.nanmedian(x)
-
-            return 1.4826 * np.nanmedian( np.abs(x - x_median) )
-
-        # Define x-axis:
-        if xend is not None:
-            x = np.arange(xend, xstart + 1)
-        else:
-            x = np.arange(0, xstart + 1)
-            
-        # Define y-axis:
-        y = np.arange(image.shape[0])
-        
-        # Define status of good/bad for each centroid:
-        status = np.full(len(x), True, dtype=bool)
-        
-        # Define array that will save centroids at each x:
-        ycentroids = np.zeros(len(x))
-        
-        for i in range(len(x))[::-1]:
-            xcurrent = x[i]
-
-            # Perform median filter to identify nasty (i.e., cosmic rays) outliers in the column:
-            mf = median_filter(image[:,xcurrent], size = 5)
-            residuals = mf - image[:,xcurrent]
-            mad_sigma = get_mad_sigma(residuals)
-            column_nsigma = np.abs(residuals) / mad_sigma
-            
-            # Extract data-quality flags for current column; index good pixels --- mask nans as well:
-            idx_good = np.where((dqflags[:, xcurrent] == 0) & (~np.isnan(image[:, xcurrent]) & (column_nsigma < nsigma)))[0]        
-            idx_bad = np.where(~(dqflags[:, xcurrent] == 0) & (~np.isnan(image[:, xcurrent]) & (column_nsigma < nsigma)))[0]
-            
-            if len(idx_good) > 0:
-
-                # Replace bad values with the ones in the median filter:
-                column_data = np.copy(image[:, xcurrent])
-                column_data[idx_bad] = mf[idx_bad]
-
-                # Convolve column with a gaussian filter; remove median before convolving:
-                filtered_column = gaussian_filter1d(column_data - \
-                                                    np.median(column_data), gauss_filter_width)
-        
-                # Find centroid within profile_radius pixels of the initial guess:
-                idx = np.where(np.abs(y - ystart) < profile_radius)[0]
-                ycentroids[i] = np.sum(y[idx] * filtered_column[idx]) / np.sum(filtered_column[idx])
-
-                # Get the difference of the current centroid with the previous one (if any):
-                if xcurrent != x[-1]:
-
-                    previous_centroid = ycentroids[i + 1]
-                    difference = np.abs(previous_centroid - ycentroids[i])
-
-                    if (difference > y_tolerance):
-
-                        if verbose:
-                            print('Tracing failed at column',xcurrent,'; estimated centroid:',ycentroids[i],', previous one:',previous_centroid,'> than tolerance: ',y_tolerance,\
-                                '. Replacing with closest good trace position.')
-
-                        ycentroids[i] = previous_centroid
-                        
-
-                ystart = ycentroids[i]
-            else:
-                print(xcurrent,'is a bad column. Setting to previous centroid:')
-                ycentroids[i] = previous_centroid
-                status[i] = True
-        
-        # Return only good centroids:
-        idx_output = np.where(status)[0]
-        return x[idx_output], ycentroids[idx_output]
-
-
     @log_fail
     @log_info
     def run(self):
@@ -290,47 +177,159 @@ class tsoMonitor():
 
             # Identify which database tables to use
             self.identify_tables()
+            
+            for detector in DETECTOR_PER_INSTRUMENT[self.instrument]:
+                self.detector = detector
+                self.query_start =  session.query(self.query_table).filter(func.max(self.query_table.end_time_mjd),
+                                                    self.query_table.instrument == self.instrument,
+                                                    self.query_table.detector == self.detector)
 
-            self.query_start =  session.query(self.query_table).filter(func.max(self.query_table.end_time_mjd),
-                                                self.query_table.instrument == self.instrument)
+                new_entries = self.query_tso_observations(self.instrument, self.detector, self.query_start, self.query_end)
 
-            new_entries = self.query_tso_observations(instrument, self.query_start, self.query_end)
+                if len(new_entries) is None:
+                    continue
 
-            rootnames = list(set([row['fileSetName'] for row in new_entries]))
+                # Putting these results into pandas dataframe for convenience.
+                query_result_df = pd.DataFrame(new_entries)
 
-            monitor_file_suffix = ('photom.fits', 'acq.fits', 'jit.fits', 'whtlt.ecsv')
+                # Make tso_monitor output dir
+                self.output_dir = os.path.join(get_config()['outputs'], 'tso_monitor')
 
+                if not os.path.isdir(self.output_dir):
+                    os.mkdir(self.output_dir)
 
-            # Update the query history
-            new_entry = {'instrument': instrument,
-                         'aperture': self.aperture,
-                         'filter': self.filter,
-                         'detector': self.detector,
-                         'obslabel': self.obslabel,
-                         'start_time_mjd': self.query_start,
-                         'end_time_mjd': self.query_end,
-                         'photom_file': self.photom_file,
-                         'acq_file': self.acq_file,
-                         'jit_file': self.jit_file,
-                         'whtlt_file': self.whtlt_file,
-                         'whtlt_mjd': self.whtlt_mjd,
-                         'whtlt_flux':self.whtlt_flux,
-                         'out_of_transit_median_flux': self.out_of_transit_median_flux,
-                         'entry_date': datetime.datetime.now()}
+                for fileSetName in query_result_df.fileSetName.unique():
+                    sorted_df = query_result_df[query_result_df['filename'].str.contains(fileSetName)]
 
-            self.query_table.__table__.insert().execute(new_entry)
-            logging.info('\tUpdated the tso monitor table')
+                    self.data_dir = os.path.join(self.output_dir,
+                            'data/{}/{}'.format(self.instrument.lower(),
+                                                fileSetName.lower()))
+                    ensure_dir_exists(self.data_dir)
+
+                    # Copy files from filesystem
+                    new_filenames = sorted_df['filenames']
+                    tso_files, not_copied = copy_files(new_filenames, self.data_dir)
+                    
+                    new_entry = {'instrument': self.instrument,
+                                'aperture': sorted_df['apername'].unique()[0],
+                                'filter': sorted_df['filter'].unique()[0],
+                                'detector': sorted_df['detector'].unique()[0],
+                                'obslabel': sorted_df['obslabel'].unique()[0],
+                                'filesetname': fileSetName,
+                                'start_time_mjd': self.query_start,
+                                'end_time_mjd': self.query_end,
+                                'files': tso_files,
+                                'entry_date': datetime.datetime.now()}
+
+                    self.query_table.insert().execute(new_entries)
+                    logging.info('\tUpdated {} with {}'.format(self.query_table.__name__, new_entry))
+
+                    logging.info('\tBeginning Preprocessing for {}'.format(new_entry))
+                    self.process(sorted_df)
+
 
         logging.info('TSO Monitor completed successfully.')
 
 
-    def query_tso_observations(self, instrument, query_start, query_end):
+    def most_recent_search(self):
+        """Query the query history database and return the information
+        on the most recent query for the given ``aperture_name`` where
+        the dark monitor was executed.
+        Returns
+        -------
+        query_result : float
+            Date (in MJD) of the ending range of the previous MAST query
+            where the dark monitor was run.
+        """
+        query = session.query(self.query_table).filter(self.query_table.instrument == self.instrument,
+                                                       self.query_table.detector == self.detector). \
+                              filter(self.query_table.run_monitor == True)
+
+        dates = np.zeros(0)
+        for instance in query:
+            dates = np.append(dates, instance.end_time_mjd)
+
+        query_count = len(dates)
+        if query_count == 0:
+            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
+            logging.info(('\tNo query history for {} with {}. Beginning search date will be set to {}.'
+                         .format(self.aperture, self.readpatt, query_result)))
+        else:
+            query_result = np.max(dates)
+
+        return query_result
+
+
+    def process(self, fileset_dataframe):
+        """Process and calculate statistics for database table.
+        """
+        files = glob.glob('{}/*'.format(self.data_dir))
+        # calculate out of transit median flux
+        # obtain frame numbers and x, y jitter
+        # centroids of targets in acq images brightest to faintest
+
+
+    def process_acq_image_centroids(self, acq_image):
+        """Find the centroid of the stars in acq image.
+
+        acq_file : str
+            full path to acq image
+        """
+        hdu = fits.open(acq_image)
+        # im_size = hdu[1].data.shape
+        # obtain centroids
+
+        # store acq image location of centroid x, y as well as brightness
+        # organize positions in x,y with brightness from highest to lowest.
+
+
+    def process_spectrum_jitter(self, x1d_file):
+        """Cross correlate a spectral trace with
+        """
+
+
+    def process_v2_v3_jitter(self, jit_file):
+        """Obtain time and v2/v3 jitter for marginally successful and failed observations.
+        """
+        # jit_data = open(jit_file)
+        # store time, v2, v3
+        print('v2, v3 jit')
+        return
+
+
+    def process_whitelight_data(self, whitelight_file):
+        """Process data from whitelight files if available.
+        """
+
+        # whtlt_data = open(whitelight_file)
+        # calculate out of transit flux
+        # normalize flux to out of transit flux
+        # store time, flux, out of transit flux
+        print('whitelight processing')
+
+
+    def query_tso_observations(self, instrument, detector, query_start, query_end):
         """Obtain all tso observations based on instrument and time.
         """
 
         parameters = {"date_obs_mjd": {"min": query_start, "max": query_end},
-                      "tsovisit": "t"}
+                      "tsovisit": "t", "detector": detector}
 
         query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
                                                     add_filters=parameters, return_data=True, caom=False)
-        self.data = query['data']
+        return query['data']
+
+
+    def webapp_plotting(self, filesetname):
+        """Given a single filesetname, create monitoring plots for the webapp.
+        """
+
+        self.plot_acq_image(filesetname)
+
+        self.plot_spectrum_trace_and_jitter(filesetname)
+
+        self.plot_whitelight_curve(filesetname)
+
+        self.plot_spectroscopic_lightcurves(filesetname)
+
+        self.plot_jitter(filesetname)
