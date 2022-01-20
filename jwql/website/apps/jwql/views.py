@@ -716,7 +716,7 @@ def view_header(request, inst, filename, filetype):
                'filename': filename,
                'file_root': file_root,
                'file_type': filetype,
-               'header_info': get_header_info(filename, filetype)} # filetype goes in here
+               'header_info': get_header_info(filename, filetype)}
 
     return render(request, template, context)
 

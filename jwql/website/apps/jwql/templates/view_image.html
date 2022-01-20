@@ -35,11 +35,11 @@
 		<br>
 
 		<!-- Buttons for viewing header, downloading files -->
-		<p>
-			<a id="view_header" class="btn btn-primary mx-2" role="button" href="#">View Header</a>
-			<!-- <a id="download_fits" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}' download>Download FITS</a>
-			<a id="download_jpg" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ jpg }}' download>Download JPEG</a> -->
-		</p>
+        <p>
+            <a id="view_header" class="btn btn-primary mx-2" role="button" href="#">View Header</a>
+            <!-- <a id="download_fits" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}' download>Download FITS</a>
+            <a id="download_jpg" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ jpg }}' download>Download JPEG</a> -->
+        </p>
 
         <div class="row">
 
@@ -59,7 +59,7 @@
                     <p>Integration: <span id="slider_val"></span></p>
                 </div>
             </div>
-            
+
             <!-- Display the anomaly form -->
             <div class="col-xl-3 text-left">
                 <!--Load the file search form from the view-->
@@ -105,21 +105,19 @@
         }
         </script>
 
-				<!-- Determine which filetype should be shown on load -->
-		    {% if 'cal' in suffixes %}
-		    	<script>change_filetype('cal', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
-		    {% elif 'rate' in suffixes %}
-		    	<script>change_filetype('rate', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
-		    {% elif 'uncal' in suffixes %}
-		    	<script>change_filetype('uncal', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
-		    {% elif suffixes|length == 1 %}
-		    	<script>change_filetype('{{suffixes.0}}', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
-		    {% else %}
-		    	<a>Lauren needs to figure out what to do with these: {{suffixes}}</a>
-		    {% endif %}
+        <!-- Determine which filetype should be shown on load -->
+        {% if 'cal' in suffixes %}
+            <script>change_filetype('cal', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
+        {% elif 'rate' in suffixes %}
+            <script>change_filetype('rate', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
+        {% elif 'uncal' in suffixes %}
+            <script>change_filetype('uncal', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
+        {% elif suffixes|length == 1 %}
+            <script>change_filetype('{{suffixes.0}}', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
+        {% else %}
+            <a>Lauren needs to figure out what to do with these: {{suffixes}}</a>
+        {% endif %}
 
-
-
-	</main>
+    </main>
 
 {% endblock %}
