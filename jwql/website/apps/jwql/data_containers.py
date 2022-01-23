@@ -24,6 +24,7 @@ Use
 
 import copy
 import glob
+import logging
 import os
 import re
 import tempfile
@@ -474,7 +475,7 @@ def get_expstart(instrument, rootname):
 
     if result['data'] == []:
         expstart = 0
-        print("WARNING: no data")
+        logging.warning("No data retreived from MAST")
     else:
         expstart = min([item['expstart'] for item in result['data']])
 
@@ -592,7 +593,6 @@ def get_header_info(filename):
 
     # Extract header information from file
     for ext in range(0, len(hdulist)):
-    #for ext in range(0, 1):
 
         # Initialize dictionary to store header information for particular extension
         header_info[ext] = {}
@@ -959,7 +959,7 @@ def get_thumbnails_all_instruments(parameters):
 
     # Determine whether or not queried anomalies are flagged
     final_subset = []
-    
+
     if anomalies != {'miri': [], 'nirspec': [], 'niriss': [], 'nircam': [], 'fgs': []}:
         for thumbnail in thumbnails_subset:
             components = thumbnail.split('_')
@@ -973,7 +973,7 @@ def get_thumbnails_all_instruments(parameters):
                             # thumbnail contains an anomaly selected in the query
                             final_subset.append(thumbnail)
             except KeyError:
-                print("Error with thumbnail: ", thumbnail)
+                logging.warning("In determining anomalies present, encountered error with thumbnail: {}".format(thumbnail))
     else:
         # if no anomalies are flagged, return all thumbnails from query
         final_subset = thumbnails_subset
@@ -1177,7 +1177,7 @@ def thumbnails_ajax(inst, proposal=None):
             data_dict['file_data'][rootname]['expstart'] = get_expstart(inst, rootname)
             data_dict['file_data'][rootname]['expstart_iso'] = Time(data_dict['file_data'][rootname]['expstart'], format='mjd').iso.split('.')[0]
         except:
-            print("issue with get_expstart for {}".format(rootname))
+            logging.warning("Issue with get_expstart for {}".format(rootname))
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
@@ -1253,7 +1253,7 @@ def thumbnails_query_ajax(rootnames):
             data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[filename_parser(rootname)['instrument']]
         except KeyError:
             data_dict['file_data'][rootname]['inst'] = "MIRI"
-            print("Warning: assuming instrument is MIRI")
+            logging.warning("Assuming instrument is MIRI because filename parser failed.")
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
         data_dict['file_data'][rootname]['expstart'] = get_expstart(data_dict['file_data'][rootname]['inst'], rootname)

@@ -1,0 +1,4 @@
+START_TIME_MJD, float
+END_TIME_MJD, float
+RUN_MONITOR, bool
+ENTRY_DATE, datetime

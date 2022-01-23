@@ -27,7 +27,7 @@ References
 import inflection
 
 # Each amplifier is represented by 2 tuples, the first for x coordinates
-# and the second for y coordinates. Within each tuple are value for
+# and the second for y coordinates. Within each tuple are values for
 # starting, ending, and step size. Step size is needed for MIRI, where
 # the pixels corresponding to the 4 amplifiers are interleaved.
 AMPLIFIER_BOUNDARIES = {'nircam': {'1': [(0, 512, 1), (0, 2048, 1)],
@@ -212,13 +212,36 @@ GRATING_PER_INSTRUMENT = {'fgs': [],
                                       'G235H', 'G395H', 'PRISM']
                           }
 
+# Dictionary with keys that are mnemonics used for grating wheel telemetry monitor
+# Corresponding limits are given for Lower Red, Lower Yellow, High Yellow, High Red
+GRATING_TELEMETRY = {'INRSH_GWA_ADCMGAIN': [2.36, 2.39, 2.62, 2.65],
+                     'INRSH_GWA_ADCMOFFSET': [-0.0600, -0.0420, 0.0420, 0.0600],
+                     'INRSH_GWA_MOTOR_VREF': [-0.0600, -0.0420, 2.530, 2.55],
+                     'PRISM_INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374],
+                     'PRISM_INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374],
+                     'MIRROR_INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374],
+                     'MIRROR_INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374],
+                     'G140H_INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374],
+                     'G140H_INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374],
+                     'G235H_INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374],
+                     'G235H_INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374],
+                     'G395H_INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374],
+                     'G395H_INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374],
+                     'G140M_INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374],
+                     'G140M_INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374],
+                     'G235M_INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374],
+                     'G235M_INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374],
+                     'G395M_INRSI_C_GWA_X_POSITION': [-374, -360., 360., 374],
+                     'G395M_INRSI_C_GWA_Y_POSITION': [-374, -200., 200., 374]}
+
 # Possible suffix types for guider exposures
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
 
 # Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
     'dark_monitor': ['<instrument>_dark_dark_current', '<instrument>_dark_pixel_stats', '<instrument>_dark_query_history'],
-    'bad_pixel_monitor': ['<instrument>_bad_pixel_stats', '<instrument>_bad_pixel_query_history']}
+    'bad_pixel_monitor': ['<instrument>_bad_pixel_stats', '<instrument>_bad_pixel_query_history'],
+    'grating_monitor': ['<instrument>_grating_stats', '<instrument>_grating_query_history']}
 
 INSTRUMENT_SERVICE_MATCH = {
     'FGS': 'Mast.Jwst.Filtered.Fgs',
@@ -284,6 +307,7 @@ MONITORS = {
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
+                ('Grating Wheel Monitor', '/nirspec/grating_monitor'),
                 ('Target Acquisition Monitor', '#'),
                 ('Data Trending', '#'),
                 ('Detector Health Monitor', '#'),

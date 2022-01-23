@@ -56,6 +56,12 @@ test_edb.py
     :members:
     :undoc-members:
 
+test_grating_monitor.py
+--------------------
+.. automodule:: jwql.tests.test_grating_monitor
+    :members:
+    :undoc-members:
+
 test_instrument_properties.py
 -----------------------------
 .. automodule:: jwql.tests.test_instrument_properties

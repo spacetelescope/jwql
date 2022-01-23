@@ -1,0 +1,632 @@
+# YAML file defining bokeh figures for the grating wheel monitor
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# INRSH_GWA_ADCMGAIN vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_INRSH_GWA_ADCMGAIN
+    ref: "source_INRSH_GWA_ADCMGAIN"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_INRSH_GWA_ADCMGAIN
+    ref: "gwa_x_INRSH_GWA_ADCMGAIN"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_INRSH_GWA_ADCMGAIN
+    ref: "gwa_y_INRSH_GWA_ADCMGAIN"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_INRSH_GWA_ADCMGAIN
+    ref: "figure_INRSH_GWA_ADCMGAIN"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "INRSH_GWA_ADCMGAIN [V]"
+    x_range: *gwa_x_INRSH_GWA_ADCMGAIN
+    y_range: *gwa_y_INRSH_GWA_ADCMGAIN
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_INRSH_GWA_ADCMGAIN}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# INRSH_GWA_ADCMOFFSET vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_INRSH_GWA_ADCMOFFSET
+    ref: "source_INRSH_GWA_ADCMOFFSET"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_INRSH_GWA_ADCMOFFSET
+    ref: "gwa_x_INRSH_GWA_ADCMOFFSET"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_INRSH_GWA_ADCMOFFSET
+    ref: "gwa_y_INRSH_GWA_ADCMOFFSET"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_INRSH_GWA_ADCMOFFSET
+    ref: "figure_INRSH_GWA_ADCMOFFSET"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "INRSH_GWA_ADCMOFFSET [V]"
+    x_range: *gwa_x_INRSH_GWA_ADCMOFFSET
+    y_range: *gwa_y_INRSH_GWA_ADCMOFFSET
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_INRSH_GWA_ADCMOFFSET}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# INRSH_GWA_MOTOR_VREF vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_INRSH_GWA_MOTOR_VREF
+    ref: "source_INRSH_GWA_MOTOR_VREF"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_INRSH_GWA_MOTOR_VREF
+    ref: "gwa_x_INRSH_GWA_MOTOR_VREF"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_INRSH_GWA_MOTOR_VREF
+    ref: "gwa_y_INRSH_GWA_MOTOR_VREF"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_INRSH_GWA_MOTOR_VREF
+    ref: "figure_INRSH_GWA_MOTOR_VREF"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "INRSH_GWA_MOTOR_VREF [V]"
+    x_range: *gwa_x_INRSH_GWA_MOTOR_VREF
+    y_range: *gwa_y_INRSH_GWA_MOTOR_VREF
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_INRSH_GWA_MOTOR_VREF}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# PRISM_INRSI_C_GWA_X_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_PRISM_INRSI_C_GWA_X_POSITION
+    ref: "source_PRISM_INRSI_C_GWA_X_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_PRISM_INRSI_C_GWA_X_POSITION
+    ref: "gwa_x_PRISM_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_PRISM_INRSI_C_GWA_X_POSITION
+    ref: "gwa_y_PRISM_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_PRISM_INRSI_C_GWA_X_POSITION
+    ref: "figure_PRISM_INRSI_C_GWA_X_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "PRISM_INRSI_C_GWA_X_POSITION [mV]"
+    x_range: *gwa_x_PRISM_INRSI_C_GWA_X_POSITION
+    y_range: *gwa_y_PRISM_INRSI_C_GWA_X_POSITION
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_PRISM_INRSI_C_GWA_X_POSITION}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# PRISM_INRSI_C_GWA_Y_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_PRISM_INRSI_C_GWA_Y_POSITION
+    ref: "source_PRISM_INRSI_C_GWA_Y_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_PRISM_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_x_PRISM_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_PRISM_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_y_PRISM_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_PRISM_INRSI_C_GWA_Y_POSITION
+    ref: "figure_PRISM_INRSI_C_GWA_Y_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "PRISM_INRSI_C_GWA_Y_POSITION [mV]"
+    x_range: *gwa_x_PRISM_INRSI_C_GWA_Y_POSITION
+    y_range: *gwa_y_PRISM_INRSI_C_GWA_Y_POSITION
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_PRISM_INRSI_C_GWA_Y_POSITION}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# MIRROR_INRSI_C_GWA_X_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_MIRROR_INRSI_C_GWA_X_POSITION
+    ref: "source_MIRROR_INRSI_C_GWA_X_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_MIRROR_INRSI_C_GWA_X_POSITION
+    ref: "gwa_x_MIRROR_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_MIRROR_INRSI_C_GWA_X_POSITION
+    ref: "gwa_y_MIRROR_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_MIRROR_INRSI_C_GWA_X_POSITION
+    ref: "figure_MIRROR_INRSI_C_GWA_X_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "INRSI_C_GWA_X_POSITION [mV]"
+    x_range: *gwa_x_MIRROR_INRSI_C_GWA_X_POSITION
+    y_range: *gwa_y_MIRROR_INRSI_C_GWA_X_POSITION
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_MIRROR_INRSI_C_GWA_X_POSITION}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# MIRROR_INRSI_C_GWA_Y_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_MIRROR_INRSI_C_GWA_Y_POSITION
+    ref: "source_MIRROR_INRSI_C_GWA_Y_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_MIRROR_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_x_MIRROR_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_MIRROR_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_y_MIRROR_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_MIRROR_INRSI_C_GWA_Y_POSITION
+    ref: "figure_MIRROR_INRSI_C_GWA_Y_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "INRSI_C_GWA_Y_POSITION [mV]"
+    x_range: *gwa_x_MIRROR_INRSI_C_GWA_Y_POSITION
+    y_range: *gwa_y_MIRROR_INRSI_C_GWA_Y_POSITION
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_MIRROR_INRSI_C_GWA_Y_POSITION}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# G140H_INRSI_C_GWA_X_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_G140H_INRSI_C_GWA_X_POSITION
+    ref: "source_G140H_INRSI_C_GWA_X_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_G140H_INRSI_C_GWA_X_POSITION
+    ref: "gwa_x_G140H_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_G140H_INRSI_C_GWA_X_POSITION
+    ref: "gwa_y_G140H_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_G140H_INRSI_C_GWA_X_POSITION
+    ref: "figure_G140H_INRSI_C_GWA_X_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "G140H_INRSI_C_GWA_X_POSITION [mV]"
+    x_range: *gwa_x_G140H_INRSI_C_GWA_X_POSITION
+    y_range: *gwa_y_G140H_INRSI_C_GWA_X_POSITION
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_G140H_INRSI_C_GWA_X_POSITION}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# G140H_INRSI_C_GWA_Y_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_G140H_INRSI_C_GWA_Y_POSITION
+    ref: "source_G140H_INRSI_C_GWA_Y_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_G140H_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_x_G140H_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_G140H_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_y_G140H_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_G140H_INRSI_C_GWA_Y_POSITION
+    ref: "figure_G140H_INRSI_C_GWA_Y_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "G140H_INRSI_C_GWA_Y_POSITION [mV]"
+    x_range: *gwa_x_G140H_INRSI_C_GWA_Y_POSITION
+    y_range: *gwa_y_G140H_INRSI_C_GWA_Y_POSITION
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_G140H_INRSI_C_GWA_Y_POSITION}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# G235H_INRSI_C_GWA_X_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_G235H_INRSI_C_GWA_X_POSITION
+    ref: "source_G235H_INRSI_C_GWA_X_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_G235H_INRSI_C_GWA_X_POSITION
+    ref: "gwa_x_G235H_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_G235H_INRSI_C_GWA_X_POSITION
+    ref: "gwa_y_G235H_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_G235H_INRSI_C_GWA_X_POSITION
+    ref: "figure_G235H_INRSI_C_GWA_X_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "G235H_INRSI_C_GWA_X_POSITION [mV]"
+    x_range: *gwa_x_G235H_INRSI_C_GWA_X_POSITION
+    y_range: *gwa_y_G235H_INRSI_C_GWA_X_POSITION
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_G235H_INRSI_C_GWA_X_POSITION}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# G235H_INRSI_C_GWA_Y_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_G235H_INRSI_C_GWA_Y_POSITION
+    ref: "source_G235H_INRSI_C_GWA_Y_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_G235H_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_x_G235H_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_G235H_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_y_G235H_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_G235H_INRSI_C_GWA_Y_POSITION
+    ref: "figure_G235H_INRSI_C_GWA_Y_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "G235H_INRSI_C_GWA_Y_POSITION [mV]"
+    x_range: *gwa_x_G235H_INRSI_C_GWA_Y_POSITION
+    y_range: *gwa_y_G235H_INRSI_C_GWA_Y_POSITION
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_G235H_INRSI_C_GWA_Y_POSITION}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# G395H_INRSI_C_GWA_X_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_G395H_INRSI_C_GWA_X_POSITION
+    ref: "source_G395H_INRSI_C_GWA_X_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_G395H_INRSI_C_GWA_X_POSITION
+    ref: "gwa_x_G395H_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_G395H_INRSI_C_GWA_X_POSITION
+    ref: "gwa_y_G395H_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_G395H_INRSI_C_GWA_X_POSITION
+    ref: "figure_G395H_INRSI_C_GWA_X_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "G395H_INRSI_C_GWA_X_POSITION [mV]"
+    x_range: *gwa_x_G395H_INRSI_C_GWA_X_POSITION
+    y_range: *gwa_y_G395H_INRSI_C_GWA_X_POSITION
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_G395H_INRSI_C_GWA_X_POSITION}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# G395H_INRSI_C_GWA_Y_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_G395H_INRSI_C_GWA_Y_POSITION
+    ref: "source_G395H_INRSI_C_GWA_Y_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_G395H_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_x_G395H_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_G395H_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_y_G395H_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_INRSI_C_GWA_Y_POSITION
+    ref: "figure_G395H_INRSI_C_GWA_Y_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "G395H_INRSI_C_GWA_Y_POSITION [mV]"
+    x_range: *gwa_x_G395H_INRSI_C_GWA_Y_POSITION
+    y_range: *gwa_y_G395H_INRSI_C_GWA_Y_POSITION
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_G395H_INRSI_C_GWA_Y_POSITION}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# G140M_INRSI_C_GWA_X_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_G140M_INRSI_C_GWA_X_POSITION
+    ref: "source_G140M_INRSI_C_GWA_X_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_G140M_INRSI_C_GWA_X_POSITION
+    ref: "gwa_x_G140M_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_G140M_INRSI_C_GWA_X_POSITION
+    ref: "gwa_y_G140M_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_G140M_INRSI_C_GWA_X_POSITION
+    ref: "figure_G140M_INRSI_C_GWA_X_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "G140M_INRSI_C_GWA_X_POSITION [mV]"
+    x_range: *gwa_x_G140M_INRSI_C_GWA_X_POSITION
+    y_range: *gwa_y_G140M_INRSI_C_GWA_X_POSITION
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_G140M_INRSI_C_GWA_X_POSITION}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# G140M_INRSI_C_GWA_Y_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_G140M_INRSI_C_GWA_Y_POSITION
+    ref: "source_G140M_INRSI_C_GWA_Y_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_G140M_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_x_G140M_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_G140M_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_y_G140M_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_G140M_INRSI_C_GWA_Y_POSITION
+    ref: "figure_G140M_INRSI_C_GWA_Y_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "G140M_INRSI_C_GWA_Y_POSITION [mV]"
+    x_range: *gwa_x_G140M_INRSI_C_GWA_Y_POSITION
+    y_range: *gwa_y_G140M_INRSI_C_GWA_Y_POSITION
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_G140M_INRSI_C_GWA_Y_POSITION}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# G235M_INRSI_C_GWA_X_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_G235M_INRSI_C_GWA_X_POSITION
+    ref: "source_G235M_INRSI_C_GWA_X_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_G235M_INRSI_C_GWA_X_POSITION
+    ref: "gwa_x_G235M_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_G235M_INRSI_C_GWA_X_POSITION
+    ref: "gwa_y_G235M_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_G235M_INRSI_C_GWA_X_POSITION
+    ref: "figure_G235M_INRSI_C_GWA_X_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "G235M_INRSI_C_GWA_X_POSITION [mV]"
+    x_range: *gwa_x_G235M_INRSI_C_GWA_X_POSITION
+    y_range: *gwa_y_G235M_INRSI_C_GWA_X_POSITION
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_G235M_INRSI_C_GWA_X_POSITION}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# G235M_INRSI_C_GWA_Y_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_G235M_INRSI_C_GWA_Y_POSITION
+    ref: "source_G235M_INRSI_C_GWA_Y_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_G235M_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_x_G235M_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_G235M_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_y_G235M_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_G235M_INRSI_C_GWA_Y_POSITION
+    ref: "figure_G235M_INRSI_C_GWA_Y_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "G235M_INRSI_C_GWA_Y_POSITION [mV]"
+    x_range: *gwa_x_G235M_INRSI_C_GWA_Y_POSITION
+    y_range: *gwa_y_G235M_INRSI_C_GWA_Y_POSITION
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_G235M_INRSI_C_GWA_Y_POSITION}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# G395M_INRSI_C_GWA_X_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_G395M_INRSI_C_GWA_X_POSITION
+    ref: "source_G395M_INRSI_C_GWA_X_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_G395M_INRSI_C_GWA_X_POSITION
+    ref: "gwa_x_G395M_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_G395M_INRSI_C_GWA_X_POSITION
+    ref: "gwa_y_G395M_INRSI_C_GWA_X_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_G395M_INRSI_C_GWA_X_POSITION
+    ref: "figure_G395M_INRSI_C_GWA_X_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "G395M_INRSI_C_GWA_X_POSITION [mV]"
+    x_range: *gwa_x_G395M_INRSI_C_GWA_X_POSITION
+    y_range: *gwa_y_G395M_INRSI_C_GWA_X_POSITION
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_G395M_INRSI_C_GWA_X_POSITION}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# G395M_INRSI_C_GWA_Y_POSITION vs Time Figure
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- !ColumnDataSource: &source_G395M_INRSI_C_GWA_Y_POSITION
+    ref: "source_G395M_INRSI_C_GWA_Y_POSITION"
+    data:
+        time: []
+        time_iso: []
+        grating: []
+        filename: []
+- !Range1d: &gwa_x_G395M_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_x_G395M_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 1
+    bounds: 'auto'
+- !Range1d: &gwa_y_G395M_INRSI_C_GWA_Y_POSITION
+    ref: "gwa_y_G395M_INRSI_C_GWA_Y_POSITION"
+    start: 0
+    end: 10
+    bounds: 'auto'
+- !Figure: &figure_G395M_INRSI_C_GWA_Y_POSITION
+    ref: "figure_G395M_INRSI_C_GWA_Y_POSITION"
+    x_axis_label: "Date"
+    x_axis_type: "datetime"
+    y_axis_label: "G395M_INRSI_C_GWA_Y_POSITION [mV]"
+    x_range: *gwa_x_G395M_INRSI_C_GWA_Y_POSITION
+    y_range: *gwa_y_G395M_INRSI_C_GWA_Y_POSITION
+    height: 400
+    width: 400
+    tools: "hover, wheel_zoom, pan, reset"
+    elements:
+        - {'kind': 'circle', 'x': 'time', 'y': 'grating', 'size': 6, 'source': *source_G395M_INRSI_C_GWA_Y_POSITION}
+
+# Document structure
+# - !Document:
+#     - !row:
+#         - *grating_figure

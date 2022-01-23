@@ -23,10 +23,11 @@ import os
 
 from bokeh.embed import components
 from bokeh.layouts import layout
+from bokeh.models import BoxAnnotation
 from bokeh.models.widgets import Tabs, Panel
 
 from . import monitor_pages
-from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES
+from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES, GRATING_TELEMETRY
 from jwql.utils.utils import get_config
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -285,6 +286,75 @@ def dark_monitor_tabs(instrument):
 
     # Build tabs
     tabs = Tabs(tabs=[histogram_tab, line_tab, image_tab])
+
+    # Return tab HTML and JavaScript to web app
+    script, div = components(tabs)
+
+    return div, script
+
+
+def grating_monitor_tabs(instrument):
+    """Creates the various tabs of the grating wheel monitor results page.
+
+    Parameters
+    ----------
+    instrument : str
+        The JWST instrument of interest (e.g. ``nircam``).
+
+    Returns
+    -------
+    div : str
+        The HTML div to render grating wheel monitor plots
+    script : str
+        The JS script to render grating wheel monitor plots
+    """
+
+    # Make a tab
+    tabs = []
+    monitor_template = monitor_pages.GratingMonitor()
+    monitor_template.input_parameters = (instrument)
+
+    # Add the telemetry vs time plots for grating wheel sensor telemetry value
+    plots = []
+    for telemetry in GRATING_TELEMETRY.keys():
+        grating_plot = monitor_template.refs['figure_{}'.format(telemetry)]
+        grating_plot.sizing_mode = 'scale_width'  # Make sure the sizing is adjustable
+
+        # Add colored boxes to plots indicating green, yellow, and red regions
+        # Grating Telemetry dictionary indices are in the following order:
+        # Lower Red, Lower Yellow, High Yellow, High Red
+        red_low_lower_threshold = GRATING_TELEMETRY[telemetry][0] - 100  # arbitrary box height to show red on rest of plot
+        yellow_low_lower_threshold = GRATING_TELEMETRY[telemetry][0]
+        green_lower_threshold = GRATING_TELEMETRY[telemetry][1]
+        green_higher_threshold = GRATING_TELEMETRY[telemetry][2]
+        yellow_high_higher_threshold = GRATING_TELEMETRY[telemetry][3]
+        red_high_higher_threshold = GRATING_TELEMETRY[telemetry][3] + 100  # arbitrary box height to show red on rest of plot
+        yellow_low_higher_threshold = green_lower_threshold
+        yellow_high_lower_threshold = green_higher_threshold
+        red_low_higher_threshold = yellow_low_lower_threshold
+        red_high_lower_threshold = yellow_high_higher_threshold
+
+        green = BoxAnnotation(bottom=green_lower_threshold, top=green_higher_threshold, fill_color='chartreuse', fill_alpha=0.2)
+        grating_plot.add_layout(green)
+        yellow_high = BoxAnnotation(bottom=yellow_high_lower_threshold, top=yellow_high_higher_threshold, fill_color='gold', fill_alpha=0.2)
+        grating_plot.add_layout(yellow_high)
+        yellow_low = BoxAnnotation(bottom=yellow_low_lower_threshold, top=yellow_low_higher_threshold, fill_color='gold', fill_alpha=0.2)
+        grating_plot.add_layout(yellow_low)
+        red_high = BoxAnnotation(bottom=red_high_lower_threshold, top=red_high_higher_threshold, fill_color='red', fill_alpha=0.1)
+        grating_plot.add_layout(red_high)
+        red_low = BoxAnnotation(bottom=red_low_lower_threshold, top=red_low_higher_threshold, fill_color='red', fill_alpha=0.1)
+        grating_plot.add_layout(red_low)
+
+        plots.append(grating_plot)
+
+    # Put grating plots on the top row.
+    grating_layout = layout(plots[0:19])
+    grating_layout.sizing_mode = 'scale_width'
+    grating_tab = Panel(child=grating_layout, title="Grating Monitor Plots")
+    tabs.append(grating_tab)
+
+    # # Build tabs
+    tabs = Tabs(tabs=tabs)
 
     # Return tab HTML and JavaScript to web app
     script, div = components(tabs)
