@@ -41,14 +41,14 @@ from jwql.utils.utils import get_config()
 if __name__ == "__main__":
 
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql_proj.settings")
-    
+
     directory_mapping = {
-                            'filesystem': 'filesystem',
-                            'outputs': 'outputs',
-                            'preview_image_filesystem': 'preview_images',
-                            'thumbnail_filesystem': 'thumbnails'
-                        }
-    
+        'filesystem': 'filesystem',
+        'outputs': 'outputs',
+        'preview_image_filesystem': 'preview_images',
+        'thumbnail_filesystem': 'thumbnails'
+        }
+
     for directory in ['filesystem', 'outputs', 'preview_image_filesystem', 'thumbnail_filesystem']:
         symlink_location = os.path.join(get_config()['jwql_dir'], directory_mapping[directory])
         if not os.path.exists(symlink_location):
