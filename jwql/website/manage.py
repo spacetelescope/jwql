@@ -36,7 +36,7 @@ For more information please see:
 import os
 import sys
 
-from jwql.utils.utils import get_config()
+from jwql.utils.utils import get_config
 
 if __name__ == "__main__":
 
