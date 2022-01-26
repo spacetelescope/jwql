@@ -125,38 +125,6 @@ class tsoMonitor():
         self.query_table = eval('{}TsoMonitor'.format(mixed_case_name))
 
 
-    def plot_acq_image(self):
-        """Plot 2D acq image.
-        """
-        print('plotting stuff here')
-
-
-    def plot_spectrum_trace_and_jitter(self):
-        """Plot the cross-correlation of the spectrum trace and jitter in the dispersion and x-dispersion directions.
-        """
-        print('plotting stuff here')
-
-
-    def plot_whitelight_curve(self):
-        """Plot whitelight curve (band integrated light flux) vs wavelength and flux normalized to the median out-of-transit
-        flux vs time.
-        """
-        print('plotting stuff here')
-
-
-    def plot_spectroscopic_lightcurves(self):
-        """A surface plot of all spectral light curves: flux of each spectral light curve vs data point number
-        with flux color bar.
-        """
-        print('plotting stuff here')
-
-
-    def plot_jitter(self):
-        """Plot V1, V2, V3 jitter vs time.
-        """
-        print('plotting stuff here')
-
-
     @log_fail
     @log_info
     def run(self):
@@ -260,22 +228,80 @@ class tsoMonitor():
         return query_result
 
 
+    def plot_acq_image(self):
+        """Plot 2D acq image.
+        """
+
+        # use matplotlib
+        print('plotting stuff here')
+
+
+    def plot_spectrum_trace_and_jitter(self):
+        """Plot the cross-correlation of the spectrum trace and jitter in the dispersion and x-dispersion directions.
+        """
+        #bokeh from database
+        print('plotting stuff here')
+
+
+    def plot_whitelight_curve(self):
+        """Plot whitelight curve (band integrated light flux) vs wavelength and flux normalized to the median out-of-transit
+        flux vs time.
+        """
+        # bokeh using database
+        print('plotting stuff here')
+
+
+    def plot_spectroscopic_lightcurves(self):
+        """A surface plot of all spectral light curves: flux of each spectral light curve vs data point number
+        with flux color bar.
+        """
+        # This will be plotted with matplotlib
+        print('plotting stuff here')
+
+
+    def plot_jitter(self):
+        """Plot V1, V2, V3 jitter vs time.
+        """
+        # bokeh using database
+        print('plotting stuff here')
+
+
     def process(self, fileset_dataframe):
         """Process and calculate statistics for database table.
         """
-        files = glob.glob('{}/*'.format(self.data_dir))
-        # calculate out of transit median flux
-        # obtain frame numbers and x, y jitter
-        # centroids of targets in acq images brightest to faintest
+        # list file extensions
+        file_exts = ['acq.fits', '.jit', 'whtlt.ecsv', 'x1d.fits']
+        filenames = fileset_dataframe['files']
+        for filename in filenames:
+            # If file name in list of files doesn't contain extension we need, skip.
+            if not any(filename.endswith(ext) for ext in file_exts):
+                continue
+
+            if filename.endswith('whtlt.ecsv'):
+                self.process_whitelight_data(filename)
+                self.plot_whitelight_curve(filename)
+            
+            if filename.endswith('acq.fits'):
+                self.process_acq_image_centroids(filename)
+                self.plot_acq_image(filename)
+
+            if filename.endswith('jit.fits'):
+                self.process_v2_v3_jitter(filename)
+                self.plot_jitter(filename)
+            
+            if filename.endswith('x1d.fits'):
+                self.process_spectrum_jitter(filename)
+                self.plot_spectrum_trace_and_jitter(filename)
+                self.plot_spectroscopic_lightcurves(filename)
 
 
-    def process_acq_image_centroids(self, acq_image):
+    def process_acq_image_centroids(self, acq_file):
         """Find the centroid of the stars in acq image.
 
         acq_file : str
             full path to acq image
         """
-        hdu = fits.open(acq_image)
+        # hdu = fits.open(acq_file)
         # im_size = hdu[1].data.shape
         # obtain centroids
 
@@ -319,17 +345,3 @@ class tsoMonitor():
                                                     add_filters=parameters, return_data=True, caom=False)
         return query['data']
 
-
-    def webapp_plotting(self, filesetname):
-        """Given a single filesetname, create monitoring plots for the webapp.
-        """
-
-        self.plot_acq_image(filesetname)
-
-        self.plot_spectrum_trace_and_jitter(filesetname)
-
-        self.plot_whitelight_curve(filesetname)
-
-        self.plot_spectroscopic_lightcurves(filesetname)
-
-        self.plot_jitter(filesetname)

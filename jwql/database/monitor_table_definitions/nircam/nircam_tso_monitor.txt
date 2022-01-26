@@ -5,6 +5,7 @@ DETECTOR, string
 OBSLABEL, string
 START_TIME_MJD, float
 END_TIME_MJD, float
+PHOTOM_FILE, string
 ACQ_FILE, string
 JIT_FILE, string
 WHTLT_FILE, string
