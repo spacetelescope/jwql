@@ -698,14 +698,15 @@ def view_header(request, inst, filename, filetype):
         Name of JWST instrument
     filename : str
         FITS filename of selected image in filesystem
-    filetype :str
-        Type of file (e.g. 'uncal')
+    filetype : str
+        Type of file (e.g. ``uncal``)
 
     Returns
     -------
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
