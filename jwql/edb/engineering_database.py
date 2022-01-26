@@ -422,7 +422,7 @@ class EdbMnemonic:
 
 
     def bokeh_plot(self, show_plot=False, savefig=False, out_dir='./', nominal_value=None, yellow_limits=None,
-                   red_limits=None, xrange=(None, None), yrange=(None, None)):
+                   red_limits=None, xrange=(None, None), yrange=(None, None), return_components=True, return_fig=False):
         """Make basic bokeh plot showing value as a function of time.
         Paramters
         ---------
@@ -516,9 +516,11 @@ class EdbMnemonic:
 
         if show_plot:
             show(fig)
-        else:
+        if return_components:
             script, div = components(fig)
             return [div, script]
+        if return_fig:
+            return fig
 
     def save_table(self, outname):
         """Save the EdbMnemonic instance
@@ -616,6 +618,63 @@ def calc_median_time(time_arr):
     med_time = add_time_offset(med, time_arr[0])
     return med_time
 
+def change_only_bounding_points(date_list, value_list, starttime, endtime):
+    """For data containing change-only values, where bracketing data outside
+    the requested time span may be present, create data points at the starting
+    and ending times.
+
+    Parameters
+    ----------
+    date_list : list
+        List of datetime values
+
+    value_list : list
+        List of corresponding mnemonic values
+
+    start_time : astropy.time.Time instance
+        Start time
+
+    end_time : astropy.time.Time instance
+        End time
+
+    Returns
+    -------
+    date_list : list
+        List of datetime values
+
+    value_list : list
+        List of corresponding mnemonic values
+    """
+    if len(date_list) > 5:
+        dates_start_arr = np.array(date_list[0:5])
+        dates_end_arr = np.array(date_list[-5:])
+        before = np.sum(dates_start_arr < starttime.datetime)
+        after = np.sum(dates_end_arr > endtime.datetime)
+    else:
+        dates_start_arr = np.array(date_list)
+        before = np.sum(dates_arr < starttime.datetime)
+        after = np.sum(dates_arr > endtime.datetime)
+
+    if before > 0:
+        if Time(date_list[before]) > starttime:
+            date0 = starttime.datetime
+            value0 = value_list[before-1]
+            date_list = date_list[before:]
+            value_list = value_list[before:]
+            date_list.insert(0, date0)
+            value_list.insert(0, value0)
+
+    if after > 0:
+        endidx = 0 - (after + 1)
+        if Time(date_list[endidx]) < endtime:
+            date_end = endtime.datetime
+            value_end = value_list[endidx]
+            date_list = date_list[0:endidx+1]
+            value_list = value_list[0:endidx+1]
+            date_list.append(date_end)
+            value_list.append(value_end)
+    return date_list, value_list
+
 
 def create_time_offset(dt_obj, epoch):
     """Subtract input epoch from a datetime object and return the
@@ -658,15 +717,32 @@ def get_mnemonic(mnemonic_identifier, start_time, end_time):
     mnemonic : instance of EdbMnemonic
         EdbMnemonic object containing query results
     """
-
     base_url = get_mast_base_url()
-
     service = ENGDB_Service(base_url)  # By default, will use the public MAST service.
-    data = service.get_values(mnemonic_identifier, start_time, end_time, include_obstime=True)
+
     meta = service.get_meta(mnemonic_identifier)
+
+    # If the mnemonic is stored as change-only data, then include bracketing values
+    # outside of the requested start and stop times. These may be needed later to
+    # translate change-only data into all-points data.
+    if meta['TlmMnemonics'][0]['AllPoints'] == 0:
+        bracket = True
+    else:
+        bracket = False
+
+    data = service.get_values(mnemonic_identifier, start_time, end_time, include_obstime=True,
+                              include_bracket_values=bracket)
 
     dates = [datetime.strptime(row.obstime.iso, "%Y-%m-%d %H:%M:%S.%f") for row in data]
     values = [row.value for row in data]
+
+    if bracket:
+        # For change-only data, check to see how many additional data points there are before
+        # the requested start time and how many are after the requested end time. Note that
+        # the max for this should be 1, but it's also possible to have zero (e.g. if you are
+        # querying up through the present and there are no more recent data values.) Use these
+        # to produce entries at the beginning and ending of the queried time range.
+        dates, values = change_only_bounding_points(dates, values, start_time, end_time)
 
     data = Table({'dates': dates, 'euvalues': values})
     info = get_mnemonic_info(mnemonic_identifier)

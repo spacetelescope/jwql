@@ -1420,12 +1420,24 @@ class EdbMnemonicMonitor():
                 #none - plot mnemonic_info.data directly - no history to add.
 
                 if telem_type != 'every_change':
-                    _, _ = mnemonic_info.bokeh_plot(savefig=True, out_dir=plot_dir, nominal_value=nominal,
-                                                    yellow_limits=yellow, red_limits=red)
+                    figure = mnemonic_info.bokeh_plot(savefig=True, out_dir=plot_dir, nominal_value=nominal,
+                                                    yellow_limits=yellow, red_limits=red, return_components=False,
+                                                    return_fig=True)
                 else:
                     # Get mean_values from the database
-                    plot_every_change_data(mnemonic_info, mean_values, savefig=True, out_dir=plot_dir)
+                    ##### NOTE: "every_change" here isn't the best term. This section is for mnemonics
+                    # such as the MIRI position sensor ratios and commanded positions. In these cases,
+                    # the dependency has a set of possible values (e.g. 'F2550W, 'F770W') and we want to
+                    # find the mean of the mnemonic associated with each dependency value. The term "each change"
+                    # comes from the MIRI document listing mnemonics to montior. It is NOT the same as
+                    # the more generic "change only" telemetry data, where data points in the array represent
+                    # only times where the value has changed from what it was previously.
+                    figure = plot_every_change_data(mnemonic_info, mean_values, savefig=True, out_dir=plot_dir)
 
+
+                ############how do we do this so that plots can be remade if requested by the user?
+                ############maybe rather than saving plots we save EdbMnmonic instances? Then rebuild the
+                ############plots starting from those?
 
 
 def create_empty_plot(title, out_dir='./',):
@@ -1465,6 +1477,41 @@ def empty_edb_instance(name, beginning, ending, info={}):
     tab["euvalues"] = []
     return ed.EdbMnemonic(name, beginning, ending, tab, {}, info)
 
+
+def every_change_to_allPoints(data):
+    """Convert a table of every-change style mnemonic data into AllPoints.
+    To do this, simply add a new data point immediately prior to each existing
+    datapoint. The new data should have a value equal to the data in the
+    preceding point. This should be enough that the data can be correctly
+    interpolated later.
+
+    Parameters
+    ----------
+    data : astropy.table.Table
+        Table of every-change data. Columns should be "dates" and "euvalues"
+
+    Returns
+    -------
+    new_data : astropy.table.Table
+        Updated table with points that can be interpreted as AllPoints
+    """
+    new_dates = [data["dates"][0]]
+    new_values = [data["euvalues"][0]]
+    for i, row in enumerate(data[0:-1]):
+        # Create a new point very close in time to the next point, with the
+        # same value as the current point
+        new_values.append(row["euvalues"])
+        next_date = data["dates"][i+1]
+        delta = next_date - row["dates"]
+        delta_secs = datetime.timedelta(seconds=delta.seconds * 0.9999)
+        new_dates.append(row["dates"] + delta_secs)
+
+        # Add the date and value of the next point
+        new_dates.append(data["dates"][i+1])
+        new_values.append(data["euvalues"].data[i+1])
+
+    new_data = Table([new_dates, new_values], names=("dates", "euvalues"))
+    return new_data
 
 
 def organize_every_change(mnemonic):
@@ -1510,7 +1557,7 @@ def organize_every_change(mnemonic):
 
 
 def plot_every_change_data(mnem, show_plot=False, savefig=True, out_dir='./', nominal_value=None, yellow_limits=None,
-                           red_limits=None, xrange=(None, None), yrange=(None, None)):
+                           red_limits=None, xrange=(None, None), yrange=(None, None), return_components=True, return_fig=False):
     """Create a plot for mnemonics where we want to see the behavior within
     each change
 
@@ -1612,6 +1659,8 @@ def plot_every_change_data(mnem, show_plot=False, savefig=True, out_dir='./', no
 
     if show_plot:
         show(fig)
-    else:
+    if return_components:
         script, div = components(fig)
         return [div, script]
+    if return_fig:
+        return fig

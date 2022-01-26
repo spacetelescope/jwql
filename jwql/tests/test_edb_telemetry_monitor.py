@@ -25,6 +25,8 @@ from astropy.table import Table
 from astropy.table.column import Column
 from astropy.time import Time, TimeDelta
 import astropy.units as u
+import datetime
+import numpy as np
 
 from jwql.edb.engineering_database import EdbMnemonic
 from jwql.instrument_monitors.common_monitors import edb_telemetry_monitor as etm
@@ -99,6 +101,27 @@ def test_conditions():
     condition_3.extract_data(temperature.data)
     assert np.all(condition_3.extracted_data == expected_table)
     assert condition_3.block_indexes == [0, 2]
+
+
+def test_every_change_to_allPoints():
+    """Make sure we convert every-change data to AllPoints data correctly
+    """
+    dates = [datetime.datetime(2021, 7, 14, 5, 24, 39+i) for i in range(10)]
+    delta = datetime.timedelta(seconds=0.9999)
+    values = np.arange(10)
+    data = Table([dates, values], names=('dates', 'euvalues'))
+
+    expected_dates = [datetime.datetime(2021, 7, 14, 5, 24, 39+i) for i in range(10)]
+    expected_dates = [dates[0]]
+    expected_values = [values[0]]
+    for i, val in enumerate(values[0:-1]):
+        expected_values.extend([val, values[i+1]])
+        expected_dates.extend([dates[i] + delta, dates[i+1]])
+
+    expected = Table([expected_dates, expected_values], names=('dates', 'euvalues'))
+    updated = etm.every_change_to_allPoints(data)
+    assert np.all(expected["dates"] == updated["dates"])
+    assert np.all(expected["euvalues"] == updated["euvalues"])
 
 """
 def test_find_all_changes():

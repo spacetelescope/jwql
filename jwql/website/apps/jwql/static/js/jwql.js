@@ -190,6 +190,18 @@ function determine_page_title(instrument, proposal) {
 
 
 /**
+ * Parse a JSON string containing a Bokeh plot
+ * @param {String} element - json-formatted string
+ */
+function parse_plot_json(element) {
+    // Determine if the URL is 'archive' or 'unlooked'
+    var formatted = Object;
+    formatted = JSON.parse(element)
+};
+
+
+
+/**
  * Perform a search of images and display the resulting thumbnails
  */
 function search() {

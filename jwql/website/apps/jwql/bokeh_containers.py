@@ -357,7 +357,7 @@ def edb_monitor_tabs(instrument):
         The JS script to render dark monitor plots
     """
     html_file_list = file_list[instrument]
-    read in html files
+    print('read in html files')
 
 
 def generic_telemetry_plot(times, values, name, nominal_value=None, yellow_limits=None,

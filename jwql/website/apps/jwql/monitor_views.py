@@ -29,7 +29,9 @@ Dependencies
 
 import os
 
+from bokeh.resources import CDN, INLINE
 from django.shortcuts import render
+import json
 
 from . import bokeh_containers
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
@@ -133,6 +135,44 @@ def dark_monitor(request, inst):
     context = {
         'inst': inst,
         'tabs_components': tabs_components,
+    }
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
+
+
+def edb_monitor(request, inst):
+    """Generate the readnoise monitor page for a given instrument
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # Ensure the instrument is correctly capitalized
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+
+    # Get the html and JS needed to render the readnoise tab plots
+    #tabs_components = bokeh_containers.readnoise_monitor_tabs(inst)
+    with open("/Users/hilbert/python_repos/jwql/jwql/instrument_monitors/common_monitors/tabbed_plots.json", 'r') as fp:
+        data=json.dumps(json.loads(fp.read()))
+        #data=json.loads(fp.read())
+
+    template = "sandbox_detail.html"
+
+    context = {
+        'inst': inst,
+        #'tabs_components': tabs_components,
+        'json_object':data,
+        'resources':CDN.render()
     }
 
     # Return a HTTP response with the template and dictionary of variables
