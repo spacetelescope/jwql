@@ -568,7 +568,7 @@ def get_filenames_by_rootname(rootname):
     return filenames
 
 
-def get_header_info(filename):
+def get_header_info(filename, filetype):
     """Return the header information for a given ``filename``.
 
     Parameters
@@ -576,6 +576,8 @@ def get_header_info(filename):
     filename : str
         The name of the file of interest, without the extension
         (e.g. ``'jw86600008001_02101_00007_guider2_uncal'``).
+    filetype : str
+        The type of the file of interest, (e.g. ``'uncal'``)
 
     Returns
     -------
@@ -587,7 +589,7 @@ def get_header_info(filename):
     header_info = {}
 
     # Open the file
-    fits_filepath = filesystem_path(filename, search='*_rate.fits')
+    fits_filepath = filesystem_path(filename, search=f'*_{filetype}.fits')
     hdulist = fits.open(fits_filepath)
 
     # Extract header information from file
