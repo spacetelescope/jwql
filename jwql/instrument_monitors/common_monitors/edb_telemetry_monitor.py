@@ -122,6 +122,23 @@ class EdbMnemonicMonitor():
     def __init__(self):
         self.query_results = {}
 
+    def add_figure(self, fig, key):
+        """Add Bokeh figure to the dictionary of figures
+
+        Parameters
+        ----------
+        fig : bokeh.plotting.figure
+            Plot of a single mnemonic
+
+        key : str
+            Key under which to store the plot
+        """
+        if key in self.figures:
+            self.figures[key].append(fig)
+        else:
+            self.figures[key] = [fig]
+
+
     def add_new_block_db_entry(self, mnem, query_time):
         """Add a new entry to the database table for any kind
         of telemetry type other than "none" (which does not save
@@ -332,7 +349,7 @@ class EdbMnemonicMonitor():
             all_times.extend((bin_times[1:] - bin_times[0:-1]) / 2.)  # for plotting later
 
             for b_idx in range(len(bin_times)-1):
-                good_points = np.where((mnem_data.data["MJD"] >= bin_times[b_idx]) & (mnem_data.data["MJD"] < bin_times[b_idx+1]))
+                good_points = np.where((mnem_data.data["dates"] >= bin_times[b_idx]) & (mnem_data.data["dates"] < bin_times[b_idx+1]))
                 bin_mean, bin_med, bin_stdev = sigma_clipped_stats(mnem_data.data["data"][good_points], sigma=sigma)
                 all_means.append(bin_mean)
                 all_meds.append(bin_med)
@@ -666,11 +683,11 @@ class EdbMnemonicMonitor():
             Dictionary of information about the mnemonic to be processed. Dictionary
             as read in from the json file of mnemonics
 
-        starting_time : float
-            Beginning time for query in MJD
+        starting_time : datetime.datetime
+            Beginning time for query
 
-        ending_time : float
-            Ending time for query in MJD
+        ending_time : datetime.datetime
+            Ending time for query
 
         telemetry_type : str
             How the telemetry will be processed. This is the top-level heirarchy from
@@ -904,7 +921,8 @@ class EdbMnemonicMonitor():
         # block of time to query over. For example, a cadence of 1 day and a duration
         # of 15 minutes means that the EDB will be queried over 12:00am - 12:15am each
         # day.
-        self.query_cadence = 1 * u.day
+        #self.query_cadence = 1 * u.day
+        self.query_cadence = timedelta(days=1)
 
         # Set up directory structure to hold the saved plots
         config = get_config()
@@ -925,7 +943,7 @@ class EdbMnemonicMonitor():
                     #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', f'{instrument_name.lower()}_mnemonics_to_monitor.json')
 
                     # Define the output directory in which the html files will be saved
-                    plot_output_dir = os.path.join(base_dir, instrument_name)
+                    self.plot_output_dir = os.path.join(base_dir, instrument_name)
 
                     # For development
                     mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_test.json')
@@ -943,7 +961,7 @@ class EdbMnemonicMonitor():
                                     filtered_mnemonic_dict[telem_type] = []
                                 filtered_mnemonic_dict[telem_type].append(mnemonic)
 
-                    self.run(instrument_name, filtered_mnemonic_dict, plot_output_dir, plot_start=plot_start, plot_end=plot_end)
+                    self.run(instrument_name, filtered_mnemonic_dict, plot_start=plot_start, plot_end=plot_end)
         else:
             # Here, no input was provided on specific mnemonics to run, so we run the entire suite
             # as defined by the json files.
@@ -964,12 +982,12 @@ class EdbMnemonicMonitor():
                     mnem_dict = json.load(json_file)
 
                 # Run with the entire dictionary
-                self.run(instrument_name, mnem_dict, plot_output_dir, plot_start=plot_start, plot_end=plot_end)
+                self.run(instrument_name, mnem_dict, plot_start=plot_start, plot_end=plot_end)
 
 
 
 
-    def run(self, instrument, mnemonic_dict, plot_dir, plot_start=None, plot_end=None):
+    def run(self, instrument, mnemonic_dict, plot_start=None, plot_end=None):
         """Run the monitor
 
         """
@@ -1024,15 +1042,22 @@ class EdbMnemonicMonitor():
         """
 
 
+        # Container to hold and organize all plots
+        self.figures = {}
+        self.instrument = instrument
 
         # Query the EDB for all mnemonics for the period of time between the previous query and the current date
         # Use exsiting JWQL EDB code - as shown above (move to within the loop over mnemonics to allow
         # a custom query time for each)
-        today = Time.now()
+        #today = Time.now()
+        #today = Time('2021-09-06')  # for development
+        #today = datetime.now()
+        today = datetime(2021, 9, 6)  # for development
 
         # Set the limits for the telemetry plots if necessary
         if plot_start is None:
-            plot_start = today - TimeDelta(EDB_DEFAULT_PLOT_RANGE, format='jd')
+            #plot_start = today - TimeDelta(EDB_DEFAULT_PLOT_RANGE, format='jd')
+            plot_start = today - timedelta(days=EDB_DEFAULT_PLOT_RANGE)
 
         if plot_end is None:
             plot_end = today
@@ -1076,11 +1101,13 @@ class EdbMnemonicMonitor():
                     #    usename = 'database_id'
                     #most_recent_search = self.most_recent_search(usename)
                     #most_recent_search = Time('2021-12-13')  # for development
-                    most_recent_search = Time('2021-09-30T00:00:00')  # for development
+                    #most_recent_search = Time('2021-09-01T00:00:00')  # for development
+                    most_recent_search = datetime(2021, 9, 1, 0, 0, 0) # for development
 
                     if plot_end > most_recent_search:
                         # Here we need to query the EDB to cover the entire plot range
-                        starttime = most_recent_search + TimeDelta(self.query_cadence)
+                        #starttime = most_recent_search + TimeDelta(self.query_cadence)
+                        starttime = most_recent_search + self.query_cadence
                     else:
                         # Here the entire plot range is before the most recent search,
                         # so all we need to do is query the JWQL database for the data.
@@ -1094,8 +1121,10 @@ class EdbMnemonicMonitor():
                     #starttime = plot_start
 
                     # For development---------
-                    most_recent_search = Time('2021-09-30T00:00:00')  # for development
-                    starttime = most_recent_search + TimeDelta(self.query_cadence)
+                    #most_recent_search = Time('2021-09-01T00:00:00')  # for development
+                    most_recent_search = datetime(2021,9,1,0,0,0)  # for development
+                    starttime = most_recent_search + self.query_cadence
+                    #starttime = most_recent_search + TimeDelta(self.query_cadence)
                     #For development---------------------
 
 
@@ -1113,14 +1142,17 @@ class EdbMnemonicMonitor():
                 else:
                     query_start_times = []
                     query_end_times = []
-                    time_range = int((plot_end - starttime).to(u.day).value)
+                    #time_range = int((plot_end - starttime).to(u.day).value)
+                    time_range = (plot_end - starttime).days
                     # Create an array of starting and ending query times. Start times are once per day
                     # between the previous query time and the present. End times are the start times
                     # plus the query duration.
                     for delta in range(time_range):
-                        tmp_start = starttime + TimeDelta(delta * u.day)
+                        #tmp_start = starttime + TimeDelta(delta * u.day)
+                        tmp_start = starttime + timedelta(days=delta)
                         query_start_times.append(tmp_start)
-                        query_end_times.append(tmp_start + TimeDelta(query_duration))
+                        #query_end_times.append(tmp_start + TimeDelta(query_duration))
+                        query_end_times.append(tmp_start + query_duration)
 
                     # Make sure the end time of the final query is before the current time
                     if query_end_times[-1] > today:
@@ -1131,7 +1163,8 @@ class EdbMnemonicMonitor():
 
                 # For development-------------------------
                 query_start_times = [starttime]
-                query_end_times = [starttime + TimeDelta(480. * u.minute)]
+                #query_end_times = [starttime + TimeDelta(480. * u.minute)]
+                query_end_times = [starttime + timedelta(days=0.25)]
                 # For development-------------------------
 
 
@@ -1420,7 +1453,7 @@ class EdbMnemonicMonitor():
                 #none - plot mnemonic_info.data directly - no history to add.
 
                 if telem_type != 'every_change':
-                    figure = mnemonic_info.bokeh_plot(savefig=True, out_dir=plot_dir, nominal_value=nominal,
+                    figure = mnemonic_info.bokeh_plot(savefig=True, out_dir=self.plot_output_dir, nominal_value=nominal,
                                                     yellow_limits=yellow, red_limits=red, return_components=False,
                                                     return_fig=True)
                 else:
@@ -1432,12 +1465,42 @@ class EdbMnemonicMonitor():
                     # comes from the MIRI document listing mnemonics to montior. It is NOT the same as
                     # the more generic "change only" telemetry data, where data points in the array represent
                     # only times where the value has changed from what it was previously.
-                    figure = plot_every_change_data(mnemonic_info, mean_values, savefig=True, out_dir=plot_dir)
+                    figure = plot_every_change_data(mnemonic_info, mean_values, savefig=True, out_dir=self.plot_output_dir)
 
+
+                # Store the figure according to the "plot_category" given in the input json file
+                self.add_figure(figure, mnemonic["plot_category"])
 
                 ############how do we do this so that plots can be remade if requested by the user?
                 ############maybe rather than saving plots we save EdbMnmonic instances? Then rebuild the
                 ############plots starting from those?
+
+        # Create a tabbed, gridded set of plots for each category of plot
+        self.tabbed_figure()
+
+
+    def tabbed_figure(self, ncols=3):
+        """Create a tabbed figure containing all of the mnemonic plots
+
+        Parameters
+        ----------
+        ncols : int
+            Number of columns of plots in each plot tab
+        """
+        panel_list = []
+        for key, plot_list in self.figures.items():
+            grid = gridplot(plot_list, ncols=ncols)
+
+            # Create one panel for each plot category
+            panel_list.append(Panel(child=grid, title=key))
+
+        # Assign the panels to Tabs
+        tabbed = Tabs(tabs=panel_list)
+
+        # Save the tabbed plot to a json file
+        item_text = json.dumps(json_item(tabbed, "myplot"))
+        with open(f'edb_{self.instrument}_tabbed_plots.json', 'w') as outfile:
+            outfile.write(item_text)
 
 
 def create_empty_plot(title, out_dir='./',):

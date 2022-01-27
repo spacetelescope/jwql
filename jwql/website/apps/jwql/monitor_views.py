@@ -37,7 +37,8 @@ from . import bokeh_containers
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config
 
-FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
+CONFIG = get_config()
+FILESYSTEM_DIR = os.path.join(CONFIG['jwql_dir'], 'filesystem')
 
 
 def bad_pixel_monitor(request, inst):
@@ -148,6 +149,7 @@ def edb_monitor(request, inst):
     ----------
     request : HttpRequest object
         Incoming request from the webpage
+
     inst : str
         Name of JWST instrument
 
@@ -156,21 +158,18 @@ def edb_monitor(request, inst):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+    inst = inst.lower()
+    plot_dir = os.path.join(CONFIG["outputs"], "edb_telemetry_monitor", inst)
 
-    # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-
-    # Get the html and JS needed to render the readnoise tab plots
-    #tabs_components = bokeh_containers.readnoise_monitor_tabs(inst)
+    # Get the json data that contains the tabbed plots
+    #with open(os.path.join(plot_dir, f'edb_{inst}_tabbed_plots.json')), 'r'_ as fp:  # USE THIS LINE FOR PRODUCTION
     with open("/Users/hilbert/python_repos/jwql/jwql/instrument_monitors/common_monitors/tabbed_plots.json", 'r') as fp:
         data=json.dumps(json.loads(fp.read()))
-        #data=json.loads(fp.read())
 
     template = "sandbox_detail.html"
 
     context = {
-        'inst': inst,
-        #'tabs_components': tabs_components,
+        'inst': JWST_INSTRUMENT_NAMES_MIXEDCASE[inst],
         'json_object':data,
         'resources':CDN.render()
     }

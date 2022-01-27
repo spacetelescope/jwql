@@ -707,9 +707,11 @@ def get_mnemonic(mnemonic_identifier, start_time, end_time):
     ----------
     mnemonic_identifier : str
         Telemetry mnemonic identifiers, e.g. ``SA_ZFGOUTFOV``
-    start_time : astropy.time.Time instance
+
+    start_time : astropy.time.Time or datetime.datetime
         Start time
-    end_time : astropy.time.Time instance
+
+    end_time : astropy.time.Time or datetime.datetime
         End time
 
     Returns
