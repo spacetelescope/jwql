@@ -163,14 +163,17 @@ class EdbMnemonicMonitor():
                     }
         self.history_table.__table__.insert().execute(db_entry)
 
-    def add_new_every_change_db_entry(self, mnem, dependency_name, query_time):
+    def add_new_every_change_db_entry(self, mnem, mnem_dict, dependency_name, query_time):
         """Add new entries to the database table for "every change"
         mnemonics. Add a separate entry for each dependency value.
 
         Parameters
         ----------
-        mnem : jwql.edb.engineering_database.EdbMnemonic
-            Mnemonic information
+        mnem : str
+            Name of the mnemonic whose data is being saved
+
+        mnem_dict : dict
+            Dictionary containing every_change data as output by organize_every_change()
 
         dependency_name : str
             Name of mnemonic whose values the changes in mnemonic are based on
@@ -191,18 +194,33 @@ class EdbMnemonicMonitor():
         #                }
         #    self.history_table.__table__.insert().execute(db_entry)
 
-        # This creates an entry close in format to the EdbMnemonic instance. Values
-        # for each dependency value are still mixed together. This makes it easier to
-        # add data retrieved from the database to new data down the road.
-        db_entry = {'mnemonic': mnem.mnemonic_identifier,
-                    'dependency_mnemonic': dependency_name,
-                    'dependency_value': mnem.every_change_values,
-                    'mnemonic_value': mnem.data["euvalues"].data,
-                    'times': mnem.data["dates"].data,
-                    'latest_query': query_time,
-                    'entry_date': datetime.datetime.now()
+        # We create a separate database entry for each unique value of the
+        # dependency mnemonic.
+        for key, value in mnem_dict.items():
+            (times, values, means) = value
+            db_entry = {'mnemonic': mnem,
+                        'dependency_mnemonic': dependency_name,
+                        'dependency_value': key,
+                        'mnemonic_value': values,
+                        'time': times,
+                        'mean': means,
+                        'stdev': stdevs,  --> ???
+                        'latest_query': query_time,
+                        'entry_date': datetime.datetime.now()
                         }
-        self.history_table.__table__.insert().execute(db_entry)
+            self.history_table.__table__.insert().execute(db_entry)
+
+
+
+        #db_entry = {'mnemonic': mnem.mnemonic_identifier,
+        #            'dependency_mnemonic': dependency_name,
+        #            'dependency_value': mnem.every_change_values,
+        #            'mnemonic_value': mnem.data["euvalues"].data,
+        #            'times': mnem.data["dates"].data,
+        #            'latest_query': query_time,
+        #            'entry_date': datetime.datetime.now()
+        #                }
+        #self.history_table.__table__.insert().execute(db_entry)
 
 
 
@@ -647,7 +665,7 @@ class EdbMnemonicMonitor():
 
         return dep_mnemonic
 
-    def get_history(self, mnemonic, start_date, end_date):
+    def get_history(self, mnemonic, start_date, end_date, info={}, meta={}):
         """Retrieve data for a single mnemonic over the given time range
 
         Parameters
@@ -663,15 +681,70 @@ class EdbMnemonicMonitor():
 
         Returns
         -------
-        data : jwql.edb.engineering_database.EdbMnemonic
+        hist : jwql.edb.engineering_database.EdbMnemonic
             Retrieved data
         """
         data = session.query(self.history_table) \
-            .filter(self.history_table.mnemonic == mnemonic) \
-            .all()
+            .filter(self.history_table.mnemonic == mnemonic
+                    self.history_table.latest_query > start_date,
+                    self.history_table.latest_query < end_date)
 
-        print('need to filter on time here.')
-        return data
+        all_dates = []
+        all_values = []
+        for row in data:
+            all_dates.extend(data.times)
+            all_values.extend(data.data)
+
+        tab = Table([all_dates, all_values], names=('dates', 'euvalues'))
+        hist = ed.EdbMnemonic(mnemonic, start_date, end_date, tab, meta, info)
+        return hist
+
+    def get_history_every_change(self, mnemonic, start_date, end_date):
+        """Retrieve data for a single mnemonic over the given time range for every_change data
+        e.g. IMIR_HK_FW_POS_RATIO, where we need to calculate and store an average value for
+        each block of time where IMIR_HK_FW_CUR_POS has a different value. This has nothing to
+        do with 'change-only' data as stored in the EDB.
+
+        Parameters
+        ----------
+        mnemonic : str
+            Name of mnemonic whose data is to be retrieved
+
+        start_date : datetime
+            Beginning date of data retrieval
+
+        end_date : datetime
+            Ending date of data retrieval
+
+        Returns
+        -------
+        hist : dict
+            Retrieved data
+        """
+        data = session.query(self.history_table) \
+            .filter(self.history_table.mnemonic == mnemonic
+                    self.history_table.latest_query > start_date,
+                    self.history_table.latest_query < end_date)
+
+        # Set up the dictionary to contain the data
+        hist = {}
+        for dep_val in np.unique(data.dependency_values):
+            hist{dep_val} = []
+
+        # Place the data from the database into the appropriate key
+        times = []
+        values = []
+        means = []
+        for row in data:
+            times.extend(row.time)
+            values.extend(row.data)
+            means.extend(row.mean)
+            hist[row.dependency_value] = (times, values, means)
+
+            what about stdev??
+
+        return hist
+
 
     def get_mnemonic_info(self, mnemonic, starting_time, ending_time, telemetry_type):
         """Wrapper around the code to query the EDB, filter the result, and calculate
@@ -779,13 +852,13 @@ class EdbMnemonicMonitor():
         if '_means' in tel_type:
             tel_type = tel_type.strip('_means')
         tel_type = tel_type.title().replace('_', '')
+        self.history_table_name = f'{mixed_case_name}EDB{tel_type}Stats'
         self.history_table = getattr(database_interface, f'{mixed_case_name}EDB{tel_type}Stats')
 
-    def load_data(self, mnemonic_name, inst, tel_type, start_date, end_date):
+    def load_data(self, mnemonic_name, start_date, end_date):
         """Query the database tables to get data"""
 
-        # Determine which database tables are needed based on instrument
-        self.identify_tables(inst, tel_type)
+        print('USE self.get_history')
 
         self.history_table = session.query(self.history_table) \
             .filter(self.history_table.mnemonic == mnemonic_name) \
@@ -804,11 +877,13 @@ class EdbMnemonicMonitor():
         query = session.query(self.history_table).filter(self.history_table.mnemonic == telem_name).order_by(self.hisotry_table.latest_query).all()
 
         if len(query) == 0:
-            base_time = '2021-08-01'
-            query_result = Time(base_time)
+            base_time = '2021-09-01 00:00:00'
+            #query_result = Time(base_time)
+            query_result = datetime.strptime(base_time, '%Y-%m-%d %H:%M:%S.%f')
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.mnemonic, base_time)))
         else:
-            query_result = Time(query[-1].latest_query)
+            #query_result = Time(query[-1].latest_query)
+            query_result = datetime.strptime(query[-1].latest_query, '%Y-%m-%d %H:%M:%S.%f')
 
         return query_result
 
@@ -1099,6 +1174,10 @@ class EdbMnemonicMonitor():
                     # usename = 'name'
                     # if 'database_id' in mnemonic:
                     #    usename = 'database_id'
+
+                    # Determine which database tables are needed based on instrument
+                    self.identify_tables(inst, telem_type)
+
                     #most_recent_search = self.most_recent_search(usename)
                     #most_recent_search = Time('2021-12-13')  # for development
                     #most_recent_search = Time('2021-09-01T00:00:00')  # for development
@@ -1136,7 +1215,9 @@ class EdbMnemonicMonitor():
                 # to run the calculations separately for each day. Should we query for the full time and then
                 # filter, or query once per day? The latter is probably slower. Could the former turn into a
                 # problem if e.g. someone wants to track a new mnemonic and it's been 100 days since the
-                # default most recent search time?
+                # default most recent search time? Also note that some mnemonics contain data sampled quite
+                # frequently, and querying over many days might lead to a very large table and/or slow
+                # response.
                 if starttime is None:
                     query_start_times = None
                 else:
@@ -1169,7 +1250,7 @@ class EdbMnemonicMonitor():
 
 
                 if telem_type != 'none':
-                    if most_recent_search < plot_end:
+                    if query_start_times is not None:
                         new_data = self.multiday_mnemonic_query(mnemonic, query_start_times, query_end_times, telem_type)
                     else:
                         usename = "name"
@@ -1193,36 +1274,50 @@ class EdbMnemonicMonitor():
 
                     # In this case we also need to retrieve the historical data from the database, so that
                     # we can add the new data and create an updated plot
-
-                    # Determine which database tables are needed based on instrument
-                    self.identify_tables(inst, tel_type)
-
-                    # self.load_data(mnemonic["name"])  -- TURNED OFF FOR INITIAL TESTING. THIS NEEDS TO BE ON LATER
-                    hist_data = self.get_history(new_data.mnemonic_identifier, plot_start, plot_end)
-
-                    # Place the historical data into an EdbMnemonic instance
-                    hist_tab = Table()
-                    if len(hist_data["times"]) > 0:
-                        hist_tab["dates"] = [Time(ele) for ele in hist_data["times"]]
-                        hist_tab["euvalues"] = hist_data["data"]
-
-                        # Data in the database go up through the most recent query.
-                        # But if we are asking for a time range completely within the time
-                        # covered by the database, then the ending time needs to be the
-                        # requested ending plot time.
+                    if telem_type != 'every_change':
+                        historical_data = self.get_history(new_data.mnemonic_identifier, plot_start, plot_end, info=new_data.info,
+                                                           meta=new_data.meta)
                         ending = starttime
                         if ending is None:
                             ending = plot_end
+                        historical_data.requested_end_time = ending
                     else:
-                        hist_tab["dates"] = []
-                        hist_tab["euvalues"] = []
-                        ending = plot_end
+                        historical_data = self.get_history_every_change(new_data.mnemonic_identifier, plot_start, plot_end)
 
-                    historical_data = ed.EdbMnemonic(new_data.mnemonic_identifier, plot_start, ending,
-                                                     hist_tab, {}, new_data.info)
 
-                    if telem_type == 'every_change':
-                        historical_data.every_change_values = hist_data["dependency_value"]
+                    if we have a different data format for get_history_every_change then things below here need to be
+                    tweaked. we need to:
+                    1) run organize_every_change on the new data -- DONE BELOW
+                    2) enter that as a new entry in the jwql database, then -- DONE BELOW
+                    3) have a simple combination of that data with the historical data
+                    4) (which has already been retrieved from the jwql database), and then
+                    5) call plot_every_change_data after removing the call in there to organize_every_change.
+
+                    # Place the historical data into an EdbMnemonic instance
+                    #hist_tab = Table()
+                    #if len(hist_data["times"]) > 0:
+                    #    hist_tab["dates"] = [Time(ele) for ele in hist_data["times"]]
+                    #    hist_tab["euvalues"] = hist_data["data"]
+                    #
+                    # Data in the database go up through the most recent query.
+                    # But if we are asking for a time range completely within the time
+                    # covered by the database, then the ending time needs to be the
+                    # requested ending plot time.
+                    #ending = starttime
+                    #if ending is None:
+                    #    ending = plot_end
+                    #else:
+                    #    hist_tab["dates"] = []
+                    #    hist_tab["euvalues"] = []
+                    #    ending = plot_end
+                    #
+                    #historical_data = ed.EdbMnemonic(new_data.mnemonic_identifier, plot_start, ending,
+                    #                                 hist_tab, {}, new_data.info)
+
+                    #historical_data.requested_end_time = ending
+
+                    #if telem_type == 'every_change':
+                        #historical_data.every_change_values = hist_data["dependency_values"]
 
 
                     # Historical data, which will be averages
@@ -1242,6 +1337,7 @@ class EdbMnemonicMonitor():
 
                     # FOR DEVELOPMENT----------
                     #deltatime = np.max(mnemonic_info.median_times) - np.min(mnemonic_info.median_times)
+                    This development historical data needs to change for every_change data
                     htab = Table()
                     #htab["dates"] = [Time('2021-10-01') + TimeDelta(0.2*i, format='jd') for i in range(4)]
                     from datetime import timedelta
@@ -1268,22 +1364,39 @@ class EdbMnemonicMonitor():
                     # save using the string in mnemonic["database_id"]
                     if telem_type != 'every_change':
                         self.add_new_block_db_entry(new_data, query_start_times[-1].datetime)
+
+                        # Now add the new data to the historical data
+                        mnemonic_info = new_data + historical_data
                     else:
-                        #every_change_data = organize_every_change(new_data)
+                        every_change_data = organize_every_change(new_data)
+
                         # If new_data is completely empty, we should still add an entry to the database, in
                         # order to note the updated most recent query time.
-                        self.add_new_every_change_db_entry(new_data, mnemonic['dependency'][0]["name"],
+                        usename = "name"
+                        if "database_id" in mnemonic:
+                            usename = "database_id"
+                        self.add_new_every_change_db_entry(mnemonic[usename], new_data, mnemonic['dependency'][0]["name"],
                                                            every_change_data, query_start_times[-1].datetime)
+
+
+                        mnemonic_info = add_every_change_history(historical_data, every_change_data)
+                        #combine = every_change_data + historical_data
+                        #mnemonic_info - from combination? then could be an edbmnemonic instance or a dict...
+                        #mnemonic_info = deepcopy(historical_data)
+                        #for key in every_change_data:
+                        #    if key in mnemonic_info:
+                        #        mnemonic_info[key].extend(every_change_data[key])
+                        #    else:
+                        #        mnemonic_info[key] = every_change_data[key]
+                        what about repeated values or out of chronological order entries?
+
+
                     print('use line above IRL. Be sure to add to database before concatenating the historical and new data')
 
 
-                    print('\n\nLENGTHS TO COMBINE: ', len(new_data), len(historical_data))
-                    print(new_data.info["unit"])
-                    print(historical_data.info["unit"])
 
-                    # Now add the new data to the historical data
-                    print('does this line need to be different for every_change vs others?')
-                    mnemonic_info = new_data + historical_data
+
+
 
 
                 else:
@@ -1503,6 +1616,31 @@ class EdbMnemonicMonitor():
             outfile.write(item_text)
 
 
+def add_every_change_history(dict1, dict2):
+    """Combine two dictionaries, where keys common to both have their values appended
+
+    Parameters
+    ----------
+    dict1 : dict
+        First dictionary to combine
+
+    dict2 : dict
+        Second dictionary to combine
+
+    Returns
+    -------
+    dd : collections.defaultdict
+        Combined dictionary
+    """
+    combined = defaultdict(list)
+
+    for d in (dict1, dict2):
+        for key, value in d.items():
+            combined[key].append(value)
+
+    print(dd)
+
+
 def create_empty_plot(title, out_dir='./',):
     """Create and save an empty Bokeh plot
 
@@ -1605,12 +1743,9 @@ def organize_every_change(mnemonic):
 
     # For each dependency value, pull out the corresponding mnemonic values and times.
     for val in unique_vals:
-        good = np.where(every_change == str(val))[0]  # val is np.str_ type. need to convert to str using repr()
+        good = np.where(every_change == str(val))[0]  # val is np.str_ type. need to convert to str
         val_times = mnemonic.data["dates"][good].datetime
         val_data = mnemonic.data["euvalues"][good].data
-        print(good)
-        print(val_times)
-        print(val_data)
 
         # Calculate the mean for each dependency value, and normalize the data
         meanval, medianval, stdevval = sigma_clipped_stats(val_data, sigma=3)

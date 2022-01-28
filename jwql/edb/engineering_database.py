@@ -652,8 +652,8 @@ def change_only_bounding_points(date_list, value_list, starttime, endtime):
         after = np.sum(dates_end_arr > endtime.datetime)
     else:
         dates_start_arr = np.array(date_list)
-        before = np.sum(dates_arr < starttime.datetime)
-        after = np.sum(dates_arr > endtime.datetime)
+        before = np.sum(dates_start_arr < starttime.datetime)
+        after = np.sum(dates_end_arr > endtime.datetime)
 
     if before > 0:
         if Time(date_list[before]) > starttime:
