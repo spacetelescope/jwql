@@ -355,8 +355,6 @@ class EdbMnemonic:
         ----------
         sigma : int
             Number of sigma to use for sigma clipping
-
-        move this to be an attribute of EdbMnemonic class
         """
         self.mean, self.median, self.stdev = sigma_clipped_stats(self.data["euvalues"], sigma=sigma)
         self.median_time = calc_median_time(self.data["dates"])
@@ -456,10 +454,19 @@ class EdbMnemonic:
         yrange : tuple
             Tuple of min, max datetime values to use as the plot range in the y direction.
 
+        return_components : bool
+            If True, return the plot as div and script components
+
+        return_fig : bool
+            If True, return the plot as a bokeh Figure object
+
         Returns
         -------
         [div, script] : list
             List containing the div and js representations of figure.
+
+        fig : bokeh.plotting.figure
+            Figure as a bokeh object
         """
 
         source = ColumnDataSource(data={'x': self.data['dates'], 'y': self.data['euvalues']})
@@ -531,6 +538,36 @@ class EdbMnemonic:
             Name of text file to save information into
         """
         ascii.write(self.data, outname, overwrite=True)
+
+    def timed_stats(self, duration, sigma=3):
+        """Break up the data into chunks of the given duration. Calculate the
+        mean value for each chunk.
+
+        Parameters
+        ----------
+        duration : astropy.quantity.Quantity
+            Length of time of each chunk of data
+
+        sigma : int
+            Number of sigma to use in sigma-clipping
+        """
+        add test for this
+        duration_secs = duration.to('second').value
+        date_arr = np.array(self.data["dates"])
+        num_bins = (np.max(self.data["dates"]) - np.min(self.data["dates"])).seconds / duration_secs
+        self.mean = []
+        self.median = []
+        self.stdev = []
+        self.median_times = []
+        for i in range(int(num_bins)):
+            min_date = self.data["dates"][0] + timedelta(seconds=i*duration_secs)
+            max_date = min_date + timedelta(seconds=duration_secs)
+            good = ((date_arr >= min_date) & (date_arr < max_date))
+            avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
+            self.mean.append(avg)
+            self.median.append(med)
+            self.stdev.append(dev)
+            self.median_times.append(calc_median_time(self.data["dates"].data[good]))
 
 
 def add_limit_boxes(fig, yellow=None, red=None):
@@ -631,10 +668,10 @@ def change_only_bounding_points(date_list, value_list, starttime, endtime):
     value_list : list
         List of corresponding mnemonic values
 
-    start_time : astropy.time.Time instance
+    start_time : datetime.datetime
         Start time
 
-    end_time : astropy.time.Time instance
+    end_time : datetime.datetime
         End time
 
     Returns
@@ -648,16 +685,16 @@ def change_only_bounding_points(date_list, value_list, starttime, endtime):
     if len(date_list) > 5:
         dates_start_arr = np.array(date_list[0:5])
         dates_end_arr = np.array(date_list[-5:])
-        before = np.sum(dates_start_arr < starttime.datetime)
-        after = np.sum(dates_end_arr > endtime.datetime)
+        before = np.sum(dates_start_arr < starttime)
+        after = np.sum(dates_end_arr > endtime)
     else:
         dates_start_arr = np.array(date_list)
-        before = np.sum(dates_start_arr < starttime.datetime)
-        after = np.sum(dates_end_arr > endtime.datetime)
+        before = np.sum(dates_start_arr < starttime)
+        after = np.sum(dates_start_arr > endtime)
 
     if before > 0:
-        if Time(date_list[before]) > starttime:
-            date0 = starttime.datetime
+        if date_list[before] > starttime:
+            date0 = starttime
             value0 = value_list[before-1]
             date_list = date_list[before:]
             value_list = value_list[before:]
@@ -666,7 +703,7 @@ def change_only_bounding_points(date_list, value_list, starttime, endtime):
 
     if after > 0:
         endidx = 0 - (after + 1)
-        if Time(date_list[endidx]) < endtime:
+        if date_list[endidx] < endtime:
             date_end = endtime.datetime
             value_end = value_list[endidx]
             date_list = date_list[0:endidx+1]
