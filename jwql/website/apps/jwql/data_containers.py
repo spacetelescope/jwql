@@ -680,12 +680,12 @@ def get_image_info(file_root, rewrite):
             pass
 
         # If it doesn't, make it using the preview_image module
-        else:
-            if not os.path.exists(jpg_dir):
-                os.makedirs(jpg_dir)
-            im = PreviewImage(filename, 'SCI')
-            im.output_directory = jpg_dir
-            im.make_image()
+        # else:
+        #     if not os.path.exists(jpg_dir):
+        #         os.makedirs(jpg_dir)
+        #     im = PreviewImage(filename, 'SCI')
+        #     im.output_directory = jpg_dir
+        #     im.make_image()
 
         # Record how many integrations there are per filetype
         search_jpgs = os.path.join(get_config()['preview_image_filesystem'], observation_dir, '{}_{}_integ*.jpg'.format(file_root, suffix))
