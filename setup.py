@@ -5,7 +5,8 @@ from setuptools import find_packages
 VERSION = '1.0.0'
 
 AUTHORS = 'Matthew Bourque, Lauren Chambers, Misty Cracraft, Mike Engesser, Mees Fix, Joe Filippazzo, Bryan Hilbert, '
-AUTHORS += 'Graham Kanarek, Teagan King, Catherine Martlin, Maria Pena-Guerrero, Johannes Sahlmann, Ben Sunnquist'
+AUTHORS += 'Graham Kanarek, Teagan King, Catherine Martlin, Shannon Osborne, Maria Pena-Guerrero, Johannes Sahlmann, '
+AUTHORS += 'Ben Sunnquist, Brian York'
 
 DESCRIPTION = 'The James Webb Space Telescope Quicklook Project'
 
@@ -38,6 +39,7 @@ REQUIRES = [
     'pytest-cov',
     'scipy',
     'sphinx',
+    'sphinx_rtd_theme',
     'sqlalchemy',
     'stdatamodels',
     'stsci_rtd_theme',

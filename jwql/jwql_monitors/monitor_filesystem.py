@@ -332,7 +332,7 @@ def plot_by_filetype(plot_type, instrument):
 
         # Query for counts
         results = session.query(FilesystemInstrument.date, getattr(FilesystemInstrument, plot_type))\
-                                .filter(FilesystemInstrument.filetype == filetype)
+            .filter(FilesystemInstrument.filetype == filetype)
 
         if instrument == 'all':
             results = results.all()
@@ -456,7 +456,7 @@ def plot_filesystem_stats():
         plot_list.append(plot_by_filetype('size', instrument))
 
     # Create a layout with a grid pattern
-    grid_chunks = [plot_list[i:i+2] for i in range(0, len(plot_list), 2)]
+    grid_chunks = [plot_list[i:i + 2] for i in range(0, len(plot_list), 2)]
     grid = gridplot(grid_chunks)
 
     # Save all of the plots in one file
