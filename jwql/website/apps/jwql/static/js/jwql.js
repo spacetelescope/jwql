@@ -156,6 +156,7 @@ function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root)
         var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
         img.src = jpg_path;
     };
+    console.log(jpg_path);
 };
 
 
