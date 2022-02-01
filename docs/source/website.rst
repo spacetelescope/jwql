@@ -8,6 +8,12 @@ api_views.py
     :members:
     :undoc-members:
 
+bokeh_dashboard.py
+------------------
+.. automodule:: jwql.website.apps.jwql.bokeh_dashboard
+    :members:
+    :undoc-members:
+
 context_processors.py
 ---------------------
 .. automodule:: jwql.website.apps.jwql.context_processors
@@ -41,12 +47,6 @@ manage.py
 monitor_views.py
 ----------------
 .. automodule:: jwql.website.apps.jwql.monitor_views
-    :members:
-    :undoc-members:
-
-oauth.py
---------
-.. automodule:: jwql.website.apps.jwql.oauth
     :members:
     :undoc-members:
 

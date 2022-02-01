@@ -54,8 +54,8 @@ from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import filename_parser
-from jwql.utils.utils import get_config, initialize_instrument_monitor
-from jwql.utils.monitor_utils import update_monitor_table
+from jwql.utils.utils import get_config
+from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 
 FILESYSTEM = get_config()['filesystem']
 PROPRIETARY_FILESYSTEM = os.path.join(FILESYSTEM, 'proprietary')
@@ -332,7 +332,7 @@ def plot_by_filetype(plot_type, instrument):
 
         # Query for counts
         results = session.query(FilesystemInstrument.date, getattr(FilesystemInstrument, plot_type))\
-                                .filter(FilesystemInstrument.filetype == filetype)
+            .filter(FilesystemInstrument.filetype == filetype)
 
         if instrument == 'all':
             results = results.all()
@@ -456,7 +456,7 @@ def plot_filesystem_stats():
         plot_list.append(plot_by_filetype('size', instrument))
 
     # Create a layout with a grid pattern
-    grid_chunks = [plot_list[i:i+2] for i in range(0, len(plot_list), 2)]
+    grid_chunks = [plot_list[i:i + 2] for i in range(0, len(plot_list), 2)]
     grid = gridplot(grid_chunks)
 
     # Save all of the plots in one file

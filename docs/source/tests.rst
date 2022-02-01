@@ -20,12 +20,6 @@ test_bias_monitor.py
     :members:
     :undoc-members:
 
-test_bokeh_templating
----------------------
-.. automodule:: jwql.tests.test_bokeh_templating
-    :members:
-    :undoc-members:
-
 test_calculations.py
 --------------------
 .. automodule:: jwql.tests.test_calculations
