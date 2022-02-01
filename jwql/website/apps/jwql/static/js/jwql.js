@@ -145,6 +145,8 @@ function change_int(file_root, num_ints, method, direction = 'right') {
 function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root) {
 
     // Update the thumbnail to show the most processed filetype
+    console.log(suffixes);
+    console.log(file_root);
     var img = document.getElementById('thumbnail'+i);
     if (suffixes.indexOf("cal") >= 0) {
         var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_cal_integ0.thumb';
