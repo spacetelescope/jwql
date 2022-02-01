@@ -49,7 +49,7 @@ def generate_proposal_thumbnails():
             thumbnail = rate_thumbnails[0]
         elif uncal_thumbnails:
             thumbnail = uncal_thumbnails[0]
-        else
+        else:
             thumbnail = None
             logging.info('No uncal or rate files found for {}.  No thumbnail generated.'.format(proposal_dir))
 
