@@ -18,6 +18,7 @@ Use
 
     This module is used within ``views.py`` as such:
     ::
+
         from .forms import FileSearchForm
         def view_function(request):
             form = FileSearchForm(request.POST or None)
@@ -39,7 +40,7 @@ References
 Dependencies
 ------------
     The user must have a configuration file named ``config.json``
-    placed in the ``jwql` directory.
+    placed in the ``jwql`` directory.
 """
 
 import datetime

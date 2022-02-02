@@ -31,8 +31,9 @@ import os
 import shutil
 
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
-from jwql.utils.utils import get_config, initialize_instrument_monitor
-from jwql.utils.monitor_utils import update_monitor_table
+from jwql.utils.utils import get_config
+from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
+
 
 @log_fail
 @log_info
