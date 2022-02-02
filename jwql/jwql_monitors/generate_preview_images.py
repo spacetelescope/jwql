@@ -706,14 +706,14 @@ def process_program(program):
             im.preview_output_directory = preview_output_directory
             im.thumbnail_output_directory = thumbnail_output_directory
 
-            # If a mosaic was made from more than one file
-            # insert it and it's associated DQ array into the
-            # instance of PreviewImage. Also set the input
-            # filename to indicate that we have mosaicked data
-            if numfiles > 1 and mosaic_image is not None:
-                im.data = mosaic_image
-                im.dq = mosaic_dq
-                im.file = dummy_file
+            # # If a mosaic was made from more than one file
+            # # insert it and it's associated DQ array into the
+            # # instance of PreviewImage. Also set the input
+            # # filename to indicate that we have mosaicked data
+            # if numfiles > 1 and mosaic_image is not None:
+            #     im.data = mosaic_image
+            #     im.dq = mosaic_dq
+            #     im.file = dummy_file
 
             im.make_image(max_img_size=max_size)
             logging.info('\tCreated preview image and thumbnail for: {}'.format(filename))
