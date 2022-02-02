@@ -49,6 +49,7 @@ from django.shortcuts import redirect, render
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT
+from jwql.utils.scrape_proposal_page import text_scrape
 from jwql.utils.utils import filesystem_path, get_base_url, get_config, query_unformat
 
 from .data_containers import build_table
@@ -324,9 +325,12 @@ def archive_thumbnails(request, inst, proposal):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
+    proposal_meta = text_scrape(proposal) 
+
     template = 'thumbnails.html'
     context = {'inst': inst,
                'prop': proposal,
+               'prop_meta': proposal_meta,
                'base_url': get_base_url()}
 
     return render(request, template, context)
