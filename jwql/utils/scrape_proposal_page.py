@@ -43,12 +43,14 @@ def text_scrape(prop_id):
 
     program_meta = {}
     program_meta['prop_id'] = prop_id
-    program_meta['phase_two'] = 'https://www.stsci.edu/jwst/phase2-public/{}.pdf'
+    program_meta['phase_two'] = '<a href=https://www.stsci.edu/jwst/phase2-public/{}.pdf> Phase Two</a>'
 
     if prop_id[0] == '0':
         program_meta['phase_two'] = program_meta['phase_two'].format(prop_id[1:])
     else:
         program_meta['phase_two'] = program_meta['phase_two'].format(prop_id)
+
+    program_meta['phase_two'] = BeautifulSoup(program_meta['phase_two'], 'html.parser')
 
     links = html.findAll('a')
     proposal_type = links[0].contents[0]
@@ -81,12 +83,17 @@ def text_scrape(prop_id):
             mid = line.find('<', start)
             end = line.find('>', mid) + 1
             cs = line[mid:end] + line[start:mid] + '</a>'
-            program_meta['cs'] = cs
+            program_meta['cs'] = BeautifulSoup(cs, 'html.parser')
 
         if 'Program Status' in line:
-            start = line.find('<b>Program Status:')
-            end = line.find('</p>')
+            start = line.find('<a')
+            end = line.find('</a>')
             ps = line[start:end]
-            program_meta['ps'] = ps
+
+            #beautiful soupify text to build absolute link
+            ps =  BeautifulSoup(ps, 'html.parser')
+            ps_link = ps('a')[0]
+            ps_link['href'] = 'https://www.stsci.edu' + ps_link['href']
+            program_meta['ps'] = ps_link
 
     return program_meta
