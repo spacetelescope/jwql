@@ -325,7 +325,7 @@ def archive_thumbnails(request, inst, proposal):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    proposal_meta = text_scrape(proposal) 
+    proposal_meta = text_scrape(proposal)
 
     template = 'thumbnails.html'
     context = {'inst': inst,

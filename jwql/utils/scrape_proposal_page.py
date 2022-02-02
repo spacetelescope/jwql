@@ -40,11 +40,11 @@ def text_scrape(prop_id):
     html = BeautifulSoup(requests.get(url).text, 'lxml')
     lines = html.findAll('p')
     lines = [str(line) for line in lines]
-    
+
     program_meta = {}
     program_meta['prop_id'] = prop_id
     program_meta['phase_two'] = 'https://www.stsci.edu/jwst/phase2-public/{}.pdf'
-    
+
     if prop_id[0] == '0':
         program_meta['phase_two'] = program_meta['phase_two'].format(prop_id[1:])
     else:
@@ -52,7 +52,7 @@ def text_scrape(prop_id):
 
     links = html.findAll('a')
     proposal_type = links[0].contents[0]
-    
+
     program_meta['prop_type'] = proposal_type
 
     # Scrape for titles/names/contact persons
