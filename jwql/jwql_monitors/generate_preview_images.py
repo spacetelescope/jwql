@@ -682,14 +682,14 @@ def process_program(program):
         max_size = 8
         numfiles = len(file_list)
         if numfiles > 1:
-            try:
-                mosaic_image, mosaic_dq = create_mosaic(file_list)
-                logging.info('\tCreated mosiac for:')
-                for item in file_list:
-                    logging.info('\t{}'.format(item))
-            except (ValueError, FileNotFoundError) as error:
-                mosaic_image, mosaic_dq = None, None
-                logging.error(error)
+            # try:
+            #     mosaic_image, mosaic_dq = create_mosaic(file_list)
+            #     logging.info('\tCreated mosiac for:')
+            #     for item in file_list:
+            #         logging.info('\t{}'.format(item))
+            # except (ValueError, FileNotFoundError) as error:
+            #     mosaic_image, mosaic_dq = None, None
+            #     logging.error(error)
             dummy_file = create_dummy_filename(file_list)
             if numfiles in [2, 4]:
                 max_size = 16
