@@ -90,8 +90,8 @@ def text_scrape(prop_id):
             end = line.find('</a>')
             ps = line[start:end]
 
-            #beautiful soupify text to build absolute link
-            ps =  BeautifulSoup(ps, 'html.parser')
+            # beautiful soupify text to build absolute link
+            ps = BeautifulSoup(ps, 'html.parser')
             ps_link = ps('a')[0]
             ps_link['href'] = 'https://www.stsci.edu' + ps_link['href']
             program_meta['ps'] = ps_link
