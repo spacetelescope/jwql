@@ -560,8 +560,8 @@ def get_filenames_by_rootname(rootname):
     proposal_dir = rootname[0:7]
     observation_dir = rootname.split('_')[0]
 
-    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*'.format(rootname)))
-    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*'.format(rootname))))
+    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}_[!o]*'.format(rootname)))
+    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}_[!o]*'.format(rootname))))
     filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
