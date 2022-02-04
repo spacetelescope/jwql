@@ -164,8 +164,8 @@ def make_log_file(module):
 
     # Determine save location
     user = pwd.getpwuid(os.getuid()).pw_name
-    admin_account = get_config['admin_account']
-    log_path = get_config['log_dir']
+    admin_account = get_config()['admin_account']
+    log_path = get_config()['log_dir']
 
     # For production
     if user == admin_account and socket.gethostname()[0] == 'p':
@@ -217,7 +217,7 @@ def log_info(func):
         logging.info('Python Executable Path: ' + sys.executable)
 
         # Read in setup.py file to build list of required modules
-        with open(get_config['setup_file']) as f:
+        with open(get_config()['setup_file']) as f:
             data = f.readlines()
 
         for i, line in enumerate(data):
