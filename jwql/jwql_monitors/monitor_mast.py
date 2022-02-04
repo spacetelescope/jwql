@@ -40,6 +40,9 @@ if not ON_GITHUB_ACTIONS:
     Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
 
 
+SETTINGS = get_config()
+
+
 def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
                          add_filters=None, add_requests=None,
                          caom=False, return_data=False):
@@ -201,7 +204,7 @@ def jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
     # Plot it
     if plot:
         # Determine plot location and names
-        output_dir = get_config()['outputs']
+        output_dir = SETTINGS['outputs']
 
         if caom:
             output_filename = 'database_monitor_caom'

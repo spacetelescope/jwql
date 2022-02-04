@@ -24,6 +24,9 @@ from astroquery.mast import Mast
 from jwql.utils.utils import check_config_for_key, get_config
 
 
+SETTINGS = get_config()
+
+
 def get_mast_base_url(request=None):
     """Return base url for mnemonic query.
 
@@ -41,7 +44,7 @@ def get_mast_base_url(request=None):
     try:
         # check if token is available via config file
         check_config_for_key('mast_base_url')
-        base_url = get_config()['mast_base_url']
+        base_url = SETTINGS['mast_base_url']
         print('Base URL returned from config file.')
         return base_url
     except (KeyError, ValueError):
@@ -77,7 +80,7 @@ def get_mast_token(request=None):
         try:
             # check if token is available via config file
             check_config_for_key('mast_token')
-            token = get_config()['mast_token']
+            token = SETTINGS['mast_token']
             print('Authenticated with config.json MAST token.')
             return token
         except (KeyError, ValueError):

@@ -269,6 +269,7 @@ def archived_proposals_ajax(request, inst):
     """
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+    filesystem = get_config()['filesystem']
 
     # Get list of all files for the given instrument
     filenames_public = get_filenames_by_instrument(inst, restriction='public')
@@ -279,14 +280,14 @@ def archived_proposals_ajax(request, inst):
     for filename in filenames_public:
         try:
             relative_filepath = filesystem_path(filename, check_existence=False)
-            full_filepath = os.path.join(get_config()['filesystem'], 'public', relative_filepath)
+            full_filepath = os.path.join(filesystem, 'public', relative_filepath)
             filenames.append(full_filepath)
         except ValueError:
             print('Unable to determine filepath for {}'.format(filename))
     for filename in filenames_proprietary:
         try:
             relative_filepath = filesystem_path(filename, check_existence=False)
-            full_filepath = os.path.join(get_config()['filesystem'], 'proprietary', relative_filepath)
+            full_filepath = os.path.join(filesystem, 'proprietary', relative_filepath)
             filenames.append(full_filepath)
         except ValueError:
             print('Unable to determine filepath for {}'.format(filename))

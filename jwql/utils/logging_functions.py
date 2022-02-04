@@ -71,6 +71,9 @@ from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_config, ensure_dir_exists
 
 
+SETTINGS = get_config()
+
+
 def configure_logging(module):
     """Configure the log file with a standard logging format.
 
@@ -163,8 +166,8 @@ def make_log_file(module):
 
     # Determine save location
     user = pwd.getpwuid(os.getuid()).pw_name
-    admin_account = get_config()['admin_account']
-    log_path = get_config()['log_dir']
+    admin_account = SETTINGS['admin_account']
+    log_path = SETTINGS['log_dir']
 
     # For production
     if user == admin_account and socket.gethostname()[0] == 'p':
@@ -216,7 +219,7 @@ def log_info(func):
         logging.info('Python Executable Path: ' + sys.executable)
 
         # Read in setup.py file to build list of required modules
-        with open(get_config()['setup_file']) as f:
+        with open(SETTINGS['setup_file']) as f:
             data = f.readlines()
 
         for i, line in enumerate(data):

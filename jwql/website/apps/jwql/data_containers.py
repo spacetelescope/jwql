@@ -41,7 +41,7 @@ from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, filename_parser, get_config
+from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MONITORS
 from jwql.utils.constants import INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
@@ -56,7 +56,6 @@ ON_READTHEDOCS = False
 if 'READTHEDOCS' in os.environ:
     ON_READTHEDOCS = os.environ['READTHEDOCS']
 
-from jwql.utils.utils import get_config, filename_parser, check_config_for_key
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
     check_config_for_key('auth_mast')
@@ -663,6 +662,10 @@ def get_image_info(file_root, rewrite):
     filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*.fits'.format(file_root))))
     image_info['all_files'] = filenames
 
+    # Determine the jph directory
+    prev_img_filesys = get_config()['preview_image_filesystem']
+    jpg_dir = os.path.join(prev_img_filesys, proposal_dir)
+
     for filename in image_info['all_files']:
 
         # Get suffix information
@@ -670,7 +673,6 @@ def get_image_info(file_root, rewrite):
         image_info['suffixes'].append(suffix)
 
         # Determine JPEG file location
-        jpg_dir = os.path.join(get_config()['preview_image_filesystem'], proposal_dir)
         jpg_filename = os.path.basename(os.path.splitext(filename)[0] + '_integ0.jpg')
         jpg_filepath = os.path.join(jpg_dir, jpg_filename)
 
@@ -688,7 +690,7 @@ def get_image_info(file_root, rewrite):
             im.make_image()
 
         # Record how many integrations there are per filetype
-        search_jpgs = os.path.join(get_config()['preview_image_filesystem'], observation_dir, '{}_{}_integ*.jpg'.format(file_root, suffix))
+        search_jpgs = os.path.join(prev_img_filesys, observation_dir, '{}_{}_integ*.jpg'.format(file_root, suffix))
         num_jpgs = len(glob.glob(search_jpgs))
         image_info['num_ints'][suffix] = num_jpgs
 
@@ -961,7 +963,7 @@ def get_thumbnails_all_instruments(parameters):
 
     # Determine whether or not queried anomalies are flagged
     final_subset = []
-    
+
     if anomalies != {'miri': [], 'nirspec': [], 'niriss': [], 'nircam': [], 'fgs': []}:
         for thumbnail in thumbnails_subset:
             components = thumbnail.split('_')

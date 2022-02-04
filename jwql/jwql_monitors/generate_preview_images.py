@@ -48,6 +48,7 @@ SW_DET_GAP = 145  # pixels = int(4.5 arcsec / 0.031 arcsec/pixel)
 FULLX = 2048  # Width of the full detector
 FULLY = 2048  # Height of the full detector
 
+SETTINGS = get_config()
 
 def array_coordinates(channelmod, detector_list, lowerleft_list):
     """Create an appropriately sized ``numpy`` array to contain the
@@ -530,10 +531,10 @@ def generate_preview_images():
     See module docstring for further details."""
 
     # Process programs in parallel
-    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], 'public', 'jw*'))]
-    program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', 'jw*'))])
+    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'public', 'jw*'))]
+    program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', 'jw*'))])
     program_list = list(set(program_list))
-    pool = multiprocessing.Pool(processes=int(get_config()['cores']))
+    pool = multiprocessing.Pool(processes=int(SETTINGS['cores']))
     pool.map(process_program, program_list)
     pool.close()
     pool.join()
@@ -638,8 +639,8 @@ def process_program(program):
     logging.info('Processing {}'.format(program))
 
     # Gather files to process
-    filenames = glob.glob(os.path.join(get_config()['filesystem'], 'public', program, '*/*.fits'))
-    filenames.extend(glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', program, '*/*.fits')))
+    filenames = glob.glob(os.path.join(SETTINGS['filesystem'], 'public', program, '*/*.fits'))
+    filenames.extend(glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', program, '*/*.fits')))
     filenames = list(set(filenames))
 
     # Ignore "original" files
@@ -658,8 +659,8 @@ def process_program(program):
             identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
         except ValueError:
             identifier = os.path.basename(filename).split('.fits')[0]
-        preview_output_directory = os.path.join(get_config()['preview_image_filesystem'], identifier)
-        thumbnail_output_directory = os.path.join(get_config()['thumbnail_filesystem'], identifier)
+        preview_output_directory = os.path.join(SETTINGS['preview_image_filesystem'], identifier)
+        thumbnail_output_directory = os.path.join(SETTINGS['thumbnail_filesystem'], identifier)
 
         # Check to see if the preview images already exist and skip if they do
         file_exists = check_existence(file_list, preview_output_directory)

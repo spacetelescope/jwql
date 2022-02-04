@@ -38,6 +38,7 @@ from jwql.utils.utils import get_config
 from jwql.bokeh_templating import BokehTemplate
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+OUTPUTS_DIR = get_config()['outputs']
 
 
 class DarkMonitor(BokehTemplate):
@@ -60,7 +61,7 @@ class DarkMonitor(BokehTemplate):
         # Open the mean dark current file and get the data
         if len(self.pixel_table) != 0:
             mean_dark_image_file = self.pixel_table[-1].mean_dark_image_file
-            mean_slope_dir = os.path.join(get_config()['outputs'], 'dark_monitor', 'mean_slope_images')
+            mean_slope_dir = os.path.join(OUTPUTS_DIR, 'dark_monitor', 'mean_slope_images')
             mean_dark_image_path = os.path.join(mean_slope_dir, mean_dark_image_file)
             with fits.open(mean_dark_image_path) as hdulist:
                 data = hdulist[1].data
