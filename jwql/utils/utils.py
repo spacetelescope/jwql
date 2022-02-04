@@ -44,8 +44,6 @@ __location__ = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
-SETTINGS = get_config()
-
 
 def _validate_config(config_file_dict):
     """Check that the config.json file contains all the needed entries with
@@ -156,7 +154,7 @@ def get_config():
 
 
 if not ON_GITHUB_ACTIONS:
-    FILESYSTEM = SETTINGS['filesystem']
+    FILESYSTEM = get_config['filesystem']
 
 
 def copy_files(files, out_dir):
@@ -509,8 +507,8 @@ def get_base_url():
     """
 
     username = getpass.getuser()
-    if username == SETTINGS['admin_account']:
-        base_url = 'https://{}.stsci.edu'.format(SETTINGS['server_name'])
+    if username == get_config['admin_account']:
+        base_url = 'https://{}.stsci.edu'.format(get_config['server_name'])
     else:
         base_url = 'http://127.0.0.1:8000'
 
@@ -527,7 +525,7 @@ def check_config_for_key(key):
         The configuration file key to verify
     """
     try:
-        SETTINGS[key]
+        get_config[key]
     except KeyError:
         raise KeyError(
             'The key `{}` is not present in config.json. Please add it.'.format(key)
@@ -535,7 +533,7 @@ def check_config_for_key(key):
             'jwql/wiki/Config-file) for more information.'
         )
 
-    if SETTINGS[key] == "":
+    if get_config[key] == "":
         raise ValueError(
             'Please complete the `{}` field in your config.json. '.format(key)
             + ' See the relevant wiki page (https://github.com/spacetelescope/'
