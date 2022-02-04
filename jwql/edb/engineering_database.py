@@ -45,7 +45,11 @@ Notes
 
 from collections import OrderedDict
 from datetime import datetime
+from enum import unique
+# from msilib.schema import tables
 import os
+from select import POLLOUT
+from tokenize import PlainToken
 import warnings
 
 from astropy.table import Table
@@ -129,14 +133,38 @@ class EdbMnemonic:
         abscissa = self.data['dates']
         ordinate = self.data['euvalues']
 
-        p1 = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
-                    title=self.mnemonic_identifier, x_axis_label='Time',
-                    y_axis_label='Value ({})'.format(self.info['unit']))
-        p1.line(abscissa, ordinate, line_width=1, line_color='blue', line_dash='dashed')
-        p1.circle(abscissa, ordinate, color='blue')
+        if type(ordinate[0]) == np.str_:
+            if len(np.unique(ordinate)) > 4:
+                table = True
+                df = self.data.to_pandas()
+                table_columns = df.columns.values
+                table_rows = df.values
+            else:
+                p1 = figure(x_axis_type='datetime')
+                override_dict = {}
+                unique_values = np.unique(ordinate)
+                for i, value in enumerate(unique_values):
+                    print(i, value)
+                    index = np.where(ordinate == value)[0]
+                    override_dict[i] = value
+                    dates = abscissa[index].astype(np.datetime64)
+                    y_values = list(np.ones(len(index), dtype=int) * i)
+                    p1.line(dates, y_values, line_width=1, line_color='blue', line_dash='dashed')
+                    p1.circle(dates, y_values, color='blue')
+
+                p1.yaxis.ticker = list(override_dict.keys())
+                p1.yaxis.major_label_overrides = override_dict
+        else:
+            p1 = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
+                        title=self.mnemonic_identifier, x_axis_label='Time',
+                        y_axis_label='Value ({})'.format(self.info['unit']))
+            p1.line(abscissa, ordinate, line_width=1, line_color='blue', line_dash='dashed')
+            p1.circle(abscissa, ordinate, color='blue')
 
         if show_plot:
             show(p1)
+        elif table:
+            return table_columns, table_rows
         else:
             script, div = components(p1)
 
