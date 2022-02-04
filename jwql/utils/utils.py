@@ -154,7 +154,7 @@ def get_config():
 
 
 if not ON_GITHUB_ACTIONS:
-    FILESYSTEM = get_config['filesystem']
+    FILESYSTEM = get_config()['filesystem']
 
 
 def copy_files(files, out_dir):
