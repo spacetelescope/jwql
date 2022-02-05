@@ -507,8 +507,8 @@ def get_base_url():
     """
 
     username = getpass.getuser()
-    if username == get_config['admin_account']:
-        base_url = 'https://{}.stsci.edu'.format(get_config['server_name'])
+    if username == get_config()['admin_account']:
+        base_url = 'https://{}.stsci.edu'.format(get_config()['server_name'])
     else:
         base_url = 'http://127.0.0.1:8000'
 
@@ -525,7 +525,7 @@ def check_config_for_key(key):
         The configuration file key to verify
     """
     try:
-        get_config[key]
+        get_config()[key]
     except KeyError:
         raise KeyError(
             'The key `{}` is not present in config.json. Please add it.'.format(key)
@@ -533,7 +533,7 @@ def check_config_for_key(key):
             'jwql/wiki/Config-file) for more information.'
         )
 
-    if get_config[key] == "":
+    if get_config()[key] == "":
         raise ValueError(
             'Please complete the `{}` field in your config.json. '.format(key)
             + ' See the relevant wiki page (https://github.com/spacetelescope/'
