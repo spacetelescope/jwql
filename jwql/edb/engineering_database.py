@@ -123,7 +123,6 @@ class EdbMnemonic:
 
     def bokeh_plot(self, show_plot=False):
         """Make basic bokeh plot showing value as a function of time.
-
         Returns
         -------
         [div, script] : list
@@ -133,43 +132,77 @@ class EdbMnemonic:
         abscissa = self.data['dates']
         ordinate = self.data['euvalues']
 
-        if type(ordinate[0]) == np.str_:
-            if len(np.unique(ordinate)) > 4:
-                table = True
-                df = self.data.to_pandas()
-                table_columns = df.columns.values
-                table_rows = df.values
-            else:
-                p1 = figure(x_axis_type='datetime')
-                override_dict = {}
-                unique_values = np.unique(ordinate)
-                for i, value in enumerate(unique_values):
-                    print(i, value)
-                    index = np.where(ordinate == value)[0]
-                    override_dict[i] = value
-                    dates = abscissa[index].astype(np.datetime64)
-                    y_values = list(np.ones(len(index), dtype=int) * i)
-                    p1.line(dates, y_values, line_width=1, line_color='blue', line_dash='dashed')
-                    p1.circle(dates, y_values, color='blue')
-
-                p1.yaxis.ticker = list(override_dict.keys())
-                p1.yaxis.major_label_overrides = override_dict
-        else:
-            p1 = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
-                        title=self.mnemonic_identifier, x_axis_label='Time',
-                        y_axis_label='Value ({})'.format(self.info['unit']))
-            p1.line(abscissa, ordinate, line_width=1, line_color='blue', line_dash='dashed')
-            p1.circle(abscissa, ordinate, color='blue')
+        p1 = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
+                    title=self.mnemonic_identifier, x_axis_label='Time',
+                    y_axis_label='Value ({})'.format(self.info['unit']))
+        p1.line(abscissa, ordinate, line_width=1, line_color='blue', line_dash='dashed')
+        p1.circle(abscissa, ordinate, color='blue')
 
         if show_plot:
             show(p1)
-        elif table:
-            return table_columns, table_rows
         else:
             script, div = components(p1)
 
             return [div, script]
 
+    def bokeh_plot_text_data(self, show_plot=False):
+        """Make basic bokeh plot showing value as a function of time.
+        Returns
+        -------
+        [div, script] : list
+            List containing the div and js representations of figure.
+        """
+
+        abscissa = self.data['dates']
+        ordinate = self.data['euvalues']
+
+        p1 = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
+                    title=self.mnemonic_identifier, x_axis_label='Time')
+
+        override_dict = {}  # Dict instructions to set y labels 
+        unique_values = np.unique(ordinate)  # Unique values in y data
+
+        # Enumerate i to plot 1, 2, ... n in y and then numbers as dict keys
+        # and text as value. This will tell bokeh to change which numerical
+        # values to text.
+        for i, value in enumerate(unique_values):
+            index = np.where(ordinate == value)[0]
+            override_dict[i] = value
+            dates = abscissa[index].astype(np.datetime64)
+            y_values = list(np.ones(len(index), dtype=int) * i)
+            p1.line(dates, y_values, line_width=1, line_color='blue', line_dash='dashed')
+            p1.circle(dates, y_values, color='blue')
+
+        p1.yaxis.ticker = list(override_dict.keys())
+        p1.yaxis.major_label_overrides = override_dict
+
+        if show_plot:
+            show(p1)
+        else:
+            script, div = components(p1)
+
+            return [div, script]
+
+    def get_table_data(self):
+        """Get data needed to make interactivate table in template.
+        """
+
+        import tempfile
+        import copy
+
+        # generate tables for display and download in web app
+        display_table = copy.deepcopy(self.data)
+
+        # temporary html file,
+        # see http://docs.astropy.org/en/stable/_modules/astropy/table/
+        tmpdir = tempfile.mkdtemp()
+        file_name_root = 'mnemonic_exploration_result_table'
+        path_for_html = os.path.join(tmpdir, '{}.html'.format(file_name_root))
+        with open(path_for_html, 'w') as tmp:
+            display_table.write(tmp, format='jsviewer')
+        html_file_content = open(path_for_html, 'r').read()
+
+        return html_file_content
 
 def get_mnemonic(mnemonic_identifier, start_time, end_time):
     """Execute query and return a ``EdbMnemonic`` instance.
@@ -279,7 +312,6 @@ def is_valid_mnemonic(mnemonic_identifier):
         return True
     else:
         return False
-
 
 def mnemonic_inventory():
     """Return all mnemonics in the DMS engineering database.
