@@ -43,7 +43,8 @@ from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as mi
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MONITORS
-from jwql.utils.constants import INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
+                                 JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
 
@@ -661,6 +662,9 @@ def get_image_info(file_root, rewrite):
     observation_dir = file_root[:13]
     filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*.fits'.format(file_root)))
     filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*.fits'.format(file_root))))
+
+    # Certain suffixes are always ignored
+    filenames = [filename for filename in filenames if filename.split('_')[-1].strip('.fits') not in IGNORED_SUFFIXES]
     image_info['all_files'] = filenames
 
     for filename in image_info['all_files']:
@@ -961,7 +965,7 @@ def get_thumbnails_all_instruments(parameters):
 
     # Determine whether or not queried anomalies are flagged
     final_subset = []
-    
+
     if anomalies != {'miri': [], 'nirspec': [], 'niriss': [], 'nircam': [], 'fgs': []}:
         for thumbnail in thumbnails_subset:
             components = thumbnail.split('_')
