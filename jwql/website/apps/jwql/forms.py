@@ -338,10 +338,10 @@ class FileSearchForm(forms.Form):
 
         # Process the data in form.cleaned_data as required
         search = self.cleaned_data['search']
-        proposal_string = '{:05d}'.format(int(search))
 
         # If they searched for a proposal
         if self.search_type == 'proposal':
+            proposal_string = '{:05d}'.format(int(search))
             return redirect('/{}/archive/{}'.format(self.instrument, proposal_string))
 
         # If they searched for a file root
