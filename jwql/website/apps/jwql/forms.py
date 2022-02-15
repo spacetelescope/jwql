@@ -276,15 +276,17 @@ class FileSearchForm(forms.Form):
             search_string_proprietary = os.path.join(get_config()['filesystem'], 'proprietary', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
             all_files = glob.glob(search_string_public)
             all_files.extend(glob.glob(search_string_proprietary))
+
+            # Ignore "original" files
+            all_files = [filename for filename in all_files if 'original' not in filename]
+
             if len(all_files) > 0:
                 all_instruments = []
                 for file in all_files:
                     instrument = filename_parser(file)['instrument']
                     all_instruments.append(instrument)
                 if len(set(all_instruments)) > 1:
-                    raise forms.ValidationError('Cannot return result for proposal with '
-                                                'multiple instruments ({}).'
-                                                .format(', '.join(set(all_instruments))))
+                    raise forms.ValidationError('Cannot return result for proposal with multiple instruments ({}).'.format(', '.join(set(all_instruments))))
 
                 self.instrument = all_instruments[0]
             else:
@@ -297,6 +299,9 @@ class FileSearchForm(forms.Form):
             search_string_proprietary = os.path.join(get_config()['filesystem'], 'proprietary', search[:7], search[:13], '{}*.fits'.format(search))
             all_files = glob.glob(search_string_public)
             all_files.extend(glob.glob(search_string_proprietary))
+
+            # Ignore "original" files
+            all_files = [filename for filename in all_files if 'original' not in filename]
 
             if len(all_files) == 0:
                 raise forms.ValidationError('Fileroot {} not in the filesystem.'.format(search))
