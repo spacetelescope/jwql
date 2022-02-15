@@ -13,23 +13,13 @@
 		<h1>{{ inst }} Dark Monitor</h1>
 		<hr>
 
-		<!--Deal with the fact that only the NIRCam database is populated-->
-		{% if inst == 'NIRCam' %}
+		<div width=100%>
+			<!--Add Bokeh HTML-->
+			{{ tabs_components[0] | safe }}
+		</div>
 
-			<div width=100%>
-				<!--Add Bokeh HTML-->
-				{{ tabs_components[0] | safe }}
-			</div>
-
-			<!--Add Bokeh scripts-->
-			{{ tabs_components[1] | safe }}
-
-
-		{% else %}
-
-			The dark current monitor is not yet implemented for this instrument.
-
-		{% endif %}
+		<!--Add Bokeh scripts-->
+		{{ tabs_components[1] | safe }}
 
 	</main>
 
