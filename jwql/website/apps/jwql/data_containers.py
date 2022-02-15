@@ -1152,9 +1152,14 @@ def thumbnails_ajax(inst, proposal=None):
         # Parse filename
         try:
             filename_dict = filename_parser(rootname)
+
+            # The detector keyword is expected in thumbnails_query_ajax() for generating filterable dropdown menus
             if 'detector' not in filename_dict.keys():
-                # this keyword is expected in thumbnails_query_ajax() for generating filterable dropdown menus
                 filename_dict['detector'] = 'Unknown'
+
+            # Weed out file types that are not supported by generate_preview_images
+            if filename_dict['filename_type'] in ['stage_3_target_id']:
+                continue
 
         except ValueError:
             # Temporary workaround for noncompliant files in filesystem
