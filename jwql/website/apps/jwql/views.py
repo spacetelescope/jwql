@@ -49,7 +49,6 @@ from django.shortcuts import redirect, render
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT
-from jwql.utils.scrape_proposal_page import text_scrape
 from jwql.utils.utils import filesystem_path, get_base_url, get_config, query_unformat
 
 from .data_containers import build_table
@@ -66,6 +65,7 @@ from .data_containers import get_thumbnails_all_instruments
 from .data_containers import nirspec_trending
 from .data_containers import random_404_page
 from .data_containers import get_jwqldb_table_view_components
+from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import InstrumentAnomalySubmitForm
