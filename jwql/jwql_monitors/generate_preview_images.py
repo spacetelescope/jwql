@@ -651,9 +651,9 @@ def process_program(program):
     logging.info('')
 
     for file_list in grouped_filenames:
-        filename = file_list[0]
 
         # Determine the save location
+        filename = file_list[0]
         try:
             identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
         except ValueError:

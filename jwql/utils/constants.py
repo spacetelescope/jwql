@@ -259,7 +259,8 @@ JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
 # Available monitor names and their location for each JWST instrument
 MONITORS = {
     'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor'),
-            ('Readnoise Monitor', '/fgs/readnoise_monitor')],
+            ('Readnoise Monitor', '/fgs/readnoise_monitor'),
+            ('Dark Current Monitor', '#')],
     'miri': [('Dark Current Monitor', '#'),
              ('Data Trending', '#'),
              ('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
@@ -273,14 +274,15 @@ MONITORS = {
     'nircam': [('Bias Monitor', '/nircam/bias_monitor'),
                ('Readnoise Monitor', '/nircam/readnoise_monitor'),
                ('Gain Level Monitor', '#'),
-               ('Mean Dark Current Rate Monitor', '/nircam/dark_monitor'),
+               ('Dark Current Monitor', '/nircam/dark_monitor'),
                ('Bad Pixel Monitor', '/nircam/bad_pixel_monitor'),
                ('Photometric Stability Monitor', '#')],
     'niriss': [('Bad Pixel Monitor', '/niriss/bad_pixel_monitor'),
                ('Readnoise Monitor', '/niriss/readnoise_monitor'),
                ('AMI Calibrator Monitor', '#'),
                ('TSO RMS Monitor', '#'),
-               ('Bias Monitor', '#')],
+               ('Bias Monitor', '/niriss/bias_monitor'),
+               ('Dark Current Monitor', '#')],
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
@@ -291,7 +293,8 @@ MONITORS = {
                 ('Internal Lamp Monitor', '#'),
                 ('Instrument Model Updates', '#'),
                 ('Failed-open Shutter Monitor', '#'),
-                ('Bias Monitor', '/nirspec/bias_monitor')]}
+                ('Bias Monitor', '/nirspec/bias_monitor'),
+                ('Dark Monitor', '#')]}
 
 # Possible suffix types for coronograph exposures
 NIRCAM_CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']
