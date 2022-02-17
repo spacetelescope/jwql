@@ -14,7 +14,6 @@
 {% block content %}
 
     <main role="main" class="container">
-
     	<!-- Page title -->
     	<h3 id='title'>{{ inst }} Images</h3>
     	<script>determine_page_title('{{ inst }}','{{ prop }}');</script>
@@ -28,6 +27,24 @@
 			<div class="mr-4" id="thumbnail-filter"></div>
 			<div class="mx-4 mr-5 ml-auto" id="thumbnail-sort"></div>
 		</div>
+
+        <hr>
+
+        <!-- Program Meta Information -->
+        <h4 id='proposal_meta'> Proposal Information for {{ prop }}</h4>
+        <div class="d-flex flex-row">
+            <div class="column">
+                <p><b>Title:</b> {{ prop_meta['title'] }}</p>
+                <p><b>Program Status:</b> {{ prop_meta['ps']|safe }}</p>
+                <p><b>Principal Investigator:</b> {{ prop_meta['pi'] }}</p>
+            </div>
+            <div class="column" style="display: inline-block; text-align: right; width: 100%">
+                <p><b>Program Coordinator:</b> {{ prop_meta['pc']|safe }}</p>
+                <p><b>Proposal Type:</b> {{ prop_meta['prop_type'] }}</p>
+                <p><b>Phase Two:</b> {{ prop_meta['phase_two']|safe }}</p>
+            </div>
+        </div>
+
 
 		<hr>
 

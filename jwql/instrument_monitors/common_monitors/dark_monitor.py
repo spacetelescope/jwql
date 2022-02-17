@@ -389,7 +389,7 @@ class Dark():
 
         query_count = len(dates)
         if query_count == 0:
-            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
+            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {} with {}. Beginning search date will be set to {}.'
                          .format(self.aperture, self.readpatt, query_result)))
         else:
