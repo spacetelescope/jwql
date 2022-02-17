@@ -155,7 +155,11 @@ function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root)
     } else if (suffixes.indexOf("uncal") >= 0) {
         var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
         img.src = jpg_path;
+    } else if (suffixes.indexOf("dark") >= 0) {
+        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_dark_integ0.thumb';
+        img.src = jpg_path;
     };
+
 };
 
 
