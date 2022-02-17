@@ -688,10 +688,9 @@ def get_image_info(file_root, rewrite):
         #     im.make_image()
 
         # Record how many integrations there are per filetype
-        search_jpgs = os.path.join(get_config()['preview_image_filesystem'], observation_dir, '{}_{}_integ*.jpg'.format(file_root, suffix))
+        search_jpgs = os.path.join(get_config()['preview_image_filesystem'], proposal_dir, '{}_{}_integ*.jpg'.format(file_root, suffix))
         num_jpgs = len(glob.glob(search_jpgs))
         image_info['num_ints'][suffix] = num_jpgs
-
         image_info['all_jpegs'].append(jpg_filepath)
 
     return image_info

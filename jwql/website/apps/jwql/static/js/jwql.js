@@ -42,6 +42,7 @@ function change_filetype(type, file_root, num_ints, inst) {
     document.getElementById("slider_range").value = 1;
     document.getElementById("slider_range").max = num_ints[type];
     document.getElementById("slider_val").innerHTML = 1;
+    document.getElementById("total_ints").innerHTML = num_ints[type];
 
     // Update the integration changing buttons
     if (num_ints[type] > 1) {
@@ -74,7 +75,7 @@ function change_int(file_root, num_ints, method, direction = 'right') {
 
     // Figure out the current image and integration
     var suffix = document.getElementById("jpg_filename").innerHTML.split('_');
-    var integration = Number(suffix[suffix.length - 1][5]);
+    var integration = Number(suffix[suffix.length - 1].replace('.jpg','').replace('integ',''))
     var suffix = suffix[suffix.length - 2];
     var program = file_root.slice(0,7);
 
@@ -114,7 +115,7 @@ function change_int(file_root, num_ints, method, direction = 'right') {
     // Update the JPG filename
     var jpg_filename = file_root + '_' + suffix + '_integ' + new_integration + '.jpg'
     var jpg_filepath = '/static/preview_images/' + program + '/' + jpg_filename
-    document.getElementById("jpg_filename").innerHTML = jpg_filename;
+    document.getElementById("jpg_filename").innerHTML = jpg_filename
 
     // Show the appropriate image
     var img = document.getElementById("image_viewer")
@@ -124,10 +125,9 @@ function change_int(file_root, num_ints, method, direction = 'right') {
     // Update the number of integrations
     var int_counter = document.getElementById("int_count");
     var int_display = new_integration + 1;
-    int_counter.innerHTML = 'Displaying integration ' + int_display + '/' + num_ints;
 
     // Update the jpg download link
-    document.getElementById("download_jpg").href = jpg_filepath;
+    // document.getElementById("download_jpg").href = jpg_filepath;
 
     // Update the slider values
     document.getElementById("slider_range").value = new_integration + 1
