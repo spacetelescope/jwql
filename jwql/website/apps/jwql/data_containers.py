@@ -31,10 +31,12 @@ import tempfile
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
+from bs4 import BeautifulSoup
 from django.conf import settings
 import numpy as np
 from operator import itemgetter
 import pandas as pd
+import requests
 
 from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
@@ -1110,6 +1112,85 @@ def random_404_page():
     random_template = templates[choose_page]
 
     return random_template
+
+
+def text_scrape(prop_id):
+    """Scrapes the Proposal Information Page.
+
+    Parameters
+    ----------
+    prop_id : int
+        Proposal ID
+
+    Returns
+    -------
+    program_meta : dict
+        Dictionary containing information about program
+    """
+
+    # Generate url
+    url = 'http://www.stsci.edu/cgi-bin/get-proposal-info?id=' + str(prop_id) + '&submit=Go&observatory=JWST'
+    html = BeautifulSoup(requests.get(url).text, 'lxml')
+    lines = html.findAll('p')
+    lines = [str(line) for line in lines]
+
+    program_meta = {}
+    program_meta['prop_id'] = prop_id
+    program_meta['phase_two'] = '<a href=https://www.stsci.edu/jwst/phase2-public/{}.pdf target="_blank"> Phase Two</a>'
+
+    if prop_id[0] == '0':
+        program_meta['phase_two'] = program_meta['phase_two'].format(prop_id[1:])
+    else:
+        program_meta['phase_two'] = program_meta['phase_two'].format(prop_id)
+
+    program_meta['phase_two'] = BeautifulSoup(program_meta['phase_two'], 'html.parser')
+
+    links = html.findAll('a')
+    proposal_type = links[0].contents[0]
+
+    program_meta['prop_type'] = proposal_type
+
+    # Scrape for titles/names/contact persons
+    for line in lines:
+        if 'Title' in line:
+            start = line.find('</b>') + 4
+            end = line.find('<', start)
+            title = line[start:end]
+            program_meta['title'] = title
+
+        if 'Principal Investigator:' in line:
+            start = line.find('</b>') + 4
+            end = line.find('<', start)
+            pi = line[start:end]
+            program_meta['pi'] = pi
+
+        if 'Program Coordinator' in line:
+            start = line.find('</b>') + 4
+            mid = line.find('<', start)
+            end = line.find('>', mid) + 1
+            pc = line[mid:end] + line[start:mid] + '</a>'
+            program_meta['pc'] = pc
+
+        if 'Contact Scientist' in line:
+            start = line.find('</b>') + 4
+            mid = line.find('<', start)
+            end = line.find('>', mid) + 1
+            cs = line[mid:end] + line[start:mid] + '</a>'
+            program_meta['cs'] = BeautifulSoup(cs, 'html.parser')
+
+        if 'Program Status' in line:
+            start = line.find('<a')
+            end = line.find('</a>')
+            ps = line[start:end]
+
+            # beautiful soupify text to build absolute link
+            ps = BeautifulSoup(ps, 'html.parser')
+            ps_link = ps('a')[0]
+            ps_link['href'] = 'https://www.stsci.edu' + ps_link['href']
+            ps_link['target'] = '_blank'
+            program_meta['ps'] = ps_link
+
+    return program_meta
 
 
 def thumbnails_ajax(inst, proposal=None):
