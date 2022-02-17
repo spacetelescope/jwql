@@ -1136,7 +1136,7 @@ def text_scrape(prop_id):
 
     program_meta = {}
     program_meta['prop_id'] = prop_id
-    program_meta['phase_two'] = '<a href=https://www.stsci.edu/jwst/phase2-public/{}.pdf> Phase Two</a>'
+    program_meta['phase_two'] = '<a href=https://www.stsci.edu/jwst/phase2-public/{}.pdf target="_blank"> Phase Two</a>'
 
     if prop_id[0] == '0':
         program_meta['phase_two'] = program_meta['phase_two'].format(prop_id[1:])
