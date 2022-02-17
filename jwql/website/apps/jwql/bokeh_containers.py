@@ -232,7 +232,7 @@ def dark_monitor_tabs(instrument):
             [single_aperture]
         )
 
-    elif instrument == 'NIRSpec':
+    elif instrument in ['NIRSpec', 'FGS']:
         d1, d2 = histograms_all_apertures
         histogram_layout = layout(
             [d1, d2]
@@ -264,7 +264,7 @@ def dark_monitor_tabs(instrument):
             [single_aperture]
         )
 
-    elif instrument == 'NIRSpec':
+    elif instrument in ['NIRSpec', 'FGS']:
         d1, d2 = lines_all_apertures
         line_layout = layout(
             [d1, d2]
@@ -276,7 +276,7 @@ def dark_monitor_tabs(instrument):
     # Mean dark image tab
 
     # The three lines below work for displaying a single image
-    image = templates_all_apertures['NRCA3_FULL'].refs["mean_dark_image_figure"]
+    image = templates_all_apertures[full_apertures[0]].refs["mean_dark_image_figure"]
     image.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
     image_layout = layout(image)
     image.height = 250  # Not working
