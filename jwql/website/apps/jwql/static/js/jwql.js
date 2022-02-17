@@ -115,7 +115,7 @@ function change_int(file_root, num_ints, method, direction = 'right') {
     // Update the JPG filename
     var jpg_filename = file_root + '_' + suffix + '_integ' + new_integration + '.jpg'
     var jpg_filepath = '/static/preview_images/' + program + '/' + jpg_filename
-    document.getElementById("jpg_filename").innerHTML = jpg_filename
+    document.getElementById("jpg_filename").innerHTML = jpg_filename;
 
     // Show the appropriate image
     var img = document.getElementById("image_viewer")
