@@ -1187,6 +1187,7 @@ def text_scrape(prop_id):
             ps = BeautifulSoup(ps, 'html.parser')
             ps_link = ps('a')[0]
             ps_link['href'] = 'https://www.stsci.edu' + ps_link['href']
+            ps_link['target'] = '_blank'
             program_meta['ps'] = ps_link
 
     return program_meta
