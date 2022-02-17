@@ -44,12 +44,9 @@ Notes
 """
 
 from collections import OrderedDict
+import copy
 from datetime import datetime
-from enum import unique
-# from msilib.schema import tables
 import os
-from select import POLLOUT
-from tokenize import PlainToken
 import warnings
 
 from astropy.table import Table
@@ -58,6 +55,7 @@ from astroquery.mast import Mast
 from bokeh.embed import components
 from bokeh.plotting import figure, show
 import numpy as np
+import tempfile
 
 from jwst.lib.engdb_tools import ENGDB_Service
 from jwql.utils.credentials import get_mast_base_url, get_mast_token
@@ -159,7 +157,7 @@ class EdbMnemonic:
         p1 = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
                     title=self.mnemonic_identifier, x_axis_label='Time')
 
-        override_dict = {}  # Dict instructions to set y labels 
+        override_dict = {}  # Dict instructions to set y labels
         unique_values = np.unique(ordinate)  # Unique values in y data
 
         # Enumerate i to plot 1, 2, ... n in y and then numbers as dict keys
@@ -187,9 +185,6 @@ class EdbMnemonic:
         """Get data needed to make interactivate table in template.
         """
 
-        import tempfile
-        import copy
-
         # generate tables for display and download in web app
         display_table = copy.deepcopy(self.data)
 
@@ -203,6 +198,7 @@ class EdbMnemonic:
         html_file_content = open(path_for_html, 'r').read()
 
         return html_file_content
+
 
 def get_mnemonic(mnemonic_identifier, start_time, end_time):
     """Execute query and return a ``EdbMnemonic`` instance.
@@ -312,6 +308,7 @@ def is_valid_mnemonic(mnemonic_identifier):
         return True
     else:
         return False
+
 
 def mnemonic_inventory():
     """Return all mnemonics in the DMS engineering database.
