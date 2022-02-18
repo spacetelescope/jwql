@@ -70,9 +70,9 @@ from jwedb.edb_interface import mnemonic_inventory
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
-    FILESYSTEM_DIR = os.path.join(configs['filesystem'])
-    PREVIEW_IMAGE_FILESYSTEM = os.path.join(configs['preview_image_filesystem'])
-    THUMBNAIL_FILESYSTEM = os.path.join(configs['thumbnail_filesystem'])
+    FILESYSTEM_DIR = configs['filesystem']
+    PREVIEW_IMAGE_FILESYSTEM = configs['preview_image_filesystem']
+    THUMBNAIL_FILESYSTEM = configs['thumbnail_filesystem']
 
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
