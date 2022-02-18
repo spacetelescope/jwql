@@ -65,6 +65,7 @@ from .data_containers import get_thumbnails_all_instruments
 from .data_containers import nirspec_trending
 from .data_containers import random_404_page
 from .data_containers import get_jwqldb_table_view_components
+from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import InstrumentAnomalySubmitForm
@@ -326,9 +327,12 @@ def archive_thumbnails(request, inst, proposal):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
+    proposal_meta = text_scrape(proposal)
+
     template = 'thumbnails.html'
     context = {'inst': inst,
                'prop': proposal,
+               'prop_meta': proposal_meta,
                'base_url': get_base_url()}
 
     return render(request, template, context)
