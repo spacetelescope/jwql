@@ -793,11 +793,12 @@ def get_preview_images_by_instrument(inst):
 
     # Get list of all preview_images
     #preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, '*', '*.jpg'))
-    preview_images = retrieve_filelist(os.path.join(PREVIEW_IMAGE_FILESYSTEM, PREVIEW_IMAGE_LISTFILE))
+    preview_list_file = "{PREVIEW_IMAGE_LISTFILE}._{inst.lower()}.txt"
+    preview_images = retrieve_filelist(os.path.join(PREVIEW_IMAGE_FILESYSTEM, preview_list_file))
 
     # Get subset of preview images that match the filenames
-    preview_images = [os.path.basename(item) for item in preview_images if
-                      os.path.basename(item).split('_integ')[0] in filenames]
+    #preview_images = [os.path.basename(item) for item in preview_images if
+    #                  os.path.basename(item).split('_integ')[0] in filenames]
 
     # Return only
 
@@ -923,7 +924,7 @@ def get_thumbnails_all_instruments(parameters):
 
     anomalies = parameters['anomalies']
 
-    filenames = []
+    #filenames = []
 
     for inst in parameters['instruments']:
         # Make sure instruments are of the proper format (e.g. "Nircam")
@@ -959,18 +960,28 @@ def get_thumbnails_all_instruments(parameters):
         results = response[0].json()['data']
 
         inst_filenames = [result['filename'].split('.')[0] for result in results]
-        filenames.extend(inst_filenames)
+        #filenames.extend(inst_filenames)
 
-    # Get list of all thumbnails
-    #thumbnail_list = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
-    thumbnail_list = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, THUMBNAIL_LISTFILE))
+        # Get list of all thumbnails
+        #thumbnail_list = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
+        thumbnail_list_file = f"{THUMBNAIL_LISTFILE}_{inst.lower()}.txt"
+        thumbnail_inst_list = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, THUMBNAIL_LISTFILE))
 
-    # Get subset of preview images that match the filenames
-    thumbnails_subset = [os.path.basename(item) for item in thumbnail_list if
-                         os.path.basename(item).split('_integ')[0] in filenames]
+        # Get subset of preview images that match the filenames
+        thumbnails_inst_subset = [os.path.basename(item) for item in thumbnail_inst_list if
+                                  os.path.basename(item).split('_integ')[0] in inst_filenames]
 
-    # Eliminate any duplicates
-    thumbnails_subset = list(set(thumbnails_subset))
+        # Eliminate any duplicates
+        thumbnails_inst_subset = list(set(thumbnails_inst_subset))
+        thumbnails_subset.extend(thumbnails_inst_subset)
+
+
+    ## Get subset of preview images that match the filenames
+    #thumbnails_subset = [os.path.basename(item) for item in thumbnail_list if
+    #                     os.path.basename(item).split('_integ')[0] in filenames]
+
+    ## Eliminate any duplicates
+    #thumbnails_subset = list(set(thumbnails_subset))
 
     # Determine whether or not queried anomalies are flagged
     final_subset = []
