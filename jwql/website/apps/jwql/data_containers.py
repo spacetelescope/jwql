@@ -655,12 +655,15 @@ def get_image_info(file_root, rewrite):
     image_info['all_jpegs'] = []
     image_info['suffixes'] = []
     image_info['num_ints'] = {}
+    image_info['available_ints'] = {}
+
 
     # Find all of the matching files
     proposal_dir = file_root[:7]
     observation_dir = file_root[:13]
     filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*.fits'.format(file_root)))
     filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*.fits'.format(file_root))))
+    #filenames = ['/grp/jwst/ins/jwql/filesystem/public/jw01173/jw01173002001_02101_00001_miri_dark.fits', '/grp/jwst/ins/jwql/filesystem/public/jw01173/jw01173002001_02101_00001_miri_uncal.fits'] # ben test remove
     image_info['all_files'] = filenames
 
     for filename in image_info['all_files']:
@@ -688,9 +691,9 @@ def get_image_info(file_root, rewrite):
         #     im.make_image()
 
         # Record how many integrations there are per filetype
-        search_jpgs = os.path.join(get_config()['preview_image_filesystem'], proposal_dir, '{}_{}_integ*.jpg'.format(file_root, suffix))
-        num_jpgs = len(glob.glob(search_jpgs))
-        image_info['num_ints'][suffix] = num_jpgs
+        jpgs = glob.glob(os.path.join(get_config()['preview_image_filesystem'], proposal_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
+        image_info['num_ints'][suffix] = len(jpgs)
+        image_info['available_ints'][suffix] = sorted([int(jpg.split('_')[-1].replace('.jpg','').replace('integ','')) for jpg in jpgs])
         image_info['all_jpegs'].append(jpg_filepath)
 
     return image_info
