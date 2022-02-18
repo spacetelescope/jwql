@@ -663,7 +663,6 @@ def get_image_info(file_root, rewrite):
     observation_dir = file_root[:13]
     filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*.fits'.format(file_root)))
     filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*.fits'.format(file_root))))
-    #filenames = ['/grp/jwst/ins/jwql/filesystem/public/jw01173/jw01173002001_02101_00001_miri_dark.fits', '/grp/jwst/ins/jwql/filesystem/public/jw01173/jw01173002001_02101_00001_miri_uncal.fits'] # ben test remove
     image_info['all_files'] = filenames
 
     for filename in image_info['all_files']:
