@@ -47,6 +47,7 @@ from collections import OrderedDict
 import copy
 from datetime import datetime
 import os
+import tempfile
 import warnings
 
 from astropy.table import Table
@@ -55,7 +56,6 @@ from astroquery.mast import Mast
 from bokeh.embed import components
 from bokeh.plotting import figure, show
 import numpy as np
-import tempfile
 
 from jwst.lib.engdb_tools import ENGDB_Service
 from jwql.utils.credentials import get_mast_base_url, get_mast_token
@@ -91,7 +91,6 @@ class EdbMnemonic:
         info : dict
             Auxiliary information on the mnemonic (description,
             category, unit)
-
         """
 
         self.mnemonic_identifier = mnemonic_identifier
@@ -121,6 +120,12 @@ class EdbMnemonic:
 
     def bokeh_plot(self, show_plot=False):
         """Make basic bokeh plot showing value as a function of time.
+
+        Parameters
+        ----------
+        show_plot : boolean
+            A switch to show the plot in the browser or not.
+
         Returns
         -------
         [div, script] : list
@@ -145,6 +150,12 @@ class EdbMnemonic:
 
     def bokeh_plot_text_data(self, show_plot=False):
         """Make basic bokeh plot showing value as a function of time.
+
+        Parameters
+        ----------
+        show_plot : boolean
+            A switch to show the plot in the browser or not.
+
         Returns
         -------
         [div, script] : list
@@ -182,8 +193,7 @@ class EdbMnemonic:
             return [div, script]
 
     def get_table_data(self):
-        """Get data needed to make interactivate table in template.
-        """
+        """Get data needed to make interactivate table in template."""
 
         # generate tables for display and download in web app
         display_table = copy.deepcopy(self.data)
@@ -257,7 +267,6 @@ def get_mnemonics(mnemonics, start_time, end_time):
     mnemonic_dict : dict
         Dictionary. keys are the queried mnemonics, values are
         instances of EdbMnemonic
-
     """
 
     if not isinstance(mnemonics, (list, np.ndarray)):
