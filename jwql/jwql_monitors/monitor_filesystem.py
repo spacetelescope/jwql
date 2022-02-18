@@ -86,8 +86,8 @@ def gather_statistics(general_results_dict, instrument_results_dict):
 
     logging.info('Gathering stats for filesystem')
 
-    for filesystem in [PROPRIETARY_FILESYSTEM, PUBLIC_FILESYSTEM]:
-        for dirpath, _, files in os.walk(FILESYSTEM):
+    for filesystem_area in [PROPRIETARY_FILESYSTEM, PUBLIC_FILESYSTEM]:
+        for dirpath, _, files in os.walk(filesystem_area):
             general_results_dict['total_file_count'] += len(files)
             for filename in files:
 
@@ -145,8 +145,8 @@ def get_global_filesystem_stats(general_results_dict):
     general_results_dict['used'] = 0.0
     general_results_dict['available'] = 0.0
 
-    for filesystem in [PROPRIETARY_FILESYSTEM, PUBLIC_FILESYSTEM]:
-        command = "df -k {}".format(filesystem)
+    for filesystem_area in [PROPRIETARY_FILESYSTEM, PUBLIC_FILESYSTEM]:
+        command = "df -k {}".format(filesystem_area)
         command += " | awk '{print $3, $4}' | tail -n 1"
         stats = subprocess.check_output(command, shell=True).split()
         general_results_dict['used'] += int(stats[0]) / (1024**3)

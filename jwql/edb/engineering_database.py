@@ -44,8 +44,10 @@ Notes
 """
 
 from collections import OrderedDict
+import copy
 from datetime import datetime
 import os
+import tempfile
 import warnings
 
 from astropy.table import Table
@@ -89,7 +91,6 @@ class EdbMnemonic:
         info : dict
             Auxiliary information on the mnemonic (description,
             category, unit)
-
         """
 
         self.mnemonic_identifier = mnemonic_identifier
@@ -120,6 +121,11 @@ class EdbMnemonic:
     def bokeh_plot(self, show_plot=False):
         """Make basic bokeh plot showing value as a function of time.
 
+        Parameters
+        ----------
+        show_plot : boolean
+            A switch to show the plot in the browser or not.
+
         Returns
         -------
         [div, script] : list
@@ -141,6 +147,67 @@ class EdbMnemonic:
             script, div = components(p1)
 
             return [div, script]
+
+    def bokeh_plot_text_data(self, show_plot=False):
+        """Make basic bokeh plot showing value as a function of time.
+
+        Parameters
+        ----------
+        show_plot : boolean
+            A switch to show the plot in the browser or not.
+
+        Returns
+        -------
+        [div, script] : list
+            List containing the div and js representations of figure.
+        """
+
+        abscissa = self.data['dates']
+        ordinate = self.data['euvalues']
+
+        p1 = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
+                    title=self.mnemonic_identifier, x_axis_label='Time')
+
+        override_dict = {}  # Dict instructions to set y labels
+        unique_values = np.unique(ordinate)  # Unique values in y data
+
+        # Enumerate i to plot 1, 2, ... n in y and then numbers as dict keys
+        # and text as value. This will tell bokeh to change which numerical
+        # values to text.
+        for i, value in enumerate(unique_values):
+            index = np.where(ordinate == value)[0]
+            override_dict[i] = value
+            dates = abscissa[index].astype(np.datetime64)
+            y_values = list(np.ones(len(index), dtype=int) * i)
+            p1.line(dates, y_values, line_width=1, line_color='blue', line_dash='dashed')
+            p1.circle(dates, y_values, color='blue')
+
+        p1.yaxis.ticker = list(override_dict.keys())
+        p1.yaxis.major_label_overrides = override_dict
+
+        if show_plot:
+            show(p1)
+        else:
+            script, div = components(p1)
+
+            return [div, script]
+
+    def get_table_data(self):
+        """Get data needed to make interactivate table in template."""
+
+        # generate tables for display and download in web app
+        display_table = copy.deepcopy(self.data)
+
+        # temporary html file,
+        # see http://docs.astropy.org/en/stable/_modules/astropy/table/
+        tmpdir = tempfile.mkdtemp()
+        file_name_root = 'mnemonic_exploration_result_table'
+        path_for_html = os.path.join(tmpdir, '{}.html'.format(file_name_root))
+        with open(path_for_html, 'w') as tmp:
+            display_table.write(tmp, format='jsviewer')
+        html_file_content = open(path_for_html, 'r').read()
+
+        return html_file_content
 
 
 def get_mnemonic(mnemonic_identifier, start_time, end_time):
@@ -200,7 +267,6 @@ def get_mnemonics(mnemonics, start_time, end_time):
     mnemonic_dict : dict
         Dictionary. keys are the queried mnemonics, values are
         instances of EdbMnemonic
-
     """
 
     if not isinstance(mnemonics, (list, np.ndarray)):
