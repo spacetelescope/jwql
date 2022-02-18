@@ -20,7 +20,7 @@
             <!--DB TABLE DROPDOWN-->
             <h4>Select JWQL Database Table</h4>
             <div class="db_table_select">
-                <select name="db_table_select" id="db_table_select">
+                <select name="db_table_select" id="db_table_select" onchange="this.form.submit()">
                     {% for instrument in all_jwql_tables %}
                     <optgroup label="{{ instrument }}">
                         {% for table in all_jwql_tables[instrument] %}
@@ -33,7 +33,6 @@
                     {% endfor %}
                 </select>
             </div>
-            <button name=make_table_view class="btn btn-primary" type="submit"><span class="fas fa-search"></span></button>
             <br><br>
 
             <!-- If tablename is passed, render table. -->

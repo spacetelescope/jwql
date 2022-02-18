@@ -734,35 +734,6 @@ def get_instrument_proposals(instrument):
     return proposals
 
 
-def get_jwqldb_table_view_components(request):
-    """Renders view for JWQLDB table viewer.
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-
-    Returns
-    -------
-    table_data : pandas.DataFrame
-        Pandas data frame of JWQL database table
-    table_name : str
-        Name of database table selected by user
-    """
-
-    if 'make_table_view' in request.POST:
-        table_name = request.POST['db_table_select']
-        table_data = build_table(table_name)
-
-        return table_data, table_name
-    else:
-        # When coming from home/monitor views
-        table_data = None
-        table_name = None
-
-    return table_data, table_name
-
-
 def get_preview_images_by_instrument(inst):
     """Return a list of preview images available in the filesystem for
     the given instrument.
