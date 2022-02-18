@@ -301,6 +301,7 @@ def get_edb_components(request):
     mnemonic_query_result_plot = None
     mnemonic_exploration_result = None
     mnemonic_query_status = None
+    mnemonic_table_result = None
 
     # If this is a POST request, we need to process the form data
     if request.method == 'POST':
@@ -341,7 +342,15 @@ def get_edb_components(request):
                         mnemonic_query_status = "QUERY RESULT RETURNED NO DATA FOR {} ON DATES {} - {}".format(mnemonic_identifier, start_time, end_time)
                     else:
                         mnemonic_query_status = 'SUCCESS'
-                        mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
+
+                        # If else to determine data visualization.
+                        if type(mnemonic_query_result.data['euvalues'][0]) == np.str_:
+                            if len(np.unique(mnemonic_query_result.data['euvalues'])) > 4:
+                                mnemonic_table_result = mnemonic_query_result.get_table_data()
+                            else:
+                                mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot_text_data()
+                        else:
+                            mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
 
                         # generate table download in web app
                         result_table = mnemonic_query_result.data
@@ -436,7 +445,8 @@ def get_edb_components(request):
                       'mnemonic_name_search_form': mnemonic_name_search_form,
                       'mnemonic_name_search_result': mnemonic_name_search_result,
                       'mnemonic_exploration_form': mnemonic_exploration_form,
-                      'mnemonic_exploration_result': mnemonic_exploration_result}
+                      'mnemonic_exploration_result': mnemonic_exploration_result,
+                      'mnemonic_table_result': mnemonic_table_result}
 
     return edb_components
 
