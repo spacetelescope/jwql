@@ -42,7 +42,7 @@ from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
-from jwql.utils.constants import MONITORS
+from jwql.utils.constants import MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
 from jwql.utils.constants import INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
@@ -59,7 +59,8 @@ if 'READTHEDOCS' in os.environ:
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
     check_config_for_key('auth_mast')
-    auth_mast = get_config()['auth_mast']
+    configs = get_config()
+    auth_mast = configs['auth_mast']
     mast_flavour = '.'.join(auth_mast.split('.')[1:])
     from astropy import config
     conf = config.get_config('astroquery')
@@ -69,9 +70,10 @@ from jwedb.edb_interface import mnemonic_inventory
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
-    FILESYSTEM_DIR = os.path.join(get_config()['filesystem'])
-    PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['preview_image_filesystem'])
-    THUMBNAIL_FILESYSTEM = os.path.join(get_config()['thumbnail_filesystem'])
+    FILESYSTEM_DIR = os.path.join(configs['filesystem'])
+    PREVIEW_IMAGE_FILESYSTEM = os.path.join(configs['preview_image_filesystem'])
+    THUMBNAIL_FILESYSTEM = os.path.join(configs['thumbnail_filesystem'])
+
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
@@ -790,7 +792,8 @@ def get_preview_images_by_instrument(inst):
     filenames = [result['filename'].split('.')[0] for result in results]
 
     # Get list of all preview_images
-    preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, '*', '*.jpg'))
+    #preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, '*', '*.jpg'))
+    preview_images = retrieve_filelist(os.path.join(PREVIEW_IMAGE_FILESYSTEM, PREVIEW_IMAGE_LISTFILE))
 
     # Get subset of preview images that match the filenames
     preview_images = [os.path.basename(item) for item in preview_images if
@@ -959,7 +962,8 @@ def get_thumbnails_all_instruments(parameters):
         filenames.extend(inst_filenames)
 
     # Get list of all thumbnails
-    thumbnail_list = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
+    #thumbnail_list = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
+    thumbnail_list = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, THUMBNAIL_LISTFILE))
 
     # Get subset of preview images that match the filenames
     thumbnails_subset = [os.path.basename(item) for item in thumbnail_list if
@@ -1022,7 +1026,8 @@ def get_thumbnails_by_instrument(inst):
     filenames = [result['filename'].split('.')[0] for result in results]
 
     # Get list of all thumbnails
-    thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
+    #thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
+    thumbnails = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, THUMBNAIL_LISTFILE))
 
     # Get subset of preview images that match the filenames
     thumbnails = [os.path.basename(item) for item in thumbnails if
@@ -1119,6 +1124,20 @@ def random_404_page():
     random_template = templates[choose_page]
 
     return random_template
+
+
+def retrieve_filelist(filename):
+    """Return a list of all thumbnail files in the filesystem from
+    a list file.
+
+    Parameters
+    ----------
+    filename : str
+        Name of a text file containing a list of files
+    """
+    with open(filename) as fobj:
+        file_list = fobj.read().splitlines()
+    return file_list
 
 
 def thumbnails_ajax(inst, proposal=None):

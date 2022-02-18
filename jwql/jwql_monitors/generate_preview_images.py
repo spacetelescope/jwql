@@ -35,7 +35,7 @@ import re
 import numpy as np
 
 from jwql.utils import permissions
-from jwql.utils.constants import NIRCAM_LONGWAVE_DETECTORS, NIRCAM_SHORTWAVE_DETECTORS
+from jwql.utils.constants import NIRCAM_LONGWAVE_DETECTORS, NIRCAM_SHORTWAVE_DETECTORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser
@@ -535,9 +535,25 @@ def generate_preview_images():
     program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', 'jw*'))])
     program_list = list(set(program_list))
     pool = multiprocessing.Pool(processes=int(SETTINGS['cores']))
-    pool.map(process_program, program_list)
+    results = pool.map(process_program, program_list)
     pool.close()
     pool.join()
+
+    # Filter the nested list in results into separate lists of preview
+    # images and thumbnail images
+    full_preview_files = []
+    full_thumbnail_files = []
+    for r in results:
+        full_preview_files.extend(r[0])
+        full_thumbnail_files.extend(r[1])
+
+    # Read in the preview image listfile and the thumbnail image list file
+    # and add these new files to each
+    preview_image_listfile = os.path.join(SETTINGS['preview_image_filesystem'], PREVIEW_IMAGE_LISTFILE)
+    update_listfile(preview_image_listfile, full_preview_files, 'preview')
+
+    thumbnail_image_listfile = os.path.join(SETTINGS['thumbnail_filesystem'], THUMBNAIL_LISTFILE)
+    update_listfile(thumbnail_image_listfile, full_thumbnail_files, 'thumbnail')
 
     # Complete logging:
     logging.info("Completed.")
@@ -651,6 +667,8 @@ def process_program(program):
     logging.info('Found {} filenames'.format(len(filenames)))
     logging.info('')
 
+    thumbnail_files = []
+    preview_image_files = []
     for file_list in grouped_filenames:
         filename = file_list[0]
 
@@ -717,9 +735,49 @@ def process_program(program):
                 im.file = dummy_file
 
             im.make_image(max_img_size=max_size)
+            thumbnail_files.extend(im.thumbnail_images)
+            preview_image_files.extend(im.preview_images)
             logging.info('\tCreated preview image and thumbnail for: {}'.format(filename))
         except (ValueError, AttributeError) as error:
             logging.warning(error)
+
+    return preview_image_files, thumbnail_files
+
+
+def update_listfile(filename, file_list, filetype):
+    """Add a list of files to a text file. Designed to add new files to the
+    file containing the list of all preview images and the file containing the
+    list of all thumbnail images.
+
+    Parameters
+    ----------
+    filename : str
+        Name, including path, of the file to be amended/created
+
+    file_list : list
+        List of filenames to be added to filename
+
+    filetype : str
+        Descriptor of the contents of the file being amended. Used only for
+        the logging statement
+    """
+    if not os.path.isfile(filename):
+        logging.warning(f"{filetype} image listfile not found!! Expected to be at {filename}. Creating a new file.")
+
+    with open(filename, 'a') as fobj:
+        # Move read cursor to the start of file.
+        fobj.seek(0)
+
+        # If file is not empty then append '\n'
+        data = fobj.read(100)
+        if len(data) > 0:
+            fiobj.write("\n")
+
+        # Append file_list at the end of file
+        for filename in file_list:
+            fobj.write(f'{filename}\n')
+
+    logging.info(f"{filetype} image listfile updated with new entries.")
 
 
 if __name__ == '__main__':

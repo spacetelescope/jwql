@@ -312,6 +312,10 @@ NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'S
 # Possible suffix types for AMI files
 NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami', 'psf-amiavg']
 
+
+PREVIEW_IMAGE_LISTFILE = 'preview_image_inventory.txt'
+
+
 # RAPID-style readout patterns for each instrument. Added so we can
 # differentiate in MAST searches for e.g. the dark current monitor
 RAPID_READPATTERNS = {'fgs': ['FGSRAPID'],
@@ -333,6 +337,8 @@ READPATT_PER_INSTRUMENT = {'fgs': ['FGS', 'FGSRAPID', 'FGS60', 'FGS840', 'FGS837
                                        'NRSRAPIDD2', 'NRSRAPIDD6']}
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
+
+THUMBNAIL_LISTFILE = 'thumbnail_inventory.txt'
 
 # Possible suffix types for time-series exposures
 TIME_SERIES_SUFFIX_TYPES = ['phot', 'whtlt']
