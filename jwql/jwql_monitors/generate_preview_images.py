@@ -547,13 +547,21 @@ def generate_preview_images():
         full_preview_files.extend(r[0])
         full_thumbnail_files.extend(r[1])
 
-    # Read in the preview image listfile and the thumbnail image list file
-    # and add these new files to each
-    preview_image_listfile = os.path.join(SETTINGS['preview_image_filesystem'], PREVIEW_IMAGE_LISTFILE)
-    update_listfile(preview_image_listfile, full_preview_files, 'preview')
+    # Filter the preview and thumbnail images by instrument and update the listfiles.
+    # We do this by looking for instrument abbreviations in the filenames. But will
+    # this work for level 3 files?? If an instrument abbreviation is not in the filename,
+    # then the preview/thubnail images won't be caught and added here.
+    for abbrev, inst_name in JWST_INSTRUMENT_NAMES_SHORTHAND.items():
+        inst_previews = [ele for ele in full_preview_files if re.search(abbrev, ele, re.IGNORECASE)]
+        inst_thumbs = [ele for ele in full_thumbnail_files if abbrev in ele]
 
-    thumbnail_image_listfile = os.path.join(SETTINGS['thumbnail_filesystem'], THUMBNAIL_LISTFILE)
-    update_listfile(thumbnail_image_listfile, full_thumbnail_files, 'thumbnail')
+        # Read in the preview image listfile and the thumbnail image list file
+        # and add these new files to each
+        preview_image_listfile = os.path.join(SETTINGS['preview_image_filesystem'], f"{PREVIEW_IMAGE_LISTFILE}_{inst_name}.txt")
+        update_listfile(preview_image_listfile, inst_previews, 'preview')
+
+        thumbnail_image_listfile = os.path.join(SETTINGS['thumbnail_filesystem'], f"{THUMBNAIL_LISTFILE}_{inst_name}.txt")
+        update_listfile(thumbnail_image_listfile, inst_thumbs, 'thumbnail')
 
     # Complete logging:
     logging.info("Completed.")

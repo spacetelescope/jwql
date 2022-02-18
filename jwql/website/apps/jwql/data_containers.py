@@ -805,7 +805,7 @@ def get_preview_images_by_instrument(inst):
 
     # Get list of all preview_images
     #preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, '*', '*.jpg'))
-    preview_list_file = "{PREVIEW_IMAGE_LISTFILE}._{inst.lower()}.txt"
+    preview_list_file = f"{PREVIEW_IMAGE_LISTFILE}_{inst.lower()}.txt"
     preview_images = retrieve_filelist(os.path.join(PREVIEW_IMAGE_FILESYSTEM, preview_list_file))
 
     # Get subset of preview images that match the filenames
@@ -937,6 +937,7 @@ def get_thumbnails_all_instruments(parameters):
     anomalies = parameters['anomalies']
 
     #filenames = []
+    thumbnails_subset = []
 
     for inst in parameters['instruments']:
         # Make sure instruments are of the proper format (e.g. "Nircam")
@@ -1161,7 +1162,7 @@ def retrieve_filelist(filename):
     with open(filename) as fobj:
         file_list = fobj.read().splitlines()
     return file_list
-  
+
 
 def text_scrape(prop_id):
     """Scrapes the Proposal Information Page.
