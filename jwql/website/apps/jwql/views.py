@@ -273,7 +273,7 @@ def archived_proposals_ajax(request, inst):
     filesystem = get_config()['filesystem']
 
     # Get list of all files for the given instrument
-    filename_query = mast_query(inst, "filename, isRestricted")
+    filename_query = mast_query_filenames_by_instrument(inst)
     filenames_public = get_filenames_by_instrument(inst, restriction='public', query_response=filename_query)
     filenames_proprietary = get_filenames_by_instrument(inst, restriction='proprietary', query_response=filename_query)
 

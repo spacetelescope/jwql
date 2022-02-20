@@ -71,7 +71,6 @@ from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_config, ensure_dir_exists
 
 
-
 def configure_logging(module):
     """Configure the log file with a standard logging format.
 

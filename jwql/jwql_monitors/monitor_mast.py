@@ -40,7 +40,6 @@ if not ON_GITHUB_ACTIONS:
     Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
 
 
-
 def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
                          add_filters=None, add_requests=None,
                          caom=False, return_data=False):

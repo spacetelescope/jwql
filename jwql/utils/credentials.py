@@ -24,7 +24,6 @@ from astroquery.mast import Mast
 from jwql.utils.utils import check_config_for_key, get_config
 
 
-
 def get_mast_base_url(request=None):
     """Return base url for mnemonic query.
 

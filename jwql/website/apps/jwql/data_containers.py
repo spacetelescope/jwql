@@ -512,14 +512,17 @@ def get_filenames_by_instrument(instrument, restriction='all', query_file=None, 
         A list of files that match the given instrument.
     """
 
-    service = INSTRUMENT_SERVICE_MATCH[instrument]
+    #service = INSTRUMENT_SERVICE_MATCH[instrument]
 
     if not query_file and not query_response:
         #result = mast_query(instrument, "filename, isRestricted")
         # Query for filenames
-        params = {"columns": "filename, isRestricted", "filters": []}
-        response = Mast.service_request_async(service, params)
-        result = response[0].json()
+        #params = {"columns": "filename, isRestricted", "filters": []}
+        #response = Mast.service_request_async(service, params)
+        #result = response[0].json()
+
+        result = mast_query_filenames_by_instrument(instrument)
+
     elif query_response:
         result = query_response
     elif query_file:
@@ -537,6 +540,22 @@ def get_filenames_by_instrument(instrument, restriction='all', query_file=None, 
         raise KeyError('{} is not a valid restriction level.  Use "all", "public", or "proprietary".'.format(restriction))
 
     return filenames
+
+
+def mast_query_filenames_by_instrument(instrument):
+    """Query MAST for filenames for the given instrument. Return the json
+    response from MAST.
+
+    Parameters
+    ----------
+    instrument : str
+        The instrument of interest (e.g. `FGS`).
+    """
+    service = INSTRUMENT_SERVICE_MATCH[instrument]
+    params = {"columns": "filename, isRestricted", "filters": []}
+    response = Mast.service_request_async(service, params)
+    result = response[0].json()
+    return result
 
 
 def get_filenames_by_proposal(proposal):
@@ -683,8 +702,9 @@ def get_image_info(file_root, rewrite):
     filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*.fits'.format(file_root))))
     image_info['all_files'] = filenames
 
-    # Determine the jph directory
-    prev_img_filesys = get_config()['preview_image_filesystem']
+    # Determine the jpg directory
+    #prev_img_filesys = get_config()['preview_image_filesystem']
+    prev_img_filesys = configs('preview_image_filesystem')
     jpg_dir = os.path.join(prev_img_filesys, proposal_dir)
 
     for filename in image_info['all_files']:
