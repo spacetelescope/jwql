@@ -779,7 +779,7 @@ def update_listfile(filename, file_list, filetype):
         # If file is not empty then append '\n'
         data = fobj.read(100)
         if len(data) > 0:
-            fiobj.write("\n")
+            fobj.write("\n")
 
         # Append file_list at the end of file
         for filename in file_list:

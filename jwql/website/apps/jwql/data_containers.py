@@ -704,7 +704,7 @@ def get_image_info(file_root, rewrite):
 
     # Determine the jpg directory
     #prev_img_filesys = get_config()['preview_image_filesystem']
-    prev_img_filesys = configs('preview_image_filesystem')
+    prev_img_filesys = configs['preview_image_filesystem']
     jpg_dir = os.path.join(prev_img_filesys, proposal_dir)
 
     for filename in image_info['all_files']:
