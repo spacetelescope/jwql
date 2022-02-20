@@ -772,7 +772,7 @@ def update_listfile(filename, file_list, filetype):
     if not os.path.isfile(filename):
         logging.warning(f"{filetype} image listfile not found!! Expected to be at {filename}. Creating a new file.")
 
-    with open(filename, 'a') as fobj:
+    with open(filename, 'a+') as fobj:
         # Move read cursor to the start of file.
         fobj.seek(0)
 
