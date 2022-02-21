@@ -12,9 +12,26 @@
     	<h2>Explore JWQL database tables through the web browser</h2><hr>
 
         <p align="justify">
-            This page allows users to interactively explore the JWQL database tables.  Simply select a table from the dropdown menu.
-        </p><br>
+            This page allows users to interactively explore the JWQL database tables. The main function of this tool is to
+            visually inspect data through the JWQL Web Application. Simply select a table from the dropdown menu to begin,
+            if further investigation of the table is needed, you can click the "Download Data" button to obtain the displayed
+            table as a CSV file.
 
+            <br><br>
+            The database table naming convention follows:
+
+
+            <xmp><instrument>_<monitor>_<stat_type></stat_type></xmp>
+
+
+            If a user is interested in the statistics from the NIRCAM Bias Monitor, the table to investigate would be
+
+
+
+            <xmp>nircam_bias_stats</xmp>.
+        </p>
+
+        <hr>
         <form action="" method="post" id="view_db_table">
             {{ csrf_input }}
             <!--DB TABLE DROPDOWN-->
@@ -67,6 +84,25 @@
                 </table>
             {% endif %}
         </form>
+
+        <h2>Importing Table Using Python's Pandas Library</h2><hr>
+        <p>
+            After downloading JWQLDB data, it is simple to import this data in a python session
+            using pandas. Visit the <a href="https://pandas.pydata.org/docs/" target="_blank">pandas documentation</a> 
+            for more information.
+            <pre>
+                <code class="python">
+                import pandas as pd  # import pandas
+
+                # Open CSV file with pandas
+                nircam_bias_stats = pd.read_csv('/path/to/downloads/nircam_bias_stats.csv')
+
+                print(nircam_bias_stats.columns)  #  to see column names.
+
+                print(nircam_bias_stats['expstart']) #  to print exposure start times.
+
+                </code>
+            </pre>
 
 	</main>
 
