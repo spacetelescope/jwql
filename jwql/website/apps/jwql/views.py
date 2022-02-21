@@ -566,7 +566,7 @@ def jwqldb_table_viewer(request):
         Outgoing response sent to the webpage
     """
 
-    try: 
+    try:
         tablename = request.POST['db_table_select']
     except KeyError:
         tablename = None
