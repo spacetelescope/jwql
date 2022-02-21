@@ -6,12 +6,13 @@ mypy + typing demo for JWQL dev meeting 2018-1-3
 Part 4: Subtlety
 """
 
-#Why do we care about this? Because errors can be subtle.
+# Why do we care about this? Because errors can be subtle.
 
-#A simple example!
 
+# A simple example!
 def get_favorite_number():
     return input("What's your favorite number? ")
 
+
 num = get_favorite_number()
-print("Twice your favorite number is", num*2)
+print("Twice your favorite number is", num * 2)

@@ -75,76 +75,14 @@ from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDar
 from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
-from jwql.utils import calculations, instrument_properties
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
+from jwql.utils import calculations, instrument_properties, monitor_utils
+from jwql.utils.constants import ASIC_TEMPLATES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, \
+                                 RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
-from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
-
-
-def mast_query_darks(instrument, aperture, start_date, end_date):
-    """Use ``astroquery`` to search MAST for dark current data
-
-    Parameters
-    ----------
-    instrument : str
-        Instrument name (e.g. ``nircam``)
-
-    aperture : str
-        Detector aperture to search for (e.g. ``NRCA1_FULL``)
-
-    start_date : float
-        Starting date for the search in MJD
-
-    end_date : float
-        Ending date for the search in MJD
-
-    Returns
-    -------
-    query_results : list
-        List of dictionaries containing the query results
-    """
-
-    # Make sure instrument is correct case
-    if instrument.lower() == 'nircam':
-        instrument = 'NIRCam'
-        dark_template = ['NRC_DARK']
-    elif instrument.lower() == 'niriss':
-        instrument = 'NIRISS'
-        dark_template = ['NIS_DARK']
-    elif instrument.lower() == 'nirspec':
-        instrument = 'NIRSpec'
-        dark_template = ['NRS_DARK']
-    elif instrument.lower() == 'fgs':
-        instrument = 'FGS'
-        dark_template = ['FGS_DARK']
-    elif instrument.lower() == 'miri':
-        instrument = 'MIRI'
-        dark_template = ['MIR_DARKALL', 'MIR_DARKIMG', 'MIR_DARKMRS']
-
-    # monitor_mast.instrument_inventory does not allow list inputs to
-    # the added_filters input (or at least if you do provide a list, then
-    # it becomes a nested list when it sends the query to MAST. The
-    # nested list is subsequently ignored by MAST.)
-    # So query once for each dark template, and combine outputs into a
-    # single list.
-    query_results = []
-    for template_name in dark_template:
-
-        # Create dictionary of parameters to add
-        parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
-                      "apername": aperture, "exp_type": template_name}
-
-        query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
-                                                  add_filters=parameters, return_data=True, caom=False)
-        if 'data' in query.keys():
-            if len(query['data']) > 0:
-                query_results.extend(query['data'])
-
-    return query_results
 
 
 class Dark():
@@ -441,8 +379,9 @@ class Dark():
             Date (in MJD) of the ending range of the previous MAST query
             where the dark monitor was run.
         """
-        query = session.query(self.query_table).filter(self.query_table.aperture==self.aperture). \
-                                                filter(self.query_table.run_monitor==True)
+        query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture,
+                                                       self.query_table.readpattern == self.readpatt). \
+                              filter(self.query_table.run_monitor == True)
 
         dates = np.zeros(0)
         for instance in query:
@@ -450,9 +389,9 @@ class Dark():
 
         query_count = len(dates)
         if query_count == 0:
-            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
-            logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
-                         .format(self.aperture, query_result)))
+            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
+            logging.info(('\tNo query history for {} with {}. Beginning search date will be set to {}.'
+                         .format(self.aperture, self.readpatt, query_result)))
         else:
             query_result = np.max(dates)
 
@@ -508,8 +447,8 @@ class Dark():
 
         # Determine which pipeline steps need to be executed
         required_steps = pipeline_tools.get_pipeline_steps(self.instrument)
-        logging.info('\tRequired calwebb1_detector pipeline steps to have the data in the '
-                     'correct format:')
+        logging.info('\tRequired calwebb1_detector pipeline steps to have'
+                     'data in correct format:')
         for item in required_steps:
             logging.info('\t\t{}: {}'.format(item, required_steps[item]))
 
@@ -728,88 +667,135 @@ class Dark():
             possible_apertures = list(Siaf(instrument).apernames)
             possible_apertures = [ap for ap in possible_apertures if ap not in apertures_to_skip]
 
+            # Get a list of all possible readout patterns associated with the aperture
+            possible_readpatts = RAPID_READPATTERNS[instrument]
+
             for aperture in possible_apertures:
                 logging.info('')
                 logging.info('Working on aperture {} in {}'.format(aperture, instrument))
 
-                # Find the appropriate threshold for the number of new files needed
+                # Find appropriate threshold for the number of new files needed
                 match = aperture == limits['Aperture']
-                file_count_threshold = limits['Threshold'][match]
 
-                # Locate the record of the most recent MAST search
-                self.aperture = aperture
-                self.query_start = self.most_recent_search()
-                logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
-
-                # Query MAST using the aperture and the time of the
-                # most recent previous search as the starting time
-                new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
-
-                logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
-
-                # Check to see if there are enough new files to meet the
-                # monitor's signal-to-noise requirements
-                if len(new_entries) >= file_count_threshold:
-                    logging.info('\tMAST query has returned sufficient new dark files for {}, {} to run the dark monitor.'
-                                 .format(self.instrument, self.aperture))
-
-                    # Get full paths to the files
-                    new_filenames = []
-                    for file_entry in new_entries:
-                        try:
-                            new_filenames.append(filesystem_path(file_entry['filename']))
-                        except FileNotFoundError:
-                            logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
-                                            .format(file_entry['filename']))
-
-                    # If it turns out that the monitor doesn't find enough
-                    # of the files returned by the MAST query to meet the threshold,
-                    # then the monitor will not be run
-                    if len(new_filenames) < file_count_threshold:
-                        logging.info(("\tFilesystem search for the files identified by MAST has returned {} files. "
-                                      "This is less than the required minimum number of files ({}) necessary to run "
-                                      "the monitor. Quitting.").format(len(new_filenames), file_count_threshold))
-                        monitor_run = False
-                    else:
-                        logging.info(("\tFilesystem search for the files identified by MAST has returned {} files.")
-                                     .format(len(new_filenames)))
-                        monitor_run = True
-
-                    if monitor_run:
-                        # Set up directories for the copied data
-                        ensure_dir_exists(os.path.join(self.output_dir, 'data'))
-                        self.data_dir = os.path.join(self.output_dir,
-                                                     'data/{}_{}'.format(self.instrument.lower(),
-                                                                         self.aperture.lower()))
-                        ensure_dir_exists(self.data_dir)
-
-                        # Copy files from filesystem
-                        dark_files, not_copied = copy_files(new_filenames, self.data_dir)
-
-                        logging.info('\tNew_filenames: {}'.format(new_filenames))
-                        logging.info('\tData dir: {}'.format(self.data_dir))
-                        logging.info('\tCopied to working dir: {}'.format(dark_files))
-                        logging.info('\tNot copied: {}'.format(not_copied))
-
-                        # Run the dark monitor
-                        self.process(dark_files)
-
+                # If the aperture is not listed in the threshold file, we need
+                # a default
+                if not np.any(match):
+                    file_count_threshold = 30
+                    logging.warning(('\tAperture {} is not present in the threshold file. Continuing '
+                                     'with the default threshold of 30 files.'.format(aperture)))
                 else:
-                    logging.info(('\tDark monitor skipped. MAST query has returned {} new dark files for '
-                                  '{}, {}. {} new files are required to run dark current monitor.')
-                                 .format(len(new_entries), instrument, aperture, file_count_threshold[0]))
-                    monitor_run = False
+                    file_count_threshold = limits['Threshold'][match][0]
+                self.aperture = aperture
 
-                # Update the query history
-                new_entry = {'instrument': instrument,
-                             'aperture': aperture,
-                             'start_time_mjd': self.query_start,
-                             'end_time_mjd': self.query_end,
-                             'files_found': len(new_entries),
-                             'run_monitor': monitor_run,
-                             'entry_date': datetime.datetime.now()}
-                self.query_table.__table__.insert().execute(new_entry)
-                logging.info('\tUpdated the query history table')
+                # We need a separate search for each readout pattern
+                for readpatt in possible_readpatts:
+                    self.readpatt = readpatt
+                    logging.info('\tWorking on readout pattern: {}'.format(self.readpatt))
+
+                    # Locate the record of the most recent MAST search
+                    self.query_start = self.most_recent_search()
+                    logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
+
+                    # Query MAST using the aperture and the time of the
+                    # most recent previous search as the starting time
+                    new_entries = monitor_utils.mast_query_darks(instrument, aperture, self.query_start, self.query_end, readpatt=self.readpatt)
+
+                    # Exclude ASIC tuning data
+                    len_new_darks = len(new_entries)
+                    new_entries = monitor_utils.exclude_asic_tuning(new_entries)
+                    len_no_asic = len(new_entries)
+                    num_asic = len_new_darks - len_no_asic
+                    logging.info("\tFiltering out ASIC tuning files removed {} dark files.".format(num_asic))
+
+                    logging.info('\tAperture: {}, Readpattern: {}, new entries: {}'.format(self.aperture, self.readpatt,
+                                                                                           len(new_entries)))
+
+                    # Check to see if there are enough new files to meet the
+                    # monitor's signal-to-noise requirements
+                    if len(new_entries) >= file_count_threshold:
+                        logging.info('\tMAST query has returned sufficient new dark files for {}, {}, {} to run the dark monitor.'
+                                     .format(self.instrument, self.aperture, self.readpatt))
+
+                        # Get full paths to the files
+                        new_filenames = []
+                        for file_entry in new_entries:
+                            try:
+                                new_filenames.append(filesystem_path(file_entry['filename']))
+                            except FileNotFoundError:
+                                logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'
+                                                .format(file_entry['filename']))
+
+                        # In some (unusual) cases, there are files in MAST with the correct aperture name
+                        # but incorrect array sizes. Make sure that the new files all have the expected
+                        # aperture size
+                        temp_filenames = []
+                        bad_size_filenames = []
+                        expected_ap = Siaf(instrument)[aperture]
+                        expected_xsize = expected_ap.XSciSize
+                        expected_ysize = expected_ap.YSciSize
+                        for new_file in new_filenames:
+                            with fits.open(new_file) as hdulist:
+                                xsize = hdulist[0].header['SUBSIZE1']
+                                ysize = hdulist[0].header['SUBSIZE2']
+                            if xsize == expected_xsize and ysize == expected_ysize:
+                                temp_filenames.append(new_file)
+                            else:
+                                bad_size_filenames.append(new_file)
+                        if len(temp_filenames) != len(new_filenames):
+                            logging.info('\tSome files returned by MAST have unexpected aperture sizes. These files will be ignored: ')
+                            for badfile in bad_size_filenames:
+                                logging.info('\t\t{}'.format(badfile))
+                        new_filenames = deepcopy(temp_filenames)
+
+                        # If it turns out that the monitor doesn't find enough
+                        # of the files returned by the MAST query to meet the threshold,
+                        # then the monitor will not be run
+                        if len(new_filenames) < file_count_threshold:
+                            logging.info(("\tFilesystem search for the files identified by MAST has returned {} files. "
+                                         "This is less than the required minimum number of files ({}) necessary to run "
+                                         "the monitor. Quitting.").format(len(new_filenames), file_count_threshold))
+                            monitor_run = False
+                        else:
+                            logging.info(("\tFilesystem search for the files identified by MAST has returned {} files.")
+                                         .format(len(new_filenames)))
+                            monitor_run = True
+
+                        if monitor_run:
+                            # Set up directories for the copied data
+                            ensure_dir_exists(os.path.join(self.output_dir, 'data'))
+                            self.data_dir = os.path.join(self.output_dir,
+                                                        'data/{}_{}'.format(self.instrument.lower(),
+                                                                            self.aperture.lower()))
+                            ensure_dir_exists(self.data_dir)
+
+                            # Copy files from filesystem
+                            dark_files, not_copied = copy_files(new_filenames, self.data_dir)
+
+                            logging.info('\tNew_filenames: {}'.format(new_filenames))
+                            logging.info('\tData dir: {}'.format(self.data_dir))
+                            logging.info('\tCopied to working dir: {}'.format(dark_files))
+                            logging.info('\tNot copied: {}'.format(not_copied))
+
+                            # Run the dark monitor
+                            self.process(dark_files)
+
+                    else:
+                        logging.info(('\tDark monitor skipped. MAST query has returned {} new dark files for '
+                                    '{}, {}, {}. {} new files are required to run dark current monitor.')
+                                    .format(len(new_entries), instrument, aperture, self.readpatt, file_count_threshold))
+                        monitor_run = False
+
+                    # Update the query history
+                    new_entry = {'instrument': instrument,
+                                'aperture': aperture,
+                                'readpattern': self.readpatt,
+                                'start_time_mjd': self.query_start,
+                                'end_time_mjd': self.query_end,
+                                'files_found': len(new_entries),
+                                'run_monitor': monitor_run,
+                                'entry_date': datetime.datetime.now()}
+                    self.query_table.__table__.insert().execute(new_entry)
+                    logging.info('\tUpdated the query history table')
 
         logging.info('Dark Monitor completed successfully.')
 
@@ -978,6 +964,14 @@ class Dark():
 
             hist, bin_edges = np.histogram(image[indexes[0], indexes[1]], bins='auto',
                                            range=(lower_bound, upper_bound))
+
+            # If the number of bins is smaller than the number of paramters
+            # to be fit, then we need to increase the number of bins
+            if len(bin_edges) < 7:
+                logging.info('\tToo few histogram bins in initial fit. Forcing 10 bins.')
+                hist, bin_edges = np.histogram(image[indexes[0], indexes[1]], bins=10,
+                                           range=(lower_bound, upper_bound))
+
             bin_centers = (bin_edges[1:] + bin_edges[0: -1]) / 2.
             initial_params = [np.max(hist), amp_mean, amp_stdev]
 
@@ -993,8 +987,7 @@ class Dark():
             degrees_of_freedom = len(hist) - 3.
             total_pix = np.sum(hist[positive])
             p_i = gauss_fit[positive] / total_pix
-            gaussian_chi_squared[key] = (np.sum((hist[positive] - (total_pix * p_i) ** 2) / (total_pix * p_i)) /
-                                        degrees_of_freedom)
+            gaussian_chi_squared[key] = (np.sum((hist[positive] - (total_pix * p_i) ** 2) / (total_pix * p_i)) / degrees_of_freedom)
 
             # Double Gaussian fit only for full frame data (and only for
             # NIRISS, NIRCam at the moment.)
@@ -1018,23 +1011,23 @@ class Dark():
 
         logging.info('\tMean dark rate by amplifier: {}'.format(amp_means))
         logging.info('\tStandard deviation of dark rate by amplifier: {}'.format(amp_means))
-        logging.info('\tBest-fit Gaussian parameters [amplitude, peak, width]'.format(gaussian_params))
+        logging.info('\tBest-fit Gaussian parameters [amplitude, peak, width]: {}'.format(gaussian_params))
         logging.info('\tReduced chi-squared associated with Gaussian fit: {}'.format(gaussian_chi_squared))
         logging.info('\tBest-fit double Gaussian parameters [amplitude1, peak1, width1, amplitude2, peak2, '
-                     'width2]'.format(double_gaussian_params))
+                     'width2]: {}'.format(double_gaussian_params))
         logging.info('\tReduced chi-squared associated with double Gaussian fit: {}'
                      .format(double_gaussian_chi_squared))
 
         return (amp_means, amp_stdevs, gaussian_params, gaussian_chi_squared, double_gaussian_params,
-                double_gaussian_chi_squared, hist.astype(np.float), bin_centers)
+                double_gaussian_chi_squared, hist.astype(float), bin_centers)
 
 
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    start_time, log_file = initialize_instrument_monitor(module)
+    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     monitor = Dark()
     monitor.run()
 
-    update_monitor_table(module, start_time, log_file)
+    monitor_utils.update_monitor_table(module, start_time, log_file)

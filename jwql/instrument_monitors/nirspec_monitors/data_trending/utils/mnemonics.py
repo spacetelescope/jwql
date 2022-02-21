@@ -20,13 +20,13 @@ Notes
 
 """
 
-#mnemonics underlaying certain conditions 15min
+# mnemonics underlaying certain conditions 15min
 # INRSD_EXP_STAT != STARTED
 mnemonic_cond_1 = [
 "SE_ZINRSFPEA",
 "SE_ZINRSFPEB"]
 
-#mnemonics underlaying condition 15min
+# mnemonics underlaying condition 15min
 # INRSH_LAMP_SEL = NO_LAMP
 mnemonic_cond_2 = [
 "SE_ZINRSICEA",
@@ -36,15 +36,15 @@ mnemonic_cond_3 = [
 "SE_ZINRSMCEA",
 "SE_ZINRSMCEB"]
 
-#menmonics applicable when CAA is powered
-#INRSH_CAA_PWRF_ST = ON
-mnemonic_caa= [
+# menmonics applicable when CAA is powered
+# INRSH_CAA_PWRF_ST = ON
+mnemonic_caa = [
 "IGDP_NRSI_C_CAAL1_TEMP",
 "IGDP_NRSI_C_CAAL2_TEMP",
 "IGDP_NRSI_C_CAAL3_TEMP",
 "IGDP_NRSI_C_CAAL4_TEMP"]
 
-#only applicable when Filter table 10 is set
+# only applicable when Filter table 10 is set
 mnemonic_ft10 = [
 "INRSH_OA_VREFOFF",
 "INRSH_OA_VREF",
@@ -63,7 +63,7 @@ mnemonic_ft10 = [
 "INRSH_RMA_ADCMGAIN",
 "INRSH_RMA_ADCMOFFSET"]
 
-#all mnemonics used for conditions
+# all mnemonics used for conditions
 mnemonic_for_conditions = [
 "INRSM_MOVE_STAT",
 "INRSH_WHEEL_MOT_SVREF",
@@ -82,9 +82,9 @@ mnemonic_for_conditions = [
 "INRSI_C_GWA_X_POSITION",
 "INRSI_C_GWA_Y_POSITION",
 
-"ICTM_RT_FILTER" ]
+"ICTM_RT_FILTER"]
 
-#these mnemonic are used by the day routine
+# these mnemonic are used by the day routine
 mnemSet_day = [
 "INRSM_MSA_Q1_365VDD",
 "INRSM_MSA_Q1_365VPP",
@@ -125,7 +125,7 @@ mnemSet_day = [
 "SI_GZCTS67A",
 "SI_GZCTS67B"]
 
-#these mnemonic are used by the 15min routine
+# these mnemonic are used by the 15min routine
 mnemSet_15min = [
 "IGDP_NRSD_ALG_TEMP",
 
@@ -240,7 +240,7 @@ mnemSet_15min = [
 "INRSM_LL_MTR_TMP_A",
 "INRSM_MSA_TMP_A"]
 
-#mnemonic set for setting up database
+# mnemonic set for setting up database
 mnemonic_set_database = [
 "GP_ZPSVOLT",
 "SE_ZINRSFPEA",
@@ -537,5 +537,5 @@ gwy_nominals = {
 'G235M' : 69.81,
 'G395M' : 89.57}
 
-#use this list for query
+# use this list for query
 mnemonic_set_query = mnemonic_set_database + mnemonic_for_conditions

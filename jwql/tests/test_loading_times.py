@@ -24,6 +24,7 @@ import pytest
 import time
 import urllib.request
 
+from jwql.utils.constants import MONITORS
 from jwql.utils.utils import get_base_url
 
 TIME_CONSTRAINT = 30  # seconds
@@ -37,6 +38,12 @@ urls = []
 urls.append('')
 urls.append('about/')
 urls.append('edb/')
+
+# Instrument monitor URLs
+for instrument in MONITORS:
+    for monitor, monitor_url in MONITORS[instrument]:
+        if monitor_url != '#':
+            urls.append(monitor_url[1:])
 
 # Specific URLs
 test_mappings = [('fgs', '86700', 'jw86600007001_02101_00001_guider2'),

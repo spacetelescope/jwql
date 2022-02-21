@@ -14,7 +14,6 @@ test_bad_pixel_monitor.py
     :members:
     :undoc-members:
 
-
 test_bias_monitor.py
 --------------------
 .. automodule:: jwql.tests.test_bias_monitor
@@ -27,12 +26,6 @@ test_calculations.py
     :members:
     :undoc-members:
 
-test_context_processors.py
---------------------------
-.. automodule:: jwql.tests.test_context_processors
-    :members:
-    :undoc-members:
-
 test_dark_monitor.py
 --------------------
 .. automodule:: jwql.tests.test_dark_monitor
@@ -42,6 +35,12 @@ test_dark_monitor.py
 test_data_containers.py
 -----------------------
 .. automodule:: jwql.tests.test_data_containers
+    :members:
+    :undoc-members:
+
+test_database_interface.py
+--------------------------
+.. automodule:: jwql.tests.test_database_interface
     :members:
     :undoc-members:
 
@@ -96,6 +95,12 @@ test_plotting.py
 test_preview_image.py
 ---------------------
 .. automodule:: jwql.tests.test_preview_image
+    :members:
+    :undoc-members:
+
+test_readnoise_monitor.py
+-------------------------
+.. automodule:: jwql.tests.test_readnoise_monitor
     :members:
     :undoc-members:
 

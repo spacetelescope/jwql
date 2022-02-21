@@ -23,8 +23,8 @@ Notes
 
 """
 
-#all mnemonic used for condition 1 (see: draft)
-#"SE_ZBUSVLT",
+# all mnemonic used for condition 1 (see: draft)
+# "SE_ZBUSVLT",
 mnemonic_cond_1 = [
 "SE_ZIMIRICEA",
 
@@ -50,7 +50,7 @@ mnemonic_cond_1 = [
 "IGDP_MIR_ICE_IFU_CRYO",
 "IGDP_MIR_ICE_IMG_CRYO"]
 
-#all mnemonics used for condition 2 (see: draft)
+# all mnemonics used for condition 2 (see: draft)
 mnemonic_cond_2=[
 "SE_ZIMIRFPEA",
 

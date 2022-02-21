@@ -13,7 +13,7 @@ The files and functions on the `webpage-template` branch that are designed to be
 | **URL entry template**  | list item that maps a URL to a view | `jwql/website/apps/jwql/urls.py` |
 | **data container function**  | python function that manipulates data for the view function | `website_template_data()` in `jwql/website/apps/jwql/data_containers.py` |
 
-*To learn more about topics like HTML templates, views, and URLs, see the [JWQL intro to web apps](https://github.com/spacetelescope/jwql/blob/master/presentations/JWQL_web_app.pdf).*
+*To learn more about topics like HTML templates, views, and URLs, see the [JWQL intro to web apps](https://github.com/spacetelescope/jwql/blob/main/presentations/JWQL_web_app.pdf).*
 
 
 

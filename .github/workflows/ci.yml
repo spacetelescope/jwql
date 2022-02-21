@@ -21,6 +21,14 @@ jobs:
         with:
           activate-environment: jwql-${{ matrix.python-version }}
 
+      - name: Bandit Check
+        uses: jpetrucciani/bandit-check@master
+        with:
+          path: "./jwql/"
+          bandit_flags: "-c .bandit"
+        continue-on-error: false
+        if: runner.os == 'Linux'
+
       - name: Build jwql conda environment and run tests
         shell: bash -l {0}
         run: |

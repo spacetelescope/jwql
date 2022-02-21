@@ -1,7 +1,7 @@
 *.pyc
 *.fits
 *.ipynb_checkpoints/
-/jwql/utils/config.json
+config.json
 build/
 dist/
 jwql.egg-info/
@@ -12,3 +12,7 @@ docs/source/api/
 htmlcov/
 *.sqlite3
 jwql/website/static/*.csv
+jwql/website/apps/jwql/static/filesystem
+jwql/website/apps/jwql/static/outputs
+jwql/website/apps/jwql/static/preview_images
+jwql/website/apps/jwql/static/thumbnails

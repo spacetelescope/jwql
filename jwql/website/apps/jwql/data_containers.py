@@ -31,17 +31,19 @@ import tempfile
 from astropy.io import fits
 from astropy.table import Table
 from astropy.time import Time
+from bs4 import BeautifulSoup
 from django.conf import settings
 import numpy as np
 from operator import itemgetter
 import pandas as pd
+import requests
 
 from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
-from jwql.utils.utils import ensure_dir_exists
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MONITORS
 from jwql.utils.constants import INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
@@ -50,8 +52,14 @@ from jwql.utils.credentials import get_mast_token
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
+# Determine if the code is being run as part of a Readthedocs build
+ON_READTHEDOCS = False
+if 'READTHEDOCS' in os.environ:
+    ON_READTHEDOCS = os.environ['READTHEDOCS']
+
 from jwql.utils.utils import get_config, filename_parser, check_config_for_key
-if not ON_GITHUB_ACTIONS:
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
     check_config_for_key('auth_mast')
     auth_mast = get_config()['auth_mast']
@@ -63,12 +71,16 @@ from astroquery.mast import Mast
 from jwedb.edb_interface import mnemonic_inventory
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-if not ON_GITHUB_ACTIONS:
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     FILESYSTEM_DIR = os.path.join(get_config()['filesystem'])
     PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['preview_image_filesystem'])
     THUMBNAIL_FILESYSTEM = os.path.join(get_config()['thumbnail_filesystem'])
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
+
+# Temporary until JWST operations: switch to test string for MAST request URL
+if not ON_GITHUB_ACTIONS:
+    Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
 
 
 def build_table(tablename):
@@ -192,7 +204,9 @@ def get_all_proposals():
         filesystem
     """
 
-    proposals = glob.glob(os.path.join(FILESYSTEM_DIR, '*'))
+    proposals = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', '*'))
+    proposals.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', '*')))
+    proposals = sorted(list(set(proposals)))
     proposals = [proposal.split('jw')[-1] for proposal in proposals]
     proposals = [proposal for proposal in proposals if len(proposal) == 5]
 
@@ -286,6 +300,8 @@ def get_edb_components(request):
     mnemonic_query_result = {}
     mnemonic_query_result_plot = None
     mnemonic_exploration_result = None
+    mnemonic_query_status = None
+    mnemonic_table_result = None
 
     # If this is a POST request, we need to process the form data
     if request.method == 'POST':
@@ -321,32 +337,45 @@ def get_edb_components(request):
 
                 if mnemonic_identifier is not None:
                     mnemonic_query_result = get_mnemonic(mnemonic_identifier, start_time, end_time)
-                    mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
 
-                    # generate table download in web app
-                    result_table = mnemonic_query_result.data
+                    if len(mnemonic_query_result.data) == 0:
+                        mnemonic_query_status = "QUERY RESULT RETURNED NO DATA FOR {} ON DATES {} - {}".format(mnemonic_identifier, start_time, end_time)
+                    else:
+                        mnemonic_query_status = 'SUCCESS'
 
-                    # save file locally to be available for download
-                    static_dir = os.path.join(settings.BASE_DIR, 'static')
-                    ensure_dir_exists(static_dir)
-                    file_name_root = 'mnemonic_query_result_table'
-                    file_for_download = '{}.csv'.format(file_name_root)
-                    path_for_download = os.path.join(static_dir, file_for_download)
+                        # If else to determine data visualization.
+                        if type(mnemonic_query_result.data['euvalues'][0]) == np.str_:
+                            if len(np.unique(mnemonic_query_result.data['euvalues'])) > 4:
+                                mnemonic_table_result = mnemonic_query_result.get_table_data()
+                            else:
+                                mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot_text_data()
+                        else:
+                            mnemonic_query_result_plot = mnemonic_query_result.bokeh_plot()
 
-                    # add meta data to saved table
-                    comments = []
-                    comments.append('DMS EDB query of {}:'.format(mnemonic_identifier))
-                    for key, value in mnemonic_query_result.info.items():
-                        comments.append('{} = {}'.format(key, str(value)))
-                    result_table.meta['comments'] = comments
-                    comments.append(' ')
-                    comments.append('Start time {}'.format(start_time.isot))
-                    comments.append('End time   {}'.format(end_time.isot))
-                    comments.append('Number of rows {}'.format(len(result_table)))
-                    comments.append(' ')
-                    result_table.write(path_for_download, format='ascii.fixed_width',
-                                       overwrite=True, delimiter=',', bookend=False)
-                    mnemonic_query_result.file_for_download = file_for_download
+                        # generate table download in web app
+                        result_table = mnemonic_query_result.data
+
+                        # save file locally to be available for download
+                        static_dir = os.path.join(settings.BASE_DIR, 'static')
+                        ensure_dir_exists(static_dir)
+                        file_name_root = 'mnemonic_query_result_table'
+                        file_for_download = '{}.csv'.format(file_name_root)
+                        path_for_download = os.path.join(static_dir, file_for_download)
+
+                        # add meta data to saved table
+                        comments = []
+                        comments.append('DMS EDB query of {}:'.format(mnemonic_identifier))
+                        for key, value in mnemonic_query_result.info.items():
+                            comments.append('{} = {}'.format(key, str(value)))
+                        result_table.meta['comments'] = comments
+                        comments.append(' ')
+                        comments.append('Start time {}'.format(start_time.isot))
+                        comments.append('End time   {}'.format(end_time.isot))
+                        comments.append('Number of rows {}'.format(len(result_table)))
+                        comments.append(' ')
+                        result_table.write(path_for_download, format='ascii.fixed_width',
+                                        overwrite=True, delimiter=',', bookend=False)
+                        mnemonic_query_result.file_for_download = file_for_download
 
             # create forms for search fields not clicked
             mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
@@ -412,10 +441,12 @@ def get_edb_components(request):
     edb_components = {'mnemonic_query_form': mnemonic_query_form,
                       'mnemonic_query_result': mnemonic_query_result,
                       'mnemonic_query_result_plot': mnemonic_query_result_plot,
+                      'mnemonic_query_status': mnemonic_query_status,
                       'mnemonic_name_search_form': mnemonic_name_search_form,
                       'mnemonic_name_search_result': mnemonic_name_search_result,
                       'mnemonic_exploration_form': mnemonic_exploration_form,
-                      'mnemonic_exploration_result': mnemonic_exploration_result}
+                      'mnemonic_exploration_result': mnemonic_exploration_result,
+                      'mnemonic_table_result': mnemonic_table_result}
 
     return edb_components
 
@@ -441,25 +472,38 @@ def get_expstart(instrument, rootname):
         The exposure start time of the observation (in MJD).
     """
 
-    file_set_name = '_'.join(rootname.split('_')[:-1])
+    if '-seg' in rootname:
+        file_set_name = rootname.split('-')[0]
+    else:
+        file_set_name = '_'.join(rootname.split('_')[:-1])
+
     service = INSTRUMENT_SERVICE_MATCH[instrument]
     params = {
         'columns': 'filename, expstart',
         'filters': [{'paramName': 'fileSetName', 'values': [file_set_name]}]}
     response = Mast.service_request_async(service, params)
     result = response[0].json()
-    expstart = min([item['expstart'] for item in result['data']])
+
+    if result['data'] == []:
+        expstart = 0
+        print("WARNING: no data")
+    else:
+        expstart = min([item['expstart'] for item in result['data']])
 
     return expstart
 
 
-def get_filenames_by_instrument(instrument):
+def get_filenames_by_instrument(instrument, restriction='all'):
     """Returns a list of filenames that match the given ``instrument``.
 
     Parameters
     ----------
     instrument : str
         The instrument of interest (e.g. `FGS`).
+    restriction : str
+        If ``all``, all filenames will be returned.  If ``public``,
+        only publicly-available filenames will be returned.  If
+        ``proprietary``, only proprietary filenames will be returned.
 
     Returns
     -------
@@ -467,12 +511,22 @@ def get_filenames_by_instrument(instrument):
         A list of files that match the given instrument.
     """
 
-    # Query for files from astroquery.Mast
     service = INSTRUMENT_SERVICE_MATCH[instrument]
-    params = {"columns": "filename", "filters": []}
+
+    # Query for filenames
+    params = {"columns": "filename, isRestricted", "filters": []}
     response = Mast.service_request_async(service, params)
     result = response[0].json()
-    filenames = [item['filename'] for item in result['data']]
+
+    # Determine filenames to return based on restriction parameter
+    if restriction == 'all':
+        filenames = [item['filename'] for item in result['data']]
+    elif restriction == 'public':
+        filenames = [item['filename'] for item in result['data'] if item['isRestricted'] is False]
+    elif restriction == 'proprietary':
+        filenames = [item['filename'] for item in result['data'] if item['isRestricted'] is True]
+    else:
+        raise KeyError('{} is not a valid restriction level.  Use "all", "public", or "proprietary".'.format(restriction))
 
     return filenames
 
@@ -493,9 +547,9 @@ def get_filenames_by_proposal(proposal):
     """
 
     proposal_string = '{:05d}'.format(int(proposal))
-    filenames = sorted(glob.glob(os.path.join(
-        FILESYSTEM_DIR, 'jw{}'.format(proposal_string), '*')))
-    filenames = [os.path.basename(filename) for filename in filenames]
+    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', 'jw{}'.format(proposal_string), '*/*'))
+    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', 'jw{}'.format(proposal_string), '*/*')))
+    filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
 
@@ -516,18 +570,17 @@ def get_filenames_by_rootname(rootname):
         A list of filenames associated with the given ``rootname``.
     """
 
-    proposal = rootname.split('_')[0].split('jw')[-1][0:5]
+    proposal_dir = rootname[0:7]
+    observation_dir = rootname.split('_')[0]
 
-    filenames = sorted(glob.glob(os.path.join(
-        FILESYSTEM_DIR,
-        'jw{}'.format(proposal),
-        '{}*'.format(rootname))))
-    filenames = [os.path.basename(filename) for filename in filenames]
+    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*'.format(rootname)))
+    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*'.format(rootname))))
+    filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
 
 
-def get_header_info(filename):
+def get_header_info(filename, filetype):
     """Return the header information for a given ``filename``.
 
     Parameters
@@ -535,6 +588,8 @@ def get_header_info(filename):
     filename : str
         The name of the file of interest, without the extension
         (e.g. ``'jw86600008001_02101_00007_guider2_uncal'``).
+    filetype : str
+        The type of the file of interest, (e.g. ``'uncal'``)
 
     Returns
     -------
@@ -546,17 +601,18 @@ def get_header_info(filename):
     header_info = {}
 
     # Open the file
-    fits_filepath = os.path.join(FILESYSTEM_DIR, filename[:7], '{}.fits'.format(filename))
+    fits_filepath = filesystem_path(filename, search=f'*_{filetype}.fits')
     hdulist = fits.open(fits_filepath)
 
     # Extract header information from file
     for ext in range(0, len(hdulist)):
+    #for ext in range(0, 1):
 
         # Initialize dictionary to store header information for particular extension
         header_info[ext] = {}
 
         # Get header
-        header = fits.getheader(fits_filepath, ext=ext)
+        header = hdulist[ext].header
 
         # Determine the extension name
         if ext == 0:
@@ -576,11 +632,12 @@ def get_header_info(filename):
 
     # Build tables
     for ext in header_info:
-        table = Table([header_info[ext]['keywords'], header_info[ext]['values']], names=('Key', 'Value'))
-        temp_path_for_html = os.path.join(tempfile.mkdtemp(), '{}_table.html'.format(header_info[ext]['EXTNAME']))
-        with open(temp_path_for_html, 'w') as f:
-            table.write(f, format='jsviewer', jskwargs={'display_length': 20})
-        header_info[ext]['table'] = open(temp_path_for_html, 'r').read()
+        data_dict = {}
+        data_dict['Keyword'] = header_info[ext]['keywords']
+        data_dict['Value'] = header_info[ext]['values']
+        header_info[ext]['table'] = pd.DataFrame(data_dict)
+        header_info[ext]['table_rows'] = header_info[ext]['table'].values
+        header_info[ext]['table_columns'] = header_info[ext]['table'].columns.values
 
     return header_info
 
@@ -611,22 +668,22 @@ def get_image_info(file_root, rewrite):
     image_info['suffixes'] = []
     image_info['num_ints'] = {}
 
-    preview_dir = os.path.join(get_config()['jwql_dir'], 'preview_images')
-
     # Find all of the matching files
-    dirname = file_root[:7]
-    search_filepath = os.path.join(FILESYSTEM_DIR, dirname, file_root + '*.fits')
-    image_info['all_files'] = glob.glob(search_filepath)
+    proposal_dir = file_root[:7]
+    observation_dir = file_root[:13]
+    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*.fits'.format(file_root)))
+    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*.fits'.format(file_root))))
+    image_info['all_files'] = filenames
 
-    for file in image_info['all_files']:
+    for filename in image_info['all_files']:
 
         # Get suffix information
-        suffix = os.path.basename(file).split('_')[4].split('.')[0]
+        suffix = os.path.basename(filename).split('_')[4].split('.')[0]
         image_info['suffixes'].append(suffix)
 
         # Determine JPEG file location
-        jpg_dir = os.path.join(preview_dir, dirname)
-        jpg_filename = os.path.basename(os.path.splitext(file)[0] + '_integ0.jpg')
+        jpg_dir = os.path.join(get_config()['preview_image_filesystem'], proposal_dir)
+        jpg_filename = os.path.basename(os.path.splitext(filename)[0] + '_integ0.jpg')
         jpg_filepath = os.path.join(jpg_dir, jpg_filename)
 
         # Check that a jpg does not already exist. If it does (and rewrite=False),
@@ -635,16 +692,15 @@ def get_image_info(file_root, rewrite):
             pass
 
         # If it doesn't, make it using the preview_image module
-        else:
-            if not os.path.exists(jpg_dir):
-                os.makedirs(jpg_dir)
-            im = PreviewImage(file, 'SCI')
-            im.output_directory = jpg_dir
-            im.make_image()
+        # else:
+        #     if not os.path.exists(jpg_dir):
+        #         os.makedirs(jpg_dir)
+        #     im = PreviewImage(filename, 'SCI')
+        #     im.output_directory = jpg_dir
+        #     im.make_image()
 
         # Record how many integrations there are per filetype
-        search_jpgs = os.path.join(preview_dir, dirname,
-                                   file_root + '_{}_integ*.jpg'.format(suffix))
+        search_jpgs = os.path.join(get_config()['preview_image_filesystem'], observation_dir, '{}_{}_integ*.jpg'.format(file_root, suffix))
         num_jpgs = len(glob.glob(search_jpgs))
         image_info['num_ints'][suffix] = num_jpgs
 
@@ -867,47 +923,46 @@ def get_thumbnails_all_instruments(parameters):
 
     anomalies = parameters['anomalies']
 
-    thumbnail_list = []
     filenames = []
 
-    if parameters['instruments'] is None:
-        thumbnails = []
     for inst in parameters['instruments']:
-        print("Retrieving thumbnails for", inst)
         # Make sure instruments are of the proper format (e.g. "Nircam")
         instrument = inst[0].upper() + inst[1:].lower()
 
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
-        params = {"columns": "*",
-                  "filters": [{"paramName": "apername",
-                               "values": parameters['apertures'][inst.lower()]
-                               },
-                              {"paramName": "detector",
-                               "values": parameters['detectors'][inst.lower()]
-                               },
-                              {"paramName": "filter",
-                               "values": parameters['filters'][inst.lower()]
-                               },
-                              {"paramName": "exp_type",
-                               "values": parameters['exposure_types'][inst.lower()]
-                               },
-                              {"paramName": "readpatt",
-                               "values": parameters['read_patterns'][inst.lower()]
-                               }
-                              ]}
+        if (parameters['apertures'][inst.lower()] == []) and (parameters['detectors'][inst.lower()] == []) \
+            and (parameters['filters'][inst.lower()] == []) and (parameters['exposure_types'][inst.lower()] == []) \
+            and (parameters['read_patterns'][inst.lower()] == []):
+                params = {"columns": "*",
+                          "filters": []}
+        else:
+            query_filters = []
+            if (parameters['apertures'][inst.lower()] != []):
+                if instrument != "Nircam":
+                    query_filters.append({"paramName": "pps_aper", "values": parameters['apertures'][inst.lower()]})
+                if instrument == "Nircam":
+                    query_filters.append({"paramName": "apername", "values": parameters['apertures'][inst.lower()]})
+            if (parameters['detectors'][inst.lower()] != []):
+                query_filters.append({"paramName": "detector", "values": parameters['detectors'][inst.lower()]})
+            if (parameters['filters'][inst.lower()] != []):
+                query_filters.append({"paramName": "filter", "values": parameters['filters'][inst.lower()]})
+            if (parameters['exposure_types'][inst.lower()] != []):
+                query_filters.append({"paramName": "exp_type", "values": parameters['exposure_types'][inst.lower()]})
+            if (parameters['read_patterns'][inst.lower()] != []):
+                query_filters.append({"paramName": "readpatt", "values": parameters['read_patterns'][inst.lower()]})
+            params = {"columns": "*",
+                      "filters": query_filters}
 
         response = Mast.service_request_async(service, params)
         results = response[0].json()['data']
 
-        for result in results:
-            filename = result['filename'].split('.')[0]
-            filenames.append(filename)
+        inst_filenames = [result['filename'].split('.')[0] for result in results]
+        filenames.extend(inst_filenames)
 
-        # Get list of all thumbnails
-        thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
-        thumbnail_list.extend(thumbnails)
+    # Get list of all thumbnails
+    thumbnail_list = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
 
     # Get subset of preview images that match the filenames
     thumbnails_subset = [os.path.basename(item) for item in thumbnail_list if
@@ -918,34 +973,24 @@ def get_thumbnails_all_instruments(parameters):
 
     # Determine whether or not queried anomalies are flagged
     final_subset = []
-    for thumbnail in thumbnails_subset:
-        components = thumbnail.split('_')
-        rootname = '{}_{}_{}_{}'.format(components[0], components[1], components[2], components[3])
-        try:
-            instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[thumbnail.split("_")[3][:3]]
-            thumbnail_anomalies = get_current_flagged_anomalies(rootname, instrument)
-            if thumbnail_anomalies:
-                for anomaly in anomalies[instrument.lower()]:
-                    if anomaly.lower() in thumbnail_anomalies:
-                        print(thumbnail, "contains an anomaly selected in the query")
-                        final_subset.append(thumbnail)
-        except KeyError:
+    
+    if anomalies != {'miri': [], 'nirspec': [], 'niriss': [], 'nircam': [], 'fgs': []}:
+        for thumbnail in thumbnails_subset:
+            components = thumbnail.split('_')
+            rootname = ''.join((components[0], '_', components[1], '_', components[2], '_', components[3]))
             try:
-                instrument = JWST_INSTRUMENT_NAMES_SHORTHAND[thumbnail.split("_")[2][:3]]
+                instrument = filename_parser(thumbnail)['instrument']
                 thumbnail_anomalies = get_current_flagged_anomalies(rootname, instrument)
                 if thumbnail_anomalies:
                     for anomaly in anomalies[instrument.lower()]:
                         if anomaly.lower() in thumbnail_anomalies:
-                            print(thumbnail, "contains an anomaly selected in the query")
+                            # thumbnail contains an anomaly selected in the query
                             final_subset.append(thumbnail)
             except KeyError:
                 print("Error with thumbnail: ", thumbnail)
-
-    if not final_subset:
-        print("No images matched anomaly selection")
+    else:
+        # if no anomalies are flagged, return all thumbnails from query
         final_subset = thumbnails_subset
-        if not final_subset:
-            final_subset = thumbnails[:10]
 
     return list(set(final_subset))
 
@@ -1056,7 +1101,8 @@ def log_into_mast(request):
     access_token = str(get_mast_token(request))
 
     # authenticate with astroquery.mast if necessary
-    if access_token != 'None':
+    # nosec comment added to ignore bandit security check
+    if access_token != 'None': # nosec
         Mast.login(token=access_token)
         return Mast.authenticated()
     else:
@@ -1076,6 +1122,85 @@ def random_404_page():
     random_template = templates[choose_page]
 
     return random_template
+
+
+def text_scrape(prop_id):
+    """Scrapes the Proposal Information Page.
+
+    Parameters
+    ----------
+    prop_id : int
+        Proposal ID
+
+    Returns
+    -------
+    program_meta : dict
+        Dictionary containing information about program
+    """
+
+    # Generate url
+    url = 'http://www.stsci.edu/cgi-bin/get-proposal-info?id=' + str(prop_id) + '&submit=Go&observatory=JWST'
+    html = BeautifulSoup(requests.get(url).text, 'lxml')
+    lines = html.findAll('p')
+    lines = [str(line) for line in lines]
+
+    program_meta = {}
+    program_meta['prop_id'] = prop_id
+    program_meta['phase_two'] = '<a href=https://www.stsci.edu/jwst/phase2-public/{}.pdf target="_blank"> Phase Two</a>'
+
+    if prop_id[0] == '0':
+        program_meta['phase_two'] = program_meta['phase_two'].format(prop_id[1:])
+    else:
+        program_meta['phase_two'] = program_meta['phase_two'].format(prop_id)
+
+    program_meta['phase_two'] = BeautifulSoup(program_meta['phase_two'], 'html.parser')
+
+    links = html.findAll('a')
+    proposal_type = links[0].contents[0]
+
+    program_meta['prop_type'] = proposal_type
+
+    # Scrape for titles/names/contact persons
+    for line in lines:
+        if 'Title' in line:
+            start = line.find('</b>') + 4
+            end = line.find('<', start)
+            title = line[start:end]
+            program_meta['title'] = title
+
+        if 'Principal Investigator:' in line:
+            start = line.find('</b>') + 4
+            end = line.find('<', start)
+            pi = line[start:end]
+            program_meta['pi'] = pi
+
+        if 'Program Coordinator' in line:
+            start = line.find('</b>') + 4
+            mid = line.find('<', start)
+            end = line.find('>', mid) + 1
+            pc = line[mid:end] + line[start:mid] + '</a>'
+            program_meta['pc'] = pc
+
+        if 'Contact Scientist' in line:
+            start = line.find('</b>') + 4
+            mid = line.find('<', start)
+            end = line.find('>', mid) + 1
+            cs = line[mid:end] + line[start:mid] + '</a>'
+            program_meta['cs'] = BeautifulSoup(cs, 'html.parser')
+
+        if 'Program Status' in line:
+            start = line.find('<a')
+            end = line.find('</a>')
+            ps = line[start:end]
+
+            # beautiful soupify text to build absolute link
+            ps = BeautifulSoup(ps, 'html.parser')
+            ps_link = ps('a')[0]
+            ps_link['href'] = 'https://www.stsci.edu' + ps_link['href']
+            ps_link['target'] = '_blank'
+            program_meta['ps'] = ps_link
+
+    return program_meta
 
 
 def thumbnails_ajax(inst, proposal=None):
@@ -1118,6 +1243,15 @@ def thumbnails_ajax(inst, proposal=None):
         # Parse filename
         try:
             filename_dict = filename_parser(rootname)
+
+            # The detector keyword is expected in thumbnails_query_ajax() for generating filterable dropdown menus
+            if 'detector' not in filename_dict.keys():
+                filename_dict['detector'] = 'Unknown'
+
+            # Weed out file types that are not supported by generate_preview_images
+            if filename_dict['filename_type'] in ['stage_3_target_id']:
+                continue
+
         except ValueError:
             # Temporary workaround for noncompliant files in filesystem
             filename_dict = {'activity': rootname[17:19],
@@ -1136,8 +1270,12 @@ def thumbnails_ajax(inst, proposal=None):
         data_dict['file_data'][rootname] = {}
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
-        data_dict['file_data'][rootname]['expstart'] = get_expstart(inst, rootname)
         data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for filename in available_files]
+        try:
+            data_dict['file_data'][rootname]['expstart'] = get_expstart(inst, rootname)
+            data_dict['file_data'][rootname]['expstart_iso'] = Time(data_dict['file_data'][rootname]['expstart'], format='mjd').iso.split('.')[0]
+        except:
+            print("issue with get_expstart for {}".format(rootname))
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
@@ -1162,16 +1300,14 @@ def thumbnails_ajax(inst, proposal=None):
     return data_dict
 
 
-def thumbnails_query_ajax(rootnames, insts):
+def thumbnails_query_ajax(rootnames):
     """Generate a page that provides data necessary to render the
     ``thumbnails`` template.
 
     Parameters
     ----------
-    insts : list of strings
-        Name of JWST instrument
-    proposal : list of strings (optional)
-        Number of APT proposal to filter
+    rootnames : list of strings (optional)
+        Rootname of APT proposal to filter
 
     Returns
     -------
@@ -1184,11 +1320,13 @@ def thumbnails_query_ajax(rootnames, insts):
     # dummy variable for view_image when thumbnail is selected
     data_dict['inst'] = "all"
     data_dict['file_data'] = {}
-
     # Gather data for each rootname
     for rootname in rootnames:
         # fit expected format for get_filenames_by_rootname()
-        rootname = rootname.split("_")[0] + '_' + rootname.split("_")[1] + '_' + rootname.split("_")[2] + '_' + rootname.split("_")[3]
+        try:
+            rootname = rootname.split("_")[0] + '_' + rootname.split("_")[1] + '_' + rootname.split("_")[2] + '_' + rootname.split("_")[3]
+        except IndexError:
+            continue
 
         # Parse filename
         try:
@@ -1210,20 +1348,31 @@ def thumbnails_query_ajax(rootnames, insts):
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
         try:
-            data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[JWST_INSTRUMENT_NAMES_SHORTHAND[rootname[26:29]]]
+            data_dict['file_data'][rootname]['inst'] = JWST_INSTRUMENT_NAMES_MIXEDCASE[filename_parser(rootname)['instrument']]
         except KeyError:
             data_dict['file_data'][rootname]['inst'] = "MIRI"
             print("Warning: assuming instrument is MIRI")
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
-        data_dict['file_data'][rootname]['expstart'] = get_expstart(rootname)
+        data_dict['file_data'][rootname]['expstart'] = get_expstart(data_dict['file_data'][rootname]['inst'], rootname)
         data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for
                                                         filename in available_files]
         data_dict['file_data'][rootname]['prop'] = rootname[2:7]
 
     # Extract information for sorting with dropdown menus
-    detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for
-                 rootname in list(data_dict['file_data'].keys())]
+    try:
+        detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for
+                    rootname in list(data_dict['file_data'].keys())]
+    except KeyError:
+        detectors = []
+        for rootname in list(data_dict['file_data'].keys()):
+            try:
+                detector = data_dict['file_data'][rootname]['filename_dict']['detector']
+                detectors.append(detector) if detector not in detectors else detectors
+            except KeyError:
+                detector = 'Unknown'
+                detectors.append(detector) if detector not in detectors else detectors
+
     instruments = [data_dict['file_data'][rootname]['inst'].lower() for
                    rootname in list(data_dict['file_data'].keys())]
     proposals = [data_dict['file_data'][rootname]['filename_dict']['program_id'] for

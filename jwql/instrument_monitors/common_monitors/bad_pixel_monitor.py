@@ -6,10 +6,19 @@ The monitor calls the ``bad_pixel_mask.py`` module in the
 ``spacetelescope/jwst_reffiles`` package in order to identify bad
 pixels. (``https://github.com/spacetelescope/jwst_reffiles``)
 
-The definitions of the bad pixel types to be searched for are given
+The bad pixel mnemonics to be searched for are given
 in the jwst package:
 ``https://jwst-pipeline.readthedocs.io/en/stable/jwst/references_general/
 references_general.html#data-quality-flags``
+
+The algorithms used to identify the various types of bad pixels were
+developed by the JWST Calibration Reference File Generation Tools working
+group, which was under the Calibration Working Group. This working group
+contained representatives from all instruments, and worked to identify
+common algorithms that all instruments could use to generate information
+to be placed in reference files. Details on the algorithms used here to
+identify bad pixels are detailed here:
+``https://outerspace.stsci.edu/display/JWSTCC/Algorithm+details%3A+DQ+Init``
 
 The bad pixel search is composed of two different parts, each of which
 can be run independently.
@@ -82,8 +91,6 @@ from astropy.time import Time
 from jwst.datamodels import dqflags
 from jwst_reffiles.bad_pixel_mask import bad_pixel_mask
 import numpy as np
-from sqlalchemy import func
-from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
 from jwql.database.database_interface import NIRCamBadPixelQueryHistory, NIRCamBadPixelStats
@@ -92,12 +99,11 @@ from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPi
 from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors import pipeline_tools
-from jwql.utils import crds_tools, instrument_properties
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
-                                 FLAT_EXP_TYPES, DARK_EXP_TYPES
+from jwql.utils import crds_tools, instrument_properties, monitor_utils
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import FLAT_EXP_TYPES, DARK_EXP_TYPES
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.mast_utils import mast_query
-from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
@@ -188,14 +194,17 @@ def check_for_sufficient_files(uncal_files, instrument_name, aperture_name, thre
         uncal_files = sorted(list(set(uncal_files)))
 
     if len(uncal_files) < threshold_value:
-        logging.info(('\tBad pixels from {} skipped. {} new {} files for {}, {} found. {} new files are '
-                      'required to run bad pixels from {} portion of monitor.')
-                      .format(file_type, len(uncal_files), file_type_singular, instrument_name, aperture_name, threshold_value, file_type))
+        logging.info(('\tBad pixels from {} skipped. {} new {} files for {},'
+                      '{} found. {} new files are required to run bad pixels'
+                      'from {} portion of monitor.')
+                     .format(file_type, len(uncal_files), file_type_singular,
+                     instrument_name, aperture_name, threshold_value, file_type))
         uncal_files = None
         run_data = False
 
     else:
-        logging.info('\tSufficient new files found for {}, {} to run the bad pixel from {} portion of the monitor.'
+        logging.info('\tSufficient new files found for {}, {} to run the'
+                     'bad pixel from {} portion of the monitor.'
                      .format(instrument_name, aperture_name, file_type))
         logging.info('\tNew entries: {}'.format(len(uncal_files)))
         run_data = True
@@ -225,6 +234,7 @@ def exclude_crds_mask_pix(bad_pix, existing_bad_pix):
         but not ``existing_bad_pix``
     """
     return bad_pix - (bad_pix & existing_bad_pix)
+
 
 def locate_rate_files(uncal_files):
     """Given a list of uncal (raw) files, generate a list of
@@ -437,7 +447,8 @@ class BadPixels():
         readpatt_filtered : list
             Filtered list of query results.
         """
-        # Need to filter all instruments' results by filter. Choose filter with the most files
+        # Need to filter all instruments' results by filter.
+        # Choose filter with the most files
         # Only for flats
         if ((datatype == 'flat') and (self.instrument != 'fgs')):
             if self.instrument in ['nircam', 'niriss']:
@@ -466,7 +477,8 @@ class BadPixels():
 
             results = deepcopy(filtered)
 
-        # All instruments: need to filter by readout pattern. Any pattern name not containing "IRS2" is ok
+        # All instruments: need to filter by readout pattern.
+        # Any pattern name not containing "IRS2" is ok
         # choose readout pattern with the most entries
         readpatt_list = [entry['readpatt'] for entry in results]
         readpatt_set = list(set(readpatt_list))
@@ -525,7 +537,9 @@ class BadPixels():
             # other instruments, you can't use aperture names to uniquely
             # identify the full frame darks/flats from a given detector.
             # Instead you must use detector names.
-            possible_apertures = [('MIRIMAGE', 'MIRIM_FULL'), ('MIRIFULONG', 'MIRIM_FULL'), ('MIRIFUSHORT', 'MIRIM_FULL')]
+            possible_apertures = [('MIRIMAGE', 'MIRIM_FULL'),
+                                  ('MIRIFULONG', 'MIRIM_FULL'),
+                                  ('MIRIFUSHORT', 'MIRIM_FULL')]
         if self.instrument == 'fgs':
             possible_apertures = ['FGS1_FULL', 'FGS2_FULL']
         if self.instrument == 'nirspec':
@@ -675,14 +689,12 @@ class BadPixels():
             where the dark monitor was run.
         """
         if file_type.lower() == 'dark':
-            mjd_field = self.query_table.dark_end_time_mjd
             run_field = self.query_table.run_bpix_from_darks
         elif file_type.lower() == 'flat':
-            mjd_field = self.query_table.flat_end_time_mjd
             run_field = self.query_table.run_bpix_from_flats
 
-        query = session.query(self.query_table).filter(self.query_table.aperture==self.aperture). \
-                                                filter(run_field==True)
+        query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture). \
+                              filter(run_field == True)
 
         dates = np.zeros(0)
         if file_type.lower() == 'dark':
@@ -694,7 +706,7 @@ class BadPixels():
 
         query_count = len(dates)
         if query_count == 0:
-            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
+            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
                          .format(self.aperture, query_result)))
         else:
@@ -803,7 +815,7 @@ class BadPixels():
                 dark_jump_files.append(jump_output)
                 dark_fitopt_files.append(fitopt_output)
                 if self.nints > 1:
-                    #dark_slope_files[index] = rate_output.replace('rate', 'rateints')
+                    # dark_slope_files[index] = rate_output.replace('rate', 'rateints')
                     dark_slope_files[index] = rate_output.replace('0_ramp_fit', '1_ramp_fit')
                 else:
                     dark_slope_files[index] = deepcopy(rate_output)
@@ -873,7 +885,7 @@ class BadPixels():
             baseline_badpix_mask = fits.getdata(baseline_file)
 
         # Exclude hot and dead pixels in the current bad pixel mask
-        #new_hot_pix = self.exclude_existing_badpix(new_hot_pix, 'hot')
+        # new_hot_pix = self.exclude_existing_badpix(new_hot_pix, 'hot')
         new_since_reffile = exclude_crds_mask_pix(badpix_map, baseline_badpix_mask)
 
         # Create a list of the new instances of each type of bad pixel
@@ -884,9 +896,11 @@ class BadPixels():
             logging.info('\tFound {} new {} pixels'.format(len(bad_location_list[0]), bad_type))
 
             if bad_type in badpix_types_from_flats:
-                self.add_bad_pix(bad_location_list, bad_type, illuminated_slope_files, min_illum_time, mid_illum_time, max_illum_time, baseline_file)
+                self.add_bad_pix(bad_location_list, bad_type, illuminated_slope_files,
+                                 min_illum_time, mid_illum_time, max_illum_time, baseline_file)
             elif bad_type in badpix_types_from_darks:
-                self.add_bad_pix(bad_location_list, bad_type, dark_slope_files, min_dark_time, mid_dark_time, max_dark_time, baseline_file)
+                self.add_bad_pix(bad_location_list, bad_type, dark_slope_files,
+                                 min_dark_time, mid_dark_time, max_dark_time, baseline_file)
             else:
                 raise ValueError("Unrecognized type of bad pixel: {}. Cannot update database table.".format(bad_type))
 
@@ -952,13 +966,13 @@ class BadPixels():
                     lamp = 'LINE2'
 
                 # What lamp is most appropriate for FGS?
-                #if self.instrument == 'fgs':
+                # if self.instrument == 'fgs':
                 #    lamp = 'G2LAMP1'
 
                 logging.info('')
                 logging.info('Working on aperture {} in {}'.format(aperture, self.instrument))
 
-                # Find the appropriate threshold for the number of new files needed
+                # Find the appropriate threshold for number of new files needed
                 match = self.aperture == limits['Aperture']
                 flat_file_count_threshold = limits['FlatThreshold'][match].data[0]
                 dark_file_count_threshold = limits['DarkThreshold'][match].data[0]
@@ -982,9 +996,11 @@ class BadPixels():
 
                 # Filter the results
                 # Filtering could be different for flats vs darks.
-                # Kevin says we shouldn't need to worry about mixing lamps in the data used to create the bad pixel
-                # mask. In flight, data will only be taken with LINE2, LEVEL 5. Currently in MAST all lamps are
-                # present, but Kevin is not concerned about variations in flat field strucutre.
+                # Kevin says we shouldn't need to worry about mixing lamps in
+                # the data used to create the bad pixel mask.
+                # In flight, data will only be taken with LINE2, LEVEL 5.
+                # Currently in MAST all lamps are present, but Kevin is
+                # not concerned about variations in flat field strucutre.
 
                 # NIRISS - results can include rate, rateints, trapsfilled
                 # MIRI - Jane says they now use illuminated data for dead pixel checks, just like other insts.
@@ -1005,8 +1021,18 @@ class BadPixels():
                 # lists to align.
 
                 if new_flat_entries:
+                    # Exclude ASIC tuning data
+                    len_new_flats = len(new_flat_entries)
+                    new_flat_entries = monitor_utils.exclude_asic_tuning(new_flat_entries)
+                    len_no_asic = len(new_flat_entries)
+                    num_asic = len_new_flats - len_no_asic
+                    logging.info("\tFiltering out ASIC tuning files removed {} flat files.".format(num_asic))
+
                     new_flat_entries = self.filter_query_results(new_flat_entries, datatype='flat')
-                    flat_uncal_files = locate_uncal_files(new_flat_entries)
+                    apcheck_flat_entries = pipeline_tools.aperture_size_check(new_flat_entries, instrument, aperture)
+                    lost_to_bad_metadata = len(new_flat_entries) - len(apcheck_flat_entries)
+                    logging.info('\t{} flat field files ignored due to inconsistency in array size and metadata.'.format(lost_to_bad_metadata))
+                    flat_uncal_files = locate_uncal_files(apcheck_flat_entries)
                     flat_uncal_files, run_flats = check_for_sufficient_files(flat_uncal_files, instrument, aperture, flat_file_count_threshold, 'flats')
                     flat_rate_files, flat_rate_files_to_copy = locate_rate_files(flat_uncal_files)
                 else:
@@ -1014,8 +1040,18 @@ class BadPixels():
                     flat_uncal_files, flat_rate_files, flat_rate_files_to_copy = None, None, None
 
                 if new_dark_entries:
+                    # Exclude ASIC tuning data
+                    len_new_darks = len(new_dark_entries)
+                    new_dark_entries = monitor_utils.exclude_asic_tuning(new_dark_entries)
+                    len_no_asic = len(new_dark_entries)
+                    num_asic = len_new_darks - len_no_asic
+                    logging.info("\tFiltering out ASIC tuning files removed {} dark files.".format(num_asic))
+
                     new_dark_entries = self.filter_query_results(new_dark_entries, datatype='dark')
-                    dark_uncal_files = locate_uncal_files(new_dark_entries)
+                    apcheck_dark_entries = pipeline_tools.aperture_size_check(new_dark_entries, instrument, aperture)
+                    lost_to_bad_metadata = len(new_dark_entries) - len(apcheck_dark_entries)
+                    logging.info('\t{} dark files ignored due to inconsistency in array size and metadata.'.format(lost_to_bad_metadata))
+                    dark_uncal_files = locate_uncal_files(apcheck_dark_entries)
                     dark_uncal_files, run_darks = check_for_sufficient_files(dark_uncal_files, instrument, aperture, dark_file_count_threshold, 'darks')
                     dark_rate_files, dark_rate_files_to_copy = locate_rate_files(dark_uncal_files)
                 else:
@@ -1069,9 +1105,9 @@ class BadPixels():
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    start_time, log_file = initialize_instrument_monitor(module)
+    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     monitor = BadPixels()
     monitor.run()
 
-    update_monitor_table(module, start_time, log_file)
+    monitor_utils.update_monitor_table(module, start_time, log_file)

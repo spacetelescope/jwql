@@ -24,7 +24,7 @@ function change_filetype(type, file_root, num_ints, inst) {
     var num_ints = JSON.parse(num_ints);
 
     // Propogate the text fields showing the filename and APT parameters
-    var fits_filename = file_root + '_' + type
+    var fits_filename = file_root + '_' + type;
     document.getElementById("jpg_filename").innerHTML = file_root + '_' + type + '_integ0.jpg';
     document.getElementById("fits_filename").innerHTML = fits_filename + '.fits';
     document.getElementById("proposal").innerHTML = file_root.slice(2,7);
@@ -33,19 +33,15 @@ function change_filetype(type, file_root, num_ints, inst) {
     document.getElementById("detector").innerHTML = file_root.split('_')[3];
 
     // Show the appropriate image
-    var img = document.getElementById("image_viewer")
+    var img = document.getElementById("image_viewer");
     var jpg_filepath = '/static/preview_images/' + file_root.slice(0,7) + '/' + file_root + '_' + type + '_integ0.jpg';
     img.src = jpg_filepath;
     img.alt = jpg_filepath;
 
     // Reset the slider values
-    document.getElementById("slider_range").value = 1
-    document.getElementById("slider_range").max = num_ints[type]
-    document.getElementById("slider_val").innerHTML = 1
-
-    // Update the number of integrations
-    var int_counter = document.getElementById("int_count");
-    int_counter.innerHTML = 'Displaying integration 1/' + num_ints[type];
+    document.getElementById("slider_range").value = 1;
+    document.getElementById("slider_range").max = num_ints[type];
+    document.getElementById("slider_val").innerHTML = 1;
 
     // Update the integration changing buttons
     if (num_ints[type] > 1) {
@@ -55,9 +51,9 @@ function change_filetype(type, file_root, num_ints, inst) {
     }
 
     // Update the image download and header links
-    document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename + '.fits';
-    document.getElementById("download_jpg").href = jpg_filepath;
-    document.getElementById("view_header").href = '/' + inst + '/' + fits_filename + '/header/';
+    // document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename + '.fits';
+    // document.getElementById("download_jpg").href = jpg_filepath;
+    document.getElementById("view_header").href = '/' + inst + '/' + file_root + '_' + type + '/header/';
 
     // Disable the "left" button, since this will be showing integ0
     document.getElementById("int_before").disabled = true;
@@ -81,7 +77,7 @@ function change_int(file_root, num_ints, method, direction = 'right') {
     var integration = Number(suffix[suffix.length - 1][5]);
     var suffix = suffix[suffix.length - 2];
     var program = file_root.slice(0,7);
-    
+
     // Find the total number of integrations for the current image
     var num_ints = num_ints.replace(/'/g, '"');
     var num_ints = JSON.parse(num_ints)[suffix];
@@ -159,7 +155,11 @@ function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root)
     } else if (suffixes.indexOf("uncal") >= 0) {
         var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
         img.src = jpg_path;
+    } else if (suffixes.indexOf("dark") >= 0) {
+        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_dark_integ0.thumb';
+        img.src = jpg_path;
     };
+
 };
 
 
@@ -432,7 +432,7 @@ function update_header_display(extension, num_extensions) {
  */
 function update_show_count(count, type) {
     content = 'Showing ' + count + '/' + count + ' ' + type;
-    content += '<a href="https://jwst-docs.stsci.edu/display/JDAT/File+Naming+Conventions+and+Data+Products" target="_blank" style="color: black">';
+    content += '<a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/science_products.html" target="_blank" style="color: black">';
     content += '<span class="help-tip mx-2">i</span></a>';
     $("#img_show_count")[0].innerHTML = content;
 };
@@ -486,7 +486,7 @@ function update_thumbnail_array(data) {
         content += 'Observation: ' + filename_dict.observation + '<br>';
         content += 'Visit: ' + filename_dict.visit + '<br>';
         content += 'Detector: ' + filename_dict.detector + '<br>';
-        content += 'Exp_Start: ' + file.expstart.toFixed(2) + '<br>';
+        content += 'Exp_Start: ' + file.expstart_iso + '<br>';
         content += '</div></a></div>';
 
         // Add the content to the div

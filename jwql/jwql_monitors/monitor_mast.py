@@ -30,7 +30,14 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_config
+from jwql.utils import monitor_utils
 from jwql.utils.plotting import bar_chart
+
+
+# Temporary until JWST operations: switch to test string for MAST request URL
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+if not ON_GITHUB_ACTIONS:
+    Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
 
 
 def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
@@ -249,8 +256,6 @@ def monitor_mast():
     """
     logging.info('Beginning database monitoring.')
 
-    outputs_dir = os.path.join(get_config()['outputs'], 'monitor_mast')
-
     # Perform inventory of the JWST service
     jwst_inventory(instruments=JWST_INSTRUMENT_NAMES,
                    dataproducts=['image', 'spectrum', 'cube'],
@@ -266,7 +271,8 @@ if __name__ == '__main__':
 
     # Configure logging
     module = os.path.basename(__file__).strip('.py')
-    configure_logging(module)
+    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     # Run the monitors
     monitor_mast()
+    monitor_utils.update_monitor_table(module, start_time, log_file)

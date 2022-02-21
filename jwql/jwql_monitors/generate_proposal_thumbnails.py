@@ -32,6 +32,7 @@ import shutil
 
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.utils import get_config
+from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 
 
 @log_fail
@@ -44,8 +45,16 @@ def generate_proposal_thumbnails():
 
     for proposal_dir in proposal_dirs:
         rate_thumbnails = glob.glob(os.path.join(proposal_dir, '*rate*.thumb'))
+        uncal_thumbnails = glob.glob(os.path.join(proposal_dir, '*uncal*.thumb'))
         if rate_thumbnails:
             thumbnail = rate_thumbnails[0]
+        elif uncal_thumbnails:
+            thumbnail = uncal_thumbnails[0]
+        else:
+            thumbnail = None
+            logging.info('No uncal or rate files found for {}.  No thumbnail generated.'.format(proposal_dir))
+
+        if thumbnail:
             proposal = os.path.basename(thumbnail)[0:7]
             outfile = os.path.join(proposal_dir, '{}.thumb'.format(proposal))
             shutil.copy2(thumbnail, outfile)
@@ -55,6 +64,7 @@ def generate_proposal_thumbnails():
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    configure_logging(module)
+    start_time, log_file = initialize_instrument_monitor(module)
 
     generate_proposal_thumbnails()
+    update_monitor_table(module, start_time, log_file)

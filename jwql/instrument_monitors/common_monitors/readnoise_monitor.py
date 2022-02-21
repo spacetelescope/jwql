@@ -42,10 +42,6 @@ from astropy.stats import sigma_clip
 from astropy.time import Time
 from astropy.visualization import ZScaleInterval
 import crds
-from jwst.dq_init import DQInitStep
-from jwst.group_scale import GroupScaleStep
-from jwst.refpix import RefPixStep
-from jwst.superbias import SuperBiasStep
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -60,12 +56,12 @@ from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISS
 from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats
 from jwql.database.database_interface import session
 from jwql.instrument_monitors import pipeline_tools
-from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
-from jwql.utils import instrument_properties
+from jwql.utils import instrument_properties, monitor_utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
+from jwql.utils.monitor_utils import update_monitor_table
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, initialize_instrument_monitor, update_monitor_table
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
 
 
 class Readnoise():
@@ -345,7 +341,7 @@ class Readnoise():
             The 2D readnoise image.
         """
 
-        # Create a stack of correlated double sampling (CDS) images using the input
+        # Create a stack of correlated double sampling (CDS) images using input
         # ramp data, combining multiple integrations if necessary.
         logging.info('\tCreating stack of CDS difference frames')
         num_ints, num_groups, num_y, num_x = data.shape
@@ -361,11 +357,12 @@ class Readnoise():
             else:
                 cds_stack = np.concatenate((cds_stack, cds), axis=0)
 
-        # Calculate the readnoise by taking the clipped stddev through the CDS stack
+        # Calculate readnoise by taking the clipped stddev through CDS stack
         logging.info('\tCreating readnoise image')
         clipped = sigma_clip(cds_stack, sigma=3.0, maxiters=3, axis=0)
         readnoise = np.std(clipped, axis=0)
-        readnoise = readnoise.filled(fill_value=np.nan)  # converts masked array to normal array and fills missing data
+        # converts masked array to normal array and fills missing data
+        readnoise = readnoise.filled(fill_value=np.nan)
 
         return readnoise
 
@@ -385,7 +382,7 @@ class Readnoise():
             self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
 
         if len(query) == 0:
-            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
+            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, query_result)))
         else:
             query_result = query[-1].end_time_mjd
@@ -447,19 +444,28 @@ class Readnoise():
 
             # Get the current JWST Readnoise Reference File data
             parameters = self.make_crds_parameter_dict()
-            reffile_mapping = crds.getreferences(parameters, reftypes=['readnoise'])
-            readnoise_file = reffile_mapping['readnoise']
-            if 'NOT FOUND' in readnoise_file:
-                logging.warning('\tNo pipeline readnoise reffile match for this file - assuming all zeros.')
-                pipeline_readnoise = np.zeros(readnoise.shape)
-            else:
+            try:
+                reffile_mapping = crds.getreferences(parameters, reftypes=['readnoise'])
+                readnoise_file = reffile_mapping['readnoise']
                 logging.info('\tPipeline readnoise reffile is {}'.format(readnoise_file))
                 pipeline_readnoise = fits.getdata(readnoise_file)
+            except:
+                logging.warning('\tError retrieving pipeline readnoise reffile - assuming all zeros.')
+                pipeline_readnoise = np.zeros(readnoise.shape)
 
             # Find the difference between the current readnoise image and the pipeline readnoise reffile, and record image stats.
             # Sometimes, the pipeline readnoise reffile needs to be cutout to match the subarray.
             if readnoise.shape != pipeline_readnoise.shape:
-                pipeline_readnoise = pipeline_readnoise[self.substrt2 - 1:self.substrt2 + self.subsize2 - 1, self.substrt1 - 1:self.substrt1 + self.subsize1 - 1]
+                try:
+                    p_substrt1, p_substrt2 = fits.getheader(readnoise_file)['SUBSTRT1'], fits.getheader(readnoise_file)['SUBSTRT2']
+                except KeyError:
+                    p_substrt1, p_substrt2 = 1, 1
+                x1, y1 = self.substrt1 - p_substrt1, self.substrt2 - p_substrt2
+                x2, y2 = x1 + self.subsize1, y1 + self.subsize2
+                pipeline_readnoise = pipeline_readnoise[y1:y2, x1:x2]
+                if pipeline_readnoise.shape != readnoise.shape:
+                    logging.warning('\tError cutting out pipeline readnoise - assuming all zeros.')
+                    pipeline_readnoise = np.zeros(readnoise.shape)
             readnoise_diff = readnoise - pipeline_readnoise
             clipped = sigma_clip(readnoise_diff, sigma=3.0, maxiters=5)
             diff_image_mean, diff_image_stddev = np.nanmean(clipped), np.nanstd(clipped)
@@ -492,7 +498,7 @@ class Readnoise():
                                   'diff_image_n': diff_image_n.astype(float),
                                   'diff_image_bin_centers': diff_image_bin_centers.astype(float),
                                   'entry_date': datetime.datetime.now()
-                                 }
+                                  }
             for key in amp_stats.keys():
                 if isinstance(amp_stats[key], (int, float)):
                     readnoise_db_entry[key] = float(amp_stats[key])
@@ -547,7 +553,15 @@ class Readnoise():
 
                 # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
-                new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
+                new_entries = monitor_utils.mast_query_darks(instrument, aperture, self.query_start, self.query_end)
+
+                # Exclude ASIC tuning data
+                len_new_darks = len(new_entries)
+                new_entries = monitor_utils.exclude_asic_tuning(new_entries)
+                len_no_asic = len(new_entries)
+                num_asic = len_new_darks - len_no_asic
+                logging.info("\tFiltering out ASIC tuning files removed {} dark files.".format(num_asic))
+
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
                 # Set up a directory to store the data for this aperture
@@ -617,9 +631,9 @@ class Readnoise():
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    start_time, log_file = initialize_instrument_monitor(module)
+    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     monitor = Readnoise()
     monitor.run()
 
-    update_monitor_table(module, start_time, log_file)
+    monitor_utils.update_monitor_table(module, start_time, log_file)

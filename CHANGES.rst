@@ -1,3 +1,118 @@
+1.0.0 (2021-10-05)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Included documentation describing the algorithms used for instrument monitors
+- Included templates for bug reports and feature requests as well as a link to submit issues on the ``home`` page
+- Included ``Documentation`` option on instrument drop down menu in the navigation bar
+
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- All relevant instruments (NIRCam, NIRISS, NIRSpec) are incorporated into the Bias Monitor
+- The generalized pipeline function from ``pipeline_tools.py`` is used for image calibration
+- For exposures containing multiple integrations, created thumbnail image for only a single ingtegration
+- Implemented tests for all Monitor webpages
+
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Modified filesystem to reflect MAST-like organizational structure
+- Implemented application security tools into GitHub Actions builds
+- Switched filesystem to use latest DMS build
+- Improved configuration file handling
+
+
+Bug Fixes
+---------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Include API Docs for all modules, classes, and functions in ReadTheDocs
+
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Included various fixes and improvements suggested during stakeholder demonstrations
+- Fixed ``View Image``, ``View Proposal``, and ``View Header`` buttons
+- Updated dashboard such that ``NULL`` Monitor Status values were fixed
+- Updated options that users can select for general image queries
+- Eliminated pop-up warning when viewing fits file headers in the web app
+- Removed login button on homepage and supporting authentication code and replaced with SSO authentication
+
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Fixed Dark Monitor failure due to dither point keyword values in data
+- Addressed Dark Monitor failure with data including 64-bit integers
+- Resolved the NIRSpec amp boundary issue
+- Fixed missing reference file error handling with latest DMS build in Readnoise Monitor
+- Ensured Dark, Bias, and Readnoise Monitors complete successfully with latest DMS build
+- Included read persmissions for database tables
+- Performed flake8 sweep of the code repository
+- Updated software to support the latest versions of ``bokeh`` and ``pysiaf``
+- Removed dependencies on the astroconda channel
+
+
+
+0.26.0 (2021-03-30)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- Included badges for GitHub Actions in ``README.md``
+- Replaced Jenkins support with GitHub Actions for CI testing
+- Removed Python 3.6 support
+
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Allow local developers to bypass ``auth.mast`` authentication
+- Added cosmic ray monitor, unit test code, and relevant database files
+- Removed unsupported options including image anomalies, unlooked images and monitors that haven't been implemented
+- Improved loading times for web app archive pages by generating a representative thumbnail with ``generate_proposal_thumbnail.py``, using ``astroquery.Mast`` rather than scraping filesystem, adding optional checks that file paths exist
+- Implemented JWQL Dashboard View
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Updated the call to the JWST pipeline RSCD step
+- Added GitHub Actions
+
+
+Bug Fixes
+---------
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Improved loading times of readnoise monitor webpage
+- Fixed broken bokeh CDN links
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Dark monitor exits gracefully when there are not enough files in the filesystem
+- Fixed filename parsing for WFS&C and AMI products
+- Adjusted generation of preview images such that images are created for all file types
+- Update ops naming convention in log directory
+
+
+
 0.25.0 (2020-12-31)
 ===================
 

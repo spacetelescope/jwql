@@ -49,8 +49,8 @@
                     from urllib import request
                     import json
 
-                    # Build the URL https://dljwql.stsci.edu/api/roontname/service/
-                    url = 'https://dljwql.stsci.edu/api/jw93025001001_02102_00001_nrca2/filenames/'
+                    # Build the URL https://jwql.stsci.edu/api/roontname/service/
+                    url = 'https://jwql.stsci.edu/api/jw93025001001_02102_00001_nrca2/filenames/'
                     req = request.urlopen(url)
                     filenames = json.loads(req.read().decode())
 
@@ -73,8 +73,8 @@
                     from urllib import request
                     import json
 
-                    # Build the URL https://dljwql.stsci.edu/api/instrument/service/
-                    url = 'https://dljwql.stsci.edu/api/fgs/thumbnails/'
+                    # Build the URL https://jwql.stsci.edu/api/instrument/service/
+                    url = 'https://jwql.stsci.edu/api/fgs/thumbnails/'
                     req = request.urlopen(url)
                     thumbnails = json.loads(req.read().decode())
 
@@ -105,8 +105,8 @@
                         from urllib import request
                         import json
 
-                        # Build the URL https://dljwql.stsci.edu/api/proposal/service/
-                        url = 'https://dljwql.stsci.edu/api/86600/filenames/'
+                        # Build the URL https://jwql.stsci.edu/api/proposal/service/
+                        url = 'https://jwql.stsci.edu/api/86600/filenames/'
                         req = request.urlopen(url)
                         filenames = json.loads(req.read().decode())
 
@@ -136,15 +136,15 @@
         <div id="api_list">
             <h4>List of Available Services</h4><hr>
                 <ul>
-                    <li>All Proposals (<code class="python">https://dljwql.stsci.edu/api/proposals/</code>)</li>
-                    <li>Instrument Proposals (<code class="python">https://dljwql.stsci.edu/api/&lt;instrument&gt;/proposals/</code>)</li>
-                    <li>Preview Images by Instrument (<code class="python">https://dljwql.stsci.edu/api/&lt;instrument&gt;/preview_images/</code>)</li>
-                    <li>Thumbnails by Instrument (<code class="python">https://dljwql.stsci.edu/api/&lt;instrument&gt;/thumbnails/</code>)</li>
-                    <li>Filenames by Proposal (<code class="python">https://dljwql.stsci.edu/api/&lt;instrument&gt;/proposals/</code>)</li>
-                    <li>Preview Images by Proposal (<code class="python">https://dljwql.stsci.edu/api/&lt;proposal&gt;/preview_images/</code>)</li>
-                    <li>Filenames by Rootname (<code class="python">https://dljwql.stsci.edu/api/&lt;rootname&gt;/filenames/</code>)</li>
-                    <li>Preview Images by Rootname (<code class="python">https://dljwql.stsci.edu/api/&lt;rootname&gt;/preview_images/</code>)</li>
-                    <li>Thumbnails by Rootname (<code class="python">https://dljwql.stsci.edu/api/&lt;rootname&gt;/thumbnails/</code>)</li>
+                    <li>All Proposals (<code class="python">https://jwql.stsci.edu/api/proposals/</code>)</li>
+                    <li>Instrument Proposals (<code class="python">https://jwql.stsci.edu/api/&lt;instrument&gt;/proposals/</code>)</li>
+                    <li>Preview Images by Instrument (<code class="python">https://jwql.stsci.edu/api/&lt;instrument&gt;/preview_images/</code>)</li>
+                    <li>Thumbnails by Instrument (<code class="python">https://jwql.stsci.edu/api/&lt;instrument&gt;/thumbnails/</code>)</li>
+                    <li>Filenames by Proposal (<code class="python">https://jwql.stsci.edu/api/&lt;instrument&gt;/proposals/</code>)</li>
+                    <li>Preview Images by Proposal (<code class="python">https://jwql.stsci.edu/api/&lt;proposal&gt;/preview_images/</code>)</li>
+                    <li>Filenames by Rootname (<code class="python">https://jwql.stsci.edu/api/&lt;rootname&gt;/filenames/</code>)</li>
+                    <li>Preview Images by Rootname (<code class="python">https://jwql.stsci.edu/api/&lt;rootname&gt;/preview_images/</code>)</li>
+                    <li>Thumbnails by Rootname (<code class="python">https://jwql.stsci.edu/api/&lt;rootname&gt;/thumbnails/</code>)</li>
                 </ul>
             <p> Where <code class="python">&lt;instrument&gt;, &lt;rootname&gt;, &lt;proposal&gt;</code> are the values for the instrument name, rootname and proposal ID respectivly</p>
         </div>

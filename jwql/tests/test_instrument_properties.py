@@ -78,7 +78,7 @@ def test_calc_frame_time():
     nrc_fullframe = instrument_properties.calc_frame_time('nircam', 'NRCA1_FULL', 2048, 2048, 4)
     nrc_160 = instrument_properties.calc_frame_time('nircam', 'NRCA1_SUB160', 160, 160, 1)
     nrs_fullframe = instrument_properties.calc_frame_time('niriss', 'NIS_CEN', 2048, 2048, 4)
-    #nrs_some_subarra = instrument_properies.calc_frame_time('niriss', '????', ??, ??, ?)
+    # nrs_some_subarra = instrument_properies.calc_frame_time('niriss', '????', ??, ??, ?)
 
     print('STILL NEED TO ADD FRAMETIME CALCS FOR MIRI AND NIRSPEC TO THE CALC_FRAME_TIME_FUNCTION')
     print('CONFIRM NIRCAMSUB160 TIME ON JDOX')

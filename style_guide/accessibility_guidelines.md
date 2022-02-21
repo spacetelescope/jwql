@@ -1,7 +1,7 @@
 Guidelines for Accessible Development
 =====================================
 
-This document serves as a guide for developing accessible web pages and code within the `jwql` project.  Any contribution to the `jwql` code repository should be checked against these guidelines to ensure it meets all applicable standards. Any violations of these guidelines should be fixed before the code is committed to the `master` or `develop` branches. 
+This document serves as a guide for developing accessible web pages and code within the `jwql` project.  Any contribution to the `jwql` code repository should be checked against these guidelines to ensure it meets all applicable standards. Any violations of these guidelines should be fixed before the code is committed to the `main` or `develop` branches. 
 
 
 `jwql`-specific Guidelines

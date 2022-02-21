@@ -24,7 +24,7 @@ References
 Dependencies
 ------------
     The user must have a configuration file named ``config.json``
-    placed in the ``jwql/utils/`` directory.
+    placed in the ``jwql`` directory.
 """
 
 import os
@@ -122,11 +122,7 @@ def dark_monitor(request, inst):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    # Deal with the fact that only the NIRCam database is populated
-    if inst == 'NIRCam':
-        tabs_components = bokeh_containers.dark_monitor_tabs(inst)
-    else:
-        tabs_components = None
+    tabs_components = bokeh_containers.dark_monitor_tabs(inst)
 
     template = "dark_monitor.html"
 
