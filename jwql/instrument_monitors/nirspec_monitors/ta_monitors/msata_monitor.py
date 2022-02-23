@@ -479,6 +479,36 @@ class MSATA():
         return p
 
 
+    def plt_lsoffsetmag(self, source):
+        """ Plot the residual Least Squares Total Slew Magnitude Offset versus time
+        Parameters
+        ----------
+            source: bokeh data object for plotting
+        Returns
+        -------
+            p: bokeh plot object
+        """
+        # create a new bokeh plot
+        p = figure(title="MSATA Least Squares Total Magnitude of the Linear V2, V3 Offset Slew vs Time", x_axis_label='Time',
+                   y_axis_label='sqrt((V2_off)**2 + (V3_off)**2)', x_axis_type='datetime')
+        p.circle(x='time_arr', y='lsoffsetmag', source=source,
+                 color="blue", size=7, fill_alpha=0.5)
+        hover = HoverTool()
+        hover.tooltips=[
+            ('Visit ID', '@visit_id'),
+            ('Filter', '@filter'),
+            ('Readout', '@readout'),
+            ('Date-Obs', '@date_obs'),
+            ('Subarray', '@subarray'),
+            ('LS roll offset', '@lsrolloffset'),
+            ('LS slew mag offset', '@lsoffsetmag'),
+            ('LS V2 offset', '@lsv2offset'),
+            ('LS V3 offset', '@lsv3offset')
+        ]
+        p.add_tools(hover)
+        return p
+
+
     def plt_mags_time(self, source):
         """ Plot the star magnitudes versus time
         Parameters
@@ -588,9 +618,10 @@ class MSATA():
         p6 = self.plt_v2offsigma_time(source)
         p7 = self.plt_v3offsigma_time(source)
         p8 = self.plt_roll_offset(source)
-        p9 = self.plt_mags_time(source)
+        p9 = self.plt_lsoffsetmag(source)
+        p10 = self.plt_mags_time(source)
         # make grid
-        grid = gridplot([p1, p2, p3, p4, p5, p6, p7, p8, p9], ncols=2, merge_tools=False)
+        grid = gridplot([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10], ncols=2, merge_tools=False)
         #show(grid)
         save(p)
 
