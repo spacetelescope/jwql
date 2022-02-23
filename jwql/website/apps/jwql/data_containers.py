@@ -110,7 +110,6 @@ def build_table(tablename):
 
     result = session.query(table_object)
 
-    session.close()
     # Turn query result into list of dicts
     result_dict = [row.__dict__ for row in result.all()]
     column_names = table_object.__table__.columns.keys()
@@ -126,6 +125,7 @@ def build_table(tablename):
     # Build table.
     table_meta_data = pd.DataFrame(data)
 
+    session.close()
     return table_meta_data
 
 

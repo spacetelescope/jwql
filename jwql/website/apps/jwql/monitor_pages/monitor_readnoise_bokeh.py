@@ -63,6 +63,8 @@ class ReadnoiseMonitor(BokehTemplate):
             .order_by(self.stats_table.expstart) \
             .all()
 
+        session.close()
+
     def pre_init(self):
 
         # Start with default values for instrument and aperture because
