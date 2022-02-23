@@ -429,8 +429,7 @@ def filename_parser(filename):
 
     # Raise error if unable to parse the filename
     except AttributeError:
-        jdox_url = 'https://jwst-docs.stsci.edu/display/JDAT/' \
-                   'File+Naming+Conventions+and+Data+Products'
+        jdox_url = 'https://jwst-docs.stsci.edu/understanding-jwst-data-files/jwst-data-file-naming-conventions'
         raise ValueError(
             'Provided file {} does not follow JWST naming conventions.  '
             'See {} for further information.'.format(filename, jdox_url)
