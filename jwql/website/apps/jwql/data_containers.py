@@ -667,6 +667,8 @@ def get_image_info(file_root, rewrite):
     image_info['all_jpegs'] = []
     image_info['suffixes'] = []
     image_info['num_ints'] = {}
+    image_info['available_ints'] = {}
+
 
     # Find all of the matching files
     proposal_dir = file_root[:7]
@@ -700,10 +702,9 @@ def get_image_info(file_root, rewrite):
         #     im.make_image()
 
         # Record how many integrations there are per filetype
-        search_jpgs = os.path.join(get_config()['preview_image_filesystem'], observation_dir, '{}_{}_integ*.jpg'.format(file_root, suffix))
-        num_jpgs = len(glob.glob(search_jpgs))
-        image_info['num_ints'][suffix] = num_jpgs
-
+        jpgs = glob.glob(os.path.join(get_config()['preview_image_filesystem'], proposal_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
+        image_info['num_ints'][suffix] = len(jpgs)
+        image_info['available_ints'][suffix] = sorted([int(jpg.split('_')[-1].replace('.jpg','').replace('integ','')) for jpg in jpgs])
         image_info['all_jpegs'].append(jpg_filepath)
 
     return image_info

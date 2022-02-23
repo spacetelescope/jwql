@@ -29,7 +29,7 @@
 	    </a><br>
 	    <form class="my-2" action="change_filetype(value, {{file_root}}, {{num_ints}}, {{inst}})">
 	    	{% for suffix in suffixes %}
-	    		<input type="radio" name="filetype" value="{{ suffix }}" id="{{ suffix }}" onclick='change_filetype("{{suffix}}", "{{file_root}}", "{{num_ints}}", "{{inst}}");'> {{ suffix }} &nbsp;&nbsp;&nbsp;&nbsp;
+	    		<input type="radio" name="filetype" value="{{ suffix }}" id="{{ suffix }}" onclick='change_filetype("{{suffix}}", "{{file_root}}", "{{num_ints}}", "{{available_ints}}", "{{inst}}");'> {{ suffix }} &nbsp;&nbsp;&nbsp;&nbsp;
 	    	{% endfor %}
 		</form>
 		<br>
@@ -42,7 +42,6 @@
         </p>
 
         <div class="row">
-
             <!-- Display the image and integration buttons/slider -->
     	    <div class="col-xl-9 text-center">
     		    <span class="image_preview">
@@ -53,10 +52,10 @@
     		    </span>
 
                 <div class="int_changer">
-                    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("{{file_root}}", "{{num_ints}}", "button", "left");' disabled>&#9664;</button>
-                    <input type="range" min="1" max="5" value="1" class="slider" id="slider_range" onchange='change_int("{{file_root}}", "{{num_ints}}", "slider")'>
-                    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("{{file_root}}", "{{num_ints}}", "button", "right");' disabled>&#9658;</button>
-                    <p>Integration: <span id="slider_val"></span></p>
+                    <button id="int_before" class="btn btn-primary mx-2" role="button" onclick='change_int("{{file_root}}", "{{num_ints}}", "{{available_ints}}", "button", "left");' disabled>&#9664;</button>
+                    <input type="range" min="1" max="5" value="1" class="slider" id="slider_range" onchange='change_int("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "slider")'>
+                    <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "button", "right");' disabled>&#9658;</button>
+                    <p>Integration: <span id="slider_val"></span>/<span id="total_ints"></span></p>
                 </div>
             </div>
 
@@ -94,26 +93,15 @@
             </div>
         </div>
 
-        <!-- Update the current slider integration value while it is being dragged -->
-        <script type="text/javascript">
-        var slider = document.getElementById("slider_range")
-        var slider_val = document.getElementById("slider_val")
-        slider_val.innerHTML = slider.value; // Display the default slider value
-
-        slider.oninput = function() {
-          slider_val.innerHTML = this.value;
-        }
-        </script>
-
         <!-- Determine which filetype should be shown on load -->
         {% if 'cal' in suffixes %}
-            <script>change_filetype('cal', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
+            <script>change_filetype('cal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", '{{inst}}');</script>
         {% elif 'rate' in suffixes %}
-            <script>change_filetype('rate', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
+            <script>change_filetype('rate', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", '{{inst}}');</script>
         {% elif 'uncal' in suffixes %}
-            <script>change_filetype('uncal', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
+            <script>change_filetype('uncal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", '{{inst}}');</script>
         {% elif suffixes|length == 1 %}
-            <script>change_filetype('{{suffixes.0}}', '{{file_root}}', '{{num_ints}}', '{{inst}}');</script>
+            <script>change_filetype('{{suffixes.0}}', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", '{{inst}}');</script>
         {% else %}
             <a>Unable to show image for: {{suffixes}}</a>
         {% endif %}
