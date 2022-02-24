@@ -1263,10 +1263,10 @@ def thumbnails_ajax(inst, proposal=None):
             pass
 
     if proposal is not None:
-        dropdown_menus = {'detector': detectors}
+        dropdown_menus = {'detector': sorted(detectors)}
     else:
-        dropdown_menus = {'detector': detectors,
-                          'proposal': proposals}
+        dropdown_menus = {'detector': sorted(detectors),
+                          'proposal': sorted(proposals)}
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
