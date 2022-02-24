@@ -596,6 +596,8 @@ class BadPixels():
                 new_pixels_x.append(x)
                 new_pixels_y.append(y)
 
+        session.close()
+
         return (new_pixels_x, new_pixels_y)
 
     def identify_tables(self):
@@ -712,6 +714,7 @@ class BadPixels():
         else:
             query_result = np.max(dates)
 
+        session.close()
         return query_result
 
     def make_crds_parameter_dict(self):

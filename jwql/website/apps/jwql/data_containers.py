@@ -125,6 +125,7 @@ def build_table(tablename):
     # Build table.
     table_meta_data = pd.DataFrame(data)
 
+    session.close()
     return table_meta_data
 
 
