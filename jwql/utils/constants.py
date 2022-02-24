@@ -344,8 +344,8 @@ TIME_SERIES_SUFFIX_TYPES = ['phot', 'whtlt']
 WFSC_SUFFIX_TYPES = ['wfscmb']
 
 # Concatenate all suffix types (ordered to ensure successful matching)
-FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
-                    TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
+FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + 
+                    TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + 
                     NIRISS_AMI_SUFFIX_TYPES + WFSC_SUFFIX_TYPES
 
 # Instrument Documentation Links
