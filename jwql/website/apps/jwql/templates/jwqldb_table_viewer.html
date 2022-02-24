@@ -20,15 +20,11 @@
             <br><br>
             The database table naming convention follows:
 
-
             <xmp><instrument>_<monitor>_<stat_type></stat_type></xmp>
 
+            For example, if a user is interested in the statistics from the NIRCAM Bias Monitor, the table to investigate would be
 
-            If a user is interested in the statistics from the NIRCAM Bias Monitor, the table to investigate would be
-
-
-
-            <xmp>nircam_bias_stats</xmp>.
+            <xmp>nircam_bias_stats</xmp>
         </p>
 
         <hr>
@@ -85,7 +81,7 @@
             {% endif %}
         </form>
 
-        <h2>Importing Table Using Python's Pandas Library</h2><hr>
+        <h2>Importing A Table Using Python's Pandas Library</h2><hr>
         <p>
             After downloading JWQLDB data, it is simple to import this data in a python session
             using pandas. Visit the <a href="https://pandas.pydata.org/docs/" target="_blank">pandas documentation</a> 
