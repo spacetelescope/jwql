@@ -262,6 +262,8 @@ class BadPixelMonitor(BokehTemplate):
             .filter(self.pixel_table.detector == self.detector) \
             .all()
 
+        session.close()
+
     def load_dummy_data(self):
         """Create dummy data for Bokeh plot development"""
         import datetime

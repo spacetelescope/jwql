@@ -141,4 +141,5 @@ class DatabaseConnection:
             filepaths.append(file_path)
             filenames.append(filename)
 
+        session.close()
         return filepaths, filenames
