@@ -2,6 +2,7 @@
 *.fits
 *.ipynb_checkpoints/
 config.json
+.DS_Store
 build/
 dist/
 jwql.egg-info/
