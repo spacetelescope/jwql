@@ -23,7 +23,9 @@ Use
 """
 
 import copy
+from collections import OrderedDict
 import glob
+from operator import getitem
 import os
 import re
 import tempfile
@@ -1261,14 +1263,20 @@ def thumbnails_ajax(inst, proposal=None):
             pass
 
     if proposal is not None:
-        dropdown_menus = {'detector': detectors}
+        dropdown_menus = {'detector': sorted(detectors)}
     else:
-        dropdown_menus = {'detector': detectors,
-                          'proposal': proposals}
+        dropdown_menus = {'detector': sorted(detectors),
+                          'proposal': sorted(proposals)}
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
     data_dict['prop'] = proposal
+
+    # Order dictionary by descending expstart time.
+    sorted_file_data = OrderedDict(sorted(data_dict['file_data'].items(),
+       key = lambda x: getitem(x[1], 'expstart'), reverse=True))
+
+    data_dict['file_data'] = sorted_file_data
 
     return data_dict
 
