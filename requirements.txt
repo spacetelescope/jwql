@@ -6,7 +6,7 @@ beautifulsoup4==4.10.0
 bokeh==2.4.2
 codecov==2.1.12
 crds==11.9.0
-cryptography==36.0.0
+cryptography==36.0.1
 django<=3.1.7
 flake8==4.0.1
 inflection==0.5.1
