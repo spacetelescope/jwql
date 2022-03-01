@@ -4,7 +4,7 @@ docutils<=0.18.0
 flake8==4.0.1
 jwst==1.4.3
 pygments==2.11.1
-pytest==6.2.5
+pytest==7.0.1
 sphinx>=2
 tomli<2.0.0
 git+https://github.com/spacetelescope/jwst_reffiles
