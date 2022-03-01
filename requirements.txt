@@ -21,7 +21,7 @@ numpydoc==1.2
 pandas==1.4.1
 psycopg2==2.9.3
 pysiaf==0.15.0
-pytest==6.2.5
+pytest==7.0.1
 pytest-cov==3.0.0
 scipy==1.7.1
 sphinx==4.2.0
