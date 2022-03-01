@@ -1,7 +1,7 @@
 asdf==2.10.0
 astropy==5.0.1
 astroquery==0.4.5
-bandit==1.7.1
+bandit==1.7.3
 beautifulsoup4==4.9.3
 bokeh==2.4.2
 codecov==2.1.12
