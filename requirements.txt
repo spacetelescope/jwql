@@ -19,7 +19,7 @@ nodejs==10.13.0
 numpy==1.22.2
 numpydoc==1.2
 pandas==1.4.1
-psycopg2==2.9.1
+psycopg2==2.9.3
 pysiaf==0.11.0
 pytest==6.2.5
 pytest-cov==3.0.0
