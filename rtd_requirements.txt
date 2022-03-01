@@ -1,4 +1,4 @@
-cython==0.29.25
+cython==0.29.28
 django==4.0.3
 docutils<=0.18.0
 flake8==4.0.1
