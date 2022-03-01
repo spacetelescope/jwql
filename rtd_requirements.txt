@@ -1,6 +1,6 @@
 cython==0.29.28
 django==4.0.3
-docutils<=0.18.0
+docutils==0.18.1
 flake8==4.0.1
 jwst==1.4.3
 pygments==2.11.1
