@@ -128,7 +128,7 @@ class MSATA():
             Pandas data frame containing all MSATA data
         """
         # from the main header
-        date_obs, visit_id, filter, readout, subarray = [], [], [], [], []
+        detector, date_obs, visit_id, filter, readout, subarray = [], [], [], [], [], []
         # from the TA header
         num_refstars, ta_status, status_rsn = [], [], []
         v2halffacet, v3halffacet, v2msactr, v3msactr = [], [], [], []
@@ -150,6 +150,7 @@ class MSATA():
                 filter.append(main_hdr['FILTER'])
             except:
                 filter.append(main_hdr['FWA_POS'])
+            detector.append(main_hdr['DETECTOR'])
             readout.append(main_hdr['READOUT'])
             subarray.append(main_hdr['SUBARRAY'])
             num_refstars.append(ta_hdr['NUMREFST'])
@@ -187,7 +188,7 @@ class MSATA():
         # create the pandas dataframe
         msata_df = pd.DataFrame({'date_obs': date_obs, 'visit_id': visit_id,
                                  'filter': filter, 'readout': readout,
-                                 'subarray': subarray, 'num_refstars': num_refstars,
+                                 'detector': detector, 'subarray': subarray,
                                  'ta_status': ta_status, 'status_rsn': status_rsn,
                                  'v2halffacet': v2halffacet, 'v3halffacet': v3halffacet,
                                  'v2msactr': v2msactr, 'v3msactr': v3msactr,
@@ -388,6 +389,45 @@ class MSATA():
             ('LS V2 sigma', '@lsv2sigma'),
             ('LS V3 offset', '@lsv3offset'),
             ('LS V3 sigma', '@lsv3sigma')
+        ]
+        p.add_tools(hover)
+        return p
+
+
+    def plt_res_offsets_corrected(self, source):
+        """ Plot the residual Least Squares V2 and V3 offsets corrected by the half-facet
+        Parameters
+        ----------
+            source: bokeh data object for plotting
+        Returns
+        -------
+            p: bokeh plot object
+        """
+        # create a new bokeh plot
+        lsv2offset, lsv3offset = source.data['lsv2offset'], source.data['lsv3offset']
+        v2halffacet, v3halffacet = source.data['v2halffacet'], source.data['v3halffacet']
+        v2_half_fac_corr = lsv2offset + v2halffacet
+        v3_half_fac_corr = lsv3offset + v3halffacet
+        # add these to the bokeh data structure
+        source.data["v2_half_fac_corr"] = v2_half_fac_corr
+        source.data["v3_half_fac_corr"] = v3_half_fac_corr
+        p = figure(title="MSATA Least Squares Residual V2-V3 Offsets Half-facet corrected",
+                   x_axis_label='Least Squares Residual V2 Offset + half-facet',
+                   y_axis_label='Least Squares Residual V3 Offset + half-facet')
+        p.circle(x='v2_half_fac_corr', y='v3_half_fac_corr', source=source,
+                 color="purple", size=7, fill_alpha=0.5)
+        hover = HoverTool()
+        hover.tooltips=[
+            ('Visit ID', '@visit_id'),
+            ('Filter', '@filter'),
+            ('Readout', '@readout'),
+            ('Date-Obs', '@date_obs'),
+            ('Subarray', '@subarray'),
+            ('LS roll offset', '@lsrolloffset'),
+            ('LS V2 offset', '@lsv2offset'),
+            ('LS V3 offset', '@lsv3offset'),
+            ('V2 half-facet', '@v2halffacet'),
+            ('V3 half-facet', '@v3halffacet')
         ]
         p.add_tools(hover)
         return p
@@ -612,16 +652,18 @@ class MSATA():
         output_file("msata_layout.html")
         p1 = self.plt_status(source)
         p2 = self.plt_residual_offsets(source)
-        p3 = self.plt_v2offset_time(source)
-        p4 = self.plt_v3offset_time(source)
-        p5 = self.plt_lsv2v3offsetsigma(source)
-        p6 = self.plt_v2offsigma_time(source)
-        p7 = self.plt_v3offsigma_time(source)
-        p8 = self.plt_roll_offset(source)
-        p9 = self.plt_lsoffsetmag(source)
-        p10 = self.plt_mags_time(source)
+        p3 = self.plt_res_offsets_corrected(source)
+        p4 = self.plt_v2offset_time(source)
+        p5 = self.plt_v3offset_time(source)
+        p6 = self.plt_lsv2v3offsetsigma(source)
+        p7 = self.plt_v2offsigma_time(source)
+        p8 = self.plt_v3offsigma_time(source)
+        p9 = self.plt_roll_offset(source)
+        p10 = self.plt_lsoffsetmag(source)
+        p11 = self.plt_mags_time(source)
         # make grid
-        grid = gridplot([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10], ncols=2, merge_tools=False)
+        grid = gridplot([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11],
+                        ncols=2, merge_tools=False)
         #show(grid)
         save(p)
 
