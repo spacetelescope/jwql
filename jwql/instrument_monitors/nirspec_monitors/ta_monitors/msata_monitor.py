@@ -53,7 +53,7 @@ from jwql.jwql_monitors import monitor_mast
 
 class MSATA():
     """ Class for executint the NIRSpec WATA monitor.
-    
+
     This class will search for new WATA current files in the file systems
     for NIRSpec and will run the monitor on these files. The monitor will
     extract the TA information from the file headers and perform all
@@ -62,7 +62,7 @@ class MSATA():
     Alternatively, the class can use the dictionaries provided created by
     the NIRSpec Python Implementation of OSS TA (which we call 'the
     replica') and obtain the TA information from there.
-    
+
     Attributes
     ----------
     output_dir : str
@@ -82,17 +82,17 @@ class MSATA():
         MJD end date to use for querying MAST.
 
     """
-    
+
     def __init__(self):
         """ Initialize an instance of the MSATA class """
-    
+
     def get_tainfo_from_fits(self, fits_file):
         """ Get the TA information from the fits file
         Parameters
         ----------
         fits_file: str
             This is the fits file for a specific MSATA
-        
+
         Returns
         -------
         msata_info: list, contains main header, and TA extension header and data
@@ -113,7 +113,7 @@ class MSATA():
             ta_table = ff['MSA_TARG_ACQ'].data
         msata_info = [main_hdr, ta_hdr, ta_table]
         return msata_info
-            
+
 
     def get_msata_data(self, new_filenames):
         """ Get the TA information from the MSATA text table
@@ -121,7 +121,7 @@ class MSATA():
         ----------
         new_filenames: list
             List of MSATA file names to consider
-        
+
         Returns
         -------
         msata_df: data frame object
