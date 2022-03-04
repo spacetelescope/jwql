@@ -353,12 +353,12 @@ WFSC_SUFFIX_TYPES = ['wfscmb']
 
 # Concatenate all suffix types (ordered to ensure successful matching)
 FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
-                    TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
-                    NIRISS_AMI_SUFFIX_TYPES + WFSC_SUFFIX_TYPES
+    TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
+    NIRISS_AMI_SUFFIX_TYPES + WFSC_SUFFIX_TYPES
 
 # Instrument Documentation Links
-URL_DICT = {'fgs': 'https://jwst-docs.stsci.edu/jwst-observatory-hardware/fine-guidance-sensor',
-            'miri': 'https://jwst-docs.stsci.edu/mid-infrared-instrument',
-            'niriss': 'https://jwst-docs.stsci.edu/near-infrared-imager-and-slitless-spectrograph',
-            'nirspec': 'https://jwst-docs.stsci.edu/near-infrared-spectrograph',
-            'nircam': 'https://jwst-docs.stsci.edu/near-infrared-camera'}
+URL_DICT = {'fgs': 'https://jwst-docs.stsci.edu/jwst-observatory-hardware/jwst-fine-guidance-sensor',
+            'miri': 'https://jwst-docs.stsci.edu/jwst-mid-infrared-instrument',
+            'niriss': 'https://jwst-docs.stsci.edu/jwst-near-infrared-imager-and-slitless-spectrograph',
+            'nirspec': 'https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph',
+            'nircam': 'https://jwst-docs.stsci.edu/jwst-near-infrared-camera'}

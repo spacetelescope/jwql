@@ -172,6 +172,8 @@ class DarkMonitor(BokehTemplate):
             .filter(self.pixel_table.detector == self.detector) \
             .all()
 
+        session.close()
+
     def _update_dark_v_time(self):
 
         # Define y range of dark current v. time plot

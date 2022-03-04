@@ -355,6 +355,8 @@ def plot_by_filetype(plot_type, instrument):
             plot.line(dates, values, legend='{} files'.format(filetype), line_color=color)
             plot.circle(dates, values, color=color)
 
+    session.close()
+
     return plot
 
 
@@ -384,6 +386,7 @@ def plot_filesystem_size():
     plot.line(dates, availables, legend='Free bytes', line_color='blue')
     plot.circle(dates, availables, color='blue')
 
+    session.close()
     return plot
 
 
@@ -435,6 +438,8 @@ def plot_central_store_dirs():
             # Plot the results
             plot.line(dates, values, legend='{} files'.format(area), line_color=color)
             plot.circle(dates, values, color=color)
+
+    session.close()
 
     return plot
 
@@ -511,6 +516,8 @@ def plot_total_file_counts():
     plot.line(dates, file_counts, line_width=2, line_color='blue')
     plot.circle(dates, file_counts, color='blue')
 
+    session.close()
+
     return plot
 
 
@@ -556,6 +563,9 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
         new_record['available'] = central_storage_dict[area]['available']
         engine.execute(CentralStore.__table__.insert(), new_record)
         session.commit()
+
+    session.close()
+
 
 
 if __name__ == '__main__':

@@ -276,6 +276,7 @@ class Dark():
                 new_pixels_x.append(x)
                 new_pixels_y.append(y)
 
+        session.close()
         return (new_pixels_x, new_pixels_y)
 
     def find_hot_dead_pixels(self, mean_image, comparison_image, hot_threshold=2., dead_threshold=0.1):
@@ -356,6 +357,7 @@ class Dark():
             filename = os.path.join(self.output_dir, 'mean_slope_images', filename)
             logging.info('Baseline filename: {}'.format(filename))
 
+        session.close()
         return filename
 
     def identify_tables(self):
@@ -395,6 +397,7 @@ class Dark():
         else:
             query_result = np.max(dates)
 
+        session.close()
         return query_result
 
     def noise_check(self, new_noise_image, baseline_noise_image, threshold=1.5):

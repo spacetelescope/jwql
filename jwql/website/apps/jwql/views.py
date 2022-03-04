@@ -64,7 +64,6 @@ from .data_containers import get_proposal_info
 from .data_containers import get_thumbnails_all_instruments
 from .data_containers import nirspec_trending
 from .data_containers import random_404_page
-from .data_containers import get_jwqldb_table_view_components
 from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
@@ -552,7 +551,7 @@ def instrument(request, inst):
     return render(request, template, context)
 
 
-def jwqldb_table_viewer(request, tablename_param=None):
+def jwqldb_table_viewer(request):
     """Generate the JWQL Table Viewer view.
 
     Parameters
@@ -569,11 +568,15 @@ def jwqldb_table_viewer(request, tablename_param=None):
         Outgoing response sent to the webpage
     """
 
-    if tablename_param is None:
-        table_meta, tablename = get_jwqldb_table_view_components(request)
+    try:
+        tablename = request.POST['db_table_select']
+    except KeyError:
+        tablename = None
+
+    if tablename is None:
+        table_meta = None
     else:
-        table_meta = build_table(tablename_param)
-        tablename = tablename_param
+        table_meta = build_table(tablename)
 
     _, _, engine, _ = load_connection(get_config()['connection_string'])
     all_jwql_tables = engine.table_names()
@@ -777,6 +780,7 @@ def view_image(request, inst, file_root, rewrite=False):
                'fits_files': image_info['all_files'],
                'suffixes': image_info['suffixes'],
                'num_ints': image_info['num_ints'],
+               'available_ints': image_info['available_ints'],
                'form': form}
 
     return render(request, template, context)

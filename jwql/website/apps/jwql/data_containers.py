@@ -23,7 +23,9 @@ Use
 """
 
 import copy
+from collections import OrderedDict
 import glob
+from operator import getitem
 import os
 import re
 import tempfile
@@ -126,6 +128,7 @@ def build_table(tablename):
     # Build table.
     table_meta_data = pd.DataFrame(data)
 
+    session.close()
     return table_meta_data
 
 
@@ -694,6 +697,8 @@ def get_image_info(file_root, rewrite):
     image_info['all_jpegs'] = []
     image_info['suffixes'] = []
     image_info['num_ints'] = {}
+    image_info['available_ints'] = {}
+
 
     # Find all of the matching files
     proposal_dir = file_root[:7]
@@ -731,10 +736,9 @@ def get_image_info(file_root, rewrite):
         #     im.make_image()
 
         # Record how many integrations there are per filetype
-        search_jpgs = os.path.join(prev_img_filesys, observation_dir, '{}_{}_integ*.jpg'.format(file_root, suffix))
-        num_jpgs = len(glob.glob(search_jpgs))
-        image_info['num_ints'][suffix] = num_jpgs
-
+        jpgs = glob.glob(os.path.join(prev_img_filesys, observation_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
+        image_info['num_ints'][suffix] = len(jpgs)
+        image_info['available_ints'][suffix] = sorted([int(jpg.split('_')[-1].replace('.jpg','').replace('integ','')) for jpg in jpgs])
         image_info['all_jpegs'].append(jpg_filepath)
 
     return image_info
@@ -763,35 +767,6 @@ def get_instrument_proposals(instrument):
     proposals = list(set(result['program'] for result in results))
 
     return proposals
-
-
-def get_jwqldb_table_view_components(request):
-    """Renders view for JWQLDB table viewer.
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-
-    Returns
-    -------
-    table_data : pandas.DataFrame
-        Pandas data frame of JWQL database table
-    table_name : str
-        Name of database table selected by user
-    """
-
-    if 'make_table_view' in request.POST:
-        table_name = request.POST['db_table_select']
-        table_data = build_table(table_name)
-
-        return table_data, table_name
-    else:
-        # When coming from home/monitor views
-        table_data = None
-        table_name = None
-
-    return table_data, table_name
 
 
 def get_preview_images_by_instrument(inst):
@@ -1348,14 +1323,20 @@ def thumbnails_ajax(inst, proposal=None):
             pass
 
     if proposal is not None:
-        dropdown_menus = {'detector': detectors}
+        dropdown_menus = {'detector': sorted(detectors)}
     else:
-        dropdown_menus = {'detector': detectors,
-                          'proposal': proposals}
+        dropdown_menus = {'detector': sorted(detectors),
+                          'proposal': sorted(proposals)}
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
     data_dict['prop'] = proposal
+
+    # Order dictionary by descending expstart time.
+    sorted_file_data = OrderedDict(sorted(data_dict['file_data'].items(),
+       key = lambda x: getitem(x[1], 'expstart'), reverse=True))
+
+    data_dict['file_data'] = sorted_file_data
 
     return data_dict
 

@@ -157,6 +157,7 @@ class Readnoise():
         else:
             file_exists = False
 
+        session.close()
         return file_exists
 
     def get_amp_stats(self, image, amps):
@@ -387,6 +388,7 @@ class Readnoise():
         else:
             query_result = query[-1].end_time_mjd
 
+        session.close()
         return query_result
 
     def process(self, file_list):
