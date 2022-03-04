@@ -708,7 +708,6 @@ def get_image_info(file_root, rewrite):
     image_info['all_files'] = filenames
 
     # Determine the jpg directory
-    #prev_img_filesys = get_config()['preview_image_filesystem']
     prev_img_filesys = configs['preview_image_filesystem']
     jpg_dir = os.path.join(prev_img_filesys, proposal_dir)
 
@@ -726,14 +725,6 @@ def get_image_info(file_root, rewrite):
         # just call the existing jpg file
         if os.path.exists(jpg_filepath) and not rewrite:
             pass
-
-        # If it doesn't, make it using the preview_image module
-        # else:
-        #     if not os.path.exists(jpg_dir):
-        #         os.makedirs(jpg_dir)
-        #     im = PreviewImage(filename, 'SCI')
-        #     im.output_directory = jpg_dir
-        #     im.make_image()
 
         # Record how many integrations there are per filetype
         jpgs = glob.glob(os.path.join(prev_img_filesys, observation_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
@@ -798,17 +789,18 @@ def get_preview_images_by_instrument(inst):
     # Parse the results to get the rootnames
     filenames = [result['filename'].split('.')[0] for result in results]
 
-    # Get list of all preview_images
-    #preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, '*', '*.jpg'))
+    # Get list of all preview_images. Text file contains only preview
+    # images for a single instrument.
     preview_list_file = f"{PREVIEW_IMAGE_LISTFILE}_{inst.lower()}.txt"
     preview_images = retrieve_filelist(os.path.join(PREVIEW_IMAGE_FILESYSTEM, preview_list_file))
 
+    # DO WE NEED TO DO THIS??? I GUESS THIS GETS RID OF ANY PREVIEW IMAGES
+    # THAT DON'T MATCH UP TO OBSERVATION FILES.
     # Get subset of preview images that match the filenames
     #preview_images = [os.path.basename(item) for item in preview_images if
     #                  os.path.basename(item).split('_integ')[0] in filenames]
 
     # Return only
-
     return preview_images
 
 
@@ -931,7 +923,6 @@ def get_thumbnails_all_instruments(parameters):
 
     anomalies = parameters['anomalies']
 
-    #filenames = []
     thumbnails_subset = []
 
     for inst in parameters['instruments']:
@@ -968,28 +959,18 @@ def get_thumbnails_all_instruments(parameters):
         results = response[0].json()['data']
 
         inst_filenames = [result['filename'].split('.')[0] for result in results]
-        #filenames.extend(inst_filenames)
 
         # Get list of all thumbnails
-        #thumbnail_list = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
         thumbnail_list_file = f"{THUMBNAIL_LISTFILE}_{inst.lower()}.txt"
         thumbnail_inst_list = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, THUMBNAIL_LISTFILE))
 
-        # Get subset of preview images that match the filenames
+        # Get subset of thumbnail images that match the filenames
         thumbnails_inst_subset = [os.path.basename(item) for item in thumbnail_inst_list if
                                   os.path.basename(item).split('_integ')[0] in inst_filenames]
 
         # Eliminate any duplicates
         thumbnails_inst_subset = list(set(thumbnails_inst_subset))
         thumbnails_subset.extend(thumbnails_inst_subset)
-
-
-    ## Get subset of preview images that match the filenames
-    #thumbnails_subset = [os.path.basename(item) for item in thumbnail_list if
-    #                     os.path.basename(item).split('_integ')[0] in filenames]
-
-    ## Eliminate any duplicates
-    #thumbnails_subset = list(set(thumbnails_subset))
 
     # Determine whether or not queried anomalies are flagged
     final_subset = []
