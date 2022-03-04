@@ -770,23 +770,24 @@ def update_listfile(filename, file_list, filetype):
         Descriptor of the contents of the file being amended. Used only for
         the logging statement
     """
-    if not os.path.isfile(filename):
-        logging.warning(f"{filetype} image listfile not found!! Expected to be at {filename}. Creating a new file.")
+    if len(file_list) > 0:
+        if not os.path.isfile(filename):
+            logging.warning(f"{filetype} image listfile not found!! Expected to be at {filename}. Creating a new file.")
 
-    with open(filename, 'a+') as fobj:
-        # Move read cursor to the start of file.
-        fobj.seek(0)
+        with open(filename, 'a+') as fobj:
+            # Move read cursor to the start of file.
+            fobj.seek(0)
 
-        # If file is not empty then append '\n'
-        data = fobj.read(100)
-        if len(data) > 0:
-            fobj.write("\n")
+            # If file is not empty then append '\n'
+            data = fobj.read(100)
+            if len(data) > 0:
+                fobj.write("\n")
 
-        # Append file_list at the end of file
-        for filename in file_list:
-            fobj.write(f'{filename}\n')
+            # Append file_list at the end of file
+            for file_to_add in file_list:
+                fobj.write(f'{file_to_add}\n')
 
-    logging.info(f"{filetype} image listfile updated with new entries.")
+        logging.info(f"{filetype} image listfile {filename} updated with new entries.")
 
 
 if __name__ == '__main__':
