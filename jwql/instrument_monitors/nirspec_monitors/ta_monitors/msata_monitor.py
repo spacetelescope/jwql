@@ -151,7 +151,10 @@ class MSATA():
             except:
                 filter.append(main_hdr['FWA_POS'])
             detector.append(main_hdr['DETECTOR'])
-            readout.append(main_hdr['READOUT'])
+            try:
+                readout.append(main_hdr['READOUT'])
+            except:
+                readout.append(main_hdr['READPATT'])
             subarray.append(main_hdr['SUBARRAY'])
             num_refstars.append(ta_hdr['NUMREFST'])
             ta_status.append(ta_hdr['TASTATUS'])
