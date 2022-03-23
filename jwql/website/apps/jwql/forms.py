@@ -375,7 +375,7 @@ class InstrumentForm(forms.Form):
     """Creates a ``ChoiceField`` form to select an instrument for a FileSearchForm object"""
 
     INSTRUMENT_CHOICES =(
-        ("1", "None")
+        ("1", "None"),
         ("2", "NIRCam"),
         ("3", "NIRISS"),
         ("4", "NIRSpec"),
