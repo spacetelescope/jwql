@@ -369,6 +369,22 @@ class FiletypeForm(forms.Form):
         file_types = self.cleaned_data['filetype']
 
         return file_types
+    
+
+class InstrumentForm(forms.Form):
+    """Creates a ``ChoiceField`` form to select an instrument for a FileSearchForm object"""
+
+    INSTRUMENT_CHOICES =(
+        ("1", "None")
+        ("2", "NIRCam"),
+        ("3", "NIRISS"),
+        ("4", "NIRSpec"),
+        ("5", "MIRI"),
+        ("6", "FGS"),
+        )
+
+    inst_field = forms.ChoiceField(choices=INSTRUMENT_CHOICES)
+
 
 
 class MnemonicSearchForm(forms.Form):
