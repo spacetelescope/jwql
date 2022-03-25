@@ -10,6 +10,7 @@ import datetime
 import json
 import numpy as np
 import os
+import urllib
 
 from astropy.stats import sigma_clipped_stats
 from astropy.table import Table
@@ -18,6 +19,7 @@ import astropy.units as u
 from bokeh.models import BoxAnnotation, ColumnDataSource, DatetimeTickFormatter, HoverTool
 from bokeh.plotting import figure, output_file, save, show
 from bokeh.palettes import Turbo256
+from jwql.database import database_interface
 from jwql.database.database_interface import NIRCamEDBDailyStats, NIRCamEDBBlockStats, \
                                              NIRCamEDBTimeStats, NIRCamEDBEveryChangeStats, \
                                              NIRISSEDBDailyStats, NIRISSEDBBlockStats, \
@@ -27,7 +29,7 @@ from jwql.database.database_interface import NIRCamEDBDailyStats, NIRCamEDBBlock
                                              FGSEDBDailyStats, FGSEDBBlockStats, \
                                              FGSEDBTimeStats, FGSEDBEveryChangeStats, \
                                              NIRSpecEDBDailyStats, NIRSpecEDBBlockStats, \
-                                             NIRSpecEDBTimeStats, NIRSpecEDBEveryChangeStats
+                                             NIRSpecEDBTimeStats, NIRSpecEDBEveryChangeStats, session
 from jwql.edb import engineering_database as ed
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import condition
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils
@@ -771,7 +773,7 @@ class EdbMnemonicMonitor():
             EdbMnemonic instance containing filtered data for the given mnemonic
         """
         # Query the EDB. An astropy table is returned.
-        print('querying edb for: ', mnemonic["name"], starting_time, ending_time, type(starting_time), type(ending_time))
+        print(f'Querying EDB for: {mnemonic["name"]} from {starting_time} to {ending_time}')
 
         try:
             mnemonic_data = ed.get_mnemonic(mnemonic["name"], starting_time, ending_time)
@@ -797,7 +799,7 @@ class EdbMnemonicMonitor():
             if "database_id" in mnemonic:
                 mnemonic_data.mnemonic_identifier = mnemonic["database_id"]
 
-        except HTTPError:
+        except urllib.error.HTTPError:
             # Mnemonic not accessible. This is largely for development where we don't
             # have access to all the mnemonics that we will in commissioning due to
             # querying the d-string.
@@ -932,16 +934,21 @@ class EdbMnemonicMonitor():
 
                 # Now calculate statistics if this is a mnemonic where averaging is to be done.
                 if telemetry_type == "daily_means":
+                    print("Calculating daily means")
                     mnemonic_info.daily_stats()
                 elif telemetry_type == "block_means":
+                    print('Calculating block stats')
                     mnemonic_info.block_stats()
                 elif telemetry_type == "every_change":
                 #    mnemonic_info.calc_every_change_stats()
+                    print('Calculating block stats on change only')
                     mnemonic_info.block_stats()
                 elif telemetry_type == "time_interval":
+                    print('Time interval data')
                     stats_duration = utils.get_averaging_time_duration(mnemonic["mean_time_block"])
                     mnemonic_info.timed_stats(stats_duration)
                 elif telemetry_type == "none":
+                    print("No averaging done, by request")
                     mnemonic_info.mean = 'No_averaging'
 
                 # Combine information from multiple days here. If averaging is done, keep track of
@@ -963,6 +970,8 @@ class EdbMnemonicMonitor():
         multiday_table["euvalues"] = multiday_mean_vals
         all_data = ed.EdbMnemonic(identifier, starting_time_list[0], ending_time_list[-1],
                                   multiday_table, meta, info)
+
+        print('need to propagate mnemonic_info.mean, stdev, etc into all_data')
 
         print(f'DONE WITH {mnemonic_dict["name"]}')
 
@@ -1002,7 +1011,7 @@ class EdbMnemonicMonitor():
         # of 15 minutes means that the EDB will be queried over 12:00am - 12:15am each
         # day.
         #self.query_cadence = 1 * u.day
-        self.query_cadence = timedelta(days=1)
+        self.query_cadence = datetime.timedelta(days=1)
 
         # Set up directory structure to hold the saved plots
         config = get_config()
@@ -1081,12 +1090,12 @@ class EdbMnemonicMonitor():
         #today = Time.now()
         #today = Time('2021-09-06')  # for development
         #today = datetime.now()
-        today = datetime(2022, 3, 24)  # for development
+        today = datetime.datetime(2022, 3, 24)  # for development
 
         # Set the limits for the telemetry plots if necessary
         if plot_start is None:
             #plot_start = today - TimeDelta(EDB_DEFAULT_PLOT_RANGE, format='jd')
-            plot_start = today - timedelta(days=EDB_DEFAULT_PLOT_RANGE)
+            plot_start = today - datetime.timedelta(days=EDB_DEFAULT_PLOT_RANGE)
 
         if plot_end is None:
             plot_end = today
@@ -1103,7 +1112,7 @@ class EdbMnemonicMonitor():
             query_duration = utils.get_query_duration(telem_type)
 
             # Determine which database tables are needed based on instrument
-            self.identify_tables(inst, telem_type)
+            self.identify_tables(instrument, telem_type)
 
             for mnemonic in mnemonic_dict[telem_type]:
 
@@ -1135,7 +1144,7 @@ class EdbMnemonicMonitor():
                     #most_recent_search = self.most_recent_search(mnemonic[usename])
                     #most_recent_search = Time('2021-12-13')  # for development
                     #most_recent_search = Time('2021-09-01T00:00:00')  # for development
-                    most_recent_search = datetime(2022, 3, 22, 0, 0, 0) # for development
+                    most_recent_search = datetime.datetime(2022, 3, 22, 0, 0, 0) # for development
 
                     if plot_end > most_recent_search:
                         # Here we need to query the EDB to cover the entire plot range
@@ -1155,7 +1164,7 @@ class EdbMnemonicMonitor():
 
                     # For development---------
                     #most_recent_search = Time('2021-09-01T00:00:00')  # for development
-                    most_recent_search = datetime(2022,3,22,0,0,0)  # for development
+                    most_recent_search = datetime.datetime(2022,3,22,0,0,0)  # for development
                     starttime = most_recent_search + self.query_cadence
                     #starttime = most_recent_search + TimeDelta(self.query_cadence)
                     #For development---------------------
@@ -1180,7 +1189,7 @@ class EdbMnemonicMonitor():
                     # plus the query duration.
                     for delta in range(time_range):
                         #tmp_start = starttime + TimeDelta(delta * u.day)
-                        tmp_start = starttime + timedelta(days=delta)
+                        tmp_start = starttime + datetime.timedelta(days=delta)
                         query_start_times.append(tmp_start)
                         #query_end_times.append(tmp_start + TimeDelta(query_duration))
                         query_end_times.append(tmp_start + query_duration)
@@ -1310,7 +1319,7 @@ class EdbMnemonicMonitor():
                     # Turned off for testing. TURN BACK ON LATER
                     # save using the string in mnemonic["database_id"]
                     if telem_type != 'every_change':
-                        self.add_new_block_db_entry(new_data, query_start_times[-1].datetime)
+                        self.add_new_block_db_entry(new_data, query_start_times[-1])
 
                         # Now add the new data to the historical data
                         mnemonic_info = new_data + historical_data

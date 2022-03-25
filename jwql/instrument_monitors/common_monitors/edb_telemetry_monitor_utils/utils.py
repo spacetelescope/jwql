@@ -2,6 +2,7 @@
 
 """Do we really need this in a separate utils file?
 """
+from datetime import timedelta
 
 import astropy.units as u
 

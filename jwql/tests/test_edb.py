@@ -17,7 +17,7 @@ Use
 
         pytest -s test_edb.py
 """
-
+from datetime import datetime
 import os
 
 from astropy.table import Table
@@ -31,6 +31,24 @@ from jwql.edb import engineering_database as ed
 
 # Determine if tests are being run on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
+def test_change_only_bounding_points():
+    """Make sure we correctly add starting and ending time entries to
+    a set of change-only data
+    """
+    dates = [datetime(2022, 3, 2, 12, i) for i in range(10)]
+    values = np.arange(10)
+    starting_time = datetime(2022, 3, 2, 12, 3, 3)
+    ending_time = datetime(2022, 3, 2, 12, 8, 4)
+
+    new_dates, new_values = ed.change_only_bounding_points(dates, values, starting_time, ending_time)
+
+    expected_dates = [starting_time] + dates[4:9] + [ending_time]
+    expected_values = list(values[3:9]) + [values[8]]
+
+    assert np.all(new_dates == expected_dates)
+    assert np.all(new_values == expected_values)
+
 
 def test_daily_stats():
     """Test that the daily statistics are calculated correctly

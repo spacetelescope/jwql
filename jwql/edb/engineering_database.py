@@ -685,24 +685,86 @@ def change_only_bounding_points(date_list, value_list, starttime, endtime):
     value_list : list
         List of corresponding mnemonic values
     """
+    date_list_arr = np.array(date_list)
+
+    valid_idx = np.where((date_list_arr <= endtime) & (date_list_arr >= starttime))[0]
+    before_startime = np.where(date_list_arr < starttime)[0]
+    before_endtime = np.where(date_list_arr < endtime)[0]
+
+    # The value at starttime is either the value of the last point before starttime,
+    # or NaN if there are no points prior to starttime
+    if len(before_startime) == 0:
+        value0 = np.nan
+    else:
+        value0 = value_list[before_startime[-1]]
+
+    # The value at endtime is NaN if there are no times before the endtime.
+    # Otherwise the value is equal to the value at the last point before endtime
+    if len(before_endtime) == 0:
+        value_end = np.nan
+    else:
+        value_end = value_list[before_endtime[-1]]
+
+    # Crop the arrays down to the times between starttime and endtime
+    date_list = list(np.array(date_list)[valid_idx])
+    value_list = list(np.array(value_list)[valid_idx])
+
+    # Add an entry for starttime and another for endtime
+    date_list.insert(0, starttime)
+    value_list.insert(0, value0)
+    date_list.append(endtime)
+    value_list.append(value_end)
+
+
+
+
+
+
+    """
     if len(date_list) > 5:
         dates_start_arr = np.array(date_list[0:5])
         dates_end_arr = np.array(date_list[-5:])
         before = np.sum(dates_start_arr < starttime)
-        after = np.sum(dates_end_arr > endtime)
+        #after = np.sum(dates_end_arr > endtime)
     else:
-        dates_start_arr = np.array(date_list)
+        dates_start_arr = date_list_arr
         before = np.sum(dates_start_arr < starttime)
-        after = np.sum(dates_start_arr > endtime)
+        #after = np.sum(dates_start_arr > endtime)
 
-    if before > 0:
-        if date_list[before] > starttime:
-            date0 = starttime
-            value0 = value_list[before-1]
-            date_list = date_list[before:]
-            value_list = value_list[before:]
-            date_list.insert(0, date0)
-            value_list.insert(0, value0)
+    date0 = starttime
+
+    # If there are no points before the starting time,
+    # then we don't know what value to set at the beginning
+    # of the dataset. In that case, set it to NaN?
+    if before == 0:
+        value0 = np.nan
+    else:
+        value0 = value_list[before-1]
+
+    # If all the points are before the start time,
+    # then final point will be taken as the value
+    # at the start time
+    if len(date_list) == before:
+        date_list = date0
+        value_list = value0
+    else:
+        date_list = date_list[before:]
+        value_list = value_list[before:]
+        date_list.insert(0, date0)
+        value_list.insert(0, value0)
+
+
+    before_endtime = np.where(date_list_arr <= endtime)[0]
+    date_end = endtime
+
+    if len(before_endtime) == 0:
+        # If there are no points before the endtime, then we
+        # don't know the value at the endtime. Again, set to
+        # NaN
+        value_end = np.nan
+    else:
+        value_end = value_list[before_endtime[-1]]
+
 
     if after > 0:
         endidx = 0 - (after + 1)
@@ -713,6 +775,7 @@ def change_only_bounding_points(date_list, value_list, starttime, endtime):
             value_list = value_list[0:endidx+1]
             date_list.append(date_end)
             value_list.append(value_end)
+    """
     return date_list, value_list
 
 
