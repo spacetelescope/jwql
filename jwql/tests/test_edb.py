@@ -22,6 +22,7 @@ import os
 
 from astropy.table import Table
 from astropy.time import Time
+import astropy.units as u
 from datetime import datetime, timedelta
 import numpy as np
 import pytest
@@ -205,3 +206,22 @@ def test_multiplication():
     assert all(prod.blocks == np.array([0, 3, 8]))
     assert prod.info['unit'] == 'W'
     assert prod.info['tlmMnemonic'] == 'TEST_VOLTAGE * TEST_CURRENT'
+
+
+def test_timed_stats():
+    """Break up data into chunks of a given duration"""
+    dates = np.array([datetime(2021, 12, 18, 12, 0, 0) + timedelta(hours=n) for n in range(0, 75, 2)])
+    block_val = np.array([1, 1.1, 1, 1.1, 1, 1.1])
+    data = np.concatenate((block_val, block_val+1, block_val+2, block_val+3, block_val+4, block_val+5))
+    data = np.append(data, np.array([95., 97.]))
+
+    tab = Table()
+    tab["dates"] = dates
+    tab["euvalues"] = data
+    mnemonic = ed.EdbMnemonic('SOMETHING', Time('2021-12-18T02:00:00'), Time('2021-12-21T14:00:00'), tab, {}, {})
+
+    duration = 12 * u.hour
+    mnemonic.timed_stats(duration, sigma=3)
+    print(mnemonic.mean)
+    print(np.append(np.arange(1.05, 6.05, 1), 96.))
+    assert np.all(np.isclose(mnemonic.mean, np.append(np.arange(1.05, 6.06, 1), 96.)))

@@ -4,6 +4,7 @@
 
 more description here
 """
+from collections import defaultdict
 from copy import deepcopy
 import datetime
 import json
@@ -197,14 +198,14 @@ class EdbMnemonicMonitor():
         # We create a separate database entry for each unique value of the
         # dependency mnemonic.
         for key, value in mnem_dict.items():
-            (times, values, means) = value
+            (times, values, means, stdevs) = value
             db_entry = {'mnemonic': mnem,
                         'dependency_mnemonic': dependency_name,
                         'dependency_value': key,
                         'mnemonic_value': values,
                         'time': times,
                         'mean': means,
-                        'stdev': stdevs,  --> ???
+                        'stdev': stdevs,
                         'latest_query': query_time,
                         'entry_date': datetime.datetime.now()
                         }
@@ -685,7 +686,7 @@ class EdbMnemonicMonitor():
             Retrieved data
         """
         data = session.query(self.history_table) \
-            .filter(self.history_table.mnemonic == mnemonic
+            .filter(self.history_table.mnemonic == mnemonic,
                     self.history_table.latest_query > start_date,
                     self.history_table.latest_query < end_date)
 
@@ -722,14 +723,14 @@ class EdbMnemonicMonitor():
             Retrieved data
         """
         data = session.query(self.history_table) \
-            .filter(self.history_table.mnemonic == mnemonic
+            .filter(self.history_table.mnemonic == mnemonic,
                     self.history_table.latest_query > start_date,
                     self.history_table.latest_query < end_date)
 
         # Set up the dictionary to contain the data
         hist = {}
         for dep_val in np.unique(data.dependency_values):
-            hist{dep_val} = []
+            hist[dep_val] = []
 
         # Place the data from the database into the appropriate key
         times = []
@@ -1348,7 +1349,7 @@ class EdbMnemonicMonitor():
                 if len(mnemonic_info.data["dates"]) == 0:
                     print(f"Mnemonic {mnemonic['name']} contains no data.")
                     create_empty_plot(mnemonic['name'])
-                    need to find a way to skip to the next mnemonic from here
+                    print('need to find a way to skip to the next mnemonic from here')
 
                 # If the mnemonic is to be plotted as the product with some other mnemonic, then get
                 # the other mnemonic's info here
@@ -1605,12 +1606,14 @@ def add_every_change_history(dict1, dict2):
         if key in dict2:
             if np.min(value[0]) < np.min(dict2[key][0]):
                 all_dates = np.append(value[0], dict2[key][0])
-                all_data =np.append(value[1], dict2[key][1])
+                all_data = np.append(value[1], dict2[key][1])
                 all_means = np.append(value[2], dict2[key][2])
+                all_devs = np.append(value[3], dict2[key][3])
             else:
                 all_dates = np.append(dict2[key][0], value[0])
-                all_data =np.append(dict2[key][1], value[1])
+                all_data = np.append(dict2[key][1], value[1])
                 all_means = np.append(dict2[key][2], value[2])
+                all_devs = np.append(dict2[key][3], value[3])
 
             # Remove any duplicates, based on the dates entries
             # Keep track of the indexes of the removed rows, so that any blocks
@@ -1629,10 +1632,16 @@ def add_every_change_history(dict1, dict2):
             unique_dates = np.unique(all_dates, return_index=False)
             if len(unique_dates) != len(all_dates):
                 print(("WARNING - There are duplicate entries in the every-change history "
-                       "and the new entry. Keeping and potting all values, but be sure the "
+                       "and the new entry. Keeping and plotting all values, but be sure the "
                        "data look ok."))
+            updated_value = (all_dates, all_data, all_means, all_devs)
+            combined[key] = updated_value
         else:
-            combined[key].append(value)
+            combined[key] = value
+    # Add entries for keys that are in dict2 but not dict1
+    for key, value in dict2.items():
+        if key not in dict1:
+            combined[key] = value
     return combined
 
 
@@ -1745,7 +1754,7 @@ def organize_every_change(mnemonic):
 
         # Calculate the mean for each dependency value, and normalize the data
         meanval, medianval, stdevval = sigma_clipped_stats(val_data, sigma=3)
-        all_data[val] = (val_times, val_data, meanval)
+        all_data[val] = (val_times, val_data, meanval, stdevval)
 
     return all_data
 
@@ -1753,30 +1762,30 @@ def organize_every_change(mnemonic):
 def remove_overlaps():
     """
     """
-            if np.min(self.data["dates"]) < np.min(mnem.data["dates"]):
-            early_dates = self.data["dates"].data
-            late_dates = mnem.data["dates"].data
-            early_data = self.data["euvalues"].data
-            late_data = mnem.data["euvalues"].data
-            early_blocks = self.blocks
-            late_blocks = mnem.blocks
-        else:
-            early_dates = mnem.data["dates"].data
-            late_dates = self.data["dates"].data
-            early_data = mnem.data["euvalues"].data
-            late_data = self.data["euvalues"].data
-            early_blocks = mnem.blocks
-            late_blocks = self.blocks
+    if np.min(self.data["dates"]) < np.min(mnem.data["dates"]):
+        early_dates = self.data["dates"].data
+        late_dates = mnem.data["dates"].data
+        early_data = self.data["euvalues"].data
+        late_data = mnem.data["euvalues"].data
+        early_blocks = self.blocks
+        late_blocks = mnem.blocks
+    else:
+        early_dates = mnem.data["dates"].data
+        late_dates = self.data["dates"].data
+        early_data = mnem.data["euvalues"].data
+        late_data = self.data["euvalues"].data
+        early_blocks = mnem.blocks
+        late_blocks = self.blocks
 
-        # Remove any duplicates, based on the dates entries
-        # Keep track of the indexes of the removed rows, so that any blocks
-        # information can be updated
-        all_dates = np.append(early_dates, late_dates)
-        unique_dates, unq_idx = np.unique(all_dates, return_index=True)
+    # Remove any duplicates, based on the dates entries
+    # Keep track of the indexes of the removed rows, so that any blocks
+    # information can be updated
+    all_dates = np.append(early_dates, late_dates)
+    unique_dates, unq_idx = np.unique(all_dates, return_index=True)
 
-        # Combine the data and keep only unique elements
-        all_data = np.append(early_data, late_data)
-        unique_data = all_data[unq_idx]
+    # Combine the data and keep only unique elements
+    all_data = np.append(early_data, late_data)
+    unique_data = all_data[unq_idx]
 
 
 def plot_every_change_data(mnem, show_plot=False, savefig=True, out_dir='./', nominal_value=None, yellow_limits=None,

@@ -551,10 +551,13 @@ class EdbMnemonic:
         sigma : int
             Number of sigma to use in sigma-clipping
         """
-        add test for this
         duration_secs = duration.to('second').value
         date_arr = np.array(self.data["dates"])
-        num_bins = (np.max(self.data["dates"]) - np.min(self.data["dates"])).seconds / duration_secs
+        num_bins = (np.max(self.data["dates"]) - np.min(self.data["dates"])).total_seconds() / duration_secs
+
+        # Round up to the next integer if there is a fractional number of bins
+        num_bins = np.ceil(num_bins)
+
         self.mean = []
         self.median = []
         self.stdev = []
