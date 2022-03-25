@@ -521,6 +521,9 @@ class Dark():
         mean_slope_file = self.save_mean_slope_image(slope_image, stdev_image, slope_files)
         logging.info('\tSigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
 
+        # Free up memory
+        del slope_image_stack
+
         # ----- Search for new hot/dead/noisy pixels -----
         # Read in baseline mean slope image and stdev image
         # The baseline image is used to look for hot/dead/noisy pixels,
