@@ -1,21 +1,21 @@
 # This file describes a conda environment that can be to install jwql
 #
 # Run the following command to set up this environment:
-# $ conda env create -f environment_python_3_7.yml
+# $ conda env create -f environment_python_3_9.yml
 #
 # The environment name can be overridden with the following command:
-# $ conda env create -n <custom name> -f environment_python_3_7.yml
+# $ conda env create -n <custom name> -f environment_python_3_9.yml
 #
 # Run the following command to activate the environment:
-# $ source activate jwql-3.7
+# $ source activate jwql-3.9
 #
 # To deactivate the environment run the following command:
 # $ source deactivate
 #
 # To remove the environment entirely, run the following command:
-# $ conda env remove -n jwql-3.7
+# $ conda env remove -n jwql-3.9
 
-name: jwql-3.7
+name: jwql-3.9
 
 channels:
   - defaults
@@ -42,7 +42,7 @@ dependencies:
   - psycopg2=2.8.6
   - pytest=6.2.4
   - pytest-cov=3.0.0
-  - python=3.7.10
+  - python=3.9.11
   - pyyaml=5.4.1
   - scipy=1.7.1
   - setuptools=52.0.0
