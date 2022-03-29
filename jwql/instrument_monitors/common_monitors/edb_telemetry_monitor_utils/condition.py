@@ -166,10 +166,11 @@ class condition:
             #print(mnemonic["dates"].data)
 
 
-
+            print('all cond.time_pairs: ', cond.time_pairs)
+            print('menmonic dates: ', mnemonic["dates"].data)
             tf_cond = [((mnemonic["dates"].data >= times[0]) & (mnemonic["dates"].data <= times[1])) for times in cond.time_pairs]
             #print(i)
-            #print('tf_cond:', tf_cond)
+            print('tf_cond:', tf_cond)
             if len(tf_cond) > 1:
                 # If there are multiple blocks of good time pairs, combine them
                 # into a 2D array (rather than list)
@@ -201,6 +202,12 @@ class condition:
         good_data["dates"] = mnemonic["dates"][tf]
         good_data["euvalues"] = mnemonic["euvalues"][tf]
         self.extracted_data = good_data
+
+
+        print("Number of entries that are good: ", np.sum(tf))
+        print(tf_matrix)
+        stop
+
 
         # We need to keep data from distinct blocks of time separate, because we may
         # need to calculate statistics for each good time block separately. Use tf to
@@ -1115,7 +1122,11 @@ class relation_test():
         #print('In cond_true_time in relation_test:')
         #print(self.rel, self.value)
         #print(self.mnemonic["euvalues"])
-
+        print('cond_true_time:')
+        print(self.mnemonic)
+        print(self.rel, self.value)
+        print(len(good_points), len(bad_points))
+        print('\n')
 
 
 

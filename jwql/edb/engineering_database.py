@@ -12,6 +12,7 @@ Authors
 
     - Johannes Sahlmann
     - Mees Fix
+    - Bryan Hilbert
 
 Use
 ---
@@ -45,6 +46,7 @@ Notes
 import calendar
 from collections import OrderedDict
 from datetime import datetime, timedelta
+from numbers import Number
 import os
 import warnings
 
@@ -99,16 +101,24 @@ class EdbMnemonic:
         self.requested_end_time = end_time
         self.data = data
 
+        self.mean = None
+        self.median = None
+        self.stdev = None
+        self.median_times = None
+
+        self.meta = meta
+        self.info = info
+        self.blocks = np.array(blocks)
+
         if len(self.data) == 0:
             self.data_start_time = None
             self.data_end_time = None
         else:
             self.data_start_time = Time(np.min(self.data['dates']), scale='utc')
             self.data_end_time = Time(np.max(self.data['dates']), scale='utc')
+            if isinstance(self.data['euvalues'][0], Number):
+                self.full_stats()
 
-        self.meta = meta
-        self.info = info
-        self.blocks = np.array(blocks)
 
     def __add__(self, mnem):
         """Allow EdbMnemonic instances to be added (i.e. combine their data).
@@ -205,8 +215,15 @@ class EdbMnemonic:
         mnem : jwql.edb.engineering_database.EdbMnemonic
             Instance to be multiplied into the current instance
         """
+        # If the data has only a single entry, we won't be able to interpolate, and therefore
+        # we can't multiply it. Return an empty EDBMnemonic instance
+        if len(mnem.data["dates"].data) < 2:
+            mnem.data["dates"] = []
+            mnem.data["euvalues"] = []
+            return mnem
+
         # First, interpolate the data in mnem onto the same times as self.data
-        mnem.interpolate(self.data["dates"])
+        mnem.interpolate(self.data["dates"].data)
 
         # Extrapolation will not be done, so make sure that we account for any elements
         # that were removed rather than extrapolated. Find all the dates for which
@@ -345,9 +362,6 @@ class EdbMnemonic:
         self.stdev = devs
         self.median_times = times
 
-
-        print('MEDIAN_TIMES:', self.median_times)
-
     def full_stats(self, sigma=3):
         """Calculate the mean/median/stdev of the data
 
@@ -367,18 +381,50 @@ class EdbMnemonic:
         times : list
             List of datetime objects describing the times to interpolate to
         """
-        new_tab = Table()
-        interp_times = np.array([create_time_offset(ele, self.data["dates"][0]) for ele in times])
-        mnem_times = np.array([create_time_offset(ele, self.data["dates"][0]) for ele in self.data["dates"]])
+        # Change-only data is unique and needs its own way to be interpolated
+        if self.meta['TlmMnemonics'][0]['AllPoints'] == 0:
+            new_tab = Table()
+            new_values = []
+            new_dates = []
+            for time in times:
+                latest = np.where(self.data["dates"] <= time)[0]
+                if len(latest) > 0:
+                    new_values.append(self.data["euvalues"][latest[-1]])
+                    new_dates.append(time)
+            if len(new_values) > 0:
+                new_tab["euvalues"] = np.array(new_values)
+                new_tab["dates"] = np.array(new_dates)
 
-        # Do not extrapolate. Any requested interoplation times that are outside the range
-        # or the original data will be ignored.
-        good_times = ((interp_times >= mnem_times[0]) & (interp_times <= mnem_times[-1]))
-        interp_times = interp_times[good_times]
+        # This is for non change-only data
+        else:
+            if len(self.data["dates"]) >= 2:
+                # We can only linearly interpolate if we have more than one entry
+                new_tab = Table()
 
-        new_tab["euvalues"] = np.interp(interp_times, mnem_times, self.data["euvalues"])
-        new_tab["dates"] = np.array([add_time_offset(ele, self.data["dates"][0]) for ele in interp_times])
 
+                print('INTERPOLATE')
+                print(times)
+                print(type(times))
+
+                print(self.data['dates'].data)
+
+
+                interp_times = np.array([create_time_offset(ele, self.data["dates"][0]) for ele in times])
+                mnem_times = np.array([create_time_offset(ele, self.data["dates"][0]) for ele in self.data["dates"]])
+
+                # Do not extrapolate. Any requested interoplation times that are outside the range
+                # or the original data will be ignored.
+                good_times = ((interp_times >= mnem_times[0]) & (interp_times <= mnem_times[-1]))
+                interp_times = interp_times[good_times]
+
+                new_tab["euvalues"] = np.interp(interp_times, mnem_times, self.data["euvalues"])
+                new_tab["dates"] = np.array([add_time_offset(ele, self.data["dates"][0]) for ele in interp_times])
+
+            else:
+                # If there are not enough data and we are unable to interpolate,
+                # then set the data table to be empty
+                new_tab["euvalues"] = np.array[()]
+                new_tab["dates"] = np.array[()]
 
         # Adjust any block values to account for the interpolated data
         new_blocks = []
@@ -388,8 +434,11 @@ class EdbMnemonic:
 
                 if len(good) > 0:
                     new_blocks.append(good[0])
+            new_blocks.append(len(new_tab["dates"]))
             self.blocks = np.array(new_blocks)
-            self.data = new_tab
+
+        # Update the data in the instance.
+        self.data = new_tab
 
     """
     def bokeh_plot(self, show_plot=False):
@@ -671,10 +720,10 @@ def change_only_bounding_points(date_list, value_list, starttime, endtime):
     value_list : list
         List of corresponding mnemonic values
 
-    start_time : datetime.datetime
+    starttime : datetime.datetime
         Start time
 
-    end_time : datetime.datetime
+    endtime : datetime.datetime
         End time
 
     Returns
@@ -686,6 +735,12 @@ def change_only_bounding_points(date_list, value_list, starttime, endtime):
         List of corresponding mnemonic values
     """
     date_list_arr = np.array(date_list)
+
+    if isinstance(starttime, Time):
+        starttime = starttime.datetime
+
+    if isinstance(endtime, Time):
+        endtime = endtime.datetime
 
     valid_idx = np.where((date_list_arr <= endtime) & (date_list_arr >= starttime))[0]
     before_startime = np.where(date_list_arr < starttime)[0]
@@ -796,7 +851,10 @@ def create_time_offset(dt_obj, epoch):
     obj : float
         Number of seconds between dt_obj and epoch
     """
-    return (dt_obj - epoch).total_seconds()
+    if isinstance(dt_obj, Time):
+        return (dt_obj - epoch).to(u.second).value
+    elif isinstance(dt_obj, datetime):
+        return (dt_obj - epoch).total_seconds()
 
 
 def get_mnemonic(mnemonic_identifier, start_time, end_time):
@@ -848,6 +906,12 @@ def get_mnemonic(mnemonic_identifier, start_time, end_time):
         # querying up through the present and there are no more recent data values.) Use these
         # to produce entries at the beginning and ending of the queried time range.
         dates, values = change_only_bounding_points(dates, values, start_time, end_time)
+
+        # Convert change-only data to "regular" data. If this is not done, checking for
+        # dependency conditions may not work well if there are a limited number of points.
+        # Also, later interpolations won't be correct with change-only points since we are
+        # doing linear interpolation.
+        #do that here
 
     data = Table({'dates': dates, 'euvalues': values})
     info = get_mnemonic_info(mnemonic_identifier)

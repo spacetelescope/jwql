@@ -437,6 +437,11 @@ class EdbMnemonicMonitor():
                 all_conditions.append(condition.relation_test(dep_mnemonic, dependency["relation"], dependency["threshold"]))
 
 
+
+            print('all_conditions time pairs:')
+            print(all_conditions[0].time_pairs)
+            print(all_conditions[0].time_pairs[0][0])
+            print(all_conditions[0].time_pairs[0][1])
             #print(len(data.data["dates"]))
             #print(data.data["dates"])
 
@@ -460,7 +465,6 @@ class EdbMnemonicMonitor():
             #    print(data.data["dates"][off+1], data.data["euvalues"][off+1])
             #except:
             #    print("no more data")
-
 
 
 
@@ -637,7 +641,7 @@ class EdbMnemonicMonitor():
                 #print(self.query_results[dependency["name"]].requested_start_time, starttime)
                 #print(self.query_results[dependency["name"]].requested_end_time, endtime)
                 mnemonic_data = ed.get_mnemonic(dependency["name"], starttime, endtime)
-                print(f'Length of returned data: {len(mnemonic_data)}')
+                print(f'Length of returned data: {len(mnemonic_data)}, {starttime}, {endtime}')
                 mnemonic_data.save_table(f'edb_results_for_development_{dependency["name"]}.txt')
                 dep_mnemonic = {"dates": mnemonic_data.data["dates"], "euvalues": mnemonic_data.data["euvalues"]}
 
@@ -661,7 +665,7 @@ class EdbMnemonicMonitor():
         else:
             print(f'Dependency {dependency["name"]} is not in self.query_results. Querying the EDB.')
             self.query_results[dependency["name"]] = ed.get_mnemonic(dependency["name"], starttime, endtime)
-            print(f'Length of data: {len(self.query_results[dependency["name"]])}')
+            print(f'Length of data: {len(self.query_results[dependency["name"]])}, {starttime}, {endtime}')
             self.query_results[dependency["name"]].save_table(f'edb_results_for_development_{dependency["name"]}.txt')
             dep_mnemonic = {"dates": self.query_results[dependency["name"]].data["dates"],
                             "euvalues": self.query_results[dependency["name"]].data["euvalues"]}
@@ -778,6 +782,11 @@ class EdbMnemonicMonitor():
         try:
             mnemonic_data = ed.get_mnemonic(mnemonic["name"], starting_time, ending_time)
 
+
+            print('First length of data: ', len(mnemonic_data.data["dates"]))
+
+
+
             # FOR DEVELOPMENT - NO NEED TO SAVE WHEN RUNNING FOR REAL
             mnemonic_data.save_table(f'edb_results_for_development_{mnemonic["name"]}.txt')
 
@@ -886,7 +895,7 @@ class EdbMnemonicMonitor():
             base_time = '2021-09-01 00:00:00'
             #query_result = Time(base_time)
             query_result = datetime.strptime(base_time, '%Y-%m-%d %H:%M:%S.%f')
-            logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.mnemonic, base_time)))
+            logging.info(('\tNo query history for {}. Returning default "previous query" date of {}.'.format(self.mnemonic, base_time)))
         else:
             #query_result = Time(query[-1].latest_query)
             query_result = datetime.strptime(query[-1].latest_query, '%Y-%m-%d %H:%M:%S.%f')
@@ -970,8 +979,6 @@ class EdbMnemonicMonitor():
         multiday_table["euvalues"] = multiday_mean_vals
         all_data = ed.EdbMnemonic(identifier, starting_time_list[0], ending_time_list[-1],
                                   multiday_table, meta, info)
-
-        print('need to propagate mnemonic_info.mean, stdev, etc into all_data')
 
         print(f'DONE WITH {mnemonic_dict["name"]}')
 
@@ -1064,7 +1071,7 @@ class EdbMnemonicMonitor():
                 mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_test.json')
 
                 # Define the output directory in which the html files will be saved
-                plot_output_dir = os.path.join(base_dir, instrument_name)
+                self.plot_output_dir = os.path.join(base_dir, instrument_name)
 
                 # Read in file with nominal list of mnemonics
                 with open(mnemonic_file) as json_file:
@@ -1088,9 +1095,10 @@ class EdbMnemonicMonitor():
         # Use exsiting JWQL EDB code - as shown above (move to within the loop over mnemonics to allow
         # a custom query time for each)
         #today = Time.now()
-        #today = Time('2021-09-06')  # for development
+        #today = Time('2021-09-02 09:00:00')  # for development
+        today = datetime.datetime(2021, 9, 3, 9, 0, 0)
         #today = datetime.now()
-        today = datetime.datetime(2022, 3, 24)  # for development
+        #today = datetime.datetime(2022, 3, 24)  # for development
 
         # Set the limits for the telemetry plots if necessary
         if plot_start is None:
@@ -1099,6 +1107,11 @@ class EdbMnemonicMonitor():
 
         if plot_end is None:
             plot_end = today
+
+
+        print('plot_start and plot_end: ', plot_start, plot_end)
+
+
 
         #q = ed.get_mnemonics(mnemonics_to_monitor, starttime, endtime)
 
@@ -1144,15 +1157,19 @@ class EdbMnemonicMonitor():
                     #most_recent_search = self.most_recent_search(mnemonic[usename])
                     #most_recent_search = Time('2021-12-13')  # for development
                     #most_recent_search = Time('2021-09-01T00:00:00')  # for development
-                    most_recent_search = datetime.datetime(2022, 3, 22, 0, 0, 0) # for development
+                    most_recent_search = datetime.datetime(2021, 9, 1, 9, 0, 0) # for development
 
-                    if plot_end > most_recent_search:
+                    print('most_recent_search, self.query_cadence:', most_recent_search, self.query_cadence)
+
+                    if plot_end > (most_recent_search + self.query_cadence):
                         # Here we need to query the EDB to cover the entire plot range
                         #starttime = most_recent_search + TimeDelta(self.query_cadence)
+                        print("We need to query the EDB")
                         starttime = most_recent_search + self.query_cadence
                     else:
                         # Here the entire plot range is before the most recent search,
                         # so all we need to do is query the JWQL database for the data.
+                        print("No need to query the EDB")
                         starttime = None
 
                 else:
@@ -1164,7 +1181,7 @@ class EdbMnemonicMonitor():
 
                     # For development---------
                     #most_recent_search = Time('2021-09-01T00:00:00')  # for development
-                    most_recent_search = datetime.datetime(2022,3,22,0,0,0)  # for development
+                    most_recent_search = datetime.datetime(2022,9,1,9,0,0)  # for development
                     starttime = most_recent_search + self.query_cadence
                     #starttime = most_recent_search + TimeDelta(self.query_cadence)
                     #For development---------------------
@@ -1183,11 +1200,24 @@ class EdbMnemonicMonitor():
                     query_start_times = []
                     query_end_times = []
                     #time_range = int((plot_end - starttime).to(u.day).value)
-                    time_range = (plot_end - starttime).days
+                    dtime = plot_end - starttime
+                    if dtime > query_duration:
+                        full_days = dtime.days
+                        partial_day = dtime.seconds
+                        # If the time span is not a full day, but long enough to cover the query_duration,
+                        # then we can fit in a final query on the last day
+                        if partial_day > query_duration.total_seconds():
+                            full_days += 1
                     # Create an array of starting and ending query times. Start times are once per day
                     # between the previous query time and the present. End times are the start times
                     # plus the query duration.
-                    for delta in range(time_range):
+
+
+                    print(starttime, most_recent_search, self.query_cadence, plot_end, full_days)
+
+
+
+                    for delta in range(full_days):
                         #tmp_start = starttime + TimeDelta(delta * u.day)
                         tmp_start = starttime + datetime.timedelta(days=delta)
                         query_start_times.append(tmp_start)
@@ -1205,6 +1235,8 @@ class EdbMnemonicMonitor():
                 #query_start_times = [starttime]
                 ##query_end_times = [starttime + TimeDelta(480. * u.minute)]
                 #query_end_times = [starttime + timedelta(days=0.25)]
+                print('query start times: ', query_start_times)
+                print('query_end_times: ', query_end_times)
                 # For development-------------------------
 
 
@@ -1279,6 +1311,8 @@ class EdbMnemonicMonitor():
 
                     # Now we need to put the newly averaged data into its own EdbMnemonic instance
                     print('COMBINING WITH HISTORY')
+                    print('length of historical data: ', len(historical_data))
+                    print('length of new data: ', len(new_data))
                     #new_table = Table()
                     #new_table["dates"] = mnemonic_info.median_times
                     #new_table["euvalues"] = mnemonic_info.mean
@@ -1316,26 +1350,48 @@ class EdbMnemonicMonitor():
                     # FOR DEVELOPMENT----------
 
 
-                    # Turned off for testing. TURN BACK ON LATER
                     # save using the string in mnemonic["database_id"]
                     if telem_type != 'every_change':
-                        self.add_new_block_db_entry(new_data, query_start_times[-1])
+
+
+
+                        # Turned off for testing. TURN BACK ON LATER-------------------------------------------------
+                        #self.add_new_block_db_entry(new_data, query_start_times[-1])
+
+
+
 
                         # Now add the new data to the historical data
                         mnemonic_info = new_data + historical_data
+
+
+                        print('length of mnemonic_info: ', len(mnemonic_info))
                     else:
                         every_change_data = organize_every_change(new_data)
+
+                        print('length of every_change_data: ', len(every_change_data))
 
                         # If new_data is completely empty, we should still add an entry to the database, in
                         # order to note the updated most recent query time.
                         #usename = "name"
                         #if "database_id" in mnemonic:
                         #    usename = "database_id"
-                        self.add_new_every_change_db_entry(mnemonic[self._usename], every_change_data, mnemonic['dependency'][0]["name"],
-                                                           query_start_times[-1])
+
+
+
+
+
+                        # Turned off for testing. TURN BACK ON LATER-------------------------------------------------
+                        #self.add_new_every_change_db_entry(mnemonic[self._usename], every_change_data, mnemonic['dependency'][0]["name"],
+                        #                                   query_start_times[-1])
+
+
+
+
 
                         # Combine the historical data with the new data from the EDB
                         mnemonic_info = add_every_change_history(historical_data, every_change_data)
+                        print('length of mnemonic_info: ', len(mnemonic_info))
                         #combine = every_change_data + historical_data
                         #mnemonic_info - from combination? then could be an edbmnemonic instance or a dict...
                         #mnemonic_info = deepcopy(historical_data)
@@ -1344,6 +1400,7 @@ class EdbMnemonicMonitor():
                         #        mnemonic_info[key].extend(every_change_data[key])
                         #    else:
                         #        mnemonic_info[key] = every_change_data[key]
+                    # Turned off for testing. TURN BACK ON LATER-------------------------------------------------
 
                 else:
                     mnemonic_info = new_data
@@ -1358,6 +1415,9 @@ class EdbMnemonicMonitor():
                 if len(mnemonic_info.data["dates"]) == 0:
                     print(f"Mnemonic {mnemonic['name']} contains no data.")
                     create_empty_plot(mnemonic['name'])
+                    mnemonic_info.bokeh_plot(savefig=True, out_dir=self.plot_output_dir, nominal_value=nominal,
+                                                    yellow_limits=yellow, red_limits=red, return_components=False,
+                                                    return_fig=True)
                     print('need to find a way to skip to the next mnemonic from here')
 
                 # If the mnemonic is to be plotted as the product with some other mnemonic, then get
@@ -1429,7 +1489,8 @@ class EdbMnemonicMonitor():
                         # In this case we also need to retrieve the historical data from the database, so that
                         # we can add the new data and create an updated plot
                         if telem_type != 'every_change':
-                            historical_combine_data = self.get_history(filtered_combine_obj.mnemonic_identifier)
+                            historical_combine_data = self.get_history(filtered_combine_obj.mnemonic_identifier, plot_start, plot_end,
+                                                                       info=mnemonic_info.info, meta=mnemonic_info.meta)
                             ending = starttime
                             if ending is None:
                                 ending = plot_end
@@ -1437,9 +1498,19 @@ class EdbMnemonicMonitor():
                         else:
                             historical_combine_data = self.get_history_every_change(filtered_combine_obj.mnemonic_identifier, plot_start, plot_end)
 
-
                         if telem_type != 'every_change':
-                            self.add_new_block_db_entry(filtered_combine_obj, query_start_times[-1].datetime)
+
+
+
+
+
+                            # Turned off for testing. TURN BACK ON LATER-------------------------------------------------
+                            #self.add_new_block_db_entry(filtered_combine_obj, query_start_times[-1].datetime)
+
+
+
+
+
 
                             # Now add the new data to the historical data
                             data_to_combine = filtered_combine_obj + historical_combine_data
@@ -1451,9 +1522,16 @@ class EdbMnemonicMonitor():
                             #usename = "name"
                             #if "database_id" in mnemonic:
                             #    usename = "database_id"
-                            self.add_new_every_change_db_entry(filtered_combine_obj[self._usename], every_change_combine_data,
-                                                               filtered_combine_obj['dependency'][0]["name"],
-                                                               query_start_times[-1])
+
+
+
+                            # Turned off for testing. TURN BACK ON LATER-------------------------------------------------
+                            #self.add_new_every_change_db_entry(filtered_combine_obj[self._usename], every_change_combine_data,
+                            #                                   filtered_combine_obj['dependency'][0]["name"],
+                            #                                   query_start_times[-1])
+
+
+
 
                             # Combine the historical data with the new data from the EDB
                             data_to_combine = add_every_change_history(historical_combine_data, every_change_combine_data)

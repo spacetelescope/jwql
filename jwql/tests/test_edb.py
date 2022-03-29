@@ -178,8 +178,11 @@ def test_interpolation():
     tab = Table()
     tab["dates"] = dates
     tab["euvalues"] = data
-    blocks = [0, 3, 8]
+    blocks = [0, 3, 8, 10]
     mnemonic = ed.EdbMnemonic('SOMETHING', Time('2021-12-18T07:20:00'), Time('2021-12-18T07:30:00'), tab, {}, {}, blocks=blocks)
+
+    # Indicate that these are not change-only data
+    mnemonic.meta = {'TlmMnemonics': [{'AllPoints': 1}]}
 
     # Note that the first element of interp_times is before the earliest value
     # of the mnemonic time, so it should be ignored.
@@ -189,7 +192,32 @@ def test_interpolation():
     mnemonic.interpolate(interp_times)
     assert all(mnemonic.data["dates"].data == interp_times[1:])
     assert all(mnemonic.data["euvalues"].data == np.arange(10, 101, 5) / 10.)
-    assert all(mnemonic.blocks == np.array([0, 6, 16]))
+    assert all(mnemonic.blocks == np.array([0, 6, 16, len(mnemonic)]))
+
+def test_interpolation_change_only():
+    """Test interpolation of change-only data"""
+    dates = np.array([datetime(2021, 12, 18, 7, n, 0) for n in range(20, 30)])
+    data = np.arange(1, 11)
+    tab = Table()
+    tab["dates"] = dates
+    tab["euvalues"] = data
+    blocks = [0, 3, 8, 10]
+    mnemonic = ed.EdbMnemonic('SOMETHING', Time('2021-12-18T07:20:00'), Time('2021-12-18T07:30:00'), tab, {}, {}, blocks=blocks)
+
+    # Indicate that these are change-only data
+    mnemonic.meta = {'TlmMnemonics': [{'AllPoints': 0}]}
+
+    # Note that the first element of interp_times is before the earliest value
+    # of the mnemonic time, so it should be ignored.
+    base_interp = datetime(2021, 12, 18, 7, 19, 30)
+    interp_times = [base_interp + timedelta(seconds = 30 * n) for n in range(0, 20)]
+
+    mnemonic.interpolate(interp_times)
+    expected_values = np.array([1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10])
+    expected_blocks = np.array([0, 6, 16, 19])
+    assert all(mnemonic.data["euvalues"].data == expected_values)
+    assert all(mnemonic.data["dates"].data == np.array(interp_times[1:]))
+    assert all(mnemonic.blocks == expected_blocks)
 
 
 def test_multiplication():

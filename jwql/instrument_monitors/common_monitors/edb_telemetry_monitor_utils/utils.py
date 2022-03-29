@@ -87,7 +87,7 @@ def get_query_duration(mnemonic_type):
     """
     if mnemonic_type.lower() == "daily_means":
         #time = 15. * u.minute
-        time = timedelta(days=0.01)
+        time = timedelta(days=0.01041667)
     elif mnemonic_type in ["every_change", "block_means", "time_interval", "none"]:
         #time = 1. * u.day
         time = timedelta(days=1)
