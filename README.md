@@ -44,7 +44,7 @@ Getting `jwql` up and running on your own computer requires four steps, detailed
 
 ### Prerequisites
 
-It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.7.  Downloads and installation instructions are  available here:
+It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.8.  Downloads and installation instructions are  available here:
 
 - [Miniconda](https://conda.io/miniconda.html)
 - [Anaconda](https://www.continuum.io/downloads)
@@ -83,16 +83,16 @@ source activate base/root
 
 **Note:** If you have added a step activating conda to your default terminal/shell (e.g. the `.bashrc`, `.zshrc`, or `.profile` file) then you don't need to do the above step.
 
-Lastly, create the `jwql` environment via one of the `environment.yml` files (currently `environment_python_3_7.yml`, for python 3.7, and `environment_python_3.8.yml`, for python 3.8, are supported by `jwql`):
+Lastly, create the `jwql` environment via one of the `environment.yml` files (currently `environment_python_3_8.yml`, for python 3.8, and `environment_python_3.9.yml`, for python 3.9, are supported by `jwql`):
 
 ```
-conda env create -f environment_python_3_7.yml
+conda env create -f environment_python_3_8.yml
 ```
 
 or
 
 ```
-conda env create -f environment_python_3.8.yml
+conda env create -f environment_python_3.9.yml
 ```
 
 ### Configuration File
@@ -150,17 +150,17 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 
 
 ## Current Development Team
-- Matthew Bourque (INS) [@bourque](https://github.com/bourque)
+- Bryan Hilbert (Project Manager, INS) [@bilhbert4](https://github.com/bhilbert4)
+- Mees Fix (Technical Lead, INS) [@mfixstsci](https://github.com/mfixstsci)
 - Misty Cracraft (INS) [@cracraft](https://github.com/cracraft)
 - Mike Engesser (INS) [@mengesser](https://github.com/mengesser)
-- Mees Fix (INS) [@mfixstsci](https://github.com/mfixstsci)
-- Bryan Hilbert (INS) [@bilhbert4](https://github.com/bhilbert4)
 - Shannon Osborne (INS) [@shanosborne](https://github.com/shanosborne)
 - Maria Pena-Guerrero [@penaguerrero](https://github.com/penaguerrero)
 - Ben Sunnquist (INS) [@bsunnquist](https://github.com/bsunnquist)
 - Brian York (INS) [@york-stsci](https://github.com/york-stsci)
 
 ## Past Development Team Members
+- Matthew Bourque (INS) [@bourque](https://github.com/bourque)
 - Lauren Chambers (INS) [@laurenmarietta](https://github.com/laurenmarietta)
 - Joe Filippazzo (INS) [@hover2pi](https://github.com/hover2pi)
 - Graham Kanarek (INS) [@gkanarek](https://github.com/gkanarek)
