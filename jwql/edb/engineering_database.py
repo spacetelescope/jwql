@@ -340,15 +340,21 @@ class EdbMnemonic:
         #    num_days = 1
         # Perform the averaging over the final fraction of a day if there are
         # entries beyond multiples of the 24 hour period
-        if num_seconds == 0:
-            # Case where the data span some exact number of days
-            range_days = num_days + 1
-        else:
+        #if num_seconds == 0:
+        # Case where the data span some exact number of days
+        range_days = num_days + 1
+        #else:
             # Case where the data span something other than an exact
             # multiple of 24 hours
-            range_days = num_days + 2
+        #    range_days = num_days + 2
 
         limits = np.array([min_date + timedelta(days=x) for x in range(range_days)])
+        limits = np.append(limits, np.max(self.data["dates"]))
+
+        print('limits', limits)
+        print(min_date, date_range, num_days, num_seconds)
+
+
         means, meds, devs, times = [], [], [], []
         for i in range(len(limits) - 1):
             good = np.where((self.data["dates"] >= limits[i]) & (self.data["dates"] < limits[i+1]))

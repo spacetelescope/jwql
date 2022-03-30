@@ -930,13 +930,6 @@ class EdbMnemonicMonitor():
                                 use_dates=None):
         """
         """
-
-
-        print(mnemonic_dict)
-        stop
-
-
-
         multiday_table = Table()
         multiday_median_times = []
         multiday_mean_vals = []
@@ -954,35 +947,10 @@ class EdbMnemonicMonitor():
             # call this function for that specific mnemonic
             mnemonic_info = self.get_mnemonic_info(mnemonic_dict, starttime, endtime, telemetry_type)
 
-
-            # If the user provides a list of datetime objects, interpolate the data onto those
-            # dates. The motivation for this is the case where we will be plotting the product
-            # of two mnemonics. Without interpolating here, the two mnemonics may have different
-            # mean/median times in their averaged data, and the multiplication won't work. This is
-            # especially true for cases where there is only a single mean value/date. In that case
-            # the interpolation that is part of the multiplication process will fail. Therefore we
-            # interpolate here, after filtering, so that all the times that will be averaged match
-            # those for the other mnemonic.
-            # UGH. THIS MIGHT NECESSITATE A BIG REORG. WE WOULD NEED TO QUERY FOR THE MAIN MNEMONIC
-            # AND THEN THE PRODUCT MNEMONIC FOR A GIVEN DAY, THEN MOVE ON TO THE NEXT DAY. OTHERWISE
-            # I'M NOT SURE HOW YOU SAVE THE LIST OF DATES TO INTERPOLATE ONTO FOR EACH DAY. THE WHOLE
-            # POINT OF WORKING ONE DAY AT A TIME WAS TO AVOID HAVING POTENTIALLY HUGE LISTS OF DATETIMES
-            # FOR MNEMONICS THAT ARE SAMPLED VERY FREQUENTLY.
-            if use_dates is not None:
-                mnemonic_info.interpolate(use_dates)
-
-
-
-
+            # If data are returned, do the appropriate averaging
+            if mnemonic_info is not None:
 
             """
-            we need to optionally interpolate here, before taking the means below, so that for cases where the
-            data will be multiplied in order to make a plot, the dates will be the same, and therefore the median
-            times will be the same. This is really for the case where there is a single median time, which means
-            that it is not possible to interpolate the data in order to match the times before multiplying. Perhaps we
-            should interpolate onto the other mnemonics times very early, before filtering? Or just after filtering?
-            That would have to be within get_mnemonic_info then.
-
             probably also need to relax the constraints on the multiplication a bit. Perhaps only for single value
             means? If the difference between the times is less than XX% of the total time covered by the mean, then
             consider that close enough?
@@ -1001,37 +969,40 @@ class EdbMnemonicMonitor():
             #else:
             #    pass
 
-            # If data are returned, do the appropriate averaging
-            if mnemonic_info is not None:
+
                 identifier = mnemonic_info.mnemonic_identifier
                 info = mnemonic_info.info
                 meta = mnemonic_info.meta
                 print('in multiday:', mnemonic_info.info["unit"])
 
-                # Now calculate statistics if this is a mnemonic where averaging is to be done.
-                if telemetry_type == "daily_means":
-                    print("Calculating daily means")
-                    mnemonic_info.daily_stats()
-                elif telemetry_type == "block_means":
-                    print('Calculating block stats')
-                    mnemonic_info.block_stats()
-                elif telemetry_type == "every_change":
-                #    mnemonic_info.calc_every_change_stats()
-                    print('Calculating block stats on change only')
-                    mnemonic_info.block_stats()
-                elif telemetry_type == "time_interval":
-                    print('Time interval data')
-                    stats_duration = utils.get_averaging_time_duration(mnemonic["mean_time_block"])
-                    mnemonic_info.timed_stats(stats_duration)
-                elif telemetry_type == "none":
-                    print("No averaging done, by request")
-                    mnemonic_info.mean = 'No_averaging'
-
-
+                # Calculate mean/median/stdev
+                mnemonic_info = calculate_statistics(mnemonic_info)
 
                 if identifier in ['SE_ZIMIRICEA', 'SE_ZBUSVLT']:
                     print("Mean value: ", identifier, mnemonic_info.mean)
                     print('2. ', mnemonic_info.data)
+
+
+
+
+                # If this mnemonic is going to be plotted as a product with another mnemonic, then
+                # retrieve the second mnemonic info here
+                if '*' in mnemonic_dict["plot_data"]:
+                    temp_dict = deepcopy(mnemonic_dict)
+                    temp_dict["name"] = mnemonic_dict["plot_data"].strip('*')
+                    product_mnemonic_info = self.get_mnemonic_info(temp_dict, starttime, endtime, telemetry_type)
+
+                    # Interpolate the product mnemonic to be on the same times as the primary mnemonic
+                    product_mnemonic_info.interpolate(mnemonic_info.data["dates"])
+
+                    # Calculate mean/median/stdev
+                    product_mnemonic_info = calculate_statistics(product_mnemonic_info)
+
+                    multiply here?
+                    then store only the product in the database, rather than the pieces
+                    this will make the history retrieval easier.
+
+
 
 
                 # Combine information from multiple days here. If averaging is done, keep track of
@@ -1812,6 +1783,29 @@ def add_every_change_history(dict1, dict2):
         if key not in dict1:
             combined[key] = value
     return combined
+
+def calculate_statistics(mnemonic_instance):
+    """
+    """
+    if telemetry_type == "daily_means":
+        print("Calculating daily means")
+        mnemonic_instance.daily_stats()
+    elif telemetry_type == "block_means":
+        print('Calculating block stats')
+        mnemonic_instance.block_stats()
+    elif telemetry_type == "every_change":
+    #    mnemonic_info.calc_every_change_stats()
+        print('Calculating block stats on change only')
+        mnemonic_instance.block_stats()
+    elif telemetry_type == "time_interval":
+        print('Time interval data')
+        stats_duration = utils.get_averaging_time_duration(mnemonic["mean_time_block"])
+        mnemonic_instance.timed_stats(stats_duration)
+    elif telemetry_type == "none":
+        print("No averaging done, by request")
+        mnemonic_instance.mean = 'No_averaging'
+    return mnemonic_instance
+
 
 
 def create_empty_plot(title, out_dir='./',):

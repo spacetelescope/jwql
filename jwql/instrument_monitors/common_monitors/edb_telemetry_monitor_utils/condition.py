@@ -167,8 +167,19 @@ class condition:
 
 
             print('all cond.time_pairs: ', cond.time_pairs)
-            print('menmonic dates: ', mnemonic["dates"].data)
+            #print('menmonic dates: ', mnemonic["dates"].data)
+
+
+
+            #need to figure out what to do here.
+            #change only mnemonic has one entry at starttime and one at endtime
+            #the dependency has a bunch of entries that start before starttime and go until after endtime
+            #In the case below, that leads to False in tf_cond here. do we interpolate only if its change=only
+            #data? interpolate onto what time list?
             tf_cond = [((mnemonic["dates"].data >= times[0]) & (mnemonic["dates"].data <= times[1])) for times in cond.time_pairs]
+
+
+
             #print(i)
             print('tf_cond:', tf_cond)
             if len(tf_cond) > 1:
@@ -206,7 +217,6 @@ class condition:
 
         print("Number of entries that are good: ", np.sum(tf))
         print(tf_matrix)
-        stop
 
 
         # We need to keep data from distinct blocks of time separate, because we may
@@ -1122,11 +1132,11 @@ class relation_test():
         #print('In cond_true_time in relation_test:')
         #print(self.rel, self.value)
         #print(self.mnemonic["euvalues"])
-        print('cond_true_time:')
-        print(self.mnemonic)
-        print(self.rel, self.value)
-        print(len(good_points), len(bad_points))
-        print('\n')
+        #print('cond_true_time:')
+        #print(self.mnemonic)
+        #print(self.rel, self.value)
+        #print(len(good_points), len(bad_points))
+        #print('\n')
 
 
 
