@@ -378,7 +378,7 @@ def get_edb_components(request):
                         comments.append('Number of rows {}'.format(len(result_table)))
                         comments.append(' ')
                         result_table.write(path_for_download, format='ascii.fixed_width',
-                                        overwrite=True, delimiter=',', bookend=False)
+                                           overwrite=True, delimiter=',', bookend=False)
                         mnemonic_query_result.file_for_download = file_for_download
 
             # create forms for search fields not clicked
@@ -921,10 +921,12 @@ def get_thumbnails_all_instruments(parameters):
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
-        if (parameters['apertures'][inst.lower()] == []) and (parameters['detectors'][inst.lower()] == []) \
-            and (parameters['filters'][inst.lower()] == []) and (parameters['exposure_types'][inst.lower()] == []) \
-            and (parameters['read_patterns'][inst.lower()] == []):
-                 params = {"columns": "*", "filters": []}
+        if ((parameters['apertures'][inst.lower()] == []) and
+            (parameters['detectors'][inst.lower()] == []) and
+            (parameters['filters'][inst.lower()] == []) and
+            (parameters['exposure_types'][inst.lower()] == []) and
+            (parameters['read_patterns'][inst.lower()] == [])):
+            params = {"columns": "*", "filters": []}
         else:
             query_filters = []
             if (parameters['apertures'][inst.lower()] != []):
