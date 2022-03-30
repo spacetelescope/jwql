@@ -8,3 +8,4 @@ pytest==7.0.1
 sphinx>=2
 tomli==2.0.1
 git+https://github.com/spacetelescope/jwst_reffiles
+git+https://github.com/spacetelescope/stsci_rtd_theme.git
