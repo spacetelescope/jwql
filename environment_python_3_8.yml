@@ -21,11 +21,12 @@ channels:
   - defaults
 
 dependencies:
-  - astropy=4.3.1
+  - astropy=5.0.2
   - bokeh=2.4.2
+  - beautifulsoup4=4.10.0
   - codecov=2.1.11
   - cryptography=36.0.0
-  - django=3.1.7
+  - django=3.2.5
   - flake8=3.9.2
   - inflection=0.5.1
   - ipython=7.29.0
@@ -52,10 +53,10 @@ dependencies:
   - wtforms=2.3.3
 
   - pip:
-    - asdf==2.8.3
+    - asdf==2.11.0
     - astroquery==0.4.5
-    - bandit==1.7.1
-    - crds==11.5.2
+    - bandit==1.7.4
+    - crds==11.10.0
     - jwst==1.3.3
     - pysiaf==0.11.0
     - pysqlite3==0.4.3

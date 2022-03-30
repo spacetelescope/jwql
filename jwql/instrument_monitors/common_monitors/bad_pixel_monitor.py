@@ -596,6 +596,8 @@ class BadPixels():
                 new_pixels_x.append(x)
                 new_pixels_y.append(y)
 
+        session.close()
+
         return (new_pixels_x, new_pixels_y)
 
     def identify_tables(self):
@@ -706,12 +708,13 @@ class BadPixels():
 
         query_count = len(dates)
         if query_count == 0:
-            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
+            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
                          .format(self.aperture, query_result)))
         else:
             query_result = np.max(dates)
 
+        session.close()
         return query_result
 
     def make_crds_parameter_dict(self):

@@ -262,8 +262,9 @@ JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
 # Available monitor names and their location for each JWST instrument
 MONITORS = {
     'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor'),
-            ('Readnoise Monitor', '/fgs/readnoise_monitor')],
-    'miri': [('Dark Current Monitor', '#'),
+            ('Readnoise Monitor', '/fgs/readnoise_monitor'),
+            ('Dark Current Monitor', '/fgs/dark_monitor')],
+    'miri': [('Dark Current Monitor', '/miri/dark_monitor'),
              ('Data Trending', '#'),
              ('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
              ('Readnoise Monitor', '/miri/readnoise_monitor'),
@@ -276,14 +277,15 @@ MONITORS = {
     'nircam': [('Bias Monitor', '/nircam/bias_monitor'),
                ('Readnoise Monitor', '/nircam/readnoise_monitor'),
                ('Gain Level Monitor', '#'),
-               ('Mean Dark Current Rate Monitor', '/nircam/dark_monitor'),
+               ('Dark Current Monitor', '/nircam/dark_monitor'),
                ('Bad Pixel Monitor', '/nircam/bad_pixel_monitor'),
                ('Photometric Stability Monitor', '#')],
     'niriss': [('Bad Pixel Monitor', '/niriss/bad_pixel_monitor'),
                ('Readnoise Monitor', '/niriss/readnoise_monitor'),
                ('AMI Calibrator Monitor', '#'),
                ('TSO RMS Monitor', '#'),
-               ('Bias Monitor', '#')],
+               ('Bias Monitor', '/niriss/bias_monitor'),
+               ('Dark Current Monitor', '/niriss/dark_monitor')],
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
@@ -294,7 +296,8 @@ MONITORS = {
                 ('Internal Lamp Monitor', '#'),
                 ('Instrument Model Updates', '#'),
                 ('Failed-open Shutter Monitor', '#'),
-                ('Bias Monitor', '/nirspec/bias_monitor')]}
+                ('Bias Monitor', '/nirspec/bias_monitor'),
+                ('Dark Monitor', '/nirspec/dark_monitor')]}
 
 # Possible suffix types for coronograph exposures
 NIRCAM_CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']
@@ -345,12 +348,12 @@ WFSC_SUFFIX_TYPES = ['wfscmb']
 
 # Concatenate all suffix types (ordered to ensure successful matching)
 FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
-                    TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
-                    NIRISS_AMI_SUFFIX_TYPES + WFSC_SUFFIX_TYPES
+    TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
+    NIRISS_AMI_SUFFIX_TYPES + WFSC_SUFFIX_TYPES
 
 # Instrument Documentation Links
-URL_DICT = {'fgs': 'https://jwst-docs.stsci.edu/jwst-observatory-hardware/fine-guidance-sensor',
-            'miri': 'https://jwst-docs.stsci.edu/mid-infrared-instrument',
-            'niriss': 'https://jwst-docs.stsci.edu/near-infrared-imager-and-slitless-spectrograph',
-            'nirspec': 'https://jwst-docs.stsci.edu/near-infrared-spectrograph',
-            'nircam': 'https://jwst-docs.stsci.edu/near-infrared-camera'}
+URL_DICT = {'fgs': 'https://jwst-docs.stsci.edu/jwst-observatory-hardware/jwst-fine-guidance-sensor',
+            'miri': 'https://jwst-docs.stsci.edu/jwst-mid-infrared-instrument',
+            'niriss': 'https://jwst-docs.stsci.edu/jwst-near-infrared-imager-and-slitless-spectrograph',
+            'nirspec': 'https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph',
+            'nircam': 'https://jwst-docs.stsci.edu/jwst-near-infrared-camera'}
