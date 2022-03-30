@@ -43,6 +43,7 @@ from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monit
 
 SETTINGS = get_config()
 
+
 def create_table(status_dict):
     """Create interactive ``bokeh`` table containing the logfile status
     results.

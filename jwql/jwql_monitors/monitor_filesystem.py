@@ -567,7 +567,6 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
     session.close()
 
 
-
 if __name__ == '__main__':
 
     # Configure logging

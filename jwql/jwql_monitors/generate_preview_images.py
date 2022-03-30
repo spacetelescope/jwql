@@ -36,7 +36,7 @@ import numpy as np
 
 from jwql.utils import permissions
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND, NIRCAM_LONGWAVE_DETECTORS, \
-                                 NIRCAM_SHORTWAVE_DETECTORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
+    NIRCAM_SHORTWAVE_DETECTORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser
@@ -50,6 +50,7 @@ FULLX = 2048  # Width of the full detector
 FULLY = 2048  # Height of the full detector
 
 SETTINGS = get_config()
+
 
 def array_coordinates(channelmod, detector_list, lowerleft_list):
     """Create an appropriately sized ``numpy`` array to contain the

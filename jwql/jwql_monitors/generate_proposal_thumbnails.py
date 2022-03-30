@@ -36,6 +36,7 @@ from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monit
 
 SETTINGS = get_config()
 
+
 @log_fail
 @log_info
 def generate_proposal_thumbnails():

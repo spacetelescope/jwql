@@ -514,16 +514,7 @@ def get_filenames_by_instrument(instrument, restriction='all', query_file=None, 
     filenames : list
         A list of files that match the given instrument.
     """
-
-    #service = INSTRUMENT_SERVICE_MATCH[instrument]
-
     if not query_file and not query_response:
-        #result = mast_query(instrument, "filename, isRestricted")
-        # Query for filenames
-        #params = {"columns": "filename, isRestricted", "filters": []}
-        #response = Mast.service_request_async(service, params)
-        #result = response[0].json()
-
         result = mast_query_filenames_by_instrument(instrument)
 
     elif query_response:
@@ -636,7 +627,6 @@ def get_header_info(filename, filetype):
 
     # Extract header information from file
     for ext in range(0, len(hdulist)):
-    #for ext in range(0, 1):
 
         # Initialize dictionary to store header information for particular extension
         header_info[ext] = {}
@@ -699,7 +689,6 @@ def get_image_info(file_root, rewrite):
     image_info['num_ints'] = {}
     image_info['available_ints'] = {}
 
-
     # Find all of the matching files
     proposal_dir = file_root[:7]
     observation_dir = file_root[:13]
@@ -729,7 +718,7 @@ def get_image_info(file_root, rewrite):
         # Record how many integrations there are per filetype
         jpgs = glob.glob(os.path.join(prev_img_filesys, observation_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
         image_info['num_ints'][suffix] = len(jpgs)
-        image_info['available_ints'][suffix] = sorted([int(jpg.split('_')[-1].replace('.jpg','').replace('integ','')) for jpg in jpgs])
+        image_info['available_ints'][suffix] = sorted([int(jpg.split('_')[-1].replace('.jpg', '').replace('integ', '')) for jpg in jpgs])
         image_info['all_jpegs'].append(jpg_filepath)
 
     return image_info
@@ -935,8 +924,7 @@ def get_thumbnails_all_instruments(parameters):
         if (parameters['apertures'][inst.lower()] == []) and (parameters['detectors'][inst.lower()] == []) \
             and (parameters['filters'][inst.lower()] == []) and (parameters['exposure_types'][inst.lower()] == []) \
             and (parameters['read_patterns'][inst.lower()] == []):
-                params = {"columns": "*",
-                          "filters": []}
+                 params = {"columns": "*", "filters": []}
         else:
             query_filters = []
             if (parameters['apertures'][inst.lower()] != []):
@@ -1026,7 +1014,6 @@ def get_thumbnails_by_instrument(inst):
     filenames = [result['filename'].split('.')[0] for result in results]
 
     # Get list of all thumbnails
-    #thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
     thumbnails = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, THUMBNAIL_LISTFILE))
 
     # Get subset of preview images that match the filenames
@@ -1104,7 +1091,7 @@ def log_into_mast(request):
 
     # authenticate with astroquery.mast if necessary
     # nosec comment added to ignore bandit security check
-    if access_token != 'None': # nosec
+    if access_token != 'None':  # nosec
         Mast.login(token=access_token)
         return Mast.authenticated()
     else:
@@ -1315,7 +1302,7 @@ def thumbnails_ajax(inst, proposal=None):
 
     # Order dictionary by descending expstart time.
     sorted_file_data = OrderedDict(sorted(data_dict['file_data'].items(),
-       key = lambda x: getitem(x[1], 'expstart'), reverse=True))
+                                   key=lambda x: getitem(x[1], 'expstart'), reverse=True))
 
     data_dict['file_data'] = sorted_file_data
 
@@ -1384,7 +1371,7 @@ def thumbnails_query_ajax(rootnames):
     # Extract information for sorting with dropdown menus
     try:
         detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for
-                    rootname in list(data_dict['file_data'].keys())]
+                     rootname in list(data_dict['file_data'].keys())]
     except KeyError:
         detectors = []
         for rootname in list(data_dict['file_data'].keys()):
