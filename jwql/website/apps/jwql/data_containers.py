@@ -921,11 +921,11 @@ def get_thumbnails_all_instruments(parameters):
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
-        if ((parameters['apertures'][inst.lower()] == []) and
-            (parameters['detectors'][inst.lower()] == []) and
-            (parameters['filters'][inst.lower()] == []) and
-            (parameters['exposure_types'][inst.lower()] == []) and
-            (parameters['read_patterns'][inst.lower()] == [])):
+        if ((parameters['apertures'][inst.lower()] == [])
+                and (parameters['detectors'][inst.lower()] == [])
+                and (parameters['filters'][inst.lower()] == [])
+                and (parameters['exposure_types'][inst.lower()] == [])
+                and (parameters['read_patterns'][inst.lower()] == [])):
             params = {"columns": "*", "filters": []}
         else:
             query_filters = []
