@@ -3,9 +3,10 @@ django==3.2.5
 docutils==0.18.1
 flake8==4.0.1
 jwst==1.4.3
+jwql==1.0.0
 pygments==2.11.2
 pytest==7.0.1
 sphinx>=2
+stsci_rtd_theme==0.2.0
 tomli==2.0.1
 git+https://github.com/spacetelescope/jwst_reffiles
-git+https://github.com/spacetelescope/stsci_rtd_theme.git
