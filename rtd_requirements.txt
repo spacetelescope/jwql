@@ -5,6 +5,7 @@ flake8==4.0.1
 jwst==1.4.3
 pygments==2.11.2
 pytest==7.0.1
+python>=3.8.5
 sphinx>=2
 tomli==2.0.1
 git+https://github.com/spacetelescope/jwst_reffiles
