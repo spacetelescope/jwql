@@ -682,7 +682,7 @@ def process_program(program):
             im.output_format = 'jpg'
             im.preview_output_directory = preview_output_directory
             im.thumbnail_output_directory = thumbnail_output_directory
-            im.make_image(max_img_size=max_size)
+            im.make_image(max_img_size=8)
             logging.info('\tCreated preview image and thumbnail for: {}'.format(filename))
         except (ValueError, AttributeError) as error:
             logging.warning(error)
