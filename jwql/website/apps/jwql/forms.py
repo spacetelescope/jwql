@@ -250,7 +250,7 @@ class FileSearchForm(forms.Form):
         )
 
     # Define choice field
-    inst_field = forms.ChoiceField(required=False, choices=INSTRUMENT_CHOICES)
+    inst_field = forms.ChoiceField(widget=forms.Select(),required=False, choices=INSTRUMENT_CHOICES)
     
     fileroot_dict = None
     search_type = None
@@ -285,7 +285,9 @@ class FileSearchForm(forms.Form):
             # See if there are any matching proposals and, if so, what
             # instrument they are for
             
-            print(self.cleaned_data.get('inst_field'))
+            self.instrument = self.cleaned_data.get('inst_field')
+            print('next')
+            print(self.instrument)
             
             # If an instrument has been selected, search its id in the filename          
             # if self.instrument == 'NIRCam':
@@ -311,8 +313,8 @@ class FileSearchForm(forms.Form):
             all_files = [filename for filename in all_files if 'original' not in filename]
             
             # Ignore files without the instrument identifier
-            if inst_str != None:
-                all_files = [filename for filename in all_files if inst_str not in filename]
+            if self.instrument != None:
+                all_files = [filename for filename in all_files if self.instrument in filename]
 
             if len(all_files) > 0:
                 all_instruments = []
