@@ -215,6 +215,9 @@ GRATING_PER_INSTRUMENT = {'fgs': [],
 # Possible suffix types for guider exposures
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
 
+# JWQL should ignore some filetypes in the filesystem.
+IGNORED_SUFFIXES = ['original', 'stream']
+
 # Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
     'dark_monitor': ['<instrument>_dark_dark_current', '<instrument>_dark_pixel_stats', '<instrument>_dark_query_history'],
