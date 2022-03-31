@@ -68,7 +68,7 @@ from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import InstrumentAnomalySubmitForm
-from .forms import InstrumentForm
+# from .forms import InstrumentForm
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
 
@@ -506,11 +506,12 @@ def home(request):
         Outgoing response sent to the webpage
     """
 
+    # Create a dropdown form 
+    # drop_form = InstrumentForm()
+    
+    
     # Create a form instance and populate it with data from the request
     form = FileSearchForm(request.POST or None)
-    
-    # create a dropdown form 
-    drop_form = InstrumentForm()
     
     # If this is a POST request, we need to process the form data
     if request.method == 'POST':
@@ -518,8 +519,7 @@ def home(request):
             return form.redirect_to_files()
 
     template = 'home.html'
-    context = {'drop_form': drop_form,
-                'inst': '',
+    context = { 'inst': '',
                 'form': form}
 
     return render(request, template, context)
