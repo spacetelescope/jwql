@@ -508,6 +508,15 @@ def get_filenames_by_instrument(instrument, restriction='all', query_file=None, 
         If ``all``, all filenames will be returned.  If ``public``,
         only publicly-available filenames will be returned.  If
         ``proprietary``, only proprietary filenames will be returned.
+    query_file : str
+        Name of a file containing a list of filenames. If provided, the
+        filenames in this file will be used rather than calling mask_query_filenames_by_instrument.
+        This can save a significant amount of time when the number of files is large.
+    query_response : dict
+        Dictionary with "data" key ontaining a list of filenames. This is assumed to
+        essentially be the returned value from a call to mast_query_filenames_by_instrument.
+        If this is provided, the call to that function is skipped, which can save a
+        significant amount of time.
 
     Returns
     -------
