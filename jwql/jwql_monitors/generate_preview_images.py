@@ -658,7 +658,7 @@ def process_program(program):
         thumbnail_output_directory = os.path.join(get_config()['thumbnail_filesystem'], identifier)
 
         # Check to see if the preview images already exist and skip if they do
-        file_exists = check_existence(file_list, preview_output_directory)
+        file_exists = check_existence([filename], preview_output_directory)
         if file_exists:
             logging.info("\tJPG already exists for {}, skipping.".format(filename))
             continue
