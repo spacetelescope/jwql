@@ -35,7 +35,7 @@ import re
 import numpy as np
 
 from jwql.utils import permissions
-from jwql.utils.constants import NIRCAM_LONGWAVE_DETECTORS, NIRCAM_SHORTWAVE_DETECTORS
+from jwql.utils.constants import IGNORED_SUFFIXES, NIRCAM_LONGWAVE_DETECTORS, NIRCAM_SHORTWAVE_DETECTORS
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser
@@ -643,7 +643,7 @@ def process_program(program):
     filenames = list(set(filenames))
 
     # Ignore "original" files
-    filenames = [item for item in filenames if '_original.fits' not in item]
+    filenames = [filename for filename in filenames if os.path.splitext(filename.split('_')[-1]) not in IGNORED_SUFFIXES]
     logging.info('Found {} filenames'.format(len(filenames)))
     logging.info('')
 
