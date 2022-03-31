@@ -792,11 +792,9 @@ def get_preview_images_by_instrument(inst):
     preview_list_file = f"{PREVIEW_IMAGE_LISTFILE}_{inst.lower()}.txt"
     preview_images = retrieve_filelist(os.path.join(PREVIEW_IMAGE_FILESYSTEM, preview_list_file))
 
-    # DO WE NEED TO DO THIS??? I GUESS THIS GETS RID OF ANY PREVIEW IMAGES
-    # THAT DON'T MATCH UP TO OBSERVATION FILES.
     # Get subset of preview images that match the filenames
-    #preview_images = [os.path.basename(item) for item in preview_images if
-    #                  os.path.basename(item).split('_integ')[0] in filenames]
+    preview_images = [os.path.basename(item) for item in preview_images if
+                      os.path.basename(item).split('_integ')[0] in filenames]
 
     # Return only
     return preview_images
