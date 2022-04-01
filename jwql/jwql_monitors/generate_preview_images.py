@@ -35,7 +35,7 @@ import re
 import numpy as np
 
 from jwql.utils import permissions
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND, NIRCAM_LONGWAVE_DETECTORS, \
+from jwql.utils.constants import IGNORED_SUFFIXES, JWST_INSTRUMENT_NAMES_SHORTHAND, NIRCAM_LONGWAVE_DETECTORS, \
     NIRCAM_SHORTWAVE_DETECTORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
 from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.preview_image import PreviewImage
@@ -670,19 +670,15 @@ def process_program(program):
     filenames = list(set(filenames))
 
     # Ignore "original" files
-    filenames = [item for item in filenames if '_original.fits' not in item]
-
-    # Group together common exposures
-    grouped_filenames = group_filenames(filenames)
+    filenames = [filename for filename in filenames if os.path.splitext(filename.split('_')[-1]) not in IGNORED_SUFFIXES]
     logging.info('Found {} filenames'.format(len(filenames)))
     logging.info('')
 
     thumbnail_files = []
     preview_image_files = []
-    for file_list in grouped_filenames:
+    for filename in filenames:
 
         # Determine the save location
-        filename = file_list[0]
         try:
             identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
         except ValueError:
@@ -691,7 +687,7 @@ def process_program(program):
         thumbnail_output_directory = os.path.join(SETTINGS['thumbnail_filesystem'], identifier)
 
         # Check to see if the preview images already exist and skip if they do
-        file_exists = check_existence(file_list, preview_output_directory)
+        file_exists = check_existence([filename], preview_output_directory)
         if file_exists:
             logging.info("\tJPG already exists for {}, skipping.".format(filename))
             continue
@@ -706,25 +702,6 @@ def process_program(program):
             permissions.set_permissions(thumbnail_output_directory)
             logging.info('\tCreated directory {}'.format(thumbnail_output_directory))
 
-        # If the exposure contains more than one file (because more
-        # than one detector was used), then create a mosaic
-        max_size = 8
-        numfiles = len(file_list)
-        if numfiles > 1:
-            try:
-                mosaic_image, mosaic_dq = create_mosaic(file_list)
-                logging.info('\tCreated mosiac for:')
-                for item in file_list:
-                    logging.info('\t{}'.format(item))
-            except (ValueError, FileNotFoundError) as error:
-                mosaic_image, mosaic_dq = None, None
-                logging.error(error)
-            dummy_file = create_dummy_filename(file_list)
-            if numfiles in [2, 4]:
-                max_size = 16
-            elif numfiles in [8]:
-                max_size = 32
-
         # Create the nominal preview image and thumbnail
         try:
             im = PreviewImage(filename, "SCI")
@@ -734,17 +711,7 @@ def process_program(program):
             im.output_format = 'jpg'
             im.preview_output_directory = preview_output_directory
             im.thumbnail_output_directory = thumbnail_output_directory
-
-            # If a mosaic was made from more than one file
-            # insert it and it's associated DQ array into the
-            # instance of PreviewImage. Also set the input
-            # filename to indicate that we have mosaicked data
-            if numfiles > 1 and mosaic_image is not None:
-                im.data = mosaic_image
-                im.dq = mosaic_dq
-                im.file = dummy_file
-
-            im.make_image(max_img_size=max_size)
+            im.make_image(max_img_size=8)
             thumbnail_files.extend(im.thumbnail_images)
             preview_image_files.extend(im.preview_images)
             logging.info('\tCreated preview image and thumbnail for: {}'.format(filename))

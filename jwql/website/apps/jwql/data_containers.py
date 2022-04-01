@@ -45,9 +45,16 @@ from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
+<<<<<<< HEAD
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
 from jwql.utils.constants import INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND
+=======
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, filename_parser, get_config
+from jwql.utils.constants import MONITORS
+from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
+                                 JWST_INSTRUMENT_NAMES_SHORTHAND
+>>>>>>> c9d393e4feb7d39e9a9724fc3fa302d3cf1587c9
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
 
@@ -579,6 +586,9 @@ def get_filenames_by_proposal(proposal):
     proposal_string = '{:05d}'.format(int(proposal))
     filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', 'jw{}'.format(proposal_string), '*/*'))
     filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', 'jw{}'.format(proposal_string), '*/*')))
+
+    # Certain suffixes are always ignored
+    filenames = [filename for filename in filenames if os.path.splitext(filename).split('_')[-1] not in IGNORED_SUFFIXES]
     filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
@@ -603,8 +613,16 @@ def get_filenames_by_rootname(rootname):
     proposal_dir = rootname[0:7]
     observation_dir = rootname.split('_')[0]
 
+<<<<<<< HEAD
     filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}_[!o]*'.format(rootname)))
     filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}_[!o]*'.format(rootname))))
+=======
+    filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*'.format(rootname)))
+    filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*'.format(rootname))))
+
+    # Certain suffixes are always ignored
+    filenames = [filename for filename in filenames if os.path.splitext(filename).split('_')[-1] not in IGNORED_SUFFIXES]
+>>>>>>> c9d393e4feb7d39e9a9724fc3fa302d3cf1587c9
     filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
@@ -703,6 +721,9 @@ def get_image_info(file_root, rewrite):
     observation_dir = file_root[:13]
     filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*.fits'.format(file_root)))
     filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*.fits'.format(file_root))))
+
+    # Certain suffixes are always ignored
+    filenames = [filename for filename in filenames if os.path.splitext(filename)[0].split('_')[-1] not in IGNORED_SUFFIXES]
     image_info['all_files'] = filenames
 
     # Determine the jpg directory
@@ -787,10 +808,16 @@ def get_preview_images_by_instrument(inst):
     # Parse the results to get the rootnames
     filenames = [result['filename'].split('.')[0] for result in results]
 
+<<<<<<< HEAD
     # Get list of all preview_images. Text file contains only preview
     # images for a single instrument.
     preview_list_file = f"{PREVIEW_IMAGE_LISTFILE}_{inst.lower()}.txt"
     preview_images = retrieve_filelist(os.path.join(PREVIEW_IMAGE_FILESYSTEM, preview_list_file))
+=======
+    # Get list of all preview_images and filter out any with ignored suffixes
+    preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, '*', '*.jpg'))
+    preview_images = [item for item in preview_images if os.path.splitext(item).split('_')[-1] not in IGNORED_SUFFIXES]
+>>>>>>> c9d393e4feb7d39e9a9724fc3fa302d3cf1587c9
 
     # Get subset of preview images that match the filenames
     preview_images = [os.path.basename(item) for item in preview_images if
@@ -819,6 +846,7 @@ def get_preview_images_by_proposal(proposal):
     proposal_string = '{:05d}'.format(int(proposal))
     preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, 'jw{}'.format(proposal_string), '*'))
     preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
+    preview_images = [item for item in preview_images if os.path.splitext(item).split('_')[-1] not in IGNORED_SUFFIXES]
 
     return preview_images
 
@@ -846,6 +874,7 @@ def get_preview_images_by_rootname(rootname):
         'jw{}'.format(proposal),
         '{}*'.format(rootname))))
     preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
+    preview_images = [item for item in preview_images if os.path.splitext(item).split('_')[-1] not in IGNORED_SUFFIXES]
 
     return preview_images
 
@@ -956,6 +985,11 @@ def get_thumbnails_all_instruments(parameters):
         results = response[0].json()['data']
 
         inst_filenames = [result['filename'].split('.')[0] for result in results]
+<<<<<<< HEAD
+=======
+        inst_filenames = [filename for filename in inst_filenames if os.path.splitext(filename).split('_')[-1] not in IGNORED_SUFFIXES]
+        filenames.extend(inst_filenames)
+>>>>>>> c9d393e4feb7d39e9a9724fc3fa302d3cf1587c9
 
         # Get list of all thumbnails
         thumbnail_list_file = f"{THUMBNAIL_LISTFILE}_{inst.lower()}.txt"
