@@ -16,7 +16,7 @@ Web Application
 ~~~~~~~~~~~~~~~
 
 - Speed up Webapp loading
-- Striped code for createing mosaic preview images
+- Striped code for creating mosaic preview images
 - Ignoring unuseful pipeline products
 - Updated feature desciption on EDB page
 - Closed all open sessions to db explicitly
@@ -24,7 +24,7 @@ Web Application
 - Switch filesystem and astroquery.mast to point to OPS
 - Updates to BANDIT CI
 - Made plotting limits robust to missing data
-- Update EDB
+- Removing reliance on jwst-dms-edb
 - Updated MIRI Readout Patterns
 - Updated "Filter By" Dropdown in Archive View
 - Plot non-numerical mnemonic dataset
