@@ -802,8 +802,6 @@ class EdbMnemonicMonitor():
                 print('As retrieved from EDB:')
                 print('First length of data: ', len(mnemonic_data.data["dates"]))
                 print(mnemonic_data.data)
-                if mnemonic['name'] == 'SE_ZBUSVLT':
-                    stop
 
             # FOR DEVELOPMENT - NO NEED TO SAVE WHEN RUNNING FOR REAL
             mnemonic_data.save_table(f'edb_results_for_development_{mnemonic["name"]}.txt')
@@ -950,12 +948,11 @@ class EdbMnemonicMonitor():
             # If data are returned, do the appropriate averaging
             if mnemonic_info is not None:
 
-            """
-            probably also need to relax the constraints on the multiplication a bit. Perhaps only for single value
-            means? If the difference between the times is less than XX% of the total time covered by the mean, then
-            consider that close enough?
-            print('1. ', mnemonic_info.data)
-            """
+
+            #probably also need to relax the constraints on the multiplication a bit. Perhaps only for single value
+            #means? If the difference between the times is less than XX% of the total time covered by the mean, then
+            #consider that close enough?
+            #print('1. ', mnemonic_info.data)
 
 
             #if mnemonic_day_info is not None:
@@ -976,7 +973,7 @@ class EdbMnemonicMonitor():
                 print('in multiday:', mnemonic_info.info["unit"])
 
                 # Calculate mean/median/stdev
-                mnemonic_info = calculate_statistics(mnemonic_info)
+                mnemonic_info = calculate_statistics(mnemonic_info, telemetry_type)
 
                 if identifier in ['SE_ZIMIRICEA', 'SE_ZBUSVLT']:
                     print("Mean value: ", identifier, mnemonic_info.mean)
@@ -992,18 +989,25 @@ class EdbMnemonicMonitor():
                     temp_dict["name"] = mnemonic_dict["plot_data"].strip('*')
                     product_mnemonic_info = self.get_mnemonic_info(temp_dict, starttime, endtime, telemetry_type)
 
-                    # Interpolate the product mnemonic to be on the same times as the primary mnemonic
-                    product_mnemonic_info.interpolate(mnemonic_info.data["dates"])
+
+                    print('Prod mnemonic 1 length:', len(mnemonic_info))
+                    print('Prod mnemonic 2 length:', len(product_mnemonic_info))
+
+
+                    # Multiply the mnemonics together to get the quantity to be plotted
+                    #combined = mnemonic_info * product_mnemonic_info
+                    combined = product_mnemonic_info * mnemonic_info
+
+                    print('Mult mnemonic length:', len(combined))
+
+
+
 
                     # Calculate mean/median/stdev
-                    product_mnemonic_info = calculate_statistics(product_mnemonic_info)
+                    mnemonic_info = calculate_statistics(combined, telemetry_type)
 
-                    multiply here?
-                    then store only the product in the database, rather than the pieces
-                    this will make the history retrieval easier.
-
-
-
+                    # Define the mnemonic identifier to be <mnemonic_name_1>*<mnemonic_name_2>
+                    product_identifier = f'{mnemonic_dict[self._usename]}{mnemonic_dict["plot_data"]}'
 
                 # Combine information from multiple days here. If averaging is done, keep track of
                 # only the averaged data. If no averaging is done, keep all data.
@@ -1024,6 +1028,12 @@ class EdbMnemonicMonitor():
         multiday_table["euvalues"] = multiday_mean_vals
         all_data = ed.EdbMnemonic(identifier, starting_time_list[0], ending_time_list[-1],
                                   multiday_table, meta, info)
+
+        # Set the mnemonic identifier to be <mnemonic_name_1>*<mnemonic_name_2>
+        # This will be used in the title of the plot later
+        if '*' in mnemonic_dict["plot_data"]:
+            all_data.mnemonic_identifier = product_identifier
+
 
         print(f'DONE WITH {mnemonic_dict["name"]}')
         print(all_data.data)
@@ -1467,6 +1477,8 @@ class EdbMnemonicMonitor():
                                                     return_fig=True)
                     print('need to find a way to skip to the next mnemonic from here')
 
+
+                """
                 # If the mnemonic is to be plotted as the product with some other mnemonic, then get
                 # the other mnemonic's info here
                 if '*' in mnemonic["plot_data"]:  # (e.g. "*SB_FJDKN")
@@ -1590,7 +1602,6 @@ class EdbMnemonicMonitor():
                         #historical_combine_data = self.get_history(combine_mnemonic["name"])
 
 
-                        """
                         # FOR DEVELOPMENT----------------------------
                         htab = Table()
                         from datetime import timedelta
@@ -1610,7 +1621,6 @@ class EdbMnemonicMonitor():
                                                                  filtered_combine_obj.requested_end_time,
                                                                  htab, filtered_combine_obj.meta, filtered_combine_obj.info) #, blocks=mnemonic_info.blocks)
                         # FOR DEVELOPMENT----------------------------
-                        """
 
                         print('Length of filtered mnemonic to multiply by:', len(filtered_combine_obj))
                         print('Length of historical data for multiply mnemonic:', len(historical_combine_data))
@@ -1658,7 +1668,7 @@ class EdbMnemonicMonitor():
                                                    "is not yet supported, as it has not yet been requested by any "
                                                    "instrument team."))
                         mnemonic_info = mult_every_change_data(mnemonic_info, data_to_combine)
-
+                    """
 
                 # Create and save plot--------------------------------------
                 nominal = utils.check_key(mnemonic, "nominal_value")
@@ -1784,7 +1794,7 @@ def add_every_change_history(dict1, dict2):
             combined[key] = value
     return combined
 
-def calculate_statistics(mnemonic_instance):
+def calculate_statistics(mnemonic_instance, telemetry_type):
     """
     """
     if telemetry_type == "daily_means":

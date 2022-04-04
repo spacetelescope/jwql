@@ -223,6 +223,7 @@ class EdbMnemonic:
             return mnem
 
         # First, interpolate the data in mnem onto the same times as self.data
+        #if len(self.data) >= len(mnem):
         mnem.interpolate(self.data["dates"].data)
 
         # Extrapolation will not be done, so make sure that we account for any elements
