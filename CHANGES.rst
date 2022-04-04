@@ -16,7 +16,7 @@ Web Application
 ~~~~~~~~~~~~~~~
 
 - Speed up Webapp loading
-- Striped code for creating mosaic preview images
+- Stripped code for creating mosaic preview images
 - Ignoring unuseful pipeline products
 - Updated feature desciption on EDB page
 - Closed all open sessions to db explicitly
