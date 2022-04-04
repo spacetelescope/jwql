@@ -65,6 +65,8 @@ class BiasMonitor(BokehTemplate):
             .order_by(self.stats_table.expstart) \
             .all()
 
+        session.close()
+
     def pre_init(self):
 
         # Start with default values for instrument and aperture because
@@ -179,5 +181,5 @@ class BiasMonitor(BokehTemplate):
                 if len(bias_vals) != 0:
                     self.refs['mean_bias_xr_amp{}_{}'.format(amp, kind)].start = expstarts.min() - timedelta(days=3)
                     self.refs['mean_bias_xr_amp{}_{}'.format(amp, kind)].end = expstarts.max() + timedelta(days=3)
-                    self.refs['mean_bias_yr_amp{}_{}'.format(amp, kind)].start = bias_vals.min() - 20
-                    self.refs['mean_bias_yr_amp{}_{}'.format(amp, kind)].end = bias_vals.max() + 20
+                    self.refs['mean_bias_yr_amp{}_{}'.format(amp, kind)].start = min(x for x in bias_vals if x is not None) - 20
+                    self.refs['mean_bias_yr_amp{}_{}'.format(amp, kind)].end = max(x for x in bias_vals if x is not None) + 20

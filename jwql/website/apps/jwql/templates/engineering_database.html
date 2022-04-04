@@ -12,7 +12,7 @@
     	<h2>Explore mnemonics in the DMS Engineering Database</h2><hr>
 
         <p align="justify">
-        This page allows interactive exploration of mnemonics stored in the Engineering Database (EDB) powered by MAST. Its use requires access privileges to the EDB (see <a href="https://outerspace.stsci.edu/pages/viewpage.action?spaceKey=JARI&title=JWST+Archive+Rehearsal+Instructions" target="_blank">instructions page</a>). Functionality is built on top of the <a href="https://astroquery.readthedocs.io/en/latest/mast/mast.html" target="_blank">astroquery.mast</a> module. Example programmatic code for EDB queries is available in this <a href="https://github.com/spacetelescope/jwql/tree/main/notebooks/edb_mnemonic_query.ipynb" target="_blank">Jupyter notebook</a>.
+        This page allows interactive exploration of mnemonics stored in the Engineering Database (EDB) powered by MAST. Users may search for mnemonics and plot a particular mnemonic over a given time period. For more information about the EDB, see the <a href="https://outerspace.stsci.edu/display/MASTDOCS/Engineering+Data" target="_blank">MAST documentation</a>.
         </p><br>
 
         <!--EDB Mnemonic Search-->
@@ -23,7 +23,7 @@
                 <div class="mnemonic_name_search_col1">
                     <b><i>Submit a mnemonic identifier:</i></b>
                     <!--Load the EDB mnemonic search form from the view-->
-                    <form action="" method="post" id="mnemonic_name_search"><input type="hidden" name="access_token" value="{{ user.access_token }}" />
+                    <form action="" method="post" id="mnemonic_name_search"><input type="hidden" name="access_token" />
                         <!--Show any errors from a previous form submission-->
                         {% if edb_components['mnemonic_name_search_form'].errors %}
                             {% for field in edb_components['mnemonic_name_search_form'] %}
@@ -74,7 +74,7 @@
                 <b><i>Submit a mnemonic identifier with a time range to view the corresponding EDB records:</i></b>
 
                 <!--Load the EDB mnemonic search form from the view-->
-                <form action="" method="post" id="mnemonic_name_search"><input type="hidden" name="access_token" value="{{ user.access_token }}" />
+                <form action="" method="post" id="mnemonic_name_search"><input type="hidden" name="access_token" />
                     <!--Show any errors from a previous form submission-->
                     {% if edb_components['mnemonic_query_form'].errors %}
                         {% for field in edb_components['mnemonic_query_form'] %}
@@ -106,15 +106,26 @@
 
             <div class="row mx-2">
                 {% if edb_components['mnemonic_query_result'] %}
-                    <b>
-                    Query returned {{ edb_components['mnemonic_query_result'].meta['paging']['rows'] }} records:
-                    <a id="download_exploration_result" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}{{ edb_components["mnemonic_query_result"].file_for_download }}' download>Download data</a>
-                    </b></div>
-
-                    {{ edb_components['mnemonic_query_result_plot'][1] | safe}}
-                    <span class='plot-container px-1'>
-                        {{  edb_components['mnemonic_query_result_plot'][0] | safe }}
-                    </span>
+                    {% if edb_components['mnemonic_query_status'] != 'SUCCESS' %}
+                        <b>
+                            <p style="color:red;">{{ edb_components['mnemonic_query_status'] }}</p>
+                        </b></div>
+                    {% else %}
+                            <b>
+                            Query returned {{ edb_components['mnemonic_query_result'].data|length }} records:
+                            <a id="download_exploration_result" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}{{ edb_components["mnemonic_query_result"].file_for_download }}' download>Download data</a>
+                            </b></div>
+                            {% if edb_components['mnemonic_table_result'] %}
+                            {% autoescape off %}
+                                {{ edb_components['mnemonic_table_result'] }}
+                            {% endautoescape %}
+                            {% else %}
+                                {{ edb_components['mnemonic_query_result_plot'][1] | safe}}
+                                <span class='plot-container px-1'>
+                                    {{  edb_components['mnemonic_query_result_plot'][0] | safe }}
+                                </span>
+                            {% endif %}
+                    {% endif%}
                 {% endif %}
             </div>
         </div>
@@ -168,7 +179,7 @@
                 {% endif %}
                 {% if edb_components['mnemonic_exploration_result'] %}
                     {% if edb_components['mnemonic_exploration_result'] != 'empty' %}
-                    <b><i>Query returned {{ edb_components['mnemonic_exploration_result'].n_rows }} matching rows in the EDB inventory containing {{ edb_components['mnemonic_exploration_result'].meta['paging']['rows']}} mnemonics.
+                    <b><i>Query returned {{ edb_components['mnemonic_exploration_result'].n_rows }} mnemonics matching input parameters out of {{ edb_components['mnemonic_exploration_result'].meta['paging']['rows']}} mnemonics total.
                     <a id="download_exploration_result" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}{{ edb_components["mnemonic_exploration_result"].file_for_download }}' download>Download table</a>
                     </i></b>
                 </div>

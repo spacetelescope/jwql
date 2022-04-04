@@ -22,7 +22,6 @@ API documentation
    :maxdepth: 1
    :caption: Contents:
 
-   bokeh_templating.rst
    common_monitors.rst
    database.rst
    edb.rst

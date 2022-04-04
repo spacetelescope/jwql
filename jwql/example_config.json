@@ -17,6 +17,8 @@
     "server_type": "",
     "log_dir" : "",
     "mast_token" : "",
+    "mast_base_url" : "",
+    "mast_request_url": "",
     "outputs" : "",
     "preview_image_filesystem" : "",
     "filesystem" : "",

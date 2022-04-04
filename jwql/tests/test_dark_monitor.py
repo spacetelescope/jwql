@@ -24,6 +24,7 @@ from astropy.time import Time
 import numpy as np
 
 from jwql.instrument_monitors.common_monitors import dark_monitor
+from jwql.utils.monitor_utils import mast_query_darks
 from jwql.utils.utils import get_config
 
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
@@ -71,6 +72,7 @@ def test_get_metadata():
     assert monitor.frame_time == 10.5
 
 
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Currently no data in astroquery.mast.  This can be removed for JWST operations.')
 def test_mast_query_darks():
     """Test that the MAST query for darks is functional"""
 
@@ -79,7 +81,7 @@ def test_mast_query_darks():
     readpatt = 'BRIGHT2'
     start_date = Time("2016-01-01T00:00:00").mjd
     end_date = Time("2018-01-01T00:00:00").mjd
-    query = dark_monitor.mast_query_darks(instrument, aperture, readpatt, start_date, end_date)
+    query = mast_query_darks(instrument, aperture, readpatt, start_date, end_date)
     apernames = [entry['apername'] for entry in query]
     filenames = [entry['filename'] for entry in query]
 

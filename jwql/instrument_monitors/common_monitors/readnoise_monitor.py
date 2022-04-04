@@ -56,13 +56,12 @@ from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISS
 from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats
 from jwql.database.database_interface import session
 from jwql.instrument_monitors import pipeline_tools
-from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
-from jwql.utils import instrument_properties
+from jwql.utils import instrument_properties, monitor_utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.monitor_utils import update_monitor_table
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, initialize_instrument_monitor
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
 
 
 class Readnoise():
@@ -158,6 +157,7 @@ class Readnoise():
         else:
             file_exists = False
 
+        session.close()
         return file_exists
 
     def get_amp_stats(self, image, amps):
@@ -383,11 +383,12 @@ class Readnoise():
             self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
 
         if len(query) == 0:
-            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
+            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, query_result)))
         else:
             query_result = query[-1].end_time_mjd
 
+        session.close()
         return query_result
 
     def process(self, file_list):
@@ -554,7 +555,15 @@ class Readnoise():
 
                 # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
-                new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
+                new_entries = monitor_utils.mast_query_darks(instrument, aperture, self.query_start, self.query_end)
+
+                # Exclude ASIC tuning data
+                len_new_darks = len(new_entries)
+                new_entries = monitor_utils.exclude_asic_tuning(new_entries)
+                len_no_asic = len(new_entries)
+                num_asic = len_new_darks - len_no_asic
+                logging.info("\tFiltering out ASIC tuning files removed {} dark files.".format(num_asic))
+
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
                 # Set up a directory to store the data for this aperture
@@ -624,9 +633,9 @@ class Readnoise():
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    start_time, log_file = initialize_instrument_monitor(module)
+    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     monitor = Readnoise()
     monitor.run()
 
-    update_monitor_table(module, start_time, log_file)
+    monitor_utils.update_monitor_table(module, start_time, log_file)

@@ -18,6 +18,7 @@ Use
 
     This module is used within ``views.py`` as such:
     ::
+
         from .forms import FileSearchForm
         def view_function(request):
             form = FileSearchForm(request.POST or None)
@@ -39,7 +40,7 @@ References
 Dependencies
 ------------
     The user must have a configuration file named ``config.json``
-    placed in the ``jwql` directory.
+    placed in the ``jwql`` directory.
 """
 
 import datetime
@@ -67,8 +68,6 @@ from jwql.utils.utils import get_config, filename_parser
 from jwql.utils.utils import query_format
 
 from wtforms import SubmitField, StringField
-
-FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
 class BaseForm(forms.Form):
@@ -273,19 +272,21 @@ class FileSearchForm(forms.Form):
             # See if there are any matching proposals and, if so, what
             # instrument they are for
             proposal_string = '{:05d}'.format(int(search))
-            search_string_public = os.path.join(FILESYSTEM_DIR, 'public', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
-            search_string_proprietary = os.path.join(FILESYSTEM_DIR, 'proprietary', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
+            search_string_public = os.path.join(get_config()['filesystem'], 'public', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
+            search_string_proprietary = os.path.join(get_config()['filesystem'], 'proprietary', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
             all_files = glob.glob(search_string_public)
             all_files.extend(glob.glob(search_string_proprietary))
+
+            # Ignore "original" files
+            all_files = [filename for filename in all_files if 'original' not in filename]
+
             if len(all_files) > 0:
                 all_instruments = []
                 for file in all_files:
                     instrument = filename_parser(file)['instrument']
                     all_instruments.append(instrument)
                 if len(set(all_instruments)) > 1:
-                    raise forms.ValidationError('Cannot return result for proposal with '
-                                                'multiple instruments ({}).'
-                                                .format(', '.join(set(all_instruments))))
+                    raise forms.ValidationError('Cannot return result for proposal with multiple instruments ({}).'.format(', '.join(set(all_instruments))))
 
                 self.instrument = all_instruments[0]
             else:
@@ -294,10 +295,13 @@ class FileSearchForm(forms.Form):
         # If they searched for a fileroot...
         elif self.search_type == 'fileroot':
             # See if there are any matching fileroots and, if so, what instrument they are for
-            search_string_public = os.path.join(FILESYSTEM_DIR, 'public', search[:7], search[:13], '{}*.fits'.format(search))
-            search_string_proprietary = os.path.join(FILESYSTEM_DIR, 'proprietary', search[:7], search[:13], '{}*.fits'.format(search))
+            search_string_public = os.path.join(get_config()['filesystem'], 'public', search[:7], search[:13], '{}*.fits'.format(search))
+            search_string_proprietary = os.path.join(get_config()['filesystem'], 'proprietary', search[:7], search[:13], '{}*.fits'.format(search))
             all_files = glob.glob(search_string_public)
             all_files.extend(glob.glob(search_string_proprietary))
+
+            # Ignore "original" files
+            all_files = [filename for filename in all_files if 'original' not in filename]
 
             if len(all_files) == 0:
                 raise forms.ValidationError('Fileroot {} not in the filesystem.'.format(search))
@@ -339,10 +343,10 @@ class FileSearchForm(forms.Form):
 
         # Process the data in form.cleaned_data as required
         search = self.cleaned_data['search']
-        proposal_string = '{:05d}'.format(int(search))
 
         # If they searched for a proposal
         if self.search_type == 'proposal':
+            proposal_string = '{:05d}'.format(int(search))
             return redirect('/{}/archive/{}'.format(self.instrument, proposal_string))
 
         # If they searched for a file root
@@ -428,8 +432,8 @@ class MnemonicQueryForm(forms.Form):
         default_end_time = now + TimeDelta(delta_day + range_day, format='jd')
     else:
         # example for testing
-        default_start_time = Time('2019-01-16 00:00:00.000', format='iso')
-        default_end_time = Time('2019-01-16 00:01:00.000', format='iso')
+        default_start_time = Time('2019-04-02 00:00:00.000', format='iso')
+        default_end_time = Time('2019-04-02 00:01:00.000', format='iso')
 
     default_mnemonic_identifier = 'IMIR_HK_ICE_SEC_VOLT4'
 
