@@ -1,3 +1,9 @@
+1.1.1 (2022-04-05)
+==================
+
+- Correction of bad wheel file in version 1.1.0
+
+
 1.1.0 (2022-04-04)
 ===================
 
@@ -8,7 +14,7 @@ Project & API Documentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - Adding RTD Requirements file and yml
-- Updated JDOX links so they don't produce 404 errors 
+- Updated JDOX links so they don't produce 404 errors
 - Updates to About page
 
 
