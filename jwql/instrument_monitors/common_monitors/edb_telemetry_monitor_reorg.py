@@ -548,6 +548,10 @@ class EdbMnemonicMonitor():
         dependency = self.get_dependency_data(dep_list[0], mnem_data.requested_start_time,
                                               mnem_data.requested_end_time)
 
+        # If no dependency data are empty, then set the blocks to encompass all the data?
+        # Or should we say that none of the data are good?
+        here
+
         # From a check of the data in the D-string EDB from rehearsals, it looks like the times
         # associated with the mnemonic of interest and the dependency are the same. So no
         # need to interpolate? We can just get indexes from the latter and apply them to
@@ -626,7 +630,7 @@ class EdbMnemonicMonitor():
             Data for the dependency mnemonic. Keys are "dates" and "euvalues"
         """
         print('DEPENDENCY:')
-        print(dependency, '\n\n')
+        print('\n\n', dependency)
 
 
 
@@ -989,14 +993,39 @@ class EdbMnemonicMonitor():
                     temp_dict["name"] = mnemonic_dict["plot_data"].strip('*')
                     product_mnemonic_info = self.get_mnemonic_info(temp_dict, starttime, endtime, telemetry_type)
 
+                    if product_mnemonic_info is None:
+                        print(f'{temp_dict["name"]} to use as product has no data between {starttime} and {endtime}.\n\n')
+                        continue
+
+                    print('Prod mnemonic 1 length:', len(mnemonic_info))
+                    print('Prod mnemonic 2 length:', len(product_mnemonic_info))
+
+                    # If either mnemonic is every-change data, then first interpolate it
+                    # onto the dates of the other. If they are both every-change data,
+                    # then interpolate onto the mnemonic with the smaller date range
+                    if mnemonic_info.meta['TlmMnemonics'][0]['AllPoints'] == 0:
+                        numpts = 50
+                        if product_mnemonic_info.meta['TlmMnemonics'][0]['AllPoints'] == 0:
+                            delta = (mnemonic_info.data["dates"][-1] - mnemonic_info.data["dates"][0]) / numpts
+                            mnem_new_dates = [mnemonic_info.data["dates"][0] + i*delta for i in range(len(numpts))]
+                            prod_new_dates = [product_mnemonic_info.data["dates"][0] + i*delta for i in range(len(numpts))]
+                            mnemonic_info.interpolate(mnem_new_dates)
+                            product_mnemonic_info.interpolate(prod_new_dates)
+                        else:
+                            mnemonic_info.interpolate(product_mnemonic_info.data["dates"])
+                    else:
+                        if product_mnemonic_info.meta['TlmMnemonics'][0]['AllPoints'] == 0:
+                            product_mnemonic_info.interpolate(mnemonic_info.data["dates"])
+                        else:
+                            pass
 
                     print('Prod mnemonic 1 length:', len(mnemonic_info))
                     print('Prod mnemonic 2 length:', len(product_mnemonic_info))
 
 
                     # Multiply the mnemonics together to get the quantity to be plotted
-                    #combined = mnemonic_info * product_mnemonic_info
-                    combined = product_mnemonic_info * mnemonic_info
+                    combined = mnemonic_info * product_mnemonic_info
+                    #combined = product_mnemonic_info * mnemonic_info
 
                     print('Mult mnemonic length:', len(combined))
 
@@ -1009,6 +1038,7 @@ class EdbMnemonicMonitor():
                     # Define the mnemonic identifier to be <mnemonic_name_1>*<mnemonic_name_2>
                     product_identifier = f'{mnemonic_dict[self._usename]}{mnemonic_dict["plot_data"]}'
 
+
                 # Combine information from multiple days here. If averaging is done, keep track of
                 # only the averaged data. If no averaging is done, keep all data.
                 if telemetry_type != 'none':
@@ -1017,6 +1047,18 @@ class EdbMnemonicMonitor():
                 else:
                     multiday_median_times.extend(mnemonic_info.data["dates"].data)
                     multiday_mean_vals.extend(mnemonic_info.data["euvalues"].data)
+
+
+            else:
+                print(f'{mnemonic_dict["name"]} to use as product has no data between {starttime} and {endtime}.\n\n')
+                continue
+
+
+
+
+            print(f'DONE with query for: {starttime}, {endtime}\n\n')
+
+
 
         # If all daily queries return empty results, get the info metadata from the EDB
         if len(info) == 0:
@@ -1151,7 +1193,7 @@ class EdbMnemonicMonitor():
         # a custom query time for each)
         #today = Time.now()
         #today = Time('2021-09-02 09:00:00')  # for development
-        today = datetime.datetime(2021, 9, 3, 9, 0, 0)
+        today = datetime.datetime(2021, 9, 4, 9, 0, 0)
         #today = datetime.now()
         #today = datetime.datetime(2022, 3, 24)  # for development
 
@@ -1683,8 +1725,8 @@ class EdbMnemonicMonitor():
 
                 if telem_type != 'every_change':
                     figure = mnemonic_info.bokeh_plot(savefig=True, out_dir=self.plot_output_dir, nominal_value=nominal,
-                                                    yellow_limits=yellow, red_limits=red, return_components=False,
-                                                    return_fig=True, show_plot=True)
+                                                      yellow_limits=yellow, red_limits=red, return_components=False,
+                                                      return_fig=True, show_plot=True)
                 else:
                     # Get mean_values from the database
                     ##### NOTE: "every_change" here isn't the best term. This section is for mnemonics

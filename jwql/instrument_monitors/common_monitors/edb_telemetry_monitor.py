@@ -1231,7 +1231,8 @@ class EdbMnemonicMonitor():
                     #most_recent_search = self.most_recent_search(mnemonic[usename])
                     #most_recent_search = Time('2021-12-13')  # for development
                     #most_recent_search = Time('2021-09-01T00:00:00')  # for development
-                    most_recent_search = datetime.datetime(2021, 9, 1, 9, 0, 0) # for development
+                    #most_recent_search = datetime.datetime(2021, 9, 1, 9, 0, 0) # for development
+                    most_recent_search = datetime.datetime(2021, 9, 1, 9, 0, 0)
 
                     print('most_recent_search, self.query_cadence:', most_recent_search, self.query_cadence)
 
