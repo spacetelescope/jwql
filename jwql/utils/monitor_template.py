@@ -70,6 +70,9 @@ from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 
 
+SETTINGS = get_config()
+
+
 @log_fail
 @log_info
 def monitor_template_main():
@@ -102,7 +105,7 @@ def monitor_template_main():
     #      'suffix': 'uncal'}
 
     # Example of locating a dataset in the filesystem
-    filesystem = get_config()['filesystem']
+    filesystem = SETTINGS['filesystem']
     dataset = os.path.join(filesystem,
                            'public',
                            'jw{}'.format(filename_dict['program_id']),
@@ -127,7 +130,7 @@ def monitor_template_main():
     plt.sizing_mode = 'stretch_both'  # Necessary for responsive sizing on web app
     script, div = components(plt)
 
-    plot_output_dir = get_config()['outputs']
+    plot_output_dir = SETTINGS['outputs']
     div_outfile = os.path.join(plot_output_dir, 'monitor_name',
                                filename_of_interest + "_component.html")
     script_outfile = os.path.join(plot_output_dir, 'monitor_name',

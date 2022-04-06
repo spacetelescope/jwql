@@ -41,6 +41,8 @@ from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_config
 from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 
+SETTINGS = get_config()
+
 
 def create_table(status_dict):
     """Create interactive ``bokeh`` table containing the logfile status
@@ -103,7 +105,7 @@ def create_table(status_dict):
     data_table = DataTable(source=source, columns=columns, width=800, height=280, index_position=None)
 
     # Get output directory for saving the table files
-    output_dir = get_config()['outputs']
+    output_dir = SETTINGS['outputs']
     output_filename = 'cron_status_table'
 
     # Save full html
@@ -241,7 +243,7 @@ def status(production_mode=True):
     logging.info("Beginning cron job status monitor")
 
     # Get main logfile path
-    log_path = get_config()['log_dir']
+    log_path = SETTINGS['log_dir']
 
     # If we are in development mode, the log files are in a slightly
     # different location than in production mode

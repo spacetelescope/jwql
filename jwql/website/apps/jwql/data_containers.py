@@ -45,9 +45,10 @@ from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, filename_parser, get_config
-from jwql.utils.constants import MONITORS
-from jwql.utils.constants import INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
+from jwql.utils.constants import MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
+from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
+                                 JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
 
@@ -60,11 +61,11 @@ ON_READTHEDOCS = False
 if 'READTHEDOCS' in os.environ:
     ON_READTHEDOCS = os.environ['READTHEDOCS']
 
-from jwql.utils.utils import get_config, filename_parser, check_config_for_key
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
     check_config_for_key('auth_mast')
-    auth_mast = get_config()['auth_mast']
+    configs = get_config()
+    auth_mast = configs['auth_mast']
     mast_flavour = '.'.join(auth_mast.split('.')[1:])
     from astropy import config
     conf = config.get_config('astroquery')
@@ -74,9 +75,10 @@ from jwedb.edb_interface import mnemonic_inventory
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
-    FILESYSTEM_DIR = os.path.join(get_config()['filesystem'])
-    PREVIEW_IMAGE_FILESYSTEM = os.path.join(get_config()['preview_image_filesystem'])
-    THUMBNAIL_FILESYSTEM = os.path.join(get_config()['thumbnail_filesystem'])
+    FILESYSTEM_DIR = configs['filesystem']
+    PREVIEW_IMAGE_FILESYSTEM = configs['preview_image_filesystem']
+    THUMBNAIL_FILESYSTEM = configs['thumbnail_filesystem']
+
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
@@ -377,7 +379,7 @@ def get_edb_components(request):
                         comments.append('Number of rows {}'.format(len(result_table)))
                         comments.append(' ')
                         result_table.write(path_for_download, format='ascii.fixed_width',
-                                        overwrite=True, delimiter=',', bookend=False)
+                                           overwrite=True, delimiter=',', bookend=False)
                         mnemonic_query_result.file_for_download = file_for_download
 
             # create forms for search fields not clicked
@@ -496,7 +498,7 @@ def get_expstart(instrument, rootname):
     return expstart
 
 
-def get_filenames_by_instrument(instrument, restriction='all'):
+def get_filenames_by_instrument(instrument, restriction='all', query_file=None, query_response=None):
     """Returns a list of filenames that match the given ``instrument``.
 
     Parameters
@@ -507,19 +509,29 @@ def get_filenames_by_instrument(instrument, restriction='all'):
         If ``all``, all filenames will be returned.  If ``public``,
         only publicly-available filenames will be returned.  If
         ``proprietary``, only proprietary filenames will be returned.
+    query_file : str
+        Name of a file containing a list of filenames. If provided, the
+        filenames in this file will be used rather than calling mask_query_filenames_by_instrument.
+        This can save a significant amount of time when the number of files is large.
+    query_response : dict
+        Dictionary with "data" key ontaining a list of filenames. This is assumed to
+        essentially be the returned value from a call to mast_query_filenames_by_instrument.
+        If this is provided, the call to that function is skipped, which can save a
+        significant amount of time.
 
     Returns
     -------
     filenames : list
         A list of files that match the given instrument.
     """
+    if not query_file and not query_response:
+        result = mast_query_filenames_by_instrument(instrument)
 
-    service = INSTRUMENT_SERVICE_MATCH[instrument]
-
-    # Query for filenames
-    params = {"columns": "filename, isRestricted", "filters": []}
-    response = Mast.service_request_async(service, params)
-    result = response[0].json()
+    elif query_response:
+        result = query_response
+    elif query_file:
+        with open(query_file) as fobj:
+            result = fobj.readlines()
 
     # Determine filenames to return based on restriction parameter
     if restriction == 'all':
@@ -532,6 +544,22 @@ def get_filenames_by_instrument(instrument, restriction='all'):
         raise KeyError('{} is not a valid restriction level.  Use "all", "public", or "proprietary".'.format(restriction))
 
     return filenames
+
+
+def mast_query_filenames_by_instrument(instrument):
+    """Query MAST for filenames for the given instrument. Return the json
+    response from MAST.
+
+    Parameters
+    ----------
+    instrument : str
+        The instrument of interest (e.g. `FGS`).
+    """
+    service = INSTRUMENT_SERVICE_MATCH[instrument]
+    params = {"columns": "filename, isRestricted", "filters": []}
+    response = Mast.service_request_async(service, params)
+    result = response[0].json()
+    return result
 
 
 def get_filenames_by_proposal(proposal):
@@ -552,6 +580,9 @@ def get_filenames_by_proposal(proposal):
     proposal_string = '{:05d}'.format(int(proposal))
     filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', 'jw{}'.format(proposal_string), '*/*'))
     filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', 'jw{}'.format(proposal_string), '*/*')))
+
+    # Certain suffixes are always ignored
+    filenames = [filename for filename in filenames if os.path.splitext(filename).split('_')[-1] not in IGNORED_SUFFIXES]
     filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
@@ -578,6 +609,9 @@ def get_filenames_by_rootname(rootname):
 
     filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*'.format(rootname)))
     filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*'.format(rootname))))
+
+    # Certain suffixes are always ignored
+    filenames = [filename for filename in filenames if os.path.splitext(filename).split('_')[-1] not in IGNORED_SUFFIXES]
     filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
@@ -609,7 +643,6 @@ def get_header_info(filename, filetype):
 
     # Extract header information from file
     for ext in range(0, len(hdulist)):
-    #for ext in range(0, 1):
 
         # Initialize dictionary to store header information for particular extension
         header_info[ext] = {}
@@ -672,13 +705,19 @@ def get_image_info(file_root, rewrite):
     image_info['num_ints'] = {}
     image_info['available_ints'] = {}
 
-
     # Find all of the matching files
     proposal_dir = file_root[:7]
     observation_dir = file_root[:13]
     filenames = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', proposal_dir, observation_dir, '{}*.fits'.format(file_root)))
     filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*.fits'.format(file_root))))
+
+    # Certain suffixes are always ignored
+    filenames = [filename for filename in filenames if os.path.splitext(filename)[0].split('_')[-1] not in IGNORED_SUFFIXES]
     image_info['all_files'] = filenames
+
+    # Determine the jpg directory
+    prev_img_filesys = configs['preview_image_filesystem']
+    jpg_dir = os.path.join(prev_img_filesys, proposal_dir)
 
     for filename in image_info['all_files']:
 
@@ -687,7 +726,6 @@ def get_image_info(file_root, rewrite):
         image_info['suffixes'].append(suffix)
 
         # Determine JPEG file location
-        jpg_dir = os.path.join(get_config()['preview_image_filesystem'], proposal_dir)
         jpg_filename = os.path.basename(os.path.splitext(filename)[0] + '_integ0.jpg')
         jpg_filepath = os.path.join(jpg_dir, jpg_filename)
 
@@ -696,18 +734,10 @@ def get_image_info(file_root, rewrite):
         if os.path.exists(jpg_filepath) and not rewrite:
             pass
 
-        # If it doesn't, make it using the preview_image module
-        # else:
-        #     if not os.path.exists(jpg_dir):
-        #         os.makedirs(jpg_dir)
-        #     im = PreviewImage(filename, 'SCI')
-        #     im.output_directory = jpg_dir
-        #     im.make_image()
-
         # Record how many integrations there are per filetype
-        jpgs = glob.glob(os.path.join(get_config()['preview_image_filesystem'], proposal_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
+        jpgs = glob.glob(os.path.join(prev_img_filesys, observation_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
         image_info['num_ints'][suffix] = len(jpgs)
-        image_info['available_ints'][suffix] = sorted([int(jpg.split('_')[-1].replace('.jpg','').replace('integ','')) for jpg in jpgs])
+        image_info['available_ints'][suffix] = sorted([int(jpg.split('_')[-1].replace('.jpg', '').replace('integ', '')) for jpg in jpgs])
         image_info['all_jpegs'].append(jpg_filepath)
 
     return image_info
@@ -767,15 +797,16 @@ def get_preview_images_by_instrument(inst):
     # Parse the results to get the rootnames
     filenames = [result['filename'].split('.')[0] for result in results]
 
-    # Get list of all preview_images
-    preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, '*', '*.jpg'))
+    # Get list of all preview_images. Text file contains only preview
+    # images for a single instrument.
+    preview_list_file = f"{PREVIEW_IMAGE_LISTFILE}_{inst.lower()}.txt"
+    preview_images = retrieve_filelist(os.path.join(PREVIEW_IMAGE_FILESYSTEM, preview_list_file))
 
     # Get subset of preview images that match the filenames
     preview_images = [os.path.basename(item) for item in preview_images if
                       os.path.basename(item).split('_integ')[0] in filenames]
 
     # Return only
-
     return preview_images
 
 
@@ -798,6 +829,7 @@ def get_preview_images_by_proposal(proposal):
     proposal_string = '{:05d}'.format(int(proposal))
     preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, 'jw{}'.format(proposal_string), '*'))
     preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
+    preview_images = [item for item in preview_images if os.path.splitext(item).split('_')[-1] not in IGNORED_SUFFIXES]
 
     return preview_images
 
@@ -825,6 +857,7 @@ def get_preview_images_by_rootname(rootname):
         'jw{}'.format(proposal),
         '{}*'.format(rootname))))
     preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
+    preview_images = [item for item in preview_images if os.path.splitext(item).split('_')[-1] not in IGNORED_SUFFIXES]
 
     return preview_images
 
@@ -898,7 +931,7 @@ def get_thumbnails_all_instruments(parameters):
 
     anomalies = parameters['anomalies']
 
-    filenames = []
+    thumbnails_subset = []
 
     for inst in parameters['instruments']:
         # Make sure instruments are of the proper format (e.g. "Nircam")
@@ -907,11 +940,12 @@ def get_thumbnails_all_instruments(parameters):
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
-        if (parameters['apertures'][inst.lower()] == []) and (parameters['detectors'][inst.lower()] == []) \
-            and (parameters['filters'][inst.lower()] == []) and (parameters['exposure_types'][inst.lower()] == []) \
-            and (parameters['read_patterns'][inst.lower()] == []):
-                params = {"columns": "*",
-                          "filters": []}
+        if ((parameters['apertures'][inst.lower()] == [])
+                and (parameters['detectors'][inst.lower()] == [])
+                and (parameters['filters'][inst.lower()] == [])
+                and (parameters['exposure_types'][inst.lower()] == [])
+                and (parameters['read_patterns'][inst.lower()] == [])):
+            params = {"columns": "*", "filters": []}
         else:
             query_filters = []
             if (parameters['apertures'][inst.lower()] != []):
@@ -934,17 +968,20 @@ def get_thumbnails_all_instruments(parameters):
         results = response[0].json()['data']
 
         inst_filenames = [result['filename'].split('.')[0] for result in results]
+        inst_filenames = [filename for filename in inst_filenames if os.path.splitext(filename).split('_')[-1] not in IGNORED_SUFFIXES]
         filenames.extend(inst_filenames)
 
-    # Get list of all thumbnails
-    thumbnail_list = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
+        # Get list of all thumbnails
+        thumbnail_list_file = f"{THUMBNAIL_LISTFILE}_{inst.lower()}.txt"
+        thumbnail_inst_list = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, THUMBNAIL_LISTFILE))
 
-    # Get subset of preview images that match the filenames
-    thumbnails_subset = [os.path.basename(item) for item in thumbnail_list if
-                         os.path.basename(item).split('_integ')[0] in filenames]
+        # Get subset of thumbnail images that match the filenames
+        thumbnails_inst_subset = [os.path.basename(item) for item in thumbnail_inst_list if
+                                  os.path.basename(item).split('_integ')[0] in inst_filenames]
 
-    # Eliminate any duplicates
-    thumbnails_subset = list(set(thumbnails_subset))
+        # Eliminate any duplicates
+        thumbnails_inst_subset = list(set(thumbnails_inst_subset))
+        thumbnails_subset.extend(thumbnails_inst_subset)
 
     # Determine whether or not queried anomalies are flagged
     final_subset = []
@@ -1000,7 +1037,7 @@ def get_thumbnails_by_instrument(inst):
     filenames = [result['filename'].split('.')[0] for result in results]
 
     # Get list of all thumbnails
-    thumbnails = glob.glob(os.path.join(THUMBNAIL_FILESYSTEM, '*', '*.thumb'))
+    thumbnails = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, THUMBNAIL_LISTFILE))
 
     # Get subset of preview images that match the filenames
     thumbnails = [os.path.basename(item) for item in thumbnails if
@@ -1077,7 +1114,7 @@ def log_into_mast(request):
 
     # authenticate with astroquery.mast if necessary
     # nosec comment added to ignore bandit security check
-    if access_token != 'None': # nosec
+    if access_token != 'None':  # nosec
         Mast.login(token=access_token)
         return Mast.authenticated()
     else:
@@ -1097,6 +1134,20 @@ def random_404_page():
     random_template = templates[choose_page]
 
     return random_template
+
+
+def retrieve_filelist(filename):
+    """Return a list of all thumbnail files in the filesystem from
+    a list file.
+
+    Parameters
+    ----------
+    filename : str
+        Name of a text file containing a list of files
+    """
+    with open(filename) as fobj:
+        file_list = fobj.read().splitlines()
+    return file_list
 
 
 def text_scrape(prop_id):
@@ -1274,7 +1325,7 @@ def thumbnails_ajax(inst, proposal=None):
 
     # Order dictionary by descending expstart time.
     sorted_file_data = OrderedDict(sorted(data_dict['file_data'].items(),
-       key = lambda x: getitem(x[1], 'expstart'), reverse=True))
+                                   key=lambda x: getitem(x[1], 'expstart'), reverse=True))
 
     data_dict['file_data'] = sorted_file_data
 
@@ -1343,7 +1394,7 @@ def thumbnails_query_ajax(rootnames):
     # Extract information for sorting with dropdown menus
     try:
         detectors = [data_dict['file_data'][rootname]['filename_dict']['detector'] for
-                    rootname in list(data_dict['file_data'].keys())]
+                     rootname in list(data_dict['file_data'].keys())]
     except KeyError:
         detectors = []
         for rootname in list(data_dict['file_data'].keys()):

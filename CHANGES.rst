@@ -1,3 +1,49 @@
+1.1.1 (2022-04-05)
+==================
+
+- Correction of bad wheel file in version 1.1.0
+
+
+1.1.0 (2022-04-04)
+===================
+
+New Features
+------------
+
+Project & API Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Adding RTD Requirements file and yml
+- Updated JDOX links so they don't produce 404 errors
+- Updates to About page
+
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Speed up Webapp loading
+- Stripped code for creating mosaic preview images
+- Ignoring unuseful pipeline products
+- Updated feature desciption on EDB page
+- Closed all open sessions to db explicitly
+- Fix/Modify Integration Number slider
+- Switch filesystem and astroquery.mast to point to OPS
+- Updates to BANDIT CI
+- Made plotting limits robust to missing data
+- Removing reliance on jwst-dms-edb
+- Updated MIRI Readout Patterns
+- Updated "Filter By" Dropdown in Archive View
+- Plot non-numerical mnemonic dataset
+
+
+``jwql`` Repository
+~~~~~~~~~~~~~~~~~~~
+
+- Removed python 3.7 support
+- Added python 3.9 environment
+- Updated README to reflect changes in environment files.
+
+
 1.0.0 (2021-10-05)
 ===================
 
