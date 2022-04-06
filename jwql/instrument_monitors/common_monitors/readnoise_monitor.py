@@ -55,6 +55,7 @@ from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCam
 from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats
 from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats
 from jwql.database.database_interface import session
+from jwql.shared_tasks.shared_tasks import run_calwebb_detector1
 from jwql.instrument_monitors import pipeline_tools
 from jwql.utils import instrument_properties, monitor_utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
@@ -412,9 +413,13 @@ class Readnoise():
             pipeline_steps = self.determine_pipeline_steps()
             logging.info('\tRunning pipeline on {}'.format(filename))
             try:
-                processed_file = pipeline_tools.run_calwebb_detector1_steps(filename, pipeline_steps)
+                filepath = os.path.dirname(filename)
+                filebase = os.path.basename(filename)
+                processed_name = filebase[:filebase.rfind("_")]+"_refpix.fits"
+                result = run_calwebb_detector1.delay(filebase, self.instrument, path=filepath)
+                processed_dir result.get()
+                processed_file = os.path.join(processed_dir, processed_name)
                 logging.info('\tPipeline complete. Output: {}'.format(processed_file))
-                set_permissions(processed_file)
             except:
                 logging.info('\tPipeline processing failed for {}'.format(filename))
                 continue
