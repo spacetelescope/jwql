@@ -382,7 +382,7 @@ class Bias():
                 filebase = os.path.basename(filename)
                 processed_name = filebase[:filebase.rfind("_")] + "_refpix.fits"
                 result = run_calwebb_detector1.delay(filebase, self.instrument, path=filepath)
-                processed_dir result.get()
+                processed_dir = result.get()
                 processed_file = os.path.join(processed_dir, processed_name)
                 logging.info('\tPipeline complete. Output: {}'.format(processed_file))
             except Exception as e:
