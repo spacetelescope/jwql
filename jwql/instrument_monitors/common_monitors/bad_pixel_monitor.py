@@ -697,7 +697,7 @@ class BadPixels():
             run_field = self.query_table.run_bpix_from_flats
 
         query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture). \
-            filter(run_field == True)
+            filter(run_field == True) # noqa: E712 (comparison to true)
 
         dates = np.zeros(0)
         if file_type.lower() == 'dark':
