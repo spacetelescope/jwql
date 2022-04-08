@@ -789,7 +789,7 @@ class BadPixels():
                     uncal_filepath = os.path.dirname(uncal_file)
                     result = calwebb_detector1_save_jump(uncal_filename, ramp_fit=True,
                                                          save_fitopt=False, path=uncal_filepath)
-                    logging.info('\tStarted Task for {}'.format(uncal_file))
+                    logging.info('\tStarted Task {} with status {}'.format(result.id, result.state))
                     jump_output, rate_output, _, output_dir = result.get()
                     logging.info('\tFinished pipeline for {}'.format(uncal_file))
                     logging.info('\tPipeline returned {} {} {}'.format(jump_output, rate_output, output_dir))
@@ -826,7 +826,7 @@ class BadPixels():
                 uncal_filepath = os.path.dirname(uncal_file)
                 result = calwebb_detector1_save_jump.delay(uncal_filename, ramp_fit=True,
                                                            save_fitopt=True, path=uncal_filepath)
-                logging.info('\tStarted Task for {} {}'.format(uncal_file, rate_file))
+                logging.info('\tStarted Task {} with status {}'.format(result.id, result.state))
                 jump_output, rate_output, fitopt_output, output_dir = result.get()
                 logging.info('Finished pipeline for {} {}'.format(uncal_file, rate_file))
                 logging.info('\tPipeline returned {} {} {} {}'.format(jump_output, rate_output, fitopt_output, output_dir))
