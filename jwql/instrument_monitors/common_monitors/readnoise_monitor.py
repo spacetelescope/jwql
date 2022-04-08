@@ -44,25 +44,25 @@ from astropy.visualization import ZScaleInterval
 import crds
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import numpy as np
-from pysiaf import Siaf
-from sqlalchemy.sql.expression import and_
+import matplotlib.pyplot as plt  # noqa: E348 (comparison to true)
+import numpy as np  # noqa: E348 (comparison to true)
+from pysiaf import Siaf  # noqa: E348 (comparison to true)
+from sqlalchemy.sql.expression import and_  # noqa: E348 (comparison to true)
 
-from jwql.database.database_interface import FGSReadnoiseQueryHistory, FGSReadnoiseStats
-from jwql.database.database_interface import MIRIReadnoiseQueryHistory, MIRIReadnoiseStats
-from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats
-from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats
-from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats
-from jwql.database.database_interface import session
-from jwql.shared_tasks.shared_tasks import run_calwebb_detector1
-from jwql.instrument_monitors import pipeline_tools
-from jwql.utils import instrument_properties, monitor_utils
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.logging_functions import log_info, log_fail
-from jwql.utils.monitor_utils import update_monitor_table
-from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
+from jwql.database.database_interface import FGSReadnoiseQueryHistory, FGSReadnoiseStats  # noqa: E348 (comparison to true)
+from jwql.database.database_interface import MIRIReadnoiseQueryHistory, MIRIReadnoiseStats  # noqa: E348 (comparison to true)
+from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats  # noqa: E348 (comparison to true)
+from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats  # noqa: E348 (comparison to true)
+from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats  # noqa: E348 (comparison to true)
+from jwql.database.database_interface import session  # noqa: E348 (comparison to true)
+from jwql.shared_tasks.shared_tasks import run_calwebb_detector1  # noqa: E348 (comparison to true)
+from jwql.instrument_monitors import pipeline_tools  # noqa: E348 (comparison to true)
+from jwql.utils import instrument_properties, monitor_utils  # noqa: E348 (comparison to true)
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E348 (comparison to true)
+from jwql.utils.logging_functions import log_info, log_fail  # noqa: E348 (comparison to true)
+from jwql.utils.monitor_utils import update_monitor_table  # noqa: E348 (comparison to true)
+from jwql.utils.permissions import set_permissions  # noqa: E348 (comparison to true)
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config  # noqa: E348 (comparison to true)
 
 
 class Readnoise():
@@ -387,7 +387,7 @@ class Readnoise():
         """
 
         query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
-            self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
+                self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()  # noqa: E712 (comparison to True)
 
         if len(query) == 0:
             query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
@@ -421,13 +421,14 @@ class Readnoise():
             try:
                 filepath = os.path.dirname(filename)
                 filebase = os.path.basename(filename)
-                processed_name = filebase[:filebase.rfind("_")]+"_refpix.fits"
+                processed_name = filebase[:filebase.rfind("_")] + "_refpix.fits"
                 result = run_calwebb_detector1.delay(filebase, self.instrument, path=filepath)
                 processed_dir result.get()
                 processed_file = os.path.join(processed_dir, processed_name)
                 logging.info('\tPipeline complete. Output: {}'.format(processed_file))
-            except:
+            except Exception as e:
                 logging.info('\tPipeline processing failed for {}'.format(filename))
+                logging.info('\tPipeline failed with error {}'.format(e))
                 os.remove(filename)
                 continue
 
@@ -463,8 +464,9 @@ class Readnoise():
                 readnoise_file = reffile_mapping['readnoise']
                 logging.info('\tPipeline readnoise reffile is {}'.format(readnoise_file))
                 pipeline_readnoise = fits.getdata(readnoise_file)
-            except:
+            except Exception as e:
                 logging.warning('\tError retrieving pipeline readnoise reffile - assuming all zeros.')
+                logging.warning('\tError {} was raised'.format(e))
                 pipeline_readnoise = np.zeros(readnoise.shape)
 
             # Find the difference between the current readnoise image and the pipeline readnoise reffile, and record image stats.
