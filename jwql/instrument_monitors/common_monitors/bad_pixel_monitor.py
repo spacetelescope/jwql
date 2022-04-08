@@ -741,8 +741,6 @@ class BadPixels():
                 parameters['CHANNEL'] = 'SHORT'
         return parameters
 
-    @log_info
-    @log_fail
     def process(self, illuminated_raw_files, illuminated_slope_files, dark_raw_files, dark_slope_files):
         """The main method for processing darks.  See module docstrings
         for further details.
