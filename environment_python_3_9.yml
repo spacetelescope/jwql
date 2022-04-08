@@ -24,7 +24,8 @@ dependencies:
   - astropy=4.3.1
   - bokeh=2.4.2
   - beautifulsoup4=4.9.3
-  - celery=5.0.5
+#  - celery=5.0.5
+  - celery
   - codecov=2.1.11
   - cryptography=36.0.0
   - django=3.1.7
@@ -45,7 +46,8 @@ dependencies:
   - pytest-cov=3.0.0
   - python=3.9.11
   - pyyaml=5.4.1
-  - redis=5.0.3
+#  - redis=5.0.3
+  - redis
   - scipy=1.7.1
   - setuptools=52.0.0
   - sphinx=4.2.0
