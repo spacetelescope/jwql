@@ -79,7 +79,7 @@ from jwql.jwql_monitors import monitor_mast
 from jwql.shared_tasks.shared_tasks import run_calwebb_detector1
 from jwql.utils import calculations, instrument_properties, monitor_utils
 from jwql.utils.constants import ASIC_TEMPLATES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, \
-                                 RAPID_READPATTERNS
+        RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
@@ -385,7 +385,7 @@ class Dark():
         """
         query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture,
                                                        self.query_table.readpattern == self.readpatt). \
-                              filter(self.query_table.run_monitor == True)
+                filter(self.query_table.run_monitor == True) # noqa: E348 (comparison to true)
 
         dates = np.zeros(0)
         for instance in query:
@@ -796,8 +796,13 @@ class Dark():
 
                     else:
                         logging.info(('\tDark monitor skipped. MAST query has returned {} new dark files for '
+<<<<<<< HEAD
                                       '{}, {}, {}. {} new files are required to run dark current monitor.')
                                       .format(len(new_entries), instrument, aperture, self.readpatt, file_count_threshold))
+=======
+                                     '{}, {}, {}. {} new files are required to run dark current monitor.')
+                                     .format(len(new_entries), instrument, aperture, self.readpatt, file_count_threshold))
+>>>>>>> working on pep8
                         monitor_run = False
 
                     # Update the query history
