@@ -24,7 +24,7 @@ dependencies:
   - astropy=4.3.1
   - bokeh=2.4.2
   - beautifulsoup4=4.9.3
-  - celery=4.4.0
+  - celery=5.0.5
   - codecov=2.1.11
   - cryptography=36.0.0
   - django=3.1.7
@@ -58,12 +58,12 @@ dependencies:
     - asdf==2.8.3
     - astroquery==0.4.5
     - bandit==1.7.1
-    - celery-singleton=0.3.1
-    - crds==11.5.2
+    - celery-singleton==0.3.1
+    - crds==11.10.0
     - jwst==1.4.3
     - pysiaf==0.11.0
     - pysqlite3==0.4.3
-    - stdatamodels==0.2.4
+    - stdatamodels==0.4.2
     - stsci_rtd_theme==0.0.2
     - git+https://github.com/spacetelescope/jwst_reffiles
     

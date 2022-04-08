@@ -45,7 +45,7 @@ dependencies:
   - pytest-cov=3.0.0
   - python=3.8.5
   - pyyaml=5.4.1
-  - redis=4.2.2
+  - redis=5.0.3
   - scipy=1.7.1
   - setuptools=52.0.0
   - sphinx=4.2.0
@@ -58,12 +58,12 @@ dependencies:
     - asdf==2.11.0
     - astroquery==0.4.5
     - bandit==1.7.4
-    - celery-singleton=0.3.1
+    - celery-singleton==0.3.1
     - crds==11.10.0
     - jwst==1.4.3
     - pysiaf==0.11.0
     - pysqlite3==0.4.3
-    - stdatamodels==0.2.4
+    - stdatamodels==0.4.2
     - stsci_rtd_theme==0.0.2
     - git+https://github.com/spacetelescope/jwst_reffiles
     
