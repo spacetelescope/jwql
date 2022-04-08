@@ -210,11 +210,10 @@ def run_calwebb_detector1(input_file, instrument, path=None):
 
     return output_dir
 
-
 @celery_app.task(base=Singleton, unique_on=['input_file', ])
 @log_fail
 @log_info
-def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True):
+def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, path=None):
     """Call ``calwebb_detector1`` on the provided file, running all
     steps up to the ``ramp_fit`` step, and save the result. Optionally
     run the ``ramp_fit`` step and save the resulting slope file as well.
@@ -256,7 +255,14 @@ def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True):
     output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
     ensure_dir_exists(output_dir)
 
-    input_file_only = os.path.basename(input_file)
+    output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
+    ensure_dir_exists(output_dir)
+    input_filename = os.path.join(output_dir, input_file)
+    if not os.path.isfile(input_filename):
+        copy_files([input_filename], output_dir)
+    set_permissions(input_filename)
+
+    input_file_only = input_file
 
     # Find the instrument used to collect the data
     datamodel = datamodels.RampModel(input_file)
