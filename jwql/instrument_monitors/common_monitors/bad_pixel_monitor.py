@@ -741,6 +741,8 @@ class BadPixels():
                 parameters['CHANNEL'] = 'SHORT'
         return parameters
 
+    @log_info
+    @log_fail
     def process(self, illuminated_raw_files, illuminated_slope_files, dark_raw_files, dark_slope_files):
         """The main method for processing darks.  See module docstrings
         for further details.
@@ -784,11 +786,15 @@ class BadPixels():
             for uncal_file, rate_file in zip(illuminated_raw_files, illuminated_slope_files):
                 self.get_metadata(uncal_file)
                 if rate_file == 'None':
+                    logging.info('Calling pipeline for {}'.format(uncal_file))
                     uncal_filename = os.path.basename(uncal_file)
                     uncal_filepath = os.path.dirname(uncal_file)
                     result = calwebb_detector1_save_jump(uncal_filename, ramp_fit=True,
                                                          save_fitopt=False, path=uncal_filepath)
+                    logging.info('\tStarted Task for {}'.format(uncal_file))
                     jump_output, rate_output, _, output_dir = result.get()
+                    logging.info('\tFinished pipeline for {}'.format(uncal_file))
+                    logging.info('\tPipeline returned {} {} {}'.format(jump_output, rate_output, output_dir))
                     if self.nints > 1:
                         illuminated_slope_files[index] = rate_output.replace('0_ramp_fit', '1_ramp_fit')
                     else:
@@ -817,11 +823,15 @@ class BadPixels():
             # even if the rate file is present, because we also need the jump
             # and fitops files, which are not saved by default
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
+                logging.info('Calling pipeline for {} {}'.format(uncal_file, rate_file))
                 uncal_filename = os.path.basename(uncal_file)
                 uncal_filepath = os.path.dirname(uncal_file)
                 result = calwebb_detector1_save_jump.delay(uncal_filename, ramp_fit=True,
                                                            save_fitopt=True, path=uncal_filepath)
+                logging.info('\tStarted Task for {} {}'.format(uncal_file, rate_file))
                 jump_output, rate_output, fitopt_output, output_dir = result.get()
+                logging.info('Finished pipeline for {} {}'.format(uncal_file, rate_file))
+                logging.info('\tPipeline returned {} {} {} {}'.format(jump_output, rate_output, fitopt_output, output_dir))
                 self.get_metadata(uncal_file)
                 dark_jump_files.append(jump_output)
                 dark_fitopt_files.append(fitopt_output)
