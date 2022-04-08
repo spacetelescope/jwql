@@ -42,23 +42,23 @@ from astropy.time import Time
 from astropy.visualization import ZScaleInterval
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt # noqa: E402 (module import not at top)
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import numpy as np # noqa: E402 (module import not at top)
-from pysiaf import Siaf # noqa: E402 (module import not at top)
+import matplotlib.pyplot as plt  # noqa: E402 (module import not at top)
+from mpl_toolkits.axes_grid1 import make_axes_locatable  # noqa: E402 (module import not at top)
+import numpy as np  # noqa: E402 (module import not at top)
+from pysiaf import Siaf  # noqa: E402 (module import not at top)
 from sqlalchemy.sql.expression import and_ # noqa: E402 (module import not at top)
 
-from jwql.database.database_interface import session # noqa: E402 (module import not at top)
-from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory # noqa: E402 (module import not at top)
-from jwql.database.database_interface import NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats # noqa: E402 (module import not at top)
-from jwql.instrument_monitors import pipeline_tools # noqa: E402 (module import not at top)
-from jwql.shared_tasks.shared_tasks import run_calwebb_detector1 # noqa: E402 (module import not at top)
-from jwql.utils import instrument_properties, monitor_utils # noqa: E402 (module import not at top)
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE # noqa: E402 (module import not at top)
-from jwql.utils.logging_functions import log_info, log_fail # noqa: E402 (module import not at top)
+from jwql.database.database_interface import session  # noqa: E402 (module import not at top)
+from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory  # noqa: E402 (module import not at top)
+from jwql.database.database_interface import NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats  # noqa: E402 (module import not at top)
+from jwql.instrument_monitors import pipeline_tools  # noqa: E402 (module import not at top)
+from jwql.shared_tasks.shared_tasks import run_calwebb_detector1  # noqa: E402 (module import not at top)
+from jwql.utils import instrument_properties, monitor_utils  # noqa: E402 (module import not at top)
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E402 (module import not at top)
+from jwql.utils.logging_functions import log_info, log_fail  # noqa: E402 (module import not at top)
 from jwql.utils.monitor_utils import update_monitor_table # noqa: E402 (module import not at top)
-from jwql.utils.permissions import set_permissions # noqa: E402 (module import not at top)
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config # noqa: E402 (module import not at top)
+from jwql.utils.permissions import set_permissions  # noqa: E402 (module import not at top)
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config  # noqa: E402 (module import not at top)
 
 
 class Bias():
