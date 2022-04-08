@@ -136,8 +136,6 @@ celery_app.conf.result_backend = 'redis://localhost:6379/0'
 
 
 @celery_app.task(base=Singleton, unique_on=['input_file', 'instrument'])
-@log_fail
-@log_info
 def run_calwebb_detector1(input_file, instrument, path=None):
     """Run the steps of ``calwebb_detector1`` on the input file, saving the result of each
     step as a separate output file, then return the name-and-path of the file as reduced
@@ -212,8 +210,6 @@ def run_calwebb_detector1(input_file, instrument, path=None):
     return output_dir
 
 @celery_app.task(base=Singleton, unique_on=['input_file', ])
-@log_fail
-@log_info
 def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, path=None):
     """Call ``calwebb_detector1`` on the provided file, running all
     steps up to the ``ramp_fit`` step, and save the result. Optionally
@@ -253,6 +249,8 @@ def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, pat
     output_dir : str
         Name of the directory where the output file is saved
     """
+    logging.info("Started Task.")
+    
     output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
     ensure_dir_exists(output_dir)
 
