@@ -132,6 +132,7 @@ from celery import Celery
 
 
 celery_app = Celery('shared_tasks', broker='redis://localhost:6379/0')
+celery_app.conf.result_backend = 'redis://localhost:6379/0'
 
 
 @celery_app.task(base=Singleton, unique_on=['input_file', 'instrument'])
