@@ -351,7 +351,7 @@ class Readnoise():
         readnoise = np.zeros((num_y, num_x))
         for idx in cols_idx:
             # Create a stack of correlated double sampling (CDS) images using input
-            # ramp data, combining multiple integrations if necessary. 
+            # ramp data, combining multiple integrations if necessary.
             for integration in range(num_ints):
                 if num_groups % 2 == 0:
                     cds = data[integration, 1::2, :, idx:idx+slice_width] - data[integration, ::2, :, idx:idx+slice_width]
