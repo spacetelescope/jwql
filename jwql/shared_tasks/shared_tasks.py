@@ -160,7 +160,7 @@ def run_calwebb_detector1(input_file, instrument, path=None):
         short_name = input_file[:input_file.rfind("_")]
     else:
         short_name = input_file.replace(".fits", "")
-    uncal_file = short_file+"_uncal.fits"
+    uncal_file = short_file + "_uncal.fits"
     if path is None or not os.path.isfile(os.path.join(path, uncal_file)):
         uncal_file = filesystem_path(uncal_file)
 
@@ -176,7 +176,7 @@ def run_calwebb_detector1(input_file, instrument, path=None):
     first_step_to_be_run = True
     for step_name in steps:
         if steps[step_name]:
-            output_filename = short_name+"_{}.fits".format(step_name)
+            output_filename = short_name + "_{}.fits".format(step_name)
             output_file = os.path.join(output_dir, output_filename)
             # skip already-done steps
             if not os.path.isfile(output_file):
@@ -211,7 +211,7 @@ def run_calwebb_detector1(input_file, instrument, path=None):
     return output_dir
 
 
-@celery_app.task(base=Singleton, unique_on=['input_file',])
+@celery_app.task(base=Singleton, unique_on=['input_file', ])
 @log_fail
 @log_info
 def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True):
