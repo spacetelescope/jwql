@@ -696,7 +696,7 @@ class BadPixels():
             run_field = self.query_table.run_bpix_from_flats
 
         query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture). \
-                              filter(run_field == True)
+            filter(run_field == True)
 
         dates = np.zeros(0)
         if file_type.lower() == 'dark':
@@ -784,7 +784,7 @@ class BadPixels():
                 if rate_file == 'None':
                     uncal_filename = os.path.basename(uncal_file)
                     uncal_filepath = os.path.dirname(uncal_file)
-                    result = calwebb_detector1_save_jump(uncal_filename, ramp_fit=True, 
+                    result = calwebb_detector1_save_jump(uncal_filename, ramp_fit=True,
                                                          save_fitopt=False, path=uncal_filepath)
                     jump_output, rate_output, _, output_dir = result.get()
                     if self.nints > 1:
@@ -817,7 +817,7 @@ class BadPixels():
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
                 uncal_filename = os.path.basename(uncal_file)
                 uncal_filepath = os.path.dirname(uncal_file)
-                result = calwebb_detector1_save_jump(uncal_filename, ramp_fit=True, 
+                result = calwebb_detector1_save_jump(uncal_filename, ramp_fit=True,
                                                      save_fitopt=True, path=uncal_filepath)
                 jump_output, rate_output, fitopt_output, output_dir = result.get()
                 self.get_metadata(uncal_file)
