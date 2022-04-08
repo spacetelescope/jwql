@@ -46,7 +46,7 @@ import matplotlib.pyplot as plt  # noqa: E402 (module import not at top)
 from mpl_toolkits.axes_grid1 import make_axes_locatable  # noqa: E402 (module import not at top)
 import numpy as np  # noqa: E402 (module import not at top)
 from pysiaf import Siaf  # noqa: E402 (module import not at top)
-from sqlalchemy.sql.expression import and_ # noqa: E402 (module import not at top)
+from sqlalchemy.sql.expression import and_  # noqa: E402 (module import not at top)
 
 from jwql.database.database_interface import session  # noqa: E402 (module import not at top)
 from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory  # noqa: E402 (module import not at top)
@@ -56,7 +56,7 @@ from jwql.shared_tasks.shared_tasks import run_calwebb_detector1  # noqa: E402 (
 from jwql.utils import instrument_properties, monitor_utils  # noqa: E402 (module import not at top)
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E402 (module import not at top)
 from jwql.utils.logging_functions import log_info, log_fail  # noqa: E402 (module import not at top)
-from jwql.utils.monitor_utils import update_monitor_table # noqa: E402 (module import not at top)
+from jwql.utils.monitor_utils import update_monitor_table  # noqa: E402 (module import not at top)
 from jwql.utils.permissions import set_permissions  # noqa: E402 (module import not at top)
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config  # noqa: E402 (module import not at top)
 
@@ -344,9 +344,8 @@ class Bias():
             where the bias monitor was run.
         """
 
-        
         query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
-                self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all() # noqa: E348 (comparison to true)
+                self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()  # noqa: E348 (comparison to true)
 
         if len(query) == 0:
             query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
@@ -381,7 +380,7 @@ class Bias():
             try:
                 filepath = os.path.dirname(filename)
                 filebase = os.path.basename(filename)
-                processed_name = filebase[:filebase.rfind("_")]  + "_refpix.fits"
+                processed_name = filebase[:filebase.rfind("_")] + "_refpix.fits"
                 result = run_calwebb_detector1.delay(filebase, self.instrument, path=filepath)
                 processed_dir result.get()
                 processed_file = os.path.join(processed_dir, processed_name)
