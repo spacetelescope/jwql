@@ -57,7 +57,7 @@ from astropy.time import Time
 import astropy.units as u
 from astroquery.mast import Mast
 from bokeh.embed import components
-from bokeh.models import BoxAnnotation, ColumnDataSource, DatetimeTickFormatter, HoverTool
+from bokeh.models import BoxAnnotation, ColumnDataSource, DatetimeTickFormatter, HoverTool, Range1d
 from bokeh.plotting import figure, output_file, show, save
 import numpy as np
 
@@ -388,9 +388,9 @@ class EdbMnemonic:
         times : list
             List of datetime objects describing the times to interpolate to
         """
+        new_tab = Table()
         # Change-only data is unique and needs its own way to be interpolated
         if self.meta['TlmMnemonics'][0]['AllPoints'] == 0:
-            new_tab = Table()
             new_values = []
             new_dates = []
             for time in times:
@@ -406,8 +406,6 @@ class EdbMnemonic:
         else:
             if len(self.data["dates"]) >= 2:
                 # We can only linearly interpolate if we have more than one entry
-                new_tab = Table()
-
 
                 print('INTERPOLATE')
                 print(times)
@@ -432,6 +430,14 @@ class EdbMnemonic:
                 # then set the data table to be empty
                 new_tab["euvalues"] = np.array[()]
                 new_tab["dates"] = np.array[()]
+
+
+
+
+        print(new_tab)
+
+
+
 
         # Adjust any block values to account for the interpolated data
         new_blocks = []
@@ -524,8 +530,20 @@ class EdbMnemonic:
         fig : bokeh.plotting.figure
             Figure as a bokeh object
         """
-
-        source = ColumnDataSource(data={'x': self.data['dates'], 'y': self.data['euvalues']})
+        # If there are no data in the table, then produce an empty plot in the date
+        # range specified by the requested start and end time
+        if len(self.data["dates"]) == 0:
+            print('XXXX', self.requested_start_time, self.requested_end_time,'\n\n\n')
+            #xrange = (self.requested_end_time, self.requested_end_time)
+            #yrange = (-1000, 1000)
+            # For development. Remove line below
+            #null_dates = [datetime(2022, 5, 5), datetime(2022, 5, 6)]
+            print('EMPTY PLOT DATES: ', self.requested_start_time, self.requested_end_time)
+            null_dates = [self.requested_start_time, self.requested_end_time]
+            null_vals = [0, 0]
+            source = ColumnDataSource(data={'x': null_dates, 'y': null_vals})
+        else:
+            source = ColumnDataSource(data={'x': self.data['dates'], 'y': self.data['euvalues']})
 
         if savefig:
             filename = os.path.join(out_dir, f"telem_plot_{self.mnemonic_identifier.replace(' ','_')}.html")
@@ -534,26 +552,42 @@ class EdbMnemonic:
         fig = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
                      title=self.mnemonic_identifier, x_axis_label='Time',
                      y_axis_label=f'{self.info["unit"]}')
+
+        # For cases where the plot is empty or contains only a single point, force the
+        # plot range to something reasonable
+        if len(self.data["dates"]) < 2:
+            fig.x_range=Range1d(self.requested_start_time - timedelta(days=1), self.requested_end_time)
+            bottom, top = (-1, 1)
+            if yellow_limits is not None:
+                bottom, top = yellow_limits
+            if red_limits is not None:
+                bottom, top = red_limits
+            fig.y_range=Range1d(bottom, top)
+
         #data = fig.line(self.data['dates'], self.data['euvalues'], line_width=1, line_color='blue')
         #fig.circle(self.data['dates'], self.data['euvalues'], color='blue', alpha=0.5)
         data = fig.scatter(x='x', y='y', line_width=1, line_color='blue', source=source)
 
-        # If there is a nominal value provided, plot a dashed line for it
-        if nominal_value is not None:
-            fig.line(self.data['dates'], np.repeat(nominal_value, len(self.data['dates'])), color='black',
-                     line_dash='dashed', alpha=0.5)
+        if len(self.data["dates"]) == 0:
+            data.visible = False
+        else:
+            # If there is a nominal value provided, plot a dashed line for it
+            if nominal_value is not None:
+                fig.line(self.data['dates'], np.repeat(nominal_value, len(self.data['dates'])), color='black',
+                        line_dash='dashed', alpha=0.5)
 
-        # If limits for warnings/errors are provided, create colored background boxes
-        if yellow_limits is not None or red_limits is not None:
-            fig = add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
+            # If limits for warnings/errors are provided, create colored background boxes
+            if yellow_limits is not None or red_limits is not None:
+                fig = add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
 
         # Make the x axis tick labels look nice
-        fig.xaxis.formatter=DatetimeTickFormatter(
-                    hours=["%d %b %H:%M"],
-                    days=["%d %b %H:%M"],
-                    months=["%d %b %Y %H:%M"],
-                    years=["%d %b %Y"]
-                )
+        fig.xaxis.formatter=DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
+                                                  seconds=["%d %b %H:%M:%S.%3N"],
+                                                  hours=["%d %b %H:%M"],
+                                                  days=["%d %b %H:%M"],
+                                                  months=["%d %b %Y %H:%M"],
+                                                  years=["%d %b %Y"]
+                                                 )
         fig.xaxis.major_label_orientation = np.pi/4
 
         hover_tool = HoverTool(tooltips=[('Value', '@y'),
@@ -569,9 +603,9 @@ class EdbMnemonic:
         if xrange[1] is not None:
             fig.x_range.end = xrange[1].timestamp()*1000.
         if yrange[0] is not None:
-            fig.y_range.start = yrange[0].timestamp()*1000.
+            fig.y_range.start = yrange[0]
         if yrange[1] is not None:
-            fig.y_range.end = yrange[1].timestamp()*1000.
+            fig.y_range.end = yrange[1]
 
         if savefig:
             output_file(filename=filename, title=self.mnemonic_identifier)

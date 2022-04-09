@@ -402,6 +402,9 @@ class EdbMnemonicMonitor():
         if len(dep_list) == 0:
             return data
 
+        print('NUMBER OF DEPS: ', len(dep_list))
+
+
         all_conditions = []
         for dependency in dep_list:
 
@@ -434,14 +437,38 @@ class EdbMnemonicMonitor():
 
 
             if len(dep_mnemonic["dates"]) > 0:
-                all_conditions.append(condition.relation_test(dep_mnemonic, dependency["relation"], dependency["threshold"]))
+                time_boundaries = condition.relation_test(dep_mnemonic, dependency["relation"], dependency["threshold"])
+                all_conditions.append(time_boundaries)
+
+                # If time_boundaries is [(None, None)] then there is no time period where the condition is True. In
+                # this case, reset the time boundaries to something nonsensical. Then when good data are extracted
+                # after this loop, nothing will be extracted.
+                #if time_boundaries[0][0] is None:
+                #    print(('No values of the dependency match the condition. Setting the range of good valid '
+                #           'times to something that makes no sense (1021-12-25), so that no data will be extracted '
+                #           ' from the mnemonic.'))
+                #    all_conditions.append([datetime(1021, 12, 25), datetime(1021, 12, 25, 0, 0, 1)])
+            else:
+                # In this case, the query for dependency data returned an empty array. With no information
+                # on the dependency, it seems like we have to throw out the data for the mnemonic of
+                # interest, because there is no way to know if the proper conditions have been met.
+                print((f'No data for dependency {dependency["name"]} between {data.requested_start_time} and {data.requested_end_time}, '
+                       f'so ignoring {mnem} data for the same time period.'))
+
+                print('\n\n\nVVVVV', data.requested_start_time, '\n\n\n')
+
+
+                filtered = empty_edb_instance(data.mnemonic_identifier, data.requested_start_time,
+                                              data.requested_end_time, meta=data.meta, info=data.info)
+                return filtered
 
 
 
-            print('all_conditions time pairs:')
-            print(all_conditions[0].time_pairs)
-            print(all_conditions[0].time_pairs[0][0])
-            print(all_conditions[0].time_pairs[0][1])
+
+            #print('all_conditions time pairs:')
+            #print(all_conditions[0].time_pairs)
+            #print(all_conditions[0].time_pairs[0][0])
+            #print(all_conditions[0].time_pairs[0][1])
             #print(len(data.data["dates"]))
             #print(data.data["dates"])
 
@@ -456,8 +483,8 @@ class EdbMnemonicMonitor():
             #    print(all_conditions[0].time_pairs)
 
 
-            on = np.where(data.data["dates"] == all_conditions[0].time_pairs[0][0])[0]
-            off = np.where(data.data["dates"] == all_conditions[0].time_pairs[0][1])[0]
+            #on = np.where(data.data["dates"] == all_conditions[0].time_pairs[0][0])[0]
+            #off = np.where(data.data["dates"] == all_conditions[0].time_pairs[0][1])[0]
 
             #print(data.data["dates"][on], data.data["euvalues"][on])
             #print(data.data["dates"][off], data.data["euvalues"][off])
@@ -497,9 +524,14 @@ class EdbMnemonicMonitor():
             for cond in all_conditions:
                 for time_pair in cond.time_pairs:
                     boundary_times.extend([time_pair[0], time_pair[1]])
-            data.interpolate(sorted(np.unique(np.array(boundary_times))))
+            # If we have a valid list of start/stop times (i.e. no None entries), then
+            # interpolate the every-change data onto those dates
 
+            print('boundary_times:', boundary_times)
 
+            #nones_present = any([None in time_tup for time_tup in boundary_times])
+            if None not in boundary_times:
+                data.interpolate(sorted(np.unique(np.array(boundary_times))))
 
         full_condition.extract_data(data.data)
         #filtered_data, block_indexes = cond.extract_data(full_condition, data.data)
@@ -512,9 +544,9 @@ class EdbMnemonicMonitor():
         #    print(full_condition.block_indexes)
 
 
-        print('CONDITON')
-        print(full_condition.extracted_data["dates"])
-        print(full_condition.block_indexes)
+        #print('CONDITON')
+        #print(full_condition.extracted_data["dates"])
+        #print(full_condition.block_indexes)
 
 
         # Put the results into an instance of EdbMnemonic
@@ -538,6 +570,13 @@ class EdbMnemonicMonitor():
         if len(dep_list) > 1:
             raise NotImplementedError("Not sure how to work with every_change data with multiple dependencies.")
 
+        # If the mnemonic instance is empty, then populate the blocks and every_change_values
+        # properties, and exit
+        if len(mnem_data) == 0:
+            mnem_data.blocks = [0, 1]
+            mnem_data.every_change_values = [np.nan]
+            return mnem_data
+
         # Retrieve the data for the dependency to use
         #if dep_list[0]["name"] in self.query_results: this only works if the dates are ok
         #    dep_table = self.query_results[dep_list[0]["name"]].data
@@ -548,9 +587,13 @@ class EdbMnemonicMonitor():
         dependency = self.get_dependency_data(dep_list[0], mnem_data.requested_start_time,
                                               mnem_data.requested_end_time)
 
-        # If no dependency data are empty, then set the blocks to encompass all the data?
-        # Or should we say that none of the data are good?
-        here
+        # If the dependency data are empty, then we can't define blocks. Set the entire range
+        # of data to a single block. Since filter_data is called before find_all_changes, we
+        # *should* never end up in here, as missing dependency data should zero out the main
+        # mnemonic in there.
+        if len(dependency) == 0:
+            mnem_data.blocks = [0, len(mnem)]
+            mnem_data.every_change_values = [np.nan]
 
         # From a check of the data in the D-string EDB from rehearsals, it looks like the times
         # associated with the mnemonic of interest and the dependency are the same. So no
@@ -606,6 +649,13 @@ class EdbMnemonicMonitor():
             #print(mnem_data.blocks)
             #print(mnem_data.every_change_values)
 
+            print(len(mnem_data))
+            print(len(dependency['dates']))
+            print(change_indexes)
+            print(vals)
+            print(mnem_data.blocks)
+            print(mnem_data.every_change_values)
+
 
         return mnem_data
 
@@ -629,8 +679,8 @@ class EdbMnemonicMonitor():
         dep_mnemonic : dict
             Data for the dependency mnemonic. Keys are "dates" and "euvalues"
         """
-        print('DEPENDENCY:')
-        print('\n\n', dependency)
+        print('\nDEPENDENCY:')
+        print(dependency)
 
 
 
@@ -743,7 +793,10 @@ class EdbMnemonicMonitor():
         Returns
         -------
         hist : dict
-            Retrieved data
+            Retrieved data. Keys are the value of the dependency mnemonic,
+            and each value is a 3-tuple. The tuple contains the times, values,
+            and mean value of the primary mnemonic corresponding to the times
+            that they dependency mnemonic has the value of the key.
         """
         data = session.query(self.history_table) \
             .filter(self.history_table.mnemonic == mnemonic,
@@ -752,18 +805,24 @@ class EdbMnemonicMonitor():
 
         # Set up the dictionary to contain the data
         hist = {}
-        for dep_val in np.unique(data.dependency_values):
-            hist[dep_val] = []
+        #for dep_val in np.unique(data.dependency_value):
+        #    hist[dep_val] = []
 
         # Place the data from the database into the appropriate key
-        times = []
-        values = []
-        means = []
         for row in data:
-            times.extend(row.time)
-            values.extend(row.mnemonic_value)
-            means.extend(row.mean)
-            hist[row.dependency_value] = (times, values, means)
+            if row.dependency_value in hist:
+                if len(hist[row.dependency_value]) > 0:
+                    times, values, means = hist[row.dependency_value]
+                else:
+                    times = []
+                    values = []
+                    means = []
+                times.extend(row.time)
+                values.extend(row.mnemonic_value)
+                means.extend(row.mean)
+                hist[row.dependency_value] = (times, values, means)
+            else:
+                hist[row.dependency_value] = (row.time, row.mnemonic_value, row.mean)
 
         return hist
 
@@ -805,7 +864,7 @@ class EdbMnemonicMonitor():
                 print(mnemonic_data.info)
                 print('As retrieved from EDB:')
                 print('First length of data: ', len(mnemonic_data.data["dates"]))
-                print(mnemonic_data.data)
+                #print(mnemonic_data.data)
 
             # FOR DEVELOPMENT - NO NEED TO SAVE WHEN RUNNING FOR REAL
             mnemonic_data.save_table(f'edb_results_for_development_{mnemonic["name"]}.txt')
@@ -827,6 +886,8 @@ class EdbMnemonicMonitor():
             # instance. This will allow different versions to be saved in the database.
             if "database_id" in mnemonic:
                 mnemonic_data.mnemonic_identifier = mnemonic["database_id"]
+            else:
+                mnemonic_data.mnemonic_identifier = mnemonic["name"]
 
         except urllib.error.HTTPError:
             # Mnemonic not accessible. This is largely for development where we don't
@@ -869,7 +930,6 @@ class EdbMnemonicMonitor():
             good_mnemonic_data.blocks = [0]
 
         if telemetry_type == "every_change":
-
             # Note that this adds good_mnemonic_data.every_change_values, which is not present
             # in other modes, but will be needed for plotting
             good_mnemonic_data = self.find_all_changes(good_mnemonic_data, mnemonic['dependency'])
@@ -935,9 +995,13 @@ class EdbMnemonicMonitor():
         multiday_table = Table()
         multiday_median_times = []
         multiday_mean_vals = []
+        multiday_every_change_data = []
         info = {}
         meta = {}
         identifier = mnemonic_dict[self._usename]
+        if '*' in mnemonic_dict["plot_data"]:
+            # Define the mnemonic identifier to be <mnemonic_name_1>*<mnemonic_name_2>
+            product_identifier = f'{mnemonic_dict[self._usename]}{mnemonic_dict["plot_data"]}'
         #identifier = mnemonic_dict["name"]
         #if "database_id" in mnemonic_dict:
         #    identifier = mnemonic_dict["database_id"]
@@ -989,6 +1053,10 @@ class EdbMnemonicMonitor():
                 # If this mnemonic is going to be plotted as a product with another mnemonic, then
                 # retrieve the second mnemonic info here
                 if '*' in mnemonic_dict["plot_data"]:
+
+                    if telemetry_type == 'every_change':
+                        raise ValueError("Plotting product of two mnemonics is not supported for every-change data.")
+
                     temp_dict = deepcopy(mnemonic_dict)
                     temp_dict["name"] = mnemonic_dict["plot_data"].strip('*')
                     product_mnemonic_info = self.get_mnemonic_info(temp_dict, starttime, endtime, telemetry_type)
@@ -1036,7 +1104,7 @@ class EdbMnemonicMonitor():
                     mnemonic_info = calculate_statistics(combined, telemetry_type)
 
                     # Define the mnemonic identifier to be <mnemonic_name_1>*<mnemonic_name_2>
-                    product_identifier = f'{mnemonic_dict[self._usename]}{mnemonic_dict["plot_data"]}'
+                    #product_identifier = f'{mnemonic_dict[self._usename]}{mnemonic_dict["plot_data"]}'
 
 
                 # Combine information from multiple days here. If averaging is done, keep track of
@@ -1044,13 +1112,14 @@ class EdbMnemonicMonitor():
                 if telemetry_type != 'none':
                     multiday_median_times.extend(mnemonic_info.median_times)
                     multiday_mean_vals.extend(mnemonic_info.mean)
+                    if telemetry_type == 'every_change':
+                        multiday_every_change_data.extend(mnemonic_info.every_change_values)
                 else:
                     multiday_median_times.extend(mnemonic_info.data["dates"].data)
                     multiday_mean_vals.extend(mnemonic_info.data["euvalues"].data)
 
-
             else:
-                print(f'{mnemonic_dict["name"]} to use as product has no data between {starttime} and {endtime}.\n\n')
+                print(f'{mnemonic_dict["name"]} has no data between {starttime} and {endtime}.\n\n')
                 continue
 
 
@@ -1071,6 +1140,11 @@ class EdbMnemonicMonitor():
         all_data = ed.EdbMnemonic(identifier, starting_time_list[0], ending_time_list[-1],
                                   multiday_table, meta, info)
 
+        # If it is an every_change mnemonic, then we need to also keep track of the dependency
+        # values that correspond to the mean values.
+        if telemetry_type == 'every_change':
+            all_data.every_change_values = multiday_every_change_data
+
         # Set the mnemonic identifier to be <mnemonic_name_1>*<mnemonic_name_2>
         # This will be used in the title of the plot later
         if '*' in mnemonic_dict["plot_data"]:
@@ -1078,7 +1152,7 @@ class EdbMnemonicMonitor():
 
 
         print(f'DONE WITH {mnemonic_dict["name"]}')
-        print(all_data.data)
+        #print(all_data.data)
         return all_data
 
     def execute(self, mnem_to_query=None, plot_start=None, plot_end=None):
@@ -1206,9 +1280,15 @@ class EdbMnemonicMonitor():
             plot_end = today
 
 
+        # Only used as fall-back plot range for cases where there is no data
+        self._plot_start = plot_start
+        self._plot_end = plot_end
         print('plot_start and plot_end: ', plot_start, plot_end)
 
-
+        #************FOR TESTING WITH TEXT FILES****************
+        #teststarttime = datetime.datetime(2019,1,1,0,0,0)
+        #testendtime = datetime.datetime(2019,1,3,0,15,10)
+        #************FOR TESTING WITH TEXT FILES****************
 
         #q = ed.get_mnemonics(mnemonics_to_monitor, starttime, endtime)
 
@@ -1339,29 +1419,40 @@ class EdbMnemonicMonitor():
 
                 if telem_type != 'none':
                     if query_start_times is not None:
-                        new_data = self.multiday_mnemonic_query(mnemonic, query_start_times, query_end_times, telem_type)
+
+
+                        # UNCOMMENT WHEN DONE TESTING!!!!!
+                        #new_data = self.multiday_mnemonic_query(mnemonic, query_start_times, query_end_times, telem_type)
+
+                        #************FOR TESTING****************
+                        #filename = f'{mnemonic["name"]}_test_data.txt'
+                        #new_data = temp_read_test_data(filename, mindate=teststarttime, maxdate=testendtime)
+                        #************FOR TESTING****************
+
                     else:
-                        #usename = "name"
-                        #if "database_id" in mnemonic:
-                        #    usename = "database_id"
+                        # In this case, all the data needed are already in the JWQLDB, so return an empty
+                        # EDBMnemonic instance. This will be combined with the data from the JWQLDB later.
                         info = ed.get_mnemonic_info(mnemonic["name"])
                         new_data = empty_edb_instance(mnemonic[self._usename], plot_start, plot_end, info=info)
                         print("empty", new_data.info["unit"])
                 else:
                     new_data = self.multiday_mnemonic_query(mnemonic, query_start_times, query_end_times, telem_type)
 
-
-                # If the mnemonic of interest has no data for the entire queried time period, then
-                # we can move on to the next mnemonic
-
                 # Save the averaged/smoothed data and dates/times to the database,
                 # but only for cases where we are averaging. For cases with no averaging
                 # the database would get too large too quickly. In that case the monitor
                 # will re-query the EDB for the entire history each time.
                 if telem_type != "none":
+                    if telem_type != 'every_change':
+                        self.add_new_block_db_entry(new_data, query_start_times[-1])
+                    else:
+                        # Before we can add the every-change data to the database, organize it to make it
+                        # easier to access. Note that every_change_data is now a dict rather than an EDBMnemonic instance
+                        every_change_data = organize_every_change(new_data)
+                        self.add_new_every_change_db_entry(new_data.mnemonic_identifier, every_change_data, mnemonic['dependency'][0]["name"],
+                                                           query_start_times[-1])
 
-                    # In this case we also need to retrieve the historical data from the database, so that
-                    # we can add the new data and create an updated plot
+                    # Retrieve the historical data from the database, so that we can add the new data
                     if telem_type != 'every_change':
                         historical_data = self.get_history(new_data.mnemonic_identifier, plot_start, plot_end, info=new_data.info,
                                                            meta=new_data.meta)
@@ -1410,8 +1501,8 @@ class EdbMnemonicMonitor():
                     print('COMBINING WITH HISTORY')
                     print('length of historical data: ', len(historical_data))
                     print('length of new data: ', len(new_data))
-                    print(new_data)
-                    print(new_data.data)
+                    #print(new_data)
+                    #print(new_data.data)
                     #new_table = Table()
                     #new_table["dates"] = mnemonic_info.median_times
                     #new_table["euvalues"] = mnemonic_info.mean
@@ -1456,17 +1547,16 @@ class EdbMnemonicMonitor():
 
                         # Turned off for testing. TURN BACK ON LATER-------------------------------------------------
                         #self.add_new_block_db_entry(new_data, query_start_times[-1])
-
-
-
-
                         # Now add the new data to the historical data
                         mnemonic_info = new_data + historical_data
 
-
                         print('length of mnemonic_info: ', len(mnemonic_info))
                     else:
-                        every_change_data = organize_every_change(new_data)
+                        print('Every change data, preparing to combine with history')
+                        #print(new_data.every_change_values)
+
+                        # Note that every_change_data is now a dict rather than an EDBMnemonic instance
+                        #every_change_data = organize_every_change(new_data)
 
                         print('length of every_change_data: ', len(every_change_data))
 
@@ -1506,19 +1596,18 @@ class EdbMnemonicMonitor():
 
 
                 print('COMBINED LENGTH: ', len(mnemonic_info))
-                print('units of mnemonic info data:', mnemonic_info.info["unit"])
+                #print('units of mnemonic info data:', mnemonic_info.info["unit"])
 
-
+                """
                 # If there is no new data and no historical data, then create an empty plot and move on
                 # to the next mnemonic
                 if len(mnemonic_info.data["dates"]) == 0:
                     print(f"Mnemonic {mnemonic['name']} contains no data.")
-                    create_empty_plot(mnemonic['name'])
+                    #create_empty_plot(mnemonic['name'])
                     mnemonic_info.bokeh_plot(savefig=True, out_dir=self.plot_output_dir, nominal_value=nominal,
                                                     yellow_limits=yellow, red_limits=red, return_components=False,
                                                     return_fig=True)
-                    print('need to find a way to skip to the next mnemonic from here')
-
+                """
 
                 """
                 # If the mnemonic is to be plotted as the product with some other mnemonic, then get
@@ -1736,9 +1825,8 @@ class EdbMnemonicMonitor():
                     # comes from the MIRI document listing mnemonics to montior. It is NOT the same as
                     # the more generic "change only" telemetry data, where data points in the array represent
                     # only times where the value has changed from what it was previously.
-                    figure = plot_every_change_data(mnemonic_info, mean_values, savefig=True, out_dir=self.plot_output_dir, show_plot=True)
-
-                stop
+                    figure = plot_every_change_data(mnemonic_info, new_data.mnemonic_identifier, new_data.info["unit"],
+                                                    savefig=True, out_dir=self.plot_output_dir, show_plot=True)
 
                 # Store the figure according to the "plot_category" given in the input json file
                 self.add_figure(figure, mnemonic["plot_category"])
@@ -1807,10 +1895,10 @@ def add_every_change_history(dict1, dict2):
                 all_means = np.append(dict2[key][2], value[2])
                 all_devs = np.append(dict2[key][3], value[3])
 
-            # Remove any duplicates, based on the dates entries
+            # Remove any duplicates, based on the dates' entries
             # Keep track of the indexes of the removed rows, so that any blocks
             # information can be updated
-            unique_dates, unq_idx = np.unique(all_dates, return_index=True)
+            #unique_dates, unq_idx = np.unique(all_dates, return_index=True)
             #unique_data = all_data[unq_idx]
             #unique_means = all_means[unq_idx]
             #combined[key] = (unique_dates, unique_data, unique_means)
@@ -1876,9 +1964,9 @@ def create_empty_plot(title, out_dir='./',):
     source = ColumnDataSource(data=data)
 
     # Create a plot using the ColumnDataSource's two columns
-    fig = figure()
+    fig = figure(title=title)
     fig.line(x=[0], y=[0])
-    fig.circle(x='x_values', y='y_values', source=source, title=title)
+    fig.circle(x='x_values', y='y_values', source=source)
 
     filename = os.path.join(out_dir, f"telem_plot_{title}.html")
     print(f'\n\nSAVING HTML FILE TO: {filename}')
@@ -1889,13 +1977,13 @@ def create_empty_plot(title, out_dir='./',):
     show(p)
 
 
-def empty_edb_instance(name, beginning, ending, info={}):
+def empty_edb_instance(name, beginning, ending, meta={}, info={}):
     """Create an EdbMnemonic instance with an empty data table
     """
     tab = Table()
     tab["dates"] = []
     tab["euvalues"] = []
-    return ed.EdbMnemonic(name, beginning, ending, tab, {}, info)
+    return ed.EdbMnemonic(name, beginning, ending, tab, meta, info)
 
 
 def every_change_to_allPoints(data):
@@ -1954,6 +2042,16 @@ def organize_every_change(mnemonic):
         of dates, the second element is a list of data values, and the third
         is a the signma-clipped mean value of the data.
     """
+
+    print('IN ORGANIZE_EVERY_CHANGE')
+    print(mnemonic.data)
+    print(mnemonic.blocks)
+    print(mnemonic.every_change_values)
+
+
+
+
+
     all_data = {}
     unique_vals = np.unique(mnemonic.every_change_values)
     if not isinstance(mnemonic.every_change_values, np.ndarray):
@@ -1964,8 +2062,8 @@ def organize_every_change(mnemonic):
     # For each dependency value, pull out the corresponding mnemonic values and times.
     for val in unique_vals:
         good = np.where(every_change == str(val))[0]  # val is np.str_ type. need to convert to str
-        val_times = mnemonic.data["dates"][good].datetime
-        val_data = mnemonic.data["euvalues"][good].data
+        val_times = mnemonic.data["dates"].data[good]
+        val_data = mnemonic.data["euvalues"].data[good]
 
         # Calculate the mean for each dependency value, and normalize the data
         meanval, medianval, stdevval = sigma_clipped_stats(val_data, sigma=3)
@@ -2003,14 +2101,15 @@ def remove_overlaps():
     unique_data = all_data[unq_idx]
 
 
-def plot_every_change_data(mnem, show_plot=False, savefig=True, out_dir='./', nominal_value=None, yellow_limits=None,
+def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True, out_dir='./', nominal_value=None, yellow_limits=None,
                            red_limits=None, xrange=(None, None), yrange=(None, None), return_components=True, return_fig=False):
     """Create a plot for mnemonics where we want to see the behavior within
     each change
 
     Parameters
     ----------
-    mnem : jwql.edb.engineering_database.EdbMnemonic
+    mnem : collections.defaultdict
+        UPDATE DESCRIPTION HERE
         Data to be plotted.
 
     show_plot : bool
@@ -2044,43 +2143,85 @@ def plot_every_change_data(mnem, show_plot=False, savefig=True, out_dir='./', no
         Tuple of min, max datetime values to use as the plot range in the y direction.
 
     """
-    #data = organize_every_change(mnem)
-
     fig = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
-                     title=mnem.mnemonic_identifier, x_axis_label='Time',
-                     y_axis_label=f'{mnem.info["unit"]}')
+                     title=mnem_name, x_axis_label='Time', y_axis_label=f'{units}')
 
     if savefig:
-        filename = os.path.join(out_dir, f"telem_plot_{mnem.mnemonic_identifier.replace(' ','_')}.html")
+        filename = os.path.join(out_dir, f"telem_plot_{mnem_name.replace(' ', '_')}.html")
         print(f'\n\nSAVING HTML FILE TO: {filename}')
 
-    # Make the x axis tick labels look nice
-    fig.xaxis.formatter=DatetimeTickFormatter(
-                hours=["%d %b %H:%M"],
-                days=["%d %b %H:%M"],
-                months=["%d %b %Y %H:%M"],
-                years=["%d %b %Y"]
-            )
-    fig.xaxis.major_label_orientation = np.pi/4
     colors = [int(len(Turbo256) / len(data)) * e for e in range(len(data))]
 
+    # Find the min and max values in the x-range. These may be used for plotting
+    # the nominal_value line later
+    min_time = datetime.datetime.today()
+    max_time = datetime.datetime(2021, 12, 25)
+
     for (key, value), color in zip(data.items(), colors):
-        val_times, val_data, meanval = value
-        dependency_val = np.repeat(key, len(val_times))
+        if len(value) > 0:
+            val_times, val_data, meanval, stdevval = value
+            dependency_val = np.repeat(key, len(val_times))
 
-        # Normalize by the mean so that all data will fit on one plot easily
-        val_data /= meanval
+            # Normalize by the mean so that all data will fit on one plot easily
+            val_data /= meanval
 
-        source = ColumnDataSource(data={'x': val_times, 'y': val_data, 'dep': dependency_val})
-        data = fig.line(x='x', y='y', line_width=1, line_color=Turbo256[color], source=source, legend_label=key)
-        cdata = fig.circle(x='x', y='y', fill_color=Turbo256[color], size=8, source=source, legend_label=key)
+            source = ColumnDataSource(data={'x': val_times, 'y': val_data, 'dep': dependency_val})
 
-        hover_tool = HoverTool(tooltips=[('Value', '@dep'),
-                                         ('Data', '@y{1.11111}'),
-                                         ('Date', '@x{%d %b %Y %H:%M:%S}')
-                                        ], mode='mouse', renderers=[cdata])
-        hover_tool.formatters={'@x': 'datetime'}
-        fig.tools.append(hover_tool)
+            data = fig.line(x='x', y='y', line_width=1, line_color=Turbo256[color], source=source, legend_label=key)
+            cdata = fig.circle(x='x', y='y', fill_color=Turbo256[color], size=8, source=source, legend_label=key)
+
+            hover_tool = HoverTool(tooltips=[('Value', '@dep'),
+                                             ('Data', '@y{1.11111}'),
+                                             ('Date', '@x{%d %b %Y %H:%M:%S}')
+                                            ], mode='mouse', renderers=[cdata])
+            hover_tool.formatters={'@x': 'datetime'}
+            fig.tools.append(hover_tool)
+
+            if np.min(val_times) < min_val:
+                min_time = np.min(val_times)
+            if np.max(val_times) > max_val:
+                max_time = np.max(val_times)
+
+    # If the input dictionary is empty, then create an empty plot with reasonable
+    # x range
+    if len(data) == 0:
+        null_dates = [self.requested_start_time, self.requested_end_time,]
+        source = ColumnDataSource(data={'x': null_times, 'y': [0, 0], 'dep': 'None'})
+        data = fig.line(x='x', y='y', line_width=1, line_color=0, source=source, legend_label='None')
+        data.visible = False
+        totpts = 0
+    else:
+        numpts = [len(val) for key, val in mnem.items()]
+        totpts = np.sum(np.array(numpts))
+
+    # For a plot with zero or one point, set the x and y range to something reasonable
+    if totpts < 2:
+        fig.x_range=Range1d(self._plot_start - datetime.timedelta(days=1), self._plot_end)
+        bottom, top = (-1, 1)
+        if yellow_limits is not None:
+            bottom, top = yellow_limits
+        if red_limits is not None:
+            bottom, top = red_limits
+        fig.y_range=Range1d(bottom, top)
+
+    # If there is a nominal value provided, plot a dashed line for it
+    if nominal_value is not None:
+        fig.line([min_time, max_time], [nominal_value, nominal_value], color='black',
+                 line_dash='dashed', alpha=0.5)
+
+    # If limits for warnings/errors are provided, create colored background boxes
+    if yellow_limits is not None or red_limits is not None:
+        fig = add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
+
+    # Make the x axis tick labels look nice
+    fig.xaxis.formatter=DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
+                                              seconds=["%d %b %H:%M:%S.%3N"],
+                                              hours=["%d %b %H:%M"],
+                                              days=["%d %b %H:%M"],
+                                              months=["%d %b %Y %H:%M"],
+                                              years=["%d %b %Y"]
+                                             )
+    fig.xaxis.major_label_orientation = np.pi/4
 
     # Force the axes' range if requested
     if xrange[0] is not None:
@@ -2088,19 +2229,15 @@ def plot_every_change_data(mnem, show_plot=False, savefig=True, out_dir='./', no
     if xrange[1] is not None:
         fig.x_range.end = xrange[1].timestamp()*1000.
     if yrange[0] is not None:
-        fig.y_range.start = yrange[0].timestamp()*1000.
+        fig.y_range.start = yrange[0]
     if yrange[1] is not None:
-        fig.y_range.end = yrange[1].timestamp()*1000.
-
-    # If limits for warnings/errors are provided, create colored background boxes
-    if yellow_limits is not None or red_limits is not None:
-        fig = ed.add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
+        fig.y_range.end = yrange[1]
 
     fig.legend.location = "top_left"
     fig.legend.click_policy="hide"
 
     if savefig:
-        output_file(filename=filename, title=mnem.mnemonic_identifier)
+        output_file(filename=filename, title=mnem_name)
         save(fig)
         set_permissions(filename)
 
@@ -2111,6 +2248,57 @@ def plot_every_change_data(mnem, show_plot=False, savefig=True, out_dir='./', no
         return [div, script]
     if return_fig:
         return fig
+
+
+
+def temp_read_test_data(filename, mindate=None, maxdate=None):
+    """Read in a text file with test telemetry data, for development.
+    Remove before merging
+    """
+    from astropy.io import ascii
+    data = ascii.read(filename)
+    dt = []
+    for ele in data["dates"]:
+        ints = [int(n) for n in ele.split(',')]
+        dt.append(datetime.datetime(ints[0], ints[1], ints[2], ints[3], ints[4], ints[5]))
+    dt = np.array(dt)
+
+    vals = data["euvalues"]
+
+    if maxdate is not None:
+        good = np.where(dt <= np.array(maxdate))[0]
+        print(good, type(good))
+        dt = dt[good]
+        vals = vals[good]
+    else:
+        maxdate = dt[-1]
+
+    if mindate is not None:
+        good = dt >= mindate
+        dt = dt[good]
+        vals = vals[good]
+    else:
+        mindate = dt[0]
+
+    new_tab = Table()
+    new_tab["dates"] = dt
+    new_tab["euvalues"] = vals
+
+    mnem = filename.strip('_test_data.txt')
+    info = ed.get_mnemonic_info(mnem)
+
+    meta = {}
+    if mnem == 'SE_ZIMIRICEA':
+        allpts = 0
+    else:
+        allpts = 1
+    meta['TlmMnemonics'] = [{'AllPoints': allpts}]
+
+    m = ed.EdbMnemonic(mnem, mindate, maxdate, new_tab, meta, info)
+    return m
+
+
+
 
 
 if __name__ == '__main__':

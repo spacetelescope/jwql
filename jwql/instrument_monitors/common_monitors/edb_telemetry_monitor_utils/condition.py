@@ -141,9 +141,8 @@ class condition:
 
 
 
-        print('length of self.cond_set:')
-        print(len(self.cond_set))
-
+        print('length of self.cond_set:', len(self.cond_set))
+        print(self.cond_set[0].time_pairs)
 
 
 
@@ -151,58 +150,62 @@ class condition:
         for i, cond in enumerate(self.cond_set):
             # Check if any of the time pairs include None, which indicates no good data
             if None in cond.time_pairs[0]:
+                self.extracted_data = Table()
+                self.extracted_data['dates'] = []
+                self.extracted_data['euvalues'] = []
+                self.block_indexes = [0, 0]
                 return Table(names=('dates', 'euvalues')), None
-
-            # Find whether each mnemonic time falls within each of the good time blocks
-
-
-            #print(mnemonic["dates"].data)
-            #print(cond.time_pairs)
-            #print(condition_list.cond_set[i].time_pairs)
-
-            #print(type(mnemonic))
-            #print(mnemonic["dates"])
-            #print(type(mnemonic["dates"]))
-            #print(mnemonic["dates"].data)
-
-
-            print('all cond.time_pairs: ', cond.time_pairs)
-            #print('menmonic dates: ', mnemonic["dates"].data)
-
-
-
-            #need to figure out what to do here.
-            #change only mnemonic has one entry at starttime and one at endtime
-            #the dependency has a bunch of entries that start before starttime and go until after endtime
-            #In the case below, that leads to False in tf_cond here. do we interpolate only if its change=only
-            #data? interpolate onto what time list?
-            tf_cond = [((mnemonic["dates"].data >= times[0]) & (mnemonic["dates"].data <= times[1])) for times in cond.time_pairs]
-
-
-
-            #print(i)
-            print('tf_cond:', tf_cond)
-            if len(tf_cond) > 1:
-                # If there are multiple blocks of good time pairs, combine them
-                # into a 2D array (rather than list)
-                tf_2d = np.zeros((len(tf_cond), len(tf_cond[1]))).astype(bool)
-                for index in range(len(tf_cond)):
-                    tf_2d[index, :] = tf_cond[index]
-                #print('tf_2d:', tf_2d)
-
-                # Flatten the 2D boolean array. If the mnemonic's time falls within any of
-                # the good time pairs, it should be True here
-                tf_flat = np.any(tf_2d, axis=0)
-                #print('tf_flat:', tf_flat)
-            elif len(tf_cond) == 1:
-                # If there is only one block of good times, then no need to create
-                # a 2D array and flatten
-                tf_flat = np.array(tf_cond)
             else:
-                print("uh oh. shouldn't be here.")
-            # Create a 2D boolean matrix that will hold the T/F values for all conditions
-            tf_matrix[i, :] = tf_flat
-            #print('tf_matrix:', tf_matrix)
+                # Find whether each mnemonic time falls within each of the good time blocks
+
+
+                #print(mnemonic["dates"].data)
+                #print(cond.time_pairs)
+                #print(condition_list.cond_set[i].time_pairs)
+
+                #print(type(mnemonic))
+                #print(mnemonic["dates"])
+                #print(type(mnemonic["dates"]))
+                #print(mnemonic["dates"].data)
+
+
+                print('all cond.time_pairs: ', cond.time_pairs)
+                #print('menmonic dates: ', mnemonic["dates"].data)
+
+
+
+                #need to figure out what to do here.
+                #change only mnemonic has one entry at starttime and one at endtime
+                #the dependency has a bunch of entries that start before starttime and go until after endtime
+                #In the case below, that leads to False in tf_cond here. do we interpolate only if its change=only
+                #data? interpolate onto what time list?
+                tf_cond = [((mnemonic["dates"].data >= times[0]) & (mnemonic["dates"].data <= times[1])) for times in cond.time_pairs]
+
+
+
+                #print(i)
+                print('tf_cond:', tf_cond)
+                if len(tf_cond) > 1:
+                    # If there are multiple blocks of good time pairs, combine them
+                    # into a 2D array (rather than list)
+                    tf_2d = np.zeros((len(tf_cond), len(tf_cond[1]))).astype(bool)
+                    for index in range(len(tf_cond)):
+                        tf_2d[index, :] = tf_cond[index]
+                    #print('tf_2d:', tf_2d)
+
+                    # Flatten the 2D boolean array. If the mnemonic's time falls within any of
+                    # the good time pairs, it should be True here
+                    tf_flat = np.any(tf_2d, axis=0)
+                    #print('tf_flat:', tf_flat)
+                elif len(tf_cond) == 1:
+                    # If there is only one block of good times, then no need to create
+                    # a 2D array and flatten
+                    tf_flat = np.array(tf_cond)
+                else:
+                    print("uh oh. shouldn't be here.")
+                # Create a 2D boolean matrix that will hold the T/F values for all conditions
+                tf_matrix[i, :] = tf_flat
+                #print('tf_matrix:', tf_matrix)
 
         # Finally, if the mnemonic's time falls within a good time block for all of the
         # conditions, then it is considered good.
@@ -215,9 +218,9 @@ class condition:
         self.extracted_data = good_data
 
 
+
         print("Number of entries that are good: ", np.sum(tf))
         print(tf_matrix)
-
 
         # We need to keep data from distinct blocks of time separate, because we may
         # need to calculate statistics for each good time block separately. Use tf to
@@ -1219,7 +1222,7 @@ class relation_test():
                 raise ValueError("No good or bad values provided. Unable to create list of corresponding times.")
         else:
             if len(good_times) == 0:
-                # All values are bad
+                # All values are bad.
                 return [(None, None)]
 
         # Now the case where there are both good and bad input times
