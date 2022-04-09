@@ -131,9 +131,8 @@ from celery_singleton import Singleton
 from celery import Celery
 
 
-celery_app = Celery('shared_tasks', broker='redis://localhost:6379/0')
-celery_app.conf.result_backend = 'redis://localhost:6379/0'
-
+celery_app = Celery('shared_tasks', broker='redis://localhost', backend='redis://localhost')
+app.conf.broker_transport_options = {'visibility_timeout': 7200}
 
 @celery_app.task(base=Singleton, unique_on=['input_file', 'instrument'])
 def run_calwebb_detector1(input_file, instrument, path=None):

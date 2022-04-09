@@ -85,6 +85,7 @@ from copy import deepcopy
 import datetime
 import logging
 import os
+from time import sleep
 
 from astropy.io import ascii, fits
 from astropy.time import Time
@@ -789,9 +790,12 @@ class BadPixels():
                     result = calwebb_detector1_save_jump(uncal_filename, ramp_fit=True,
                                                          save_fitopt=False, path=uncal_filepath)
                     logging.info('\tStarted Task {} with status {}'.format(result.id, result.state))
+                    while not result.ready():
+                        logging.info("\tTask status is {}".format(result.state))
+                        sleep(300)
                     jump_output, rate_output, _, output_dir = result.get()
-                    logging.info('\tFinished pipeline for {}'.format(uncal_file))
-                    logging.info('\tPipeline returned {} {} {}'.format(jump_output, rate_output, output_dir))
+                    logging.info('Pipeline finished')
+                    logging.info('Pipeline returned {} {} {}'.format(jump_output, rate_output, output_dir))
                     if self.nints > 1:
                         illuminated_slope_files[index] = rate_output.replace('0_ramp_fit', '1_ramp_fit')
                     else:
@@ -826,9 +830,12 @@ class BadPixels():
                 result = calwebb_detector1_save_jump.delay(uncal_filename, ramp_fit=True,
                                                            save_fitopt=True, path=uncal_filepath)
                 logging.info('\tStarted Task {} with status {}'.format(result.id, result.state))
+                while not result.ready():
+                    logging.info("\tTask status is {}".format(result.state))
+                    sleep(300)
                 jump_output, rate_output, fitopt_output, output_dir = result.get()
-                logging.info('Finished pipeline for {} {}'.format(uncal_file, rate_file))
-                logging.info('\tPipeline returned {} {} {} {}'.format(jump_output, rate_output, fitopt_output, output_dir))
+                logging.info('\tPipeline finished.')
+                logging.info('Pipeline returned {} {} {} {}'.format(jump_output, rate_output, fitopt_output, output_dir))
                 self.get_metadata(uncal_file)
                 dark_jump_files.append(jump_output)
                 dark_fitopt_files.append(fitopt_output)
