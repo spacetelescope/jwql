@@ -166,7 +166,7 @@ def edb_monitor(request, inst):
     with open("/Users/hilbert/python_repos/jwql/jwql/instrument_monitors/common_monitors/edb_nircam_tabbed_plots.json", 'r') as fp:
         data=json.dumps(json.loads(fp.read()))
 
-    template = "sandbox_detail.html"
+    template = "edb_monitor.html"
 
     context = {
         'inst': JWST_INSTRUMENT_NAMES_MIXEDCASE[inst],
