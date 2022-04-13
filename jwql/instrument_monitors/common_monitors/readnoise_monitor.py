@@ -557,7 +557,7 @@ class Readnoise():
                 # (plus a buffer to catch any missing files from the previous
                 # run) as the start time in the new MAST search.
                 most_recent_search = self.most_recent_search()
-                self.query_start = most_recent_search - 65
+                self.query_start = most_recent_search - 70
 
                 # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
