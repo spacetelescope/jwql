@@ -1863,7 +1863,7 @@ class EdbMnemonicMonitor():
         self.tabbed_figure()
 
 
-    def tabbed_figure(self, ncols=3):
+    def tabbed_figure(self, ncols=2):
         """Create a tabbed figure containing all of the mnemonic plots
 
         Parameters
@@ -1887,7 +1887,7 @@ class EdbMnemonicMonitor():
         output_file = os.path.join(self.plot_output_dir, basename)
         with open(output_file, 'w') as outfile:
             outfile.write(item_text)
-        print(f'JSON file with tabbed plots saved to {outfile}')
+        print(f'JSON file with tabbed plots saved to {output_file}')
 
 
 def add_every_change_history(dict1, dict2):
