@@ -181,5 +181,11 @@ class BiasMonitor(BokehTemplate):
                 if len(bias_vals) != 0:
                     self.refs['mean_bias_xr_amp{}_{}'.format(amp, kind)].start = expstarts.min() - timedelta(days=3)
                     self.refs['mean_bias_xr_amp{}_{}'.format(amp, kind)].end = expstarts.max() + timedelta(days=3)
-                    self.refs['mean_bias_yr_amp{}_{}'.format(amp, kind)].start = min(x for x in bias_vals if x is not None) - 20
-                    self.refs['mean_bias_yr_amp{}_{}'.format(amp, kind)].end = max(x for x in bias_vals if x is not None) + 20
+                    min_val, max_val = min(x for x in bias_vals if x is not None), max(x for x in bias_vals if x is not None)
+                    if min_val == max_val:
+                        self.refs['mean_bias_yr_amp{}_{}'.format(amp, kind)].start = min_val - 1
+                        self.refs['mean_bias_yr_amp{}_{}'.format(amp, kind)].end = max_val + 1
+                    else:
+                        offset = (max_val - min_val) * .1
+                        self.refs['mean_bias_yr_amp{}_{}'.format(amp, kind)].start = min_val - offset
+                        self.refs['mean_bias_yr_amp{}_{}'.format(amp, kind)].end = max_val + offset
