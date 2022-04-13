@@ -160,10 +160,12 @@ def edb_monitor(request, inst):
     """
     inst = inst.lower()
     plot_dir = os.path.join(CONFIG["outputs"], "edb_telemetry_monitor", inst)
+    json_file = f'edb_{inst}_tabbed_plots.json'
 
     # Get the json data that contains the tabbed plots
     #with open(os.path.join(plot_dir, f'edb_{inst}_tabbed_plots.json')), 'r'_ as fp:  # USE THIS LINE FOR PRODUCTION
-    with open("/Users/hilbert/python_repos/jwql/jwql/instrument_monitors/common_monitors/edb_nircam_tabbed_plots.json", 'r') as fp:
+    #with open("/Users/hilbert/python_repos/jwql/jwql/instrument_monitors/common_monitors/edb_nircam_tabbed_plots.json", 'r') as fp:
+    with open(os.path.join(plot_dir, json_file), 'r') as fp:
         data=json.dumps(json.loads(fp.read()))
 
     template = "edb_monitor.html"

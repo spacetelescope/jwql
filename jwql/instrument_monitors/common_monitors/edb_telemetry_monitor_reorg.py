@@ -39,7 +39,7 @@ from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils
 from jwql.utils.constants import EDB_DEFAULT_PLOT_RANGE, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import get_config
+from jwql.utils.utils import ensure_dir_exists, get_config
 
 
 # To query the EDB for a single mnemonic
@@ -1228,6 +1228,7 @@ class EdbMnemonicMonitor():
 
                     # Define the output directory in which the html files will be saved
                     self.plot_output_dir = os.path.join(base_dir, instrument_name)
+                    ensure_dir_exists(self.plot_output_dir)
 
                     # For development
                     #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_test.json')
@@ -1262,6 +1263,7 @@ class EdbMnemonicMonitor():
 
                 # Define the output directory in which the html files will be saved
                 self.plot_output_dir = os.path.join(base_dir, instrument_name)
+                ensure_dir_exists(self.plot_output_dir)
 
                 # Read in file with nominal list of mnemonics
                 with open(mnemonic_file) as json_file:
@@ -1881,8 +1883,11 @@ class EdbMnemonicMonitor():
 
         # Save the tabbed plot to a json file
         item_text = json.dumps(json_item(tabbed, "myplot"))
-        with open(f'edb_{self.instrument}_tabbed_plots.json', 'w') as outfile:
+        basename = f'edb_{self.instrument}_tabbed_plots.json'
+        output_file = os.path.join(self.plot_output_dir, basename)
+        with open(output_file, 'w') as outfile:
             outfile.write(item_text)
+        print(f'JSON file with tabbed plots saved to {outfile}')
 
 
 def add_every_change_history(dict1, dict2):

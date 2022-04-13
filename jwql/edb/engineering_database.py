@@ -708,19 +708,11 @@ def add_limit_boxes(fig, yellow=None, red=None):
             red_low = BoxAnnotation(bottom=red[0]-100, top=red[0], fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_low)
 
-            print('YH:', yellow_high.id)
-            print('YL:', yellow_low.id)
-            print('RH:', red_high.id)
-            print('RL:', red_low.id)
-
         else:
             yellow_high = BoxAnnotation(bottom=yellow[1], top=yellow[1] + 100, fill_color='gold', fill_alpha=0.2)
             fig.add_layout(yellow_high)
             yellow_low = BoxAnnotation(bottom=yellow[0] - 100, top=yellow[0], fill_color='gold', fill_alpha=0.2)
             fig.add_layout(yellow_low)
-
-            print('YH:', yellow_high.id)
-            print('YL:', yellow_low.id)
 
     else:
         if red is not None:
@@ -731,9 +723,6 @@ def add_limit_boxes(fig, yellow=None, red=None):
             red_low = BoxAnnotation(bottom=red[0]-100, top=red[0], fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_low)
 
-            print('GREEN:', green.id)
-            print('RH:', red_high.id)
-            print('RL:', red_low.id)
     return fig
 
 
