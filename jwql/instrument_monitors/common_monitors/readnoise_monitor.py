@@ -548,13 +548,6 @@ class Readnoise():
             siaf = Siaf(self.instrument)
             possible_apertures = list(siaf.apertures)
 
-            # Get the minimum groups needed to calculate readnoise for this instrument. MIRI
-            # removes the first five and last group before calculating the readnoise, so needs extra.
-            if instrument == 'miri':
-                min_groups = 8
-            else:
-                min_groups = 2
-
             for aperture in possible_apertures:
 
                 logging.info('\nWorking on aperture {} in {}'.format(aperture, instrument))
@@ -611,7 +604,13 @@ class Readnoise():
                         else:
                             num_groups = fits.getheader(uncal_filename)['NGROUPS']
                             num_ints = fits.getheader(uncal_filename)['NINTS']
-                            if (num_groups >= min_groups) & (num_ints >= 2):  # skip processing if the file doesnt have enough groups/ints to calculate the readnoise
+                            if instrument == 'miri':
+                                total_cds_frames = int((num_groups-6)/2) * num_ints
+                            else:
+                                total_cds_frames = int(num_groups/2) * num_ints
+                            # Skip processing if the file doesnt have enough groups/ints to calculate the readnoise.
+                            # MIRI needs extra since they omit the first five and last group before calculating the readnoise.
+                            if total_cds_frames >= 10:
                                 shutil.copy(uncal_filename, self.data_dir)
                                 logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
                                 set_permissions(output_filename)
