@@ -1871,7 +1871,7 @@ class EdbMnemonicMonitor():
         """
         panel_list = []
         for key, plot_list in self.figures.items():
-            grid = gridplot(plot_list, ncols=ncols)  # merge_tools=False to allow separate tools for each plot?
+            grid = gridplot(plot_list, ncols=ncols, merge_tools=False)  # merge_tool=False to allow separate tools for each plot?
 
             # Create one panel for each plot category
             panel_list.append(Panel(child=grid, title=key))

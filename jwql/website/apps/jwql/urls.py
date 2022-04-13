@@ -13,6 +13,7 @@ Authors
     - Matthew Bourque
     - Johannes Sahlmann
     - Teagan King
+    - Bryan Hilbert
 
 Use
 ---
