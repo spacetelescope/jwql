@@ -456,34 +456,6 @@ class EdbMnemonic:
         # Update the data in the instance.
         self.data = new_tab
 
-    """
-    def bokeh_plot(self, show_plot=False):
-        Make basic bokeh plot showing value as a function of time.
-
-        Returns
-        -------
-        [div, script] : list
-            List containing the div and js representations of figure.
-
-
-        abscissa = self.data['dates']
-        ordinate = self.data['euvalues']
-
-        p1 = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
-                    title=self.mnemonic_identifier, x_axis_label='Time',
-                    y_axis_label='Value ({})'.format(self.info['unit']))
-        p1.line(abscissa, ordinate, line_width=1, line_color='blue', line_dash='dashed')
-        p1.circle(abscissa, ordinate, color='blue')
-
-        if show_plot:
-            show(p1)
-        else:
-            script, div = components(p1)
-
-            return [div, script]
-        """
-
-
     def bokeh_plot(self, show_plot=False, savefig=False, out_dir='./', nominal_value=None, yellow_limits=None,
                    red_limits=None, xrange=(None, None), yrange=(None, None), return_components=True, return_fig=False):
         """Make basic bokeh plot showing value as a function of time.
