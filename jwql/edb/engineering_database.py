@@ -378,7 +378,10 @@ class EdbMnemonic:
             Number of sigma to use for sigma clipping
         """
         self.mean, self.median, self.stdev = sigma_clipped_stats(self.data["euvalues"], sigma=sigma)
-        self.median_time = calc_median_time(self.data["dates"])
+        self.mean = [self.mean]
+        self.median = [self.median]
+        self.stdev = [self.stdev]
+        self.median_time = [calc_median_time(self.data["dates"])]
 
     def interpolate(self, times):
         """Interpolate data euvalues at specified datetimes.
@@ -549,9 +552,14 @@ class EdbMnemonic:
             filename = os.path.join(out_dir, f"telem_plot_{self.mnemonic_identifier.replace(' ','_')}.html")
             print(f'\n\nSAVING HTML FILE TO: {filename}')
 
+        if self.info is None:
+            units = 'Unknown'
+        else:
+            units = self.info["unit"]
+
         fig = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
                      title=self.mnemonic_identifier, x_axis_label='Time',
-                     y_axis_label=f'{self.info["unit"]}')
+                     y_axis_label=f'{units}')
 
         # For cases where the plot is empty or contains only a single point, force the
         # plot range to something reasonable
@@ -570,15 +578,18 @@ class EdbMnemonic:
 
         if len(self.data["dates"]) == 0:
             data.visible = False
+            if nominal_value is not None:
+                fig.line(null_dates, np.repeat(nominal_value, len(null_dates)), color='black',
+                        line_dash='dashed', alpha=0.5)
         else:
             # If there is a nominal value provided, plot a dashed line for it
             if nominal_value is not None:
                 fig.line(self.data['dates'], np.repeat(nominal_value, len(self.data['dates'])), color='black',
                         line_dash='dashed', alpha=0.5)
 
-            # If limits for warnings/errors are provided, create colored background boxes
-            if yellow_limits is not None or red_limits is not None:
-                fig = add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
+        # If limits for warnings/errors are provided, create colored background boxes
+        if yellow_limits is not None or red_limits is not None:
+            fig = add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
 
         # Make the x axis tick labels look nice
         fig.xaxis.formatter=DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
@@ -686,6 +697,7 @@ def add_limit_boxes(fig, yellow=None, red=None):
     if yellow is not None:
         green = BoxAnnotation(bottom=yellow[0], top=yellow[1], fill_color='chartreuse', fill_alpha=0.2)
         fig.add_layout(green)
+        print('GREEN:', green.id)
         if red is not None:
             yellow_high = BoxAnnotation(bottom=yellow[1], top=red[1], fill_color='gold', fill_alpha=0.2)
             fig.add_layout(yellow_high)
@@ -695,11 +707,21 @@ def add_limit_boxes(fig, yellow=None, red=None):
             fig.add_layout(red_high)
             red_low = BoxAnnotation(bottom=red[0]-100, top=red[0], fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_low)
+
+            print('YH:', yellow_high.id)
+            print('YL:', yellow_low.id)
+            print('RH:', red_high.id)
+            print('RL:', red_low.id)
+
         else:
             yellow_high = BoxAnnotation(bottom=yellow[1], top=yellow[1] + 100, fill_color='gold', fill_alpha=0.2)
             fig.add_layout(yellow_high)
             yellow_low = BoxAnnotation(bottom=yellow[0] - 100, top=yellow[0], fill_color='gold', fill_alpha=0.2)
             fig.add_layout(yellow_low)
+
+            print('YH:', yellow_high.id)
+            print('YL:', yellow_low.id)
+
     else:
         if red is not None:
             green = BoxAnnotation(bottom=red[0], top=red[1], fill_color='chartreuse', fill_alpha=0.2)
@@ -708,6 +730,10 @@ def add_limit_boxes(fig, yellow=None, red=None):
             fig.add_layout(red_high)
             red_low = BoxAnnotation(bottom=red[0]-100, top=red[0], fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_low)
+
+            print('GREEN:', green.id)
+            print('RH:', red_high.id)
+            print('RL:', red_low.id)
     return fig
 
 
@@ -1084,7 +1110,11 @@ def process_mast_service_request_result(result, data_as_table=True):
         if data_as_table:
             data = Table(json_data['data'])
         else:
-            data = json_data['data'][0]
+            if len(json_data['data']) > 0:
+                data = json_data['data'][0]
+            else:
+                warnings.warn('Query did not return any data. Returning None')
+                return None, None
     except KeyError:
         warnings.warn('Query did not return any data. Returning None')
         return None, None
