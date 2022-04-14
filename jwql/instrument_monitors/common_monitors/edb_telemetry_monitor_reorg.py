@@ -458,6 +458,113 @@ class EdbMnemonicMonitor():
                 all_stdevs.append(bin_stdev)
         return all_means, all_meds, all_stdevs, all_times
 
+    @log_fail
+    @log_info
+    def execute(self, mnem_to_query=None, plot_start=None, plot_end=None):
+        """Top-level wrapper to run the monitor. Take a requested list of mnemonics to
+        process, or assume that mnemonics will be processed.
+
+        Parameters
+        ----------
+        mnem_to_query : dict
+            NOT YET IMPLEMENTED
+            Mnemonic names to query. This should be a dictionary with the instrument
+            names as keys and a list of mnemonic names as the value. This option is
+            intended for use when someone requests, from the website, an expanded timeframe
+            compared to the default. The monitor will then look up the details
+            of each mnemonic (i.e. dependencies, averaging) from the standard
+            json file, and will run the query using query_start and query_end.
+
+        plot_start : astropy.time.Time
+            NOT YET IMPLEMENTED
+            Start time to use for the query when requested from the website. Note
+            that the query will be broken up into multiple queries, each spanning
+            the default amount of time, in order to prevent querying for too much
+            data at one time.
+
+        plot_end : astropy.time.Time
+            NOT YET IMPLEMENTED
+            End time to use for the query when requested from the website.
+        """
+        # This is a dictionary that will hold the query results for multiple mnemonics,
+        # in an effort to minimize the number of EDB queries and save time.
+        self.query_results = {}
+
+        # The cadence with which the EDB is queried. This is different than the query
+        # duration. This is the cadence of the query starts, while the duration is the
+        # block of time to query over. For example, a cadence of 1 day and a duration
+        # of 15 minutes means that the EDB will be queried over 12:00am - 12:15am each
+        # day.
+        self.query_cadence = datetime.timedelta(days=1)
+
+        # Set up directory structure to hold the saved plots
+        config = get_config()
+        base_dir = os.path.join(config["outputs"], "edb_telemetry_monitor")
+        ensure_dir_exists(base_dir)
+
+        # Case where the user is requesting the monitor run for some subset of
+        # mnemonics for some non-standard time span
+        if mnem_to_query is not None:
+            if plot_start is None or plot_end is None:
+                raise ValueError(("If mnem_to_query is provided, plot_start and plot_end "
+                                  "must also be provided."))
+
+            for instrument_name in JWST_INSTRUMENT_NAMES:
+                if instrument_name in mnem_to_query:
+                    # Read in a list of mnemonics that the instrument teams want to monitor
+                    # From either a text file, or a edb_mnemonics_montior database table
+                    monitor_dir = os.path.dirname(os.path.abspath(__file__))
+                    #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', f'{instrument_name.lower()}_mnemonics_to_monitor.json')
+
+                    # Define the output directory in which the html files will be saved
+                    self.plot_output_dir = os.path.join(base_dir, instrument_name)
+                    ensure_dir_exists(self.plot_output_dir)
+
+                    # For development
+                    #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_test.json')
+                    mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'nircam_mnemonic_to_monitor.json')
+
+                    # Read in file with nominal list of mnemonics
+                    with open(mnemonic_file) as json_file:
+                        mnem_dict = json.load(json_file)
+
+                    # Filter to keep only the requested mnemonics
+                    filtered_mnemonic_dict = {}
+                    for telem_type in mnem_dict:
+                        for mnemonic in mnem_dict[telem_type]:
+                            if mnemonic["name"] in mnem_to_query:
+                                if telem_type not in filtered_mnemonic_dict:
+                                    filtered_mnemonic_dict[telem_type] = []
+                                filtered_mnemonic_dict[telem_type].append(mnemonic)
+
+                    self.run(instrument_name, filtered_mnemonic_dict, plot_start=plot_start, plot_end=plot_end)
+                    logging.info(f'Monitor complete for {instument_name}')
+        else:
+            # Here, no input was provided on specific mnemonics to run, so we run the entire suite
+            # as defined by the json files. This is the default operation.
+
+            # Loop over all instruments
+            for instrument_name in ['nircam']:  #JWST_INSTRUMENT_NAMES:
+                monitor_dir = os.path.dirname(os.path.abspath(__file__))
+
+                # For development
+                #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_test.json')
+                mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'nircam_mnemonics_to_monitor.json')
+
+                # Define the output directory in which the html files will be saved
+                self.plot_output_dir = os.path.join(base_dir, instrument_name)
+                ensure_dir_exists(self.plot_output_dir)
+
+                # Read in file with nominal list of mnemonics
+                with open(mnemonic_file) as json_file:
+                    mnem_dict = json.load(json_file)
+
+                # Run with the entire dictionary
+                self.run(instrument_name, mnem_dict, plot_start=plot_start, plot_end=plot_end)
+                logging.info(f'Monitor complete for {instument_name}')
+
+        logging.info(f'EDB Telemetry Monitor completed successfully.')
+
     def filter_telemetry(self, mnem, data, dep_list):
         """
         Filter telemetry data for a single mnemonic based on a list of
@@ -1048,107 +1155,6 @@ class EdbMnemonicMonitor():
         logging.info(f'DONE retrieving/filtering/averaging data for {mnemonic_dict["name"]}')
         return all_data
 
-    def execute(self, mnem_to_query=None, plot_start=None, plot_end=None):
-        """Top-level wrapper to run the monitor. Take a requested list of mnemonics to
-        process, or assume that mnemonics will be processed.
-
-        Parameters
-        ----------
-        mnem_to_query : dict
-            NOT YET IMPLEMENTED
-            Mnemonic names to query. This should be a dictionary with the instrument
-            names as keys and a list of mnemonic names as the value. This option is
-            intended for use when someone requests, from the website, an expanded timeframe
-            compared to the default. The monitor will then look up the details
-            of each mnemonic (i.e. dependencies, averaging) from the standard
-            json file, and will run the query using query_start and query_end.
-
-        plot_start : astropy.time.Time
-            NOT YET IMPLEMENTED
-            Start time to use for the query when requested from the website. Note
-            that the query will be broken up into multiple queries, each spanning
-            the default amount of time, in order to prevent querying for too much
-            data at one time.
-
-        plot_end : astropy.time.Time
-            NOT YET IMPLEMENTED
-            End time to use for the query when requested from the website.
-        """
-        # This is a dictionary that will hold the query results for multiple mnemonics,
-        # in an effort to minimize the number of EDB queries and save time.
-        self.query_results = {}
-
-        # The cadence with which the EDB is queried. This is different than the query
-        # duration. This is the cadence of the query starts, while the duration is the
-        # block of time to query over. For example, a cadence of 1 day and a duration
-        # of 15 minutes means that the EDB will be queried over 12:00am - 12:15am each
-        # day.
-        self.query_cadence = datetime.timedelta(days=1)
-
-        # Set up directory structure to hold the saved plots
-        config = get_config()
-        base_dir = os.path.join(config["outputs"], "edb_telemetry_monitor")
-        ensure_dir_exists(base_dir)
-
-        # Case where the user is requesting the monitor run for some subset of
-        # mnemonics for some non-standard time span
-        if mnem_to_query is not None:
-            if plot_start is None or plot_end is None:
-                raise ValueError(("If mnem_to_query is provided, plot_start and plot_end "
-                                  "must also be provided."))
-
-            for instrument_name in JWST_INSTRUMENT_NAMES:
-                if instrument_name in mnem_to_query:
-                    # Read in a list of mnemonics that the instrument teams want to monitor
-                    # From either a text file, or a edb_mnemonics_montior database table
-                    monitor_dir = os.path.dirname(os.path.abspath(__file__))
-                    #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', f'{instrument_name.lower()}_mnemonics_to_monitor.json')
-
-                    # Define the output directory in which the html files will be saved
-                    self.plot_output_dir = os.path.join(base_dir, instrument_name)
-                    ensure_dir_exists(self.plot_output_dir)
-
-                    # For development
-                    #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_test.json')
-                    mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'nircam_mnemonic_to_monitor.json')
-
-                    # Read in file with nominal list of mnemonics
-                    with open(mnemonic_file) as json_file:
-                        mnem_dict = json.load(json_file)
-
-                    # Filter to keep only the requested mnemonics
-                    filtered_mnemonic_dict = {}
-                    for telem_type in mnem_dict:
-                        for mnemonic in mnem_dict[telem_type]:
-                            if mnemonic["name"] in mnem_to_query:
-                                if telem_type not in filtered_mnemonic_dict:
-                                    filtered_mnemonic_dict[telem_type] = []
-                                filtered_mnemonic_dict[telem_type].append(mnemonic)
-
-                    self.run(instrument_name, filtered_mnemonic_dict, plot_start=plot_start, plot_end=plot_end)
-        else:
-            # Here, no input was provided on specific mnemonics to run, so we run the entire suite
-            # as defined by the json files. This is the default operation.
-
-            # Loop over all instruments
-            for instrument_name in ['nircam']:  #JWST_INSTRUMENT_NAMES:
-                monitor_dir = os.path.dirname(os.path.abspath(__file__))
-
-                # For development
-                #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_test.json')
-                mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'nircam_mnemonics_to_monitor.json')
-
-                # Define the output directory in which the html files will be saved
-                self.plot_output_dir = os.path.join(base_dir, instrument_name)
-                ensure_dir_exists(self.plot_output_dir)
-
-                # Read in file with nominal list of mnemonics
-                with open(mnemonic_file) as json_file:
-                    mnem_dict = json.load(json_file)
-
-                # Run with the entire dictionary
-                self.run(instrument_name, mnem_dict, plot_start=plot_start, plot_end=plot_end)
-
     def run(self, instrument, mnemonic_dict, plot_start=None, plot_end=None):
         """Run the monitor on a single mnemonic.
 
@@ -1428,7 +1434,6 @@ class EdbMnemonicMonitor():
 
         # Create a tabbed, gridded set of plots for each category of plot, and save as a json file.
         self.tabbed_figure()
-
 
     def tabbed_figure(self, ncols=2):
         """Create a tabbed object containing a panel of gridded plots in each tab.
@@ -1797,5 +1802,10 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
 
 
 if __name__ == '__main__':
+    module = os.path.basename(__file__).strip('.py')
+    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
+
     monitor = EdbMnemonicMonitor()
     monitor.execute()
+
+    monitor_utils.update_monitor_table(module, start_time, log_file)

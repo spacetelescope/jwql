@@ -1,24 +1,8 @@
-see test_file.json for proposed final format
 {
-    "5_min": [
-        {
-            "name": "SOMETHING",
-            "description": "example of 5 min",
-            "dependency": [
-                {
-                    "name": "SAME",
-                    "relation": "brother",
-                    "threshold": 2
-                }
-            ],
-            "plot_data": "*SE_ZBUSVLT",
-            "plot_trendlines": [7.0, 7.57, 8.13],
-            "plot_category": "power"
-        }
-    ],
     "daily_means": [
         {
             "name": "SE_ZIMIRICEA",
+            "database_id": "SE_ZIMIRICEA_NO_OPS",
             "description": "ICE drive current (no ops)",
             "dependency": [
                 {
@@ -33,62 +17,29 @@ see test_file.json for proposed final format
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "*SE_ZBUSVLT",
-            "nominal_trendlines": [7.57],
-            "plot_trendlines": [7.0, 7.57, 8.13],
-            "plot_category": "power"
-        },
-        {
-            "name": "SE_ZBUSVLT",
-            "description": "Drive voltage",
-            "dependency": [
-                {
-                    "name": "SE_ZIMIRICEA",
-                    "relation": ">",
-                    "threshold": 0.2
-                },
-                {
-                    "name": "IMIR_HK_ICE_SEC_VOLT1",
-                    "relation": "<",
-                    "threshold": 1
-                },
-                {
-                    "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
-                },
-                {
-                    "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
-                },
-                {
-                    "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
-                }
-            ],
-            "plot_data": "none",
-            "plot_trendlines": [],
-            "plot_category": "voltage"
+            "nominal_value": 7.57,
+            "yellow_limits": [7.0, 8.13],
+            "plot_category": "Power",
         },
         {
             "name": "IMIR_HK_ICE_SEC_VOLT4",
-            "description": "ICE secondary voltage 4 (no ops)",
+            "database_id": "IMIR_HK_ICE_SEC_VOLT4_NO_OPS",
+            "description": "ICE Secondary Voltage 4 (no ops)",
             "dependency": [
                 {
                     "name": "SE_ZIMIRICEA",
@@ -102,23 +53,24 @@ see test_file.json for proposed final format
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [4.52, 4.53, 4.55],
-            "plot_category": "voltage"
+            "nominal_value": 4.53,
+            "yellow_limits": [4.52, 4.55],
+            "plot_category": "ICE_voltage",
         },
         {
             "name": "IGDP_MIR_ICE_INTER_TEMP",
@@ -151,8 +103,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [5.0, 30.0],
-            "plot_category": "temperature"
+            "yellow_limits": [5.0, 30.0],
+            "plot_category": "ICE_temperature"
         },
         {
             "name": "SI_GZMPT1AK",
@@ -185,42 +137,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "temperature"
-        },
-        {
-            "name": "ST_ZTC1MIRIA",
-            "description": "ICE A IEC panel Temp",
-            "dependency": [
-                {
-                    "name": "SE_ZIMIRICEA",
-                    "relation": ">",
-                    "threshold": 0.2
-                },
-                {
-                    "name": "IMIR_HK_ICE_SEC_VOLT1",
-                    "relation": "<",
-                    "threshold": 1
-                },
-                {
-                    "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
-                },
-                {
-                    "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
-                },
-                {
-                    "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
-                }
-            ],
-            "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "temperature"
+            "yellow_limits": [],
+            "plot_category": "ICE_temperature"
         },
         {
             "name": "IGDP_MIR_ICE_T1P_CRYO",
@@ -253,8 +171,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [5.7, 7.5],
-            "plot_category": "temperature"
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "Deck_temperature"
         },
         {
             "name": "IGDP_MIR_ICE_T2R_CRYO",
@@ -287,8 +205,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [5.7, 7.5],
-            "plot_category": "temperature"
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "Deck_temperature"
         },
         {
             "name": "IGDP_MIR_ICE_T3LW_CRYO",
@@ -321,8 +239,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [5.7, 7.5],
-            "plot_category": "temperature"
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "FPM_temperature"
         },
         {
             "name": "IGDP_MIR_ICE_T4SW_CRYO",
@@ -355,8 +273,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [5.7, 7.5],
-            "plot_category": "temperature"
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "FPM_temperature"
         },
         {
             "name": "IGDP_MIR_ICE_T5IMG_CRYO",
@@ -389,8 +307,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [5.7, 7.5],
-            "plot_category": "temperature"
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "FPM_temperature"
         },
         {
             "name": "IGDP_MIR_ICE_T6DECKCRYO",
@@ -423,8 +341,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [5.7, 7.5],
-            "plot_category": "temperature"
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "Deck_temperature"
         },
         {
             "name": "IGDP_MIR_ICE_T7IOC_CRYO",
@@ -457,10 +375,10 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [5.7, 7.5],
-            "plot_category": "temperature"
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "Deck_temperature"
         },
-        {
+       {
             "name": "IGDP_MIR_ICE_FW_CRYO",
             "description": "FWA Temperature",
             "dependency": [
@@ -491,8 +409,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [5.7, 7.5],
-            "plot_category": "temperature"
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "FW_temperature"
         },
         {
             "name": "IGDP_MIR_ICE_CCC_CRYO",
@@ -525,8 +443,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [5.7, 7.5],
-            "plot_category": "temperature"
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "FW_temperature"
         },
         {
             "name": "IGDP_MIR_ICE_GW14_CRYO",
@@ -559,8 +477,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [5.7, 7.5],
-            "plot_category": "temperature"
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "FW_temperature"
         },
         {
             "name": "IGDP_MIR_ICE_GW23_CRYO",
@@ -593,8 +511,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [5.7, 7.5],
-            "plot_category": "temperature"
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "FW_temperature"
         },
         {
             "name": "IGDP_MIR_ICE_POMP_CRYO",
@@ -627,8 +545,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [5.7, 7.5],
-            "plot_category": "temperature"
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "POM_temperature"
         },
         {
             "name": "IGDP_MIR_ICE_POMR_CRYO",
@@ -661,8 +579,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [5.7, 7.5],
-            "plot_category": "temperature"
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "POM_temperature"
         },
         {
             "name": "IGDP_MIR_ICE_IFU_CRYO",
@@ -695,8 +613,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [5.7, 7.5],
-            "plot_category": "temperature"
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "Cal_src_temperature"
         },
         {
             "name": "IGDP_MIR_ICE_IMG_CRYO",
@@ -729,8 +647,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [5.7, 7.5],
-            "plot_category": "temperature"
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "Cal_src_temperature"
         },
         {
             "name": "SE_ZIMIRFPEA",
@@ -758,8 +676,9 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "*SE_ZBUSVLT",
-            "plot_trendlines": [27.94, 30.31, 32.67],
-            "plot_category": "power"
+            "nominal_value": 30.31,
+            "yellow_limits": [27.94, 32.67],
+            "plot_category": "Power"
         },
         {
             "name": "IMIR_PDU_V_DIG_5V",
@@ -787,8 +706,9 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [4.95, 5.0, 5.05],
-            "plot_category": "voltage"
+            "nominal_value": 5.0,
+            "yellow_limits": [4.95, 5.05],
+            "plot_category": "FPE_voltage"
         },
         {
             "name": "IMIR_PDU_I_DIG_5V",
@@ -816,8 +736,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "power"
+            "plot_category": "FPE_current"
         },
         {
             "name": "IMIR_PDU_V_ANA_5V",
@@ -845,8 +764,9 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [4.95, 5.0, 5.05],
-            "plot_category": "voltage"
+            "nominal_value": 5.0,
+            "yellow_limits": [4.95, 5.05],
+            "plot_category": "FPE_voltage"
         },
         {
             "name": "IMIR_PDU_I_ANA_5V",
@@ -874,8 +794,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "power"
+            "plot_category": "FPE_current"
         },
         {
             "name": "IMIR_PDU_V_ANA_N5V",
@@ -903,8 +822,9 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [-5.05, -5.0, -4.95],
-            "plot_category": "voltage"
+            "nominal_value": 5.0,
+            "yellow_limits": [-5.05, -4.95],
+            "plot_category": "FPE_voltage"
         },
         {
             "name": "IMIR_PDU_I_ANA_N5V",
@@ -932,8 +852,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "power"
+            "plot_category": "FPE_current"
         },
         {
             "name": "IMIR_PDU_V_ANA_7V",
@@ -961,8 +880,9 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [6.95, 7.0, 7.05],
-            "plot_category": "voltage"
+            "nominal_value": 7.0,
+            "yellow_limits": [6.95, 7.05],
+            "plot_category": "FPE_voltage"
         },
         {
             "name": "IMIR_PDU_I_ANA_7V",
@@ -990,8 +910,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "power"
+            "plot_category": "FPE_current"
         },
         {
             "name": "IMIR_PDU_V_ANA_N7V",
@@ -1019,8 +938,9 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [-7.05, -7.0, -6.95],
-            "plot_category": "voltage"
+            "nominal_value": -7.0,
+            "yellow_limits": [-7.05, -6.95],
+            "plot_category": "FPE_voltage"
         },
         {
             "name": "IMIR_PDU_I_ANA_N7V",
@@ -1048,8 +968,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "power"
+            "plot_category": "FPE_current"
         },
         {
             "name": "IMIR_SPW_V_DIG_2R5V",
@@ -1077,8 +996,9 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [2.45, 2.5, 2.55],
-            "plot_category": "voltage"
+            "nominal_value": 2.5,
+            "yellow_limits": [2.45, 2.55],
+            "plot_category": "FPE_voltage"
         },
         {
             "name": "IMIR_PDU_V_REF_2R5V",
@@ -1106,8 +1026,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "voltage"
+            "plot_category": "FPE_voltage"
         },
         {
             "name": "IGDP_MIR_IC_V_VDETCOM",
@@ -1135,8 +1054,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "bias"
+            "plot_category": "Detector_bias"
         },
         {
             "name": "IGDP_MIR_SW_V_VDETCOM",
@@ -1164,8 +1082,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "bias"
+            "plot_category": "Detector_bias"
         },
         {
             "name": "IGDP_MIR_LW_V_VDETCOM",
@@ -1193,8 +1110,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "bias"
+            "plot_category": "Detector_bias"
         },
         {
             "name": "IGDP_MIR_IC_V_VSSOUT",
@@ -1222,8 +1138,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "bias"
+            "plot_category": "Detector_bias"
         },
         {
             "name": "IGDP_MIR_SW_V_VSSOUT",
@@ -1251,8 +1166,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "bias"
+            "plot_category": "Detector_bias"
         },
         {
             "name": "IGDP_MIR_LW_V_VSSOUT",
@@ -1280,8 +1194,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "bias"
+            "plot_category": "Detector_bias"
         },
         {
             "name": "IGDP_MIR_IC_V_VRSTOFF",
@@ -1309,8 +1222,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "bias"
+            "plot_category": "Detector_bias"
         },
         {
             "name": "IGDP_MIR_SW_V_VRSTOFF",
@@ -1338,8 +1250,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "bias"
+            "plot_category": "Detector_bias"
         },
         {
             "name": "IGDP_MIR_LW_V_VRSTOFF",
@@ -1367,8 +1278,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "bias"
+            "plot_category": "Detector_bias"
         },
         {
             "name": "IGDP_MIR_IC_V_VP",
@@ -1396,8 +1306,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "bias"
+            "plot_category": "Detector_bias"
         },
         {
             "name": "IGDP_MIR_SW_V_VP",
@@ -1425,8 +1334,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "bias"
+            "plot_category": "Detector_bias"
         },
         {
             "name": "IGDP_MIR_LW_V_VP",
@@ -1454,8 +1362,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "bias"
+            "plot_category": "Detector_bias"
         },
         {
             "name": "IGDP_MIR_IC_V_VDDUC",
@@ -1483,8 +1390,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "bias"
+            "plot_category": "Detector_bias"
         },
         {
             "name": "IGDP_MIR_SW_V_VDDUC",
@@ -1512,8 +1418,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "bias"
+            "plot_category": "Detector_bias"
         },
         {
             "name": "IGDP_MIR_LW_V_VDDUC",
@@ -1541,8 +1446,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "bias"
+            "plot_category": "Detector_bias"
         },
         {
             "name": "IMIR_PDU_TEMP",
@@ -1570,8 +1474,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [238.15, 366.15],
-            "plot_category": "temperature"
+            "yellow_limits": [238.15, 366.15],
+            "plot_category": "FPE_temperature"
         },
         {
             "name": "SI_GZMPT2AK",
@@ -1599,8 +1503,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "temperature"
+            "plot_category": "FPE_temperature"
         },
         {
             "name": "ST_ZTC2MIRIA",
@@ -1628,8 +1531,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "temperature"
+            "plot_category": "FPE_temperature"
         },
         {
             "name": "IMIR_IC_SCE_ANA_TEMP1",
@@ -1657,8 +1559,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [238.2, 350.0],
-            "plot_category": "temperature"
+            "yellow_limits": [238.2, 350.0],
+            "plot_category": "FPE_temperature"
         },
         {
             "name": "IMIR_SW_SCE_ANA_TEMP1",
@@ -1687,7 +1589,7 @@ see test_file.json for proposed final format
             ],
             "plot_data": "nominal",
             "plot_trendlines": [238.2, 350.0],
-            "plot_category": "temperature"
+            "plot_category": "FPE_temperature"
         },
         {
             "name": "IMIR_LW_SCE_ANA_TEMP1",
@@ -1715,8 +1617,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [238.2, 350.0],
-            "plot_category": "temperature"
+            "yellow_limits": [238.2, 350.0],
+            "plot_category": "FPE_temperature"
         },
         {
             "name": "IMIR_IC_SCE_DIG_TEMP",
@@ -1744,8 +1646,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [238.2, 350.0],
-            "plot_category": "temperature"
+            "yellow_limits": [238.2, 350.0],
+            "plot_category": "FPE_temperature"
         },
         {
             "name": "IMIR_SW_SCE_DIG_TEMP",
@@ -1773,8 +1675,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [238.2, 350.0],
-            "plot_category": "temperature"
+            "yellow_limits": [238.2, 350.0],
+            "plot_category": "FPE_temperature"
         },
         {
             "name": "IMIR_LW_SCE_DIG_TEMP",
@@ -1802,8 +1704,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [238.2, 350.0],
-            "plot_category": "temperature"
+            "yellow_limits": [238.2, 350.0],
+            "plot_category": "FPE_temperature"
         },
         {
             "name": "IGDP_MIR_IC_DET_TEMP",
@@ -1831,8 +1733,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "temperature"
+            "plot_category": "FPE_temperature"
         },
         {
             "name": "IGDP_MIR_SW_DET_TEMP",
@@ -1860,8 +1761,7 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "temperature"
+            "plot_category": "FPE_temperature"
         },
         {
             "name": "IGDP_MIR_LW_DET_TEMP",
@@ -1889,14 +1789,14 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [],
-            "plot_category": "temperature"
+            "plot_category": "FPE_temperature"
         }
     ],
-    "block_means": [
+    "block_means":[
         {
             "name": "IMIR_HK_ICE_SEC_VOLT1",
-            "description": "ICE secondary Voltage (HV) V1",
+            "database_id": "IMIR_HK_ICE_SEC_VOLT1_OPS",
+            "description": "ICE Secondary Voltage (HV) 1",
             "dependency": [
                 {
                     "name": "IMIR_HK_ICE_SEC_VOLT1",
@@ -1905,12 +1805,14 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [39.11, 39.21, 39.31],
-            "plot_category": "voltage"
+            "nominal_value": 39.21,
+            "yellow_limits": [39.11, 39.31],
+            "plot_category": "ICE_voltage",
         },
         {
             "name": "IMIR_HK_ICE_SEC_VOLT2",
-            "description": "ICE secondary Voltage (HV) V2",
+            "database_id": "IMIR_HK_ICE_SEC_VOLT2_OPS",
+            "description": "ICE Secondary Voltage (HV) 2",
             "dependency": [
                 {
                     "name": "IMIR_HK_ICE_SEC_VOLT1",
@@ -1919,12 +1821,14 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [78.99, 79.19, 79.39],
-            "plot_category": "voltage"
+            "nominal_value": 79.19,
+            "yellow_limits": [78.99, 79.39],
+            "plot_category": "ICE_voltage",
         },
         {
             "name": "IMIR_HK_ICE_SEC_VOLT3",
-            "description": "ICE secondary Voltage (HV) V3",
+            "database_id": "IMIR_HK_ICE_SEC_VOLT3_OPS",
+            "description": "ICE Secondary Voltage (HV) 3",
             "dependency": [
                 {
                     "name": "IMIR_HK_ICE_SEC_VOLT1",
@@ -1933,12 +1837,14 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [39.82, 39.87, 39.92],
-            "plot_category": "voltage"
+            "nominal_value": 39.87,
+            "yellow_limits": [39.82, 39.92],
+            "plot_category": "ICE_voltage",
         },
         {
             "name": "IMIR_HK_ICE_SEC_VOLT4",
-            "description": "ICE secondary Voltage (HV) V4",
+            "database_id": "IMIR_HK_ICE_SEC_VOLT4_OPS",
+            "description": "ICE Secondary Voltage (HV) 4",
             "dependency": [
                 {
                     "name": "IMIR_HK_ICE_SEC_VOLT1",
@@ -1947,12 +1853,14 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [4.86, 4.88, 4.91],
-            "plot_category": "voltage"
+            "nominal_value": 4.88,
+            "yellow_limits": [4.86, 4.91],
+            "plot_category": "ICE_voltage",
         },
         {
             "name": "SE_ZIMIRICEA",
-            "description": "ICE drive current (HV)",
+            "database_id": "SE_ZIMIRICEA_OPS",
+            "description": "ICE drive current",
             "dependency": [
                 {
                     "name": "IMIR_HK_ICE_SEC_VOLT1",
@@ -1961,11 +1869,13 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "*SE_ZBUSVLT",
-            "plot_trendlines": [10.23, 11.13, 12.02],
-            "plot_category": "power"
+            "nominal_value": 11.13,
+            "yellow_limits": [10.23, 12.02],
+            "plot_category": "ICE_power",
         },
         {
             "name": "IMIR_HK_FW_POS_VOLT",
+            "database_id": "IMIR_HK_FW_POS_VOLT",
             "description": "FW position sensor supply voltage",
             "dependency": [
                 {
@@ -1975,11 +1885,13 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [290.39, 292.39, 294.39],
-            "plot_category": "voltage"
+            "nominal_value": 292.39,
+            "yellow_limits": [290.39, 294.39],
+            "plot_category": "filter_wheel",
         },
         {
             "name": "IMIR_HK_GW14_POS_VOLT",
+            "database_id": "IMIR_HK_GW14_POS_VOLT",
             "description": "GW14 position sensor supply voltage",
             "dependency": [
                 {
@@ -1989,11 +1901,13 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [291.92, 293.92, 295.92],
-            "plot_category": "voltage"
+            "nominal_value": 293.92,
+            "yellow_limits": [291.92, 295.92],
+            "plot_category": "filter_wheel",
         },
         {
             "name": "IMIR_HK_GW23_POS_VOLT",
+            "database_id": "IMIR_HK_GW23_POS_VOLT",
             "description": "GW23 position sensor supply voltage",
             "dependency": [
                 {
@@ -2003,26 +1917,29 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [295.52, 297.52, 299.52],
-            "plot_category": "voltage"
+            "nominal_value": 297.52,
+            "yellow_limits": [295.52, 299.52],
+            "plot_category": "filter_wheel",
         },
         {
             "name": "IMIR_HK_CCC_POS_VOLT",
+            "database_id": "IMIR_HK_CCC_POS_VOLT",
             "description": "CCC position sensor supply voltage",
             "dependency": [
                 {
-                    "name": "IMIR_HK_CCC_POS_VOLT ",
+                    "name": "IMIR_HK_CCC_POS_VOLT",
                     "relation": ">",
                     "threshold": 0.25
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [294.31, 296.31, 298.31],
-            "plot_category": "voltage"
+            "nominal_value": 296.31,
+            "yellow_limits": [294.31, 298.31],
+            "plot_category": "filter_wheel",
         }
     ],
     "every_change": [
-		{
+        {
             "name": "IMIR_HK_FW_POS_RATIO",
             "description": "FW position sensor ratio",
             "dependency": [
@@ -2033,39 +1950,11 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [-1.6, 1.6],
+            "yellow_limits": [-1.6, 1.6],
             "plot_category": "wheel_ratios"
         },
         {
-            "name": "IMIR_HK_FW_CUR_POS",
-            "description": "FW commanded position",
-            "dependency": [
-                {
-                    "name": "IMIR_HK_FW_CUR_POS",
-                    "relation": "none",
-                    "threshold": 0
-                }
-            ],
-            "plot_data": "nominal",
-            "plot_trendlines": [-1.6, 1.6],
-            "plot_category": "wheel_ratios"
-        },
-		{
             "name": "IMIR_HK_GW14_POS_RATIO",
-            "description": "GW14 position sensor ratio",
-            "dependency": [
-                {
-                    "name": "IMIR_HK_GW14_CUR_POS",
-                    "relation": "none",
-                    "threshold": 0
-                }
-            ],
-            "plot_data": "nominal",
-            "plot_trendlines": [-1.6, 1.6],
-            "plot_category": "wheel_ratios"
-        },
-        {
-            "name": "IMIR_HK_GW14_CUR_POS",
             "description": "GW14 commanded position",
             "dependency": [
                 {
@@ -2075,25 +1964,11 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [-1.6, 1.6],
-            "plot_category": "wheel_ratios"
-        },
-		{
-            "name": "IMIR_HK_GW23_POS_RATIO",
-            "description": "GW23 position sensor ratio",
-            "dependency": [
-                {
-                    "name": "IMIR_HK_GW23_CUR_POS",
-                    "relation": "none",
-                    "threshold": 0
-                }
-            ],
-            "plot_data": "nominal",
-            "plot_trendlines": [-1.6, 1.6],
-            "plot_category": "wheel_ratios"
+            "yellow_limits": [-1.6, 1.6],
+            "plot_category": "filter_wheel"
         },
         {
-            "name": "IMIR_HK_GW23_CUR_POS",
+            "name": "IMIR_HK_GW23_POS_RATIO",
             "description": "GW23 commanded position",
             "dependency": [
                 {
@@ -2103,25 +1978,11 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [-1.6, 1.6],
-            "plot_category": "wheel_ratios"
-        },
-		{
-            "name": "IMIR_HK_CCC_POS_RATIO",
-            "description": "CCC position sensor ratio",
-            "dependency": [
-                {
-                    "name": "IMIR_HK_CCC_CUR_POS",
-                    "relation": "none",
-                    "threshold": 0
-                }
-            ],
-            "plot_data": "nominal",
-            "plot_trendlines": [-6.0, 6.0],
-            "plot_category": "wheel_ratios"
+            "yellow_limits": [-1.6, 1.6],
+            "plot_category": "filter_wheel"
         },
         {
-            "name": "IMIR_HK_CCC_CUR_POS",
+            "name": "IMIR_HK_CCC_POS_RATIO",
             "description": "CCC commanded position",
             "dependency": [
                 {
@@ -2131,22 +1992,8 @@ see test_file.json for proposed final format
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [-1.6, 1.6],
-            "plot_category": "wheel_ratios"
-        },
-        {
-            "name": "IMIR_HK_CCC_ACTUATOR",
-            "description": "CCC actuator",
-            "dependency": [
-                {
-                    "name": "IMIR_HK_CCC_CUR_POS",
-                    "relation": "none",
-                    "threshold": 0
-                }
-            ],
-            "plot_data": "nominal",
-            "plot_trendlines": [-1.6, 1.6],
-            "plot_category": "wheel_ratios"
+            "yellow_limits": [-6.0, 6.0],
+            "plot_category": "filter_wheel"
         }
     ]
 }

@@ -70,56 +70,6 @@ MAST_EDB_DICTIONARY_SERVICE = 'Mast.JwstEdb.Dictionary'
 
 class EdbMnemonic:
     """Class to hold and manipulate results of DMS EngDB queries."""
-
-    def __init__(self, mnemonic_identifier, start_time, end_time, data, meta, info, blocks=[None]):
-        """Populate attributes.
-
-        Parameters
-        ----------
-        mnemonic_identifier : str
-            Telemetry mnemonic identifier
-        start_time : astropy.time.Time instance
-            Start time
-        end_time : astropy.time.Time instance
-            End time
-        data : astropy.table.Table
-            Table representation of the returned data.
-        meta : dict
-            Additional information returned by the query
-        info : dict
-            Auxiliary information on the mnemonic (description,
-            category, unit)
-        blocks : list
-            Index numbers corresponding to the beginning of separate blocks
-            of data. This can be used to calculate separate statistics for
-            each block.
-
-        """
-
-        self.mnemonic_identifier = mnemonic_identifier
-        self.requested_start_time = start_time
-        self.requested_end_time = end_time
-        self.data = data
-
-        self.mean = None
-        self.median = None
-        self.stdev = None
-        self.median_times = None
-
-        self.meta = meta
-        self.info = info
-        self.blocks = np.array(blocks)
-
-        if len(self.data) == 0:
-            self.data_start_time = None
-            self.data_end_time = None
-        else:
-            self.data_start_time = Time(np.min(self.data['dates']), scale='utc')
-            self.data_end_time = Time(np.max(self.data['dates']), scale='utc')
-            if isinstance(self.data['euvalues'][0], Number):
-                self.full_stats()
-
-
     def __add__(self, mnem):
         """Allow EdbMnemonic instances to be added (i.e. combine their data).
         info and metadata will not be touched. Data will be updated. Duplicate
@@ -134,9 +84,13 @@ class EdbMnemonic:
         ----------
         mnem : jwql.edb.engineering_database.EdbMnemonic
             Instance to be added to the current instance
+
+        Returns
+        -------
+        new_obj : jwql.edb.engineering_database.EdbMnemonic
+            Summed instance
         """
         # Do not combine two instances of different mnemonics
-        #if self.info['tlmMnemonic'] != mnem.info['tlmMnemonic']:
         if self.mnemonic_identifier != self.mnemonic_identifier:
             raise ValueError((f'Unable to concatenate EdbMnemonic instances for {self.info["tlmMnemonic"]} '
                               'and {mnem.info["tlmMnemonic"]}.'))
@@ -197,6 +151,54 @@ class EdbMnemonic:
                               new_data, self.meta, self.info, blocks=new_blocks)
         return new_obj
 
+    def __init__(self, mnemonic_identifier, start_time, end_time, data, meta, info, blocks=[None]):
+        """Populate attributes.
+
+        Parameters
+        ----------
+        mnemonic_identifier : str
+            Telemetry mnemonic identifier
+        start_time : astropy.time.Time instance
+            Start time
+        end_time : astropy.time.Time instance
+            End time
+        data : astropy.table.Table
+            Table representation of the returned data.
+        meta : dict
+            Additional information returned by the query
+        info : dict
+            Auxiliary information on the mnemonic (description,
+            category, unit)
+        blocks : list
+            Index numbers corresponding to the beginning of separate blocks
+            of data. This can be used to calculate separate statistics for
+            each block.
+
+        """
+
+        self.mnemonic_identifier = mnemonic_identifier
+        self.requested_start_time = start_time
+        self.requested_end_time = end_time
+        self.data = data
+
+        self.mean = None
+        self.median = None
+        self.stdev = None
+        self.median_times = None
+
+        self.meta = meta
+        self.info = info
+        self.blocks = np.array(blocks)
+
+        if len(self.data) == 0:
+            self.data_start_time = None
+            self.data_end_time = None
+        else:
+            self.data_start_time = Time(np.min(self.data['dates']), scale='utc')
+            self.data_end_time = Time(np.max(self.data['dates']), scale='utc')
+            if isinstance(self.data['euvalues'][0], Number):
+                self.full_stats()
+
     def __len__(self):
         """Report the length of the data in the instance"""
         return len(self.data["dates"])
@@ -214,6 +216,11 @@ class EdbMnemonic:
         ----------
         mnem : jwql.edb.engineering_database.EdbMnemonic
             Instance to be multiplied into the current instance
+
+        Returns
+        -------
+        new_obj : jwql.edb.engineering_database.EdbMnemonic
+            New object where the data table is the product of those in the inputs
         """
         # If the data has only a single entry, we won't be able to interpolate, and therefore
         # we can't multiply it. Return an empty EDBMnemonic instance
@@ -297,15 +304,6 @@ class EdbMnemonic:
                 medianval = meanval
                 stdevval = 0
                 medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i+1]]))
-
-            #medtimes.append(np.median(self.data["dates"][index:mnem_data.blocks[i+1]]))
-
-        #    OR:
-        #for time_tup in mnem_data.time_pairs:
-        #    good = np.where((mnem_data.data["MJD"] >= time_tup[0]) & (mnem_data.data["MJD"] < time_tup[1]))
-        #    meanval, medianval, stdevval = sigma_clipped_stats(mnem_data.data["data"][good], sigma=sigma)
-        #    medtimes.append(np.median(mnem_data.data["MJD"][good]))
-
                 means.append(meanval)
                 medians.append(medianval)
                 stdevs.append(stdevval)
@@ -314,151 +312,12 @@ class EdbMnemonic:
         self.stdev = stdevs
         self.median_times = medtimes
 
-    def daily_stats(self, sigma=3):
-        """Calculate the statistics for each day in the data
-        contained in data["data"]. Should we add a check for a
-        case where the final block of time is <<1 day?
-
-        Parameters
-        ----------
-        sigma : int
-            Number of sigma to use for sigma clipping
-
-        AS IS BELOW, THIS WILL IGNORE ANY PARTIAL DAYS! SHOULD WE
-        UPDATE TO INCLUDE THE CALCULATIONS FOR THOSE? E.G. AS-IS,
-        IF YOU HAVE 23 HOURS WORTH OF DATA, THIS FUNCTION WILL NOT
-        CALCULATE ANYTHING. OR IF YOU HAVE 24+23 HOURS OF DATA, IT WILL
-        ONLY CALCULATE STATS FOR THE FIRST 24 HOUR PERIOD.
-        """
-        min_date = np.min(self.data["dates"])
-        date_range = np.max(self.data["dates"]) - min_date
-        num_days = date_range.days
-        num_seconds = date_range.seconds
-
-        # If all the data are within a day, set num_days=1 in order to get
-        # a starting and ending time within limits below
-        #if num_days == 0:
-        #    num_days = 1
-        # Perform the averaging over the final fraction of a day if there are
-        # entries beyond multiples of the 24 hour period
-        #if num_seconds == 0:
-        # Case where the data span some exact number of days
-        range_days = num_days + 1
-        #else:
-            # Case where the data span something other than an exact
-            # multiple of 24 hours
-        #    range_days = num_days + 2
-
-        limits = np.array([min_date + timedelta(days=x) for x in range(range_days)])
-        limits = np.append(limits, np.max(self.data["dates"]))
-
-        print('limits', limits)
-        print(min_date, date_range, num_days, num_seconds)
-
-
-        means, meds, devs, times = [], [], [], []
-        for i in range(len(limits) - 1):
-            good = np.where((self.data["dates"] >= limits[i]) & (self.data["dates"] < limits[i+1]))
-            avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
-            means.append(avg)
-            meds.append(med)
-            devs.append(dev)
-            times.append(limits[i] + (limits[i+1] - limits[i]) / 2.)
-        self.mean = means
-        self.median = meds
-        self.stdev = devs
-        self.median_times = times
-
-    def full_stats(self, sigma=3):
-        """Calculate the mean/median/stdev of the data
-
-        Parameters
-        ----------
-        sigma : int
-            Number of sigma to use for sigma clipping
-        """
-        self.mean, self.median, self.stdev = sigma_clipped_stats(self.data["euvalues"], sigma=sigma)
-        self.mean = [self.mean]
-        self.median = [self.median]
-        self.stdev = [self.stdev]
-        self.median_time = [calc_median_time(self.data["dates"])]
-
-    def interpolate(self, times):
-        """Interpolate data euvalues at specified datetimes.
-
-        Parameters
-        ----------
-        times : list
-            List of datetime objects describing the times to interpolate to
-        """
-        new_tab = Table()
-        # Change-only data is unique and needs its own way to be interpolated
-        if self.meta['TlmMnemonics'][0]['AllPoints'] == 0:
-            new_values = []
-            new_dates = []
-            for time in times:
-                latest = np.where(self.data["dates"] <= time)[0]
-                if len(latest) > 0:
-                    new_values.append(self.data["euvalues"][latest[-1]])
-                    new_dates.append(time)
-            if len(new_values) > 0:
-                new_tab["euvalues"] = np.array(new_values)
-                new_tab["dates"] = np.array(new_dates)
-
-        # This is for non change-only data
-        else:
-            if len(self.data["dates"]) >= 2:
-                # We can only linearly interpolate if we have more than one entry
-
-                print('INTERPOLATE')
-                print(times)
-                print(type(times))
-
-                print(self.data['dates'].data)
-
-
-                interp_times = np.array([create_time_offset(ele, self.data["dates"][0]) for ele in times])
-                mnem_times = np.array([create_time_offset(ele, self.data["dates"][0]) for ele in self.data["dates"]])
-
-                # Do not extrapolate. Any requested interoplation times that are outside the range
-                # or the original data will be ignored.
-                good_times = ((interp_times >= mnem_times[0]) & (interp_times <= mnem_times[-1]))
-                interp_times = interp_times[good_times]
-
-                new_tab["euvalues"] = np.interp(interp_times, mnem_times, self.data["euvalues"])
-                new_tab["dates"] = np.array([add_time_offset(ele, self.data["dates"][0]) for ele in interp_times])
-
-            else:
-                # If there are not enough data and we are unable to interpolate,
-                # then set the data table to be empty
-                new_tab["euvalues"] = np.array[()]
-                new_tab["dates"] = np.array[()]
-
-
-
-
-        print(new_tab)
-
-
-
-
-        # Adjust any block values to account for the interpolated data
-        new_blocks = []
-        if self.blocks is not None:
-            for index in self.blocks[0:-1]:
-                good = np.where(new_tab["dates"] >= self.data["dates"][index])[0]
-
-                if len(good) > 0:
-                    new_blocks.append(good[0])
-            new_blocks.append(len(new_tab["dates"]))
-            self.blocks = np.array(new_blocks)
-
-        # Update the data in the instance.
-        self.data = new_tab
-
     def bokeh_plot(self, show_plot=False, savefig=False, out_dir='./', nominal_value=None, yellow_limits=None,
                    red_limits=None, xrange=(None, None), yrange=(None, None), return_components=True, return_fig=False):
-        """Make basic bokeh plot showing value as a function of time.
+        """Make basic bokeh plot showing value as a function of time. Optionally add a line indicating
+        nominal (expected) value, as well as yellow and red background regions to denote values that
+        may be unexpected.
+
         Paramters
         ---------
         show_plot : bool
@@ -499,21 +358,20 @@ class EdbMnemonic:
 
         Returns
         -------
-        [div, script] : list
-            List containing the div and js representations of figure.
-
-        fig : bokeh.plotting.figure
-            Figure as a bokeh object
+        obj : list or bokeh.plotting.figure
+            If return_components is True, return a list containing [div, script]
+            If return_figre is True, return the bokeh figure itself
         """
+        # Make sure that only one output type is specified, or bokeh will get mad
+        options = np.array([show_plot, savefig, return_components, return_fig])
+        if np.sum(options) > 1:
+            trues = np.where(options)[0]
+            raise ValueError((f'{options[trues]} are set to True in plot_every_change_data. Bokeh '
+                              'will only allow one of these to be True.'))
+
         # If there are no data in the table, then produce an empty plot in the date
         # range specified by the requested start and end time
         if len(self.data["dates"]) == 0:
-            print('XXXX', self.requested_start_time, self.requested_end_time,'\n\n\n')
-            #xrange = (self.requested_end_time, self.requested_end_time)
-            #yrange = (-1000, 1000)
-            # For development. Remove line below
-            #null_dates = [datetime(2022, 5, 5), datetime(2022, 5, 6)]
-            print('EMPTY PLOT DATES: ', self.requested_start_time, self.requested_end_time)
             null_dates = [self.requested_start_time, self.requested_end_time]
             null_vals = [0, 0]
             source = ColumnDataSource(data={'x': null_dates, 'y': null_vals})
@@ -544,8 +402,6 @@ class EdbMnemonic:
                 bottom, top = red_limits
             fig.y_range=Range1d(bottom, top)
 
-        #data = fig.line(self.data['dates'], self.data['euvalues'], line_width=1, line_color='blue')
-        #fig.circle(self.data['dates'], self.data['euvalues'], color='blue', alpha=0.5)
         data = fig.scatter(x='x', y='y', line_width=1, line_color='blue', source=source)
 
         if len(self.data["dates"]) == 0:
@@ -602,6 +458,111 @@ class EdbMnemonic:
         if return_fig:
             return fig
 
+    def daily_stats(self, sigma=3):
+        """Calculate the statistics for each day in the data
+        contained in data["data"]. Should we add a check for a
+        case where the final block of time is <<1 day?
+
+        Parameters
+        ----------
+        sigma : int
+            Number of sigma to use for sigma clipping
+        """
+        min_date = np.min(self.data["dates"])
+        date_range = np.max(self.data["dates"]) - min_date
+        num_days = date_range.days
+        num_seconds = date_range.seconds
+        range_days = num_days + 1
+
+        # Generate a list of times to use as boundaries for calculating means
+        limits = np.array([min_date + timedelta(days=x) for x in range(range_days)])
+        limits = np.append(limits, np.max(self.data["dates"]))
+
+        means, meds, devs, times = [], [], [], []
+        for i in range(len(limits) - 1):
+            good = np.where((self.data["dates"] >= limits[i]) & (self.data["dates"] < limits[i+1]))
+            avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
+            means.append(avg)
+            meds.append(med)
+            devs.append(dev)
+            times.append(limits[i] + (limits[i+1] - limits[i]) / 2.)
+        self.mean = means
+        self.median = meds
+        self.stdev = devs
+        self.median_times = times
+
+    def full_stats(self, sigma=3):
+        """Calculate the mean/median/stdev of the full compliment of data
+
+        Parameters
+        ----------
+        sigma : int
+            Number of sigma to use for sigma clipping
+        """
+        self.mean, self.median, self.stdev = sigma_clipped_stats(self.data["euvalues"], sigma=sigma)
+        self.mean = [self.mean]
+        self.median = [self.median]
+        self.stdev = [self.stdev]
+        self.median_time = [calc_median_time(self.data["dates"])]
+
+    def interpolate(self, times):
+        """Interpolate data euvalues at specified datetimes.
+
+        Parameters
+        ----------
+        times : list
+            List of datetime objects describing the times to interpolate to
+        """
+        new_tab = Table()
+
+        # Change-only data is unique and needs its own way to be interpolated
+        if self.meta['TlmMnemonics'][0]['AllPoints'] == 0:
+            new_values = []
+            new_dates = []
+            for time in times:
+                latest = np.where(self.data["dates"] <= time)[0]
+                if len(latest) > 0:
+                    new_values.append(self.data["euvalues"][latest[-1]])
+                    new_dates.append(time)
+            if len(new_values) > 0:
+                new_tab["euvalues"] = np.array(new_values)
+                new_tab["dates"] = np.array(new_dates)
+
+        # This is for non change-only data
+        else:
+            # We can only linearly interpolate if we have more than one entry
+            if len(self.data["dates"]) >= 2:
+                interp_times = np.array([create_time_offset(ele, self.data["dates"][0]) for ele in times])
+                mnem_times = np.array([create_time_offset(ele, self.data["dates"][0]) for ele in self.data["dates"]])
+
+                # Do not extrapolate. Any requested interoplation times that are outside the range
+                # or the original data will be ignored.
+                good_times = ((interp_times >= mnem_times[0]) & (interp_times <= mnem_times[-1]))
+                interp_times = interp_times[good_times]
+
+                new_tab["euvalues"] = np.interp(interp_times, mnem_times, self.data["euvalues"])
+                new_tab["dates"] = np.array([add_time_offset(ele, self.data["dates"][0]) for ele in interp_times])
+
+            else:
+                # If there are not enough data and we are unable to interpolate,
+                # then set the data table to be empty
+                new_tab["euvalues"] = np.array[()]
+                new_tab["dates"] = np.array[()]
+
+        # Adjust any block values to account for the interpolated data
+        new_blocks = []
+        if self.blocks is not None:
+            for index in self.blocks[0:-1]:
+                good = np.where(new_tab["dates"] >= self.data["dates"][index])[0]
+
+                if len(good) > 0:
+                    new_blocks.append(good[0])
+            new_blocks.append(len(new_tab["dates"]))
+            self.blocks = np.array(new_blocks)
+
+        # Update the data in the instance.
+        self.data = new_tab
+
     def save_table(self, outname):
         """Save the EdbMnemonic instance
 
@@ -647,7 +608,7 @@ class EdbMnemonic:
 
 
 def add_limit_boxes(fig, yellow=None, red=None):
-    """Add gree/yellow/red background colors
+    """Add green/yellow/red background colors
 
     Parameters
     ----------
@@ -665,11 +626,15 @@ def add_limit_boxes(fig, yellow=None, red=None):
         may indicate an error. It is assumed that the low value of red is less
         than the low value of yellow, and that the high value of red is
         greater than the high value of yellow.
+
+    Returns
+    -------
+    fig : bokeh.plotting.figure
+        Modified figure with BoxAnnotations added
     """
     if yellow is not None:
         green = BoxAnnotation(bottom=yellow[0], top=yellow[1], fill_color='chartreuse', fill_alpha=0.2)
         fig.add_layout(green)
-        print('GREEN:', green.id)
         if red is not None:
             yellow_high = BoxAnnotation(bottom=yellow[1], top=red[1], fill_color='gold', fill_alpha=0.2)
             fig.add_layout(yellow_high)
@@ -735,10 +700,11 @@ def calc_median_time(time_arr):
     med_time = add_time_offset(med, time_arr[0])
     return med_time
 
+
 def change_only_bounding_points(date_list, value_list, starttime, endtime):
     """For data containing change-only values, where bracketing data outside
     the requested time span may be present, create data points at the starting
-    and ending times.
+    and ending times. This can be helpful with later interpolations.
 
     Parameters
     ----------
@@ -798,67 +764,6 @@ def change_only_bounding_points(date_list, value_list, starttime, endtime):
     date_list.append(endtime)
     value_list.append(value_end)
 
-
-
-
-
-
-    """
-    if len(date_list) > 5:
-        dates_start_arr = np.array(date_list[0:5])
-        dates_end_arr = np.array(date_list[-5:])
-        before = np.sum(dates_start_arr < starttime)
-        #after = np.sum(dates_end_arr > endtime)
-    else:
-        dates_start_arr = date_list_arr
-        before = np.sum(dates_start_arr < starttime)
-        #after = np.sum(dates_start_arr > endtime)
-
-    date0 = starttime
-
-    # If there are no points before the starting time,
-    # then we don't know what value to set at the beginning
-    # of the dataset. In that case, set it to NaN?
-    if before == 0:
-        value0 = np.nan
-    else:
-        value0 = value_list[before-1]
-
-    # If all the points are before the start time,
-    # then final point will be taken as the value
-    # at the start time
-    if len(date_list) == before:
-        date_list = date0
-        value_list = value0
-    else:
-        date_list = date_list[before:]
-        value_list = value_list[before:]
-        date_list.insert(0, date0)
-        value_list.insert(0, value0)
-
-
-    before_endtime = np.where(date_list_arr <= endtime)[0]
-    date_end = endtime
-
-    if len(before_endtime) == 0:
-        # If there are no points before the endtime, then we
-        # don't know the value at the endtime. Again, set to
-        # NaN
-        value_end = np.nan
-    else:
-        value_end = value_list[before_endtime[-1]]
-
-
-    if after > 0:
-        endidx = 0 - (after + 1)
-        if date_list[endidx] < endtime:
-            date_end = endtime.datetime
-            value_end = value_list[endidx]
-            date_list = date_list[0:endidx+1]
-            value_list = value_list[0:endidx+1]
-            date_list.append(date_end)
-            value_list.append(value_end)
-    """
     return date_list, value_list
 
 
@@ -967,9 +872,7 @@ def get_mnemonics(mnemonics, start_time, end_time):
     mnemonic_dict : dict
         Dictionary. keys are the queried mnemonics, values are
         instances of EdbMnemonic
-
     """
-
     if not isinstance(mnemonics, (list, np.ndarray)):
         raise RuntimeError('Please provide a list/array of mnemonic_identifiers')
 
@@ -994,7 +897,6 @@ def get_mnemonic_info(mnemonic_identifier):
     info : dict
         Object that contains the returned data
     """
-
     mast_token = get_mast_token()
     return query_mnemonic_info(mnemonic_identifier, token=mast_token)
 
@@ -1012,7 +914,6 @@ def is_valid_mnemonic(mnemonic_identifier):
     bool
         Is mnemonic_identifier a valid EDB mnemonic?
     """
-
     inventory = mnemonic_inventory()[0]
     if mnemonic_identifier in inventory['tlmMnemonic']:
         return True
@@ -1033,7 +934,6 @@ def mnemonic_inventory():
     meta : dict
         Additional information returned by the query.
     """
-
     out = Mast.service_request_async(MAST_EDB_MNEMONIC_SERVICE, {})
     data, meta = process_mast_service_request_result(out)
 
@@ -1060,7 +960,6 @@ def process_mast_service_request_result(result, data_as_table=True):
     meta : dict
         Additional information returned by the query
     """
-
     json_data = result[0].json()
     if json_data['status'] != 'COMPLETE':
         raise RuntimeError('Mnemonic query did not complete.\nquery status: {}\nmessage: {}'.format(
@@ -1104,7 +1003,6 @@ def query_mnemonic_info(mnemonic_identifier, token=None):
     info : dict
         Object that contains the returned data
     """
-
     parameters = {"mnemonic": "{}".format(mnemonic_identifier)}
     result = Mast.service_request_async(MAST_EDB_DICTIONARY_SERVICE, parameters)
     info = process_mast_service_request_result(result, data_as_table=False)[0]

@@ -1,7 +1,20 @@
 #! /usr/bin/env python
 
-"""Do we really need this in a separate utils file?
+"""Utility functions that can be used with the EDB Telemetry Monitor
+
+Authors
+-------
+
+    - Bryan Hilbert
+
+Use
+---
+
+    This module can be imported as such:
+    >>> import utils
+    key = utils.check_key('my_key')
 """
+
 from datetime import timedelta
 
 import astropy.units as u
@@ -112,4 +125,3 @@ def remove_outer_points(telemetry):
     """
     telemetry.data.remove_row(0)
     telemetry.data.remove_row(-1)
-    #return telemetry
