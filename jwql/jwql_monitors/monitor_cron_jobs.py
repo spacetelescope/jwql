@@ -40,6 +40,7 @@ from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_config
 from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
+from jwql.utils.utils import ensure_dir_exists
 
 
 def create_table(status_dict):
@@ -106,8 +107,12 @@ def create_table(status_dict):
     output_dir = get_config()['outputs']
     output_filename = 'cron_status_table'
 
+    #verify/create output sub-directory
+    output_dir = os.path.join(output_dir, 'monitor_cron_jobs')
+    ensure_dir_exists(output_dir)
+
     # Save full html
-    html_outfile = os.path.join(output_dir, 'monitor_cron_jobs', '{}.html'.format(output_filename))
+    html_outfile = os.path.join(output_dir, '{}.html'.format(output_filename))
     output_file(html_outfile)
     save(data_table)
     try:
