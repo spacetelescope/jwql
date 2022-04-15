@@ -7,7 +7,7 @@
             "plot_data": "nominal",
             "yellow_limits": [4.99, 5.04],
             "red_limits": [4.5, 5.5],
-            "plot_category": "ice_voltage"
+            "plot_category": "ICE_voltage"
         },
         {
             "name": "INRC_ICE_DC_VOL_P15_ALL",
@@ -16,7 +16,7 @@
             "plot_data": "nominal",
             "yellow_limits": [13.9, 14.7],
             "red_limits": [11.5, 16.5],
-            "plot_category": "ice_voltage"
+            "plot_category": "ICE_voltage"
         },
         {
             "name": "INRC_ICE_DC_VOL_N15_ALL",
@@ -25,7 +25,7 @@
             "plot_data": "nominal",
             "yellow_limits": [-14.7, -13.9],
             "red_limits": [-16.5, -11.5],
-            "plot_category": "ice_voltage"
+            "plot_category": "ICE_voltage"
         },
         {
             "name": "INRC_ICE_DC_VOL_P15_MOT",
@@ -34,7 +34,7 @@
             "plot_data": "nominal",
             "yellow_limits": [13.9, 14.7],
             "red_limits": [11.5, 16.5],
-            "plot_category": "ice_voltage"
+            "plot_category": "ICE_voltage"
         },
         {
             "name": "INRC_ICE_DC_VOL_N15_MOT",
@@ -43,7 +43,7 @@
             "plot_data": "nominal",
             "yellow_limits": [-14.7, -13.9],
             "red_limits": [-16.5, -11.5],
-            "plot_category": "ice_voltage"
+            "plot_category": "ICE_voltage"
         },
         {
             "name": "INRC_ICE_DC_VOL_P30_MOT",
@@ -52,7 +52,7 @@
             "plot_data": "nominal",
             "yellow_limits": [13.6, 14.5],
             "red_limits": [12, 33],
-            "plot_category": "ice_voltage"
+            "plot_category": "ICE_voltage"
         },
         {
             "name": "INRC_ICE_DC_VOL_N30_MOT",
@@ -61,8 +61,242 @@
             "plot_data": "nominal",
             "yellow_limits": [-14.6, -13.7],
             "red_limits": [-33, -12],
-            "plot_category": "ice_voltage"
-        }
+            "plot_category": "ICE_voltage"
+        },
+        {
+            "name": "INRC_FA_PSC_VMNSCR",
+            "description": "ModA SCR voltage out monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [3.19, 3.24],
+            "red_limits": [-1.0, 3.45],
+            "plot_category": "ModA_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FA_PSC_VD3P3",
+            "description": "ModA PSC +3.3 V digital voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [3.29, 3.31],
+            "red_limits": [-1.0, 3.5],
+            "plot_category": "ModA_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FA_PSC_VPADC",
+            "description": "ModA PSC ADC +2.5V monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [2.5, 2.503],
+            "red_limits": [-1.0, 2.7],
+            "plot_category": "ModA_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FA_PSC_VD2P5",
+            "description": "ModA PSC +2.5V digital voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [2.478, 2.486],
+            "red_limits": [-1.0, 2.6],
+            "plot_category": "ModA_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FA_PSC_VDCD_5P",
+            "description": "ModA PSC Digital voltage monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [5.05, 5.2],
+            "red_limits": [-1.0, 5.5],
+            "plot_category": "ModA_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FA_PSC_VDCA_8P",
+            "description": "ModA PSC +6.25VDC power-in monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [6.228, 6.248],
+            "red_limits": [-1.0, 6.75],
+            "plot_category": "ModA_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FA_PSC_VDCA_8N",
+            "description": "ModA PSC -6.25VDC power-in monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-6.3, -6.15],
+            "red_limits": [-6.75, 1],
+            "plot_category": "ModA_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FA_PSC_VDCA_5P",
+            "description": "ModA PSC +5VDC regulator monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [5.255, 5.28],
+            "red_limits": [-1.0, 5.4],
+            "plot_category": "ModA_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FA_PSC_VDCA_5N",
+            "description": "ModA PSC -5VDC regulator monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-5.285, -5.26],
+            "red_limits": [-5.4, 1.0],
+            "plot_category": "ModA_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FA_PSC_VDCR_7P",
+            "description": "ModA PSC reference +6.25V analog voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [6.2, 6.4],
+            "red_limits": [-1.0, 7.5],
+            "plot_category": "ModA_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FA_PSC_VDCR_7N",
+            "description": "ModA PSC reference -6.25V analog voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-6.3, -6.1],
+            "red_limits": [-7.5, 1.0],
+            "plot_category": "ModA_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FA_PSC_VDCR_5P",
+            "description": "ModA PSC reference +5V analog voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [5.05, 5.25],
+            "red_limits": [-1.0, 5.4],
+            "plot_category": "ModA_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FA_PSC_VDCR_5N",
+            "description": "ModA PSC reference -5V analog voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-5.15, -4.95],
+            "red_limits": [-5.4, 1.0],
+            "plot_category": "ModA_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FB_PSC_VMNSCR",
+            "description": "ModB SCR voltage out monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [3.19, 3.24],
+            "red_limits": [-1.0, 3.45],
+            "plot_category": "ModB_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FB_PSC_VD3P3",
+            "description": "ModB PSC +3.3V digital voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [3.29, 3.34],
+            "red_limits": [-1.0, 3.5],
+            "plot_category": "ModB_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FB_PSC_VPADC",
+            "description": "ModB PSC ADC +2.5V monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [2.5, 2.503],
+            "red_limits": [-1.0, 2.7],
+            "plot_category": "ModB_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FB_PSC_VD2P5",
+            "description": "ModB PSC +2.5V digital voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [2.488, 2.501],
+            "red_limits": [-1.0, 2.6],
+            "plot_category": "ModB_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FB_PSC_VDCD_5P",
+            "description": "ModB PSC Digital voltage monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [5.05, 5.23],
+            "red_limits": [-1.0, 5.5],
+            "plot_category": "ModB_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FB_PSC_VDCA_8P",
+            "description": "ModB PSC +6.25VDC power-in monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [6.24, 6.26],
+            "red_limits": [-1.0, 6.75],
+            "plot_category": "ModB_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FB_PSC_VDCA_8N",
+            "description": "ModB PSC -6.25VDC power-in monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-6.3, -6.2],
+            "red_limits": [-6.75, 1],
+            "plot_category": "ModB_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FB_PSC_VDCA_5P",
+            "description": "ModB PSC +5VDC regulator monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [5.27, 5.28],
+            "red_limits": [-1.0, 5.4],
+            "plot_category": "ModB_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FB_PSC_VDCA_5N",
+            "description": "ModB PSC -5VDC regulator monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-5.285, -5.27],
+            "red_limits": [-5.4, 1.0],
+            "plot_category": "ModB_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FB_PSC_VDCR_7P",
+            "description": "ModB PSC reference +6.25V analog voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [6.2, 6.4],
+            "red_limits": [-1.0, 7.5],
+            "plot_category": "ModB_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FB_PSC_VDCR_7N",
+            "description": "ModB PSC reference -6.25V analog voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-6.3, -6.0],
+            "red_limits": [-7.5, 1.0],
+            "plot_category": "ModB_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FB_PSC_VDCR_5P",
+            "description": "ModB PSC reference +5V analog voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [5.05, 5.25],
+            "red_limits": [-1.0, 5.4],
+            "plot_category": "ModB_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FB_PSC_VDCR_5N",
+            "description": "ModB PSC reference -5V analog voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-5.15, -4.95],
+            "red_limits": [-5.4, 1.0],
+            "plot_category": "ModB_PSC_voltages+currents"
+        },
     ],
     "block_means": [
     ],
@@ -71,23 +305,30 @@
     "time_interval": [
     ],
     "none": [
+        can add doug's entries for if w switch to tmc1 and tmc2 and have dependencies:
+        INRC_FA_PSC_TMC1_PWR_ST
+        INRC_FA_PSC_TMC2_PWR_ST
+        INRC_FB_PSC_TMC1_PWR_ST
+        INRC_FB_PSC_TMC2_PWR_ST
+        where values can be "ON" or "OFF"
+        but we don't want a bunch of empty plots on the page either...
         {
             "name": "SE_ZINRCICE1",
-            "description": "ICE1 current",
+            "description": "ICE1 current monitor",
             "dependency": [],
             "plot_data": "nominal",
             "yellow_limits": [0.36, 0.8],
             "red_limits": [0, 1.367],
-            "plot_category": "box_current"
+            "plot_category": "Box_current"
         },
         {
             "name": "SE_ZINRCICE2",
-            "description": "ICE2 current",
+            "description": "ICE2 current monitor",
             "dependency": [],
             "plot_data": "nominal",
             "yellow_limits": [0.38, 0.86],
             "red_limits": [0, 1.372],
-            "plot_category": "box_current"
+            "plot_category": "Box_current"
         },
         {
             "name": "SE_ZINRCFPAA",
@@ -96,7 +337,7 @@
             "plot_data": "nominal",
             "yellow_limits": [0.49, 0.515],
             "red_limits": [0, 0.59],
-            "plot_category": "box_current"
+            "plot_category": "Box_current"
         },
         {
             "name": "SE_ZINRCFPBA",
@@ -105,7 +346,7 @@
             "plot_data": "nominal",
             "yellow_limits": [0.485, 0.535],
             "red_limits": [0, 0.589],
-            "plot_category": "box_current"
+            "plot_category": "Box_current"
         },
         {
             "name": "SE_ZBUSVLT",
@@ -113,7 +354,1753 @@
             "dependency": [],
             "plot_data": "nominal",
             "red_limits": [30.7, 31.7],
-            "plot_category": "box_current"
-        }
+            "plot_category": "Box_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_P5_DIG",
+            "description": "ICE HK +5V current for Digital electronics",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.4, 0.9],
+            "red_limits": [-0.01, 1.408],
+            "plot_category": "ICE_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_P15_ALL",
+            "description": "ICE HK +15V current for all functions",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.15, 0.35],
+            "red_limits": [-0.01, 0.8426],
+            "plot_category": "ICE_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_N15_ALL",
+            "description": "ICE HK -15V current for all functions",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.21, 0.35],
+            "red_limits": [-0.01, 0.8426],
+            "plot_category": "ICE_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_P15_MOT",
+            "description": "ICE HK +15V current for FWA & PIL motor drive",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.01, 0.34],
+            "red_limits": [-0.01, 0.8426],
+            "plot_category": "ICE_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_N15_MOT",
+            "description": "ICE HK -15V current for FWA & PIL motor drive",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.0, 0.34],
+            "red_limits": [-0.01, 0.8426],
+            "plot_category": "ICE_current"
+        },
+
+
+These two need to be filtered for only when the FAM is moved. What dependencies should we use?
+        {
+            "name": "INRC_ICE_DC_CUR_P30_MOT",
+            "description": "ICE HK +15V current for FAM motor drive",
+            "dependency": [
+                {
+                    "name": "INRC_ICE_DC_CUR_P30_MOT",
+                    "relation": ">",
+                    "threshold": 0.0
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [0.0, 0.13],
+            "red_limits": [-0.01, 0.8426],
+            "plot_category": "ICE_current"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_N30_MOT",
+            "description": "ICE HK -15V current for FAM motor drive",
+            "dependency": [
+                {
+                    "name": "INRC_ICE_DC_CUR_P30_MOT",
+                    "relation": ">",
+                    "threshold": 0.0
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [0.0, 0.32],
+            "red_limits": [-0.01, 0.8426],
+            "plot_category": "ICE_current"
+        },
+
+
+
+        {
+            "name": "IGDP_NRC_A_T_ICE_POS_EL",
+            "description": "ICE position sensor board internal Cernox sensor, SN X45683",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 286.0,
+            "red_limits": [248.15, 333.15],
+            "plot_category": "ICE_board_temp"
+        },
+        {
+            "name": "IGDP_NRC_A_T_ICE_DIO_EL",
+            "description": "ICE DIO board internal Cernox sensor, SN X45422",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 284.0,
+            "red_limits": [248.15, 333.15],
+            "plot_category": "ICE_board_temp"
+        },
+        {
+            "name": "IGDP_NRC_A_T_ICE_POW_EL",
+            "description": "ICE Power supply board internal Cernox sensor, SN X45569",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 287.0,
+            "red_limits": [248.15, 333.15],
+            "plot_category": "ICE_board_temp"
+        },
+        {
+            "name": "IGDP_NRC_A_T_ICE_MOT_EL",
+            "description": "ICE motor controller board internal Cernox sensor, SN X45432",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 288.0,
+            "red_limits": [248.15, 333.15],
+            "plot_category": "ICE_board_temp"
+        },
+        {
+            "name": "IGDP_NRC_B_T_ICE_POS_EL",
+            "description": "ICE position sensor board internal Cernox sensor, SN X45684",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 285.0,
+            "red_limits": [248.15, 333.15],
+            "plot_category": "ICE_board_temp"
+        },
+        {
+            "name": "IGDP_NRC_B_T_ICE_DIO_EL",
+            "description": "ICE DIO board internal Cernox sensor, SN X45423",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 289.0,
+            "red_limits": [248.15, 333.15],
+            "plot_category": "ICE_board_temp"
+        },
+        {
+            "name": "IGDP_NRC_B_T_ICE_POW_EL",
+            "description": "ICE power supply board internal Cernox sensor, SN X45588",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 297.0,
+            "red_limits": [248.15, 333.15],
+            "plot_category": "ICE_board_temp"
+        },
+        {
+            "name": "IGDP_NRC_B_T_ICE_MOT_EL",
+            "description": "ICE motor controller board internal Cernox sensor, SN X45436",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 290.0,
+            "red_limits": [248.15, 333.15],
+            "plot_category": "ICE_board_temp"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNSCR",
+            "description": "ModA SCR current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [309, 335],
+            "red_limits": [-2.5, 1400],
+            "plot_category": "ModA_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNSCR",
+            "description": "ModB SCR current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [315, 345],
+            "red_limits": [-2.5, 1400],
+            "plot_category": "ModB_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FA_ACE1_BOARD_TEMP",
+            "description": "ModA ACE1 board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 14.0,
+            "red_limits": [-25, 60.0],
+            "plot_category": "ACE_board_temp"
+        },
+        {
+            "name": "INRC_FA_ACE2_BOARD_TEMP",
+            "description": "ModA ACE2 board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 16.0,
+            "red_limits": [-25, 60.0],
+            "plot_category": "ACE_board_temp"
+        },
+        {
+            "name": "INRC_FA_ACE3_BOARD_TEMP",
+            "description": "ModA ACE3 board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 17.0,
+            "red_limits": [-25, 60.0],
+            "plot_category": "ACE_board_temp"
+        },
+        {
+            "name": "INRC_FA_ACE4_BOARD_TEMP",
+            "description": "ModA ACE4 board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 15.0,
+            "red_limits": [-25, 60.0],
+            "plot_category": "ACE_board_temp"
+        },
+        {
+            "name": "INRC_FA_ACE5_BOARD_TEMP",
+            "description": "ModA ACE5 board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 14.5,
+            "red_limits": [-25, 60.0],
+            "plot_category": "ACE_board_temp"
+        },
+        {
+            "name": "INRC_FB_ACE1_BOARD_TEMP",
+            "description": "ModB ACE1 board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 15.5,
+            "red_limits": [-25, 60.0],
+            "plot_category": "ACE_board_temp"
+        },
+        {
+            "name": "INRC_FB_ACE2_BOARD_TEMP",
+            "description": "ModB ACE2 board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 15.0,
+            "red_limits": [-25, 60.0],
+            "plot_category": "ACE_board_temp"
+        },
+        {
+            "name": "INRC_FB_ACE3_BOARD_TEMP",
+            "description": "ModB ACE3 board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 14.5,
+            "red_limits": [-25, 60.0],
+            "plot_category": "ACE_board_temp"
+        },
+        {
+            "name": "INRC_FB_ACE4_BOARD_TEMP",
+            "description": "ModB ACE4 board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 15.5,
+            "red_limits": [-25, 60.0],
+            "plot_category": "ACE_board_temp"
+        },
+        {
+            "name": "INRC_FB_ACE5_BOARD_TEMP",
+            "description": "ModB ACE5 board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 15.0,
+            "red_limits": [-25, 60.0],
+            "plot_category": "ACE_board_temp"
+        },
+        {
+            "name": "INRC_FA_TMC1_BOARD_TEMP",
+            "description": "ModA TMC1 board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 16.5,
+            "red_limits": [-25, 60.0],
+            "plot_category": "FPE_board_temp"
+        },
+        {
+            "name": "INRC_FA_TMC2_BOARD_TEMP",
+            "description": "ModA TMC2 board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 16.0,
+            "red_limits": [-25, 60.0],
+            "plot_category": "FPE_board_temp"
+        },
+        {
+            "name": "INRC_FB_TMC1_BOARD_TEMP",
+            "description": "ModB TMC1 board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 16.0,
+            "red_limits": [-25, 60.0],
+            "plot_category": "FPE_board_temp"
+        },
+        {
+            "name": "INRC_FB_TMC2_BOARD_TEMP",
+            "description": "ModB TMC2 board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 13.0,
+            "red_limits": [-25, 60.0],
+            "plot_category": "FPE_board_temp"
+        },
+        {
+            "name": "INRC_FA_PSC_LVCBRD_TEMP",
+            "description": "ModA LVC board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 23.0,
+            "red_limits": [-25, 60.0],
+            "plot_category": "FPE_board_temp"
+        },
+        {
+            "name": "INRC_FA_PSC_BOARD_TEMP",
+            "description": "ModA PSC board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 16.5,
+            "red_limits": [-25, 60.0],
+            "plot_category": "FPE_board_temp"
+        },
+        {
+            "name": "INRC_FA_PSC_SCRBRD_TEMP",
+            "description": "ModA SCR board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 17.5,
+            "red_limits": [-25, 60.0],
+            "plot_category": "FPE_board_temp"
+        },
+        {
+            "name": "INRC_FB_PSC_LVCBRD_TEMP",
+            "description": "ModB LVC board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 23.5,
+            "red_limits": [-25, 60.0],
+            "plot_category": "FPE_board_temp"
+        },
+        {
+            "name": "INRC_FB_PSC_BOARD_TEMP",
+            "description": "ModB PSC board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 15.5,
+            "red_limits": [-25, 60.0],
+            "plot_category": "FPE_board_temp"
+        },
+        {
+            "name": "INRC_FB_PSC_SCRBRD_TEMP",
+            "description": "ModB SCR board temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 17.5,
+            "red_limits": [-25, 60.0],
+            "plot_category": "FPE_board_temp"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE1_P",
+            "description": "ModA ACE1 +5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [20.0, 23.0],
+            "red_limits": [-2.5, 50.0],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE1_N",
+            "description": "ModA ACE1 -5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-17.5, -15.0],
+            "red_limits": [-30.0, 1.5],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE1_D",
+            "description": "ModA ACE1 digital current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [123, 143],
+            "red_limits": [-2.5, 160],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE1R_N",
+            "description": "ModA ACE1 -5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-3.6, -0.1],
+            "red_limits": [-6.0, 1.0],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE1R_P",
+            "description": "ModA ACE1 +5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.1, 4.2],
+            "red_limits": [-1.0, 6.0],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE2_P",
+            "description": "ModA ACE2 +5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [20.5, 21.4],
+            "red_limits": [-2.5, 50.0],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE2_N",
+            "description": "ModA ACE2 -5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-15.3, -15.2],
+            "red_limits": [-30.0, 1.5],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE2_D",
+            "description": "ModA ACE2 digital current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [120, 140],
+            "red_limits": [-2.5, 160],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE2R_N",
+            "description": "ModA ACE2 -5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-3.8, -0.1],
+            "red_limits": [-6.0, 1.0],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE2R_P",
+            "description": "ModA ACE2 +5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.4, 4.4],
+            "red_limits": [-1.0, 6.0],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE3_P",
+            "description": "ModA ACE3 +5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [20.4, 21.4],
+            "red_limits": [-2.5, 50.0],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE3_N",
+            "description": "ModA ACE3 -5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-15.7, -15.5],
+            "red_limits": [-30.0, 1.5],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE3_D",
+            "description": "ModA ACE3 digital current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [120, 140],
+            "red_limits": [-2.5, 160],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE23_N",
+            "description": "ModA ACE3 -5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-3.6, 0.0],
+            "red_limits": [-6.0, 1.0],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE3R_P",
+            "description": "ModA ACE3 +5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.1, 4.2],
+            "red_limits": [-1.0, 6.0],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE4_P",
+            "description": "ModA ACE4 +5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [20.3, 22.0],
+            "red_limits": [-2.5, 50.0],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE4_N",
+            "description": "ModA ACE4 -5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-15.2, -15.0],
+            "red_limits": [-30.0, 1.5],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE4_D",
+            "description": "ModA ACE4 digital current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [122, 140],
+            "red_limits": [-2.5, 160],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE4R_N",
+            "description": "ModA ACE4 -5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-4.1, 0.0],
+            "red_limits": [-6.0, 1.0],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE4R_P",
+            "description": "ModA ACE4 +5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.1, 4.7],
+            "red_limits": [-1.0, 6.0],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE5_P",
+            "description": "ModA ACE5 +5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [20.4, 23.0],
+            "red_limits": [-2.5, 50.0],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE5_N",
+            "description": "ModA ACE5 -5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-17.3, -14.9],
+            "red_limits": [-30.0, 1.5],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE5_D",
+            "description": "ModA ACE5 digital current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [119, 138],
+            "red_limits": [-2.5, 160],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE5R_N",
+            "description": "ModA ACE5 -5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-4.1, -0.1],
+            "red_limits": [-6.0, 1.0],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNACE5R_P",
+            "description": "ModA ACE5 +5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.1, 4.6],
+            "red_limits": [-1.0, 6.0],
+            "plot_category": "ModA_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE1_P",
+            "description": "ModB ACE1 +5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [20.0, 22.7],
+            "red_limits": [-2.5, 50.0],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE1_N",
+            "description": "ModB ACE1 -5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-17.1, -14.8],
+            "red_limits": [-30.0, 1.5],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE1_D",
+            "description": "ModB ACE1 digital current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [120, 139],
+            "red_limits": [-2.5, 160],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE1R_N",
+            "description": "ModB ACE1 -5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-4.2, -0.1],
+            "red_limits": [-6.0, 1.0],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE1R_P",
+            "description": "ModB ACE1 +5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.0, 4.7],
+            "red_limits": [-1.0, 6.0],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE2_P",
+            "description": "ModB ACE2 +5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [20.0, 22.5],
+            "red_limits": [-2.5, 50.0],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE2_N",
+            "description": "ModB ACE2 -5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-17.1, -14.8],
+            "red_limits": [-30.0, 1.5],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE2_D",
+            "description": "ModB ACE2 digital current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [122, 141],
+            "red_limits": [-2.5, 160],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE2R_N",
+            "description": "ModB ACE2 -5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-3.8, -0.1],
+            "red_limits": [-6.0, 1.0],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE2R_P",
+            "description": "ModB ACE2 +5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.1, 4.6],
+            "red_limits": [-1.0, 6.0],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE3_P",
+            "description": "ModB ACE3 +5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [19.5, 22.7],
+            "red_limits": [-2.5, 50.0],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE3_N",
+            "description": "ModB ACE3 -5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-17.2, -14.9],
+            "red_limits": [-30.0, 1.5],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE3_D",
+            "description": "ModB ACE3 digital current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [119, 137],
+            "red_limits": [-2.5, 160],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE23_N",
+            "description": "ModB ACE3 -5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-3.6, -0.1],
+            "red_limits": [-6.0, 1.0],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE3R_P",
+            "description": "ModB ACE3 +5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.1, 4.3],
+            "red_limits": [-1.0, 6.0],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE4_P",
+            "description": "ModB ACE4 +5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [20.0, 22.7],
+            "red_limits": [-2.5, 50.0],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE4_N",
+            "description": "ModB ACE4 -5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-17.3, -14.9],
+            "red_limits": [-30.0, 1.5],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE4_D",
+            "description": "ModB ACE4 digital current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [124, 142],
+            "red_limits": [-2.5, 160],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE4R_N",
+            "description": "ModB ACE4 -5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-4.0, -0.1],
+            "red_limits": [-6.0, 1.0],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE4R_P",
+            "description": "ModB ACE4 +5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.1, 4.6],
+            "red_limits": [-1.0, 6.0],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE5_P",
+            "description": "ModB ACE5 +5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [20.0, 22.8],
+            "red_limits": [-2.5, 50.0],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE5_N",
+            "description": "ModB ACE5 -5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-17.4, -15.0],
+            "red_limits": [-30.0, 1.5],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE5_D",
+            "description": "ModB ACE5 digital current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [118, 135],
+            "red_limits": [-2.5, 160],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE5R_N",
+            "description": "ModB ACE5 -5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-3.9, -0.1],
+            "red_limits": [-6.0, 1.0],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNACE5R_P",
+            "description": "ModB ACE5 +5V reference current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.1, 4.6],
+            "red_limits": [-1.0, 6.0],
+            "plot_category": "ModB_ACE_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNTMC2_P",
+            "description": "ModA TMC2 +5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [33.0, 65.0],
+            "red_limits": [-2.5, 80.0],
+            "plot_category": "TMC_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNTMC2_D",
+            "description": "ModA TMC2 digital current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [21.0, 28.0],
+            "red_limits": [-2.5, 45.0],
+            "plot_category": "TMC_current"
+        },
+        {
+            "name": "INRC_FA_PSC_IMNTMC2_N",
+            "description": "ModA TMC2 -5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-45.0, -28.0],
+            "red_limits": [-70.0, 2.5],
+            "plot_category": "TMC_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNTMC1_P",
+            "description": "ModB TMC1 +5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [34.0, 66.0],
+            "red_limits": [-2.5, 80.0],
+            "plot_category": "TMC_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNTMC1_D",
+            "description": "ModB TMC1 digital current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [20.8, 30.0],
+            "red_limits": [-2.5, 45.0],
+            "plot_category": "TMC_current"
+        },
+        {
+            "name": "INRC_FB_PSC_IMNTMC1_N",
+            "description": "ModB TMC1 -5V analog current monitor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-46.0, -29.0],
+            "red_limits": [-70.0, 2.5],
+            "plot_category": "TMC_current"
+        },
+        {
+            "name": "INRC_FA_ACE1_SC_A3P3_I",
+            "description": "ModA ASIC1 3.3V analog current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [3.0, 7.0],
+            "red_limits": [-1.5, 17.5],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE1_SC_R3P3_I",
+            "description": "ModA ASIC1 3.3V reference current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.08, 0.21],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE1_SC_D3P3_I",
+            "description": "ModA ASIC1 3.3V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.15, 0.27],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE1_SC_D2P5_I",
+            "description": "ModA ASIC1 2.5V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.3, 5.0],
+            "red_limits": [-1.0, 6.5],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE1_SC_VIO_I",
+            "description": "ModA ASIC1 VIO LVDS current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.2, 2.3],
+            "red_limits": [-1.0, 5.5],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE2_SC_A3P3_I",
+            "description": "ModA ASIC2 3.3V analog current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [3.5, 6.5],
+            "red_limits": [-1.5, 17.5],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE2_SC_R3P3_I",
+            "description": "ModA ASIC2 3.3V reference current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.09, 0.2],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE2_SC_D3P3_I",
+            "description": "ModA ASIC2 3.3V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.12, 0.26],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE2_SC_D2P5_I",
+            "description": "ModA ASIC2 2.5V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.5, 5.5],
+            "red_limits": [-1.0, 6.5],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE2_SC_VIO_I",
+            "description": "ModA ASIC2 VIO LVDS current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.4, 2.4],
+            "red_limits": [-1.0, 5.5],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE3_SC_A3P3_I",
+            "description": "ModA ASIC3 3.3V analog current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [3.3, 6.5],
+            "red_limits": [-1.5, 17.5],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE3_SC_R3P3_I",
+            "description": "ModA ASIC3 3.3V reference current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.08, 0.21],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE3_SC_D3P3_I",
+            "description": "ModA ASIC3 3.3V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.13, 0.26],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE3_SC_D2P5_I",
+            "description": "ModA ASIC3 2.5V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.5, 5.0],
+            "red_limits": [-1.0, 6.5],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE3_SC_VIO_I",
+            "description": "ModA ASIC3 VIO LVDS current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.4, 2.7],
+            "red_limits": [-1.0, 5.5],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE4_SC_A3P3_I",
+            "description": "ModA ASIC4 3.3V analog current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [3.2, 5.4],
+            "red_limits": [-1.5, 17.5],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE4_SC_R3P3_I",
+            "description": "ModA ASIC4 3.3V reference current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.09, 0.21],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE4_SC_D3P3_I",
+            "description": "ModA ASIC4 3.3V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.12, 0.25],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE4_SC_D2P5_I",
+            "description": "ModA ASIC4 2.5V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.7, 5.0],
+            "red_limits": [-1.0, 6.5],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE4_SC_VIO_I",
+            "description": "ModA ASIC4 VIO LVDS current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.4, 2.3],
+            "red_limits": [-1.0, 5.5],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE5_SC_A3P3_I",
+            "description": "ModA ASIC5 3.3V analog current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [3.7, 5.6],
+            "red_limits": [-1.5, 17.5],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE5_SC_R3P3_I",
+            "description": "ModA ASIC5 3.3V reference current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.09, 0.22],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE5_SC_D3P3_I",
+            "description": "ModA ASIC5 3.3V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.11, 0.25],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE5_SC_D2P5_I",
+            "description": "ModA ASIC5 2.5V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.7, 5.3],
+            "red_limits": [-1.0, 6.5],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FA_ACE5_SC_VIO_I",
+            "description": "ModA ASIC5 VIO LVDS current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.5, 2.4],
+            "red_limits": [-1.0, 5.5],
+            "plot_category": "ModA_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE1_SC_A3P3_I",
+            "description": "ModB ASIC1 3.3V analog current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [3.2, 6.9],
+            "red_limits": [-1.5, 17.5],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE1_SC_R3P3_I",
+            "description": "ModB ASIC1 3.3V reference current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.08, 0.18],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE1_SC_D3P3_I",
+            "description": "ModB ASIC1 3.3V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.12, 0.24],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE1_SC_D2P5_I",
+            "description": "ModB ASIC1 2.5V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.6, 5.8],
+            "red_limits": [-1.0, 6.5],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE1_SC_VIO_I",
+            "description": "ModB ASIC1 VIO LVDS current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.2, 2.2],
+            "red_limits": [-1.0, 5.5],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE2_SC_A3P3_I",
+            "description": "ModB ASIC2 3.3V analog current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [3.6, 6.5],
+            "red_limits": [-1.5, 17.5],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE2_SC_R3P3_I",
+            "description": "ModB ASIC2 3.3V reference current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.11, 0.26],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE2_SC_D3P3_I",
+            "description": "ModB ASIC2 3.3V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.12, 0.27],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE2_SC_D2P5_I",
+            "description": "ModB ASIC2 2.5V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.8, 5.2],
+            "red_limits": [-1.0, 6.5],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE2_SC_VIO_I",
+            "description": "ModB ASIC2 VIO LVDS current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.4, 2.4],
+            "red_limits": [-1.0, 5.5],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE3_SC_A3P3_I",
+            "description": "ModB ASIC3 3.3V analog current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [2.9, 6.3],
+            "red_limits": [-1.5, 17.5],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE3_SC_R3P3_I",
+            "description": "ModB ASIC3 3.3V reference current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.05, 0.16],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE3_SC_D3P3_I",
+            "description": "ModB ASIC3 3.3V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.07, 0.24],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE3_SC_D2P5_I",
+            "description": "ModB ASIC3 2.5V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.4, 5.1],
+            "red_limits": [-1.0, 6.5],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE3_SC_VIO_I",
+            "description": "ModB ASIC3 VIO LVDS current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.3, 2.2],
+            "red_limits": [-1.0, 5.5],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE4_SC_A3P3_I",
+            "description": "ModB ASIC4 3.3V analog current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [3.6, 5.3],
+            "red_limits": [-1.5, 17.5],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE4_SC_R3P3_I",
+            "description": "ModB ASIC4 3.3V reference current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.08, 0.22],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE4_SC_D3P3_I",
+            "description": "ModB ASIC4 3.3V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.11, 0.27],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE4_SC_D2P5_I",
+            "description": "ModB ASIC4 2.5V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.7, 5.4],
+            "red_limits": [-1.0, 6.5],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE4_SC_VIO_I",
+            "description": "ModB ASIC4 VIO LVDS current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.5, 2.4],
+            "red_limits": [-1.0, 5.5],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE5_SC_A3P3_I",
+            "description": "ModB ASIC5 3.3V analog current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [3.6, 6.9],
+            "red_limits": [-1.5, 17.5],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE5_SC_R3P3_I",
+            "description": "ModB ASIC5 3.3V reference current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.08, 0.21],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE5_SC_D3P3_I",
+            "description": "ModB ASIC5 3.3V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.12, 0.24],
+            "red_limits": [-1.0, 1.0],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE5_SC_D2P5_I",
+            "description": "ModB ASIC5 2.5V digital current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.7, 5.1],
+            "red_limits": [-1.0, 6.5],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "INRC_FB_ACE5_SC_VIO_I",
+            "description": "ModB ASIC5 VIO LVDS current",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.5, 2.5],
+            "red_limits": [-1.0, 5.5],
+            "plot_category": "ModB_ASIC_current"
+        },
+        {
+            "name": "IGDP_NRC_FA_TMC2_LWMV_T",
+            "description": "ModA LW FPA Cernox Secondary T-sensor reading",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 38.8,
+            "red_limits": [35.0, 314],
+            "plot_category": "FPA_temp"
+        },
+        {
+            "name": "IGDP_NRC_FA_TMC2_SWMV_T",
+            "description": "ModA SW FPA Cernox Secondary T-sensor reading",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 38.5,
+            "red_limits": [35.0, 314],
+            "plot_category": "FPA_temp"
+        },
+
+        {
+            "name": "IGDP_NRC_FB_TMC1_LWMV_T",
+            "description": "ModB LW FPA Cernox Primary T-sensor reading",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 37.9,
+            "red_limits": [35.0, 314],
+            "plot_category": "FPA_temp"
+        },
+        {
+            "name": "IGDP_NRC_FB_TMC1_SWMV_T",
+            "description": "ModB SW FPA Cernox Primary T-sensor reading",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 39.0,
+            "red_limits": [35.0, 314],
+            "plot_category": "FPA_temp"
+        },
+        {
+            "name": "IGDP_NRC_FA_ACE1_SCTEMP",
+            "description": "ModA ASIC1 Temperature read by ACE card",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 39.5,
+            "red_limits": [35.0, 314],
+            "plot_category": "ASIC_temp"
+        },
+        {
+            "name": "IGDP_NRC_FA_ACE2_SCTEMP",
+            "description": "ModA ASIC2 Temperature read by ACE card",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 39.3,
+            "red_limits": [35.0, 314],
+            "plot_category": "ASIC_temp"
+        },
+        {
+            "name": "IGDP_NRC_FA_ACE3_SCTEMP",
+            "description": "ModA ASIC3 Temperature read by ACE card",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 39.4,
+            "red_limits": [35.0, 314],
+            "plot_category": "ASIC_temp"
+        },
+        {
+            "name": "IGDP_NRC_FA_ACE4_SCTEMP",
+            "description": "ModA ASIC4 Temperature read by ACE card",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 39.3,
+            "red_limits": [35.0, 314],
+            "plot_category": "ASIC_temp"
+        },
+        {
+            "name": "IGDP_NRC_FA_ACE5_SCTEMP",
+            "description": "ModA ASIC5 Temperature read by ACE card",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 38.4,
+            "red_limits": [35.0, 314],
+            "plot_category": "ASIC_temp"
+        },
+        {
+            "name": "IGDP_NRC_FB_ACE1_SCTEMP",
+            "description": "ModB ASIC1 Temperature read by ACE card",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 40.3,
+            "red_limits": [35.0, 314],
+            "plot_category": "ASIC_temp"
+        },
+        {
+            "name": "IGDP_NRC_FB_ACE2_SCTEMP",
+            "description": "ModB ASIC2 Temperature read by ACE card",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 40.35,
+            "red_limits": [35.0, 314],
+            "plot_category": "ASIC_temp"
+        },
+        {
+            "name": "IGDP_NRC_FB_ACE3_SCTEMP",
+            "description": "ModB ASIC3 Temperature read by ACE card",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 40.3,
+            "red_limits": [35.0, 314],
+            "plot_category": "ASIC_temp"
+        },
+        {
+            "name": "IGDP_NRC_FB_ACE4_SCTEMP",
+            "description": "ModB ASIC4 Temperature read by ACE card",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 40.3,
+            "red_limits": [35.0, 314],
+            "plot_category": "ASIC_temp"
+        },
+        {
+            "name": "IGDP_NRC_FB_ACE5_SCTEMP",
+            "description": "ModB ASIC5 Temperature read by ACE card",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 38.5,
+            "red_limits": [35.0, 314],
+            "plot_category": "ASIC_temp"
+        },
+
+
+        {
+            "name": "IGDP_NRC_A_T_LWFPAH1",
+            "description": "ModA LW FPA Housing Primary Cernox T-sensor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 38.45,
+            "red_limits": [35.0, 308],
+            "plot_category": "FPAH_temp"
+        },
+        {
+            "name": "IGDP_NRC_A_T_LWFPAH2",
+            "description": "ModA LW FPA Housing Secondary Cernox T-sensor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 38.75,
+            "red_limits": [35.0, 308],
+            "plot_category": "FPAH_temp"
+        },
+        {
+            "name": "IGDP_NRC_A_T_SWFPAH1",
+            "description": "ModA SW FPA Housing Primary Cernox T-sensor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 38.75,
+            "red_limits": [35.0, 308],
+            "plot_category": "FPAH_temp"
+        },
+        {
+            "name": "IGDP_NRC_A_T_SWFPAH2",
+            "description": "ModA SW FPA Housing Secondary Cernox T-sensor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 38.9,
+            "red_limits": [35.0, 308],
+            "plot_category": "FPAH_temp"
+        },
+        {
+            "name": "IGDP_NRC_B_T_LWFPAH1",
+            "description": "ModB LW FPA Housing Primary Cernox T-sensor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 38.5,
+            "red_limits": [35.0, 308],
+            "plot_category": "FPAH_temp"
+        },
+        {
+            "name": "IGDP_NRC_B_T_LWFPAH2",
+            "description": "ModB LW FPA Housing Secondary Cernox T-sensor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 38.6,
+            "red_limits": [35.0, 308],
+            "plot_category": "FPAH_temp"
+        },
+        {
+            "name": "IGDP_NRC_B_T_SWFPAH1",
+            "description": "ModB SW FPA Housing Primary Cernox T-sensor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 39.05,
+            "red_limits": [35.0, 308],
+            "plot_category": "FPAH_temp"
+        },
+        {
+            "name": "IGDP_NRC_B_T_SWFPAH2",
+            "description": "ModB SW FPA Housing Secondary Cernox T-sensor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 39.1,
+            "red_limits": [35.0, 308],
+            "plot_category": "FPAH_temp"
+        },
+        {
+            "name": "IGDP_NRC_A_T_OBA_TS1",
+            "description": "ModA Optical Bench Primary Cernox T-sensor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 38.15,
+            "red_limits": [35.0, 314],
+            "plot_category": "OBA_temp"
+        },
+        {
+            "name": "IGDP_NRC_A_T_OBA_TS2",
+            "description": "ModA Optical Bench Secondary Cernox T-sensor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 38.35,
+            "red_limits": [35.0, 314],
+            "plot_category": "OBA_temp"
+        },
+        {
+            "name": "IGDP_NRC_B_T_OBA_TS1",
+            "description": "ModB Optical Bench Primary Cernox T-sensor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 38.25,
+            "red_limits": [35.0, 314],
+            "plot_category": "OBA_temp"
+        },
+        {
+            "name": "IGDP_NRC_B_T_OBA_TS2",
+            "description": "ModB Optical Bench Secondary Cernox T-sensor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 38.4,
+            "red_limits": [35.0, 314],
+            "plot_category": "OBA_temp"
+        },
+        {
+            "name": "IGDP_NRC_A_T_PIL",
+            "description": "ModA PIL Cernox T-sensor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 39.8,
+            "red_limits": [35.0, 314],
+            "plot_category": "PIL_temp"
+        },
+        {
+            "name": "IGDP_NRC_B_T_PIL",
+            "description": "ModB PIL Cernox T-sensor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 38.3,
+            "red_limits": [35.0, 314],
+            "plot_category": "PIL_temp"
+        },
+        {
+            "name": "INRC_A_M_PIL_AS_POS",
+            "description": "ModA PIL SensorA position",
+            "dependency": [
+                {
+                    "name": "IGDP_NRC_A_PIL_STATE",
+                    "relation": "=",
+                    "threshold": "DEPLOYED"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [-23490, 20982],
+            "red_limits": [-24000, 24000],
+            "plot_category": "PIL_pos"
+        },
+        {
+            "name": "INRC_A_M_PIL_BS_POS",
+            "description": "ModA PIL SensorB position",
+            "dependency": [
+                {
+                    "name": "IGDP_NRC_A_PIL_STATE",
+                    "relation": "=",
+                    "threshold": "DEPLOYED"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [-22382, 17863],
+            "red_limits": [-24000, 24000],
+            "plot_category": "PIL_pos"
+        },
+        {
+            "name": "INRC_B_M_PIL_AS_POS",
+            "description": "ModB PIL SensorA position",
+            "dependency": [
+                {
+                    "name": "IGDP_NRC_B_PIL_STATE",
+                    "relation": "=",
+                    "threshold": "DEPLOYED"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [-16670, 19735],
+            "red_limits": [-24000, 24000],
+            "plot_category": "PIL_pos"
+        },
+        {
+            "name": "INRC_B_M_PIL_BS_POS",
+            "description": "ModB PIL SensorB position",
+            "dependency": [
+                {
+                    "name": "IGDP_NRC_B_PIL_STATE",
+                    "relation": "=",
+                    "threshold": "DEPLOYED"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [-24132, 20274],
+            "red_limits": [-24000, 24000],
+            "plot_category": "PIL_pos"
+        },
+        {
+            "name": "INRC_SW_TMR_PIL",
+            "description": "NFSW PIL timeout timer value",
+            "database_id": "INRC_SW_TMR_PIL_A",
+            "dependency": [
+                {
+                    "name": "IGDP_NRC_A_PIL_STATE",
+                    "relation": "=",
+                    "threshold": "DEPLOYED"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "PIL_pos"
+        },
+        {
+            "name": "INRC_SW_TMR_PIL",
+            "description": "NFSW PIL timeout timer value",
+            "database_id": "INRC_SW_TMR_PIL_B",
+            "dependency": [
+                {
+                    "name": "IGDP_NRC_B_PIL_STATE",
+                    "relation": "=",
+                    "threshold": "DEPLOYED"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "PIL_pos"
+        },
+        {
+            "name": "INRC_FA_TMC2_LW_SEN_SET",
+            "description": "ModA TMC2 LW FPA heater setpoint",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [1890, 1940],
+            "plot_category": "FPA_heater_setpt"
+        },
+        {
+            "name": "INRC_FA_TMC2_SW_SEN_SET",
+            "description": "ModA TMC2 SW FPA heater setpoint",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [1055, 1105],
+            "plot_category": "FPA_heater_setpt"
+        },
+        {
+            "name": "INRC_FB_TMC1_LW_SEN_SET",
+            "description": "ModB TMC1 LW FPA heater setpoint",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [800, 1900],
+            "plot_category": "FPA_heater_setpt"
+        },
+        {
+            "name": "INRC_FB_TMC1_SW_SEN_SET",
+            "description": "ModB TMC1 SW FPA heater setpoint",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [700, 2200],
+            "plot_category": "FPA_heater_setpt"
+        },
+
+
+        {
+            "name": "IGDP_NRC_FA_TMC2_LW_TS1",
+            "description": "T-offset for ModA LW FPA relative to zero-power, based on comparing TMC2 and OBA TS1 sensors",
+            "dependency": [],
+            "plot_data": "nominal",
+            "red_limits": [0, 1],
+            "plot_category": "FPA_heater_setpt"
+        },
+        {
+            "name": "IGDP_NRC_FA_TMC2_LW_TS2",
+            "description": "T-offset for ModA LW FPA relative to zero-power, based on comparing TMC2 and OBA TS2 sensors",
+            "dependency": [],
+            "plot_data": "nominal",
+            "red_limits": [0, 1],
+            "plot_category": "FPA_heater_setpt"
+        },
+        {
+            "name": "IGDP_NRC_FA_TMC2_SW_TS1",
+            "description": "T-offset for ModA SW FPA relative to zero-power, based on comparing TMC2 and OBA TS1 sensors",
+            "dependency": [],
+            "plot_data": "nominal",
+            "red_limits": [0, 1],
+            "plot_category": "FPA_heater_setpt"
+        },
+        {
+            "name": "IGDP_NRC_FA_TMC2_SW_TS2",
+            "description": "T-offset for ModA SW FPA relative to zero-power, based on comparing TMC2 and OBA TS2 sensors",
+            "dependency": [],
+            "plot_data": "nominal",
+            "red_limits": [0, 1],
+            "plot_category": "FPA_heater_setpt"
+        },
+        {
+            "name": "IGDP_NRC_FB_TMC1_LW_TS1",
+            "description": "T-offset for ModB LW FPA relative to zero-power, based on comparing TMC1 and OBA TS1 sensors",
+            "dependency": [],
+            "plot_data": "nominal",
+            "red_limits": [0, 1],
+            "plot_category": "FPA_heater_setpt"
+        },
+        {
+            "name": "IGDP_NRC_FB_TMC1_LW_TS2",
+            "description": "T-offset for ModB LW FPA relative to zero-power, based on comparing TMC1 and OBA TS2 sensors",
+            "dependency": [],
+            "plot_data": "nominal",
+            "red_limits": [0, 1],
+            "plot_category": "FPA_heater_setpt"
+        },
+        {
+            "name": "IGDP_NRC_FB_TMC1_SW_TS1",
+            "description": "T-offset for ModB SW FPA relative to zero-power, based on comparing TMC1 and OBA TS1 sensors",
+            "dependency": [],
+            "plot_data": "nominal",
+            "red_limits": [0, 1],
+            "plot_category": "FPA_heater_setpt"
+        },
+        {
+            "name": "IGDP_NRC_FB_TMC1_SW_TS2",
+            "description": "T-offset for ModB SW FPA relative to zero-power, based on comparing TMC1 and OBA TS2 sensors",
+            "dependency": [],
+            "plot_data": "nominal",
+            "red_limits": [0, 1],
+            "plot_category": "FPA_heater_setpt"
+        },
     ]
 }

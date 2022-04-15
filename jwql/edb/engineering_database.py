@@ -292,7 +292,10 @@ class EdbMnemonic:
         medtimes = []
         if type(self.data["euvalues"].data[0]) not in [np.str_, str]:
             for i, index in enumerate(self.blocks[0:-1]):
-                meanval, medianval, stdevval = sigma_clipped_stats(self.data["euvalues"].data[index:self.blocks[i+1]], sigma=sigma)
+                if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
+                    meanval, medianval, stdevval = sigma_clipped_stats(self.data["euvalues"].data[index:self.blocks[i+1]], sigma=sigma)
+                else:
+                    meanval, medianval, stdevval = change_only_stats(self.data["euvalues"].data[index:self.blocks[i+1]], sigma=sigma)
                 medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i+1]]))
                 means.append(meanval)
                 medians.append(medianval)
@@ -481,7 +484,11 @@ class EdbMnemonic:
         means, meds, devs, times = [], [], [], []
         for i in range(len(limits) - 1):
             good = np.where((self.data["dates"] >= limits[i]) & (self.data["dates"] < limits[i+1]))
-            avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
+
+            if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
+                avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
+            else:
+                avg, med, dev = change_only_stats(self.data["euvalues"][good], sigma=sigma)
             means.append(avg)
             meds.append(med)
             devs.append(dev)
@@ -499,7 +506,10 @@ class EdbMnemonic:
         sigma : int
             Number of sigma to use for sigma clipping
         """
-        self.mean, self.median, self.stdev = sigma_clipped_stats(self.data["euvalues"], sigma=sigma)
+        if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
+            self.mean, self.median, self.stdev = sigma_clipped_stats(self.data["euvalues"], sigma=sigma)
+        else:
+            self.mean, self.median, self.stdev = change_only_stats(self.data["euvalues"], sigma=sigma)
         self.mean = [self.mean]
         self.median = [self.median]
         self.stdev = [self.stdev]
@@ -515,11 +525,18 @@ class EdbMnemonic:
         """
         new_tab = Table()
 
+
+need to keep the points between the time entries as well.
+for each time need points between the prior point and the current point
+
         # Change-only data is unique and needs its own way to be interpolated
         if self.meta['TlmMnemonics'][0]['AllPoints'] == 0:
             new_values = []
             new_dates = []
             for time in times:
+
+
+
                 latest = np.where(self.data["dates"] <= time)[0]
                 if len(latest) > 0:
                     new_values.append(self.data["euvalues"][latest[-1]])
@@ -600,7 +617,10 @@ class EdbMnemonic:
             min_date = self.data["dates"][0] + timedelta(seconds=i*duration_secs)
             max_date = min_date + timedelta(seconds=duration_secs)
             good = ((date_arr >= min_date) & (date_arr < max_date))
-            avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
+            if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
+                avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
+            else:
+                 avg, med, dev = change_only_stats(self.data["euvalues"][good], sigma=sigma)
             self.mean.append(avg)
             self.median.append(med)
             self.stdev.append(dev)
@@ -695,9 +715,10 @@ def calc_median_time(time_arr):
     med_time : datetime.datetime
         Median time, as a datetime object
     """
-    offsets = np.array([create_time_offset(ele, time_arr[0]) for ele in time_arr])
-    med = np.median(offsets)
-    med_time = add_time_offset(med, time_arr[0])
+    #offsets = np.array([create_time_offset(ele, time_arr[0]) for ele in time_arr])
+    #med = np.median(offsets)
+    #med_time = add_time_offset(med, time_arr[0])
+    med_time = time_arr[0] + ((time_arr[-1] - time_arr[0]) / 2.)
     return med_time
 
 
@@ -765,6 +786,48 @@ def change_only_bounding_points(date_list, value_list, starttime, endtime):
     value_list.append(value_end)
 
     return date_list, value_list
+
+
+    def change_only_stats(times, values, sigma=3):
+        """Calculate the mean/median/stdev as well as the median time for a
+        collection of change-only data.
+
+        Parameters
+        ----------
+        times : list
+            List of datetime objects
+
+        values : list
+            List of values corresponding to times
+
+        sigma : float
+            Number of sigma to use for sigma-clipping
+
+        Returns
+        -------
+        meanval : float
+            Mean of values
+
+        medianval : float
+            Median of values
+
+        stdevval : float
+            Standard deviation of values
+        """
+        times = np.array(times)
+        values = np.array(values)
+        delta_time = times[1:] - times[0:-1]
+        #total_time = times[-1] - times[0]
+        #weighted_values = values[0:-1] * delta_time
+        #meanval = np.sum(weighted_values) / total_time
+
+        time_fractions = delta_time / np.min(delta_time) * 100.
+        arr_for_median = [[val]*int(time) for val, time in zip(values, time_fractions)]
+        flat_list_for_median = [item for sublist in arr_for_median for item in sublist]
+        meanval, medianval, stdevval = sigma_clipped_stats(flat_list_for_median, sigma=sigma)
+        #medianval = np.median(flat_list_for_median)
+        #stdevval = np.std(flat_list_for_median)
+        return meanval, medianval, stdevval
 
 
 def create_time_offset(dt_obj, epoch):
