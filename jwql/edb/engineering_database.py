@@ -534,9 +534,6 @@ for each time need points between the prior point and the current point
             new_values = []
             new_dates = []
             for time in times:
-
-
-
                 latest = np.where(self.data["dates"] <= time)[0]
                 if len(latest) > 0:
                     new_values.append(self.data["euvalues"][latest[-1]])

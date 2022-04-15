@@ -646,9 +646,14 @@ class EdbMnemonicMonitor():
                 for time_pair in cond.time_pairs:
                     boundary_times.extend([time_pair[0], time_pair[1]])
             # If we have a valid list of start/stop times (i.e. no None entries), then
-            # interpolate the every-change data onto those dates
+            # add data for those points to the exsiting collection of date/value points.
+            # To do this we use interpolate, but afterwards the data will still be change-
+            # only.
             if None not in boundary_times:
-                data.interpolate(sorted(np.unique(np.array(boundary_times))))
+                existing_dates = np.array(data.data["dates"])
+                unique_boundary_dates = np.unique(np.array(boundary_times))
+                interp_dates = sorted(np.append(existing_dates, unique_boundary_dates))
+                data.interpolate(interp_dates)
 
         full_condition.extract_data(data.data)
 
@@ -720,8 +725,14 @@ class EdbMnemonicMonitor():
             change_indexes = np.insert(change_indexes, len(change_indexes), len(dependency["euvalues"]))
 
             # If dates differ between the mnemonic of interest and the dependency, then interpolate to match
+            # If the mnemonic of interest is change-only data, then we need to interpolate onto a list of dates
+            # that include those originally in the mnemonic plus those in the dependency)
             if not np.all(dependency["dates"] == mnem_data.data["dates"].data):
-                mnem_data.interpolate(dependency["dates"])
+                if mnem_data.meta['TlmMnemonics'][0]['AllPoints'] != 0:
+                    mnem_data.interpolate(dependency["dates"])
+                else:
+                    all_dates = sorted(np.append(np.array(dependency["dates"]), np.array(mnem_data.data["dates"].data)))
+                    mnem_data.interpolate(all_dates)
 
             # Get the dependency values for each change.
             vals = dependency["euvalues"][change_indexes[0:-1]].data
@@ -1087,22 +1098,39 @@ class EdbMnemonicMonitor():
                         logging.info(f'{temp_dict["name"]} to use as product has no data between {starttime} and {endtime}.\n\n')
                         continue
 
-                    # If either mnemonic is every-change data, then first interpolate it
+                    # If either mnemonic is change-only data, then first interpolate it
                     # onto the dates of the other. If they are both every-change data,
                     # then interpolate onto the mnemonic with the smaller date range
                     if mnemonic_info.meta['TlmMnemonics'][0]['AllPoints'] == 0:
-                        numpts = 50
                         if product_mnemonic_info.meta['TlmMnemonics'][0]['AllPoints'] == 0:
-                            delta = (mnemonic_info.data["dates"][-1] - mnemonic_info.data["dates"][0]) / numpts
-                            mnem_new_dates = [mnemonic_info.data["dates"][0] + i*delta for i in range(len(numpts))]
-                            prod_new_dates = [product_mnemonic_info.data["dates"][0] + i*delta for i in range(len(numpts))]
+                            # If both mnemonics are change-only, then we need to translate them both
+                            # to all-points.
+                            delta_t = timedelta(seconds=1.)
+                            mnem_numpts = (mnemonic_info.data["dates"][-1] - mnemonic_info.data["dates"][0]) / delta_t + 1
+                            mnem_new_dates = [mnemonic_info.data["dates"][0] + i*delta_t for i in range(len(mnem_numpts))]
+
+                            prod_numpts = (product_mnemonic_info.data["dates"][-1] - product_mnemonic_info.data["dates"][0]) / delta_t + 1
+                            prod_new_dates = [product_mnemonic_info.data["dates"][0] + i*delta_t for i in range(len(prod_numpts))]
+
+                            # Interpolate each onto its new list of allPoints dates. When they are multiplied below,
+                            # they will be interpolated onto the same list of dates.
+                            in these cases, we want to interpolate onto the specified dates, and no others. This is slightly
+                            different from the other interpolation case, where we do want to keep intermediate points
                             mnemonic_info.interpolate(mnem_new_dates)
                             product_mnemonic_info.interpolate(prod_new_dates)
+
+                            # Update metadata to reflect that these are now allPoints data
+                            product_mnemonic_info.meta['TlmMnemonics'][0]['AllPoints'] = 1
                         else:
                             mnemonic_info.interpolate(product_mnemonic_info.data["dates"])
+                        # Now that we have effectively converted the every-change data into allPoints data,
+                        # modify the metadata to reflect that
+                        mnemonic_info.meta['TlmMnemonics'][0]['AllPoints'] = 1
                     else:
                         if product_mnemonic_info.meta['TlmMnemonics'][0]['AllPoints'] == 0:
+                            # Interpolate onto the allPoints set of dates, and update the metadata
                             product_mnemonic_info.interpolate(mnemonic_info.data["dates"])
+                            product_mnemonic_info.meta['TlmMnemonics'][0]['AllPoints'] = 1
                         else:
                             pass
 
