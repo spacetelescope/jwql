@@ -21,9 +21,12 @@ From these data, a daily mean is calculated. For all other types of telemetry, t
 the full day.
 
 2. "block_means" - These are mnemonics where the user wishes to see mean values associated with each
-block of entries in the retrieved and filtered data. The use case for this type is not well defined
-at the moment, although the concept of blocks is used for calculating means for other types of
-telemetry.
+block of entries in the retrieved and filtered data. For example, you want to examine a voltage at times
+when some other current is less than 0.25A. The script will read in all telemetry data, and filter out
+data points for times where the current did not meet the criteria. It will then calculate the mean of
+each remaining block of continuous good data. So if the data were good from 2:00 to 2:30, then bad until
+3:00, and good again from 3:00 - 4:00, then the monitor will calculate a mean value for the 2:00-2:30
+period, and a mean from the 3:00-4:00 period.
 
 4. "time_interval" - Mnemonics in this category have their data retrieved and filtered, and then averaged
 over the requested time interval. For example, if the user sets a time interval of 5 minutes, then the
@@ -40,10 +43,14 @@ of "every change" is separate from the idea of every-change telemetry, in which 
 only generated at times when the telemetry value changes. Some of the mnemonics in the EDB do contain
 change-only telemetry data, but this should be largely invisible to the EDB Telemetry Monitor user.
 
-5. "none" - In this case, no averaging is done. (Although filtering is still done) All filtered data
+5. "all" - In this case, no averaging is done. (Although filtering is still done) All filtered data
 are kept as they are retrived from the EDB, and plotted without any modification.
 
+6. "all+daily_means"
 
+7. "all+block_means"
+
+8. "all+time_interval"
 
 Here is an example of two daily_mean telemetry entries in the json file. In both, SE_ZIMIRICEA values are retrieved.
 For the first plot, data are only kept for the times where the following dependencies are true:
@@ -142,9 +149,9 @@ For a case with no dependencies, the "dependencies" keyword can be left empty:
 
 
 For the case where no averaging is to be done, place the entries under the top-level
-"none" entry.
+"all" entry.
 
-    "none": [
+    "all": [
         {
             "name": "SE_ZINRCICE1",
             "description": "ICE1 current",
@@ -352,7 +359,7 @@ class EdbMnemonicMonitor():
 
     def add_new_block_db_entry(self, mnem, query_time):
         """Add a new entry to the database table for any kind
-        of telemetry type other than "none" (which does not save
+        of telemetry type other than "all" (which does not save
         data in the database) and "every_change" (which needs a
         custom table.)
 
@@ -985,7 +992,7 @@ class EdbMnemonicMonitor():
 
         tel_type : str
             Type of telemetry. This comes from the json file listing all mnemonics to be monitored.
-            Examples include "every_change", "daily", "none", etc
+            Examples include "every_change", "daily", "all", etc
         """
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst]
         if '_means' in tel_type:
@@ -1041,7 +1048,7 @@ class EdbMnemonicMonitor():
 
         telemetry_type : str
             Type of telemetry being retrieved. This is from the top-level of the json file describing
-            all mnemonics to be monitored. Examples include "every_change", "daily", "none".
+            all mnemonics to be monitored. Examples include "every_change", "daily", "all".
 
         Returns
         -------
@@ -1142,7 +1149,7 @@ class EdbMnemonicMonitor():
 
                 # Combine information from multiple days here. If averaging is done, keep track of
                 # only the averaged data. If no averaging is done, keep all data.
-                if telemetry_type != 'none':
+                if telemetry_type != 'all':
                     multiday_median_times.extend(mnemonic_info.median_times)
                     multiday_mean_vals.extend(mnemonic_info.mean)
                     multiday_stdev_vals.extend(mnemonic_info.stdev)
@@ -1235,9 +1242,9 @@ class EdbMnemonicMonitor():
             query_duration = utils.get_query_duration(telem_type)
 
             # Determine which database tables are needed based on instrument. A telemetry
-            # type of "none" indicates that no time-averaging is done, and therefore the
+            # type of "all" indicates that no time-averaging is done, and therefore the
             # data are not stored in the JWQL database (for database table size reasons).
-            if telem_type != 'none':
+            if telem_type != 'all':
                 self.identify_tables(instrument, telem_type)
 
             # Work on mnemonic at a time
@@ -1261,7 +1268,7 @@ class EdbMnemonicMonitor():
                 if 'database_id' in mnemonic:
                     self._usename = 'database_id'
 
-                if telem_type != 'none':
+                if telem_type != 'all':
                     # Find the end time of the previous query from the database.
 
                     #most_recent_search = self.most_recent_search(mnemonic[usename])
@@ -1325,7 +1332,7 @@ class EdbMnemonicMonitor():
                     logging.info(f'Query start times: {query_start_times}')
                     logging.info(f'Query end times: {query_end_times}')
 
-                if telem_type != 'none':
+                if telem_type != 'all':
                     if query_start_times is not None:
 
                         # Query the EDB/JWQLDB, filter by dependencies, and perform averaging
@@ -1345,7 +1352,7 @@ class EdbMnemonicMonitor():
                 # Save the averaged/smoothed data and dates/times to the database, but only for cases where we
                 # are averaging. For cases with no averaging the database would get too large too quickly. In
                 # that case the monitor will re-query the EDB for the entire history each time.
-                if telem_type != "none":
+                if telem_type != "all":
 
                     # "every_change" data must be treated differently from other types of averaging, since
                     # those mnemonics have their data separated into collections based on the value of a
@@ -1554,7 +1561,7 @@ def calculate_statistics(mnemonic_instance, telemetry_type):
         EdbMnemonic instance containing the telemetry data to be averaged.
 
     telemetry_type : str
-        Type of telemetry. Examples include "daily", "every_change", "none". These values
+        Type of telemetry. Examples include "daily", "every_change", "all". These values
         come from the top-level json file that lists the mnemonics to be monitored.
 
     Returns
@@ -1572,7 +1579,7 @@ def calculate_statistics(mnemonic_instance, telemetry_type):
     elif telemetry_type == "time_interval":
         stats_duration = utils.get_averaging_time_duration(mnemonic["mean_time_block"])
         mnemonic_instance.timed_stats(stats_duration)
-    elif telemetry_type == "none":
+    elif telemetry_type == "all":
         mnemonic_instance.full_stats()
     return mnemonic_instance
 

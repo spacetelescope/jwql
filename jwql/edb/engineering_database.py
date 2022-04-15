@@ -513,7 +513,7 @@ class EdbMnemonic:
         self.mean = [self.mean]
         self.median = [self.median]
         self.stdev = [self.stdev]
-        self.median_time = [calc_median_time(self.data["dates"])]
+        self.median_times = [calc_median_time(self.data["dates"])]
 
     def interpolate(self, times):
         """Interpolate data euvalues at specified datetimes.
@@ -524,10 +524,6 @@ class EdbMnemonic:
             List of datetime objects describing the times to interpolate to
         """
         new_tab = Table()
-
-
-need to keep the points between the time entries as well.
-for each time need points between the prior point and the current point
 
         # Change-only data is unique and needs its own way to be interpolated
         if self.meta['TlmMnemonics'][0]['AllPoints'] == 0:
@@ -576,6 +572,178 @@ for each time need points between the prior point and the current point
 
         # Update the data in the instance.
         self.data = new_tab
+
+    def plot_data_plus_devs(self, show_plot=False, savefig=False, out_dir='./', nominal_value=None, yellow_limits=None,
+                            red_limits=None, xrange=(None, None), yrange=(None, None), return_components=True, return_fig=False):
+        """Make basic bokeh plot showing value as a function of time. Optionally add a line indicating
+        nominal (expected) value, as well as yellow and red background regions to denote values that
+        may be unexpected. Also add a plot of the mean value over time and in a second figure, a plot of
+        the devaition from the mean.
+
+        Paramters
+        ---------
+        show_plot : bool
+            If True, show plot on screen rather than returning div and script
+
+        savefig : bool
+            If True, file is saved to html file
+
+        out_dir : str
+            Directory into which the html file is saved
+
+        nominal_value : float
+            Expected or nominal value for the telemetry. If provided, a horizontal dashed line
+            at this value will be added.
+
+        yellow_limits : list
+            2-element list giving the lower and upper limits outside of which the telemetry value
+            is considered non-nominal. If provided, the area of the plot between these two values
+            will be given a green background, and that outside of these limits will have a yellow
+            background.
+
+        red_limits : list
+            2-element list giving the lower and upper limits outside of which the telemetry value
+            is considered worse than in the yellow region. If provided, the area of the plot outside
+            of these two values will have a red background.
+
+        xrange : tuple
+            Tuple of min, max datetime values to use as the plot range in the x direction.
+
+        yrange : tuple
+            Tuple of min, max datetime values to use as the plot range in the y direction.
+
+        return_components : bool
+            If True, return the plot as div and script components
+
+        return_fig : bool
+            If True, return the plot as a bokeh Figure object
+
+        Returns
+        -------
+        obj : list or bokeh.plotting.figure
+            If return_components is True, return a list containing [div, script]
+            If return_figre is True, return the bokeh figure itself
+        """
+        # Make sure that only one output type is specified, or bokeh will get mad
+        options = np.array([show_plot, savefig, return_components, return_fig])
+        if np.sum(options) > 1:
+            trues = np.where(options)[0]
+            raise ValueError((f'{options[trues]} are set to True in plot_every_change_data. Bokeh '
+                              'will only allow one of these to be True.'))
+
+        # If there are no data in the table, then produce an empty plot in the date
+        # range specified by the requested start and end time
+        if len(self.data["dates"]) == 0:
+            null_dates = [self.requested_start_time, self.requested_end_time]
+            null_vals = [0, 0]
+            data_dates = null_dates
+            data_vals = null_vals
+        else:
+            data_dates = self.data['dates']
+            data_vals = self.data['euvalues']
+        source = ColumnDataSource(data={'x': data_dates, 'y': data_vals})
+
+        if savefig:
+            filename = os.path.join(out_dir, f"telem_plot_{self.mnemonic_identifier.replace(' ','_')}.html")
+            print(f'\n\nSAVING HTML FILE TO: {filename}')
+
+        if self.info is None:
+            units = 'Unknown'
+        else:
+            units = self.info["unit"]
+
+        fig = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type=None,
+                     title=self.mnemonic_identifier, x_axis_label='Time',
+                     y_axis_label=f'{units}')
+
+        # For cases where the plot is empty or contains only a single point, force the
+        # plot range to something reasonable
+        if len(self.data["dates"]) < 2:
+            fig.x_range=Range1d(self.requested_start_time - timedelta(days=1), self.requested_end_time)
+            bottom, top = (-1, 1)
+            if yellow_limits is not None:
+                bottom, top = yellow_limits
+            if red_limits is not None:
+                bottom, top = red_limits
+            fig.y_range=Range1d(bottom, top)
+
+        data = fig.scatter(x='x', y='y', line_width=1, line_color='blue', source=source)
+
+        # Plot the mean value over time
+        if len(self.median_times) > 0:
+            mean_data = fig.line(self.median_times, self.mean, line_width=1, line_color='orange', alpha=0.75)
+
+        if len(self.data["dates"]) == 0:
+            data.visible = False
+            if nominal_value is not None:
+                fig.line(null_dates, np.repeat(nominal_value, len(null_dates)), color='black',
+                        line_dash='dashed', alpha=0.5)
+        else:
+            # If there is a nominal value provided, plot a dashed line for it
+            if nominal_value is not None:
+                fig.line(self.data['dates'], np.repeat(nominal_value, len(self.data['dates'])), color='black',
+                        line_dash='dashed', alpha=0.5)
+
+        # If limits for warnings/errors are provided, create colored background boxes
+        if yellow_limits is not None or red_limits is not None:
+            fig = add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
+
+
+        hover_tool = HoverTool(tooltips=[('Value', '@y'),
+                                         ('Date', '@x{%d %b %Y %H:%M:%S}')
+                                        ], mode='mouse', renderers=[data])
+        hover_tool.formatters={'@x': 'datetime'}
+
+        fig.tools.append(hover_tool)
+
+        # Force the axes' range if requested
+        if xrange[0] is not None:
+            fig.x_range.start = xrange[0].timestamp()*1000.
+        if xrange[1] is not None:
+            fig.x_range.end = xrange[1].timestamp()*1000.
+        if yrange[0] is not None:
+            fig.y_range.start = yrange[0]
+        if yrange[1] is not None:
+            fig.y_range.end = yrange[1]
+
+        # Now create a second plot showing the devitation from the mean
+        fig_dev = figure(height=250, x_range=fig.x_range, tools="xpan,xwheel_zoom,xbox_zoom,reset", y_axis_location="right",
+                         x_axis_type='datetime')
+
+        # Interpolate the mean values so that we can subtract the original data
+        interp_means = np.interp(data_dates, self.median_times, self.mean)
+
+        # Calculate deviation from the mean
+        dev = data_vals - interp_means
+
+        # Plot
+        fig_dev.line(data_dates, dev, color='red')
+
+        # Make the x axis tick labels look nice
+        fig_dev.xaxis.formatter=DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
+                                                  seconds=["%d %b %H:%M:%S.%3N"],
+                                                  hours=["%d %b %H:%M"],
+                                                  days=["%d %b %H:%M"],
+                                                  months=["%d %b %Y %H:%M"],
+                                                  years=["%d %b %Y"]
+                                                 )
+        fig.xaxis.major_label_orientation = np.pi/4
+
+
+        # Place the two figures in a column object
+        bothfigs = column(figa, fig_dev)
+
+        if savefig:
+            output_file(filename=filename, title=self.mnemonic_identifier)
+            save(bothfigs)
+
+        if show_plot:
+            show(bothfigs)
+        if return_components:
+            script, div = components(bothfigs)
+            return [div, script]
+        if return_fig:
+            return bothfigs
 
     def save_table(self, outname):
         """Save the EdbMnemonic instance

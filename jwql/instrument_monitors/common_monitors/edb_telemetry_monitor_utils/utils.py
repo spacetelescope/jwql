@@ -84,7 +84,7 @@ def get_averaging_time_duration(duration_string):
 def get_query_duration(mnemonic_type):
     """Turn the string version of the EDB query duration into a timedelta
     quantity. Allowed duration_string values include "daily_means",
-    "every_change", "block_means", or "time_interval", or "none". These terms
+    "every_change", "block_means", or "time_interval", or "all". These terms
     describe more how the mnemonic's data will be processed after it is
     retrieved, but we can map each mnemonic type to a length of time to
     use for the EDB query.
@@ -99,10 +99,8 @@ def get_query_duration(mnemonic_type):
     time : datetime.timedelta
     """
     if mnemonic_type.lower() == "daily_means":
-        #time = 15. * u.minute
         time = timedelta(days=0.01041667)
-    elif mnemonic_type in ["every_change", "block_means", "time_interval", "none"]:
-        #time = 1. * u.day
+    elif mnemonic_type in ["every_change", "block_means", "time_interval", "all"]:
         time = timedelta(days=1)
     else:
         raise ValueError(f"Unrecognized mnemonic type: {mnemonic_type}. Unsure what duration to use for EDB query.")
