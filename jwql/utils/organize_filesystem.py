@@ -32,6 +32,8 @@ import shutil
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, get_config, ensure_dir_exists, filename_parser
 
+SETTINGS = get_config()
+
 
 def organize_filesystem():
     """The main function of the ``organize_filesystem`` module.  See
@@ -39,7 +41,7 @@ def organize_filesystem():
     """
 
     # Walk through list of files to process
-    for directory, _, files in os.walk(get_config()['old_filesystem']):
+    for directory, _, files in os.walk(SETTINGS['old_filesystem']):
 
         print('Processing {}'.format(directory))
 
@@ -52,7 +54,7 @@ def organize_filesystem():
             # Build destination path for those filenames that can be parsed
             try:
                 destination_directory = os.path.join(
-                    get_config()['filesystem'],
+                    SETTINGS['filesystem'],
                     'jw{}'.format(filename_dict['program_id']),
                     'jw{}{}{}'.format(filename_dict['program_id'], filename_dict['observation'], filename_dict['visit']))
             except KeyError:  # Some filenames do not have a program_id/observation/visit structure
@@ -79,7 +81,7 @@ def revert_filesystem():
     """
 
     # Walk through list of files to process
-    for directory, _, files in os.walk(get_config()['filesystem']):
+    for directory, _, files in os.walk(SETTINGS['filesystem']):
 
         print('Processing {}'.format(directory))
 
@@ -92,7 +94,7 @@ def revert_filesystem():
             # Build destination path for those filenames that can be parsed
             try:
                 destination_directory = os.path.join(
-                    get_config()['old_filesystem'],
+                    SETTINGS['old_filesystem'],
                     'jw{}'.format(filename_dict['program_id']))
             except KeyError:  # Some filenames do not have a program_id/observation/visit structure
                 break

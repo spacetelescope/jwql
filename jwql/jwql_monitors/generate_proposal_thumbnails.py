@@ -34,6 +34,8 @@ from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.utils import get_config
 from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 
+SETTINGS = get_config()
+
 
 @log_fail
 @log_info
@@ -41,7 +43,7 @@ def generate_proposal_thumbnails():
     """The main function of the ``generate_proposal_thumbnails`` module.
     See module docstring for further details."""
 
-    proposal_dirs = glob.glob(os.path.join(get_config()['thumbnail_filesystem'], '*'))
+    proposal_dirs = glob.glob(os.path.join(SETTINGS['thumbnail_filesystem'], '*'))
 
     for proposal_dir in proposal_dirs:
         rate_thumbnails = glob.glob(os.path.join(proposal_dir, '*rate*.thumb'))

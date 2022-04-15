@@ -57,10 +57,12 @@ from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 
-FILESYSTEM = get_config()['filesystem']
+SETTINGS = get_config()
+FILESYSTEM = SETTINGS['filesystem']
 PROPRIETARY_FILESYSTEM = os.path.join(FILESYSTEM, 'proprietary')
 PUBLIC_FILESYSTEM = os.path.join(FILESYSTEM, 'public')
-CENTRAL = get_config()['jwql_dir']
+CENTRAL = SETTINGS['jwql_dir']
+OUTPUTS = SETTINGS['outputs']
 
 
 def gather_statistics(general_results_dict, instrument_results_dict):
@@ -465,7 +467,7 @@ def plot_filesystem_stats():
     grid = gridplot(grid_chunks)
 
     # Save all of the plots in one file
-    outputs_dir = os.path.join(get_config()['outputs'], 'monitor_filesystem')
+    outputs_dir = os.path.join(OUTPUTS, 'monitor_filesystem')
     outfile = os.path.join(outputs_dir, 'filesystem_monitor.html')
     output_file(outfile)
     save(grid)
@@ -563,7 +565,6 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
         session.commit()
 
     session.close()
-
 
 
 if __name__ == '__main__':
