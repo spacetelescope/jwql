@@ -107,7 +107,7 @@ def create_table(status_dict):
     output_dir = get_config()['outputs']
     output_filename = 'cron_status_table'
 
-    #verify/create output sub-directory
+    # verify/create output sub-directory
     output_dir = os.path.join(output_dir, 'monitor_cron_jobs')
     ensure_dir_exists(output_dir)
 
