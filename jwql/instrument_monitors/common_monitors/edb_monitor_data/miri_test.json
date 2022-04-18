@@ -90,7 +90,7 @@
             "query_duration": "15 minutes"
         }
     ],
-    "block_means": [
+    "all+block_means": [
         {
             "name": "IMIR_HK_ICE_SEC_VOLT1",
             "description": "ICE secondary Voltage (HV) V1",

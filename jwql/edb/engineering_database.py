@@ -461,6 +461,21 @@ class EdbMnemonic:
         if return_fig:
             return fig
 
+    def change_only_plot_prep(self):
+        """Tweak change-only data such that a plot that connects points with
+        a line looks more realistic, with only horizontal and vertical lines.
+        """
+        new_dates = [self.data["dates"][0]]
+        new_vals = [self.data["euvalues"][0]]
+        delta_t = timedelta(microseconds=1)
+        for i, row in enumerate(self.data[1:]):
+            new_dates.append(self.data["dates"][i] - delta_t)
+            new_vals.append(self.data["euvalues"][i-1])
+        new_table = Table()
+        new_table["dates"] = new_dates
+        new_table["euvalues"] = new_vals
+        self.data = new_table
+
     def daily_stats(self, sigma=3):
         """Calculate the statistics for each day in the data
         contained in data["data"]. Should we add a check for a
@@ -708,7 +723,7 @@ class EdbMnemonic:
 
         # Now create a second plot showing the devitation from the mean
         fig_dev = figure(height=250, x_range=fig.x_range, tools="xpan,xwheel_zoom,xbox_zoom,reset", y_axis_location="right",
-                         x_axis_type='datetime')
+                         x_axis_type='datetime', x_axis_label='Time', y_axis_label=f'Data - Mean ({units})')
 
         # Interpolate the mean values so that we can subtract the original data
         interp_means = np.interp(data_dates, self.median_times, self.mean)

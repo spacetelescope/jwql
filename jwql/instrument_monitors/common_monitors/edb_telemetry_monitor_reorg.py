@@ -46,11 +46,19 @@ change-only telemetry data, but this should be largely invisible to the EDB Tele
 5. "all" - In this case, no averaging is done. (Although filtering is still done) All filtered data
 are kept as they are retrived from the EDB, and plotted without any modification.
 
-6. "all+daily_means"
+6. "all+daily_means" - This is a combination of the "all" and "daily_means" cases above. All data points
+are retrieved from the EDB and optionally filtered by dependencies. Then daily means are calculated.
+Both the full set of data and the daily means are plotted, along with deviations from the mean.
 
-7. "all+block_means"
+7. "all+block_means" - This is a combination of the "all" and "block_means" cases above. All data points
+are retrieved from the EDB and optionally filtered by dependencies. Then means for each block of good data
+are calculated. Both the full set of data and the means are plotted, along with deviations from the mean.
 
-8. "all+time_interval"
+8. "all+time_interval" - This is a combination of the "all" and "time_interval" cases above. All data points
+are retrieved from the EDB and optionally filtered by dependencies. Then means are calculated for each block
+of time lasting the duration of the time interval. Both the full set of data and the means are plotted, along
+with deviations from the mean.
+
 
 Here is an example of two daily_mean telemetry entries in the json file. In both, SE_ZIMIRICEA values are retrieved.
 For the first plot, data are only kept for the times where the following dependencies are true:
@@ -267,6 +275,8 @@ from jwql.utils.constants import EDB_DEFAULT_PLOT_RANGE, JWST_INSTRUMENT_NAMES, 
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import ensure_dir_exists, get_config
 
+
+ALLOWED_COMBINATION_TYPES = ['all+daily_means', 'all+block_means', 'all+every_change', 'all+time_interval']
 
 class EdbMnemonicMonitor():
     """Class for executing the EDB Telemetry Monitor
@@ -528,8 +538,8 @@ class EdbMnemonicMonitor():
                     ensure_dir_exists(self.plot_output_dir)
 
                     # For development
-                    #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_test.json')
-                    mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'nircam_mnemonic_to_monitor.json')
+                    mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_test.json')
+                    #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'nircam_mnemonic_to_monitor.json')
 
                     # Read in file with nominal list of mnemonics
                     with open(mnemonic_file) as json_file:
@@ -555,8 +565,8 @@ class EdbMnemonicMonitor():
                 monitor_dir = os.path.dirname(os.path.abspath(__file__))
 
                 # For development
-                #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_test.json')
-                mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'nircam_mnemonics_to_monitor.json')
+                mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_test.json')
+                #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'nircam_mnemonics_to_monitor.json')
 
                 # Define the output directory in which the html files will be saved
                 self.plot_output_dir = os.path.join(base_dir, instrument_name)
@@ -750,6 +760,55 @@ class EdbMnemonicMonitor():
             mnem_data.every_change_values = vals
 
         return mnem_data
+
+    def generate_query_start_times(self, starting_time):
+        """Generate a list of starting and ending query times such that the entire time range
+        is covered, but we are only querying the EDB for one day's worth of data at a time.
+        Start times are once per day between the previous query time and the present. End
+        times are the start times plus the query duration.
+
+        Parameters
+        ----------
+        starting_time : datetime.datetime
+            Datetime specifying the earliest time to query the EDB
+
+        Returns
+        -------
+        query_starting_times : list
+            List of datetime objects giving start times for EDB queries on a daily basis
+
+        query_ending_times : list
+            List of datetime objects giving ending times for EDB queries on a daily basis
+        """
+        if starting_time is None:
+            query_starting_times = None
+            query_ending_times = None
+            logging.info(f'Query start times: None')
+        else:
+            query_starting_times = []
+            query_ending_times = []
+            dtime = self._plot_end - starting_time
+            if dtime > self.query_duration:
+                full_days = dtime.days
+                partial_day = dtime.seconds
+                # If the time span is not a full day, but long enough to cover the query_duration,
+                # then we can fit in a final query on the last day
+                if partial_day > self.query_duration.total_seconds():
+                    full_days += 1
+
+            for delta in range(full_days):
+                tmp_start = starting_time + datetime.timedelta(days=delta)
+                query_starting_times.append(tmp_start)
+                query_ending_times.append(tmp_start + self.query_duration)
+
+            # Make sure the end time of the final query is before the current time
+            if query_ending_times[-1] > self._today:
+                query_ending_times = np.array(query_ending_times)
+                query_starting_times = np.array(query_starting_times)
+                valid_ending_times = query_ending_times <= self._today
+                query_starting_times = query_starting_times[valid_end_times]
+                query_ending_times = query_ending_times[valid_end_times]
+        return query_starting_times, query_ending_times
 
     def get_dependency_data(self, dependency, starttime, endtime):
         """Find EDB data for the mnemonic listed as a dependency. Keep a dcitionary up to
@@ -1121,8 +1180,6 @@ class EdbMnemonicMonitor():
 
                             # Interpolate each onto its new list of allPoints dates. When they are multiplied below,
                             # they will be interpolated onto the same list of dates.
-                            in these cases, we want to interpolate onto the specified dates, and no others. This is slightly
-                            different from the other interpolation case, where we do want to keep intermediate points
                             mnemonic_info.interpolate(mnem_new_dates)
                             product_mnemonic_info.interpolate(prod_new_dates)
 
@@ -1213,18 +1270,16 @@ class EdbMnemonicMonitor():
         self.figures = {}
         self.instrument = instrument
 
-        #today = Time.now()
-        #today = Time('2021-09-02 09:00:00')  # for development
-        today = datetime.datetime(2021, 9, 4, 9, 0, 0)
-        #today = datetime.now()
+        self._today = datetime.datetime(2021, 9, 4, 9, 0, 0)
+        #self._today = datetime.now()
         #today = datetime.datetime(2022, 3, 24)  # for development
 
         # Set the limits for the telemetry plots if necessary
         if plot_start is None:
-            plot_start = today - datetime.timedelta(days=EDB_DEFAULT_PLOT_RANGE)
+            plot_start = self._today - datetime.timedelta(days=EDB_DEFAULT_PLOT_RANGE)
 
         if plot_end is None:
-            plot_end = today
+            plot_end = self._today
 
         # Only used as fall-back plot range for cases where there is no data
         self._plot_start = plot_start
@@ -1232,14 +1287,22 @@ class EdbMnemonicMonitor():
 
         # At the top level, we loop over the different types of telemetry. These types
         # largely control if/how the data will be averaged.
-        for telem_type in mnemonic_dict:
+        for telemetry_kind in mnemonic_dict:
+            telem_type = telemetry_kind
             logging.info(f'Working on telemetry_type: {telem_type}')
+
+            # For the combined telemetry types (e.g. "all+daily_mean") break up
+            # into it's component parts. Work on the second part (e.g. "daily_mean")
+            # first, and then the "all" part afterwards
+            if telemetry_kind in ALLOWED_COMBINATION_TYPES:
+                telem_type = telemetry_kind.split('+')[0]
+                logging.info(f'Working first on {telem_type}')
 
             # Figure out the time duration over which the mnemonic should be queried. In
             # most cases this is just a full day. In some cases ("daily_average" telem_type)
             # the query will span a shorter time since the mnemonic won't change much over
             # a full day.
-            query_duration = utils.get_query_duration(telem_type)
+            self.query_duration = utils.get_query_duration(telem_type)
 
             # Determine which database tables are needed based on instrument. A telemetry
             # type of "all" indicates that no time-averaging is done, and therefore the
@@ -1297,6 +1360,7 @@ class EdbMnemonicMonitor():
                     # present day.
                     starttime = plot_start
 
+                """
                 # Generate a list of starting and ending query times such that the entire time range
                 # is covered, but we are only querying the EDB for one day's worth of data at a time.
                 # Start times are once per day between the previous query time and the present. End
@@ -1308,18 +1372,18 @@ class EdbMnemonicMonitor():
                     query_start_times = []
                     query_end_times = []
                     dtime = plot_end - starttime
-                    if dtime > query_duration:
+                    if dtime > self.query_duration:
                         full_days = dtime.days
                         partial_day = dtime.seconds
                         # If the time span is not a full day, but long enough to cover the query_duration,
                         # then we can fit in a final query on the last day
-                        if partial_day > query_duration.total_seconds():
+                        if partial_day > self.query_duration.total_seconds():
                             full_days += 1
 
                     for delta in range(full_days):
                         tmp_start = starttime + datetime.timedelta(days=delta)
                         query_start_times.append(tmp_start)
-                        query_end_times.append(tmp_start + query_duration)
+                        query_end_times.append(tmp_start + self.query_duration)
 
                     # Make sure the end time of the final query is before the current time
                     if query_end_times[-1] > today:
@@ -1328,9 +1392,13 @@ class EdbMnemonicMonitor():
                         valid_end_times = query_end_times <= today
                         query_start_times = query_start_times[valid_end_times]
                         query_end_times = query_end_times[valid_end_times]
+                """
 
-                    logging.info(f'Query start times: {query_start_times}')
-                    logging.info(f'Query end times: {query_end_times}')
+
+
+                query_start_times, query_end_times = self.generate_query_start_times(starttime)
+                logging.info(f'Query start times: {query_start_times}')
+                logging.info(f'Query end times: {query_end_times}')
 
                 if telem_type != 'all':
                     if query_start_times is not None:
@@ -1443,13 +1511,45 @@ class EdbMnemonicMonitor():
                 else:
                     mnemonic_info = new_data
 
+                # For a telemetry_kind that is a combination of all+something, here we work on the "all" part.
+                if telemetry_kind in ALLOWED_COMBINATION_TYPES:
+                    temp_telem_type = "all"
+
+                    # Query the EDB/JWQLDB, filter by dependencies, and perform averaging
+                    full_query_start_times, full_query_end_times = self.generate_query_start_times(self._plot_start)
+                    additional_data = self.multiday_mnemonic_query(mnemonic, full_query_start_times, full_query_end_times, temp_telem_type)
+
+                    # Since this non-averaged data is going to be plotted directlty, tweak the data in the
+                    # case of change_only data so that the plot looks more realistic. Do this by adding a
+                    # new point immediately prior to each point, with the value of the previous point.
+                    if additional_data.meta['TlmMnemonics'][0]['AllPoints'] == 0:
+                        additional_data.change_only_plot_prep()
+
+                    # Now arrange the data in a way that makes sense. Place the non-averaged data collected above
+                    # into self.data, and the averaged data into the self.mean and self.median_times attributes
+                    mnemonic_info.mean = mnemonic_info.data["euvalues"].value
+                    mnemonic_info.median_times = mnemonic_info.data["dates"].value
+                    tmp_table = Table()
+                    tmp_table["dates"] = additional_data.data["dates"]
+                    tmp_table["euvalues"] = additional_data.data["euvalues"]
+
                 # Create plot
                 # If there is a nominal value, or yellow/red limits to be included in the plot, get those here
                 nominal = utils.check_key(mnemonic, "nominal_value")
                 yellow = utils.check_key(mnemonic, "yellow_limits")
                 red = utils.check_key(mnemonic, "red_limits")
 
-                if telem_type != 'every_change':
+                if telemetry_kind == 'every_change':
+                    # For every_change data, the plot is more complex, and we must use the custom
+                    # plot_every_change_data() method. Again, return the figure object without saving it.
+                    figure = plot_every_change_data(mnemonic_info, new_data.mnemonic_identifier, new_data.info["unit"],
+                                                    savefig=False, out_dir=self.plot_output_dir, show_plot=False)
+
+                elif telemetry_kind in ALLOWED_COMBINATION_TYPES:
+                    figure = mnemonic_info.plot_data_plus_devs(savefig=False, out_dir=self.plot_output_dir, nominal_value=nominal,
+                                                               yellow_limits=yellow, red_limits=red, return_components=False,
+                                                               return_fig=True, show_plot=False)
+                else:
                     # For telemetry types other than every_change, the data will be contained in an instance of
                     # and EDBMnemonic. In this case, we can create the plot using the bokeh_plot method. The default
                     # behavior is to return the Bokeh figure itself, rather than the script and div. Also, do not
@@ -1458,11 +1558,6 @@ class EdbMnemonicMonitor():
                     figure = mnemonic_info.bokeh_plot(savefig=False, out_dir=self.plot_output_dir, nominal_value=nominal,
                                                       yellow_limits=yellow, red_limits=red, return_components=False,
                                                       return_fig=True, show_plot=False)
-                else:
-                    # For every_change data, the plot is more complex, and we must use the custom
-                    # plot_every_change_data() method. Again, return the figure object without saving it.
-                    figure = plot_every_change_data(mnemonic_info, new_data.mnemonic_identifier, new_data.info["unit"],
-                                                    savefig=False, out_dir=self.plot_output_dir, show_plot=False)
 
                 # Add the figure to a dictionary that organizes the plots by plot_category
                 self.add_figure(figure, mnemonic["plot_category"])
@@ -1747,7 +1842,7 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
     # Find the min and max values in the x-range. These may be used for plotting
     # the nominal_value line later. Initialize here, and then dial them in based
     # on the data.
-    min_time = datetime.datetime.today()
+    min_time = self._today
     max_time = datetime.datetime(2021, 12, 25)
 
     for (key, value), color in zip(data.items(), colors):
