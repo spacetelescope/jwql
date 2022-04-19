@@ -48,6 +48,7 @@ from astropy.table import Table
 from copy import deepcopy  # only needed for development
 import numpy as np
 
+
 class condition:
     """Class to hold several subconditions"""
     def __init__(self, cond_set):
@@ -77,7 +78,7 @@ class condition:
         """Print conditions time pairs on command line (developement)"""
         print('Available time pairs:')
         for times in self.time_pairs:
-            print('list: '+str(times))
+            print('list: ' + str(times))
 
     def extract_data(self, mnemonic):
         """Extract data from the mnemonic that match the condition
@@ -179,7 +180,7 @@ class condition:
             if i == 0:
                 diff = switch_to_true[i]
             else:
-                diff = switch_to_true[i] - switch_to_false[i-1]
+                diff = switch_to_true[i] - switch_to_false[i - 1]
             switch_to_true -= diff
             switch_to_false -= diff
             filtered_indexes.append(switch_to_true[i])
@@ -335,7 +336,6 @@ class relation_test():
         time_pairs = self.generate_time_pairs(good_time_values, bad_time_values)
         return time_pairs
 
-
     def generate_time_pairs(self, good_times, bad_times):
         """Define blocks of time where a condition is true. Creates a list of
         tuples of (start time, end time) where a condition is true, given a
@@ -399,10 +399,8 @@ class relation_test():
 
         # Now create tuples of the start and end times where the values change
         # We need to know if the first element of the data is True or False,
-        # in order to get the index counters correct below. Note the we can use
-        # "if all_vals[0] == True:"" or "if all_vals[0]:"" here. I prefer the
-        # former, for readability.
-        if all_vals[0] == True:
+        # in order to get the index counters correct below.
+        if all_vals[0]:
             start_idx = 0
             counter_delta = 0
         else:
@@ -415,14 +413,9 @@ class relation_test():
         good_blocks = []
         for counti, strt in enumerate(change_indexes[start_idx:len(change_indexes):2]):
             i = counti * 2 + counter_delta
-
-            #print(counti, start_idx, strt, i, len(change_indexes))
-
             if i < (len(change_indexes) - 1):
-                #print('initial', all_times[strt], all_times[change_indexes[i+1]-1])
-                good_blocks.append((all_times[strt], all_times[change_indexes[i+1]-1]))
+                good_blocks.append((all_times[strt], all_times[change_indexes[i + 1] - 1]))
             else:
-                #print('final',all_times[strt], all_times[-1])
                 good_blocks.append((all_times[strt], all_times[-1]))
 
         return good_blocks

@@ -38,7 +38,6 @@ from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
-
 def test_add_every_change_history():
     """Test that every_change data is correcly combined with an existing
     set of every_change data
@@ -47,7 +46,7 @@ def test_add_every_change_history():
     data1 = np.array([0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0.2])
     means1 = 0.15
     devs1 = 0.07
-    dates2 = np.array([dates1[-1] + datetime.timedelta(seconds=1*i) for i in range(1, 11)])
+    dates2 = np.array([dates1[-1] + datetime.timedelta(seconds=1 * i) for i in range(1, 11)])
     data2 = np.array([0.3, 0.4, 0.3, 0.4, 0.3, 0.4, 0.3, 0.4, 0.3, 0.4])
     means2 = 0.35
     devs2 = 0.07
@@ -65,13 +64,13 @@ def test_add_every_change_history():
         for i, cele in enumerate(combine1[key]):
             assert np.all(cele == expected1[key][i])
 
-    dates3 = np.array([dates2[-1] + datetime.timedelta(seconds=1*i) for i in range(1, 11)])
-    ec3 = {'0.55': (dates3, data2+0.2, means2+0.2, devs2)}
+    dates3 = np.array([dates2[-1] + datetime.timedelta(seconds=1 * i) for i in range(1, 11)])
+    ec3 = {'0.55': (dates3, data2 + 0.2, means2 + 0.2, devs2)}
     combine2 = etm.add_every_change_history(ec1, ec3)
     expected2 = defaultdict(list)
     expected2['0.15'] = (dates1, data1, means1, devs1)
     expected2['0.35'] = (dates2, data2, means2, devs2)
-    expected2['0.55'] = (dates3, data2+0.2, means2+0.2, devs2)
+    expected2['0.55'] = (dates3, data2 + 0.2, means2 + 0.2, devs2)
 
     for key in combine2:
         print('compare ', key)
@@ -87,7 +86,7 @@ def test_conditions():
     end_time = Time('2022-02-03')
     temp_data = Table()
     temp_data["euvalues"] = np.array([35., 35.1, 35.2, 36., 36.1, 36.2, 37.1, 37., 36., 36.])
-    temp_data["dates"] = np.array([Time('2022-02-02') + TimeDelta(0.1*i, format='jd') for i in range(10)])
+    temp_data["dates"] = np.array([Time('2022-02-02') + TimeDelta(0.1 * i, format='jd') for i in range(10)])
     meta = {}
     info = {}
     temperature = EdbMnemonic("TEMPERATURE", start_time, end_time, temp_data, meta, info)
@@ -95,33 +94,18 @@ def test_conditions():
     # Create conditional data
     current_data = {}
     current_data["euvalues"] = np.array([1., 1., 1., 2.5, 2.5, 2.5, 5.5, 5.5, 2.5, 2.5])
-    #current_data["dates"] = np.arange(10)*0.1001 + 59612.
     current_data["dates"] = np.array([Time('2022-02-02') + TimeDelta(0.1001*i, format='jd') for i in range(10)])
 
-
-    ##############################################################
-    # Set up condition
-    # Using separate classes for each of =, <, >
-    #eq25 = cond.equal(current_data, 2.5)
-    #condition_list = [eq25]
-    #condition_1 = cond.condition(condition_list)
-
-
-    # pick one of above or below....
-
-
-    # Or using a single relation class
+    # Using a single relation class
     eq25 = cond.relation_test(current_data, '==', 2.5)
     condition_list = [eq25]
     condition_1 = cond.condition(condition_list)
-    ##########################################################
 
     # Extract the good data
     condition_1.extract_data(temperature.data)
 
     # Expected results
     expected_table = Table()
-    #expected_table["dates"] = [59612.4, 59612.5, 59612.9]
     frac_days = [0.4, 0.5, 0.9]
     expected_table["dates"] = [Time('2022-02-02') + TimeDelta(frac, format='jd') for frac in frac_days]
     expected_table["euvalues"] = [36.1, 36.2, 36.0]
@@ -147,17 +131,17 @@ def test_conditions():
 def test_every_change_to_allPoints():
     """Make sure we convert every-change data to AllPoints data correctly
     """
-    dates = [datetime.datetime(2021, 7, 14, 5, 24, 39+i) for i in range(10)]
+    dates = [datetime.datetime(2021, 7, 14, 5, 24, 39 + i) for i in range(10)]
     delta = datetime.timedelta(seconds=0.9999)
     values = np.arange(10)
     data = Table([dates, values], names=('dates', 'euvalues'))
 
-    expected_dates = [datetime.datetime(2021, 7, 14, 5, 24, 39+i) for i in range(10)]
+    expected_dates = [datetime.datetime(2021, 7, 14, 5, 24, 39 + i) for i in range(10)]
     expected_dates = [dates[0]]
     expected_values = [values[0]]
     for i, val in enumerate(values[0:-1]):
-        expected_values.extend([val, values[i+1]])
-        expected_dates.extend([dates[i] + delta, dates[i+1]])
+        expected_values.extend([val, values[i + 1]])
+        expected_dates.extend([dates[i] + delta, dates[i + 1]])
 
     expected = Table([expected_dates, expected_values], names=('dates', 'euvalues'))
     updated = etm.every_change_to_allPoints(data)
@@ -209,7 +193,7 @@ def test_multiple_conditions():
     end_time = Time('2022-02-03')
     temp_data = Table()
     temp_data["euvalues"] = Column(np.array([35., 35.1, 35.2, 36., 36.1, 36.2, 37.1, 37., 36., 36.]))
-    temp_data["dates"] = Column(np.array([Time('2022-02-02') + TimeDelta(0.1*i, format='jd') for i in range(10)]))
+    temp_data["dates"] = Column(np.array([Time('2022-02-02') + TimeDelta(0.1 * i, format='jd') for i in range(10)]))
     meta = {}
     info = {}
     temperature = EdbMnemonic("TEMPERATURE", start_time, end_time, temp_data, meta, info)
@@ -217,12 +201,12 @@ def test_multiple_conditions():
     # Create conditional data
     current_data = {}
     current_data["euvalues"] = Column(np.array([1., 2.5, 2.5, 2.5, 2.5, 2.5, 5.5, 5.5, 2.5, 2.5]))
-    current_data["dates"] = Column(np.array([Time('2022-02-02') + TimeDelta(0.1001*i, format='jd') for i in range(10)]))
+    current_data["dates"] = Column(np.array([Time('2022-02-02') + TimeDelta(0.1001 * i, format='jd') for i in range(10)]))
 
     element_data = {}
     element_data["euvalues"] = Column(np.repeat("OFF", 20))
     element_data["euvalues"][13:] = "ON"
-    element_data["dates"] = Column(np.array([Time('2022-02-02') + TimeDelta(0.06*i, format='jd') for i in range(20)]))
+    element_data["dates"] = Column(np.array([Time('2022-02-02') + TimeDelta(0.06 * i, format='jd') for i in range(20)]))
 
     grt35 = cond.relation_test(temp_data, '>', 35.11)
     eq25 = cond.relation_test(current_data, '==', 2.5)
@@ -242,7 +226,7 @@ def test_organize_every_change():
     easier to plot
     """
     basetime = Time('2021-04-06 14:00:00')
-    dates = np.array([basetime + TimeDelta(600*i, format='sec') for i in range(20)])
+    dates = np.array([basetime + TimeDelta(600 * i, format='sec') for i in range(20)])
     vals = np.array([300.5, 310.3, -250.5, -500.9, 32.2,
                      300.1, 310.8, -250.2, -500.2, 32.7,
                      300.2, 310.4, -250.6, -500.8, 32.3,
@@ -289,11 +273,10 @@ def test_organize_every_change():
 
 
 def test_remove_outer_points():
-    """
+    """Test that points outside the requested time are removed for change-only data
     """
     data = Table()
-    #data["dates"] = [56999.5, 57000., 57000.5, 57001., 57001.5]
-    data["dates"] = [Time('2014-12-08') + TimeDelta(0.5 * (i+1), format='jd') for i in range(5)]
+    data["dates"] = [Time('2014-12-08') + TimeDelta(0.5 * (i + 1), format='jd') for i in range(5)]
     data["euvalues"] = [1, 2, 3, 4, 5]
     mnem = EdbMnemonic('TEST', Time('2022-12-09'), Time('2022-12-10'), data, {}, {})
     etm_utils.remove_outer_points(mnem)
@@ -302,7 +285,7 @@ def test_remove_outer_points():
 
 
 def test_get_averaging_time_duration():
-    """
+    """Test that only allowed string formats are used for averaging time duration
     """
     in_strings = ["5_minute", "45_second", "10_day", "2_hour"]
     expected_vals = [5 * u.minute, 45 * u.second, 10 * u.day, 2 * u.hour]
@@ -318,7 +301,7 @@ def test_get_averaging_time_duration():
 
 
 def test_get_query_duration():
-    """
+    """Test that the correct query duration is found
     """
     in_strings = ['daily_means', "every_change", "block_means", "time_interval", "none"]
     expected_vals = [15 * u.minute, 1 * u.day, 1 * u.day, 1 * u.day, 1 * u.day,]
@@ -331,7 +314,7 @@ def test_get_query_duration():
 
 
 def test_key_check():
-    """
+    """Test the dictionary key checker
     """
     d = {'key1': [1,2,3], 'key4': 'a'}
     assert etm_utils.check_key(d, 'key1') == d['key1']

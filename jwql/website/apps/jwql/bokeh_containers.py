@@ -36,6 +36,7 @@ FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
+
 def add_limit_boxes(fig, yellow=None, red=None):
     """Add gree/yellow/red background colors
 
@@ -64,9 +65,9 @@ def add_limit_boxes(fig, yellow=None, red=None):
             fig.add_layout(yellow_high)
             yellow_low = BoxAnnotation(bottom=red_limits[0], top=yellow_limits[0], fill_color='gold', fill_alpha=0.2)
             fig.add_layout(yellow_low)
-            red_high = BoxAnnotation(bottom=red_limits[1], top=red_limits[1]+100, fill_color='red', fill_alpha=0.1)
+            red_high = BoxAnnotation(bottom=red_limits[1], top=red_limits[1] + 100, fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_high)
-            red_low = BoxAnnotation(bottom=red_limits[0]-100, top=red_limits[0], fill_color='red', fill_alpha=0.1)
+            red_low = BoxAnnotation(bottom=red_limits[0] - 100, top=red_limits[0], fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_low)
         else:
             yellow_high = BoxAnnotation(bottom=yellow_limits[1], top=yellow_limits[1] + 100, fill_color='gold', fill_alpha=0.2)
@@ -77,9 +78,9 @@ def add_limit_boxes(fig, yellow=None, red=None):
         if red is not None:
             green = BoxAnnotation(bottom=red_limits[0], top=red_limits[1], fill_color='chartreuse', fill_alpha=0.2)
             fig.add_layout(green)
-            red_high = BoxAnnotation(bottom=red_limits[1], top=red_limits[1]+100, fill_color='red', fill_alpha=0.1)
+            red_high = BoxAnnotation(bottom=red_limits[1], top=red_limits[1] + 100, fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_high)
-            red_low = BoxAnnotation(bottom=red_limits[0]-100, top=red_limits[0], fill_color='red', fill_alpha=0.1)
+            red_low = BoxAnnotation(bottom=red_limits[0] - 100, top=red_limits[0], fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_low)
     return fig
 
@@ -405,19 +406,18 @@ def generic_telemetry_plot(times, values, name, nominal_value=None, yellow_limit
         output_file(f"telem_plot_{name}.html")
 
     fig = figure(width=400, height=400, x_axis_label='Date', y_axis_label='Voltage',
-               x_axis_type='datetime')
+                 x_axis_type='datetime')
     fig.circle(times, values, size=4, color='navy', alpha=0.5)
 
     if nominal_value is not None:
         fig.line(times, np.repeat(nominal_value, len(times)), line_dash='dashed')
 
-    fig.xaxis.formatter=DatetimeTickFormatter(
-            hours=["%d %b %H:%M"],
-            days=["%d %b %H:%M"],
-            months=["%d %b %Y %H:%M"],
-            years=["%d %b %Y"],
-        )
-    fig.xaxis.major_label_orientation = np.pi/4
+    fig.xaxis.formatter = DatetimeTickFormatter(hours=["%d %b %H:%M"],
+                                                days=["%d %b %H:%M"],
+                                                months=["%d %b %Y %H:%M"],
+                                                years=["%d %b %Y"],
+                                                )
+    fig.xaxis.major_label_orientation = np.pi / 4
 
     fig = add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
 

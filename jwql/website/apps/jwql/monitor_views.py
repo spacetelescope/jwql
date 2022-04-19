@@ -164,14 +164,14 @@ def edb_monitor(request, inst):
 
     # Get the json data that contains the tabbed plots
     with open(os.path.join(plot_dir, json_file), 'r') as fp:
-        data=json.dumps(json.loads(fp.read()))
+        data = json.dumps(json.loads(fp.read()))
 
     template = "edb_monitor.html"
 
     context = {
         'inst': JWST_INSTRUMENT_NAMES_MIXEDCASE[inst],
-        'json_object':data,
-        'resources':CDN.render()
+        'json_object': data,
+        'resources': CDN.render()
     }
 
     # Return a HTTP response with the template and dictionary of variables

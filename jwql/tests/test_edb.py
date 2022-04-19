@@ -32,6 +32,7 @@ from jwql.edb import engineering_database as ed
 # Determine if tests are being run on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
+
 def test_change_only_bounding_points():
     """Make sure we correctly add starting and ending time entries to
     a set of change-only data
@@ -100,11 +101,11 @@ def test_get_mnemonic():
     assert len(mnemonic) == 2637
     assert mnemonic.meta == {'Count': 1,
                              'TlmMnemonics': [{'TlmMnemonic': 'IMIR_HK_ICE_SEC_VOLT4',
-                             'Subsystem': 'MIRI',
-                             'RawType': 'FL32',
-                             'EUType': 'FL32',
-                             'SQLType': 'REAL',
-                             'AllPoints': 1}]}
+                                               'Subsystem': 'MIRI',
+                                               'RawType': 'FL32',
+                                               'EUType': 'FL32',
+                                               'SQLType': 'REAL',
+                                               'AllPoints': 1}]}
     assert mnemonic.info == {'subsystem': 'MIRI',
                              'tlmMnemonic': 'IMIR_HK_ICE_SEC_VOLT4',
                              'tlmIdentifier': 210961,
@@ -142,6 +143,7 @@ def test_get_mnemonics():
     mnemonic_dict = get_mnemonics(mnemonics, start_time, end_time)
     assert len(mnemonic_dict) == len(mnemonics)
 
+
 def test_add():
     """Test addition (i.e. concatenation) of two EdbMnemonic objects"""
     dates1 = np.array([datetime(2021, 12, 18, 7, n, 0) for n in range(20, 30)])
@@ -171,6 +173,7 @@ def test_add():
     assert all(added.data["dates"] == np.append(dates1, dates2[3:]))
     assert added.info['unit'] == 'V'
 
+
 def test_interpolation():
     """Test interpolation of an EdbMnemonic object"""
     dates = np.array([datetime(2021, 12, 18, 7, n, 0) for n in range(20, 30)])
@@ -187,7 +190,7 @@ def test_interpolation():
     # Note that the first element of interp_times is before the earliest value
     # of the mnemonic time, so it should be ignored.
     base_interp = datetime(2021, 12, 18, 7, 19, 30)
-    interp_times = [base_interp + timedelta(seconds = 30 * n) for n in range(0, 20)]
+    interp_times = [base_interp + timedelta(seconds=30 * n) for n in range(0, 20)]
 
     mnemonic.interpolate(interp_times)
     assert all(mnemonic.data["dates"].data == interp_times[1:])
@@ -210,7 +213,7 @@ def test_interpolation_change_only():
     # Note that the first element of interp_times is before the earliest value
     # of the mnemonic time, so it should be ignored.
     base_interp = datetime(2021, 12, 18, 7, 19, 30)
-    interp_times = [base_interp + timedelta(seconds = 30 * n) for n in range(0, 20)]
+    interp_times = [base_interp + timedelta(seconds=30 * n) for n in range(0, 20)]
 
     mnemonic.interpolate(interp_times)
     expected_values = np.array([1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10])
@@ -258,7 +261,7 @@ def test_timed_stats():
     """Break up data into chunks of a given duration"""
     dates = np.array([datetime(2021, 12, 18, 12, 0, 0) + timedelta(hours=n) for n in range(0, 75, 2)])
     block_val = np.array([1, 1.1, 1, 1.1, 1, 1.1])
-    data = np.concatenate((block_val, block_val+1, block_val+2, block_val+3, block_val+4, block_val+5))
+    data = np.concatenate((block_val, block_val + 1, block_val + 2, block_val + 3, block_val + 4, block_val + 5))
     data = np.append(data, np.array([95., 97.]))
 
     tab = Table()

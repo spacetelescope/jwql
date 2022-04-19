@@ -448,8 +448,8 @@ class EdbMnemonic:
 
         hover_tool = HoverTool(tooltips=[('Value', '@y'),
                                          ('Date', '@x{%d %b %Y %H:%M:%S}')
-                                        ], mode='mouse', renderers=[data])
-        hover_tool.formatters={'@x': 'datetime'}
+                                         ], mode='mouse', renderers=[data])
+        hover_tool.formatters = {'@x': 'datetime'}
 
         fig.tools.append(hover_tool)
 
@@ -766,12 +766,12 @@ class EdbMnemonic:
 
         # Make the x axis tick labels look nice
         fig_dev.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                       seconds=["%d %b %H:%M:%S.%3N"],
-                                                       hours=["%d %b %H:%M"],
-                                                       days=["%d %b %H:%M"],
-                                                       months=["%d %b %Y %H:%M"],
-                                                       years=["%d %b %Y"]
-                                                       )
+                                                        seconds=["%d %b %H:%M:%S.%3N"],
+                                                        hours=["%d %b %H:%M"],
+                                                        days=["%d %b %H:%M"],
+                                                        months=["%d %b %Y %H:%M"],
+                                                        years=["%d %b %Y"]
+                                                        )
         fig.xaxis.major_label_orientation = np.pi / 4
 
         # Place the two figures in a column object
