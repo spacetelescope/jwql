@@ -194,8 +194,6 @@ class EdbMnemonic:
             self.data_start_time = None
             self.data_end_time = None
         else:
-            #self.data_start_time = Time(np.min(self.data['dates']), scale='utc')
-            #self.data_end_time = Time(np.max(self.data['dates']), scale='utc')
             self.data_start_time = np.min(self.data['dates'])
             self.data_end_time = np.max(self.data['dates'])
             if isinstance(self.data['euvalues'][0], Number) and 'TlmMnemonics' in self.meta:
@@ -232,7 +230,6 @@ class EdbMnemonic:
             return mnem
 
         # First, interpolate the data in mnem onto the same times as self.data
-        #if len(self.data) >= len(mnem):
         mnem.interpolate(self.data["dates"].data)
 
         # Extrapolation will not be done, so make sure that we account for any elements
@@ -295,11 +292,11 @@ class EdbMnemonic:
         if type(self.data["euvalues"].data[0]) not in [np.str_, str]:
             for i, index in enumerate(self.blocks[0:-1]):
                 if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
-                    meanval, medianval, stdevval = sigma_clipped_stats(self.data["euvalues"].data[index:self.blocks[i+1]], sigma=sigma)
+                    meanval, medianval, stdevval = sigma_clipped_stats(self.data["euvalues"].data[index:self.blocks[i + 1]], sigma=sigma)
                 else:
-                    meanval, medianval, stdevval = change_only_stats(self.data["dates"].data[index:self.blocks[i+1]],
-                                                                     self.data["euvalues"].data[index:self.blocks[i+1]], sigma=sigma)
-                medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i+1]]))
+                    meanval, medianval, stdevval = change_only_stats(self.data["dates"].data[index:self.blocks[i + 1]],
+                                                                     self.data["euvalues"].data[index:self.blocks[i + 1]], sigma=sigma)
+                medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i + 1]]))
                 means.append(meanval)
                 medians.append(medianval)
                 stdevs.append(stdevval)
@@ -309,7 +306,7 @@ class EdbMnemonic:
                 meanval = self.data["euvalues"].data[index]
                 medianval = meanval
                 stdevval = 0
-                medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i+1]]))
+                medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i + 1]]))
                 means.append(meanval)
                 medians.append(medianval)
                 stdevs.append(stdevval)
@@ -414,19 +411,13 @@ class EdbMnemonic:
         # For cases where the plot is empty or contains only a single point, force the
         # plot range to something reasonable
         if len(self.data["dates"]) < 2:
-
-
-            print(self.requested_start_time, type(self.requested_start_time))
-            print(self.requested_end_time, type(self.requested_end_time))
-
-
-            fig.x_range=Range1d(self.requested_start_time - timedelta(days=1), self.requested_end_time)
+            fig.x_range = Range1d(self.requested_start_time - timedelta(days=1), self.requested_end_time)
             bottom, top = (-1, 1)
             if yellow_limits is not None:
                 bottom, top = yellow_limits
             if red_limits is not None:
                 bottom, top = red_limits
-            fig.y_range=Range1d(bottom, top)
+            fig.y_range = Range1d(bottom, top)
 
         data = fig.scatter(x='x', y='y', line_width=1, line_color='blue', source=source)
 
@@ -434,26 +425,26 @@ class EdbMnemonic:
             data.visible = False
             if nominal_value is not None:
                 fig.line(null_dates, np.repeat(nominal_value, len(null_dates)), color='black',
-                        line_dash='dashed', alpha=0.5)
+                         line_dash='dashed', alpha=0.5)
         else:
             # If there is a nominal value provided, plot a dashed line for it
             if nominal_value is not None:
                 fig.line(self.data['dates'], np.repeat(nominal_value, len(self.data['dates'])), color='black',
-                        line_dash='dashed', alpha=0.5)
+                         line_dash='dashed', alpha=0.5)
 
         # If limits for warnings/errors are provided, create colored background boxes
         if yellow_limits is not None or red_limits is not None:
             fig = add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
 
         # Make the x axis tick labels look nice
-        fig.xaxis.formatter=DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                  seconds=["%d %b %H:%M:%S.%3N"],
-                                                  hours=["%d %b %H:%M"],
-                                                  days=["%d %b %H:%M"],
-                                                  months=["%d %b %Y %H:%M"],
-                                                  years=["%d %b %Y"]
-                                                 )
-        fig.xaxis.major_label_orientation = np.pi/4
+        fig.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
+                                                    seconds=["%d %b %H:%M:%S.%3N"],
+                                                    hours=["%d %b %H:%M"],
+                                                    days=["%d %b %H:%M"],
+                                                    months=["%d %b %Y %H:%M"],
+                                                    years=["%d %b %Y"]
+                                                    )
+        fig.xaxis.major_label_orientation = np.pi / 4
 
         hover_tool = HoverTool(tooltips=[('Value', '@y'),
                                          ('Date', '@x{%d %b %Y %H:%M:%S}')
@@ -464,9 +455,9 @@ class EdbMnemonic:
 
         # Force the axes' range if requested
         if xrange[0] is not None:
-            fig.x_range.start = xrange[0].timestamp()*1000.
+            fig.x_range.start = xrange[0].timestamp() * 1000.
         if xrange[1] is not None:
-            fig.x_range.end = xrange[1].timestamp()*1000.
+            fig.x_range.end = xrange[1].timestamp() * 1000.
         if yrange[0] is not None:
             fig.y_range.start = yrange[0]
         if yrange[1] is not None:
@@ -495,7 +486,7 @@ class EdbMnemonic:
         delta_t = timedelta(microseconds=1)
         for i, row in enumerate(self.data[1:]):
             new_dates.append(self.data["dates"][i] - delta_t)
-            new_vals.append(self.data["euvalues"][i-1])
+            new_vals.append(self.data["euvalues"][i - 1])
         new_table = Table()
         new_table["dates"] = new_dates
         new_table["euvalues"] = new_vals
@@ -523,7 +514,7 @@ class EdbMnemonic:
 
         means, meds, devs, times = [], [], [], []
         for i in range(len(limits) - 1):
-            good = np.where((self.data["dates"] >= limits[i]) & (self.data["dates"] < limits[i+1]))
+            good = np.where((self.data["dates"] >= limits[i]) & (self.data["dates"] < limits[i + 1]))
 
             if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
                 avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
@@ -532,7 +523,7 @@ class EdbMnemonic:
             means.append(avg)
             meds.append(med)
             devs.append(dev)
-            times.append(limits[i] + (limits[i+1] - limits[i]) / 2.)
+            times.append(limits[i] + (limits[i + 1] - limits[i]) / 2.)
         self.mean = means
         self.median = meds
         self.stdev = devs
@@ -714,13 +705,13 @@ class EdbMnemonic:
         # For cases where the plot is empty or contains only a single point, force the
         # plot range to something reasonable
         if len(self.data["dates"]) < 2:
-            fig.x_range=Range1d(self.requested_start_time - timedelta(days=1), self.requested_end_time)
+            fig.x_range = Range1d(self.requested_start_time - timedelta(days=1), self.requested_end_time)
             bottom, top = (-1, 1)
             if yellow_limits is not None:
                 bottom, top = yellow_limits
             if red_limits is not None:
                 bottom, top = red_limits
-            fig.y_range=Range1d(bottom, top)
+            fig.y_range = Range1d(bottom, top)
 
         data = fig.scatter(x='x', y='y', line_width=1, line_color='blue', source=source)
 
@@ -732,30 +723,29 @@ class EdbMnemonic:
             data.visible = False
             if nominal_value is not None:
                 fig.line(null_dates, np.repeat(nominal_value, len(null_dates)), color='black',
-                        line_dash='dashed', alpha=0.5)
+                         line_dash='dashed', alpha=0.5)
         else:
             # If there is a nominal value provided, plot a dashed line for it
             if nominal_value is not None:
                 fig.line(self.data['dates'], np.repeat(nominal_value, len(self.data['dates'])), color='black',
-                        line_dash='dashed', alpha=0.5)
+                         line_dash='dashed', alpha=0.5)
 
         # If limits for warnings/errors are provided, create colored background boxes
         if yellow_limits is not None or red_limits is not None:
             fig = add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
 
-
         hover_tool = HoverTool(tooltips=[('Value', '@y'),
                                          ('Date', '@x{%d %b %Y %H:%M:%S}')
-                                        ], mode='mouse', renderers=[data])
-        hover_tool.formatters={'@x': 'datetime'}
+                                         ], mode='mouse', renderers=[data])
+        hover_tool.formatters = {'@x': 'datetime'}
 
         fig.tools.append(hover_tool)
 
         # Force the axes' range if requested
         if xrange[0] is not None:
-            fig.x_range.start = xrange[0].timestamp()*1000.
+            fig.x_range.start = xrange[0].timestamp() * 1000.
         if xrange[1] is not None:
-            fig.x_range.end = xrange[1].timestamp()*1000.
+            fig.x_range.end = xrange[1].timestamp() * 1000.
         if yrange[0] is not None:
             fig.y_range.start = yrange[0]
         if yrange[1] is not None:
@@ -775,15 +765,14 @@ class EdbMnemonic:
         fig_dev.line(data_dates, dev, color='red')
 
         # Make the x axis tick labels look nice
-        fig_dev.xaxis.formatter=DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                                  seconds=["%d %b %H:%M:%S.%3N"],
-                                                  hours=["%d %b %H:%M"],
-                                                  days=["%d %b %H:%M"],
-                                                  months=["%d %b %Y %H:%M"],
-                                                  years=["%d %b %Y"]
-                                                 )
-        fig.xaxis.major_label_orientation = np.pi/4
-
+        fig_dev.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
+                                                       seconds=["%d %b %H:%M:%S.%3N"],
+                                                       hours=["%d %b %H:%M"],
+                                                       days=["%d %b %H:%M"],
+                                                       months=["%d %b %Y %H:%M"],
+                                                       years=["%d %b %Y"]
+                                                       )
+        fig.xaxis.major_label_orientation = np.pi / 4
 
         # Place the two figures in a column object
         bothfigs = column(figa, fig_dev)
@@ -834,13 +823,13 @@ class EdbMnemonic:
         self.stdev = []
         self.median_times = []
         for i in range(int(num_bins)):
-            min_date = self.data["dates"][0] + timedelta(seconds=i*duration_secs)
+            min_date = self.data["dates"][0] + timedelta(seconds=i * duration_secs)
             max_date = min_date + timedelta(seconds=duration_secs)
             good = ((date_arr >= min_date) & (date_arr < max_date))
             if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
                 avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
             else:
-                 avg, med, dev = change_only_stats(self.data["dates"][good], self.data["euvalues"][good], sigma=sigma)
+                avg, med, dev = change_only_stats(self.data["dates"][good], self.data["euvalues"][good], sigma=sigma)
             self.mean.append(avg)
             self.median.append(med)
             self.stdev.append(dev)
@@ -880,9 +869,9 @@ def add_limit_boxes(fig, yellow=None, red=None):
             fig.add_layout(yellow_high)
             yellow_low = BoxAnnotation(bottom=red[0], top=yellow[0], fill_color='gold', fill_alpha=0.2)
             fig.add_layout(yellow_low)
-            red_high = BoxAnnotation(bottom=red[1], top=red[1]+100, fill_color='red', fill_alpha=0.1)
+            red_high = BoxAnnotation(bottom=red[1], top=red[1] + 100, fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_high)
-            red_low = BoxAnnotation(bottom=red[0]-100, top=red[0], fill_color='red', fill_alpha=0.1)
+            red_low = BoxAnnotation(bottom=red[0] - 100, top=red[0], fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_low)
 
         else:
@@ -895,9 +884,9 @@ def add_limit_boxes(fig, yellow=None, red=None):
         if red is not None:
             green = BoxAnnotation(bottom=red[0], top=red[1], fill_color='chartreuse', fill_alpha=0.2)
             fig.add_layout(green)
-            red_high = BoxAnnotation(bottom=red[1], top=red[1]+100, fill_color='red', fill_alpha=0.1)
+            red_high = BoxAnnotation(bottom=red[1], top=red[1] + 100, fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_high)
-            red_low = BoxAnnotation(bottom=red[0]-100, top=red[0], fill_color='red', fill_alpha=0.1)
+            red_low = BoxAnnotation(bottom=red[0] - 100, top=red[0], fill_color='red', fill_alpha=0.1)
             fig.add_layout(red_low)
 
     return fig
@@ -935,9 +924,6 @@ def calc_median_time(time_arr):
     med_time : datetime.datetime
         Median time, as a datetime object
     """
-    #offsets = np.array([create_time_offset(ele, time_arr[0]) for ele in time_arr])
-    #med = np.median(offsets)
-    #med_time = add_time_offset(med, time_arr[0])
     med_time = time_arr[0] + ((time_arr[-1] - time_arr[0]) / 2.)
     return med_time
 
@@ -1044,16 +1030,11 @@ def change_only_stats(times, values, sigma=3):
         times = np.array(times)
         values = np.array(values)
         delta_time = times[1:] - times[0:-1]
-        #total_time = times[-1] - times[0]
-        #weighted_values = values[0:-1] * delta_time
-        #meanval = np.sum(weighted_values) / total_time
 
         time_fractions = delta_time / np.min(delta_time) * 100.
-        arr_for_median = [[val]*int(time) for val, time in zip(values, time_fractions)]
+        arr_for_median = [[val] * int(time) for val, time in zip(values, time_fractions)]
         flat_list_for_median = [item for sublist in arr_for_median for item in sublist]
         meanval, medianval, stdevval = sigma_clipped_stats(flat_list_for_median, sigma=sigma)
-        #medianval = np.median(flat_list_for_median)
-        #stdevval = np.std(flat_list_for_median)
     return meanval, medianval, stdevval
 
 

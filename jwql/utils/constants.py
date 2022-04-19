@@ -340,11 +340,6 @@ READPATT_PER_INSTRUMENT = {'fgs': ['FGS', 'FGSRAPID', 'FGS60', 'FGS840', 'FGS837
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 
-# Output directory into which the html files containing EDB telemetry monitor
-# plots will be saved
-# THIS PROBABLY NEEDS TO END UP IN THE CONFIG.JSON FILE???
-TELEMETRY_HTML_OUTPUT_DIR = './'
-
 # Possible suffix types for time-series exposures
 TIME_SERIES_SUFFIX_TYPES = ['phot', 'whtlt']
 
