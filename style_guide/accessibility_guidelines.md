@@ -28,7 +28,6 @@ Every contribution to the web application must include the following features:
     - Ensure the page is still readable and functional when the text size is doubled
     - Ensure users can navigate through page with just the keyboard and not get trapped
     - Ensure you can see where you are when tabbing through page (e.g. buttons and links are highlighted when in focus)
-    - Add a link before the navigation bar to allow users to jump to main content without tabbing through every `<navbar>` item
     - Add informative page titles
 
 Please note that this list is not exhaustive; other guidelines listed by WCAG or 508 may also apply to particular web pages and features and should be implemented as appropriate.

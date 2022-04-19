@@ -178,7 +178,7 @@ class BokehTemplate(object):
         if not self.format_string:
             return
 
-        self.formats = yaml.load(self.format_string, Loader=yaml.FullLoader)
+        self.formats = yaml.load(self.format_string, Loader=yaml.SafeLoader)
 
     def parse_interface(self):
         """

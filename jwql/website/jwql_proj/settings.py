@@ -34,7 +34,7 @@ from django.contrib.messages import constants as messages
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'nx4xai#69@7pfb@l182z9aa#h8dfoms0$eitcrt5!77en*8(y4'
+SECRET_KEY = get_config()['django_secret_key']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

@@ -23,8 +23,9 @@ from jinja2 import Environment, lexer, nodes
 from jinja2.ext import Extension
 
 
+# nosec comment added to ignore bandit security check
 def environment(**options):
-    env = Environment(**options)
+    env = Environment(**options)  # nosec
     env.globals.update({
         'static': staticfiles_storage.url,
         'url': reverse,

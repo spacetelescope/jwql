@@ -157,6 +157,7 @@ class Readnoise():
         else:
             file_exists = False
 
+        session.close()
         return file_exists
 
     def get_amp_stats(self, image, amps):
@@ -341,28 +342,34 @@ class Readnoise():
             The 2D readnoise image.
         """
 
-        # Create a stack of correlated double sampling (CDS) images using input
-        # ramp data, combining multiple integrations if necessary.
-        logging.info('\tCreating stack of CDS difference frames')
-        num_ints, num_groups, num_y, num_x = data.shape
-        for integration in range(num_ints):
-            if num_groups % 2 == 0:
-                cds = data[integration, 1::2, :, :] - data[integration, ::2, :, :]
-            else:
-                # Omit the last group if the number of groups is odd
-                cds = data[integration, 1::2, :, :] - data[integration, ::2, :, :][:-1]
-
-            if integration == 0:
-                cds_stack = cds
-            else:
-                cds_stack = np.concatenate((cds_stack, cds), axis=0)
-
-        # Calculate readnoise by taking the clipped stddev through CDS stack
         logging.info('\tCreating readnoise image')
-        clipped = sigma_clip(cds_stack, sigma=3.0, maxiters=3, axis=0)
-        readnoise = np.std(clipped, axis=0)
-        # converts masked array to normal array and fills missing data
-        readnoise = readnoise.filled(fill_value=np.nan)
+        num_ints, num_groups, num_y, num_x = data.shape
+
+        # Calculate the readnoise in slices to avoid memory issues on large files.
+        slice_width = 20
+        cols_idx = np.array(np.arange(num_x)[::slice_width])
+        readnoise = np.zeros((num_y, num_x))
+        for idx in cols_idx:
+            # Create a stack of correlated double sampling (CDS) images using input
+            # ramp data, combining multiple integrations if necessary.
+            for integration in range(num_ints):
+                if num_groups % 2 == 0:
+                    cds = data[integration, 1::2, :, idx:idx+slice_width] - data[integration, ::2, :, idx:idx+slice_width]
+                else:
+                    # Omit the last group if the number of groups is odd
+                    cds = data[integration, 1::2, :, idx:idx+slice_width] - data[integration, ::2, :, idx:idx+slice_width][:-1]
+
+                if integration == 0:
+                    cds_stack = cds
+                else:
+                    cds_stack = np.concatenate((cds_stack, cds), axis=0)
+
+            # Calculate readnoise by taking the clipped stddev through CDS stack
+            clipped = sigma_clip(cds_stack, sigma=3.0, maxiters=3, axis=0)
+            readnoise_slice = np.ma.std(clipped, axis=0)
+
+            # Add the readnoise in this slice to the full readnoise image
+            readnoise[:, idx:idx+slice_width] = readnoise_slice
 
         return readnoise
 
@@ -382,11 +389,12 @@ class Readnoise():
             self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
 
         if len(query) == 0:
-            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
+            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, query_result)))
         else:
             query_result = query[-1].end_time_mjd
 
+        session.close()
         return query_result
 
     def process(self, file_list):
@@ -546,10 +554,10 @@ class Readnoise():
                 self.aperture = aperture
 
                 # Locate the record of the most recent MAST search; use this time
-                # (plus a 30 day buffer to catch any missing files from the previous
+                # (plus a buffer to catch any missing files from the previous
                 # run) as the start time in the new MAST search.
                 most_recent_search = self.most_recent_search()
-                self.query_start = most_recent_search - 30
+                self.query_start = most_recent_search - 70
 
                 # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
@@ -595,13 +603,20 @@ class Readnoise():
                             logging.info('\t{} does not exist in JWQL filesystem, even though {} does'.format(uncal_filename, filename))
                         else:
                             num_groups = fits.getheader(uncal_filename)['NGROUPS']
-                            if num_groups > 10:  # skip processing if the file doesnt have enough groups to calculate the readnoise
+                            num_ints = fits.getheader(uncal_filename)['NINTS']
+                            if instrument == 'miri':
+                                total_cds_frames = int((num_groups-6)/2) * num_ints
+                            else:
+                                total_cds_frames = int(num_groups/2) * num_ints
+                            # Skip processing if the file doesnt have enough groups/ints to calculate the readnoise.
+                            # MIRI needs extra since they omit the first five and last group before calculating the readnoise.
+                            if total_cds_frames >= 10:
                                 shutil.copy(uncal_filename, self.data_dir)
                                 logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
                                 set_permissions(output_filename)
                                 new_files.append(output_filename)
                             else:
-                                logging.info('\tNot enough groups to calculate readnoise in {}'.format(uncal_filename))
+                                logging.info('\tNot enough groups/ints to calculate readnoise in {}'.format(uncal_filename))
                     except FileNotFoundError:
                         logging.info('\t{} does not exist in JWQL filesystem'.format(file_entry['filename']))
 

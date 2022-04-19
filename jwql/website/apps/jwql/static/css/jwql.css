@@ -373,6 +373,15 @@ li:hover .nav-link, .navbar-brand:hover {
     z-index: 1;
 }
 
+.proposal:hover {
+    cursor: pointer;
+}
+
+.proposal:hover {
+    background-color: #356198;
+    opacity: 0.75;
+}
+
 .proposal-info {
     width: 100%;
     height: 100%;

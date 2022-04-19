@@ -9,7 +9,7 @@
 {% block content %}
 
     <main role="main" class="container">
-    	<h4>{{ filename }}</h4><h>
+    	<h4>{{ filename }}_{{file_type}}</h4><h>
 
     	<p>
             <a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:view_image', args=[inst, file_root]) }}>View Image</a>

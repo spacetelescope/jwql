@@ -1,7 +1,12 @@
-django<=3.1.7
-docutils<=0.18.0
+cython==0.29.28
+django==3.2.5
+docutils==0.18.1
 flake8==4.0.1
-jwst==1.3.3
-pygments==2.10.0
-pytest==6.2.5
+jwst==1.4.3
+jwql==1.0.0
+pygments==2.11.2
+pytest==7.0.1
+sphinx>=2
+stsci_rtd_theme==0.0.2
+tomli==2.0.1
 git+https://github.com/spacetelescope/jwst_reffiles

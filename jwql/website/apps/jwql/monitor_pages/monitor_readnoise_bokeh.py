@@ -63,6 +63,8 @@ class ReadnoiseMonitor(BokehTemplate):
             .order_by(self.stats_table.expstart) \
             .all()
 
+        session.close()
+
     def pre_init(self):
 
         # Start with default values for instrument and aperture because
@@ -119,8 +121,14 @@ class ReadnoiseMonitor(BokehTemplate):
             if len(readnoise_vals) != 0:
                 self.refs['mean_readnoise_xr_amp{}'.format(amp)].start = expstarts.min() - timedelta(days=3)
                 self.refs['mean_readnoise_xr_amp{}'.format(amp)].end = expstarts.max() + timedelta(days=3)
-                self.refs['mean_readnoise_yr_amp{}'.format(amp)].start = readnoise_vals.min() - 1
-                self.refs['mean_readnoise_yr_amp{}'.format(amp)].end = readnoise_vals.max() + 1
+                min_val, max_val = min(x for x in readnoise_vals if x is not None), max(x for x in readnoise_vals if x is not None)
+                if min_val == max_val:
+                    self.refs['mean_readnoise_yr_amp{}'.format(amp)].start = min_val - 1
+                    self.refs['mean_readnoise_yr_amp{}'.format(amp)].end = max_val + 1
+                else:
+                    offset = (max_val - min_val) * .1
+                    self.refs['mean_readnoise_yr_amp{}'.format(amp)].start = min_val - offset
+                    self.refs['mean_readnoise_yr_amp{}'.format(amp)].end = max_val + offset
 
     def update_readnoise_diff_plots(self):
         """Updates the readnoise difference image and histogram"""

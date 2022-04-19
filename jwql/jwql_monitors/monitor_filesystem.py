@@ -54,13 +54,15 @@ from jwql.utils.logging_functions import configure_logging, log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import filename_parser
-from jwql.utils.utils import get_config, initialize_instrument_monitor
-from jwql.utils.monitor_utils import update_monitor_table
+from jwql.utils.utils import get_config
+from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 
-FILESYSTEM = get_config()['filesystem']
+SETTINGS = get_config()
+FILESYSTEM = SETTINGS['filesystem']
 PROPRIETARY_FILESYSTEM = os.path.join(FILESYSTEM, 'proprietary')
 PUBLIC_FILESYSTEM = os.path.join(FILESYSTEM, 'public')
-CENTRAL = get_config()['jwql_dir']
+CENTRAL = SETTINGS['jwql_dir']
+OUTPUTS = SETTINGS['outputs']
 
 
 def gather_statistics(general_results_dict, instrument_results_dict):
@@ -84,8 +86,8 @@ def gather_statistics(general_results_dict, instrument_results_dict):
 
     logging.info('Gathering stats for filesystem')
 
-    for filesystem in [PROPRIETARY_FILESYSTEM, PUBLIC_FILESYSTEM]:
-        for dirpath, _, files in os.walk(FILESYSTEM):
+    for filesystem_area in [PROPRIETARY_FILESYSTEM, PUBLIC_FILESYSTEM]:
+        for dirpath, _, files in os.walk(filesystem_area):
             general_results_dict['total_file_count'] += len(files)
             for filename in files:
 
@@ -143,8 +145,8 @@ def get_global_filesystem_stats(general_results_dict):
     general_results_dict['used'] = 0.0
     general_results_dict['available'] = 0.0
 
-    for filesystem in [PROPRIETARY_FILESYSTEM, PUBLIC_FILESYSTEM]:
-        command = "df -k {}".format(filesystem)
+    for filesystem_area in [PROPRIETARY_FILESYSTEM, PUBLIC_FILESYSTEM]:
+        command = "df -k {}".format(filesystem_area)
         command += " | awk '{print $3, $4}' | tail -n 1"
         stats = subprocess.check_output(command, shell=True).split()
         general_results_dict['used'] += int(stats[0]) / (1024**3)
@@ -332,7 +334,7 @@ def plot_by_filetype(plot_type, instrument):
 
         # Query for counts
         results = session.query(FilesystemInstrument.date, getattr(FilesystemInstrument, plot_type))\
-                                .filter(FilesystemInstrument.filetype == filetype)
+            .filter(FilesystemInstrument.filetype == filetype)
 
         if instrument == 'all':
             results = results.all()
@@ -352,6 +354,8 @@ def plot_by_filetype(plot_type, instrument):
             # Plot the results
             plot.line(dates, values, legend='{} files'.format(filetype), line_color=color)
             plot.circle(dates, values, color=color)
+
+    session.close()
 
     return plot
 
@@ -382,6 +386,7 @@ def plot_filesystem_size():
     plot.line(dates, availables, legend='Free bytes', line_color='blue')
     plot.circle(dates, availables, color='blue')
 
+    session.close()
     return plot
 
 
@@ -434,6 +439,8 @@ def plot_central_store_dirs():
             plot.line(dates, values, legend='{} files'.format(area), line_color=color)
             plot.circle(dates, values, color=color)
 
+    session.close()
+
     return plot
 
 
@@ -456,11 +463,11 @@ def plot_filesystem_stats():
         plot_list.append(plot_by_filetype('size', instrument))
 
     # Create a layout with a grid pattern
-    grid_chunks = [plot_list[i:i+2] for i in range(0, len(plot_list), 2)]
+    grid_chunks = [plot_list[i:i + 2] for i in range(0, len(plot_list), 2)]
     grid = gridplot(grid_chunks)
 
     # Save all of the plots in one file
-    outputs_dir = os.path.join(get_config()['outputs'], 'monitor_filesystem')
+    outputs_dir = os.path.join(OUTPUTS, 'monitor_filesystem')
     outfile = os.path.join(outputs_dir, 'filesystem_monitor.html')
     output_file(outfile)
     save(grid)
@@ -509,6 +516,8 @@ def plot_total_file_counts():
     plot.line(dates, file_counts, line_width=2, line_color='blue')
     plot.circle(dates, file_counts, color='blue')
 
+    session.close()
+
     return plot
 
 
@@ -554,6 +563,8 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
         new_record['available'] = central_storage_dict[area]['available']
         engine.execute(CentralStore.__table__.insert(), new_record)
         session.commit()
+
+    session.close()
 
 
 if __name__ == '__main__':

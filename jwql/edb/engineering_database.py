@@ -63,9 +63,15 @@ import numpy as np
 
 from jwst.lib.engdb_tools import ENGDB_Service
 from jwql.utils.credentials import get_mast_base_url, get_mast_token
+from jwql.utils.utils import get_config
 
 MAST_EDB_MNEMONIC_SERVICE = 'Mast.JwstEdb.Mnemonics'
 MAST_EDB_DICTIONARY_SERVICE = 'Mast.JwstEdb.Dictionary'
+
+# Temporary until JWST operations: switch to test string for MAST request URL
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+if not ON_GITHUB_ACTIONS:
+    Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
 
 
 class EdbMnemonic:
@@ -173,7 +179,6 @@ class EdbMnemonic:
             Index numbers corresponding to the beginning of separate blocks
             of data. This can be used to calculate separate statistics for
             each block.
-
         """
 
         self.mnemonic_identifier = mnemonic_identifier
@@ -363,6 +368,11 @@ class EdbMnemonic:
 
         return_fig : bool
             If True, return the plot as a bokeh Figure object
+
+        Parameters
+        ----------
+        show_plot : boolean
+            A switch to show the plot in the browser or not.
 
         Returns
         -------
@@ -1059,6 +1069,67 @@ def create_time_offset(dt_obj, epoch):
         return (dt_obj - epoch).to(u.second).value
     elif isinstance(dt_obj, datetime):
         return (dt_obj - epoch).total_seconds()
+
+    def bokeh_plot_text_data(self, show_plot=False):
+        """Make basic bokeh plot showing value as a function of time.
+
+        Parameters
+        ----------
+        show_plot : boolean
+            A switch to show the plot in the browser or not.
+
+        Returns
+        -------
+        [div, script] : list
+            List containing the div and js representations of figure.
+        """
+
+        abscissa = self.data['dates']
+        ordinate = self.data['euvalues']
+
+        p1 = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
+                    title=self.mnemonic_identifier, x_axis_label='Time')
+
+        override_dict = {}  # Dict instructions to set y labels
+        unique_values = np.unique(ordinate)  # Unique values in y data
+
+        # Enumerate i to plot 1, 2, ... n in y and then numbers as dict keys
+        # and text as value. This will tell bokeh to change which numerical
+        # values to text.
+        for i, value in enumerate(unique_values):
+            index = np.where(ordinate == value)[0]
+            override_dict[i] = value
+            dates = abscissa[index].astype(np.datetime64)
+            y_values = list(np.ones(len(index), dtype=int) * i)
+            p1.line(dates, y_values, line_width=1, line_color='blue', line_dash='dashed')
+            p1.circle(dates, y_values, color='blue')
+
+        p1.yaxis.ticker = list(override_dict.keys())
+        p1.yaxis.major_label_overrides = override_dict
+
+        if show_plot:
+            show(p1)
+        else:
+            script, div = components(p1)
+
+            return [div, script]
+
+    def get_table_data(self):
+        """Get data needed to make interactivate table in template."""
+
+        # generate tables for display and download in web app
+        display_table = copy.deepcopy(self.data)
+
+        # temporary html file,
+        # see http://docs.astropy.org/en/stable/_modules/astropy/table/
+        tmpdir = tempfile.mkdtemp()
+        file_name_root = 'mnemonic_exploration_result_table'
+        path_for_html = os.path.join(tmpdir, '{}.html'.format(file_name_root))
+        with open(path_for_html, 'w') as tmp:
+            display_table.write(tmp, format='jsviewer')
+        html_file_content = open(path_for_html, 'r').read()
+
+        return html_file_content
 
 
 def get_mnemonic(mnemonic_identifier, start_time, end_time):

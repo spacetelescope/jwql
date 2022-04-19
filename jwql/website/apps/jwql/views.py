@@ -57,22 +57,19 @@ from .data_containers import get_acknowledgements
 from .data_containers import get_current_flagged_anomalies
 from .data_containers import get_dashboard_components
 from .data_containers import get_edb_components
-from .data_containers import get_filenames_by_instrument
+from .data_containers import get_filenames_by_instrument, mast_query_filenames_by_instrument
 from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import get_thumbnails_all_instruments
 from .data_containers import nirspec_trending
 from .data_containers import random_404_page
-from .data_containers import get_jwqldb_table_view_components
+from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import InstrumentAnomalySubmitForm
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
-
-
-FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
 def anomaly_query(request):
@@ -272,24 +269,26 @@ def archived_proposals_ajax(request, inst):
     """
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+    filesystem = get_config()['filesystem']
 
     # Get list of all files for the given instrument
-    filenames_public = get_filenames_by_instrument(inst, restriction='public')
-    filenames_proprietary = get_filenames_by_instrument(inst, restriction='proprietary')
+    filename_query = mast_query_filenames_by_instrument(inst)
+    filenames_public = get_filenames_by_instrument(inst, restriction='public', query_response=filename_query)
+    filenames_proprietary = get_filenames_by_instrument(inst, restriction='proprietary', query_response=filename_query)
 
     # Determine locations to the files
     filenames = []
     for filename in filenames_public:
         try:
             relative_filepath = filesystem_path(filename, check_existence=False)
-            full_filepath = os.path.join(FILESYSTEM_DIR, 'public', relative_filepath)
+            full_filepath = os.path.join(filesystem, 'public', relative_filepath)
             filenames.append(full_filepath)
         except ValueError:
             print('Unable to determine filepath for {}'.format(filename))
     for filename in filenames_proprietary:
         try:
             relative_filepath = filesystem_path(filename, check_existence=False)
-            full_filepath = os.path.join(FILESYSTEM_DIR, 'proprietary', relative_filepath)
+            full_filepath = os.path.join(filesystem, 'proprietary', relative_filepath)
             filenames.append(full_filepath)
         except ValueError:
             print('Unable to determine filepath for {}'.format(filename))
@@ -298,7 +297,6 @@ def archived_proposals_ajax(request, inst):
     proposal_info = get_proposal_info(filenames)
 
     context = {'inst': inst,
-               'all_filenames': filenames,
                'num_proposals': proposal_info['num_proposals'],
                'thumbnails': {'proposals': proposal_info['proposals'],
                               'thumbnail_paths': proposal_info['thumbnail_paths'],
@@ -328,9 +326,12 @@ def archive_thumbnails(request, inst, proposal):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
+    proposal_meta = text_scrape(proposal)
+
     template = 'thumbnails.html'
     context = {'inst': inst,
                'prop': proposal,
+               'prop_meta': proposal_meta,
                'base_url': get_base_url()}
 
     return render(request, template, context)
@@ -550,7 +551,7 @@ def instrument(request, inst):
     return render(request, template, context)
 
 
-def jwqldb_table_viewer(request, tablename_param=None):
+def jwqldb_table_viewer(request):
     """Generate the JWQL Table Viewer view.
 
     Parameters
@@ -567,11 +568,15 @@ def jwqldb_table_viewer(request, tablename_param=None):
         Outgoing response sent to the webpage
     """
 
-    if tablename_param is None:
-        table_meta, tablename = get_jwqldb_table_view_components(request)
+    try:
+        tablename = request.POST['db_table_select']
+    except KeyError:
+        tablename = None
+
+    if tablename is None:
+        table_meta = None
     else:
-        table_meta = build_table(tablename_param)
-        tablename = tablename_param
+        table_meta = build_table(tablename)
 
     _, _, engine, _ = load_connection(get_config()['connection_string'])
     all_jwql_tables = engine.table_names()
@@ -691,7 +696,7 @@ def unlooked_images(request, inst):
     pass
 
 
-def view_header(request, inst, filename):
+def view_header(request, inst, filename, filetype):
     """Generate the header view page
 
     Parameters
@@ -702,12 +707,15 @@ def view_header(request, inst, filename):
         Name of JWST instrument
     filename : str
         FITS filename of selected image in filesystem
+    filetype : str
+        Type of file (e.g. ``uncal``)
 
     Returns
     -------
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
@@ -717,7 +725,8 @@ def view_header(request, inst, filename):
     context = {'inst': inst,
                'filename': filename,
                'file_root': file_root,
-               'header_info': get_header_info(filename)}
+               'file_type': filetype,
+               'header_info': get_header_info(filename, filetype)}
 
     return render(request, template, context)
 
@@ -771,6 +780,7 @@ def view_image(request, inst, file_root, rewrite=False):
                'fits_files': image_info['all_files'],
                'suffixes': image_info['suffixes'],
                'num_ints': image_info['num_ints'],
+               'available_ints': image_info['available_ints'],
                'form': form}
 
     return render(request, template, context)
