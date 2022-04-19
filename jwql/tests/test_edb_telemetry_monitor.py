@@ -94,7 +94,7 @@ def test_conditions():
     # Create conditional data
     current_data = {}
     current_data["euvalues"] = np.array([1., 1., 1., 2.5, 2.5, 2.5, 5.5, 5.5, 2.5, 2.5])
-    current_data["dates"] = np.array([Time('2022-02-02') + TimeDelta(0.1001*i, format='jd') for i in range(10)])
+    current_data["dates"] = np.array([Time('2022-02-02') + TimeDelta(0.1001 * i, format='jd') for i in range(10)])
 
     # Using a single relation class
     eq25 = cond.relation_test(current_data, '==', 2.5)
@@ -231,16 +231,16 @@ def test_organize_every_change():
                      300.1, 310.8, -250.2, -500.2, 32.7,
                      300.2, 310.4, -250.6, -500.8, 32.3,
                      300.4, 310.5, -250.4, -500.1, 32.9])
-    ec_vals = ["F2550W", 'F560W', 'F770W', 'F1000W','F1500W',
-               "F2550W", 'F560W', 'F770W', 'F1000W','F1500W',
-               "F2550W", 'F560W', 'F770W', 'F1000W','F1500W',
-               "F2550W", 'F560W', 'F770W', 'F1000W','F1500W']
+    ec_vals = ["F2550W", 'F560W', 'F770W', 'F1000W', 'F1500W',
+               "F2550W", 'F560W', 'F770W', 'F1000W', 'F1500W',
+               "F2550W", 'F560W', 'F770W', 'F1000W', 'F1500W',
+               "F2550W", 'F560W', 'F770W', 'F1000W', 'F1500W']
 
     m = Table()
     m["dates"] = dates
     m["euvalues"] = vals
     mnem = EdbMnemonic('IMIR_HK_FW_POS_RATIO', Time('2021-04-06T00:00:00'), Time('2021-04-06T23:00:00'),
-                       m, {}, {"unit":"Pos Ratio"})
+                       m, {}, {"unit": "Pos Ratio"})
     mnem.every_change_values = ec_vals
     data = etm.organize_every_change(mnem)
 
@@ -256,11 +256,11 @@ def test_organize_every_change():
     f1000_vals = vals[f1000_idx]
     f1500_vals = vals[f1500_idx]
 
-    f2550mean, _,  _ = sigma_clipped_stats(f2550_vals, sigma=3)
-    f560mean, _,  _ = sigma_clipped_stats(f560_vals, sigma=3)
-    f770mean, _,  _ = sigma_clipped_stats(f770_vals, sigma=3)
-    f1000mean, _,  _ = sigma_clipped_stats(f1000_vals, sigma=3)
-    f1500mean, _,  _ = sigma_clipped_stats(f1500_vals, sigma=3)
+    f2550mean, _, _ = sigma_clipped_stats(f2550_vals, sigma=3)
+    f560mean, _, _ = sigma_clipped_stats(f560_vals, sigma=3)
+    f770mean, _, _ = sigma_clipped_stats(f770_vals, sigma=3)
+    f1000mean, _, _ = sigma_clipped_stats(f1000_vals, sigma=3)
+    f1500mean, _, _ = sigma_clipped_stats(f1500_vals, sigma=3)
     expected = {'F2550W': (np.array([e.datetime for e in dates[f2550_idx]]), f2550_vals, f2550mean),
                 'F560W': (np.array([e.datetime for e in dates[f560_idx]]), f560_vals, f560mean),
                 'F770W': (np.array([e.datetime for e in dates[f770_idx]]), f770_vals, f770mean),
@@ -304,7 +304,7 @@ def test_get_query_duration():
     """Test that the correct query duration is found
     """
     in_strings = ['daily_means', "every_change", "block_means", "time_interval", "none"]
-    expected_vals = [15 * u.minute, 1 * u.day, 1 * u.day, 1 * u.day, 1 * u.day,]
+    expected_vals = [15 * u.minute, 1 * u.day, 1 * u.day, 1 * u.day, 1 * u.day]
     for inval, outval in zip(in_strings, expected_vals):
         output = etm_utils.get_query_duration(inval)
         assert output == outval
@@ -316,6 +316,6 @@ def test_get_query_duration():
 def test_key_check():
     """Test the dictionary key checker
     """
-    d = {'key1': [1,2,3], 'key4': 'a'}
+    d = {'key1': [1, 2, 3], 'key4': 'a'}
     assert etm_utils.check_key(d, 'key1') == d['key1']
-    assert etm_utils.check_key(d, 'key2') == None
+    assert etm_utils.check_key(d, 'key2') is None

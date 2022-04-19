@@ -380,7 +380,7 @@ def get_edb_components(request):
                         comments.append(' ')
                         result_table.write(path_for_download, format='ascii.fixed_width',
                                            overwrite=True, delimiter=',', bookend=False)
-                        mnemonic_query_result.file_for_download = file_for_download
+                        mnemonic_query_result.file_for_download = path_for_download
 
             # create forms for search fields not clicked
             mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
@@ -429,7 +429,7 @@ def get_edb_components(request):
                 path_for_download = os.path.join(static_dir, file_for_download)
                 display_table.write(path_for_download, format='ascii.fixed_width',
                                     overwrite=True, delimiter=',', bookend=False)
-                mnemonic_exploration_result.file_for_download = file_for_download
+                mnemonic_exploration_result.file_for_download = path_for_download
 
                 if mnemonic_exploration_result.n_rows == 0:
                     mnemonic_exploration_result = 'empty'

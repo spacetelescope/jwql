@@ -197,6 +197,7 @@ def test_interpolation():
     assert all(mnemonic.data["euvalues"].data == np.arange(10, 101, 5) / 10.)
     assert all(mnemonic.blocks == np.array([0, 6, 16, len(mnemonic)]))
 
+
 def test_interpolation_change_only():
     """Test interpolation of change-only data"""
     dates = np.array([datetime(2021, 12, 18, 7, n, 0) for n in range(20, 30)])
