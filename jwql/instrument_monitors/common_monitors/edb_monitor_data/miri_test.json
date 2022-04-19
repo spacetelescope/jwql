@@ -90,7 +90,7 @@
             "query_duration": "15 minutes"
         }
     ],
-    "all+block_means": [
+    "block_means": [
         {
             "name": "IMIR_HK_ICE_SEC_VOLT1",
             "description": "ICE secondary Voltage (HV) V1",
@@ -138,11 +138,11 @@
             "plot_category": "wheel_ratios"
         },
         {
-            "name": "IMIR_HK_FW_CUR_POS",
+            "name": "IMIR_HK_GW14_POS_RATIO",
             "description": "FW commanded position",
             "dependency": [
                 {
-                    "name": "IMIR_HK_FW_CUR_POS",
+                    "name": "IMIR_HK_GW14_CUR_POS",
                     "relation": "none",
                     "threshold": 0
                 }

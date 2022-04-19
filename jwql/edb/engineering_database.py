@@ -91,7 +91,7 @@ class EdbMnemonic:
             Summed instance
         """
         # Do not combine two instances of different mnemonics
-        if self.mnemonic_identifier != self.mnemonic_identifier:
+        if self.mnemonic_identifier != mnem.mnemonic_identifier:
             raise ValueError((f'Unable to concatenate EdbMnemonic instances for {self.info["tlmMnemonic"]} '
                               'and {mnem.info["tlmMnemonic"]}.'))
 
@@ -194,9 +194,11 @@ class EdbMnemonic:
             self.data_start_time = None
             self.data_end_time = None
         else:
-            self.data_start_time = Time(np.min(self.data['dates']), scale='utc')
-            self.data_end_time = Time(np.max(self.data['dates']), scale='utc')
-            if isinstance(self.data['euvalues'][0], Number):
+            #self.data_start_time = Time(np.min(self.data['dates']), scale='utc')
+            #self.data_end_time = Time(np.max(self.data['dates']), scale='utc')
+            self.data_start_time = np.min(self.data['dates'])
+            self.data_end_time = np.max(self.data['dates'])
+            if isinstance(self.data['euvalues'][0], Number) and 'TlmMnemonics' in self.meta:
                 self.full_stats()
 
     def __len__(self):
@@ -273,8 +275,8 @@ class EdbMnemonic:
     def __str__(self):
         """Return string describing the instance."""
         return 'EdbMnemonic {} with {} records between {} and {}'.format(
-            self.mnemonic_identifier, len(self.data), self.data_start_time.isot,
-            self.data_end_time.isot)
+            self.mnemonic_identifier, len(self.data), self.data_start_time,
+            self.data_end_time)
 
     def block_stats(self, sigma=3):
         """Calculate stats for a mnemonic where we want a mean value for
@@ -295,7 +297,8 @@ class EdbMnemonic:
                 if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
                     meanval, medianval, stdevval = sigma_clipped_stats(self.data["euvalues"].data[index:self.blocks[i+1]], sigma=sigma)
                 else:
-                    meanval, medianval, stdevval = change_only_stats(self.data["euvalues"].data[index:self.blocks[i+1]], sigma=sigma)
+                    meanval, medianval, stdevval = change_only_stats(self.data["dates"].data[index:self.blocks[i+1]],
+                                                                     self.data["euvalues"].data[index:self.blocks[i+1]], sigma=sigma)
                 medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i+1]]))
                 means.append(meanval)
                 medians.append(medianval)
@@ -316,7 +319,8 @@ class EdbMnemonic:
         self.median_times = medtimes
 
     def bokeh_plot(self, show_plot=False, savefig=False, out_dir='./', nominal_value=None, yellow_limits=None,
-                   red_limits=None, xrange=(None, None), yrange=(None, None), return_components=True, return_fig=False):
+                   red_limits=None, title=None, xrange=(None, None), yrange=(None, None), return_components=True,
+                   return_fig=False):
         """Make basic bokeh plot showing value as a function of time. Optionally add a line indicating
         nominal (expected) value, as well as yellow and red background regions to denote values that
         may be unexpected.
@@ -346,6 +350,10 @@ class EdbMnemonic:
             2-element list giving the lower and upper limits outside of which the telemetry value
             is considered worse than in the yellow region. If provided, the area of the plot outside
             of these two values will have a red background.
+
+        title : str
+            Will be used as the plot title. If None, the mnemonic name and description (if present)
+            will be used as the title
 
         xrange : tuple
             Tuple of min, max datetime values to use as the plot range in the x direction.
@@ -390,13 +398,28 @@ class EdbMnemonic:
         else:
             units = self.info["unit"]
 
+        # Create a useful plot title if necessary
+        if title is None:
+            if 'description' in self.info:
+                if len(self.info['description']) > 0:
+                    title = f'{self.mnemonic_identifier} - {self.info["description"]}'
+                else:
+                    title = self.mnemonic_identifier
+            else:
+                title = self.mnemonic_identifier
+
         fig = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
-                     title=self.mnemonic_identifier, x_axis_label='Time',
-                     y_axis_label=f'{units}')
+                     title=title, x_axis_label='Time', y_axis_label=f'{units}')
 
         # For cases where the plot is empty or contains only a single point, force the
         # plot range to something reasonable
         if len(self.data["dates"]) < 2:
+
+
+            print(self.requested_start_time, type(self.requested_start_time))
+            print(self.requested_end_time, type(self.requested_end_time))
+
+
             fig.x_range=Range1d(self.requested_start_time - timedelta(days=1), self.requested_end_time)
             bottom, top = (-1, 1)
             if yellow_limits is not None:
@@ -461,9 +484,11 @@ class EdbMnemonic:
         if return_fig:
             return fig
 
-    def change_only_plot_prep(self):
-        """Tweak change-only data such that a plot that connects points with
-        a line looks more realistic, with only horizontal and vertical lines.
+    def change_only_add_points(self):
+        """Tweak change-only data. Add an additional data point immediately prior to
+        each original data point, with a value equal to that in the previous data point.
+        This will help with filtering data based on conditions later, and will create a
+        plot that looks more realistic, with only horizontal and vertical lines.
         """
         new_dates = [self.data["dates"][0]]
         new_vals = [self.data["euvalues"][0]]
@@ -503,7 +528,7 @@ class EdbMnemonic:
             if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
                 avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
             else:
-                avg, med, dev = change_only_stats(self.data["euvalues"][good], sigma=sigma)
+                avg, med, dev = change_only_stats(self.data["dates"][good], self.data["euvalues"][good], sigma=sigma)
             means.append(avg)
             meds.append(med)
             devs.append(dev)
@@ -524,7 +549,7 @@ class EdbMnemonic:
         if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
             self.mean, self.median, self.stdev = sigma_clipped_stats(self.data["euvalues"], sigma=sigma)
         else:
-            self.mean, self.median, self.stdev = change_only_stats(self.data["euvalues"], sigma=sigma)
+            self.mean, self.median, self.stdev = change_only_stats(self.data["dates"], self.data["euvalues"], sigma=sigma)
         self.mean = [self.mean]
         self.median = [self.median]
         self.stdev = [self.stdev]
@@ -589,7 +614,8 @@ class EdbMnemonic:
         self.data = new_tab
 
     def plot_data_plus_devs(self, show_plot=False, savefig=False, out_dir='./', nominal_value=None, yellow_limits=None,
-                            red_limits=None, xrange=(None, None), yrange=(None, None), return_components=True, return_fig=False):
+                            red_limits=None, xrange=(None, None), yrange=(None, None), title=None, return_components=True,
+                            return_fig=False):
         """Make basic bokeh plot showing value as a function of time. Optionally add a line indicating
         nominal (expected) value, as well as yellow and red background regions to denote values that
         may be unexpected. Also add a plot of the mean value over time and in a second figure, a plot of
@@ -626,6 +652,10 @@ class EdbMnemonic:
 
         yrange : tuple
             Tuple of min, max datetime values to use as the plot range in the y direction.
+
+        title : str
+            Will be used as the plot title. If None, the mnemonic name and description (if present)
+            will be used as the title
 
         return_components : bool
             If True, return the plot as div and script components
@@ -667,8 +697,18 @@ class EdbMnemonic:
         else:
             units = self.info["unit"]
 
+        # Create a useful plot title if necessary
+        if title is None:
+            if 'description' in self.info:
+                if len(self.info['description']) > 0:
+                    title = f'{self.mnemonic_identifier} - {self.info["description"]}'
+                else:
+                    title = self.mnemonic_identifier
+            else:
+                title = self.mnemonic_identifier
+
         fig = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type=None,
-                     title=self.mnemonic_identifier, x_axis_label='Time',
+                     title=title, x_axis_label='Time',
                      y_axis_label=f'{units}')
 
         # For cases where the plot is empty or contains only a single point, force the
@@ -800,7 +840,7 @@ class EdbMnemonic:
             if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
                 avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
             else:
-                 avg, med, dev = change_only_stats(self.data["euvalues"][good], sigma=sigma)
+                 avg, med, dev = change_only_stats(self.data["dates"][good], self.data["euvalues"][good], sigma=sigma)
             self.mean.append(avg)
             self.median.append(med)
             self.stdev.append(dev)
@@ -968,32 +1008,39 @@ def change_only_bounding_points(date_list, value_list, starttime, endtime):
     return date_list, value_list
 
 
-    def change_only_stats(times, values, sigma=3):
-        """Calculate the mean/median/stdev as well as the median time for a
-        collection of change-only data.
+def change_only_stats(times, values, sigma=3):
+    """Calculate the mean/median/stdev as well as the median time for a
+    collection of change-only data.
 
-        Parameters
-        ----------
-        times : list
-            List of datetime objects
+    Parameters
+    ----------
+    times : list
+        List of datetime objects
 
-        values : list
-            List of values corresponding to times
+    values : list
+        List of values corresponding to times
 
-        sigma : float
-            Number of sigma to use for sigma-clipping
+    sigma : float
+        Number of sigma to use for sigma-clipping
 
-        Returns
-        -------
-        meanval : float
-            Mean of values
+    Returns
+    -------
+    meanval : float
+        Mean of values
 
-        medianval : float
-            Median of values
+    medianval : float
+        Median of values
 
-        stdevval : float
-            Standard deviation of values
-        """
+    stdevval : float
+        Standard deviation of values
+    """
+    # If there is only a single datapoint, then the mean will be
+    # equal to it.
+    if len(times) == 0:
+        return None, None, None
+    if len(times) == 1:
+        return values, values, 0.
+    else:
         times = np.array(times)
         values = np.array(values)
         delta_time = times[1:] - times[0:-1]
@@ -1007,7 +1054,7 @@ def change_only_bounding_points(date_list, value_list, starttime, endtime):
         meanval, medianval, stdevval = sigma_clipped_stats(flat_list_for_median, sigma=sigma)
         #medianval = np.median(flat_list_for_median)
         #stdevval = np.std(flat_list_for_median)
-        return meanval, medianval, stdevval
+    return meanval, medianval, stdevval
 
 
 def create_time_offset(dt_obj, epoch):
@@ -1083,17 +1130,20 @@ def get_mnemonic(mnemonic_identifier, start_time, end_time):
         # to produce entries at the beginning and ending of the queried time range.
         dates, values = change_only_bounding_points(dates, values, start_time, end_time)
 
-        # Convert change-only data to "regular" data. If this is not done, checking for
-        # dependency conditions may not work well if there are a limited number of points.
-        # Also, later interpolations won't be correct with change-only points since we are
-        # doing linear interpolation.
-        #do that here
-
     data = Table({'dates': dates, 'euvalues': values})
     info = get_mnemonic_info(mnemonic_identifier)
 
-    # create and return instance
+    # Create and return instance
     mnemonic = EdbMnemonic(mnemonic_identifier, start_time, end_time, data, meta, info)
+
+    # Convert change-only data to "regular" data. If this is not done, checking for
+    # dependency conditions may not work well if there are a limited number of points.
+    # Also, later interpolations won't be correct with change-only points since we are
+    # doing linear interpolation.
+    if bracket:
+        if len(mnemonic) > 0:
+            mnemonic.change_only_add_points()
+
     return mnemonic
 
 
