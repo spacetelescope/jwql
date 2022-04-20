@@ -57,6 +57,7 @@ from astropy.time import Time
 import astropy.units as u
 from astroquery.mast import Mast
 from bokeh.embed import components
+from bokeh.layouts import column
 from bokeh.models import BoxAnnotation, ColumnDataSource, DatetimeTickFormatter, HoverTool, Range1d
 from bokeh.plotting import figure, output_file, show, save
 import numpy as np
@@ -485,6 +486,50 @@ class EdbMnemonic:
         if return_fig:
             return fig
 
+    def bokeh_plot_text_data(self, show_plot=False):
+        """Make basic bokeh plot showing value as a function of time.
+
+        Parameters
+        ----------
+        show_plot : boolean
+            A switch to show the plot in the browser or not.
+
+        Returns
+        -------
+        [div, script] : list
+            List containing the div and js representations of figure.
+        """
+
+        abscissa = self.data['dates']
+        ordinate = self.data['euvalues']
+
+        p1 = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
+                    title=self.mnemonic_identifier, x_axis_label='Time')
+
+        override_dict = {}  # Dict instructions to set y labels
+        unique_values = np.unique(ordinate)  # Unique values in y data
+
+        # Enumerate i to plot 1, 2, ... n in y and then numbers as dict keys
+        # and text as value. This will tell bokeh to change which numerical
+        # values to text.
+        for i, value in enumerate(unique_values):
+            index = np.where(ordinate == value)[0]
+            override_dict[i] = value
+            dates = abscissa[index].astype(np.datetime64)
+            y_values = list(np.ones(len(index), dtype=int) * i)
+            p1.line(dates, y_values, line_width=1, line_color='blue', line_dash='dashed')
+            p1.circle(dates, y_values, color='blue')
+
+        p1.yaxis.ticker = list(override_dict.keys())
+        p1.yaxis.major_label_overrides = override_dict
+
+        if show_plot:
+            show(p1)
+        else:
+            script, div = components(p1)
+
+            return [div, script]
+
     def change_only_add_points(self):
         """Tweak change-only data. Add an additional data point immediately prior to
         each original data point, with a value equal to that in the previous data point.
@@ -556,6 +601,23 @@ class EdbMnemonic:
         self.stdev = [self.stdev]
         self.median_times = [calc_median_time(self.data["dates"])]
 
+    def get_table_data(self):
+        """Get data needed to make interactivate table in template."""
+
+        # generate tables for display and download in web app
+        display_table = copy.deepcopy(self.data)
+
+        # temporary html file,
+        # see http://docs.astropy.org/en/stable/_modules/astropy/table/
+        tmpdir = tempfile.mkdtemp()
+        file_name_root = 'mnemonic_exploration_result_table'
+        path_for_html = os.path.join(tmpdir, '{}.html'.format(file_name_root))
+        with open(path_for_html, 'w') as tmp:
+            display_table.write(tmp, format='jsviewer')
+        html_file_content = open(path_for_html, 'r').read()
+
+        return html_file_content
+
     def interpolate(self, times):
         """Interpolate data euvalues at specified datetimes.
 
@@ -597,8 +659,8 @@ class EdbMnemonic:
             else:
                 # If there are not enough data and we are unable to interpolate,
                 # then set the data table to be empty
-                new_tab["euvalues"] = np.array[()]
-                new_tab["dates"] = np.array[()]
+                new_tab["euvalues"] = np.array([])
+                new_tab["dates"] = np.array([])
 
         # Adjust any block values to account for the interpolated data
         new_blocks = []
@@ -762,14 +824,18 @@ class EdbMnemonic:
             fig.y_range.end = yrange[1]
 
         # Now create a second plot showing the devitation from the mean
-        fig_dev = figure(height=250, x_range=fig.x_range, tools="xpan,xwheel_zoom,xbox_zoom,reset", y_axis_location="right",
+        fig_dev = figure(height=250, x_range=fig.x_range, tools="xpan,xwheel_zoom,xbox_zoom,reset", y_axis_location="left",
                          x_axis_type='datetime', x_axis_label='Time', y_axis_label=f'Data - Mean ({units})')
 
         # Interpolate the mean values so that we can subtract the original data
-        interp_means = np.interp(data_dates, self.median_times, self.mean)
-
-        # Calculate deviation from the mean
-        dev = data_vals - interp_means
+        if len(self.median_times) > 1:
+            interp_means = interpolate_datetimes(data_dates, self.median_times, self.mean)
+            dev = data_vals - interp_means
+        elif len(self.median_times) == 1:
+            dev = data_vals - self.mean
+        else:
+            # No median data, so we can't calculate any deviation
+            dev = [0] * len(data_vals)
 
         # Plot
         fig_dev.line(data_dates, dev, color='red')
@@ -785,7 +851,7 @@ class EdbMnemonic:
         fig.xaxis.major_label_orientation = np.pi / 4
 
         # Place the two figures in a column object
-        bothfigs = column(figa, fig_dev)
+        bothfigs = column(fig, fig_dev)
 
         if savefig:
             output_file(filename=filename, title=self.mnemonic_identifier)
@@ -844,6 +910,17 @@ class EdbMnemonic:
             self.median.append(med)
             self.stdev.append(dev)
             self.median_times.append(calc_median_time(self.data["dates"].data[good]))
+
+
+
+
+
+
+
+
+
+
+
 
 
 def add_limit_boxes(fig, yellow=None, red=None):
@@ -1070,67 +1147,6 @@ def create_time_offset(dt_obj, epoch):
     elif isinstance(dt_obj, datetime):
         return (dt_obj - epoch).total_seconds()
 
-    def bokeh_plot_text_data(self, show_plot=False):
-        """Make basic bokeh plot showing value as a function of time.
-
-        Parameters
-        ----------
-        show_plot : boolean
-            A switch to show the plot in the browser or not.
-
-        Returns
-        -------
-        [div, script] : list
-            List containing the div and js representations of figure.
-        """
-
-        abscissa = self.data['dates']
-        ordinate = self.data['euvalues']
-
-        p1 = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
-                    title=self.mnemonic_identifier, x_axis_label='Time')
-
-        override_dict = {}  # Dict instructions to set y labels
-        unique_values = np.unique(ordinate)  # Unique values in y data
-
-        # Enumerate i to plot 1, 2, ... n in y and then numbers as dict keys
-        # and text as value. This will tell bokeh to change which numerical
-        # values to text.
-        for i, value in enumerate(unique_values):
-            index = np.where(ordinate == value)[0]
-            override_dict[i] = value
-            dates = abscissa[index].astype(np.datetime64)
-            y_values = list(np.ones(len(index), dtype=int) * i)
-            p1.line(dates, y_values, line_width=1, line_color='blue', line_dash='dashed')
-            p1.circle(dates, y_values, color='blue')
-
-        p1.yaxis.ticker = list(override_dict.keys())
-        p1.yaxis.major_label_overrides = override_dict
-
-        if show_plot:
-            show(p1)
-        else:
-            script, div = components(p1)
-
-            return [div, script]
-
-    def get_table_data(self):
-        """Get data needed to make interactivate table in template."""
-
-        # generate tables for display and download in web app
-        display_table = copy.deepcopy(self.data)
-
-        # temporary html file,
-        # see http://docs.astropy.org/en/stable/_modules/astropy/table/
-        tmpdir = tempfile.mkdtemp()
-        file_name_root = 'mnemonic_exploration_result_table'
-        path_for_html = os.path.join(tmpdir, '{}.html'.format(file_name_root))
-        with open(path_for_html, 'w') as tmp:
-            display_table.write(tmp, format='jsviewer')
-        html_file_content = open(path_for_html, 'r').read()
-
-        return html_file_content
-
 
 def get_mnemonic(mnemonic_identifier, start_time, end_time):
     """Execute query and return a ``EdbMnemonic`` instance.
@@ -1244,6 +1260,45 @@ def get_mnemonic_info(mnemonic_identifier):
     """
     mast_token = get_mast_token()
     return query_mnemonic_info(mnemonic_identifier, token=mast_token)
+
+
+def interpolate_datetimes(new_times, old_times, old_data):
+    """interpolate a set of datetime/value pairs onto another set
+    of datetime objects
+
+    Parameters
+    ----------
+    new_times : numpy.ndarray
+        Array of datetime objects onto which the data will be interpolated
+
+    old_times : numpy.ndarray
+        Array of datetime objects associated with the input data values
+
+    old_data : numpy.ndarray
+        Array of data values associated with ``old_times``, which will be
+        interpolated onto ``new_times``
+
+    Returns
+    -------
+    new_data : numpy.ndarray
+        Array of values interpolated onto ``new_times``
+    """
+    # We can only linearly interpolate if we have more than one entry
+    if len(old_data) >= 2:
+        interp_times = np.array([create_time_offset(ele, old_times[0]) for ele in new_times])
+        mnem_times = np.array([create_time_offset(ele, old_times[0]) for ele in old_times])
+
+        # Do not extrapolate. Any requested interoplation times that are outside the range
+        # or the original data will be ignored.
+        #good_times = ((interp_times >= mnem_times[0]) & (interp_times <= mnem_times[-1]))
+        #interp_times = interp_times[good_times]
+
+        new_data = np.interp(interp_times, mnem_times, old_data)
+    else:
+        # If there are not enough data and we are unable to interpolate,
+        # then set the data table to be empty
+        new_data = np.array([])
+    return new_data
 
 
 def is_valid_mnemonic(mnemonic_identifier):

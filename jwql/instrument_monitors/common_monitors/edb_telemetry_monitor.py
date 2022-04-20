@@ -1312,10 +1312,10 @@ class EdbMnemonicMonitor():
             logging.info(f'Working on telemetry_type: {telem_type}')
 
             # For the combined telemetry types (e.g. "all+daily_mean") break up
-            # into it's component parts. Work on the second part (e.g. "daily_mean")
+            # into its component parts. Work on the second part (e.g. "daily_mean")
             # first, and then the "all" part afterwards
             if telemetry_kind in ALLOWED_COMBINATION_TYPES:
-                telem_type = telemetry_kind.split('+')[0]
+                telem_type = telemetry_kind.split('+')[1]
                 logging.info(f'Working first on {telem_type}')
 
             # Figure out the time duration over which the mnemonic should be queried. In
@@ -1331,7 +1331,7 @@ class EdbMnemonicMonitor():
                 self.identify_tables(instrument, telem_type)
 
             # Work on mnemonic at a time
-            for mnemonic in mnemonic_dict[telem_type]:
+            for mnemonic in mnemonic_dict[telemetry_kind]:
 
                 logging.info(f'Working on {mnemonic["name"]}')
 
