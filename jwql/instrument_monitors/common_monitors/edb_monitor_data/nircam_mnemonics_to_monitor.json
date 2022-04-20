@@ -428,7 +428,7 @@ These two need to be filtered for only when the FAM is moved. What dependencies 
             "description": "ICE HK -15V current for FAM motor drive",
             "dependency": [
                 {
-                    "name": "INRC_ICE_DC_CUR_P30_MOT",
+                    "name": "INRC_ICE_DC_CUR_N30_MOT",
                     "relation": ">",
                     "threshold": 0.0
                 }
