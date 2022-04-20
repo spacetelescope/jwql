@@ -49,6 +49,9 @@ GRATINGS_CHOSEN = {}
 # Instruments selected by user in anomaly_query
 INSTRUMENTS_CHOSEN = []
 
+# Include all of the parameters selected by user in anomaly query
+PARAMETERS = {}
+
 # Read patterns selected by user in anomaly_query
 READPATTS_CHOSEN = {}
 

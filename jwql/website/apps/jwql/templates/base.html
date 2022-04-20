@@ -35,8 +35,6 @@
 
 	<body>
 
-		<a href="#main_content" style="color:white" title="Jump to main content">Jump to main content</a>
-
 		<!-- Navigation Bar -->
 		<nav class="navbar navbar-dark navbar-expand-xl fixed-top">
 
@@ -52,22 +50,6 @@
 					<font color='#f2ce3a'>{{ inst }}</font>
 				{% endif %}
 			</a>
-
-			<!--Show OAuth Button Link when navbar is collapsed-->
-			<ul class="navbar-nav ml-auto  d-xl-none">
-				{% if user.ezid %}
-				<li class="nav-item active">
-					<a id="oauth_user" href="https://auth.mastdev.stsci.edu/tokens" target="_blank" rel="noopener noreferrer">
-						{{ user.ezid }}
-					</a>
-					<a role="button" class="btn btn-primary" href={{ url('jwql:logout') }}>logout</a>
-				</li>
-				{% else %}
-					<li class="nav-item active">
-						<a role="button" class="btn btn-primary" href={{ url('jwql:login') }}>login</a>
-					</li>
-				{% endif %}
-			</ul>
 
 			<!--Make navbar collapsible when page shrinks-->
 	        <button class="navbar-toggler" type="button" data-toggle="collapse"
@@ -144,21 +126,6 @@
 						</li>
 		      		{% endfor %}
 
-					<!--GitHub Link-->
-					<!--Show GitHub link when navbar is NOT collapsed-->
-	            	<li class="nav-item active d-none d-xl-block">
-						<a id="github-link"
-						   class="nav-link"
-						   href="https://github.com/spacetelescope/jwql"
-						   target="_blank">
-							<img src={{ static('img/githublogo.svg') }}
-								 height=35
-								 width=35
-								 alt="GitHub Logo"
-								 title="GitHub Logo">
-						</a>
-					</li>
-
 					<!--Show GitHub link when navbar is collapsed-->
 	            	<li class="nav-item active d-xl-none">
 						<a id="github-link"
@@ -178,20 +145,20 @@
 	    	</div>
 
 
-			<!--Show OAuth button when navbar is NOT collapsed-->
+			<!--Show GitHub button when navbar is NOT collapsed-->
 			<ul class="navbar-nav ml-auto d-none d-xl-block">
-				{% if user.ezid %}
-				<li class="nav-item active">
-					<a id="oauth_user" href="https://auth.mastdev.stsci.edu/tokens" target="_blank" rel="noopener noreferrer">
-						{{ user.ezid }}
+            	<li class="nav-item active d-none d-xl-block">
+					<a id="github-link"
+					   class="nav-link"
+					   href="https://github.com/spacetelescope/jwql"
+					   target="_blank">
+						<img src={{ static('img/githublogo.svg') }}
+							 height=35
+							 width=35
+							 alt="GitHub Logo"
+							 title="GitHub Logo">
 					</a>
-					<a role="button" class="btn btn-primary" href={{ url('jwql:logout') }}>logout</a>
 				</li>
-				{% else %}
-					<li class="nav-item active">
-						<a role="button" class="btn btn-primary" href={{ url('jwql:login') }}>login</a>
-					</li>
-				{% endif %}
 			</ul>
 
 
@@ -204,6 +171,23 @@
 	    </div>
 
 		<div id="main_content"></div>
+
+		<!--Handle incoming messages-->
+		{% for message in messages %}
+		<div class="container-fluid p-0">
+		  <div class="alert {{ message.tags }} alert-dismissible" role="alert" >
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+			  <span aria-hidden="true">&times;</span>
+			</button>
+			{{ message }}
+			<script>
+				setTimeout(function () {
+					$('.alert').alert('close');
+				}, 5000);
+			</script>
+		  </div>
+		</div>
+		{% endfor %}
 
     	{% block content %}
         {% endblock %}

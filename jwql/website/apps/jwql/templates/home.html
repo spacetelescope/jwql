@@ -48,7 +48,7 @@
 
         <h4>Find a JWST Proposal or File</h4>
 
-        Submit a proposal number (e.g. 86600, 783) or file root (e.g. jw86600006001_02101_00008_guider1) to view that proposal or file:
+        Submit a proposal number (e.g. 01014, 1078) or file root (e.g. jw01014005001_02101_00001_guider1) to view that proposal or file:
 
         <!--Load the file search form from the view-->
         <form action="" method="post" id="homepage_filesearch">
@@ -82,9 +82,15 @@
 
         <hr>
 
-        <h4>Query the Archive for Anomalies</h4>
+        <h4>Query the Archive</h4>
 
         <a role="button" class="btn btn-primary my-2" type="submit" href={{ url( 'jwql:anomaly_query' ) }}>Enter Query Form</a>
+
+        <hr>
+
+        <h4>Found a bug or have a feature request?</h4>
+
+        <a role="button" class="btn btn-primary my-2" type="submit" href="https://github.com/spacetelescope/jwql/issues/new/choose">Submit an Issue</a>
 
 	</main>
 

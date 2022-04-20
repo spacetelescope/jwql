@@ -2,10 +2,11 @@ import numpy as np
 from setuptools import setup
 from setuptools import find_packages
 
-VERSION = '0.26.0'
+VERSION = '1.1.1'
 
 AUTHORS = 'Matthew Bourque, Lauren Chambers, Misty Cracraft, Mike Engesser, Mees Fix, Joe Filippazzo, Bryan Hilbert, '
-AUTHORS += 'Graham Kanarek, Teagan King, Catherine Martlin, Maria Pena-Guerrero, Johannes Sahlmann, Ben Sunnquist'
+AUTHORS += 'Graham Kanarek, Teagan King, Catherine Martlin, Shannon Osborne, Maria Pena-Guerrero, Johannes Sahlmann, '
+AUTHORS += 'Ben Sunnquist, Brian York'
 
 DESCRIPTION = 'The James Webb Space Telescope Quicklook Project'
 
@@ -13,12 +14,12 @@ REQUIRES = [
     'asdf>=2.3.3',
     'astropy>=3.2.1',
     'astroquery>=0.3.9',
-    'authlib',
+    'bandit',
     'bokeh',
     'codecov',
     'crds',
     'cryptography',
-    'django',
+    'django<=3.1.7',
     'flake8',
     'inflection',
     'ipython',
@@ -39,6 +40,7 @@ REQUIRES = [
     'pytest-cov',
     'scipy',
     'sphinx',
+    'sphinx_rtd_theme',
     'sqlalchemy',
     'stdatamodels',
     'stsci_rtd_theme',

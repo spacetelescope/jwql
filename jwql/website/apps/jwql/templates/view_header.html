@@ -9,7 +9,7 @@
 {% block content %}
 
     <main role="main" class="container">
-    	<h4>{{ filename }}</h4><h>
+    	<h4>{{ filename }}_{{file_type}}</h4><h>
 
     	<p>
             <a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:view_image', args=[inst, file_root]) }}>View Image</a>
@@ -33,17 +33,67 @@
             {% for extension in header_info %}
                 {% set extname = header_info[extension]['EXTNAME'] %}
                 {% set header_table = header_info[extension]['table'] %}
-                    {% if extension == 0 %}
-                        <h4 id="header-display-name-extension0">Extension: {{ header_info[0]['EXTNAME'] }}</h4><h>
-                        <div id="header-table-extension0">{{header_info[0]['table']|safe}}</div>
-                    {% else %}
-                        <h4 id="header-display-name-extension{{extension}}" display="none">Extension: {{ header_info[extension]['EXTNAME'] }}</h4><h>
-                        <div id="header-table-extension{{extension}}" display="none">{{header_info[extension]['table']|safe}}</div>
-                    {% endif %}
+                {% set table_columns = header_info[extension]['table_columns'] %}
+                {% set table_rows = header_info[extension]['table_rows'] %}
+                {% if extension == 0 %}
+                    <h4 id="header-display-name-extension{{extension}}">Extension: {{ header_info[extension]['EXTNAME'] }}</h4><h>
+                    <div id="header-table-extension{{extension}}">
+                        <table id="jwqltable" class="display" style="width:100%">
+                            <thead>
+                                 <tr>
+                                    {% for column in table_columns %}
+                                        <th>{{ column }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in table_rows %}
+                                    <tr>
+                                        {% for value in row %}
+                                            <td>{{ value }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+               {% else %}
+                    <h4 id="header-display-name-extension{{extension}}" style="display: none">Extension: {{ header_info[extension]['EXTNAME'] }}</h4><h>
+                    <div id="header-table-extension{{extension}}" style="display: none">
+                        <table id="jwqltable" class="display" style="width:100%">
+                            <thead>
+                                <tr>
+                                    {% for column in table_columns %}
+                                        <th>{{ column }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in table_rows %}
+                                    <tr>
+                                        {% for value in row %}
+                                            <td>{{ value }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
             {% endfor %}
         </div>
         <br>
 
 	</main>
+
+
+    <!-- JS for datatables rendering and sorting with DataTables. -->
+    <script>
+        $(document).ready(function() {
+            $('#jwqltable').DataTable( {
+                "order": []
+            });
+        } );
+    </script>
 
 {% endblock %}

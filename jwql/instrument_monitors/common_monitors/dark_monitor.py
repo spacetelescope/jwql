@@ -75,84 +75,14 @@ from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDar
 from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
-from jwql.utils import calculations, instrument_properties
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, RAPID_READPATTERNS
+from jwql.utils import calculations, instrument_properties, monitor_utils
+from jwql.utils.constants import ASIC_TEMPLATES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, \
+                                 RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
-from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
-
-
-def mast_query_darks(instrument, aperture, start_date, end_date, readpatt=None):
-    """Use ``astroquery`` to search MAST for dark current data
-
-    Parameters
-    ----------
-    instrument : str
-        Instrument name (e.g. ``nircam``)
-
-    aperture : str
-        Detector aperture to search for (e.g. ``NRCA1_FULL``)
-
-    start_date : float
-        Starting date for the search in MJD
-
-    end_date : float
-        Ending date for the search in MJD
-
-    readpatt : str
-        Readout pattern to search for (e.g. ``RAPID``). If None,
-        readout pattern will not be added to the query parameters.
-
-    Returns
-    -------
-    query_results : list
-        List of dictionaries containing the query results
-    """
-
-    # Make sure instrument is correct case
-    if instrument.lower() == 'nircam':
-        instrument = 'NIRCam'
-        dark_template = ['NRC_DARK']
-    elif instrument.lower() == 'niriss':
-        instrument = 'NIRISS'
-        dark_template = ['NIS_DARK']
-    elif instrument.lower() == 'nirspec':
-        instrument = 'NIRSpec'
-        dark_template = ['NRS_DARK']
-    elif instrument.lower() == 'fgs':
-        instrument = 'FGS'
-        dark_template = ['FGS_DARK']
-    elif instrument.lower() == 'miri':
-        instrument = 'MIRI'
-        dark_template = ['MIR_DARKALL', 'MIR_DARKIMG', 'MIR_DARKMRS']
-
-    # monitor_mast.instrument_inventory does not allow list inputs to
-    # the added_filters input (or at least if you do provide a list, then
-    # it becomes a nested list when it sends the query to MAST. The
-    # nested list is subsequently ignored by MAST.)
-    # So query once for each dark template, and combine outputs into a
-    # single list.
-    query_results = []
-    for template_name in dark_template:
-
-        # Create dictionary of parameters to add
-        parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
-                      "apername": aperture, "exp_type": template_name,
-                     }
-
-        if readpatt is not None:
-            parameters["readpatt"] = readpatt
-
-        query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
-                                                  add_filters=parameters, return_data=True, caom=False)
-        if 'data' in query.keys():
-            if len(query['data']) > 0:
-                query_results.extend(query['data'])
-
-    return query_results
 
 
 class Dark():
@@ -346,6 +276,7 @@ class Dark():
                 new_pixels_x.append(x)
                 new_pixels_y.append(y)
 
+        session.close()
         return (new_pixels_x, new_pixels_y)
 
     def find_hot_dead_pixels(self, mean_image, comparison_image, hot_threshold=2., dead_threshold=0.1):
@@ -426,6 +357,7 @@ class Dark():
             filename = os.path.join(self.output_dir, 'mean_slope_images', filename)
             logging.info('Baseline filename: {}'.format(filename))
 
+        session.close()
         return filename
 
     def identify_tables(self):
@@ -459,12 +391,13 @@ class Dark():
 
         query_count = len(dates)
         if query_count == 0:
-            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
+            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {} with {}. Beginning search date will be set to {}.'
                          .format(self.aperture, self.readpatt, query_result)))
         else:
             query_result = np.max(dates)
 
+        session.close()
         return query_result
 
     def noise_check(self, new_noise_image, baseline_noise_image, threshold=1.5):
@@ -768,7 +701,15 @@ class Dark():
 
                     # Query MAST using the aperture and the time of the
                     # most recent previous search as the starting time
-                    new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end, readpatt=self.readpatt)
+                    new_entries = monitor_utils.mast_query_darks(instrument, aperture, self.query_start, self.query_end, readpatt=self.readpatt)
+
+                    # Exclude ASIC tuning data
+                    len_new_darks = len(new_entries)
+                    new_entries = monitor_utils.exclude_asic_tuning(new_entries)
+                    len_no_asic = len(new_entries)
+                    num_asic = len_new_darks - len_no_asic
+                    logging.info("\tFiltering out ASIC tuning files removed {} dark files.".format(num_asic))
+
                     logging.info('\tAperture: {}, Readpattern: {}, new entries: {}'.format(self.aperture, self.readpatt,
                                                                                            len(new_entries)))
 
@@ -1087,9 +1028,9 @@ class Dark():
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    start_time, log_file = initialize_instrument_monitor(module)
+    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     monitor = Dark()
     monitor.run()
 
-    update_monitor_table(module, start_time, log_file)
+    monitor_utils.update_monitor_table(module, start_time, log_file)

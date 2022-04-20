@@ -2,6 +2,7 @@
 *.fits
 *.ipynb_checkpoints/
 config.json
+.DS_Store
 build/
 dist/
 jwql.egg-info/
@@ -12,3 +13,7 @@ docs/source/api/
 htmlcov/
 *.sqlite3
 jwql/website/static/*.csv
+jwql/website/apps/jwql/static/filesystem
+jwql/website/apps/jwql/static/outputs
+jwql/website/apps/jwql/static/preview_images
+jwql/website/apps/jwql/static/thumbnails

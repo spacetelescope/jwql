@@ -99,12 +99,11 @@ from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPi
 from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors import pipeline_tools
-from jwql.utils import crds_tools, instrument_properties
+from jwql.utils import crds_tools, instrument_properties, monitor_utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import FLAT_EXP_TYPES, DARK_EXP_TYPES
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.mast_utils import mast_query
-from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
@@ -597,6 +596,8 @@ class BadPixels():
                 new_pixels_x.append(x)
                 new_pixels_y.append(y)
 
+        session.close()
+
         return (new_pixels_x, new_pixels_y)
 
     def identify_tables(self):
@@ -707,12 +708,13 @@ class BadPixels():
 
         query_count = len(dates)
         if query_count == 0:
-            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
+            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
                          .format(self.aperture, query_result)))
         else:
             query_result = np.max(dates)
 
+        session.close()
         return query_result
 
     def make_crds_parameter_dict(self):
@@ -1022,10 +1024,17 @@ class BadPixels():
                 # lists to align.
 
                 if new_flat_entries:
+                    # Exclude ASIC tuning data
+                    len_new_flats = len(new_flat_entries)
+                    new_flat_entries = monitor_utils.exclude_asic_tuning(new_flat_entries)
+                    len_no_asic = len(new_flat_entries)
+                    num_asic = len_new_flats - len_no_asic
+                    logging.info("\tFiltering out ASIC tuning files removed {} flat files.".format(num_asic))
+
                     new_flat_entries = self.filter_query_results(new_flat_entries, datatype='flat')
                     apcheck_flat_entries = pipeline_tools.aperture_size_check(new_flat_entries, instrument, aperture)
                     lost_to_bad_metadata = len(new_flat_entries) - len(apcheck_flat_entries)
-                    logging.info('{} flat field files ignored due to inconsistency in array size and metadata.'.format(lost_to_bad_metadata))
+                    logging.info('\t{} flat field files ignored due to inconsistency in array size and metadata.'.format(lost_to_bad_metadata))
                     flat_uncal_files = locate_uncal_files(apcheck_flat_entries)
                     flat_uncal_files, run_flats = check_for_sufficient_files(flat_uncal_files, instrument, aperture, flat_file_count_threshold, 'flats')
                     flat_rate_files, flat_rate_files_to_copy = locate_rate_files(flat_uncal_files)
@@ -1034,10 +1043,17 @@ class BadPixels():
                     flat_uncal_files, flat_rate_files, flat_rate_files_to_copy = None, None, None
 
                 if new_dark_entries:
+                    # Exclude ASIC tuning data
+                    len_new_darks = len(new_dark_entries)
+                    new_dark_entries = monitor_utils.exclude_asic_tuning(new_dark_entries)
+                    len_no_asic = len(new_dark_entries)
+                    num_asic = len_new_darks - len_no_asic
+                    logging.info("\tFiltering out ASIC tuning files removed {} dark files.".format(num_asic))
+
                     new_dark_entries = self.filter_query_results(new_dark_entries, datatype='dark')
                     apcheck_dark_entries = pipeline_tools.aperture_size_check(new_dark_entries, instrument, aperture)
                     lost_to_bad_metadata = len(new_dark_entries) - len(apcheck_dark_entries)
-                    logging.info('{} dark files ignored due to inconsistency in array size and metadata.'.format(lost_to_bad_metadata))
+                    logging.info('\t{} dark files ignored due to inconsistency in array size and metadata.'.format(lost_to_bad_metadata))
                     dark_uncal_files = locate_uncal_files(apcheck_dark_entries)
                     dark_uncal_files, run_darks = check_for_sufficient_files(dark_uncal_files, instrument, aperture, dark_file_count_threshold, 'darks')
                     dark_rate_files, dark_rate_files_to_copy = locate_rate_files(dark_uncal_files)
@@ -1092,9 +1108,9 @@ class BadPixels():
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    start_time, log_file = initialize_instrument_monitor(module)
+    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     monitor = BadPixels()
     monitor.run()
 
-    update_monitor_table(module, start_time, log_file)
+    monitor_utils.update_monitor_table(module, start_time, log_file)

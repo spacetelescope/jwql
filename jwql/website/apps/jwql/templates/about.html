@@ -9,12 +9,31 @@
 {% block content %}
 
     <main role="main" class="container">
-        <div style="text-align: center"><img src={{ static('img/jwql_logo_full_transparent.png') }} width=350px alt="The JWQL logo" title="The JWQL logo"></div><br>
-        <hr>
 
-        <h4>About the project</h4>
+        <div id="toc_container">
+            <h2>Contents</h2>
+            <ul class="toc_list">
+                <li><a href="#about_the_project">About the Project</a>
+                <li><a href="#features">Features</a>
+                <ul>
+                    <li><a href="#visual_inspection">Visual Inspection</a></li>
+                    <li><a href="#instrument_monitoring">Instrument Monitoring</a></li>
+                    <li><a href="#engineering_database">Engineering Database</a></li>
+                    <li><a href="#jwqldb_database">JWQLDB Database</a></li>
+                    <li><a href="#programmatic_api">Programmatic API</a></li>
+                </ul>
+                <li><a href="#access_and_authentication">Access and Authentication</a></li>
+                <li><a href="#technology_stack">Technology Stack</a></li>
+                <li><a href="#development_team">Development Team</a></li>
+                <li><a href="#contributing">Contributing</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="#acknowledgements">Acknowledgements</a></li>
+            </ul>
+        </div>
 
-        <br>
+
+
+        <h2 id="about_the_project">About the Project</h2><br>
 
         <div style='text-align: center'>
             <img src={{ static('img/jwql_overview.png') }}
@@ -22,8 +41,98 @@
                  alt="JWQL overview"
                  title="">
         </div><br>
+        The JWST Quicklook Application (JWQL) is a Python-based web application and automation framework for use by the JWST instrument teams to monitor the health and stability of the JWST instruments. Please see the <a href="https://github.com/spacetelescope/jwql" target="_blank">GitHub repository</a> for information on the latest development. The team actively strives to adhere to software engineering best practices, strictly following <a href="https://github.com/spacetelescope/jwql/wiki/git-&-GitHub-workflow-for-contributing" target="_blank">defined workflows</a> and Python <a href="https://github.com/spacetelescope/jwql/wiki/Style-Guide" target="_blank">style guides</a>.<br><br>
 
-        The JWST Quicklook Application (JWQL) is a Python-based web application and automation framework for use by the JWST instrument teams to monitor the health and stability of the JWST instruments. Please see the <a href="https://github.com/spacetelescope/jwql" target="_blank">GitHub repository</a> for information on the latest development. The team actively strives to adhere to software engineering best practices, strictly following defined workflows and Python style guides.<br><br>
+        JWQL serves all in-flight JWST stage 0, 1, 2, and 3 data products in the MAST archive.  For more detail, see the <a href="https://jwst-pipeline.readthedocs.io/en/latest/jwst/data_products/product_types.html" target="_blank">Data Product Types</a> documentation.<br><br>
+
+        API documentation can be found on <a href="https://jwql.readthedocs.io/en/latest/" target="_blank">readthedocs</a>.<br><br>
+
+
+
+
+        <h2 id="features">Features</h2><br>
+
+
+        <h4 id="visual_inspection">Visual Inspection</h4><br>
+
+        The JWQL application offers users a way to visually inspect JWST data that is present in the MAST archive.  Users may choose to view data for a particular instrument, program, and observation.  Users may also flag images as having one or more 'anomalies'.  Flagged anomalies are then stored in the JWQLDB database for future analysis.  Additionaly, users may view the contents of the FITS header for the given observation, as well as visually inspect other available filetypes.
+
+        <div style='text-align: center'>
+            <img src={{ static('img/visual_inspection.png') }}
+                 width=100%
+                 alt="visual inspection feature example"
+                 title="">
+        </div><br>
+
+
+        <h4 id="instrument_monitoring">Instrument Monitoring</h4><br>
+
+        The JWQL application automatically executes various instrument monitoring software on a daily basis and serves monitoring output plots and metadata.
+
+        <div style='text-align: center'>
+            <img src={{ static('img/instrument_monitor.png') }}
+                 width=100%
+                 alt="instrument monitor example"
+                 title="">
+        </div>
+
+        Below is the list of the monitors that the JWQL team has or is currently planning to develop, in collaboration with each instrument team.  Further information can be found on <a href="https://innerspace.stsci.edu/display/JWQLPROJ/Instrument+Monitor+Overview" target="_blank">Innerspace</a>.<br><br>
+
+        <div style='text-align: center'>
+            <img src={{ static('img/jwql_instrument_monitors.png') }}
+                 width=100%
+                 alt="JWQL instrument monitors"
+                 title="">
+        </div><br><br>
+
+
+        <h4 id="engineering_database">Engineering Database</h4><br>
+
+        The JWQL application allows users to query the <a href="https://jwql.stsci.edu/edb/" target="_blank">Engineering Database</a> (EDB).  Users may search for mnemonics and plot a particular mnemonic over a given time period.  For more information about the EDB, see the <a href="https://outerspace.stsci.edu/display/MASTDOCS/Engineering+Data" target="_blank">MAST documentation</a>.
+
+        <div style='text-align: center'>
+            <img src={{ static('img/edb.png') }}
+                 width=100%
+                 alt="Engineering Database example"
+                 title="">
+        </div>
+
+
+        <h4 id="jwqldb_database">JWQLDB Database</h4><br>
+
+        Instrument monitoring results and other metadata get stored in a database called the <a href="https://jwql.stsci.edu/jwqldb/" target="_blank">"JWQLDB" database</a>.  Users may view the contents of this database directly through the browser.
+
+        <div style='text-align: center'>
+            <img src={{ static('img/jwqldb.png') }}
+                 width=100%
+                 alt="JWQLDB example"
+                 title="">
+        </div>
+
+
+        <h4 id="programmatic_api">Programmatic API</h4><br>
+
+
+        The JWQL application allows users to gather various JWST archival metadata through a <a href="https://jwql.stsci.edu/api/" target="_blank">programmatic API</a>.
+
+        <div style='text-align: center'>
+            <img src={{ static('img/programmatic_api.png') }}
+                 width=100%
+                 alt="programmatic API example"
+                 title="">
+        </div>
+
+
+
+        <h2 id="access_and_authentication">Access and Authentication</h2><br>
+
+
+        Due to the presence of restricted JWST data, access to the JWQL web app is currently restricted to JWST instrument team members at STScI, JWQL developers, and other select individuals from other internal teams (e.g. DMS). Access is controlled via a hard-coded Active Directory (AD) groups. Individuals may be added or removed from these groups by submitting a request to <a href='mailto: jwql@stsci.edu'>jwql@stsci.edu</a><br><br>
+
+
+
+
+        <h2 id="technology_stack">Technology Stack</h2><br>
 
         The project uses the following technologies:<br><br>
 
@@ -34,21 +143,10 @@
                  title="">
         </div><br>
 
-        The JWQL application is currently under heavy development. The 1.0 release is expected in the fall of 2021.<br><br>
 
-        API documentation can be found on <a href="https://jwql.readthedocs.io/en/latest/" target="_blank">readthedocs</a>.<br><br>
 
-        Below is the list of automated monitors that the JWQL team has or is currently planning to develop, in collaboration with each instrument team.  Further information can be found on <a href="https://innerspace.stsci.edu/display/JWQLPROJ/Instrument+Monitor+Overview" target="_blank">Innerspace</a>.
 
-        <div style='text-align: center'>
-            <img src={{ static('img/jwql_instrument_monitors.png') }}
-                 width=100%
-                 alt="JWQL instrument monitors"
-                 title="">
-        </div><br>
-
-        <br><br>
-        <h4>The Development Team</h4>
+        <h2 id="development_team">Development Team</h2><br>
         The JWQL project is being actively developed by the following team members:
 
         <div style='text-align: center'>
@@ -58,11 +156,22 @@
                  title="">
         </div><br>
 
-        <br>
-        <h4>Contact</h4>
-        If you have discovered an issue with the functionality of the JWQL application, we ask that you please <a href="https://github.com/spacetelescope/jwql/issues" target="_blank">submit an issue</a> on our GitHub repository. Any other questions, comments, or concerns can be directed to <a href='jwql@stsci.edu'>jwql@stsci.edu</a>.<br><br>
 
-        <h4>Acknowledgements</h4>
+
+        <h2 id="contributing">Contributing</h2><br>
+
+        The JWQL development team welcomes contributions from anyone at STScI.  If you are interested, please see the <a href="https://github.com/spacetelescope/jwql#software-contributions" target="_blank">Software Contributions</a> documentation.<br><br>
+
+
+
+
+        <h2 id="contact">Contact</h2><br>
+        To submit a bug report or suggest a new feature, please <a href="https://github.com/spacetelescope/jwql/issues/new/choose" target="_blank">create a new issue</a> on our GitHub repository. The JWQL team will prioritize the issue once it is received. Any other questions, comments, or concerns can be directed to <a href='mailto: jwql@stsci.edu'>jwql@stsci.edu</a>.<br><br>
+
+
+
+
+        <h2 id="acknowledgements">Acknowledgements</h2><br>
 
         The JWQL project would not be possible without the contributions of the following individuals:
 
@@ -72,10 +181,13 @@
         {% endfor %}
         </ul>
 
-        <h4>Other attributions:</h4>
+
+
+
+        <h4>Other attributions:</h4><br>
         <ul>
-            <li>This website aims to be accessibile via 508 complience.
-            <li>The loading animation 'magnify' is provided by <a href="https://loading.io">loading.io</a></li>
+            <li>This website aims to be accessible via 508 compliance.
+            <li>The loading animation 'magnify' is provided by <a href="https://loading.io" target="_blank">loading.io</a></li>
         </ul>
 
     </main>

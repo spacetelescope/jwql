@@ -18,6 +18,7 @@ Use
 
     This module is used within ``views.py`` as such:
     ::
+
         from .forms import FileSearchForm
         def view_function(request):
             form = FileSearchForm(request.POST or None)
@@ -39,7 +40,7 @@ References
 Dependencies
 ------------
     The user must have a configuration file named ``config.json``
-    placed in the ``jwql` directory.
+    placed in the ``jwql`` directory.
 """
 
 import datetime
@@ -68,8 +69,6 @@ from jwql.utils.utils import query_format
 
 from wtforms import SubmitField, StringField
 
-FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
-
 
 class BaseForm(forms.Form):
     """A generic form with target resolve built in"""
@@ -89,7 +88,7 @@ class AnomalyQueryForm(BaseForm):
 
     # Generate lists of form options for each instrument
     params = {}
-    for instrument in ['miri', 'niriss', 'nircam', 'nirspec']:
+    for instrument in ['miri', 'niriss', 'nircam', 'nirspec', 'fgs']:
         params[instrument] = {}
         params[instrument]['aperture_list'] = []
         params[instrument]['filter_list'] = []
@@ -138,36 +137,43 @@ class AnomalyQueryForm(BaseForm):
     nirspec_aper = forms.MultipleChoiceField(required=False, choices=params['nirspec']['aperture_list'], widget=forms.CheckboxSelectMultiple)
     niriss_aper = forms.MultipleChoiceField(required=False, choices=params['niriss']['aperture_list'], widget=forms.CheckboxSelectMultiple)
     nircam_aper = forms.MultipleChoiceField(required=False, choices=params['nircam']['aperture_list'], widget=forms.CheckboxSelectMultiple)
+    fgs_aper = forms.MultipleChoiceField(required=False, choices=params['fgs']['aperture_list'], widget=forms.CheckboxSelectMultiple)
 
     miri_filt = forms.MultipleChoiceField(required=False, choices=params['miri']['filter_list'], widget=forms.CheckboxSelectMultiple)
     nirspec_filt = forms.MultipleChoiceField(required=False, choices=params['nirspec']['filter_list'], widget=forms.CheckboxSelectMultiple)
     niriss_filt = forms.MultipleChoiceField(required=False, choices=params['niriss']['filter_list'], widget=forms.CheckboxSelectMultiple)
     nircam_filt = forms.MultipleChoiceField(required=False, choices=params['nircam']['filter_list'], widget=forms.CheckboxSelectMultiple)
+    fgs_filt = forms.MultipleChoiceField(required=False, choices=params['fgs']['filter_list'], widget=forms.CheckboxSelectMultiple)
 
     miri_detector = forms.MultipleChoiceField(required=False, choices=params['miri']['detector_list'], widget=forms.CheckboxSelectMultiple)
     nirspec_detector = forms.MultipleChoiceField(required=False, choices=params['nirspec']['detector_list'], widget=forms.CheckboxSelectMultiple)
     niriss_detector = forms.MultipleChoiceField(required=False, choices=params['niriss']['detector_list'], widget=forms.CheckboxSelectMultiple)
     nircam_detector = forms.MultipleChoiceField(required=False, choices=params['nircam']['detector_list'], widget=forms.CheckboxSelectMultiple)
+    fgs_detector = forms.MultipleChoiceField(required=False, choices=params['fgs']['detector_list'], widget=forms.CheckboxSelectMultiple)
 
     miri_anomalies = forms.MultipleChoiceField(required=False, choices=params['miri']['anomalies_list'], widget=forms.CheckboxSelectMultiple)
     nirspec_anomalies = forms.MultipleChoiceField(required=False, choices=params['nirspec']['anomalies_list'], widget=forms.CheckboxSelectMultiple)
     niriss_anomalies = forms.MultipleChoiceField(required=False, choices=params['niriss']['anomalies_list'], widget=forms.CheckboxSelectMultiple)
     nircam_anomalies = forms.MultipleChoiceField(required=False, choices=params['nircam']['anomalies_list'], widget=forms.CheckboxSelectMultiple)
+    fgs_anomalies = forms.MultipleChoiceField(required=False, choices=params['fgs']['anomalies_list'], widget=forms.CheckboxSelectMultiple)
 
     miri_readpatt = forms.MultipleChoiceField(required=False, choices=params['miri']['readpatt_list'], widget=forms.CheckboxSelectMultiple)
     nirspec_readpatt = forms.MultipleChoiceField(required=False, choices=params['nirspec']['readpatt_list'], widget=forms.CheckboxSelectMultiple)
     niriss_readpatt = forms.MultipleChoiceField(required=False, choices=params['niriss']['readpatt_list'], widget=forms.CheckboxSelectMultiple)
     nircam_readpatt = forms.MultipleChoiceField(required=False, choices=params['nircam']['readpatt_list'], widget=forms.CheckboxSelectMultiple)
+    fgs_readpatt = forms.MultipleChoiceField(required=False, choices=params['fgs']['readpatt_list'], widget=forms.CheckboxSelectMultiple)
 
     miri_exptype = forms.MultipleChoiceField(required=False, choices=params['miri']['exptype_list'], widget=forms.CheckboxSelectMultiple)
     nirspec_exptype = forms.MultipleChoiceField(required=False, choices=params['nirspec']['exptype_list'], widget=forms.CheckboxSelectMultiple)
     niriss_exptype = forms.MultipleChoiceField(required=False, choices=params['niriss']['exptype_list'], widget=forms.CheckboxSelectMultiple)
     nircam_exptype = forms.MultipleChoiceField(required=False, choices=params['nircam']['exptype_list'], widget=forms.CheckboxSelectMultiple)
+    fgs_exptype = forms.MultipleChoiceField(required=False, choices=params['fgs']['exptype_list'], widget=forms.CheckboxSelectMultiple)
 
     miri_grating = forms.MultipleChoiceField(required=False, choices=params['miri']['grating_list'], widget=forms.CheckboxSelectMultiple)
     nirspec_grating = forms.MultipleChoiceField(required=False, choices=params['nirspec']['grating_list'], widget=forms.CheckboxSelectMultiple)
     niriss_grating = forms.MultipleChoiceField(required=False, choices=params['niriss']['grating_list'], widget=forms.CheckboxSelectMultiple)
     nircam_grating = forms.MultipleChoiceField(required=False, choices=params['nircam']['grating_list'], widget=forms.CheckboxSelectMultiple)
+    fgs_grating = forms.MultipleChoiceField(required=False, choices=params['fgs']['grating_list'], widget=forms.CheckboxSelectMultiple)
 
     def clean_inst(self):
 
@@ -195,8 +201,7 @@ class InstrumentAnomalySubmitForm(forms.Form):
             The rootname of the image to flag (e.g.
             ``jw86600008001_02101_00001_guider2``)
         user : str
-            The ``ezid`` of the authenticated user that is flagging the
-            anomaly
+            The user that is flagging the anomaly
         anomaly_choices : list
             A list of anomalies that are to be flagged (e.g.
             ``['snowball', 'crosstalk']``)
@@ -267,19 +272,21 @@ class FileSearchForm(forms.Form):
             # See if there are any matching proposals and, if so, what
             # instrument they are for
             proposal_string = '{:05d}'.format(int(search))
-            search_string_public = os.path.join(FILESYSTEM_DIR, 'public', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
-            search_string_proprietary = os.path.join(FILESYSTEM_DIR, 'proprietary', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
+            search_string_public = os.path.join(get_config()['filesystem'], 'public', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
+            search_string_proprietary = os.path.join(get_config()['filesystem'], 'proprietary', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
             all_files = glob.glob(search_string_public)
             all_files.extend(glob.glob(search_string_proprietary))
+
+            # Ignore "original" files
+            all_files = [filename for filename in all_files if 'original' not in filename]
+
             if len(all_files) > 0:
                 all_instruments = []
                 for file in all_files:
                     instrument = filename_parser(file)['instrument']
                     all_instruments.append(instrument)
                 if len(set(all_instruments)) > 1:
-                    raise forms.ValidationError('Cannot return result for proposal with '
-                                                'multiple instruments ({}).'
-                                                .format(', '.join(set(all_instruments))))
+                    raise forms.ValidationError('Cannot return result for proposal with multiple instruments ({}).'.format(', '.join(set(all_instruments))))
 
                 self.instrument = all_instruments[0]
             else:
@@ -288,10 +295,13 @@ class FileSearchForm(forms.Form):
         # If they searched for a fileroot...
         elif self.search_type == 'fileroot':
             # See if there are any matching fileroots and, if so, what instrument they are for
-            search_string_public = os.path.join(FILESYSTEM_DIR, 'public', search[:7], search[:13], '{}*.fits'.format(search))
-            search_string_proprietary = os.path.join(FILESYSTEM_DIR, 'proprietary', search[:7], search[:13], '{}*.fits'.format(search))
+            search_string_public = os.path.join(get_config()['filesystem'], 'public', search[:7], search[:13], '{}*.fits'.format(search))
+            search_string_proprietary = os.path.join(get_config()['filesystem'], 'proprietary', search[:7], search[:13], '{}*.fits'.format(search))
             all_files = glob.glob(search_string_public)
             all_files.extend(glob.glob(search_string_proprietary))
+
+            # Ignore "original" files
+            all_files = [filename for filename in all_files if 'original' not in filename]
 
             if len(all_files) == 0:
                 raise forms.ValidationError('Fileroot {} not in the filesystem.'.format(search))
@@ -333,10 +343,10 @@ class FileSearchForm(forms.Form):
 
         # Process the data in form.cleaned_data as required
         search = self.cleaned_data['search']
-        proposal_string = '{:05d}'.format(int(search))
 
         # If they searched for a proposal
         if self.search_type == 'proposal':
+            proposal_string = '{:05d}'.format(int(search))
             return redirect('/{}/archive/{}'.format(self.instrument, proposal_string))
 
         # If they searched for a file root
@@ -422,8 +432,8 @@ class MnemonicQueryForm(forms.Form):
         default_end_time = now + TimeDelta(delta_day + range_day, format='jd')
     else:
         # example for testing
-        default_start_time = Time('2019-01-16 00:00:00.000', format='iso')
-        default_end_time = Time('2019-01-16 00:01:00.000', format='iso')
+        default_start_time = Time('2019-04-02 00:00:00.000', format='iso')
+        default_end_time = Time('2019-04-02 00:01:00.000', format='iso')
 
     default_mnemonic_identifier = 'IMIR_HK_ICE_SEC_VOLT4'
 

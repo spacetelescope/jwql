@@ -36,9 +36,24 @@ For more information please see:
 import os
 import sys
 
+from jwql.utils.utils import get_config
+
 if __name__ == "__main__":
 
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql_proj.settings")
+
+    directory_mapping = {
+        'filesystem': 'filesystem',
+        'outputs': 'outputs',
+        'preview_image_filesystem': 'preview_images',
+        'thumbnail_filesystem': 'thumbnails'
+        }
+
+    for directory in ['filesystem', 'outputs', 'preview_image_filesystem', 'thumbnail_filesystem']:
+        symlink_location = os.path.join(os.path.dirname(__file__), 'apps', 'jwql', 'static', directory_mapping[directory])
+        if not os.path.exists(symlink_location):
+            symlink_path = get_config()[directory]
+            os.symlink(symlink_path, symlink_location)
 
     try:
         from django.core.management import execute_from_command_line

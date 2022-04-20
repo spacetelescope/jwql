@@ -43,6 +43,7 @@ import os
 from bokeh.layouts import layout
 from bokeh.embed import components
 from django.http import HttpResponse, JsonResponse
+from django.contrib import messages
 from django.shortcuts import redirect, render
 
 from jwql.database.database_interface import load_connection
@@ -56,23 +57,19 @@ from .data_containers import get_acknowledgements
 from .data_containers import get_current_flagged_anomalies
 from .data_containers import get_dashboard_components
 from .data_containers import get_edb_components
-from .data_containers import get_filenames_by_instrument
+from .data_containers import get_filenames_by_instrument, mast_query_filenames_by_instrument
 from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import get_thumbnails_all_instruments
 from .data_containers import nirspec_trending
 from .data_containers import random_404_page
-from .data_containers import get_jwqldb_table_view_components
+from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import InstrumentAnomalySubmitForm
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
-from .oauth import auth_info, auth_required
-
-
-FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
 def anomaly_query(request):
@@ -83,7 +80,7 @@ def anomaly_query(request):
     if request.method == 'POST':
         if form.is_valid():
             query_configs = {}
-            for instrument in ['miri', 'nirspec', 'niriss', 'nircam']:
+            for instrument in ['miri', 'nirspec', 'niriss', 'nircam', 'fgs']:
                 query_configs[instrument] = {}
                 query_configs[instrument]['filters'] = [query_unformat(i) for i in form.cleaned_data['{}_filt'.format(instrument)]]
                 query_configs[instrument]['apertures'] = [query_unformat(i) for i in form.cleaned_data['{}_aper'.format(instrument)]]
@@ -229,8 +226,7 @@ def api_landing(request):
     return render(request, template, context)
 
 
-@auth_required
-def archived_proposals(request, user, inst):
+def archived_proposals(request, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -256,8 +252,7 @@ def archived_proposals(request, user, inst):
     return render(request, template, context)
 
 
-@auth_required
-def archived_proposals_ajax(request, user, inst):
+def archived_proposals_ajax(request, inst):
     """Generate the page listing all archived proposals in the database
 
     Parameters
@@ -269,29 +264,31 @@ def archived_proposals_ajax(request, user, inst):
 
     Returns
     -------
-    HttpResponse object
+    JsonResponse object
         Outgoing response sent to the webpage
     """
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+    filesystem = get_config()['filesystem']
 
     # Get list of all files for the given instrument
-    filenames_public = get_filenames_by_instrument(inst, restriction='public')
-    filenames_proprietary = get_filenames_by_instrument(inst, restriction='proprietary')
+    filename_query = mast_query_filenames_by_instrument(inst)
+    filenames_public = get_filenames_by_instrument(inst, restriction='public', query_response=filename_query)
+    filenames_proprietary = get_filenames_by_instrument(inst, restriction='proprietary', query_response=filename_query)
 
     # Determine locations to the files
     filenames = []
     for filename in filenames_public:
         try:
             relative_filepath = filesystem_path(filename, check_existence=False)
-            full_filepath = os.path.join(FILESYSTEM_DIR, 'public', relative_filepath)
+            full_filepath = os.path.join(filesystem, 'public', relative_filepath)
             filenames.append(full_filepath)
         except ValueError:
             print('Unable to determine filepath for {}'.format(filename))
     for filename in filenames_proprietary:
         try:
             relative_filepath = filesystem_path(filename, check_existence=False)
-            full_filepath = os.path.join(FILESYSTEM_DIR, 'proprietary', relative_filepath)
+            full_filepath = os.path.join(filesystem, 'proprietary', relative_filepath)
             filenames.append(full_filepath)
         except ValueError:
             print('Unable to determine filepath for {}'.format(filename))
@@ -300,7 +297,6 @@ def archived_proposals_ajax(request, user, inst):
     proposal_info = get_proposal_info(filenames)
 
     context = {'inst': inst,
-               'all_filenames': filenames,
                'num_proposals': proposal_info['num_proposals'],
                'thumbnails': {'proposals': proposal_info['proposals'],
                               'thumbnail_paths': proposal_info['thumbnail_paths'],
@@ -309,8 +305,7 @@ def archived_proposals_ajax(request, user, inst):
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-@auth_required
-def archive_thumbnails(request, user, inst, proposal):
+def archive_thumbnails(request, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -331,16 +326,18 @@ def archive_thumbnails(request, user, inst, proposal):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
+    proposal_meta = text_scrape(proposal)
+
     template = 'thumbnails.html'
     context = {'inst': inst,
                'prop': proposal,
+               'prop_meta': proposal_meta,
                'base_url': get_base_url()}
 
     return render(request, template, context)
 
 
-@auth_required
-def archive_thumbnails_ajax(request, user, inst, proposal):
+def archive_thumbnails_ajax(request, inst, proposal):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -355,7 +352,7 @@ def archive_thumbnails_ajax(request, user, inst, proposal):
 
     Returns
     -------
-    HttpResponse object
+    JsonResponse object
         Outgoing response sent to the webpage
     """
     # Ensure the instrument is correctly capitalized
@@ -366,8 +363,7 @@ def archive_thumbnails_ajax(request, user, inst, proposal):
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
-@auth_required
-def archive_thumbnails_query_ajax(request, user):
+def archive_thumbnails_query_ajax(request):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -382,7 +378,7 @@ def archive_thumbnails_query_ajax(request, user):
 
     Returns
     -------
-    HttpResponse object
+    JsonResponse object
         Outgoing response sent to the webpage
     """
 
@@ -392,9 +388,14 @@ def archive_thumbnails_query_ajax(request, user):
         instrument = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
         instruments_list.append(instrument)
 
-    rootnames = anomaly_query_config.THUMBNAILS
+    parameters = anomaly_query_config.PARAMETERS
 
-    data = thumbnails_query_ajax(rootnames, instruments_list)
+    # when parameters only contains nirspec as instrument, thumbnails still end up being all niriss data
+    thumbnails = get_thumbnails_all_instruments(parameters)
+
+    anomaly_query_config.THUMBNAILS = thumbnails
+
+    data = thumbnails_query_ajax(thumbnails)
 
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
@@ -439,16 +440,13 @@ def dashboard(request):
     return render(request, template, context)
 
 
-@auth_info
-def engineering_database(request, user):
+def engineering_database(request):
     """Generate the EDB page.
 
     Parameters
     ----------
     request : HttpRequest object
         Incoming request from the webpage
-    user : dict
-        A dictionary of user credentials.
 
     Returns
     -------
@@ -502,8 +500,6 @@ def home(request):
     ----------
     request : HttpRequest object
         Incoming request from the webpage
-    user : dict
-        A dictionary of user credentials.
 
     Returns
     -------
@@ -555,7 +551,7 @@ def instrument(request, inst):
     return render(request, template, context)
 
 
-def jwqldb_table_viewer(request, tablename_param=None):
+def jwqldb_table_viewer(request):
     """Generate the JWQL Table Viewer view.
 
     Parameters
@@ -572,11 +568,15 @@ def jwqldb_table_viewer(request, tablename_param=None):
         Outgoing response sent to the webpage
     """
 
-    if tablename_param is None:
-        table_meta, tablename = get_jwqldb_table_view_components(request)
+    try:
+        tablename = request.POST['db_table_select']
+    except KeyError:
+        tablename = None
+
+    if tablename is None:
+        table_meta = None
     else:
-        table_meta = build_table(tablename_param)
-        tablename = tablename_param
+        table_meta = build_table(tablename)
 
     _, _, engine, _ = load_connection(get_config()['connection_string'])
     all_jwql_tables = engine.table_names()
@@ -667,27 +667,11 @@ def query_submit(request):
     parameters['read_patterns'] = anomaly_query_config.READPATTS_CHOSEN
     parameters['gratings'] = anomaly_query_config.GRATINGS_CHOSEN
     parameters['anomalies'] = anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES
-    thumbnails = get_thumbnails_all_instruments(parameters)
-    anomaly_query_config.THUMBNAILS = thumbnails
 
-    # get information about thumbnails for thumbnail viewer
-    proposal_info = get_proposal_info(thumbnails)
+    anomaly_query_config.PARAMETERS = parameters
 
     context = {'inst': '',
-               'anomalies_chosen_from_current_anomalies': anomaly_query_config.ANOMALIES_CHOSEN_FROM_CURRENT_ANOMALIES,
-               'apertures_chosen': anomaly_query_config.APERTURES_CHOSEN,
-               'filters_chosen': anomaly_query_config.FILTERS_CHOSEN,
-               'inst_list_chosen': anomaly_query_config.INSTRUMENTS_CHOSEN,
-               'detectors_chosen': anomaly_query_config.DETECTORS_CHOSEN,
-               'thumbnails': thumbnails,
-               'base_url': get_base_url(),
-               'rootnames': thumbnails,
-               'thumbnail_data': {'inst': "Queried Anomalies",
-                                  'all_filenames': thumbnails,
-                                  'num_proposals': proposal_info['num_proposals'],
-                                  'thumbnails': {'proposals': proposal_info['proposals'],
-                                                 'thumbnail_paths': proposal_info['thumbnail_paths'],
-                                                 'num_files': proposal_info['num_files']}}
+               'base_url': get_base_url()
                }
 
     return render(request, template, context)
@@ -712,7 +696,7 @@ def unlooked_images(request, inst):
     pass
 
 
-def view_header(request, inst, filename):
+def view_header(request, inst, filename, filetype):
     """Generate the header view page
 
     Parameters
@@ -723,12 +707,15 @@ def view_header(request, inst, filename):
         Name of JWST instrument
     filename : str
         FITS filename of selected image in filesystem
+    filetype : str
+        Type of file (e.g. ``uncal``)
 
     Returns
     -------
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
@@ -738,21 +725,19 @@ def view_header(request, inst, filename):
     context = {'inst': inst,
                'filename': filename,
                'file_root': file_root,
-               'header_info': get_header_info(filename)}
+               'file_type': filetype,
+               'header_info': get_header_info(filename, filetype)}
 
     return render(request, template, context)
 
 
-@auth_required
-def view_image(request, user, inst, file_root, rewrite=False):
+def view_image(request, inst, file_root, rewrite=False):
     """Generate the image view page
 
     Parameters
     ----------
     request : HttpRequest object
         Incoming request from the webpage
-    user : dict
-        A dictionary of user credentials.
     inst : str
         Name of JWST instrument
     file_root : str
@@ -778,17 +763,14 @@ def view_image(request, user, inst, file_root, rewrite=False):
     # Create a form instance
     form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
 
-    # If user is running the web app locally and has not authenticated,
-    # then replace ezid with 'dev'
-    if '127.0.0.1' in get_base_url():
-        if user['ezid'] is None:
-            user['ezid'] = 'dev'
-
-    # If this is a POST request, process the form data
-    if request.method == 'POST':
+    # If this is a POST request and the form is filled out, process the form data
+    if request.method == 'POST' and 'anomaly_choices' in dict(request.POST):
         anomaly_choices = dict(request.POST)['anomaly_choices']
         if form.is_valid():
-            form.update_anomaly_table(file_root, user['ezid'], anomaly_choices)
+            form.update_anomaly_table(file_root, 'unknown', anomaly_choices)
+            messages.success(request, "Anomaly submitted successfully")
+        else:
+            messages.error(request, "Failed to submit anomaly")
 
     # Build the context
     context = {'inst': inst,
@@ -798,6 +780,7 @@ def view_image(request, user, inst, file_root, rewrite=False):
                'fits_files': image_info['all_files'],
                'suffixes': image_info['suffixes'],
                'num_ints': image_info['num_ints'],
+               'available_ints': image_info['available_ints'],
                'form': form}
 
     return render(request, template, context)

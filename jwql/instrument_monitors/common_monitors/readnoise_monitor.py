@@ -56,13 +56,12 @@ from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISS
 from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats
 from jwql.database.database_interface import session
 from jwql.instrument_monitors import pipeline_tools
-from jwql.instrument_monitors.common_monitors.dark_monitor import mast_query_darks
-from jwql.utils import instrument_properties
+from jwql.utils import instrument_properties, monitor_utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.monitor_utils import update_monitor_table
 from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, initialize_instrument_monitor
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
 
 
 class Readnoise():
@@ -158,6 +157,7 @@ class Readnoise():
         else:
             file_exists = False
 
+        session.close()
         return file_exists
 
     def get_amp_stats(self, image, amps):
@@ -342,28 +342,34 @@ class Readnoise():
             The 2D readnoise image.
         """
 
-        # Create a stack of correlated double sampling (CDS) images using input
-        # ramp data, combining multiple integrations if necessary.
-        logging.info('\tCreating stack of CDS difference frames')
-        num_ints, num_groups, num_y, num_x = data.shape
-        for integration in range(num_ints):
-            if num_groups % 2 == 0:
-                cds = data[integration, 1::2, :, :] - data[integration, ::2, :, :]
-            else:
-                # Omit the last group if the number of groups is odd
-                cds = data[integration, 1::2, :, :] - data[integration, ::2, :, :][:-1]
-
-            if integration == 0:
-                cds_stack = cds
-            else:
-                cds_stack = np.concatenate((cds_stack, cds), axis=0)
-
-        # Calculate readnoise by taking the clipped stddev through CDS stack
         logging.info('\tCreating readnoise image')
-        clipped = sigma_clip(cds_stack, sigma=3.0, maxiters=3, axis=0)
-        readnoise = np.std(clipped, axis=0)
-        # converts masked array to normal array and fills missing data
-        readnoise = readnoise.filled(fill_value=np.nan)
+        num_ints, num_groups, num_y, num_x = data.shape
+
+        # Calculate the readnoise in slices to avoid memory issues on large files.
+        slice_width = 20
+        cols_idx = np.array(np.arange(num_x)[::slice_width])
+        readnoise = np.zeros((num_y, num_x))
+        for idx in cols_idx:
+            # Create a stack of correlated double sampling (CDS) images using input
+            # ramp data, combining multiple integrations if necessary.
+            for integration in range(num_ints):
+                if num_groups % 2 == 0:
+                    cds = data[integration, 1::2, :, idx:idx+slice_width] - data[integration, ::2, :, idx:idx+slice_width]
+                else:
+                    # Omit the last group if the number of groups is odd
+                    cds = data[integration, 1::2, :, idx:idx+slice_width] - data[integration, ::2, :, idx:idx+slice_width][:-1]
+
+                if integration == 0:
+                    cds_stack = cds
+                else:
+                    cds_stack = np.concatenate((cds_stack, cds), axis=0)
+
+            # Calculate readnoise by taking the clipped stddev through CDS stack
+            clipped = sigma_clip(cds_stack, sigma=3.0, maxiters=3, axis=0)
+            readnoise_slice = np.ma.std(clipped, axis=0)
+
+            # Add the readnoise in this slice to the full readnoise image
+            readnoise[:, idx:idx+slice_width] = readnoise_slice
 
         return readnoise
 
@@ -383,11 +389,12 @@ class Readnoise():
             self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
 
         if len(query) == 0:
-            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
+            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, query_result)))
         else:
             query_result = query[-1].end_time_mjd
 
+        session.close()
         return query_result
 
     def process(self, file_list):
@@ -547,14 +554,22 @@ class Readnoise():
                 self.aperture = aperture
 
                 # Locate the record of the most recent MAST search; use this time
-                # (plus a 30 day buffer to catch any missing files from the previous
+                # (plus a buffer to catch any missing files from the previous
                 # run) as the start time in the new MAST search.
                 most_recent_search = self.most_recent_search()
-                self.query_start = most_recent_search - 30
+                self.query_start = most_recent_search - 70
 
                 # Query MAST for new dark files for this instrument/aperture
                 logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
-                new_entries = mast_query_darks(instrument, aperture, self.query_start, self.query_end)
+                new_entries = monitor_utils.mast_query_darks(instrument, aperture, self.query_start, self.query_end)
+
+                # Exclude ASIC tuning data
+                len_new_darks = len(new_entries)
+                new_entries = monitor_utils.exclude_asic_tuning(new_entries)
+                len_no_asic = len(new_entries)
+                num_asic = len_new_darks - len_no_asic
+                logging.info("\tFiltering out ASIC tuning files removed {} dark files.".format(num_asic))
+
                 logging.info('\tAperture: {}, new entries: {}'.format(self.aperture, len(new_entries)))
 
                 # Set up a directory to store the data for this aperture
@@ -588,13 +603,20 @@ class Readnoise():
                             logging.info('\t{} does not exist in JWQL filesystem, even though {} does'.format(uncal_filename, filename))
                         else:
                             num_groups = fits.getheader(uncal_filename)['NGROUPS']
-                            if num_groups > 10:  # skip processing if the file doesnt have enough groups to calculate the readnoise
+                            num_ints = fits.getheader(uncal_filename)['NINTS']
+                            if instrument == 'miri':
+                                total_cds_frames = int((num_groups-6)/2) * num_ints
+                            else:
+                                total_cds_frames = int(num_groups/2) * num_ints
+                            # Skip processing if the file doesnt have enough groups/ints to calculate the readnoise.
+                            # MIRI needs extra since they omit the first five and last group before calculating the readnoise.
+                            if total_cds_frames >= 10:
                                 shutil.copy(uncal_filename, self.data_dir)
                                 logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
                                 set_permissions(output_filename)
                                 new_files.append(output_filename)
                             else:
-                                logging.info('\tNot enough groups to calculate readnoise in {}'.format(uncal_filename))
+                                logging.info('\tNot enough groups/ints to calculate readnoise in {}'.format(uncal_filename))
                     except FileNotFoundError:
                         logging.info('\t{} does not exist in JWQL filesystem'.format(file_entry['filename']))
 
@@ -624,9 +646,9 @@ class Readnoise():
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
-    start_time, log_file = initialize_instrument_monitor(module)
+    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     monitor = Readnoise()
     monitor.run()
 
-    update_monitor_table(module, start_time, log_file)
+    monitor_utils.update_monitor_table(module, start_time, log_file)

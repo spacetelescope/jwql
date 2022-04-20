@@ -12,7 +12,7 @@ jobs:
       max-parallel: 5
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: [3.7, 3.8]
+        python-version: [3.8, 3.9]
 
     steps:
       - uses: actions/checkout@v2
@@ -22,8 +22,11 @@ jobs:
           activate-environment: jwql-${{ matrix.python-version }}
 
       - name: Bandit Check
-        uses: jpetrucciani/bandit-check@1.6.2
-        continue-on-error: true
+        uses: jpetrucciani/bandit-check@master
+        with:
+          path: "./jwql/"
+          bandit_flags: "-c .bandit"
+        continue-on-error: false
         if: runner.os == 'Linux'
 
       - name: Build jwql conda environment and run tests

@@ -190,7 +190,7 @@ def copy_files(files, out_dir):
                 shutil.copy2(input_file, out_dir)
                 success.append(input_new_path)
                 permissions.set_permissions(input_new_path)
-            except:
+            except Exception:
                 failed.append(input_file)
     return success, failed
 
@@ -429,8 +429,7 @@ def filename_parser(filename):
 
     # Raise error if unable to parse the filename
     except AttributeError:
-        jdox_url = 'https://jwst-docs.stsci.edu/display/JDAT/' \
-                   'File+Naming+Conventions+and+Data+Products'
+        jdox_url = 'https://jwst-docs.stsci.edu/understanding-jwst-data-files/jwst-data-file-naming-conventions'
         raise ValueError(
             'Provided file {} does not follow JWST naming conventions.  '
             'See {} for further information.'.format(filename, jdox_url)
@@ -508,7 +507,7 @@ def get_base_url():
 
     username = getpass.getuser()
     if username == get_config()['admin_account']:
-        base_url = 'https://dljwql.stsci.edu'
+        base_url = 'https://{}.stsci.edu'.format(get_config()['server_name'])
     else:
         base_url = 'http://127.0.0.1:8000'
 
@@ -528,42 +527,17 @@ def check_config_for_key(key):
         get_config()[key]
     except KeyError:
         raise KeyError(
-            'The key `{}` is not present in config.json. Please add it.'.format(key)
-            + ' See the relevant wiki page (https://github.com/spacetelescope/'
+            'The key `{}` is not present in config.json. Please add it.'.format(key) +
+            ' See the relevant wiki page (https://github.com/spacetelescope/' +
             'jwql/wiki/Config-file) for more information.'
         )
 
     if get_config()[key] == "":
         raise ValueError(
-            'Please complete the `{}` field in your config.json. '.format(key)
-            + ' See the relevant wiki page (https://github.com/spacetelescope/'
+            'Please complete the `{}` field in your config.json. '.format(key) + 
+            ' See the relevant wiki page (https://github.com/spacetelescope/' +
             'jwql/wiki/Config-file) for more information.'
         )
-
-
-def initialize_instrument_monitor(module):
-    """Configures a log file for the instrument monitor run and
-    captures the start time of the monitor
-
-    Parameters
-    ----------
-    module : str
-        The module name (e.g. ``dark_monitor``)
-
-    Returns
-    -------
-    start_time : datetime object
-        The start time of the monitor
-    log_file : str
-        The path to where the log file is stored
-    """
-
-    from jwql.utils.logging_functions import configure_logging
-
-    start_time = datetime.datetime.now()
-    log_file = configure_logging(module)
-
-    return start_time, log_file
 
 
 def query_format(string):

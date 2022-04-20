@@ -46,7 +46,6 @@ from django.urls import re_path
 
 from . import api_views
 from . import monitor_views
-from . import oauth
 from . import views
 
 app_name = 'jwql'
@@ -56,11 +55,6 @@ urlpatterns = [
 
     # Home
     path('', views.home, name='home'),
-
-    # Authentication
-    path('login/', oauth.login, name='login'),
-    path('logout/', oauth.logout, name='logout'),
-    path('authorize/', oauth.authorize, name='authorize'),
 
     # MIRI-specific views
     path('miri/miri_data_trending/', views.miri_data_trending, name='miri_data_trending'),
@@ -89,7 +83,7 @@ urlpatterns = [
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
     re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),
     re_path(r'^(?P<inst>({}))/(?P<file_root>[\w]+)/$'.format(instruments), views.view_image, name='view_image'),
-    re_path(r'^(?P<inst>({}))/(?P<filename>.+)/header/$'.format(instruments), views.view_header, name='view_header'),
+    re_path(r'^(?P<inst>({}))/(?P<filename>.+)_(?P<filetype>.+)/header/'.format(instruments), views.view_header, name='view_header'),
     re_path(r'^(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/$'.format(instruments), views.archive_thumbnails, name='archive_thumb'),
 
     # AJAX views

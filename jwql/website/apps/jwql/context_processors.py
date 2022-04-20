@@ -28,11 +28,8 @@ import bokeh
 import jwql
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, MONITORS, URL_DICT
 
-from .oauth import auth_info
 
-
-@auth_info
-def base_context(request, user):
+def base_context(request):
     """Provide the context needed for the ``base.html`` template.
 
     Parameters
@@ -50,7 +47,6 @@ def base_context(request, user):
     context = {}
     context['inst_list'] = JWST_INSTRUMENT_NAMES
     context['tools'] = MONITORS
-    context['user'] = user
     context['version'] = jwql.__version__
     context['bokeh_version'] = bokeh.__version__
     context['url_dict'] = URL_DICT
