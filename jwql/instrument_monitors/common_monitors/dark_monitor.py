@@ -56,6 +56,7 @@ Use
 
 from copy import copy, deepcopy
 import datetime
+from glob import glob
 import logging
 import os
 
@@ -584,6 +585,11 @@ class Dark():
         # histogram of the pixels in each amp
         (amp_mean, amp_stdev, gauss_param, gauss_chisquared, double_gauss_params, double_gauss_chisquared,
             histogram, bins) = self.stats_by_amp(slope_image, amp_bounds)
+
+        # Remove the input files in order to save disk space
+        files_to_remove = glob(f'{self.data_dir}/*fits')
+        for filename in files_to_remove:
+            os.remove(filename)
 
         # Construct new entry for dark database table
         source_files = [os.path.basename(item) for item in file_list]

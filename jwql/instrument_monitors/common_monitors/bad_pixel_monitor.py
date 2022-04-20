@@ -83,6 +83,7 @@ Templates to use: ``FGS_INTFLAT``, ``NIS_LAMP``, ``NRS_LAMP``,
 
 from copy import deepcopy
 import datetime
+from glob import glob
 import logging
 import os
 
@@ -906,6 +907,11 @@ class BadPixels():
                                  min_dark_time, mid_dark_time, max_dark_time, baseline_file)
             else:
                 raise ValueError("Unrecognized type of bad pixel: {}. Cannot update database table.".format(bad_type))
+
+        # Remove raw files, rate files, and pipeline products in order to save disk space
+        files_to_remove = glob(f'{self.data_dir}/*.fits')
+        for filename in files_to_remove:
+            os.remove(filename)
 
     @log_fail
     @log_info
