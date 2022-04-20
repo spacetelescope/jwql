@@ -761,8 +761,8 @@ class Dark():
                         # then the monitor will not be run
                         if len(new_filenames) < file_count_threshold:
                             logging.info(("\tFilesystem search for the files identified by MAST has returned {} files. "
-                                         "This is less than the required minimum number of files ({}) necessary to run "
-                                         "the monitor. Quitting.").format(len(new_filenames), file_count_threshold))
+                                          "This is less than the required minimum number of files ({}) necessary to run "
+                                          "the monitor. Quitting.").format(len(new_filenames), file_count_threshold))
                             monitor_run = False
                         else:
                             logging.info(("\tFilesystem search for the files identified by MAST has returned {} files.")
@@ -773,8 +773,8 @@ class Dark():
                             # Set up directories for the copied data
                             ensure_dir_exists(os.path.join(self.output_dir, 'data'))
                             self.data_dir = os.path.join(self.output_dir,
-                                                        'data/{}_{}'.format(self.instrument.lower(),
-                                                                            self.aperture.lower()))
+                                                         'data/{}_{}'.format(self.instrument.lower(),
+                                                                             self.aperture.lower()))
                             ensure_dir_exists(self.data_dir)
 
                             # Copy files from filesystem
@@ -790,19 +790,19 @@ class Dark():
 
                     else:
                         logging.info(('\tDark monitor skipped. MAST query has returned {} new dark files for '
-                                    '{}, {}, {}. {} new files are required to run dark current monitor.')
-                                    .format(len(new_entries), instrument, aperture, self.readpatt, file_count_threshold))
+                                      '{}, {}, {}. {} new files are required to run dark current monitor.')
+                                      .format(len(new_entries), instrument, aperture, self.readpatt, file_count_threshold))
                         monitor_run = False
 
                     # Update the query history
                     new_entry = {'instrument': instrument,
-                                'aperture': aperture,
-                                'readpattern': self.readpatt,
-                                'start_time_mjd': self.query_start,
-                                'end_time_mjd': self.query_end,
-                                'files_found': len(new_entries),
-                                'run_monitor': monitor_run,
-                                'entry_date': datetime.datetime.now()}
+                                 'aperture': aperture,
+                                 'readpattern': self.readpatt,
+                                 'start_time_mjd': self.query_start,
+                                 'end_time_mjd': self.query_end,
+                                 'files_found': len(new_entries),
+                                 'run_monitor': monitor_run,
+                                 'entry_date': datetime.datetime.now()}
                     self.query_table.__table__.insert().execute(new_entry)
                     logging.info('\tUpdated the query history table')
 
@@ -979,7 +979,7 @@ class Dark():
             if len(bin_edges) < 7:
                 logging.info('\tToo few histogram bins in initial fit. Forcing 10 bins.')
                 hist, bin_edges = np.histogram(image[indexes[0], indexes[1]], bins=10,
-                                           range=(lower_bound, upper_bound))
+                                               range=(lower_bound, upper_bound))
 
             bin_centers = (bin_edges[1:] + bin_edges[0: -1]) / 2.
             initial_params = [np.max(hist), amp_mean, amp_stdev]
