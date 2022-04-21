@@ -37,7 +37,7 @@ from datetime import datetime
 from astropy.io import fits
 from random import randint
 from bokeh.io import output_file
-from bokeh.plotting import figure, show
+from bokeh.plotting import figure, show, save
 from bokeh.models import ColumnDataSource, Range1d
 from bokeh.models.tools import HoverTool
 from bokeh.layouts import gridplot
@@ -127,92 +127,65 @@ class MSATA():
         msata_df: data frame object
             Pandas data frame containing all MSATA data
         """
-        # from the main header
-        detector, date_obs, visit_id, filter, readout, subarray = [], [], [], [], [], []
-        # from the TA header
-        num_refstars, ta_status, status_rsn = [], [], []
-        v2halffacet, v3halffacet, v2msactr, v3msactr = [], [], [], []
-        lsv2offset, lsv3offset, lsoffsetmag, lsrolloffset = [], [], [], []
-        lsv2sigma, lsv3sigma, lsiterations, lsfintargs = [], [], [], []
-        guidestarid, guidestarx, guidestary, guidestarroll = [], [], [], []
-        samx, samy, samroll = [], [], []
-        # from the TA fits table
-        reference_star_mag, convergence_status, reference_star_number = [], [], []
-        lsf_removed_status, lsf_removed_reason = [], []
-        lsf_removed_x, lsf_removed_y = [], []
-        found_v2, found_v3, box_peak_value = [], [], []
+        # structure to define required keywords to extract and where they live
+        keywds2extract = {'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs'},
+                          'OBS_ID':  {'loc': 'main_hdr', 'alt_key': None, 'name': 'visit_id'},
+                          'FILTER':  {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter'},
+                          'DETECTOR':  {'loc': 'main_hdr', 'alt_key': None, 'name': 'detector'},
+                          'READOUT':  {'loc': 'main_hdr', 'alt_key': 'READPATT', 'name': 'readout'},
+                          'SUBARRAY':  {'loc': 'main_hdr', 'alt_key': None, 'name': 'subarray'},
+                          'NUMREFST':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'num_refstars'},
+                          'TASTATUS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ta_status'},
+                          'STAT_RSN':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'status_rsn'},
+                          'V2HFOFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2halffacet'},
+                          'V3HFOFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v3halffacet'},
+                          'V2MSACTR':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2msactr'},
+                          'V3MSACTR':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v3msactr'},
+                          'FITXOFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv2offset'},
+                          'FITYOFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv3offset'},
+                          'OFFSTMAG':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsoffsetmag'},
+                          'FITROFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsrolloffset'},
+                          'FITXSIGM':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv2sigma'},
+                          'FITYSIGM':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv3sigma'},
+                          'ITERATNS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsiterations'},
+                          'GUIDERID':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestarid'},
+                          'IDEAL_X':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestarx'},
+                          'IDEAL_Y':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestary'},
+                          'IDL_ROLL':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestarroll'},
+                          'SAM_X':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'samx'},
+                          'SAM_Y':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'samy'},
+                          'SAM_ROLL':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'samroll'},
+                          'box_peak_value':  {'loc': 'ta_table', 'alt_key': None, 'name': 'box_peak_value'},
+                          'reference_star_mag':  {'loc': 'ta_table', 'alt_key': None, 'name': 'reference_star_mag'},
+                          'convergence_status':  {'loc': 'ta_table', 'alt_key': None, 'name': 'convergence_status'},
+                          'reference_star_number':  {'loc': 'ta_table', 'alt_key': None, 'name': 'reference_star_number'},
+                          'lsf_removed_status':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_status'},
+                          'lsf_removed_reason':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_reason'},
+                          'lsf_removed_x':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_x'},
+                          'lsf_removed_y':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_y'},
+                          'found_v2':  {'loc': 'ta_table', 'alt_key': None, 'name': 'found_v2'},
+                          'found_v3':  {'loc': 'ta_table', 'alt_key': None, 'name': 'found_v3'}
+                         }
+        # fill out the dictionary  to create the dataframe
+        msata_dict = {}
         for fits_file in new_filenames:
             msata_info = self.get_tainfo_from_fits(fits_file)
             main_hdr, ta_hdr, ta_table = msata_info
-            date_obs.append(main_hdr['DATE-OBS'])
-            visit_id.append(main_hdr['OBS_ID'])  # PropID+VisitID+VisitGrpID+SeqID+ActID
-            try:
-                filter.append(main_hdr['FILTER'])
-            except:
-                filter.append(main_hdr['FWA_POS'])
-            detector.append(main_hdr['DETECTOR'])
-            try:
-                readout.append(main_hdr['READOUT'])
-            except:
-                readout.append(main_hdr['READPATT'])
-            subarray.append(main_hdr['SUBARRAY'])
-            num_refstars.append(ta_hdr['NUMREFST'])
-            ta_status.append(ta_hdr['TASTATUS'])
-            status_rsn.append(ta_hdr['STAT_RSN'])
-            v2halffacet.append(ta_hdr['V2HFOFFS'])
-            v3halffacet.append(ta_hdr['V3HFOFFS'])
-            v2msactr.append(ta_hdr['V2MSACTR'])
-            v3msactr.append(ta_hdr['V3MSACTR'])
-            lsv2offset.append(ta_hdr['FITXOFFS'])
-            lsv3offset.append(ta_hdr['FITYOFFS'])
-            lsoffsetmag.append(ta_hdr['OFFSTMAG'])
-            lsrolloffset.append(ta_hdr['FITROFFS'])
-            lsv2sigma.append(ta_hdr['FITXSIGM'])
-            lsv3sigma.append(ta_hdr['FITYSIGM'])
-            lsiterations.append(ta_hdr['ITERATNS'])
-            guidestarid.append(ta_hdr['GUIDERID'])
-            guidestarx.append(ta_hdr['IDEAL_X'])
-            guidestary.append(ta_hdr['IDEAL_Y'])
-            guidestarroll.append(ta_hdr['IDL_ROLL'])
-            samx.append(ta_hdr['SAM_X'])
-            samy.append(ta_hdr['SAM_Y'])
-            samroll.append(ta_hdr['SAM_ROLL'])
-            # now from the TA table
-            box_peak_value.append(ta_table['box_peak_value'])
-            reference_star_mag.append(ta_table['reference_star_mag'])
-            convergence_status.append(ta_table['convergence_status'])
-            reference_star_number.append(ta_table['reference_star_number'])
-            lsf_removed_status.append(ta_table['lsf_removed_status'])
-            lsf_removed_reason.append(ta_table['lsf_removed_reason'])
-            lsf_removed_x.append(ta_table['lsf_removed_x'])
-            lsf_removed_y.append(ta_table['lsf_removed_y'])
-            found_v2.append(ta_table['found_v2'])
-            found_v3.append(ta_table['found_v3'])
+            for key, key_dict in keywds2extract.items():
+                key_name = key_dict['name']
+                if key_name not in msata_dict:
+                    msata_dict[key_name] = []
+                ext = main_hdr
+                if key_dict['loc'] == 'ta_hdr':
+                    ext = ta_hdr
+                if key_dict['loc'] == 'ta_table':
+                    ext = ta_table
+                try:
+                    msata_dict[key_name].append(ext[key])
+                except:
+                    msata_dict[key_name].append(ext[key_dict['alt_key']])
         # create the pandas dataframe
-        msata_df = pd.DataFrame({'date_obs': date_obs, 'visit_id': visit_id,
-                                 'filter': filter, 'readout': readout,
-                                 'detector': detector, 'subarray': subarray,
-                                 'ta_status': ta_status, 'status_rsn': status_rsn,
-                                 'v2halffacet': v2halffacet, 'v3halffacet': v3halffacet,
-                                 'v2msactr': v2msactr, 'v3msactr': v3msactr,
-                                 'lsv2offset': lsv2offset, 'lsv3offset': lsv3offset,
-                                 'lsoffsetmag': lsoffsetmag, 'lsrolloffset': lsrolloffset,
-                                 'lsv2sigma': lsv2sigma, 'lsv3sigma': lsv3sigma,
-                                 'lsiterations': lsiterations, 'guidestarid': guidestarid,
-                                 'guidestarx': guidestarx, 'guidestary': guidestary,
-                                 'guidestarroll': guidestarroll,
-                                 'samx': samx, 'samy': samy, 'samroll': samroll,
-                                 'box_peak_value': box_peak_value,
-                                 'reference_star_mag': reference_star_mag,
-                                 'convergence_status': convergence_status,
-                                 'reference_star_number': reference_star_number,
-                                 'lsf_removed_status': lsf_removed_status,
-                                 'lsf_removed_reason': lsf_removed_reason,
-                                 'lsf_removed_x': lsf_removed_x,
-                                 'lsf_removed_y': lsf_removed_y,
-                                 'found_v2': found_v2,
-                                 'found_v3': found_v3
-                                })
+        msata_df = pd.DataFrame(msata_dict)
         msata_df.index = msata_df.index + 1
         return msata_df
 
@@ -226,7 +199,7 @@ class MSATA():
 
         Returns
         -------
-        p: bokeh plot object
+        plot: bokeh plot object
         """
         # to get the times we need the fits files
         pass
@@ -239,7 +212,7 @@ class MSATA():
             source: bokeh data object for plotting
         Returns
         -------
-            p: bokeh plot object
+            plot: bokeh plot object
         """
         ta_status, date_obs = source.data['ta_status'], source.data['date_obs']
         # bokeh does not like to plot strings, turn  into binary type
@@ -259,22 +232,22 @@ class MSATA():
         source.data["ta_status_bool"] = bool_status
         source.data["status_colors"] = status_colors
         # create a new bokeh plot
-        p = figure(title="MSATA Status [Succes=1, Fail=0]", x_axis_label='Time',
+        plot = figure(title="MSATA Status [Succes=1, Fail=0]", x_axis_label='Time',
                    y_axis_label='MSATA Status', x_axis_type='datetime',)
         limits = [-0.5, 1.5]
-        p.circle(x='time_arr', y='ta_status_bool', source=source,
+        plot.circle(x='time_arr', y='ta_status_bool', source=source,
                  color='status_colors', size=7, fill_alpha=0.5)
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
             ('TA status', '@ta_status'),
-            ('Filter', '@filter'),
+            ('Filter', '@tafilter'),
             ('Readout', '@readout'),
             ('Date-Obs', '@date_obs'),
             ('Subarray', '@subarray')
         ]
-        p.add_tools(hover)
-        return p
+        plot.add_tools(hover)
+        return plot
 
 
     def plt_residual_offsets(self, source):
@@ -284,18 +257,18 @@ class MSATA():
             source: bokeh data object for plotting
         Returns
         -------
-            p: bokeh plot object
+            plot: bokeh plot object
         """
         # create a new bokeh plot
-        p = figure(title="MSATA Least Squares Residual V2-V3 Offsets",
+        plot = figure(title="MSATA Least Squares Residual V2-V3 Offsets",
                    x_axis_label='Least Squares Residual V2 Offset',
                    y_axis_label='Least Squares Residual V3 Offset')
-        p.circle(x='lsv2offset', y='lsv3offset', source=source,
+        plot.circle(x='lsv2offset', y='lsv3offset', source=source,
                  color="purple", size=7, fill_alpha=0.5)
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
-            ('Filter', '@filter'),
+            ('Filter', '@tafilter'),
             ('Readout', '@readout'),
             ('Date-Obs', '@date_obs'),
             ('Subarray', '@subarray'),
@@ -303,8 +276,8 @@ class MSATA():
             ('LS V2 offset', '@lsv2offset'),
             ('LS V3 offset', '@lsv3offset')
         ]
-        p.add_tools(hover)
-        return p
+        plot.add_tools(hover)
+        return plot
 
 
     def plt_v2offset_time(self, source):
@@ -314,17 +287,17 @@ class MSATA():
             source: bokeh data object for plotting
         Returns
         -------
-            p: bokeh plot object
+            plot: bokeh plot object
         """
         # create a new bokeh plot
-        p = figure(title="MSATA Least Squares V2 Offset vs Time", x_axis_label='Time',
+        plot = figure(title="MSATA Least Squares V2 Offset vs Time", x_axis_label='Time',
                    y_axis_label='Least Squares Residual V2 Offset', x_axis_type='datetime')
-        p.circle(x='time_arr', y='lsv2offset', source=source,
+        plot.circle(x='time_arr', y='lsv2offset', source=source,
                  color="blue", size=7, fill_alpha=0.5)
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
-            ('Filter', '@filter'),
+            ('Filter', '@tafilter'),
             ('Readout', '@readout'),
             ('Date-Obs', '@date_obs'),
             ('Subarray', '@subarray'),
@@ -332,8 +305,8 @@ class MSATA():
             ('LS V2 offset', '@lsv2offset'),
             ('LS V3 offset', '@lsv3offset')
         ]
-        p.add_tools(hover)
-        return p
+        plot.add_tools(hover)
+        return plot
 
 
     def plt_v3offset_time(self, source):
@@ -343,17 +316,17 @@ class MSATA():
             source: bokeh data object for plotting
         Returns
         -------
-            p: bokeh plot object
+            plot: bokeh plot object
         """
         # create a new bokeh plot
-        p = figure(title="MSATA Least Squares V3 Offset vs Time", x_axis_label='Time',
+        plot = figure(title="MSATA Least Squares V3 Offset vs Time", x_axis_label='Time',
                    y_axis_label='Least Squares Residual V3 Offset', x_axis_type='datetime')
-        p.circle(x='time_arr', y='lsv3offset', source=source,
+        plot.circle(x='time_arr', y='lsv3offset', source=source,
                  color="blue", size=7, fill_alpha=0.5)
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
-            ('Filter', '@filter'),
+            ('Filter', '@tafilter'),
             ('Readout', '@readout'),
             ('Date-Obs', '@date_obs'),
             ('Subarray', '@subarray'),
@@ -361,8 +334,8 @@ class MSATA():
             ('LS V2 offset', '@lsv2offset'),
             ('LS V3 offset', '@lsv3offset')
         ]
-        p.add_tools(hover)
-        return p
+        plot.add_tools(hover)
+        return plot
 
 
     def plt_lsv2v3offsetsigma(self, source):
@@ -372,18 +345,18 @@ class MSATA():
             source: bokeh data object for plotting
         Returns
         -------
-            p: bokeh plot object
+            plot: bokeh plot object
         """
         # create a new bokeh plot
-        p = figure(title="MSATA Least Squares Residual V2-V3 Sigma Offsets",
+        plot = figure(title="MSATA Least Squares Residual V2-V3 Sigma Offsets",
                    x_axis_label='Least Squares Residual V2 Sigma Offset',
                    y_axis_label='Least Squares Residual V3 Sigma Offset')
-        p.circle(x='lsv2sigma', y='lsv3sigma', source=source,
+        plot.circle(x='lsv2sigma', y='lsv3sigma', source=source,
                  color="purple", size=7, fill_alpha=0.5)
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
-            ('Filter', '@filter'),
+            ('Filter', '@tafilter'),
             ('Readout', '@readout'),
             ('Date-Obs', '@date_obs'),
             ('Subarray', '@subarray'),
@@ -393,8 +366,8 @@ class MSATA():
             ('LS V3 offset', '@lsv3offset'),
             ('LS V3 sigma', '@lsv3sigma')
         ]
-        p.add_tools(hover)
-        return p
+        plot.add_tools(hover)
+        return plot
 
 
     def plt_res_offsets_corrected(self, source):
@@ -404,7 +377,7 @@ class MSATA():
             source: bokeh data object for plotting
         Returns
         -------
-            p: bokeh plot object
+            plot: bokeh plot object
         """
         # create a new bokeh plot
         lsv2offset, lsv3offset = source.data['lsv2offset'], source.data['lsv3offset']
@@ -414,15 +387,15 @@ class MSATA():
         # add these to the bokeh data structure
         source.data["v2_half_fac_corr"] = v2_half_fac_corr
         source.data["v3_half_fac_corr"] = v3_half_fac_corr
-        p = figure(title="MSATA Least Squares Residual V2-V3 Offsets Half-facet corrected",
+        plot = figure(title="MSATA Least Squares Residual V2-V3 Offsets Half-facet corrected",
                    x_axis_label='Least Squares Residual V2 Offset + half-facet',
                    y_axis_label='Least Squares Residual V3 Offset + half-facet')
-        p.circle(x='v2_half_fac_corr', y='v3_half_fac_corr', source=source,
+        plot.circle(x='v2_half_fac_corr', y='v3_half_fac_corr', source=source,
                  color="purple", size=7, fill_alpha=0.5)
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
-            ('Filter', '@filter'),
+            ('Filter', '@tafilter'),
             ('Readout', '@readout'),
             ('Date-Obs', '@date_obs'),
             ('Subarray', '@subarray'),
@@ -432,8 +405,8 @@ class MSATA():
             ('V2 half-facet', '@v2halffacet'),
             ('V3 half-facet', '@v3halffacet')
         ]
-        p.add_tools(hover)
-        return p
+        plot.add_tools(hover)
+        return plot
 
 
     def plt_v2offsigma_time(self, source):
@@ -443,25 +416,25 @@ class MSATA():
             source: bokeh data object for plotting
         Returns
         -------
-            p: bokeh plot object
+            plot: bokeh plot object
         """
         # create a new bokeh plot
-        p = figure(title="MSATA Least Squares V2 Sigma Offset vs Time", x_axis_label='Time',
+        plot = figure(title="MSATA Least Squares V2 Sigma Offset vs Time", x_axis_label='Time',
                    y_axis_label='Least Squares Residual V2 Sigma Offset', x_axis_type='datetime')
-        p.circle(x='time_arr', y='lsv2sigma', source=source,
+        plot.circle(x='time_arr', y='lsv2sigma', source=source,
                  color="blue", size=7, fill_alpha=0.5)
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
-            ('Filter', '@filter'),
+            ('Filter', '@tafilter'),
             ('Readout', '@readout'),
             ('Date-Obs', '@date_obs'),
             ('Subarray', '@subarray'),
             ('LS V2 offset', '@lsv2offset'),
             ('LS V2 sigma', '@lsv2sigma')
         ]
-        p.add_tools(hover)
-        return p
+        plot.add_tools(hover)
+        return plot
 
 
     def plt_v3offsigma_time(self, source):
@@ -474,14 +447,14 @@ class MSATA():
             p: bokeh plot object
         """
         # create a new bokeh plot
-        p = figure(title="MSATA Least Squares V3 Sigma Offset vs Time", x_axis_label='Time',
+        plot = figure(title="MSATA Least Squares V3 Sigma Offset vs Time", x_axis_label='Time',
                    y_axis_label='Least Squares Residual V3 Sigma Offset', x_axis_type='datetime')
-        p.circle(x='time_arr', y='lsv3sigma', source=source,
+        plot.circle(x='time_arr', y='lsv3sigma', source=source,
                  color="blue", size=7, fill_alpha=0.5)
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
-            ('Filter', '@filter'),
+            ('Filter', '@tafilter'),
             ('Readout', '@readout'),
             ('Date-Obs', '@date_obs'),
             ('Subarray', '@subarray'),
@@ -489,8 +462,8 @@ class MSATA():
             ('LS V3 offset', '@lsv3offset'),
             ('LS V3 sigma', '@lsv3sigma')
         ]
-        p.add_tools(hover)
-        return p
+        plot.add_tools(hover)
+        return plot
 
 
     def plt_roll_offset(self, source):
@@ -500,17 +473,17 @@ class MSATA():
             source: bokeh data object for plotting
         Returns
         -------
-            p: bokeh plot object
+            plot: bokeh plot object
         """
         # create a new bokeh plot
-        p = figure(title="MSATA Least Squares Roll Offset vs Time", x_axis_label='Time',
+        plot = figure(title="MSATA Least Squares Roll Offset vs Time", x_axis_label='Time',
                    y_axis_label='Least Squares Residual Roll Offset', x_axis_type='datetime')
-        p.circle(x='time_arr', y='lsrolloffset', source=source,
+        plot.circle(x='time_arr', y='lsrolloffset', source=source,
                  color="blue", size=7, fill_alpha=0.5)
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
-            ('Filter', '@filter'),
+            ('Filter', '@tafilter'),
             ('Readout', '@readout'),
             ('Date-Obs', '@date_obs'),
             ('Subarray', '@subarray'),
@@ -518,8 +491,8 @@ class MSATA():
             ('LS V2 offset', '@lsv2offset'),
             ('LS V3 offset', '@lsv3offset')
         ]
-        p.add_tools(hover)
-        return p
+        plot.add_tools(hover)
+        return plot
 
 
     def plt_lsoffsetmag(self, source):
@@ -529,17 +502,17 @@ class MSATA():
             source: bokeh data object for plotting
         Returns
         -------
-            p: bokeh plot object
+            plot: bokeh plot object
         """
         # create a new bokeh plot
-        p = figure(title="MSATA Least Squares Total Magnitude of the Linear V2, V3 Offset Slew vs Time", x_axis_label='Time',
+        plot = figure(title="MSATA Least Squares Total Magnitude of the Linear V2, V3 Offset Slew vs Time", x_axis_label='Time',
                    y_axis_label='sqrt((V2_off)**2 + (V3_off)**2)', x_axis_type='datetime')
-        p.circle(x='time_arr', y='lsoffsetmag', source=source,
+        plot.circle(x='time_arr', y='lsoffsetmag', source=source,
                  color="blue", size=7, fill_alpha=0.5)
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
-            ('Filter', '@filter'),
+            ('Filter', '@tafilter'),
             ('Readout', '@readout'),
             ('Date-Obs', '@date_obs'),
             ('Subarray', '@subarray'),
@@ -548,8 +521,8 @@ class MSATA():
             ('LS V2 offset', '@lsv2offset'),
             ('LS V3 offset', '@lsv3offset')
         ]
-        p.add_tools(hover)
-        return p
+        plot.add_tools(hover)
+        return plot
 
 
     def plt_mags_time(self, source):
@@ -559,7 +532,7 @@ class MSATA():
             source: bokeh data object for plotting
         Returns
         -------
-            p: bokeh plot object
+            plot: bokeh plot object
         """
         visit_id = source.data['visit_id']
         lsf_removed_status = source.data['lsf_removed_status']
@@ -614,11 +587,11 @@ class MSATA():
                     }
         mini_source = ColumnDataSource(data=mini_source)
         # create a the bokeh plot
-        p = figure(title="MSATA Star Pseudo Magnitudes vs Time", x_axis_label='Time',
+        plot = figure(title="MSATA Star Pseudo Magnitudes vs Time", x_axis_label='Time',
                    y_axis_label='Star  -2.5*log(box_peak)', x_axis_type='datetime')
-        p.circle(x='tarr', y='visit_mags', source=mini_source,
+        plot.circle(x='tarr', y='visit_mags', source=mini_source,
                  color='colors_list', size=7, fill_alpha=0.5)
-        p.y_range.flipped = True
+        plot.y_range.flipped = True
         # add count saturation warning lines
         loc1 = -2.5 * np.log(45000.0)
         loc2 = -2.5 * np.log(50000.0)
@@ -626,13 +599,13 @@ class MSATA():
         hline1 = Span(location=loc1, dimension='width', line_color='green', line_width=3)
         hline2 = Span(location=loc2, dimension='width', line_color='yellow', line_width=3)
         hline3 = Span(location=loc3, dimension='width', line_color='red', line_width=3)
-        p.renderers.extend([hline1, hline2, hline3])
+        plot.renderers.extend([hline1, hline2, hline3])
         label1 = Label(x=time_arr[-1], y=loc1, y_units='data', text='45000 counts')
         label2 = Label(x=time_arr[-1], y=loc2, y_units='data', text='50000 counts')
         label3 = Label(x=time_arr[-1], y=loc3, y_units='data', text='60000 counts')
-        p.add_layout(label1)
-        p.add_layout(label2)
-        p.add_layout(label3)
+        plot.add_layout(label1)
+        plot.add_layout(label2)
+        plot.add_layout(label3)
         # add hover
         hover = HoverTool()
         hover.tooltips=[('Visit ID', '@vid'),
@@ -644,8 +617,8 @@ class MSATA():
                         ('Measured V2', '@stars_v2'),
                         ('Measured V3', '@stars_v3')
                         ]
-        p.add_tools(hover)
-        return p
+        plot.add_tools(hover)
+        return plot
         
         
     def mk_plt_layout(self):
@@ -668,7 +641,7 @@ class MSATA():
         grid = gridplot([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11],
                         ncols=2, merge_tools=False)
         #show(grid)
-        save(p)
+        save(grid)
 
 
     def most_recent_search(self):
@@ -682,9 +655,7 @@ class MSATA():
             Date (in MJD) of the ending range of the previous MAST query
             where the msata monitor was run.
         """
-        query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture,
-                                                       self.query_table.readpattern == self.readpatt). \
-                              filter(self.query_table.run_monitor == True)
+        query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture)
 
         dates = np.zeros(0)
         for instance in query:
@@ -693,8 +664,8 @@ class MSATA():
         query_count = len(dates)
         if query_count == 0:
             query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
-            logging.info(('\tNo query history for {} with {}. Beginning search date will be set to {}.'
-                         .format(self.aperture, self.readpatt, query_result)))
+            logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
+                         .format(self.aperture, query_result)))
         else:
             query_result = np.max(dates)
 
@@ -725,9 +696,9 @@ class MSATA():
 
         # Query MAST using the aperture and the time of the
         # most recent previous search as the starting time
-        new_entries = monitor_utils.mast_query_ta(instrument, aperture, self.query_start, self.query_end, readpatt=self.readpatt)
+        new_entries = monitor_utils.mast_query_ta(self.instrument, self.aperture, self.query_start, self.query_end)
         msata_entries = len(new_entries)
-        logging.info('\tMAST query has returned {} new WATA files for {}, {}, {} to run the dark monitor.'.format(msata_entries, self.instrument, self.aperture, self.readpatt))
+        logging.info('\tMAST query has returned {} new WATA files for {}, {} to run the MSATA monitor.'.format(msata_entries, self.instrument, self.aperture))
         
         # Get full paths to the files
         new_filenames = []
@@ -745,13 +716,11 @@ class MSATA():
 
         # Update the query history
         new_entry = {'instrument': 'nirspec',
-                    'aperture': aperture,
-                    'readpattern': self.readpatt,
+                    'aperture': self.aperture,
                     'start_time_mjd': self.query_start,
                     'end_time_mjd': self.query_end,
                     'files_found': len(new_entries),
-                    'run_monitor': monitor_run,
-                    'entry_date': datetime.datetime.now()}
+                    'entry_date': datetime.now()}
         self.query_table.__table__.insert().execute(new_entry)
         logging.info('\tUpdated the query history table')
 
