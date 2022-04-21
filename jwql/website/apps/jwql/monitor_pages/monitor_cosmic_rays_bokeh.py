@@ -17,8 +17,6 @@ Use
 import datetime
 import os
 
-from astropy.io import fits
-from astropy.time import Time
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -27,7 +25,7 @@ from jwql.database.database_interface import session
 from jwql.database.database_interface import MIRICosmicRayQueryHistory, MIRICosmicRayStats
 from jwql.database.database_interface import NIRCamCosmicRayQueryHistory, NIRCamCosmicRayStats
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.utils import get_config, filesystem_path
+
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 

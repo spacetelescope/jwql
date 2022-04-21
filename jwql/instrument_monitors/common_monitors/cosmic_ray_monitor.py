@@ -37,6 +37,7 @@ import shutil
 from astropy.io import fits
 from astropy.time import Time
 import julian
+from jwst.datamodels import dqflags
 import numpy as np
 from pysiaf import Siaf
 from sqlalchemy import func
@@ -110,6 +111,36 @@ class CosmicRay:
     def __init__(self):
         """Initialize an instance of the ``Cosmic_Ray`` class."""
 
+    def filter_bases(self, file_list):
+        """Filter a list of input files. Strip off everything after the last
+        underscore (e.g. "i2d.fits"), and keep only once instance of the
+        remaining basename.
+
+        Parameters
+        ----------
+        file_list : list
+            List of fits files
+
+        Returns
+        -------
+        good_files : list
+            Filtered list of uncal file names
+        """
+        good_files = []
+        for filename in file_list:
+            # Search the first part of the filename for letters. (e.g. jw01059007003
+            # without the jw). If there aren't any, then it's not a stage 3 product and
+            # we can continue.
+            substr = filename[2:13]
+            letters = re.findall("\D", substr)
+            if len(letters) == 0:
+                rev = filename[::-1]
+                under = rev.find('_')
+                base = rev[under + 1:][::-1]
+                if base not in good_files:
+                    good_files.append(f'{base}_uncal.fits')
+        return good_files
+
     def identify_tables(self):
         """Determine which database tables to use for a run of the
         cosmic ray monitor.
@@ -161,7 +192,7 @@ class CosmicRay:
             mags.append(self.magnitude(coord, coord_gb, rateints, jump_data, jump_head))
 
         return mags
-        
+
 
     def get_jump_data(self, jump_filename):
         """Opens and reads a given .FITS file containing cosmic rays.
@@ -210,7 +241,7 @@ class CosmicRay:
             List of coordinates to a pixel marked with a jump.
         """
 
-        temp = np.where(dq == 4)
+        temp = np.where(dq & dqflags.pixel["JUMP_DET"] > 0)
 
         jump_locs = []
 
@@ -438,7 +469,8 @@ class CosmicRay:
                     pass
 
                 # Next we analyze the cosmic rays in the new data
-                for output_file in os.listdir(self.obs_dir):
+                obs_files = os.listdir(self.obs_dir)
+                for output_file in obs_files:
 
                     if 'jump' in output_file:
                         jump_file = os.path.join(self.obs_dir, output_file)
@@ -491,6 +523,17 @@ class CosmicRay:
                 except:
                     logging.info("Could not insert entry into database. \n")
 
+                # Delete fits files in order to save disk space
+                logging.info("Removing pipeline products in order to save disk space. \n")
+                for obsfile in obs_files:
+                    try:
+                        os.remove(obsfile)
+                    except OSError:
+                        logging.info(f"Unable to delete {obsfile}")
+                        pass
+                os.rmdir(self.obs_dir)
+                os.remove(file_name)
+
     @log_fail
     @log_info
     def run(self):
@@ -535,11 +578,14 @@ class CosmicRay:
 
                     new_entries = self.query_mast()
 
+                    # Filter new entries so we omit stage 3 results and keep only base names
+                    new_entries = self.filter_bases(new_entries)
+
                     # for testing purposes only
                     #new_filenames = get_config()['local_test_data']
                     new_filenames = []
 
-                    for file_entry in new_entries['data']:
+                    for file_entry in new_entries:
                         try:
                             new_filenames.append(filesystem_path(file_entry['filename']))
                         except FileNotFoundError:
