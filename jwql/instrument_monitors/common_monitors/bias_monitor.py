@@ -430,6 +430,10 @@ class Bias():
             self.stats_table.__table__.insert().execute(bias_db_entry)
             logging.info('\tNew entry added to bias database table: {}'.format(bias_db_entry))
 
+            # Remove the raw and calibrated files to save memory space
+            os.remove(filename)
+            os.remove(processed_file)
+
     @log_fail
     @log_info
     def run(self):
