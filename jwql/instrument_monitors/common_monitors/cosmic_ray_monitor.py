@@ -595,7 +595,7 @@ class CosmicRay:
                     logging.info('\tMost recent query: {}'.format(self.query_start))
 
                     new_entries = self.query_mast()
-                    logging.info(f'\tNew MAST query returned dictionary with {len(new_entries['data'])} files.')
+                    logging.info(f'\tNew MAST query returned dictionary with {len(new_entries["data"])} files.')
                     new_entries = self.pull_filenames(new_entries)
                     logging.info(f'\tExtracted {len(new_entries)} files from MAST dictionary.')
 
