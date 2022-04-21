@@ -382,6 +382,7 @@ class Bias():
                 set_permissions(processed_file)
             except:
                 logging.info('\tPipeline processing failed for {}'.format(filename))
+                os.remove(filename)
                 continue
 
             # Find amplifier boundaries so per-amp statistics can be calculated
