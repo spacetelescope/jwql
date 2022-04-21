@@ -574,7 +574,7 @@ class CosmicRay:
 
         self.query_end = Time.now().mjd
 
-        for instrument in JWST_INSTRUMENT_NAMES:
+        for instrument in ['nircam']:  #JWST_INSTRUMENT_NAMES:
             if instrument == 'miri' or instrument == 'nircam':
                 self.instrument = instrument
 
@@ -584,6 +584,9 @@ class CosmicRay:
                 # Get a list of possible apertures
                 #possible_apertures = list(Siaf(instrument).apernames)
                 possible_apertures = self.possible_apers(instrument)
+
+                #XXXFOR TESTING
+                possible_apertures = ['NRCA1_FULL']
 
                 # Use this line instead to save time while testing
                 #possible_apertures = ['MIRIM_FULL', 'NRCB4_FULL']
@@ -597,6 +600,9 @@ class CosmicRay:
 
                     # We start by querying MAST for new data
                     self.query_start = self.most_recent_search()
+
+                    #XXXXFOT TESTING
+                    self.query_start = 59688.78
 
                     logging.info('\tMost recent query: {}'.format(self.query_start))
                     logging.info(f'\tQuerying MAST from {self.query_start} to {self.query_end}')
