@@ -138,8 +138,9 @@ class CosmicRay:
                 rev = filename[::-1]
                 under = rev.find('_')
                 base = rev[under + 1:][::-1]
-                if base not in good_files:
-                    good_files.append(f'{base}_uncal.fits')
+                uncal_file = f'{base}_uncal.fits'
+                if uncal_file not in good_files:
+                    good_files.append(uncal_file)
         return good_files
 
     def identify_tables(self):
@@ -533,7 +534,7 @@ class CosmicRay:
                 # Delete fits files in order to save disk space
                 logging.info("Removing pipeline products in order to save disk space. \n")
                 try:
-                    shutil.rmtree(dir_path)
+                    shutil.rmtree(self.obs_dir)
                 except OSError as e:
                     logging.error(f"Unable to delete {self.obs_dir}")
                     logging.error(e)
@@ -613,6 +614,9 @@ class CosmicRay:
                     # Filter new entries so we omit stage 3 results and keep only base names
                     new_entries = self.filter_bases(new_entries)
                     logging.info(f'\tAfter filtering to keep only uncal files, we are left with {len(new_entries)} files')
+
+                    for fname in new_entries:
+                        logging.info(f'{fname}')
 
                     # for testing purposes only
                     #new_filenames = get_config()['local_test_data']
