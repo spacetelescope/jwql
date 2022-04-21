@@ -448,6 +448,7 @@ class CosmicRay:
             if 'uncal' in file_name:
                 dir_name = '_'.join(file_name.split('_')[:4])  # file_name[51:76]
 
+                logging.info(f'Setting obs_dir to {self.obs_dir}')
                 self.obs_dir = os.path.join(self.data_dir, dir_name)
                 ensure_dir_exists(self.obs_dir)
 
@@ -464,6 +465,7 @@ class CosmicRay:
                 uncal_file = os.path.join(self.obs_dir, os.path.basename(file_name))
 
                 try:
+                    logging.info(f'Running calwebb_detector1 on {uncal_file}')
                     pipeline_tools.calwebb_detector1_save_jump(uncal_file, self.obs_dir, ramp_fit=True, save_fitopt=False)
                 except:
                     logging.info('Failed to complete pipeline steps on {}.'.format(uncal_file))
@@ -484,6 +486,8 @@ class CosmicRay:
                         if '1_ramp_fit' in output_file:
                             rate_file = os.path.join(self.obs_dir, output_file)
 
+                logging.info(f'\tUsing {jump_file} and {rate_file} to monitor CRs.')
+
                 try:
                     jump_head, jump_data, jump_dq = self.get_jump_data(jump_file)
                 except:
@@ -496,6 +500,8 @@ class CosmicRay:
 
                 jump_locs = self.get_jump_locs(jump_dq)
                 jump_locs_pre = self.group_before(jump_locs)
+
+                logging.info(f'\tFound {len(jump_locs)} CR-flags.')
 
                 eff_time = jump_head['EFFEXPTM']
 
@@ -593,11 +599,10 @@ class CosmicRay:
                     self.query_start = self.most_recent_search()
 
                     logging.info('\tMost recent query: {}'.format(self.query_start))
-
+                    logging.info(f'\tQuerying MAST from {self.query_start} to {self.query_end}')
                     new_entries = self.query_mast()
                     logging.info(f'\tNew MAST query returned dictionary with {len(new_entries["data"])} files.')
                     new_entries = self.pull_filenames(new_entries)
-                    logging.info(f'\tExtracted {len(new_entries)} files from MAST dictionary.')
 
                     # Filter new entries so we omit stage 3 results and keep only base names
                     new_entries = self.filter_bases(new_entries)
@@ -625,6 +630,7 @@ class CosmicRay:
                     ensure_dir_exists(self.data_dir)
 
                     cosmic_ray_files, not_copied = copy_files(new_filenames, self.data_dir)
+                    logging.info(f'\tCopied {len(cosmic_ray_files)} to the working directory {self.data_dir}.')
 
                     self.process(cosmic_ray_files)
 
