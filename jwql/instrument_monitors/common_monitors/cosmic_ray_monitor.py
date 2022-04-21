@@ -535,6 +535,23 @@ class CosmicRay:
                 os.rmdir(self.obs_dir)
                 os.remove(file_name)
 
+    def pull_filenames(self, file_info):
+        """Extract filenames from the list of file information returned from
+        query_mast.
+
+        Parameters
+        ----------
+        file_info : dict
+            Dictionary of file information returned by ``query_mast``
+
+        Returns
+        -------
+        files : list
+            List of filenames (without paths) extracted from ``file_info``
+        """
+        files = [element['filename'] for element in file_info['data']]
+        return files
+
     @log_fail
     @log_info
     def run(self):
@@ -578,9 +595,13 @@ class CosmicRay:
                     logging.info('\tMost recent query: {}'.format(self.query_start))
 
                     new_entries = self.query_mast()
+                    logging.info(f'\tNew MAST query returned dictionary with {len(new_entries['data'])} files.')
+                    new_entries = self.pull_filenames(new_entries)
+                    logging.info(f'\tExtracted {len(new_entries)} files from MAST dictionary.')
 
                     # Filter new entries so we omit stage 3 results and keep only base names
                     new_entries = self.filter_bases(new_entries)
+                    logging.info(f'\tAfter filtering to keep only uncal files, we are left with {len(new_entries)} files')
 
                     # for testing purposes only
                     #new_filenames = get_config()['local_test_data']
@@ -588,12 +609,12 @@ class CosmicRay:
 
                     for file_entry in new_entries:
                         try:
-                            new_filenames.append(filesystem_path(file_entry['filename']))
+                            new_filenames.append(filesystem_path(file_entry))
                         except FileNotFoundError:
-                            logging.info('\t{} not found in target directory'.format(file_entry['filename']))
+                            logging.info('\t{} not found in target directory'.format(file_entry))
                         except ValueError:
                             logging.info(
-                                '\tProvided file {} does not follow JWST naming conventions.'.format(file_entry['filename']))
+                                '\tProvided file {} does not follow JWST naming conventions.'.format(file_entry))
 
                     # Next we copy new files to the working directory
                     output_dir = os.path.join(get_config()['outputs'], 'cosmic_ray_monitor')
