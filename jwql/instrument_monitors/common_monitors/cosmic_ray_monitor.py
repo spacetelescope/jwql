@@ -448,9 +448,9 @@ class CosmicRay:
             if 'uncal' in file_name:
                 dir_name = '_'.join(file_name.split('_')[:4])  # file_name[51:76]
 
-                logging.info(f'Setting obs_dir to {self.obs_dir}')
                 self.obs_dir = os.path.join(self.data_dir, dir_name)
                 ensure_dir_exists(self.obs_dir)
+                logging.info(f'Setting obs_dir to {self.obs_dir}')
 
                 head = fits.getheader(file_name)
                 self.nints = head['NINTS']
@@ -532,13 +532,13 @@ class CosmicRay:
 
                 # Delete fits files in order to save disk space
                 logging.info("Removing pipeline products in order to save disk space. \n")
-                for obsfile in obs_files:
-                    try:
-                        os.remove(obsfile)
-                    except OSError:
-                        logging.info(f"Unable to delete {obsfile}")
-                        pass
-                os.rmdir(self.obs_dir)
+                try:
+                    shutil.rmtree(dir_path)
+                except OSError as e:
+                    logging.error(f"Unable to delete {self.obs_dir}")
+                    logging.error(e)
+
+                # Remove initial copy of input file as well
                 os.remove(file_name)
 
     def pull_filenames(self, file_info):
