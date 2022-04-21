@@ -16,18 +16,37 @@
             <a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:archive_thumb', args=[inst, file_root[2:7]]) }}> View Proposal</a>
 	    </p>
 
+        <input type="radio" name="header-radio" onclick="display_div('by-extension', 'header-radio')" checked> Show Headers By Extension &nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="radio" name="header-radio" onclick="display_div('all-headers', 'header-radio')"> Show All Header Extensions &nbsp;&nbsp;&nbsp;&nbsp;
+        <hr>
         <!-- Allow the user to change the header type that is being displayed -->
-        <div id="header-options">
-            <form class="my-2">
+        <div id="by-extension" class="toHide" style="display:none">
+            <div id="header-options">
+                <form class="my-2">
+                    {% for extension in header_info %}
+                        {% set num_extensions = header_info|length %}
+                        {% set extname = header_info[extension]['EXTNAME'] %}
+                        {% if extension == 0 %}
+                            <input type="radio" name="header_extension" id="extension0" onclick="update_header_display('0', '{{num_extensions}}')" checked="checked"> {{ extname }} &nbsp;&nbsp;&nbsp;&nbsp;
+                        {% else %}
+                            <input type="radio" name="header_extension" id="extension{{extension}}" onclick="update_header_display('{{extension}}', '{{num_extensions}}')"> {{ extname }} &nbsp;&nbsp;&nbsp;&nbsp;
+                        {% endif %}
+                    {% endfor %}
+            </div>
+            <div id="header-tables">
                 {% for extension in header_info %}
-                    {% set num_extensions = header_info|length %}
                     {% set extname = header_info[extension]['EXTNAME'] %}
-                    {% if extension == 0 %}
-                        <input type="radio" name="header_extension" id="extension0" onclick="update_header_display('0', '{{num_extensions}}')" checked="checked"> {{ extname }} &nbsp;&nbsp;&nbsp;&nbsp;
-                    {% else %}
-                        <input type="radio" name="header_extension" id="extension{{extension}}" onclick="update_header_display('{{extension}}', '{{num_extensions}}')"> {{ extname }} &nbsp;&nbsp;&nbsp;&nbsp;
-                    {% endif %}
+                    {% set header_table = header_info[extension]['table'] %}
+                        {% if extension == 0 %}
+                            <h4 id="header-display-name-extension0">Extension: {{ header_info[0]['EXTNAME'] }}</h4><h>
+                            <div id="header-table-extension0">{{header_info[0]['table']|safe}}</div>
+                        {% else %}
+                            <h4 id="header-display-name-extension{{extension}}" display="none">Extension: {{ header_info[extension]['EXTNAME'] }}</h4><h>
+                            <div id="header-table-extension{{extension}}" display="none">{{header_info[extension]['table']|safe}}</div>
+                        {% endif %}
                 {% endfor %}
+            </div>
+            <br>
         </div>
         <div id="header-tables">
             {% for extension in header_info %}
@@ -82,6 +101,7 @@
                 {% endif %}
             {% endfor %}
         </div>
+
         <br>
 
 	</main>

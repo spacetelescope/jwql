@@ -27,6 +27,7 @@ References
     - JWST TR JWST-STScI-004800, SM-12
  """
 
+from bs4 import BeautifulSoup
 import datetime
 import getpass
 import glob
@@ -111,6 +112,29 @@ def _validate_config(config_file_dict):
             'Provided config.json does not match the '
             'required JSON schema: {}'.format(e.message)
         )
+
+
+def combine_header_tables(header_info):
+    """Take file header and combine all html headers into one.
+    """
+
+    html_list = []
+
+    for header_ext in range(len(header_info)):
+        html = header_info[header_ext]['table']
+        soup = BeautifulSoup(html, features="lxml")
+        html_list += soup.findAll('tr')
+
+    with open('/Users/mfix/Desktop/jwql/jwql/website/apps/jwql/templates/combined_table.html', 'r') as f:
+        contents = f.read()
+        soup = BeautifulSoup(contents, 'lxml')
+
+    for thead in soup.findAll('thead'):
+        [thead.insert_after(tag) for tag in html_list]
+
+    html_string = str(soup)
+
+    return html_string
 
 
 def get_config():

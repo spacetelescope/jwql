@@ -561,3 +561,15 @@ function version_url(version_string) {
     a_line += '">JWQL v' + version_string + '</a>';
     return a_line;
 };
+
+/**
+ * Show div that is hidden by radio button
+ * @param {String} version_string - The x.y.z version number
+ */
+
+function display_div(div_name, button_name) {
+    $("[name="+button_name+"]").click(function(){
+            $('.toHide').hide();
+            $("#"+div_name).show('slow');
+    });
+ };
