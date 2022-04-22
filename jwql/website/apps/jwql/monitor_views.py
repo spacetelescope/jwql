@@ -32,7 +32,7 @@ import os
 from django.shortcuts import render
 
 from . import bokeh_containers
-from jwql.website.apps.jwql import bokeh_containers_no_templating_for_cosmicrays
+from jwql.website.apps.jwql import bokeh_containers
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config
 
@@ -122,7 +122,7 @@ def cosmic_ray_monitor(request, inst):
     # Ensure the instrument is correctly capitalized
     inst = inst.upper()
 
-    tabs_components = bokeh_containers_no_templating_for_cosmicrays.cosmic_ray_monitor_tabs(inst)
+    tabs_components = bokeh_containers.cosmic_ray_monitor_tabs(inst)
 
     template = "cosmic_ray_monitor.html"
 

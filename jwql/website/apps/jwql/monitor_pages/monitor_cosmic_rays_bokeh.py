@@ -22,7 +22,7 @@ Bokeh figures will then be in:
 from datetime import datetime, timedelta
 import os
 
-from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool
+from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Range1d
 from bokeh.plotting import figure
 import matplotlib.pyplot as plt
 import numpy as np
@@ -123,12 +123,12 @@ class CosmicRayMonitor():
         """
         self.get_history_data()
 
+        # If there are no data, create a reasonable looking empty plot
         if len(self.times) == 0:
-            null_dates = [datetime(2021, 12, 25), datetime(2021, 12, 26)]
-            null_vals = [0, 0]
-            source = ColumnDataSource(data={'x': null_dates, 'y': null_vals})
-        else:
-            source = ColumnDataSource(data={'x': self.times, 'y': self.count})
+            self.times = [datetime(2021, 12, 25), datetime(2021, 12, 26)]
+            self.count = [0, 0]
+
+        source = ColumnDataSource(data={'x': self.times, 'y': self.count})
 
         # Create a useful plot title
         title = f'CR Rates: {self._instrument}, {self._aperture}'
