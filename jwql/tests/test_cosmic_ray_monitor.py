@@ -23,7 +23,7 @@ from astropy.io import fits
 import numpy as np
 import pytest
 
-from jwql.instrument_monitors.miri_monitors.cosmic_ray_monitor import CosmicRay
+from jwql.instrument_monitors.common_monitors.cosmic_ray_monitor import CosmicRay
 from jwql.database.database_interface import MIRICosmicRayQueryHistory
 from jwql.utils.utils import get_config
 
@@ -82,12 +82,15 @@ def test_get_cr_rate():
     """Test the ``get_cr_rate`` function"""
 
     cr = CosmicRay()
-    jump_locations = np.arange(100).tolist()
-    time = 5
+    jumps = 100
+    header = fits.header.Header()
+    header['EFFEXPTM'] = 110.
+    header['TGROUP'] = 10.
+    header['SUBSIZE1'] = 50.
+    header['SUBSIZE2'] = 50.
 
-    rate = cr.get_cr_rate(jump_locations, time)
-
-    assert rate == 20.0
+    rate = cr.get_cr_rate(jumps, header)
+    assert rate == 0.0004
 
 
 def test_group_before():

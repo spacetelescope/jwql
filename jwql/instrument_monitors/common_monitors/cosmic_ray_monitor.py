@@ -195,6 +195,36 @@ class CosmicRay:
 
         return mags
 
+    def get_cr_rate(self, cr_num, header):
+        """Given a number of CR hits, as well as the header from an observation file,
+        calculate the rate of CR hits per pixel
+
+        Parameters
+        ----------
+        cr_num : int
+            Number of jump flags identified in a particular exposure
+
+        header : astropy.io.fits.header.Header
+            Header of the exposure file
+
+        Returns
+        -------
+        rate : float
+            Rate of CR flags per pixel per second
+        """
+
+        # Note that the pipeline's jump step is unable to find CR hits in
+        # the initial group. So let's subtract one group time from the effective
+        # exposure time in order to get the exposure time that was acutally
+        # searched
+        efftime = header['EFFEXPTM']
+        group_time = header['TGROUP']
+        efftime -= group_time
+
+        num_pix = (header['SUBSIZE1'] * header['SUBSIZE2'])
+
+        rate = cr_num / num_pix / efftime
+        return rate
 
     def get_jump_data(self, jump_filename):
         """Opens and reads a given .FITS file containing cosmic rays.
@@ -501,10 +531,14 @@ class CosmicRay:
 
                 jump_locs = self.get_jump_locs(jump_dq)
                 jump_locs_pre = self.group_before(jump_locs)
+                cosmic_ray_num = len(jump_locs)
 
-                logging.info(f'\tFound {len(jump_locs)} CR-flags.')
+                logging.info(f'\tFound {cosmic_ray_num} CR-flags.')
 
-                eff_time = jump_head['EFFEXPTM']
+                # Translate CR count into a CR rate per pixel, so that all exposures
+                # can go on one plot regardless of exposure time and aperture size
+                cr_rate = self.get_cr_rate(cosmic_ray_num, jump_head)
+                logging.info(f'\tNormalizing by time and area, this is {cr_rate} jumps/sec/pixel.')
 
                 # Get observation time info
                 obs_start_time = jump_head['EXPSTART']
@@ -512,7 +546,6 @@ class CosmicRay:
                 start_time = julian.from_jd(obs_start_time, fmt='mjd')
                 end_time = julian.from_jd(obs_end_time, fmt='mjd')
 
-                cosmic_ray_num = len(jump_locs)
                 cosmic_ray_mags = self.get_cr_mags(jump_locs, jump_locs_pre, rate_data, jump_data, jump_head)
 
                 # Insert new data into database
@@ -523,6 +556,7 @@ class CosmicRay:
                                            'obs_start_time': start_time,
                                            'obs_end_time': end_time,
                                            'jump_count': cosmic_ray_num,
+                                           'jump_rate': cr_rate,
                                            'magnitude': cosmic_ray_mags
                                            }
                     self.stats_table.__table__.insert().execute(cosmic_ray_db_entry)

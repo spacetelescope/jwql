@@ -93,10 +93,10 @@ class CosmicRayMonitor():
         database query result
         """
         self.times = [row.obs_end_time for row in self.cosmic_ray_table]
-        self.count = [row.jump_count for row in self.cosmic_ray_table]
+        self.rate = [row.jump_rate for row in self.cosmic_ray_table]
 
         #self.times = [datetime(2022,1,i) for i in range(1,16)]  # for testing
-        #self.count = [40000. + i*1000 for i in range(1,16)]  # for testing
+        #self.rate = [40000. + i*1000 for i in range(1,16)]  # for testing
 
 
     def histogram_plot(self):
@@ -130,22 +130,22 @@ class CosmicRayMonitor():
         # If there are no data, create a reasonable looking empty plot
         if len(self.times) == 0:
             self.times = [datetime(2021, 12, 25), datetime(2021, 12, 26)]
-            self.count = [0, 0]
+            self.rate = [0, 0]
 
-        source = ColumnDataSource(data={'x': self.times, 'y': self.count})
+        source = ColumnDataSource(data={'x': self.times, 'y': self.rate})
 
         # Create a useful plot title
         title = f'CR Rates: {self._instrument}, {self._aperture}'
 
         # Create figure
         fig = figure(tools='zoom_in, zoom_out, box_zoom, pan, reset, save', x_axis_type='datetime',
-                     title=title, x_axis_label='Date', y_axis_label='Number of Cosmic Rays')
+                     title=title, x_axis_label='Date', y_axis_label='CR rate (per pix per sec)')
 
         # For cases where the plot contains only a single point, force the
         # plot range to something reasonable
         if len(self.times) < 2:
             fig.x_range = Range1d(self.times[0] - timedelta(days=1), self.times[0] + timedelta(days=1))
-            fig.y_range = Range1d(self.count[0] - 0.5*self.count[0], self.count[0] + 0.5*self.count[0])
+            fig.y_range = Range1d(self.rate[0] - 0.5*self.rate[0], self.rate[0] + 0.5*self.rate[0])
 
         data = fig.scatter(x='x', y='y', line_width=5, line_color='blue', source=source)
         #line = fig.line(x='x', y='y', line_width=5, line_color='blue', source=source)
