@@ -239,7 +239,7 @@ def cosmic_ray_monitor_tabs(instrument):
         )
 
         # CR Rate History tab
-        single_aperture_line = lines_all_apertures[0]
+        single_aperture_line = history_all_apertures[0]
         line_layout = layout(
             [single_aperture_line]
         )

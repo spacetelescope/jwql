@@ -93,7 +93,7 @@ class CosmicRayMonitor():
         database query result
         """
         self.times = [row.obs_end_time for row in self.cosmic_ray_table]
-        self.count = [row.jump_count for row in self.cosmic_ray_table]
+        self.count = [row.jump_rate for row in self.cosmic_ray_table]
 
         #self.times = [datetime(2022,1,i) for i in range(1,16)]  # for testing
         #self.count = [40000. + i*1000 for i in range(1,16)]  # for testing
