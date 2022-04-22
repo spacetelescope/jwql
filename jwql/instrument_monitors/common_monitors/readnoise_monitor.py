@@ -265,7 +265,7 @@ class Readnoise():
         plt.title('{}'.format(outname))
 
         # Save the figure
-        plt.savefig(output_filename, bbox_inches='tight', dpi=200, overwrite=True)
+        plt.savefig(output_filename, bbox_inches='tight', dpi=200)
         set_permissions(output_filename)
         logging.info('\t{} created'.format(output_filename))
 
