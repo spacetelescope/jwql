@@ -3,7 +3,8 @@
 Authors
 -------
 
-    - Mike Engesser
+    - Bryan Hilbert
+
 Use
 ---
 
@@ -11,16 +12,21 @@ Use
     ::
 
         from jwql.website.apps.jwql import monitor_pages
-        monitor_template = monitor_pages.CosmicRayMonitor()
+        monitor_template = monitor_pages.CosmicRayMonitor('nircam', 'NRCA1_FULL')
+
+Bokeh figures will then be in:
+        monitor_template.history_figure
+        monitor_template.histogram_figure
 """
 
-import datetime
+from datetime import datetime, timedelta
 import os
 
+from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool
+from bokeh.plotting import figure
 import matplotlib.pyplot as plt
 import numpy as np
 
-from jwql.bokeh_templating import BokehTemplate
 from jwql.database.database_interface import session
 from jwql.database.database_interface import MIRICosmicRayQueryHistory, MIRICosmicRayStats
 from jwql.database.database_interface import NIRCamCosmicRayQueryHistory, NIRCamCosmicRayStats
@@ -30,51 +36,44 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-class CosmicRayMonitor(BokehTemplate):
+class CosmicRayMonitor():
+    def __init__(self, instrument, aperture):
+        """Create instance
 
-    # Combine instrument and aperture into a single property because we
-    # do not want to invoke the setter unless both are updated
-    @property
-    def aperture_info(self):
-        return (self._instrument, self._aperture)
+        Parameters
+        ----------
+        instrument : str
+            Name of JWST instrument. e.g. 'nircam'
 
-    @aperture_info.setter
-    def aperture_info(self, info):
-        self._instrument, self._aperture = info
-        self.pre_init()
-        self.post_init()
+        aperture : str
+            Name of aperture. e.g. 'NRCA1_FULL'
+        """
+        self._instrument = instrument
+        self._aperture = aperture
+        self.create_figures()
 
-    def pre_init(self):
-        # Start with default values for instrument and aperture because
-        # BokehTemplate's __init__ method does not allow input arguments
-        try:
-            dummy_instrument = self._instrument
-            dummy_aperture = self._aperture
-        except AttributeError:
-            self._instrument = 'MIRI'
-            self._aperture = 'MIRIM_FULL'
-
-        self._embed = True
-
-        # App design
-        self.format_string = None
-        self.interface_file = os.path.join(SCRIPT_DIR, "yaml", "cosmic_ray_monitor_interface.yaml")
-
-        # Load data tables
+    def create_figures(self):
+        """Wrapper function to create both the history and histogram plots
+        for a given instrument/aperture.
+        """
+        # Get the data
         self.load_data()
-        self.get_history_data()
 
-        # Get dates and coordinates of the most recent entries
-        #self.most_recent_data()
+        # Create the history plot
+        self.history_figure = self.history_plot()
 
-    def post_init(self):
-        self._update_cosmic_ray_v_time()
-        self._update_cosmic_ray_histogram()
+        # Create the histogram plot
+        self.histogram_figure = self.histogram_plot()
 
     def get_histogram_data(self):
         """Get data required to create cosmic ray histogram from the
         database query.
         """
+
+        #self.mags = {}   # For testing
+        #self.mags[-1] = [2000]*3 + [4000]*10 + [7500]*36 + [12500]*45 + [45000]*89 + [100000]*125 + [120000]*80 + [150000]*64 + [190000]*32 + [210000]*5  # For testing
+
+        self.mags = [row.magnitude for row in self.cosmic_ray_table]
 
         last_hist_index = -1
         hist = plt.hist(self.mags[last_hist_index])
@@ -89,15 +88,81 @@ class CosmicRayMonitor(BokehTemplate):
         """Extract data on the history of cosmic ray numbers from the
         database query result
         """
-        self.cosmic_ray_history = {}
-
         self.times = [row.obs_end_time for row in self.cosmic_ray_table]
         self.count = [row.jump_count for row in self.cosmic_ray_table]
 
-        self.mags = [row.magnitude for row in self.cosmic_ray_table]
+        #self.times = [datetime(2022,1,i) for i in range(1,16)]  # for testing
+        #self.count = [40000. + i*1000 for i in range(1,16)]  # for testing
 
-        hover_values = np.array([datetime.datetime.strftime(t, "%d-%b-%Y") for t in self.times])
-        self.cosmic_ray_history['Cosmic Rays'] = (self.times, self.count, hover_values)
+
+    def histogram_plot(self):
+        """Create the histogram figure of CR magnitudes.
+        """
+        self.get_histogram_data()
+
+        title = f'Magnitudes: {self._instrument}, {self._aperture}'
+        fig = figure(title=title, tools='zoom_in, zoom_out, box_zoom, pan, reset, save', background_fill_color="#fafafa")
+        fig.quad(top=self.amplitude, bottom=0, left=self.bin_left, right=self.bin_left+self.bin_width,
+                 fill_color="navy", line_color="white", alpha=0.5)
+
+        fig.y_range.start = 0
+        fig.xaxis.formatter.use_scientific = False
+        fig.xaxis.major_label_orientation = np.pi / 4
+
+        hover_tool = HoverTool(tooltips=[('Num CRs: ', '@top{int}')])
+        fig.tools.append(hover_tool)
+
+        fig.xaxis.axis_label = 'Cosmic Ray Magnitude (DN)'
+        fig.yaxis.axis_label = 'Number of Cosmic Rays'
+        fig.grid.grid_line_color = "white"
+        fig.sizing_mode = "scale_width"
+        return fig
+
+    def history_plot(self):
+        """Create the plot of CR rates versus time
+        """
+        self.get_history_data()
+
+        if len(self.times) == 0:
+            null_dates = [datetime(2021, 12, 25), datetime(2021, 12, 26)]
+            null_vals = [0, 0]
+            source = ColumnDataSource(data={'x': null_dates, 'y': null_vals})
+        else:
+            source = ColumnDataSource(data={'x': self.times, 'y': self.count})
+
+        # Create a useful plot title
+        title = f'CR Rates: {self._instrument}, {self._aperture}'
+
+        # Create figure
+        fig = figure(tools='zoom_in, zoom_out, box_zoom, pan, reset, save', x_axis_type='datetime',
+                     title=title, x_axis_label='Date', y_axis_label='Number of Cosmic Rays')
+
+        # For cases where the plot contains only a single point, force the
+        # plot range to something reasonable
+        if len(self.times) < 2:
+            fig.x_range = Range1d(self.times[0] - timedelta(days=1), self.times[0] + timedelta(days=1))
+            fig.y_range = Range1d(self.count[0] - 0.5*self.count[0], self.count[0] + 0.5*self.count[0])
+
+        data = fig.scatter(x='x', y='y', line_width=5, line_color='blue', source=source)
+        #line = fig.line(x='x', y='y', line_width=5, line_color='blue', source=source)
+
+        # Make the x axis tick labels look nice
+        fig.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
+                                                    seconds=["%d %b %H:%M:%S.%3N"],
+                                                    hours=["%d %b %H:%M"],
+                                                    days=["%d %b %H:%M"],
+                                                    months=["%d %b %Y %H:%M"],
+                                                    years=["%d %b %Y"]
+                                                    )
+        fig.xaxis.major_label_orientation = np.pi / 4
+
+        hover_tool = HoverTool(tooltips=[('Value', '@y'),
+                                         ('Date', '@x{%d %b %Y %H:%M:%S}')
+                                         ], mode='mouse', renderers=[data])
+        hover_tool.formatters = {'@x': 'datetime'}
+        fig.tools.append(hover_tool)
+        fig.sizing_mode = "scale_width"
+        return fig
 
     def identify_tables(self):
         """Determine which database tables as associated with
@@ -117,47 +182,6 @@ class CosmicRayMonitor(BokehTemplate):
             .filter(self.stats_table.aperture == self._aperture) \
             .all()
 
-    def most_recent_data(self):
-        """Get the cosmic ray magnitudes associated with the most
-        recent run of the monitor.
-        """
-
-        cosmic_ray_times = [row.obs_end_time for row in self.cosmic_ray_table]
-
-        if len(cosmic_ray_times) > 0:
-            self.most_recent_obs = max(cosmic_ray_times)
-        else:
-            self.most_recent_obs = datetime.datetime(1999, 10, 31)
-
-    def _update_cosmic_ray_v_time(self):
-        """Update the plot properties for the plots of the number of cosmic rays
-        versus time.
-        """
-
-        self.refs['cosmic_ray_x_range'].start = min(self.times)
-        self.refs['cosmic_ray_x_range'].end = max(self.times)
-        self.refs['cosmic_ray_y_range'].start = min(self.count)
-        self.refs['cosmic_ray_y_range'].end = max(self.count)
-
-        self.refs['cosmic_ray_history_figure'].title.text = '{} Cosmic Ray History'.format(self.aperture)
-        self.refs['cosmic_ray_history_figure'].title.align = "center"
-        self.refs['cosmic_ray_history_figure'].title.text_font_size = "20px"
-
-    def _update_cosmic_ray_histogram():
-
-        mags = [row.magnitude for row in self.cosmic_ray_table]
-
-        self.refs['hist_x_range'].start = 0
-        self.refs['hist_x_range'].end = max(mags)
-
-        self.refs['hist_y_range'].start = 0
-        self.refs['hist_y_range'].end = max(mags)
-
-        self.refs['cosmic_ray_histogram'].title.text = '{}} Cosmic Ray Intensities'.format(self.aperture)
-        self.refs['cosmic_ray_histogram'].title.align = "center"
-        self.refs['cosmic_ray_histogram'].title.text_font_size = "20px"
-
-
 # Uncomment the line below when testing via the command line:
 # bokeh serve --show monitor_cosmic_rays_bokeh.py
-CosmicRayMonitor()
+#CosmicRayMonitor('nircam', 'NRCA1_FULL')

@@ -8,6 +8,7 @@ Authors
 -------
 
     - Gray Kanarek
+    - Bryan Hilbert
 
 Use
 ---
@@ -199,25 +200,22 @@ def cosmic_ray_monitor_tabs(instrument):
 
     full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
 
-    templates_all_apertures = {}
+    histograms_all_apertures = []
+    history_all_apertures = []
     for aperture in full_apertures:
 
         # Start with default values for instrument and aperture because
         # BokehTemplate's __init__ method does not allow input arguments
-        monitor_template = monitor_pages.CosmicRayMonitor()
+        monitor_template = monitor_pages.CosmicRayMonitor(instrument.lower(), aperture)
 
         # Set instrument and monitor using CosmicRayMonitor's setters
-        monitor_template.aperture_info = (instrument, aperture)
-        templates_all_apertures[aperture] = monitor_template
+        #monitor_template.aperture_info = (instrument, aperture)
+        #templates_all_apertures[aperture] = monitor_template
+        histograms_all_apertures.append(monitor_template.histogram_figure)
+        history_all_apertures.append(monitor_template.history_figure)
 
-    # Histogram tab
-    histograms_all_apertures = []
-    for aperture_name, template in templates_all_apertures.items():
-        histogram = template.refs["cosmic_ray_histogram"]
-        histogram.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-        histograms_all_apertures.append(histogram)
-
-    if instrument == 'NIRCam':
+    if instrument.lower() == 'nircam':
+        # Histogram tab
         a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = histograms_all_apertures
         histogram_layout = layout(
             [a2, a4, b3, b1],
@@ -225,39 +223,30 @@ def cosmic_ray_monitor_tabs(instrument):
             [a5, b5]
         )
 
-    elif instrument in ['MIRI']:
+        # CR Rate History tab
+        a1_line, a2_line, a3_line, a4_line, a5_line, b1_line, b2_line, b3_line, b4_line, b5_line = history_all_apertures
+        line_layout = layout(
+            [a2_line, a4_line, b3_line, b1_line],
+            [a1_line, a3_line, b4_line, b2_line],
+            [a5_line, b5_line]
+        )
+
+    elif instrument.lower() in ['miri']:
+        # Histogram tab
         single_aperture = histograms_all_apertures[0]
         histogram_layout = layout(
             [single_aperture]
         )
 
+        # CR Rate History tab
+        single_aperture_line = lines_all_apertures[0]
+        line_layout = layout(
+            [single_aperture_line]
+        )
+
+    # Allow figure sizes to scale with window
     histogram_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
     histogram_tab = Panel(child=histogram_layout, title="Histogram")
-
-    # Cosmic Ray v. time tab
-    lines_all_apertures = []
-    for aperture_name, template in templates_all_apertures.items():
-        line = template.refs["cosmic_ray_history_figure"]
-        line.title.align = "center"
-        line.title.text_font_size = "20px"
-        line.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
-        lines_all_apertures.append(line)
-
-    if instrument == 'NIRCam':
-        a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = lines_all_apertures
-        line_layout = layout(
-            [a2, a4, b3, b1],
-            [a1, a3, b4, b2],
-            [a5, b5]
-        )
-
-    elif instrument in ['MIRI']:
-        single_aperture = lines_all_apertures[0]
-        line_layout = layout(
-            [single_aperture]
-        )
-
-
     line_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
     line_tab = Panel(child=line_layout, title="Trending")
 
@@ -268,8 +257,8 @@ def cosmic_ray_monitor_tabs(instrument):
     script, div = components(tabs)
 
     return div, script
-    
-    
+
+
 def dark_monitor_tabs(instrument):
     """Creates the various tabs of the dark monitor results page.
 

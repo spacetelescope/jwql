@@ -37,8 +37,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Cosmic Ray Histogram Figure
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-- !ColumnDataSource: &cosmic_ray_history_source
-  ref: "cosmic_ray_history_source"
+- !ColumnDataSource: &cosmic_ray_histogram_source
+  ref: "cosmic_ray_histogram_source"
   data:
     bin_center: !self.bin_center
     amplitude: !self.amplitude
