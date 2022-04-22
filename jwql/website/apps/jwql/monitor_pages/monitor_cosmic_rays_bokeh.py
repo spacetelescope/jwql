@@ -75,6 +75,10 @@ class CosmicRayMonitor():
 
         self.mags = [row.magnitude for row in self.cosmic_ray_table]
 
+        # If there are no data, then create something reasonable
+        if len(self.mags) == 0:
+            self.mags = [[0]]
+
         last_hist_index = -1
         hist = plt.hist(self.mags[last_hist_index])
 
