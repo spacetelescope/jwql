@@ -388,6 +388,14 @@ class EdbMnemonic:
             raise ValueError((f'{options[trues]} are set to True in plot_every_change_data. Bokeh '
                               'will only allow one of these to be True.'))
 
+        # yellow and red limits must come in pairs
+        if yellow_limits is not None:
+            if len(yellow_limits) != 2:
+                yellow_limits = None
+        if red_limits is not None:
+            if len(red_limits) != 2:
+                red_limits = None
+
         # If there are no data in the table, then produce an empty plot in the date
         # range specified by the requested start and end time
         if len(self.data["dates"]) == 0:
@@ -425,10 +433,8 @@ class EdbMnemonic:
             fig.x_range = Range1d(self.requested_start_time - timedelta(days=1), self.requested_end_time)
             bottom, top = (-1, 1)
             if yellow_limits is not None:
-                if len(yellow_limits) == 2:
                     bottom, top = yellow_limits
             if red_limits is not None:
-                if len(red_limits) == 2:
                     bottom, top = red_limits
             fig.y_range = Range1d(bottom, top)
 
@@ -752,6 +758,14 @@ class EdbMnemonic:
             data_dates = self.data['dates']
             data_vals = self.data['euvalues']
         source = ColumnDataSource(data={'x': data_dates, 'y': data_vals})
+
+        # yellow and red limits must come in pairs
+        if yellow_limits is not None:
+            if len(yellow_limits) != 2:
+                yellow_limits = None
+        if red_limits is not None:
+            if len(red_limits) != 2:
+                red_limits = None
 
         if savefig:
             filename = os.path.join(out_dir, f"telem_plot_{self.mnemonic_identifier.replace(' ','_')}.html")

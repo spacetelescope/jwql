@@ -1869,6 +1869,14 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
     if title is None:
         title = mnem_name
 
+    # yellow and red limits must come in pairs
+    if yellow_limits is not None:
+        if len(yellow_limits) != 2:
+            yellow_limits = None
+    if red_limits is not None:
+        if len(red_limits) != 2:
+            red_limits = None
+
     # Create figure
     fig = figure(tools='pan,box_zoom,reset,wheel_zoom,save', x_axis_type='datetime',
                  title=title, x_axis_label='Time', y_axis_label=f'{units}')
