@@ -156,9 +156,18 @@ class EdbMnemonic:
         new_data = Table([unique_dates, unique_data], names=('dates', 'euvalues'))
         new_obj = EdbMnemonic(self.mnemonic_identifier, self.data_start_time, self.data_end_time,
                               new_data, self.meta, self.info, blocks=new_blocks)
+
+        if self.mean_time_block is not None:
+            new_obj.mean_time_block = self.mean_time_block
+        elif mnem.mean_time_block is not None:
+            new_obj.mean_time_block = mnem.mean_time_block
+        else:
+            new_obj.mean_time_block = None
+
         return new_obj
 
-    def __init__(self, mnemonic_identifier, start_time, end_time, data, meta, info, blocks=[None]):
+    def __init__(self, mnemonic_identifier, start_time, end_time, data, meta, info, blocks=[None],
+                 mean_time_block=None):
         """Populate attributes.
 
         Parameters
@@ -180,6 +189,8 @@ class EdbMnemonic:
             Index numbers corresponding to the beginning of separate blocks
             of data. This can be used to calculate separate statistics for
             each block.
+        mean_time_block : astropy.units.quantity.Quantity
+            Time period over which data are averaged
         """
 
         self.mnemonic_identifier = mnemonic_identifier
@@ -191,6 +202,7 @@ class EdbMnemonic:
         self.median = None
         self.stdev = None
         self.median_times = None
+        self.mean_time_block = mean_time_block
 
         self.meta = meta
         self.info = info
@@ -215,8 +227,6 @@ class EdbMnemonic:
         Blocks will not be updated, under the assumption that the times in self.data
         will all be kept, and therefore self.blocks will remain correct after
         multiplication.
-
-        BLOCKS DO NEED TO BE UPDATED HERE, DUE TO POTENTIALLY LOSING EXTRAPOLATED ROWS!!!!
 
         Parameters
         ----------
@@ -265,6 +275,12 @@ class EdbMnemonic:
 
         new_obj = EdbMnemonic(self.mnemonic_identifier, self.requested_start_time, self.requested_end_time,
                               new_tab, self.meta, self.info, blocks=use_blocks)
+        if self.mean_time_block is not None:
+            new_obj.mean_time_block = self.mean_time_block
+        elif mnem.mean_time_block is not None:
+            new_obj.mean_time_block = mnem.mean_time_block
+        else:
+            new_obj.mean_time_block = None
 
         try:
             combined_unit = (u.Unit(self.info['unit']) * u.Unit(mnem.info['unit'])).compose()[0]
@@ -891,19 +907,16 @@ class EdbMnemonic:
         """
         ascii.write(self.data, outname, overwrite=True)
 
-    def timed_stats(self, duration, sigma=3):
+    def timed_stats(self, sigma=3):
         """Break up the data into chunks of the given duration. Calculate the
         mean value for each chunk.
 
         Parameters
         ----------
-        duration : astropy.quantity.Quantity
-            Length of time of each chunk of data
-
         sigma : int
             Number of sigma to use in sigma-clipping
         """
-        duration_secs = duration.to('second').value
+        duration_secs = self.mean_time_block.to('second').value
         date_arr = np.array(self.data["dates"])
         num_bins = (np.max(self.data["dates"]) - np.min(self.data["dates"])).total_seconds() / duration_secs
 
@@ -926,17 +939,6 @@ class EdbMnemonic:
             self.median.append(med)
             self.stdev.append(dev)
             self.median_times.append(calc_median_time(self.data["dates"].data[good]))
-
-
-
-
-
-
-
-
-
-
-
 
 
 def add_limit_boxes(fig, yellow=None, red=None):

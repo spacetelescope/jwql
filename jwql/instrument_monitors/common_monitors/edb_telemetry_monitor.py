@@ -1055,6 +1055,9 @@ class EdbMnemonicMonitor():
             # for other telemety types, but will be needed for plotting and saving data in the database.
             good_mnemonic_data = self.find_all_changes(good_mnemonic_data, mnemonic['dependency'])
 
+        if telemetry_type == 'time_interval':
+            good_mnemonic_data.mean_time_block = utils.get_averaging_time_duration(mnemonic["mean_time_block"])
+
         # If the filtered data contains enough entries, then proceed.
         if len(good_mnemonic_data) > 0:
             return good_mnemonic_data
@@ -1676,8 +1679,7 @@ def calculate_statistics(mnemonic_instance, telemetry_type):
     elif telemetry_type == "every_change":
         mnemonic_instance.block_stats()
     elif telemetry_type == "time_interval":
-        stats_duration = utils.get_averaging_time_duration(mnemonic["mean_time_block"])
-        mnemonic_instance.timed_stats(stats_duration)
+        mnemonic_instance.timed_stats()
     elif telemetry_type == "all":
         mnemonic_instance.full_stats()
     return mnemonic_instance
