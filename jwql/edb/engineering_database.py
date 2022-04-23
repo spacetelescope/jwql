@@ -425,9 +425,11 @@ class EdbMnemonic:
             fig.x_range = Range1d(self.requested_start_time - timedelta(days=1), self.requested_end_time)
             bottom, top = (-1, 1)
             if yellow_limits is not None:
-                bottom, top = yellow_limits
+                if len(yellow_limits) == 2:
+                    bottom, top = yellow_limits
             if red_limits is not None:
-                bottom, top = red_limits
+                if len(red_limits) == 2:
+                    bottom, top = red_limits
             fig.y_range = Range1d(bottom, top)
 
         data = fig.scatter(x='x', y='y', line_width=1, line_color='blue', source=source)
