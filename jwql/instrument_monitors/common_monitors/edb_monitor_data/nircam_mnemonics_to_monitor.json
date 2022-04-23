@@ -404,44 +404,6 @@
             "plot_category": "ICE_current",
             "mean_time_block": "1_day"
         },
-
-
-These two need to be filtered for only when the FAM is moved. What dependencies should we use?
-        {
-            "name": "INRC_ICE_DC_CUR_P30_MOT",
-            "description": "ICE HK +15V current for FAM motor drive",
-            "dependency": [
-                {
-                    "name": "INRC_ICE_DC_CUR_P30_MOT",
-                    "relation": ">",
-                    "threshold": 0.0
-                }
-            ],
-            "plot_data": "nominal",
-            "yellow_limits": [0.0, 0.13],
-            "red_limits": [-0.01, 0.8426],
-            "plot_category": "ICE_current",
-            "mean_time_block": "1_day"
-        },
-        {
-            "name": "INRC_ICE_DC_CUR_N30_MOT",
-            "description": "ICE HK -15V current for FAM motor drive",
-            "dependency": [
-                {
-                    "name": "INRC_ICE_DC_CUR_N30_MOT",
-                    "relation": ">",
-                    "threshold": 0.0
-                }
-            ],
-            "plot_data": "nominal",
-            "yellow_limits": [0.0, 0.32],
-            "red_limits": [-0.01, 0.8426],
-            "plot_category": "ICE_current",
-            "mean_time_block": "1_day"
-        },
-
-
-
         {
             "name": "IGDP_NRC_A_T_ICE_POS_EL",
             "description": "ICE position sensor board internal Cernox sensor, SN X45683",
