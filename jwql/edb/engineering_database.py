@@ -1196,7 +1196,8 @@ def get_mnemonic(mnemonic_identifier, start_time, end_time):
         # the max for this should be 1, but it's also possible to have zero (e.g. if you are
         # querying up through the present and there are no more recent data values.) Use these
         # to produce entries at the beginning and ending of the queried time range.
-        dates, values = change_only_bounding_points(dates, values, start_time, end_time)
+        if len(dates) > 0:
+            dates, values = change_only_bounding_points(dates, values, start_time, end_time)
 
     data = Table({'dates': dates, 'euvalues': values})
     info = get_mnemonic_info(mnemonic_identifier)

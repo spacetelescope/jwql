@@ -1095,7 +1095,8 @@ class EdbMnemonicMonitor():
         query = session.query(self.history_table).filter(self.history_table.mnemonic == telem_name).order_by(self.history_table.latest_query).all()
 
         if len(query) == 0:
-            base_time = '2021-09-01 00:00:0.0'
+            #base_time = '2021-09-01 00:00:0.0'
+            base_time = '2022-04-12 00:00:0.0'
             query_result = datetime.datetime.strptime(base_time, '%Y-%m-%d %H:%M:%S.%f')
             logging.info(f'\tNo query history for {telem_name}. Returning default "previous query" date of {base_time}.')
             print(f'\tNo query history for {telem_name}. Returning default "previous query" date of {base_time}.')
@@ -1292,7 +1293,7 @@ class EdbMnemonicMonitor():
         self.figures = {}
         self.instrument = instrument
 
-        self._today = datetime.datetime(2022, 4, 12, 0, 0, 0)
+        self._today = datetime.datetime(2022, 4, 20, 0, 0, 0)
         #self._today = datetime.datetime(2021, 9, 4, 9, 0, 0)
         #self._today = datetime.now()
 
