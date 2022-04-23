@@ -159,6 +159,7 @@ class CosmicRayMonitor():
                                                     years=["%d %b %Y"]
                                                     )
         fig.xaxis.major_label_orientation = np.pi / 4
+        fig.yaxis[0].formatter = BasicTickFormatter(use_scientific=True, precision=2)
 
         hover_tool = HoverTool(tooltips=[('Value', '@y'),
                                          ('Date', '@x{%d %b %Y %H:%M:%S}')
