@@ -296,7 +296,7 @@
             "yellow_limits": [-5.15, -4.95],
             "red_limits": [-5.4, 1.0],
             "plot_category": "ModB_PSC_voltages+currents"
-        },
+        }
     ],
     "block_means": [
     ],
@@ -2246,6 +2246,6 @@
             "red_limits": [0, 1],
             "plot_category": "FPA_heater_setpt",
             "mean_time_block": "1_day"
-        },
+        }
     ]
 }

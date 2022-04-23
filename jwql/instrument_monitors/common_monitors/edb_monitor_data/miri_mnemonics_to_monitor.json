@@ -34,7 +34,7 @@
             "plot_data": "*SE_ZBUSVLT",
             "nominal_value": 7.57,
             "yellow_limits": [7.0, 8.13],
-            "plot_category": "Power",
+            "plot_category": "Power"
         },
         {
             "name": "IMIR_HK_ICE_SEC_VOLT4",
@@ -70,7 +70,7 @@
             "plot_data": "nominal",
             "nominal_value": 4.53,
             "yellow_limits": [4.52, 4.55],
-            "plot_category": "ICE_voltage",
+            "plot_category": "ICE_voltage"
         },
         {
             "name": "IGDP_MIR_ICE_INTER_TEMP",
@@ -1807,7 +1807,7 @@
             "plot_data": "nominal",
             "nominal_value": 39.21,
             "yellow_limits": [39.11, 39.31],
-            "plot_category": "ICE_voltage",
+            "plot_category": "ICE_voltage"
         },
         {
             "name": "IMIR_HK_ICE_SEC_VOLT2",
@@ -1823,7 +1823,7 @@
             "plot_data": "nominal",
             "nominal_value": 79.19,
             "yellow_limits": [78.99, 79.39],
-            "plot_category": "ICE_voltage",
+            "plot_category": "ICE_voltage"
         },
         {
             "name": "IMIR_HK_ICE_SEC_VOLT3",
@@ -1839,7 +1839,7 @@
             "plot_data": "nominal",
             "nominal_value": 39.87,
             "yellow_limits": [39.82, 39.92],
-            "plot_category": "ICE_voltage",
+            "plot_category": "ICE_voltage"
         },
         {
             "name": "IMIR_HK_ICE_SEC_VOLT4",
@@ -1855,7 +1855,7 @@
             "plot_data": "nominal",
             "nominal_value": 4.88,
             "yellow_limits": [4.86, 4.91],
-            "plot_category": "ICE_voltage",
+            "plot_category": "ICE_voltage"
         },
         {
             "name": "SE_ZIMIRICEA",
@@ -1871,7 +1871,7 @@
             "plot_data": "*SE_ZBUSVLT",
             "nominal_value": 11.13,
             "yellow_limits": [10.23, 12.02],
-            "plot_category": "ICE_power",
+            "plot_category": "ICE_power"
         },
         {
             "name": "IMIR_HK_FW_POS_VOLT",
@@ -1887,7 +1887,7 @@
             "plot_data": "nominal",
             "nominal_value": 292.39,
             "yellow_limits": [290.39, 294.39],
-            "plot_category": "filter_wheel",
+            "plot_category": "filter_wheel"
         },
         {
             "name": "IMIR_HK_GW14_POS_VOLT",
@@ -1903,7 +1903,7 @@
             "plot_data": "nominal",
             "nominal_value": 293.92,
             "yellow_limits": [291.92, 295.92],
-            "plot_category": "filter_wheel",
+            "plot_category": "filter_wheel"
         },
         {
             "name": "IMIR_HK_GW23_POS_VOLT",
@@ -1919,7 +1919,7 @@
             "plot_data": "nominal",
             "nominal_value": 297.52,
             "yellow_limits": [295.52, 299.52],
-            "plot_category": "filter_wheel",
+            "plot_category": "filter_wheel"
         },
         {
             "name": "IMIR_HK_CCC_POS_VOLT",
@@ -1935,7 +1935,7 @@
             "plot_data": "nominal",
             "nominal_value": 296.31,
             "yellow_limits": [294.31, 298.31],
-            "plot_category": "filter_wheel",
+            "plot_category": "filter_wheel"
         }
     ],
     "every_change": [
