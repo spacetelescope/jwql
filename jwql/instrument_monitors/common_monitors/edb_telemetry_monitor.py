@@ -576,10 +576,10 @@ class EdbMnemonicMonitor():
                 monitor_dir = os.path.dirname(os.path.abspath(__file__))
 
                 # For development
-                if instrument == 'miri':
+                if instrument_name == 'miri':
                     #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_test.json')
                     mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_mnemonics_to_monitor.json')
-                elif instrument == 'nircam':
+                elif instrument_name == 'nircam':
                     mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'nircam_mnemonics_to_monitor.json')
 
                 # Define the output directory in which the html files will be saved
