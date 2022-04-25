@@ -423,6 +423,7 @@ class Readnoise():
                 set_permissions(processed_file)
             except:
                 logging.info('\tPipeline processing failed for {}'.format(filename))
+                os.remove(filename)
                 continue
 
             # Find amplifier boundaries so per-amp statistics can be calculated
@@ -437,8 +438,8 @@ class Readnoise():
             # Make the readnoise image
             readnoise_outfile = os.path.join(self.data_dir, os.path.basename(processed_file.replace('.fits', '_readnoise.fits')))
             readnoise = self.make_readnoise_image(cal_data)
-            fits.writeto(readnoise_outfile, readnoise, overwrite=True)
-            logging.info('\tReadnoise image saved to {}'.format(readnoise_outfile))
+            #fits.writeto(readnoise_outfile, readnoise, overwrite=True)
+            #logging.info('\tReadnoise image saved to {}'.format(readnoise_outfile))
 
             # Calculate the full image readnoise stats
             clipped = sigma_clip(readnoise, sigma=3.0, maxiters=5)
