@@ -271,36 +271,49 @@ def archived_proposals_ajax(request, inst):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
     filesystem = get_config()['filesystem']
 
+    # Dictionary to hold summary information for all proposals
+    all_proposals = get_all_proposals()
+    all_proposal_info = {'num_proposals': 0,
+                         'proposals': [],
+                         'thumbnail_paths': [],
+                         'num_files': []}
+
     # Get list of all files for the given instrument
-    filename_query = mast_query_filenames_by_instrument(inst)
-    filenames_public = get_filenames_by_instrument(inst, restriction='public', query_response=filename_query)
-    filenames_proprietary = get_filenames_by_instrument(inst, restriction='proprietary', query_response=filename_query)
+    for proposal in all_proposals:
+        filename_query = mast_query_filenames_by_instrument(inst, proposal)
+        filenames_public = get_filenames_by_instrument(inst, restriction='public', query_response=filename_query)
+        filenames_proprietary = get_filenames_by_instrument(inst, restriction='proprietary', query_response=filename_query)
 
-    # Determine locations to the files
-    filenames = []
-    for filename in filenames_public:
-        try:
-            relative_filepath = filesystem_path(filename, check_existence=False)
-            full_filepath = os.path.join(filesystem, 'public', relative_filepath)
-            filenames.append(full_filepath)
-        except ValueError:
-            print('Unable to determine filepath for {}'.format(filename))
-    for filename in filenames_proprietary:
-        try:
-            relative_filepath = filesystem_path(filename, check_existence=False)
-            full_filepath = os.path.join(filesystem, 'proprietary', relative_filepath)
-            filenames.append(full_filepath)
-        except ValueError:
-            print('Unable to determine filepath for {}'.format(filename))
+        # Determine locations to the files
+        filenames = []
+        for filename in filenames_public:
+            try:
+                relative_filepath = filesystem_path(filename, check_existence=False)
+                full_filepath = os.path.join(filesystem, 'public', relative_filepath)
+                filenames.append(full_filepath)
+            except ValueError:
+                print('Unable to determine filepath for {}'.format(filename))
+        for filename in filenames_proprietary:
+            try:
+                relative_filepath = filesystem_path(filename, check_existence=False)
+                full_filepath = os.path.join(filesystem, 'proprietary', relative_filepath)
+                filenames.append(full_filepath)
+            except ValueError:
+                print('Unable to determine filepath for {}'.format(filename))
 
-    # Gather information about the proposals for the given instrument
-    proposal_info = get_proposal_info(filenames)
+        if len(filenames) > 0:
+            # Gather information about the proposals for the given instrument
+            proposal_info = get_proposal_info(filenames)
+            all_proposal_info['num_proposals'] = all_proposal_info['num_proposals'] + 1
+            all_proposal_info['proposals'].append(proposal)
+            all_proposal_info['thumbnail_paths'].append(proposal_info['thumbnail_paths'])
+            all_proposal_info['num_files'].append(proposal_info['num_files'])
 
     context = {'inst': inst,
-               'num_proposals': proposal_info['num_proposals'],
-               'thumbnails': {'proposals': proposal_info['proposals'],
-                              'thumbnail_paths': proposal_info['thumbnail_paths'],
-                              'num_files': proposal_info['num_files']}}
+               'num_proposals': all_proposal_info['num_proposals'],
+               'thumbnails': {'proposals': all_proposal_info['proposals'],
+                              'thumbnail_paths': all_proposal_info['thumbnail_paths'],
+                              'num_files': all_proposal_info['num_files']}}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
