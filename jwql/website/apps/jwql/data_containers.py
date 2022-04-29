@@ -495,7 +495,7 @@ def get_expstart(instrument, rootname):
     return expstart
 
 
-def get_filenames_by_instrument(instrument, proposal, restriction='all', query_file=None, query_response=None):
+def get_filenames_by_instrument(instrument, proposal, restriction='all', query_file=None, query_response=None, other_columns=None):
     """Returns a list of filenames that match the given ``instrument``.
 
     Parameters
@@ -517,14 +517,19 @@ def get_filenames_by_instrument(instrument, proposal, restriction='all', query_f
         essentially be the returned value from a call to mast_query_filenames_by_instrument.
         If this is provided, the call to that function is skipped, which can save a
         significant amount of time.
+    other_columns : list
+        List of other columns to retrieve from the MAST query
 
     Returns
     -------
     filenames : list
         A list of files that match the given instrument.
+    col_data : dict
+        Dictionary of other attributes returned from MAST. Keys are the attribute names
+        e.g. 'exptime', and values are lists of the value for each filename. e.g. ['59867.6, 59867.601']
     """
     if not query_file and not query_response:
-        result = mast_query_filenames_by_instrument(instrument, proposal)
+        result = mast_query_filenames_by_instrument(instrument, proposal, other_columns=other_columns)
 
     elif query_response:
         result = query_response
@@ -532,20 +537,37 @@ def get_filenames_by_instrument(instrument, proposal, restriction='all', query_f
         with open(query_file) as fobj:
             result = fobj.readlines()
 
+    if other_columns is not None:
+        col_data = {}
+        for element in extra_columns:
+            col_data[element] = []
+
     # Determine filenames to return based on restriction parameter
     if restriction == 'all':
         filenames = [item['filename'] for item in result['data']]
+        if other_columns is not None:
+            for keyword in other_columns:
+                col_data[keyword] = [item[keyword] for item in result['data']]
     elif restriction == 'public':
         filenames = [item['filename'] for item in result['data'] if item['isRestricted'] is False]
+        if other_columns is not None:
+            for keyword in other_columns:
+                col_data[keyword] = [item[keyword] for item in result['data'] if item['isRestricted'] is False]
     elif restriction == 'proprietary':
         filenames = [item['filename'] for item in result['data'] if item['isRestricted'] is True]
+        if other_columns is not None:
+            for keyword in other_columns:
+                col_data[keyword] = [item[keyword] for item in result['data'] if item['isRestricted'] is True]
     else:
         raise KeyError('{} is not a valid restriction level.  Use "all", "public", or "proprietary".'.format(restriction))
+
+    if other_columns is not None:
+        return (filenames, col_data)
 
     return filenames
 
 
-def mast_query_filenames_by_instrument(instrument, proposal_id):
+def mast_query_filenames_by_instrument(instrument, proposal_id, other_columns=None):
     """Query MAST for filenames for the given instrument. Return the json
     response from MAST.
 
@@ -555,14 +577,21 @@ def mast_query_filenames_by_instrument(instrument, proposal_id):
         The instrument of interest (e.g. `FGS`).
     proposal_id : str
         Proposal ID number to use to filter the results
+    other_columns : list
+        List of other columns to return from the MAST query
 
     Returns
     -------
     result : dict
         Dictionary of file information
     """
+    if other_columns is None:
+        columns = "filename, isRestricted"
+    else:
+        columns = "filename, isRestricted, " + ", ".join(other_columns)
+
     service = INSTRUMENT_SERVICE_MATCH[instrument]
-    params = {"columns": "filename, isRestricted", "filters": [{'paramName': 'program', "values": [proposal_id]}]}
+    params = {"columns": columns, "filters": [{'paramName': 'program', "values": [proposal_id]}]}
     response = Mast.service_request_async(service, params)
     result = response[0].json()
     return result
@@ -1246,7 +1275,7 @@ def thumbnails_ajax(inst, proposal):
     """
 
     # Get the available files for the instrument
-    filenames = get_filenames_by_instrument(inst, proposal)
+    filenames, columns = get_filenames_by_instrument(inst, proposal, other_columns='expstart')
 
     # Get set of unique rootnames
     rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
@@ -1282,8 +1311,10 @@ def thumbnails_ajax(inst, proposal):
                              'visit': rootname[10:13],
                              'visit_group': rootname[14:16]}
 
-        # Get list of available filenames
+        # Get list of available filenames and exposure start times. All files with a given
+        # rootname will have the same exposure start time, so just keep the first.
         available_files = [item for item in filenames if rootname in item]
+        exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
 
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
@@ -1291,8 +1322,8 @@ def thumbnails_ajax(inst, proposal):
         data_dict['file_data'][rootname]['available_files'] = available_files
         data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for filename in available_files]
         try:
-            data_dict['file_data'][rootname]['expstart'] = get_expstart(inst, rootname)
-            data_dict['file_data'][rootname]['expstart_iso'] = Time(data_dict['file_data'][rootname]['expstart'], format='mjd').iso.split('.')[0]
+            data_dict['file_data'][rootname]['expstart'] = exp_start
+            data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
         except:
             print("issue with get_expstart for {}".format(rootname))
 
@@ -1325,21 +1356,22 @@ def thumbnails_ajax(inst, proposal):
     return data_dict
 
 
-def thumbnails_query_ajax(rootnames):
+def thumbnails_query_ajax(rootnames, expstarts=None):
     """Generate a page that provides data necessary to render the
     ``thumbnails`` template.
 
     Parameters
     ----------
-    rootnames : list of strings (optional)
+    rootnames : list of strings
         Rootname of APT proposal to filter
+    expstarts : list
+        Exposure start times from MAST (mjd)
 
     Returns
     -------
     data_dict : dict
         Dictionary of data needed for the ``thumbnails`` template
     """
-
     # Initialize dictionary that will contain all needed data
     data_dict = {}
     # dummy variable for view_image when thumbnail is selected
