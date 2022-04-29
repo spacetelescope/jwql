@@ -539,7 +539,7 @@ def get_filenames_by_instrument(instrument, proposal, restriction='all', query_f
 
     if other_columns is not None:
         col_data = {}
-        for element in extra_columns:
+        for element in other_columns:
             col_data[element] = []
 
     # Determine filenames to return based on restriction parameter
@@ -1275,7 +1275,7 @@ def thumbnails_ajax(inst, proposal):
     """
 
     # Get the available files for the instrument
-    filenames, columns = get_filenames_by_instrument(inst, proposal, other_columns='expstart')
+    filenames, columns = get_filenames_by_instrument(inst, proposal, other_columns=['expstart'])
 
     # Get set of unique rootnames
     rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
