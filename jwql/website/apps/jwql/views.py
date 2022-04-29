@@ -53,7 +53,7 @@ from jwql.utils.utils import filesystem_path, get_base_url, get_config, query_un
 
 from .data_containers import build_table
 from .data_containers import data_trending
-from .data_containers import get_acknowledgements
+from .data_containers import get_acknowledgements, get_all_proposals
 from .data_containers import get_current_flagged_anomalies
 from .data_containers import get_dashboard_components
 from .data_containers import get_edb_components
@@ -281,8 +281,8 @@ def archived_proposals_ajax(request, inst):
     # Get list of all files for the given instrument
     for proposal in all_proposals:
         filename_query = mast_query_filenames_by_instrument(inst, proposal)
-        filenames_public = get_filenames_by_instrument(inst, restriction='public', query_response=filename_query)
-        filenames_proprietary = get_filenames_by_instrument(inst, restriction='proprietary', query_response=filename_query)
+        filenames_public = get_filenames_by_instrument(inst, proposal, restriction='public', query_response=filename_query)
+        filenames_proprietary = get_filenames_by_instrument(inst, proposal, restriction='proprietary', query_response=filename_query)
 
         # Determine locations to the files
         filenames = []
@@ -306,8 +306,8 @@ def archived_proposals_ajax(request, inst):
             proposal_info = get_proposal_info(filenames)
             all_proposal_info['num_proposals'] = all_proposal_info['num_proposals'] + 1
             all_proposal_info['proposals'].append(proposal)
-            all_proposal_info['thumbnail_paths'].append(proposal_info['thumbnail_paths'])
-            all_proposal_info['num_files'].append(proposal_info['num_files'])
+            all_proposal_info['thumbnail_paths'].append(proposal_info['thumbnail_paths'][0])
+            all_proposal_info['num_files'].append(proposal_info['num_files'][0])
 
     context = {'inst': inst,
                'num_proposals': all_proposal_info['num_proposals'],
