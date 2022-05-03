@@ -49,7 +49,7 @@ from django.shortcuts import redirect, render
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT
-from jwql.utils.utils import filesystem_path, get_base_url, get_config, query_unformat
+from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get_config, query_unformat
 
 from .data_containers import build_table
 from .data_containers import data_trending
@@ -301,13 +301,27 @@ def archived_proposals_ajax(request, inst):
             except ValueError:
                 print('Unable to determine filepath for {}'.format(filename))
 
+
+        # Get set of unique rootnames
+        num_files = 0
+        rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
+        for rootname in rootnames:
+            filename_dict = filename_parser(rootname)
+
+            # Weed out file types that are not supported by generate_preview_images
+            if 'stage_3' not in filename_dict['filename_type']:
+                num_files += 1
+
+
+
         if len(filenames) > 0:
             # Gather information about the proposals for the given instrument
             proposal_info = get_proposal_info(filenames)
             all_proposal_info['num_proposals'] = all_proposal_info['num_proposals'] + 1
             all_proposal_info['proposals'].append(proposal)
             all_proposal_info['thumbnail_paths'].append(proposal_info['thumbnail_paths'][0])
-            all_proposal_info['num_files'].append(proposal_info['num_files'][0])
+            all_proposal_info['num_files'].append(num_files)
+            #all_proposal_info['num_files'].append(proposal_info['num_files'][0])
 
     context = {'inst': inst,
                'num_proposals': all_proposal_info['num_proposals'],

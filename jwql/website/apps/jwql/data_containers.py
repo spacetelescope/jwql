@@ -211,7 +211,7 @@ def get_all_proposals():
     proprietary_proposals = os.listdir(os.path.join(FILESYSTEM_DIR, 'proprietary'))
     public_proposals = os.listdir(os.path.join(FILESYSTEM_DIR, 'public'))
     all_proposals = [prop[2:] for prop in proprietary_proposals+public_proposals if 'jw' in prop]
-    proposals = list(set(all_proposals))
+    proposals = sorted(list(set(all_proposals)))
     return proposals
 
 
@@ -1297,7 +1297,7 @@ def thumbnails_ajax(inst, proposal):
                 filename_dict['detector'] = 'Unknown'
 
             # Weed out file types that are not supported by generate_preview_images
-            if filename_dict['filename_type'] in ['stage_3_target_id']:
+            if 'stage_3' in filename_dict['filename_type']:
                 continue
 
         except ValueError:
