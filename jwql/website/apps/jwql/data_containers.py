@@ -211,8 +211,7 @@ def get_all_proposals():
     proprietary_proposals = os.listdir(os.path.join(FILESYSTEM_DIR, 'proprietary'))
     public_proposals = os.listdir(os.path.join(FILESYSTEM_DIR, 'public'))
     all_proposals = [prop[2:] for prop in proprietary_proposals+public_proposals if 'jw' in prop]
-    proposals = sorted(list(set(all_proposals)))
-    proposals.reverse()
+    proposals = sorted(list(set(all_proposals)), reverse=True)
     return proposals
 
 
