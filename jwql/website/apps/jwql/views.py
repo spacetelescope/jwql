@@ -53,7 +53,7 @@ from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get
 
 from .data_containers import build_table
 from .data_containers import data_trending
-from .data_containers import get_acknowledgements, get_all_proposals
+from .data_containers import get_acknowledgements, get_instrument_proposals
 from .data_containers import get_current_flagged_anomalies
 from .data_containers import get_dashboard_components
 from .data_containers import get_edb_components
@@ -272,7 +272,7 @@ def archived_proposals_ajax(request, inst):
     filesystem = get_config()['filesystem']
 
     # Dictionary to hold summary information for all proposals
-    all_proposals = get_all_proposals()
+    all_proposals = get_instrument_proposals(inst)
     all_proposal_info = {'num_proposals': 0,
                          'proposals': [],
                          'thumbnail_paths': [],
@@ -311,8 +311,6 @@ def archived_proposals_ajax(request, inst):
             # Weed out file types that are not supported by generate_preview_images
             if 'stage_3' not in filename_dict['filename_type']:
                 num_files += 1
-
-
 
         if len(filenames) > 0:
             # Gather information about the proposals for the given instrument

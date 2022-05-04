@@ -38,6 +38,7 @@ from django.conf import settings
 import numpy as np
 from operator import itemgetter
 import pandas as pd
+import pyvo as vo
 import requests
 
 from jwql.database import database_interface as di
@@ -789,16 +790,14 @@ def get_instrument_proposals(instrument):
 
     Returns
     -------
-    proposals : list
+    inst_proposals : list
         List of proposals for the given instrument
     """
-    inst_proposals = []
-    all_proposals = get_all_proposals()
-    for proposal in all_proposals:
-        result = mast_query_filenames_by_instrument(instrument, proposal)
-        if len(result['data']) > 0:
-            inst_proposals.append(proposal)
-    return inst_proposals
+    tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
+    tap_results = tap_service.search(f"select distinct proposal_id from dbo.ObsPointing where obs_collection='JWST' and calib_level>0 and instrument_name like '{instrument.upper()}%'")
+    prop_table = tap_results.to_table()
+    inst_proposals = prop_table['proposal_id'].data
+    return inst_proposals.compressed()
 
 
 def get_preview_images_by_instrument(inst):
@@ -823,7 +822,7 @@ def get_preview_images_by_instrument(inst):
 
     # Query MAST for all rootnames for the instrument
     all_preview_images = []
-    all_proposals = get_all_proposals()
+    all_proposals = get_instrument_proposals(inst)
     for prop in all_proposals:
         prop_result = mast_query_filenames_by_instrument(inst, prop)
 
@@ -1057,7 +1056,7 @@ def get_thumbnails_by_instrument(inst):
     all_thumbnails = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, thumb_inventory))
 
     thumbnails = []
-    all_proposals = get_all_proposals()
+    all_proposals = get_instrument_proposals(inst)
     for proposal in all_proposals:
         result = mast_query_filenames_by_instrument(inst, proposal)
 
