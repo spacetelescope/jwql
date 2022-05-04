@@ -1,8 +1,6 @@
 {
     "admin_account" : "",
     "auth_mast" : "",
-    "client_id" : "",
-    "client_secret" : "",
     "connection_string" : "",
     "database" : {
         "engine" : "",
