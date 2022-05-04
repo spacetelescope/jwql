@@ -144,7 +144,8 @@ def instrument_keywords(instrument, caom=False):
     """
     # Retrieve one dataset to get header keywords
     sample = instrument_inventory(instrument, return_data=True, caom=caom,
-                                  add_requests={'pagesize': 1, 'page': 1})
+                                  add_requests={'pagesize': 1, 'page': 1},
+                                  add_filters={'program': '01440'})
     data = [[i['name'], i['type']] for i in sample['fields']]
     keywords = pd.DataFrame(data, columns=('keyword', 'dtype'))
 
