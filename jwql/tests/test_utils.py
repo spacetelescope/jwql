@@ -307,8 +307,8 @@ def test_filename_parser_whole_filesystem():
     for dir_name, _, file_list in os.walk(filesystem_dir):
         for file in file_list:
             if 'public' in file or 'proprietary' in file:
-              if file.endswith('.fits'):
-                  all_files.append(os.path.join(dir_name, file))
+                if file.endswith('.fits'):
+                    all_files.append(os.path.join(dir_name, file))
 
     # Run the filename_parser on all files
     bad_filenames = []
@@ -364,8 +364,6 @@ def test_validate_config():
     good_config_dict = {
         "admin_account": "",
         "auth_mast": "",
-        "client_id": "",
-        "client_secret": "",
         "connection_string": "",
         "database": {
             "engine": "",
