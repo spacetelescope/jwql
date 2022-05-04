@@ -520,19 +520,10 @@ function update_thumbnails_page(inst, proposal, base_url) {
         url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/',
         success: function(data){
             // Perform various updates to divs
-            let t1 = performance.now();
             update_show_count(Object.keys(data.file_data).length, 'activities');
-            let t2 = performance.now();
             update_thumbnail_array(data);
-            let t3 = performance.now();
             update_filter_options(data);
-            let t4 = performance.now();
             update_sort_options(data);
-            let t5 = performance.now();
-            console.log(`update_show_count time taken is ${t2 - t1}`);
-            console.log(`update_thumbnail_array time taken is ${t3 - t2}`);
-            console.log(`update_filter_options time taken is ${t4 - t3}`);
-            console.log(`update_sort_options time taken is ${t5 - t4}`);
 
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
