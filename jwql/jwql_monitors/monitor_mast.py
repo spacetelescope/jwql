@@ -143,9 +143,13 @@ def instrument_keywords(instrument, caom=False):
         A DataFrame of the keywords
     """
     # Retrieve one dataset to get header keywords
+    if not caom:
+        filter_to_add = {'program': '01440'}
+    else:
+        filter_to_add = {'proposal_id': '01440'}
     sample = instrument_inventory(instrument, return_data=True, caom=caom,
                                   add_requests={'pagesize': 1, 'page': 1},
-                                  add_filters={'program': '01440'})
+                                  add_filters=filter_to_add)
     data = [[i['name'], i['type']] for i in sample['fields']]
     keywords = pd.DataFrame(data, columns=('keyword', 'dtype'))
 
