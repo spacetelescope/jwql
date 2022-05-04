@@ -796,7 +796,8 @@ def get_instrument_proposals(instrument):
     tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
     tap_results = tap_service.search(f"select distinct proposal_id from dbo.ObsPointing where obs_collection='JWST' and calib_level>0 and instrument_name like '{instrument.upper()}%'")
     prop_table = tap_results.to_table()
-    inst_proposals = prop_table['proposal_id'].data
+    proposals = prop_table['proposal_id'].data
+    inst_proposals = sorted(proposals.compressed(), reverse=True)
     return inst_proposals.compressed()
 
 
