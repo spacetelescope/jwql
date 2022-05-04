@@ -37,6 +37,7 @@ REQUIRES = [
     'pysiaf',
     'pytest',
     'pytest-cov',
+    'pyvo',
     'scipy',
     'sphinx',
     'sphinx_rtd_theme',

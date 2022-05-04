@@ -38,6 +38,7 @@ from django.conf import settings
 import numpy as np
 from operator import itemgetter
 import pandas as pd
+import pyvo as vo
 import requests
 
 from jwql.database import database_interface as di
@@ -208,13 +209,10 @@ def get_all_proposals():
         A list of proposal numbers for all proposals that exist in the
         filesystem
     """
-
-    proposals = glob.glob(os.path.join(FILESYSTEM_DIR, 'public', '*'))
-    proposals.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', '*')))
-    proposals = sorted(list(set(proposals)))
-    proposals = [proposal.split('jw')[-1] for proposal in proposals]
-    proposals = [proposal for proposal in proposals if len(proposal) == 5]
-
+    proprietary_proposals = os.listdir(os.path.join(FILESYSTEM_DIR, 'proprietary'))
+    public_proposals = os.listdir(os.path.join(FILESYSTEM_DIR, 'public'))
+    all_proposals = [prop[2:] for prop in proprietary_proposals+public_proposals if 'jw' in prop]
+    proposals = sorted(list(set(all_proposals)), reverse=True)
     return proposals
 
 
@@ -498,13 +496,15 @@ def get_expstart(instrument, rootname):
     return expstart
 
 
-def get_filenames_by_instrument(instrument, restriction='all', query_file=None, query_response=None):
+def get_filenames_by_instrument(instrument, proposal, restriction='all', query_file=None, query_response=None, other_columns=None):
     """Returns a list of filenames that match the given ``instrument``.
 
     Parameters
     ----------
     instrument : str
         The instrument of interest (e.g. `FGS`).
+    proposal : str
+        Proposal number to filter the results
     restriction : str
         If ``all``, all filenames will be returned.  If ``public``,
         only publicly-available filenames will be returned.  If
@@ -518,14 +518,19 @@ def get_filenames_by_instrument(instrument, restriction='all', query_file=None, 
         essentially be the returned value from a call to mast_query_filenames_by_instrument.
         If this is provided, the call to that function is skipped, which can save a
         significant amount of time.
+    other_columns : list
+        List of other columns to retrieve from the MAST query
 
     Returns
     -------
     filenames : list
         A list of files that match the given instrument.
+    col_data : dict
+        Dictionary of other attributes returned from MAST. Keys are the attribute names
+        e.g. 'exptime', and values are lists of the value for each filename. e.g. ['59867.6, 59867.601']
     """
     if not query_file and not query_response:
-        result = mast_query_filenames_by_instrument(instrument)
+        result = mast_query_filenames_by_instrument(instrument, proposal, other_columns=other_columns)
 
     elif query_response:
         result = query_response
@@ -533,20 +538,37 @@ def get_filenames_by_instrument(instrument, restriction='all', query_file=None, 
         with open(query_file) as fobj:
             result = fobj.readlines()
 
+    if other_columns is not None:
+        col_data = {}
+        for element in other_columns:
+            col_data[element] = []
+
     # Determine filenames to return based on restriction parameter
     if restriction == 'all':
         filenames = [item['filename'] for item in result['data']]
+        if other_columns is not None:
+            for keyword in other_columns:
+                col_data[keyword] = [item[keyword] for item in result['data']]
     elif restriction == 'public':
         filenames = [item['filename'] for item in result['data'] if item['isRestricted'] is False]
+        if other_columns is not None:
+            for keyword in other_columns:
+                col_data[keyword] = [item[keyword] for item in result['data'] if item['isRestricted'] is False]
     elif restriction == 'proprietary':
         filenames = [item['filename'] for item in result['data'] if item['isRestricted'] is True]
+        if other_columns is not None:
+            for keyword in other_columns:
+                col_data[keyword] = [item[keyword] for item in result['data'] if item['isRestricted'] is True]
     else:
         raise KeyError('{} is not a valid restriction level.  Use "all", "public", or "proprietary".'.format(restriction))
+
+    if other_columns is not None:
+        return (filenames, col_data)
 
     return filenames
 
 
-def mast_query_filenames_by_instrument(instrument):
+def mast_query_filenames_by_instrument(instrument, proposal_id, other_columns=None):
     """Query MAST for filenames for the given instrument. Return the json
     response from MAST.
 
@@ -554,9 +576,23 @@ def mast_query_filenames_by_instrument(instrument):
     ----------
     instrument : str
         The instrument of interest (e.g. `FGS`).
+    proposal_id : str
+        Proposal ID number to use to filter the results
+    other_columns : list
+        List of other columns to return from the MAST query
+
+    Returns
+    -------
+    result : dict
+        Dictionary of file information
     """
+    if other_columns is None:
+        columns = "filename, isRestricted"
+    else:
+        columns = "filename, isRestricted, " + ", ".join(other_columns)
+
     service = INSTRUMENT_SERVICE_MATCH[instrument]
-    params = {"columns": "filename, isRestricted", "filters": []}
+    params = {"columns": columns, "filters": [{'paramName': 'program', "values": [proposal_id]}]}
     response = Mast.service_request_async(service, params)
     result = response[0].json()
     return result
@@ -754,18 +790,15 @@ def get_instrument_proposals(instrument):
 
     Returns
     -------
-    proposals : list
+    inst_proposals : list
         List of proposals for the given instrument
     """
-
-    service = "Mast.Jwst.Filtered.{}".format(instrument)
-    params = {"columns": "program",
-              "filters": []}
-    response = Mast.service_request_async(service, params)
-    results = response[0].json()['data']
-    proposals = list(set(result['program'] for result in results))
-
-    return proposals
+    tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
+    tap_results = tap_service.search(f"select distinct proposal_id from dbo.ObsPointing where obs_collection='JWST' and calib_level>0 and instrument_name like '{instrument.upper()}%'")
+    prop_table = tap_results.to_table()
+    proposals = prop_table['proposal_id'].data
+    inst_proposals = sorted(proposals.compressed(), reverse=True)
+    return inst_proposals.compressed()
 
 
 def get_preview_images_by_instrument(inst):
@@ -783,31 +816,28 @@ def get_preview_images_by_instrument(inst):
         A list of preview images available in the filesystem for the
         given instrument.
     """
-
-    # Make sure the instrument is of the proper format (e.g. "Nircam")
-    instrument = inst[0].upper() + inst[1:].lower()
-
-    # Query MAST for all rootnames for the instrument
-    service = "Mast.Jwst.Filtered.{}".format(instrument)
-    params = {"columns": "filename",
-              "filters": []}
-    response = Mast.service_request_async(service, params)
-    results = response[0].json()['data']
-
-    # Parse the results to get the rootnames
-    filenames = [result['filename'].split('.')[0] for result in results]
-
     # Get list of all preview_images. Text file contains only preview
     # images for a single instrument.
     preview_list_file = f"{PREVIEW_IMAGE_LISTFILE}_{inst.lower()}.txt"
     preview_images = retrieve_filelist(os.path.join(PREVIEW_IMAGE_FILESYSTEM, preview_list_file))
 
-    # Get subset of preview images that match the filenames
-    preview_images = [os.path.basename(item) for item in preview_images if
-                      os.path.basename(item).split('_integ')[0] in filenames]
+    # Query MAST for all rootnames for the instrument
+    all_preview_images = []
+    all_proposals = get_instrument_proposals(inst)
+    for prop in all_proposals:
+        prop_result = mast_query_filenames_by_instrument(inst, prop)
 
-    # Return only
-    return preview_images
+        # Parse the results to get the rootnames
+        filenames = [result['filename'].split('.')[0] for result in prop_result]
+
+        if len(filenames) > 0:
+            # Get subset of preview images that match the filenames
+            prop_preview_images = [os.path.basename(item) for item in preview_images if
+                                   os.path.basename(item).split('_integ')[0] in filenames]
+            all_preview_images.extend(prop_preview_images)
+
+    # Return only preview images that match the filenames retrieved from MAST
+    return all_preview_images
 
 
 def get_preview_images_by_proposal(proposal):
@@ -1022,26 +1052,24 @@ def get_thumbnails_by_instrument(inst):
         A list of thumbnails available in the filesystem for the
         given instrument.
     """
-
-    # Make sure the instrument is of the proper format (e.g. "Nircam")
-    instrument = inst[0].upper() + inst[1:].lower()
-
-    # Query MAST for all rootnames for the instrument
-    service = "Mast.Jwst.Filtered.{}".format(instrument)
-    params = {"columns": "filename",
-              "filters": []}
-    response = Mast.service_request_async(service, params)
-    results = response[0].json()['data']
-
-    # Parse the results to get the rootnames
-    filenames = [result['filename'].split('.')[0] for result in results]
-
     # Get list of all thumbnails
-    thumbnails = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, THUMBNAIL_LISTFILE))
+    thumb_inventory = f'{THUMBNAIL_LISTFILE}_{inst.lower()}.txt'
+    all_thumbnails = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, thumb_inventory))
 
-    # Get subset of preview images that match the filenames
-    thumbnails = [os.path.basename(item) for item in thumbnails if
-                  os.path.basename(item).split('_integ')[0] in filenames]
+    thumbnails = []
+    all_proposals = get_instrument_proposals(inst)
+    for proposal in all_proposals:
+        result = mast_query_filenames_by_instrument(inst, proposal)
+
+        # Parse the results to get the rootnames
+        filenames = [result['filename'].split('.')[0] for result in results]
+
+        if len(filenames) > 0:
+            # Get subset of preview images that match the filenames
+            prop_thumbnails = [os.path.basename(item) for item in all_thumbnails if
+                               os.path.basename(item).split('_integ')[0] in filenames]
+
+            thumbnails.extend(prop_thumbnails)
 
     return thumbnails
 
@@ -1229,7 +1257,7 @@ def text_scrape(prop_id):
     return program_meta
 
 
-def thumbnails_ajax(inst, proposal=None):
+def thumbnails_ajax(inst, proposal):
     """Generate a page that provides data necessary to render the
     ``thumbnails`` template.
 
@@ -1247,16 +1275,10 @@ def thumbnails_ajax(inst, proposal=None):
     """
 
     # Get the available files for the instrument
-    filenames = get_filenames_by_instrument(inst)
+    filenames, columns = get_filenames_by_instrument(inst, proposal, other_columns=['expstart'])
 
     # Get set of unique rootnames
     rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
-
-    # If the proposal is specified (i.e. if the page being loaded is
-    # an archive page), only collect data for given proposal
-    if proposal is not None:
-        proposal_string = '{:05d}'.format(int(proposal))
-        rootnames = [rootname for rootname in rootnames if rootname[2:7] == proposal_string]
 
     # Initialize dictionary that will contain all needed data
     data_dict = {}
@@ -1275,7 +1297,7 @@ def thumbnails_ajax(inst, proposal=None):
                 filename_dict['detector'] = 'Unknown'
 
             # Weed out file types that are not supported by generate_preview_images
-            if filename_dict['filename_type'] in ['stage_3_target_id']:
+            if 'stage_3' in filename_dict['filename_type']:
                 continue
 
         except ValueError:
@@ -1289,8 +1311,10 @@ def thumbnails_ajax(inst, proposal=None):
                              'visit': rootname[10:13],
                              'visit_group': rootname[14:16]}
 
-        # Get list of available filenames
+        # Get list of available filenames and exposure start times. All files with a given
+        # rootname will have the same exposure start time, so just keep the first.
         available_files = [item for item in filenames if rootname in item]
+        exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
 
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
@@ -1298,8 +1322,8 @@ def thumbnails_ajax(inst, proposal=None):
         data_dict['file_data'][rootname]['available_files'] = available_files
         data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for filename in available_files]
         try:
-            data_dict['file_data'][rootname]['expstart'] = get_expstart(inst, rootname)
-            data_dict['file_data'][rootname]['expstart_iso'] = Time(data_dict['file_data'][rootname]['expstart'], format='mjd').iso.split('.')[0]
+            data_dict['file_data'][rootname]['expstart'] = exp_start
+            data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
         except:
             print("issue with get_expstart for {}".format(rootname))
 
@@ -1332,21 +1356,22 @@ def thumbnails_ajax(inst, proposal=None):
     return data_dict
 
 
-def thumbnails_query_ajax(rootnames):
+def thumbnails_query_ajax(rootnames, expstarts=None):
     """Generate a page that provides data necessary to render the
     ``thumbnails`` template.
 
     Parameters
     ----------
-    rootnames : list of strings (optional)
+    rootnames : list of strings
         Rootname of APT proposal to filter
+    expstarts : list
+        Exposure start times from MAST (mjd)
 
     Returns
     -------
     data_dict : dict
         Dictionary of data needed for the ``thumbnails`` template
     """
-
     # Initialize dictionary that will contain all needed data
     data_dict = {}
     # dummy variable for view_image when thumbnail is selected
