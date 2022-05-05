@@ -669,8 +669,8 @@ def process_program(program):
     filenames.extend(glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', program, '*/*.fits')))
     filenames = list(set(filenames))
 
-    # Ignore "original" files
-    filenames = [filename for filename in filenames if os.path.splitext(filename.split('_')[-1]) not in IGNORED_SUFFIXES]
+    # remove specific "ignored" suffix files (currently "original" and "stream")
+    filenames = [filename for filename in filenames if os.path.splitext(filename.split('_')[-1])[0] not in IGNORED_SUFFIXES]
     logging.info('Found {} filenames'.format(len(filenames)))
     logging.info('')
 
