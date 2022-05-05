@@ -496,7 +496,7 @@ def get_expstart(instrument, rootname):
     return expstart
 
 
-def get_filenames_by_instrument(instrument, proposal, restriction='all', query_file=None, query_response=None, other_columns=None):
+def get_filenames_by_instrument(instrument, proposal, observation_id=None, restriction='all', query_file=None, query_response=None, other_columns=None):
     """Returns a list of filenames that match the given ``instrument``.
 
     Parameters
@@ -505,6 +505,8 @@ def get_filenames_by_instrument(instrument, proposal, restriction='all', query_f
         The instrument of interest (e.g. `FGS`).
     proposal : str
         Proposal number to filter the results
+    observation_id : str
+        Observation number to filter the results
     restriction : str
         If ``all``, all filenames will be returned.  If ``public``,
         only publicly-available filenames will be returned.  If
@@ -530,7 +532,7 @@ def get_filenames_by_instrument(instrument, proposal, restriction='all', query_f
         e.g. 'exptime', and values are lists of the value for each filename. e.g. ['59867.6, 59867.601']
     """
     if not query_file and not query_response:
-        result = mast_query_filenames_by_instrument(instrument, proposal, other_columns=other_columns)
+        result = mast_query_filenames_by_instrument(instrument, proposal, observation_id=observation_id, other_columns=other_columns)
 
     elif query_response:
         result = query_response
@@ -568,7 +570,7 @@ def get_filenames_by_instrument(instrument, proposal, restriction='all', query_f
     return filenames
 
 
-def mast_query_filenames_by_instrument(instrument, proposal_id, other_columns=None):
+def mast_query_filenames_by_instrument(instrument, proposal_id, observation_id=None, other_columns=None):
     """Query MAST for filenames for the given instrument. Return the json
     response from MAST.
 
@@ -578,6 +580,9 @@ def mast_query_filenames_by_instrument(instrument, proposal_id, other_columns=No
         The instrument of interest (e.g. `FGS`).
     proposal_id : str
         Proposal ID number to use to filter the results
+    observation_id : str
+        Observation ID number to use to filter the results. If None, all files for the ``proposal_id`` are
+        retreived
     other_columns : list
         List of other columns to return from the MAST query
 
@@ -592,7 +597,10 @@ def mast_query_filenames_by_instrument(instrument, proposal_id, other_columns=No
         columns = "filename, isRestricted, " + ", ".join(other_columns)
 
     service = INSTRUMENT_SERVICE_MATCH[instrument]
-    params = {"columns": columns, "filters": [{'paramName': 'program', "values": [proposal_id]}]}
+    filters = [{'paramName': 'program', "values": [proposal_id]}]
+    if observation_id is not None:
+        filters.append({'paramName': 'observtn', 'values': [observation_id]})
+    params = {"columns": columns, "filters": filters}
     response = Mast.service_request_async(service, params)
     result = response[0].json()
     return result
@@ -1257,7 +1265,7 @@ def text_scrape(prop_id):
     return program_meta
 
 
-def thumbnails_ajax(inst, proposal):
+def thumbnails_ajax(inst, proposal, obs_num=None):
     """Generate a page that provides data necessary to render the
     ``thumbnails`` template.
 
@@ -1267,6 +1275,8 @@ def thumbnails_ajax(inst, proposal):
         Name of JWST instrument
     proposal : str (optional)
         Number of APT proposal to filter
+    obs_num : str (optional)
+        Observation number
 
     Returns
     -------
@@ -1275,7 +1285,7 @@ def thumbnails_ajax(inst, proposal):
     """
 
     # Get the available files for the instrument
-    filenames, columns = get_filenames_by_instrument(inst, proposal, other_columns=['expstart'])
+    filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart'])
 
     # Get set of unique rootnames
     rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])

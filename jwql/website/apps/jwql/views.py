@@ -362,7 +362,7 @@ def archive_thumbnails(request, inst, proposal):
     return render(request, template, context)
 
 
-def archive_thumbnails_ajax(request, inst, proposal):
+def archive_thumbnails_ajax(request, inst, proposal, observation=None):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -374,6 +374,8 @@ def archive_thumbnails_ajax(request, inst, proposal):
         Name of JWST instrument
     proposal : str
         Number of observing proposal
+    observation : str
+        Observation number within the proposal
 
     Returns
     -------
@@ -383,9 +385,44 @@ def archive_thumbnails_ajax(request, inst, proposal):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    data = thumbnails_ajax(inst, proposal)
+    data = thumbnails_ajax(inst, proposal, obs_num=observation)
 
     return JsonResponse(data, json_dumps_params={'indent': 2})
+
+
+def archive_thumbnails_per_observation(request, inst, proposal, observation):
+    """Generate the page listing all archived images in the database
+    for a certain proposal
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    proposal : str
+        Number of observing proposal
+    observation : str
+    Observation number within the proposal
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    # Ensure the instrument is correctly capitalized
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+
+    proposal_meta = text_scrape(proposal)
+
+    template = 'thumbnails_per_obs.html'
+    context = {'inst': inst,
+               'prop': proposal,
+               'obs': observation[3:],
+               'prop_meta': proposal_meta,
+               'base_url': get_base_url()}
+
+    return render(request, template, context)
 
 
 def archive_thumbnails_query_ajax(request):

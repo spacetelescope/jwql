@@ -185,10 +185,41 @@ function determine_page_title(instrument, proposal) {
     var url = document.URL;
     var url_split = url.split('/');
     var url_title = url_split[url_split.length - 2];
+    var url_end = url_split[url_split.length - 1];
     if (url_title == 'archive') {
         final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal
     } else if (url_title == 'unlooked') {
         final_title = 'Unlooked ' + instrument + ' Images';
+    } else if (isNaN(url_title) == false) {
+        final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal + ', Observtion ' + url_end
+    }
+
+    // Update the titles accordingly
+    if (typeof final_title !== 'undefined') {
+        document.getElementById('title').innerHTML = final_title;
+        if (document.title != final_title) {
+            document.title = final_title;
+        };
+    };
+};
+
+/**
+ * Determine whether the page is archive or unlooked
+ * @param {String} instrument - The instrument of interest
+ * @param {Integer} proposal - The proposal of interest
+ */
+function determine_page_title_obs(instrument, proposal, observation) {
+    // Determine if the URL is 'archive' or 'unlooked'
+    var url = document.URL;
+    var url_split = url.split('/');
+    var url_title = url_split[url_split.length - 2];
+    var url_end = url_split[url_split.length - 1];
+    if (url_title == 'archive') {
+        final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal + ', Observtion ' + observation
+    } else if (url_title == 'unlooked') {
+        final_title = 'Unlooked ' + instrument + ' Images';
+    } else if (isNaN(url_title) == false) {
+        final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal + ', Observtion ' + observation
     }
 
     // Update the titles accordingly
@@ -518,6 +549,29 @@ function update_thumbnail_array(data) {
 function update_thumbnails_page(inst, proposal, base_url) {
     $.ajax({
         url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/',
+        success: function(data){
+            // Perform various updates to divs
+            update_show_count(Object.keys(data.file_data).length, 'activities');
+            update_thumbnail_array(data);
+            update_filter_options(data);
+            update_sort_options(data);
+
+            // Replace loading screen with the proposal array div
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("thumbnail-array").style.display = "block";
+        }});
+};
+
+/**
+ * Updates various compnents on the thumbnails page
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} proposal - The proposal number of interest (e.g. "88660")
+ * @param {String} observation - The observation number within the proposal (e.g. "001")
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function update_thumbnails_per_observation_page(inst, proposal, observation, base_url) {
+    $.ajax({
+        url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/obs' + observation + '/',
         success: function(data){
             // Perform various updates to divs
             update_show_count(Object.keys(data.file_data).length, 'activities');
