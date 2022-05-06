@@ -925,12 +925,14 @@ def get_proposal_info(filepaths):
     num_files = []
 
     # Gather thumbnails and counts for proposals
-    proposals, thumbnail_paths, num_files = [], [], []
+    proposals, thumbnail_paths, num_files, observations = [], [], [], []
     for filepath in filepaths:
         proposal = filepath.split('/')[-1][2:7]
         if proposal not in proposals:
             thumbnail_paths.append(os.path.join('jw{}'.format(proposal), 'jw{}.thumb'.format(proposal)))
             files_for_proposal = [item for item in filepaths if 'jw{}'.format(proposal) in item]
+            obsnums = sorted([filename_parser(fname)['observation'] for fname in files_for_proposal])
+            observations.extend(obsnums)
             num_files.append(len(files_for_proposal))
             proposals.append(proposal)
 
@@ -940,6 +942,7 @@ def get_proposal_info(filepaths):
     proposal_info['proposals'] = proposals
     proposal_info['thumbnail_paths'] = thumbnail_paths
     proposal_info['num_files'] = num_files
+    proposal_info['observation_nums'] = observations
 
     return proposal_info
 

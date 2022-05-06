@@ -275,6 +275,7 @@ def archived_proposals_ajax(request, inst):
     all_proposals = get_instrument_proposals(inst)
     all_proposal_info = {'num_proposals': 0,
                          'proposals': [],
+                         'min_obsnum': [],
                          'thumbnail_paths': [],
                          'num_files': []}
 
@@ -317,12 +318,14 @@ def archived_proposals_ajax(request, inst):
             proposal_info = get_proposal_info(filenames)
             all_proposal_info['num_proposals'] = all_proposal_info['num_proposals'] + 1
             all_proposal_info['proposals'].append(proposal)
+            all_proposal_info['min_obsnum'].append(proposal_info['observation_nums'][0])
             all_proposal_info['thumbnail_paths'].append(proposal_info['thumbnail_paths'][0])
             all_proposal_info['num_files'].append(num_files)
             #all_proposal_info['num_files'].append(proposal_info['num_files'][0])
 
     context = {'inst': inst,
                'num_proposals': all_proposal_info['num_proposals'],
+               'min_obsnum': all_proposal_info['min_obsnum'],
                'thumbnails': {'proposals': all_proposal_info['proposals'],
                               'thumbnail_paths': all_proposal_info['thumbnail_paths'],
                               'num_files': all_proposal_info['num_files']}}
