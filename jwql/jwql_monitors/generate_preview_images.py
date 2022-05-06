@@ -763,5 +763,9 @@ if __name__ == '__main__':
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = initialize_instrument_monitor(module)
 
+    import os
+    pid = os.getpid()
+    input(f"Connect to process >> {pid} << then press Enter to continue...")
+
     generate_preview_images()
     update_monitor_table(module, start_time, log_file)

@@ -201,6 +201,18 @@ function determine_page_title(instrument, proposal) {
 };
 
 
+/** 
+ * If an image is not found, replace with temporary image sized to thumbnail
+ */
+function imageError(image) {
+    image.onerror = "";
+    image.src = "/static/img/imagenotfound.png";
+    /* Use thumbnail settings to keep it tidy */
+    image.className = "thumbnail";
+    return true;
+}
+
+
 /**
  * Perform a search of images and display the resulting thumbnails
  */
@@ -491,7 +503,7 @@ function update_thumbnail_array(data) {
             content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
             content += '<a href="/' + filename_dict.instrument + '/' + rootname + '/">';
         }
-        content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="this.src=/static/img/imagenotfound.png">';
+        content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="imageError(this);">';
         content += '<div class="thumbnail-color-fill" ></div>';
         content += '<div class="thumbnail-info">';
         content += 'Proposal: ' + filename_dict.program_id + '<br>';
@@ -561,3 +573,5 @@ function version_url(version_string) {
     a_line += '">JWQL v' + version_string + '</a>';
     return a_line;
 };
+
+
