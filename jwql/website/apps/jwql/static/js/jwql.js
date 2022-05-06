@@ -12,7 +12,7 @@
  * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
  *                          values are the number of integrations for that suffix
  * @param {Dict} available_ints - A dictionary whose keys are suffix types and whose
- *                                values are the integration numbers of the available 
+ *                                values are the integration numbers of the available
  *                                jpgs for that suffix
  * @param {String} inst - The instrument for the given file
  */
@@ -76,7 +76,7 @@ function change_filetype(type, file_root, num_ints, available_ints, inst) {
  * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
  *                          values are the number of integrations for that suffix
  * @param {Dict} available_ints - A dictionary whose keys are suffix types and whose
- *                                values are the integration numbers of the available 
+ *                                values are the integration numbers of the available
  *                                jpgs for that suffix
  * @param {String} method - How the integration change was initialized, either "button" or "slider"
  * @param {String} direction - The direction to switch to, either "left" (decrease) or "right" (increase).
