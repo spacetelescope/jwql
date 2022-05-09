@@ -204,11 +204,13 @@ function determine_page_title(instrument, proposal) {
 /** 
  * If an image is not found, replace with temporary image sized to thumbnail
  */
-function imageError(image) {
+function imageError(image, makeThumbnail=false) {
     image.onerror = "";
     image.src = "/static/img/imagenotfound.png";
     /* Use thumbnail settings to keep it tidy */
-    image.className = "thumbnail";
+    if (makeThumbnail) {
+        image.className = "thumbnail";
+    }
     return true;
 }
 

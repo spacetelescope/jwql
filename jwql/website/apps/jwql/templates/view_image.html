@@ -47,7 +47,7 @@
     		    <span class="image_preview">
     		    	<img id="image_viewer"
                          src='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}_cal_integ0.jpg'
-                         onerror="imageError(this);"
+                         onerror="imageError(this, true);"
                          alt='{{ file_root }}_cal_integ0.jpg'
                          title="Preview image for {{ file_root }}">
     		    </span>
