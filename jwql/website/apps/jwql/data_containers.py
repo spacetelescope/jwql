@@ -806,7 +806,7 @@ def get_instrument_proposals(instrument):
     prop_table = tap_results.to_table()
     proposals = prop_table['proposal_id'].data
     inst_proposals = sorted(proposals.compressed(), reverse=True)
-    return inst_proposals.compressed()
+    return inst_proposals
 
 
 def get_preview_images_by_instrument(inst):
