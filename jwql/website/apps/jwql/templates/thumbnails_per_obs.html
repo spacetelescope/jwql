@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+    <!-- Custom styles and scripts for this template -->
+    <style type="text/css">
+        div#thumbnail-array { display: none; }
+    </style>
+
+	<title>Unlooked {{ inst }} Images - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+    	<!-- Page title -->
+    	<h3 id='title'>{{ inst }} Images</h3>
+    	<script>determine_page_title_obs('{{ inst }}','{{ prop }}','{{ obs }}');</script>
+
+    	<!-- Show Count -->
+    	<p id='img_show_count'></p>
+    	<hr>
+
+    	<!-- Filter and sort options -->
+		<div class="d-flex flex-row">
+			<div class="mr-4" id="thumbnail-filter"></div>
+			<div class="mx-4 mr-5 ml-auto" id="thumbnail-sort"></div>
+		</div>
+
+        <hr>
+
+        <!-- Program Meta Information -->
+        <h4 id='proposal_meta'> Proposal Information for {{ prop }}</h4>
+        <div class="d-flex flex-row">
+            <div class="column">
+                <p><b>Title:</b> {{ prop_meta['title'] }}</p>
+                <p><b>Program Status:</b> {{ prop_meta['ps']|safe }}</p>
+                <p><b>Principal Investigator:</b> {{ prop_meta['pi'] }}</p>
+            </div>
+            <div class="column" style="display: inline-block; text-align: right; width: 100%">
+                <p><b>Program Coordinator:</b> {{ prop_meta['pc']|safe }}</p>
+                <p><b>Proposal Type:</b> {{ prop_meta['prop_type'] }}</p>
+                <p><b>Phase Two:</b> {{ prop_meta['phase_two']|safe }}</p>
+            </div>
+        </div>
+
+
+		<hr>
+
+        <!-- Loading animation -->
+        <div id="loading">
+            <div class="lds-css ng-scope">
+                <div style="width:100%;height:100%" class="lds-magnify">
+                    <div>
+                        <div>
+                            <div>
+                            </div>
+                            <div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                Loading ...
+            </div>
+        </div>
+
+        <!-- Display the data -->
+        <div id='thumbnail-array'></div>
+        <a id="no_thumbnails_msg" style='display: none'>No data match the selected criteria.</a>
+
+	</main>
+
+	<script>update_thumbnails_per_observation_page('{{inst}}', '{{prop}}', '{{obs}}', {{base_url}}');</script>
+
+{% endblock %}

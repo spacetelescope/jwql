@@ -931,7 +931,17 @@ def get_proposal_info(filepaths):
         if proposal not in proposals:
             thumbnail_paths.append(os.path.join('jw{}'.format(proposal), 'jw{}.thumb'.format(proposal)))
             files_for_proposal = [item for item in filepaths if 'jw{}'.format(proposal) in item]
-            obsnums = sorted([filename_parser(fname)['observation'] for fname in files_for_proposal])
+
+            obsnums = []
+            for fname in files_for_proposal:
+                try:
+                    obs = filename_parser(fname)['observation']
+                    obsnums.append(obs)
+                except KeyError:
+                    pass
+            obsnums = sorted(obsnums)
+
+            #obsnums = sorted([filename_parser(fname)['observation'] for fname in files_for_proposal])
             observations.extend(obsnums)
             num_files.append(len(files_for_proposal))
             proposals.append(proposal)

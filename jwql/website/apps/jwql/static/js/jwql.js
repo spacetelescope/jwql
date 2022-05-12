@@ -207,6 +207,7 @@ function determine_page_title(instrument, proposal) {
  * Determine whether the page is archive or unlooked
  * @param {String} instrument - The instrument of interest
  * @param {Integer} proposal - The proposal of interest
+ * @param {Integer} observation - The observation number of interest
  */
 function determine_page_title_obs(instrument, proposal, observation) {
     // Determine if the URL is 'archive' or 'unlooked'
