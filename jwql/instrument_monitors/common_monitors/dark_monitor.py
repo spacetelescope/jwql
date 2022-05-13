@@ -56,6 +56,7 @@ Use
 
 from copy import copy, deepcopy
 import datetime
+from glob import glob
 import logging
 import os
 
@@ -276,6 +277,7 @@ class Dark():
                 new_pixels_x.append(x)
                 new_pixels_y.append(y)
 
+        session.close()
         return (new_pixels_x, new_pixels_y)
 
     def find_hot_dead_pixels(self, mean_image, comparison_image, hot_threshold=2., dead_threshold=0.1):
@@ -356,6 +358,7 @@ class Dark():
             filename = os.path.join(self.output_dir, 'mean_slope_images', filename)
             logging.info('Baseline filename: {}'.format(filename))
 
+        session.close()
         return filename
 
     def identify_tables(self):
@@ -389,12 +392,13 @@ class Dark():
 
         query_count = len(dates)
         if query_count == 0:
-            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
+            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {} with {}. Beginning search date will be set to {}.'
                          .format(self.aperture, self.readpatt, query_result)))
         else:
             query_result = np.max(dates)
 
+        session.close()
         return query_result
 
     def noise_check(self, new_noise_image, baseline_noise_image, threshold=1.5):
@@ -582,6 +586,11 @@ class Dark():
         (amp_mean, amp_stdev, gauss_param, gauss_chisquared, double_gauss_params, double_gauss_chisquared,
             histogram, bins) = self.stats_by_amp(slope_image, amp_bounds)
 
+        # Remove the input files in order to save disk space
+        files_to_remove = glob(f'{self.data_dir}/*fits')
+        for filename in files_to_remove:
+            os.remove(filename)
+
         # Construct new entry for dark database table
         source_files = [os.path.basename(item) for item in file_list]
         for key in amp_mean.keys():
@@ -752,8 +761,8 @@ class Dark():
                         # then the monitor will not be run
                         if len(new_filenames) < file_count_threshold:
                             logging.info(("\tFilesystem search for the files identified by MAST has returned {} files. "
-                                         "This is less than the required minimum number of files ({}) necessary to run "
-                                         "the monitor. Quitting.").format(len(new_filenames), file_count_threshold))
+                                          "This is less than the required minimum number of files ({}) necessary to run "
+                                          "the monitor. Quitting.").format(len(new_filenames), file_count_threshold))
                             monitor_run = False
                         else:
                             logging.info(("\tFilesystem search for the files identified by MAST has returned {} files.")
@@ -764,8 +773,8 @@ class Dark():
                             # Set up directories for the copied data
                             ensure_dir_exists(os.path.join(self.output_dir, 'data'))
                             self.data_dir = os.path.join(self.output_dir,
-                                                        'data/{}_{}'.format(self.instrument.lower(),
-                                                                            self.aperture.lower()))
+                                                         'data/{}_{}'.format(self.instrument.lower(),
+                                                                             self.aperture.lower()))
                             ensure_dir_exists(self.data_dir)
 
                             # Copy files from filesystem
@@ -781,19 +790,19 @@ class Dark():
 
                     else:
                         logging.info(('\tDark monitor skipped. MAST query has returned {} new dark files for '
-                                    '{}, {}, {}. {} new files are required to run dark current monitor.')
-                                    .format(len(new_entries), instrument, aperture, self.readpatt, file_count_threshold))
+                                      '{}, {}, {}. {} new files are required to run dark current monitor.')
+                                      .format(len(new_entries), instrument, aperture, self.readpatt, file_count_threshold))
                         monitor_run = False
 
                     # Update the query history
                     new_entry = {'instrument': instrument,
-                                'aperture': aperture,
-                                'readpattern': self.readpatt,
-                                'start_time_mjd': self.query_start,
-                                'end_time_mjd': self.query_end,
-                                'files_found': len(new_entries),
-                                'run_monitor': monitor_run,
-                                'entry_date': datetime.datetime.now()}
+                                 'aperture': aperture,
+                                 'readpattern': self.readpatt,
+                                 'start_time_mjd': self.query_start,
+                                 'end_time_mjd': self.query_end,
+                                 'files_found': len(new_entries),
+                                 'run_monitor': monitor_run,
+                                 'entry_date': datetime.datetime.now()}
                     self.query_table.__table__.insert().execute(new_entry)
                     logging.info('\tUpdated the query history table')
 
@@ -970,7 +979,7 @@ class Dark():
             if len(bin_edges) < 7:
                 logging.info('\tToo few histogram bins in initial fit. Forcing 10 bins.')
                 hist, bin_edges = np.histogram(image[indexes[0], indexes[1]], bins=10,
-                                           range=(lower_bound, upper_bound))
+                                               range=(lower_bound, upper_bound))
 
             bin_centers = (bin_edges[1:] + bin_edges[0: -1]) / 2.
             initial_params = [np.max(hist), amp_mean, amp_stdev]

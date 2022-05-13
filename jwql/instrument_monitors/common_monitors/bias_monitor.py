@@ -206,6 +206,7 @@ class Bias():
         else:
             file_exists = False
 
+        session.close()
         return file_exists
 
     def get_amp_medians(self, image, amps):
@@ -346,11 +347,12 @@ class Bias():
             self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
 
         if len(query) == 0:
-            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
+            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, query_result)))
         else:
             query_result = query[-1].end_time_mjd
 
+        session.close()
         return query_result
 
     def process(self, file_list):
@@ -380,6 +382,7 @@ class Bias():
                 set_permissions(processed_file)
             except:
                 logging.info('\tPipeline processing failed for {}'.format(filename))
+                os.remove(filename)
                 continue
 
             # Find amplifier boundaries so per-amp statistics can be calculated
@@ -427,6 +430,10 @@ class Bias():
             # Add this new entry to the bias database table
             self.stats_table.__table__.insert().execute(bias_db_entry)
             logging.info('\tNew entry added to bias database table: {}'.format(bias_db_entry))
+
+            # Remove the raw and calibrated files to save memory space
+            os.remove(filename)
+            os.remove(processed_file)
 
     @log_fail
     @log_info

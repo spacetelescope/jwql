@@ -11,9 +11,12 @@
  * @param {String} file_root - The rootname of the file
  * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
  *                          values are the number of integrations for that suffix
+ * @param {Dict} available_ints - A dictionary whose keys are suffix types and whose
+ *                                values are the integration numbers of the available
+ *                                jpgs for that suffix
  * @param {String} inst - The instrument for the given file
  */
-function change_filetype(type, file_root, num_ints, inst) {
+function change_filetype(type, file_root, num_ints, available_ints, inst) {
 
     // Change the radio button to check the right filetype
     document.getElementById(type).checked = true;
@@ -23,8 +26,13 @@ function change_filetype(type, file_root, num_ints, inst) {
     var num_ints = num_ints.replace(/'/g, '"');
     var num_ints = JSON.parse(num_ints);
 
+    // Get the available integration jpg numbers
+    var available_ints = available_ints.replace(/&#39;/g, '"');
+    var available_ints = available_ints.replace(/'/g, '"');
+    var available_ints = JSON.parse(available_ints)[type];
+
     // Propogate the text fields showing the filename and APT parameters
-    var fits_filename = file_root + '_' + type
+    var fits_filename = file_root + '_' + type;
     document.getElementById("jpg_filename").innerHTML = file_root + '_' + type + '_integ0.jpg';
     document.getElementById("fits_filename").innerHTML = fits_filename + '.fits';
     document.getElementById("proposal").innerHTML = file_root.slice(2,7);
@@ -33,19 +41,16 @@ function change_filetype(type, file_root, num_ints, inst) {
     document.getElementById("detector").innerHTML = file_root.split('_')[3];
 
     // Show the appropriate image
-    var img = document.getElementById("image_viewer")
+    var img = document.getElementById("image_viewer");
     var jpg_filepath = '/static/preview_images/' + file_root.slice(0,7) + '/' + file_root + '_' + type + '_integ0.jpg';
     img.src = jpg_filepath;
     img.alt = jpg_filepath;
 
     // Reset the slider values
-    document.getElementById("slider_range").value = 1
-    document.getElementById("slider_range").max = num_ints[type]
-    document.getElementById("slider_val").innerHTML = 1
-
-    // Update the number of integrations
-    var int_counter = document.getElementById("int_count");
-    int_counter.innerHTML = 'Displaying integration 1/' + num_ints[type];
+    document.getElementById("slider_range").value = 1;
+    document.getElementById("slider_range").max = num_ints[type];
+    document.getElementById("slider_val").innerHTML = 1;
+    document.getElementById("total_ints").innerHTML = available_ints[available_ints.length - 1] + 1;
 
     // Update the integration changing buttons
     if (num_ints[type] > 1) {
@@ -55,9 +60,9 @@ function change_filetype(type, file_root, num_ints, inst) {
     }
 
     // Update the image download and header links
-    document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename + '.fits';
-    document.getElementById("download_jpg").href = jpg_filepath;
-    document.getElementById("view_header").href = '/' + inst + '/' + fits_filename + '/header/';
+    // document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename + '.fits';
+    // document.getElementById("download_jpg").href = jpg_filepath;
+    document.getElementById("view_header").href = '/' + inst + '/' + file_root + '_' + type + '/header/';
 
     // Disable the "left" button, since this will be showing integ0
     document.getElementById("int_before").disabled = true;
@@ -70,21 +75,29 @@ function change_filetype(type, file_root, num_ints, inst) {
  * @param {String} file_root - The rootname of the file
  * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
  *                          values are the number of integrations for that suffix
+ * @param {Dict} available_ints - A dictionary whose keys are suffix types and whose
+ *                                values are the integration numbers of the available
+ *                                jpgs for that suffix
  * @param {String} method - How the integration change was initialized, either "button" or "slider"
  * @param {String} direction - The direction to switch to, either "left" (decrease) or "right" (increase).
  *                             Only relevant if method is "button".
  */
-function change_int(file_root, num_ints, method, direction = 'right') {
+function change_int(file_root, num_ints, available_ints, method, direction = 'right') {
 
     // Figure out the current image and integration
     var suffix = document.getElementById("jpg_filename").innerHTML.split('_');
-    var integration = Number(suffix[suffix.length - 1][5]);
+    var integration = Number(suffix[suffix.length - 1].replace('.jpg','').replace('integ',''))
     var suffix = suffix[suffix.length - 2];
     var program = file_root.slice(0,7);
 
     // Find the total number of integrations for the current image
     var num_ints = num_ints.replace(/'/g, '"');
     var num_ints = JSON.parse(num_ints)[suffix];
+
+    // Get the available integration jpg numbers and the current integration index
+    var available_ints = available_ints.replace(/'/g, '"');
+    var available_ints = JSON.parse(available_ints)[suffix];
+    var current_index = available_ints.indexOf(integration);
 
     // Get the desired integration value
     switch (method) {
@@ -93,13 +106,13 @@ function change_int(file_root, num_ints, method, direction = 'right') {
                 (integration == 0 && direction == 'left')) {
                 return;
             } else if (direction == 'right') {
-                new_integration = integration + 1
+                new_integration = available_ints[current_index + 1]
             } else if (direction == 'left') {
-                new_integration = integration - 1
+                new_integration = available_ints[current_index - 1]
             }
             break;
         case "slider":
-            new_integration = document.getElementById("slider_range").value - 1;
+            new_integration = available_ints[document.getElementById("slider_range").value - 1];
             break;
     }
 
@@ -107,10 +120,10 @@ function change_int(file_root, num_ints, method, direction = 'right') {
     if (new_integration == 0) {
         document.getElementById("int_after").disabled = false;
         document.getElementById("int_before").disabled = true;
-    } else if (new_integration < num_ints - 1) {
+    } else if (new_integration < available_ints[available_ints.length - 1]) {
         document.getElementById("int_after").disabled = false;
         document.getElementById("int_before").disabled = false;
-    } else if (new_integration == num_ints - 1) {
+    } else if (new_integration == available_ints[available_ints.length - 1]) {
         document.getElementById("int_after").disabled = true;
         document.getElementById("int_before").disabled = false;
     }
@@ -125,13 +138,8 @@ function change_int(file_root, num_ints, method, direction = 'right') {
     img.src = jpg_filepath;
     img.alt = jpg_filepath;
 
-    // Update the number of integrations
-    var int_counter = document.getElementById("int_count");
-    var int_display = new_integration + 1;
-    int_counter.innerHTML = 'Displaying integration ' + int_display + '/' + num_ints;
-
     // Update the jpg download link
-    document.getElementById("download_jpg").href = jpg_filepath;
+    // document.getElementById("download_jpg").href = jpg_filepath;
 
     // Update the slider values
     document.getElementById("slider_range").value = new_integration + 1
@@ -159,7 +167,11 @@ function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root)
     } else if (suffixes.indexOf("uncal") >= 0) {
         var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
         img.src = jpg_path;
+    } else if (suffixes.indexOf("dark") >= 0) {
+        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_dark_integ0.thumb';
+        img.src = jpg_path;
     };
+
 };
 
 
@@ -187,6 +199,20 @@ function determine_page_title(instrument, proposal) {
         };
     };
 };
+
+
+/** 
+ * If an image is not found, replace with temporary image sized to thumbnail
+ */
+function imageError(image, makeThumbnail=false) {
+    image.onerror = "";
+    image.src = "/static/img/imagenotfound.png";
+    /* Use thumbnail settings to keep it tidy */
+    if (makeThumbnail) {
+        image.className = "thumbnail";
+    }
+    return true;
+}
 
 
 /**
@@ -479,7 +505,7 @@ function update_thumbnail_array(data) {
             content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
             content += '<a href="/' + filename_dict.instrument + '/' + rootname + '/">';
         }
-        content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="this.src=/static/img/imagenotfound.png">';
+        content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="imageError(this);">';
         content += '<div class="thumbnail-color-fill" ></div>';
         content += '<div class="thumbnail-info">';
         content += 'Proposal: ' + filename_dict.program_id + '<br>';
@@ -549,3 +575,5 @@ function version_url(version_string) {
     a_line += '">JWQL v' + version_string + '</a>';
     return a_line;
 };
+
+

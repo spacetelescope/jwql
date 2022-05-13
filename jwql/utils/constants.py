@@ -201,7 +201,7 @@ FULL_FRAME_APERTURES = {'NIRCAM': ['NRCA1_FULL', 'NRCA2_FULL', 'NRCA3_FULL', 'NR
 # Possible suffix types for nominal files
 GENERIC_SUFFIX_TYPES = ['uncal', 'cal', 'rateints', 'rate', 'trapsfilled', 'i2d',
                         'x1dints', 'x1d', 's2d', 's3d', 'dark', 'crfints',
-                        'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat']
+                        'crf', 'ramp', 'fitopt', 'bsubints', 'bsub', 'cat', 'segm', 'c1d']
 
 # Gratings available for each instrument
 GRATING_PER_INSTRUMENT = {'fgs': [],
@@ -214,6 +214,9 @@ GRATING_PER_INSTRUMENT = {'fgs': [],
 
 # Possible suffix types for guider exposures
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
+
+# JWQL should ignore some filetypes in the filesystem.
+IGNORED_SUFFIXES = ['original', 'stream']
 
 # Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
@@ -259,8 +262,9 @@ JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
 # Available monitor names and their location for each JWST instrument
 MONITORS = {
     'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor'),
-            ('Readnoise Monitor', '/fgs/readnoise_monitor')],
-    'miri': [('Dark Current Monitor', '#'),
+            ('Readnoise Monitor', '/fgs/readnoise_monitor'),
+            ('Dark Current Monitor', '/fgs/dark_monitor')],
+    'miri': [('Dark Current Monitor', '/miri/dark_monitor'),
              ('Data Trending', '#'),
              ('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
              ('Readnoise Monitor', '/miri/readnoise_monitor'),
@@ -273,14 +277,15 @@ MONITORS = {
     'nircam': [('Bias Monitor', '/nircam/bias_monitor'),
                ('Readnoise Monitor', '/nircam/readnoise_monitor'),
                ('Gain Level Monitor', '#'),
-               ('Mean Dark Current Rate Monitor', '/nircam/dark_monitor'),
+               ('Dark Current Monitor', '/nircam/dark_monitor'),
                ('Bad Pixel Monitor', '/nircam/bad_pixel_monitor'),
                ('Photometric Stability Monitor', '#')],
     'niriss': [('Bad Pixel Monitor', '/niriss/bad_pixel_monitor'),
                ('Readnoise Monitor', '/niriss/readnoise_monitor'),
                ('AMI Calibrator Monitor', '#'),
                ('TSO RMS Monitor', '#'),
-               ('Bias Monitor', '#')],
+               ('Bias Monitor', '/niriss/bias_monitor'),
+               ('Dark Current Monitor', '/niriss/dark_monitor')],
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
@@ -291,7 +296,8 @@ MONITORS = {
                 ('Internal Lamp Monitor', '#'),
                 ('Instrument Model Updates', '#'),
                 ('Failed-open Shutter Monitor', '#'),
-                ('Bias Monitor', '/nirspec/bias_monitor')]}
+                ('Bias Monitor', '/nirspec/bias_monitor'),
+                ('Dark Monitor', '/nirspec/dark_monitor')]}
 
 # Possible suffix types for coronograph exposures
 NIRCAM_CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']
@@ -311,6 +317,10 @@ NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'S
 
 # Possible suffix types for AMI files
 NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami', 'psf-amiavg']
+
+# Base name for the file listing the preview images for a given instrument.
+# The complete name will have "_{instrument.lower}.txt" added to the end of this.
+PREVIEW_IMAGE_LISTFILE = 'preview_image_inventory'
 
 # RAPID-style readout patterns for each instrument. Added so we can
 # differentiate in MAST searches for e.g. the dark current monitor
@@ -334,6 +344,10 @@ READPATT_PER_INSTRUMENT = {'fgs': ['FGS', 'FGSRAPID', 'FGS60', 'FGS840', 'FGS837
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 
+# Base name for the file listing the thumbnail images for a given instrument.
+# The complete name will have "_{instrument.lower}.txt" added to the end of this.
+THUMBNAIL_LISTFILE = 'thumbnail_inventory'
+
 # Possible suffix types for time-series exposures
 TIME_SERIES_SUFFIX_TYPES = ['phot', 'whtlt']
 
@@ -342,12 +356,12 @@ WFSC_SUFFIX_TYPES = ['wfscmb']
 
 # Concatenate all suffix types (ordered to ensure successful matching)
 FILE_SUFFIX_TYPES = GUIDER_SUFFIX_TYPES + GENERIC_SUFFIX_TYPES + \
-                    TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
-                    NIRISS_AMI_SUFFIX_TYPES + WFSC_SUFFIX_TYPES
+    TIME_SERIES_SUFFIX_TYPES + NIRCAM_CORONAGRAPHY_SUFFIX_TYPES + \
+    NIRISS_AMI_SUFFIX_TYPES + WFSC_SUFFIX_TYPES
 
 # Instrument Documentation Links
-URL_DICT = {'fgs': 'https://jwst-docs.stsci.edu/jwst-observatory-hardware/fine-guidance-sensor',
-            'miri': 'https://jwst-docs.stsci.edu/mid-infrared-instrument',
-            'niriss': 'https://jwst-docs.stsci.edu/near-infrared-imager-and-slitless-spectrograph',
-            'nirspec': 'https://jwst-docs.stsci.edu/near-infrared-spectrograph',
-            'nircam': 'https://jwst-docs.stsci.edu/near-infrared-camera'}
+URL_DICT = {'fgs': 'https://jwst-docs.stsci.edu/jwst-observatory-hardware/jwst-fine-guidance-sensor',
+            'miri': 'https://jwst-docs.stsci.edu/jwst-mid-infrared-instrument',
+            'niriss': 'https://jwst-docs.stsci.edu/jwst-near-infrared-imager-and-slitless-spectrograph',
+            'nirspec': 'https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph',
+            'nircam': 'https://jwst-docs.stsci.edu/jwst-near-infrared-camera'}

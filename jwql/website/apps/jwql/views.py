@@ -49,30 +49,27 @@ from django.shortcuts import redirect, render
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT
-from jwql.utils.utils import filesystem_path, get_base_url, get_config, query_unformat
+from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get_config, query_unformat
 
 from .data_containers import build_table
 from .data_containers import data_trending
-from .data_containers import get_acknowledgements
+from .data_containers import get_acknowledgements, get_instrument_proposals
 from .data_containers import get_current_flagged_anomalies
 from .data_containers import get_dashboard_components
 from .data_containers import get_edb_components
-from .data_containers import get_filenames_by_instrument
+from .data_containers import get_filenames_by_instrument, mast_query_filenames_by_instrument
 from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_proposal_info
 from .data_containers import get_thumbnails_all_instruments
 from .data_containers import nirspec_trending
 from .data_containers import random_404_page
-from .data_containers import get_jwqldb_table_view_components
+from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import InstrumentAnomalySubmitForm
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
-
-
-FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 
 
 def anomaly_query(request):
@@ -272,37 +269,63 @@ def archived_proposals_ajax(request, inst):
     """
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+    filesystem = get_config()['filesystem']
+
+    # Dictionary to hold summary information for all proposals
+    all_proposals = get_instrument_proposals(inst)
+    all_proposal_info = {'num_proposals': 0,
+                         'proposals': [],
+                         'thumbnail_paths': [],
+                         'num_files': []}
 
     # Get list of all files for the given instrument
-    filenames_public = get_filenames_by_instrument(inst, restriction='public')
-    filenames_proprietary = get_filenames_by_instrument(inst, restriction='proprietary')
+    for proposal in all_proposals:
+        filename_query = mast_query_filenames_by_instrument(inst, proposal)
+        filenames_public = get_filenames_by_instrument(inst, proposal, restriction='public', query_response=filename_query)
+        filenames_proprietary = get_filenames_by_instrument(inst, proposal, restriction='proprietary', query_response=filename_query)
 
-    # Determine locations to the files
-    filenames = []
-    for filename in filenames_public:
-        try:
-            relative_filepath = filesystem_path(filename, check_existence=False)
-            full_filepath = os.path.join(FILESYSTEM_DIR, 'public', relative_filepath)
-            filenames.append(full_filepath)
-        except ValueError:
-            print('Unable to determine filepath for {}'.format(filename))
-    for filename in filenames_proprietary:
-        try:
-            relative_filepath = filesystem_path(filename, check_existence=False)
-            full_filepath = os.path.join(FILESYSTEM_DIR, 'proprietary', relative_filepath)
-            filenames.append(full_filepath)
-        except ValueError:
-            print('Unable to determine filepath for {}'.format(filename))
+        # Determine locations to the files
+        filenames = []
+        for filename in filenames_public:
+            try:
+                relative_filepath = filesystem_path(filename, check_existence=False)
+                full_filepath = os.path.join(filesystem, 'public', relative_filepath)
+                filenames.append(full_filepath)
+            except ValueError:
+                print('Unable to determine filepath for {}'.format(filename))
+        for filename in filenames_proprietary:
+            try:
+                relative_filepath = filesystem_path(filename, check_existence=False)
+                full_filepath = os.path.join(filesystem, 'proprietary', relative_filepath)
+                filenames.append(full_filepath)
+            except ValueError:
+                print('Unable to determine filepath for {}'.format(filename))
 
-    # Gather information about the proposals for the given instrument
-    proposal_info = get_proposal_info(filenames)
+
+        # Get set of unique rootnames
+        num_files = 0
+        rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
+        for rootname in rootnames:
+            filename_dict = filename_parser(rootname)
+
+            # Weed out file types that are not supported by generate_preview_images
+            if 'stage_3' not in filename_dict['filename_type']:
+                num_files += 1
+
+        if len(filenames) > 0:
+            # Gather information about the proposals for the given instrument
+            proposal_info = get_proposal_info(filenames)
+            all_proposal_info['num_proposals'] = all_proposal_info['num_proposals'] + 1
+            all_proposal_info['proposals'].append(proposal)
+            all_proposal_info['thumbnail_paths'].append(proposal_info['thumbnail_paths'][0])
+            all_proposal_info['num_files'].append(num_files)
+            #all_proposal_info['num_files'].append(proposal_info['num_files'][0])
 
     context = {'inst': inst,
-               'all_filenames': filenames,
-               'num_proposals': proposal_info['num_proposals'],
-               'thumbnails': {'proposals': proposal_info['proposals'],
-                              'thumbnail_paths': proposal_info['thumbnail_paths'],
-                              'num_files': proposal_info['num_files']}}
+               'num_proposals': all_proposal_info['num_proposals'],
+               'thumbnails': {'proposals': all_proposal_info['proposals'],
+                              'thumbnail_paths': all_proposal_info['thumbnail_paths'],
+                              'num_files': all_proposal_info['num_files']}}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
@@ -328,9 +351,12 @@ def archive_thumbnails(request, inst, proposal):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
+    proposal_meta = text_scrape(proposal)
+
     template = 'thumbnails.html'
     context = {'inst': inst,
                'prop': proposal,
+               'prop_meta': proposal_meta,
                'base_url': get_base_url()}
 
     return render(request, template, context)
@@ -550,7 +576,7 @@ def instrument(request, inst):
     return render(request, template, context)
 
 
-def jwqldb_table_viewer(request, tablename_param=None):
+def jwqldb_table_viewer(request):
     """Generate the JWQL Table Viewer view.
 
     Parameters
@@ -567,11 +593,15 @@ def jwqldb_table_viewer(request, tablename_param=None):
         Outgoing response sent to the webpage
     """
 
-    if tablename_param is None:
-        table_meta, tablename = get_jwqldb_table_view_components(request)
+    try:
+        tablename = request.POST['db_table_select']
+    except KeyError:
+        tablename = None
+
+    if tablename is None:
+        table_meta = None
     else:
-        table_meta = build_table(tablename_param)
-        tablename = tablename_param
+        table_meta = build_table(tablename)
 
     _, _, engine, _ = load_connection(get_config()['connection_string'])
     all_jwql_tables = engine.table_names()
@@ -691,7 +721,7 @@ def unlooked_images(request, inst):
     pass
 
 
-def view_header(request, inst, filename):
+def view_header(request, inst, filename, filetype):
     """Generate the header view page
 
     Parameters
@@ -702,12 +732,15 @@ def view_header(request, inst, filename):
         Name of JWST instrument
     filename : str
         FITS filename of selected image in filesystem
+    filetype : str
+        Type of file (e.g. ``uncal``)
 
     Returns
     -------
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
@@ -717,7 +750,8 @@ def view_header(request, inst, filename):
     context = {'inst': inst,
                'filename': filename,
                'file_root': file_root,
-               'header_info': get_header_info(filename)}
+               'file_type': filetype,
+               'header_info': get_header_info(filename, filetype)}
 
     return render(request, template, context)
 
@@ -771,6 +805,7 @@ def view_image(request, inst, file_root, rewrite=False):
                'fits_files': image_info['all_files'],
                'suffixes': image_info['suffixes'],
                'num_ints': image_info['num_ints'],
+               'available_ints': image_info['available_ints'],
                'form': form}
 
     return render(request, template, context)

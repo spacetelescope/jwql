@@ -83,6 +83,7 @@ Templates to use: ``FGS_INTFLAT``, ``NIS_LAMP``, ``NRS_LAMP``,
 
 from copy import deepcopy
 import datetime
+from glob import glob
 import logging
 import os
 
@@ -596,6 +597,8 @@ class BadPixels():
                 new_pixels_x.append(x)
                 new_pixels_y.append(y)
 
+        session.close()
+
         return (new_pixels_x, new_pixels_y)
 
     def identify_tables(self):
@@ -694,7 +697,7 @@ class BadPixels():
             run_field = self.query_table.run_bpix_from_flats
 
         query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture). \
-                              filter(run_field == True)
+            filter(run_field == True)
 
         dates = np.zeros(0)
         if file_type.lower() == 'dark':
@@ -706,12 +709,13 @@ class BadPixels():
 
         query_count = len(dates)
         if query_count == 0:
-            query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
+            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
                          .format(self.aperture, query_result)))
         else:
             query_result = np.max(dates)
 
+        session.close()
         return query_result
 
     def make_crds_parameter_dict(self):
@@ -903,6 +907,11 @@ class BadPixels():
                                  min_dark_time, mid_dark_time, max_dark_time, baseline_file)
             else:
                 raise ValueError("Unrecognized type of bad pixel: {}. Cannot update database table.".format(bad_type))
+
+        # Remove raw files, rate files, and pipeline products in order to save disk space
+        files_to_remove = glob(f'{self.data_dir}/*.fits')
+        for filename in files_to_remove:
+            os.remove(filename)
 
     @log_fail
     @log_info

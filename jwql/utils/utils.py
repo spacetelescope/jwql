@@ -27,14 +27,13 @@ References
     - JWST TR JWST-STScI-004800, SM-12
  """
 
-import datetime
 import getpass
 import glob
 import json
 import os
 import re
 import shutil
-
+import http
 import jsonschema
 
 from jwql.utils import permissions
@@ -65,8 +64,6 @@ def _validate_config(config_file_dict):
         "properties": {  # List all the possible entries and their types
             "admin_account": {"type": "string"},
             "auth_mast": {"type": "string"},
-            "client_id": {"type": "string"},
-            "client_secret": {"type": "string"},
             "connection_string": {"type": "string"},
             "database": {
                 "type": "object",
@@ -100,7 +97,7 @@ def _validate_config(config_file_dict):
                      "preview_image_filesystem", "thumbnail_filesystem",
                      "outputs", "jwql_dir", "admin_account", "log_dir",
                      "test_dir", "test_data", "setup_file", "auth_mast",
-                     "client_id", "client_secret", "mast_token"]
+                     "mast_token"]
     }
 
     # Test that the provided config file dict matches the schema
@@ -190,7 +187,7 @@ def copy_files(files, out_dir):
                 shutil.copy2(input_file, out_dir)
                 success.append(input_new_path)
                 permissions.set_permissions(input_new_path)
-            except:
+            except Exception:
                 failed.append(input_file)
     return success, failed
 
@@ -210,7 +207,7 @@ def download_mast_data(query_results, output_dir):
 
     # Set up the https connection
     server = 'mast.stsci.edu'
-    conn = httplib.HTTPSConnection(server)
+    conn = http.client.HTTPSConnection(server)
 
     # Dowload the products
     print('Number of query results: {}'.format(len(query_results)))
@@ -429,8 +426,7 @@ def filename_parser(filename):
 
     # Raise error if unable to parse the filename
     except AttributeError:
-        jdox_url = 'https://jwst-docs.stsci.edu/display/JDAT/' \
-                   'File+Naming+Conventions+and+Data+Products'
+        jdox_url = 'https://jwst-docs.stsci.edu/understanding-jwst-data-files/jwst-data-file-naming-conventions'
         raise ValueError(
             'Provided file {} does not follow JWST naming conventions.  '
             'See {} for further information.'.format(filename, jdox_url)
@@ -508,7 +504,7 @@ def get_base_url():
 
     username = getpass.getuser()
     if username == get_config()['admin_account']:
-        base_url = 'https://dljwql.stsci.edu'
+        base_url = 'https://{}.stsci.edu'.format(get_config()['server_name'])
     else:
         base_url = 'http://127.0.0.1:8000'
 
@@ -528,15 +524,15 @@ def check_config_for_key(key):
         get_config()[key]
     except KeyError:
         raise KeyError(
-            'The key `{}` is not present in config.json. Please add it.'.format(key)
-            + ' See the relevant wiki page (https://github.com/spacetelescope/'
+            'The key `{}` is not present in config.json. Please add it.'.format(key) +
+            ' See the relevant wiki page (https://github.com/spacetelescope/' +
             'jwql/wiki/Config-file) for more information.'
         )
 
     if get_config()[key] == "":
         raise ValueError(
-            'Please complete the `{}` field in your config.json. '.format(key)
-            + ' See the relevant wiki page (https://github.com/spacetelescope/'
+            'Please complete the `{}` field in your config.json. '.format(key) +
+            ' See the relevant wiki page (https://github.com/spacetelescope/' +
             'jwql/wiki/Config-file) for more information.'
         )
 

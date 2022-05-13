@@ -15,14 +15,14 @@
 
 
 The JWST Quicklook Application (`JWQL`) is a database-driven web application and automation framework for use by the JWST instrument teams to monitor and trend the health, stability, and performance of the JWST instruments.  The system is comprised of the following:
-1. A network file system that stores all uncalibrated and calibrated data products on disk in a centrally-located area, accessible to instrument team members (MAST data cache)
+1. A network file system that stores all uncalibrated and calibrated data products on disk in a centrally-located area, accessible to instrument team members (i.e. the MAST data cache)
 2. A relational database that stores observational metadata allowing for data discovery via relational queries (MAST database API).
 3. A software library that provides tools to support an automation framework in which to build automated instrument monitoring routines.
 4. A web application that allows users to visually inspect new and archival JWST data as well as instrument-specific monitoring and performance results.
 
 Official API documentation can be found on [ReadTheDocs](https://jwql.readthedocs.io)
 
-The `jwql` application is currently under heavy development.  The `1.0` release is expected in 2021.  Currently, a development version of the web application can be found at [https://dljwql.stsci.edu](https://dljwql.stsci.edu).
+The `jwql` application is available at [https://jwql.stsci.edu](https://jwql.stsci.edu).  Please note that the application is currently restricted to specific JWST instrument team members.
 
 ## Installation for Users
 
@@ -44,7 +44,7 @@ Getting `jwql` up and running on your own computer requires four steps, detailed
 
 ### Prerequisites
 
-It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.7.  Downloads and installation instructions are  available here:
+It is highly suggested that contributors have a working installation of `anaconda` or `miniconda` for Python 3.8.  Downloads and installation instructions are  available here:
 
 - [Miniconda](https://conda.io/miniconda.html)
 - [Anaconda](https://www.continuum.io/downloads)
@@ -69,7 +69,7 @@ instead, and then proceed as stated.
 
 ### Environment Installation
 
-Following the download of the `jwql` repository, contributors can then install the `jwql` `conda` environment via the environment yaml file, which contains all of the dependencies for the project.  First, ensure that your version of `conda` is up to date:
+Following the download of the `jwql` repository, contributors can then install the `jwql` `conda` environment via the environment yaml file, which contains all of the dependencies for the project. First, if necessary, [install `conda`](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html). Next, ensure that your version of `conda` is up to date:
 
 ```
 conda update conda
@@ -81,26 +81,19 @@ Next, activate the `base` or `root` environment (depending on your version of `c
 source activate base/root
 ```
 
-Lastly, create the `jwql` environment via the `environment_python_3_7.yml` file:
+**Note:** If you have added a step activating conda to your default terminal/shell (e.g. the `.bashrc`, `.zshrc`, or `.profile` file) then you don't need to do the above step.
+
+Lastly, create the `jwql` environment via one of the `environment.yml` files (currently `environment_python_3_8.yml`, for python 3.8, and `environment_python_3.9.yml`, for python 3.9, are supported by `jwql`):
 
 ```
-conda env create -f environment_python_3_7.yml --name jwql-3.7
-```
-
-### Package Installation
-
-Next, you need to install the `jwql` package under development mode.  This can be accomplished either by running the `setup.py` script, or `pip install` with the `-e` option:
-
-```
-python setup.py develop
+conda env create -f environment_python_3_8.yml
 ```
 
 or
 
 ```
-pip install -e .
+conda env create -f environment_python_3.9.yml
 ```
-The package should now appear if you run `conda list jwql`.
 
 ### Configuration File
 
@@ -112,7 +105,9 @@ Much of the `jwql` software depends on the existence of a `config.json` file wit
 If you use `JWQL` for work/research presented in a publication (whether directly,
 or as a dependency to another package), we recommend and encourage the following acknowledgment:
 
-  This research made use of the open source Python package JWQL (Bourque et al, 2020).
+```
+  This research made use of the open source Python package 'jwql' (Bourque et al, 2020).
+```
 
 where (Bourque et al, 2020) is a citation of the Zenodo record available using the DOI badge above. By using the `Export` box in the lower right corner of the Zenodo page, you can export the citation in the format most convenient for you.
 
@@ -127,7 +122,7 @@ The following is a bare-bones example of a best work flow for contributing to th
 
 1. Create a fork off of the `spacetelescope` `jwql` repository.
 2. Make a local clone of your fork.
-3. Ensure your personal fork is pointing `upstream` properly.
+3. Ensure your personal fork is [pointing `upstream` properly](https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/configuring-a-remote-for-a-fork).
 4. Create a branch on that personal fork.
 5. Make your software changes.
 6. Push that branch to your personal GitHub repository (i.e. `origin`).
@@ -155,19 +150,21 @@ Any questions about the `jwql` project or its software can be directed to `jwql@
 
 
 ## Current Development Team
-- Matthew Bourque (INS) [@bourque](https://github.com/bourque)
+- Bryan Hilbert (Project Manager, INS) [@bilhbert4](https://github.com/bhilbert4)
+- Mees Fix (Technical Lead, INS) [@mfixstsci](https://github.com/mfixstsci)
 - Misty Cracraft (INS) [@cracraft](https://github.com/cracraft)
 - Mike Engesser (INS) [@mengesser](https://github.com/mengesser)
-- Mees Fix (INS) [@mfixstsci](https://github.com/mfixstsci)
-- Bryan Hilbert (INS) [@bilhbert4](https://github.com/bhilbert4)
-- Graham Kanarek (INS) [@gkanarek](https://github.com/gkanarek)
-- Teagan King (INS) [@tnking97](https://github.com/tnking97)
+- Shannon Osborne (INS) [@shanosborne](https://github.com/shanosborne)
 - Maria Pena-Guerrero [@penaguerrero](https://github.com/penaguerrero)
 - Ben Sunnquist (INS) [@bsunnquist](https://github.com/bsunnquist)
+- Brian York (INS) [@york-stsci](https://github.com/york-stsci)
 
 ## Past Development Team Members
+- Matthew Bourque (INS) [@bourque](https://github.com/bourque)
 - Lauren Chambers (INS) [@laurenmarietta](https://github.com/laurenmarietta)
 - Joe Filippazzo (INS) [@hover2pi](https://github.com/hover2pi)
+- Graham Kanarek (INS) [@gkanarek](https://github.com/gkanarek)
+- Teagan King (INS) [@tnking97](https://github.com/tnking97)
 - Sara Ogaz (DMD) [@SaOgaz](https://github.com/SaOgaz)
 - Catherine Martlin (INS) [@catherine-martlin](https://github.com/catherine-martlin)
 - Johannes Sahlmann (INS) [@Johannes-Sahlmann](https://github.com/johannes-sahlmann)
