@@ -275,7 +275,7 @@ def monitor_mast():
 
 @lock_module
 def protected_code():
-    # Protected code ensures only 1 instance of module will run at any given time
+    """Protected code ensures only 1 instance of module will run at any given time"""
 
     # Configure logging
     module = os.path.basename(__file__).strip('.py')

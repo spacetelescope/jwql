@@ -18,8 +18,11 @@ Use
         pytest -s test_protect_module.py
 """
 import os
-from pytest import fixture
+from pytest import fixture, mark
 from jwql.utils.protect_module import lock_module
+
+# Determine if tests are being run on Github Actions
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
 @fixture
@@ -39,6 +42,7 @@ def protected_code_entered():
     return True
 
 
+@mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_lock_module_create_destroy_file(module_lock):
     """Test if that wrapper will create and destroy a lock file named by module """
 
@@ -51,7 +55,9 @@ def test_lock_module_create_destroy_file(module_lock):
     assert (file_created and not file_exists) is True
 
 
+@mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_lock_module_wont_run_locked(module_lock):
+    """Test if that wrapper will create and destroy a lock file named by module """
     # create locked file in advance of calling protected code
     with open(module_lock, "w"):
         entered_protected_code = protected_code_entered()

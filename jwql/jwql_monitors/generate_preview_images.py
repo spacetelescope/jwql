@@ -761,7 +761,7 @@ def update_listfile(filename, file_list, filetype):
 
 @lock_module
 def protected_code():
-    # Protected code ensures only 1 instance of module will run at any given time
+    """Protected code ensures only 1 instance of module will run at any given time"""
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = initialize_instrument_monitor(module)
 
