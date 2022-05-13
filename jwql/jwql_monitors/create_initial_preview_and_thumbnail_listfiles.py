@@ -9,11 +9,13 @@ Author:  B. Hilbert
 """
 from glob import glob
 import os
-import re
 
+from jwql.utils.protect_module import lock_module
 from jwql.utils.utils import get_config
 
 
+# Lock module makes create_files() protected code, ensures only one instance of module will run
+@lock_module
 def create_files():
     """Create a new set of listfiles"""
     inst_strings = ['guider', 'nrc', 'miri', 'nis', 'nrs']
