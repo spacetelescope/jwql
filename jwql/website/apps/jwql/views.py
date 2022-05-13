@@ -421,7 +421,7 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
     template = 'thumbnails_per_obs.html'
     context = {'inst': inst,
                'prop': proposal,
-               'obs': observation[3:],
+               'obs': observation,
                'prop_meta': proposal_meta,
                'base_url': get_base_url()}
 

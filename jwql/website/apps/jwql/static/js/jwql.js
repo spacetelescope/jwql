@@ -185,14 +185,14 @@ function determine_page_title(instrument, proposal) {
     var url = document.URL;
     var url_split = url.split('/');
     var url_title = url_split[url_split.length - 2];
-    var url_end = url_split[url_split.length - 1];
+    //var url_end = url_split[url_split.length - 1];
     if (url_title == 'archive') {
         final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal
     } else if (url_title == 'unlooked') {
         final_title = 'Unlooked ' + instrument + ' Images';
-    } else if (isNaN(url_title) == false) {
-        final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal + ', Observtion ' + url_end
-    }
+    //} else if (isNaN(url_title) == false) {
+    //    final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal + ', Observation ' + url_end
+    //}
 
     // Update the titles accordingly
     if (typeof final_title !== 'undefined') {
@@ -213,7 +213,7 @@ function determine_page_title_obs(instrument, proposal, observation) {
     // Determine if the URL is 'archive' or 'unlooked'
     var url = document.URL;
     var url_split = url.split('/');
-    var url_title = url_split[url_split.length - 2];
+    var url_title = url_split[url_split.length - 3];
     var url_end = url_split[url_split.length - 1];
     if (url_title == 'archive') {
         final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal + ', Observation ' + observation
