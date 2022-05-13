@@ -31,8 +31,8 @@ Use
         @lock_module
         def protected_code():
             # Protected code ensures only 1 instance of module will run at any given time
-            
-            # Example code normally in __name == '__main__' check 
+
+            # Example code normally in __name == '__main__' check
             initialize_code()
             my_main_function()
             logging_code()
@@ -54,16 +54,17 @@ References
 """
 
 import os
-import inspect 
+import inspect
 from functools import wraps
+
 
 def lock_module(func):
     """Decorator to prevent more than 1 instance of a module.
 
-    This function can be used as a decorator to create lock files on python 
+    This function can be used as a decorator to create lock files on python
     modules where we only want one instance running at any given time.
     More info at top of module
-    
+
     Parameters
     ----------
     func : func
@@ -78,12 +79,12 @@ def lock_module(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
 
-        #Get the module name of the calling method
+        # Get the module name of the calling method
         frame = inspect.stack()[1]
         mod = inspect.getmodule(frame[0])
         module = mod.__file__
 
-        #remove python suffix if it exists, then append to make testing work properly for instances where .py may not exist
+        # remove python suffix if it exists, then append to make testing work properly for instances where .py may not exist
         module_lock = module.replace('.py', '.lock')
 
         if os.path.exists(module_lock):
@@ -101,7 +102,7 @@ def lock_module(func):
                 try:
                     os.remove(module_lock)
                 except Exception as e:
-                    print (e, type(e).__name__, e.args)
-                    print (module_lock + ' delete failed, Please Manually Delete')
+                    print(e, type(e).__name__, e.args)
+                    print(module_lock + ' delete failed, Please Manually Delete')
                     pass
     return wrapped
