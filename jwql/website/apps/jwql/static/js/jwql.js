@@ -475,6 +475,29 @@ function update_header_display(extension, num_extensions) {
 };
 
 /**
+ * Updates the obs-list div with sorting options
+ * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ * @param {String} inst - Instrument name
+ * @param {String} prop - Proposal ID
+ * @param {List} obslist - List of observation number strings
+ */
+function update_obs_options(data, int, prop, obslist) {
+
+    // Build div content
+    content = 'Program observations:';
+    content += '<div class="dropdown">';
+    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Default</button>';
+    content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
+    for (var i = 0; i < obslist.length; i++) {
+        content += '<a class="dropdown-item" href="/' + inst + '/archive/' + prop + '/obs' + obslist[i] + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
+    }
+    content += '</div></div>';
+
+    // Add the content to the div
+    $("#obs-list")[0].innerHTML = content;
+};
+
+/**
  * Updates the img_show_count component
  * @param {Integer} count - The count to display
  * @param {String} type - The type of the count (e.g. "activities")
@@ -573,15 +596,17 @@ function update_thumbnails_page(inst, proposal, base_url) {
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} proposal - The proposal number of interest (e.g. "88660")
  * @param {String} observation - The observation number within the proposal (e.g. "001")
+ * @param {List} observation_list - List of all observations in this proposal
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
-function update_thumbnails_per_observation_page(inst, proposal, observation, base_url) {
+function update_thumbnails_per_observation_page(inst, proposal, observation, observation_list, base_url) {
     $.ajax({
         url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/obs' + observation + '/',
         success: function(data){
             // Perform various updates to divs
             update_show_count(Object.keys(data.file_data).length, 'activities');
             update_thumbnail_array(data);
+            update_obs_options(data, observation_list);
             update_filter_options(data);
             update_sort_options(data);
 

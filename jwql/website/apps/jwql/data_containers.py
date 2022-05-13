@@ -957,6 +957,30 @@ def get_proposal_info(filepaths):
     return proposal_info
 
 
+def get_rootnames_for_instrument_proposal(instrument, proposal):
+    """Return a list of proposals for the given instrument
+
+    Parameters
+    ----------
+    instrument : str
+        Name of the JWST instrument, with first letter capitalized
+        (e.g. ``Fgs``)
+
+    proposal : int or str
+        Proposal ID number
+
+    Returns
+    -------
+    rootnames : list
+        List of rootnames for the given instrument and proposal number
+    """
+    tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
+    tap_results = tap_service.search(f"select obs_id from dbo.ObsPointing where obs_collection='JWST' and calib_level>0 and instrument_name like '{instrument.lower()}' and proposal_id={proposal}")
+    prop_table = tap_results.to_table()
+    rootnames = prop_table['obs_id'].data
+    return rootnames.compressed()
+
+
 def get_thumbnails_all_instruments(parameters):
     """Return a list of thumbnails available in the filesystem for all
     instruments given requested MAST parameters and queried anomalies.

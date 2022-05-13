@@ -418,10 +418,18 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
 
     proposal_meta = text_scrape(proposal)
 
+    # Get a list of all observation numbers for the proposal
+    # This will be used to create buttons for observation-specific
+    # pages
+    rootnames = get_rootnames_for_instrument_proposal(inst, proposal)
+    all_obs = [filename_parser(root)['observation'] for root in rootnames]
+    obs_list = sorted(list(set(all_obs)))
+
     template = 'thumbnails_per_obs.html'
     context = {'inst': inst,
                'prop': proposal,
                'obs': observation,
+               'obs_list' : obs_list,
                'prop_meta': proposal_meta,
                'base_url': get_base_url()}
 

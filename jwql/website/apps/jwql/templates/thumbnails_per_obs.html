@@ -22,6 +22,14 @@
     	<p id='img_show_count'></p>
     	<hr>
 
+        <!-- Create buttons to all observation numbers of this proposal -->
+        {{ obs_list }}
+        <div class="d-flex flex-row">
+            <div class="mx-4 mr-5 ml-auto" id="thumbnail-sort"></div>
+        </div>
+
+        <hr>
+
     	<!-- Filter and sort options -->
 		<div class="d-flex flex-row">
 			<div class="mr-4" id="thumbnail-filter"></div>
@@ -71,6 +79,6 @@
 
 	</main>
 
-	<script>update_thumbnails_per_observation_page('{{ inst }}', '{{ prop }}', '{{ obs }}', '{{ base_url }}');</script>
+	<script>update_thumbnails_per_observation_page('{{ inst }}', '{{ prop }}', '{{ obs }}', '{{ obs_list }}', '{{ base_url }}');</script>
 
 {% endblock %}
