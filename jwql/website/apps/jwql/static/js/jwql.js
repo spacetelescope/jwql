@@ -192,7 +192,7 @@ function determine_page_title(instrument, proposal) {
         final_title = 'Unlooked ' + instrument + ' Images';
     //} else if (isNaN(url_title) == false) {
     //    final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal + ', Observation ' + url_end
-    //}
+    }
 
     // Update the titles accordingly
     if (typeof final_title !== 'undefined') {
