@@ -34,6 +34,7 @@ Gaussian parameters are saved to the DarkDarkCurrent database table.
 Author
 ------
     - Mees Fix
+    - Jeff Valenti
 Use
 ---
     This module can be used from the command line as such:
@@ -41,37 +42,24 @@ Use
         python tso_monitor.py
 """
 
-from copy import copy, deepcopy
 import datetime
 import logging
 import os
 
-from astropy.io import ascii, fits
-from astropy.modeling import models
 from astropy.time import Time
-from astropy.timeseries import LombScargle
-from glob import glob
+from datetime import datetime
 from jwst import datamodels
 import numpy as np
 import pandas as pd
-from pysiaf import Siaf
-from scipy.interpolate import interp1d
-from scipy.ndimage import gaussian_filter1d
-from scipy.ndimage import median_filter
+from requests import get as requests_get
 from sqlalchemy import func
-from sqlalchemy.sql.expression import and_
 
 from jwql.database.database_interface import session
-from jwql.database.database_interface import NIRCamTsoMonitor, NIRSpecTsoMonitor, NIRISSTsoMonitor, MIRITsoMonitor
-from jwql.instrument_monitors import pipeline_tools
+# from jwql.database.database_interface import NIRCamTsoMonitor, NIRSpecTsoMonitor, NIRISSTsoMonitor, MIRITsoMonitor
 from jwql.jwql_monitors import monitor_mast
-from jwql.utils import calculations, instrument_properties, monitor_utils
-
 from jwql.utils.constants import JWST_DATAPRODUCTS, JWST_INSTRUMENT_NAMES, DETECTOR_PER_INSTRUMENT
-
 from jwql.utils.logging_functions import log_info, log_fail
-from jwql.utils.permissions import set_permissions
-from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
+from jwql.utils.utils import copy_files, ensure_dir_exists, get_config
 
 
 class tsoMonitor():
@@ -85,22 +73,21 @@ class tsoMonitor():
 
     Parameters
     ----------
-    testing : bool
-        For pytest. If ``True``, an instance of ``Dark`` is created, but
-        no other code is executed.
+
     Attributes
     ----------
 
     Raises
     ------
-    ValueError
-        If encountering an unrecognized bad pixel type
-    ValueError
-        If the most recent query search returns more than one entry
+
     """
 
     def __init__(self):
         """Initialize an instance of the ``tsoMonitor`` class."""
+
+        self.token = get_config()['mast_token']
+        self.baseurl = 'https://mast.stsci.edu/jwst/api/v0.1/' \
+                        'Download/file?uri=mast:jwstedb'
 
 
     def compute_out_of_transit_flux(self):
@@ -114,6 +101,40 @@ class tsoMonitor():
         times_seconds = (times - times[0]) * 24 * 3600.
 
         # self.median_out_of_transit_flux = np.median(ootf)
+
+
+    def format_date(self, date):
+        '''Convert datetime object or ISO 8501 string to EDB date format.'''
+        if type(date) is str:
+            dtobj = datetime.fromisoformat(date)
+        elif type(date) is datetime:
+            dtobj = date
+        else:
+            raise ValueError('date must be ISO 8501 string or datetime obj')
+
+        return dtobj.strftime('%Y%m%dT%H%M%S')
+
+
+    def get_jwstedb_data(self, mnemonic, start, end):
+        '''Get engineering data for specified mnemonic and time interval.'''
+
+        
+        startdate = self.format_date(start)
+        enddate = self.format_date(end)
+        
+        filename = f'{mnemonic}-{startdate}-{enddate}.csv'
+        url = f'{self.baseurl}/{filename}'
+        
+        headers = {'Authorization': f'token {self.token}'}
+        
+        with requests_get(url, headers=headers, stream=True) as response:
+            
+            response.raise_for_status()
+            
+            lines = response.text.splitlines()
+            time, time_mjd, value = self._parse(lines)
+            
+            return time, time_mjd, value
 
 
     def identify_tables(self):
@@ -226,6 +247,56 @@ class tsoMonitor():
             query_result = np.max(dates)
 
         return query_result
+
+
+    def _parse(self, lines):
+        '''Parse lines of text returned by MAST EDB interface.'''
+
+        from csv import reader as csv_reader
+        from datetime import datetime
+
+        # Define SQL-to-python datatype conversions. 
+        # Taken from https://docs.microsoft.com/en-us/sql/machine-learning/python/python-libraries-and-data-types?view=sql-server-ver15
+        cast = {'bigint': float, 
+                'binary': bytes,
+                'bit': bool,
+                'char': str,
+                'date': datetime,
+                'datetime': datetime,
+                'float': float, 
+                'nchar': str,
+                'nvarchar': str,
+                'nvarchar(max)': str,
+                'real': float,
+                'smalldatetime': datetime,
+                'smallint': int, 
+                'tinyint': int,
+                'uniqueidentifier': str,
+                'varbinary': bytes,
+                'varbinary(max)': bytes,
+                'varchar': str, 
+                'varchar(n)': str,
+                'varchar(max)': str}
+        
+        # Set lists that will save the data:
+        time = []
+        time_mjd = []
+        value = []
+
+        for field in csv_reader(lines, delimiter=',', quotechar='"'):
+
+            if field[0] == 'theTime':
+                continue
+
+            # Read in SQL data-type:
+            sqltype = field[3]
+
+            # Save time and value converted to python using the SQL data-type:
+            time.append(datetime.fromisoformat(field[0]))
+            time_mjd.append(float(field[1]))
+            value.append(cast[sqltype](field[2]))
+
+        return time, time_mjd, value
 
 
     def plot_acq_image(self):
