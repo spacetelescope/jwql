@@ -58,8 +58,9 @@ dependencies:
     - jwst==1.4.6
     - pysiaf==0.15.0
     - pysqlite3==0.4.7
+    - pyvo==1.3
     - stsci_rtd_theme==0.0.2
     - git+https://github.com/spacetelescope/jwst_reffiles
-    
+
     # Current package
     - -e .

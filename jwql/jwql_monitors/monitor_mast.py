@@ -27,11 +27,12 @@ from bokeh.io import save, output_file
 import pandas as pd
 
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_DATAPRODUCTS
-from jwql.utils.logging_functions import configure_logging, log_info, log_fail
+from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_config
 from jwql.utils import monitor_utils
 from jwql.utils.plotting import bar_chart
+from jwql.utils.protect_module import lock_module
 
 
 # Temporary until JWST operations: switch to test string for MAST request URL
@@ -143,8 +144,13 @@ def instrument_keywords(instrument, caom=False):
         A DataFrame of the keywords
     """
     # Retrieve one dataset to get header keywords
+    if not caom:
+        filter_to_add = {'program': '01440'}
+    else:
+        filter_to_add = {'proposal_id': '01440'}
     sample = instrument_inventory(instrument, return_data=True, caom=caom,
-                                  add_requests={'pagesize': 1, 'page': 1})
+                                  add_requests={'pagesize': 1, 'page': 1},
+                                  add_filters=filter_to_add)
     data = [[i['name'], i['type']] for i in sample['fields']]
     keywords = pd.DataFrame(data, columns=('keyword', 'dtype'))
 
@@ -267,7 +273,9 @@ def monitor_mast():
                    caom=True, plot=True)
 
 
-if __name__ == '__main__':
+@lock_module
+def protected_code():
+    """Protected code ensures only 1 instance of module will run at any given time"""
 
     # Configure logging
     module = os.path.basename(__file__).strip('.py')
@@ -276,3 +284,7 @@ if __name__ == '__main__':
     # Run the monitors
     monitor_mast()
     monitor_utils.update_monitor_table(module, start_time, log_file)
+
+
+if __name__ == '__main__':
+    protected_code()
