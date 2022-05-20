@@ -165,6 +165,7 @@ def run_calwebb_detector1(input_file, instrument, path=None):
         if path is None or not os.path.isfile(os.path.join(path, uncal_file)):
             uncal_file = filesystem_path(uncal_file)
     else:
+        short_name = input_file[:input_file.rfind("_uncal")]
         if os.path.isfile(os.path.join(path, input_file)):
             uncal_file = os.path.join(path, input_file)
         else:
