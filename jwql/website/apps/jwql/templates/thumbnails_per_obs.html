@@ -14,6 +14,13 @@
 {% block content %}
 
     <main role="main" class="container">
+        <!-- Create buttons to all observation numbers of this proposal -->
+        <div class="d-flex flex-row">
+            <div class="mx-4 mr-5 ml-auto" id="obs-list"></div>
+        </div>
+
+        <hr>
+
     	<!-- Page title -->
     	<h3 id='title'>{{ inst }} Images</h3>
     	<script>determine_page_title_obs('{{ inst }}','{{ prop }}','{{ obs }}');</script>
@@ -21,13 +28,6 @@
     	<!-- Show Count -->
     	<p id='img_show_count'></p>
     	<hr>
-
-        <!-- Create buttons to all observation numbers of this proposal -->
-        <div class="d-flex flex-row">
-            <div class="mx-4 mr-5 ml-auto" id="obs-list"></div>
-        </div>
-
-        <hr>
 
     	<!-- Filter and sort options -->
 		<div class="d-flex flex-row">

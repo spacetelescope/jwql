@@ -383,9 +383,6 @@ function update_archive_page(inst, base_url) {
             num_proposals = data.thumbnails.proposals.length;
             update_show_count(num_proposals, 'proposals')
 
-            console.log('in update_archive_page')
-            console.log(data.min_obsnum)
-
             // Add content to the proposal array div
             for (var i = 0; i < data.thumbnails.proposals.length; i++) {
 
@@ -485,11 +482,8 @@ function update_header_display(extension, num_extensions) {
  * @param {List} obslist - List of observation number strings
  */
 function update_obs_options(data, inst, prop, obslist) {
-    console.log('in update_obs_options')
-    console.log(data.obs_list)
-
     // Build div content
-    content = 'Program observations:';
+    content = 'Available observations:';
     content += '<div class="dropdown">';
     content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Obs Nums</button>';
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
