@@ -783,8 +783,11 @@ class BadPixels():
             for uncal_file, rate_file in zip(illuminated_raw_files, illuminated_slope_files):
                 self.get_metadata(uncal_file)
                 if rate_file == 'None':
-                    jump_output, rate_output, _ = pipeline_tools.calwebb_detector1_save_jump(uncal_file, self.data_dir,
-                                                                                             ramp_fit=True, save_fitopt=False)
+                    uncal_filename = os.path.basename(uncal_file)
+                    uncal_filepath = os.path.dirname(uncal_file)
+                    result = calwebb_detector1_save_jump(uncal_filename, ramp_fit=True, 
+                                                         save_fitopt=False, path=uncal_filepath)
+                    jump_output, rate_output, _, output_dir = result.get()
                     if self.nints > 1:
                         illuminated_slope_files[index] = rate_output.replace('0_ramp_fit', '1_ramp_fit')
                     else:
@@ -813,8 +816,11 @@ class BadPixels():
             # even if the rate file is present, because we also need the jump
             # and fitops files, which are not saved by default
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
-                jump_output, rate_output, fitopt_output = pipeline_tools.calwebb_detector1_save_jump(uncal_file, self.data_dir,
-                                                                                                     ramp_fit=True, save_fitopt=True)
+                uncal_filename = os.path.basename(uncal_file)
+                uncal_filepath = os.path.dirname(uncal_file)
+                result = calwebb_detector1_save_jump(uncal_filename, ramp_fit=True, 
+                                                     save_fitopt=True, path=uncal_filepath)
+                jump_output, rate_output, fitopt_output, output_dir = result.get()
                 self.get_metadata(uncal_file)
                 dark_jump_files.append(jump_output)
                 dark_fitopt_files.append(fitopt_output)

@@ -98,23 +98,31 @@ There are many other ways to call and use tasks, including ways to group tasks, 
 synchronously, run a group of tasks with a final callback function, etc. These are best
 explained by the celery documentation itself.
 """
-from copy import copy, deepcopy
-import datetime
+from collections import OrderedDict
+
 import logging
 import os
 
-from astropy.io import ascii, fits
-from astropy.modeling import models
-from astropy.time import Time
-import numpy as np
-from pysiaf import Siaf
-from sqlalchemy import func
-from sqlalchemy.sql.expression import and_
+from astropy.io import fits
 
-from jwql.instrument_monitors import pipeline_tools
-from jwql.utils import calculations, instrument_properties, monitor_utils
-from jwql.utils.constants import ASIC_TEMPLATES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, \
-                                 RAPID_READPATTERNS
+from jwst import datamodels
+from jwst.dq_init import DQInitStep
+from jwst.dark_current import DarkCurrentStep
+from jwst.firstframe import FirstFrameStep
+from jwst.group_scale import GroupScaleStep
+from jwst.ipc import IPCStep
+from jwst.jump import JumpStep
+from jwst.lastframe import LastFrameStep
+from jwst.linearity import LinearityStep
+from jwst.persistence import PersistenceStep
+from jwst.pipeline.calwebb_detector1 import Detector1Pipeline
+from jwst.ramp_fitting import RampFitStep
+from jwst.refpix import RefPixStep
+from jwst.rscd import RscdStep
+from jwst.saturation import SaturationStep
+from jwst.superbias import SuperBiasStep
+
+from jwql.instrument_monitors.pipeline_tools import PIPELINE_STEP_MAPPING, get_pipeline_steps
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
@@ -126,8 +134,10 @@ from celery import Celery
 celery_app = Celery('shared_tasks', broker='redis://localhost:6379/0')
 
 
-@celery_app.task(base=Singleton, unique_on=['input_file', ])
-def run_calwebb_detector1(input_file, path=None):
+@celery_app.task(base=Singleton, unique_on=['input_file', 'instrument'])
+@log_fail
+@log_info
+def run_calwebb_detector1(input_file, instrument, path=None):
     """Run the steps of ``calwebb_detector1`` on the input file, saving the result of each 
     step as a separate output file, then return the name-and-path of the file as reduced 
     in the reduction directory.
@@ -146,26 +156,30 @@ def run_calwebb_detector1(input_file, path=None):
     reduction_path : str
         The path at which the reduced data file(s) may be found.
     """
-    if path is None or not os.path.isfile(os.path.join(path, input_file)):
-        input_file = filesystem_path(input_file)
+    if "_" in input_file:
+        short_name = input_file[:input_file.rfind("_")]
+    else:
+        short_name = input_file.replace(".fits", "")
+    uncal_file = short_file+"_uncal.fits"
+    if path is None or not os.path.isfile(os.path.join(path, uncal_file)):
+        uncal_file = filesystem_path(uncal_file)
 
     output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
     ensure_dir_exists(output_dir)
-    input_filename = os.path.join(output_dir, input_file)
+    input_filename = os.path.join(output_dir, uncal_file)
     if not os.path.isfile(input_filename):
-        copy_files([input_file], output_dir)
-    header = fits.getheader(input_filename)
-    # *****TODO***** can I get instrument this way?
-    instrument = header['INSTRUME']
+        copy_files([input_filename], output_dir)
+    set_permissions(input_filename)
     
-    required_steps = pipeline_tools.get_pipeline_steps(instrument)
+    required_steps = get_pipeline_steps(instrument)
     
     first_step_to_be_run = True
     for step_name in steps:
         if steps[step_name]:
-            output_filename = input_file.replace(".fits", "_{}.fits".format(step_name))
+            output_filename = short_name+"_{}.fits".format(step_name)
+            output_file = os.path.join(output_dir, output_filename)
             # skip already-done steps                
-            if not os.path.isfile(output_filename):
+            if not os.path.isfile(output_file):
                 if first_step_to_be_run:
                     model = PIPELINE_STEP_MAPPING[step_name].call(input_filename)
                     first_step_to_be_run = False
@@ -184,16 +198,138 @@ def run_calwebb_detector1(input_file, path=None):
                         # If the dither_points entry is not populated, then ignore this 
                         # change
                         pass
-                    model.save(output_filename)
+                    model.save(output_file)
                 else:
                     try:
                         model[0].meta.dither.dither_points = int(model[0].meta.dither.dither_points)
                     except TypeError:
                         # If the dither_points entry is not populated, then ignore this change
                         pass
-                    model[0].save(output_filename)
+                    model[0].save(output_file)
+            set_permissions(output_file)
 
     return output_dir
+
+
+@celery_app.task(base=Singleton, unique_on=['input_file',])
+@log_fail
+@log_info
+def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True):
+    """Call ``calwebb_detector1`` on the provided file, running all
+    steps up to the ``ramp_fit`` step, and save the result. Optionally
+    run the ``ramp_fit`` step and save the resulting slope file as well.
+
+    Parameters
+    ----------
+    input_file : str
+        Name of fits file to run on the pipeline
+
+    ramp_fit : bool
+        If ``False``, the ``ramp_fit`` step is not run. The output file
+        will be a ``*_jump.fits`` file.
+        If ``True``, the ``*jump.fits`` file will be produced and saved.
+        In addition, the ``ramp_fit`` step will be run and a
+        ``*rate.fits`` or ``*_rateints.fits`` file will be saved.
+        (``rateints`` if the input file has >1 integration)
+
+    save_fitopt : bool
+        If ``True``, the file of optional outputs from the ramp fitting
+        step of the pipeline is saved.
+
+    Returns
+    -------
+    jump_output : str
+        Name of the saved file containing the output prior to the
+        ``ramp_fit`` step.
+
+    pipe_output : str
+        Name of the saved file containing the output after ramp-fitting
+        is performed (if requested). Otherwise ``None``.
+    
+    fitopt_output : str
+        Name of the saved file containing the output after ramp-fitting
+        is performed (if requested). Otherwise ``None``.
+    
+    output_dir : str
+        Name of the directory where the output file is saved
+    """
+    output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
+    ensure_dir_exists(output_dir)
+
+    input_file_only = os.path.basename(input_file)
+
+    # Find the instrument used to collect the data
+    datamodel = datamodels.RampModel(input_file)
+    instrument = datamodel.meta.instrument.name.lower()
+
+    # If the data pre-date jwst version 1.2.1, then they will have
+    # the NUMDTHPT keyword (with string value of the number of dithers)
+    # rather than the newer NRIMDTPT keyword (with an integer value of
+    # the number of dithers). If so, we need to update the file here so
+    # that it doesn't cause the pipeline to crash later. Both old and
+    # new keywords are mapped to the model.meta.dither.dither_points
+    # metadata entry. So we should be able to focus on that.
+    if isinstance(datamodel.meta.dither.dither_points, str):
+        # If we have a string, change it to an integer
+        datamodel.meta.dither.dither_points = int(datamodel.meta.dither.dither_points)
+    elif datamodel.meta.dither.dither_points is None:
+        # If the information is missing completely, put in a dummy value
+        datamodel.meta.dither.dither_points = 1
+
+    # Switch to calling the pipeline rather than individual steps,
+    # and use the run() method so that we can set parameters
+    # progammatically.
+    model = Detector1Pipeline()
+
+    # Always true
+    if instrument == 'nircam':
+        model.refpix.odd_even_rows = False
+
+    # Default CR rejection threshold is too low
+    model.jump.rejection_threshold = 15
+
+    # Turn off IPC step until it is put in the right place
+    model.ipc.skip = True
+
+    model.jump.save_results = True
+    model.jump.output_dir = output_dir
+    jump_output = os.path.join(output_dir, input_file_only.replace('uncal', 'jump'))
+
+    # Check to see if the jump version of the requested file is already
+    # present
+    run_jump = not os.path.isfile(jump_output)
+
+    if ramp_fit:
+        model.ramp_fit.save_results = True
+        # model.save_results = True
+        model.output_dir = output_dir
+        # pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', 'rate'))
+        pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', '0_ramp_fit'))
+        run_slope = not os.path.isfile(pipe_output)
+        if save_fitopt:
+            model.ramp_fit.save_opt = True
+            fitopt_output = os.path.join(output_dir, input_file_only.replace('uncal', 'fitopt'))
+            run_fitopt = not os.path.isfile(fitopt_output)
+        else:
+            model.ramp_fit.save_opt = False
+            fitopt_output = None
+            run_fitopt = False
+    else:
+        model.ramp_fit.skip = True
+        pipe_output = None
+        fitopt_output = None
+        run_slope = False
+        run_fitopt = False
+
+    # Call the pipeline if any of the files at the requested calibration
+    # states are not present in the output directory
+    if run_jump or (ramp_fit and run_slope) or (save_fitopt and run_fitopt):
+        model.run(datamodel)
+    else:
+        print(("Files with all requested calibration states for {} already present in "
+               "output directory. Skipping pipeline call.".format(input_file)))
+
+    return jump_output, pipe_output, fitopt_output, output_dir
 
 
 if __name__ == '__main__':

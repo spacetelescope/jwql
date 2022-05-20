@@ -76,6 +76,7 @@ from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDar
 from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
+from jwql.shared_tasks.shared_tasks import run_calwebb_detector1
 from jwql.utils import calculations, instrument_properties, monitor_utils
 from jwql.utils.constants import ASIC_TEMPLATES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, \
                                  RAPID_READPATTERNS
@@ -482,12 +483,17 @@ class Dark():
             if any(steps_to_run.values()) is False:
                 slope_files.append(filename)
             else:
+                file_path = os.path.dirname(filename)
+                file_name = os.path.basename(filename)
                 processed_file = filename.replace('.fits', '_{}.fits'.format('rate'))
+                processed_filename = os.path.basename(processed_file)
 
                 # If the slope file already exists, skip the pipeline call
                 if not os.path.isfile(processed_file):
                     logging.info('\tRunning pipeline on {}'.format(filename))
-                    processed_file = pipeline_tools.run_calwebb_detector1_steps(os.path.abspath(filename), steps_to_run)
+                    result = run_calwebb_detector1(file_name, self.instrument, path=file_path)
+                    processed_path = result.get()
+                    processed_file = os.path.join(processed_path, processed_filename)
                     logging.info('\tPipeline complete. Output: {}'.format(processed_file))
 
                 else:
