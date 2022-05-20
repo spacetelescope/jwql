@@ -394,7 +394,7 @@ function update_archive_page(inst, base_url) {
 
                 // Build div content
                 content = '<div class="proposal text-center">';
-                if (inst !== 'nircam') {
+                if (inst !== 'NIRCam') {
                     content += '<a href="/' + inst + '/archive/' + prop + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
                 } else {
                     content += '<a href="/' + inst + '/archive/' + prop + '/obs' + min_obsnum + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
