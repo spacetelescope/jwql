@@ -134,7 +134,7 @@ from celery import Celery
 celery_app = Celery('shared_tasks', broker='redis://localhost', backend='redis://localhost')
 celery_app.conf.broker_transport_options = {'visibility_timeout': 7200}
 
-@celery_app.task(name='jwql.shared_tasks.shared_tasks.run_calwebb_detector1' base=Singleton, unique_on=['input_file', 'instrument'])
+@celery_app.task(name='jwql.shared_tasks.shared_tasks.run_calwebb_detector1', base=Singleton, unique_on=['input_file', 'instrument'])
 def run_calwebb_detector1(input_file, instrument, path=None):
     """Run the steps of ``calwebb_detector1`` on the input file, saving the result of each
     step as a separate output file, then return the name-and-path of the file as reduced
@@ -158,7 +158,7 @@ def run_calwebb_detector1(input_file, instrument, path=None):
         short_name = input_file[:input_file.rfind("_")]
     else:
         short_name = input_file.replace(".fits", "")
-    uncal_file = short_file + "_uncal.fits"
+    uncal_file = short_name + "_uncal.fits"
     if path is None or not os.path.isfile(os.path.join(path, uncal_file)):
         uncal_file = filesystem_path(uncal_file)
 
