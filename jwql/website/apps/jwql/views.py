@@ -331,6 +331,9 @@ def archived_proposals_ajax(request, inst):
                               'thumbnail_paths': all_proposal_info['thumbnail_paths'],
                               'num_files': all_proposal_info['num_files']}}
 
+    print('in archived_proposals_ajax')
+    print(all_proposal_info['min_obsnum'])
+
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
@@ -423,7 +426,13 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
     # This will be used to create buttons for observation-specific
     # pages
     rootnames = get_rootnames_for_instrument_proposal(inst, proposal)
-    all_obs = [filename_parser(root)['observation'] for root in rootnames]
+    all_obs = []
+    for root in rootnames:
+        try:
+            all_obs.append(filename_parser(root)['observation'])
+            #all_obs = [filename_parser(root)['observation'] for root in rootnames]
+        except KeyError:
+            pass
     obs_list = sorted(list(set(all_obs)))
 
     template = 'thumbnails_per_obs.html'

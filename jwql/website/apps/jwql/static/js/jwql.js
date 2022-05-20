@@ -383,6 +383,9 @@ function update_archive_page(inst, base_url) {
             num_proposals = data.thumbnails.proposals.length;
             update_show_count(num_proposals, 'proposals')
 
+            console.log('in update_archive_page')
+            console.log(data.min_obsnum)
+
             // Add content to the proposal array div
             for (var i = 0; i < data.thumbnails.proposals.length; i++) {
 
@@ -475,21 +478,23 @@ function update_header_display(extension, num_extensions) {
 };
 
 /**
- * Updates the obs-list div with sorting options
+ * Updates the obs-list div with observation number options
  * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
  * @param {String} inst - Instrument name
  * @param {String} prop - Proposal ID
  * @param {List} obslist - List of observation number strings
  */
-function update_obs_options(data, int, prop, obslist) {
+function update_obs_options(data, inst, prop, obslist) {
+    console.log('in update_obs_options')
+    console.log(data.obs_list)
 
     // Build div content
     content = 'Program observations:';
     content += '<div class="dropdown">';
-    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Default</button>';
+    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Obs Nums</button>';
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
-    for (var i = 0; i < obslist.length; i++) {
-        content += '<a class="dropdown-item" href="/' + inst + '/archive/' + prop + '/obs' + obslist[i] + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
+    for (var i = 0; i < data.obs_list.length; i++) {
+        content += '<a class="dropdown-item" href="/' + inst + '/archive/' + prop + '/obs' + data.obs_list[i] + '/" > Obs' + data.obs_list[i] + '</a>';
     }
     content += '</div></div>';
 
@@ -606,7 +611,7 @@ function update_thumbnails_per_observation_page(inst, proposal, observation, obs
             // Perform various updates to divs
             update_show_count(Object.keys(data.file_data).length, 'activities');
             update_thumbnail_array(data);
-            update_obs_options(data, observation_list);
+            update_obs_options(data, inst, proposal);
             update_filter_options(data);
             update_sort_options(data);
 

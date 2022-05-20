@@ -1321,6 +1321,31 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         Dictionary of data needed for the ``thumbnails`` template
     """
 
+
+    #generate the list of all obs of the proposal here, so that the list can be
+    #properly packaged up and sent to the js scripts. but to do this, we need to call
+    #get_rootnames_for_instrument_proposal, which is largely repeating the work done by
+    #get_filenames_by_instrument above. can we use just get_rootnames? we would have to
+    #filter results by obs_num after the call and after obs_list is created.
+    #But we need the filename list below...hmmm...so maybe we need to do both
+    all_rootnames = get_rootnames_for_instrument_proposal(inst, proposal)
+    all_obs = []
+    for root in all_rootnames:
+        # Wrap in try/except because level 3 rootnames won't have an observation
+        # number returned by the filename_parser. That's fine, we're not interested
+        # in those files anyway.
+        try:
+            all_obs.append(filename_parser(root)['observation'])
+        except KeyError:
+            pass
+    obs_list = sorted(list(set(all_obs)))
+
+
+
+
+
+
+
     # Get the available files for the instrument
     filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart'])
 
@@ -1332,7 +1357,8 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     data_dict['inst'] = inst
     data_dict['file_data'] = {}
 
-    # Gather data for each rootname
+    # Gather data for each rootname, and construct a list of all observations
+    # in the proposal
     for rootname in rootnames:
 
         # Parse filename
@@ -1399,6 +1425,9 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
                                    key=lambda x: getitem(x[1], 'expstart'), reverse=True))
 
     data_dict['file_data'] = sorted_file_data
+
+    # Add list of observation numbers
+    data_dict['obs_list'] = obs_list
 
     return data_dict
 
