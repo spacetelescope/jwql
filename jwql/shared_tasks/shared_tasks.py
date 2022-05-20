@@ -177,7 +177,7 @@ def run_calwebb_detector1(input_file, instrument, path=None):
         copy_files([input_filename], output_dir)
     set_permissions(input_filename)
 
-    required_steps = get_pipeline_steps(instrument)
+    steps = get_pipeline_steps(instrument)
 
     first_step_to_be_run = True
     for step_name in steps:
