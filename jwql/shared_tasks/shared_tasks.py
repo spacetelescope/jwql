@@ -154,13 +154,21 @@ def run_calwebb_detector1(input_file, instrument, path=None):
     reduction_path : str
         The path at which the reduced data file(s) may be found.
     """
-    if "_" in input_file:
-        short_name = input_file[:input_file.rfind("_")]
+    logging.info("Got calibration task with arguments {} {} {}".format(input_file, instrument, path))
+    
+    if "uncal" not in input_file:
+        if "_" in input_file:
+            short_name = input_file[:input_file.rfind("_")]
+        else:
+            short_name = input_file.replace(".fits", "")
+        uncal_file = short_name + "_uncal.fits"
+        if path is None or not os.path.isfile(os.path.join(path, uncal_file)):
+            uncal_file = filesystem_path(uncal_file)
     else:
-        short_name = input_file.replace(".fits", "")
-    uncal_file = short_name + "_uncal.fits"
-    if path is None or not os.path.isfile(os.path.join(path, uncal_file)):
-        uncal_file = filesystem_path(uncal_file)
+        if os.path.isfile(os.path.join(path, input_file)):
+            uncal_file = os.path.join(path, input_file)
+        else:
+            uncal_file = filesystem_path(input_file)
 
     output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
     ensure_dir_exists(output_dir)
