@@ -381,7 +381,7 @@ class Bias():
             try:
                 filepath = os.path.dirname(filename)
                 filebase = os.path.basename(filename)
-                processed_name = filebase[:filebase.rfind("_")] + "_refpix.fits"
+                processed_name = filebase[:filebase.rfind("_uncal")] + "_refpix.fits"
                 result = run_calwebb_detector1.delay(filebase, self.instrument, path=filepath)
                 sleep(1)
                 logging.info('\t\tStarted Task {} with status {}'.format(result.id, result.state))
