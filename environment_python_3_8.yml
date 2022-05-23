@@ -63,7 +63,7 @@ dependencies:
     - pysqlite3==0.4.7
     - pyvo==1.3
     - stsci_rtd_theme==0.0.2
-    - stcal==0.7.1
+    - stcal==0.7.0
     - git+https://github.com/spacetelescope/jwst_reffiles
 
     # Current package
