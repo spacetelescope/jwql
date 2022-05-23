@@ -35,6 +35,7 @@ from collections import OrderedDict
 import datetime
 import logging
 import os
+from time import sleep
 
 from astropy.io import fits
 from astropy.stats import sigma_clip, sigma_clipped_stats
