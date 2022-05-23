@@ -123,12 +123,13 @@ from jwst.saturation import SaturationStep
 from jwst.superbias import SuperBiasStep
 
 from jwql.instrument_monitors.pipeline_tools import PIPELINE_STEP_MAPPING, get_pipeline_steps
-from jwql.utils.logging_functions import log_info, log_fail
+from jwql.utils.logging_functions import configure_logging
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
 from celery_singleton import Singleton
 from celery import Celery
+from celery.utils.log import get_task_logger
 
 
 celery_app = Celery('shared_tasks', broker='redis://localhost', backend='redis://localhost')

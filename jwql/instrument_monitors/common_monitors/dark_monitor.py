@@ -491,11 +491,15 @@ class Dark():
                 # If the slope file already exists, skip the pipeline call
                 if not os.path.isfile(processed_file):
                     logging.info('\tRunning pipeline on {}'.format(filename))
-                    result = run_calwebb_detector1(file_name, self.instrument, path=file_path)
+                    result = run_calwebb_detector1.delay(file_name, self.instrument, path=file_path)
+                    sleep(10)
+                    logging.info('\t\tStarted Task {} with status {}'.format(result.id, result.state))
+                    while not result.ready():
+                        logging.info("\t\tTask status is {}".format(result.state))
+                        sleep(10)
                     processed_path = result.get()
                     processed_file = os.path.join(processed_path, processed_filename)
                     logging.info('\tPipeline complete. Output: {}'.format(processed_file))
-
                 else:
                     logging.info('\tSlope file {} already exists. Skipping call to pipeline.'
                                  .format(processed_file))

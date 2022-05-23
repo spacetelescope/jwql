@@ -790,10 +790,11 @@ class BadPixels():
                     uncal_filepath = os.path.dirname(uncal_file)
                     result = calwebb_detector1_save_jump(uncal_filename, ramp_fit=True,
                                                          save_fitopt=False, path=uncal_filepath)
+                    sleep(10)
                     logging.info('\tStarted Task {} with status {}'.format(result.id, result.state))
                     while not result.ready():
                         logging.info("\tTask status is {}".format(result.state))
-                        sleep(300)
+                        sleep(10)
                     jump_output, rate_output, _, output_dir = result.get()
                     logging.info('Pipeline finished')
                     logging.info('Pipeline returned {} {} {}'.format(jump_output, rate_output, output_dir))
