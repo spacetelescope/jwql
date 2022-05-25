@@ -216,6 +216,7 @@ def run_calwebb_detector1(input_file, instrument, path=None):
                     model[0].save(output_file)
             set_permissions(output_file)
 
+    logging.info("Finished calibration.")
     return output_dir
 
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.calwebb_detector1_save_jump', base=Singleton, unique_on=['input_file', ])
@@ -258,7 +259,8 @@ def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, pat
     output_dir : str
         Name of the directory where the output file is saved
     """
-    logging.info("Started Task.")
+    msg = "Started Task. with inputs {} {} {} {}"
+    logging.info(msg.format(input_file, ramp_fit, save_fitopt, path))
     
     output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
     ensure_dir_exists(output_dir)
@@ -343,6 +345,7 @@ def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, pat
         print(("Files with all requested calibration states for {} already present in "
                "output directory. Skipping pipeline call.".format(input_file)))
 
+    logging.info("Finished pipeline")
     return jump_output, pipe_output, fitopt_output, output_dir
 
 

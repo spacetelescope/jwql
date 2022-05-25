@@ -383,11 +383,6 @@ class Bias():
                 filebase = os.path.basename(filename)
                 processed_name = filebase[:filebase.rfind("_uncal")] + "_refpix.fits"
                 result = run_calwebb_detector1.delay(filebase, self.instrument, path=filepath)
-                sleep(10)
-                logging.info('\t\tStarted Task {} with status {}'.format(result.id, result.state))
-                while not result.ready():
-                    logging.info("\t\tTask status is {}".format(result.state))
-                    sleep(10)
                 processed_dir = result.get()
                 processed_file = os.path.join(processed_dir, processed_name)
                 logging.info('\tPipeline complete. Output: {}'.format(processed_file))
