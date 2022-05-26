@@ -24,7 +24,7 @@ dependencies:
   - astropy=5.0.4
   - bokeh=2.4.2
   - beautifulsoup4=4.11.1
-  - celery
+  - celery=5.0.5
   - codecov=2.1.11
   - cryptography=36.0.0
   - django=3.2.5
@@ -45,7 +45,7 @@ dependencies:
   - pytest-cov=3.0.0
   - python=3.8.5
   - pyyaml=6.0
-  - redis
+  - redis=5.0.3
   - scipy=1.7.3
   - setuptools=52.0.0
   - sphinx=4.2.0
@@ -57,7 +57,7 @@ dependencies:
   - pip:
     - astroquery==0.4.6
     - bandit==1.7.4
-    - celery-singleton
+    - celery-singleton=0.3.1
     - jwst==1.4.6
     - pysiaf==0.15.0
     - pysqlite3==0.4.7

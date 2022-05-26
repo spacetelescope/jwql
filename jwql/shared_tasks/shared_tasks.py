@@ -176,7 +176,7 @@ def run_calwebb_detector1(input_file, instrument, path=None):
     ensure_dir_exists(output_dir)
     input_filename = os.path.join(output_dir, uncal_file)
     if not os.path.isfile(input_filename):
-        copy_files([input_filename], output_dir)
+        copy_files([uncal_file], output_dir)
     set_permissions(input_filename)
 
     steps = get_pipeline_steps(instrument)
@@ -261,15 +261,27 @@ def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, pat
     """
     msg = "Started Task. with inputs {} {} {} {}"
     logging.info(msg.format(input_file, ramp_fit, save_fitopt, path))
-    
-    output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
-    ensure_dir_exists(output_dir)
+
+    if "uncal" not in input_file:
+        if "_" in input_file:
+            short_name = input_file[:input_file.rfind("_")]
+        else:
+            short_name = input_file.replace(".fits", "")
+        uncal_file = short_name + "_uncal.fits"
+        if path is None or not os.path.isfile(os.path.join(path, uncal_file)):
+            uncal_file = filesystem_path(uncal_file)
+    else:
+        short_name = input_file[:input_file.rfind("_uncal")]
+        if os.path.isfile(os.path.join(path, input_file)):
+            uncal_file = os.path.join(path, input_file)
+        else:
+            uncal_file = filesystem_path(input_file)
 
     output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
     ensure_dir_exists(output_dir)
-    input_filename = os.path.join(output_dir, input_file)
+    input_filename = os.path.join(output_dir, uncal_file)
     if not os.path.isfile(input_filename):
-        copy_files([input_filename], output_dir)
+        copy_files([uncal_file], output_dir)
     set_permissions(input_filename)
 
     input_file_only = input_file
