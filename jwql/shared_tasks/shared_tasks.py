@@ -148,13 +148,13 @@ def create_task_log_handler(logger, propagate):
     logger.propagate = propagate
 
 
-@celery.signals.after_setup_task_logger.connect
+@after_setup_task_logger.connect
 def after_setup_celery_task_logger(logger, **kwargs):
     """ This function sets the 'celery.task' logger handler and formatter """
     create_celery_logger_handler(logger, True)
 
 
-@celery.signals.after_setup_logger.connect
+@after_setup_logger.connect
 def after_setup_celery_logger(logger, **kwargs):
     """ This function sets the 'celery' logger handler and formatter """
     create_celery_logger_handler(logger, False)
