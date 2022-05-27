@@ -151,13 +151,13 @@ def create_task_log_handler(logger, propagate):
 @after_setup_task_logger.connect
 def after_setup_celery_task_logger(logger, **kwargs):
     """ This function sets the 'celery.task' logger handler and formatter """
-    create_celery_logger_handler(logger, True)
+    create_task_log_handler(logger, True)
 
 
 @after_setup_logger.connect
 def after_setup_celery_logger(logger, **kwargs):
     """ This function sets the 'celery' logger handler and formatter """
-    create_celery_logger_handler(logger, False)
+    create_task_log_handler(logger, False)
 
 
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.run_calwebb_detector1', base=Singleton, unique_on=['input_file', 'instrument'])
