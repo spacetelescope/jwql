@@ -491,16 +491,21 @@ class Dark():
                 # If the slope file already exists, skip the pipeline call
                 if not os.path.isfile(processed_file):
                     logging.info('\tRunning pipeline on {}'.format(filename))
-                    result = run_calwebb_detector1.delay(file_name, self.instrument, path=file_path)
-                    processed_path = result.get()
-                    processed_file = os.path.join(processed_path, processed_filename)
-                    logging.info('\tPipeline complete. Output: {}'.format(processed_file))
+                    try:
+                        result = run_calwebb_detector1.delay(file_name, self.instrument, path=file_path)
+                        processed_path = result.get()
+                        processed_file = os.path.join(processed_path, processed_filename)
+                        logging.info('\tPipeline complete. Output: {}'.format(processed_file))
+                    except Exception as e:
+                        logging.error("Trapped exception while calibrating {}".format(file_name))
+                        logging.error("{}".format(e))
                 else:
                     logging.info('\tSlope file {} already exists. Skipping call to pipeline.'
                                  .format(processed_file))
                     pass
 
-                slope_files.append(processed_file)
+                if os.path.isfile(processed_file):
+                    slope_files.append(processed_file)
 
                 # Delete the original dark ramp file to save disk space
                 os.remove(filename)
