@@ -101,6 +101,7 @@ explained by the celery documentation itself.
 from collections import OrderedDict
 
 import logging
+from logging.handlers import RotatingFileHandler
 import os
 
 from astropy.io import fits
@@ -129,11 +130,35 @@ from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesyst
 
 from celery_singleton import Singleton
 from celery import Celery
+from celery.signals import after_setup_logger, after_setup_task_logger
 from celery.utils.log import get_task_logger
 
 
 celery_app = Celery('shared_tasks', broker='redis://localhost', backend='redis://localhost')
 celery_app.conf.broker_transport_options = {'visibility_timeout': 7200}
+
+
+def create_task_log_handler(logger, propagate):
+    celery_handler = RotatingFileHandler(
+        configure_logging('shared_tasks'),
+        maxBytes=209715200,
+        backupCount=10
+    )
+    logger.addHandler(celery_handler)
+    logger.propagate = propagate
+
+
+@celery.signals.after_setup_task_logger.connect
+def after_setup_celery_task_logger(logger, **kwargs):
+    """ This function sets the 'celery.task' logger handler and formatter """
+    create_celery_logger_handler(logger, True)
+
+
+@celery.signals.after_setup_logger.connect
+def after_setup_celery_logger(logger, **kwargs):
+    """ This function sets the 'celery' logger handler and formatter """
+    create_celery_logger_handler(logger, False)
+
 
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.run_calwebb_detector1', base=Singleton, unique_on=['input_file', 'instrument'])
 def run_calwebb_detector1(input_file, instrument, path=None):
