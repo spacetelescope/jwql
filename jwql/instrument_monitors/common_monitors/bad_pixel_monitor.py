@@ -791,6 +791,7 @@ class BadPixels():
                         uncal_filepath = os.path.dirname(uncal_file)
                         result = calwebb_detector1_save_jump.delay(uncal_filename, ramp_fit=True,
                                                                    save_fitopt=False, path=uncal_filepath)
+                        logging.info('\tStarting with ID {}'.format(result.id))
                         jump_output, rate_output, _, output_dir = result.get()
                         logging.info('Pipeline finished')
                         if self.nints > 1:
@@ -829,6 +830,7 @@ class BadPixels():
                     uncal_filepath = os.path.dirname(uncal_file)
                     result = calwebb_detector1_save_jump.delay(uncal_filename, ramp_fit=True,
                                                                save_fitopt=True, path=uncal_filepath)
+                    logging.info('\tStarting with ID {}'.format(result.id))
                     jump_output, rate_output, fitopt_output, output_dir = result.get()
                     logging.info('\tPipeline finished.')
                     self.get_metadata(uncal_file)

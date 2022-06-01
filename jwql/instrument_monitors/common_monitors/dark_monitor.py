@@ -493,6 +493,7 @@ class Dark():
                     logging.info('\tRunning pipeline on {}'.format(filename))
                     try:
                         result = run_calwebb_detector1.delay(file_name, self.instrument, path=file_path)
+                        logging.info('\tStarting with ID {}'.format(result.id))
                         processed_path = result.get()
                         processed_file = os.path.join(processed_path, processed_filename)
                         logging.info('\tPipeline complete. Output: {}'.format(processed_file))
