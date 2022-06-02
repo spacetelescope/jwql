@@ -101,7 +101,7 @@ explained by the celery documentation itself.
 from collections import OrderedDict
 
 import logging
-from logging.handlers import FileHandler, StreamHandler
+from logging import FileHandler, StreamHandler
 import os
 import sys
 
