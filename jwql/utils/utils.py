@@ -368,6 +368,18 @@ def filename_parser(filename):
         r"_gs-(?P<guider_mode>(id|acq1|acq2|track|fg))" \
         r"_((?P<date_time>\d{13})|(?P<guide_star_attempt_id>\d{1}))"
 
+    # Segment guider filenames
+    # e.g. "jw00729011001_gs-id_1_image_cal.fits" or
+    # "jw00799003001_gs-acq1_2019154181705_stream.fits"
+    guider_segment = \
+        r"jw" \
+        r"(?P<program_id>\d{5})" \
+        r"(?P<observation>\d{3})" \
+        r"(?P<visit>\d{3})" \
+        r"_gs-(?P<guider_mode>(id|acq1|acq2|track|fg))" \
+        r"_((?P<date_time>\d{13})|(?P<guide_star_attempt_id>\d{1}))" \
+        r"-seg(?P<segment>\d{3})"
+
     # Build list of filename types
     filename_types = [
         stage_1_and_2,
@@ -377,7 +389,8 @@ def filename_parser(filename):
         stage_3_target_id_epoch,
         stage_3_source_id_epoch,
         time_series,
-        guider]
+        guider,
+        guider_segment]
 
     filename_type_names = [
         'stage_1_and_2',
@@ -387,7 +400,8 @@ def filename_parser(filename):
         'stage_3_target_id_epoch',
         'stage_3_source_id_epoch',
         'time_series',
-        'guider'
+        'guider',
+        'guider_segment'
     ]
 
     # Try to parse the filename
