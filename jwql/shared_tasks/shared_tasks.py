@@ -161,8 +161,6 @@ def after_setup_celery_logger(logger, **kwargs):
 
 
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.run_calwebb_detector1', \
-                 base=Singleton, \
-                 unique_on=['input_file', 'instrument'], \
                  autoretry_for=(Exception,), \
                  retry_backoff=2)
 def run_calwebb_detector1(input_file, instrument, path=None):
@@ -249,8 +247,6 @@ def run_calwebb_detector1(input_file, instrument, path=None):
     return output_dir
 
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.calwebb_detector1_save_jump', \
-                 base=Singleton, \
-                 unique_on=['input_file',], \
                  autoretry_for=(Exception,), \
                  retry_backoff=2)
 def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, path=None):
