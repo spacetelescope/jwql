@@ -35,6 +35,7 @@ from collections import OrderedDict
 import datetime
 import logging
 import os
+import redis
 from time import sleep
 
 from astropy.io import fits
@@ -60,6 +61,8 @@ from jwql.utils.logging_functions import log_info, log_fail  # noqa: E402 (modul
 from jwql.utils.monitor_utils import update_monitor_table  # noqa: E402 (module import not at top)
 from jwql.utils.permissions import set_permissions  # noqa: E402 (module import not at top)
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config  # noqa: E402 (module import not at top)
+
+REDIS_CLIENT = redis.Redis()
 
 
 class Bias():
@@ -378,6 +381,11 @@ class Bias():
             # Run the file through the necessary pipeline steps
             pipeline_steps = self.determine_pipeline_steps()
             logging.info('\tRunning pipeline on {}'.format(filename))
+            with fits.open(filename) as input_file:
+                is_tso = input_file[0].header['TSOVISIT']
+            if is_tso:
+                intensive_lock = REDIS_CLIENT.lock("intensive_operation")
+                have_lock = intensive_lock.acquire(blocking=True)
             try:
                 filepath = os.path.dirname(filename)
                 filebase = os.path.basename(filename)
@@ -392,6 +400,9 @@ class Bias():
                 logging.info('\tProcessing raised {}'.format(e))
                 os.remove(filename)
                 continue
+            finally:
+                if is_tso and have_lock:
+                    intensive_lock.release()
 
             # Find amplifier boundaries so per-amp statistics can be calculated
             _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)

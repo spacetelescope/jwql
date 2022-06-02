@@ -86,6 +86,7 @@ import datetime
 from glob import glob
 import logging
 import os
+import redis
 from time import sleep
 
 from astropy.io import ascii, fits
@@ -111,6 +112,8 @@ from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'bad_pixel_file_thresholds.txt')
+
+REDIS_CLIENT = redis.Redis()
 
 
 def bad_map_to_list(badpix_image, mnemonic):
@@ -786,6 +789,11 @@ class BadPixels():
                 self.get_metadata(uncal_file)
                 if rate_file == 'None':
                     logging.info('Calling pipeline for {}'.format(uncal_file))
+                    with fits.open(uncal_file) as input_file:
+                        is_tso = input_file[0].header['TSOVISIT']
+                    if is_tso:
+                        intensive_lock = REDIS_CLIENT.lock("intensive_operation")
+                        have_lock = intensive_lock.acquire(blocking=True)
                     try:
                         uncal_filename = os.path.basename(uncal_file)
                         uncal_filepath = os.path.dirname(uncal_file)
@@ -800,6 +808,9 @@ class BadPixels():
                             illuminated_slope_files[index] = deepcopy(rate_output)
                     except Exception as e:
                         logging.error('Processing produced exception: {}'.format(e))
+                    finally:
+                        if is_tso and have_lock:
+                            intensive_lock.release()
                     index += 1
 
                 # Get observation time for all files
@@ -825,6 +836,11 @@ class BadPixels():
             # and fitops files, which are not saved by default
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
                 logging.info('Calling pipeline for {} {}'.format(uncal_file, rate_file))
+                with fits.open(uncal_file) as input_file:
+                    is_tso = input_file[0].header['TSOVISIT']
+                if is_tso:
+                    intensive_lock = REDIS_CLIENT.lock("intensive_operation")
+                    have_lock = intensive_lock.acquire(blocking=True)
                 try:
                     uncal_filename = os.path.basename(uncal_file)
                     uncal_filepath = os.path.dirname(uncal_file)
@@ -845,6 +861,10 @@ class BadPixels():
                 except Exception as e:
                     logging.error("Pipeline Exception for {}".format(uncal_file))
                     logging.error("Trapped {}".format(e))
+                finally:
+                    if is_tso and have_lock:
+                        intensive_lock.release()
+                    
                 index += 1
 
             if len(all_files) == 0:

@@ -101,8 +101,9 @@ explained by the celery documentation itself.
 from collections import OrderedDict
 
 import logging
-from logging.handlers import RotatingFileHandler
+from logging.handlers import FileHandler, StreamHandler
 import os
+import sys
 
 from astropy.io import fits
 
@@ -128,8 +129,8 @@ from jwql.utils.logging_functions import configure_logging
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
-from celery_singleton import Singleton
 from celery import Celery
+from celery.app.log import TaskFormatter
 from celery.signals import after_setup_logger, after_setup_task_logger
 from celery.utils.log import get_task_logger
 
@@ -139,12 +140,12 @@ celery_app.conf.broker_transport_options = {'visibility_timeout': 7200}
 
 
 def create_task_log_handler(logger, propagate):
-    celery_handler = RotatingFileHandler(
-        configure_logging('shared_tasks'),
-        maxBytes=209715200,
-        backupCount=10
-    )
-    logger.addHandler(celery_handler)
+    celery_log_file_handler = FileHandler(configure_logging('shared_tasks'))
+    celery_log_stream_handler = StreamHandler(sys.stdout)
+    logger.addHandler(celery_log_file_handler)
+    logger.addHandler(celery_log_stream_handler)
+    for handler in logger.handlers:
+        handler.setFormatter(TaskFormatter('%(asctime)s - %(task_id)s - %(task_name)s - %(name)s - %(levelname)s - %(message)s'))
     logger.propagate = propagate
 
 
@@ -163,7 +164,7 @@ def after_setup_celery_logger(logger, **kwargs):
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.run_calwebb_detector1', \
                  autoretry_for=(Exception,), \
                  retry_backoff=2)
-def run_calwebb_detector1(input_file, instrument, path=None):
+def run_calwebb_detector1(input_file, instrument, path=None, tso=False):
     """Run the steps of ``calwebb_detector1`` on the input file, saving the result of each
     step as a separate output file, then return the name-and-path of the file as reduced
     in the reduction directory.
@@ -249,7 +250,7 @@ def run_calwebb_detector1(input_file, instrument, path=None):
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.calwebb_detector1_save_jump', \
                  autoretry_for=(Exception,), \
                  retry_backoff=2)
-def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, path=None):
+def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, path=None, tso=False):
     """Call ``calwebb_detector1`` on the provided file, running all
     steps up to the ``ramp_fit`` step, and save the result. Optionally
     run the ``ramp_fit`` step and save the resulting slope file as well.

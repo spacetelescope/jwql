@@ -35,6 +35,7 @@ from collections import OrderedDict
 import datetime
 import logging
 import os
+import redis
 import shutil
 
 from astropy.io import fits
@@ -63,6 +64,8 @@ from jwql.utils.logging_functions import log_info, log_fail  # noqa: E348 (compa
 from jwql.utils.monitor_utils import update_monitor_table  # noqa: E348 (comparison to true)
 from jwql.utils.permissions import set_permissions  # noqa: E348 (comparison to true)
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config  # noqa: E348 (comparison to true)
+
+REDIS_CLIENT = redis.Redis()
 
 
 class Readnoise():
@@ -418,6 +421,11 @@ class Readnoise():
             # Run the file through the necessary pipeline steps
             pipeline_steps = self.determine_pipeline_steps()
             logging.info('\tRunning pipeline on {}'.format(filename))
+            with fits.open(uncal_file) as input_file:
+                is_tso = input_file[0].header['TSOVISIT']
+            if is_tso:
+                intensive_lock = REDIS_CLIENT.lock("intensive_operation")
+                have_lock = intensive_lock.acquire(blocking=True)
             try:
                 filepath = os.path.dirname(filename)
                 filebase = os.path.basename(filename)
@@ -432,6 +440,9 @@ class Readnoise():
                 logging.info('\tPipeline failed with error {}'.format(e))
                 os.remove(filename)
                 continue
+            finally:
+                if is_tso and have_lock:
+                    intensive_lock.release()
 
             # Find amplifier boundaries so per-amp statistics can be calculated
             _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)
