@@ -337,38 +337,6 @@ def archived_proposals_ajax(request, inst):
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-def archive_thumbnails(request, inst, proposal):
-    """Generate the page listing all archived images in the database
-    for a certain proposal
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    inst : str
-        Name of JWST instrument
-    proposal : str
-        Number of observing proposal
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-    # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-
-    proposal_meta = text_scrape(proposal)
-
-    template = 'thumbnails.html'
-    context = {'inst': inst,
-               'prop': proposal,
-               'prop_meta': proposal_meta,
-               'base_url': get_base_url()}
-
-    return render(request, template, context)
-
-
 def archive_thumbnails_ajax(request, inst, proposal, observation=None):
     """Generate the page listing all archived images in the database
     for a certain proposal
