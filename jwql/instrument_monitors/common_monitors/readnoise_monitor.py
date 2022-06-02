@@ -421,7 +421,7 @@ class Readnoise():
             # Run the file through the necessary pipeline steps
             pipeline_steps = self.determine_pipeline_steps()
             logging.info('\tRunning pipeline on {}'.format(filename))
-            with fits.open(uncal_file) as input_file:
+            with fits.open(filename) as input_file:
                 is_tso = input_file[0].header['TSOVISIT']
             if is_tso:
                 intensive_lock = REDIS_CLIENT.lock("intensive_operation")
