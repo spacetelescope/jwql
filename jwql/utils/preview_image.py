@@ -208,7 +208,7 @@ class PreviewImage():
                     else:
                         data = hdulist[ext].data.astype(np.float)
                     try:
-                        self.units = hdulist[ext].header['BUNIT']
+                        self.units = f"{hdulist[ext].header['BUNIT']}  "
                     except KeyError:
                         self.units = ''
                 else:
