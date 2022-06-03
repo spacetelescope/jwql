@@ -48,6 +48,7 @@ from django.shortcuts import redirect, render
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
+from jwql.utils.interactive_preview_image import InteractivePreviewImg
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT
 from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get_config, query_unformat
 
@@ -779,33 +780,46 @@ def view_image(request, inst, file_root, rewrite=False):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    template = 'view_image.html'
+    # TEMPORARY CODE START
+    template = '_temp_preview.html'
     image_info = get_image_info(file_root, rewrite)
+    file = image_info['all_files'][0]
+    script, div = InteractivePreviewImg(file, low_lim=None, high_lim=None, scaling='lin', contrast=0.4, extname='DQ')
 
-    # Determine current flagged anomalies
-    current_anomalies = get_current_flagged_anomalies(file_root, inst)
+    context = {'script': script,
+               'div': div}
 
-    # Create a form instance
-    form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
+    return render(request, template, context)
 
-    # If this is a POST request and the form is filled out, process the form data
-    if request.method == 'POST' and 'anomaly_choices' in dict(request.POST):
-        anomaly_choices = dict(request.POST)['anomaly_choices']
-        if form.is_valid():
-            form.update_anomaly_table(file_root, 'unknown', anomaly_choices)
-            messages.success(request, "Anomaly submitted successfully")
-        else:
-            messages.error(request, "Failed to submit anomaly")
+    # TEMPORARY CODE END
 
-    # Build the context
-    context = {'inst': inst,
-               'prop_id': file_root[2:7],
-               'file_root': file_root,
-               'jpg_files': image_info['all_jpegs'],
-               'fits_files': image_info['all_files'],
-               'suffixes': image_info['suffixes'],
-               'num_ints': image_info['num_ints'],
-               'available_ints': image_info['available_ints'],
-               'form': form}
+#    template = 'view_image.html'
+#    image_info = get_image_info(file_root, rewrite)
+#
+#    # Determine current flagged anomalies
+#    current_anomalies = get_current_flagged_anomalies(file_root, inst)
+#
+#    # Create a form instance
+#    form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
+#
+#    # If this is a POST request and the form is filled out, process the form data
+#    if request.method == 'POST' and 'anomaly_choices' in dict(request.POST):
+#        anomaly_choices = dict(request.POST)['anomaly_choices']
+#        if form.is_valid():
+#            form.update_anomaly_table(file_root, 'unknown', anomaly_choices)
+#            messages.success(request, "Anomaly submitted successfully")
+#        else:
+#            messages.error(request, "Failed to submit anomaly")
+#
+#    # Build the context
+#    context = {'inst': inst,
+#               'prop_id': file_root[2:7],
+#               'file_root': file_root,
+#               'jpg_files': image_info['all_jpegs'],
+#               'fits_files': image_info['all_files'],
+#               'suffixes': image_info['suffixes'],
+#               'num_ints': image_info['num_ints'],
+#               'available_ints': image_info['available_ints'],
+#               'form': form}
 
     return render(request, template, context)
