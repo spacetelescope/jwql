@@ -116,6 +116,8 @@ class PreviewImage():
         self.preview_output_directory = None
         self.scaling = 'log'
         self.thumbnail_output_directory = None
+        self.preview_images = []
+        self.thumbnail_images = []
 
         # Read in file
         self.data, self.dq = self.get_data(self.file, extension)
@@ -400,6 +402,7 @@ class PreviewImage():
                              maxsize=max_img_size, thumbnail=False)
             self.save_image(outfile, thumbnail=False)
             plt.close()
+            self.preview_images.append(outfile)
 
             # Create thumbnail image matplotlib object, only for the
             # first integration
@@ -413,6 +416,7 @@ class PreviewImage():
                                  maxsize=max_img_size, thumbnail=True)
                 self.save_image(outfile, thumbnail=True)
                 plt.close()
+                self.thumbnail_images.append(outfile)
 
     def save_image(self, fname, thumbnail=False):
         """

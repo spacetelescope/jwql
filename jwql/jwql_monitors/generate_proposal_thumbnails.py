@@ -30,9 +30,12 @@ import logging
 import os
 import shutil
 
-from jwql.utils.logging_functions import configure_logging, log_info, log_fail
+from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.utils import get_config
 from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
+from jwql.utils.protect_module import lock_module
+
+SETTINGS = get_config()
 
 
 @log_fail
@@ -41,7 +44,7 @@ def generate_proposal_thumbnails():
     """The main function of the ``generate_proposal_thumbnails`` module.
     See module docstring for further details."""
 
-    proposal_dirs = glob.glob(os.path.join(get_config()['thumbnail_filesystem'], '*'))
+    proposal_dirs = glob.glob(os.path.join(SETTINGS['thumbnail_filesystem'], '*'))
 
     for proposal_dir in proposal_dirs:
         rate_thumbnails = glob.glob(os.path.join(proposal_dir, '*rate*.thumb'))
@@ -61,10 +64,15 @@ def generate_proposal_thumbnails():
             logging.info('Copied {} to {}'.format(thumbnail, outfile))
 
 
-if __name__ == '__main__':
-
+@lock_module
+def protected_code():
+    """Protected code ensures only 1 instance of module will run at any given time"""
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = initialize_instrument_monitor(module)
 
     generate_proposal_thumbnails()
     update_monitor_table(module, start_time, log_file)
+
+
+if __name__ == '__main__':
+    protected_code()

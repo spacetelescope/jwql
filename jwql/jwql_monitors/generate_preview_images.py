@@ -35,8 +35,10 @@ import re
 import numpy as np
 
 from jwql.utils import permissions
-from jwql.utils.constants import NIRCAM_LONGWAVE_DETECTORS, NIRCAM_SHORTWAVE_DETECTORS
-from jwql.utils.logging_functions import configure_logging, log_info, log_fail
+from jwql.utils.constants import IGNORED_SUFFIXES, JWST_INSTRUMENT_NAMES_SHORTHAND, NIRCAM_LONGWAVE_DETECTORS, \
+    NIRCAM_SHORTWAVE_DETECTORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
+from jwql.utils.logging_functions import log_info, log_fail
+from jwql.utils.protect_module import lock_module
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser
 from jwql.utils.monitor_utils import update_monitor_table, initialize_instrument_monitor
@@ -47,6 +49,8 @@ LW_MOD_GAP = 741  # pixels = int(46 arcsec / 0.062 arcsec/pixel)
 SW_DET_GAP = 145  # pixels = int(4.5 arcsec / 0.031 arcsec/pixel)
 FULLX = 2048  # Width of the full detector
 FULLY = 2048  # Height of the full detector
+
+SETTINGS = get_config()
 
 
 def array_coordinates(channelmod, detector_list, lowerleft_list):
@@ -530,13 +534,37 @@ def generate_preview_images():
     See module docstring for further details."""
 
     # Process programs in parallel
-    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], 'public', 'jw*'))]
-    program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', 'jw*'))])
+    program_list = [os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'public', 'jw*'))]
+    program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', 'jw*'))])
     program_list = list(set(program_list))
-    pool = multiprocessing.Pool(processes=int(get_config()['cores']))
-    pool.map(process_program, program_list)
+    pool = multiprocessing.Pool(processes=int(SETTINGS['cores']))
+    results = pool.map(process_program, program_list)
     pool.close()
     pool.join()
+
+    # Filter the nested list in results into separate lists of preview
+    # images and thumbnail images
+    full_preview_files = []
+    full_thumbnail_files = []
+    for r in results:
+        full_preview_files.extend(r[0])
+        full_thumbnail_files.extend(r[1])
+
+    # Filter the preview and thumbnail images by instrument and update the listfiles.
+    # We do this by looking for instrument abbreviations in the filenames. But will
+    # this work for level 3 files?? If an instrument abbreviation is not in the filename,
+    # then the preview/thubnail images won't be caught and added here.
+    for abbrev, inst_name in JWST_INSTRUMENT_NAMES_SHORTHAND.items():
+        inst_previews = [ele for ele in full_preview_files if re.search(abbrev, ele, re.IGNORECASE)]
+        inst_thumbs = [ele for ele in full_thumbnail_files if abbrev in ele]
+
+        # Read in the preview image listfile and the thumbnail image list file
+        # and add these new files to each
+        preview_image_listfile = os.path.join(SETTINGS['preview_image_filesystem'], f"{PREVIEW_IMAGE_LISTFILE}_{inst_name}.txt")
+        update_listfile(preview_image_listfile, inst_previews, 'preview')
+
+        thumbnail_image_listfile = os.path.join(SETTINGS['thumbnail_filesystem'], f"{THUMBNAIL_LISTFILE}_{inst_name}.txt")
+        update_listfile(thumbnail_image_listfile, inst_thumbs, 'thumbnail')
 
     # Complete logging:
     logging.info("Completed.")
@@ -638,31 +666,29 @@ def process_program(program):
     logging.info('Processing {}'.format(program))
 
     # Gather files to process
-    filenames = glob.glob(os.path.join(get_config()['filesystem'], 'public', program, '*/*.fits'))
-    filenames.extend(glob.glob(os.path.join(get_config()['filesystem'], 'proprietary', program, '*/*.fits')))
+    filenames = glob.glob(os.path.join(SETTINGS['filesystem'], 'public', program, '*/*.fits'))
+    filenames.extend(glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', program, '*/*.fits')))
     filenames = list(set(filenames))
 
-    # Ignore "original" files
-    filenames = [item for item in filenames if '_original.fits' not in item]
-
-    # Group together common exposures
-    grouped_filenames = group_filenames(filenames)
+    # remove specific "ignored" suffix files (currently "original" and "stream")
+    filenames = [filename for filename in filenames if os.path.splitext(filename.split('_')[-1])[0] not in IGNORED_SUFFIXES]
     logging.info('Found {} filenames'.format(len(filenames)))
     logging.info('')
 
-    for file_list in grouped_filenames:
+    thumbnail_files = []
+    preview_image_files = []
+    for filename in filenames:
 
         # Determine the save location
-        filename = file_list[0]
         try:
             identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
         except ValueError:
             identifier = os.path.basename(filename).split('.fits')[0]
-        preview_output_directory = os.path.join(get_config()['preview_image_filesystem'], identifier)
-        thumbnail_output_directory = os.path.join(get_config()['thumbnail_filesystem'], identifier)
+        preview_output_directory = os.path.join(SETTINGS['preview_image_filesystem'], identifier)
+        thumbnail_output_directory = os.path.join(SETTINGS['thumbnail_filesystem'], identifier)
 
         # Check to see if the preview images already exist and skip if they do
-        file_exists = check_existence(file_list, preview_output_directory)
+        file_exists = check_existence([filename], preview_output_directory)
         if file_exists:
             logging.info("\tJPG already exists for {}, skipping.".format(filename))
             continue
@@ -677,25 +703,6 @@ def process_program(program):
             permissions.set_permissions(thumbnail_output_directory)
             logging.info('\tCreated directory {}'.format(thumbnail_output_directory))
 
-        # If the exposure contains more than one file (because more
-        # than one detector was used), then create a mosaic
-        max_size = 8
-        numfiles = len(file_list)
-        if numfiles > 1:
-            try:
-                mosaic_image, mosaic_dq = create_mosaic(file_list)
-                logging.info('\tCreated mosiac for:')
-                for item in file_list:
-                    logging.info('\t{}'.format(item))
-            except (ValueError, FileNotFoundError) as error:
-                mosaic_image, mosaic_dq = None, None
-                logging.error(error)
-            dummy_file = create_dummy_filename(file_list)
-            if numfiles in [2, 4]:
-                max_size = 16
-            elif numfiles in [8]:
-                max_size = 32
-
         # Create the nominal preview image and thumbnail
         try:
             im = PreviewImage(filename, "SCI")
@@ -705,26 +712,62 @@ def process_program(program):
             im.output_format = 'jpg'
             im.preview_output_directory = preview_output_directory
             im.thumbnail_output_directory = thumbnail_output_directory
-
-            # If a mosaic was made from more than one file
-            # insert it and it's associated DQ array into the
-            # instance of PreviewImage. Also set the input
-            # filename to indicate that we have mosaicked data
-            if numfiles > 1 and mosaic_image is not None:
-                im.data = mosaic_image
-                im.dq = mosaic_dq
-                im.file = dummy_file
-
-            im.make_image(max_img_size=max_size)
+            im.make_image(max_img_size=8)
+            thumbnail_files.extend(im.thumbnail_images)
+            preview_image_files.extend(im.preview_images)
             logging.info('\tCreated preview image and thumbnail for: {}'.format(filename))
         except (ValueError, AttributeError) as error:
             logging.warning(error)
 
+    return preview_image_files, thumbnail_files
 
-if __name__ == '__main__':
 
+def update_listfile(filename, file_list, filetype):
+    """Add a list of files to a text file. Designed to add new files to the
+    file containing the list of all preview images and the file containing the
+    list of all thumbnail images.
+
+    Parameters
+    ----------
+    filename : str
+        Name, including path, of the file to be amended/created
+
+    file_list : list
+        List of filenames to be added to filename
+
+    filetype : str
+        Descriptor of the contents of the file being amended. Used only for
+        the logging statement
+    """
+    if len(file_list) > 0:
+        if not os.path.isfile(filename):
+            logging.warning(f"{filetype} image listfile not found!! Expected to be at {filename}. Creating a new file.")
+
+        with open(filename, 'a+') as fobj:
+            # Move read cursor to the start of file.
+            fobj.seek(0)
+
+            # If file is not empty then append '\n'
+            data = fobj.read(100)
+            if len(data) > 0:
+                fobj.write("\n")
+
+            # Append file_list at the end of file
+            for file_to_add in file_list:
+                fobj.write(f'{file_to_add}\n')
+
+        logging.info(f"{filetype} image listfile {filename} updated with new entries.")
+
+
+@lock_module
+def protected_code():
+    """Protected code ensures only 1 instance of module will run at any given time"""
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = initialize_instrument_monitor(module)
 
     generate_preview_images()
     update_monitor_table(module, start_time, log_file)
+
+
+if __name__ == '__main__':
+    protected_code()
