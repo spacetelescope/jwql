@@ -338,7 +338,7 @@ class PreviewImage():
                 cbar = fig.colorbar(cax, ticks=tickvals)
 
                 # This seems to correctly remove the ticks and labels we want to remove. It gives a warning that
-                # it doesn't work on log scales, whcih we don't care about. So let's ignore that warning.
+                # it doesn't work on log scales, which we don't care about. So let's ignore that warning.
                 warnings.filterwarnings("ignore", message="AutoMinorLocator does not work with logarithmic scale")
                 cbar.ax.yaxis.set_minor_locator(AutoMinorLocator(n=0))
 
