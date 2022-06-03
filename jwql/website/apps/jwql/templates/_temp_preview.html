@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>_delete_me_preview_test - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class='dashboard'>
+        <h1 style="text-align: center">JWQL Preview Test</h1>
+        <hr>
+
+        <p>
+            Test preview image
+        </p>
+        <hr>
+        <br>
+        <body>
+            {{ div | safe }}
+            {{ script | safe }}
+        </body>
+        
+    </main>
+
+{% endblock %}
