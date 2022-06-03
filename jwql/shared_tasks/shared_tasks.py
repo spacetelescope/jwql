@@ -161,9 +161,7 @@ def after_setup_celery_logger(logger, **kwargs):
     create_task_log_handler(logger, False)
 
 
-@celery_app.task(name='jwql.shared_tasks.shared_tasks.run_calwebb_detector1', \
-                 autoretry_for=(Exception,), \
-                 retry_backoff=2)
+@celery_app.task(name='jwql.shared_tasks.shared_tasks.run_calwebb_detector1')
 def run_calwebb_detector1(input_file, instrument, path=None, tso=False):
     """Run the steps of ``calwebb_detector1`` on the input file, saving the result of each
     step as a separate output file, then return the name-and-path of the file as reduced
@@ -247,9 +245,7 @@ def run_calwebb_detector1(input_file, instrument, path=None, tso=False):
     logging.info("Finished calibration.")
     return output_dir
 
-@celery_app.task(name='jwql.shared_tasks.shared_tasks.calwebb_detector1_save_jump', \
-                 autoretry_for=(Exception,), \
-                 retry_backoff=2)
+@celery_app.task(name='jwql.shared_tasks.shared_tasks.calwebb_detector1_save_jump')
 def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, path=None, tso=False):
     """Call ``calwebb_detector1`` on the provided file, running all
     steps up to the ``ramp_fit`` step, and save the result. Optionally
