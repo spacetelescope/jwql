@@ -792,6 +792,7 @@ class BadPixels():
                     with fits.open(uncal_file) as input_file:
                         is_tso = input_file[0].header['TSOVISIT']
                     if is_tso:
+                        logging.info("Locking for intensive task")
                         intensive_lock = REDIS_CLIENT.lock("intensive_operation")
                         have_lock = intensive_lock.acquire(blocking=True)
                     try:
@@ -811,6 +812,7 @@ class BadPixels():
                     finally:
                         if is_tso and have_lock:
                             intensive_lock.release()
+                            logging.info("Intensive Task Lock Released")
                     index += 1
 
                 # Get observation time for all files
@@ -839,6 +841,7 @@ class BadPixels():
                 with fits.open(uncal_file) as input_file:
                     is_tso = input_file[0].header['TSOVISIT']
                 if is_tso:
+                    logging.info("Locking for intensive task")
                     intensive_lock = REDIS_CLIENT.lock("intensive_operation")
                     have_lock = intensive_lock.acquire(blocking=True)
                 try:
@@ -864,6 +867,7 @@ class BadPixels():
                 finally:
                     if is_tso and have_lock:
                         intensive_lock.release()
+                        logging.info("Intensive Task Lock Released")
                     
                 index += 1
 

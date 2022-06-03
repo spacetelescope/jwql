@@ -496,6 +496,7 @@ class Dark():
                     with fits.open(filename) as input_file:
                         is_tso = input_file[0].header['TSOVISIT']
                     if is_tso:
+                        logging.info("Locking for intensive task")
                         intensive_lock = REDIS_CLIENT.lock("intensive_operation")
                         have_lock = intensive_lock.acquire(blocking=True)
                     try:
@@ -510,6 +511,7 @@ class Dark():
                     finally:
                         if is_tso and have_lock:
                             intensive_lock.release()
+                            logging.info("Intensive Task Lock Released")
                 else:
                     logging.info('\tSlope file {} already exists. Skipping call to pipeline.'
                                  .format(processed_file))

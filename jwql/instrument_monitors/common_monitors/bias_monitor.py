@@ -384,6 +384,7 @@ class Bias():
             with fits.open(filename) as input_file:
                 is_tso = input_file[0].header['TSOVISIT']
             if is_tso:
+                logging.info("Locking for intensive task")
                 intensive_lock = REDIS_CLIENT.lock("intensive_operation")
                 have_lock = intensive_lock.acquire(blocking=True)
             try:
@@ -403,6 +404,7 @@ class Bias():
             finally:
                 if is_tso and have_lock:
                     intensive_lock.release()
+                    logging.info("Intensive Task Lock Released")
 
             # Find amplifier boundaries so per-amp statistics can be calculated
             _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)
