@@ -135,8 +135,11 @@ from celery.signals import after_setup_logger, after_setup_task_logger
 from celery.utils.log import get_task_logger
 
 
-celery_app = Celery('shared_tasks', broker='redis://localhost', backend='redis://localhost')
-celery_app.conf.broker_transport_options = {'visibility_timeout': 7200}
+celery_app = Celery('shared_tasks', 
+                    broker='redis://localhost', 
+                    backend='redis://localhost',
+                    worker_max_memory_per_child=32*1024*1024 # new child after 32GB consumed
+                    )
 
 
 def create_task_log_handler(logger, propagate):
