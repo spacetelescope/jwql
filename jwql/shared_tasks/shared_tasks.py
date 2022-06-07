@@ -143,14 +143,21 @@ celery_app = Celery('shared_tasks',
 
 
 def create_task_log_handler(logger, propagate):
-    celery_log_file_handler = FileHandler(configure_logging('shared_tasks'))
+    log_file_name = configure_logging('shared_tasks')
+    output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
+    ensure_dir_exists(output_dir)
+    celery_log_file_handler = FileHandler(log_file_name)
     celery_log_stream_handler = StreamHandler(sys.stdout)
     logger.addHandler(celery_log_file_handler)
     logger.addHandler(celery_log_stream_handler)
     for handler in logger.handlers:
         handler.setFormatter(TaskFormatter('%(asctime)s - %(task_id)s - %(task_name)s - %(name)s - %(levelname)s - %(message)s'))
     logger.propagate = propagate
-
+    if not os.path.exists(os.path.join(output_dir, "celery_pipeline_log.cfg")):
+        with open(os.path.join(output_dir, "celery_pipeline_log.cfg", "w")) as cfg_file:
+            cfg_file.write("[*]\n")
+            cfg_file.write("level = WARNING\n")
+            cfg_file.write("handler = append:{}\n".format(log_file_name))
 
 @after_setup_task_logger.connect
 def after_setup_celery_task_logger(logger, **kwargs):
@@ -185,7 +192,7 @@ def run_calwebb_detector1(input_file, instrument, path=None, tso=False):
         The path at which the reduced data file(s) may be found.
     """
     logging.info("Got calibration task with arguments {} {} {}".format(input_file, instrument, path))
-    
+        
     if "uncal" not in input_file:
         if "_" in input_file:
             short_name = input_file[:input_file.rfind("_")]
@@ -216,6 +223,7 @@ def run_calwebb_detector1(input_file, instrument, path=None, tso=False):
             output_filename = short_name + "_{}.fits".format(step_name)
             output_file = os.path.join(output_dir, output_filename)
             # skip already-done steps
+            logging.info("Running Pipeline Step {}".format(step_name))
             if not os.path.isfile(output_file):
                 if first_step_to_be_run:
                     model = PIPELINE_STEP_MAPPING[step_name].call(input_filename)
