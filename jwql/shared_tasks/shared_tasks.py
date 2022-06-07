@@ -154,7 +154,7 @@ def create_task_log_handler(logger, propagate):
         handler.setFormatter(TaskFormatter('%(asctime)s - %(task_id)s - %(task_name)s - %(name)s - %(levelname)s - %(message)s'))
     logger.propagate = propagate
     if not os.path.exists(os.path.join(output_dir, "celery_pipeline_log.cfg")):
-        with open(os.path.join(output_dir, "celery_pipeline_log.cfg", "w")) as cfg_file:
+        with open(os.path.join(output_dir, "celery_pipeline_log.cfg"), "w") as cfg_file:
             cfg_file.write("[*]\n")
             cfg_file.write("level = WARNING\n")
             cfg_file.write("handler = append:{}\n".format(log_file_name))
