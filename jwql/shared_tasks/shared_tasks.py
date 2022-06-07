@@ -214,6 +214,8 @@ def run_calwebb_detector1(input_file, instrument, path=None, tso=False):
     if not os.path.isfile(input_filename):
         copy_files([uncal_file], output_dir)
     set_permissions(input_filename)
+    
+    log_config = os.path.join(output_dir, "celery_pipeline_log.cfg")
 
     steps = get_pipeline_steps(instrument)
 
@@ -226,10 +228,10 @@ def run_calwebb_detector1(input_file, instrument, path=None, tso=False):
             logging.info("Running Pipeline Step {}".format(step_name))
             if not os.path.isfile(output_file):
                 if first_step_to_be_run:
-                    model = PIPELINE_STEP_MAPPING[step_name].call(input_filename)
+                    model = PIPELINE_STEP_MAPPING[step_name].call(input_filename, logcfg=log_config)
                     first_step_to_be_run = False
                 else:
-                    model = PIPELINE_STEP_MAPPING[step_name].call(model)
+                    model = PIPELINE_STEP_MAPPING[step_name].call(model, logcfg=log_config)
 
                 if step_name != 'rate':
                     # Make sure the dither_points metadata entry is at integer (was a
@@ -321,6 +323,8 @@ def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, pat
         copy_files([uncal_file], output_dir)
     set_permissions(input_filename)
 
+    log_config = os.path.join(output_dir, "celery_pipeline_log.cfg")
+
     input_file_only = input_file
 
     # Find the instrument used to collect the data
@@ -388,8 +392,9 @@ def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, pat
 
     # Call the pipeline if any of the files at the requested calibration
     # states are not present in the output directory
+    logging.info("Running save_jump pipeline")
     if run_jump or (ramp_fit and run_slope) or (save_fitopt and run_fitopt):
-        model.run(datamodel)
+        model.run(datamodel, logcfg=log_config)
     else:
         print(("Files with all requested calibration states for {} already present in "
                "output directory. Skipping pipeline call.".format(input_file)))
