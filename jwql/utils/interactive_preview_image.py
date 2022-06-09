@@ -91,7 +91,7 @@ class InteractivePreviewImg():
         self.get_data()
         if 'DQ' in self.extname:
             self.get_bits()
-        self.create_bokeh_image()
+        self.script, self.div = self.create_bokeh_image()
 
     def create_bokeh_image(self):
         """Method to create the figure

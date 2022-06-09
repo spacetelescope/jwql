@@ -784,10 +784,10 @@ def view_image(request, inst, file_root, rewrite=False):
     template = '_temp_preview.html'
     image_info = get_image_info(file_root, rewrite)
     file = image_info['all_files'][0]
-    script, div = InteractivePreviewImg(file, low_lim=None, high_lim=None, scaling='lin', contrast=0.4, extname='DQ')
+    int_preview_image = InteractivePreviewImg(file, low_lim=None, high_lim=None, scaling='lin', contrast=0.4)
 
-    context = {'script': script,
-               'div': div}
+    context = {'script': int_preview_image.script,
+               'div': int_preview_image.div}
 
     return render(request, template, context)
 
