@@ -757,6 +757,39 @@ def view_header(request, inst, filename, filetype):
     return render(request, template, context)
 
 
+def view_bokeh_image(request, inst, filename, filetype):
+    """Generate the header view page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    filename : str
+        FITS filename of selected image in filesystem
+    filetype : str
+        Type of file (e.g. ``uncal``)
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # Ensure the instrument is correctly capitalized
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+
+    template = 'view_bokeh_image.html'
+
+    int_preview_image = InteractivePreviewImg(filename, low_lim=None, high_lim=None, scaling='lin', contrast=0.4)
+
+    context = {'script': int_preview_image.script,
+               'div': int_preview_image.div}
+
+    return render(request, template, context)
+
+
 def view_image(request, inst, file_root, rewrite=False):
     """Generate the image view page
 
