@@ -138,7 +138,9 @@ from celery.utils.log import get_task_logger
 celery_app = Celery('shared_tasks', 
                     broker='redis://localhost', 
                     backend='redis://localhost',
-                    worker_max_memory_per_child=32*1024*1024 # new child after 32GB consumed
+                    worker_max_memory_per_child=32*1024*1024, # new child after 32GB consumed
+                    worker_max_tasks_per_child=1,
+                    task_soft_time_limit=100000,
                     )
 
 
