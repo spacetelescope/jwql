@@ -172,7 +172,7 @@ def after_setup_celery_logger(logger, **kwargs):
     create_task_log_handler(logger, False)
 
 
-@task_postrun.collect
+@task_postrun.connect
 def collect_after_task(**kwargs):
     gc.collect()
 
