@@ -302,7 +302,6 @@ def archived_proposals_ajax(request, inst):
             except ValueError:
                 print('Unable to determine filepath for {}'.format(filename))
 
-
         # Get set of unique rootnames
         num_files = 0
         rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
@@ -320,7 +319,7 @@ def archived_proposals_ajax(request, inst):
             all_proposal_info['proposals'].append(proposal)
             all_proposal_info['thumbnail_paths'].append(proposal_info['thumbnail_paths'][0])
             all_proposal_info['num_files'].append(num_files)
-            #all_proposal_info['num_files'].append(proposal_info['num_files'][0])
+            # all_proposal_info['num_files'].append(proposal_info['num_files'][0])
 
     context = {'inst': inst,
                'num_proposals': all_proposal_info['num_proposals'],
@@ -757,7 +756,7 @@ def view_header(request, inst, filename, filetype):
     return render(request, template, context)
 
 
-def view_bokeh_image(request, inst, filename, filetype):
+def view_bokeh_image(request, inst, filename, filetype, rewrite=False):
     """Generate the header view page
 
     Parameters
@@ -770,6 +769,8 @@ def view_bokeh_image(request, inst, filename, filetype):
         FITS filename of selected image in filesystem
     filetype : str
         Type of file (e.g. ``uncal``)
+    rewrite : bool, optional
+        Regenerate if bokeh image already exists?
 
     Returns
     -------
@@ -779,10 +780,21 @@ def view_bokeh_image(request, inst, filename, filetype):
 
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-
     template = 'view_bokeh_image.html'
 
-    int_preview_image = InteractivePreviewImg(filename, low_lim=None, high_lim=None, scaling='lin', contrast=0.4)
+    # Save fits file name to use for bokeh image
+    fits_file = filename + '_' + filetype + '.fits'
+
+    # Get image info containing all paths to fits files
+    image_info_list = get_image_info(filename, rewrite)
+    # Find index of our fits file
+    fits_index = next(ix for ix, fits_path in enumerate(image_info_list['all_files']) if fits_file in fits_path)
+
+    # TODO verify and create appropriate error handling
+
+    # get full path of fits file to send to InteractivePreviewImg
+    full_fits_file = image_info_list['all_files'][fits_index]
+    int_preview_image = InteractivePreviewImg(full_fits_file, low_lim=None, high_lim=None, scaling='lin', contrast=0.4)  # TODO make contrast variable field
 
     context = {'script': int_preview_image.script,
                'div': int_preview_image.div}
@@ -813,46 +825,33 @@ def view_image(request, inst, file_root, rewrite=False):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    # TEMPORARY CODE START
-    template = '_temp_preview.html'
+    template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
-    file = image_info['all_files'][0]
-    int_preview_image = InteractivePreviewImg(file, low_lim=None, high_lim=None, scaling='lin', contrast=0.4)
 
-    context = {'script': int_preview_image.script,
-               'div': int_preview_image.div}
+    # Determine current flagged anomalies
+    current_anomalies = get_current_flagged_anomalies(file_root, inst)
 
-    return render(request, template, context)
+    # Create a form instance
+    form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
 
-    # TEMPORARY CODE END
+    # If this is a POST request and the form is filled out, process the form data
+    if request.method == 'POST' and 'anomaly_choices' in dict(request.POST):
+        anomaly_choices = dict(request.POST)['anomaly_choices']
+        if form.is_valid():
+            form.update_anomaly_table(file_root, 'unknown', anomaly_choices)
+            messages.success(request, "Anomaly submitted successfully")
+        else:
+            messages.error(request, "Failed to submit anomaly")
 
-#    template = 'view_image.html'
-#    image_info = get_image_info(file_root, rewrite)
-#
-#    # Determine current flagged anomalies
-#    current_anomalies = get_current_flagged_anomalies(file_root, inst)
-#
-#    # Create a form instance
-#    form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
-#
-#    # If this is a POST request and the form is filled out, process the form data
-#    if request.method == 'POST' and 'anomaly_choices' in dict(request.POST):
-#        anomaly_choices = dict(request.POST)['anomaly_choices']
-#        if form.is_valid():
-#            form.update_anomaly_table(file_root, 'unknown', anomaly_choices)
-#            messages.success(request, "Anomaly submitted successfully")
-#        else:
-#            messages.error(request, "Failed to submit anomaly")
-#
-#    # Build the context
-#    context = {'inst': inst,
-#               'prop_id': file_root[2:7],
-#               'file_root': file_root,
-#               'jpg_files': image_info['all_jpegs'],
-#               'fits_files': image_info['all_files'],
-#               'suffixes': image_info['suffixes'],
-#               'num_ints': image_info['num_ints'],
-#               'available_ints': image_info['available_ints'],
-#               'form': form}
+    # Build the context
+    context = {'inst': inst,
+               'prop_id': file_root[2:7],
+               'file_root': file_root,
+               'jpg_files': image_info['all_jpegs'],
+               'fits_files': image_info['all_files'],
+               'suffixes': image_info['suffixes'],
+               'num_ints': image_info['num_ints'],
+               'available_ints': image_info['available_ints'],
+               'form': form}
 
     return render(request, template, context)

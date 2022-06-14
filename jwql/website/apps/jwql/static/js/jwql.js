@@ -16,7 +16,7 @@
  *                                jpgs for that suffix
  * @param {String} inst - The instrument for the given file
  */
-function change_filetype(type, file_root, num_ints, available_ints, inst) {
+  function change_filetype(type, file_root, num_ints, available_ints, inst) {
 
     // Change the radio button to check the right filetype
     document.getElementById(type).checked = true;
