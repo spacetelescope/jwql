@@ -99,7 +99,7 @@ synchronously, run a group of tasks with a final callback function, etc. These a
 explained by the celery documentation itself.
 """
 from collections import OrderedDict
-
+import gc
 import logging
 from logging import FileHandler, StreamHandler
 import os
@@ -131,9 +131,8 @@ from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesyst
 
 from celery import Celery
 from celery.app.log import TaskFormatter
-from celery.signals import after_setup_logger, after_setup_task_logger
+from celery.signals import after_setup_logger, after_setup_task_logger, task_postrun
 from celery.utils.log import get_task_logger
-
 
 celery_app = Celery('shared_tasks', 
                     broker='redis://localhost', 
@@ -171,6 +170,11 @@ def after_setup_celery_task_logger(logger, **kwargs):
 def after_setup_celery_logger(logger, **kwargs):
     """ This function sets the 'celery' logger handler and formatter """
     create_task_log_handler(logger, False)
+
+
+@task_postrun.collect
+def collect_after_task(**kwargs):
+    gc.collect()
 
 
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.run_calwebb_detector1')
