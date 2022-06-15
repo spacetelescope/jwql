@@ -63,7 +63,7 @@
     // document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename + '.fits';
     // document.getElementById("download_jpg").href = jpg_filepath;
     document.getElementById("view_header").href = '/' + inst + '/' + file_root + '_' + type + '/header/';
-    document.getElementById("view_bokeh_image").href = '/' + inst + '/' + file_root + '_' + type + '/bokeh/';
+    document.getElementById("explore_image").href = '/' + inst + '/' + file_root + '_' + type + '/explore_image/';
 
     // Disable the "left" button, since this will be showing integ0
     document.getElementById("int_before").disabled = true;

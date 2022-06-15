@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>Explore {{ inst }} Image - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+    	<!-- Show image group name -->
+    	<h3> {{ file_root }}</h3>
+        <!-- Determine which filetype should be shown on load -->
+
+    	<p>
+            <a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:view_image', args=[inst, file_root]) }}>View Image</a>
+            <a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:archive_thumb', args=[inst, prop_id]) }}> View Proposal</a>
+	    </p>
+        
+
+		<div class="row">
+            <!-- Display the image -->
+    	    <div class="col-xl-9 text-center">
+    		    {{ div | safe }}
+                {{ script | safe }}
+            </div>
+
+            <!-- Display the anomaly form -->
+            
+            <!-- Display the anomaly form above -->
+        </div>
+
+    </main>
+
+{% endblock %}

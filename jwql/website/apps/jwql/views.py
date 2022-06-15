@@ -756,7 +756,7 @@ def view_header(request, inst, filename, filetype):
     return render(request, template, context)
 
 
-def view_bokeh_image(request, inst, filename, filetype, rewrite=False):
+def explore_image(request, inst, filename, filetype, rewrite=False):
     """Generate the header view page
 
     Parameters
@@ -780,7 +780,7 @@ def view_bokeh_image(request, inst, filename, filetype, rewrite=False):
 
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-    template = 'view_bokeh_image.html'
+    template = 'explore_image.html'
 
     # Save fits file name to use for bokeh image
     fits_file = filename + '_' + filetype + '.fits'
@@ -796,8 +796,16 @@ def view_bokeh_image(request, inst, filename, filetype, rewrite=False):
     full_fits_file = image_info_list['all_files'][fits_index]
     int_preview_image = InteractivePreviewImg(full_fits_file, low_lim=None, high_lim=None, scaling='lin', contrast=0.4)  # TODO make contrast variable field
 
-    context = {'script': int_preview_image.script,
-               'div': int_preview_image.div}
+    context = {'inst': inst,
+               'prop_id': filename[2:7],
+               'file_root': filename,
+               'index': fits_index,
+               'fits_files': image_info_list['all_files'],
+               'suffix': image_info_list['suffixes'][fits_index],
+               'num_ints': image_info_list['num_ints'],
+               'available_ints': image_info_list['available_ints'],
+               'script': int_preview_image.script,
+               'div': int_preview_image.div}            # 'form': form}  TODO make form
 
     return render(request, template, context)
 
