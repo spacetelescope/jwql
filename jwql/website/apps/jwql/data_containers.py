@@ -35,6 +35,7 @@ from astropy.table import Table
 from astropy.time import Time
 from bs4 import BeautifulSoup
 from django.conf import settings
+from django.contrib import messages
 import numpy as np
 from operator import itemgetter
 import pandas as pd
@@ -52,6 +53,7 @@ from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWS
                                  JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
+from .forms import InstrumentAnomalySubmitForm
 
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
@@ -246,6 +248,41 @@ def get_current_flagged_anomalies(rootname, instrument):
         current_anomalies = []
 
     return current_anomalies
+
+
+def get_anomaly_form(request, inst, file_root):
+    """Generate form data for context
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    file_root : str
+        FITS filename of selected image in filesystem
+
+    Returns
+    -------
+    InstrumentAnomalySubmitForm object
+        form object to be sent with context to template
+    """
+    # Determine current flagged anomalies
+    current_anomalies = get_current_flagged_anomalies(file_root, inst)
+
+    # Create a form instance
+    form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
+
+    # If this is a POST request and the form is filled out, process the form data
+    if request.method == 'POST' and 'anomaly_choices' in dict(request.POST):
+        anomaly_choices = dict(request.POST)['anomaly_choices']
+        if form.is_valid():
+            form.update_anomaly_table(file_root, 'unknown', anomaly_choices)
+            messages.success(request, "Anomaly submitted successfully")
+        else:
+            messages.error(request, "Failed to submit anomaly")
+
+    return form
 
 
 def get_dashboard_components(request):

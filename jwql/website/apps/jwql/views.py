@@ -43,7 +43,6 @@ import os
 from bokeh.layouts import layout
 from bokeh.embed import components
 from django.http import HttpResponse, JsonResponse
-from django.contrib import messages
 from django.shortcuts import redirect, render
 
 from jwql.database.database_interface import load_connection
@@ -55,7 +54,7 @@ from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get
 from .data_containers import build_table
 from .data_containers import data_trending
 from .data_containers import get_acknowledgements, get_instrument_proposals
-from .data_containers import get_current_flagged_anomalies
+from .data_containers import get_anomaly_form
 from .data_containers import get_dashboard_components
 from .data_containers import get_edb_components
 from .data_containers import get_filenames_by_instrument, mast_query_filenames_by_instrument
@@ -68,7 +67,6 @@ from .data_containers import random_404_page
 from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
-from .forms import InstrumentAnomalySubmitForm
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
 
@@ -756,7 +754,7 @@ def view_header(request, inst, filename, filetype):
     return render(request, template, context)
 
 
-def explore_image(request, inst, filename, filetype, rewrite=False):
+def explore_image(request, inst, file_root, filetype, rewrite=False):
     """Generate the header view page
 
     Parameters
@@ -765,8 +763,8 @@ def explore_image(request, inst, filename, filetype, rewrite=False):
         Incoming request from the webpage
     inst : str
         Name of JWST instrument
-    filename : str
-        FITS filename of selected image in filesystem
+    file_root : str
+        FITS file_root of selected image in filesystem
     filetype : str
         Type of file (e.g. ``uncal``)
     rewrite : bool, optional
@@ -783,10 +781,10 @@ def explore_image(request, inst, filename, filetype, rewrite=False):
     template = 'explore_image.html'
 
     # Save fits file name to use for bokeh image
-    fits_file = filename + '_' + filetype + '.fits'
+    fits_file = file_root + '_' + filetype + '.fits'
 
     # Get image info containing all paths to fits files
-    image_info_list = get_image_info(filename, rewrite)
+    image_info_list = get_image_info(file_root, rewrite)
     # Find index of our fits file
     fits_index = next(ix for ix, fits_path in enumerate(image_info_list['all_files']) if fits_file in fits_path)
 
@@ -796,16 +794,19 @@ def explore_image(request, inst, filename, filetype, rewrite=False):
     full_fits_file = image_info_list['all_files'][fits_index]
     int_preview_image = InteractivePreviewImg(full_fits_file, low_lim=None, high_lim=None, scaling='lin', contrast=0.4)  # TODO make contrast variable field
 
+    form = get_anomaly_form(request, inst, file_root)
+
     context = {'inst': inst,
-               'prop_id': filename[2:7],
-               'file_root': filename,
+               'prop_id': file_root[2:7],
+               'file_root': file_root,
                'index': fits_index,
                'fits_files': image_info_list['all_files'],
                'suffix': image_info_list['suffixes'][fits_index],
                'num_ints': image_info_list['num_ints'],
                'available_ints': image_info_list['available_ints'],
                'script': int_preview_image.script,
-               'div': int_preview_image.div}            # 'form': form}  TODO make form
+               'div': int_preview_image.div,
+               'form': form}
 
     return render(request, template, context)
 
@@ -836,20 +837,7 @@ def view_image(request, inst, file_root, rewrite=False):
     template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
 
-    # Determine current flagged anomalies
-    current_anomalies = get_current_flagged_anomalies(file_root, inst)
-
-    # Create a form instance
-    form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
-
-    # If this is a POST request and the form is filled out, process the form data
-    if request.method == 'POST' and 'anomaly_choices' in dict(request.POST):
-        anomaly_choices = dict(request.POST)['anomaly_choices']
-        if form.is_valid():
-            form.update_anomaly_table(file_root, 'unknown', anomaly_choices)
-            messages.success(request, "Anomaly submitted successfully")
-        else:
-            messages.error(request, "Failed to submit anomaly")
+    form = get_anomaly_form(request, inst, file_root)
 
     # Build the context
     context = {'inst': inst,

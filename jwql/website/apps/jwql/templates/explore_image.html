@@ -27,7 +27,37 @@
             </div>
 
             <!-- Display the anomaly form -->
-            
+            <div class="col-xl-3 text-left">
+                <!--Load the file search form from the view-->
+                <div class="anomaly_form">
+                    <h5>Submit Anomaly</h5>
+                    <form action="" method="post">
+                        <!--Show any errors from a previous form submission-->
+                        {% if form.errors %}
+                            <fieldset>
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <div class="alert alert-danger">
+                                            <strong>{{ error|escape }}</strong>
+                                        </div>
+                                    {% endfor %}
+                                {% endfor %}
+                            </fieldset>
+                        {% endif %}
+
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+
+                        <!--Show the field forms-->
+                        {% for field in form %}
+                            {% for subwidget in field.subwidgets %}
+                                <li class="anomaly_choice">{{subwidget}}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        <button class="btn btn-primary" type="submit" style="float: right;">Submit</button>
+                    </form>
+                </div>
+            </div>
             <!-- Display the anomaly form above -->
         </div>
 
