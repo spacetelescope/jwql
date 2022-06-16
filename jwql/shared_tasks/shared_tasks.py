@@ -234,7 +234,7 @@ def run_calwebb_detector1(input_file, instrument, path=None, tso=False):
             logging.info("*****CELERY: Running Pipeline Step {}".format(step_name))
             kwargs = {'logcfg': log_config}
             if step_name in ['jump', 'rate']:
-                kwargs['max_cores'] = 'half'
+                kwargs['maximum_cores'] = 'half'
             if not os.path.isfile(output_file):
                 if first_step_to_be_run:
                     model = PIPELINE_STEP_MAPPING[step_name].call(input_filename, **kwargs)
@@ -382,7 +382,7 @@ def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, pat
 
     if ramp_fit:
         model.ramp_fit.save_results = True
-        model.ramp_fit.max_cores = 'half'
+        model.ramp_fit.maximum_cores = 'half'
         # model.save_results = True
         model.output_dir = output_dir
         # pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', 'rate'))
