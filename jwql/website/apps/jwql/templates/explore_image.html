@@ -10,7 +10,8 @@
 
     <main role="main" class="container">
     	<!-- Show image group name -->
-    	<h3> {{ file_root }}</h3>
+        <h3>Explore Mode </h3>
+    	<h3>{{ file_root }}_{{ filetype }}.fits</h3>
         <!-- Determine which filetype should be shown on load -->
 
     	<p>
@@ -22,8 +23,26 @@
 		<div class="row">
             <!-- Display the image -->
     	    <div class="col-xl-9 text-center">
-    		    {{ div | safe }}
-                {{ script | safe }}
+    		    <!-- Loading animation -->
+                <div id="loading">
+                    <div class="lds-css ng-scope">
+                        <div style="width:100%;height:100%" class="lds-magnify">
+                            <div>
+                                <div>
+                                    <div>
+                                    </div>
+                                    <div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        Loading ...
+                    </div>
+                </div>
+
+                <!-- Display the data -->
+                <div id='explore_image'></div>
+                <a id="explore_image_fail" style='display: none'>Image explorer failed to load</a>
             </div>
 
             <!-- Display the anomaly form -->
@@ -62,5 +81,6 @@
         </div>
 
     </main>
+    <script>update_explore_image_page('{{inst}}', '{{file_root}}', '{{filetype}}', '{{base_url}}');</script>
 
 {% endblock %}

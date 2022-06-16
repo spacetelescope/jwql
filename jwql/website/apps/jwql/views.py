@@ -780,35 +780,74 @@ def explore_image(request, inst, file_root, filetype, rewrite=False):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
     template = 'explore_image.html'
 
-    # Save fits file name to use for bokeh image
-    fits_file = file_root + '_' + filetype + '.fits'
-
     # Get image info containing all paths to fits files
     image_info_list = get_image_info(file_root, rewrite)
+
+    # Save fits file name to use for bokeh image
+    fits_file = file_root + '_' + filetype + '.fits'
     # Find index of our fits file
     fits_index = next(ix for ix, fits_path in enumerate(image_info_list['all_files']) if fits_file in fits_path)
 
     # TODO verify and create appropriate error handling
-
-    # get full path of fits file to send to InteractivePreviewImg
-    full_fits_file = image_info_list['all_files'][fits_index]
-    int_preview_image = InteractivePreviewImg(full_fits_file, low_lim=None, high_lim=None, scaling='lin', contrast=0.4)  # TODO make contrast variable field
 
     form = get_anomaly_form(request, inst, file_root)
 
     context = {'inst': inst,
                'prop_id': file_root[2:7],
                'file_root': file_root,
+               'filetype': filetype,
                'index': fits_index,
-               'fits_files': image_info_list['all_files'],
                'suffix': image_info_list['suffixes'][fits_index],
                'num_ints': image_info_list['num_ints'],
                'available_ints': image_info_list['available_ints'],
-               'script': int_preview_image.script,
-               'div': int_preview_image.div,
+               'base_url': get_base_url(),
                'form': form}
 
     return render(request, template, context)
+
+
+def explore_image_ajax(request, inst, file_root, filetype, rewrite=False):
+    """Generate the page listing all archived images in the database
+    for a certain proposal
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    ile_root : str
+        FITS file_root of selected image in filesystem
+    filetype : str
+        Type of file (e.g. ``uncal``)
+    rewrite : bool, optional
+        Regenerate if bokeh image already exists?
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+    # Ensure the instrument is correctly capitalized
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+
+    # Get image info containing all paths to fits files
+    image_info_list = get_image_info(file_root, rewrite)
+
+    # Save fits file name to use for bokeh image
+    fits_file = file_root + '_' + filetype + '.fits'
+    # Find index of our fits file
+    fits_index = next(ix for ix, fits_path in enumerate(image_info_list['all_files']) if fits_file in fits_path)
+
+    # get full path of fits file to send to InteractivePreviewImg
+    full_fits_file = image_info_list['all_files'][fits_index]
+    int_preview_image = InteractivePreviewImg(full_fits_file, low_lim=None, high_lim=None)
+
+    context = {'inst': "inst",
+               'script': int_preview_image.script,
+               'div': int_preview_image.div}
+
+    return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
 def view_image(request, inst, file_root, rewrite=False):

@@ -397,6 +397,38 @@ function update_archive_page(inst, base_url) {
 
 
 /**
+ * Updates various compnents on the thumbnails page
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} file_root - The rootname of the file forresponding tot he instrument (e.g. "JW01473015001_04101_00001_MIRIMAGE")
+ * @param {String} filetype - The type to be viewed (e.g. "cal" or "rate").
+ */
+ function update_explore_image_page(inst, file_root, filetype, base_url) {
+    $.ajax({
+        url: base_url + '/ajax/' + inst + '/' + file_root + '_' + filetype + '/explore_image/',
+        success: function(data){
+
+            // Build div content
+            content = data["div"];
+            content += data["script"];
+            
+            // Add the content to the div
+            $('#explore_image').html(content);
+
+            // Replace loading screen
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("explore_image").style.display = "inline-block";
+            document.getElementById('explore_image_fail').style.display = "none";
+        },
+        error : function(response) {
+            document.getElementById("loading").style.display = "none";
+            document.getElementById('explore_image_fail').style.display = "inline-block";
+        }
+    });
+};
+
+
+
+/**
  * Updates the thumbnail-filter div with filter options
  * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
  */
@@ -576,5 +608,3 @@ function version_url(version_string) {
     a_line += '">JWQL v' + version_string + '</a>';
     return a_line;
 };
-
-
