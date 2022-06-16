@@ -148,9 +148,7 @@ def create_task_log_handler(logger, propagate):
     output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
     ensure_dir_exists(output_dir)
     celery_log_file_handler = FileHandler(log_file_name)
-    celery_log_stream_handler = StreamHandler(sys.stdout)
     logger.addHandler(celery_log_file_handler)
-    logger.addHandler(celery_log_stream_handler)
     for handler in logger.handlers:
         handler.setFormatter(TaskFormatter('%(asctime)s - %(task_id)s - %(task_name)s - %(name)s - %(levelname)s - %(message)s'))
     logger.propagate = propagate
@@ -235,15 +233,19 @@ def run_calwebb_detector1(input_file, instrument, path=None, tso=False):
             if not os.path.isfile(output_file):
                 if first_step_to_be_run:
                     if step_name in ['jump', 'rate']:
-                        model = PIPELINE_STEP_MAPPING[step_name].call(input_filename, logcfg=log_config, maximum_cores='quarter')
+#                         model = PIPELINE_STEP_MAPPING[step_name].call(input_filename, logcfg=log_config, maximum_cores='quarter')
+                        model = PIPELINE_STEP_MAPPING[step_name].call(input_filename, maximum_cores='quarter')
                     else:
-                        model = PIPELINE_STEP_MAPPING[step_name].call(input_filename, logcfg=log_config)
+#                         model = PIPELINE_STEP_MAPPING[step_name].call(input_filename, logcfg=log_config)
+                        model = PIPELINE_STEP_MAPPING[step_name].call(input_filename)
                     first_step_to_be_run = False
                 else:
                     if step_name in ['jump', 'rate']:
-                        model = PIPELINE_STEP_MAPPING[step_name].call(model, logcfg=log_config, maximum_cores='quarter')
+#                         model = PIPELINE_STEP_MAPPING[step_name].call(model, logcfg=log_config, maximum_cores='quarter')
+                        model = PIPELINE_STEP_MAPPING[step_name].call(model, maximum_cores='quarter')
                     else:
-                        model = PIPELINE_STEP_MAPPING[step_name].call(model, logcfg=log_config)
+#                         model = PIPELINE_STEP_MAPPING[step_name].call(model, logcfg=log_config)
+                        model = PIPELINE_STEP_MAPPING[step_name].call(model)
 
                 if step_name != 'rate':
                     # Make sure the dither_points metadata entry is at integer (was a
