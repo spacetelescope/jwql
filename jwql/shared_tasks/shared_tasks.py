@@ -232,15 +232,18 @@ def run_calwebb_detector1(input_file, instrument, path=None, tso=False):
             output_file = os.path.join(output_dir, output_filename)
             # skip already-done steps
             logging.info("*****CELERY: Running Pipeline Step {}".format(step_name))
-            kwargs = {}#'logcfg': log_config}
-            if step_name in ['jump', 'rate']:
-                kwargs['maximum_cores'] = 'quarter'
             if not os.path.isfile(output_file):
                 if first_step_to_be_run:
-                    model = PIPELINE_STEP_MAPPING[step_name].call(input_filename, **kwargs)
+                    if step_name in ['jump', 'rate']:
+                        model = PIPELINE_STEP_MAPPING[step_name].call(input_filename, logcfg=log_config, maximum_cores='quarter')
+                    else:
+                        model = PIPELINE_STEP_MAPPING[step_name].call(input_filename, logcfg=log_config)
                     first_step_to_be_run = False
                 else:
-                    model = PIPELINE_STEP_MAPPING[step_name].call(model, **kwargs)
+                    if step_name in ['jump', 'rate']:
+                        model = PIPELINE_STEP_MAPPING[step_name].call(model, logcfg=log_config, maximum_cores='quarter')
+                    else:
+                        model = PIPELINE_STEP_MAPPING[step_name].call(model, logcfg=log_config)
 
                 if step_name != 'rate':
                     # Make sure the dither_points metadata entry is at integer (was a
