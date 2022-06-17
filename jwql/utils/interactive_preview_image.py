@@ -34,7 +34,7 @@ class InteractivePreviewImg():
     """
 
     def __init__(self, filename, low_lim=None, high_lim=None, scaling='log', contrast=None, extname='SCI',
-                 group=-1, integ=0, save_html=None, show=False):
+                 group=-1, integ=0, mask=None, save_html=None, show=False):
         """Populate attributes, read in data, and create the Bokeh figure
         Parameters
         ----------
@@ -61,6 +61,9 @@ class InteractivePreviewImg():
             If an integer, this is the group number within ``integ`` to read in and display. Defaults to -1
             (final group of ``integration``). If a 2-element list, this lists the group numbers corresponding
             to the 2-element list in ``integ`` for the 2 frames to be read in and subtracted prior to display.
+        mask : numpy.ndarray
+            Mask to use in order to avoid some pixels when auto-scaling. Pixels with a value other than 0 will
+            be ignored when auto-scaling.
         save_html : str
             Name of html file to save the figure to. If None, the components are returned instead.
         show : bool
@@ -72,6 +75,7 @@ class InteractivePreviewImg():
         self.scaling = scaling
         self.contrast = contrast
         self.extname = extname.upper()
+        self.mask = mask
         self.show = show
         self.save_html = save_html
 
@@ -208,7 +212,11 @@ class InteractivePreviewImg():
         originally created or IRAF.
         """
         z = ZScaleInterval(contrast=self.contrast)
-        limits = z.get_limits(self.data)
+        if self.mask is None:
+            limits = z.get_limits(self.data)
+        else:
+            goodpix = self.mask == 0
+            limits = z.get_limits(self.data[goodpix])
         return limits
 
     def index_check(self, shapes):
