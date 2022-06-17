@@ -45,6 +45,8 @@
     var jpg_filepath = '/static/preview_images/' + file_root.slice(0,7) + '/' + file_root + '_' + type + '_integ0.jpg';
     img.src = jpg_filepath;
     img.alt = jpg_filepath;
+    // if previous image had error, remove error sizing
+    img.classList.remove("thumbnail");
 
     // Reset the slider values
     document.getElementById("slider_range").value = 1;
@@ -205,8 +207,7 @@ function determine_page_title(instrument, proposal) {
 /** 
  * If an image is not found, replace with temporary image sized to thumbnail
  */
-function imageError(image, makeThumbnail=false) {
-    image.onerror = "";
+function image_error(image, makeThumbnail=false) {
     image.src = "/static/img/imagenotfound.png";
     /* Use thumbnail settings to keep it tidy */
     if (makeThumbnail) {
@@ -538,7 +539,7 @@ function update_thumbnail_array(data) {
             content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
             content += '<a href="/' + filename_dict.instrument + '/' + rootname + '/">';
         }
-        content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="imageError(this);">';
+        content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="image_error(this);">';
         content += '<div class="thumbnail-color-fill" ></div>';
         content += '<div class="thumbnail-info">';
         content += 'Proposal: ' + filename_dict.program_id + '<br>';
