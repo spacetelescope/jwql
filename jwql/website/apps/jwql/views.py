@@ -806,7 +806,7 @@ def explore_image(request, inst, file_root, filetype, rewrite=False):
     return render(request, template, context)
 
 
-def explore_image_ajax(request, inst, file_root, filetype, rewrite=False):
+def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_lim=None, high_lim=None, rewrite=False):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -816,10 +816,16 @@ def explore_image_ajax(request, inst, file_root, filetype, rewrite=False):
         Incoming request from the webpage
     inst : str
         Name of JWST instrument
-    ile_root : str
+    file_root : str
         FITS file_root of selected image in filesystem
     filetype : str
         Type of file (e.g. ``uncal``)
+    scaling : str
+        Scaling to implement in interactive preview image ("log" or "lin")
+    low_lim : str
+        Signal value to use as the lower limit of the displayed image. If "None", it will be calculated using the ZScale function
+    high_lim : str
+        Signal value to use as the upper limit of the displayed image. If "None", it will be calculated using the ZScale function
     rewrite : bool, optional
         Regenerate if bokeh image already exists?
 
@@ -841,7 +847,18 @@ def explore_image_ajax(request, inst, file_root, filetype, rewrite=False):
 
     # get full path of fits file to send to InteractivePreviewImg
     full_fits_file = image_info_list['all_files'][fits_index]
-    int_preview_image = InteractivePreviewImg(full_fits_file, low_lim=None, high_lim=None)
+    # sent floats not strings to init
+    if low_lim == "None":
+        low_lim = None
+    if high_lim == "None":
+        high_lim = None
+
+    if low_lim is not None:
+        low_lim = float(low_lim)
+    if high_lim is not None:
+        high_lim = float(high_lim)
+
+    int_preview_image = InteractivePreviewImg(full_fits_file, low_lim, high_lim, scaling)
 
     context = {'inst': "inst",
                'script': int_preview_image.script,

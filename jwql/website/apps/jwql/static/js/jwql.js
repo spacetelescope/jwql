@@ -204,6 +204,34 @@ function determine_page_title(instrument, proposal) {
 };
 
 
+/**
+ * get_radio_button_value
+ * @param {String} element_name - The name of the radio buttons
+ * @returns value - value of checked radio button
+ */
+function get_radio_button_value(element_name) {
+    var element = document.getElementsByName(element_name);
+      
+    for(i = 0; i < element.length; i++) {
+        if(element[i].checked) {
+            return element[i].value;
+        }
+    }
+    return "";
+}
+
+/**
+ * get_scaling_value
+ * @param {String} element_id - The element id
+ * @returns value - value of element id or "None" if empty or not a number
+*/
+function get_number_or_none(element_id) {
+
+    var limit = document.getElementById(element_id).value;
+    if (limit.length == 0 || isNaN(limit)) limit = "None";
+    return limit;
+}
+
 /** 
  * If an image is not found, replace with temporary image sized to thumbnail
  */
@@ -402,17 +430,38 @@ function update_archive_page(inst, base_url) {
  * @param {String} inst - The instrument of interest (e.g. "FGS")
  * @param {String} file_root - The rootname of the file forresponding tot he instrument (e.g. "JW01473015001_04101_00001_MIRIMAGE")
  * @param {String} filetype - The type to be viewed (e.g. "cal" or "rate").
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ * @param {Boolean} do_opt_args - Flag to calculate and send optional arguments in URL
  */
- function update_explore_image_page(inst, file_root, filetype, base_url) {
+ function update_explore_image_page(inst, file_root, filetype, base_url, do_opt_args=false) {
+    
+    /* if they exist set up the optional parameters before the ajax call*/
+    optional_params = "";
+    if(do_opt_args) {
+        // Reset loading
+        document.getElementById("loading").style.display = "inline-block";
+        document.getElementById("explore_image").style.display = "none";
+        document.getElementById("explore_image_fail").style.display = "none";
+
+        // Get the arguments to update
+        scaling = get_radio_button_value("scaling");
+        low_lim = get_number_or_none("low_lim");
+        high_lim = get_number_or_none("high_lim");
+        optional_params = optional_params + "_" + scaling + "_" + low_lim + "_" + high_lim;
+        //optional_params = optional_params + "/" + scaling;
+    }
+
     $.ajax({
-        url: base_url + '/ajax/' + inst + '/' + file_root + '_' + filetype + '/explore_image/',
+        url: base_url + '/ajax/' + inst + '/' + file_root + '_' + filetype + '/explore_image' + optional_params,
         success: function(data){
 
             // Build div content
             content = data["div"];
             content += data["script"];
             
-            // Add the content to the div
+            /* Add the content to the div
+            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery. 
+            */
             $('#explore_image').html(content);
 
             // Replace loading screen
