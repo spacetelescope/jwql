@@ -301,6 +301,15 @@ def filename_parser(filename):
         r"_(?P<detector>((?!_)[\w])+)"\
         r"_(?P<ac_id>(o\d{3}|(c|a|r)\d{4}))"
 
+    # Stage 2 MSA metadata file. Created by APT and loaded in
+    # assign_wcs. e.g. "jw01118008001_01_msa.fits"
+    stage_2_msa = \
+        r"jw" \
+        r"(?P<program_id>\d{5})"\
+        r"(?P<observation>\d{3})"\
+        r"(?P<visit>\d{3})"\
+        r"(_.._msa.fits)"
+
     # Stage 3 filenames with target ID
     # e.g. "jw80600-o009_t001_miri_f1130w_i2d.fits"
     stage_3_target_id = \
@@ -384,6 +393,7 @@ def filename_parser(filename):
     filename_types = [
         stage_1_and_2,
         stage_2c,
+        stage_2_msa,
         stage_3_target_id,
         stage_3_source_id,
         stage_3_target_id_epoch,
@@ -395,6 +405,7 @@ def filename_parser(filename):
     filename_type_names = [
         'stage_1_and_2',
         'stage_2c',
+        'stage_2_msa',
         'stage_3_target_id',
         'stage_3_source_id',
         'stage_3_target_id_epoch',
@@ -407,8 +418,8 @@ def filename_parser(filename):
     # Try to parse the filename
     for filename_type, filename_type_name in zip(filename_types, filename_type_names):
 
-        # If full filename, try using suffix
-        if not file_root_name:
+        # If full filename, try using suffix, except for *msa.fits files
+        if not file_root_name and 'msa.fits' not in filename:
             filename_type += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
         # If not, make sure the provided regex matches the entire filename root
         else:
@@ -431,12 +442,15 @@ def filename_parser(filename):
 
         # Also, add the instrument if not already there
         if 'instrument' not in filename_dict.keys():
-            if name_match == 'guider':
+            if name_match in ['guider', 'guider_segment']:
                 filename_dict['instrument'] = 'fgs'
             elif 'detector' in filename_dict.keys():
                 filename_dict['instrument'] = JWST_INSTRUMENT_NAMES_SHORTHAND[
                     filename_dict['detector'][:3].lower()
                 ]
+            elif name_match == 'stage_2_msa':
+                    filename_dict['instrument'] = 'nirspec'
+
 
     # Raise error if unable to parse the filename
     except AttributeError:
