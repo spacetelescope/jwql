@@ -37,7 +37,11 @@ import http
 import jsonschema
 
 from jwql.utils import permissions
-from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_LEN, \
+                                 FILE_DATETIME_LEN, FILE_EPOCH_LEN, FILE_GUIDESTAR_ATTMPT_LEN, \
+                                 FILE_OBS_LEN, FILE_PARALLEL_SEQ_ID_LEN, FILE_PROG_ID_LEN, \
+                                 FILE_SEG_LEN, FILE_SOURCE_ID_LEN, FILE_SUFFIX_TYPES, FILE_TARG_ID_LEN, \
+                                 FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, JWST_INSTRUMENT_NAMES_SHORTHAND
 
 __location__ = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
@@ -278,12 +282,12 @@ def filename_parser(filename):
     # e.g. "jw80500012009_01101_00012_nrcalong_uncal.fits"
     stage_1_and_2 = \
         r"jw" \
-        r"(?P<program_id>\d{5})"\
-        r"(?P<observation>\d{3})"\
-        r"(?P<visit>\d{3})"\
-        r"_(?P<visit_group>\d{2})"\
-        r"(?P<parallel_seq_id>\d{1})"\
-        r"(?P<activity>\w{2})"\
+        r"(?P<program_id>\d{" + f"{FILE_PROG_ID_LEN}" + "})"\
+        r"(?P<observation>\d{" + f"{FILE_OBS_LEN}" + "})"\
+        r"(?P<visit>\d{" + f"{FILE_VISIT_LEN}" + "})"\
+        r"_(?P<visit_group>\d{" + f"{FILE_VISIT_GRP_LEN}" + "})"\
+        r"(?P<parallel_seq_id>\d{" + f"{FILE_PARALLEL_SEQ_ID_LEN}" + "})"\
+        r"(?P<activity>\w{" f"{FILE_ACT_LEN}" + "})"\
         r"_(?P<exposure_id>\d+)"\
         r"_(?P<detector>((?!_)[\w])+)"
 
@@ -291,32 +295,32 @@ def filename_parser(filename):
     # e.g. "jw94015002002_02108_00001_mirimage_o002_crf.fits"
     stage_2c = \
         r"jw" \
-        r"(?P<program_id>\d{5})" \
-        r"(?P<observation>\d{3})" \
-        r"(?P<visit>\d{3})" \
-        r"_(?P<visit_group>\d{2})" \
-        r"(?P<parallel_seq_id>\d{1})" \
-        r"(?P<activity>\w{2})" \
+        r"(?P<program_id>\d{" + f"{FILE_PROG_ID_LEN}" + "})" \
+        r"(?P<observation>\d{" + f"{FILE_OBS_LEN}" + "})" \
+        r"(?P<visit>\d{" + f"{FILE_VISIT_LEN}" + "})" \
+        r"_(?P<visit_group>\d{" + f"{FILE_VISIT_GRP_LEN}" + "})" \
+        r"(?P<parallel_seq_id>\d{" + f"{FILE_PARALLEL_SEQ_ID_LEN}" + "})" \
+        r"(?P<activity>\w{" + f"{FILE_ACT_LEN}" + "})" \
         r"_(?P<exposure_id>\d+)" \
         r"_(?P<detector>((?!_)[\w])+)"\
-        r"_(?P<ac_id>(o\d{3}|(c|a|r)\d{4}))"
+        r"_(?P<ac_id>(o\d{" + f"{FILE_AC_O_ID_LEN}" + r"}|(c|a|r)\d{" + f"{FILE_AC_CAR_ID_LEN}" + "}))"
 
     # Stage 2 MSA metadata file. Created by APT and loaded in
     # assign_wcs. e.g. "jw01118008001_01_msa.fits"
     stage_2_msa = \
         r"jw" \
-        r"(?P<program_id>\d{5})"\
-        r"(?P<observation>\d{3})"\
-        r"(?P<visit>\d{3})"\
+        r"(?P<program_id>\d{" + f"{FILE_PROG_ID_LEN}" + "})"\
+        r"(?P<observation>\d{" + f"{FILE_OBS_LEN}" + "})"\
+        r"(?P<visit>\d{" + f"{FILE_VISIT_LEN}" + "})"\
         r"(_.._msa.fits)"
 
     # Stage 3 filenames with target ID
     # e.g. "jw80600-o009_t001_miri_f1130w_i2d.fits"
     stage_3_target_id = \
         r"jw" \
-        r"(?P<program_id>\d{5})"\
-        r"-(?P<ac_id>(o\d{3}|(c|a|r)\d{4}))"\
-        r"_(?P<target_id>(t)\d{3})"\
+        r"(?P<program_id>\d{" + f"{FILE_PROG_ID_LEN}" + "})"\
+        r"-(?P<ac_id>(o\d{" + f"{FILE_AC_O_ID_LEN}" + r"}|(c|a|r)\d{" + f"{FILE_AC_CAR_ID_LEN}" + "}))"\
+        r"_(?P<target_id>(t)\d{" + f"{FILE_TARG_ID_LEN}" + "})"\
         r"_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
         r"_(?P<optical_elements>((?!_)[\w-])+)"
 
@@ -324,9 +328,9 @@ def filename_parser(filename):
     # e.g. "jw80600-o009_s00001_miri_f1130w_i2d.fits"
     stage_3_source_id = \
         r"jw" \
-        r"(?P<program_id>\d{5})"\
-        r"-(?P<ac_id>(o\d{3}|(c|a|r)\d{4}))"\
-        r"_(?P<source_id>(s)\d{5})"\
+        r"(?P<program_id>\d{" + f"{FILE_PROG_ID_LEN}" + "})"\
+        r"-(?P<ac_id>(o\d{" + f"{FILE_AC_O_ID_LEN}" + r"}|(c|a|r)\d{" + f"{FILE_AC_CAR_ID_LEN}" + "}))"\
+        r"_(?P<source_id>(s)\d{" + f"{FILE_SOURCE_ID_LEN}" + "})"\
         r"_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
         r"_(?P<optical_elements>((?!_)[\w-])+)"
 
@@ -334,10 +338,10 @@ def filename_parser(filename):
     # e.g. "jw80600-o009_t001-epoch1_miri_f1130w_i2d.fits"
     stage_3_target_id_epoch = \
         r"jw" \
-        r"(?P<program_id>\d{5})"\
-        r"-(?P<ac_id>(o\d{3}|(c|a|r)\d{4}))"\
-        r"_(?P<target_id>(t)\d{3})"\
-        r"-epoch(?P<epoch>\d{1})"\
+        r"(?P<program_id>\d{" + f"{FILE_PROG_ID_LEN}" + "})"\
+        r"-(?P<ac_id>(o\d{" + f"{FILE_AC_O_ID_LEN}" + r"}|(c|a|r)\d{" + f"{FILE_AC_CAR_ID_LEN}" + "}))"\
+        r"_(?P<target_id>(t)\d{" + f"{FILE_TARG_ID_LEN}" + "})"\
+        r"-epoch(?P<epoch>\d{" + f"{FILE_EPOCH_LEN}" + "})"\
         r"_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
         r"_(?P<optical_elements>((?!_)[\w-])+)"
 
@@ -345,10 +349,10 @@ def filename_parser(filename):
     # e.g. "jw80600-o009_s00001-epoch1_miri_f1130w_i2d.fits"
     stage_3_source_id_epoch = \
         r"jw" \
-        r"(?P<program_id>\d{5})"\
-        r"-(?P<ac_id>(o\d{3}|(c|a|r)\d{4}))"\
-        r"_(?P<source_id>(s)\d{5})"\
-        r"-epoch(?P<epoch>\d{1})"\
+        r"(?P<program_id>\d{" + f"{FILE_PROG_ID_LEN}" + "})"\
+        r"-(?P<ac_id>(o\d{" + f"{FILE_AC_O_ID_LEN}" + r"}|(c|a|r)\d{" + f"{FILE_AC_CAR_ID_LEN}" + "}))"\
+        r"_(?P<source_id>(s)\d{" + f"{FILE_SOURCE_ID_LEN}" + "})"\
+        r"-epoch(?P<epoch>\d{" + f"{FILE_EPOCH_LEN}" + "})"\
         r"_(?P<instrument>(nircam|niriss|nirspec|miri|fgs))"\
         r"_(?P<optical_elements>((?!_)[\w-])+)"
 
@@ -356,14 +360,14 @@ def filename_parser(filename):
     # e.g. "jw00733003001_02101_00002-seg001_nrs1_rate.fits"
     time_series = \
         r"jw" \
-        r"(?P<program_id>\d{5})"\
-        r"(?P<observation>\d{3})"\
-        r"(?P<visit>\d{3})"\
-        r"_(?P<visit_group>\d{2})"\
-        r"(?P<parallel_seq_id>\d{1})"\
-        r"(?P<activity>\w{2})"\
+        r"(?P<program_id>\d{" + f"{FILE_PROG_ID_LEN}" + "})"\
+        r"(?P<observation>\d{" + f"{FILE_OBS_LEN}" + "})"\
+        r"(?P<visit>\d{" + f"{FILE_VISIT_LEN}" + "})"\
+        r"_(?P<visit_group>\d{" + f"{FILE_VISIT_GRP_LEN}" + "})"\
+        r"(?P<parallel_seq_id>\d{" + f"{FILE_PARALLEL_SEQ_ID_LEN}" + "})"\
+        r"(?P<activity>\w{" + f"{FILE_ACT_LEN}" + "})"\
         r"_(?P<exposure_id>\d+)"\
-        r"-seg(?P<segment>\d{3})"\
+        r"-seg(?P<segment>\d{" + f"{FILE_SEG_LEN}" + "})"\
         r"_(?P<detector>\w+)"
 
     # Guider filenames
@@ -371,23 +375,22 @@ def filename_parser(filename):
     # "jw00799003001_gs-acq1_2019154181705_stream.fits"
     guider = \
         r"jw" \
-        r"(?P<program_id>\d{5})" \
-        r"(?P<observation>\d{3})" \
-        r"(?P<visit>\d{3})" \
+        r"(?P<program_id>\d{" + f"{FILE_PROG_ID_LEN}" + "})" \
+        r"(?P<observation>\d{" + f"{FILE_OBS_LEN}" + "})" \
+        r"(?P<visit>\d{" + f"{FILE_VISIT_LEN}" + "})" \
         r"_gs-(?P<guider_mode>(id|acq1|acq2|track|fg))" \
-        r"_((?P<date_time>\d{13})|(?P<guide_star_attempt_id>\d{1}))"
+        r"_((?P<date_time>\d{" + f"{FILE_DATETIME_LEN}" + r"})|(?P<guide_star_attempt_id>\d{" + f"{FILE_GUIDESTAR_ATTMPT_LEN}" + "}))"
 
     # Segment guider filenames
-    # e.g. "jw00729011001_gs-id_1_image_cal.fits" or
-    # "jw00799003001_gs-acq1_2019154181705_stream.fits"
+    # e.g. "jw01118005001_gs-fg_2022150070312-seg002_uncal.fits"
     guider_segment = \
         r"jw" \
-        r"(?P<program_id>\d{5})" \
-        r"(?P<observation>\d{3})" \
-        r"(?P<visit>\d{3})" \
+        r"(?P<program_id>\d{" + f"{FILE_PROG_ID_LEN}" + "})" \
+        r"(?P<observation>\d{" + f"{FILE_OBS_LEN}" + "})" \
+        r"(?P<visit>\d{" + f"{FILE_VISIT_LEN}" + "})" \
         r"_gs-(?P<guider_mode>(id|acq1|acq2|track|fg))" \
-        r"_((?P<date_time>\d{13})|(?P<guide_star_attempt_id>\d{1}))" \
-        r"-seg(?P<segment>\d{3})"
+        r"_((?P<date_time>\d{" + f"{FILE_DATETIME_LEN}" + r"})|(?P<guide_star_attempt_id>\d{" + f"{FILE_GUIDESTAR_ATTMPT_LEN}" + "}))" \
+        r"-seg(?P<segment>\d{" + f"{FILE_SEG_LEN}" + "})"
 
     # Build list of filename types
     filename_types = [
