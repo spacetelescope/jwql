@@ -184,6 +184,9 @@ FILE_TARG_ID_LEN = 3
 FILE_VISIT_GRP_LEN = 2
 FILE_VISIT_LEN = 3
 
+# MSA metadata file do not have a standard suffix attached
+FILETYPE_WO_STANDARD_SUFFIX = 'msa.fits'
+
 FLAT_EXP_TYPES = {'nircam': ['NRC_FLAT'],
                   'niriss': ['NIS_LAMP'],
                   'miri': ['MIR_FLATIMAGE', 'MIR_FLATMRS'],

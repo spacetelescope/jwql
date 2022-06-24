@@ -41,7 +41,8 @@ from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_
                                  FILE_DATETIME_LEN, FILE_EPOCH_LEN, FILE_GUIDESTAR_ATTMPT_LEN, \
                                  FILE_OBS_LEN, FILE_PARALLEL_SEQ_ID_LEN, FILE_PROG_ID_LEN, \
                                  FILE_SEG_LEN, FILE_SOURCE_ID_LEN, FILE_SUFFIX_TYPES, FILE_TARG_ID_LEN, \
-                                 FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, JWST_INSTRUMENT_NAMES_SHORTHAND
+                                 FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, FILETYPE_WO_STANDARD_SUFFIX, \
+                                 JWST_INSTRUMENT_NAMES_SHORTHAND
 
 __location__ = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
@@ -422,7 +423,7 @@ def filename_parser(filename):
     for filename_type, filename_type_name in zip(filename_types, filename_type_names):
 
         # If full filename, try using suffix, except for *msa.fits files
-        if not file_root_name and 'msa.fits' not in filename:
+        if not file_root_name and FILETYPE_WO_STANDARD_SUFFIX not in filename:
             filename_type += r"_(?P<suffix>{}).*".format('|'.join(FILE_SUFFIX_TYPES))
         # If not, make sure the provided regex matches the entire filename root
         else:
