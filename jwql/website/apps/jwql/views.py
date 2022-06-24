@@ -403,6 +403,10 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
             pass
     obs_list = sorted(list(set(all_obs)))
 
+
+    print(obs_list)
+    stop
+
     template = 'thumbnails_per_obs.html'
     context = {'inst': inst,
                'prop': proposal,

@@ -958,7 +958,7 @@ def get_proposal_info(filepaths):
 
 
 def get_rootnames_for_instrument_proposal(instrument, proposal):
-    """Return a list of proposals for the given instrument
+    """Return a list of rootnames for the given instrument and proposal
 
     Parameters
     ----------
@@ -974,11 +974,18 @@ def get_rootnames_for_instrument_proposal(instrument, proposal):
     rootnames : list
         List of rootnames for the given instrument and proposal number
     """
-    tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
-    tap_results = tap_service.search(f"select obs_id from dbo.ObsPointing where obs_collection='JWST' and calib_level>0 and instrument_name like '{instrument.lower()}' and proposal_id={proposal}")
-    prop_table = tap_results.to_table()
-    rootnames = prop_table['obs_id'].data
-    return rootnames.compressed()
+    #tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
+    #tap_results = tap_service.search(f"select obs_id from dbo.ObsPointing where obs_collection='JWST' and calib_level>0 and instrument_name like '{instrument.lower()}' and proposal_id={proposal}")
+    #prop_table = tap_results.to_table()
+    #rootnames = prop_table['obs_id'].data
+    #return rootnames.compressed()
+
+    prop_result = mast_query_filenames_by_instrument(instrument, int(proposal))
+    print(prop_result)
+
+    # Parse the results to get the rootnames
+    filenames = [result['filename'].split('.')[0] for result in prop_result['data']]
+    return filenames
 
 
 def get_thumbnails_all_instruments(parameters):
@@ -1339,11 +1346,6 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         except KeyError:
             pass
     obs_list = sorted(list(set(all_obs)))
-
-
-
-
-
 
 
     # Get the available files for the instrument
