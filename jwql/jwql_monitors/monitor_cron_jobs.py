@@ -36,11 +36,12 @@ from bokeh.io import save, output_file
 from bokeh.models import ColumnDataSource
 from bokeh.models.widgets import DataTable, DateFormatter, HTMLTemplateFormatter, TableColumn
 
-from jwql.utils.logging_functions import configure_logging, log_info, log_fail
+from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_config
 from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
 from jwql.utils.utils import ensure_dir_exists
+from jwql.utils.protect_module import lock_module
 
 SETTINGS = get_config()
 
@@ -328,10 +329,15 @@ def success_check(filename):
     return execution
 
 
-if __name__ == '__main__':
-
+@lock_module
+def protected_code():
+    """Protected code ensures only 1 instance of module will run at any given time"""
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = initialize_instrument_monitor(module)
 
     status()
     update_monitor_table(module, start_time, log_file)
+
+
+if __name__ == '__main__':
+    protected_code()

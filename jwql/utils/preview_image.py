@@ -37,6 +37,7 @@ Use:
 import logging
 import os
 import socket
+import warnings
 
 from astropy.io import fits
 import numpy as np
@@ -48,6 +49,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+from matplotlib.ticker import AutoMinorLocator
 
 # Only import jwst if not running from readthedocs
 if 'build' and 'project' not in socket.gethostname():
@@ -205,6 +207,10 @@ class PreviewImage():
                         data = hdulist[ext].data[:, [0, -1], :, :].astype(np.float)
                     else:
                         data = hdulist[ext].data.astype(np.float)
+                    try:
+                        self.units = f"{hdulist[ext].header['BUNIT']}  "
+                    except KeyError:
+                        self.units = ''
                 else:
                     raise ValueError('WARNING: no {} extension in {}!'.format(ext, filename))
 
@@ -330,8 +336,15 @@ class PreviewImage():
                 format_string = "%.{}f".format(dig)
                 tlabelstr = [format_string % number for number in tlabelflt]
                 cbar = fig.colorbar(cax, ticks=tickvals)
+
+                # This seems to correctly remove the ticks and labels we want to remove. It gives a warning that
+                # it doesn't work on log scales, which we don't care about. So let's ignore that warning.
+                warnings.filterwarnings("ignore", message="AutoMinorLocator does not work with logarithmic scale")
+                cbar.ax.yaxis.set_minor_locator(AutoMinorLocator(n=0))
+
                 cbar.ax.set_yticklabels(tlabelstr)
                 cbar.ax.tick_params(labelsize=maxsize * 5. / 4)
+                cbar.ax.set_ylabel(self.units, labelpad=10, rotation=270)
                 ax.set_xlabel('Pixels', fontsize=maxsize * 5. / 4)
                 ax.set_ylabel('Pixels', fontsize=maxsize * 5. / 4)
                 ax.tick_params(labelsize=maxsize)
@@ -355,7 +368,7 @@ class PreviewImage():
             filename = os.path.split(self.file)[-1]
             ax.set_title(filename + ' Int: {}'.format(np.int(integration_number)))
 
-    def make_image(self, max_img_size=8):
+    def make_image(self, max_img_size=8.0):
         """The main function of the ``PreviewImage`` class."""
 
         shape = self.data.shape
