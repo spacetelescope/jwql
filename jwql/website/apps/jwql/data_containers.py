@@ -974,18 +974,32 @@ def get_rootnames_for_instrument_proposal(instrument, proposal):
     rootnames : list
         List of rootnames for the given instrument and proposal number
     """
-    #tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
+    tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
     #tap_results = tap_service.search(f"select obs_id from dbo.ObsPointing where obs_collection='JWST' and calib_level>0 and instrument_name like '{instrument.lower()}' and proposal_id={proposal}")
-    #prop_table = tap_results.to_table()
-    #rootnames = prop_table['obs_id'].data
-    #return rootnames.compressed()
+    tap_results = tap_service.search(f"select observationID from dbo.CaomObservation where collection='JWST' and maxLevel=2 and insName like '{instrument.lower()}' and prpID='{int(proposal)}'")
+    prop_table = tap_results.to_table()
+    rootnames = prop_table['observationID'].data
+    return rootnames.compressed()
 
-    prop_result = mast_query_filenames_by_instrument(instrument, int(proposal))
-    print(prop_result)
 
-    # Parse the results to get the rootnames
-    filenames = [result['filename'].split('.')[0] for result in prop_result['data']]
-    return filenames
+def get_rootnames_for_proposal(proposal):
+    """Return a list of rootnames for the given proposal (all instruments)
+
+    Parameters
+    ----------
+    proposal : int or str
+        Proposal ID number
+
+    Returns
+    -------
+    rootnames : list
+        List of rootnames for the given instrument and proposal number
+    """
+    tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
+    tap_results = tap_service.search(f"select observationID from dbo.CaomObservation where collection='JWST' and maxLevel=2 and prpID='{int(proposal)}'")
+    prop_table = tap_results.to_table()
+    rootnames = prop_table['observationID'].data
+    return rootnames.compressed()
 
 
 def get_thumbnails_all_instruments(parameters):
@@ -1199,6 +1213,27 @@ def log_into_mast(request):
         return Mast.authenticated()
     else:
         return False
+
+
+def proposal_rootnames_by_instrument(proposal):
+    """Retrieve the rootnames for a given proposal for all instruments and return
+    as a dictionary with instrument names as keys. Instruments not used in the proposal
+    will not be present in the dictionary.
+
+    proposal : int or str
+        Proposal ID number
+
+    Returns
+    -------
+    rootnames : dict
+        Dictionary of rootnames with instrument names as keys
+    """
+    rootnames = {}
+    for instrument in JWST_INSTRUMENT_NAMES:
+        names = get_rootnames_for_instrument_proposal(instrument, proposal)
+        if len(names) > 0:
+            rootnames[instrument] = names
+    return rootnames
 
 
 def random_404_page():
