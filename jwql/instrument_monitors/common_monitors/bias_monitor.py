@@ -54,15 +54,13 @@ from jwql.database.database_interface import session  # noqa: E402 (module impor
 from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory  # noqa: E402 (module import not at top)
 from jwql.database.database_interface import NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats  # noqa: E402 (module import not at top)
 from jwql.instrument_monitors import pipeline_tools  # noqa: E402 (module import not at top)
-from jwql.shared_tasks.shared_tasks import run_calwebb_detector1  # noqa: E402 (module import not at top)
+from jwql.shared_tasks.shared_tasks import run_calwebb_detector1, REDIS_CLIENT  # noqa: E402 (module import not at top)
 from jwql.utils import instrument_properties, monitor_utils  # noqa: E402 (module import not at top)
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E402 (module import not at top)
 from jwql.utils.logging_functions import log_info, log_fail  # noqa: E402 (module import not at top)
 from jwql.utils.monitor_utils import update_monitor_table  # noqa: E402 (module import not at top)
 from jwql.utils.permissions import set_permissions  # noqa: E402 (module import not at top)
 from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config  # noqa: E402 (module import not at top)
-
-REDIS_CLIENT = redis.Redis()
 
 
 class Bias():
@@ -370,6 +368,8 @@ class Bias():
             List of filenames (including full paths) to the dark current
             files.
         """
+        send_dir = os.path.join(get_config()["transfer_dir"], "incoming")
+        receive_dir = os.path.join(get_config()["transfer_dir"], "outgoing")
 
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
@@ -381,30 +381,34 @@ class Bias():
             # Run the file through the necessary pipeline steps
             pipeline_steps = self.determine_pipeline_steps()
             logging.info('\tRunning pipeline on {}'.format(filename))
-            with fits.open(filename) as input_file:
-                is_tso = input_file[0].header['TSOVISIT']
-            if is_tso:
-                logging.info("Locking for intensive task")
-                intensive_lock = REDIS_CLIENT.lock("intensive_operation")
-                have_lock = intensive_lock.acquire(blocking=True)
-            try:
-                filepath = os.path.dirname(filename)
-                filebase = os.path.basename(filename)
-                processed_name = filebase[:filebase.rfind("_uncal")] + "_refpix.fits"
-                result = run_calwebb_detector1.delay(filebase, self.instrument, path=filepath)
-                logging.info('\tStarting with ID {}'.format(result.id))
-                processed_dir = result.get()
-                processed_file = os.path.join(processed_dir, processed_name)
-                logging.info('\tPipeline complete. Output: {}'.format(processed_file))
-            except Exception as e:
-                logging.info('\tPipeline processing failed for {}'.format(filename))
-                logging.info('\tProcessing raised {}'.format(e))
-                os.remove(filename)
-                continue
-            finally:
-                if is_tso and have_lock:
-                    intensive_lock.release()
-                    logging.info("Intensive Task Lock Released")
+            copy_files([filename], send_dir)
+            uncal_name = os.path.basename(filename)
+            short_name = uncal_name.replace("_uncal.fits", "").replace("_0thgroup.fits", "")
+            logging.info("Locking calibration for {}".format(short_name))
+            cal_lock = REDIS_CLIENT.lock(short_name)
+            have_lock = cal_lock.acquire(blocking=True)
+            if have_lock:
+                logging.info("Lock Acquired")
+                try:
+                    processed_name = short_name + "_refpix.fits"
+                    result = run_calwebb_detector1.delay(uncal_name, self.instrument)
+                    logging.info('\tStarting with ID {}'.format(result.id))
+                    processed_dir = result.get()
+                    logging.info('\tPipeline complete. Output: {}'.format(processed_file))
+                    output_dir = os.path.join(self.output_dir, 'data')
+                    copy_files([os.path.join(receive_dir, processed_name)], output_dir)
+                    to_clear = glob.glob(os.path.join(receive_dir, short_name+"*"))
+                    for file in to_clear:
+                        os.remove(file)
+                    if os.path.isfile(os.path.join(send_dir, uncal_name)):
+                        os.remove(os.path.join(send_dir, uncal_name))
+                except Exception as e:
+                    logging.info('\tPipeline processing failed for {}'.format(filename))
+                    logging.info('\tProcessing raised {}'.format(e))
+                    continue
+                finally:
+                    cal_lock.release()
+                    logging.info("Released Lock {}".format(short_name))
 
             # Find amplifier boundaries so per-amp statistics can be calculated
             _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)

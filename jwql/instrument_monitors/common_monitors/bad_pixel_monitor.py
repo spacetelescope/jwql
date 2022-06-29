@@ -102,7 +102,7 @@ from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPi
 from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors import pipeline_tools
-from jwql.shared_tasks.shared_tasks import calwebb_detector1_save_jump
+from jwql.shared_tasks.shared_tasks import calwebb_detector1_save_jump, REDIS_CLIENT
 from jwql.utils import crds_tools, instrument_properties, monitor_utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import FLAT_EXP_TYPES, DARK_EXP_TYPES
@@ -112,8 +112,6 @@ from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'bad_pixel_file_thresholds.txt')
-
-REDIS_CLIENT = redis.Redis()
 
 
 def bad_map_to_list(badpix_image, mnemonic):
@@ -782,6 +780,8 @@ class BadPixels():
         badpix_types_from_flats = ['DEAD', 'LOW_QE', 'OPEN', 'ADJ_OPEN']
         badpix_types_from_darks = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
         illuminated_obstimes = []
+        send_dir = os.path.join(get_config()["transfer_dir"], "incoming")
+        receive_dir = os.path.join(get_config()["transfer_dir"], "outgoing")
         if illuminated_raw_files:
             index = 0
             badpix_types.extend(badpix_types_from_flats)
@@ -789,30 +789,36 @@ class BadPixels():
                 self.get_metadata(uncal_file)
                 if rate_file == 'None':
                     logging.info('Calling pipeline for {}'.format(uncal_file))
-                    with fits.open(uncal_file) as input_file:
-                        is_tso = input_file[0].header['TSOVISIT']
-                    if is_tso:
-                        logging.info("Locking for intensive task")
-                        intensive_lock = REDIS_CLIENT.lock("intensive_operation")
-                        have_lock = intensive_lock.acquire(blocking=True)
-                    try:
-                        uncal_filename = os.path.basename(uncal_file)
-                        uncal_filepath = os.path.dirname(uncal_file)
-                        result = calwebb_detector1_save_jump.delay(uncal_filename, ramp_fit=True,
-                                                                   save_fitopt=False, path=uncal_filepath)
-                        logging.info('\tStarting with ID {}'.format(result.id))
-                        jump_output, rate_output, _, output_dir = result.get()
-                        logging.info('Pipeline finished')
-                        if self.nints > 1:
-                            illuminated_slope_files[index] = rate_output.replace('0_ramp_fit', '1_ramp_fit')
-                        else:
+                    copy_files([uncal_file], send_dir)
+                    uncal_name = os.path.basename(uncal_file)
+                    short_name = uncal_name.replace("_uncal.fits", "")
+                    logging.info("Locking calibration for {}".format(short_name))
+                    cal_lock = REDIS_CLIENT.lock(short_name)
+                    have_lock = cal_lock.acquire(blocking=True)
+                    if have_lock:
+                        logging.info("Lock Acquired")
+                        try:
+                            result = calwebb_detector1_save_jump.delay(uncal_name, ramp_fit=True, save_fitopt=False)
+                            logging.info('\tStarting with ID {}'.format(result.id))
+                            jump_output, rate_output, _ = result.get()
+                            logging.info('Pipeline finished')
+                            output_dir = os.path.join(self.output_dir, 'data')
+                            if self.nints > 1:
+                                rate_output = rate_output.replace('0_ramp_fit', '1_ramp_fit')
+                            copy_files([jump_output, rate_output], output_dir)
+                            jump_output = os.path.join(output_dir, os.path.basename(jump_output))
+                            rate_output = os.path.join(output_dir, os.path.basename(rate_output))
+                            to_clear = glob.glob(os.path.join(receive_dir, short_name+"*"))
+                            for file in to_clear:
+                                os.remove(file)
+                            if os.path.isfile(os.path.join(send_dir, uncal_name)):
+                                os.remove(os.path.join(send_dir, uncal_name))
                             illuminated_slope_files[index] = deepcopy(rate_output)
-                    except Exception as e:
-                        logging.error('Processing produced exception: {}'.format(e))
-                    finally:
-                        if is_tso and have_lock:
-                            intensive_lock.release()
-                            logging.info("Intensive Task Lock Released")
+                        except Exception as e:
+                            logging.error('Processing produced exception: {}'.format(e))
+                        finally:
+                            cal_lock.release()
+                            logging.info("Released Lock {}".format(short_name))
                     index += 1
 
                 # Get observation time for all files
@@ -838,36 +844,43 @@ class BadPixels():
             # and fitops files, which are not saved by default
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
                 logging.info('Calling pipeline for {} {}'.format(uncal_file, rate_file))
-                with fits.open(uncal_file) as input_file:
-                    is_tso = input_file[0].header['TSOVISIT']
-                if is_tso:
-                    logging.info("Locking for intensive task")
-                    intensive_lock = REDIS_CLIENT.lock("intensive_operation")
-                    have_lock = intensive_lock.acquire(blocking=True)
-                try:
-                    uncal_filename = os.path.basename(uncal_file)
-                    uncal_filepath = os.path.dirname(uncal_file)
-                    result = calwebb_detector1_save_jump.delay(uncal_filename, ramp_fit=True,
-                                                               save_fitopt=True, path=uncal_filepath)
-                    logging.info('\tStarting with ID {}'.format(result.id))
-                    jump_output, rate_output, fitopt_output, output_dir = result.get()
-                    logging.info('\tPipeline finished.')
-                    self.get_metadata(uncal_file)
-                    dark_jump_files.append(jump_output)
-                    dark_fitopt_files.append(fitopt_output)
-                    if self.nints > 1:
-                        # dark_slope_files[index] = rate_output.replace('rate', 'rateints')
-                        dark_slope_files[index] = rate_output.replace('0_ramp_fit', '1_ramp_fit')
-                    else:
+                copy_files([uncal_file], send_dir)
+                uncal_name = os.path.basename(uncal_file)
+                short_name = uncal_name.replace("_uncal.fits", "")
+                logging.info("Locking calibration for {}".format(short_name))
+                cal_lock = REDIS_CLIENT.lock(short_name)
+                have_lock = cal_lock.acquire(blocking=True)
+                if have_lock:
+                    logging.info("Lock Acquired")
+
+                    try:
+                        result = calwebb_detector1_save_jump.delay(uncal_name, ramp_fit=True, save_fitopt=True)
+                        logging.info('\tStarting with ID {}'.format(result.id))
+                        jump_output, rate_output, fitopt_output = result.get()
+                        logging.info('\tPipeline finished.')
+                        self.get_metadata(uncal_file)
+                        if self.nints > 1:
+                            rate_output = rate_output.replace('0_ramp_fit', '1_ramp_fit')
+                        output_dir = os.path.join(self.output_dir, 'data')
+                        copy_files([jump_output, rate_output, fitopt_output], output_dir)
+                        jump_output = os.path.join(output_dir, os.path.basename(jump_output))
+                        rate_output = os.path.join(output_dir, os.path.basename(rate_output))
+                        fitopt_output = os.path.join(output_dir, os.path.basename(fitopt_output))
+                        dark_jump_files.append(jump_output)
+                        dark_fitopt_files.append(fitopt_output)
                         dark_slope_files[index] = deepcopy(rate_output)
-                    dark_obstimes.append(instrument_properties.get_obstime(uncal_file))
-                except Exception as e:
-                    logging.error("Pipeline Exception for {}".format(uncal_file))
-                    logging.error("Trapped {}".format(e))
-                finally:
-                    if is_tso and have_lock:
-                        intensive_lock.release()
-                        logging.info("Intensive Task Lock Released")
+                        dark_obstimes.append(instrument_properties.get_obstime(uncal_file))
+                        to_clear = glob.glob(os.path.join(receive_dir, short_name+"*"))
+                        for file in to_clear:
+                            os.remove(file)
+                        if os.path.isfile(os.path.join(send_dir, uncal_name)):
+                            os.remove(os.path.join(send_dir, uncal_name))
+                    except Exception as e:
+                        logging.error("Pipeline Exception for {}".format(uncal_file))
+                        logging.error("Trapped {}".format(e))
+                    finally:
+                        cal_lock.release()
+                        logging.info("Released Lock {}".format(short_name))
                     
                 index += 1
 

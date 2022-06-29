@@ -103,6 +103,7 @@ import gc
 import logging
 from logging import FileHandler, StreamHandler
 import os
+import shutil
 import sys
 
 from astropy.io import fits
@@ -134,9 +135,11 @@ from celery.app.log import TaskFormatter
 from celery.signals import after_setup_logger, after_setup_task_logger, task_postrun
 from celery.utils.log import get_task_logger
 
+REDIS_CLIENT = redis.Redis(host=get_config()["redis_host"], port=get_config()["redis_port"])
+
 celery_app = Celery('shared_tasks', 
-                    broker='redis://{}:{}'.format(get_config()['redis_url'], get_config()['redis_port']),
-                    backend='redis://{}:{}'.format(get_config()['redis_url'], get_config()['redis_port']),
+                    broker='redis://{}:{}'.format(get_config()['redis_host'], get_config()['redis_port']),
+                    backend='redis://{}:{}'.format(get_config()['redis_host'], get_config()['redis_port']),
                     worker_max_tasks_per_child=2
                     )
 
@@ -174,7 +177,7 @@ def collect_after_task(**kwargs):
 
 
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.run_calwebb_detector1')
-def run_calwebb_detector1(input_file, instrument, path=None, tso=False):
+def run_calwebb_detector1(input_file_name, instrument):
     """Run the steps of ``calwebb_detector1`` on the input file, saving the result of each
     step as a separate output file, then return the name-and-path of the file as reduced
     in the reduction directory.
@@ -193,29 +196,22 @@ def run_calwebb_detector1(input_file, instrument, path=None, tso=False):
     reduction_path : str
         The path at which the reduced data file(s) may be found.
     """
-    logging.info("*****CELERY: Got calibration task with arguments {} {} {}".format(input_file, instrument, path))
-        
-    if "uncal" not in input_file:
-        if "_" in input_file:
-            short_name = input_file[:input_file.rfind("_")]
-        else:
-            short_name = input_file.replace(".fits", "")
-        uncal_file = short_name + "_uncal.fits"
-        if path is None or not os.path.isfile(os.path.join(path, uncal_file)):
-            uncal_file = filesystem_path(uncal_file)
-    else:
-        short_name = input_file[:input_file.rfind("_uncal")]
-        if os.path.isfile(os.path.join(path, input_file)):
-            uncal_file = os.path.join(path, input_file)
-        else:
-            uncal_file = filesystem_path(input_file)
-
-    output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
-    ensure_dir_exists(output_dir)
-    input_filename = os.path.join(output_dir, uncal_file)
-    if not os.path.isfile(input_filename):
-        copy_files([uncal_file], output_dir)
-    set_permissions(input_filename)
+    msg = "*****CELERY: Starting {} calibration task for {}"
+    logging.info(msg.format(instrument, input_file))
+    
+    input_file = os.path.join(get_config()["transfer_dir"], "incoming", input_file_name)
+    if not os.path.isfile(input_file):
+        logging.error("*****CELERY: File {} not found!".format(input_file))
+        raise FileNotFoundError("{} not found".format(input_file))
+    
+    cal_dir = os.path.join(get_config['outputs'], "calibrated_data")
+    uncal_file = os.path.join(cal_dir, input_file_name)
+    short_name = input_file_name.replace("_uncal", "").replace("_0thgroup", "")
+    ensure_dir_exists(cal_dir)
+    copy_files([input_file], cal_dir)
+    set_permissions(uncal_file)
+    
+    output_dir = os.path.join(get_config()["transfer_dir"], "outgoing")
     
     log_config = os.path.join(output_dir, "celery_pipeline_log.cfg")
 
@@ -225,7 +221,8 @@ def run_calwebb_detector1(input_file, instrument, path=None, tso=False):
     for step_name in steps:
         if steps[step_name]:
             output_filename = short_name + "_{}.fits".format(step_name)
-            output_file = os.path.join(output_dir, output_filename)
+            output_file = os.path.join(cal_dir, output_filename)
+            transfer_file = os.path.join(output_dir, output_filename)
             # skip already-done steps
             logging.info("*****CELERY: Running Pipeline Step {}".format(step_name))
             if not os.path.isfile(output_file):
@@ -255,13 +252,18 @@ def run_calwebb_detector1(input_file, instrument, path=None, tso=False):
                         # If the dither_points entry is not populated, then ignore this change
                         pass
                     model[0].save(output_file)
-            set_permissions(output_file)
+            else:
+                logging.info("*****CELERY: File {} exists".format(output_filename))
+            if not os.path.exists(transfer_file):
+                copy_files([output_file], transfer_dir)
+            set_permissions(transfer_file)
 
     logging.info("*****CELERY: Finished calibration.")
     return output_dir
 
+
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.calwebb_detector1_save_jump')
-def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, path=None, tso=False):
+def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True):
     """Call ``calwebb_detector1`` on the provided file, running all
     steps up to the ``ramp_fit`` step, and save the result. Optionally
     run the ``ramp_fit`` step and save the resulting slope file as well.
@@ -296,41 +298,28 @@ def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, pat
     fitopt_output : str
         Name of the saved file containing the output after ramp-fitting
         is performed (if requested). Otherwise ``None``.
-
-    output_dir : str
-        Name of the directory where the output file is saved
     """
-    msg = "*****CELERY: Started Task. with inputs {} {} {} {}"
-    logging.info(msg.format(input_file, ramp_fit, save_fitopt, path))
+    msg = "*****CELERY: Started Save Jump Task on {}. ramp_fit={}, save_fitopt={}"
+    logging.info(msg.format(input_file_name, ramp_fit, save_fitopt))
 
-    if "uncal" not in input_file:
-        if "_" in input_file:
-            short_name = input_file[:input_file.rfind("_")]
-        else:
-            short_name = input_file.replace(".fits", "")
-        uncal_file = short_name + "_uncal.fits"
-        if path is None or not os.path.isfile(os.path.join(path, uncal_file)):
-            uncal_file = filesystem_path(uncal_file)
-    else:
-        short_name = input_file[:input_file.rfind("_uncal")]
-        if os.path.isfile(os.path.join(path, input_file)):
-            uncal_file = os.path.join(path, input_file)
-        else:
-            uncal_file = filesystem_path(input_file)
-
-    output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
-    ensure_dir_exists(output_dir)
-    input_filename = os.path.join(output_dir, uncal_file)
-    if not os.path.isfile(input_filename):
-        copy_files([uncal_file], output_dir)
-    set_permissions(input_filename)
+    input_file = os.path.join(get_config()["transfer_dir"], "incoming", input_file_name)
+    if not os.path.isfile(input_file):
+        logging.error("*****CELERY: File {} not found!".format(input_file))
+        raise FileNotFoundError("{} not found".format(input_file))
+    
+    cal_dir = os.path.join(get_config['outputs'], "calibrated_data")
+    uncal_file = os.path.join(cal_dir, input_file_name)
+    short_name = input_file_name.replace("_uncal", "").replace("_0thgroup", "")
+    ensure_dir_exists(cal_dir)
+    copy_files([input_file], cal_dir)
+    set_permissions(uncal_file)
+    
+    output_dir = os.path.join(get_config()["transfer_dir"], "outgoing")
 
     log_config = os.path.join(output_dir, "celery_pipeline_log.cfg")
 
-    input_file_only = input_file
-
     # Find the instrument used to collect the data
-    datamodel = datamodels.RampModel(input_filename)
+    datamodel = datamodels.RampModel(uncal_file)
     instrument = datamodel.meta.instrument.name.lower()
 
     # If the data pre-date jwst version 1.2.1, then they will have
@@ -363,8 +352,8 @@ def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, pat
     model.ipc.skip = True
 
     model.jump.save_results = True
-    model.jump.output_dir = output_dir
-    jump_output = os.path.join(output_dir, input_file_only.replace('uncal', 'jump'))
+    model.jump.output_dir = cal_dir
+    jump_output = os.path.join(cal_dir, input_file.replace('uncal', 'jump'))
     
     model.logcfg = log_config
 
@@ -375,13 +364,13 @@ def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, pat
     if ramp_fit:
         model.ramp_fit.save_results = True
         # model.save_results = True
-        model.output_dir = output_dir
+        model.output_dir = cal_dir
         # pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', 'rate'))
-        pipe_output = os.path.join(output_dir, input_file_only.replace('uncal', '0_ramp_fit'))
+        pipe_output = os.path.join(cal_dir, input_file.replace('uncal', '0_ramp_fit'))
         run_slope = not os.path.isfile(pipe_output)
         if save_fitopt:
             model.ramp_fit.save_opt = True
-            fitopt_output = os.path.join(output_dir, input_file_only.replace('uncal', 'fitopt'))
+            fitopt_output = os.path.join(cal_dir, input_file.replace('uncal', 'fitopt'))
             run_fitopt = not os.path.isfile(fitopt_output)
         else:
             model.ramp_fit.save_opt = False
@@ -402,9 +391,12 @@ def calwebb_detector1_save_jump(input_file, ramp_fit=True, save_fitopt=True, pat
     else:
         print(("Files with all requested calibration states for {} already present in "
                "output directory. Skipping pipeline call.".format(input_file)))
+    
+    calibrated_files = glob.glob(uncal_file.replace("_uncal.fits", "*"))
+    copy_files(calibrated_files, output_dir)
 
     logging.info("*****CELERY: Finished pipeline")
-    return jump_output, pipe_output, fitopt_output, output_dir
+    return jump_output, pipe_output, fitopt_output
 
 
 if __name__ == '__main__':
