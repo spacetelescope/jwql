@@ -468,7 +468,9 @@ class Dark():
             required_steps['group_scale'] = False
 
         send_dir = os.path.join(get_config()["transfer_dir"], "incoming")
+        ensure_dir_exists(send_dir)
         receive_dir = os.path.join(get_config()["transfer_dir"], "outgoing")
+        ensure_dir_exists(receive_dir)
 
         # Run pipeline steps on files, generating slope files
         slope_files = []

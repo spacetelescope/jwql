@@ -410,7 +410,9 @@ class Readnoise():
             files.
         """
         send_dir = os.path.join(get_config()["transfer_dir"], "incoming")
+        ensure_dir_exists(send_dir)
         receive_dir = os.path.join(get_config()["transfer_dir"], "outgoing")
+        ensure_dir_exists(receive_dir)
 
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))

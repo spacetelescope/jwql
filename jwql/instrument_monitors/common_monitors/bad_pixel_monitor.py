@@ -781,7 +781,9 @@ class BadPixels():
         badpix_types_from_darks = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
         illuminated_obstimes = []
         send_dir = os.path.join(get_config()["transfer_dir"], "incoming")
+        ensure_dir_exists(send_dir)
         receive_dir = os.path.join(get_config()["transfer_dir"], "outgoing")
+        ensure_dir_exists(receive_dir)
         if illuminated_raw_files:
             index = 0
             badpix_types.extend(badpix_types_from_flats)
