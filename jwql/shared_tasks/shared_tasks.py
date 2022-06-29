@@ -103,6 +103,7 @@ import gc
 import logging
 from logging import FileHandler, StreamHandler
 import os
+import redis
 import shutil
 import sys
 
