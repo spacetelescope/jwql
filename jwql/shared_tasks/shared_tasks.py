@@ -257,7 +257,7 @@ def run_calwebb_detector1(input_file_name, instrument):
             else:
                 logging.info("*****CELERY: File {} exists".format(output_filename))
             if not os.path.exists(transfer_file):
-                copy_files([output_file], transfer_dir)
+                copy_files([output_file], output_dir)
             set_permissions(transfer_file)
 
     logging.info("*****CELERY: Finished calibration.")
