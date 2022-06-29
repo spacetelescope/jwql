@@ -22,7 +22,7 @@ Bokeh figures will then be in:
 from datetime import datetime, timedelta
 import os
 
-from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool, Range1d
+from bokeh.models import BasicTickFormatter, ColumnDataSource, DatetimeTickFormatter, HoverTool, Range1d
 from bokeh.plotting import figure
 import matplotlib.pyplot as plt
 import numpy as np
@@ -80,7 +80,11 @@ class CosmicRayMonitor():
             self.mags = [[0]]
 
         last_hist_index = -1
-        hist = plt.hist(self.mags[last_hist_index])
+        # We'll never see CRs with magnitudes above 65535.
+        # Let's fix the bins for now, and see some data to check
+        # if they are reasonable
+        bins = np.arange(-65000, 66000, 5000)
+        hist = plt.hist(self.mags[last_hist_index], bins=bins)
 
         self.bin_left = np.array([bar.get_x() for bar in hist[2]])
         self.amplitude = [bar.get_height() for bar in hist[2]]

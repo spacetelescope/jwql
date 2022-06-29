@@ -498,8 +498,9 @@ class CosmicRay:
                 try:
                     logging.info(f'Running calwebb_detector1 on {uncal_file}')
                     pipeline_tools.calwebb_detector1_save_jump(uncal_file, self.obs_dir, ramp_fit=True, save_fitopt=False)
-                except:
+                except Exception as e:
                     logging.info('Failed to complete pipeline steps on {}.'.format(uncal_file))
+                    logging.info(e)
                     pass
 
                 # Next we analyze the cosmic rays in the new data
