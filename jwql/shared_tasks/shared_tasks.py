@@ -198,14 +198,14 @@ def run_calwebb_detector1(input_file_name, instrument):
         The path at which the reduced data file(s) may be found.
     """
     msg = "*****CELERY: Starting {} calibration task for {}"
-    logging.info(msg.format(instrument, input_file))
+    logging.info(msg.format(instrument, input_file_name))
     
     input_file = os.path.join(get_config()["transfer_dir"], "incoming", input_file_name)
     if not os.path.isfile(input_file):
         logging.error("*****CELERY: File {} not found!".format(input_file))
         raise FileNotFoundError("{} not found".format(input_file))
     
-    cal_dir = os.path.join(get_config['outputs'], "calibrated_data")
+    cal_dir = os.path.join(get_config()['outputs'], "calibrated_data")
     uncal_file = os.path.join(cal_dir, input_file_name)
     short_name = input_file_name.replace("_uncal", "").replace("_0thgroup", "")
     ensure_dir_exists(cal_dir)
@@ -228,7 +228,7 @@ def run_calwebb_detector1(input_file_name, instrument):
             logging.info("*****CELERY: Running Pipeline Step {}".format(step_name))
             if not os.path.isfile(output_file):
                 if first_step_to_be_run:
-                    model = PIPELINE_STEP_MAPPING[step_name].call(input_filename, logcfg=log_config)
+                    model = PIPELINE_STEP_MAPPING[step_name].call(uncal_file, logcfg=log_config)
                     first_step_to_be_run = False
                 else:
                     model = PIPELINE_STEP_MAPPING[step_name].call(model, logcfg=log_config)
@@ -308,7 +308,7 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
         logging.error("*****CELERY: File {} not found!".format(input_file))
         raise FileNotFoundError("{} not found".format(input_file))
     
-    cal_dir = os.path.join(get_config['outputs'], "calibrated_data")
+    cal_dir = os.path.join(get_config()['outputs'], "calibrated_data")
     uncal_file = os.path.join(cal_dir, input_file_name)
     short_name = input_file_name.replace("_uncal", "").replace("_0thgroup", "")
     ensure_dir_exists(cal_dir)
