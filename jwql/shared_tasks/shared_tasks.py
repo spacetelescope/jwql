@@ -100,6 +100,7 @@ explained by the celery documentation itself.
 """
 from collections import OrderedDict
 import gc
+from glob import glob
 import logging
 from logging import FileHandler, StreamHandler
 import os
@@ -393,7 +394,7 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
         print(("Files with all requested calibration states for {} already present in "
                "output directory. Skipping pipeline call.".format(input_file)))
     
-    calibrated_files = glob.glob(uncal_file.replace("_uncal.fits", "*"))
+    calibrated_files = glob(uncal_file.replace("_uncal.fits", "*"))
     copy_files(calibrated_files, output_dir)
 
     logging.info("*****CELERY: Finished pipeline")

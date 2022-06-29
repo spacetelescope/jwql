@@ -33,6 +33,7 @@ Use
 
 from collections import OrderedDict
 import datetime
+from glob import glob
 import logging
 import os
 import redis
@@ -63,7 +64,7 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MI
 from jwql.utils.logging_functions import log_info, log_fail  # noqa: E348 (comparison to true)
 from jwql.utils.monitor_utils import update_monitor_table  # noqa: E348 (comparison to true)
 from jwql.utils.permissions import set_permissions  # noqa: E348 (comparison to true)
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config  # noqa: E348 (comparison to true)
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, copy_files  # noqa: E348 (comparison to true)
 
 
 class Readnoise():
@@ -441,7 +442,7 @@ class Readnoise():
                     logging.info('\tPipeline complete. Output: {}'.format(processed_name))
                     output_dir = os.path.join(self.output_dir, 'data')
                     copy_files([os.path.join(receive_dir, processed_name)], output_dir)
-                    to_clear = glob.glob(os.path.join(receive_dir, short_name+"*"))
+                    to_clear = glob(os.path.join(receive_dir, short_name+"*"))
                     for file in to_clear:
                         os.remove(file)
                     if os.path.isfile(os.path.join(send_dir, uncal_name)):

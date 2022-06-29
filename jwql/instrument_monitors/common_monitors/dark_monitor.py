@@ -510,7 +510,7 @@ class Dark():
                             logging.info('\tPipeline complete. Output: {}'.format(processed_name))
                             output_dir = os.path.join(self.output_dir, 'data')
                             copy_files([os.path.join(receive_dir, processed_name)], output_dir)
-                            to_clear = glob.glob(os.path.join(receive_dir, short_name+"*"))
+                            to_clear = glob(os.path.join(receive_dir, short_name+"*"))
                             for file in to_clear:
                                 os.remove(file)
                             if os.path.isfile(os.path.join(send_dir, uncal_name)):

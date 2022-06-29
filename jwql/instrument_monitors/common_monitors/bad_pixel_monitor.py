@@ -810,7 +810,7 @@ class BadPixels():
                             copy_files([jump_output, rate_output], output_dir)
                             jump_output = os.path.join(output_dir, os.path.basename(jump_output))
                             rate_output = os.path.join(output_dir, os.path.basename(rate_output))
-                            to_clear = glob.glob(os.path.join(receive_dir, short_name+"*"))
+                            to_clear = glob(os.path.join(receive_dir, short_name+"*"))
                             for file in to_clear:
                                 os.remove(file)
                             if os.path.isfile(os.path.join(send_dir, uncal_name)):
@@ -872,7 +872,7 @@ class BadPixels():
                         dark_fitopt_files.append(fitopt_output)
                         dark_slope_files[index] = deepcopy(rate_output)
                         dark_obstimes.append(instrument_properties.get_obstime(uncal_file))
-                        to_clear = glob.glob(os.path.join(receive_dir, short_name+"*"))
+                        to_clear = glob(os.path.join(receive_dir, short_name+"*"))
                         for file in to_clear:
                             os.remove(file)
                         if os.path.isfile(os.path.join(send_dir, uncal_name)):
