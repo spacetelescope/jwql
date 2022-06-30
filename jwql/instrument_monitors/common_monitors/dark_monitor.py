@@ -491,8 +491,7 @@ class Dark():
                 file_path = os.path.dirname(filename)
                 uncal_name = os.path.basename(filename)
                 short_name = uncal_name.replace("_uncal.fits", "")
-                processed_file = filename.replace('.fits', '_{}.fits'.format('rate'))
-                processed_name = os.path.basename(processed_file)
+                processed_name = short_name + "_rate.fits"
 
                 # If the slope file already exists, skip the pipeline call
                 if not os.path.isfile(processed_file):
@@ -515,6 +514,7 @@ class Dark():
                                 os.remove(file)
                             if os.path.isfile(os.path.join(send_dir, uncal_name)):
                                 os.remove(os.path.join(send_dir, uncal_name))
+                            processed_file = os.path.join(output_dir, processed_name)
                         except Exception as e:
                             logging.info('\tPipeline processing failed for {}'.format(filename))
                             logging.info('\tProcessing raised {}'.format(e))

@@ -426,8 +426,7 @@ class Readnoise():
 
             uncal_name = os.path.basename(filename)
             short_name = uncal_name.replace("_uncal.fits", "")
-            processed_file = filename.replace('_uncal.fits', '_{}.fits'.format('refpix'))
-            processed_name = os.path.basename(processed_file)
+            processed_name = short_name + "_refpix.fits"
             logging.info('\tRunning pipeline on {}'.format(filename))
             logging.info("Locking calibration for {}".format(short_name))
             cal_lock = REDIS_CLIENT.lock(short_name)

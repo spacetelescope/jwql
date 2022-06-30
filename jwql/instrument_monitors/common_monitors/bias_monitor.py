@@ -385,7 +385,7 @@ class Bias():
             pipeline_steps = self.determine_pipeline_steps()
             logging.info('\tRunning pipeline on {}'.format(filename))
             uncal_name = os.path.basename(filename)
-            short_name = uncal_name.replace("_uncal.fits", "").replace("_0thgroup.fits", "")
+            short_name = uncal_name.replace("_uncal", "").replace("_0thgroup", "").replace(".fits", "")
             logging.info("Locking calibration for {}".format(short_name))
             cal_lock = REDIS_CLIENT.lock(short_name)
             have_lock = cal_lock.acquire(blocking=True)
