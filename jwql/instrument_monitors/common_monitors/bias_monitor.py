@@ -61,7 +61,7 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E402 (
 from jwql.utils.logging_functions import log_info, log_fail  # noqa: E402 (module import not at top)
 from jwql.utils.monitor_utils import update_monitor_table  # noqa: E402 (module import not at top)
 from jwql.utils.permissions import set_permissions  # noqa: E402 (module import not at top)
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config  # noqa: E402 (module import not at top)
+from jwql.utils.utils import copy_files, ensure_dir_exists, filesystem_path, get_config  # noqa: E402 (module import not at top)
 
 
 class Bias():
