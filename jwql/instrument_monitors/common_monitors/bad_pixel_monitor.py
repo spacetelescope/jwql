@@ -792,7 +792,7 @@ class BadPixels():
                 if rate_file == 'None':
                     logging.info('Calling pipeline for {}'.format(uncal_file))
                     uncal_name = os.path.basename(uncal_file)
-                    short_name = uncal_name.replace("_uncal", "").replace(".fits". "")
+                    short_name = uncal_name.replace("_uncal", "").replace(".fits", "")
                     logging.info("Locking calibration for {}".format(short_name))
                     cal_lock = REDIS_CLIENT.lock(short_name)
                     have_lock = cal_lock.acquire(blocking=True)
