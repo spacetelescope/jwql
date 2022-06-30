@@ -397,7 +397,7 @@ class Bias():
                     result = run_calwebb_detector1.delay(uncal_name, self.instrument)
                     logging.info('\tStarting with ID {}'.format(result.id))
                     processed_dir = result.get()
-                    logging.info('\tPipeline complete. Output: {}'.format(processed_file))
+                    logging.info('\tPipeline complete. Output: {}'.format(processed_name))
                     output_dir = os.path.join(self.output_dir, 'data')
                     copy_files([os.path.join(receive_dir, processed_name)], output_dir)
                     to_clear = glob(os.path.join(receive_dir, short_name+"*"))
