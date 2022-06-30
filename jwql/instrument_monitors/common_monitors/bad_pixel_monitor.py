@@ -791,7 +791,6 @@ class BadPixels():
                 self.get_metadata(uncal_file)
                 if rate_file == 'None':
                     logging.info('Calling pipeline for {}'.format(uncal_file))
-                    copy_files([uncal_file], send_dir)
                     uncal_name = os.path.basename(uncal_file)
                     short_name = uncal_name.replace("_uncal.fits", "")
                     logging.info("Locking calibration for {}".format(short_name))
@@ -799,6 +798,7 @@ class BadPixels():
                     have_lock = cal_lock.acquire(blocking=True)
                     if have_lock:
                         logging.info("Lock Acquired")
+                        copy_files([uncal_file], send_dir)
                         try:
                             result = calwebb_detector1_save_jump.delay(uncal_name, ramp_fit=True, save_fitopt=False)
                             logging.info('\tStarting with ID {}'.format(result.id))
@@ -846,7 +846,6 @@ class BadPixels():
             # and fitops files, which are not saved by default
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
                 logging.info('Calling pipeline for {} {}'.format(uncal_file, rate_file))
-                copy_files([uncal_file], send_dir)
                 uncal_name = os.path.basename(uncal_file)
                 short_name = uncal_name.replace("_uncal.fits", "")
                 logging.info("Locking calibration for {}".format(short_name))
@@ -856,6 +855,7 @@ class BadPixels():
                     logging.info("Lock Acquired")
 
                     try:
+                        copy_files([uncal_file], send_dir)
                         result = calwebb_detector1_save_jump.delay(uncal_name, ramp_fit=True, save_fitopt=True)
                         logging.info('\tStarting with ID {}'.format(result.id))
                         jump_output, rate_output, fitopt_output = result.get()

@@ -497,12 +497,12 @@ class Dark():
                 # If the slope file already exists, skip the pipeline call
                 if not os.path.isfile(processed_file):
                     logging.info('\tRunning pipeline on {}'.format(filename))
-                    copy_files([filename], send_dir)
                     logging.info("Locking calibration for {}".format(short_name))
                     cal_lock = REDIS_CLIENT.lock(short_name)
                     have_lock = cal_lock.acquire(blocking=True)
                     if have_lock:
                         logging.info("Lock Acquired")
+                        copy_files([filename], send_dir)
                         try:
                             result = run_calwebb_detector1.delay(uncal_name, self.instrument)
                             logging.info('\tStarting with ID {}'.format(result.id))

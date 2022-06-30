@@ -429,13 +429,13 @@ class Readnoise():
             processed_file = filename.replace('_uncal.fits', '_{}.fits'.format('refpix'))
             processed_name = os.path.basename(processed_file)
             logging.info('\tRunning pipeline on {}'.format(filename))
-            copy_files([filename], send_dir)
             logging.info("Locking calibration for {}".format(short_name))
             cal_lock = REDIS_CLIENT.lock(short_name)
             have_lock = cal_lock.acquire(blocking=True)
             if have_lock:
                 logging.info("Lock Acquired")
                 try:
+                    copy_files([filename], send_dir)
                     result = run_calwebb_detector1.delay(uncal_name, self.instrument)
                     logging.info('\tStarting with ID {}'.format(result.id))
                     processed_dir = result.get()
@@ -447,6 +447,7 @@ class Readnoise():
                         os.remove(file)
                     if os.path.isfile(os.path.join(send_dir, uncal_name)):
                         os.remove(os.path.join(send_dir, uncal_name))
+                    processed_file = os.path.join(output_dir, processed_name)
                 except Exception as e:
                     logging.info('\tPipeline processing failed for {}'.format(filename))
                     logging.info('\tProcessing raised {}'.format(e))
