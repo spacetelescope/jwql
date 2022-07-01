@@ -481,7 +481,7 @@ function update_obs_options(data, inst, prop, obslist) {
     // Build div content
     content = 'Available observations:';
     content += '<div class="dropdown">';
-    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Obs Nums</button>';
+    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="obs_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Obs Nums</button>';
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
     for (var i = 0; i < data.obs_list.length; i++) {
         content += '<a class="dropdown-item" href="/' + inst + '/archive/' + prop + '/obs' + data.obs_list[i] + '/" > Obs' + data.obs_list[i] + '</a>';
