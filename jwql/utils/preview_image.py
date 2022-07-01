@@ -368,8 +368,17 @@ class PreviewImage():
             filename = os.path.split(self.file)[-1]
             ax.set_title(filename + ' Int: {}'.format(np.int(integration_number)))
 
-    def make_image(self, max_img_size=8.0):
-        """The main function of the ``PreviewImage`` class."""
+    def make_image(self, max_img_size=8.0, create_thumbnail=False):
+        """The main function of the ``PreviewImage`` class.
+
+        Parameters
+        ----------
+        max_img_size : float
+            Image size in the largest dimension
+
+        create_thumbnail : bool
+            If True, a thumbnail image is created and saved.
+        """
 
         shape = self.data.shape
 
@@ -419,7 +428,7 @@ class PreviewImage():
 
             # Create thumbnail image matplotlib object, only for the
             # first integration
-            if i == 0:
+            if i == 0 and create_thumbnail:
                 if self.thumbnail_output_directory is None:
                     outdir = indir
                 else:
