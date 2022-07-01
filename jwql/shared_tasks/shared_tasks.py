@@ -456,7 +456,7 @@ def run_pipeline(input_file, ext_or_exts, instrument):
             logging.info("\t\tPipeline Complete")
             if isinstance(ext_or_exts, str):
                 ext_or_exts = [ext_or_exts]
-            file_or_files = [short_name+"_"x+".fits" for x in ext_or_exts]
+            file_or_files = ["{}_{}.fits".format(short_name, x) for x in ext_or_exts]
             output_file_or_files = [os.path.join(receive_dir, x) for x in file_or_files]
             logging.info("\t\tCopying {} to {}".format(file_or_files, input_path))
             copy_files(output_file_or_files, input_path)
