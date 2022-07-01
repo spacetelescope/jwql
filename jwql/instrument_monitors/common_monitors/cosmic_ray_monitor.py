@@ -17,6 +17,8 @@ Authors
 -------
 
     - Mike Engesser
+    - Matt Bourque
+    - Bryan Hilbert
 
 Use
 ---
@@ -37,7 +39,6 @@ import shutil
 # Third-Party Imports
 from astropy.io import fits
 from astropy.time import Time
-import julian
 from jwst.datamodels import dqflags
 import numpy as np
 from pysiaf import Siaf
@@ -544,8 +545,8 @@ class CosmicRay:
                 # Get observation time info
                 obs_start_time = jump_head['EXPSTART']
                 obs_end_time = jump_head['EXPEND']
-                start_time = julian.from_jd(obs_start_time, fmt='mjd')
-                end_time = julian.from_jd(obs_end_time, fmt='mjd')
+                start_time = Time(obs_start_time, format='mjd', scale='utc').isot.replace('T', ' ')
+                end_time = Time(obs_end_time, format='mjd', scale='utc').isot.replace('T', ' ')
 
                 cosmic_ray_mags = self.get_cr_mags(jump_locs, jump_locs_pre, rate_data, jump_data, jump_head)
 
@@ -610,7 +611,7 @@ class CosmicRay:
 
         self.query_end = Time.now().mjd
 
-        for instrument in ['nircam']:  #JWST_INSTRUMENT_NAMES:
+        for instrument in JWST_INSTRUMENT_NAMES:
             if instrument == 'miri' or instrument == 'nircam':
                 self.instrument = instrument
 
@@ -618,14 +619,7 @@ class CosmicRay:
                 self.identify_tables()
 
                 # Get a list of possible apertures
-                #possible_apertures = list(Siaf(instrument).apernames)
                 possible_apertures = self.possible_apers(instrument)
-
-                #XXXFOR TESTING
-                possible_apertures = ['NRCA1_FULL']
-
-                # Use this line instead to save time while testing
-                #possible_apertures = ['MIRIM_FULL', 'NRCB4_FULL']
 
                 for aperture in possible_apertures:
 
@@ -636,9 +630,6 @@ class CosmicRay:
 
                     # We start by querying MAST for new data
                     self.query_start = self.most_recent_search()
-
-                    #XXXXFOT TESTING
-                    self.query_start = 59688.78
 
                     logging.info('\tMost recent query: {}'.format(self.query_start))
                     logging.info(f'\tQuerying MAST from {self.query_start} to {self.query_end}')
@@ -653,10 +644,7 @@ class CosmicRay:
                     for fname in new_entries:
                         logging.info(f'{fname}')
 
-                    # for testing purposes only
-                    #new_filenames = get_config()['local_test_data']
                     new_filenames = []
-
                     for file_entry in new_entries:
                         try:
                             new_filenames.append(filesystem_path(file_entry))
@@ -668,8 +656,6 @@ class CosmicRay:
 
                     # Next we copy new files to the working directory
                     output_dir = os.path.join(get_config()['outputs'], 'cosmic_ray_monitor')
-
-                    #self.data_dir = get_config()['local_test_dir']  # for testing purposes only
 
                     self.data_dir =  os.path.join(output_dir,'data')
                     ensure_dir_exists(self.data_dir)

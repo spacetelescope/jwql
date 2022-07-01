@@ -70,9 +70,6 @@ class CosmicRayMonitor():
         database query.
         """
 
-        #self.mags = {}   # For testing
-        #self.mags[-1] = [2000]*3 + [4000]*10 + [7500]*36 + [12500]*45 + [45000]*89 + [100000]*125 + [120000]*80 + [150000]*64 + [190000]*32 + [210000]*5  # For testing
-
         self.mags = [row.magnitude for row in self.cosmic_ray_table]
 
         # If there are no data, then create something reasonable
@@ -98,10 +95,6 @@ class CosmicRayMonitor():
         """
         self.times = [row.obs_end_time for row in self.cosmic_ray_table]
         self.rate = [row.jump_rate for row in self.cosmic_ray_table]
-
-        #self.times = [datetime(2022,1,i) for i in range(1,16)]  # for testing
-        #self.rate = [40000. + i*1000 for i in range(1,16)]  # for testing
-
 
     def histogram_plot(self):
         """Create the histogram figure of CR magnitudes.
@@ -152,7 +145,6 @@ class CosmicRayMonitor():
             fig.y_range = Range1d(self.rate[0] - 0.5*self.rate[0], self.rate[0] + 0.5*self.rate[0])
 
         data = fig.scatter(x='x', y='y', line_width=5, line_color='blue', source=source)
-        #line = fig.line(x='x', y='y', line_width=5, line_color='blue', source=source)
 
         # Make the x axis tick labels look nice
         fig.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
@@ -190,7 +182,3 @@ class CosmicRayMonitor():
         self.cosmic_ray_table = session.query(self.stats_table) \
             .filter(self.stats_table.aperture == self._aperture) \
             .all()
-
-# Uncomment the line below when testing via the command line:
-# bokeh serve --show monitor_cosmic_rays_bokeh.py
-#CosmicRayMonitor('nircam', 'NRCA1_FULL')
