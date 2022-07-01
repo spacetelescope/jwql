@@ -483,6 +483,7 @@ class Dark():
             if any(steps_to_run.values()) is False:
                 slope_files.append(filename)
             else:
+                processed_file = filename.replace("_uncal", "_rate")
                 # If the slope file already exists, skip the pipeline call
                 if not os.path.isfile(processed_file):
                     # Run the file through the necessary pipeline steps
