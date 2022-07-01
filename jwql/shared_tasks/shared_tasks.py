@@ -208,7 +208,7 @@ def run_calwebb_detector1(input_file_name, instrument):
     
     cal_dir = os.path.join(get_config()['outputs'], "calibrated_data")
     uncal_file = os.path.join(cal_dir, input_file_name)
-    short_name = input_name.replace("_0thgroup", "").replace("_uncal", "").replace("_dark", "").replace(".fits", "")
+    short_name = input_file_name.replace("_0thgroup", "").replace("_uncal", "").replace("_dark", "").replace(".fits", "")
     ensure_dir_exists(cal_dir)
     copy_files([input_file], cal_dir)
     set_permissions(uncal_file)
