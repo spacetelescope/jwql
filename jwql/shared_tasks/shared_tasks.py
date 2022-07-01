@@ -450,7 +450,7 @@ def run_pipeline(input_file, ext_or_exts, instrument):
             logging.info("\t\tAcquired Lock.")
             logging.info("\t\tCopying {} to {}".format(input_file, send_dir))
             copy_files([input_file], send_dir)
-            result = run_callwebb_detector1.delay(input_name, instrument)
+            result = run_calwebb_detector1.delay(input_name, instrument)
             logging.info("\t\tStarting with ID {}".format(result.id))
             processed_dir = result.get()
             logging.info("\t\tPipeline Complete")
