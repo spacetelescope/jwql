@@ -208,7 +208,7 @@ def run_calwebb_detector1(input_file_name, instrument):
     
     cal_dir = os.path.join(get_config()['outputs'], "calibrated_data")
     uncal_file = os.path.join(cal_dir, input_file_name)
-    short_name = input_file_name.replace("_uncal", "").replace("_0thgroup", "")
+    short_name = input_name.replace("_0thgroup", "").replace("_uncal", "").replace("_dark", "").replace(".fits", "")
     ensure_dir_exists(cal_dir)
     copy_files([input_file], cal_dir)
     set_permissions(uncal_file)
@@ -441,6 +441,7 @@ def run_pipeline(input_file, ext_or_exts, instrument):
     ensure_dir_exists(receive_path)
     
     input_path, input_name = os.path.split(input_file)
+    logging.info("\tPath is {}, file is {}".format(input_path, input_name))
     short_name = input_name.replace("_0thgroup", "").replace("_uncal", "").replace("_dark", "").replace(".fits", "")
     logging.info("\tLocking {}".format(short_name))
     cal_lock = REDIS_CLIENT.lock(short_name)
