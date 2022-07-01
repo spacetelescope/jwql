@@ -459,13 +459,13 @@ def run_pipeline(input_file, ext_or_exts, instrument):
             file_or_files = [short_name+x+".fits" for x in ext_or_exts]
             output_file_or_files = [os.path.join(receive_dir, x) for x in file_or_files]
             logging.info("\t\tCopying {} to {}".format(file_or_files, input_path))
-            copy_files(output_file_or_files, input_dir)
+            copy_files(output_file_or_files, input_path)
             logging.info("\t\tClearing Transfer Files")
             to_clear = glob(os.path.join(send_dir, short_name+"*")) + glob(os.path.join(receive_dir, short_name+"*"))
             for file in to_clear:
                 os.remove(file)
         except Exception as e:
-            logging.error('\tPipeline processing failed for {}'.format(filename))
+            logging.error('\tPipeline processing failed for {}'.format(input_name))
             logging.error('\tProcessing raised {}'.format(e))
         finally:
             cal_lock.release()
