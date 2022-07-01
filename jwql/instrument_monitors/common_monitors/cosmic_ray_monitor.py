@@ -4,8 +4,8 @@
 
 This module contains code for the cosmic ray monitor, which currently
 checks the number and magnitude of jumps in all observations performed
-with MIRI and NIRCam. The code first checks MAST for any new MIRI or
-NIRCam observations that have not yet been run through the monitor. It
+using a subset of apertures for each instrument. The code first checks
+MAST for any new observations that have not yet been run through the monitor. It
 then copies those files to a working directory, where they are run
 through the pipeline, and for which the output is stored in a new
 directory for each observation. Each observation is then analyzed for
@@ -50,6 +50,12 @@ from jwql.database.database_interface import MIRICosmicRayQueryHistory
 from jwql.database.database_interface import MIRICosmicRayStats
 from jwql.database.database_interface import NIRCamCosmicRayQueryHistory
 from jwql.database.database_interface import NIRCamCosmicRayStats
+from jwql.database.database_interface import NIRISSCosmicRayQueryHistory
+from jwql.database.database_interface import NIRISSCosmicRayStats
+from jwql.database.database_interface import NIRSpecCosmicRayQueryHistory
+from jwql.database.database_interface import NIRSpecCosmicRayStats
+from jwql.database.database_interface import FGSCosmicRayQueryHistory
+from jwql.database.database_interface import FGSCosmicRayStats
 from jwql.database.database_interface import session
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
@@ -64,7 +70,7 @@ class CosmicRay:
     """Class for executing the cosmic ray monitor.
 
     This class will search for new (since the previous instance of the
-    class) MIRI and NIRCam data in the file system. It will loop over
+    class) data in the file system. It will loop over
     instrument/aperture combinations and find the number of new files
     available. It will copy the files over to a working directory and
     run the monitor. This will count the number and magnitude of all
@@ -463,6 +469,15 @@ class CosmicRay:
                      'MIRIFU_CHANNEL4B',
                      'MIRIFU_CHANNEL4C']
 
+        if inst.lower() == 'niriss':
+            apers = ['NIS_CEN']
+
+        if inst.lower() == 'nirspec':
+            apers = ['NRS_FULL_MSA']
+
+        if inst.lower() == 'fgs':
+            apers = ['FGS1_FULL', 'FGS2_FULL']
+
         return apers
 
     def process(self, file_list):
@@ -612,70 +627,69 @@ class CosmicRay:
         self.query_end = Time.now().mjd
 
         for instrument in JWST_INSTRUMENT_NAMES:
-            if instrument == 'miri' or instrument == 'nircam':
-                self.instrument = instrument
+            self.instrument = instrument
 
-                # Identify which tables to use
-                self.identify_tables()
+            # Identify which tables to use
+            self.identify_tables()
 
-                # Get a list of possible apertures
-                possible_apertures = self.possible_apers(instrument)
+            # Get a list of possible apertures
+            possible_apertures = self.possible_apers(instrument)
 
-                for aperture in possible_apertures:
+            for aperture in possible_apertures:
 
-                    logging.info('')
-                    logging.info('Working on aperture {} in {}'.format(aperture, instrument))
+                logging.info('')
+                logging.info('Working on aperture {} in {}'.format(aperture, instrument))
 
-                    self.aperture = aperture
+                self.aperture = aperture
 
-                    # We start by querying MAST for new data
-                    self.query_start = self.most_recent_search()
+                # We start by querying MAST for new data
+                self.query_start = self.most_recent_search()
 
-                    logging.info('\tMost recent query: {}'.format(self.query_start))
-                    logging.info(f'\tQuerying MAST from {self.query_start} to {self.query_end}')
-                    new_entries = self.query_mast()
-                    logging.info(f'\tNew MAST query returned dictionary with {len(new_entries["data"])} files.')
-                    new_entries = self.pull_filenames(new_entries)
+                logging.info('\tMost recent query: {}'.format(self.query_start))
+                logging.info(f'\tQuerying MAST from {self.query_start} to {self.query_end}')
+                new_entries = self.query_mast()
+                logging.info(f'\tNew MAST query returned dictionary with {len(new_entries["data"])} files.')
+                new_entries = self.pull_filenames(new_entries)
 
-                    # Filter new entries so we omit stage 3 results and keep only base names
-                    new_entries = self.filter_bases(new_entries)
-                    logging.info(f'\tAfter filtering to keep only uncal files, we are left with {len(new_entries)} files')
+                # Filter new entries so we omit stage 3 results and keep only base names
+                new_entries = self.filter_bases(new_entries)
+                logging.info(f'\tAfter filtering to keep only uncal files, we are left with {len(new_entries)} files')
 
-                    for fname in new_entries:
-                        logging.info(f'{fname}')
+                for fname in new_entries:
+                    logging.info(f'{fname}')
 
-                    new_filenames = []
-                    for file_entry in new_entries:
-                        try:
-                            new_filenames.append(filesystem_path(file_entry))
-                        except FileNotFoundError:
-                            logging.info('\t{} not found in target directory'.format(file_entry))
-                        except ValueError:
-                            logging.info(
-                                '\tProvided file {} does not follow JWST naming conventions.'.format(file_entry))
+                new_filenames = []
+                for file_entry in new_entries:
+                    try:
+                        new_filenames.append(filesystem_path(file_entry))
+                    except FileNotFoundError:
+                        logging.info('\t{} not found in target directory'.format(file_entry))
+                    except ValueError:
+                        logging.info(
+                            '\tProvided file {} does not follow JWST naming conventions.'.format(file_entry))
 
-                    # Next we copy new files to the working directory
-                    output_dir = os.path.join(get_config()['outputs'], 'cosmic_ray_monitor')
+                # Next we copy new files to the working directory
+                output_dir = os.path.join(get_config()['outputs'], 'cosmic_ray_monitor')
 
-                    self.data_dir =  os.path.join(output_dir,'data')
-                    ensure_dir_exists(self.data_dir)
+                self.data_dir =  os.path.join(output_dir,'data')
+                ensure_dir_exists(self.data_dir)
 
-                    cosmic_ray_files, not_copied = copy_files(new_filenames, self.data_dir)
-                    logging.info(f'\tCopied {len(cosmic_ray_files)} to the working directory {self.data_dir}.')
+                cosmic_ray_files, not_copied = copy_files(new_filenames, self.data_dir)
+                logging.info(f'\tCopied {len(cosmic_ray_files)} to the working directory {self.data_dir}.')
 
-                    self.process(cosmic_ray_files)
+                self.process(cosmic_ray_files)
 
-                    monitor_run = True
+                monitor_run = True
 
-                    new_entry = {'instrument': self.instrument,
-                                 'aperture': self.aperture,
-                                 'start_time_mjd': self.query_start,
-                                 'end_time_mjd': self.query_end,
-                                 'files_found': len(new_entries),
-                                 'run_monitor': monitor_run,
-                                 'entry_date': datetime.datetime.now()}
-                    self.query_table.__table__.insert().execute(new_entry)
-                    logging.info('\tUpdated the query history table')
+                new_entry = {'instrument': self.instrument,
+                             'aperture': self.aperture,
+                             'start_time_mjd': self.query_start,
+                             'end_time_mjd': self.query_end,
+                             'files_found': len(new_entries),
+                             'run_monitor': monitor_run,
+                             'entry_date': datetime.datetime.now()}
+                self.query_table.__table__.insert().execute(new_entry)
+                logging.info('\tUpdated the query history table')
 
     def query_mast(self):
         """Use astroquery to search MAST for cosmic ray data

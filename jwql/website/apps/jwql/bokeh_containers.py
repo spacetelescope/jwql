@@ -231,7 +231,7 @@ def cosmic_ray_monitor_tabs(instrument):
             [a5_line, b5_line]
         )
 
-    elif instrument.lower() in ['miri']:
+    elif instrument.lower() in ['miri', 'niriss', 'nirspec']:
         # Histogram tab
         single_aperture = histograms_all_apertures[0]
         histogram_layout = layout(
@@ -243,6 +243,15 @@ def cosmic_ray_monitor_tabs(instrument):
         line_layout = layout(
             [single_aperture_line]
         )
+
+    elif instrument.lower() == 'fgs':
+        # Histogram tab
+        g1, g2 = histograms_all_apertures
+        histogram_layout = layout([g1, g2])
+
+        # CR Rate History tab
+        g1_line, g2_line = history_all_apertures
+        line_layout = layout([g1_line, g2_line])
 
     # Allow figure sizes to scale with window
     histogram_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable

@@ -283,7 +283,8 @@ JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
 MONITORS = {
     'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor'),
             ('Readnoise Monitor', '/fgs/readnoise_monitor'),
-            ('Dark Current Monitor', '/fgs/dark_monitor')],
+            ('Dark Current Monitor', '/fgs/dark_monitor'),
+            ('Cosmic Ray Monitor', '/fgs/cosmic_ray_monitor')],
     'miri': [('Dark Current Monitor', '/miri/dark_monitor'),
              ('Data Trending', '#'),
              ('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
@@ -307,7 +308,8 @@ MONITORS = {
                ('AMI Calibrator Monitor', '#'),
                ('TSO RMS Monitor', '#'),
                ('Bias Monitor', '/niriss/bias_monitor'),
-               ('Dark Current Monitor', '/niriss/dark_monitor')],
+               ('Dark Current Monitor', '/niriss/dark_monitor'),
+               ('Cosmic Ray Monitor', '/niriss/cosmic_ray_monitor')],
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
@@ -319,7 +321,8 @@ MONITORS = {
                 ('Instrument Model Updates', '#'),
                 ('Failed-open Shutter Monitor', '#'),
                 ('Bias Monitor', '/nirspec/bias_monitor'),
-                ('Dark Monitor', '/nirspec/dark_monitor')]}
+                ('Dark Monitor', '/nirspec/dark_monitor'),
+                ('Cosmic Ray Monitor', '/nirspec/cosmic_ray_monitor')]}
 
 # Possible suffix types for coronograph exposures
 NIRCAM_CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']
