@@ -43,7 +43,7 @@ import requests
 
 from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
-from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
+from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemonic_inventory
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
@@ -72,7 +72,6 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     conf = config.get_config('astroquery')
     conf['mast'] = {'server': 'https://{}'.format(mast_flavour)}
 from astroquery.mast import Mast
-from jwedb.edb_interface import mnemonic_inventory
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
