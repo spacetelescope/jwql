@@ -826,6 +826,7 @@ def view_image(request, inst, file_root, rewrite=False):
     # Build the context
     context = {'inst': inst,
                'prop_id': file_root[2:7],
+               'obsnum': file_root[7:10],
                'file_root': file_root,
                'jpg_files': image_info['all_jpegs'],
                'fits_files': image_info['all_files'],
