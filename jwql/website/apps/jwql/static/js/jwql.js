@@ -158,19 +158,8 @@ function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root)
 
     // Update the thumbnail to show the most processed filetype
     var img = document.getElementById('thumbnail'+i);
-    if (suffixes.indexOf("cal") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_cal_integ0.thumb';
-        img.src = jpg_path;
-    } else if (suffixes.indexOf("rate") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_rate_integ0.thumb';
-        img.src = jpg_path;
-    } else if (suffixes.indexOf("uncal") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
-        img.src = jpg_path;
-    } else if (suffixes.indexOf("dark") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_dark_integ0.thumb';
-        img.src = jpg_path;
-    };
+    var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_rate_integ0.thumb';
+    img.src = jpg_path;
 
 };
 
@@ -201,7 +190,7 @@ function determine_page_title(instrument, proposal) {
 };
 
 
-/** 
+/**
  * If an image is not found, replace with temporary image sized to thumbnail
  */
 function imageError(image, makeThumbnail=false) {
