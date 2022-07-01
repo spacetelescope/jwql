@@ -435,10 +435,10 @@ def run_pipeline(input_file, ext_or_exts, instrument):
     """
     logging.info("Pipeline Call for {} requesting {}".format(input_file, ext_or_exts))
     config = get_config()
-    send_dir = os.path.join(config["transfer_dir"], "incoming")
-    ensure_dir_exists(send_dir)
-    receive_dir = os.path.join(config["transfer_dir"], "outgoing")
-    ensure_dir_exists(receive_dir)
+    send_path = os.path.join(config["transfer_dir"], "incoming")
+    ensure_dir_exists(send_path)
+    receive_path = os.path.join(config["transfer_dir"], "outgoing")
+    ensure_dir_exists(receive_path)
     
     input_path, input_name = os.path.split(input_file)
     short_name = input_name.replace("_0thgroup", "").replace("_uncal", "").replace("_dark", "").replace(".fits", "")
@@ -448,20 +448,20 @@ def run_pipeline(input_file, ext_or_exts, instrument):
     if have_lock:
         try:
             logging.info("\t\tAcquired Lock.")
-            logging.info("\t\tCopying {} to {}".format(input_file, send_dir))
-            copy_files([input_file], send_dir)
+            logging.info("\t\tCopying {} to {}".format(input_file, send_path))
+            copy_files([input_file], send_path)
             result = run_calwebb_detector1.delay(input_name, instrument)
             logging.info("\t\tStarting with ID {}".format(result.id))
-            processed_dir = result.get()
+            processed_path = result.get()
             logging.info("\t\tPipeline Complete")
             if isinstance(ext_or_exts, str):
                 ext_or_exts = [ext_or_exts]
             file_or_files = ["{}_{}.fits".format(short_name, x) for x in ext_or_exts]
-            output_file_or_files = [os.path.join(receive_dir, x) for x in file_or_files]
+            output_file_or_files = [os.path.join(input_path, x) for x in file_or_files]
             logging.info("\t\tCopying {} to {}".format(file_or_files, input_path))
-            copy_files(output_file_or_files, input_path)
+            copy_files([os.path.join(receive_path, x) for x in file_or_files], input_path)
             logging.info("\t\tClearing Transfer Files")
-            to_clear = glob(os.path.join(send_dir, short_name+"*")) + glob(os.path.join(receive_dir, short_name+"*"))
+            to_clear = glob(os.path.join(send_path, short_name+"*")) + glob(os.path.join(receive_path, short_name+"*"))
             for file in to_clear:
                 os.remove(file)
         except Exception as e:
