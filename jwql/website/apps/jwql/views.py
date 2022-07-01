@@ -389,7 +389,7 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     proposal_meta = text_scrape(proposal)
-
+<
     # Get a list of all observation numbers for the proposal
     # This will be used to create buttons for observation-specific
     # pages
@@ -402,10 +402,6 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
         except KeyError:
             pass
     obs_list = sorted(list(set(all_obs)))
-
-    print(rootnames)
-    print(obs_list)
-    stop
 
     template = 'thumbnails_per_obs.html'
     context = {'inst': inst,
