@@ -57,7 +57,7 @@ from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCam
 from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats  # noqa: E348 (comparison to true)
 from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats  # noqa: E348 (comparison to true)
 from jwql.database.database_interface import session  # noqa: E348 (comparison to true)
-from jwql.shared_tasks.shared_tasks import run_calwebb_detector1, REDIS_CLIENT  # noqa: E348 (comparison to true)
+from jwql.shared_tasks.shared_tasks import run_pipeline  # noqa: E348 (comparison to true)
 from jwql.instrument_monitors import pipeline_tools  # noqa: E348 (comparison to true)
 from jwql.utils import instrument_properties, monitor_utils  # noqa: E348 (comparison to true)
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E348 (comparison to true)
@@ -410,11 +410,6 @@ class Readnoise():
             List of filenames (including full paths) to the dark current
             files.
         """
-        send_dir = os.path.join(get_config()["transfer_dir"], "incoming")
-        ensure_dir_exists(send_dir)
-        receive_dir = os.path.join(get_config()["transfer_dir"], "outgoing")
-        ensure_dir_exists(receive_dir)
-
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
 
@@ -423,37 +418,7 @@ class Readnoise():
 
             # Run the file through the necessary pipeline steps
             pipeline_steps = self.determine_pipeline_steps()
-
-            uncal_name = os.path.basename(filename)
-            short_name = uncal_name.replace("_uncal.fits", "")
-            processed_name = short_name + "_refpix.fits"
-            logging.info('\tRunning pipeline on {}'.format(filename))
-            logging.info("Locking calibration for {}".format(short_name))
-            cal_lock = REDIS_CLIENT.lock(short_name)
-            have_lock = cal_lock.acquire(blocking=True)
-            if have_lock:
-                logging.info("Lock Acquired")
-                try:
-                    copy_files([filename], send_dir)
-                    result = run_calwebb_detector1.delay(uncal_name, self.instrument)
-                    logging.info('\tStarting with ID {}'.format(result.id))
-                    processed_dir = result.get()
-                    logging.info('\tPipeline complete. Output: {}'.format(processed_name))
-                    output_dir = os.path.join(self.output_dir, 'data')
-                    copy_files([os.path.join(receive_dir, processed_name)], output_dir)
-                    to_clear = glob(os.path.join(receive_dir, short_name+"*"))
-                    for file in to_clear:
-                        os.remove(file)
-                    if os.path.isfile(os.path.join(send_dir, uncal_name)):
-                        os.remove(os.path.join(send_dir, uncal_name))
-                    processed_file = os.path.join(output_dir, processed_name)
-                except Exception as e:
-                    logging.info('\tPipeline processing failed for {}'.format(filename))
-                    logging.info('\tProcessing raised {}'.format(e))
-                    continue
-                finally:
-                    cal_lock.release()
-                    logging.info("Released Lock {}".format(short_name))
+            processed_file = run_pipeline(filename, "refpix", self.instrument)
 
             # Find amplifier boundaries so per-amp statistics can be calculated
             _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)

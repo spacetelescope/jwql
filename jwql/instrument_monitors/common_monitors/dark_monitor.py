@@ -77,7 +77,7 @@ from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDar
 from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
-from jwql.shared_tasks.shared_tasks import run_calwebb_detector1, REDIS_CLIENT
+from jwql.shared_tasks.shared_tasks import run_pipeline
 from jwql.utils import calculations, instrument_properties, monitor_utils
 from jwql.utils.constants import ASIC_TEMPLATES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, \
     RAPID_READPATTERNS
@@ -467,11 +467,6 @@ class Dark():
         if self.read_pattern not in pipeline_tools.GROUPSCALE_READOUT_PATTERNS:
             required_steps['group_scale'] = False
 
-        send_dir = os.path.join(get_config()["transfer_dir"], "incoming")
-        ensure_dir_exists(send_dir)
-        receive_dir = os.path.join(get_config()["transfer_dir"], "outgoing")
-        ensure_dir_exists(receive_dir)
-
         # Run pipeline steps on files, generating slope files
         slope_files = []
         for filename in file_list:
@@ -488,40 +483,10 @@ class Dark():
             if any(steps_to_run.values()) is False:
                 slope_files.append(filename)
             else:
-                file_path = os.path.dirname(filename)
-                uncal_name = os.path.basename(filename)
-                short_name = uncal_name.replace("_uncal.fits", "")
-                processed_name = short_name + "_rate.fits"
-
                 # If the slope file already exists, skip the pipeline call
                 if not os.path.isfile(processed_file):
-                    logging.info('\tRunning pipeline on {}'.format(filename))
-                    logging.info("Locking calibration for {}".format(short_name))
-                    cal_lock = REDIS_CLIENT.lock(short_name)
-                    have_lock = cal_lock.acquire(blocking=True)
-                    if have_lock:
-                        logging.info("Lock Acquired")
-                        copy_files([filename], send_dir)
-                        try:
-                            result = run_calwebb_detector1.delay(uncal_name, self.instrument)
-                            logging.info('\tStarting with ID {}'.format(result.id))
-                            processed_dir = result.get()
-                            logging.info('\tPipeline complete. Output: {}'.format(processed_name))
-                            output_dir = os.path.join(self.output_dir, 'data')
-                            copy_files([os.path.join(receive_dir, processed_name)], output_dir)
-                            to_clear = glob(os.path.join(receive_dir, short_name+"*"))
-                            for file in to_clear:
-                                os.remove(file)
-                            if os.path.isfile(os.path.join(send_dir, uncal_name)):
-                                os.remove(os.path.join(send_dir, uncal_name))
-                            processed_file = os.path.join(output_dir, processed_name)
-                        except Exception as e:
-                            logging.info('\tPipeline processing failed for {}'.format(filename))
-                            logging.info('\tProcessing raised {}'.format(e))
-                            continue
-                        finally:
-                            cal_lock.release()
-                            logging.info("Released Lock {}".format(short_name))
+                    # Run the file through the necessary pipeline steps
+                    processed_file = run_pipeline(filename, "rate", self.instrument)
                 else:
                     msg = '\tSlope file {} already exists. Skipping call to pipeline.'
                     logging.info(msg.format(processed_file))
