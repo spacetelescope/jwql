@@ -2009,8 +2009,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     monitor = EdbMnemonicMonitor()
-    plot_start_dt = datetime.strptime(args.plot_start, '%Y-%m-%d')
-    plot_end_dt = datetime.strptime(args.plot_end, '%Y-%m-%d')
+    plot_start_dt = datetime.datetime.strptime(args.plot_start, '%Y-%m-%d')
+    plot_end_dt = datetime.datetime.strptime(args.plot_end, '%Y-%m-%d')
     monitor.execute(args.mnem_to_query, plot_start_dt, plot_end_dt)
 
     monitor_utils.update_monitor_table(module, start_time, log_file)
