@@ -236,6 +236,7 @@ Use
         python edb_telemetry_monitor.py
 
 """
+import argparse
 from collections import defaultdict
 from copy import deepcopy
 import datetime
@@ -496,7 +497,6 @@ class EdbMnemonicMonitor():
         Parameters
         ----------
         mnem_to_query : dict
-            NOT YET IMPLEMENTED
             Mnemonic names to query. This should be a dictionary with the instrument
             names as keys and a list of mnemonic names as the value. This option is
             intended for use when someone requests, from the website, an expanded timeframe
@@ -504,15 +504,13 @@ class EdbMnemonicMonitor():
             of each mnemonic (i.e. dependencies, averaging) from the standard
             json file, and will run the query using query_start and query_end.
 
-        plot_start : astropy.time.Time
-            NOT YET IMPLEMENTED
+        plot_start : datetime.datetime
             Start time to use for the query when requested from the website. Note
             that the query will be broken up into multiple queries, each spanning
             the default amount of time, in order to prevent querying for too much
             data at one time.
 
-        plot_end : astropy.time.Time
-            NOT YET IMPLEMENTED
+        plot_end : datetime.datetime
             End time to use for the query when requested from the website.
         """
         # This is a dictionary that will hold the query results for multiple mnemonics,
@@ -1685,6 +1683,16 @@ def calculate_statistics(mnemonic_instance, telemetry_type):
     return mnemonic_instance
 
 
+def define_options(parser=None, usage=None, conflict_handler='resolve'):
+    if parser is None:
+        parser = argparse.ArgumentParser(usage=usage, conflict_handler=conflict_handler)
+
+    parser.add_argument('mnem_to_query', type=str, default=None, help='Mnemonic to query for')
+    parser.add_argument('plot_start', type=str, default=None, help='Start time for EDB monitor query. Expected format: "2022-10-31"')
+    parser.add_argument('plot_end', type=str, default=None, help='End time for EDB monitor query. Expected format: "2022-10-31"')
+    return(parser)
+
+
 def empty_edb_instance(name, beginning, ending, meta={}, info={}):
     """Create an EdbMnemonic instance with an empty data table
 
@@ -1985,7 +1993,7 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
         set_permissions(filename)
 
     if show_plot:
-        show(fig)
+        show(fig)<
     if return_components:
         script, div = components(fig)
         return [div, script]
@@ -1997,7 +2005,12 @@ if __name__ == '__main__':
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
+    parser = define_options()
+    args = parser.parse_args()
+
     monitor = EdbMnemonicMonitor()
-    monitor.execute()
+    plot_start_dt = datetime.strptime(args.plot_start, '%Y-%m-%d')
+    plot_end_dt = datetime.strptime(args.plot_end, '%Y-%m-%d')
+    monitor.execute(args.mnem_to_query, plot_start_dt, plot_end_dt)
 
     monitor_utils.update_monitor_table(module, start_time, log_file)
