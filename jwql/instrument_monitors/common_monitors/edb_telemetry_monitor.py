@@ -1993,7 +1993,7 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
         set_permissions(filename)
 
     if show_plot:
-        show(fig)<
+        show(fig)
     if return_components:
         script, div = components(fig)
         return [div, script]
