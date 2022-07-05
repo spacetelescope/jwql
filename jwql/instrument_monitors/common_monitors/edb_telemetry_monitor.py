@@ -819,8 +819,8 @@ class EdbMnemonicMonitor():
                 query_ending_times = np.array(query_ending_times)
                 query_starting_times = np.array(query_starting_times)
                 valid_ending_times = query_ending_times <= self._today
-                query_starting_times = query_starting_times[valid_end_times]
-                query_ending_times = query_ending_times[valid_end_times]
+                query_starting_times = query_starting_times[valid_ending_times]
+                query_ending_times = query_ending_times[valid_ending_times]
         return query_starting_times, query_ending_times
 
     def get_dependency_data(self, dependency, starttime, endtime):
@@ -1297,7 +1297,7 @@ class EdbMnemonicMonitor():
         self.figures = {}
         self.instrument = instrument
 
-        self._today = datetime.datetime(2022, 4, 20, 0, 0, 0)
+        self._today = datetime.datetime(2022, 6, 20, 0, 0, 0)
         #self._today = datetime.datetime(2021, 9, 4, 9, 0, 0)
         #self._today = datetime.now()
 
