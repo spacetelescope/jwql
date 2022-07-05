@@ -1687,9 +1687,9 @@ def define_options(parser=None, usage=None, conflict_handler='resolve'):
     if parser is None:
         parser = argparse.ArgumentParser(usage=usage, conflict_handler=conflict_handler)
 
-    parser.add_argument('mnem_to_query', type=str, default=None, help='Mnemonic to query for')
-    parser.add_argument('plot_start', type=str, default=None, help='Start time for EDB monitor query. Expected format: "2022-10-31"')
-    parser.add_argument('plot_end', type=str, default=None, help='End time for EDB monitor query. Expected format: "2022-10-31"')
+    parser.add_argument('--mnem_to_query', type=str, default=None, help='Mnemonic to query for')
+    parser.add_argument('--plot_start', type=str, default=None, help='Start time for EDB monitor query. Expected format: "2022-10-31"')
+    parser.add_argument('--plot_end', type=str, default=None, help='End time for EDB monitor query. Expected format: "2022-10-31"')
     return(parser)
 
 
@@ -2008,9 +2008,14 @@ if __name__ == '__main__':
     parser = define_options()
     args = parser.parse_args()
 
+    plot_start_dt = None
+    plot_end_dt = None
+    if args.plot_start is not None:
+        plot_start_dt = datetime.datetime.strptime(args.plot_start, '%Y-%m-%d')
+    if args.plot_end is not None:
+        plot_end_dt = datetime.datetime.strptime(args.plot_end, '%Y-%m-%d')
+
     monitor = EdbMnemonicMonitor()
-    plot_start_dt = datetime.datetime.strptime(args.plot_start, '%Y-%m-%d')
-    plot_end_dt = datetime.datetime.strptime(args.plot_end, '%Y-%m-%d')
     monitor.execute(args.mnem_to_query, plot_start_dt, plot_end_dt)
 
     monitor_utils.update_monitor_table(module, start_time, log_file)
