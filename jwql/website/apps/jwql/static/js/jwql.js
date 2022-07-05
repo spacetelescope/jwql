@@ -12,7 +12,7 @@
  * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
  *                          values are the number of integrations for that suffix
  * @param {Dict} available_ints - A dictionary whose keys are suffix types and whose
- *                                values are the integration numbers of the available 
+ *                                values are the integration numbers of the available
  *                                jpgs for that suffix
  * @param {String} inst - The instrument for the given file
  */
@@ -76,7 +76,7 @@ function change_filetype(type, file_root, num_ints, available_ints, inst) {
  * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
  *                          values are the number of integrations for that suffix
  * @param {Dict} available_ints - A dictionary whose keys are suffix types and whose
- *                                values are the integration numbers of the available 
+ *                                values are the integration numbers of the available
  *                                jpgs for that suffix
  * @param {String} method - How the integration change was initialized, either "button" or "slider"
  * @param {String} direction - The direction to switch to, either "left" (decrease) or "right" (increase).
@@ -199,6 +199,20 @@ function determine_page_title(instrument, proposal) {
         };
     };
 };
+
+
+/** 
+ * If an image is not found, replace with temporary image sized to thumbnail
+ */
+function imageError(image, makeThumbnail=false) {
+    image.onerror = "";
+    image.src = "/static/img/imagenotfound.png";
+    /* Use thumbnail settings to keep it tidy */
+    if (makeThumbnail) {
+        image.className = "thumbnail";
+    }
+    return true;
+}
 
 
 /**
@@ -503,7 +517,7 @@ function update_thumbnail_array(data) {
             content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
             content += '<a href="/' + filename_dict.instrument + '/' + rootname + '/">';
         }
-        content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="this.src=/static/img/imagenotfound.png">';
+        content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="imageError(this);">';
         content += '<div class="thumbnail-color-fill" ></div>';
         content += '<div class="thumbnail-info">';
         content += 'Proposal: ' + filename_dict.program_id + '<br>';
@@ -573,3 +587,5 @@ function version_url(version_string) {
     a_line += '">JWQL v' + version_string + '</a>';
     return a_line;
 };
+
+

@@ -172,6 +172,25 @@ EXPTYPES = {"nircam": {"imaging": "NRC_IMAGE", "ts_imaging": "NRC_TSIMAGE",
                        "pom": "NIS_IMAGE", "wfss": "NIS_WFSS"},
             "fgs": {"imaging": "FGS_IMAGE"}}
 
+# Filename Component Lengths
+FILE_AC_CAR_ID_LEN = 4
+FILE_AC_O_ID_LEN = 3
+FILE_ACT_LEN = 2
+FILE_DATETIME_LEN = 13
+FILE_EPOCH_LEN = 1
+FILE_GUIDESTAR_ATTMPT_LEN = 1
+FILE_OBS_LEN = 3
+FILE_PARALLEL_SEQ_ID_LEN = 1
+FILE_PROG_ID_LEN = 5
+FILE_SEG_LEN = 3
+FILE_SOURCE_ID_LEN = 5
+FILE_TARG_ID_LEN = 3
+FILE_VISIT_GRP_LEN = 2
+FILE_VISIT_LEN = 3
+
+# MSA metadata file do not have a standard suffix attached
+FILETYPE_WO_STANDARD_SUFFIX = 'msa.fits'
+
 FLAT_EXP_TYPES = {'nircam': ['NRC_FLAT'],
                   'niriss': ['NIS_LAMP'],
                   'miri': ['MIR_FLATIMAGE', 'MIR_FLATMRS'],

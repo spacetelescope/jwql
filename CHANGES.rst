@@ -1,3 +1,12 @@
+Unreleased
+==========
+
+Web Application
+~~~~~~~~~~~~~~~
+
+- Dark and Bad Pixel Monitors delete unnecessary outputs to save disk space (#933)
+
+
 1.1.1 (2022-04-05)
 ==================
 
