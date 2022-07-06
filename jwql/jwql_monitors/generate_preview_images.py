@@ -722,7 +722,7 @@ def process_program(program):
 
             # Only create a thumbnail for rate files. Create preview images
             # for all filetypes
-            if 'rate.fits' in filename:
+            if 'rate.fits' in filename or 'dark.fits' in filename:
                 im.make_image(max_img_size=8, create_thumbnail=True)
                 thumbnail_files.extend(im.thumbnail_images)
                 logging.info('\tCreated preview image and thumbnail for: {}'.format(filename))
