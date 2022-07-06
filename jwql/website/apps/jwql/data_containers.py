@@ -361,9 +361,9 @@ def get_edb_components(request):
                         # save file locally to be available for download
                         static_dir = os.path.join(settings.BASE_DIR, 'static')
                         ensure_dir_exists(static_dir)
-                        file_name_root = f'{mnemonic_identifier}_{start_time.isot}_{end_time.isot}'
+                        file_name_root = f"{mnemonic_identifier}_{start_time.iso.split(' ')[0]}_{end_time.iso.split(' ')[0]}"
                         file_for_download = '{}.csv'.format(file_name_root)
-                        path_for_download = os.path.join(static_dir, file_for_download)
+                        path_to_save = os.path.join(static_dir, file_for_download)
 
                         # add meta data to saved table
                         comments = []
@@ -376,9 +376,9 @@ def get_edb_components(request):
                         comments.append('End time   {}'.format(end_time.isot))
                         comments.append('Number of rows {}'.format(len(result_table)))
                         comments.append(' ')
-                        result_table.write(path_for_download, format='ascii.fixed_width',
+                        result_table.write(path_to_save, format='ascii.fixed_width',
                                            overwrite=True, delimiter=',', bookend=False)
-                        mnemonic_query_result.file_for_download = path_for_download
+                        mnemonic_query_result.file_for_download = file_for_download
 
             # create forms for search fields not clicked
             mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')

@@ -114,6 +114,7 @@
                             <b>
                             Query returned {{ edb_components['mnemonic_query_result'].data|length }} records:
                             <a id="download_exploration_result" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}{{ edb_components["mnemonic_query_result"].file_for_download }}' download>Download data</a>
+                            <!--<a id="download_exploration_result" class="btn btn-primary my-2 mx-2" role="button" href='{{ edb_components["mnemonic_query_result"].file_for_download }}' download>Download data</a> -->
                             </b></div>
                             {% if edb_components['mnemonic_table_result'] %}
                             {% autoescape off %}
