@@ -361,7 +361,7 @@ def get_edb_components(request):
                         # save file locally to be available for download
                         static_dir = os.path.join(settings.BASE_DIR, 'static')
                         ensure_dir_exists(static_dir)
-                        file_name_root = 'mnemonic_query_result_table'
+                        file_name_root = f'{mnemonic_identifier}_{start_time.isot}_{end_time.isot}'
                         file_for_download = '{}.csv'.format(file_name_root)
                         path_for_download = os.path.join(static_dir, file_for_download)
 
