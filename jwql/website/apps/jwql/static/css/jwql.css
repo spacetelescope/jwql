@@ -275,7 +275,7 @@ display : inline;
   display: inline-block;
 }
 
-.instrument_select {m;
+.instrument_select {
   padding-top: 1rem;
   padding-bottom: 2rem;
   margin-right: 5rem;
