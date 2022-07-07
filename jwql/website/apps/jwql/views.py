@@ -317,7 +317,6 @@ def archived_proposals_ajax(request, inst):
             all_proposal_info['proposals'].append(proposal)
             all_proposal_info['thumbnail_paths'].append(proposal_info['thumbnail_paths'][0])
             all_proposal_info['num_files'].append(num_files)
-            # all_proposal_info['num_files'].append(proposal_info['num_files'][0])
 
     context = {'inst': inst,
                'num_proposals': all_proposal_info['num_proposals'],
