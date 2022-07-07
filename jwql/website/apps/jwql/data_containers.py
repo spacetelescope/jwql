@@ -496,7 +496,7 @@ def get_expstart(instrument, rootname):
     return expstart
 
 
-def get_filenames_by_instrument(instrument, proposal, restriction='all', query_file=None, query_response=None, other_columns=None):
+def get_filenames_by_instrument(instrument, proposal, observation_id=None, restriction='all', query_file=None, query_response=None, other_columns=None):
     """Returns a list of filenames that match the given ``instrument``.
 
     Parameters
@@ -505,6 +505,8 @@ def get_filenames_by_instrument(instrument, proposal, restriction='all', query_f
         The instrument of interest (e.g. `FGS`).
     proposal : str
         Proposal number to filter the results
+    observation_id : str
+        Observation number to filter the results
     restriction : str
         If ``all``, all filenames will be returned.  If ``public``,
         only publicly-available filenames will be returned.  If
@@ -530,7 +532,7 @@ def get_filenames_by_instrument(instrument, proposal, restriction='all', query_f
         e.g. 'exptime', and values are lists of the value for each filename. e.g. ['59867.6, 59867.601']
     """
     if not query_file and not query_response:
-        result = mast_query_filenames_by_instrument(instrument, proposal, other_columns=other_columns)
+        result = mast_query_filenames_by_instrument(instrument, proposal, observation_id=observation_id, other_columns=other_columns)
 
     elif query_response:
         result = query_response
@@ -568,7 +570,7 @@ def get_filenames_by_instrument(instrument, proposal, restriction='all', query_f
     return filenames
 
 
-def mast_query_filenames_by_instrument(instrument, proposal_id, other_columns=None):
+def mast_query_filenames_by_instrument(instrument, proposal_id, observation_id=None, other_columns=None):
     """Query MAST for filenames for the given instrument. Return the json
     response from MAST.
 
@@ -578,6 +580,9 @@ def mast_query_filenames_by_instrument(instrument, proposal_id, other_columns=No
         The instrument of interest (e.g. `FGS`).
     proposal_id : str
         Proposal ID number to use to filter the results
+    observation_id : str
+        Observation ID number to use to filter the results. If None, all files for the ``proposal_id`` are
+        retreived
     other_columns : list
         List of other columns to return from the MAST query
 
@@ -592,7 +597,10 @@ def mast_query_filenames_by_instrument(instrument, proposal_id, other_columns=No
         columns = "filename, isRestricted, " + ", ".join(other_columns)
 
     service = INSTRUMENT_SERVICE_MATCH[instrument]
-    params = {"columns": columns, "filters": [{'paramName': 'program', "values": [proposal_id]}]}
+    filters = [{'paramName': 'program', "values": [proposal_id]}]
+    if observation_id is not None:
+        filters.append({'paramName': 'observtn', 'values': [observation_id]})
+    params = {"columns": columns, "filters": filters}
     response = Mast.service_request_async(service, params)
     result = response[0].json()
     return result
@@ -917,12 +925,24 @@ def get_proposal_info(filepaths):
     num_files = []
 
     # Gather thumbnails and counts for proposals
-    proposals, thumbnail_paths, num_files = [], [], []
+    proposals, thumbnail_paths, num_files, observations = [], [], [], []
     for filepath in filepaths:
         proposal = filepath.split('/')[-1][2:7]
         if proposal not in proposals:
             thumbnail_paths.append(os.path.join('jw{}'.format(proposal), 'jw{}.thumb'.format(proposal)))
             files_for_proposal = [item for item in filepaths if 'jw{}'.format(proposal) in item]
+
+            obsnums = []
+            for fname in files_for_proposal:
+                try:
+                    obs = filename_parser(fname)['observation']
+                    obsnums.append(obs)
+                except KeyError:
+                    pass
+            obsnums = sorted(obsnums)
+
+            #obsnums = sorted([filename_parser(fname)['observation'] for fname in files_for_proposal])
+            observations.extend(obsnums)
             num_files.append(len(files_for_proposal))
             proposals.append(proposal)
 
@@ -932,8 +952,54 @@ def get_proposal_info(filepaths):
     proposal_info['proposals'] = proposals
     proposal_info['thumbnail_paths'] = thumbnail_paths
     proposal_info['num_files'] = num_files
+    proposal_info['observation_nums'] = observations
 
     return proposal_info
+
+
+def get_rootnames_for_instrument_proposal(instrument, proposal):
+    """Return a list of rootnames for the given instrument and proposal
+
+    Parameters
+    ----------
+    instrument : str
+        Name of the JWST instrument, with first letter capitalized
+        (e.g. ``Fgs``)
+
+    proposal : int or str
+        Proposal ID number
+
+    Returns
+    -------
+    rootnames : list
+        List of rootnames for the given instrument and proposal number
+    """
+    tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
+    #tap_results = tap_service.search(f"select obs_id from dbo.ObsPointing where obs_collection='JWST' and calib_level>0 and instrument_name like '{instrument.lower()}' and proposal_id={proposal}")
+    tap_results = tap_service.search(f"select observationID from dbo.CaomObservation where collection='JWST' and maxLevel=2 and insName like '{instrument.lower()}' and prpID='{int(proposal)}'")
+    prop_table = tap_results.to_table()
+    rootnames = prop_table['observationID'].data
+    return rootnames.compressed()
+
+
+def get_rootnames_for_proposal(proposal):
+    """Return a list of rootnames for the given proposal (all instruments)
+
+    Parameters
+    ----------
+    proposal : int or str
+        Proposal ID number
+
+    Returns
+    -------
+    rootnames : list
+        List of rootnames for the given instrument and proposal number
+    """
+    tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
+    tap_results = tap_service.search(f"select observationID from dbo.CaomObservation where collection='JWST' and maxLevel=2 and prpID='{int(proposal)}'")
+    prop_table = tap_results.to_table()
+    rootnames = prop_table['observationID'].data
+    return rootnames.compressed()
 
 
 def get_thumbnails_all_instruments(parameters):
@@ -1149,6 +1215,27 @@ def log_into_mast(request):
         return False
 
 
+def proposal_rootnames_by_instrument(proposal):
+    """Retrieve the rootnames for a given proposal for all instruments and return
+    as a dictionary with instrument names as keys. Instruments not used in the proposal
+    will not be present in the dictionary.
+
+    proposal : int or str
+        Proposal ID number
+
+    Returns
+    -------
+    rootnames : dict
+        Dictionary of rootnames with instrument names as keys
+    """
+    rootnames = {}
+    for instrument in JWST_INSTRUMENT_NAMES:
+        names = get_rootnames_for_instrument_proposal(instrument, proposal)
+        if len(names) > 0:
+            rootnames[instrument] = names
+    return rootnames
+
+
 def random_404_page():
     """Randomly select one of the various 404 templates for JWQL
 
@@ -1257,7 +1344,7 @@ def text_scrape(prop_id):
     return program_meta
 
 
-def thumbnails_ajax(inst, proposal):
+def thumbnails_ajax(inst, proposal, obs_num=None):
     """Generate a page that provides data necessary to render the
     ``thumbnails`` template.
 
@@ -1267,6 +1354,8 @@ def thumbnails_ajax(inst, proposal):
         Name of JWST instrument
     proposal : str (optional)
         Number of APT proposal to filter
+    obs_num : str (optional)
+        Observation number
 
     Returns
     -------
@@ -1274,8 +1363,28 @@ def thumbnails_ajax(inst, proposal):
         Dictionary of data needed for the ``thumbnails`` template
     """
 
+
+    #generate the list of all obs of the proposal here, so that the list can be
+    #properly packaged up and sent to the js scripts. but to do this, we need to call
+    #get_rootnames_for_instrument_proposal, which is largely repeating the work done by
+    #get_filenames_by_instrument above. can we use just get_rootnames? we would have to
+    #filter results by obs_num after the call and after obs_list is created.
+    #But we need the filename list below...hmmm...so maybe we need to do both
+    all_rootnames = get_rootnames_for_instrument_proposal(inst, proposal)
+    all_obs = []
+    for root in all_rootnames:
+        # Wrap in try/except because level 3 rootnames won't have an observation
+        # number returned by the filename_parser. That's fine, we're not interested
+        # in those files anyway.
+        try:
+            all_obs.append(filename_parser(root)['observation'])
+        except KeyError:
+            pass
+    obs_list = sorted(list(set(all_obs)))
+
+
     # Get the available files for the instrument
-    filenames, columns = get_filenames_by_instrument(inst, proposal, other_columns=['expstart'])
+    filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart'])
 
     # Get set of unique rootnames
     rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
@@ -1285,7 +1394,8 @@ def thumbnails_ajax(inst, proposal):
     data_dict['inst'] = inst
     data_dict['file_data'] = {}
 
-    # Gather data for each rootname
+    # Gather data for each rootname, and construct a list of all observations
+    # in the proposal
     for rootname in rootnames:
 
         # Parse filename
@@ -1352,6 +1462,9 @@ def thumbnails_ajax(inst, proposal):
                                    key=lambda x: getitem(x[1], 'expstart'), reverse=True))
 
     data_dict['file_data'] = sorted_file_data
+
+    # Add list of observation numbers
+    data_dict['obs_list'] = obs_list
 
     return data_dict
 
