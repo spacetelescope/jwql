@@ -14,7 +14,7 @@
 
     	<!-- Specify the attributes of what is currently being shown -->
     	<div class="d-flex flex-row">
-    		<div class="APT_parameters">Proposal: <a id="proposal" href="{{ url('jwql:archive_thumb', args=[inst, prop_id]) }}"></a></div>
+    		<div class="APT_parameters">Proposal: <a id="proposal" href="{{ url('jwql:archive_thumb_per_obs', args=[inst, prop_id, obsnum]) }}"></a></div>
     		<div class="APT_parameters">Observation: <a id="obs_id"></a></div>
     		<div class="APT_parameters">Visit: <a id="visit_id"></a></div>
     		<div class="APT_parameters">Detector: <a id="detector"></a></div>

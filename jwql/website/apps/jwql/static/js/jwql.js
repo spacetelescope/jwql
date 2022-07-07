@@ -203,6 +203,35 @@ function determine_page_title(instrument, proposal) {
     };
 };
 
+/**
+ * Determine whether the page is archive or unlooked
+ * @param {String} instrument - The instrument of interest
+ * @param {Integer} proposal - The proposal of interest
+ * @param {Integer} observation - The observation number of interest
+ */
+function determine_page_title_obs(instrument, proposal, observation) {
+    // Determine if the URL is 'archive' or 'unlooked'
+    var url = document.URL;
+    var url_split = url.split('/');
+    var url_title = url_split[url_split.length - 3];
+    var url_end = url_split[url_split.length - 1];
+    if (url_title == 'archive') {
+        final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal + ', Observation ' + observation
+    } else if (url_title == 'unlooked') {
+        final_title = 'Unlooked ' + instrument + ' Images';
+    } else if (isNaN(url_title) == false) {
+        final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal + ', Observation ' + observation
+    }
+
+    // Update the titles accordingly
+    if (typeof final_title !== 'undefined') {
+        document.getElementById('title').innerHTML = final_title;
+        if (document.title != final_title) {
+            document.title = final_title;
+        };
+    };
+};
+
 
 /**
  * get_radio_button_value
@@ -400,12 +429,13 @@ function update_archive_page(inst, base_url) {
 
                 // Parse out useful variables
                 prop = data.thumbnails.proposals[i];
+                min_obsnum = data.min_obsnum[i];
                 thumb = data.thumbnails.thumbnail_paths[i];
                 n = data.thumbnails.num_files[i];
 
                 // Build div content
                 content = '<div class="proposal text-center">';
-                content += '<a href="/' + inst + '/archive/' + prop + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
+                content += '<a href="/' + inst + '/archive/' + prop + '/obs' + min_obsnum + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
                 content += '<span class="helper"></span>'
                 content += '<img src="/static/thumbnails/' + thumb + '" alt="" title="Thumbnail for ' + prop + '" width=100%>';
                 content += '<div class="proposal-color-fill" ></div>';
@@ -535,6 +565,28 @@ function update_header_display(extension, num_extensions) {
 };
 
 /**
+ * Updates the obs-list div with observation number options
+ * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ * @param {String} inst - Instrument name
+ * @param {String} prop - Proposal ID
+ * @param {List} obslist - List of observation number strings
+ */
+function update_obs_options(data, inst, prop, obslist) {
+    // Build div content
+    content = 'Available observations:';
+    content += '<div class="dropdown">';
+    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="obs_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Obs Nums</button>';
+    content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
+    for (var i = 0; i < data.obs_list.length; i++) {
+        content += '<a class="dropdown-item" href="/' + inst + '/archive/' + prop + '/obs' + data.obs_list[i] + '/" > Obs' + data.obs_list[i] + '</a>';
+    }
+    content += '</div></div>';
+
+    // Add the content to the div
+    $("#obs-list")[0].innerHTML = content;
+};
+
+/**
  * Updates the img_show_count component
  * @param {Integer} count - The count to display
  * @param {String} type - The type of the count (e.g. "activities")
@@ -619,6 +671,31 @@ function update_thumbnails_page(inst, proposal, base_url) {
             // Perform various updates to divs
             update_show_count(Object.keys(data.file_data).length, 'activities');
             update_thumbnail_array(data);
+            update_filter_options(data);
+            update_sort_options(data);
+
+            // Replace loading screen with the proposal array div
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("thumbnail-array").style.display = "block";
+        }});
+};
+
+/**
+ * Updates various compnents on the thumbnails page
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} proposal - The proposal number of interest (e.g. "88660")
+ * @param {String} observation - The observation number within the proposal (e.g. "001")
+ * @param {List} observation_list - List of all observations in this proposal
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function update_thumbnails_per_observation_page(inst, proposal, observation, observation_list, base_url) {
+    $.ajax({
+        url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/obs' + observation + '/',
+        success: function(data){
+            // Perform various updates to divs
+            update_show_count(Object.keys(data.file_data).length, 'activities');
+            update_thumbnail_array(data);
+            update_obs_options(data, inst, proposal);
             update_filter_options(data);
             update_sort_options(data);
 
