@@ -418,7 +418,7 @@ class Readnoise():
 
             # Run the file through the necessary pipeline steps
             pipeline_steps = self.determine_pipeline_steps()
-            processed_file = run_pipeline(filename, "refpix", self.instrument)
+            processed_file = run_pipeline(filename, "uncal", "refpix", self.instrument)
 
             # Find amplifier boundaries so per-amp statistics can be calculated
             _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)

@@ -401,7 +401,7 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
     return jump_output, pipe_output, fitopt_output
 
 
-def run_pipeline(input_file, ext_or_exts, instrument):
+def run_pipeline(input_file, in_ext, ext_or_exts, instrument):
     """Convenience function for using the ``run_calwebb_detector1`` function on a data 
     file, including the following steps:
     
@@ -442,7 +442,16 @@ def run_pipeline(input_file, ext_or_exts, instrument):
     
     input_path, input_name = os.path.split(input_file)
     logging.info("\tPath is {}, file is {}".format(input_path, input_name))
-    short_name = input_name.replace("_0thgroup", "").replace("_uncal", "").replace("_dark", "").replace(".fits", "")
+
+    if "uncal" not in in_ext:
+        logging.info("\tSwitching from {} to uncal".format(in_ext))
+        uncal_name = os.path.basename(input_file).replace(in_ext, "uncal")
+        uncal_file = filesystem_path(uncal_name, check_existence=True)
+    else:
+        uncal_file = input_file
+        uncal_name = input_name
+    
+    short_name = input_name.replace("_"+in_ext, "").replace(".fits", "")
     logging.info("\tLocking {}".format(short_name))
     cal_lock = REDIS_CLIENT.lock(short_name)
     have_lock = cal_lock.acquire(blocking=True)
@@ -450,8 +459,8 @@ def run_pipeline(input_file, ext_or_exts, instrument):
         try:
             logging.info("\t\tAcquired Lock.")
             logging.info("\t\tCopying {} to {}".format(input_file, send_path))
-            copy_files([input_file], send_path)
-            result = run_calwebb_detector1.delay(input_name, instrument)
+            copy_files([uncal_file], send_path)
+            result = run_calwebb_detector1.delay(uncal_name, instrument)
             logging.info("\t\tStarting with ID {}".format(result.id))
             processed_path = result.get()
             logging.info("\t\tPipeline Complete")

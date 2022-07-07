@@ -377,7 +377,7 @@ class Bias():
             self.expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'], fits.getheader(filename, 0)['TIME-OBS'])
             
             # Run the file through the necessary pipeline steps
-            processed_file = run_pipeline(filename, "refpix", self.instrument)
+            processed_file = run_pipeline(filename, "uncal_0thgroup", "refpix", self.instrument)
 
             # Find amplifier boundaries so per-amp statistics can be calculated
             _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)

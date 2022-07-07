@@ -487,7 +487,7 @@ class Dark():
                 # If the slope file already exists, skip the pipeline call
                 if not os.path.isfile(processed_file):
                     # Run the file through the necessary pipeline steps
-                    processed_file = run_pipeline(filename, "rate", self.instrument)
+                    processed_file = run_pipeline(filename, "dark", "rate", self.instrument)
                 else:
                     msg = '\tSlope file {} already exists. Skipping call to pipeline.'
                     logging.info(msg.format(processed_file))
