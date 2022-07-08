@@ -537,18 +537,24 @@ def generate_preview_images():
     program_list = [os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'public', 'jw*'))]
     program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', 'jw*'))])
     program_list = list(set(program_list))
-    pool = multiprocessing.Pool(processes=int(SETTINGS['cores']))
-    results = pool.map(process_program, program_list)
-    pool.close()
-    pool.join()
+    #pool = multiprocessing.Pool(processes=int(SETTINGS['cores']))
+    #results = pool.map(process_program, program_list)
+    #pool.close()
+    #pool.join()
 
     # Filter the nested list in results into separate lists of preview
     # images and thumbnail images
     full_preview_files = []
     full_thumbnail_files = []
-    for r in results:
-        full_preview_files.extend(r[0])
-        full_thumbnail_files.extend(r[1])
+    #for r in results:
+    #    full_preview_files.extend(r[0])
+    #    full_thumbnail_files.extend(r[1])
+
+    # Try turning off the parallel processing to see if the issue of bad thumbnail images goes away
+    for program in program_list:
+        prev_files, thumb_files = process_program(program)
+        full_preview_files.extend(prev_files)
+        full_thumbnail_files.extend(thumb_files)
 
     # Filter the preview and thumbnail images by instrument and update the listfiles.
     # We do this by looking for instrument abbreviations in the filenames. But will
