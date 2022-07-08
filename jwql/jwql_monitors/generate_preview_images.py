@@ -692,6 +692,8 @@ def process_program(program):
     preview_image_files = []
     for filename in filenames:
 
+        logging.info(f'Working on {filename}')
+
         # Determine the save location
         try:
             identifier = 'jw{}'.format(filename_parser(filename)['program_id'])
