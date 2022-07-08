@@ -438,7 +438,7 @@ class PreviewImage():
                                  maxsize=max_img_size, thumbnail=True)
                 self.save_image(outfile, thumbnail=True)
                 plt.close()
-                self.thumbnail_images.append(outfile)
+                self.thumbnail_images.append(self.thumbnail_filename)
 
     def save_image(self, fname, thumbnail=False):
         """
@@ -463,8 +463,9 @@ class PreviewImage():
 
         # If the image is a thumbnail, rename to '.thumb'
         if thumbnail:
-            thumb_fname = fname.replace('.jpg', '.thumb')
+            self.thumbnail_filename = fname.replace('.jpg', '.thumb')
             os.rename(fname, thumb_fname)
-            logging.info('\tSaved image to {}'.format(thumb_fname))
+            logging.info('\tSaved image to {}'.format(thumbnail_filename))
         else:
             logging.info('\tSaved image to {}'.format(fname))
+            self.thumbnail_filename = None
