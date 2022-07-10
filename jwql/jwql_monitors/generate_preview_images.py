@@ -37,7 +37,8 @@ import numpy as np
 from jwql.utils import permissions
 from jwql.utils.constants import IGNORED_SUFFIXES, JWST_INSTRUMENT_NAMES_SHORTHAND, NIRCAM_LONGWAVE_DETECTORS, \
     NIRCAM_SHORTWAVE_DETECTORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
-from jwql.utils.logging_functions import configure_logging, log_info, log_fail
+from jwql.utils.logging_functions import log_info, log_fail
+from jwql.utils.protect_module import lock_module
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.utils import get_config, filename_parser
 from jwql.utils.monitor_utils import update_monitor_table, initialize_instrument_monitor
@@ -758,10 +759,15 @@ def update_listfile(filename, file_list, filetype):
         logging.info(f"{filetype} image listfile {filename} updated with new entries.")
 
 
-if __name__ == '__main__':
-
+@lock_module
+def protected_code():
+    """Protected code ensures only 1 instance of module will run at any given time"""
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = initialize_instrument_monitor(module)
 
     generate_preview_images()
     update_monitor_table(module, start_time, log_file)
+
+
+if __name__ == '__main__':
+    protected_code()

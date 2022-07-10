@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>Explore {{ inst }} Image - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+    	<!-- Show fits file name -->
+        <h3>Explore Mode </h3>
+    	<h3>{{ file_root }}_{{ filetype }}.fits</h3>
+    	<p>
+            <a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:view_image', args=[inst, file_root]) }}>View Image</a>
+            <a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:archive_thumb_per_obs', args=[inst, file_root[2:7], file_root[7:10]]) }}> View Proposal</a>
+	    </p>
+
+        <!-- Allow the user to change the settings in the image to explore -->
+        <h4>Image Settings</h4>
+        Scaling:&nbsp;&nbsp;
+        <input type="radio" name="scaling" value="log" id="log" checked="checked"> log &nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="radio" name="scaling" value="lin" id="lin"> linear &nbsp;&nbsp;
+        <br>
+        Z-Scale Limits:&nbsp;&nbsp;
+        <input type="number" id="low_lim" step="any">&nbsp;Low &nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="number" id="high_lim" step="any">&nbsp;High &nbsp;&nbsp;&nbsp;&nbsp;
+        <br>
+
+        <p>
+            <a class="btn btn-primary my-2 mx-2" role="button" onclick="update_explore_image_page('{{inst}}', '{{file_root}}', '{{filetype}}', '{{base_url}}', true)"> Apply Settings</a>
+	    </p>
+
+		<div class="row">
+            <!-- Display the image -->
+    	    <div class="col-xl-9 text-center">
+    		    <!-- Loading animation -->
+                <div id="loading">
+                    <div class="lds-css ng-scope">
+                        <div style="width:100%;height:100%" class="lds-magnify">
+                            <div>
+                                <div>
+                                    <div>
+                                    </div>
+                                    <div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        Loading ...
+                    </div>
+                </div>
+
+                <!-- Display the data -->
+                <div id='explore_image'></div>
+                <a id="explore_image_fail" style='display: none'>Image explorer failed to load</a>
+            </div>
+
+            <!-- Display the anomaly form -->
+            <div class="col-xl-3 text-left">
+                <!--Load the file search form from the view-->
+                <div class="anomaly_form">
+                    <h5>Submit Anomaly</h5>
+                    <form action="" method="post">
+                        <!--Show any errors from a previous form submission-->
+                        {% if form.errors %}
+                            <fieldset>
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <div class="alert alert-danger">
+                                            <strong>{{ error|escape }}</strong>
+                                        </div>
+                                    {% endfor %}
+                                {% endfor %}
+                            </fieldset>
+                        {% endif %}
+
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+
+                        <!--Show the field forms-->
+                        {% for field in form %}
+                            {% for subwidget in field.subwidgets %}
+                                <li class="anomaly_choice">{{subwidget}}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        <button class="btn btn-primary" type="submit" style="float: right;">Submit</button>
+                    </form>
+                </div>
+            </div>
+            <!-- Display the anomaly form above -->
+        </div>
+
+    </main>
+    <script>update_explore_image_page('{{inst}}', '{{file_root}}', '{{filetype}}', '{{base_url}}');</script>
+
+{% endblock %}

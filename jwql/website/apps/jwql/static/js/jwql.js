@@ -16,7 +16,7 @@
  *                                jpgs for that suffix
  * @param {String} inst - The instrument for the given file
  */
-function change_filetype(type, file_root, num_ints, available_ints, inst) {
+  function change_filetype(type, file_root, num_ints, available_ints, inst) {
 
     // Change the radio button to check the right filetype
     document.getElementById(type).checked = true;
@@ -45,6 +45,8 @@ function change_filetype(type, file_root, num_ints, available_ints, inst) {
     var jpg_filepath = '/static/preview_images/' + file_root.slice(0,7) + '/' + file_root + '_' + type + '_integ0.jpg';
     img.src = jpg_filepath;
     img.alt = jpg_filepath;
+    // if previous image had error, remove error sizing
+    img.classList.remove("thumbnail");
 
     // Reset the slider values
     document.getElementById("slider_range").value = 1;
@@ -63,6 +65,7 @@ function change_filetype(type, file_root, num_ints, available_ints, inst) {
     // document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename + '.fits';
     // document.getElementById("download_jpg").href = jpg_filepath;
     document.getElementById("view_header").href = '/' + inst + '/' + file_root + '_' + type + '/header/';
+    document.getElementById("explore_image").href = '/' + inst + '/' + file_root + '_' + type + '/explore_image/';
 
     // Disable the "left" button, since this will be showing integ0
     document.getElementById("int_before").disabled = true;
@@ -200,12 +203,68 @@ function determine_page_title(instrument, proposal) {
     };
 };
 
+/**
+ * Determine whether the page is archive or unlooked
+ * @param {String} instrument - The instrument of interest
+ * @param {Integer} proposal - The proposal of interest
+ * @param {Integer} observation - The observation number of interest
+ */
+function determine_page_title_obs(instrument, proposal, observation) {
+    // Determine if the URL is 'archive' or 'unlooked'
+    var url = document.URL;
+    var url_split = url.split('/');
+    var url_title = url_split[url_split.length - 3];
+    var url_end = url_split[url_split.length - 1];
+    if (url_title == 'archive') {
+        final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal + ', Observation ' + observation
+    } else if (url_title == 'unlooked') {
+        final_title = 'Unlooked ' + instrument + ' Images';
+    } else if (isNaN(url_title) == false) {
+        final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal + ', Observation ' + observation
+    }
+
+    // Update the titles accordingly
+    if (typeof final_title !== 'undefined') {
+        document.getElementById('title').innerHTML = final_title;
+        if (document.title != final_title) {
+            document.title = final_title;
+        };
+    };
+};
+
+
+/**
+ * get_radio_button_value
+ * @param {String} element_name - The name of the radio buttons
+ * @returns value - value of checked radio button
+ */
+function get_radio_button_value(element_name) {
+    var element = document.getElementsByName(element_name);
+      
+    for(i = 0; i < element.length; i++) {
+        if(element[i].checked) {
+            return element[i].value;
+        }
+    }
+    return "";
+}
+
+/**
+ * get_scaling_value
+ * @param {String} element_id - The element id
+ * @returns value - value of element id or "None" if empty or not a number
+*/
+function get_number_or_none(element_id) {
+
+    var limit = document.getElementById(element_id).value;
+    if (limit.length == 0 || isNaN(limit)) limit = "None";
+    return limit;
+}
 
 /** 
  * If an image is not found, replace with temporary image sized to thumbnail
  */
-function imageError(image, makeThumbnail=false) {
-    image.onerror = "";
+function image_error(image, makeThumbnail=false) {
     image.src = "/static/img/imagenotfound.png";
     /* Use thumbnail settings to keep it tidy */
     if (makeThumbnail) {
@@ -370,12 +429,13 @@ function update_archive_page(inst, base_url) {
 
                 // Parse out useful variables
                 prop = data.thumbnails.proposals[i];
+                min_obsnum = data.min_obsnum[i];
                 thumb = data.thumbnails.thumbnail_paths[i];
                 n = data.thumbnails.num_files[i];
 
                 // Build div content
                 content = '<div class="proposal text-center">';
-                content += '<a href="/' + inst + '/archive/' + prop + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
+                content += '<a href="/' + inst + '/archive/' + prop + '/obs' + min_obsnum + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
                 content += '<span class="helper"></span>'
                 content += '<img src="/static/thumbnails/' + thumb + '" alt="" title="Thumbnail for ' + prop + '" width=100%>';
                 content += '<div class="proposal-color-fill" ></div>';
@@ -393,6 +453,59 @@ function update_archive_page(inst, base_url) {
             };
     }});
 };
+
+
+/**
+ * Updates various compnents on the thumbnails page
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} file_root - The rootname of the file forresponding tot he instrument (e.g. "JW01473015001_04101_00001_MIRIMAGE")
+ * @param {String} filetype - The type to be viewed (e.g. "cal" or "rate").
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ * @param {Boolean} do_opt_args - Flag to calculate and send optional arguments in URL
+ */
+ function update_explore_image_page(inst, file_root, filetype, base_url, do_opt_args=false) {
+    
+    /* if they exist set up the optional parameters before the ajax call*/
+    optional_params = "";
+    if(do_opt_args) {
+        // Reset loading
+        document.getElementById("loading").style.display = "inline-block";
+        document.getElementById("explore_image").style.display = "none";
+        document.getElementById("explore_image_fail").style.display = "none";
+
+        // Get the arguments to update
+        scaling = get_radio_button_value("scaling");
+        low_lim = get_number_or_none("low_lim");
+        high_lim = get_number_or_none("high_lim");
+        optional_params = optional_params + "_" + scaling + "_" + low_lim + "_" + high_lim;
+        //optional_params = optional_params + "/" + scaling;
+    }
+
+    $.ajax({
+        url: base_url + '/ajax/' + inst + '/' + file_root + '_' + filetype + '/explore_image' + optional_params,
+        success: function(data){
+
+            // Build div content
+            content = data["div"];
+            content += data["script"];
+            
+            /* Add the content to the div
+            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery. 
+            */
+            $('#explore_image').html(content);
+
+            // Replace loading screen
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("explore_image").style.display = "inline-block";
+            document.getElementById('explore_image_fail').style.display = "none";
+        },
+        error : function(response) {
+            document.getElementById("loading").style.display = "none";
+            document.getElementById('explore_image_fail').style.display = "inline-block";
+        }
+    });
+};
+
 
 
 /**
@@ -452,6 +565,28 @@ function update_header_display(extension, num_extensions) {
 };
 
 /**
+ * Updates the obs-list div with observation number options
+ * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ * @param {String} inst - Instrument name
+ * @param {String} prop - Proposal ID
+ * @param {List} obslist - List of observation number strings
+ */
+function update_obs_options(data, inst, prop, obslist) {
+    // Build div content
+    content = 'Available observations:';
+    content += '<div class="dropdown">';
+    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="obs_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Obs Nums</button>';
+    content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
+    for (var i = 0; i < data.obs_list.length; i++) {
+        content += '<a class="dropdown-item" href="/' + inst + '/archive/' + prop + '/obs' + data.obs_list[i] + '/" > Obs' + data.obs_list[i] + '</a>';
+    }
+    content += '</div></div>';
+
+    // Add the content to the div
+    $("#obs-list")[0].innerHTML = content;
+};
+
+/**
  * Updates the img_show_count component
  * @param {Integer} count - The count to display
  * @param {String} type - The type of the count (e.g. "activities")
@@ -505,7 +640,7 @@ function update_thumbnail_array(data) {
             content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
             content += '<a href="/' + filename_dict.instrument + '/' + rootname + '/">';
         }
-        content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="imageError(this);">';
+        content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="image_error(this);">';
         content += '<div class="thumbnail-color-fill" ></div>';
         content += '<div class="thumbnail-info">';
         content += 'Proposal: ' + filename_dict.program_id + '<br>';
@@ -546,6 +681,31 @@ function update_thumbnails_page(inst, proposal, base_url) {
 };
 
 /**
+ * Updates various compnents on the thumbnails page
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} proposal - The proposal number of interest (e.g. "88660")
+ * @param {String} observation - The observation number within the proposal (e.g. "001")
+ * @param {List} observation_list - List of all observations in this proposal
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function update_thumbnails_per_observation_page(inst, proposal, observation, observation_list, base_url) {
+    $.ajax({
+        url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/obs' + observation + '/',
+        success: function(data){
+            // Perform various updates to divs
+            update_show_count(Object.keys(data.file_data).length, 'activities');
+            update_thumbnail_array(data);
+            update_obs_options(data, inst, proposal);
+            update_filter_options(data);
+            update_sort_options(data);
+
+            // Replace loading screen with the proposal array div
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("thumbnail-array").style.display = "block";
+        }});
+};
+
+/**
  * Updates various components on the thumbnails anomaly query page
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
  * @param {List} rootnames
@@ -575,5 +735,3 @@ function version_url(version_string) {
     a_line += '">JWQL v' + version_string + '</a>';
     return a_line;
 };
-
-
