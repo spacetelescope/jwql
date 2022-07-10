@@ -44,6 +44,7 @@ from bokeh.layouts import layout
 from bokeh.embed import components
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
 
 from jwql.database.database_interface import load_connection
