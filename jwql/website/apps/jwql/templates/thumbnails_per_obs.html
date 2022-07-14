@@ -80,6 +80,10 @@
                     <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/archive/{{ prop }}/obs{{ obs_list[previous] }}/" style="float: left;">< Previous</a>
                 {% endif %}
 
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
                 {% if page_obj.has_next() %}
                     {% set next = page_obj.next_page_number() -1 %}
                     <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/archive/{{ prop }}/obs{{ obs_list[next] }}/" style="float: right;">Next ></a>
