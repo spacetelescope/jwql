@@ -402,7 +402,7 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
 
     obs_list = sorted(list(set(all_obs)))
 
-    paginator = Paginator(obs_list, 25) # Show 25 contacts per page.
+    paginator = Paginator(obs_list, 1)
 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
