@@ -401,18 +401,13 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
             pass
 
     obs_list = sorted(list(set(all_obs)))
-    
-    paginator = Paginator(obs_list, 1)
 
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
 
     template = 'thumbnails_per_obs.html'
     context = {'base_url': get_base_url(),
                'inst': inst,
                'obs': observation,
                'obs_list' : obs_list,
-               'page_obj' : page_obj,
                'prop': proposal,
                'prop_meta': proposal_meta}
 
