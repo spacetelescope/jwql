@@ -76,11 +76,17 @@
         <div class="pagination">
             <span class="step-links">
                 {% if page_obj.has_previous %}
-                    <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ prop }}/{{ obs }}" style="float: left;">< Previous</a>
+                    {% set previous = page_obj.previous_page_number() - 1 %}
+                    <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ prop }}/{{ obs_list[previous] }}" style="float: left;">< Previous</a>
+                {% else %}
+                    <a role="button" class="btn btn-primary my-2" type="submit" style="float: left;" disabled>< Previous</a>
                 {% endif %}
 
                 {% if page_obj.has_next %}
-                    <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ prop }}/{{ obs }}" style="float: right;">Next ></a>
+                    {% set next = page_obj.next_page_number() - 1 %}
+                    <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ prop }}/{{ obs_list[next] }}" style="float: right;">Next ></a>
+                {% else %}
+                    <a role="button" class="btn btn-primary my-2" type="submit" style="float: left;" disabled>< Previous</a>
                 {% endif %}
             </span>
         </div>
