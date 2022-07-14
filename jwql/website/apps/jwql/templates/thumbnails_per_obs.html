@@ -81,7 +81,7 @@
                 {% endif %}
 
 
-                {% if obs_list.index(obs) != len(obs_list) - 1 %}
+                {% if obs_list.index(obs) != obs_list|length - 1 %}
                     <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/archive/{{ prop }}/obs{{ obs_list[index+1] }}/" style="float: right;">Next ></a>
                 {% endif %}
             </span>
