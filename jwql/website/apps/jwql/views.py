@@ -401,8 +401,8 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
             pass
 
     obs_list = sorted(list(set(all_obs)))
-
-    paginator = Paginator(obs_list, 1)
+    
+    paginator = Paginator(obs_list, len(obs_list))
 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
