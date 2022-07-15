@@ -925,15 +925,13 @@ def view_image(request, inst, file_root, rewrite=False):
     form = get_anomaly_form(request, inst, file_root)
 
     rootnames = get_rootnames_for_instrument_proposal('nircam', '01465')
-    roots_by_obsnum = defaultdict(list)
+    file_root_list = defaultdict(list)
 
     for root in rootnames:
         try:
-            roots_by_obsnum[(filename_parser(root)['observation'])].append(root)
+            file_root_list[(filename_parser(root)['observation'])].append(root)
         except KeyError:
             pass
-
-    file_root_list = roots_by_obsnum[obsnum]
 
     # Build the context
     context = {'base_url': get_base_url(),
