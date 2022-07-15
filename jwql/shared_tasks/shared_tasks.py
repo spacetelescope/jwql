@@ -179,7 +179,7 @@ def collect_after_task(**kwargs):
 
 
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.run_calwebb_detector1')
-def run_calwebb_detector1(input_file_name, instrument):
+def run_calwebb_detector1(input_file_name, instrument, step_args={}):
     """Run the steps of ``calwebb_detector1`` on the input file, saving the result of each
     step as a separate output file, then return the name-and-path of the file as reduced
     in the reduction directory.
@@ -188,10 +188,16 @@ def run_calwebb_detector1(input_file_name, instrument):
     ----------
     input_file : str
         File on which to run the pipeline steps
+    
+    instrument : str
+        Instrument that was used for the observation contained in input_file_name.
 
-    path : str, default None
-        The location to find the input file. If not provided, the input file will be
-        searched for in the JWQL data directories.
+    step_args : dict
+        A dictionary containing custom arguments to supply to individual pipeline steps. 
+        When a step is run, the dictionary will be checked for a key matching the step 
+        name (as defined in jwql.utils.utils.get_pipeline_steps() for the provided 
+        instrument). The value matching the step key should, itself, be a dictionary that
+        can be spliced in to step.call() via dereferencing (**dict)
 
     Returns
     -------
@@ -221,6 +227,9 @@ def run_calwebb_detector1(input_file_name, instrument):
 
     first_step_to_be_run = True
     for step_name in steps:
+        kwargs = {}
+        if step_name in step_args:
+            kwargs = step_args[step_name]
         if steps[step_name]:
             output_filename = short_name + "_{}.fits".format(step_name)
             output_file = os.path.join(cal_dir, output_filename)
@@ -229,10 +238,10 @@ def run_calwebb_detector1(input_file_name, instrument):
             logging.info("*****CELERY: Running Pipeline Step {}".format(step_name))
             if not os.path.isfile(output_file):
                 if first_step_to_be_run:
-                    model = PIPELINE_STEP_MAPPING[step_name].call(uncal_file, logcfg=log_config)
+                    model = PIPELINE_STEP_MAPPING[step_name].call(uncal_file, logcfg=log_config, **kwargs)
                     first_step_to_be_run = False
                 else:
-                    model = PIPELINE_STEP_MAPPING[step_name].call(model, logcfg=log_config)
+                    model = PIPELINE_STEP_MAPPING[step_name].call(model, logcfg=log_config, **kwargs)
 
                 if step_name != 'rate':
                     # Make sure the dither_points metadata entry is at integer (was a
@@ -401,7 +410,7 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
     return jump_output, pipe_output, fitopt_output
 
 
-def run_pipeline(input_file, in_ext, ext_or_exts, instrument):
+def run_pipeline(input_file, in_ext, ext_or_exts, instrument, step_args={}):
     """Convenience function for using the ``run_calwebb_detector1`` function on a data 
     file, including the following steps:
     
@@ -427,6 +436,10 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument):
     
     instrument : str
         Name of the instrument being calibrated
+    
+    step_args : dict
+        A dictionary containing custom arguments to supply to individual pipeline steps. 
+        Passed on directly to the pipeline task.
 
     Returns
     -------
@@ -451,6 +464,7 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument):
         uncal_file = input_file
         uncal_name = input_name
     
+    output_file_or_files = []
     short_name = input_name.replace("_"+in_ext, "").replace(".fits", "")
     logging.info("\tLocking {}".format(short_name))
     cal_lock = REDIS_CLIENT.lock(short_name)
@@ -460,7 +474,7 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument):
             logging.info("\t\tAcquired Lock.")
             logging.info("\t\tCopying {} to {}".format(input_file, send_path))
             copy_files([uncal_file], send_path)
-            result = run_calwebb_detector1.delay(uncal_name, instrument)
+            result = run_calwebb_detector1.delay(uncal_name, instrument, step_args=step_args)
             logging.info("\t\tStarting with ID {}".format(result.id))
             processed_path = result.get()
             logging.info("\t\tPipeline Complete")
