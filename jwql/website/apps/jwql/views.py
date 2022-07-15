@@ -925,7 +925,7 @@ def view_image(request, inst, file_root, rewrite=False):
     form = get_anomaly_form(request, inst, file_root)
 
     rootnames = get_rootnames_for_instrument_proposal('nircam', '01465')
-    rootnames_by_obsnum = defaultdict(list)
+    roots_by_obsnum = defaultdict(list)
 
     for root in rootnames:
         try:
