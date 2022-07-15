@@ -933,6 +933,8 @@ def view_image(request, inst, file_root, rewrite=False):
         except KeyError:
             pass
 
+    file_root_list = {key : sorted(file_root_list[key]) for key in sorted(file_root_list)}
+
     # Build the context
     context = {'base_url': get_base_url(),
                'file_root_list': file_root_list,
