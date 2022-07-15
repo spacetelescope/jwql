@@ -37,6 +37,7 @@ Dependencies
     placed in the ``jwql`` directory.
 """
 
+from collections import defaultdict
 import csv
 import os
 
@@ -923,8 +924,21 @@ def view_image(request, inst, file_root, rewrite=False):
 
     form = get_anomaly_form(request, inst, file_root)
 
+    rootnames = get_rootnames_for_instrument_proposal('nircam', '01465')
+    rootnames_by_obsnum = defaultdict(list)
+
+    for root in rootnames:
+        try:
+            roots_by_obsnum[(filename_parser(root)['observation'])].append(root)
+        except KeyError:
+            pass
+
+    file_root_list = roots_by_obsnum[obsnum]
+
     # Build the context
-    context = {'inst': inst,
+    context = {'base_url': get_base_url(),
+               'file_root_list': file_root_list,
+               'inst': inst,
                'prop_id': file_root[2:7],
                'obsnum': file_root[7:10],
                'file_root': file_root,
