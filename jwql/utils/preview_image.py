@@ -464,8 +464,8 @@ class PreviewImage():
         # If the image is a thumbnail, rename to '.thumb'
         if thumbnail:
             self.thumbnail_filename = fname.replace('.jpg', '.thumb')
-            os.rename(fname, thumb_fname)
-            logging.info('\tSaved image to {}'.format(thumbnail_filename))
+            os.rename(fname, self.thumbnail_filename)
+            logging.info('\tSaved image to {}'.format(self.thumbnail_filename))
         else:
             logging.info('\tSaved image to {}'.format(fname))
             self.thumbnail_filename = None
