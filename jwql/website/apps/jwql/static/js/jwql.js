@@ -3,7 +3,42 @@
  *
  * @author Lauren Chambers
  * @author Matthew Bourque
+ * @author Bryan Hilbert
  */
+
+/**
+ * Construct the div that displays image of developers
+ * @param {List} img_list - List of png files to be displayed
+ */
+function arrange_developer_photos(img_list) {
+    var nphoto = img_list.length;
+    var nrow = Math.floor(nphoto / 4);
+    var remainder = nphoto % 4;
+    // Create image grid div content
+    for (row = 0; row < nrow; row++) {
+        content = '<div class="row">';
+        if (row < (nrow - 1)) {
+            var maxcol = 4;
+        } else {
+            var maxcol = remainder;
+        }
+        for (photo = 0; photo < maxcol; photo++){
+            var index = row * photo;
+            content += '<div class="col-md-4">';
+            content += '<div class="thumbnail">';
+            content += '<img src="/static/img/' + img_list[index] + '" alt="" style="width:100%">';
+            content += '</div>';
+            content += '</div>';
+        }
+        content += '</div>';
+    }
+
+        // Add the content to the div
+        /*$("#dev-photo-array")[0].innerHTML += content; */
+        document.getElementById("dev-photo-array").innerHTML = content;
+
+};
+
 
  /**
  * Change the filetype of the displayed image
@@ -240,7 +275,7 @@ function determine_page_title_obs(instrument, proposal, observation) {
  */
 function get_radio_button_value(element_name) {
     var element = document.getElementsByName(element_name);
-      
+
     for(i = 0; i < element.length; i++) {
         if(element[i].checked) {
             return element[i].value;
@@ -261,7 +296,7 @@ function get_number_or_none(element_id) {
     return limit;
 }
 
-/** 
+/**
  * If an image is not found, replace with temporary image sized to thumbnail
  */
 function image_error(image, makeThumbnail=false) {
@@ -464,7 +499,7 @@ function update_archive_page(inst, base_url) {
  * @param {Boolean} do_opt_args - Flag to calculate and send optional arguments in URL
  */
  function update_explore_image_page(inst, file_root, filetype, base_url, do_opt_args=false) {
-    
+
     /* if they exist set up the optional parameters before the ajax call*/
     optional_params = "";
     if(do_opt_args) {
@@ -488,9 +523,9 @@ function update_archive_page(inst, base_url) {
             // Build div content
             content = data["div"];
             content += data["script"];
-            
+
             /* Add the content to the div
-            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery. 
+            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
             */
             $('#explore_image').html(content);
 

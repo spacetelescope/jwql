@@ -11,6 +11,7 @@ Authors
     - Lauren Chambers
     - Matthew Bourque
     - Teagan King
+    - Bryan Hilbert
 
 Use
 ---
