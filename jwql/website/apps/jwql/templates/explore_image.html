@@ -14,7 +14,7 @@
     	<h3>{{ file_root }}_{{ filetype }}.fits</h3>
     	<p>
             <a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:view_image', args=[inst, file_root]) }}>View Image</a>
-            <a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:archive_thumb', args=[inst, prop_id]) }}>View Proposal</a>
+            <a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:archive_thumb_per_obs', args=[inst, file_root[2:7], file_root[7:10]]) }}> View Proposal</a>
 	    </p>
 
         <!-- Allow the user to change the settings in the image to explore -->
@@ -27,6 +27,11 @@
         <input type="number" id="low_lim" step="any">&nbsp;Low &nbsp;&nbsp;&nbsp;&nbsp;
         <input type="number" id="high_lim" step="any">&nbsp;High &nbsp;&nbsp;&nbsp;&nbsp;
         <br>
+        Extension:&nbsp;&nbsp;
+        {% for extension in extensions %}
+            <input type="radio" name="extension" value="{{ extension }}" id="{{ extension }}"> {{ extension }} &nbsp;&nbsp;&nbsp;&nbsp;
+        {% endfor %}
+		<br>
 
         <p>
             <a class="btn btn-primary my-2 mx-2" role="button" onclick="update_explore_image_page('{{inst}}', '{{file_root}}', '{{filetype}}', '{{base_url}}', true)"> Apply Settings</a>

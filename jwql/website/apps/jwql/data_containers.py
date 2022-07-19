@@ -49,7 +49,7 @@ from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as mi
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
-from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
+from jwql.utils.constants import EXPLORE_IMAGE_EXTENSIONS, IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
                                  JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
@@ -824,6 +824,29 @@ def get_image_info(file_root, rewrite):
     return image_info
 
 
+def get_explorer_extension_names(fits_file, filetype):
+    """ Return a list of Extensions that can be explored interactively
+
+    Parameters
+    ----------
+    filename : str
+        The name of the file of interest, without the extension
+        (e.g. ``'jw86600008001_02101_00007_guider2_uncal'``).
+    filetype : str
+        The type of the file of interest, (e.g. ``'uncal'``)
+
+    Returns
+    -------
+    extensions : list
+        List of Extensions found in header and allowed to be Explored
+    """
+
+    header_info = get_header_info(fits_file, filetype)
+
+    extensions = [header_info[extension]['EXTNAME'] for extension in header_info if header_info[extension]['EXTNAME'].upper() in EXPLORE_IMAGE_EXTENSIONS]
+    return extensions
+
+
 def get_instrument_proposals(instrument):
     """Return a list of proposals for the given instrument
 
@@ -978,7 +1001,7 @@ def get_proposal_info(filepaths):
                     pass
             obsnums = sorted(obsnums)
 
-            #obsnums = sorted([filename_parser(fname)['observation'] for fname in files_for_proposal])
+            # obsnums = sorted([filename_parser(fname)['observation'] for fname in files_for_proposal])
             observations.extend(obsnums)
             num_files.append(len(files_for_proposal))
             proposals.append(proposal)
@@ -1400,13 +1423,12 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         Dictionary of data needed for the ``thumbnails`` template
     """
 
-
-    #generate the list of all obs of the proposal here, so that the list can be
-    #properly packaged up and sent to the js scripts. but to do this, we need to call
-    #get_rootnames_for_instrument_proposal, which is largely repeating the work done by
-    #get_filenames_by_instrument above. can we use just get_rootnames? we would have to
-    #filter results by obs_num after the call and after obs_list is created.
-    #But we need the filename list below...hmmm...so maybe we need to do both
+    # generate the list of all obs of the proposal here, so that the list can be
+    # properly packaged up and sent to the js scripts. but to do this, we need to call
+    # get_rootnames_for_instrument_proposal, which is largely repeating the work done by
+    # get_filenames_by_instrument above. can we use just get_rootnames? we would have to
+    # filter results by obs_num after the call and after obs_list is created.
+    # But we need the filename list below...hmmm...so maybe we need to do both
     all_rootnames = get_rootnames_for_instrument_proposal(inst, proposal)
     all_obs = []
     for root in all_rootnames:
