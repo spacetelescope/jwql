@@ -803,7 +803,7 @@ def get_image_info(file_root, rewrite):
     for filename in image_info['all_files']:
 
         # Get suffix information
-        suffix = os.path.basename(filename).split('_')[4].split('.')[0]
+        suffix = filename_parser(filename)['suffix']
         image_info['suffixes'].append(suffix)
 
         # Determine JPEG file location
