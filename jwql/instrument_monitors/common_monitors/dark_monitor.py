@@ -513,8 +513,6 @@ class Dark():
         max_time = np.max(obs_times)
         mid_time = instrument_properties.mean_time(obs_times)
         
-        intensive_lock = REDIS_CLIENT.lock("intensive_operation")
-        have_lock = intensive_lock.acquire(blocking=True)
         try:
 
             # Read in all slope images and place into a list
@@ -597,9 +595,6 @@ class Dark():
         except Exception as e:
             logging.critical("ERROR: {}".format(e))
             raise e
-        finally:
-            if have_lock:
-                intensive_lock.release()
 
         # Construct new entry for dark database table
         source_files = [os.path.basename(item) for item in file_list]
