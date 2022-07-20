@@ -1472,13 +1472,15 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         # suffix values to be one of those. In the case where neither rate nor
         # dark files are present, revert to uncal, which will then cause the
         # "thumbnail not available" fallback image to be used.
-        suffixes = [filename_parser(filename)['suffix'] for filename in available_files]
-        if 'rate' in suffixes:
-            data_dict['file_data'][rootname]['suffixes'] = ['rate']
-        elif 'dark' in suffixes:
-            data_dict['file_data'][rootname]['suffixes'] = ['dark']
-        else:
-            data_dict['file_data'][rootname]['suffixes'] = ['uncal']
+        suffixes = ['rate', 'dark', 'uncal']
+        #suffixes = [filename_parser(filename)['suffix'] for filename in available_files]
+        #if 'rate' in suffixes:
+        #    data_dict['file_data'][rootname]['suffixes'] = ['rate']
+        #elif 'dark' in suffixes:
+        #    data_dict['file_data'][rootname]['suffixes'] = ['dark']
+        #else:
+        #    data_dict['file_data'][rootname]['suffixes'] = ['uncal']
+        data_dict['file_data'][rootname]['suffixes'] = suffixes
         try:
             data_dict['file_data'][rootname]['expstart'] = exp_start
             data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
