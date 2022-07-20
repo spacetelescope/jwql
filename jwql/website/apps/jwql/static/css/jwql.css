@@ -518,6 +518,16 @@ li:hover .nav-link, .navbar-brand:hover {
     font-size: 0.75rem;
 }
 
+.thumbnail-staff {
+    width: 15rem;
+    height: 15rem;
+    text-align: center;
+    position: relative;
+    display: inline-block;
+    margin: 0.1rem;
+}
+
+
 /*Format the version identifier text in bottom corner*/
 #version-div {
   float: right;
