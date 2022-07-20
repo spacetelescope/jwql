@@ -87,6 +87,8 @@
 .dropdown-menu {
     background-color: #2d353c;
     border-radius: 0px;
+    max-height:  400px;
+    overflow-y:  auto;
 }
 
 .dropdown-menu .dropdown-item {
