@@ -203,6 +203,8 @@ def about(request):
     dev_images = sorted(glob(os.path.join(img_dir, 'dev*png')))
     dev_images = [os.path.basename(e) for e in dev_images]
 
+    construct captions here and provide as a list.
+
     template = 'about.html'
     acknowledgements = get_acknowledgements()
     context = {'acknowledgements': acknowledgements,
