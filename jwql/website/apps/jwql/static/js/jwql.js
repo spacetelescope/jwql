@@ -3,42 +3,9 @@
  *
  * @author Lauren Chambers
  * @author Matthew Bourque
+ * @author Brad Sappington
  * @author Bryan Hilbert
  */
-
-/**
- * Construct the div that displays image of developers
- * @param {List} img_list - List of png files to be displayed
- */
-function arrange_developer_photos(img_list) {
-    var nphoto = img_list.length;
-    var nrow = Math.floor(nphoto / 4);
-    var remainder = nphoto % 4;
-    // Create image grid div content
-    for (row = 0; row < nrow; row++) {
-        content = '<div class="row">';
-        if (row < (nrow - 1)) {
-            var maxcol = 4;
-        } else {
-            var maxcol = remainder;
-        }
-        for (photo = 0; photo < maxcol; photo++){
-            var index = row * photo;
-            content += '<div class="col-md-4">';
-            content += '<div class="thumbnail">';
-            content += '<img src="/static/img/' + img_list[index] + '" alt="" style="width:100%">';
-            content += '</div>';
-            content += '</div>';
-        }
-        content += '</div>';
-    }
-
-        // Add the content to the div
-        /*$("#dev-photo-array")[0].innerHTML += content; */
-        document.getElementById("dev-photo-array").innerHTML = content;
-
-};
-
 
  /**
  * Change the filetype of the displayed image

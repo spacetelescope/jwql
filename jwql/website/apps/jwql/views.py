@@ -199,16 +199,9 @@ def about(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    img_dir = os.path.join(__location__, 'static/img')
-    dev_images = sorted(glob(os.path.join(img_dir, 'dev*png')))
-    dev_images = [os.path.basename(e) for e in dev_images]
-
-    construct captions here and provide as a list.
-
     template = 'about.html'
     acknowledgements = get_acknowledgements()
     context = {'acknowledgements': acknowledgements,
-               'dev_images': dev_images,
                'inst': ''}
 
     return render(request, template, context)
