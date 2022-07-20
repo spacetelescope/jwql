@@ -38,7 +38,6 @@ Dependencies
 """
 
 import csv
-from glob import glob
 import os
 
 from bokeh.layouts import layout
@@ -52,7 +51,6 @@ from jwql.utils.interactive_preview_image import InteractivePreviewImg
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT
 from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get_config, query_unformat
 
-from .data_containers import __location__
 from .data_containers import build_table
 from .data_containers import data_trending
 from .data_containers import get_acknowledgements, get_instrument_proposals
@@ -199,6 +197,7 @@ def about(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+
     template = 'about.html'
     acknowledgements = get_acknowledgements()
     context = {'acknowledgements': acknowledgements,
