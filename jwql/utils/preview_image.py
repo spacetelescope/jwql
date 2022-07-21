@@ -302,9 +302,9 @@ class PreviewImage():
             if thumbnail:
                 self.fig, ax = plt.subplots(figsize=(3, 3))
                 cax = ax.imshow(shiftdata,
-                                      norm=colors.LogNorm(vmin=shiftmin,
-                                                          vmax=shiftmax),
-                                      cmap=self.cmap)
+                                norm=colors.LogNorm(vmin=shiftmin,
+                                                    vmax=shiftmax),
+                                cmap=self.cmap)
                 # Invert y axis
                 plt.gca().invert_yaxis()
 
