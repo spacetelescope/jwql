@@ -377,8 +377,17 @@ class PreviewImage():
             filename = os.path.split(self.file)[-1]
             ax.set_title(filename + ' Int: {}'.format(np.int(integration_number)))
 
-    def make_image(self, max_img_size=8.0):
-        """The main function of the ``PreviewImage`` class."""
+    def make_image(self, max_img_size=8.0, create_thumbnail=False):
+        """The main function of the ``PreviewImage`` class.
+
+        Parameters
+        ----------
+        max_img_size : float
+            Image size in the largest dimension
+
+        create_thumbnail : bool
+            If True, a thumbnail image is created and saved.
+        """
 
         shape = self.data.shape
 
@@ -428,7 +437,7 @@ class PreviewImage():
 
             # Create thumbnail image matplotlib object, only for the
             # first integration
-            if i == 0:
+            if i == 0 and create_thumbnail:
                 if self.thumbnail_output_directory is None:
                     outdir = indir
                 else:
@@ -438,7 +447,8 @@ class PreviewImage():
                                  maxsize=max_img_size, thumbnail=True)
                 self.save_image(outfile, thumbnail=True)
                 plt.close(self.fig)
-                self.thumbnail_images.append(outfile)
+                self.thumbnail_images.append(self.thumbnail_filename)
+
 
     def save_image(self, fname, thumbnail=False):
         """
@@ -462,8 +472,9 @@ class PreviewImage():
 
         # If the image is a thumbnail, rename to '.thumb'
         if thumbnail:
-            thumb_fname = fname.replace('.jpg', '.thumb')
-            os.rename(fname, thumb_fname)
-            logging.info('\tSaved image to {}'.format(thumb_fname))
+            self.thumbnail_filename = fname.replace('.jpg', '.thumb')
+            os.rename(fname, self.thumbnail_filename)
+            logging.info('\tSaved image to {}'.format(self.thumbnail_filename))
         else:
             logging.info('\tSaved image to {}'.format(fname))
+            self.thumbnail_filename = None

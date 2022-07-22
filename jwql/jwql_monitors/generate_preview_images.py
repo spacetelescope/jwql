@@ -660,6 +660,13 @@ def process_program(program):
     ----------
     program : str
         The program identifier (e.g. ``88600``)
+
+    Returns
+    -------
+    preview_image_files : list
+        List of preview image filenames
+    thumbnail_files : list
+        List of thumbnail image filenames
     """
 
     logging.info('')
@@ -682,6 +689,8 @@ def process_program(program):
     thumbnail_files = []
     preview_image_files = []
     for filename in filenames:
+
+        logging.info(f'Working on {filename}')
 
         # Determine the save location
         try:
@@ -716,10 +725,19 @@ def process_program(program):
             im.output_format = 'jpg'
             im.preview_output_directory = preview_output_directory
             im.thumbnail_output_directory = thumbnail_output_directory
-            im.make_image(max_img_size=8)
-            thumbnail_files.extend(im.thumbnail_images)
+
+            # Create a thumbnail for rate or dark files only. Create preview
+            # images for all filetypes
+            if 'rate.fits' in filename or 'dark.fits' in filename:
+                im.make_image(max_img_size=8, create_thumbnail=True)
+                thumbnail_files.extend(im.thumbnail_images)
+                logging.info('\tCreated preview image and thumbnail for: {}'.format(filename))
+            else:
+                im.make_image(max_img_size=8, create_thumbnail=False)
+                logging.info('\tCreated preview image for: {}'.format(filename))
+
             preview_image_files.extend(im.preview_images)
-            logging.info('\tCreated preview image and thumbnail for: {}'.format(filename))
+
         except (ValueError, AttributeError) as error:
             logging.warning(error)
 
