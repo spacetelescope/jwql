@@ -1468,19 +1468,24 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
 
-        # We generate thumbnails only for rate and dark files, so limit the
-        # suffix values to be one of those. In the case where neither rate nor
-        # dark files are present, revert to uncal, which will then cause the
+        # We generate thumbnails only for rate and dark files. Check if these files
+        # exist in the thumbnail filesystem. In the case where neither rate nor
+        # dark thumbnails are present, revert to 'none', which will then cause the
         # "thumbnail not available" fallback image to be used.
-        suffixes = ['rate', 'dark', 'uncal']
-        #suffixes = [filename_parser(filename)['suffix'] for filename in available_files]
-        #if 'rate' in suffixes:
-        #    data_dict['file_data'][rootname]['suffixes'] = ['rate']
-        #elif 'dark' in suffixes:
-        #    data_dict['file_data'][rootname]['suffixes'] = ['dark']
-        #else:
-        #    data_dict['file_data'][rootname]['suffixes'] = ['uncal']
-        data_dict['file_data'][rootname]['suffixes'] = suffixes
+        proposal_string = f'jw{str(proposal).zfill(5)}'
+        available_thumbnails = glob.glob(os.path.join(config['thumbnail_filesystem'], proposal_string, f'{rootname}*thumb'))
+
+        if len(available_thumbnails) > 0:
+            preferred = [thumb for thumb in available_thumbnails if 'rate' in thumb]
+            if len(preferred) == 0:
+                preferred = [thumb for thumb in available_thumbnails if 'dark' in thumb]
+            if len(preferred) > 0:
+                data_dict['file_data'][rootname]['thumbnail'] = os.path.basename(preferred[0])
+            else:
+                data_dict['file_data'][rootname]['thumbnail'] = 'none'
+        else:
+            data_dict['file_data'][rootname]['thumbnail'] = 'none'
+
         try:
             data_dict['file_data'][rootname]['expstart'] = exp_start
             data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]

@@ -157,16 +157,13 @@ function change_int(file_root, num_ints, available_ints, method, direction = 'ri
  * @param {Integer} i - The index of the thumbnail
  * @param {String} file_root - The rootname of the file corresponding to the thumbnail
  */
-function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root) {
+function determine_filetype_for_thumbnail(thumbnail_dir, thumb_filename, i, file_root) {
 
-    // Update the thumbnail to show the most processed filetype
+    // Update the thumbnail filename
     var img = document.getElementById('thumbnail'+i);
-    if (suffixes.indexOf("rate") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_rate_integ0.thumb';
-        img.src = jpg_path;
-    } else if (suffixes.indexOf("dark") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_dark_integ0.thumb';
-        img.src = jpg_path;
+    if (thumb_filename != 'none') {
+        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + thumb_filename;
+        img.src = jpg_path
     };
 
 };
@@ -234,7 +231,7 @@ function determine_page_title_obs(instrument, proposal, observation) {
  */
 function get_radio_button_value(element_name) {
     var element = document.getElementsByName(element_name);
-      
+
     for(i = 0; i < element.length; i++) {
         if(element[i].checked) {
             return element[i].value;
@@ -458,7 +455,7 @@ function update_archive_page(inst, base_url) {
  * @param {Boolean} do_opt_args - Flag to calculate and send optional arguments in URL
  */
  function update_explore_image_page(inst, file_root, filetype, base_url, do_opt_args=false) {
-    
+
     /* if they exist set up the optional parameters before the ajax call*/
     optional_params = "";
     if(do_opt_args) {
@@ -482,9 +479,9 @@ function update_archive_page(inst, base_url) {
             // Build div content
             content = data["div"];
             content += data["script"];
-            
+
             /* Add the content to the div
-            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery. 
+            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
             */
             $('#explore_image').html(content);
 
@@ -648,7 +645,7 @@ function update_thumbnail_array(data) {
         $("#thumbnail-array")[0].innerHTML += content;
 
         // Add the appropriate image to the thumbnail
-        determine_filetype_for_thumbnail('/static/thumbnails/' , file.suffixes, i, rootname);
+        determine_filetype_for_thumbnail('/static/thumbnails/' , file.thumbnail, i, rootname);
     };
 };
 
