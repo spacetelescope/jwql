@@ -930,6 +930,7 @@ def view_image(request, inst, file_root, rewrite=False):
                'suffixes': image_info['suffixes'],
                'num_ints': image_info['num_ints'],
                'available_ints': image_info['available_ints'],
+               'total_ints': image_info['total_ints'],
                'form': form}
 
     return render(request, template, context)

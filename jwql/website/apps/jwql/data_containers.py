@@ -786,6 +786,7 @@ def get_image_info(file_root, rewrite):
     image_info['suffixes'] = []
     image_info['num_ints'] = {}
     image_info['available_ints'] = {}
+    image_info['total_ints'] = {}
 
     # Find all of the matching files
     proposal_dir = file_root[:7]
@@ -823,11 +824,17 @@ def get_image_info(file_root, rewrite):
         if os.path.exists(jpg_filepath) and not rewrite:
             pass
 
-        # Record how many integrations there are per filetype
+        # Record how many integrations have been saved as preview images per filetype
         jpgs = glob.glob(os.path.join(prev_img_filesys, proposal_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
         image_info['num_ints'][suffix] = len(jpgs)
         image_info['available_ints'][suffix] = sorted([int(jpg.split('_')[-1].replace('.jpg', '').replace('integ', '')) for jpg in jpgs])
         image_info['all_jpegs'].append(jpg_filepath)
+
+        # Record how many integrations exist per filetype
+        if suffix not in SUFFIXES_WITH_AVERAGED_INTS:
+            image_info['total_ints'][suffix] = fits.getheader(filename)['NINTS']
+        else:
+            image_info['total_ints'][suffix] = 1
 
     return image_info
 

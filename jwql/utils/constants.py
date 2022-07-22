@@ -368,6 +368,9 @@ SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISM
 # since those are essentially level 2 files that are output by the level 3 pipeline.
 SUFFIXES_TO_ADD_ASSOCIATION = ['crf', 'crfints']
 
+# Filename suffixes where data have been averaged over integrations
+SUFFIXES_WITH_AVERAGED_INTS = ['rate', 'cal', 'crf']
+
 # Base name for the file listing the thumbnail images for a given instrument.
 # The complete name will have "_{instrument.lower}.txt" added to the end of this.
 THUMBNAIL_LISTFILE = 'thumbnail_inventory'
