@@ -363,6 +363,11 @@ READPATT_PER_INSTRUMENT = {'fgs': ['FGS', 'FGSRAPID', 'FGS60', 'FGS840', 'FGS837
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
 
+# Filename suffixes that need to include the association value in the suffix in
+# order to identify the preview image file. This should only be crf and crfints,
+# since those are essentially level 2 files that are output by the level 3 pipeline.
+SUFFIXES_TO_ADD_ASSOCIATION = ['crf', 'crfints']
+
 # Base name for the file listing the thumbnail images for a given instrument.
 # The complete name will have "_{instrument.lower}.txt" added to the end of this.
 THUMBNAIL_LISTFILE = 'thumbnail_inventory'

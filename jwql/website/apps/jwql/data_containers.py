@@ -50,7 +50,7 @@ from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
 from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
-                                 JWST_INSTRUMENT_NAMES_SHORTHAND
+                                 JWST_INSTRUMENT_NAMES_SHORTHAND, SUFFIXES_TO_ADD_ASSOCIATION
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
 from .forms import InstrumentAnomalySubmitForm
@@ -804,6 +804,13 @@ def get_image_info(file_root, rewrite):
 
         # Get suffix information
         suffix = filename_parser(filename)['suffix']
+
+        # For crf or crfints suffixes, we need to also include the association value
+        # in the suffix, so that preview images can be found later.
+        if suffix in SUFFIXES_TO_ADD_ASSOCIATION:
+            assn = filename.split('_')[-2]
+            suffix = f'{assn}_{suffix}'
+
         image_info['suffixes'].append(suffix)
 
         # Determine JPEG file location
