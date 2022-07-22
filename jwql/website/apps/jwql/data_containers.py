@@ -1472,7 +1472,6 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         # exist in the thumbnail filesystem. In the case where neither rate nor
         # dark thumbnails are present, revert to 'none', which will then cause the
         # "thumbnail not available" fallback image to be used.
-        proposal_string = f'jw{str(proposal).zfill(5)}'
         available_thumbnails = get_thumbnails_by_rootname(rootname)
 
         if len(available_thumbnails) > 0:
