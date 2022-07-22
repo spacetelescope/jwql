@@ -63,7 +63,7 @@
     document.getElementById("slider_range").value = 1;
     document.getElementById("slider_range").max = num_ints[type];
     document.getElementById("slider_val").innerHTML = 1;
-    document.getElementById("total_ints").innerHTML = total_ints;
+    document.getElementById("total_ints").innerHTML = total_ints[type];
 
     // Update the integration changing buttons
     if (num_ints[type] > 1) {
