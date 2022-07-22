@@ -3,6 +3,8 @@
  *
  * @author Lauren Chambers
  * @author Matthew Bourque
+ * @author Brad Sappington
+ * @author Bryan Hilbert
  */
 
  /**
