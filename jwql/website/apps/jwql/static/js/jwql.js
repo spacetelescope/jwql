@@ -3,6 +3,8 @@
  *
  * @author Lauren Chambers
  * @author Matthew Bourque
+ * @author Brad Sappington
+ * @author Bryan Hilbert
  */
 
  /**
@@ -240,7 +242,7 @@ function determine_page_title_obs(instrument, proposal, observation) {
  */
 function get_radio_button_value(element_name) {
     var element = document.getElementsByName(element_name);
-      
+
     for(i = 0; i < element.length; i++) {
         if(element[i].checked) {
             return element[i].value;
@@ -261,7 +263,7 @@ function get_number_or_none(element_id) {
     return limit;
 }
 
-/** 
+/**
  * If an image is not found, replace with temporary image sized to thumbnail
  */
 function image_error(image, makeThumbnail=false) {
@@ -464,7 +466,7 @@ function update_archive_page(inst, base_url) {
  * @param {Boolean} do_opt_args - Flag to calculate and send optional arguments in URL
  */
  function update_explore_image_page(inst, file_root, filetype, base_url, do_opt_args=false) {
-    
+
     /* if they exist set up the optional parameters before the ajax call*/
     optional_params = "";
     if(do_opt_args) {
@@ -488,9 +490,9 @@ function update_archive_page(inst, base_url) {
             // Build div content
             content = data["div"];
             content += data["script"];
-            
+
             /* Add the content to the div
-            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery. 
+            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
             */
             $('#explore_image').html(content);
 
