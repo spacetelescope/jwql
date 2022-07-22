@@ -369,7 +369,7 @@ SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISM
 SUFFIXES_TO_ADD_ASSOCIATION = ['crf', 'crfints']
 
 # Filename suffixes where data have been averaged over integrations
-SUFFIXES_WITH_AVERAGED_INTS = ['rate', 'cal', 'crf', 'i2d']
+SUFFIXES_WITH_AVERAGED_INTS = ['rate', 'cal', 'crf', 'i2d', 'bsub']
 
 # Base name for the file listing the thumbnail images for a given instrument.
 # The complete name will have "_{instrument.lower}.txt" added to the end of this.

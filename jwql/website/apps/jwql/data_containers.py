@@ -830,8 +830,10 @@ def get_image_info(file_root, rewrite):
         image_info['available_ints'][suffix] = sorted([int(jpg.split('_')[-1].replace('.jpg', '').replace('integ', '')) for jpg in jpgs])
         image_info['all_jpegs'].append(jpg_filepath)
 
-        # Record how many integrations exist per filetype
-        if suffix not in SUFFIXES_WITH_AVERAGED_INTS:
+        # Record how many integrations exist per filetype. crf needs to be treated
+        # separately because the suffix includes the association number, which can't
+        # be predicted for a given program.
+        if ((suffix not in SUFFIXES_WITH_AVERAGED_INTS) and (suffix[-3:] != 'crf')):
             image_info['total_ints'][suffix] = fits.getheader(filename)['NINTS']
         else:
             image_info['total_ints'][suffix] = 1
