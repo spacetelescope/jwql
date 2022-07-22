@@ -1501,7 +1501,24 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         data_dict['file_data'][rootname] = {}
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
-        data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for filename in available_files]
+
+        # We generate thumbnails only for rate and dark files. Check if these files
+        # exist in the thumbnail filesystem. In the case where neither rate nor
+        # dark thumbnails are present, revert to 'none', which will then cause the
+        # "thumbnail not available" fallback image to be used.
+        available_thumbnails = get_thumbnails_by_rootname(rootname)
+
+        if len(available_thumbnails) > 0:
+            preferred = [thumb for thumb in available_thumbnails if 'rate' in thumb]
+            if len(preferred) == 0:
+                preferred = [thumb for thumb in available_thumbnails if 'dark' in thumb]
+            if len(preferred) > 0:
+                data_dict['file_data'][rootname]['thumbnail'] = os.path.basename(preferred[0])
+            else:
+                data_dict['file_data'][rootname]['thumbnail'] = 'none'
+        else:
+            data_dict['file_data'][rootname]['thumbnail'] = 'none'
+
         try:
             data_dict['file_data'][rootname]['expstart'] = exp_start
             data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
