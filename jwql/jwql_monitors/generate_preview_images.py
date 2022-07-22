@@ -722,7 +722,7 @@ def process_program(program):
             im.preview_output_directory = preview_output_directory
             im.thumbnail_output_directory = thumbnail_output_directory
 
-            # Only create a thumbnail for rate or dark files only. Create preview
+            # Create a thumbnail for rate or dark files only. Create preview
             # images for all filetypes
             if 'rate.fits' in filename or 'dark.fits' in filename:
                 im.make_image(max_img_size=8, create_thumbnail=True)
