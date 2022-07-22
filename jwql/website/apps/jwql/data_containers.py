@@ -824,7 +824,7 @@ def get_image_info(file_root, rewrite):
             pass
 
         # Record how many integrations there are per filetype
-        jpgs = glob.glob(os.path.join(prev_img_filesys, observation_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
+        jpgs = glob.glob(os.path.join(prev_img_filesys, proposal_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
         image_info['num_ints'][suffix] = len(jpgs)
         image_info['available_ints'][suffix] = sorted([int(jpg.split('_')[-1].replace('.jpg', '').replace('integ', '')) for jpg in jpgs])
         image_info['all_jpegs'].append(jpg_filepath)
