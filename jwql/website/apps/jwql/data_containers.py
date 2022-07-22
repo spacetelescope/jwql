@@ -1473,7 +1473,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         # dark thumbnails are present, revert to 'none', which will then cause the
         # "thumbnail not available" fallback image to be used.
         proposal_string = f'jw{str(proposal).zfill(5)}'
-        available_thumbnails = glob.glob(os.path.join(config['thumbnail_filesystem'], proposal_string, f'{rootname}*thumb'))
+        available_thumbnails = get_thumbnails_by_rootname(rootname)
 
         if len(available_thumbnails) > 0:
             preferred = [thumb for thumb in available_thumbnails if 'rate' in thumb]
