@@ -159,22 +159,13 @@ function change_int(file_root, num_ints, available_ints, method, direction = 'ri
  * @param {Integer} i - The index of the thumbnail
  * @param {String} file_root - The rootname of the file corresponding to the thumbnail
  */
-function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root) {
+function determine_filetype_for_thumbnail(thumbnail_dir, thumb_filename, i, file_root) {
 
-    // Update the thumbnail to show the most processed filetype
+    // Update the thumbnail filename
     var img = document.getElementById('thumbnail'+i);
-    if (suffixes.indexOf("cal") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_cal_integ0.thumb';
-        img.src = jpg_path;
-    } else if (suffixes.indexOf("rate") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_rate_integ0.thumb';
-        img.src = jpg_path;
-    } else if (suffixes.indexOf("uncal") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
-        img.src = jpg_path;
-    } else if (suffixes.indexOf("dark") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_dark_integ0.thumb';
-        img.src = jpg_path;
+    if (thumb_filename != 'none') {
+        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + thumb_filename;
+        img.src = jpg_path
     };
 
 };
@@ -656,7 +647,7 @@ function update_thumbnail_array(data) {
         $("#thumbnail-array")[0].innerHTML += content;
 
         // Add the appropriate image to the thumbnail
-        determine_filetype_for_thumbnail('/static/thumbnails/' , file.suffixes, i, rootname);
+        determine_filetype_for_thumbnail('/static/thumbnails/' , file.thumbnail, i, rootname);
     };
 };
 
