@@ -51,7 +51,7 @@ from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
 from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
-                                 JWST_INSTRUMENT_NAMES_SHORTHAND, SUFFIXES_TO_ADD_ASSOCIATION
+                                 JWST_INSTRUMENT_NAMES_SHORTHAND, SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
 from .forms import InstrumentAnomalySubmitForm
