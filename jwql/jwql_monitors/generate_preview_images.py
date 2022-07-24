@@ -679,6 +679,10 @@ def process_program(program):
 
     # remove specific "ignored" suffix files (currently "original" and "stream")
     filenames = [filename for filename in filenames if os.path.splitext(filename.split('_')[-1])[0] not in IGNORED_SUFFIXES]
+
+    # Remove guiding files, as these are not currently visible in JWQL anyway
+    filenames = [filename for filename in filenames if 'guider_mode' not in filename_parser(filename)]
+
     logging.info('Found {} filenames'.format(len(filenames)))
     logging.info('')
 
