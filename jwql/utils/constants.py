@@ -246,7 +246,7 @@ GUIDER_FILENAME_TYPE = ['gs-fg', 'gs-track', 'gs-id', 'gs-acq1', 'gs-acq2']
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
 
 # JWQL should ignore some filetypes in the filesystem.
-IGNORED_SUFFIXES = ['original', 'stream']
+IGNORED_SUFFIXES = ['original', 'stream', 'x1d', 'x1dints', 'c1d']
 
 # Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
