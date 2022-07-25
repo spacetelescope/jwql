@@ -410,7 +410,7 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
     return jump_output, pipe_output, fitopt_output
 
 
-def run_pipeline(input_file, in_ext, ext_or_exts, instrument, step_args={}):
+def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
     """Convenience function for using the ``run_calwebb_detector1`` function on a data 
     file, including the following steps:
     
@@ -437,9 +437,8 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, step_args={}):
     instrument : str
         Name of the instrument being calibrated
     
-    step_args : dict
-        A dictionary containing custom arguments to supply to individual pipeline steps. 
-        Passed on directly to the pipeline task.
+    jump_pipe : bool
+        Whether the detector1 jump pipeline is being used (e.g. the bad pixel monitor)
 
     Returns
     -------
@@ -474,7 +473,16 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, step_args={}):
             logging.info("\t\tAcquired Lock.")
             logging.info("\t\tCopying {} to {}".format(input_file, send_path))
             copy_files([uncal_file], send_path)
-            result = run_calwebb_detector1.delay(uncal_name, instrument, step_args=step_args)
+            if jump_pipe:
+                ramp_fit = False
+                save_fitopt = False
+                if "rate" in ext_or_exts or "rateint" in ext_or_exts:
+                    ramp_fit = True
+                if "fitopt" in ext_or_exts:
+                    save_fitopt = True
+                result = calwebb_detector1_save_jump.delay(uncal_name, ramp_fit=ramp_fit, save_fitopt=save_fitopt)
+            else:
+                result = run_calwebb_detector1.delay(uncal_name, instrument)
             logging.info("\t\tStarting with ID {}".format(result.id))
             processed_path = result.get()
             logging.info("\t\tPipeline Complete")
