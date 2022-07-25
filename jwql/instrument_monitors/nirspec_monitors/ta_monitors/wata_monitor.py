@@ -55,11 +55,7 @@ class WATA():
     for NIRSpec and will run the monitor on these files. The monitor will
     extract the TA information from the file headers and perform all
     statistical measurements. Results will be saved to the WATA database.
-    
-    Alternatively, the class can use the dictionaries provided created by
-    the NIRSpec Python Implementation of OSS TA (which we call 'the
-    replica') and obtain the TA information from there.
-    
+
     Attributes
     ----------
     output_dir : str
@@ -78,10 +74,12 @@ class WATA():
         Name of the aperture used for the dark current (e.g.
         "NRS_FULL_MSA", "NRS_S1600A1_SLIT").
     """
-    
+
+
     def __init__(self):
         """ Initialize an instance of the WATA class """
-    
+
+
     def get_tainfo_from_fits(self, fits_file):
         """ Get the TA information from the fits file
         Parameters
@@ -107,7 +105,8 @@ class WATA():
                 exit()
             hdr = ff[0].header
         return hdr
-    
+
+
     def get_wata_data(self, new_filenames):
         """ Create the data array for the WATA input files
         Parameters
@@ -174,7 +173,7 @@ class WATA():
         wata_df = pd.DataFrame(wata_dict)
         wata_df.index = wata_df.index + 1
         return wata_df
-            
+
 
     def plt_status(self, source):
         """ Plot the WATA status (passed = 0 or failed = 1).

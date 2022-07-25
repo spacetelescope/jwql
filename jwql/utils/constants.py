@@ -9,6 +9,7 @@ Authors
     - Ben Sunnquist
     - Teagan King
     - Mike Engesser
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -245,7 +246,7 @@ GUIDER_FILENAME_TYPE = ['gs-fg', 'gs-track', 'gs-id', 'gs-acq1', 'gs-acq2']
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
 
 # JWQL should ignore some filetypes in the filesystem.
-IGNORED_SUFFIXES = ['original', 'stream', 'x1d', 'x1dints', 'c1d']
+IGNORED_SUFFIXES = ['original', 'stream']
 
 # Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
@@ -323,7 +324,7 @@ MONITORS = {
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
-                ('Target Acquisition Monitor', '#'),
+                ('Target Acquisition Monitors', '/nirspec/ta_monitors'),
                 ('Data Trending', '#'),
                 ('Detector Health Monitor', '#'),
                 ('Ref Pix Monitor', '#'),

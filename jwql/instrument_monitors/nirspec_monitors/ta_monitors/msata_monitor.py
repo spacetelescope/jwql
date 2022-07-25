@@ -4,6 +4,7 @@
 
 # HISTORY
 #    Feb 2022 - Vr. 1.0: Completed initial version
+#    Jul 2022 - Vr. 1.1: Changed keywords to final flight values
 
 
 """
@@ -23,7 +24,7 @@ ______
 Use
 ---
     This module can be used from the command line as follows:
-    python nrs_ta_monitors.py
+    python msata_monitor.py
     
 """
 
@@ -52,16 +53,12 @@ from jwql.jwql_monitors import monitor_mast
 
 
 class MSATA():
-    """ Class for executint the NIRSpec WATA monitor.
+    """ Class for executint the NIRSpec MSATA monitor.
 
-    This class will search for new WATA current files in the file systems
+    This class will search for new MSATA current files in the file systems
     for NIRSpec and will run the monitor on these files. The monitor will
-    extract the TA information from the file headers and perform all
+    extract the TA information from the fits file headers and perform all
     statistical measurements. Results will be saved to the MSATA database.
-    
-    Alternatively, the class can use the dictionaries provided created by
-    the NIRSpec Python Implementation of OSS TA (which we call 'the
-    replica') and obtain the TA information from there.
 
     Attributes
     ----------
@@ -83,8 +80,10 @@ class MSATA():
 
     """
 
+
     def __init__(self):
         """ Initialize an instance of the MSATA class """
+
 
     def get_tainfo_from_fits(self, fits_file):
         """ Get the TA information from the fits file
@@ -158,13 +157,13 @@ class MSATA():
                           'box_peak_value':  {'loc': 'ta_table', 'alt_key': None, 'name': 'box_peak_value'},
                           'reference_star_mag':  {'loc': 'ta_table', 'alt_key': None, 'name': 'reference_star_mag'},
                           'convergence_status':  {'loc': 'ta_table', 'alt_key': None, 'name': 'convergence_status'},
-                          'reference_star_number':  {'loc': 'ta_table', 'alt_key': None, 'name': 'reference_star_number'},
+                          'order_number':  {'loc': 'ta_table', 'alt_key': None, 'name': 'reference_star_number'},
                           'lsf_removed_status':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_status'},
                           'lsf_removed_reason':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_reason'},
                           'lsf_removed_x':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_x'},
                           'lsf_removed_y':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_y'},
-                          'found_v2':  {'loc': 'ta_table', 'alt_key': None, 'name': 'found_v2'},
-                          'found_v3':  {'loc': 'ta_table', 'alt_key': None, 'name': 'found_v3'}
+                          'planned_v2':  {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v2'},
+                          'planned_v3':  {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v3'}
                          }
         # fill out the dictionary  to create the dataframe
         msata_dict = {}
@@ -539,8 +538,8 @@ class MSATA():
         lsf_removed_reason = source.data['lsf_removed_reason']
         lsf_removed_x = source.data['lsf_removed_x']
         lsf_removed_y = source.data['lsf_removed_y']
-        found_v2 = source.data['found_v2']
-        found_v3 = source.data['found_v3']
+        planned_v2 = source.data['planned_v2']
+        planned_v3 = source.data['planned_v3']
         reference_star_number = source.data['reference_star_number']
         visits_stars_mags = source.data['reference_star_mag']
         box_peak_value = source.data['box_peak_value']
@@ -563,8 +562,8 @@ class MSATA():
                 c.append(ci)
                 if 'not_removed' in lsf_removed_status[i][j]:
                     s.append('SUCCESS')
-                    x.append(found_v2[i][j])
-                    y.append(found_v3[i][j])
+                    x.append(planned_v2[i][j])
+                    y.append(planned_v3[i][j])
                 else:
                     s.append(lsf_removed_reason[i][j])
                     x.append(lsf_removed_x[i][j])
@@ -677,7 +676,7 @@ class MSATA():
     def run(self):
         """The main method. See module docstrings for further details."""
         
-        logging.info('Begin logging for wata_monitor')
+        logging.info('Begin logging for msata_monitor')
         
         # Get the output directory and setup a directory to store the data
         self.output_dir = os.path.join(get_config()['outputs'], 'msata_monitor')
@@ -698,7 +697,7 @@ class MSATA():
         # most recent previous search as the starting time
         new_entries = monitor_utils.mast_query_ta(self.instrument, self.aperture, self.query_start, self.query_end)
         msata_entries = len(new_entries)
-        logging.info('\tMAST query has returned {} new WATA files for {}, {} to run the MSATA monitor.'.format(msata_entries, self.instrument, self.aperture))
+        logging.info('\tMAST query has returned {} new MSATA files for {}, {} to run the MSATA monitor.'.format(msata_entries, self.instrument, self.aperture))
         
         # Get full paths to the files
         new_filenames = []
