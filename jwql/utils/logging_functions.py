@@ -159,7 +159,8 @@ def make_log_file(module):
 
     # Build filename
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M')
-    filename = '{0}_{1}.log'.format(module, timestamp)
+    hostname = socket.gethostname()
+    filename = '{0}_{1}_{2}.log'.format(module, hostname, timestamp)
 
     # Determine save location
     user = pwd.getpwuid(os.getuid()).pw_name
