@@ -52,6 +52,8 @@ from jwql.utils.constants import MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LIS
 from jwql.utils.constants import EXPLORE_IMAGE_EXTENSIONS_EXCLUDE, IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.credentials import get_mast_token
 from .forms import InstrumentAnomalySubmitForm
+from astroquery.mast import Mast
+from jwedb.edb_interface import mnemonic_inventory
 
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
@@ -71,8 +73,7 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     from astropy import config
     conf = config.get_config('astroquery')
     conf['mast'] = {'server': 'https://{}'.format(mast_flavour)}
-from astroquery.mast import Mast
-from jwedb.edb_interface import mnemonic_inventory
+
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
@@ -998,8 +999,6 @@ def get_proposal_info(filepaths):
                 except KeyError:
                     pass
             obsnums = sorted(obsnums)
-
-            # obsnums = sorted([filename_parser(fname)['observation'] for fname in files_for_proposal])
             observations.extend(obsnums)
             num_files.append(len(files_for_proposal))
             proposals.append(proposal)
@@ -1448,7 +1447,6 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         except KeyError:
             pass
     obs_list = sorted(list(set(all_obs)))
-
 
     # Get the available files for the instrument
     filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart'])

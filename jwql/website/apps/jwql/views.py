@@ -396,7 +396,6 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
     for root in rootnames:
         try:
             all_obs.append(filename_parser(root)['observation'])
-            # all_obs = [filename_parser(root)['observation'] for root in rootnames]
         except KeyError:
             pass
     obs_list = sorted(list(set(all_obs)))
