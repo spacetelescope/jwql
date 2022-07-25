@@ -32,7 +32,6 @@ import re
 import tempfile
 
 from astropy.io import fits
-from astropy.table import Table
 from astropy.time import Time
 from bs4 import BeautifulSoup
 from django.conf import settings
@@ -50,9 +49,7 @@ from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as mi
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
-from jwql.utils.constants import EXPLORE_IMAGE_EXTENSIONS, IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
-                                 JWST_INSTRUMENT_NAMES_SHORTHAND
-from jwql.utils.preview_image import PreviewImage
+from jwql.utils.constants import EXPLORE_IMAGE_EXTENSIONS_EXCLUDE, IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.credentials import get_mast_token
 from .forms import InstrumentAnomalySubmitForm
 
@@ -844,7 +841,7 @@ def get_explorer_extension_names(fits_file, filetype):
 
     header_info = get_header_info(fits_file, filetype)
 
-    extensions = [header_info[extension]['EXTNAME'] for extension in header_info if header_info[extension]['EXTNAME'].upper() in EXPLORE_IMAGE_EXTENSIONS]
+    extensions = [header_info[extension]['EXTNAME'] for extension in header_info if header_info[extension]['EXTNAME'].upper() not in EXPLORE_IMAGE_EXTENSIONS_EXCLUDE]
     return extensions
 
 
@@ -1036,7 +1033,6 @@ def get_rootnames_for_instrument_proposal(instrument, proposal):
         List of rootnames for the given instrument and proposal number
     """
     tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
-    #tap_results = tap_service.search(f"select obs_id from dbo.ObsPointing where obs_collection='JWST' and calib_level>0 and instrument_name like '{instrument.lower()}' and proposal_id={proposal}")
     tap_results = tap_service.search(f"select observationID from dbo.CaomObservation where collection='JWST' and maxLevel=2 and insName like '{instrument.lower()}' and prpID='{int(proposal)}'")
     prop_table = tap_results.to_table()
     rootnames = prop_table['observationID'].data

@@ -471,7 +471,7 @@ function update_archive_page(inst, base_url) {
         low_lim = get_number_or_none("low_lim");
         high_lim = get_number_or_none("high_lim");
         ext_name = get_radio_button_value("extension");
-        optional_params = optional_params + "_" + scaling + "_" + low_lim + "_" + high_lim + "_" + ext_name;
+        optional_params = optional_params + "/scaling_" + scaling + "/low_" + low_lim + "/high_" + high_lim + "/ext_" + ext_name;
     }
 
     $.ajax({

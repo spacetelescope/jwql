@@ -891,7 +891,7 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
     if high_lim is not None:
         high_lim = float(high_lim)
 
-    int_preview_image = InteractivePreviewImg(full_fits_file, low_lim, high_lim, scaling)
+    int_preview_image = InteractivePreviewImg(full_fits_file, low_lim, high_lim, scaling, None, ext_name)
 
     context = {'inst': "inst",
                'script': int_preview_image.script,

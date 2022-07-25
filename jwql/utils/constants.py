@@ -162,7 +162,7 @@ EXP_TYPE_PER_INSTRUMENT = {'fgs': ['FGS_FOCUS', 'FGS_IMAGE', 'FGS_INTFLAT',
                                        'NRS_CONFIRM', 'NRS_FIXEDSLIT', 'NRS_MIMF', 'NRS_FOCUS',
                                        'NRS_TACONFIRM', 'NRS_WATA', 'NRS_MSATA']}
 
-EXPLORE_IMAGE_EXTENSIONS = ["SCI", "DQ", "GROUPDQ", "PIXELDQ", "ERR"]
+EXPLORE_IMAGE_EXTENSIONS_EXCLUDE = ["PRIMARY", "ASDF", "INT_TIMES"]
 
 EXPTYPES = {"nircam": {"imaging": "NRC_IMAGE", "ts_imaging": "NRC_TSIMAGE",
                        "wfss": "NRC_WFSS", "ts_grism": "NRC_TSGRISM"},

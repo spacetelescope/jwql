@@ -29,7 +29,11 @@
         <br>
         Extension:&nbsp;&nbsp;
         {% for extension in extensions %}
-            <input type="radio" name="extension" value="{{ extension }}" id="{{ extension }}"> {{ extension }} &nbsp;&nbsp;&nbsp;&nbsp;
+            {% if extension == 'SCI' %}
+                <input type="radio" name="extension" value="{{ extension }}" id="{{ extension }}" checked="checked"> {{ extension }} &nbsp;&nbsp;&nbsp;&nbsp;
+            {% else %}
+                <input type="radio" name="extension" value="{{ extension }}" id="{{ extension }}"> {{ extension }} &nbsp;&nbsp;&nbsp;&nbsp;
+            {% endif %}
         {% endfor %}
 		<br>
 
