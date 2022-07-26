@@ -217,6 +217,15 @@ class PreviewImage():
                 if 'PIXELDQ' in extnames:
                     dq = hdulist['PIXELDQ'].data
                     dq = (dq & dqflags.pixel['NON_SCIENCE'] == 0)
+
+                    # Case where all pixels are flagged as NON_SCIENCE
+                    # This shouldn't happen, but preview_image did crash
+                    # at one point saying that there were no good pixels to
+                    # work with.
+                    if not np.any(dq):
+                        logging.warning('All pixels flagged as NON_SCIENCE. Using all pixels to determine scaling.')
+                        yd, xd = data.shape[-2:]
+                        dq = np.ones((yd, xd), dtype="bool")
                 else:
                     yd, xd = data.shape[-2:]
                     dq = np.ones((yd, xd), dtype="bool")
