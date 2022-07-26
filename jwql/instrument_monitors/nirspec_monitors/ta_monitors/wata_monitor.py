@@ -173,7 +173,7 @@ class WATA():
         wata_df = pd.DataFrame(wata_dict)
         wata_df.index = wata_df.index + 1
         return wata_df
-
+            
 
     def plt_status(self, source):
         """ Plot the WATA status (passed = 0 or failed = 1).
@@ -235,6 +235,12 @@ class WATA():
                    y_axis_label='Residual V3 Offset')
         plot.circle(x='v2_offset', y='v3_offset', source=source,
                  color="purple", size=7, fill_alpha=0.5)
+        plot.x_range = Range1d(-0.5, 0.5)
+        plot.y_range = Range1d(-0.5, 0.5)
+        # mark origin lines
+        vline = Span(location=0, dimension='height', line_color='black', line_width=0.7)
+        hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+        plot.renderers.extend([vline, hline])
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
@@ -262,6 +268,10 @@ class WATA():
                    y_axis_label='Residual V2 Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='v2_offset', source=source,
                  color="blue", size=7, fill_alpha=0.5)
+        plot.y_range = Range1d(-0.5, 0.5)
+        # mark origin line
+        hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+        plot.renderers.extend([hline])
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
@@ -289,6 +299,10 @@ class WATA():
                    y_axis_label='Residual V3 Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='v2_offset', source=source,
                  color="blue", size=7, fill_alpha=0.5)
+        plot.y_range = Range1d(-0.5, 0.5)
+        # mark origin line
+        hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+        plot.renderers.extend([hline])
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
@@ -371,6 +385,12 @@ class WATA():
         plot.y_range = Range1d(limits[0], limits[1])
         plot.circle(x='corr_col', y='corr_row', source=source,
                    color="purple", size=7, fill_alpha=0.5)
+        plot.x_range = Range1d(-32.0, 32.0)
+        plot.y_range = Range1d(-32.0, 32.0)
+        # mark origin lines
+        vline = Span(location=0, dimension='height', line_color='black', line_width=0.7)
+        hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+        plot.renderers.extend([vline, hline])
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),

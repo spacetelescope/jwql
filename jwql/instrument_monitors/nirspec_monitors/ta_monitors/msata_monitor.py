@@ -157,7 +157,7 @@ class MSATA():
                           'box_peak_value':  {'loc': 'ta_table', 'alt_key': None, 'name': 'box_peak_value'},
                           'reference_star_mag':  {'loc': 'ta_table', 'alt_key': None, 'name': 'reference_star_mag'},
                           'convergence_status':  {'loc': 'ta_table', 'alt_key': None, 'name': 'convergence_status'},
-                          'order_number':  {'loc': 'ta_table', 'alt_key': None, 'name': 'reference_star_number'},
+                          'reference_star_number':  {'loc': 'ta_table', 'alt_key': None, 'name': 'reference_star_number'},
                           'lsf_removed_status':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_status'},
                           'lsf_removed_reason':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_reason'},
                           'lsf_removed_x':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_x'},
@@ -165,7 +165,7 @@ class MSATA():
                           'planned_v2':  {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v2'},
                           'planned_v3':  {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v3'}
                          }
-        # fill out the dictionary  to create the dataframe
+        # fill out the dictionary to create the dataframe
         msata_dict = {}
         for fits_file in new_filenames:
             msata_info = self.get_tainfo_from_fits(fits_file)
@@ -180,9 +180,20 @@ class MSATA():
                 if key_dict['loc'] == 'ta_table':
                     ext = ta_table
                 try:
-                    msata_dict[key_name].append(ext[key])
+                    val = ext[key]
                 except:
-                    msata_dict[key_name].append(ext[key_dict['alt_key']])
+                    val = ext[key_dict['alt_key']]
+                """ UNCOMMENTED THIS BLOCK IN CASE WE DO WANT TO GET RID OF the 999.0 values
+                # remove the 999 values for arrays
+                if isinstance(val, np.ndarray):
+                    if val.dtype.char == 'd' or val.dtype.char == 'f':
+                        val = np.where(abs(val) != 999.0, val, 0.0)
+                # remove the 999 from single values
+                elif not isinstance(val, str):
+                    if float(abs(val)) == 999.0:
+                        val = 0.0
+                """
+                msata_dict[key_name].append(val)
         # create the pandas dataframe
         msata_df = pd.DataFrame(msata_dict)
         msata_df.index = msata_df.index + 1
@@ -264,6 +275,12 @@ class MSATA():
                    y_axis_label='Least Squares Residual V3 Offset')
         plot.circle(x='lsv2offset', y='lsv3offset', source=source,
                  color="purple", size=7, fill_alpha=0.5)
+        plot.x_range = Range1d(-0.5, 0.5)
+        plot.y_range = Range1d(-0.5, 0.5)
+        # mark origin lines
+        vline = Span(location=0, dimension='height', line_color='black', line_width=0.7)
+        hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+        plot.renderers.extend([vline, hline])
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
@@ -293,6 +310,10 @@ class MSATA():
                    y_axis_label='Least Squares Residual V2 Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsv2offset', source=source,
                  color="blue", size=7, fill_alpha=0.5)
+        plot.y_range = Range1d(-0.5, 0.5)
+        # mark origin line
+        hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+        plot.renderers.extend([hline])
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
@@ -322,6 +343,10 @@ class MSATA():
                    y_axis_label='Least Squares Residual V3 Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsv3offset', source=source,
                  color="blue", size=7, fill_alpha=0.5)
+        plot.y_range = Range1d(-0.5, 0.5)
+        # mark origin line
+        hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+        plot.renderers.extend([hline])
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
@@ -352,6 +377,12 @@ class MSATA():
                    y_axis_label='Least Squares Residual V3 Sigma Offset')
         plot.circle(x='lsv2sigma', y='lsv3sigma', source=source,
                  color="purple", size=7, fill_alpha=0.5)
+        plot.x_range = Range1d(-0.1, 0.1)
+        plot.y_range = Range1d(-0.1, 0.1)
+        # mark origin lines
+        vline = Span(location=0, dimension='height', line_color='black', line_width=0.7)
+        hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+        plot.renderers.extend([vline, hline])
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
@@ -391,6 +422,12 @@ class MSATA():
                    y_axis_label='Least Squares Residual V3 Offset + half-facet')
         plot.circle(x='v2_half_fac_corr', y='v3_half_fac_corr', source=source,
                  color="purple", size=7, fill_alpha=0.5)
+        plot.x_range = Range1d(-0.5, 0.5)
+        plot.y_range = Range1d(-0.5, 0.5)
+        # mark origin lines
+        vline = Span(location=0, dimension='height', line_color='black', line_width=0.7)
+        hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+        plot.renderers.extend([vline, hline])
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
@@ -422,6 +459,10 @@ class MSATA():
                    y_axis_label='Least Squares Residual V2 Sigma Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsv2sigma', source=source,
                  color="blue", size=7, fill_alpha=0.5)
+        plot.y_range = Range1d(-0.1, 0.1)
+        # mark origin line
+        hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+        plot.renderers.extend([hline])
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
@@ -450,6 +491,10 @@ class MSATA():
                    y_axis_label='Least Squares Residual V3 Sigma Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsv3sigma', source=source,
                  color="blue", size=7, fill_alpha=0.5)
+        plot.y_range = Range1d(-0.1, 0.1)
+        # mark origin line
+        hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+        plot.renderers.extend([hline])
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
@@ -479,6 +524,10 @@ class MSATA():
                    y_axis_label='Least Squares Residual Roll Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsrolloffset', source=source,
                  color="blue", size=7, fill_alpha=0.5)
+        plot.y_range = Range1d(-25.0, 25.0)
+        # mark origin line
+        hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+        plot.renderers.extend([hline])
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
@@ -508,6 +557,10 @@ class MSATA():
                    y_axis_label='sqrt((V2_off)**2 + (V3_off)**2)', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsoffsetmag', source=source,
                  color="blue", size=7, fill_alpha=0.5)
+        plot.y_range = Range1d(-0.5, 0.5)
+        # mark origin line
+        hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
+        plot.renderers.extend([hline])
         hover = HoverTool()
         hover.tooltips=[
             ('Visit ID', '@visit_id'),
@@ -618,8 +671,8 @@ class MSATA():
                         ]
         plot.add_tools(hover)
         return plot
-        
-        
+
+
     def mk_plt_layout(self):
         """Create the bokeh plot layout"""
         source = self.msata_data
