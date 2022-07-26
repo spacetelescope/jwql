@@ -167,6 +167,11 @@ class PreviewImage():
         """
         nelem = np.sum(pixmap)
         numclip = np.int(clipperc * nelem)
+
+        # Ignore any pixels that are NaN
+        finite = np.isfinite(data)
+        pixmap = pixmap & finite
+
         sorted = np.sort(data[pixmap], axis=None)
         minval = sorted[numclip]
         maxval = sorted[-numclip - 1]
@@ -304,20 +309,21 @@ class PreviewImage():
 
             # If making a thumbnail, make a figure with no axes
             if thumbnail:
-                fig = plt.imshow(shiftdata,
-                                 norm=colors.LogNorm(vmin=shiftmin,
-                                                     vmax=shiftmax),
-                                 cmap=self.cmap)
+                self.fig, ax = plt.subplots(figsize=(3, 3))
+                cax = ax.imshow(shiftdata,
+                                norm=colors.LogNorm(vmin=shiftmin,
+                                                    vmax=shiftmax),
+                                cmap=self.cmap)
                 # Invert y axis
                 plt.gca().invert_yaxis()
 
                 plt.axis('off')
-                fig.axes.get_xaxis().set_visible(False)
-                fig.axes.get_yaxis().set_visible(False)
+                cax.axes.get_xaxis().set_visible(False)
+                cax.axes.get_yaxis().set_visible(False)
 
             # If preview image, add axes and colorbars
             else:
-                fig, ax = plt.subplots(figsize=(xsize, ysize))
+                self.fig, ax = plt.subplots(figsize=(xsize, ysize))
                 cax = ax.imshow(shiftdata,
                                 norm=colors.LogNorm(vmin=shiftmin,
                                                     vmax=shiftmax),
@@ -344,7 +350,7 @@ class PreviewImage():
                     dig = 2
                 format_string = "%.{}f".format(dig)
                 tlabelstr = [format_string % number for number in tlabelflt]
-                cbar = fig.colorbar(cax, ticks=tickvals)
+                cbar = self.fig.colorbar(cax, ticks=tickvals)
 
                 # This seems to correctly remove the ticks and labels we want to remove. It gives a warning that
                 # it doesn't work on log scales, which we don't care about. So let's ignore that warning.
@@ -364,8 +370,11 @@ class PreviewImage():
                 plt.rcParams.update({'xtick.labelsize': maxsize * 5. / 4})
 
         elif scale == 'linear':
-            fig, ax = plt.subplots(figsize=(xsize, ysize))
+            self.fig, ax = plt.subplots(figsize=(xsize, ysize))
             cax = ax.imshow(image, clim=(min_value, max_value), cmap=self.cmap)
+
+            # Invert y axis
+            plt.gca().invert_yaxis()
 
             if not thumbnail:
                 cbar = fig.colorbar(cax)
@@ -432,7 +441,7 @@ class PreviewImage():
             self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
                              maxsize=max_img_size, thumbnail=False)
             self.save_image(outfile, thumbnail=False)
-            plt.close()
+            plt.close(self.fig)
             self.preview_images.append(outfile)
 
             # Create thumbnail image matplotlib object, only for the
@@ -446,8 +455,9 @@ class PreviewImage():
                 self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
                                  maxsize=max_img_size, thumbnail=True)
                 self.save_image(outfile, thumbnail=True)
-                plt.close()
+                plt.close(self.fig)
                 self.thumbnail_images.append(self.thumbnail_filename)
+
 
     def save_image(self, fname, thumbnail=False):
         """
@@ -466,7 +476,6 @@ class PreviewImage():
             True if saving a thumbnail image, false for the full
             preview image.
         """
-
         plt.savefig(fname, bbox_inches='tight', pad_inches=0)
         permissions.set_permissions(fname)
 
