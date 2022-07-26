@@ -721,8 +721,9 @@ class MSATA():
         p9 = self.plt_roll_offset(source)
         p10 = self.plt_lsoffsetmag(source)
         p11 = self.plt_mags_time(source)
+        p12 = self.plt_tot_number_of_stars(source)
         # make grid
-        grid = gridplot([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11],
+        grid = gridplot([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12],
                         ncols=2, merge_tools=False)
         #show(grid)
         save(grid)
