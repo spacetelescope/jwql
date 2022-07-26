@@ -243,19 +243,18 @@ class MSATA():
         source.data["status_colors"] = status_colors
         # create a new bokeh plot
         plot = figure(title="MSATA Status [Succes=1, Fail=0]", x_axis_label='Time',
-                   y_axis_label='MSATA Status', x_axis_type='datetime',)
+                      y_axis_label='MSATA Status', x_axis_type='datetime',)
         limits = [-0.5, 1.5]
         plot.circle(x='time_arr', y='ta_status_bool', source=source,
-                 color='status_colors', size=7, fill_alpha=0.5)
+                    color='status_colors', size=7, fill_alpha=0.5)
         hover = HoverTool()
-        hover.tooltips=[
-            ('Visit ID', '@visit_id'),
-            ('TA status', '@ta_status'),
-            ('Filter', '@tafilter'),
-            ('Readout', '@readout'),
-            ('Date-Obs', '@date_obs'),
-            ('Subarray', '@subarray')
-        ]
+        hover.tooltips=[('Visit ID', '@visit_id'),
+                        ('TA status', '@ta_status'),
+                        ('Filter', '@tafilter'),
+                        ('Readout', '@readout'),
+                        ('Date-Obs', '@date_obs'),
+                        ('Subarray', '@subarray')
+                        ]
         plot.add_tools(hover)
         return plot
 
@@ -271,10 +270,10 @@ class MSATA():
         """
         # create a new bokeh plot
         plot = figure(title="MSATA Least Squares Residual V2-V3 Offsets",
-                   x_axis_label='Least Squares Residual V2 Offset',
-                   y_axis_label='Least Squares Residual V3 Offset')
+                      x_axis_label='Least Squares Residual V2 Offset',
+                      y_axis_label='Least Squares Residual V3 Offset')
         plot.circle(x='lsv2offset', y='lsv3offset', source=source,
-                 color="purple", size=7, fill_alpha=0.5)
+                    color="purple", size=7, fill_alpha=0.5)
         plot.x_range = Range1d(-0.5, 0.5)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin lines
@@ -282,16 +281,15 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
         hover = HoverTool()
-        hover.tooltips=[
-            ('Visit ID', '@visit_id'),
-            ('Filter', '@tafilter'),
-            ('Readout', '@readout'),
-            ('Date-Obs', '@date_obs'),
-            ('Subarray', '@subarray'),
-            ('LS roll offset', '@lsrolloffset'),
-            ('LS V2 offset', '@lsv2offset'),
-            ('LS V3 offset', '@lsv3offset')
-        ]
+        hover.tooltips=[('Visit ID', '@visit_id'),
+                        ('Filter', '@tafilter'),
+                        ('Readout', '@readout'),
+                        ('Date-Obs', '@date_obs'),
+                        ('Subarray', '@subarray'),
+                        ('LS roll offset', '@lsrolloffset'),
+                        ('LS V2 offset', '@lsv2offset'),
+                        ('LS V3 offset', '@lsv3offset')
+                        ]
         plot.add_tools(hover)
         return plot
 
@@ -307,24 +305,23 @@ class MSATA():
         """
         # create a new bokeh plot
         plot = figure(title="MSATA Least Squares V2 Offset vs Time", x_axis_label='Time',
-                   y_axis_label='Least Squares Residual V2 Offset', x_axis_type='datetime')
+                      y_axis_label='Least Squares Residual V2 Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsv2offset', source=source,
-                 color="blue", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.5)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips=[
-            ('Visit ID', '@visit_id'),
-            ('Filter', '@tafilter'),
-            ('Readout', '@readout'),
-            ('Date-Obs', '@date_obs'),
-            ('Subarray', '@subarray'),
-            ('LS roll offset', '@lsrolloffset'),
-            ('LS V2 offset', '@lsv2offset'),
-            ('LS V3 offset', '@lsv3offset')
-        ]
+        hover.tooltips=[('Visit ID', '@visit_id'),
+                        ('Filter', '@tafilter'),
+                        ('Readout', '@readout'),
+                        ('Date-Obs', '@date_obs'),
+                        ('Subarray', '@subarray'),
+                        ('LS roll offset', '@lsrolloffset'),
+                        ('LS V2 offset', '@lsv2offset'),
+                        ('LS V3 offset', '@lsv3offset')
+                        ]
         plot.add_tools(hover)
         return plot
 
@@ -340,24 +337,23 @@ class MSATA():
         """
         # create a new bokeh plot
         plot = figure(title="MSATA Least Squares V3 Offset vs Time", x_axis_label='Time',
-                   y_axis_label='Least Squares Residual V3 Offset', x_axis_type='datetime')
+                      y_axis_label='Least Squares Residual V3 Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsv3offset', source=source,
-                 color="blue", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.5)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips=[
-            ('Visit ID', '@visit_id'),
-            ('Filter', '@tafilter'),
-            ('Readout', '@readout'),
-            ('Date-Obs', '@date_obs'),
-            ('Subarray', '@subarray'),
-            ('LS roll offset', '@lsrolloffset'),
-            ('LS V2 offset', '@lsv2offset'),
-            ('LS V3 offset', '@lsv3offset')
-        ]
+        hover.tooltips=[('Visit ID', '@visit_id'),
+                        ('Filter', '@tafilter'),
+                        ('Readout', '@readout'),
+                        ('Date-Obs', '@date_obs'),
+                        ('Subarray', '@subarray'),
+                        ('LS roll offset', '@lsrolloffset'),
+                        ('LS V2 offset', '@lsv2offset'),
+                        ('LS V3 offset', '@lsv3offset')
+                        ]
         plot.add_tools(hover)
         return plot
 
@@ -373,10 +369,10 @@ class MSATA():
         """
         # create a new bokeh plot
         plot = figure(title="MSATA Least Squares Residual V2-V3 Sigma Offsets",
-                   x_axis_label='Least Squares Residual V2 Sigma Offset',
-                   y_axis_label='Least Squares Residual V3 Sigma Offset')
+                      x_axis_label='Least Squares Residual V2 Sigma Offset',
+                      y_axis_label='Least Squares Residual V3 Sigma Offset')
         plot.circle(x='lsv2sigma', y='lsv3sigma', source=source,
-                 color="purple", size=7, fill_alpha=0.5)
+                    color="purple", size=7, fill_alpha=0.5)
         plot.x_range = Range1d(-0.1, 0.1)
         plot.y_range = Range1d(-0.1, 0.1)
         # mark origin lines
@@ -384,18 +380,17 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
         hover = HoverTool()
-        hover.tooltips=[
-            ('Visit ID', '@visit_id'),
-            ('Filter', '@tafilter'),
-            ('Readout', '@readout'),
-            ('Date-Obs', '@date_obs'),
-            ('Subarray', '@subarray'),
-            ('LS roll offset', '@lsrolloffset'),
-            ('LS V2 offset', '@lsv2offset'),
-            ('LS V2 sigma', '@lsv2sigma'),
-            ('LS V3 offset', '@lsv3offset'),
-            ('LS V3 sigma', '@lsv3sigma')
-        ]
+        hover.tooltips=[('Visit ID', '@visit_id'),
+                        ('Filter', '@tafilter'),
+                        ('Readout', '@readout'),
+                        ('Date-Obs', '@date_obs'),
+                        ('Subarray', '@subarray'),
+                        ('LS roll offset', '@lsrolloffset'),
+                        ('LS V2 offset', '@lsv2offset'),
+                        ('LS V2 sigma', '@lsv2sigma'),
+                        ('LS V3 offset', '@lsv3offset'),
+                        ('LS V3 sigma', '@lsv3sigma')
+                        ]
         plot.add_tools(hover)
         return plot
 
@@ -418,10 +413,10 @@ class MSATA():
         source.data["v2_half_fac_corr"] = v2_half_fac_corr
         source.data["v3_half_fac_corr"] = v3_half_fac_corr
         plot = figure(title="MSATA Least Squares Residual V2-V3 Offsets Half-facet corrected",
-                   x_axis_label='Least Squares Residual V2 Offset + half-facet',
-                   y_axis_label='Least Squares Residual V3 Offset + half-facet')
+                      x_axis_label='Least Squares Residual V2 Offset + half-facet',
+                      y_axis_label='Least Squares Residual V3 Offset + half-facet')
         plot.circle(x='v2_half_fac_corr', y='v3_half_fac_corr', source=source,
-                 color="purple", size=7, fill_alpha=0.5)
+                    color="purple", size=7, fill_alpha=0.5)
         plot.x_range = Range1d(-0.5, 0.5)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin lines
@@ -429,18 +424,17 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
         hover = HoverTool()
-        hover.tooltips=[
-            ('Visit ID', '@visit_id'),
-            ('Filter', '@tafilter'),
-            ('Readout', '@readout'),
-            ('Date-Obs', '@date_obs'),
-            ('Subarray', '@subarray'),
-            ('LS roll offset', '@lsrolloffset'),
-            ('LS V2 offset', '@lsv2offset'),
-            ('LS V3 offset', '@lsv3offset'),
-            ('V2 half-facet', '@v2halffacet'),
-            ('V3 half-facet', '@v3halffacet')
-        ]
+        hover.tooltips=[('Visit ID', '@visit_id'),
+                        ('Filter', '@tafilter'),
+                        ('Readout', '@readout'),
+                        ('Date-Obs', '@date_obs'),
+                        ('Subarray', '@subarray'),
+                        ('LS roll offset', '@lsrolloffset'),
+                        ('LS V2 offset', '@lsv2offset'),
+                        ('LS V3 offset', '@lsv3offset'),
+                        ('V2 half-facet', '@v2halffacet'),
+                        ('V3 half-facet', '@v3halffacet')
+                        ]
         plot.add_tools(hover)
         return plot
 
@@ -456,23 +450,22 @@ class MSATA():
         """
         # create a new bokeh plot
         plot = figure(title="MSATA Least Squares V2 Sigma Offset vs Time", x_axis_label='Time',
-                   y_axis_label='Least Squares Residual V2 Sigma Offset', x_axis_type='datetime')
+                      y_axis_label='Least Squares Residual V2 Sigma Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsv2sigma', source=source,
-                 color="blue", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.5)
         plot.y_range = Range1d(-0.1, 0.1)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips=[
-            ('Visit ID', '@visit_id'),
-            ('Filter', '@tafilter'),
-            ('Readout', '@readout'),
-            ('Date-Obs', '@date_obs'),
-            ('Subarray', '@subarray'),
-            ('LS V2 offset', '@lsv2offset'),
-            ('LS V2 sigma', '@lsv2sigma')
-        ]
+        hover.tooltips=[('Visit ID', '@visit_id'),
+                        ('Filter', '@tafilter'),
+                        ('Readout', '@readout'),
+                        ('Date-Obs', '@date_obs'),
+                        ('Subarray', '@subarray'),
+                        ('LS V2 offset', '@lsv2offset'),
+                        ('LS V2 sigma', '@lsv2sigma')
+                        ]
         plot.add_tools(hover)
         return plot
 
@@ -488,24 +481,23 @@ class MSATA():
         """
         # create a new bokeh plot
         plot = figure(title="MSATA Least Squares V3 Sigma Offset vs Time", x_axis_label='Time',
-                   y_axis_label='Least Squares Residual V3 Sigma Offset', x_axis_type='datetime')
+                      y_axis_label='Least Squares Residual V3 Sigma Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsv3sigma', source=source,
-                 color="blue", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.5)
         plot.y_range = Range1d(-0.1, 0.1)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips=[
-            ('Visit ID', '@visit_id'),
-            ('Filter', '@tafilter'),
-            ('Readout', '@readout'),
-            ('Date-Obs', '@date_obs'),
-            ('Subarray', '@subarray'),
-            ('LS roll offset', '@lsrolloffset'),
-            ('LS V3 offset', '@lsv3offset'),
-            ('LS V3 sigma', '@lsv3sigma')
-        ]
+        hover.tooltips=[('Visit ID', '@visit_id'),
+                        ('Filter', '@tafilter'),
+                        ('Readout', '@readout'),
+                        ('Date-Obs', '@date_obs'),
+                        ('Subarray', '@subarray'),
+                        ('LS roll offset', '@lsrolloffset'),
+                        ('LS V3 offset', '@lsv3offset'),
+                        ('LS V3 sigma', '@lsv3sigma')
+                        ]
         plot.add_tools(hover)
         return plot
 
@@ -521,24 +513,23 @@ class MSATA():
         """
         # create a new bokeh plot
         plot = figure(title="MSATA Least Squares Roll Offset vs Time", x_axis_label='Time',
-                   y_axis_label='Least Squares Residual Roll Offset', x_axis_type='datetime')
+                      y_axis_label='Least Squares Residual Roll Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsrolloffset', source=source,
-                 color="blue", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.5)
         plot.y_range = Range1d(-25.0, 25.0)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips=[
-            ('Visit ID', '@visit_id'),
-            ('Filter', '@tafilter'),
-            ('Readout', '@readout'),
-            ('Date-Obs', '@date_obs'),
-            ('Subarray', '@subarray'),
-            ('LS roll offset', '@lsrolloffset'),
-            ('LS V2 offset', '@lsv2offset'),
-            ('LS V3 offset', '@lsv3offset')
-        ]
+        hover.tooltips=[('Visit ID', '@visit_id'),
+                        ('Filter', '@tafilter'),
+                        ('Readout', '@readout'),
+                        ('Date-Obs', '@date_obs'),
+                        ('Subarray', '@subarray'),
+                        ('LS roll offset', '@lsrolloffset'),
+                        ('LS V2 offset', '@lsv2offset'),
+                        ('LS V3 offset', '@lsv3offset')
+                        ]
         plot.add_tools(hover)
         return plot
 
@@ -562,16 +553,57 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips=[
-            ('Visit ID', '@visit_id'),
-            ('Filter', '@tafilter'),
-            ('Readout', '@readout'),
-            ('Date-Obs', '@date_obs'),
-            ('Subarray', '@subarray'),
-            ('LS roll offset', '@lsrolloffset'),
-            ('LS slew mag offset', '@lsoffsetmag'),
-            ('LS V2 offset', '@lsv2offset'),
-            ('LS V3 offset', '@lsv3offset')
+        hover.tooltips=[('Visit ID', '@visit_id'),
+                        ('Filter', '@tafilter'),
+                        ('Readout', '@readout'),
+                        ('Date-Obs', '@date_obs'),
+                        ('Subarray', '@subarray'),
+                        ('LS roll offset', '@lsrolloffset'),
+                        ('LS slew mag offset', '@lsoffsetmag'),
+                        ('LS V2 offset', '@lsv2offset'),
+                        ('LS V3 offset', '@lsv3offset')
+                        ]
+        plot.add_tools(hover)
+        return plot
+
+
+    def plt_tot_number_of_stars(self, source):
+        """ Plot the total number of stars used versus time
+        Parameters
+        ----------
+            source: bokeh data object for plotting
+        Returns
+        -------
+            plot: bokeh plot object
+        """
+        # get the number of stars per array
+        visit_id, reference_star_number = source.data['visit_id'], source.data['reference_star_number']
+        date_obs, time_arr = source.data['date_obs'], source.data['time_arr']
+        # create the list of color per visit and tot_number_of_stars
+        colors_list, tot_number_of_stars = [], []
+        for i, _ in enumerate(visit_id):
+            tot_stars = len(reference_star_number[i])
+            tot_number_of_stars.append(tot_stars)
+            ci = '#%06X' % randint(0, 0xFFFFFF)
+            colors_list.append(ci)
+        # add these to the bokeh data structure
+        source.data["tot_number_of_stars"] = tot_number_of_stars
+        source.data["colors_list"] = colors_list
+        # create a new bokeh plot
+        plot = figure(title="Total Number of Stars vs Time", x_axis_label='Time',
+                      y_axis_label='Total number of stars', x_axis_type='datetime')
+        plot.circle(x='time_arr', y='tot_number_of_stars', source=source,
+                    color='colors_list', size=7, fill_alpha=0.5)
+        hover = HoverTool()
+        hover.tooltips=[('Visit ID', '@visit_id'),
+                        ('Filter', '@tafilter'),
+                        ('Readout', '@readout'),
+                        ('Date-Obs', '@date_obs'),
+                        ('Subarray', '@subarray'),
+                        ('LS roll offset', '@lsrolloffset'),
+                        ('LS slew mag offset', '@lsoffsetmag'),
+                        ('LS V2 offset', '@lsv2offset'),
+                        ('LS V3 offset', '@lsv3offset')
         ]
         plot.add_tools(hover)
         return plot
