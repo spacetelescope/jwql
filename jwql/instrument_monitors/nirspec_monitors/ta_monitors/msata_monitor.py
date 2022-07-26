@@ -50,6 +50,7 @@ from jwql.utils import monitor_utils
 from jwql.database.database_interface import session
 from jwql.database.database_interface import NIRSpecTAQueryHistory, NIRSpecTAStats
 from jwql.jwql_monitors import monitor_mast
+from jwql.utils.utils import ensure_dir_exists, get_config
 
 
 class MSATA():
@@ -709,7 +710,7 @@ class MSATA():
         """Create the bokeh plot layout"""
         source = self.msata_data
         source = ColumnDataSource(data=source)
-        output_file("msata_layout.html")
+        output_file(os.path.join(self.output_dir, "msata_layout.html"))
         p1 = self.plt_status(source)
         p2 = self.plt_residual_offsets(source)
         p3 = self.plt_res_offsets_corrected(source)
@@ -766,7 +767,13 @@ class MSATA():
         
         # Get the output directory and setup a directory to store the data
         self.output_dir = os.path.join(get_config()['outputs'], 'msata_monitor')
+        ensure_dir_exists(self.output_dir)
+        # Set up directories for the copied data
         ensure_dir_exists(os.path.join(self.output_dir, 'data'))
+        self.data_dir = os.path.join(self.output_dir,
+                                     'data/{}_{}'.format(self.instrument.lower(),
+                                                         self.aperture.lower()))
+        ensure_dir_exists(self.data_dir)
 
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
