@@ -27,6 +27,15 @@
         <input type="number" id="low_lim" step="any">&nbsp;Low &nbsp;&nbsp;&nbsp;&nbsp;
         <input type="number" id="high_lim" step="any">&nbsp;High &nbsp;&nbsp;&nbsp;&nbsp;
         <br>
+        Extension:&nbsp;&nbsp;
+        {% for extension in extensions %}
+            {% if extension == 'SCI' %}
+                <input type="radio" name="extension" value="{{ extension }}" id="{{ extension }}" checked="checked"> {{ extension }} &nbsp;&nbsp;&nbsp;&nbsp;
+            {% else %}
+                <input type="radio" name="extension" value="{{ extension }}" id="{{ extension }}"> {{ extension }} &nbsp;&nbsp;&nbsp;&nbsp;
+            {% endif %}
+        {% endfor %}
+		<br>
 
         <p>
             <a class="btn btn-primary my-2 mx-2" role="button" onclick="update_explore_image_page('{{inst}}', '{{file_root}}', '{{filetype}}', '{{base_url}}', true)"> Apply Settings</a>
