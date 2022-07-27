@@ -299,7 +299,7 @@ class FileSearchForm(forms.Form):
                 if len(set(all_instruments)) > 1:
                     instrument_routes = ['<a href="/{}/archive/{}/obs{}">{}</a>'.format(instrument, proposal_string[1:], all_observations[0], instrument) for instrument in set(all_instruments)]
                     raise forms.ValidationError(
-                                mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))
+                        mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))
 
                 self.instrument = all_instruments[0]
             else:

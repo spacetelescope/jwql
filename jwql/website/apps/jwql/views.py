@@ -506,20 +506,16 @@ def home(request):
         Outgoing response sent to the webpage
     """
 
-    # Create a dropdown form 
-    # drop_form = InstrumentForm()
-    
-    
     # Create a form instance and populate it with data from the request
     form = FileSearchForm(request.POST or None)
-    
+
     # If this is a POST request, we need to process the form data
     if request.method == 'POST':
         if form.is_valid():
             return form.redirect_to_files()
 
     template = 'home.html'
-    context = { 'inst': '',
+    context = {'inst': '',
                 'form': form}
 
     return render(request, template, context)
