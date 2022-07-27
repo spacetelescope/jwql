@@ -169,7 +169,7 @@ def mast_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
     # Make sure instrument is correct case
     if instrument.lower() == 'nirspec':
         instrument = 'NIRSpec'
-        if apername == 'NRS_S1600A1_SLIT':
+        if aperture == 'NRS_S1600A1_SLIT':
             ta_template = ['NRS_TASLIT', 'NRS_BOTA', 'NRS_WATA']
         else:
             ta_template = ['NRS_TACQ', 'NRS_MSATA']

@@ -35,10 +35,11 @@ import logging
 import numpy as np
 import pandas as pd
 from datetime import datetime
+from astropy.time import Time
 from astropy.io import fits
 from random import randint
-from bokeh.io import output_file
-from bokeh.plotting import figure, show, save
+from sqlalchemy.sql.expression import and_
+from bokeh.plotting import figure, output_file, show, save
 from bokeh.models import ColumnDataSource, Range1d
 from bokeh.models.tools import HoverTool
 from bokeh.layouts import gridplot
@@ -47,10 +48,11 @@ from bokeh.models import Span, Label
 # jwql imports
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils import monitor_utils
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.database.database_interface import session
 from jwql.database.database_interface import NIRSpecTAQueryHistory, NIRSpecTAStats
 from jwql.jwql_monitors import monitor_mast
-from jwql.utils.utils import ensure_dir_exists, get_config
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
 
 
 class MSATA():
@@ -201,31 +203,18 @@ class MSATA():
         return msata_df
 
 
-    def plt_slewsize_vs_time(self, data):
-        """ Plot the slew size versus time
-        Parameters
-        ----------
-        data: pandas data frame
-            This is the data frame that contains all MSATA.
-
-        Returns
-        -------
-        plot: bokeh plot object
-        """
-        # to get the times we need the fits files
-        pass
-
-
-    def plt_status(self, source):
+    def plt_status(self):
         """ Plot the MSATA status versus time.
         Parameters
         ----------
-            source: bokeh data object for plotting
+            None
         Returns
         -------
             plot: bokeh plot object
         """
-        ta_status, date_obs = source.data['ta_status'], source.data['date_obs']
+        #ta_status, date_obs = source.data['ta_status'], source.data['date_obs']
+        date_obs = self.source.data['date_obs']
+        ta_status = self.source.data['ta_status']
         # bokeh does not like to plot strings, turn  into binary type
         bool_status, time_arr, status_colors = [], [], []
         for tas, do_str in zip(ta_status, date_obs):
@@ -239,14 +228,14 @@ class MSATA():
             t = datetime.fromisoformat(do_str)
             time_arr.append(t)
         # add these to the bokeh data structure
-        source.data["time_arr"] = time_arr
-        source.data["ta_status_bool"] = bool_status
-        source.data["status_colors"] = status_colors
+        self.source.data["time_arr"] = time_arr
+        self.source.data["ta_status_bool"] = bool_status
+        self.source.data["status_colors"] = status_colors
         # create a new bokeh plot
         plot = figure(title="MSATA Status [Succes=1, Fail=0]", x_axis_label='Time',
                       y_axis_label='MSATA Status', x_axis_type='datetime',)
         limits = [-0.5, 1.5]
-        plot.circle(x='time_arr', y='ta_status_bool', source=source,
+        plot.circle(x='time_arr', y='ta_status_bool', source=self.source,
                     color='status_colors', size=7, fill_alpha=0.5)
         hover = HoverTool()
         hover.tooltips=[('Visit ID', '@visit_id'),
@@ -260,11 +249,11 @@ class MSATA():
         return plot
 
 
-    def plt_residual_offsets(self, source):
+    def plt_residual_offsets(self):
         """ Plot the residual Least Squares V2 and V3 offsets
         Parameters
         ----------
-            source: bokeh data object for plotting
+            None
         Returns
         -------
             plot: bokeh plot object
@@ -273,7 +262,7 @@ class MSATA():
         plot = figure(title="MSATA Least Squares Residual V2-V3 Offsets",
                       x_axis_label='Least Squares Residual V2 Offset',
                       y_axis_label='Least Squares Residual V3 Offset')
-        plot.circle(x='lsv2offset', y='lsv3offset', source=source,
+        plot.circle(x='lsv2offset', y='lsv3offset', source=self.source,
                     color="purple", size=7, fill_alpha=0.5)
         plot.x_range = Range1d(-0.5, 0.5)
         plot.y_range = Range1d(-0.5, 0.5)
@@ -295,11 +284,11 @@ class MSATA():
         return plot
 
 
-    def plt_v2offset_time(self, source):
+    def plt_v2offset_time(self):
         """ Plot the residual V2 versus time
         Parameters
         ----------
-            source: bokeh data object for plotting
+            None
         Returns
         -------
             plot: bokeh plot object
@@ -307,7 +296,7 @@ class MSATA():
         # create a new bokeh plot
         plot = figure(title="MSATA Least Squares V2 Offset vs Time", x_axis_label='Time',
                       y_axis_label='Least Squares Residual V2 Offset', x_axis_type='datetime')
-        plot.circle(x='time_arr', y='lsv2offset', source=source,
+        plot.circle(x='time_arr', y='lsv2offset', source=self.source,
                     color="blue", size=7, fill_alpha=0.5)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin line
@@ -327,11 +316,11 @@ class MSATA():
         return plot
 
 
-    def plt_v3offset_time(self, source):
+    def plt_v3offset_time(self):
         """ Plot the residual V3 versus time
         Parameters
         ----------
-            source: bokeh data object for plotting
+            None
         Returns
         -------
             plot: bokeh plot object
@@ -339,7 +328,7 @@ class MSATA():
         # create a new bokeh plot
         plot = figure(title="MSATA Least Squares V3 Offset vs Time", x_axis_label='Time',
                       y_axis_label='Least Squares Residual V3 Offset', x_axis_type='datetime')
-        plot.circle(x='time_arr', y='lsv3offset', source=source,
+        plot.circle(x='time_arr', y='lsv3offset', source=self.source,
                     color="blue", size=7, fill_alpha=0.5)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin line
@@ -359,11 +348,11 @@ class MSATA():
         return plot
 
 
-    def plt_lsv2v3offsetsigma(self, source):
+    def plt_lsv2v3offsetsigma(self):
         """ Plot the residual Least Squares V2 and V3 sigma offsets
         Parameters
         ----------
-            source: bokeh data object for plotting
+            None
         Returns
         -------
             plot: bokeh plot object
@@ -372,7 +361,7 @@ class MSATA():
         plot = figure(title="MSATA Least Squares Residual V2-V3 Sigma Offsets",
                       x_axis_label='Least Squares Residual V2 Sigma Offset',
                       y_axis_label='Least Squares Residual V3 Sigma Offset')
-        plot.circle(x='lsv2sigma', y='lsv3sigma', source=source,
+        plot.circle(x='lsv2sigma', y='lsv3sigma', source=self.source,
                     color="purple", size=7, fill_alpha=0.5)
         plot.x_range = Range1d(-0.1, 0.1)
         plot.y_range = Range1d(-0.1, 0.1)
@@ -396,27 +385,27 @@ class MSATA():
         return plot
 
 
-    def plt_res_offsets_corrected(self, source):
+    def plt_res_offsets_corrected(self):
         """ Plot the residual Least Squares V2 and V3 offsets corrected by the half-facet
         Parameters
         ----------
-            source: bokeh data object for plotting
+            None
         Returns
         -------
             plot: bokeh plot object
         """
         # create a new bokeh plot
-        lsv2offset, lsv3offset = source.data['lsv2offset'], source.data['lsv3offset']
-        v2halffacet, v3halffacet = source.data['v2halffacet'], source.data['v3halffacet']
+        lsv2offset, lsv3offset = self.source.data['lsv2offset'], self.source.data['lsv3offset']
+        v2halffacet, v3halffacet = self.source.data['v2halffacet'], self.source.data['v3halffacet']
         v2_half_fac_corr = lsv2offset + v2halffacet
         v3_half_fac_corr = lsv3offset + v3halffacet
         # add these to the bokeh data structure
-        source.data["v2_half_fac_corr"] = v2_half_fac_corr
-        source.data["v3_half_fac_corr"] = v3_half_fac_corr
+        self.source.data["v2_half_fac_corr"] = v2_half_fac_corr
+        self.source.data["v3_half_fac_corr"] = v3_half_fac_corr
         plot = figure(title="MSATA Least Squares Residual V2-V3 Offsets Half-facet corrected",
                       x_axis_label='Least Squares Residual V2 Offset + half-facet',
                       y_axis_label='Least Squares Residual V3 Offset + half-facet')
-        plot.circle(x='v2_half_fac_corr', y='v3_half_fac_corr', source=source,
+        plot.circle(x='v2_half_fac_corr', y='v3_half_fac_corr', source=self.source,
                     color="purple", size=7, fill_alpha=0.5)
         plot.x_range = Range1d(-0.5, 0.5)
         plot.y_range = Range1d(-0.5, 0.5)
@@ -440,11 +429,11 @@ class MSATA():
         return plot
 
 
-    def plt_v2offsigma_time(self, source):
+    def plt_v2offsigma_time(self):
         """ Plot the residual Least Squares V2 sigma Offset versus time
         Parameters
         ----------
-            source: bokeh data object for plotting
+            None
         Returns
         -------
             plot: bokeh plot object
@@ -452,7 +441,7 @@ class MSATA():
         # create a new bokeh plot
         plot = figure(title="MSATA Least Squares V2 Sigma Offset vs Time", x_axis_label='Time',
                       y_axis_label='Least Squares Residual V2 Sigma Offset', x_axis_type='datetime')
-        plot.circle(x='time_arr', y='lsv2sigma', source=source,
+        plot.circle(x='time_arr', y='lsv2sigma', source=self.source,
                     color="blue", size=7, fill_alpha=0.5)
         plot.y_range = Range1d(-0.1, 0.1)
         # mark origin line
@@ -471,11 +460,11 @@ class MSATA():
         return plot
 
 
-    def plt_v3offsigma_time(self, source):
+    def plt_v3offsigma_time(self):
         """ Plot the residual Least Squares V3 Offset versus time
         Parameters
         ----------
-            source: bokeh data object for plotting
+            None
         Returns
         -------
             p: bokeh plot object
@@ -483,7 +472,7 @@ class MSATA():
         # create a new bokeh plot
         plot = figure(title="MSATA Least Squares V3 Sigma Offset vs Time", x_axis_label='Time',
                       y_axis_label='Least Squares Residual V3 Sigma Offset', x_axis_type='datetime')
-        plot.circle(x='time_arr', y='lsv3sigma', source=source,
+        plot.circle(x='time_arr', y='lsv3sigma', source=self.source,
                     color="blue", size=7, fill_alpha=0.5)
         plot.y_range = Range1d(-0.1, 0.1)
         # mark origin line
@@ -503,11 +492,11 @@ class MSATA():
         return plot
 
 
-    def plt_roll_offset(self, source):
+    def plt_roll_offset(self):
         """ Plot the residual Least Squares roll Offset versus time
         Parameters
         ----------
-            source: bokeh data object for plotting
+            None
         Returns
         -------
             plot: bokeh plot object
@@ -515,7 +504,7 @@ class MSATA():
         # create a new bokeh plot
         plot = figure(title="MSATA Least Squares Roll Offset vs Time", x_axis_label='Time',
                       y_axis_label='Least Squares Residual Roll Offset', x_axis_type='datetime')
-        plot.circle(x='time_arr', y='lsrolloffset', source=source,
+        plot.circle(x='time_arr', y='lsrolloffset', source=self.source,
                     color="blue", size=7, fill_alpha=0.5)
         plot.y_range = Range1d(-25.0, 25.0)
         # mark origin line
@@ -535,11 +524,11 @@ class MSATA():
         return plot
 
 
-    def plt_lsoffsetmag(self, source):
+    def plt_lsoffsetmag(self):
         """ Plot the residual Least Squares Total Slew Magnitude Offset versus time
         Parameters
         ----------
-            source: bokeh data object for plotting
+            None
         Returns
         -------
             plot: bokeh plot object
@@ -547,7 +536,7 @@ class MSATA():
         # create a new bokeh plot
         plot = figure(title="MSATA Least Squares Total Magnitude of the Linear V2, V3 Offset Slew vs Time", x_axis_label='Time',
                    y_axis_label='sqrt((V2_off)**2 + (V3_off)**2)', x_axis_type='datetime')
-        plot.circle(x='time_arr', y='lsoffsetmag', source=source,
+        plot.circle(x='time_arr', y='lsoffsetmag', source=self.source,
                  color="blue", size=7, fill_alpha=0.5)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin line
@@ -568,32 +557,36 @@ class MSATA():
         return plot
 
 
-    def plt_tot_number_of_stars(self, source):
+    def plt_tot_number_of_stars(self):
         """ Plot the total number of stars used versus time
         Parameters
         ----------
-            source: bokeh data object for plotting
+            None
         Returns
         -------
             plot: bokeh plot object
         """
         # get the number of stars per array
-        visit_id, reference_star_number = source.data['visit_id'], source.data['reference_star_number']
-        date_obs, time_arr = source.data['date_obs'], source.data['time_arr']
+        visit_id = self.source.data['visit_id']
+        reference_star_number = self.source.data['reference_star_number']
+        date_obs, time_arr = self.source.data['date_obs'], self.source.data['time_arr']
         # create the list of color per visit and tot_number_of_stars
         colors_list, tot_number_of_stars = [], []
+        color_dict = {}
         for i, _ in enumerate(visit_id):
             tot_stars = len(reference_star_number[i])
             tot_number_of_stars.append(tot_stars)
             ci = '#%06X' % randint(0, 0xFFFFFF)
-            colors_list.append(ci)
+            if visit_id[i] not in color_dict:
+                color_dict[visit_id[i]] = ci
+            colors_list.append(color_dict[visit_id[i]])
         # add these to the bokeh data structure
-        source.data["tot_number_of_stars"] = tot_number_of_stars
-        source.data["colors_list"] = colors_list
+        self.source.data["tot_number_of_stars"] = tot_number_of_stars
+        self.source.data["colors_list"] = colors_list
         # create a new bokeh plot
         plot = figure(title="Total Number of Stars vs Time", x_axis_label='Time',
                       y_axis_label='Total number of stars', x_axis_type='datetime')
-        plot.circle(x='time_arr', y='tot_number_of_stars', source=source,
+        plot.circle(x='time_arr', y='tot_number_of_stars', source=self.source,
                     color='colors_list', size=7, fill_alpha=0.5)
         hover = HoverTool()
         hover.tooltips=[('Visit ID', '@visit_id'),
@@ -610,7 +603,7 @@ class MSATA():
         return plot
 
 
-    def plt_mags_time(self, source):
+    def plt_mags_time(self):
         """ Plot the star magnitudes versus time
         Parameters
         ----------
@@ -619,25 +612,23 @@ class MSATA():
         -------
             plot: bokeh plot object
         """
-        visit_id = source.data['visit_id']
-        lsf_removed_status = source.data['lsf_removed_status']
-        lsf_removed_reason = source.data['lsf_removed_reason']
-        lsf_removed_x = source.data['lsf_removed_x']
-        lsf_removed_y = source.data['lsf_removed_y']
-        planned_v2 = source.data['planned_v2']
-        planned_v3 = source.data['planned_v3']
-        reference_star_number = source.data['reference_star_number']
-        visits_stars_mags = source.data['reference_star_mag']
-        box_peak_value = source.data['box_peak_value']
-        date_obs, time_arr = source.data['date_obs'], source.data['time_arr']
-        # create the list of color per visit
-        colors_list = []
+        visit_id = self.source.data['visit_id']
+        lsf_removed_status = self.source.data['lsf_removed_status']
+        lsf_removed_reason = self.source.data['lsf_removed_reason']
+        lsf_removed_x = self.source.data['lsf_removed_x']
+        lsf_removed_y = self.source.data['lsf_removed_y']
+        planned_v2 = self.source.data['planned_v2']
+        planned_v3 = self.source.data['planned_v3']
+        reference_star_number = self.source.data['reference_star_number']
+        visits_stars_mags = self.source.data['reference_star_mag']
+        box_peak_value = self.source.data['box_peak_value']
+        date_obs, time_arr = self.source.data['date_obs'], self.source.data['time_arr']
+        colors_list = self.source.data['colors_list']
         # create the structure matching the number of visits and reference stars
-        vid, dobs, tarr, star_no, status = [], [], [], [], []
+        new_colors_list, vid, dobs, tarr, star_no, status = [], [], [], [], [], []
         peaks, visit_mags, stars_v2, stars_v3 = [], [], [], []
         for i, _ in enumerate(visit_id):
             mags, v, d, t, c, s, x, y  = [], [], [], [], [], [], [], []
-            ci = '#%06X' % randint(0, 0xFFFFFF)
             for j in range(len(reference_star_number[i])):
                 # calculate the pseudo magnitude
                 m = -2.5 * np.log(box_peak_value[i][j])
@@ -645,7 +636,7 @@ class MSATA():
                 v.append(visit_id[i])
                 d.append(date_obs[i])
                 t.append(time_arr[i])
-                c.append(ci)
+                c.append(colors_list[i])
                 if 'not_removed' in lsf_removed_status[i][j]:
                     s.append('SUCCESS')
                     x.append(planned_v2[i][j])
@@ -660,14 +651,14 @@ class MSATA():
             star_no.extend(reference_star_number[i])
             status.extend(s)
             visit_mags.extend(mags)
-            colors_list.extend(c)
+            new_colors_list.extend(c)
             stars_v2.extend(x)
             stars_v3.extend(y)
             peaks.extend(box_peak_value[i])
         # now create the mini ColumnDataSource for this particular plot
         mini_source={'vid': vid, 'star_no': star_no, 'status': status,
                      'dobs': dobs, 'tarr': tarr, 'visit_mags': visit_mags,
-                     'peaks': peaks, 'colors_list': colors_list,
+                     'peaks': peaks, 'colors_list': new_colors_list,
                      'stars_v2': stars_v2, 'stars_v3': stars_v2
                     }
         mini_source = ColumnDataSource(data=mini_source)
@@ -708,26 +699,32 @@ class MSATA():
 
     def mk_plt_layout(self):
         """Create the bokeh plot layout"""
-        source = self.msata_data
-        source = ColumnDataSource(data=source)
+        self.source = ColumnDataSource(data=self.msata_data)
         output_file(os.path.join(self.output_dir, "msata_layout.html"))
-        p1 = self.plt_status(source)
-        p2 = self.plt_residual_offsets(source)
-        p3 = self.plt_res_offsets_corrected(source)
-        p4 = self.plt_v2offset_time(source)
-        p5 = self.plt_v3offset_time(source)
-        p6 = self.plt_lsv2v3offsetsigma(source)
-        p7 = self.plt_v2offsigma_time(source)
-        p8 = self.plt_v3offsigma_time(source)
-        p9 = self.plt_roll_offset(source)
-        p10 = self.plt_lsoffsetmag(source)
-        p11 = self.plt_mags_time(source)
-        p12 = self.plt_tot_number_of_stars(source)
+        p1 = self.plt_status()
+        p2 = self.plt_residual_offsets()
+        p3 = self.plt_res_offsets_corrected()
+        p4 = self.plt_v2offset_time()
+        p5 = self.plt_v3offset_time()
+        p6 = self.plt_lsv2v3offsetsigma()
+        p7 = self.plt_v2offsigma_time()
+        p8 = self.plt_v3offsigma_time()
+        p9 = self.plt_roll_offset()
+        p10 = self.plt_lsoffsetmag()
+        p12 = self.plt_tot_number_of_stars()
+        p11 = self.plt_mags_time()
         # make grid
         grid = gridplot([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12],
                         ncols=2, merge_tools=False)
         #show(grid)
         save(grid)
+
+
+    def identify_tables(self):
+        """Determine which database tables to use for a run of the TA monitor."""
+        mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
+        self.query_table = eval('{}TAQueryHistory'.format(mixed_case_name))
+        self.stats_table = eval('{}TAStats'.format(mixed_case_name))
 
 
     def most_recent_search(self):
@@ -741,7 +738,8 @@ class MSATA():
             Date (in MJD) of the ending range of the previous MAST query
             where the msata monitor was run.
         """
-        query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture)
+        query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
+                              self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
 
         dates = np.zeros(0)
         for instance in query:
@@ -764,7 +762,14 @@ class MSATA():
         """The main method. See module docstrings for further details."""
         
         logging.info('Begin logging for msata_monitor')
-        
+
+        # define MSATA variables
+        self.instrument = "nirspec"
+        self.aperture = "NRS_FULL_MSA"
+
+        # Identify which database tables to use
+        self.identify_tables()
+
         # Get the output directory and setup a directory to store the data
         self.output_dir = os.path.join(get_config()['outputs'], 'msata_monitor')
         ensure_dir_exists(self.output_dir)
@@ -775,15 +780,14 @@ class MSATA():
                                                          self.aperture.lower()))
         ensure_dir_exists(self.data_dir)
 
+        # Locate the record of most recent MAST search; use this time
+        # Locate the record of most recent MAST search; use this time
+        # (plus a 30 day buffer to catch any missing files from
+        # previous run) as the start time in the new MAST search.
+        self.query_start = self.most_recent_search()
+        #self.query_start = most_recent_search - 30
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
-        
-        # define MSATA variables
-        self.instrument = "nirspec"
-        self.aperture = "NRS_FULL_MSA"
-        
-        # Locate the record of the most recent MAST search
-        self.query_start = self.most_recent_search()
         logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
 
         # Query MAST using the aperture and the time of the
@@ -791,7 +795,7 @@ class MSATA():
         new_entries = monitor_utils.mast_query_ta(self.instrument, self.aperture, self.query_start, self.query_end)
         msata_entries = len(new_entries)
         logging.info('\tMAST query has returned {} new MSATA files for {}, {} to run the MSATA monitor.'.format(msata_entries, self.instrument, self.aperture))
-        
+
         # Get full paths to the files
         new_filenames = []
         for file_entry in new_entries:
@@ -799,10 +803,10 @@ class MSATA():
                 new_filenames.append(filesystem_path(file_entry['filename']))
             except FileNotFoundError:
                 logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'.format(file_entry['filename']))
-        
+
         # get the data
         self.msata_data = self.get_msata_data(new_filenames)
-    
+
         # make the plots
         self.mk_plt_layout()
 
@@ -818,7 +822,7 @@ class MSATA():
 
         logging.info('MSATA Monitor completed successfully.')
 
-                
+
 if __name__ == '__main__':
 
     module = os.path.basename(__file__).strip('.py')
