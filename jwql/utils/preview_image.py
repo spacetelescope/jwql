@@ -166,7 +166,7 @@ class PreviewImage():
             Tuple of floats, minimum and maximum signal levels
         """
         nelem = np.sum(pixmap)
-        numclip = int(clipperc * nelem)
+        numclip = np.int32(clipperc * nelem)
 
         # Ignore any pixels that are NaN
         finite = np.isfinite(data)
