@@ -52,6 +52,7 @@ from astropy.time import Time, TimeDelta
 from django import forms
 from django.db import models
 from django.shortcuts import redirect
+from django.utils.safestring import mark_safe
 from jwedb.edb_interface import is_valid_mnemonic
 
 from jwql.database import database_interface as di
@@ -239,19 +240,7 @@ class FileSearchForm(forms.Form):
     # Define search field
     search = forms.CharField(label='', max_length=500, required=True,
                              empty_value='Search')
-    
-    INSTRUMENT_CHOICES =(
-        (None, "None"),
-        ("nrc", "NIRCam"),
-        ("nis", "NIRISS"),
-        ("nrs", "NIRSpec"),
-        ("mir", "MIRI"),
-        ("gs-acq", "FGS"),
-        )
 
-    # Define choice field
-    inst_field = forms.ChoiceField(widget=forms.Select(),required=False, choices=INSTRUMENT_CHOICES)
-    
     fileroot_dict = None
     search_type = None
     instrument = None
@@ -284,25 +273,9 @@ class FileSearchForm(forms.Form):
         if self.search_type == 'proposal':
             # See if there are any matching proposals and, if so, what
             # instrument they are for
-            
+
             self.instrument = self.cleaned_data.get('inst_field')
-            print('next')
-            print(self.instrument)
-            
-            # If an instrument has been selected, search its id in the filename          
-            # if self.instrument == 'NIRCam':
-            #     inst_str = 'nrc'
-            # elif self.instrument == 'NIRSpec':
-            #     inst_str = 'nrs'
-            # elif self.instrument == 'NIRISS':
-            #     inst_str = 'nis'
-            # elif self.instrument == 'MIRI':
-            #     inst_str = 'mir'
-            # elif self.instrument == 'FGS':
-            #     inst_str = 'gs-acq'
-            # else:
-            #     inst_str = None
-            
+
             proposal_string = '{:05d}'.format(int(search))
             search_string_public = os.path.join(get_config()['filesystem'], 'public', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
             search_string_proprietary = os.path.join(get_config()['filesystem'], 'proprietary', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
@@ -311,18 +284,22 @@ class FileSearchForm(forms.Form):
 
             # Ignore "original" files
             all_files = [filename for filename in all_files if 'original' not in filename]
-            
-            # Ignore files without the instrument identifier
-            if self.instrument != None:
-                all_files = [filename for filename in all_files if self.instrument in filename]
 
             if len(all_files) > 0:
                 all_instruments = []
+                all_observations = []
                 for file in all_files:
                     instrument = filename_parser(file)['instrument']
+                    observation = filename_parser(file)['observation']
                     all_instruments.append(instrument)
+                    all_observations.append(observation)
+
+                all_observations = sorted(all_observations)
+
                 if len(set(all_instruments)) > 1:
-                    raise forms.ValidationError('Cannot return result for proposal with multiple instruments ({}).'.format(', '.join(set(all_instruments))))
+                    instrument_routes = ['<a href="/{}/archive/{}/obs{}">{}</a>'.format(instrument, proposal_string[1:], all_observations[0], instrument) for instrument in set(all_instruments)]
+                    raise forms.ValidationError(
+                                mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))
 
                 self.instrument = all_instruments[0]
             else:
@@ -376,7 +353,7 @@ class FileSearchForm(forms.Form):
             Outgoing redirect response sent to the webpage
 
         """
-        
+
         # Process the data in form.cleaned_data as required
         search = self.cleaned_data['search']
 
@@ -405,24 +382,6 @@ class FiletypeForm(forms.Form):
         file_types = self.cleaned_data['filetype']
 
         return file_types
-    
-
-# class InstrumentForm(forms.Form):
-#     """Creates a ``ChoiceField`` form to select an instrument for a FileSearchForm object"""
-
-#     INSTRUMENT_CHOICES =(
-#         (None, "None"),
-#         ("nrc", "NIRCam"),
-#         ("nis", "NIRISS"),
-#         ("nrs", "NIRSpec"),
-#         ("mir", "MIRI"),
-#         ("gs-acq", "FGS"),
-#         )
-
-#     inst_field = forms.ChoiceField(choices=INSTRUMENT_CHOICES)
-    
-#     def __str__(self):
-#         self.instrument = self.cleaned_data["inst_field"]
 
 
 class MnemonicSearchForm(forms.Form):
