@@ -166,10 +166,17 @@ class PreviewImage():
             Tuple of floats, minimum and maximum signal levels
         """
         nelem = np.sum(pixmap)
-        numclip = np.int(clipperc * nelem)
+        numclip = int(clipperc * nelem)
 
         # Ignore any pixels that are NaN
         finite = np.isfinite(data)
+
+        # If all non-science pixels are NaN then we're sunk. Scale
+        # from 0 to 1.
+        if not np.any(finite):
+            logging.info('No pixels with finite signal. Scaling from 0 to 1')
+            return (0., 1.)
+
         pixmap = pixmap & finite
 
         sorted = np.sort(data[pixmap], axis=None)
