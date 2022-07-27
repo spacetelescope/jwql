@@ -38,10 +38,10 @@ import jsonschema
 
 from jwql.utils import permissions
 from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_LEN, \
-                                 FILE_DATETIME_LEN, FILE_EPOCH_LEN, FILE_GUIDESTAR_ATTMPT_LEN, \
-                                 FILE_OBS_LEN, FILE_PARALLEL_SEQ_ID_LEN, FILE_PROG_ID_LEN, \
-                                 FILE_SEG_LEN, FILE_SOURCE_ID_LEN, FILE_SUFFIX_TYPES, FILE_TARG_ID_LEN, \
-                                 FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, FILETYPE_WO_STANDARD_SUFFIX, \
+                                 FILE_DATETIME_LEN, FILE_EPOCH_LEN, FILE_GUIDESTAR_ATTMPT_LEN_MIN, \
+                                 FILE_GUIDESTAR_ATTMPT_LEN_MAX, FILE_OBS_LEN, FILE_PARALLEL_SEQ_ID_LEN, \
+                                 FILE_PROG_ID_LEN, FILE_SEG_LEN, FILE_SOURCE_ID_LEN, FILE_SUFFIX_TYPES, \
+                                 FILE_TARG_ID_LEN, FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, FILETYPE_WO_STANDARD_SUFFIX, \
                                  JWST_INSTRUMENT_NAMES_SHORTHAND
 
 __location__ = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -380,7 +380,7 @@ def filename_parser(filename):
         r"(?P<observation>\d{" + f"{FILE_OBS_LEN}" + "})" \
         r"(?P<visit>\d{" + f"{FILE_VISIT_LEN}" + "})" \
         r"_gs-(?P<guider_mode>(id|acq1|acq2|track|fg))" \
-        r"_((?P<date_time>\d{" + f"{FILE_DATETIME_LEN}" + r"})|(?P<guide_star_attempt_id>\d{" + f"{FILE_GUIDESTAR_ATTMPT_LEN},{FILE_GUIDESTAR_ATTMPT_LEN+2}" + "}))"
+        r"_((?P<date_time>\d{" + f"{FILE_DATETIME_LEN}" + r"})|(?P<guide_star_attempt_id>\d{" + f"{FILE_GUIDESTAR_ATTMPT_LEN_MIN},{FILE_GUIDESTAR_ATTMPT_LEN_MAX}" + "}))"
 
     # Segment guider filenames
     # e.g. "jw01118005001_gs-fg_2022150070312-seg002_uncal.fits"
@@ -390,7 +390,7 @@ def filename_parser(filename):
         r"(?P<observation>\d{" + f"{FILE_OBS_LEN}" + "})" \
         r"(?P<visit>\d{" + f"{FILE_VISIT_LEN}" + "})" \
         r"_gs-(?P<guider_mode>(id|acq1|acq2|track|fg))" \
-        r"_((?P<date_time>\d{" + f"{FILE_DATETIME_LEN}" + r"})|(?P<guide_star_attempt_id>\d{" + f"{FILE_GUIDESTAR_ATTMPT_LEN},{FILE_GUIDESTAR_ATTMPT_LEN+2}" + "}))" \
+        r"_((?P<date_time>\d{" + f"{FILE_DATETIME_LEN}" + r"})|(?P<guide_star_attempt_id>\d{" + f"{FILE_GUIDESTAR_ATTMPT_LEN_MIN},{FILE_GUIDESTAR_ATTMPT_LEN_MAX}" + "}))" \
         r"-seg(?P<segment>\d{" + f"{FILE_SEG_LEN}" + "})"
 
     # Build list of filename types
