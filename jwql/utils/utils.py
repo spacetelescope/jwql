@@ -380,7 +380,7 @@ def filename_parser(filename):
         r"(?P<observation>\d{" + f"{FILE_OBS_LEN}" + "})" \
         r"(?P<visit>\d{" + f"{FILE_VISIT_LEN}" + "})" \
         r"_gs-(?P<guider_mode>(id|acq1|acq2|track|fg))" \
-        r"_((?P<date_time>\d{" + f"{FILE_DATETIME_LEN}" + r"})|(?P<guide_star_attempt_id>\d{" + f"{FILE_GUIDESTAR_ATTMPT_LEN}" + "}))"
+        r"_((?P<date_time>\d{" + f"{FILE_DATETIME_LEN}" + r"})|(?P<guide_star_attempt_id>\d{" + f"{FILE_GUIDESTAR_ATTMPT_LEN},{FILE_GUIDESTAR_ATTMPT_LEN+2}" + "}))"
 
     # Segment guider filenames
     # e.g. "jw01118005001_gs-fg_2022150070312-seg002_uncal.fits"
@@ -390,7 +390,7 @@ def filename_parser(filename):
         r"(?P<observation>\d{" + f"{FILE_OBS_LEN}" + "})" \
         r"(?P<visit>\d{" + f"{FILE_VISIT_LEN}" + "})" \
         r"_gs-(?P<guider_mode>(id|acq1|acq2|track|fg))" \
-        r"_((?P<date_time>\d{" + f"{FILE_DATETIME_LEN}" + r"})|(?P<guide_star_attempt_id>\d{" + f"{FILE_GUIDESTAR_ATTMPT_LEN}" + "}))" \
+        r"_((?P<date_time>\d{" + f"{FILE_DATETIME_LEN}" + r"})|(?P<guide_star_attempt_id>\d{" + f"{FILE_GUIDESTAR_ATTMPT_LEN},{FILE_GUIDESTAR_ATTMPT_LEN+2}" + "}))" \
         r"-seg(?P<segment>\d{" + f"{FILE_SEG_LEN}" + "})"
 
     # Build list of filename types
