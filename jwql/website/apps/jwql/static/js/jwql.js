@@ -378,6 +378,8 @@ function sort_by_proposals(sort_type) {
         tinysort(props, {order:'asc'});
     } else if (sort_type == 'Descending') {
         tinysort(props, {order:'desc'});
+    } else if (sort_type == 'Most_Recent') {
+        tinysort(props, {attr:'expstart'})
     }
 };
 
@@ -425,6 +427,7 @@ function update_archive_page(inst, base_url) {
                 min_obsnum = data.min_obsnum[i];
                 thumb = data.thumbnails.thumbnail_paths[i];
                 n = data.thumbnails.num_files[i];
+                expstart = data.thumbnails.expstart[i];
 
                 // Build div content
                 content = '<div class="proposal text-center">';

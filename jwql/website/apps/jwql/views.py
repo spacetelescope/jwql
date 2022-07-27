@@ -40,6 +40,7 @@ Dependencies
 import csv
 import os
 
+from astropy.time import Time
 from bokeh.layouts import layout
 from bokeh.embed import components
 from django.http import HttpResponse, JsonResponse
@@ -278,13 +279,22 @@ def archived_proposals_ajax(request, inst):
                          'proposals': [],
                          'min_obsnum': [],
                          'thumbnail_paths': [],
-                         'num_files': []}
+                         'num_files': [],
+                         'expstart': []}
 
     # Get list of all files for the given instrument
     for proposal in all_proposals:
-        filename_query = mast_query_filenames_by_instrument(inst, proposal)
+        filename_query = mast_query_filenames_by_instrument(inst, proposal, other_columns=['expstart'])
         filenames_public = get_filenames_by_instrument(inst, proposal, restriction='public', query_response=filename_query)
         filenames_proprietary = get_filenames_by_instrument(inst, proposal, restriction='proprietary', query_response=filename_query)
+
+        # The expstart time is used only for sorting the proposal-level thumbnails,
+        # so we only need one value per proposal. Since not all observations of a
+        # given proposal are observed at the same time, and other proposals' observations
+        # may be interleaved, grab the most recent expstart for each proposal.
+        exp_start = Time.now().mjd
+        if len(filename_query['data']) > 0:
+            exp_start = sorted([entry['expstart'] for entry in filename_query['data']])[-1]
 
         # Determine locations to the files
         filenames = []
@@ -321,16 +331,15 @@ def archived_proposals_ajax(request, inst):
             all_proposal_info['min_obsnum'].append(proposal_info['observation_nums'][0])
             all_proposal_info['thumbnail_paths'].append(proposal_info['thumbnail_paths'][0])
             all_proposal_info['num_files'].append(num_files)
+            all_proposal_info['expstart'].append(exp_start)
 
     context = {'inst': inst,
                'num_proposals': all_proposal_info['num_proposals'],
                'min_obsnum': all_proposal_info['min_obsnum'],
                'thumbnails': {'proposals': all_proposal_info['proposals'],
                               'thumbnail_paths': all_proposal_info['thumbnail_paths'],
-                              'num_files': all_proposal_info['num_files']}}
-
-    print('in archived_proposals_ajax')
-    print(all_proposal_info['min_obsnum'])
+                              'num_files': all_proposal_info['num_files'],
+                              'expstart': all_proposal_info['expstart']}}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
