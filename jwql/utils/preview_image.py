@@ -422,8 +422,7 @@ class PreviewImage():
             frame = diff_img[i, :, :]
 
             # Find signal limits for the display
-            minval, maxval = self.find_limits(frame, self.dq,
-                                              self.clip_percent)
+            minval, maxval = self.find_limits(frame)
 
             # Create preview image matplotlib object
             indir, infile = os.path.split(self.file)
