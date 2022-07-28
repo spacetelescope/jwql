@@ -429,9 +429,11 @@ function update_archive_page(inst, base_url) {
                 n = data.thumbnails.num_files[i];
                 expstart = data.thumbnails.expstart[i];
 
+                console.log(expstart)
+
                 // Build div content
                 content = '<div class="proposal text-center">';
-                content += '<a href="/' + inst + '/archive/' + prop + '/obs' + min_obsnum + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
+                content += '<a href="/' + inst + '/archive/' + prop + '/obs' + min_obsnum + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '" exp_start="' + expstart + '"';
                 content += '<span class="helper"></span>'
                 content += '<img src="/static/thumbnails/' + thumb + '" alt="" title="Thumbnail for ' + prop + '" width=100%>';
                 content += '<div class="proposal-color-fill" ></div>';

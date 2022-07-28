@@ -333,6 +333,16 @@ def archived_proposals_ajax(request, inst):
             all_proposal_info['num_files'].append(num_files)
             all_proposal_info['expstart'].append(exp_start)
 
+    # Sort proposals from most recent to oldest, in order to have this as the
+    # default when the page is loaded
+    #print('should we do this?')
+    #indexes = np.flip(np.argsort(all_proposal_info['expstart']))
+    #all_proposal_info['proposals'] = all_proposal_info['proposals'][indexes]
+    #all_proposal_info['min_obsnum'] = all_proposal_info['min_obsnum'][indexes]
+    #all_proposal_info['thumbnail_paths'] = all_proposal_info['thumbnail_paths'][indexes]
+    #all_proposal_info['num_files'] = all_proposal_info['num_files'][indexes]
+    #all_proposal_info['expstart'] = all_proposal_info['expstart'][indexes]
+
     context = {'inst': inst,
                'num_proposals': all_proposal_info['num_proposals'],
                'min_obsnum': all_proposal_info['min_obsnum'],
