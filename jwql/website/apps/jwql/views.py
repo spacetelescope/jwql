@@ -14,6 +14,7 @@ Authors
     - Johannes Sahlmann
     - Teagan King
     - Mees Fix
+    - Mike Engesser 
 
 Use
 ---
@@ -68,7 +69,6 @@ from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import InstrumentAnomalySubmitForm
-# from .forms import InstrumentForm
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
 
@@ -516,7 +516,7 @@ def home(request):
 
     template = 'home.html'
     context = {'inst': '',
-                'form': form}
+               'form': form}
 
     return render(request, template, context)
 

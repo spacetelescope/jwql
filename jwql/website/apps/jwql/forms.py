@@ -50,7 +50,6 @@ import os
 
 from astropy.time import Time, TimeDelta
 from django import forms
-from django.db import models
 from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
 from jwedb.edb_interface import is_valid_mnemonic
@@ -273,9 +272,6 @@ class FileSearchForm(forms.Form):
         if self.search_type == 'proposal':
             # See if there are any matching proposals and, if so, what
             # instrument they are for
-
-            self.instrument = self.cleaned_data.get('inst_field')
-
             proposal_string = '{:05d}'.format(int(search))
             search_string_public = os.path.join(get_config()['filesystem'], 'public', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))
             search_string_proprietary = os.path.join(get_config()['filesystem'], 'proprietary', 'jw{}'.format(proposal_string), '*', '*{}*.fits'.format(proposal_string))

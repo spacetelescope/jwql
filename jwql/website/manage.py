@@ -43,11 +43,11 @@ if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql_proj.settings")
 
     directory_mapping = {
-                        'filesystem': 'filesystem',
-                        'outputs': 'outputs',
-                        'preview_image_filesystem': 'preview_images',
-                        'thumbnail_filesystem': 'thumbnails'
-                        }
+        'filesystem': 'filesystem',
+        'outputs': 'outputs',
+        'preview_image_filesystem': 'preview_images',
+        'thumbnail_filesystem': 'thumbnails'
+        }
 
     for directory in ['filesystem', 'outputs', 'preview_image_filesystem', 'thumbnail_filesystem']:
         symlink_location = os.path.join(os.path.dirname(__file__), 'apps', 'jwql', 'static', directory_mapping[directory])
@@ -62,6 +62,5 @@ if __name__ == "__main__":
             "Couldn't import Django. Are you sure it's installed and "
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
-        )
-        
+        ) from exc
     execute_from_command_line(sys.argv)
