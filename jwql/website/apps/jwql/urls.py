@@ -81,14 +81,17 @@ urlpatterns = [
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
     re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),
-    re_path(r'^(?P<inst>({}))/(?P<file_root>[\w]+)/$'.format(instruments), views.view_image, name='view_image'),
+    re_path(r'^(?P<inst>({}))/(?P<file_root>[\w-]+)/$'.format(instruments), views.view_image, name='view_image'),
+    re_path(r'^(?P<inst>({}))/(?P<file_root>.+)_(?P<filetype>.+)/explore_image/'.format(instruments), views.explore_image, name='explore_image'),
     re_path(r'^(?P<inst>({}))/(?P<filename>.+)_(?P<filetype>.+)/header/'.format(instruments), views.view_header, name='view_header'),
-    re_path(r'^(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/$'.format(instruments), views.archive_thumbnails, name='archive_thumb'),
+    re_path(r'^(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/obs(?P<observation>[\d]{{1,3}})/$'.format(instruments), views.archive_thumbnails_per_observation, name='archive_thumb_per_obs'),
 
     # AJAX views
     re_path('ajax/query_submit/', views.archive_thumbnails_query_ajax, name='archive_thumb_query_ajax'),
     re_path(r'^ajax/(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals_ajax, name='archive_ajax'),
-    re_path(r'^ajax/(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/$'.format(instruments), views.archive_thumbnails_ajax, name='archive_thumb_ajax'),
+    re_path(r'^ajax/(?P<inst>({}))/(?P<file_root>.+)_(?P<filetype>.+)/explore_image/$'.format(instruments), views.explore_image_ajax, name='explore_image_ajax'),
+    re_path(r'^ajax/(?P<inst>({}))/(?P<file_root>.+)_(?P<filetype>.+)/explore_image/scaling_(?P<scaling>.+)/low_(?P<low_lim>.+)/high_(?P<high_lim>.+)/ext_(?P<ext_name>.+)/$'.format(instruments), views.explore_image_ajax, name='explore_image_ajax'),
+    re_path(r'^ajax/(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/obs(?P<observation>[\d]{{1,3}})/$'.format(instruments), views.archive_thumbnails_ajax, name='archive_thumb_ajax'),
 
     # REST API views
     path('api/proposals/', api_views.all_proposals, name='all_proposals'),

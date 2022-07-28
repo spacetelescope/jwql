@@ -162,11 +162,33 @@ EXP_TYPE_PER_INSTRUMENT = {'fgs': ['FGS_FOCUS', 'FGS_IMAGE', 'FGS_INTFLAT',
                                        'NRS_CONFIRM', 'NRS_FIXEDSLIT', 'NRS_MIMF', 'NRS_FOCUS',
                                        'NRS_TACONFIRM', 'NRS_WATA', 'NRS_MSATA']}
 
+EXPLORE_IMAGE_EXTENSIONS_EXCLUDE = ["PRIMARY", "ASDF", "INT_TIMES", "GROUP"]
+
 EXPTYPES = {"nircam": {"imaging": "NRC_IMAGE", "ts_imaging": "NRC_TSIMAGE",
                        "wfss": "NRC_WFSS", "ts_grism": "NRC_TSGRISM"},
             "niriss": {"imaging": "NIS_IMAGE", "ami": "NIS_IMAGE",
                        "pom": "NIS_IMAGE", "wfss": "NIS_WFSS"},
             "fgs": {"imaging": "FGS_IMAGE"}}
+
+# Filename Component Lengths
+FILE_AC_CAR_ID_LEN = 4
+FILE_AC_O_ID_LEN = 3
+FILE_ACT_LEN = 2
+FILE_DATETIME_LEN = 13
+FILE_EPOCH_LEN = 1
+FILE_GUIDESTAR_ATTMPT_LEN_MIN = 1
+FILE_GUIDESTAR_ATTMPT_LEN_MAX = 3
+FILE_OBS_LEN = 3
+FILE_PARALLEL_SEQ_ID_LEN = 1
+FILE_PROG_ID_LEN = 5
+FILE_SEG_LEN = 3
+FILE_SOURCE_ID_LEN = 5
+FILE_TARG_ID_LEN = 3
+FILE_VISIT_GRP_LEN = 2
+FILE_VISIT_LEN = 3
+
+# MSA metadata file do not have a standard suffix attached
+FILETYPE_WO_STANDARD_SUFFIX = 'msa.fits'
 
 FLAT_EXP_TYPES = {'nircam': ['NRC_FLAT'],
                   'niriss': ['NIS_LAMP'],
@@ -214,6 +236,9 @@ GRATING_PER_INSTRUMENT = {'fgs': [],
 
 # Possible suffix types for guider exposures
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
+
+# JWQL should ignore some filetypes in the filesystem.
+IGNORED_SUFFIXES = ['original', 'stream', 'x1d', 'x1dints', 'c1d']
 
 # Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
@@ -315,6 +340,10 @@ NIRCAM_SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'S
 # Possible suffix types for AMI files
 NIRISS_AMI_SUFFIX_TYPES = ['amiavg', 'aminorm', 'ami', 'psf-amiavg']
 
+# Base name for the file listing the preview images for a given instrument.
+# The complete name will have "_{instrument.lower}.txt" added to the end of this.
+PREVIEW_IMAGE_LISTFILE = 'preview_image_inventory'
+
 # RAPID-style readout patterns for each instrument. Added so we can
 # differentiate in MAST searches for e.g. the dark current monitor
 RAPID_READPATTERNS = {'fgs': ['FGSRAPID'],
@@ -336,6 +365,10 @@ READPATT_PER_INSTRUMENT = {'fgs': ['FGS', 'FGSRAPID', 'FGS60', 'FGS840', 'FGS837
                                        'NRSRAPIDD2', 'NRSRAPIDD6']}
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
+
+# Base name for the file listing the thumbnail images for a given instrument.
+# The complete name will have "_{instrument.lower}.txt" added to the end of this.
+THUMBNAIL_LISTFILE = 'thumbnail_inventory'
 
 # Possible suffix types for time-series exposures
 TIME_SERIES_SUFFIX_TYPES = ['phot', 'whtlt']

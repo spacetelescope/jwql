@@ -37,6 +37,7 @@ Use:
 import logging
 import os
 import socket
+import warnings
 
 from astropy.io import fits
 import numpy as np
@@ -48,6 +49,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+from matplotlib.ticker import AutoMinorLocator
 
 # Only import jwst if not running from readthedocs
 if 'build' and 'project' not in socket.gethostname():
@@ -116,6 +118,8 @@ class PreviewImage():
         self.preview_output_directory = None
         self.scaling = 'log'
         self.thumbnail_output_directory = None
+        self.preview_images = []
+        self.thumbnail_images = []
 
         # Read in file
         self.data, self.dq = self.get_data(self.file, extension)
@@ -162,7 +166,19 @@ class PreviewImage():
             Tuple of floats, minimum and maximum signal levels
         """
         nelem = np.sum(pixmap)
-        numclip = np.int(clipperc * nelem)
+        numclip = np.int32(clipperc * nelem)
+
+        # Ignore any pixels that are NaN
+        finite = np.isfinite(data)
+
+        # If all non-science pixels are NaN then we're sunk. Scale
+        # from 0 to 1.
+        if not np.any(finite):
+            logging.info('No pixels with finite signal. Scaling from 0 to 1')
+            return (0., 1.)
+
+        pixmap = pixmap & finite
+
         sorted = np.sort(data[pixmap], axis=None)
         minval = sorted[numclip]
         maxval = sorted[-numclip - 1]
@@ -203,6 +219,10 @@ class PreviewImage():
                         data = hdulist[ext].data[:, [0, -1], :, :].astype(np.float)
                     else:
                         data = hdulist[ext].data.astype(np.float)
+                    try:
+                        self.units = f"{hdulist[ext].header['BUNIT']}  "
+                    except KeyError:
+                        self.units = ''
                 else:
                     raise ValueError('WARNING: no {} extension in {}!'.format(ext, filename))
 
@@ -287,20 +307,21 @@ class PreviewImage():
 
             # If making a thumbnail, make a figure with no axes
             if thumbnail:
-                fig = plt.imshow(shiftdata,
-                                 norm=colors.LogNorm(vmin=shiftmin,
-                                                     vmax=shiftmax),
-                                 cmap=self.cmap)
+                self.fig, ax = plt.subplots(figsize=(3, 3))
+                cax = ax.imshow(shiftdata,
+                                norm=colors.LogNorm(vmin=shiftmin,
+                                                    vmax=shiftmax),
+                                cmap=self.cmap)
                 # Invert y axis
                 plt.gca().invert_yaxis()
 
                 plt.axis('off')
-                fig.axes.get_xaxis().set_visible(False)
-                fig.axes.get_yaxis().set_visible(False)
+                cax.axes.get_xaxis().set_visible(False)
+                cax.axes.get_yaxis().set_visible(False)
 
             # If preview image, add axes and colorbars
             else:
-                fig, ax = plt.subplots(figsize=(xsize, ysize))
+                self.fig, ax = plt.subplots(figsize=(xsize, ysize))
                 cax = ax.imshow(shiftdata,
                                 norm=colors.LogNorm(vmin=shiftmin,
                                                     vmax=shiftmax),
@@ -327,9 +348,16 @@ class PreviewImage():
                     dig = 2
                 format_string = "%.{}f".format(dig)
                 tlabelstr = [format_string % number for number in tlabelflt]
-                cbar = fig.colorbar(cax, ticks=tickvals)
+                cbar = self.fig.colorbar(cax, ticks=tickvals)
+
+                # This seems to correctly remove the ticks and labels we want to remove. It gives a warning that
+                # it doesn't work on log scales, which we don't care about. So let's ignore that warning.
+                warnings.filterwarnings("ignore", message="AutoMinorLocator does not work with logarithmic scale")
+                cbar.ax.yaxis.set_minor_locator(AutoMinorLocator(n=0))
+
                 cbar.ax.set_yticklabels(tlabelstr)
                 cbar.ax.tick_params(labelsize=maxsize * 5. / 4)
+                cbar.ax.set_ylabel(self.units, labelpad=10, rotation=270)
                 ax.set_xlabel('Pixels', fontsize=maxsize * 5. / 4)
                 ax.set_ylabel('Pixels', fontsize=maxsize * 5. / 4)
                 ax.tick_params(labelsize=maxsize)
@@ -340,8 +368,11 @@ class PreviewImage():
                 plt.rcParams.update({'xtick.labelsize': maxsize * 5. / 4})
 
         elif scale == 'linear':
-            fig, ax = plt.subplots(figsize=(xsize, ysize))
+            self.fig, ax = plt.subplots(figsize=(xsize, ysize))
             cax = ax.imshow(image, clim=(min_value, max_value), cmap=self.cmap)
+
+            # Invert y axis
+            plt.gca().invert_yaxis()
 
             if not thumbnail:
                 cbar = fig.colorbar(cax)
@@ -353,8 +384,17 @@ class PreviewImage():
             filename = os.path.split(self.file)[-1]
             ax.set_title(filename + ' Int: {}'.format(np.int(integration_number)))
 
-    def make_image(self, max_img_size=8):
-        """The main function of the ``PreviewImage`` class."""
+    def make_image(self, max_img_size=8.0, create_thumbnail=False):
+        """The main function of the ``PreviewImage`` class.
+
+        Parameters
+        ----------
+        max_img_size : float
+            Image size in the largest dimension
+
+        create_thumbnail : bool
+            If True, a thumbnail image is created and saved.
+        """
 
         shape = self.data.shape
 
@@ -399,11 +439,12 @@ class PreviewImage():
             self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
                              maxsize=max_img_size, thumbnail=False)
             self.save_image(outfile, thumbnail=False)
-            plt.close()
+            plt.close(self.fig)
+            self.preview_images.append(outfile)
 
             # Create thumbnail image matplotlib object, only for the
             # first integration
-            if i == 0:
+            if i == 0 and create_thumbnail:
                 if self.thumbnail_output_directory is None:
                     outdir = indir
                 else:
@@ -412,7 +453,9 @@ class PreviewImage():
                 self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
                                  maxsize=max_img_size, thumbnail=True)
                 self.save_image(outfile, thumbnail=True)
-                plt.close()
+                plt.close(self.fig)
+                self.thumbnail_images.append(self.thumbnail_filename)
+
 
     def save_image(self, fname, thumbnail=False):
         """
@@ -431,14 +474,14 @@ class PreviewImage():
             True if saving a thumbnail image, false for the full
             preview image.
         """
-
         plt.savefig(fname, bbox_inches='tight', pad_inches=0)
         permissions.set_permissions(fname)
 
         # If the image is a thumbnail, rename to '.thumb'
         if thumbnail:
-            thumb_fname = fname.replace('.jpg', '.thumb')
-            os.rename(fname, thumb_fname)
-            logging.info('\tSaved image to {}'.format(thumb_fname))
+            self.thumbnail_filename = fname.replace('.jpg', '.thumb')
+            os.rename(fname, self.thumbnail_filename)
+            logging.info('\tSaved image to {}'.format(self.thumbnail_filename))
         else:
             logging.info('\tSaved image to {}'.format(fname))
+            self.thumbnail_filename = None

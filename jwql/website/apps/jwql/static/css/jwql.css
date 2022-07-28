@@ -87,6 +87,8 @@
 .dropdown-menu {
     background-color: #2d353c;
     border-radius: 0px;
+    max-height:  400px;
+    overflow-y:  auto;
 }
 
 .dropdown-menu .dropdown-item {
@@ -273,7 +275,7 @@ display : inline;
   display: inline-block;
 }
 
-.instrument_select {m;
+.instrument_select {
   padding-top: 1rem;
   padding-bottom: 2rem;
   margin-right: 5rem;
@@ -371,6 +373,15 @@ li:hover .nav-link, .navbar-brand:hover {
     top: 0%;
     left: 0%;
     z-index: 1;
+}
+
+.proposal:hover {
+    cursor: pointer;
+}
+
+.proposal:hover {
+    background-color: #356198;
+    opacity: 0.75;
 }
 
 .proposal-info {
@@ -506,6 +517,16 @@ li:hover .nav-link, .navbar-brand:hover {
     z-index: 2;
     font-size: 0.75rem;
 }
+
+.thumbnail-staff {
+    width: 15rem;
+    height: 15rem;
+    text-align: center;
+    position: relative;
+    display: inline-block;
+    margin: 0.1rem;
+}
+
 
 /*Format the version identifier text in bottom corner*/
 #version-div {

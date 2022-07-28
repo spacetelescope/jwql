@@ -50,17 +50,20 @@ from jwql.database.database_interface import session
 from jwql.database.database_interface import FilesystemGeneral
 from jwql.database.database_interface import FilesystemInstrument
 from jwql.database.database_interface import CentralStore
-from jwql.utils.logging_functions import configure_logging, log_info, log_fail
+from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.constants import FILE_SUFFIX_TYPES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import filename_parser
 from jwql.utils.utils import get_config
 from jwql.utils.monitor_utils import initialize_instrument_monitor, update_monitor_table
+from jwql.utils.protect_module import lock_module
 
-FILESYSTEM = get_config()['filesystem']
+SETTINGS = get_config()
+FILESYSTEM = SETTINGS['filesystem']
 PROPRIETARY_FILESYSTEM = os.path.join(FILESYSTEM, 'proprietary')
 PUBLIC_FILESYSTEM = os.path.join(FILESYSTEM, 'public')
-CENTRAL = get_config()['jwql_dir']
+CENTRAL = SETTINGS['jwql_dir']
+OUTPUTS = SETTINGS['outputs']
 
 
 def gather_statistics(general_results_dict, instrument_results_dict):
@@ -465,7 +468,7 @@ def plot_filesystem_stats():
     grid = gridplot(grid_chunks)
 
     # Save all of the plots in one file
-    outputs_dir = os.path.join(get_config()['outputs'], 'monitor_filesystem')
+    outputs_dir = os.path.join(OUTPUTS, 'monitor_filesystem')
     outfile = os.path.join(outputs_dir, 'filesystem_monitor.html')
     output_file(outfile)
     save(grid)
@@ -565,8 +568,9 @@ def update_database(general_results_dict, instrument_results_dict, central_stora
     session.close()
 
 
-
-if __name__ == '__main__':
+@lock_module
+def protected_code():
+    """Protected code ensures only 1 instance of module will run at any given time"""
 
     # Configure logging
     module = os.path.basename(__file__).strip('.py')
@@ -574,3 +578,7 @@ if __name__ == '__main__':
 
     monitor_filesystem()
     update_monitor_table(module, start_time, log_file)
+
+
+if __name__ == '__main__':
+    protected_code()
