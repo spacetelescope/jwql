@@ -51,6 +51,7 @@ import os
 from astropy.time import Time, TimeDelta
 from django import forms
 from django.shortcuts import redirect
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from jwedb.edb_interface import is_valid_mnemonic
 
@@ -291,9 +292,9 @@ class FileSearchForm(forms.Form):
                     all_observations.append(observation)
 
                 all_observations = sorted(all_observations)
-
+                
                 if len(set(all_instruments)) > 1:
-                    instrument_routes = ['<a href="/{}/archive/{}/obs{}">{}</a>'.format(instrument, proposal_string[1:], all_observations[0], instrument) for instrument in set(all_instruments)]
+                    instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, proposal_string[1:], all_observations[0], instrument) for instrument in set(all_instruments)]
                     raise forms.ValidationError(
                         mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))
 
