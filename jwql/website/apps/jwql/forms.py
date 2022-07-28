@@ -44,6 +44,7 @@ Dependencies
     placed in the ``jwql`` directory.
 """
 
+from collections import defaultdict
 import datetime
 import glob
 import os
@@ -284,19 +285,25 @@ class FileSearchForm(forms.Form):
 
             if len(all_files) > 0:
                 all_instruments = []
-                all_observations = []
+                all_observations = defaultdict(int)
                 for file in all_files:
                     instrument = filename_parser(file)['instrument']
                     observation = filename_parser(file)['observation']
                     all_instruments.append(instrument)
                     all_observations.append(observation)
+                    all_observations[instrument].append(observation)
 
                 all_observations = sorted(all_observations)
-                
+
                 if len(set(all_instruments)) > 1:
-                    instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, proposal_string[1:], all_observations[0], instrument) for instrument in set(all_instruments)]
-                    raise forms.ValidationError(
-                        mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))# nosec
+                    # Technically all proposal have multiple instruments if you include guider data. Remove Guider Data
+                    if len(set(all_instruments)) == 2 and 'fgs' in set(all_instruments):
+                        all_instruments.remove('fgs')
+                        self.instrument = all_instruments[0]
+                    else:
+                        instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, proposal_string[1:], all_observations[instrument][0], instrument) for instrument in set(all_instruments)]
+                        raise forms.ValidationError(
+                            mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))# nosec
 
                 self.instrument = all_instruments[0]
             else:
