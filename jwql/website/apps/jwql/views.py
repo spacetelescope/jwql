@@ -14,7 +14,6 @@ Authors
     - Johannes Sahlmann
     - Teagan King
     - Mees Fix
-    - Mike Engesser 
 
 Use
 ---
