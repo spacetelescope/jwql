@@ -290,7 +290,6 @@ class FileSearchForm(forms.Form):
                     instrument = filename_parser(file)['instrument']
                     observation = filename_parser(file)['observation']
                     all_instruments.append(instrument)
-                    all_observations.append(observation)
                     all_observations[instrument].append(observation)
 
                 all_observations = sorted(all_observations)
