@@ -29,6 +29,7 @@ import argparse
 import os
 from jwql.utils.utils import get_config
 
+
 def run(instrument, prev_or_thumb, str_to_exclude):
     """The main function. Locates the inventory file using config.json, opens
     it, and removes any lines containing ``str_to_exclude``.
@@ -56,7 +57,7 @@ def run(instrument, prev_or_thumb, str_to_exclude):
     filename = os.path.join(basedir, filename)
 
     newlines = []
-    fobj =  open(filename, 'r')
+    fobj = open(filename, 'r')
     count = 0
     while True:
         count += 1
@@ -102,9 +103,9 @@ def define_options(parser=None, usage=None, conflict_handler='resolve'):
     if parser is None:
         parser = argparse.ArgumentParser(usage=usage, conflict_handler=conflict_handler)
 
-    parser.add_argument('-i', '--instrument', type=str, default=None, choices=['niriss','nircam','nirspec','miri','fgs'], help='Instrument.  (default=%(default)s)')
+    parser.add_argument('-i', '--instrument', type=str, default=None, choices=['niriss', 'nircam', 'nirspec', 'miri', 'fgs'], help='Instrument.  (default=%(default)s)')
     parser.add_argument('-p', '--prev_or_thumb', type=str, default=None, choices=['p', 't'], help='Work on preview images (p) or thumbnails (t)')
-    parser.add_argument('-s','--str_to_exclude',  type=str, help='String controlling which entries are removed.')
+    parser.add_argument('-s', '--str_to_exclude', type=str, help='String controlling which entries are removed.')
     return parser
 
 
