@@ -73,6 +73,7 @@ from jwql.utils.utils import query_format
 
 from wtforms import SubmitField, StringField
 
+from .data_containers import get_rootnames_for_instrument_proposal
 
 class BaseForm(forms.Form):
     """A generic form with target resolve built in"""
