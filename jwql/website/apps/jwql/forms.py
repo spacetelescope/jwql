@@ -291,15 +291,15 @@ class FileSearchForm(forms.Form):
                     observation = filename_parser(file)['observation']
                     all_instruments.append(instrument)
                     all_observations[instrument].append(observation)
-                
+
+                # sort lists so first observation is available when link is clicked.
                 for instrument in all_instruments:
                     all_observations[instrument].sort()
 
                 if len(set(all_instruments)) > 1:
                     # Technically all proposal have multiple instruments if you include guider data. Remove Guider Data
                     if len(set(all_instruments)) == 2 and 'fgs' in set(all_instruments):
-                        all_instruments.remove('fgs')
-                        self.instrument = all_instruments[0]
+                        all_instruments = filter(lambda val: val != 'fgs', all_instruments)
                     else:
                         instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, proposal_string[1:], all_observations[instrument][0], instrument) for instrument in set(all_instruments)]
                         raise forms.ValidationError(
@@ -364,11 +364,24 @@ class FileSearchForm(forms.Form):
         # If they searched for a proposal
         if self.search_type == 'proposal':
             proposal_string = '{:05d}'.format(int(search))
-            return redirect('/{}/archive/{}'.format(self.instrument, proposal_string))
+            all_rootnames = get_rootnames_for_instrument_proposal(self.instrument, proposal_string)
+            all_obs = []
+            for root in all_rootnames:
+                # Wrap in try/except because level 3 rootnames won't have an observation
+                # number returned by the filename_parser. That's fine, we're not interested
+                # in those files anyway.
+                try:
+                    all_obs.append(filename_parser(root)['observation'])
+                except KeyError:
+                    pass
+
+            observation = sorted(list(set(all_obs)))[0]
+
+            return redirect('/{}/archive/{}/obs{}'.format(self.instrument, proposal_string, observation))
 
         # If they searched for a file root
         elif self.search_type == 'fileroot':
-            return redirect('/{}/{}'.format(self.instrument, search))
+            return redirect('/{}/{}/'.format(self.instrument, search))
 
 
 class FiletypeForm(forms.Form):
