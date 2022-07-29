@@ -299,7 +299,7 @@ class FileSearchForm(forms.Form):
                 if len(set(all_instruments)) > 1:
                     # Technically all proposal have multiple instruments if you include guider data. Remove Guider Data
                     if len(set(all_instruments)) == 2 and 'fgs' in set(all_instruments):
-                        all_instruments = filter(lambda val: val != 'fgs', all_instruments)
+                        all_instruments = list(filter(('fgs').__ne__, all_instruments))
                     else:
                         instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, proposal_string[1:], all_observations[instrument][0], instrument) for instrument in set(all_instruments)]
                         raise forms.ValidationError(
