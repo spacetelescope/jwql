@@ -285,14 +285,15 @@ class FileSearchForm(forms.Form):
 
             if len(all_files) > 0:
                 all_instruments = []
-                all_observations = defaultdict(int)
+                all_observations = defaultdict(list)
                 for file in all_files:
                     instrument = filename_parser(file)['instrument']
                     observation = filename_parser(file)['observation']
                     all_instruments.append(instrument)
                     all_observations[instrument].append(observation)
-
-                all_observations = sorted(all_observations)
+                
+                for instrument in all_instruments:
+                    all_observations[instrument].sort()
 
                 if len(set(all_instruments)) > 1:
                     # Technically all proposal have multiple instruments if you include guider data. Remove Guider Data
