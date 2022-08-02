@@ -44,6 +44,7 @@ from bokeh.models import ColumnDataSource, Range1d
 from bokeh.models.tools import HoverTool
 from bokeh.layouts import gridplot
 from bokeh.models import Span, Label
+from bokeh.embed import components
 
 # jwql imports
 from jwql.utils.logging_functions import log_info, log_fail
@@ -52,7 +53,7 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.database.database_interface import session
 from jwql.database.database_interface import NIRSpecTAQueryHistory, NIRSpecTAStats
 from jwql.jwql_monitors import monitor_mast
-from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config
+from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, filename_parser
 
 
 class MSATA():
@@ -108,8 +109,8 @@ class MSATA():
                     break
             if not msata:
                 print('\n WARNING! This file is not MSATA: ', fits_file)
-                print('  Exiting msata_monitor.py  \n')
-                exit()
+                print('  Skiping msata_monitor for this file  \n')
+                return None
             main_hdr = ff[0].header
             ta_hdr = ff['MSA_TARG_ACQ'].header
             ta_table = ff['MSA_TARG_ACQ'].data
@@ -172,6 +173,8 @@ class MSATA():
         msata_dict = {}
         for fits_file in new_filenames:
             msata_info = self.get_tainfo_from_fits(fits_file)
+            if msata_info is None:
+                continue
             main_hdr, ta_hdr, ta_table = msata_info
             for key, key_dict in keywds2extract.items():
                 key_name = key_dict['name']
@@ -718,6 +721,9 @@ class MSATA():
                         ncols=2, merge_tools=False)
         #show(grid)
         save(grid)
+        # return the needed components for embeding the results in the MSATA html template
+        script, div = components(grid)
+        return script, div
 
 
     def identify_tables(self):
@@ -773,7 +779,7 @@ class MSATA():
         # Get the output directory and setup a directory to store the data
         self.output_dir = os.path.join(get_config()['outputs'], 'msata_monitor')
         ensure_dir_exists(self.output_dir)
-        # Set up directories for the copied data
+        # Set up directory to store the data
         ensure_dir_exists(os.path.join(self.output_dir, 'data'))
         self.data_dir = os.path.join(self.output_dir,
                                      'data/{}_{}'.format(self.instrument.lower(),
@@ -781,11 +787,7 @@ class MSATA():
         ensure_dir_exists(self.data_dir)
 
         # Locate the record of most recent MAST search; use this time
-        # Locate the record of most recent MAST search; use this time
-        # (plus a 30 day buffer to catch any missing files from
-        # previous run) as the start time in the new MAST search.
         self.query_start = self.most_recent_search()
-        #self.query_start = most_recent_search - 30
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
         logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
@@ -798,29 +800,48 @@ class MSATA():
 
         # Get full paths to the files
         new_filenames = []
+        wanted_suffix = ['cal']
         for file_entry in new_entries:
-            try:
-                new_filenames.append(filesystem_path(file_entry['filename']))
-            except FileNotFoundError:
-                logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'.format(file_entry['filename']))
+            filename_of_interest = file_entry['filename']
+            filename_dict = filename_parser(filename_of_interest)
+            if filename_dict['suffix'] in wanted_suffix:
+                filename_of_interest = filename_of_interest.replace('cal', 'uncal')
+                try:
+                    new_filenames.append(filesystem_path(filename_of_interest))
+                except FileNotFoundError:
+                    logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'.format(filename_of_interest))
 
-        # get the data
-        self.msata_data = self.get_msata_data(new_filenames)
+        if len(new_filenames) == 0:
+            logging.warning('\t\t ** Unable to locate any file in filesystem. Nothing to process. ** ')
 
-        # make the plots
-        self.mk_plt_layout()
+        # Run the monitor on any new files
+        script, div = None, None
+        if len(new_filenames) > 0:
+            # get the data
+            self.msata_data = self.get_msata_data(new_filenames)
+
+            # make the plots
+            script, div = self.mk_plt_layout()
+            monitor_run = True
+            
+        else:
+            logging.info('\tMSATA monitor skipped. {} new MSATA.'.format(msata_entries))
+            monitor_run = False
 
         # Update the query history
         new_entry = {'instrument': 'nirspec',
-                    'aperture': self.aperture,
-                    'start_time_mjd': self.query_start,
-                    'end_time_mjd': self.query_end,
-                    'files_found': len(new_entries),
-                    'entry_date': datetime.now()}
+                     'aperture': self.aperture,
+                     'start_time_mjd': self.query_start,
+                     'end_time_mjd': self.query_end,
+                     'entries_found': msata_entries,
+                     'files_found': len(new_filenames),
+                     'run_monitor': monitor_run,
+                     'entry_date': datetime.now()}
         self.query_table.__table__.insert().execute(new_entry)
         logging.info('\tUpdated the query history table')
 
         logging.info('MSATA Monitor completed successfully.')
+        return script, div
 
 
 if __name__ == '__main__':
@@ -829,6 +850,6 @@ if __name__ == '__main__':
     start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     monitor = MSATA()
-    monitor.run()
+    script_and_div = monitor.run()
 
     monitor_utils.update_monitor_table(module, start_time, log_file)

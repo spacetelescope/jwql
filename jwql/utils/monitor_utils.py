@@ -5,6 +5,7 @@ Authors
 
     - Matthew Bourque
     - Bryan Hilbert
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -17,6 +18,7 @@ Use
  """
 import datetime
 import os
+from astroquery.mast import Mast
 
 
 from jwql.database.database_interface import Monitor
@@ -170,18 +172,18 @@ def mast_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
     if instrument.lower() == 'nirspec':
         instrument = 'NIRSpec'
         if aperture == 'NRS_S1600A1_SLIT':
-            ta_template = ['NRS_TASLIT', 'NRS_BOTA', 'NRS_WATA']
+            exp_types = ['NRS_TASLIT', 'NRS_BOTA', 'NRS_WATA']
         else:
-            ta_template = ['NRS_TACQ', 'NRS_MSATA']
+            exp_types = ['NRS_TACQ', 'NRS_MSATA']
 
     # monitor_mast.instrument_inventory does not allow list inputs to
     # the added_filters input (or at least if you do provide a list, then
     # it becomes a nested list when it sends the query to MAST. The
     # nested list is subsequently ignored by MAST.)
-    # So query once for each TA template, and combine outputs into a
+    # So query once for each dark template, and combine outputs into a
     # single list.
     query_results = []
-    for template_name in ta_template:
+    for template_name in exp_types:
 
         # Create dictionary of parameters to add
         parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
@@ -196,9 +198,7 @@ def mast_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
         if 'data' in query.keys():
             if len(query['data']) > 0:
                 query_results.extend(query['data'])
-
     return query_results
-
 
 
 def update_monitor_table(module, start_time, log_file):

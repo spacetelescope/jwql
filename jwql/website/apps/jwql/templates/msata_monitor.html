@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>{{ inst }} MSATA Monitor- JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+
+		<h1>{{ inst }} MSATA Monitor</h1>
+        <!--Horizontal line-->
+        <hr>
+        <!--Include an image located at jwql/website/apps/jwql/static/img/-->
+        <div style="text-align: center">
+          <img src={{ static('img/jwql_logo_full_transparent.png') }}
+               width=20%
+               alt="JWQL Logo"
+               title="JWQL Logo">
+        </div>
+
+        <p id= "description">
+          <h2>Updates to this monitor only ocurr with new data</h2>
+          This monitor uses all MSATA data available and the plots include all data.
+          The plots will only be updated if new MSATA data is in MAST, otherwise, the
+          monitor will only show all data previously obtained.
+          <br>
+          <br>
+
+        </p>
+
+		<div width=100%>
+			<!--Add Bokeh HTML-->
+			{{ tabs_components[1] | safe }}
+		</div>
+
+		<!--Add Bokeh scripts-->
+		{{ tabs_components[0] | safe }}
+
+	</main>
+
+{% endblock %}

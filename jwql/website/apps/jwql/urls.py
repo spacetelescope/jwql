@@ -13,6 +13,7 @@ Authors
     - Matthew Bourque
     - Johannes Sahlmann
     - Teagan King
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -61,6 +62,8 @@ urlpatterns = [
 
     # NIRSpec-specific views
     path('nirspec/nirspec_data_trending/', views.nirspec_data_trending, name='nirspec_data_trending'),
+    path('nirspec/msata_monitor/', monitor_views.msata_monitoring, name='msata_monitor'),
+    path('nirspec/wata_monitor/', monitor_views.wata_monitoring, name='wata_monitor'),
 
     # Common monitor views
     re_path(r'^(?P<inst>({}))/dark_monitor/$'.format(instruments), monitor_views.dark_monitor, name='dark_monitor'),

@@ -154,7 +154,7 @@ def data_trending():
 
 
 def nirspec_trending():
-    """Container for Miri datatrending dashboard and components
+    """Container for NIRSpec datatrending dashboard and components
 
     Returns
     -------
