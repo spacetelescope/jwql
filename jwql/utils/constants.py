@@ -8,7 +8,6 @@ Authors
     - Bryan Hilbert
     - Ben Sunnquist
     - Teagan King
-    - Mike Engesser
 
 Use
 ---
@@ -67,17 +66,12 @@ ANOMALIES_PER_INSTRUMENT = {
     'snowball': ['fgs', 'nircam', 'niriss', 'nirspec'],
     # instrument-specific anomalies:
     'column_pull_up': ['miri'],
-    'column_pull_down': ['miri'],
     'dominant_msa_leakage': ['nirspec'],
     'dragons_breath': ['nircam'],
-    'MRS_glow': ['miri'],
-    'MRS_zipper': ['miri'],
+    'glow': ['miri'],
     'internal_reflection': ['miri'],
     'optical_short': ['nirspec'],  # Only for MOS observations
-    'row_pull_up': ['miri'],
     'row_pull_down': ['miri'],
-    'LRS_Contamination': ['miri'],
-    'tree_rings': ['miri'],
     # additional anomalies:
     'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
 
