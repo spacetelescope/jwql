@@ -30,11 +30,12 @@ Dependencies
 import os
 
 from django.shortcuts import render
+from django.http import HttpResponse, JsonResponse
 
 from . import bokeh_containers
 from jwql.website.apps.jwql import bokeh_containers
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.utils import get_config
+from jwql.utils.utils import get_config, get_base_url
 from jwql.instrument_monitors.nirspec_monitors.ta_monitors import msata_monitor
 from jwql.instrument_monitors.nirspec_monitors.ta_monitors import wata_monitor
 from jwql.utils import monitor_utils
@@ -216,23 +217,42 @@ def msata_monitoring(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    # run the monitor
-    module = 'msata_monitor.py'
-    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
-    monitor = msata_monitor.MSATA()
-    script_and_div = monitor.run()
-    monitor_utils.update_monitor_table(module, start_time, log_file)
-
     # get the template and embed the plots
     template = "msata_monitor.html"
 
     context = {
         'inst': 'NIRSpec',
-        'tabs_components': script_and_div,
+        'base_url': get_base_url()
     }
 
     # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
+
+
+def msata_monitoring_ajax(request):
+    """Generate the MSATA monitor results to display in the monitor page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+    # run the monitor
+    module = 'msata_monitor.py'
+    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
+    monitor = msata_monitor.MSATA()
+    monitor.run()
+    monitor_utils.update_monitor_table(module, start_time, log_file)
+
+    context = {'script': monitor.script,
+               'div': monitor.div}
+
+    return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
 def wata_monitoring(request):
@@ -248,20 +268,40 @@ def wata_monitoring(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    # run the monitor
-    module = 'wata_monitor.py'
-    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
-    monitor = wata_monitor.WATA()
-    script_and_div = monitor.run()
-    monitor_utils.update_monitor_table(module, start_time, log_file)
-
     # get the template and embed the plots
     template = "wata_monitor.html"
 
     context = {
         'inst': 'NIRSpec',
-        'tabs_components': script_and_div,
+        'base_url': get_base_url()
     }
 
     # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
+
+
+def wata_monitoring_ajax(request):
+    """Generate the WATA monitor results to display in the monitor page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+    # run the monitor
+    module = 'wata_monitor.py'
+    start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
+    monitor = wata_monitor.WATA()
+    monitor.run()
+    monitor_utils.update_monitor_table(module, start_time, log_file)
+
+    context = {'script': monitor.script,
+               'div': monitor.div}
+
+    return JsonResponse(context, json_dumps_params={'indent': 2})
+

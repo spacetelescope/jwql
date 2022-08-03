@@ -108,8 +108,8 @@ class MSATA():
                     msata = True
                     break
             if not msata:
-                print('\n WARNING! This file is not MSATA: ', fits_file)
-                print('  Skiping msata_monitor for this file  \n')
+                #print('\n WARNING! This file is not MSATA: ', fits_file)
+                #print('  Skiping msata_monitor for this file  \n')
                 return None
             main_hdr = ff[0].header
             ta_hdr = ff['MSA_TARG_ACQ'].header
@@ -800,33 +800,33 @@ class MSATA():
 
         # Get full paths to the files
         new_filenames = []
-        wanted_suffix = ['cal']
-        for file_entry in new_entries:
-            filename_of_interest = file_entry['filename']
-            filename_dict = filename_parser(filename_of_interest)
-            if filename_dict['suffix'] in wanted_suffix:
-                filename_of_interest = filename_of_interest.replace('cal', 'uncal')
-                try:
-                    new_filenames.append(filesystem_path(filename_of_interest))
-                except FileNotFoundError:
-                    logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'.format(filename_of_interest))
+        for entry_dict in new_entries:
+            filename_of_interest = entry_dict['productFilename']
+            try:
+                new_filenames.append(filesystem_path(filename_of_interest))
+            except FileNotFoundError:
+                logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'.format(filename_of_interest))
 
         if len(new_filenames) == 0:
             logging.warning('\t\t ** Unable to locate any file in filesystem. Nothing to process. ** ')
 
         # Run the monitor on any new files
-        script, div = None, None
+        logging.info('\tMSATA monitor found {} new uncal files.'.format(len(new_filenames)))
+        self.script, self.div = None, None
+        monitor_run = False
+        print('***** new_filenames =', len(new_filenames))
         if len(new_filenames) > 0:
             # get the data
-            self.msata_data = self.get_msata_data(new_filenames)
+            try:
+                self.msata_data = self.get_msata_data(new_filenames)
+                # make the plots
+                self.script, self.div = self.mk_plt_layout()
+                monitor_run = True
+            except:
+                logging.info('\tMSATA monitor skipped. No MSATA data found.')
 
-            # make the plots
-            script, div = self.mk_plt_layout()
-            monitor_run = True
-            
         else:
-            logging.info('\tMSATA monitor skipped. {} new MSATA.'.format(msata_entries))
-            monitor_run = False
+            logging.info('\tMSATA monitor skipped.')
 
         # Update the query history
         new_entry = {'instrument': 'nirspec',
@@ -841,7 +841,6 @@ class MSATA():
         logging.info('\tUpdated the query history table')
 
         logging.info('MSATA Monitor completed successfully.')
-        return script, div
 
 
 if __name__ == '__main__':
