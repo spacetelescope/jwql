@@ -191,14 +191,17 @@ def mast_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
     result = response[0].json()['data']
     wanted_suffix = ['rate']
     observation_ids = []
+    ta_indicator = '02101'  # this is the activity number, always the same for TA
     for file_entry in result:
         filename_of_interest = file_entry['filename']
         filename_dict = filename_parser(filename_of_interest)
         if filename_dict['suffix'] in wanted_suffix:
             suffix2remove = filename_of_interest.split(sep="_")[-1]
+            activity_number = filename_of_interest.split(sep="_")[-4]
             obs_id = filename_of_interest.replace("_"+suffix2remove, "")
-            if obs_id not in observation_ids:
-                observation_ids.append(obs_id)
+            if activity_number == ta_indicator:
+                if obs_id not in observation_ids:
+                    observation_ids.append(obs_id)
 
     # now query again for these observations only and filter the uncal files only
     obs = Observations.query_criteria(obs_collection='JWST',

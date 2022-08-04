@@ -167,7 +167,8 @@ class MSATA():
                           'lsf_removed_x':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_x'},
                           'lsf_removed_y':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_y'},
                           'planned_v2':  {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v2'},
-                          'planned_v3':  {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v3'}
+                          'planned_v3':  {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v3'},
+                          'FITTARGS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stars_in_fit'}
                          }
         # fill out the dictionary to create the dataframe
         msata_dict = {}
@@ -509,7 +510,7 @@ class MSATA():
                       y_axis_label='Least Squares Residual Roll Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsrolloffset', source=self.source,
                     color="blue", size=7, fill_alpha=0.5)
-        plot.y_range = Range1d(-25.0, 25.0)
+        plot.y_range = Range1d(-600.0, 600.0)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
@@ -572,6 +573,7 @@ class MSATA():
         # get the number of stars per array
         visit_id = self.source.data['visit_id']
         reference_star_number = self.source.data['reference_star_number']
+        stars_in_fit = self.source.data['stars_in_fit']
         date_obs, time_arr = self.source.data['date_obs'], self.source.data['time_arr']
         # create the list of color per visit and tot_number_of_stars
         colors_list, tot_number_of_stars = [], []
@@ -591,12 +593,16 @@ class MSATA():
                       y_axis_label='Total number of stars', x_axis_type='datetime')
         plot.circle(x='time_arr', y='tot_number_of_stars', source=self.source,
                     color='colors_list', size=7, fill_alpha=0.5)
+        plot.triangle(x='time_arr', y='stars_in_fit', source=self.source,
+                      color='black', size=7, fill_alpha=0.5)
+        plot.y_range = Range1d(0.0, 40.0)
         hover = HoverTool()
         hover.tooltips=[('Visit ID', '@visit_id'),
                         ('Filter', '@tafilter'),
                         ('Readout', '@readout'),
                         ('Date-Obs', '@date_obs'),
                         ('Subarray', '@subarray'),
+                        ('Stars in fit', '@stars_in_fit'),
                         ('LS roll offset', '@lsrolloffset'),
                         ('LS slew mag offset', '@lsoffsetmag'),
                         ('LS V2 offset', '@lsv2offset'),
@@ -814,7 +820,7 @@ class MSATA():
         logging.info('\tMSATA monitor found {} new uncal files.'.format(len(new_filenames)))
         self.script, self.div = None, None
         monitor_run = False
-        print('***** new_filenames =', len(new_filenames))
+        #print('***** new_filenames =', len(new_filenames))
         if len(new_filenames) > 0:
             # get the data
             try:
