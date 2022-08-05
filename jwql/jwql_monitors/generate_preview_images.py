@@ -673,8 +673,8 @@ def process_program(program):
     logging.info('Processing {}'.format(program))
 
     # Gather files to process
-    filenames = glob.glob(os.path.join(SETTINGS['filesystem'], 'public', program, '*/*.fits'))
-    filenames.extend(glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', program, '*/*.fits')))
+    filenames = glob.glob(os.path.join(SETTINGS['filesystem'], 'public', program, 'jw*/*.fits'))
+    filenames.extend(glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', program, 'jw*/*.fits')))
     filenames = list(set(filenames))
 
     # remove specific "ignored" suffix files (currently "original" and "stream")
