@@ -79,6 +79,12 @@
     cursor: default;
 }
 
+/* Make disabled sections opaque and unclickable */
+.disabled_section {
+    pointer-events: none;
+    opacity: 0.4;
+  }
+
 /*Define dropdown menu colors*/
 .dropdown-item:hover{
     background-color: black;

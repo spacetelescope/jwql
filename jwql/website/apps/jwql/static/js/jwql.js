@@ -499,8 +499,6 @@ function update_archive_page(inst, base_url) {
     });
 };
 
-
-
 /**
  * Updates the thumbnail-filter div with filter options
  * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
@@ -533,6 +531,30 @@ function update_filter_options(data) {
     // Add the content to the div
     $("#thumbnail-filter")[0].innerHTML = content;
 };
+
+function update_group_difference_availability() {
+    
+    // STEP 1 - check array size of currently selected extension
+    ext_name = get_radio_button_value("extension");
+    
+    // STEP 2 - If array size is 3 dimensional or less, disable difference functionality
+    //          uncheck calculate_difference box
+    //          remove values from Subtrahend boxes as they can't be accessed
+
+
+    // STEP 3 - If array size is 4 dimensional
+    //          enable calculate_difference box
+    //          enable subtrahend boxes and default values to 1 and 1
+
+
+    if (document.getElementById("calcDifference").checked) {
+        document.getElementById("integrationGroup2").classList.remove("disabled_section");
+    } else {
+        document.getElementById("integrationGroup2").classList.add("disabled_section");
+        document.getElementById("integration2").value = null;
+        document.getElementById("group2").value = null;
+    }
+}
 
 /**
  * Change the header extension displayed
