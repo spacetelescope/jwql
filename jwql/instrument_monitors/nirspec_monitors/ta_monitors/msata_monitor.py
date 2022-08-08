@@ -5,6 +5,7 @@
 # HISTORY
 #    Feb 2022 - Vr. 1.0: Completed initial version
 #    Jul 2022 - Vr. 1.1: Changed keywords to final flight values
+#    Aug 2022 - Vr. 1.2: Modified plots according to NIRSpec team input
 
 
 """
@@ -190,7 +191,7 @@ class MSATA():
                     val = ext[key]
                 except:
                     val = ext[key_dict['alt_key']]
-                """ UNCOMMENTED THIS BLOCK IN CASE WE DO WANT TO GET RID OF the 999.0 values
+                """ UNCOMMENT THIS BLOCK IN CASE WE DO WANT TO GET RID OF the 999.0 values
                 # remove the 999 values for arrays
                 if isinstance(val, np.ndarray):
                     if val.dtype.char == 'd' or val.dtype.char == 'f':
@@ -219,27 +220,30 @@ class MSATA():
         #ta_status, date_obs = source.data['ta_status'], source.data['date_obs']
         date_obs = self.source.data['date_obs']
         ta_status = self.source.data['ta_status']
-        # bokeh does not like to plot strings, turn  into binary type
-        bool_status, time_arr, status_colors = [], [], []
+        # bokeh does not like to plot strings, turn  into numbers
+        number_status, time_arr, status_colors = [], [], []
         for tas, do_str in zip(ta_status, date_obs):
             if 'success' in tas.lower():
-                bool_status.append(1)
+                number_status.append(1.0)
                 status_colors.append('blue')
+            elif 'progress' in tas.lower():
+                number_status.append(0.5)
+                status_colors.append('green')
             else:
-                bool_status.append(0)
+                number_status.append(0.0)
                 status_colors.append('red')
             # convert time string into an array of time (this is in UT)
             t = datetime.fromisoformat(do_str)
             time_arr.append(t)
         # add these to the bokeh data structure
         self.source.data["time_arr"] = time_arr
-        self.source.data["ta_status_bool"] = bool_status
+        self.source.data["number_status"] = number_status
         self.source.data["status_colors"] = status_colors
         # create a new bokeh plot
-        plot = figure(title="MSATA Status [Succes=1, Fail=0]", x_axis_label='Time',
+        plot = figure(title="MSATA Status [Succes=1, In_Progress=0.5, Fail=0]", x_axis_label='Time',
                       y_axis_label='MSATA Status', x_axis_type='datetime',)
-        limits = [-0.5, 1.5]
-        plot.circle(x='time_arr', y='ta_status_bool', source=self.source,
+        plot.y_range = Range1d(-0.5, 1.5)
+        plot.circle(x='time_arr', y='number_status', source=self.source,
                     color='status_colors', size=7, fill_alpha=0.5)
         hover = HoverTool()
         hover.tooltips=[('Visit ID', '@visit_id'),
@@ -267,7 +271,13 @@ class MSATA():
                       x_axis_label='Least Squares Residual V2 Offset',
                       y_axis_label='Least Squares Residual V3 Offset')
         plot.circle(x='lsv2offset', y='lsv3offset', source=self.source,
-                    color="purple", size=7, fill_alpha=0.5)
+                    color="purple", size=7, fill_alpha=0.4)
+        v2halffacet, v3halffacet = self.source.data['v2halffacet'], self.source.data['v3halffacet']
+        xstart, ystart, ray_length= -1*v2halffacet[0], -1*v3halffacet[0], 0.05
+        plot.ray(x=xstart-ray_length/2.0, y=ystart, length=ray_length, angle_units="deg", angle=0)
+        plot.ray(x=xstart, y=ystart-ray_length/2.0, length=ray_length, angle_units="deg", angle=90)
+        hflabel = Label(x=xstart/3.0, y=ystart, y_units='data', text='-V2, -V3 half-facets values')
+        plot.add_layout(hflabel)
         plot.x_range = Range1d(-0.5, 0.5)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin lines
@@ -305,7 +315,11 @@ class MSATA():
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
-        plot.renderers.extend([hline])
+        time_arr, v2halffacet = self.source.data['time_arr'], self.source.data['v2halffacet']
+        hfline = Span(location=-1*v2halffacet[0], dimension='width', line_color='green', line_width=3)
+        plot.renderers.extend([hline, hfline])
+        hflabel = Label(x=time_arr[-1], y=-1*v2halffacet[0], y_units='data', text='-V2 half-facet value')
+        plot.add_layout(hflabel)
         hover = HoverTool()
         hover.tooltips=[('Visit ID', '@visit_id'),
                         ('Filter', '@tafilter'),
@@ -337,7 +351,11 @@ class MSATA():
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
-        plot.renderers.extend([hline])
+        time_arr, v3halffacet = self.source.data['time_arr'], self.source.data['v3halffacet']
+        hfline = Span(location=-1*v3halffacet[0], dimension='width', line_color='green', line_width=3)
+        plot.renderers.extend([hline, hfline])
+        hflabel = Label(x=time_arr[-1], y=-1*v3halffacet[0], y_units='data', text='-V3 half-facet value')
+        plot.add_layout(hflabel)
         hover = HoverTool()
         hover.tooltips=[('Visit ID', '@visit_id'),
                         ('Filter', '@tafilter'),
@@ -366,7 +384,7 @@ class MSATA():
                       x_axis_label='Least Squares Residual V2 Sigma Offset',
                       y_axis_label='Least Squares Residual V3 Sigma Offset')
         plot.circle(x='lsv2sigma', y='lsv3sigma', source=self.source,
-                    color="purple", size=7, fill_alpha=0.5)
+                    color="purple", size=7, fill_alpha=0.4)
         plot.x_range = Range1d(-0.1, 0.1)
         plot.y_range = Range1d(-0.1, 0.1)
         # mark origin lines
@@ -410,13 +428,18 @@ class MSATA():
                       x_axis_label='Least Squares Residual V2 Offset + half-facet',
                       y_axis_label='Least Squares Residual V3 Offset + half-facet')
         plot.circle(x='v2_half_fac_corr', y='v3_half_fac_corr', source=self.source,
-                    color="purple", size=7, fill_alpha=0.5)
+                    color="purple", size=7, fill_alpha=0.4)
         plot.x_range = Range1d(-0.5, 0.5)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin lines
         vline = Span(location=0, dimension='height', line_color='black', line_width=0.7)
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
+        xstart, ystart, ray_length= -1*v2halffacet[0], -1*v3halffacet[0], 0.05
+        plot.ray(x=xstart-ray_length/2.0, y=ystart, length=ray_length, angle_units="deg", angle=0)
+        plot.ray(x=xstart, y=ystart-ray_length/2.0, length=ray_length, angle_units="deg", angle=90)
+        hflabel = Label(x=xstart/3.0, y=ystart, y_units='data', text='-V2, -V3 half-facets values')
+        plot.add_layout(hflabel)
         hover = HoverTool()
         hover.tooltips=[('Visit ID', '@visit_id'),
                         ('Filter', '@tafilter'),
@@ -513,7 +536,13 @@ class MSATA():
         plot.y_range = Range1d(-600.0, 600.0)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
-        plot.renderers.extend([hline])
+        # Maximum accepted roll line and label
+        time_arr = self.source.data['time_arr']
+        arlinepos = Span(location=120, dimension='width', line_color='green', line_width=3)
+        arlineneg = Span(location=-120, dimension='width', line_color='green', line_width=3)
+        arlabel = Label(x=time_arr[-1], y=125, y_units='data', text='Max accepted roll')
+        plot.add_layout(arlabel)
+        plot.renderers.extend([hline, arlinepos, arlineneg])
         hover = HoverTool()
         hover.tooltips=[('Visit ID', '@visit_id'),
                         ('Filter', '@tafilter'),
@@ -589,7 +618,7 @@ class MSATA():
         self.source.data["tot_number_of_stars"] = tot_number_of_stars
         self.source.data["colors_list"] = colors_list
         # create a new bokeh plot
-        plot = figure(title="Total Number of Stars vs Time", x_axis_label='Time',
+        plot = figure(title="Total Number of Measurements vs Time", x_axis_label='Time',
                       y_axis_label='Total number of stars', x_axis_type='datetime')
         plot.circle(x='time_arr', y='tot_number_of_stars', source=self.source,
                     color='colors_list', size=7, fill_alpha=0.5)
@@ -635,13 +664,10 @@ class MSATA():
         colors_list = self.source.data['colors_list']
         # create the structure matching the number of visits and reference stars
         new_colors_list, vid, dobs, tarr, star_no, status = [], [], [], [], [], []
-        peaks, visit_mags, stars_v2, stars_v3 = [], [], [], []
+        peaks, stars_v2, stars_v3 = [], [], []
         for i, _ in enumerate(visit_id):
-            mags, v, d, t, c, s, x, y  = [], [], [], [], [], [], [], []
+            v, d, t, c, s, x, y  = [], [], [], [], [], [], []
             for j in range(len(reference_star_number[i])):
-                # calculate the pseudo magnitude
-                m = -2.5 * np.log(box_peak_value[i][j])
-                mags.append(m)
                 v.append(visit_id[i])
                 d.append(date_obs[i])
                 t.append(time_arr[i])
@@ -659,28 +685,24 @@ class MSATA():
             tarr.extend(t)
             star_no.extend(reference_star_number[i])
             status.extend(s)
-            visit_mags.extend(mags)
             new_colors_list.extend(c)
             stars_v2.extend(x)
             stars_v3.extend(y)
             peaks.extend(box_peak_value[i])
         # now create the mini ColumnDataSource for this particular plot
         mini_source={'vid': vid, 'star_no': star_no, 'status': status,
-                     'dobs': dobs, 'tarr': tarr, 'visit_mags': visit_mags,
+                     'dobs': dobs, 'tarr': tarr,
                      'peaks': peaks, 'colors_list': new_colors_list,
                      'stars_v2': stars_v2, 'stars_v3': stars_v2
                     }
         mini_source = ColumnDataSource(data=mini_source)
         # create a the bokeh plot
-        plot = figure(title="MSATA Star Pseudo Magnitudes vs Time", x_axis_label='Time',
-                   y_axis_label='Star  -2.5*log(box_peak)', x_axis_type='datetime')
-        plot.circle(x='tarr', y='visit_mags', source=mini_source,
-                 color='colors_list', size=7, fill_alpha=0.5)
-        plot.y_range.flipped = True
+        plot = figure(title="MSATA Counts vs Time", x_axis_label='Time', y_axis_label='box_peak [Counts]',
+                      x_axis_type='datetime')
+        plot.circle(x='tarr', y='peaks', source=mini_source,
+                    color='colors_list', size=7, fill_alpha=0.5)
         # add count saturation warning lines
-        loc1 = -2.5 * np.log(45000.0)
-        loc2 = -2.5 * np.log(50000.0)
-        loc3 = -2.5 * np.log(60000.0)
+        loc1, loc2, loc3 = 45000.0, 50000.0, 60000.0
         hline1 = Span(location=loc1, dimension='width', line_color='green', line_width=3)
         hline2 = Span(location=loc2, dimension='width', line_color='yellow', line_width=3)
         hline3 = Span(location=loc3, dimension='width', line_color='red', line_width=3)
@@ -691,6 +713,7 @@ class MSATA():
         plot.add_layout(label1)
         plot.add_layout(label2)
         plot.add_layout(label3)
+        plot.y_range = Range1d(-1000.0, 62000.0)
         # add hover
         hover = HoverTool()
         hover.tooltips=[('Visit ID', '@vid'),
@@ -698,7 +721,6 @@ class MSATA():
                         ('LS Status', '@status'),
                         ('Date-Obs', '@dobs'),
                         ('Box peak', '@peaks'),
-                        ('Pseudo mag', '@visit_mags'),
                         ('Measured V2', '@stars_v2'),
                         ('Measured V3', '@stars_v3')
                         ]
@@ -820,7 +842,6 @@ class MSATA():
         logging.info('\tMSATA monitor found {} new uncal files.'.format(len(new_filenames)))
         self.script, self.div = None, None
         monitor_run = False
-        #print('***** new_filenames =', len(new_filenames))
         if len(new_filenames) > 0:
             # get the data
             try:
@@ -855,6 +876,6 @@ if __name__ == '__main__':
     start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     monitor = MSATA()
-    script_and_div = monitor.run()
+    monitor.run()
 
     monitor_utils.update_monitor_table(module, start_time, log_file)

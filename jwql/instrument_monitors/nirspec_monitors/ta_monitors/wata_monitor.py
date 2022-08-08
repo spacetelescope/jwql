@@ -218,7 +218,7 @@ class WATA():
         # create a new bokeh plot
         plot = figure(title="WATA Status [Succes=1, Fail=0]", x_axis_label='Time',
                       y_axis_label='WATA Status', x_axis_type='datetime',)
-        limits = [-0.5, 1.5]
+        plot.y_range = Range1d(-0.5, 1.5)
         plot.circle(x='time_arr', y='ta_status_bool', source=self.source,
                     color='status_colors', size=7, fill_alpha=0.5)
         #output_file("wata_status.html")
@@ -337,22 +337,37 @@ class WATA():
         """
         # calculate the pseudo magnitudes
         max_val_box, time_arr = self.source.data['max_val_box'], self.source.data['time_arr']
-        pseudo_mag = []
-        for peak in max_val_box:
-            m = -2.5 * np.log(peak)
-            pseudo_mag.append(m)
+        # create the arrays per filter
+        f140x_arr, f110w_arr, clear_arr = [], [], []
+        filter_used = self.source.data['tafilter']
+        for i, val in enumerate(max_val_box):
+            if '140' in filter_used[i]:
+                f140x_arr.append(val)
+                f110w_arr.append(0.0)
+                clear_arr.append(0.0)
+            elif '110' in filter_used[i]:
+                f140x_arr.append(0.0)
+                f110w_arr.append(val)
+                clear_arr.append(0.0)
+            else:
+                f140x_arr.append(0.0)
+                f110w_arr.append(0.0)
+                clear_arr.append(val)
         # add to the bokeh data structure
-        self.source.data["pseudo_mag"] = pseudo_mag
+        self.source.data["f140x_arr"] = f140x_arr
+        self.source.data["f110w_arr"] = f110w_arr
+        self.source.data["clear_arr"] = clear_arr
         # create a new bokeh plot
-        plot = figure(title="WATA Star Pseudo Magnitude vs Time", x_axis_label='Time',
-                      y_axis_label='Star  -2.5*log(box_peak)', x_axis_type='datetime')
-        plot.circle(x='time_arr', y='pseudo_mag', source=self.source,
+        plot = figure(title="WATA Counts vs Time", x_axis_label='Time',
+                      y_axis_label='box_peak [Counts]', x_axis_type='datetime')
+        plot.circle(x='time_arr', y='f140x_arr', source=self.source,
                     color="blue", size=7, fill_alpha=0.5)
-        plot.y_range.flipped = True
+        plot.triangle(x='time_arr', y='f110w_arr', source=self.source,
+                      color="orange", size=7, fill_alpha=0.7)
+        plot.square(x='time_arr', y='clear_arr', source=self.source,
+                    color="gray", size=7, fill_alpha=0.5)
         # add count saturation warning lines
-        loc1 = -2.5 * np.log(45000.0)
-        loc2 = -2.5 * np.log(50000.0)
-        loc3 = -2.5 * np.log(60000.0)
+        loc1, loc2, loc3 = 45000.0, 50000.0, 60000.0
         hline1 = Span(location=loc1, dimension='width', line_color='green', line_width=3)
         hline2 = Span(location=loc2, dimension='width', line_color='yellow', line_width=3)
         hline3 = Span(location=loc3, dimension='width', line_color='red', line_width=3)
@@ -363,6 +378,7 @@ class WATA():
         plot.add_layout(label1)
         plot.add_layout(label2)
         plot.add_layout(label3)
+        plot.y_range = Range1d(-1000.0, 62000.0)
         # add hover
         hover = HoverTool()
         hover.tooltips=[('Visit ID', '@visit_id'),
@@ -370,8 +386,7 @@ class WATA():
                         ('Filter', '@tafilter'),
                         ('Readout', '@readout'),
                         ('Date-Obs', '@date_obs'),
-                        ('Box peak', '@max_val_box'),
-                        ('Pseudo mag', '@pseudo_mag')
+                        ('Box peak', '@max_val_box')
                         ]
         plot.add_tools(hover)
         return plot
@@ -550,7 +565,7 @@ if __name__ == '__main__':
     start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
 
     monitor = WATA()
-    script_and_div = monitor.run()
+    monitor.run()
 
     monitor_utils.update_monitor_table(module, start_time, log_file)
 
