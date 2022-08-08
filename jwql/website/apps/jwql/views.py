@@ -819,7 +819,7 @@ def explore_image(request, inst, file_root, filetype, rewrite=False):
     extension_ints = {}
     extension_groups = {}
 
-    # gather extension information to send
+    # gather extension group/integration information to send
     if os.path.isfile(full_fits_file):
         with fits.open(full_fits_file) as hdulist:
             for exten in extensions:

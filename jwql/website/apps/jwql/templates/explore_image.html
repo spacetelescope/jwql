@@ -19,47 +19,66 @@
 
         <!-- Allow the user to change the settings in the image to explore -->
         <h4>Image Settings</h4>
-        Scaling:&nbsp;&nbsp;
-        <input type="radio" name="scaling" value="log" id="log" checked="checked"> log &nbsp;&nbsp;&nbsp;&nbsp;
-        <input type="radio" name="scaling" value="lin" id="lin"> linear &nbsp;&nbsp;
-        <br>
-        Z-Scale Limits:&nbsp;&nbsp;
-        <input type="number" id="low_lim" size="15" step="any">&nbsp;Low &nbsp;&nbsp;&nbsp;&nbsp;
-        <input type="number" id="high_lim" size="15" step="any">&nbsp;High &nbsp;&nbsp;&nbsp;&nbsp;
-        <br>
         <div class="mt-4">
+            Scaling:&nbsp;&nbsp;
+            <input type="radio" name="scaling" value="log" id="log" checked="checked"> log &nbsp;&nbsp;&nbsp;&nbsp;
+            <input type="radio" name="scaling" value="lin" id="lin"> linear &nbsp;&nbsp;
+            <br>
+            Z-Scale Limits:&nbsp;&nbsp;
+            <input type="number" id="low_lim" size="15" step="any">&nbsp;Low &nbsp;&nbsp;&nbsp;&nbsp;
+            <input type="number" id="high_lim" size="15" step="any">&nbsp;High &nbsp;&nbsp;&nbsp;&nbsp;
+            <br>
             Extension:&nbsp;&nbsp;
             {% for extension in extensions %}
                 {% if extension == 'SCI' %}
-                    <input type="radio" name="extension" value="{{ extension }}" id="{{ extension }}" checked="checked" onclick="update_group_difference_availability();"> {{ extension }} &nbsp;&nbsp;&nbsp;&nbsp;
+                    <input type="radio" name="extension" value="{{ extension }}" id="{{ extension }}" checked="checked" onclick='explore_image_update_enable_options("{{ extension_ints }}", "{{ extension_groups }}");'> {{ extension }} &nbsp;&nbsp;&nbsp;&nbsp;
                 {% else %}
-                    <input type="radio" name="extension" value="{{ extension }}" id="{{ extension }}" onclick="update_group_difference_availability();"> {{ extension }} &nbsp;&nbsp;&nbsp;&nbsp;
+                    <input type="radio" name="extension" value="{{ extension }}" id="{{ extension }}" onclick='explore_image_update_enable_options("{{ extension_ints }}", "{{ extension_groups }}");'> {{ extension }} &nbsp;&nbsp;&nbsp;&nbsp;
                 {% endif %}
             {% endfor %}
             <br>
-            <div class="row" id="integrationGroup1">
-                <div>
-                    <input type="number" id="integration1" min="1" max="5" size="3" step="1">
+            <br>
+            <div class="row">
+                <div class="explorer_options" id="integrationInput1">
+                    <input type="number" id="integration1" min="1" size="3" step="1">
                     <label id="integration-name" for="integration1">Integration</label>
-                    <input type="number" id="group1" min="1" max="5" size="3" step="1">
+                </div>
+                <div class="explorer_options" id="groupInput1">
+                    <input type="number" id="group1" min="1" size="3" step="1">
                     <label id="group1-name" for="group1">Group</label>
                 </div>
             </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="calcDifference" onclick="update_group_difference_availability();">
+            <div class="form-check" id="calcDifferenceForm">
+                <input class="form-check-input" type="checkbox" id="calcDifference" onclick='explore_image_update_enable_options("{{ extension_ints }}", "{{ extension_groups }}");'>
                 <label class="form-check-label" for="calcDifference">Calculate Difference</label>
             </div>
-            <div class="row" id="integrationGroup2">
-                <div>
+            <div class="row">
+                <div class="explorer_options" id="integrationInput2">
                     <input type="number" id="integration2" min="1" max="5" size="3" step="1">
-                    <label id="integration2-name" for="integration2" >Integration</label>
+                    <label id="integration2-name" for="integration2">Integration</label>
+                </div>
+                <div class="explorer_options" id="groupInput2">
                     <input type="number" id="group2" min="1" max="5" size="3" step="1">
-                    <label id="group2-name" for="group2" >Group</label>
+                    <label id="group2-name" for="group2">Group</label>
                 </div>
             </div>
+            Extensions -
             {% for extension in extensions %}
-                {{ extension }} - group {{ extension_groups.SCI  }} - integ {{ extension_ints.SCI }}
+                {{ extension }}
             {% endfor %}
+            -- full extensions == {{ extensions }}
+            <br>
+            Group - 
+            {% for keyg, extensiong in extension_groups.items() %}
+                {{ keyg }} - {{ extensiong }}
+            {% endfor %}
+            -- full groups == {{ extension_groups }}
+            <br>
+            Integration - 
+            {% for keyi, extensioni in extension_ints.items() %}
+                {{ keyi }} - {{ extensioni }}
+            {% endfor %}
+            -- full integration == {{ extension_ints }}
         </div>
         <br>
         <p>
@@ -127,7 +146,7 @@
         </div>
 
     </main>
-    <script>update_group_difference_availability();</script>
+    <script>explore_image_update_enable_options('{{ extension_ints }}', '{{ extension_groups }}');</script>
     <script>update_explore_image_page('{{inst}}', '{{file_root}}', '{{filetype}}', '{{base_url}}');</script>
 
 {% endblock %}

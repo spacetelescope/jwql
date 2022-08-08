@@ -225,6 +225,66 @@ function determine_page_title_obs(instrument, proposal, observation) {
     };
 };
 
+/**
+ * adds/removes disabled_section class and clears value
+ * @param {string} element_id 
+ * @param {boolean} set_disable 
+ */
+ function set_disabled_section (element_id, set_disable) {
+
+    if (set_disable) {
+        document.getElementById(element_id).value = null;
+        document.getElementById(element_id).classList.add("disabled_section");
+    } else {
+        document.getElementById(element_id).classList.remove("disabled_section");
+    }
+}
+/**
+ * Interprets number of integrations/groups for the selected extension and disables input for calculating difference accordingly
+ * @param {Dict} integrations - A dictionary whose keys are extensions and whose
+ *                              values are the number of integrations for that suffix
+ * @param {Dict} groups - A dictionary whose keys are extensions and whose
+ *                              values are the number of groups for that suffix
+ */
+function explore_image_update_enable_options(integrations, groups) {
+    
+    // STEP 1 - check nr of integrations and groups of currently selected extension
+    ext_name = get_radio_button_value("extension");
+
+    // Clean the input parameters and get our integrations/groups for this extension
+    var calc_difference = false;
+    var integrations = integrations.replace(/&#39;/g, '"');
+    var integrations = integrations.replace(/'/g, '"');
+    var integrations = JSON.parse(integrations)[ext_name];
+    var groups = groups.replace(/&#39;/g, '"');
+    var groups = groups.replace(/'/g, '"');
+    var groups = JSON.parse(groups)[ext_name];
+
+    document.getElementById("integration1").max = integrations;
+    document.getElementById("integration2").max = integrations;
+    document.getElementById("group1").max = groups;
+    document.getElementById("group2").max = groups;
+    
+    
+    // STEP 2 - disable integration/group input if not multiple
+    set_disabled_section("integration1", (integrations <= 1));
+    set_disabled_section("group1", (groups <= 1));
+    
+    // STEP 3 - If multiple integrations and groups.  Allow difference calculations
+    //          enable calculate_difference box
+    //          enable subtrahend boxes and default values to 1 and 1
+    if (integrations > 1 
+    &&  groups > 1) {
+        set_disabled_section("calcDifferenceForm", false);
+        calc_difference = document.getElementById("calcDifference").checked;
+        
+    } else {
+        document.getElementById("calcDifference").checked.value = false;
+        set_disabled_section("calcDifferenceForm", true);
+    }
+    set_disabled_section("integration2", !calc_difference);
+    set_disabled_section("group2", !calc_difference);
+}
 
 /**
  * get_radio_button_value
@@ -531,30 +591,6 @@ function update_filter_options(data) {
     // Add the content to the div
     $("#thumbnail-filter")[0].innerHTML = content;
 };
-
-function update_group_difference_availability() {
-    
-    // STEP 1 - check array size of currently selected extension
-    ext_name = get_radio_button_value("extension");
-    
-    // STEP 2 - If array size is 3 dimensional or less, disable difference functionality
-    //          uncheck calculate_difference box
-    //          remove values from Subtrahend boxes as they can't be accessed
-
-
-    // STEP 3 - If array size is 4 dimensional
-    //          enable calculate_difference box
-    //          enable subtrahend boxes and default values to 1 and 1
-
-
-    if (document.getElementById("calcDifference").checked) {
-        document.getElementById("integrationGroup2").classList.remove("disabled_section");
-    } else {
-        document.getElementById("integrationGroup2").classList.add("disabled_section");
-        document.getElementById("integration2").value = null;
-        document.getElementById("group2").value = null;
-    }
-}
 
 /**
  * Change the header extension displayed
