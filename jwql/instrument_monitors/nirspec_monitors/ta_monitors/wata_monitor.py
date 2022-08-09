@@ -343,15 +343,15 @@ class WATA():
         for i, val in enumerate(max_val_box):
             if '140' in filter_used[i]:
                 f140x_arr.append(val)
-                f110w_arr.append(0.0)
-                clear_arr.append(0.0)
+                f110w_arr.append(np.NaN)
+                clear_arr.append(np.NaN)
             elif '110' in filter_used[i]:
-                f140x_arr.append(0.0)
+                f140x_arr.append(np.NaN)
                 f110w_arr.append(val)
-                clear_arr.append(0.0)
+                clear_arr.append(np.NaN)
             else:
-                f140x_arr.append(0.0)
-                f110w_arr.append(0.0)
+                f140x_arr.append(np.NaN)
+                f110w_arr.append(np.NaN)
                 clear_arr.append(val)
         # add to the bokeh data structure
         self.source.data["f140x_arr"] = f140x_arr
@@ -363,9 +363,9 @@ class WATA():
         plot.circle(x='time_arr', y='f140x_arr', source=self.source,
                     color="blue", size=7, fill_alpha=0.5)
         plot.triangle(x='time_arr', y='f110w_arr', source=self.source,
-                      color="orange", size=7, fill_alpha=0.7)
+                      color="orange", size=8, fill_alpha=0.7)
         plot.square(x='time_arr', y='clear_arr', source=self.source,
-                    color="gray", size=7, fill_alpha=0.5)
+                    color="gray", size=7, fill_alpha=0.4)
         # add count saturation warning lines
         loc1, loc2, loc3 = 45000.0, 50000.0, 60000.0
         hline1 = Span(location=loc1, dimension='width', line_color='green', line_width=3)
