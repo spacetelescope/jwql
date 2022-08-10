@@ -849,7 +849,7 @@ def explore_image(request, inst, file_root, filetype, rewrite=False):
     return render(request, template, context)
 
 
-def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_lim=None, high_lim=None, ext_name="SCI", rewrite=False):
+def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_lim=None, high_lim=None, ext_name="SCI", int1_nr=None, grp1_nr=None, int2_nr=None, grp2_nr=None, rewrite=False):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -897,13 +897,34 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
         low_lim = None
     if high_lim == "None":
         high_lim = None
-
+    if int1_nr == "None":
+        int1_nr = None
+    if grp1_nr == "None":
+        grp1_nr = None
+    if int2_nr == "None":
+        int2_nr = None
+    if grp2_nr == "None":
+        grp2_nr = None
+        
     if low_lim is not None:
         low_lim = float(low_lim)
     if high_lim is not None:
         high_lim = float(high_lim)
 
-    int_preview_image = InteractivePreviewImg(full_fits_file, low_lim, high_lim, scaling, None, ext_name)
+    group = None
+    integ = None
+    if (grp1_nr):
+        if (grp2_nr):
+            group = [int(grp1_nr), int(grp2_nr)]
+        else:
+            group = int(grp1_nr)
+    if (int1_nr):
+        if (int2_nr):
+            integ = [int(int1_nr), int(int2_nr)]
+        else:
+            integ = int(int1_nr)
+
+    int_preview_image = InteractivePreviewImg(full_fits_file, low_lim, high_lim, scaling, None, ext_name, group, integ)
 
     context = {'inst': "inst",
                'script': int_preview_image.script,

@@ -259,6 +259,10 @@ function explore_image_update_enable_options(integrations, groups) {
     var groups = groups.replace(/&#39;/g, '"');
     var groups = groups.replace(/'/g, '"');
     var groups = JSON.parse(groups)[ext_name];
+    
+    // Zero base our calculations
+    integrations -= 1
+    groups -=1
 
     document.getElementById("integration1").max = integrations;
     document.getElementById("integration2").max = integrations;
@@ -267,14 +271,14 @@ function explore_image_update_enable_options(integrations, groups) {
     
     
     // STEP 2 - disable integration/group input if not multiple
-    set_disabled_section("integration1", (integrations <= 1));
-    set_disabled_section("group1", (groups <= 1));
+    set_disabled_section("integration1", (integrations < 1));
+    set_disabled_section("group1", (groups < 1));
     
     // STEP 3 - If multiple integrations and groups.  Allow difference calculations
     //          enable calculate_difference box
     //          enable subtrahend boxes and default values to 1 and 1
-    if (integrations > 1 
-    &&  groups > 1) {
+    if (integrations > 0
+    &&  groups > 0) {
         set_disabled_section("calcDifferenceForm", false);
         calc_difference = document.getElementById("calcDifference").checked;
         
@@ -525,13 +529,23 @@ function update_archive_page(inst, base_url) {
         document.getElementById("loading").style.display = "inline-block";
         document.getElementById("explore_image").style.display = "none";
         document.getElementById("explore_image_fail").style.display = "none";
+        calc_difference = document.getElementById("calcDifference").checked;
 
         // Get the arguments to update
         scaling = get_radio_button_value("scaling");
         low_lim = get_number_or_none("low_lim");
         high_lim = get_number_or_none("high_lim");
         ext_name = get_radio_button_value("extension");
-        optional_params = optional_params + "/scaling_" + scaling + "/low_" + low_lim + "/high_" + high_lim + "/ext_" + ext_name;
+        int1_nr = get_number_or_none("integration1");
+        grp1_nr = get_number_or_none("group1");
+        if (calc_difference) {
+            int2_nr = get_number_or_none("integration2");
+            grp2_nr = get_number_or_none("group2");
+        } else {
+            int2_nr="None";
+            grp2_nr="None";
+        }
+        optional_params = optional_params + "/scaling_" + scaling + "/low_" + low_lim + "/high_" + high_lim + "/ext_" + ext_name + "/int1_" + int1_nr + "/grp1_" + grp1_nr + "/int2_" + int2_nr + "/grp2_" + grp2_nr;
     }
 
     $.ajax({

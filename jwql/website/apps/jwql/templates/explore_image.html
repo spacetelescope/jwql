@@ -28,6 +28,7 @@
             <input type="number" id="low_lim" size="15" step="any">&nbsp;Low &nbsp;&nbsp;&nbsp;&nbsp;
             <input type="number" id="high_lim" size="15" step="any">&nbsp;High &nbsp;&nbsp;&nbsp;&nbsp;
             <br>
+            <br>
             Extension:&nbsp;&nbsp;
             {% for extension in extensions %}
                 {% if extension == 'SCI' %}
@@ -36,15 +37,13 @@
                     <input type="radio" name="extension" value="{{ extension }}" id="{{ extension }}" onclick='explore_image_update_enable_options("{{ extension_ints }}", "{{ extension_groups }}");'> {{ extension }} &nbsp;&nbsp;&nbsp;&nbsp;
                 {% endif %}
             {% endfor %}
-            <br>
-            <br>
             <div class="row">
                 <div class="explorer_options" id="integrationInput1">
-                    <input type="number" id="integration1" min="1" size="3" step="1">
-                    <label id="integration-name" for="integration1">Integration</label>
+                    <input type="number" id="integration1" min="0" size="3" step="1">
+                    <label id="integration1-name" for="integration1">Integration</label>
                 </div>
                 <div class="explorer_options" id="groupInput1">
-                    <input type="number" id="group1" min="1" size="3" step="1">
+                    <input type="number" id="group1" min="0" size="3" step="1">
                     <label id="group1-name" for="group1">Group</label>
                 </div>
             </div>
@@ -54,37 +53,37 @@
             </div>
             <div class="row">
                 <div class="explorer_options" id="integrationInput2">
-                    <input type="number" id="integration2" min="1" max="5" size="3" step="1">
+                    <input type="number" id="integration2" min="0" size="3" step="1">
                     <label id="integration2-name" for="integration2">Integration</label>
                 </div>
                 <div class="explorer_options" id="groupInput2">
-                    <input type="number" id="group2" min="1" max="5" size="3" step="1">
+                    <input type="number" id="group2" min="0" size="3" step="1">
                     <label id="group2-name" for="group2">Group</label>
                 </div>
             </div>
-            Extensions -
-            {% for extension in extensions %}
-                {{ extension }}
-            {% endfor %}
-            -- full extensions == {{ extensions }}
-            <br>
-            Group - 
-            {% for keyg, extensiong in extension_groups.items() %}
-                {{ keyg }} - {{ extensiong }}
-            {% endfor %}
-            -- full groups == {{ extension_groups }}
-            <br>
-            Integration - 
-            {% for keyi, extensioni in extension_ints.items() %}
-                {{ keyi }} - {{ extensioni }}
-            {% endfor %}
-            -- full integration == {{ extension_ints }}
         </div>
+        Extensions -
+        {% for extension in extensions %}
+            {{ extension }}
+        {% endfor %}
+        -- full extensions == {{ extensions }}
+        <br>
+        Group - 
+        {% for keyg, extensiong in extension_groups.items() %}
+            {{ keyg }} - {{ extensiong }}
+        {% endfor %}
+        -- full groups == {{ extension_groups }}
+        <br>
+        Integration - 
+        {% for keyi, extensioni in extension_ints.items() %}
+            {{ keyi }} - {{ extensioni }}
+        {% endfor %}
+        -- full integration == {{ extension_ints }}
+
         <br>
         <p>
             <a class="btn btn-primary my-2 mx-2" role="button" onclick="update_explore_image_page('{{inst}}', '{{file_root}}', '{{filetype}}', '{{base_url}}', true)"> Apply Settings</a>
 	    </p>
-
 		<div class="row">
             <!-- Display the image -->
     	    <div class="col-xl-9 text-center">
