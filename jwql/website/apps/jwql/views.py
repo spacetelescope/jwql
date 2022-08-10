@@ -905,7 +905,7 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
         int2_nr = None
     if grp2_nr == "None":
         grp2_nr = None
-        
+
     if low_lim is not None:
         low_lim = float(low_lim)
     if high_lim is not None:

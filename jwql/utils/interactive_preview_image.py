@@ -204,7 +204,7 @@ class InteractivePreviewImg():
 
         # If a difference image is requested, create the difference image here
         if len(self.data.shape) == 3 and (isinstance(self.group, list) or isinstance(self.integ, list)):
-            diff_img = self.data[0, :, :]*1. - self.data[1, :, :]
+            diff_img = self.data[0, :, :] * 1. - self.data[1, :, :]
             self.data = diff_img
 
         # Get the units of the data. This will be reported as the title of the colorbar
@@ -260,7 +260,7 @@ class InteractivePreviewImg():
         elif len(shapes) == 3:
             integ = [shapes[0] + i if i < 0 else i for i in integ]
             checks.append(np.all(np.array(integ) < shapes[0]))
-        
+
         if not np.all(checks):
             raise ValueError(
                 f'Requested groups {group} or integs {integ} are larger than the input data size of {shapes}.')
