@@ -337,35 +337,78 @@ class WATA():
         """
         # calculate the pseudo magnitudes
         max_val_box, time_arr = self.source.data['max_val_box'], self.source.data['time_arr']
-        # create the arrays per filter
-        f140x_arr, f110w_arr, clear_arr = [], [], []
-        filter_used = self.source.data['tafilter']
+        # create the arrays per filter and readout pattern
+        nrsrapid_f140x, nrsrapid_f110w, nrsrapid_clear = [], [], []
+        nrsrapidd6_f140x, nrsrapidd6_f110w, nrsrapidd6_clear = [], [], []
+        filter_used, readout = self.source.data['tafilter'], self.source.data['readout']
         for i, val in enumerate(max_val_box):
             if '140' in filter_used[i]:
-                f140x_arr.append(val)
-                f110w_arr.append(np.NaN)
-                clear_arr.append(np.NaN)
+                if readout[i].lower() == 'nrsrapid':
+                    nrsrapid_f140x.append(val)
+                    nrsrapid_f110w.append(np.NaN)
+                    nrsrapid_clear.append(np.NaN)
+                    nrsrapidd6_f140x.append(np.NaN)
+                    nrsrapidd6_f110w.append(np.NaN)
+                    nrsrapidd6_clear.append(np.NaN)
+                elif readout[i].lower() == 'nrsrapidd6':
+                    nrsrapid_f140x.append(np.NaN)
+                    nrsrapid_f110w.append(np.NaN)
+                    nrsrapid_clear.append(np.NaN)
+                    nrsrapidd6_f140x.append(val)
+                    nrsrapidd6_f110w.append(np.NaN)
+                    nrsrapidd6_clear.append(np.NaN)
             elif '110' in filter_used[i]:
-                f140x_arr.append(np.NaN)
-                f110w_arr.append(val)
-                clear_arr.append(np.NaN)
+                if readout[i].lower() == 'nrsrapid':
+                    nrsrapid_f140x.append(np.NaN)
+                    nrsrapid_f110w.append(val)
+                    nrsrapid_clear.append(np.NaN)
+                    nrsrapidd6_f140x.append(np.NaN)
+                    nrsrapidd6_f110w.append(np.NaN)
+                    nrsrapidd6_clear.append(np.NaN)
+                elif readout[i].lower() == 'nrsrapidd6':
+                    nrsrapid_f140x.append(np.NaN)
+                    nrsrapid_f110w.append(np.NaN)
+                    nrsrapid_clear.append(np.NaN)
+                    nrsrapidd6_f140x.append(np.NaN)
+                    nrsrapidd6_f110w.append(val)
+                    nrsrapidd6_clear.append(np.NaN)
             else:
-                f140x_arr.append(np.NaN)
-                f110w_arr.append(np.NaN)
-                clear_arr.append(val)
+                if readout[i].lower() == 'nrsrapid':
+                    nrsrapid_f140x.append(np.NaN)
+                    nrsrapid_f110w.append(np.NaN)
+                    nrsrapid_clear.append(val)
+                    nrsrapidd6_f140x.append(np.NaN)
+                    nrsrapidd6_f110w.append(np.NaN)
+                    nrsrapidd6_clear.append(np.NaN)
+                elif readout[i].lower() == 'nrsrapidd6':
+                    nrsrapid_f140x.append(np.NaN)
+                    nrsrapid_f110w.append(np.NaN)
+                    nrsrapid_clear.append(np.NaN)
+                    nrsrapidd6_f140x.append(np.NaN)
+                    nrsrapidd6_f110w.append(np.NaN)
+                    nrsrapidd6_clear.append(val)
         # add to the bokeh data structure
-        self.source.data["f140x_arr"] = f140x_arr
-        self.source.data["f110w_arr"] = f110w_arr
-        self.source.data["clear_arr"] = clear_arr
+        self.source.data["nrsrapid_f140x"] = nrsrapid_f140x
+        self.source.data["nrsrapid_f110w"] = nrsrapid_f110w
+        self.source.data["nrsrapid_clear"] = nrsrapid_clear
+        self.source.data["nrsrapidd6_f140x"] = nrsrapidd6_f140x
+        self.source.data["nrsrapidd6_f110w"] = nrsrapidd6_f110w
+        self.source.data["nrsrapidd6_clear"] = nrsrapidd6_clear
         # create a new bokeh plot
         plot = figure(title="WATA Counts vs Time", x_axis_label='Time',
                       y_axis_label='box_peak [Counts]', x_axis_type='datetime')
-        plot.circle(x='time_arr', y='f140x_arr', source=self.source,
-                    color="blue", size=7, fill_alpha=0.5)
-        plot.triangle(x='time_arr', y='f110w_arr', source=self.source,
-                      color="orange", size=8, fill_alpha=0.7)
-        plot.square(x='time_arr', y='clear_arr', source=self.source,
-                    color="gray", size=7, fill_alpha=0.4)
+        plot.circle(x='time_arr', y='nrsrapid_f140x', source=self.source,
+                    color="blue", size=7, fill_alpha=0.5)#, legend_label='F140X NRSRAPID')
+        plot.circle(x='time_arr', y='nrsrapidd6_f140x', source=self.source,
+                    color="blue", size=12, fill_alpha=0.5)#, legend_label='F140X NRSRAPIDD6')
+        plot.triangle(x='time_arr', y='nrsrapid_f110w', source=self.source,
+                      color="orange", size=8, fill_alpha=0.7)#, legend_label='F110W NRSRAPID')
+        plot.triangle(x='time_arr', y='nrsrapidd6_f110w', source=self.source,
+                      color="orange", size=13, fill_alpha=0.7)#, legend_label='F110W NRSRAPIDD6')
+        plot.square(x='time_arr', y='nrsrapid_clear', source=self.source,
+                    color="gray", size=7, fill_alpha=0.4)#, legend_label='CLEAR NRSRAPID')
+        plot.square(x='time_arr', y='nrsrapidd6_clear', source=self.source,
+                    color="gray", size=12, fill_alpha=0.4)#, legend_label='CLEAR NRSRAPIDD6')
         # add count saturation warning lines
         loc1, loc2, loc3 = 45000.0, 50000.0, 60000.0
         hline1 = Span(location=loc1, dimension='width', line_color='green', line_width=3)

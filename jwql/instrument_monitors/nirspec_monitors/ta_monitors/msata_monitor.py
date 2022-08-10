@@ -619,7 +619,7 @@ class MSATA():
         self.source.data["colors_list"] = colors_list
         # create a new bokeh plot
         plot = figure(title="Total Number of Measurements vs Time", x_axis_label='Time',
-                      y_axis_label='Total number of stars', x_axis_type='datetime')
+                      y_axis_label='Total number of measurements', x_axis_type='datetime')
         plot.circle(x='time_arr', y='tot_number_of_stars', source=self.source,
                     color='colors_list', size=7, fill_alpha=0.5)
         plot.triangle(x='time_arr', y='stars_in_fit', source=self.source,
