@@ -233,7 +233,6 @@ function determine_page_title_obs(instrument, proposal, observation) {
  function set_disabled_section (element_id, set_disable) {
 
     if (set_disable) {
-        document.getElementById(element_id).value = null;
         document.getElementById(element_id).classList.add("disabled_section");
     } else {
         document.getElementById(element_id).classList.remove("disabled_section");
@@ -248,7 +247,7 @@ function determine_page_title_obs(instrument, proposal, observation) {
  */
 function explore_image_update_enable_options(integrations, groups) {
     
-    // STEP 1 - check nr of integrations and groups of currently selected extension
+    // Check nr of integrations and groups of currently selected extension
     ext_name = get_radio_button_value("extension");
 
     // Clean the input parameters and get our integrations/groups for this extension
@@ -264,21 +263,17 @@ function explore_image_update_enable_options(integrations, groups) {
     integrations -= 1
     groups -=1
 
+    // Set max values to those available
     document.getElementById("integration1").max = integrations;
     document.getElementById("integration2").max = integrations;
     document.getElementById("group1").max = groups;
     document.getElementById("group2").max = groups;
     
     
-    // STEP 2 - disable integration/group input if not multiple
-    set_disabled_section("integration1", (integrations < 1));
-    set_disabled_section("group1", (groups < 1));
-    
-    // STEP 3 - If multiple integrations and groups.  Allow difference calculations
+    // If multiple integrations or groups.  Allow difference calculations
     //          enable calculate_difference box
-    //          enable subtrahend boxes and default values to 1 and 1
-    if (integrations > 0
-    &&  groups > 0) {
+    //          enable subtrahend boxes
+    if (integrations > 0 || groups > 0) {
         set_disabled_section("calcDifferenceForm", false);
         calc_difference = document.getElementById("calcDifference").checked;
         
@@ -286,8 +281,25 @@ function explore_image_update_enable_options(integrations, groups) {
         document.getElementById("calcDifference").checked.value = false;
         set_disabled_section("calcDifferenceForm", true);
     }
-    set_disabled_section("integration2", !calc_difference);
-    set_disabled_section("group2", !calc_difference);
+
+    if (!calc_difference) {
+        document.getElementById("integration2").value = null;
+        document.getElementById("group2").value = null;
+    }
+    if (integrations < 1) {
+        document.getElementById("integration1").value = null;
+        document.getElementById("integration2").value = null;
+    }
+    if (groups < 1){
+        document.getElementById("group1").value = null;
+        document.getElementById("group2").value = null;
+    }
+    // Add/remove disable class to integration/group input if not multiple
+    set_disabled_section("integrationInput1", (integrations < 1));
+    set_disabled_section("groupInput1", (groups < 1));
+    set_disabled_section("integrationInput2", (!calc_difference || integrations < 1));
+    set_disabled_section("groupInput2", (!calc_difference || groups < 1));
+    
 }
 
 /**
