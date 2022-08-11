@@ -730,9 +730,10 @@ def get_header_info(filename, filetype):
         # Get header
         header = hdulist[ext].header
 
-        # Determine the extension name
+        # Determine the extension name and type
         if ext == 0:
             header_info[ext]['EXTNAME'] = 'PRIMARY'
+            header_info[ext]['XTENSION'] = 'PRIMARY'
         else:
             header_info[ext]['EXTNAME'] = header['EXTNAME']
             header_info[ext]['XTENSION'] = header['XTENSION']
