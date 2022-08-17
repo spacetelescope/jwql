@@ -1539,7 +1539,8 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     data_dict['dropdown_menus'] = dropdown_menus
     data_dict['prop'] = proposal
 
-    # Order dictionary by descending expstart time.
+    # Order dictionary by descending expstart time. This will dictate the order of the
+    # observation's thumbnails upon loading the observation's page.
     sorted_file_data = OrderedDict(sorted(data_dict['file_data'].items(),
                                    key=lambda x: getitem(x[1], 'expstart'), reverse=True))
 

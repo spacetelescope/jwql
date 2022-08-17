@@ -378,8 +378,8 @@ function sort_by_proposals(sort_type) {
         tinysort(props, {order:'asc'});
     } else if (sort_type == 'Descending') {
         tinysort(props, {order:'desc'});
-    } else if (sort_type == 'Most_Recent') {
-        tinysort(props, {attr:'expstart'})
+    } else if (sort_type == 'Most Recent') {
+        tinysort(props, {attr:'exp_start', order:"desc"})
     }
 };
 
@@ -399,7 +399,9 @@ function sort_by_thumbnails(sort_type) {
         tinysort(thumbs, {attr:'file_root'});
     } else if (sort_type == 'Default') {
         tinysort(thumbs, {selector: 'img', attr:'id'});
-    } else if (sort_type == 'Exposure Start Time') {
+    } else if (sort_type == 'Most Recent') {
+        tinysort(thumbs, {attr:'exp_start', order:'desc'});
+    } else if (sort_type == 'Oldest') {
         tinysort(thumbs, {attr:'exp_start'});
     }
 };
@@ -429,11 +431,9 @@ function update_archive_page(inst, base_url) {
                 n = data.thumbnails.num_files[i];
                 expstart = data.thumbnails.expstart[i];
 
-                console.log(expstart)
-
                 // Build div content
-                content = '<div class="proposal text-center">';
-                content += '<a href="/' + inst + '/archive/' + prop + '/obs' + min_obsnum + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '" exp_start="' + expstart + '"';
+                content = '<div class="proposal text-center" exp_start=' + expstart + '>';
+                content += '<a href="/' + inst + '/archive/' + prop + '/obs' + min_obsnum + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '">';
                 content += '<span class="helper"></span>'
                 content += '<img src="/static/thumbnails/' + thumb + '" alt="" title="Thumbnail for ' + prop + '" width=100%>';
                 content += '<div class="proposal-color-fill" ></div>';
@@ -605,11 +605,11 @@ function update_sort_options(data) {
     // Build div content
     content = 'Sort by:';
     content += '<div class="dropdown">';
-    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Default</button>';
+    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Most Recent</button>';
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
-    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Default\');">Default</a>';
     content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Name\');">Name</a>';
-    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Exposure Start Time\');">Exposure Start Time</a>';
+    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Most Recent\');">Most Recent</a>';
+    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Oldest\');">Oldest</a>';
     content += '</div></div>';
 
     // Add the content to the div
