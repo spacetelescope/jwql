@@ -49,7 +49,7 @@ from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as mi
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
-from jwql.utils.constants import EXPLORE_IMAGE_EXTENSIONS_EXCLUDE, IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.credentials import get_mast_token
 from .forms import InstrumentAnomalySubmitForm
 from astroquery.mast import Mast
@@ -730,11 +730,13 @@ def get_header_info(filename, filetype):
         # Get header
         header = hdulist[ext].header
 
-        # Determine the extension name
+        # Determine the extension name and type
         if ext == 0:
             header_info[ext]['EXTNAME'] = 'PRIMARY'
+            header_info[ext]['XTENSION'] = 'PRIMARY'
         else:
             header_info[ext]['EXTNAME'] = header['EXTNAME']
+            header_info[ext]['XTENSION'] = header['XTENSION']
 
         # Get list of keywords and values
         exclude_list = ['', 'COMMENT']
@@ -837,12 +839,12 @@ def get_explorer_extension_names(fits_file, filetype):
     Returns
     -------
     extensions : list
-        List of Extensions found in header and allowed to be Explored
+        List of Extensions found in header and allowed to be Explored (extension type "IMAGE")
     """
 
     header_info = get_header_info(fits_file, filetype)
 
-    extensions = [header_info[extension]['EXTNAME'] for extension in header_info if header_info[extension]['EXTNAME'].upper() not in EXPLORE_IMAGE_EXTENSIONS_EXCLUDE]
+    extensions = [header_info[extension]['EXTNAME'] for extension in header_info if header_info[extension]['XTENSION'] == 'IMAGE']
     return extensions
 
 
