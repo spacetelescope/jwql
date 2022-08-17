@@ -335,7 +335,7 @@ def archived_proposals_ajax(request, inst):
 
     # Sort proposals from most recent to oldest, in order to have this as the
     # default when the page is loaded
-    #print('should we do this?')
+    #print('should we do this? or should we keep the default to be increasing proposal ID order?')
     #indexes = np.flip(np.argsort(all_proposal_info['expstart']))
     #all_proposal_info['proposals'] = all_proposal_info['proposals'][indexes]
     #all_proposal_info['min_obsnum'] = all_proposal_info['min_obsnum'][indexes]
