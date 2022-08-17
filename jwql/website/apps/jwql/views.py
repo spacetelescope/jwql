@@ -72,6 +72,7 @@ from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
+from astropy.io import fits
 
 
 def anomaly_query(request):
@@ -824,38 +825,50 @@ def explore_image(request, inst, file_root, filetype, rewrite=False):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
     template = 'explore_image.html'
 
-    # Get image info containing all paths to fits files
-    image_info_list = get_image_info(file_root, rewrite)
-
     # get explorable extensions from header
     extensions = get_explorer_extension_names(file_root, filetype)
 
-    # Save fits file name to use for bokeh image
     fits_file = file_root + '_' + filetype + '.fits'
-
+    # Get image info containing all paths to fits files
+    image_info_list = get_image_info(file_root, rewrite)
     # Find index of our fits file
     fits_index = next(ix for ix, fits_path in enumerate(image_info_list['all_files']) if fits_file in fits_path)
+    # get full path of fits file to open and extract extension info
+    full_fits_file = image_info_list['all_files'][fits_index]
+    extension_ints = {}
+    extension_groups = {}
 
-    # TODO verify and create appropriate error handling
+    # gather extension group/integration information to send
+    if os.path.isfile(full_fits_file):
+        with fits.open(full_fits_file) as hdulist:
+            for exten in extensions:
+                dims = hdulist[exten].shape
+                if len(dims) == 4:
+                    extension_ints[exten], extension_groups[exten], ny, nx = dims
+                elif len(dims) == 3:
+                    extension_groups[exten] = 0
+                    extension_ints[exten], ny, nx = dims
+                else:
+                    extension_ints[exten] = 0
+                    extension_groups[exten] = 0
+    else:
+        raise FileNotFoundError(f'WARNING: {full_fits_file} does not exist!')
 
     form = get_anomaly_form(request, inst, file_root)
 
     context = {'inst': inst,
-               'prop_id': file_root[2:7],
                'file_root': file_root,
                'filetype': filetype,
-               'index': fits_index,
-               'suffix': image_info_list['suffixes'][fits_index],
-               'num_ints': image_info_list['num_ints'],
-               'available_ints': image_info_list['available_ints'],
                'extensions': extensions,
+               'extension_groups': extension_groups,
+               'extension_ints': extension_ints,
                'base_url': get_base_url(),
                'form': form}
 
     return render(request, template, context)
 
 
-def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_lim=None, high_lim=None, ext_name="SCI", rewrite=False):
+def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_lim=None, high_lim=None, ext_name="SCI", int1_nr=None, grp1_nr=None, int2_nr=None, grp2_nr=None, rewrite=False):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -903,13 +916,34 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
         low_lim = None
     if high_lim == "None":
         high_lim = None
+    if int1_nr == "None":
+        int1_nr = None
+    if grp1_nr == "None":
+        grp1_nr = None
+    if int2_nr == "None":
+        int2_nr = None
+    if grp2_nr == "None":
+        grp2_nr = None
 
     if low_lim is not None:
         low_lim = float(low_lim)
     if high_lim is not None:
         high_lim = float(high_lim)
 
-    int_preview_image = InteractivePreviewImg(full_fits_file, low_lim, high_lim, scaling, None, ext_name)
+    group = None
+    integ = None
+    if (grp1_nr):
+        if (grp2_nr):
+            group = [int(grp1_nr), int(grp2_nr)]
+        else:
+            group = int(grp1_nr)
+    if (int1_nr):
+        if (int2_nr):
+            integ = [int(int1_nr), int(int2_nr)]
+        else:
+            integ = int(int1_nr)
+
+    int_preview_image = InteractivePreviewImg(full_fits_file, low_lim, high_lim, scaling, None, ext_name, group, integ)
 
     context = {'inst': "inst",
                'script': int_preview_image.script,

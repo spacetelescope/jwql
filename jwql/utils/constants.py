@@ -8,6 +8,7 @@ Authors
     - Bryan Hilbert
     - Ben Sunnquist
     - Teagan King
+    - Mike Engesser
 
 Use
 ---
@@ -66,12 +67,17 @@ ANOMALIES_PER_INSTRUMENT = {
     'snowball': ['fgs', 'nircam', 'niriss', 'nirspec'],
     # instrument-specific anomalies:
     'column_pull_up': ['miri'],
+    'column_pull_down': ['miri'],
     'dominant_msa_leakage': ['nirspec'],
     'dragons_breath': ['nircam'],
-    'glow': ['miri'],
+    'MRS_glow': ['miri'],
+    'MRS_zipper': ['miri'],
     'internal_reflection': ['miri'],
     'optical_short': ['nirspec'],  # Only for MOS observations
+    'row_pull_up': ['miri'],
     'row_pull_down': ['miri'],
+    'LRS_Contamination': ['miri'],
+    'tree_rings': ['miri'],
     # additional anomalies:
     'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
 
@@ -162,8 +168,6 @@ EXP_TYPE_PER_INSTRUMENT = {'fgs': ['FGS_FOCUS', 'FGS_IMAGE', 'FGS_INTFLAT',
                                        'NRS_CONFIRM', 'NRS_FIXEDSLIT', 'NRS_MIMF', 'NRS_FOCUS',
                                        'NRS_TACONFIRM', 'NRS_WATA', 'NRS_MSATA']}
 
-EXPLORE_IMAGE_EXTENSIONS_EXCLUDE = ["PRIMARY", "ASDF", "INT_TIMES", "GROUP"]
-
 EXPTYPES = {"nircam": {"imaging": "NRC_IMAGE", "ts_imaging": "NRC_TSIMAGE",
                        "wfss": "NRC_WFSS", "ts_grism": "NRC_TSGRISM"},
             "niriss": {"imaging": "NIS_IMAGE", "ami": "NIS_IMAGE",
@@ -176,7 +180,8 @@ FILE_AC_O_ID_LEN = 3
 FILE_ACT_LEN = 2
 FILE_DATETIME_LEN = 13
 FILE_EPOCH_LEN = 1
-FILE_GUIDESTAR_ATTMPT_LEN = 1
+FILE_GUIDESTAR_ATTMPT_LEN_MIN = 1
+FILE_GUIDESTAR_ATTMPT_LEN_MAX = 3
 FILE_OBS_LEN = 3
 FILE_PARALLEL_SEQ_ID_LEN = 1
 FILE_PROG_ID_LEN = 5
