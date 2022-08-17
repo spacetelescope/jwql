@@ -32,7 +32,6 @@ import re
 import tempfile
 
 from astropy.io import fits
-from astropy.table import Table
 from astropy.time import Time
 from bs4 import BeautifulSoup
 from django.conf import settings
@@ -55,6 +54,8 @@ from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWS
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
 from .forms import InstrumentAnomalySubmitForm
+from astroquery.mast import Mast
+from jwedb.edb_interface import mnemonic_inventory
 
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
@@ -74,8 +75,7 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     from astropy import config
     conf = config.get_config('astroquery')
     conf['mast'] = {'server': 'https://{}'.format(mast_flavour)}
-from astroquery.mast import Mast
-from jwedb.edb_interface import mnemonic_inventory
+
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
@@ -732,11 +732,13 @@ def get_header_info(filename, filetype):
         # Get header
         header = hdulist[ext].header
 
-        # Determine the extension name
+        # Determine the extension name and type
         if ext == 0:
             header_info[ext]['EXTNAME'] = 'PRIMARY'
+            header_info[ext]['XTENSION'] = 'PRIMARY'
         else:
             header_info[ext]['EXTNAME'] = header['EXTNAME']
+            header_info[ext]['XTENSION'] = header['XTENSION']
 
         # Get list of keywords and values
         exclude_list = ['', 'COMMENT']
@@ -839,6 +841,29 @@ def get_image_info(file_root, rewrite):
             image_info['total_ints'][suffix] = 1
 
     return image_info
+
+
+def get_explorer_extension_names(fits_file, filetype):
+    """ Return a list of Extensions that can be explored interactively
+
+    Parameters
+    ----------
+    filename : str
+        The name of the file of interest, without the extension
+        (e.g. ``'jw86600008001_02101_00007_guider2_uncal'``).
+    filetype : str
+        The type of the file of interest, (e.g. ``'uncal'``)
+
+    Returns
+    -------
+    extensions : list
+        List of Extensions found in header and allowed to be Explored (extension type "IMAGE")
+    """
+
+    header_info = get_header_info(fits_file, filetype)
+
+    extensions = [header_info[extension]['EXTNAME'] for extension in header_info if header_info[extension]['XTENSION'] == 'IMAGE']
+    return extensions
 
 
 def get_instrument_proposals(instrument):
@@ -994,8 +1019,6 @@ def get_proposal_info(filepaths):
                 except KeyError:
                     pass
             obsnums = sorted(obsnums)
-
-            #obsnums = sorted([filename_parser(fname)['observation'] for fname in files_for_proposal])
             observations.extend(obsnums)
             num_files.append(len(files_for_proposal))
             proposals.append(proposal)
@@ -1029,7 +1052,6 @@ def get_rootnames_for_instrument_proposal(instrument, proposal):
         List of rootnames for the given instrument and proposal number
     """
     tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
-    #tap_results = tap_service.search(f"select obs_id from dbo.ObsPointing where obs_collection='JWST' and calib_level>0 and instrument_name like '{instrument.lower()}' and proposal_id={proposal}")
     tap_results = tap_service.search(f"select observationID from dbo.CaomObservation where collection='JWST' and maxLevel=2 and insName like '{instrument.lower()}' and prpID='{int(proposal)}'")
     prop_table = tap_results.to_table()
     rootnames = prop_table['observationID'].data
@@ -1428,13 +1450,12 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         Dictionary of data needed for the ``thumbnails`` template
     """
 
-
-    #generate the list of all obs of the proposal here, so that the list can be
-    #properly packaged up and sent to the js scripts. but to do this, we need to call
-    #get_rootnames_for_instrument_proposal, which is largely repeating the work done by
-    #get_filenames_by_instrument above. can we use just get_rootnames? we would have to
-    #filter results by obs_num after the call and after obs_list is created.
-    #But we need the filename list below...hmmm...so maybe we need to do both
+    # generate the list of all obs of the proposal here, so that the list can be
+    # properly packaged up and sent to the js scripts. but to do this, we need to call
+    # get_rootnames_for_instrument_proposal, which is largely repeating the work done by
+    # get_filenames_by_instrument above. can we use just get_rootnames? we would have to
+    # filter results by obs_num after the call and after obs_list is created.
+    # But we need the filename list below...hmmm...so maybe we need to do both
     all_rootnames = get_rootnames_for_instrument_proposal(inst, proposal)
     all_obs = []
     for root in all_rootnames:
@@ -1446,7 +1467,6 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         except KeyError:
             pass
     obs_list = sorted(list(set(all_obs)))
-
 
     # Get the available files for the instrument
     filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart'])

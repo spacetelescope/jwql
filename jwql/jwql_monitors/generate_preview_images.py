@@ -673,12 +673,16 @@ def process_program(program):
     logging.info('Processing {}'.format(program))
 
     # Gather files to process
-    filenames = glob.glob(os.path.join(SETTINGS['filesystem'], 'public', program, '*/*.fits'))
-    filenames.extend(glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', program, '*/*.fits')))
+    filenames = glob.glob(os.path.join(SETTINGS['filesystem'], 'public', program, 'jw*/*.fits'))
+    filenames.extend(glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', program, 'jw*/*.fits')))
     filenames = list(set(filenames))
 
     # remove specific "ignored" suffix files (currently "original" and "stream")
     filenames = [filename for filename in filenames if os.path.splitext(filename.split('_')[-1])[0] not in IGNORED_SUFFIXES]
+
+    # Remove guiding files, as these are not currently visible in JWQL anyway
+    filenames = [filename for filename in filenames if 'guider_mode' not in filename_parser(filename)]
+
     logging.info('Found {} filenames'.format(len(filenames)))
     logging.info('')
 
