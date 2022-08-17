@@ -143,7 +143,7 @@ class PreviewImage():
         """
         return data[:, -1, :, :] - data[:, 0, :, :]
 
-    def find_limits(self, data, pixmap, clipperc):
+    def find_limits(self, data):
         """
         Find the minimum and maximum signal levels after clipping the
         top and bottom ``clipperc`` of the pixels.
@@ -152,22 +152,12 @@ class PreviewImage():
         ----------
         data : obj
             2D numpy ndarray of floats
-        pixmap : obj
-            2D numpy ndarray boolean array of science pixel locations
-            (``True`` for science pixels, ``False`` for non-science
-            pixels)
-        clipperc : float
-            Fraction of top and bottom signal levels to clip (e.g. 0.01
-            means to clip brightest and dimmest 1% of pixels)
 
         Returns
         -------
         results : tuple
             Tuple of floats, minimum and maximum signal levels
         """
-        nelem = np.sum(pixmap)
-        numclip = np.int(clipperc * nelem)
-
         # Ignore any pixels that are NaN
         finite = np.isfinite(data)
 
@@ -179,9 +169,24 @@ class PreviewImage():
 
         pixmap = pixmap & finite
 
-        sorted = np.sort(data[pixmap], axis=None)
-        minval = sorted[numclip]
-        maxval = sorted[-numclip - 1]
+        # Combine maps of science pixels and finite pixels
+        pixmap = self.dq & finite
+
+        # If all non-science pixels are NaN then we're sunk. Scale
+        # from 0 to 1.
+        if not np.any(pixmap):
+            logging.info('No pixels with finite signal. Scaling from 0 to 1')
+            return (0., 1.)
+
+        sorted_pix = np.sort(data[pixmap], axis=None)
+
+        # Determine how many pixels to clip off of the high and low ends
+        nelem = np.sum(pixmap)
+        numclip = np.int32(self.clip_percent * nelem)
+
+        # Determine min and max scaling levels
+        minval = sorted_pix[numclip]
+        maxval = sorted_pix[-numclip - 1]
         return (minval, maxval)
 
     def get_data(self, filename, ext):
@@ -425,8 +430,7 @@ class PreviewImage():
             frame = diff_img[i, :, :]
 
             # Find signal limits for the display
-            minval, maxval = self.find_limits(frame, self.dq,
-                                              self.clip_percent)
+            minval, maxval = self.find_limits(frame)
 
             # Create preview image matplotlib object
             indir, infile = os.path.split(self.file)
