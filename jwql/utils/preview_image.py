@@ -223,8 +223,8 @@ class PreviewImage():
                 else:
                     raise ValueError('WARNING: no {} extension in {}!'.format(ext, filename))
 
-                if 'PIXELDQ' in extnames:
-                    dq = hdulist['PIXELDQ'].data
+                if 'DQ' in extnames:
+                    dq = hdulist['DQ'].data
                     dq = (dq & dqflags.pixel['NON_SCIENCE'] == 0)
                 else:
                     yd, xd = data.shape[-2:]
