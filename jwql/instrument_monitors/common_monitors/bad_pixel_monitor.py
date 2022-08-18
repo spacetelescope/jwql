@@ -86,7 +86,6 @@ import datetime
 from glob import glob
 import logging
 import os
-import redis
 from time import sleep
 
 from astropy.io import ascii, fits
@@ -102,7 +101,7 @@ from jwql.database.database_interface import MIRIBadPixelQueryHistory, MIRIBadPi
 from jwql.database.database_interface import NIRSpecBadPixelQueryHistory, NIRSpecBadPixelStats
 from jwql.database.database_interface import FGSBadPixelQueryHistory, FGSBadPixelStats
 from jwql.instrument_monitors import pipeline_tools
-from jwql.shared_tasks.shared_tasks import run_pipeline
+from jwql.shared_tasks.shared_tasks import only_one, run_pipeline
 from jwql.utils import crds_tools, instrument_properties, monitor_utils
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import FLAT_EXP_TYPES, DARK_EXP_TYPES
@@ -925,6 +924,7 @@ class BadPixels():
 
     @log_fail
     @log_info
+    @only_one(key="bad_pixel_monitor")
     def run(self):
         """The main method.  See module docstrings for further details.
 

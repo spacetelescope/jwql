@@ -146,6 +146,36 @@ celery_app = Celery('shared_tasks',
                     )
 
 
+def only_one(function=None, key="", timeout=None):
+    """Enforce only one of the function running at a time. Import as decorator."""
+
+    def _dec(run_func):
+        """Decorator."""
+
+        def _caller(*args, **kwargs):
+            """Caller."""
+            ret_value = None
+            have_lock = False
+            lock = REDIS_CLIENT.lock(key, timeout=timeout)
+            try:
+                have_lock = lock.acquire(blocking=False)
+                if have_lock:
+                    ret_value = run_func(*args, **kwargs)
+                else:
+                    logging.warning("Lock {} is already in use.".format(key))
+                    msg = "If you believe that this is a stale lock, log in to {}"
+                    msg += " and enter 'redis-cli del {}'"
+                    logging.warning(msg.format(get_config()['redis_host'], key))
+            finally:
+                if have_lock:
+                    lock.release()
+
+            return ret_value
+
+        return _caller
+
+    return _dec(function) if function is not None else _dec
+
 def create_task_log_handler(logger, propagate):
     log_file_name = configure_logging('shared_tasks')
     output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
@@ -455,13 +485,13 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
     input_path, input_name = os.path.split(input_file)
     logging.info("\tPath is {}, file is {}".format(input_path, input_name))
 
-    if "uncal" not in in_ext:
-        logging.info("\tSwitching from {} to uncal".format(in_ext))
-        uncal_name = os.path.basename(input_file).replace(in_ext, "uncal")
-        uncal_file = filesystem_path(uncal_name, check_existence=True)
-    else:
-        uncal_file = input_file
-        uncal_name = input_name
+#     if "uncal" not in in_ext:
+#         logging.info("\tSwitching from {} to uncal".format(in_ext))
+#         uncal_name = os.path.basename(input_file).replace(in_ext, "uncal")
+#         uncal_file = filesystem_path(uncal_name, check_existence=True)
+#     else:
+#         uncal_file = input_file
+#         uncal_name = input_name
     
     output_file_or_files = []
     short_name = input_name.replace("_"+in_ext, "").replace(".fits", "")

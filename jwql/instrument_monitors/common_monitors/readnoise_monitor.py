@@ -33,10 +33,8 @@ Use
 
 from collections import OrderedDict
 import datetime
-from glob import glob
 import logging
 import os
-import redis
 import shutil
 
 from astropy.io import fits
@@ -57,7 +55,7 @@ from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCam
 from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats  # noqa: E348 (comparison to true)
 from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats  # noqa: E348 (comparison to true)
 from jwql.database.database_interface import session  # noqa: E348 (comparison to true)
-from jwql.shared_tasks.shared_tasks import run_pipeline  # noqa: E348 (comparison to true)
+from jwql.shared_tasks.shared_tasks import only_one, run_pipeline  # noqa: E348 (comparison to true)
 from jwql.instrument_monitors import pipeline_tools  # noqa: E348 (comparison to true)
 from jwql.utils import instrument_properties, monitor_utils  # noqa: E348 (comparison to true)
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E348 (comparison to true)
@@ -519,6 +517,7 @@ class Readnoise():
 
     @log_fail
     @log_info
+    @only_one(key='readnoise_monitor')
     def run(self):
         """The main method.  See module docstrings for further
         details.

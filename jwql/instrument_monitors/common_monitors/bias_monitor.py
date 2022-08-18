@@ -33,10 +33,8 @@ Use
 
 from collections import OrderedDict
 import datetime
-from glob import glob
 import logging
 import os
-import redis
 from time import sleep
 
 from astropy.io import fits
@@ -55,7 +53,7 @@ from jwql.database.database_interface import session  # noqa: E402 (module impor
 from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory  # noqa: E402 (module import not at top)
 from jwql.database.database_interface import NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats  # noqa: E402 (module import not at top)
 from jwql.instrument_monitors import pipeline_tools  # noqa: E402 (module import not at top)
-from jwql.shared_tasks.shared_tasks import run_pipeline  # noqa: E402 (module import not at top)
+from jwql.shared_tasks.shared_tasks import only_one, run_pipeline  # noqa: E402 (module import not at top)
 from jwql.utils import instrument_properties, monitor_utils  # noqa: E402 (module import not at top)
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E402 (module import not at top)
 from jwql.utils.logging_functions import log_info, log_fail  # noqa: E402 (module import not at top)
@@ -431,6 +429,7 @@ class Bias():
 
     @log_fail
     @log_info
+    @only_one(key='bias_monitor')
     def run(self):
         """The main method.  See module docstrings for further details."""
 

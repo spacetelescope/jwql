@@ -59,7 +59,6 @@ import datetime
 from glob import glob
 import logging
 import os
-import redis
 
 from astropy.io import ascii, fits
 from astropy.modeling import models
@@ -77,7 +76,7 @@ from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDar
 from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
-from jwql.shared_tasks.shared_tasks import run_pipeline
+from jwql.shared_tasks.shared_tasks import only_one, run_pipeline
 from jwql.utils import calculations, instrument_properties, monitor_utils
 from jwql.utils.constants import ASIC_TEMPLATES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, \
     RAPID_READPATTERNS
@@ -651,6 +650,7 @@ class Dark():
 
     @log_fail
     @log_info
+    @only_one(key='dark_monitor')
     def run(self):
         """The main method.  See module docstrings for further
         details.
