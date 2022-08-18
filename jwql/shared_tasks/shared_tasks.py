@@ -490,8 +490,8 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
 #         uncal_name = os.path.basename(input_file).replace(in_ext, "uncal")
 #         uncal_file = filesystem_path(uncal_name, check_existence=True)
 #     else:
-#         uncal_file = input_file
-#         uncal_name = input_name
+    uncal_file = input_file
+    uncal_name = input_name
     
     output_file_or_files = []
     short_name = input_name.replace("_"+in_ext, "").replace(".fits", "")
