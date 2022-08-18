@@ -297,14 +297,12 @@ class FileSearchForm(forms.Form):
                 for instrument in all_instruments:
                     all_observations[instrument].sort()
 
-                if len(set(all_instruments)) > 1:
+                if len(set(all_instruments)) > 1 and 'fgs' in set(all_instruments):
                     # Technically all proposal have multiple instruments if you include guider data. Remove Guider Data
-                    if len(set(all_instruments)) == 2 and 'fgs' in set(all_instruments):
-                        all_instruments = list(filter(('fgs').__ne__, all_instruments))
-                    else:
-                        instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, proposal_string[1:], all_observations[instrument][0], instrument) for instrument in set(all_instruments)]
-                        raise forms.ValidationError(
-                            mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))# nosec
+                    all_instruments = list(filter(('fgs').__ne__, all_instruments))
+                    instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, proposal_string[1:], all_observations[instrument][0], instrument) for instrument in set(all_instruments)]
+                    raise forms.ValidationError(
+                        mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))# nosec
 
                 self.instrument = all_instruments[0]
             else:
