@@ -29,7 +29,7 @@
 	    </a><br>
 	    <form class="my-2" action="change_filetype(value, {{file_root}}, {{num_ints}}, {{inst}})">
 	    	{% for suffix in suffixes %}
-	    		<input type="radio" name="filetype" value="{{ suffix }}" id="{{ suffix }}" onclick='change_filetype("{{suffix}}", "{{file_root}}", "{{num_ints}}", "{{available_ints}}", "{{inst}}");'> {{ suffix }} &nbsp;&nbsp;&nbsp;&nbsp;
+	    		<input type="radio" name="filetype" value="{{ suffix }}" id="{{ suffix }}" onclick='change_filetype("{{suffix}}", "{{file_root}}", "{{num_ints}}", "{{available_ints}}", "{{total_ints}}", "{{inst}}");'> {{ suffix }} &nbsp;&nbsp;&nbsp;&nbsp;
 	    	{% endfor %}
 		</form>
 		<br>
@@ -97,13 +97,13 @@
 
         <!-- Determine which filetype should be shown on load -->
         {% if 'cal' in suffixes %}
-            <script>change_filetype('cal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", '{{inst}}');</script>
+            <script>change_filetype('cal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif 'rate' in suffixes %}
-            <script>change_filetype('rate', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", '{{inst}}');</script>
+            <script>change_filetype('rate', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif 'uncal' in suffixes %}
-            <script>change_filetype('uncal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", '{{inst}}');</script>
+            <script>change_filetype('uncal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif suffixes|length == 1 %}
-            <script>change_filetype('{{suffixes.0}}', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", '{{inst}}');</script>
+            <script>change_filetype('{{suffixes.0}}', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% else %}
             <a>Unable to show image for: {{suffixes}}</a>
         {% endif %}
