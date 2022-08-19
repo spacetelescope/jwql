@@ -294,6 +294,9 @@ class PreviewImage():
         else:
             raise FileNotFoundError('WARNING: {} does not exist!'.format(filename))
 
+        if dq.shape != data.shape[-2:]:
+            raise ValueError(f'DQ array does not have the same shape as the data in {filename}')
+
         return data, dq
 
     def get_nonsci_map(self, hdulist, extensions, xdim, ydim):
