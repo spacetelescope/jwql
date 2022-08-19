@@ -268,7 +268,7 @@ class PreviewImage():
                     # to the MIRI DQ extensions until the data are flat fielded, which is after the rate
                     # files have been created.
                     if 'mirimage' in filename:
-                        external_map_file = (os.path.join(configs['output'], 'non_science_maps', 'mirimage_non_science_map.fits'))
+                        external_map_file = (os.path.join(CONFIGS['output'], 'non_science_maps', 'mirimage_non_science_map.fits'))
                         dq = self.nonsci_from_file(external_map_file)
                         dq = crop_to_subarray(dq, hdulist[0].header, xd, yd)
                     else:
