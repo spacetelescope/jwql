@@ -65,6 +65,7 @@ from jwql.utils.constants import EXP_TYPE_PER_INSTRUMENT
 from jwql.utils.constants import FILTERS_PER_INSTRUMENT
 from jwql.utils.constants import GENERIC_SUFFIX_TYPES
 from jwql.utils.constants import GRATING_PER_INSTRUMENT
+from jwql.utils.constants import GUIDER_FILENAME_TYPE
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.constants import READPATT_PER_INSTRUMENT
@@ -73,7 +74,6 @@ from jwql.utils.utils import query_format
 
 from wtforms import SubmitField, StringField
 
-# from jwql.website.apps.jwql.data_containers import get_rootnames_for_instrument_proposal
 
 class BaseForm(forms.Form):
     """A generic form with target resolve built in"""
@@ -288,18 +288,25 @@ class FileSearchForm(forms.Form):
                 all_instruments = []
                 all_observations = defaultdict(list)
                 for file in all_files:
-                    instrument = filename_parser(file)['instrument']
-                    observation = filename_parser(file)['observation']
-                    all_instruments.append(instrument)
-                    all_observations[instrument].append(observation)
+                    filename = os.path.basename(file)
+
+                    # We only want to pass in datasets that are science exptypes. JWQL doesn't
+                    # handle guider data, this will still allow for science FGS data but filter
+                    # guider data.
+                    if any(map(filename.__contains__, GUIDER_FILENAME_TYPE)):
+                        continue
+                    else:
+                        instrument = filename_parser(file)['instrument']
+                        observation = filename_parser(file)['observation']
+                        all_instruments.append(instrument)
+                        all_observations[instrument].append(observation)
 
                 # sort lists so first observation is available when link is clicked.
                 for instrument in all_instruments:
                     all_observations[instrument].sort()
 
-                if len(set(all_instruments)) > 1 and 'fgs' in set(all_instruments):
+                if len(set(all_instruments)) > 1:
                     # Technically all proposal have multiple instruments if you include guider data. Remove Guider Data
-                    all_instruments = list(filter(('fgs').__ne__, all_instruments))
                     instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, proposal_string[1:], all_observations[instrument][0], instrument) for instrument in set(all_instruments)]
                     raise forms.ValidationError(
                         mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))# nosec
