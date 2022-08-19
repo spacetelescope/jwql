@@ -216,6 +216,7 @@ class PreviewImage():
                         data = hdulist[ext].data[:, [0, -1], :, :].astype(np.float)
                     else:
                         data = hdulist[ext].data.astype(np.float)
+                    yd, xd = data.shape[-2:]
                     try:
                         self.units = f"{hdulist[ext].header['BUNIT']}  "
                     except KeyError:
@@ -223,12 +224,58 @@ class PreviewImage():
                 else:
                     raise ValueError('WARNING: no {} extension in {}!'.format(ext, filename))
 
-                if 'DQ' in extnames:
-                    dq = hdulist['DQ'].data
-                    dq = (dq & dqflags.pixel['NON_SCIENCE'] == 0)
+                # Get a map of the non-science pixels from a dedicated
+                # map file. Getting this info from the DQ extension
+                # doesn't work for uncal files, nor MIRI rate files.
+                if 'uncal' in filename:
+                    # uncal files have no DQ extensions, so we can't get a map of non-science pixels from the
+                    # data itself.
+                    if 'miri' in filename:
+                        if 'mirimage' in filename:
+                            # MIRI imaging files use the external MIRI non-science map
+                            external_map_file = (os.path.join(configs['output'], 'non_science_maps', 'mirimage_non_science_map.fits'))
+                            dq = self.nonsci_from_file(external_map_file)
+                            dq = crop_to_subarray(dq, hdulist[0].header, xd, yd)
+                        else:
+                            # For MIRI MRS/LRS data, we don't worry about non-science pixels, so create a map where all
+                            # pixels are good.
+                            dq = np.ones((yd, xd), dtype="bool")
+                    elif 'nrs' in filename:
+                        if 'NRSIRS2' in hdulist[0].header['READPATT']:
+                            # NIRSpec IRS2 files use external non-science maps
+                            if 'nrs1' in filename:
+                                external_map_file = (os.path.join(configs['output'], 'non_science_maps', 'nrs1_irs2_non_science_map.fits'))
+                            elif 'nrs2' in filename:
+                                external_map_file = (os.path.join(configs['output'], 'non_science_maps', 'nrs2_irs2_non_science_map.fits'))
+                            # IRS2 mode is only used in full frame observations, so no need to crop
+                            # to a subarray
+                            dq = self.nonsci_from_file(external_map_file)
+                        else:
+                            # NIRSpec observations that do not use IRS2 use the "standard" NIR detector non-science map.
+                            # i.e. 4 outer rows and columns are refernece pixels
+                            dq = create_nir_nonsci_map()
+                            dq = crop_to_subarray(dq, hdulist[0].header, xd, yd)
+                    else:
+                        # All NIRCam, NIRISS, and FGS observations also use the "standard" NIR detector non-science map.
+                        dq = create_nir_nonsci_map()
+                        dq = crop_to_subarray(dq, hdulist[0].header, xd, yd)
+                elif 'rate' in filename:
+                    # For rate/rateints images all we need to worry about is MIRI imaging files. For those we use
+                    # the external non-science map, because the pipeline does not add the NON_SCIENCE flags
+                    # to the MIRI DQ extensions until the data are flat fielded, which is after the rate
+                    # files have been created.
+                    if 'mirimage' in filename:
+                        external_map_file = (os.path.join(configs['output'], 'non_science_maps', 'mirimage_non_science_map.fits'))
+                        dq = self.nonsci_from_file(external_map_file)
+                        dq = crop_to_subarray(dq, hdulist[0].header, xd, yd)
+                    else:
+                        # For everything other than MIRI imaging, we get the non-science map from the
+                        # DQ array in the file.
+                        dq = self.get_nonsci_map(hdulist, extnames, xd, yd)
                 else:
-                    yd, xd = data.shape[-2:]
-                    dq = np.ones((yd, xd), dtype="bool")
+                    # For all file suffixes other than uncal and rate/rateints, we get the non-science map
+                    # from the DQ array in the file.
+                    dq = self.get_nonsci_map(hdulist, extnames, xd, yd)
 
                 # Collect information on aperture location within the
                 # full detector. This is needed for mosaicking NIRCam
@@ -245,6 +292,33 @@ class PreviewImage():
             raise FileNotFoundError('WARNING: {} does not exist!'.format(filename))
 
         return data, dq
+
+    def get_nonsci_map(self, hdulist, extensions, xdim, ydim):
+        """Create a map of non-science pixels for a given HDUList. If there is no DQ
+        extension in the HDUList, assume all pixels are science pixels.
+
+        Parameters
+        ----------
+        hdulist : astropy.io.fits.HDUList
+            HDUList object from a fits file
+
+        extensions : list
+            List of extension names in the HDUList
+
+        xdim : int
+            Number of columns in data array. Only used if there is no DQ extension
+
+        ydim : int
+            Number of rows in the data array. Only used if there is no DQ extension
+        """
+        if 'DQ' in extensions:
+            dq = hdulist['DQ'].data
+            dq = (dq & (dqflags.pixel['NON_SCIENCE'] | dqflags.pixel['REFERENCE_PIXEL']) == 0)
+        else:
+            # If there is no DQ extension in the HDUList, then we create a dq map where we assume
+            # that all of the pixels are science pixels
+            dq = np.ones((ydim, xdim), dtype=bool)
+        return dq
 
     def make_figure(self, image, integration_number, min_value, max_value,
                     scale, maxsize=8, thumbnail=False):
@@ -481,3 +555,64 @@ class PreviewImage():
         else:
             logging.info('\tSaved image to {}'.format(fname))
             self.thumbnail_filename = None
+
+
+def create_nir_nonsci_map():
+    """Create a map of non-science pixels for a near-IR detector
+
+    Returns
+    -------
+    arr : numpy.ndarray
+        2D array. Science pixels have a value of 1 and non-science pixels
+        (reference pixels) have a value of 0.
+    """
+    arr = np.ones((2048, 2048), dtype=int)
+    arr[0:4, :] = 0
+    arr[:, 0:4] = 0
+    arr[2044:, :] = 0
+    arr[:, 2044:] = 0
+    return arr
+
+
+def crop_to_subarray(arr, header, xdim, ydim):
+    """Given a full frame array, along with a fits HDU header containing subarray
+    information, crop the array down to the indicated subarray.
+
+    Parameters
+    ----------
+    arr : numpy.ndarray
+        2D array of data. Assumed to be full frame (2048 x 2048)
+
+    header : astropy.io.fits.header
+        Header from a single extension of a fits file
+
+    xdim : int
+        Number of columns in the corresponding data (not dq) array, in pixels
+
+    ydim : int
+        Number of rows in the corresponding data (not dq) array, in pixels
+
+    Returns
+    -------
+    arr : numpy.ndarray
+        arr, cropped down to the size specified in the header
+    """
+    # Pixel coordinates in the headers are 1-indexed. Subtract 1 to get them into
+    # python's 0-indexed system
+    try:
+        xstart = header['SUBSTRT1'] - 1
+        xlen = header['SUBSIZE1']
+        ystart = header['SUBSTRT2'] - 1
+        ylen = header['SUBSIZE2']
+    except KeyError:
+        # If subarray info is missing from the header, then we don't know which
+        # part of the dq array to extract. Rather than raising an exception, let's
+        # extract a portion of the dq array that is centered on the full frame
+        # array, so that we can still create a preview image later.
+        logging.info("No subarray location information in file. Extracting a portion of the DQ array centered on the full frame.")
+        arr_ydim, arr_xdim = arr.shape
+        ystart = (arr_ydim // 2) - (ydim // 2)
+        xstart = (arr_xdim // 2) - (xdim // 2)
+        xlen = xdim
+        ylen = ydim
+    return arr[ystart : (ystart + ylen), xstart : (xstart + xlen)]
