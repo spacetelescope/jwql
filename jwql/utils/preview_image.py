@@ -529,6 +529,21 @@ class PreviewImage():
                 plt.close(self.fig)
                 self.thumbnail_images.append(self.thumbnail_filename)
 
+    def nonsci_from_file(self, filename):
+        """Read in a map of non-science/reference pixels from a fits file
+
+        Parameters
+        ----------
+        filename : str
+            Name of fits file to be read in.
+
+        Returns
+        -------
+        map : numpy.ndarray
+            2D array of pixel values
+        """
+        map = fits.getdata(filename)
+        return map
 
     def save_image(self, fname, thumbnail=False):
         """
