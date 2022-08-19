@@ -324,6 +324,15 @@ class PreviewImage():
         """
         if 'DQ' in extensions:
             dq = hdulist['DQ'].data
+
+            # For files with multiple integrations (rateints, calints), chop down the
+            # DQ array to a single frame, since the non-science pixels will be the same
+            # in all integrations
+            if len(dq.shape) == 3:
+                dq = dq[0, :, :]
+            elif len(dq.shape) == 4:
+                dq = dq[0, 0, :, :]
+
             dq = (dq & (dqflags.pixel['NON_SCIENCE'] | dqflags.pixel['REFERENCE_PIXEL']) == 0)
         else:
             # If there is no DQ extension in the HDUList, then we create a dq map where we assume
