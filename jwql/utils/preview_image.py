@@ -43,6 +43,7 @@ from astropy.io import fits
 import numpy as np
 
 from jwql.utils import permissions
+from jwql.utils.utils import get_config
 
 # Use the 'Agg' backend to avoid invoking $DISPLAY
 import matplotlib
@@ -54,6 +55,8 @@ from matplotlib.ticker import AutoMinorLocator
 # Only import jwst if not running from readthedocs
 if 'build' and 'project' not in socket.gethostname():
     from jwst.datamodels import dqflags
+
+CONFIGS = get_config()
 
 
 class PreviewImage():
@@ -233,7 +236,7 @@ class PreviewImage():
                     if 'miri' in filename:
                         if 'mirimage' in filename:
                             # MIRI imaging files use the external MIRI non-science map
-                            external_map_file = (os.path.join(configs['output'], 'non_science_maps', 'mirimage_non_science_map.fits'))
+                            external_map_file = (os.path.join(CONFIGS['output'], 'non_science_maps', 'mirimage_non_science_map.fits'))
                             dq = self.nonsci_from_file(external_map_file)
                             dq = crop_to_subarray(dq, hdulist[0].header, xd, yd)
                         else:
@@ -244,9 +247,9 @@ class PreviewImage():
                         if 'NRSIRS2' in hdulist[0].header['READPATT']:
                             # NIRSpec IRS2 files use external non-science maps
                             if 'nrs1' in filename:
-                                external_map_file = (os.path.join(configs['output'], 'non_science_maps', 'nrs1_irs2_non_science_map.fits'))
+                                external_map_file = (os.path.join(CONFIGS['output'], 'non_science_maps', 'nrs1_irs2_non_science_map.fits'))
                             elif 'nrs2' in filename:
-                                external_map_file = (os.path.join(configs['output'], 'non_science_maps', 'nrs2_irs2_non_science_map.fits'))
+                                external_map_file = (os.path.join(CONFIGS['output'], 'non_science_maps', 'nrs2_irs2_non_science_map.fits'))
                             # IRS2 mode is only used in full frame observations, so no need to crop
                             # to a subarray
                             dq = self.nonsci_from_file(external_map_file)
