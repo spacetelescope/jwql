@@ -122,7 +122,7 @@ class InteractivePreviewImg():
                 palette="Viridis256", low=limits[0], high=limits[1])
             ticker = BasicTicker()
         yd, xd = self.data.shape
-        info = dict(image=[self.data], x=[0], y=[0], dw=[yd], dh=[xd])
+        info = dict(image=[self.data], x=[0], y=[0], dw=[xd], dh=[yd])
         if 'DQ' in self.extname:
             info["dq"] = [self.bit_list]
         if not self.show and self.save_html is not None:
