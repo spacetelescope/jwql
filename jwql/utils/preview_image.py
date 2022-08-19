@@ -242,7 +242,7 @@ class PreviewImage():
                         else:
                             # For MIRI MRS/LRS data, we don't worry about non-science pixels, so create a map where all
                             # pixels are good.
-                            dq = np.ones((yd, xd), dtype="bool")
+                            dq = np.ones((yd, xd), dtype="bool").astype(bool)
                     elif 'nrs' in filename:
                         if 'NRSIRS2' in hdulist[0].header['READPATT']:
                             # NIRSpec IRS2 files use external non-science maps
@@ -313,6 +313,11 @@ class PreviewImage():
 
         ydim : int
             Number of rows in the data array. Only used if there is no DQ extension
+
+        Returns
+        -------
+        dq : numpy.ndarray
+            2D boolean array giving locations of non-science pixels
         """
         if 'DQ' in extensions:
             dq = hdulist['DQ'].data
@@ -540,10 +545,10 @@ class PreviewImage():
         Returns
         -------
         map : numpy.ndarray
-            2D array of pixel values
+            2D boolean array of pixel values
         """
         map = fits.getdata(filename)
-        return map
+        return map.astype(bool)
 
     def save_image(self, fname, thumbnail=False):
         """
@@ -581,7 +586,7 @@ def create_nir_nonsci_map():
     Returns
     -------
     arr : numpy.ndarray
-        2D array. Science pixels have a value of 1 and non-science pixels
+        2D boolean array. Science pixels have a value of 1 and non-science pixels
         (reference pixels) have a value of 0.
     """
     arr = np.ones((2048, 2048), dtype=int)
@@ -589,7 +594,7 @@ def create_nir_nonsci_map():
     arr[:, 0:4] = 0
     arr[2044:, :] = 0
     arr[:, 2044:] = 0
-    return arr
+    return arr.astype(bool)
 
 
 def crop_to_subarray(arr, header, xdim, ydim):
