@@ -69,7 +69,7 @@ from jwql.utils.constants import GUIDER_FILENAME_TYPE
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.constants import READPATT_PER_INSTRUMENT
-from jwql.utils.utils import get_config, filename_parser
+from jwql.utils.utils import get_config, get_rootnames_for_instrument_proposal, filename_parser
 from jwql.utils.utils import query_format
 
 from wtforms import SubmitField, StringField

@@ -543,6 +543,30 @@ def get_base_url():
     return base_url
 
 
+def get_rootnames_for_instrument_proposal(instrument, proposal):
+    """Return a list of rootnames for the given instrument and proposal
+
+    Parameters
+    ----------
+    instrument : str
+        Name of the JWST instrument, with first letter capitalized
+        (e.g. ``Fgs``)
+
+    proposal : int or str
+        Proposal ID number
+
+    Returns
+    -------
+    rootnames : list
+        List of rootnames for the given instrument and proposal number
+    """
+    tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
+    tap_results = tap_service.search(f"select observationID from dbo.CaomObservation where collection='JWST' and maxLevel=2 and insName like '{instrument.lower()}' and prpID='{int(proposal)}'")
+    prop_table = tap_results.to_table()
+    rootnames = prop_table['observationID'].data
+    return rootnames.compressed()
+
+
 def check_config_for_key(key):
     """Check that the config.json file contains the specified key
     and that the entry is not empty
