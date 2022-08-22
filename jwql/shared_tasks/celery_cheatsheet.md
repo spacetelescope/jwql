@@ -60,7 +60,7 @@ have:
   - Log in as the appropriate service user
   - Change to the JWQL `shared_tasks` directory
   - Wait until all `celery` workers have shut down
-  - Run `celery purge -A shared_tasks`
+  - Run `celery -A shared_tasks purge`
   - This will discard any tasks that have not been completed. If a monitor is currently
     running, and is waiting for a task to finish, that task will be purged by this command,
     and the monitor will wait forever for the task to return, so if you didn't make sure 

@@ -779,10 +779,6 @@ class BadPixels():
         badpix_types_from_flats = ['DEAD', 'LOW_QE', 'OPEN', 'ADJ_OPEN']
         badpix_types_from_darks = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
         illuminated_obstimes = []
-        send_dir = os.path.join(get_config()["transfer_dir"], "incoming")
-        ensure_dir_exists(send_dir)
-        receive_dir = os.path.join(get_config()["transfer_dir"], "outgoing")
-        ensure_dir_exists(receive_dir)
         if illuminated_raw_files:
             index = 0
             badpix_types.extend(badpix_types_from_flats)
@@ -790,12 +786,15 @@ class BadPixels():
                 self.get_metadata(uncal_file)
                 if rate_file == 'None':
                     logging.info('Calling pipeline for {}'.format(uncal_file))
+                    logging.info("Copying raw file to {}".format(self.data_dir))
+                    copy_files([uncal_file], self.data_dir)
+                    local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
                     out_exts = ['jump']
                     if self.nints > 1:
                         out_exts.append('1_ramp_fit')
                     else:
                         out_exts.append('0_ramp_fit')
-                    processed_files = run_pipeline(uncal_file, "uncal", out_exts, self.instrument, jump_pipe=True)
+                    processed_files = run_pipeline(local_uncal_file, "uncal", out_exts, self.instrument, jump_pipe=True)
                     illuminated_slope_files[index] = deepcopy(processed_files[1])
                     index += 1
 
@@ -822,13 +821,16 @@ class BadPixels():
             # and fitops files, which are not saved by default
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
                 logging.info('Calling pipeline for {} {}'.format(uncal_file, rate_file))
+                logging.info("Copying raw file to {}".format(self.data_dir))
+                copy_files([uncal_file], self.data_dir)
+                local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
 
                 out_exts = ['jump', 'fitopt']
                 if self.nints > 1:
                     out_exts.append('1_ramp_fit')
                 else:
                     out_exts.append('0_ramp_fit')
-                processed_files = run_pipeline(uncal_file, "uncal", out_exts, self.instrument, jump_pipe=True)
+                processed_files = run_pipeline(local_uncal_file, "uncal", out_exts, self.instrument, jump_pipe=True)
                 dark_jump_files.append(processed_files[0])
                 dark_fitopt_files.append(processed_files[1])
                 dark_slope_files[index] = deepcopy(processed_files[2])
