@@ -139,10 +139,30 @@ from celery.utils.log import get_task_logger
 
 REDIS_CLIENT = redis.Redis(host=get_config()["redis_host"], port=get_config()["redis_port"])
 
+# Okay, let's explain these options:
+#   - the first argument ('shared_tasks') is the task queue to listen to. We only have one,
+#     and we've named it 'shared_tasks'. Both the clients (monitors) and the server(s)
+#     (workers) need to use the same queue so that the workers are taking tasks from the 
+#     same place that the monitors are putting them.
+#   - the broker is the server that keeps track of tasks and task IDs. redis does this
+#   - the backend is the server that keeps track of events. redis does this too
+#   - worker_mask_tasks_per_child is how many tasks a process can run before it gets
+#     restarted and replaced. This is set to 1 because the pipeline has memory leaks.
+#   - worker_prefetch_multiplier is how many tasks a worker can reserve for itself at a 
+#     time. If set to 0, a worker can reserve any number. If set to an integer, a single
+#     worker can reserve that many tasks. We don't really want workers reserving tasks 
+#     while they're already running a task, because tasks can take a long time to finish,
+#     and there's no reason for the other workers to be sitting around doing nothing while
+#     all the monitors are waiting on a single worker.
+#   - worker_concurrency is how many task threads a worker can run concurrently on the same
+#     machine. It's set to 1 because an individual pipeline process can consume all of the
+#     available memory, so setting the concurrency higher will result in inevitable crashes.
 celery_app = Celery('shared_tasks', 
                     broker='redis://{}:{}'.format(get_config()['redis_host'], get_config()['redis_port']),
                     backend='redis://{}:{}'.format(get_config()['redis_host'], get_config()['redis_port']),
-                    worker_max_tasks_per_child=2
+                    worker_max_tasks_per_child=1,
+                    worker_prefetch_multiplier=1,
+                    worker_concurrency=1
                     )
 
 
