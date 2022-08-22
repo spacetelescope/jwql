@@ -30,6 +30,7 @@ References
 import getpass
 import glob
 import json
+import pyvo as vo
 import os
 import re
 import shutil
