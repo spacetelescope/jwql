@@ -143,7 +143,7 @@ class PreviewImage():
         """
         return data[:, -1, :, :] - data[:, 0, :, :]
 
-    def find_limits(self, data, pixmap, clipperc):
+    def find_limits(self, data):
         """
         Find the minimum and maximum signal levels after clipping the
         top and bottom ``clipperc`` of the pixels.
@@ -152,24 +152,33 @@ class PreviewImage():
         ----------
         data : obj
             2D numpy ndarray of floats
-        pixmap : obj
-            2D numpy ndarray boolean array of science pixel locations
-            (``True`` for science pixels, ``False`` for non-science
-            pixels)
-        clipperc : float
-            Fraction of top and bottom signal levels to clip (e.g. 0.01
-            means to clip brightest and dimmest 1% of pixels)
 
         Returns
         -------
         results : tuple
             Tuple of floats, minimum and maximum signal levels
         """
+        # Ignore any pixels that are NaN
+        finite = np.isfinite(data)
+
+        # Combine maps of science pixels and finite pixels
+        pixmap = self.dq & finite
+
+        # If all non-science pixels are NaN then we're sunk. Scale
+        # from 0 to 1.
+        if not np.any(pixmap):
+            logging.info('No pixels with finite signal. Scaling from 0 to 1')
+            return (0., 1.)
+
+        sorted_pix = np.sort(data[pixmap], axis=None)
+
+        # Determine how many pixels to clip off of the high and low ends
         nelem = np.sum(pixmap)
-        numclip = np.int(clipperc * nelem)
-        sorted = np.sort(data[pixmap], axis=None)
-        minval = sorted[numclip]
-        maxval = sorted[-numclip - 1]
+        numclip = np.int32(self.clip_percent * nelem)
+
+        # Determine min and max scaling levels
+        minval = sorted_pix[numclip]
+        maxval = sorted_pix[-numclip - 1]
         return (minval, maxval)
 
     def get_data(self, filename, ext):
@@ -295,20 +304,21 @@ class PreviewImage():
 
             # If making a thumbnail, make a figure with no axes
             if thumbnail:
-                fig = plt.imshow(shiftdata,
-                                 norm=colors.LogNorm(vmin=shiftmin,
-                                                     vmax=shiftmax),
-                                 cmap=self.cmap)
+                self.fig, ax = plt.subplots(figsize=(3, 3))
+                cax = ax.imshow(shiftdata,
+                                norm=colors.LogNorm(vmin=shiftmin,
+                                                    vmax=shiftmax),
+                                cmap=self.cmap)
                 # Invert y axis
                 plt.gca().invert_yaxis()
 
                 plt.axis('off')
-                fig.axes.get_xaxis().set_visible(False)
-                fig.axes.get_yaxis().set_visible(False)
+                cax.axes.get_xaxis().set_visible(False)
+                cax.axes.get_yaxis().set_visible(False)
 
             # If preview image, add axes and colorbars
             else:
-                fig, ax = plt.subplots(figsize=(xsize, ysize))
+                self.fig, ax = plt.subplots(figsize=(xsize, ysize))
                 cax = ax.imshow(shiftdata,
                                 norm=colors.LogNorm(vmin=shiftmin,
                                                     vmax=shiftmax),
@@ -335,7 +345,7 @@ class PreviewImage():
                     dig = 2
                 format_string = "%.{}f".format(dig)
                 tlabelstr = [format_string % number for number in tlabelflt]
-                cbar = fig.colorbar(cax, ticks=tickvals)
+                cbar = self.fig.colorbar(cax, ticks=tickvals)
 
                 # This seems to correctly remove the ticks and labels we want to remove. It gives a warning that
                 # it doesn't work on log scales, which we don't care about. So let's ignore that warning.
@@ -355,8 +365,11 @@ class PreviewImage():
                 plt.rcParams.update({'xtick.labelsize': maxsize * 5. / 4})
 
         elif scale == 'linear':
-            fig, ax = plt.subplots(figsize=(xsize, ysize))
+            self.fig, ax = plt.subplots(figsize=(xsize, ysize))
             cax = ax.imshow(image, clim=(min_value, max_value), cmap=self.cmap)
+
+            # Invert y axis
+            plt.gca().invert_yaxis()
 
             if not thumbnail:
                 cbar = fig.colorbar(cax)
@@ -368,8 +381,17 @@ class PreviewImage():
             filename = os.path.split(self.file)[-1]
             ax.set_title(filename + ' Int: {}'.format(np.int(integration_number)))
 
-    def make_image(self, max_img_size=8.0):
-        """The main function of the ``PreviewImage`` class."""
+    def make_image(self, max_img_size=8.0, create_thumbnail=False):
+        """The main function of the ``PreviewImage`` class.
+
+        Parameters
+        ----------
+        max_img_size : float
+            Image size in the largest dimension
+
+        create_thumbnail : bool
+            If True, a thumbnail image is created and saved.
+        """
 
         shape = self.data.shape
 
@@ -400,8 +422,7 @@ class PreviewImage():
             frame = diff_img[i, :, :]
 
             # Find signal limits for the display
-            minval, maxval = self.find_limits(frame, self.dq,
-                                              self.clip_percent)
+            minval, maxval = self.find_limits(frame)
 
             # Create preview image matplotlib object
             indir, infile = os.path.split(self.file)
@@ -414,12 +435,12 @@ class PreviewImage():
             self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
                              maxsize=max_img_size, thumbnail=False)
             self.save_image(outfile, thumbnail=False)
-            plt.close()
+            plt.close(self.fig)
             self.preview_images.append(outfile)
 
             # Create thumbnail image matplotlib object, only for the
             # first integration
-            if i == 0:
+            if i == 0 and create_thumbnail:
                 if self.thumbnail_output_directory is None:
                     outdir = indir
                 else:
@@ -428,8 +449,9 @@ class PreviewImage():
                 self.make_figure(frame, i, minval, maxval, self.scaling.lower(),
                                  maxsize=max_img_size, thumbnail=True)
                 self.save_image(outfile, thumbnail=True)
-                plt.close()
-                self.thumbnail_images.append(outfile)
+                plt.close(self.fig)
+                self.thumbnail_images.append(self.thumbnail_filename)
+
 
     def save_image(self, fname, thumbnail=False):
         """
@@ -448,14 +470,14 @@ class PreviewImage():
             True if saving a thumbnail image, false for the full
             preview image.
         """
-
         plt.savefig(fname, bbox_inches='tight', pad_inches=0)
         permissions.set_permissions(fname)
 
         # If the image is a thumbnail, rename to '.thumb'
         if thumbnail:
-            thumb_fname = fname.replace('.jpg', '.thumb')
-            os.rename(fname, thumb_fname)
-            logging.info('\tSaved image to {}'.format(thumb_fname))
+            self.thumbnail_filename = fname.replace('.jpg', '.thumb')
+            os.rename(fname, self.thumbnail_filename)
+            logging.info('\tSaved image to {}'.format(self.thumbnail_filename))
         else:
             logging.info('\tSaved image to {}'.format(fname))
+            self.thumbnail_filename = None

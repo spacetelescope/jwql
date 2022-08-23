@@ -14,7 +14,7 @@
 
     	<!-- Specify the attributes of what is currently being shown -->
     	<div class="d-flex flex-row">
-    		<div class="APT_parameters">Proposal: <a id="proposal" href="{{ url('jwql:archive_thumb', args=[inst, prop_id]) }}"></a></div>
+    		<div class="APT_parameters">Proposal: <a id="proposal" href="{{ url('jwql:archive_thumb_per_obs', args=[inst, prop_id, obsnum]) }}"></a></div>
     		<div class="APT_parameters">Observation: <a id="obs_id"></a></div>
     		<div class="APT_parameters">Visit: <a id="visit_id"></a></div>
     		<div class="APT_parameters">Detector: <a id="detector"></a></div>
@@ -29,7 +29,7 @@
 	    </a><br>
 	    <form class="my-2" action="change_filetype(value, {{file_root}}, {{num_ints}}, {{inst}})">
 	    	{% for suffix in suffixes %}
-	    		<input type="radio" name="filetype" value="{{ suffix }}" id="{{ suffix }}" onclick='change_filetype("{{suffix}}", "{{file_root}}", "{{num_ints}}", "{{available_ints}}", "{{inst}}");'> {{ suffix }} &nbsp;&nbsp;&nbsp;&nbsp;
+	    		<input type="radio" name="filetype" value="{{ suffix }}" id="{{ suffix }}" onclick='change_filetype("{{suffix}}", "{{file_root}}", "{{num_ints}}", "{{available_ints}}", "{{total_ints}}", "{{inst}}");'> {{ suffix }} &nbsp;&nbsp;&nbsp;&nbsp;
 	    	{% endfor %}
 		</form>
 		<br>
@@ -37,6 +37,7 @@
 		<!-- Buttons for viewing header, downloading files -->
         <p>
             <a id="view_header" class="btn btn-primary mx-2" role="button" href="#">View Header</a>
+            <a id="explore_image" class="btn btn-primary mx-2" role="button" href="#">Explore Image</a>
             <!-- <a id="download_fits" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}' download>Download FITS</a>
             <a id="download_jpg" class="btn btn-primary my-2 mx-2" role="button" href='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ jpg }}' download>Download JPEG</a> -->
         </p>
@@ -47,7 +48,7 @@
     		    <span class="image_preview">
     		    	<img id="image_viewer"
                          src='{{ static("") }}preview_images/{{ file_root[:7] }}/{{ file_root }}_cal_integ0.jpg'
-                         onerror="imageError(this, true);"
+                         onerror="image_error(this, true);"
                          alt='{{ file_root }}_cal_integ0.jpg'
                          title="Preview image for {{ file_root }}">
     		    </span>
@@ -96,13 +97,13 @@
 
         <!-- Determine which filetype should be shown on load -->
         {% if 'cal' in suffixes %}
-            <script>change_filetype('cal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", '{{inst}}');</script>
+            <script>change_filetype('cal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif 'rate' in suffixes %}
-            <script>change_filetype('rate', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", '{{inst}}');</script>
+            <script>change_filetype('rate', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif 'uncal' in suffixes %}
-            <script>change_filetype('uncal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", '{{inst}}');</script>
+            <script>change_filetype('uncal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif suffixes|length == 1 %}
-            <script>change_filetype('{{suffixes.0}}', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", '{{inst}}');</script>
+            <script>change_filetype('{{suffixes.0}}', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% else %}
             <a>Unable to show image for: {{suffixes}}</a>
         {% endif %}
