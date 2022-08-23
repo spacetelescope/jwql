@@ -162,6 +162,7 @@ celery_app = Celery('shared_tasks',
                     backend='redis://{}:{}'.format(get_config()['redis_host'], get_config()['redis_port']),
                     worker_max_tasks_per_child=1,
                     worker_prefetch_multiplier=1,
+                    task_acks_late=True,
                     worker_concurrency=1
                     )
 
