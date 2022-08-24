@@ -127,6 +127,44 @@ class PreviewImage():
         # Read in file
         self.data, self.dq = self.get_data(self.file, extension)
 
+    def determine_map_file(self, header):
+        """Determine which file contains the map of non-science pixels given a
+        file header
+
+        Parameters
+        ----------
+        header : astropy.io.fits.header
+            Header object from an HDU object
+        """
+        if header['INSTRUME'] == 'MIRI':
+            # MIRI imaging files use the external MIRI non-science map. Note that MIRI_CORONCAL and
+            # MIRI_LYOT observations also have 'mirimage' in the filename. We deal with this in
+            # crop_to_subarray()
+            if 'CORONMSK' not in header:
+                self.nonsci_map_file = (os.path.join(CONFIGS['outputs'], 'non_science_maps', 'mirimage_non_science_map.fits'))
+            elif header['CORONMSK'] == '4QPM_1065':
+                self.nonsci_map_file = (os.path.join(CONFIGS['outputs'], 'non_science_maps', 'miri4qpm_1065_non_science_map.fits'))
+            elif header['CORONMSK'] == '4QPM_1140':
+                self.nonsci_map_file = (os.path.join(CONFIGS['outputs'], 'non_science_maps', 'miri4qpm_1140_non_science_map.fits'))
+            elif header['CORONMSK'] == '4QPM_1550':
+                self.nonsci_map_file = (os.path.join(CONFIGS['outputs'], 'non_science_maps', 'miri4qpm_1550_non_science_map.fits'))
+            elif header['CORONMSK'] in ['LYOT', 'LYOT_2300']:
+                self.nonsci_map_file = (os.path.join(CONFIGS['outputs'], 'non_science_maps', 'mirilyot_non_science_map.fits'))
+
+        elif header['INSTRUME'] == 'NIRSPEC':
+            if 'NRSIRS2' in header['READPATT']:
+                # IRS2 mode arrays are very different sizes between uncal and i2d files. For the uncal,
+                # use the external non-science map. The i2d files we can treat like i2d files from the
+                # other NIR detectors.
+                if header['DETECTOR'] == 'NRS1':
+                    self.nonsci_map_file = (os.path.join(CONFIGS['outputs'], 'non_science_maps', 'nrs1_irs2_non_science_map.fits'))
+                elif header['DETECTOR'] == 'NRS2':
+                    self.nonsci_map_file = (os.path.join(CONFIGS['outputs'], 'non_science_maps', 'nrs2_irs2_non_science_map.fits'))
+            else:
+                self.nonsci_map_file = None
+        else:
+            self.nonsci_map_file = None
+
     def difference_image(self, data):
         """
         Create a difference image from the data. Use last group minus
@@ -227,19 +265,17 @@ class PreviewImage():
                 else:
                     raise ValueError('WARNING: no {} extension in {}!'.format(ext, filename))
 
-                # Get a map of the non-science pixels from a dedicated
-                # map file. Getting this info from the DQ extension
-                # doesn't work for uncal files, nor MIRI rate files.
+                # For files that have no DQ extension, we get a map of the non-science
+                # pixels from a dedicated map file. Getting this info from the DQ extension
+                # doesn't work for uncal and i2d files, nor MIRI rate files.
+                self.determine_map_file(hdulist[0].header)
+
                 if (('uncal' in filename) or ('i2d' in filename)):
                     # uncal files have no DQ extensions, so we can't get a map of non-science pixels from the
                     # data itself.
                     if 'miri' in filename:
                         if 'mirimage' in filename:
-                            # MIRI imaging files use the external MIRI non-science map. Note that MIRI_CORONCAL and
-                            # MIRI_LYOT observations also have 'mirimage' in the filename. We deal with this in
-                            # crop_to_subarray()
-                            external_map_file = (os.path.join(CONFIGS['outputs'], 'non_science_maps', 'mirimage_non_science_map.fits'))
-                            dq = self.nonsci_from_file(external_map_file)
+                            dq = self.nonsci_from_file()
                             dq = crop_to_subarray(dq, hdulist[0].header, xd, yd)
                             dq = expand_for_i2d(dq, xd, yd)
                         else:
@@ -252,14 +288,11 @@ class PreviewImage():
                             # use the external non-science map. The i2d files we can treat like i2d files from the
                             # other NIR detectors.
                             if 'uncal' in filename:
-                                if 'nrs1' in filename:
-                                    external_map_file = (os.path.join(CONFIGS['outputs'], 'non_science_maps', 'nrs1_irs2_non_science_map.fits'))
-                                elif 'nrs2' in filename:
-                                    external_map_file = (os.path.join(CONFIGS['outputs'], 'non_science_maps', 'nrs2_irs2_non_science_map.fits'))
-
-                                dq = self.nonsci_from_file(external_map_file)
-                                dq = crop_to_subarray(dq, hdulist[0].header, xd, yd)
-                                dq = expand_for_i2d(dq, xd, yd)
+                                dq = self.nonsci_from_file()
+                                # ISR2 data are always full frame, so no need to crop to subarray
+                                # and since we are guaranteed to have an uncal file, no need to expand for i2d
+                                #dq = crop_to_subarray(dq, hdulist[0].header, xd, yd)
+                                #dq = expand_for_i2d(dq, xd, yd)
                             elif 'i2d' in filename:
                                 dq = create_nir_nonsci_map()
                                 dq = crop_to_subarray(dq, hdulist[0].header, xd, yd)
@@ -281,8 +314,7 @@ class PreviewImage():
                     # to the MIRI DQ extensions until the data are flat fielded, which is after the rate
                     # files have been created.
                     if 'mirimage' in filename:
-                        external_map_file = (os.path.join(CONFIGS['outputs'], 'non_science_maps', 'mirimage_non_science_map.fits'))
-                        dq = self.nonsci_from_file(external_map_file)
+                        dq = self.nonsci_from_file()
                         dq = crop_to_subarray(dq, hdulist[0].header, xd, yd)
                         dq = expand_for_i2d(dq, xd, yd)
                     else:
@@ -560,7 +592,7 @@ class PreviewImage():
                 plt.close(self.fig)
                 self.thumbnail_images.append(self.thumbnail_filename)
 
-    def nonsci_from_file(self, filename):
+    def nonsci_from_file(self):
         """Read in a map of non-science/reference pixels from a fits file
 
         Parameters
@@ -573,7 +605,7 @@ class PreviewImage():
         map : numpy.ndarray
             2D boolean array of pixel values
         """
-        map = fits.getdata(filename)
+        map = fits.getdata(self.nonsci_map_file)
         return map.astype(bool)
 
     def save_image(self, fname, thumbnail=False):
@@ -675,7 +707,7 @@ def expand_for_i2d(array, xdim, ydim):
     Parameters
     ----------
     array : numpy.ndarray
-        2D DQ array
+        2D DQ array of booleans
 
     xdim : int
         Number of columns in the data whose dimensions we want ``array`` to have.
@@ -691,55 +723,25 @@ def expand_for_i2d(array, xdim, ydim):
         2D array with dimensions of (ydim x xdim)
     """
     ydim_array, xdim_array = array.shape
-    if ((ydim_array < ydim) or (xdim_array < xdim)):
-        new_array = np.zeros((ydim, xdim))  # Added rows/cols will be all zeros
-        y_offset = (ydim - ydim_array) // 2
-        x_offset = (xdim - xdim_array) // 2
-        new_array[y_offset : (y_offset + ydim_array), x_offset : (x_offset + xdim_array)] = array
-        return new_array
-    elif ((ydim_array > ydim) or (xdim_array > xdim)):
-        raise ValueError(('Array dimensions are already larger than those we are looking to expand to. '
-                          'e.g. the DQ array, cropped to the appropriate subarray, is larger than the '
-                          'data in the i2d file.'))
-
-
-
-
-def miri_manual_dq_adjustments():
-    """Only MIRI files with the CORONMSK header keyword need to use this function. This will make
-    some small adjustments to the DQ mask for the coron apertures in order to help with scaling.
-    """
-    #check the miri flat reffiles to see if we can find a map of coron aperture pixels. if so,
-    #integrate that with the non-science mask. That will be much cleaner than making manual adjustments
-    #on the fly.
-
-    logging.info(f"{header['FILENAME']} is a MIRI file with CORONMSK in the header. Manually cropp")
-    #wait. we cannot manually crop. we need the dq array to be the same size as the data, right?
-    if header['CORONMSK'] == '4QPM_1065':
-        xstart = 34
-        ystart = 35
-        xlen = 176
-        ylen = 185
-    elif header['CORONMSK'] == '4QPM_1140':
-        xstart = 34
-        ystart = 260
-        xlen = 176
-        ylen = 185
-    elif header['CORONMSK'] == '4QPM_1550':
-        xstart = 34
-        ystart = 480
-        xlen = 176
-        ylen = 185
-    elif header['CORONMSK'] in ['LYOT', 'LYOT_2300']:
-        xstart = 34
-        ystart = 760
-        xlen = 226
-        ylen = 240
+    if ((ydim_array != ydim) or (xdim_array != xdim)):
+        if (ydim_array != ydim):
+            new_array_y = np.zeros((ydim, xdim_array), dtype=bool)  # Added rows/cols will be all zeros
+            y_offset = abs((ydim - ydim_array) // 2)
+            if (ydim_array < ydim):
+                new_array_y[y_offset : (y_offset + ydim_array), :] = array
+            elif (ydim_array > ydim):
+                new_array_y = array[y_offset : (y_offset + ydim), :]
+        else:
+            new_array_y = array
+        if (xdim_array != xdim):
+            new_array_x = np.zeros((ydim, xdim), dtype=bool)  # Added rows/cols will be all zeros
+            x_offset = abs((xdim - xdim_array) // 2)
+            if (xdim_array < xdim):
+                new_array_x[:, x_offset : (x_offset + xdim_array)] = new_array_y
+            elif (xdim_array > xdim):
+                new_array_x = new_array_y[:, x_offset : (x_offset + xdim)]
+        else:
+            new_array_x = new_array_y
+        return new_array_x
     else:
-        # Just in case there are other options, default to the upper
-        # level lyot/lyot_2300 aperture.
-        xstart = 34
-        ystart = 760
-        xlen = 226
-        ylen = 240
-
+        return array
