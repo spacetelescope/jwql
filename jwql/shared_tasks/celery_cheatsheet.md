@@ -40,7 +40,7 @@ have:
     `celery` workers.
   - Log in as the appropriate service user
   - Change to the JWQL `shared_tasks` directory (`~/jwql/jwql/jwql/shared_tasks`)
-  - Start `celery` in detached mode with `celery -A shared_tasks worker -E --concurrency=1 --max-tasks-per-child=1 --detach`
+  - Start `celery` in detached mode with `celery -A shared_tasks worker -D -E -ldebug -Ofair -c1 --max-tasks-per-child=1 --prefetch-multiplier 1`
 - **Shutting Down Celery Workers:**
   - Log in to any server on which `celery` is running (`pljwql3..6`)
   - Log in as the appropriate service user

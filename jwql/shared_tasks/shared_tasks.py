@@ -137,7 +137,10 @@ from celery.app.log import TaskFormatter
 from celery.signals import after_setup_logger, after_setup_task_logger, task_postrun
 from celery.utils.log import get_task_logger
 
-REDIS_CLIENT = redis.Redis(host=get_config()["redis_host"], port=get_config()["redis_port"])
+REDIS_HOST = get_config()["redis_host"]
+REDIS_PORT = get_config()["redis_port"]
+REDIS_URL = "redis://{}:{}".format(REDIS_HOST, REDIS_PORT)
+REDIS_CLIENT = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
 
 # Okay, let's explain these options:
 #   - the first argument ('shared_tasks') is the task queue to listen to. We only have one,
@@ -157,14 +160,11 @@ REDIS_CLIENT = redis.Redis(host=get_config()["redis_host"], port=get_config()["r
 #   - worker_concurrency is how many task threads a worker can run concurrently on the same
 #     machine. It's set to 1 because an individual pipeline process can consume all of the
 #     available memory, so setting the concurrency higher will result in inevitable crashes.
-celery_app = Celery('shared_tasks', 
-                    broker='redis://{}:{}'.format(get_config()['redis_host'], get_config()['redis_port']),
-                    backend='redis://{}:{}'.format(get_config()['redis_host'], get_config()['redis_port']),
-                    worker_max_tasks_per_child=1,
-                    worker_prefetch_multiplier=1,
-                    task_acks_late=True,
-                    worker_concurrency=1
-                    )
+celery_app = Celery('shared_tasks', broker=REDIS_URL, backend=REDIS_URL)
+celery_app.conf.update(worker_max_tasks_per_child=1)
+celery_app.conf.update(worker_prefetch_multiplier=1)
+celery_app.conf.update(task_acks_late=True)
+celery_app.conf.update(worker_concurrency=1)
 
 
 def only_one(function=None, key="", timeout=None):
@@ -455,6 +455,7 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
                "output directory. Skipping pipeline call.".format(input_file)))
     
     calibrated_files = glob(uncal_file.replace("_uncal.fits", "*"))
+    logging.info("*****CELERY: Pipeline Output is {}".format(calibrated_files))
     copy_files(calibrated_files, output_dir)
 
     logging.info("*****CELERY: Finished pipeline")

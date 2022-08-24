@@ -534,7 +534,7 @@ class Dark():
             aperture_type = Siaf(self.instrument)[self.aperture].AperType
             if aperture_type == 'FULLSCA':
                 baseline_file = self.get_baseline_filename()
-                if baseline_file is None:
+                if (baseline_file is None) or (not os.path.isfile(baseline_file)):
                     logging.warning(('\tNo baseline dark current countrate image for {} {}. Setting the '
                                      'current mean slope image to be the new baseline.'.format(self.instrument, self.aperture)))
                     baseline_file = mean_slope_file

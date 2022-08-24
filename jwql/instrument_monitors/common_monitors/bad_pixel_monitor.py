@@ -830,10 +830,18 @@ class BadPixels():
                     out_exts.append('1_ramp_fit')
                 else:
                     out_exts.append('0_ramp_fit')
-                processed_files = run_pipeline(local_uncal_file, "uncal", out_exts, self.instrument, jump_pipe=True)
-                dark_jump_files.append(processed_files[0])
-                dark_fitopt_files.append(processed_files[1])
-                dark_slope_files[index] = deepcopy(processed_files[2])
+                
+                local_processed_files = [local_uncal_file.replace("uncal", x) for x in out_exts]
+                calibrated_data = [os.path.isfile(x) for x in local_processed_files]
+                if not all(calibrated_data):
+                    processed_files = run_pipeline(local_uncal_file, "uncal", out_exts, self.instrument, jump_pipe=True)
+                    dark_jump_files.append(processed_files[0])
+                    dark_fitopt_files.append(processed_files[1])
+                    dark_slope_files[index] = deepcopy(processed_files[2])
+                else:
+                    dark_jump_files.append(local_processed_files[0])
+                    dark_fitopt_files.append(local_processed_files[1])
+                    dark_slope_files[index] = deepcopy(local_processed_files[2])
                 dark_obstimes.append(instrument_properties.get_obstime(uncal_file))
                 index += 1
 
