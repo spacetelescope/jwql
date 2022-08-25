@@ -54,6 +54,7 @@ from matplotlib.ticker import AutoMinorLocator
 
 # Only import jwst if not running from readthedocs
 # Determine if the code is being run as part of a Readthedocs build
+ON_READTHEDOCS = False
 if 'READTHEDOCS' in os.environ:
     ON_READTHEDOCS = os.environ['READTHEDOCS']
 
