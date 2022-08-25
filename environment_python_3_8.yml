@@ -46,7 +46,7 @@ dependencies:
   - python=3.8.5
   - pyyaml=6.0
   - redis=5.0.3
-  - scipy
+  - scipy=1.7.3
   - setuptools=52.0.0
   - sphinx=4.2.0
   - sphinx_rtd_theme=0.4.3
@@ -57,7 +57,6 @@ dependencies:
   - pip:
     - astroquery==0.4.6
     - bandit==1.7.4
-    - celery-singleton==0.3.1
     - jwst==1.4.6
     - pysiaf==0.15.0
     - pysqlite3==0.4.7

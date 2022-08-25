@@ -528,8 +528,9 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
             if jump_pipe:
                 ramp_fit = False
                 save_fitopt = False
-                if "rate" in ext_or_exts or "rateint" in ext_or_exts:
-                    ramp_fit = True
+                for ext in ext_or_exts:
+                    if "rate" in ext:
+                        ramp_fit = True
                 if "fitopt" in ext_or_exts:
                     save_fitopt = True
                 result = calwebb_detector1_save_jump.delay(uncal_name, ramp_fit=ramp_fit, save_fitopt=save_fitopt)
