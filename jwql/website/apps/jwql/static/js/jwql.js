@@ -227,8 +227,8 @@ function determine_page_title_obs(instrument, proposal, observation) {
 
 /**
  * adds/removes disabled_section class and clears value
- * @param {string} element_id 
- * @param {boolean} set_disable 
+ * @param {string} element_id
+ * @param {boolean} set_disable
  */
  function set_disabled_section (element_id, set_disable) {
 
@@ -246,7 +246,7 @@ function determine_page_title_obs(instrument, proposal, observation) {
  *                              values are the number of groups for that suffix
  */
 function explore_image_update_enable_options(integrations, groups) {
-    
+
     // Check nr of integrations and groups of currently selected extension
     ext_name = get_radio_button_value("extension");
 
@@ -258,7 +258,7 @@ function explore_image_update_enable_options(integrations, groups) {
     var groups = groups.replace(/&#39;/g, '"');
     var groups = groups.replace(/'/g, '"');
     var groups = JSON.parse(groups)[ext_name];
-    
+
     // Zero base our calculations
     integrations -= 1
     groups -=1
@@ -268,15 +268,15 @@ function explore_image_update_enable_options(integrations, groups) {
     document.getElementById("integration2").max = integrations;
     document.getElementById("group1").max = groups;
     document.getElementById("group2").max = groups;
-    
-    
+
+
     // If multiple integrations or groups.  Allow difference calculations
     //          enable calculate_difference box
     //          enable subtrahend boxes
     if (integrations > 0 || groups > 0) {
         set_disabled_section("calcDifferenceForm", false);
         calc_difference = document.getElementById("calcDifference").checked;
-        
+
     } else {
         document.getElementById("calcDifference").checked.value = false;
         set_disabled_section("calcDifferenceForm", true);
@@ -299,7 +299,7 @@ function explore_image_update_enable_options(integrations, groups) {
     set_disabled_section("groupInput1", (groups < 1));
     set_disabled_section("integrationInput2", (!calc_difference || integrations < 1));
     set_disabled_section("groupInput2", (!calc_difference || groups < 1));
-    
+
 }
 
 /**

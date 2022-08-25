@@ -45,6 +45,7 @@ from bokeh.layouts import layout
 from bokeh.embed import components
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+import numpy as np
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
@@ -337,12 +338,12 @@ def archived_proposals_ajax(request, inst):
     # Sort proposals from most recent to oldest, in order to have this as the
     # default when the page is loaded
     #print('should we do this? or should we keep the default to be increasing proposal ID order?')
-    #indexes = np.flip(np.argsort(all_proposal_info['expstart']))
-    #all_proposal_info['proposals'] = all_proposal_info['proposals'][indexes]
-    #all_proposal_info['min_obsnum'] = all_proposal_info['min_obsnum'][indexes]
-    #all_proposal_info['thumbnail_paths'] = all_proposal_info['thumbnail_paths'][indexes]
-    #all_proposal_info['num_files'] = all_proposal_info['num_files'][indexes]
-    #all_proposal_info['expstart'] = all_proposal_info['expstart'][indexes]
+    indexes = np.flip(np.argsort(all_proposal_info['expstart']))
+    all_proposal_info['proposals'] = list(np.array(all_proposal_info['proposals'])[indexes])
+    all_proposal_info['min_obsnum'] = list(np.array(all_proposal_info['min_obsnum'])[indexes])
+    all_proposal_info['thumbnail_paths'] = list(np.array(all_proposal_info['thumbnail_paths'])[indexes])
+    all_proposal_info['num_files'] = list(np.array(all_proposal_info['num_files'])[indexes])
+    all_proposal_info['expstart'] = list(np.array(all_proposal_info['expstart'])[indexes])
 
     context = {'inst': inst,
                'num_proposals': all_proposal_info['num_proposals'],
