@@ -55,6 +55,7 @@ def test_crop_to_subarray():
 
     # Set up a fits header
     h = fits.ImageHDU([0])
+    h.header['FILENAME'] = 'myfile_uncal.fits'
 
     # Specify that we are cropping the DQ array down to a 5x5 subarray
     xdim = 5
