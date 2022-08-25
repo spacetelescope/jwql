@@ -49,8 +49,11 @@ from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as mi
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
-from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
+                                 JWST_INSTRUMENT_NAMES_SHORTHAND, SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS
+from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
+from jwql.utils.utils import get_rootnames_for_instrument_proposal
 from .forms import InstrumentAnomalySubmitForm
 from astroquery.mast import Mast
 from jwedb.edb_interface import mnemonic_inventory
@@ -786,6 +789,7 @@ def get_image_info(file_root, rewrite):
     image_info['suffixes'] = []
     image_info['num_ints'] = {}
     image_info['available_ints'] = {}
+    image_info['total_ints'] = {}
 
     # Find all of the matching files
     proposal_dir = file_root[:7]
@@ -804,7 +808,14 @@ def get_image_info(file_root, rewrite):
     for filename in image_info['all_files']:
 
         # Get suffix information
-        suffix = os.path.basename(filename).split('_')[4].split('.')[0]
+        suffix = filename_parser(filename)['suffix']
+
+        # For crf or crfints suffixes, we need to also include the association value
+        # in the suffix, so that preview images can be found later.
+        if suffix in SUFFIXES_TO_ADD_ASSOCIATION:
+            assn = filename.split('_')[-2]
+            suffix = f'{assn}_{suffix}'
+
         image_info['suffixes'].append(suffix)
 
         # Determine JPEG file location
@@ -816,11 +827,19 @@ def get_image_info(file_root, rewrite):
         if os.path.exists(jpg_filepath) and not rewrite:
             pass
 
-        # Record how many integrations there are per filetype
-        jpgs = glob.glob(os.path.join(prev_img_filesys, observation_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
+        # Record how many integrations have been saved as preview images per filetype
+        jpgs = glob.glob(os.path.join(prev_img_filesys, proposal_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
         image_info['num_ints'][suffix] = len(jpgs)
         image_info['available_ints'][suffix] = sorted([int(jpg.split('_')[-1].replace('.jpg', '').replace('integ', '')) for jpg in jpgs])
         image_info['all_jpegs'].append(jpg_filepath)
+
+        # Record how many integrations exist per filetype. crf needs to be treated
+        # separately because the suffix includes the association number, which can't
+        # be predicted for a given program.
+        if ((suffix not in SUFFIXES_WITH_AVERAGED_INTS) and (suffix[-3:] != 'crf')):
+            image_info['total_ints'][suffix] = fits.getheader(filename)['NINTS']
+        else:
+            image_info['total_ints'][suffix] = 1
 
     return image_info
 
@@ -1014,30 +1033,6 @@ def get_proposal_info(filepaths):
     proposal_info['observation_nums'] = observations
 
     return proposal_info
-
-
-def get_rootnames_for_instrument_proposal(instrument, proposal):
-    """Return a list of rootnames for the given instrument and proposal
-
-    Parameters
-    ----------
-    instrument : str
-        Name of the JWST instrument, with first letter capitalized
-        (e.g. ``Fgs``)
-
-    proposal : int or str
-        Proposal ID number
-
-    Returns
-    -------
-    rootnames : list
-        List of rootnames for the given instrument and proposal number
-    """
-    tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
-    tap_results = tap_service.search(f"select observationID from dbo.CaomObservation where collection='JWST' and maxLevel=2 and insName like '{instrument.lower()}' and prpID='{int(proposal)}'")
-    prop_table = tap_results.to_table()
-    rootnames = prop_table['observationID'].data
-    return rootnames.compressed()
 
 
 def get_rootnames_for_proposal(proposal):
