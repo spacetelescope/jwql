@@ -53,10 +53,19 @@ import matplotlib.colors as colors
 from matplotlib.ticker import AutoMinorLocator
 
 # Only import jwst if not running from readthedocs
-if 'build' and 'project' not in socket.gethostname():
+# Determine if the code is being run as part of a Readthedocs build
+if 'READTHEDOCS' in os.environ:
+    ON_READTHEDOCS = os.environ['READTHEDOCS']
+
+#if 'build' and 'project' not in socket.gethostname():
+#    ON_READTHEDOCS = False
+if not ON_READTHEDOCS:
     from jwst.datamodels import dqflags
 
-CONFIGS = get_config()
+ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
+
+if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
+    CONFIGS = get_config()
 
 
 class PreviewImage():
