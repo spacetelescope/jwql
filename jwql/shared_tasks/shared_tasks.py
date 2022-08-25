@@ -529,7 +529,7 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
                 ramp_fit = False
                 save_fitopt = False
                 for ext in ext_or_exts:
-                    if "rate" in ext:
+                    if "ramp" in ext:
                         ramp_fit = True
                 if "fitopt" in ext_or_exts:
                     save_fitopt = True
