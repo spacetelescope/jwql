@@ -270,67 +270,34 @@ def archived_proposals_ajax(request, inst):
     """
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-    filesystem = get_config()['filesystem']
 
-    # Dictionary to hold summary information for all proposals
-    all_proposals = get_instrument_proposals(inst)
-    all_proposal_info = {'num_proposals': 0,
-                         'proposals': [],
-                         'min_obsnum': [],
-                         'thumbnail_paths': [],
-                         'num_files': []}
+    # Get the appropriate database table
+    inst_table = eval(f'{inst}Archive')
 
-    # Get list of all files for the given instrument
-    for proposal in all_proposals:
-        filename_query = mast_query_filenames_by_instrument(inst, proposal)
-        filenames_public = get_filenames_by_instrument(inst, proposal, restriction='public', query_response=filename_query)
-        filenames_proprietary = get_filenames_by_instrument(inst, proposal, restriction='proprietary', query_response=filename_query)
+    # Assuming the table contains a single entry for each proposal/obsnum combination
+    # we can read in the entire table
+    database = session.query(inst_table).all()
 
-        # Determine locations to the files
-        filenames = []
-        for filename in filenames_public:
-            try:
-                relative_filepath = filesystem_path(filename, check_existence=False)
-                full_filepath = os.path.join(filesystem, 'public', relative_filepath)
-                filenames.append(full_filepath)
-            except ValueError:
-                print('Unable to determine filepath for {}'.format(filename))
-        for filename in filenames_proprietary:
-            try:
-                relative_filepath = filesystem_path(filename, check_existence=False)
-                full_filepath = os.path.join(filesystem, 'proprietary', relative_filepath)
-                filenames.append(full_filepath)
-            except ValueError:
-                print('Unable to determine filepath for {}'.format(filename))
+    # Generate the information needed for the context
+    proposals = list(set(database.proposals))
+    num_proposals = len(proposals)
 
-        # Get set of unique rootnames
-        num_files = 0
-        rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
-        for rootname in rootnames:
-            filename_dict = filename_parser(rootname)
+    min_obsnum = []
+    thumbnail_paths = []
+    num_files = []
+    for proposal in proposals:
+        query the database for the appropriate lines?
+        min_obsnum.append(np.min(lines.obsnum))
+        thumbnail_paths.append(lines[0].thumbnail)
+        num_files.append(np.sum(lines.num_files))
 
-            # Weed out file types that are not supported by generate_preview_images
-            if 'stage_3' not in filename_dict['filename_type']:
-                num_files += 1
-
-        if len(filenames) > 0:
-            # Gather information about the proposals for the given instrument
-            proposal_info = get_proposal_info(filenames)
-            all_proposal_info['num_proposals'] = all_proposal_info['num_proposals'] + 1
-            all_proposal_info['proposals'].append(proposal)
-            all_proposal_info['min_obsnum'].append(proposal_info['observation_nums'][0])
-            all_proposal_info['thumbnail_paths'].append(proposal_info['thumbnail_paths'][0])
-            all_proposal_info['num_files'].append(num_files)
 
     context = {'inst': inst,
-               'num_proposals': all_proposal_info['num_proposals'],
-               'min_obsnum': all_proposal_info['min_obsnum'],
-               'thumbnails': {'proposals': all_proposal_info['proposals'],
-                              'thumbnail_paths': all_proposal_info['thumbnail_paths'],
-                              'num_files': all_proposal_info['num_files']}}
-
-    print('in archived_proposals_ajax')
-    print(all_proposal_info['min_obsnum'])
+               'num_proposals': num_proposals,
+               'min_obsnum': min_obsnum,
+               'thumbnails': {'proposals': proposals,
+                              'thumbnail_paths': thumbnail_paths,
+                              'num_files': num_files}}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
