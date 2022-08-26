@@ -291,17 +291,21 @@ def archive_orm_factory(class_name):
     # a list of exp_types that go with each obsnum? That might help for filtering
     # or sorting down the road?
 
-    data_dict['columns'] = ['proposal', 'obsnum', 'thumbnail_path', 'num_files', 'exp_types']
-    data_dict['names'] = [name.replace('_', ' ') for name in data_dict['columns']]
-
     # Create a table with the appropriate Columns
     data_dict['id'] = Column(Integer, primary_key=True, nullable=False)
+    data_dict['date'] = Column(DateTime, unique=True, nullable=False)
+    data_dict['proposal'] = Column(Integer, nullable=False)
+    data_dict['osbnum'] = Column(Integer, nullable=False)
+    data_dict['thumbnail_path'] = Column(String, nullable=False)  string_array_1d
+    data_dict['num_files'] = Column(Integer, nullable=False)
+    data_dict['exp_types'] = Column(ARRAY(String, dimensions=1), nullable=False)
+
     #data_dict['rootname'] = Column(String(), nullable=False)
     #data_dict['flag_date'] = Column(DateTime, nullable=False)
     #data_dict['user'] = Column(String(), nullable=False)
 
-    for column in data_dict['columns']:
-        data_dict[column] = Column(Boolean, nullable=False, default=False)
+    #for column in data_dict['columns']:
+    #    data_dict[column] = Column(Boolean, nullable=False, default=False)
 
     #instrument_anomalies = []
     #for anomaly in ANOMALIES_PER_INSTRUMENT:
