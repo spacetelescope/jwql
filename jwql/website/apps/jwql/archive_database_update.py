@@ -120,15 +120,6 @@ def get_updates(inst):
                 exps_for_obs = list(set(exps_for_obs + metadata_proprietary['observtn'][match_prop]))
                 exp_types[str(proposal)][obsnum] = exps_for_obs
 
-            # Collect all the information that will be saved in the database
-            #all_proposal_info['num_proposals'] = all_proposal_info['num_proposals'] + 1
-            #all_proposal_info['proposals'].append(proposal)
-            #all_proposal_info['min_obsnum'].append(proposal_info['observation_nums'][0])
-            #all_proposal_info['obsnums'].append(proposal_info['observation_nums'])
-            #all_proposal_info['exptypes'].append(xxxx)
-            #all_proposal_info['thumbnail_paths'].append(proposal_info['thumbnail_paths'][0])
-            #all_proposal_info['num_files'].append(num_files)
-
                 # Update the appropriate database table
                 update_database_table(inst, proposal, obsnum, proposal_info['thumbnail_paths'][0], num_files, exp_types)
 
@@ -174,34 +165,6 @@ def files_in_filesystem(files, permission_type):
     return filenames
 
 
-def query_database(instrument, prop_num, obs_num):
-    """
-    """
-    inst_table = eval(f'{instrument}Archive')
-    db_entries = session.query(inst_table) \
-            .filter(inst_table.proposal == prop_num) \
-            .filter(inst_table.obsnum == obs_num) \
-            .all()
-    session.close()
-
-    num_found = len(db_entries)
-    if num_found == 0:
-        db_entries = None
-    elif num_found == 1:
-        db_entries = db_entries[0]
-    else:
-        raise ValueError(f'Expecting a single database entry for proposal: {proposal}, obsnum {obsnum}, but found {len(db_entries)}')
-
-
-
-
-
-
-
-    return db_entries
-
-
-
 def update_database_table(instrument, prop, obs, thumbnail, files, types):
     """
     """
@@ -219,7 +182,6 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types):
     else:
         raise ValueError(f'Expecting a single database entry for proposal: {proposal}, obsnum {obsnum}, but found {len(db_entries)}')
 
-    #result = query_database(instrument, prop, obs)
     if db_entries is not None:
         db_entires.date = datetime.today()
         db_entries.thumbnail_path = thumbnail
