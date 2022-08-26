@@ -183,6 +183,21 @@ def query_database(instrument, prop_num, obs_num):
             .filter(inst_table.obsnum == obs_num) \
             .all()
     session.close()
+
+    num_found = len(db_entries)
+    if num_found == 0:
+        db_entries = None
+    elif num_found == 1:
+        db_entries = db_entries[0]
+    else:
+        raise ValueError(f'Expecting a single database entry for proposal: {proposal}, obsnum {obsnum}, but found {len(db_entries)}')
+
+
+
+
+
+
+
     return db_entries
 
 
@@ -193,12 +208,24 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types):
     logging.info('')
     inst_table = eval(f'{instrument}Archive')
 
-    need to check and see if prop/obs entry exists in database and
-    if so, update entry. If not, add a new entry
+    db_entries = session.query(inst_table) \
+            .filter(inst_table.proposal == prop) \
+            .filter(inst_table.obsnum == obs) \
+            .all()
 
-    result = query_database(instrument, prop, obs)
-    if len(result) != 0:
-        update entry...or assume it is correct and skip entirely?
+    num_found = len(db_entries)
+    if num_found == 0:
+        db_entries = None
+    else:
+        raise ValueError(f'Expecting a single database entry for proposal: {proposal}, obsnum {obsnum}, but found {len(db_entries)}')
+
+    #result = query_database(instrument, prop, obs)
+    if db_entries is not None:
+        db_entires.date = datetime.today()
+        db_entries.thumbnail_path = thumbnail
+        db_entries.num_files = files
+        db_entries.exp_types = types
+        session.commit()
     else:
         # If the proposal/obsnum combination is not in the database, add a
         # new entry
@@ -209,6 +236,8 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types):
                  'exp_types': types
                  }
         inst_table.__table__.insert().execute(entry)
+
+    session.close()
 
 
 if __name__ == '__main__':
