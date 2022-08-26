@@ -447,5 +447,30 @@ MIRIReadnoiseStats = monitor_orm_factory('miri_readnoise_stats')
 FGSReadnoiseQueryHistory = monitor_orm_factory('fgs_readnoise_query_history')
 FGSReadnoiseStats = monitor_orm_factory('fgs_readnoise_stats')
 
+INSTRUMENT_TABLES = {
+                        'nircam': [NIRCamDarkQueryHistory, NIRCamDarkPixelStats,
+                                   NIRCamDarkDarkCurrent, NIRCamBiasQueryHistory,
+                                   NIRCamBiasStats, NIRCamBadPixelQueryHistory,
+                                   NIRCamBadPixelStats, NIRCamReadnoiseQueryHistory,
+                                   NIRCamReadnoiseStats],
+                        'niriss': [NIRISSDarkQueryHistory, NIRISSDarkPixelStats,
+                                   NIRISSDarkDarkCurrent, NIRISSBiasQueryHistory,
+                                   NIRISSBiasStats, NIRISSBadPixelQueryHistory,
+                                   NIRISSBadPixelStats, NIRISSReadnoiseQueryHistory,
+                                   NIRISSReadnoiseStats],
+                        'miri': [MIRIDarkQueryHistory, MIRIDarkPixelStats, 
+                                 MIRIDarkDarkCurrent, MIRIBadPixelQueryHistory, 
+                                 MIRIBadPixelStats, MIRIReadnoiseQueryHistory,
+                                 MIRIReadnoiseStats],
+                        'nirspec': [NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats,
+                                    NIRSpecDarkDarkCurrent, NIRSpecBiasQueryHistory,
+                                    NIRSpecBiasStats, NIRSpecBadPixelQueryHistory,
+                                    NIRSpecBadPixelStats, NIRSpecReadnoiseQueryHistory,
+                                    NIRSpecReadnoiseStats],
+                        'fgs': [FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent,
+                                FGSBadPixelQueryHistory, FGSBadPixelStats, 
+                                FGSReadnoiseQueryHistory, FGSReadnoiseStats]
+                    }
+
 if __name__ == '__main__':
     base.metadata.create_all(engine)
