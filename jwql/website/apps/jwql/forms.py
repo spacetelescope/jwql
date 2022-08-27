@@ -50,7 +50,7 @@ import os
 from astropy.time import Time, TimeDelta
 from django import forms
 from django.shortcuts import redirect
-from jwedb.edb_interface import is_valid_mnemonic
+from jwql.edb.engineering_database import is_valid_mnemonic
 
 from jwql.database import database_interface as di
 from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT
