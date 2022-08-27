@@ -8,6 +8,7 @@ Authors
     - Bryan Hilbert
     - Ben Sunnquist
     - Teagan King
+    - Mike Engesser
 
 Use
 ---
@@ -66,12 +67,17 @@ ANOMALIES_PER_INSTRUMENT = {
     'snowball': ['fgs', 'nircam', 'niriss', 'nirspec'],
     # instrument-specific anomalies:
     'column_pull_up': ['miri'],
+    'column_pull_down': ['miri'],
     'dominant_msa_leakage': ['nirspec'],
     'dragons_breath': ['nircam'],
-    'glow': ['miri'],
+    'MRS_glow': ['miri'],
+    'MRS_zipper': ['miri'],
     'internal_reflection': ['miri'],
     'optical_short': ['nirspec'],  # Only for MOS observations
+    'row_pull_up': ['miri'],
     'row_pull_down': ['miri'],
+    'LRS_Contamination': ['miri'],
+    'tree_rings': ['miri'],
     # additional anomalies:
     'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
 
@@ -174,7 +180,8 @@ FILE_AC_O_ID_LEN = 3
 FILE_ACT_LEN = 2
 FILE_DATETIME_LEN = 13
 FILE_EPOCH_LEN = 1
-FILE_GUIDESTAR_ATTMPT_LEN = 1
+FILE_GUIDESTAR_ATTMPT_LEN_MIN = 1
+FILE_GUIDESTAR_ATTMPT_LEN_MAX = 3
 FILE_OBS_LEN = 3
 FILE_PARALLEL_SEQ_ID_LEN = 1
 FILE_PROG_ID_LEN = 5
@@ -231,11 +238,14 @@ GRATING_PER_INSTRUMENT = {'fgs': [],
                                       'G235H', 'G395H', 'PRISM']
                           }
 
+# Filename extensions for guider data
+GUIDER_FILENAME_TYPE = ['gs-fg', 'gs-track', 'gs-id', 'gs-acq1', 'gs-acq2']
+
 # Possible suffix types for guider exposures
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
 
 # JWQL should ignore some filetypes in the filesystem.
-IGNORED_SUFFIXES = ['original', 'stream']
+IGNORED_SUFFIXES = ['original', 'stream', 'x1d', 'x1dints', 'c1d']
 
 # Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
@@ -368,6 +378,14 @@ READPATT_PER_INSTRUMENT = {'fgs': ['FGS', 'FGSRAPID', 'FGS60', 'FGS840', 'FGS837
                                        'NRSRAPIDD2', 'NRSRAPIDD6']}
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
+
+# Filename suffixes that need to include the association value in the suffix in
+# order to identify the preview image file. This should only be crf and crfints,
+# since those are essentially level 2 files that are output by the level 3 pipeline.
+SUFFIXES_TO_ADD_ASSOCIATION = ['crf', 'crfints']
+
+# Filename suffixes where data have been averaged over integrations
+SUFFIXES_WITH_AVERAGED_INTS = ['rate', 'cal', 'crf', 'i2d', 'bsub']
 
 # Base name for the file listing the thumbnail images for a given instrument.
 # The complete name will have "_{instrument.lower}.txt" added to the end of this.
