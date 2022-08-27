@@ -56,7 +56,7 @@ from jwql.utils.credentials import get_mast_token
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
 from .forms import InstrumentAnomalySubmitForm
 from astroquery.mast import Mast
-from jwedb.edb_interface import mnemonic_inventory
+
 
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
