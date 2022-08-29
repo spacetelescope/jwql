@@ -332,7 +332,7 @@ def archived_proposals_ajax(request, inst):
             all_proposal_info['proposals'].append(proposal)
             all_proposal_info['min_obsnum'].append(proposal_info['observation_nums'][0])
             all_proposal_info['thumbnail_paths'].append(proposal_info['thumbnail_paths'][0])
-            all_proposal_info['num_files'].append(int(num_files))
+            all_proposal_info['num_files'].append(num_files)
             all_proposal_info['expstart'].append(exp_start)
 
     # Sort proposals from most recent to oldest, in order to have this as the
@@ -344,6 +344,10 @@ def archived_proposals_ajax(request, inst):
     all_proposal_info['thumbnail_paths'] = list(np.array(all_proposal_info['thumbnail_paths'])[indexes])
     all_proposal_info['num_files'] = list(np.array(all_proposal_info['num_files'])[indexes])
     all_proposal_info['expstart'] = list(np.array(all_proposal_info['expstart'])[indexes])
+
+    # Convert numpy types into python types so that JsonResponse will be happy
+    all_proposal_info['num_files'] = [int(element) for element in all_proposal_info['num_files']]
+    all_proposal_info['expstart'] = [float(element) for element in all_proposal_info['expstart']]
 
     context = {'inst': inst,
                'num_proposals': all_proposal_info['num_proposals'],
