@@ -12,6 +12,7 @@ Authors
     - Johannes Sahlmann
     - Matthew Bourque
     - Teagan King
+    - Mike Engesser
 
 Use
 ---
@@ -43,6 +44,7 @@ Dependencies
     placed in the ``jwql`` directory.
 """
 
+from collections import defaultdict
 import datetime
 import glob
 import os
@@ -50,6 +52,8 @@ import os
 from astropy.time import Time, TimeDelta
 from django import forms
 from django.shortcuts import redirect
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from jwedb.edb_interface import is_valid_mnemonic
 
 from jwql.database import database_interface as di
@@ -61,10 +65,11 @@ from jwql.utils.constants import EXP_TYPE_PER_INSTRUMENT
 from jwql.utils.constants import FILTERS_PER_INSTRUMENT
 from jwql.utils.constants import GENERIC_SUFFIX_TYPES
 from jwql.utils.constants import GRATING_PER_INSTRUMENT
+from jwql.utils.constants import GUIDER_FILENAME_TYPE
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
 from jwql.utils.constants import READPATT_PER_INSTRUMENT
-from jwql.utils.utils import get_config, filename_parser
+from jwql.utils.utils import get_config, get_rootnames_for_instrument_proposal, filename_parser
 from jwql.utils.utils import query_format
 
 from wtforms import SubmitField, StringField
@@ -238,7 +243,6 @@ class FileSearchForm(forms.Form):
     search = forms.CharField(label='', max_length=500, required=True,
                              empty_value='Search')
 
-    # Initialize attributes
     fileroot_dict = None
     search_type = None
     instrument = None
@@ -282,11 +286,30 @@ class FileSearchForm(forms.Form):
 
             if len(all_files) > 0:
                 all_instruments = []
+                all_observations = defaultdict(list)
                 for file in all_files:
-                    instrument = filename_parser(file)['instrument']
-                    all_instruments.append(instrument)
+                    filename = os.path.basename(file)
+
+                    # We only want to pass in datasets that are science exptypes. JWQL doesn't
+                    # handle guider data, this will still allow for science FGS data but filter
+                    # guider data.
+                    if any(map(filename.__contains__, GUIDER_FILENAME_TYPE)):
+                        continue
+                    else:
+                        instrument = filename_parser(file)['instrument']
+                        observation = filename_parser(file)['observation']
+                        all_instruments.append(instrument)
+                        all_observations[instrument].append(observation)
+
+                # sort lists so first observation is available when link is clicked.
+                for instrument in all_instruments:
+                    all_observations[instrument].sort()
+
                 if len(set(all_instruments)) > 1:
-                    raise forms.ValidationError('Cannot return result for proposal with multiple instruments ({}).'.format(', '.join(set(all_instruments))))
+                    # Technically all proposal have multiple instruments if you include guider data. Remove Guider Data
+                    instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, proposal_string[1:], all_observations[instrument][0], instrument) for instrument in set(all_instruments)]
+                    raise forms.ValidationError(
+                        mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))# nosec
 
                 self.instrument = all_instruments[0]
             else:
@@ -347,11 +370,24 @@ class FileSearchForm(forms.Form):
         # If they searched for a proposal
         if self.search_type == 'proposal':
             proposal_string = '{:05d}'.format(int(search))
-            return redirect('/{}/archive/{}'.format(self.instrument, proposal_string))
+            all_rootnames = get_rootnames_for_instrument_proposal(self.instrument, proposal_string)
+            all_obs = []
+            for root in all_rootnames:
+                # Wrap in try/except because level 3 rootnames won't have an observation
+                # number returned by the filename_parser. That's fine, we're not interested
+                # in those files anyway.
+                try:
+                    all_obs.append(filename_parser(root)['observation'])
+                except KeyError:
+                    pass
+
+            observation = sorted(list(set(all_obs)))[0]
+
+            return redirect('/{}/archive/{}/obs{}'.format(self.instrument, proposal_string, observation))
 
         # If they searched for a file root
         elif self.search_type == 'fileroot':
-            return redirect('/{}/{}'.format(self.instrument, search))
+            return redirect('/{}/{}/'.format(self.instrument, search))
 
 
 class FiletypeForm(forms.Form):

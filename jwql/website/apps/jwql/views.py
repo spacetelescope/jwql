@@ -49,7 +49,7 @@ from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT
-from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get_config, query_unformat
+from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
 from .data_containers import data_trending
@@ -62,7 +62,6 @@ from .data_containers import get_filenames_by_instrument, mast_query_filenames_b
 from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_proposal_info
-from .data_containers import get_rootnames_for_instrument_proposal
 from .data_containers import get_thumbnails_all_instruments
 from .data_containers import nirspec_trending
 from .data_containers import random_404_page

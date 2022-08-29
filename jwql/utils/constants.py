@@ -238,6 +238,9 @@ GRATING_PER_INSTRUMENT = {'fgs': [],
                                       'G235H', 'G395H', 'PRISM']
                           }
 
+# Filename extensions for guider data
+GUIDER_FILENAME_TYPE = ['gs-fg', 'gs-track', 'gs-id', 'gs-acq1', 'gs-acq2']
+
 # Possible suffix types for guider exposures
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
 
