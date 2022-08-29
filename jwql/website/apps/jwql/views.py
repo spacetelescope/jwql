@@ -357,27 +357,6 @@ def archived_proposals_ajax(request, inst):
                               'num_files': all_proposal_info['num_files'],
                               'expstart': all_proposal_info['expstart']}}
 
-    print('inst:', type(inst))
-    print('num_proposals:', type(all_proposal_info['num_proposals']))
-    print('min_obsnum:', type(all_proposal_info['min_obsnum']))
-    print('            ', type(all_proposal_info['min_obsnum'][0]))
-    print('proposals:', type(all_proposal_info['proposals']))
-    print('            ', type(all_proposal_info['proposals'][0]))
-    print('thumbnail_paths:', type(all_proposal_info['thumbnail_paths']))
-    print('                ', type(all_proposal_info['thumbnail_paths'][0]))
-    print('num_files:', type(all_proposal_info['num_files']))
-    print('           ', type(all_proposal_info['num_files'][0]))
-    print('expstart:', type(all_proposal_info['expstart']))
-    print('         ', type(all_proposal_info['expstart'][0]))
-
-    jj = JsonResponse(context, json_dumps_params={'indent': 2})
-    stop
-
-
-
-
-
-
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
