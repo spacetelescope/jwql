@@ -328,11 +328,11 @@ def archived_proposals_ajax(request, inst):
         if len(filenames) > 0:
             # Gather information about the proposals for the given instrument
             proposal_info = get_proposal_info(filenames)
-            all_proposal_info['num_proposals'] = all_proposal_info['num_proposals'] + 1
+            all_proposal_info['num_proposals'] = int(all_proposal_info['num_proposals'] + 1)
             all_proposal_info['proposals'].append(proposal)
             all_proposal_info['min_obsnum'].append(proposal_info['observation_nums'][0])
             all_proposal_info['thumbnail_paths'].append(proposal_info['thumbnail_paths'][0])
-            all_proposal_info['num_files'].append(num_files)
+            all_proposal_info['num_files'].append(int(num_files))
             all_proposal_info['expstart'].append(exp_start)
 
     # Sort proposals from most recent to oldest, in order to have this as the

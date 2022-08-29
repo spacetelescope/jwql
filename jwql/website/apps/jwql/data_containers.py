@@ -639,6 +639,13 @@ def mast_query_filenames_by_instrument(instrument, proposal_id, observation_id=N
     params = {"columns": columns, "filters": filters}
     response = Mast.service_request_async(service, params)
     result = response[0].json()
+
+    # Check to be sure the query is not hitting the ceiling for number of results returned.
+    # If so, it means there could be missing entries (i.e. the returned result is only a
+    # subset of the desired data.)
+    if len(result['data']) == 50000:
+        raise ValueError("Max number of results returned. Please narrow your search.")
+
     return result
 
 
