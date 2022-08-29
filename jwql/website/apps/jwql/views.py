@@ -296,7 +296,7 @@ def archived_proposals_ajax(request, inst):
         # may be interleaved, grab the most recent expstart for each proposal.
         exp_start = Time.now().mjd
         if len(filename_query['data']) > 0:
-            exp_start = sorted([entry['expstart'] for entry in filename_query['data']])[-1]
+            exp_start = sorted([float(entry['expstart']) for entry in filename_query['data']])[-1]
 
         # Determine locations to the files
         filenames = []
