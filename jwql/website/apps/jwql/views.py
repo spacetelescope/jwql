@@ -345,10 +345,6 @@ def archived_proposals_ajax(request, inst):
     all_proposal_info['num_files'] = np.array(all_proposal_info['num_files'])[indexes].tolist()
     all_proposal_info['expstart'] = np.array(all_proposal_info['expstart'])[indexes].tolist()
 
-    # Convert numpy types into python types so that JsonResponse will be happy
-    #all_proposal_info['num_files'] = [int(element) for element in all_proposal_info['num_files']]
-    #all_proposal_info['expstart'] = [float(element) for element in all_proposal_info['expstart']]
-
     context = {'inst': inst,
                'num_proposals': all_proposal_info['num_proposals'],
                'min_obsnum': all_proposal_info['min_obsnum'],
