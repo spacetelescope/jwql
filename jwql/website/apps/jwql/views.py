@@ -339,15 +339,15 @@ def archived_proposals_ajax(request, inst):
     # default when the page is loaded
     #print('should we do this? or should we keep the default to be increasing proposal ID order?')
     indexes = np.flip(np.argsort(all_proposal_info['expstart']))
-    all_proposal_info['proposals'] = list(np.array(all_proposal_info['proposals'])[indexes])
-    all_proposal_info['min_obsnum'] = list(np.array(all_proposal_info['min_obsnum'])[indexes])
-    all_proposal_info['thumbnail_paths'] = list(np.array(all_proposal_info['thumbnail_paths'])[indexes])
-    all_proposal_info['num_files'] = list(np.array(all_proposal_info['num_files'])[indexes])
-    all_proposal_info['expstart'] = list(np.array(all_proposal_info['expstart'])[indexes])
+    all_proposal_info['proposals'] = np.array(all_proposal_info['proposals'])[indexes].tolist()
+    all_proposal_info['min_obsnum'] = np.array(all_proposal_info['min_obsnum'])[indexes].tolist()
+    all_proposal_info['thumbnail_paths'] = np.array(all_proposal_info['thumbnail_paths'])[indexes].tolist()
+    all_proposal_info['num_files'] = np.array(all_proposal_info['num_files'])[indexes].tolist()
+    all_proposal_info['expstart'] = np.array(all_proposal_info['expstart'])[indexes].tolist()
 
     # Convert numpy types into python types so that JsonResponse will be happy
-    all_proposal_info['num_files'] = [int(element) for element in all_proposal_info['num_files']]
-    all_proposal_info['expstart'] = [float(element) for element in all_proposal_info['expstart']]
+    #all_proposal_info['num_files'] = [int(element) for element in all_proposal_info['num_files']]
+    #all_proposal_info['expstart'] = [float(element) for element in all_proposal_info['expstart']]
 
     context = {'inst': inst,
                'num_proposals': all_proposal_info['num_proposals'],
@@ -356,6 +356,27 @@ def archived_proposals_ajax(request, inst):
                               'thumbnail_paths': all_proposal_info['thumbnail_paths'],
                               'num_files': all_proposal_info['num_files'],
                               'expstart': all_proposal_info['expstart']}}
+
+    print('inst:', type(inst))
+    print('num_proposals:', type(all_proposal_info['num_proposals']))
+    print('min_obsnum:', type(all_proposal_info['min_obsnum']))
+    print('            ', type(all_proposal_info['min_obsnum'][0]))
+    print('proposals:', type(all_proposal_info['proposals']))
+    print('            ', type(all_proposal_info['proposals'][0]))
+    print('thumbnail_paths:', type(all_proposal_info['thumbnail_paths']))
+    print('                ', type(all_proposal_info['thumbnail_paths'][0]))
+    print('num_files:', type(all_proposal_info['num_files']))
+    print('           ', type(all_proposal_info['num_files'][0]))
+    print('expstart:', type(all_proposal_info['expstart']))
+    print('         ', type(all_proposal_info['expstart'][0]))
+
+    jj = JsonResponse(context, json_dumps_params={'indent': 2})
+    stop
+
+
+
+
+
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
