@@ -435,7 +435,7 @@ def define_options(parser=None, usage=None, conflict_handler='resolve'):
     """
     """
     if parser is None:
-        parser = argparse.ArgumentParser(usage=usage,conflict_handler=conflict_handler)
+        parser = argparse.ArgumentParser(usage=usage, conflict_handler=conflict_handler)
 
     parser.add_argument('--overwrite', action='store_true', default=None, help='If set, existing preview images will be re-created and overwritten.')
     return parser
@@ -554,10 +554,6 @@ def generate_preview_images(overwrite):
     program_list = [os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'public', 'jw*'))]
     program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', 'jw*'))])
     program_list = list(set(program_list))
-
-    program_list = ['jw01068'] # test on a small program
-
-
     program_list = [(element, overwrite) for element in program_list]
     pool = multiprocessing.Pool(processes=int(SETTINGS['cores']))
     results = pool.starmap(process_program, program_list)
