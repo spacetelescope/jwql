@@ -450,19 +450,40 @@ FGSReadnoiseStats = monitor_orm_factory('fgs_readnoise_stats')
 INSTRUMENT_TABLES = {
     'nircam': [NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent,
                NIRCamBiasQueryHistory, NIRCamBiasStats, NIRCamBadPixelQueryHistory,
-               NIRCamBadPixelStats, NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats],
+               NIRCamBadPixelStats, NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats,
+               NIRCamAnomaly],
     'niriss': [NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent,
                NIRISSBiasQueryHistory, NIRISSBiasStats, NIRISSBadPixelQueryHistory,
-               NIRISSBadPixelStats, NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats],
+               NIRISSBadPixelStats, NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats,
+               NIRISSAnomaly],
     'miri': [MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent,
              MIRIBadPixelQueryHistory, MIRIBadPixelStats, MIRIReadnoiseQueryHistory,
-             MIRIReadnoiseStats],
+             MIRIReadnoiseStats, MIRIAnomaly],
     'nirspec': [NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent,
                 NIRSpecBiasQueryHistory, NIRSpecBiasStats, NIRSpecBadPixelQueryHistory,
-                NIRSpecBadPixelStats, NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats],
+                NIRSpecBadPixelStats, NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats,
+                NIRSpecAnomaly],
     'fgs': [FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent,
             FGSBadPixelQueryHistory, FGSBadPixelStats, FGSReadnoiseQueryHistory,
-            FGSReadnoiseStats]}
+            FGSReadnoiseStats, FGSAnomaly]}
+
+MONITOR_TABLES = {
+    'dark': [NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent, 
+             NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent,
+             NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent,
+             MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent,
+             FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent],
+    'bias': [NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory,
+             NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats],
+    'bad_pixel': [NIRCamBadPixelQueryHistory, NIRCamBadPixelStats, NIRISSBadPixelStats, 
+                  NIRISSBadPixelQueryHistory, FGSBadPixelQueryHistory, FGSBadPixelStats,
+                  MIRIBadPixelQueryHistory, MIRIBadPixelStats, NIRSpecBadPixelQueryHistory,
+                  NIRSpecBadPixelStats],
+    'readnoise': [NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats, NIRISSReadnoiseStats,
+                  NIRISSReadnoiseQueryHistory, NIRSpecReadnoiseQueryHistory, 
+                  NIRSpecReadnoiseStats, MIRIReadnoiseQueryHistory, MIRIReadnoiseStats,
+                  FGSReadnoiseQueryHistory, FGSReadnoiseStats],
+    'anomaly': [NIRCamAnomaly, NIRISSAnomaly, NIRSpecAnomaly, MIRIAnomaly, FGSAnomaly]}
 
 if __name__ == '__main__':
     base.metadata.create_all(engine)

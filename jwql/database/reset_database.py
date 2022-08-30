@@ -24,40 +24,94 @@ Dependencies
     ``postgresql+psycopg2://user:password@host:port/database``.
 """
 
-import argparse
+import argparse, sys
 
-from jwql.database.database_interface import base, set_read_permissions, INSTRUMENT_TABLES
+from jwql.database.database_interface import base, set_read_permissions
+from jwql.database.database_interface INSTRUMENT_TABLES, MONITOR_TABLES
 from jwql.utils.utils import get_config
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Reset JWQL database tables')
-    parser.add_argument('instrument', metavar='INSTRUMENT', type=str,
+    parser.add_argument('-i', '--instrument', metavar='INSTRUMENT', type=str,
                         help='instrument tables to reset ("all" for all)',
-                        default='all')
+                        default='all', dest='instrument')
+    parser.add_argument('-m', '--monitor', metavar='MONITOR', type=str,
+                        help='monitor tables to reset ("all" for all)',
+                        default='all', dest='monitor')
+    parser.add_argument('--explicitly_reset_production', action='store_true',
+                        default=False, help='Needed to reset Production tables',
+                        dest='explicit_prod')
+    parser.add_argument('--explicitly_reset_anomalies', action='store_true',
+                        default=False, help='Needed to reset anomaly tables',
+                        dest='explicit_anomaly')
     args = parser.parse_args()
 
-    instrument = args.instrument
+    instrument = args.instrument.lower()
+    monitor = args.monitor.lower()
+    
+    if instrument != 'all' and instrument not in INSTRUMENT_TABLES:
+        sys.stderr.write("ERROR: Unknown instrument {}".format(instrument))
+        sys.exit(1)
+    if monitor != 'all' and monitor not in MONITOR_TABLES:
+        sys.stderr.write("ERROR: Unknown monitor {}".format(monitor))
+        sys.exit(1)
 
     connection_string = get_config()['connection_string']
     server_type = connection_string.split('@')[-1][0]
+    
+    if server_type == 'p' and not args.explicit_prod:
+        msg = "ERROR: Can't reset production databases without explicitly setting the "
+        msg += "--explicitly_reset_production flag!"
+        sys.stderr.write(msg)
+        sys.exit(1)
+    
+    if monitor in ['all', 'anomaly'] and not args.explicit_anomaly:
+        msg = "ERROR: Can't reset anomaly tables without explicitly setting the "
+        msg += "--explicitly_reset_anomalies flag!"
+        sys.stderr.write(msg)
+        sys.exit(1)
 
-    assert server_type != 'p', 'Cannot reset production database!'
+    msg = 'About to reset {}{} tables for database instance {}. Do you wish to proceed? (y/N)'
+    response = input(msg.format(monitor, instrument, connection_string))
 
-    prompt = ('About to reset {} tables for database instance {}. Do you '
-              'wish to proceed? (y/n)\n'.format(instrument, connection_string))
-    response = input(prompt)
-
-    if response.lower() == 'y':
-        if instrument.lower() == 'all':
-            base.metadata.drop_all()
-            base.metadata.create_all()
-        elif instrument.lower() in ['nircam', 'nirspec', 'niriss', 'miri', 'fgs']:
-            tables = [x.__table__ for x in INSTRUMENT_TABLES[instrument]]
-            base.metadata.drop_all(tables=tables)
-            base.metadata.create_all(tables=tables)
-        else:
-            raise ValueError("Unknown instrument {}".format(instrument))
-        set_read_permissions()
+    if response.lower() != 'y':
+        print("Did not enter y/Y. Stopping.")
+        sys.exit(0)
+    else:
+        tables = []
+        if instrument != 'all':
+            base_tables = INSTRUMENT_TABLES[instrument]
+            if monitor == 'all':
+                check_tables = base_tables
+            else:
+                check_tables = MONITOR_TABLES[monitor]
+        elif monitor != 'all':
+            base_tables = MONITOR_TABLES[instrument]
+            if instrument == 'all':
+                check_tables = base_tables
+            else:
+                check_tables = INSTRUMENT_TABLES[instrument]
+        else: # instrument and monitor are both 'all'
+            if args.explicit_anomaly: # really delete everything
+                base.metadata.drop_all()
+                base.metadata.create_all()
+                print('\nDatabase instance {} has been reset'.format(connection_string))
+                sys.exit(0)
+            else:
+                for monitor in monitor_tables:
+                    if monitor != 'anomaly':
+                        base.metadata.drop_all(tables=monitor_tables[monitor])
+                        base.metadata.create_all(tables=monitor_tables[monitor])
+                print('\nDatabase instance {} has been reset'.format(connection_string))
+                sys.exit(0)
+        
+        # Choosing what to reset. We want every table in base_tables that is *also* in
+        # check_tables.
+        for table in base_tables:
+            if table in check_tables:
+                tables.append(table)
+        base.metadata.drop_all(tables=tables)
+        base.metadata.create_all(tables=tables)
         print('\nDatabase instance {} has been reset'.format(connection_string))
