@@ -839,6 +839,7 @@ class BadPixels():
                     dark_fitopt_files.append(processed_files[1])
                     dark_slope_files[index] = deepcopy(processed_files[2])
                 else:
+                    logging.info("\tProcessed files already exist.")
                     dark_jump_files.append(local_processed_files[0])
                     dark_fitopt_files.append(local_processed_files[1])
                     dark_slope_files[index] = deepcopy(local_processed_files[2])

@@ -53,7 +53,7 @@ from jwql.database.database_interface import session  # noqa: E402 (module impor
 from jwql.database.database_interface import NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory  # noqa: E402 (module import not at top)
 from jwql.database.database_interface import NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats  # noqa: E402 (module import not at top)
 from jwql.instrument_monitors import pipeline_tools  # noqa: E402 (module import not at top)
-from jwql.shared_tasks.shared_tasks import only_one, run_pipeline  # noqa: E402 (module import not at top)
+from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline  # noqa: E402 (module import not at top)
 from jwql.utils import instrument_properties, monitor_utils  # noqa: E402 (module import not at top)
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E402 (module import not at top)
 from jwql.utils.logging_functions import log_info, log_fail  # noqa: E402 (module import not at top)
@@ -367,6 +367,9 @@ class Bias():
             List of filenames (including full paths) to the dark current
             files.
         """
+        logging.info("Creating calibration tasks")
+        outputs = run_parallel_pipeline(file_list, "uncal_0thgroup", "refpix", self.instrument)
+        
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
 
@@ -375,7 +378,7 @@ class Bias():
             self.expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'], fits.getheader(filename, 0)['TIME-OBS'])
             
             # Run the file through the necessary pipeline steps
-            processed_file = run_pipeline(filename, "uncal_0thgroup", "refpix", self.instrument)
+            processed_file = outputs[filename]
 
             # Find amplifier boundaries so per-amp statistics can be calculated
             _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)

@@ -462,6 +462,168 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
     return jump_output, pipe_output, fitopt_output
 
 
+def prep_file(input_file, input_extension):
+    """Prepares a file for calibration by:
+    
+    - Creating a short file-name from the file (i.e. the name without the calibration 
+      extension)
+    - Creating a redis lock on the short name
+    - Copying the uncalibrated file into the transfer directory
+    
+    Returns the lock and the short name.
+    
+    Parameters
+    ----------
+    input_file : str
+        Name of the fits file to run
+    
+    input_extension : str
+        The calibration extension currently present on the input file
+    
+    Returns
+    -------
+    lock : redis lock
+        Acquired lock on the input file
+    
+    short_name : str
+        The exposure ID with the calibration tag and the fits extension chopped off.
+    
+    uncal_file : str
+        The raw file to be calibrated
+    """
+    config = get_config()
+    send_path = os.path.join(config["transfer_dir"], "incoming")
+    ensure_dir_exists(send_path)
+    receive_path = os.path.join(config["transfer_dir"], "outgoing")
+    ensure_dir_exists(receive_path)
+    
+    input_path, input_name = os.path.split(input_file)
+    logging.info("\tPath is {}, file is {}".format(input_path, input_name))
+
+    if "uncal" not in in_ext:
+        logging.info("\tSwitching from {} to uncal".format(in_ext))
+        uncal_name = os.path.basename(input_file).replace(in_ext, "uncal")
+        uncal_file = filesystem_path(uncal_name, check_existence=True)
+    else:
+        uncal_file = input_file
+        uncal_name = input_name
+    
+    output_file_or_files = []
+    short_name = input_name.replace("_"+in_ext, "").replace(".fits", "")
+    logging.info("\tLocking {}".format(short_name))
+    cal_lock = REDIS_CLIENT.lock(short_name)
+    have_lock = cal_lock.acquire(blocking=True)
+    if not have_lock:
+        msg = "Waited for lock on {}, and was granted it, but don't have it!"
+        logging.critical(msg.format(short_name))
+        raise ValueError("Redis lock for {} is in an unknown state".format(short_name))
+    logging.info("\t\tAcquired Lock.")
+    logging.info("\t\tCopying {} to {}".format(input_file, send_path))
+    copy_files([uncal_file], send_path)
+    return short_name, cal_lock, uncal_file
+
+
+def start_pipeline(input_file, ext_or_exts, instrument, jump_pipe=False):
+    """Starts the standard or save_jump pipeline for the provided file.
+    
+    .. warning::
+    
+        Only call this function if you have already locked the file using Redis.
+    
+    This function performs the following steps:
+    
+    - Determine whether to call calwebb_detector1 or save_jump tasks
+    - If calling save_jump, determine which outputs are expected
+    - Call the task
+    - return the task result object (so that it can be dealt with appropriately)
+    
+    When this function returns, the task may or may not have started, and probably will 
+    not have finished. Because the task was called using the ``delay()`` method, calling 
+    ``result.get()`` will block until the result is available.
+    
+    .. warning::
+    
+        This function will not use the ``celery`` settings to trap exceptions, so calling
+        ``result.get()`` *may* raise an exception if the task itself raises an exception.
+
+    Parameters
+    ----------
+    input_file : str
+        Name of fits file to run on the pipeline
+
+    ext_or_exts : str or list-of-str
+        The requested output calibrated files
+    
+    instrument : str
+        Name of the instrument being calibrated
+    
+    jump_pipe : bool
+        Whether the detector1 jump pipeline is being used (e.g. the bad pixel monitor)
+
+    Returns
+    -------
+    result : celery.result.AsyncResult
+        The task result object
+    """
+    if jump_pipe:
+        ramp_fit = False
+        save_fitopt = False
+        for ext in ext_or_exts:
+            if "ramp" in ext:
+                ramp_fit = True
+            elif "fitopt" in ext:
+                save_fitopt = True
+        result = calwebb_detector1_save_jump.delay(input_file, ramp_fit=ramp_fit, save_fitopt=save_fitopt)
+    else:
+        result = run_calwebb_detector1.delay(input_file, instrument)
+    return result
+
+
+def retrieve_files(short_name, ext_or_exts, dest_dir):
+    """This function takes the name of a calibrated file, the desired extensions, the
+    directory to which they should be copied, and a redis lock. It then does the following:
+    
+    - Copy the file(s) with the provided extensions to the output directory
+    - Deletes the files from the transfer directory
+    - Releases the lock
+    
+    Parameters
+    ----------
+    short_name : str
+        Name of the calibrated file (without any calibration tags or file extension)
+
+    ext_or_exts : str or list of str
+        Desired extension(s)
+    
+    dest_dir : str
+        Location for the desired extensions
+    
+    Returns
+    -------
+    output_file_or_files : str or list of str
+        The location of the requested calibrated files                                                                                           
+    """
+    config = get_config()
+    send_path = os.path.join(config["transfer_dir"], "incoming")
+    ensure_dir_exists(send_path)
+    receive_path = os.path.join(config["transfer_dir"], "outgoing")
+    ensure_dir_exists(receive_path)
+    
+    if isinstance(ext_or_exts, str):
+        ext_or_exts = [ext_or_exts]
+    file_or_files = ["{}_{}.fits".format(short_name, x) for x in ext_or_exts]
+    output_file_or_files = [os.path.join(dest_dir, x) for x in file_or_files]
+    logging.info("\t\tCopying {} to {}".format(file_or_files, dest_dir))
+    copy_files([os.path.join(receive_path, x) for x in file_or_files], dest_dir)
+    logging.info("\t\tClearing Transfer Files")
+    to_clear = glob(os.path.join(send_path, short_name+"*")) + glob(os.path.join(receive_path, short_name+"*"))
+    for file in to_clear:
+        os.remove(file)
+    if len(output_file_or_files) == 1:
+        output_file_or_files = output_file_or_files[0]
+    return output_file_or_files
+
+
 def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
     """Convenience function for using the ``run_calwebb_detector1`` function on a data 
     file, including the following steps:
@@ -498,70 +660,98 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
         Name (or names) of the result file(s), including path(s)
     """
     logging.info("Pipeline Call for {} requesting {}".format(input_file, ext_or_exts))
-    config = get_config()
-    send_path = os.path.join(config["transfer_dir"], "incoming")
-    ensure_dir_exists(send_path)
-    receive_path = os.path.join(config["transfer_dir"], "outgoing")
-    ensure_dir_exists(receive_path)
-    
-    input_path, input_name = os.path.split(input_file)
-    logging.info("\tPath is {}, file is {}".format(input_path, input_name))
-
-    if "uncal" not in in_ext:
-        logging.info("\tSwitching from {} to uncal".format(in_ext))
-        uncal_name = os.path.basename(input_file).replace(in_ext, "uncal")
-        uncal_file = filesystem_path(uncal_name, check_existence=True)
-    else:
-        uncal_file = input_file
-        uncal_name = input_name
-    
-    output_file_or_files = []
-    short_name = input_name.replace("_"+in_ext, "").replace(".fits", "")
-    logging.info("\tLocking {}".format(short_name))
-    cal_lock = REDIS_CLIENT.lock(short_name)
-    have_lock = cal_lock.acquire(blocking=True)
-    if have_lock:
-        try:
-            logging.info("\t\tAcquired Lock.")
-            logging.info("\t\tCopying {} to {}".format(input_file, send_path))
-            copy_files([uncal_file], send_path)
-            if jump_pipe:
-                ramp_fit = False
-                save_fitopt = False
-                for ext in ext_or_exts:
-                    if "ramp" in ext:
-                        ramp_fit = True
-                if "fitopt" in ext_or_exts:
-                    save_fitopt = True
-                result = calwebb_detector1_save_jump.delay(uncal_name, ramp_fit=ramp_fit, save_fitopt=save_fitopt)
-            else:
-                result = run_calwebb_detector1.delay(uncal_name, instrument)
-            logging.info("\t\tStarting with ID {}".format(result.id))
-            processed_path = result.get()
-            logging.info("\t\tPipeline Complete")
-            if isinstance(ext_or_exts, str):
-                ext_or_exts = [ext_or_exts]
-            file_or_files = ["{}_{}.fits".format(short_name, x) for x in ext_or_exts]
-            output_file_or_files = [os.path.join(input_path, x) for x in file_or_files]
-            logging.info("\t\tCopying {} to {}".format(file_or_files, input_path))
-            copy_files([os.path.join(receive_path, x) for x in file_or_files], input_path)
-            logging.info("\t\tClearing Transfer Files")
-            to_clear = glob(os.path.join(send_path, short_name+"*")) + glob(os.path.join(receive_path, short_name+"*"))
-            for file in to_clear:
-                os.remove(file)
-        except Exception as e:
-            logging.error('\tPipeline processing failed for {}'.format(input_name))
-            logging.error('\tProcessing raised {}'.format(e))
-        finally:
-            cal_lock.release()
-            logging.info("\tReleased Lock {}".format(short_name))
-    else:
-        raise ValueError("Unable to acquire lock for {}".format(short_name))
+    try:
+        retrieve_dir = os.path.dirname(input_file)
+        cal_lock, short_name, uncal_file = prep_file(input_file, in_ext)
+        result = start_pipeline(uncal_file, ext_or_exts, instrument, jump_pipe=jump_pipe)
+        logging.info("\t\tStarting with ID {}".format(result.id))
+        processed_path = result.get()
+        logging.info("\t\tPipeline Complete")
+        output = retrieve_files(short_name, ext_or_exts, retrieve_dir)
+    except Exception as e:
+        logging.error('\tPipeline processing failed for {}'.format(input_name))
+        logging.error('\tProcessing raised {}'.format(e))
+    finally:
+        cal_lock.release()
+        logging.info("\tReleased Lock {}".format(short_name))
     
     logging.info("Pipeline Call Completed")
-    if len(output_file_or_files) == 1:
-        output_file_or_files = output_file_or_files[0]
-    return output_file_or_files
+    return output
+
+
+def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pipe=False):
+    """Convenience function for using the ``run_calwebb_detector1`` function on a list of
+    data files, breaking them into parallel celery calls, collecting the results together,
+    and returning the results as another list. In particular, this function will do the
+    following:
+    
+    - Lock the file ID so that no other calibration happens at the same time
+    - Copy the input (raw) file to the (central storage) transfer location
+    - Call the ``run_calwebb_detector1`` task
+    - For the extension (or extensions) (where by "extension" we mean 'uncal' or 'refpix'
+      or 'jump' rather than something like '.fits') requested, copy the files from the 
+      outgoing transfer location to the same directory as the input file
+    - Delete the input file from the transfer location
+    - Delete the output files from the transfer location
+    
+    It will then return what it was given – either a single file+path or a list of 
+    files+paths, depending on what ``out_exts`` was provided as.
+
+    Parameters
+    ----------
+    input_file : str
+        Name of fits file to run on the pipeline
+    
+    in_ext : str
+        Input file extension
+
+    ext_or_exts : str or list-of-str
+        The requested output calibrated files
+    
+    instrument : str
+        Name of the instrument being calibrated
+    
+    jump_pipe : bool
+        Whether the detector1 jump pipeline is being used (e.g. the bad pixel monitor)
+
+    Returns
+    -------
+    file_or_files : str or list-of-str
+        Name (or names) of the result file(s), including path(s)
+    """
+    logging.info("Pipeline call requestion calibrated extensions {}".format(ext_or_exts))
+    for input_file in input_files:
+        logging.info("\tCalibrating {}".format(input_file))
+    
+    input_file_paths = {}
+    results = {}
+    locks = {}
+    outputs = {}
+    output_dirs = {}
+
+    try:
+        for input_file in input_files:
+            retrieve_dir = os.path.dirname(input_file)
+            cal_lock, short_name, uncal_file = prep_file(input_file, in_ext)
+            output_dirs[short_name] = retrieve_dir
+            input_file_paths[short_name] = input_file
+            locks[short_name] = cal_lock
+            results[short_name] = start_pipeline(uncal_file, ext_or_exts, instrument, jump_pipe=jump_pipe)
+            logging.info("\tStarting {} with ID {}".format(short_name, results[short_name].id))
+        for short_name in results:
+            try:
+                processed_path = results[short_name].get()
+                outputs[input_file_paths[short_name]] = retrieve_files(short_name, ext_or_exts, output_dirs[short_name])
+            except Exception as e:
+                logging.error('\tPipeline processing failed for {}'.format(input_name))
+                logging.error('\tProcessing raised {}'.format(e))
+    finally:
+        for short_name in locks:
+            locks[short_name].release()
+            logging.info("\tReleased Lock {}".format(short_name))
+    
+    logging.info("Pipeline Call Completed")
+    return outputs
 
 
 if __name__ == '__main__':
