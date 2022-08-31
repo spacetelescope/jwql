@@ -369,8 +369,8 @@ class CosmicRay:
 
         if self.nints == 1:
             rate = rateints[coord[-2]][coord[-1]]
-            cr_mag = data[0][coord[0]][coord[1]][coord[2]]
-                     - data[0][coord_gb[0]][coord_gb[1]][coord_gb[2]]
+            cr_mag = data[0][coord[0]][coord[1]][coord[2]] \
+                     - data[0][coord_gb[0]][coord_gb[1]][coord_gb[2]] \
                      - rate * grouptime
 
         else:
@@ -503,11 +503,10 @@ class CosmicRay:
                 head = fits.getheader(file_name)
                 self.nints = head['NINTS']
 
-                try:
-                    copy_files([file_name], self.obs_dir)
-                except:
-                    logging.info('Failed to copy {} to observation dir.'.format(file_name))
-                    pass
+                copied, failed_to_copy = copy_files([file_name], self.obs_dir)
+                # If the file cannot be copied to the working directory, skip it
+                if len(failed_to_copy) > 0:
+                    continue
 
                 # Next we run the pipeline on the files to get the proper outputs
                 uncal_file = os.path.join(self.obs_dir, os.path.basename(file_name))
