@@ -214,7 +214,7 @@ def get_all_proposals():
     """
     proprietary_proposals = os.listdir(os.path.join(FILESYSTEM_DIR, 'proprietary'))
     public_proposals = os.listdir(os.path.join(FILESYSTEM_DIR, 'public'))
-    all_proposals = [prop[2:] for prop in proprietary_proposals+public_proposals if 'jw' in prop]
+    all_proposals = [prop[2: ] for prop in proprietary_proposals+public_proposals if 'jw' in prop]
     proposals = sorted(list(set(all_proposals)), reverse=True)
     return proposals
 
@@ -1088,7 +1088,7 @@ def get_thumbnails_all_instruments(parameters):
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
-        if ((parameters['apertures'][inst.lower()] == [])
+        if ((parameters['apertures'][inst.lower()] == []) and
                 and (parameters['detectors'][inst.lower()] == [])
                 and (parameters['filters'][inst.lower()] == [])
                 and (parameters['exposure_types'][inst.lower()] == [])
@@ -1512,7 +1512,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         try:
             data_dict['file_data'][rootname]['expstart'] = exp_start
             data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
-        except:
+        except ValueError, TypeError:
             print("issue with get_expstart for {}".format(rootname))
 
     # Extract information for sorting with dropdown menus

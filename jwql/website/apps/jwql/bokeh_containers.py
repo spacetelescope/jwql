@@ -182,6 +182,7 @@ def bias_monitor_tabs(instrument):
 
     return div, script
 
+
 def cosmic_ray_monitor_tabs(instrument):
     """Creates the various tabs of the cosmic monitor results page.
 
@@ -209,8 +210,8 @@ def cosmic_ray_monitor_tabs(instrument):
         monitor_template = monitor_pages.CosmicRayMonitor(instrument.lower(), aperture)
 
         # Set instrument and monitor using CosmicRayMonitor's setters
-        #monitor_template.aperture_info = (instrument, aperture)
-        #templates_all_apertures[aperture] = monitor_template
+        # monitor_template.aperture_info = (instrument, aperture)
+        # templates_all_apertures[aperture] = monitor_template
         histograms_all_apertures.append(monitor_template.histogram_figure)
         history_all_apertures.append(monitor_template.history_figure)
 

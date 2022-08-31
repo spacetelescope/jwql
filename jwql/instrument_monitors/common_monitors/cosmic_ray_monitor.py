@@ -254,14 +254,15 @@ class CosmicRay:
 
         """
 
-        hdu = fits.open(jump_filename)
-
-        head = hdu[0].header
-        data = hdu[1].data
-
-        dq = hdu[3].data
-
-        hdu.close()
+        try:
+            hdu = fits.open(jump_filename)
+            head = hdu[0].header
+            data = hdu[1].data
+            dq = hdu[3].data
+            hdu.close()
+        except IndexError, FileNotFoundError:
+            logging.warning(f'Could not open jump file: {jump_file} Skipping')
+            head = data = dq = None
 
         return head, data, dq
 
@@ -306,8 +307,11 @@ class CosmicRay:
         data: NoneType
             FITS data
         """
-
-        data = fits.getdata(rate_filename)
+        try:
+            data = fits.getdata(rate_filename)
+        except FileNotFoundError:
+            logging.warning(f'Could not open rate file: {rate_file} Skipping')
+            data = None
 
         return data
 
@@ -365,8 +369,8 @@ class CosmicRay:
 
         if self.nints == 1:
             rate = rateints[coord[-2]][coord[-1]]
-            cr_mag = data[0][coord[0]][coord[1]][coord[2]] \
-                     - data[0][coord_gb[0]][coord_gb[1]][coord_gb[2]] \
+            cr_mag = data[0][coord[0]][coord[1]][coord[2]]
+                     - data[0][coord_gb[0]][coord_gb[1]][coord_gb[2]]
                      - rate * grouptime
 
         else:
@@ -374,7 +378,6 @@ class CosmicRay:
             cr_mag = data[coord] - data[coord_gb] - rate * grouptime
 
         return cr_mag
-
 
     def most_recent_search(self):
         """Adapted from Dark Monitor (Bryan Hilbert)
@@ -410,8 +413,6 @@ class CosmicRay:
             query_result = 57357.0  # a.k.a. Dec 1, 2015 == CV3
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
                           .format(self.aperture, query_result)))
-        #elif query_count > 1:
-         #   raise ValueError('More than one "most recent" query?')
         else:
             query_result = query[0].end_time_mjd
 
@@ -536,15 +537,10 @@ class CosmicRay:
 
                 logging.info(f'\tUsing {jump_file} and {rate_file} to monitor CRs.')
 
-                try:
-                    jump_head, jump_data, jump_dq = self.get_jump_data(jump_file)
-                except:
-                    logging.info('Could not open jump file: {}'.format(jump_file))
-
-                try:
-                    rate_data = self.get_rate_data(rate_file)
-                except:
-                    logging.info('Could not open rate file: {}'.format(rate_file))
+                jump_head, jump_data, jump_dq = self.get_jump_data(jump_file)
+                rate_data = self.get_rate_data(rate_file)
+                if jump_head is None or rate_data is None:
+                    continue
 
                 jump_locs = self.get_jump_locs(jump_dq)
                 jump_locs_pre = self.group_before(jump_locs)
@@ -671,7 +667,7 @@ class CosmicRay:
                 # Next we copy new files to the working directory
                 output_dir = os.path.join(get_config()['outputs'], 'cosmic_ray_monitor')
 
-                self.data_dir =  os.path.join(output_dir,'data')
+                self.data_dir = os.path.join(output_dir, 'data')
                 ensure_dir_exists(self.data_dir)
 
                 cosmic_ray_files, not_copied = copy_files(new_filenames, self.data_dir)
