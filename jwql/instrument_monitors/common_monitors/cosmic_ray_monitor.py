@@ -43,7 +43,7 @@ from jwst.datamodels import dqflags
 import numpy as np
 from pysiaf import Siaf
 from sqlalchemy import func
-from sqlalchemy.errors import DatabaseInsertionError
+from sqlalchemy.exc import StatementError, DataError, DatabaseError, InvalidRequestError, OperationalError
 from sqlalchemy.sql.expression import and_
 
 # Local imports
@@ -575,8 +575,9 @@ class CosmicRay:
                     self.stats_table.__table__.insert().execute(cosmic_ray_db_entry)
 
                     logging.info("Successfully inserted into database. \n")
-                except DatabaseInsertionError:
-                    logging.info("Could not insert entry into database. \n")
+                except (StatementError, DataError, DatabaseError, InvalidRequestError, OperationalError) as e:
+                    logging.error("Could not insert entry into database. \n")
+                    logging.error(e)
 
                 # Delete fits files in order to save disk space
                 logging.info("Removing pipeline products in order to save disk space. \n")
