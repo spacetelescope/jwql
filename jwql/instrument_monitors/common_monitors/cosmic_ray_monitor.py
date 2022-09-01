@@ -43,6 +43,7 @@ from jwst.datamodels import dqflags
 import numpy as np
 from pysiaf import Siaf
 from sqlalchemy import func
+from sqlalchemy.errors import DatabaseInsertionError
 from sqlalchemy.sql.expression import and_
 
 # Local imports
@@ -140,7 +141,7 @@ class CosmicRay:
             # without the jw). If there aren't any, then it's not a stage 3 product and
             # we can continue.
             substr = filename[2:13]
-            letters = re.findall("\D", substr)
+            letters = re.findall("\D", substr)  # noqa: W605
             if len(letters) == 0:
                 rev = filename[::-1]
                 under = rev.find('_')
@@ -370,8 +371,8 @@ class CosmicRay:
         if self.nints == 1:
             rate = rateints[coord[-2]][coord[-1]]
             cr_mag = data[0][coord[0]][coord[1]][coord[2]] \
-                     - data[0][coord_gb[0]][coord_gb[1]][coord_gb[2]] \
-                     - rate * grouptime
+                - data[0][coord_gb[0]][coord_gb[1]][coord_gb[2]] \
+                - rate * grouptime
 
         else:
             rate = rateints[coord[0]][coord[-2]][coord[-1]]
@@ -574,7 +575,7 @@ class CosmicRay:
                     self.stats_table.__table__.insert().execute(cosmic_ray_db_entry)
 
                     logging.info("Successfully inserted into database. \n")
-                except:
+                except DatabaseInsertionError:
                     logging.info("Could not insert entry into database. \n")
 
                 # Delete fits files in order to save disk space

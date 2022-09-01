@@ -49,8 +49,8 @@ from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as mi
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
-from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
-                                 JWST_INSTRUMENT_NAMES_SHORTHAND, SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS
+from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND, SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
@@ -1088,11 +1088,11 @@ def get_thumbnails_all_instruments(parameters):
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
-        if ((parameters['apertures'][inst.lower()] == []) and
-                and (parameters['detectors'][inst.lower()] == [])
-                and (parameters['filters'][inst.lower()] == [])
-                and (parameters['exposure_types'][inst.lower()] == [])
-                and (parameters['read_patterns'][inst.lower()] == [])):
+        if ((parameters['apertures'][inst.lower()] == []) and  # noqa: W503
+                and (parameters['detectors'][inst.lower()] == [])  # noqa: W503
+                and (parameters['filters'][inst.lower()] == [])  # noqa: W503
+                and (parameters['exposure_types'][inst.lower()] == [])  # noqa: W503
+                and (parameters['read_patterns'][inst.lower()] == [])):  # noqa: W503
             params = {"columns": "*", "filters": []}
         else:
             query_filters = []
