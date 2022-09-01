@@ -286,12 +286,14 @@ class CosmicRay:
 
         jump_locs = []
 
-        if self.nints > 1:
+        if len(temp) == 4:
             for i in range(len(temp[0])):
                 jump_locs.append((temp[0][i], temp[1][i], temp[2][i], temp[3][i]))
-        else:
+        elif len(temp) == 3:
             for i in range(len(temp[0])):
                 jump_locs.append((temp[0][i], temp[1][i], temp[2][i]))
+        else:
+            logging.error(f'dq has {len(temp)} dimensions. We expect it to have 3 or 4.')
 
         return jump_locs
 
@@ -333,12 +335,14 @@ class CosmicRay:
 
         jump_locs_pre = []
 
-        if self.nints > 1:
+        if len(jump_locs) == 4:
             for coord in jump_locs:
                 jump_locs_pre.append((coord[0], coord[1] - 1, coord[2], coord[3]))
-        else:
+        elif len(jump_locs) == 3:
             for coord in jump_locs:
                 jump_locs_pre.append((coord[0] - 1, coord[1], coord[2]))
+        else:
+            logging.error(f'jump_locs has {len(jump_locs)} dimensions. Expecting 3 or 4.')
 
         return jump_locs_pre
 
