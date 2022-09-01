@@ -405,7 +405,7 @@ class CosmicRay:
             and_(
                 self.query_table.aperture == self.aperture,
                 self.query_table.end_time_mjd == sub_query.c.maxdate,
-                self.query_table.run_monitor == True
+                self.query_table.run_monitor == True  # noqa: E712
             )
         ).all()
 
