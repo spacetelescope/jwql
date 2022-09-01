@@ -27,7 +27,7 @@ Dependencies
 import argparse, sys
 
 from jwql.database.database_interface import base, set_read_permissions
-from jwql.database.database_interface INSTRUMENT_TABLES, MONITOR_TABLES
+from jwql.database.database_interface import INSTRUMENT_TABLES, MONITOR_TABLES
 from jwql.utils.utils import get_config
 
 
