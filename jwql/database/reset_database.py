@@ -67,13 +67,13 @@ if __name__ == '__main__':
         sys.stderr.write(msg)
         sys.exit(1)
     
-    if monitor in ['all', 'anomaly'] and not args.explicit_anomaly:
+    if monitor == 'anomaly' and not args.explicit_anomaly:
         msg = "ERROR: Can't reset anomaly tables without explicitly setting the "
         msg += "--explicitly_reset_anomalies flag!"
         sys.stderr.write(msg)
         sys.exit(1)
 
-    msg = 'About to reset {}{} tables for database instance {}. Do you wish to proceed? (y/N)'
+    msg = 'About to reset {} {} tables for database instance {}. Do you wish to proceed? (y/N)'
     response = input(msg.format(monitor, instrument, connection_string))
 
     if response.lower() != 'y':
