@@ -1512,8 +1512,9 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         try:
             data_dict['file_data'][rootname]['expstart'] = exp_start
             data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
-        except ValueError, TypeError:
-            print("issue with get_expstart for {}".format(rootname))
+        except (ValueError, TypeError) as e:
+            logging.warning("Unable to populate exp_start info for {}".format(rootname))
+            raise e
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
