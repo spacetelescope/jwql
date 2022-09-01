@@ -1088,10 +1088,10 @@ def get_thumbnails_all_instruments(parameters):
         # Query MAST for all rootnames for the instrument
         service = "Mast.Jwst.Filtered.{}".format(instrument)
 
-        if ((parameters['apertures'][inst.lower()] == [])  # noqa: W503
-                and (parameters['detectors'][inst.lower()] == [])  # noqa: W503
-                and (parameters['filters'][inst.lower()] == [])  # noqa: W503
-                and (parameters['exposure_types'][inst.lower()] == [])  # noqa: W503
+        if ((parameters['apertures'][inst.lower()] == [])
+                and (parameters['detectors'][inst.lower()] == [])
+                and (parameters['filters'][inst.lower()] == [])
+                and (parameters['exposure_types'][inst.lower()] == [])
                 and (parameters['read_patterns'][inst.lower()] == [])):  # noqa: W503
             params = {"columns": "*", "filters": []}
         else:
