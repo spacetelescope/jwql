@@ -73,7 +73,7 @@ if __name__ == '__main__':
         sys.stderr.write(msg)
         sys.exit(1)
 
-    msg = 'About to reset {} {} tables for database instance {}. Do you wish to proceed? (y/N)'
+    msg = 'About to reset instruments: {} and monitors: {} tables for database instance {}. Do you wish to proceed? (y/N)'
     response = input(msg.format(monitor, instrument, connection_string))
 
     if response.lower() != 'y':
@@ -88,7 +88,7 @@ if __name__ == '__main__':
             else:
                 check_tables = MONITOR_TABLES[monitor]
         elif monitor != 'all':
-            base_tables = MONITOR_TABLES[instrument]
+            base_tables = MONITOR_TABLES[monitor]
             if instrument == 'all':
                 check_tables = base_tables
             else:
@@ -111,7 +111,8 @@ if __name__ == '__main__':
         # check_tables.
         for table in base_tables:
             if table in check_tables:
-                tables.append(table)
+                if (table not in MONITOR_TABLES['anomaly']) or (args.explicit_anomaly):
+                    tables.append(table)
         base.metadata.drop_all(tables=tables)
         base.metadata.create_all(tables=tables)
         print('\nDatabase instance {} has been reset'.format(connection_string))
