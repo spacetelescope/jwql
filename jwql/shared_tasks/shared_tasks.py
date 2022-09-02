@@ -662,7 +662,7 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
     logging.info("Pipeline Call for {} requesting {}".format(input_file, ext_or_exts))
     try:
         retrieve_dir = os.path.dirname(input_file)
-        cal_lock, short_name, uncal_file = prep_file(input_file, in_ext)
+        short_name, cal_lock, uncal_file = prep_file(input_file, in_ext)
         result = start_pipeline(uncal_file, ext_or_exts, instrument, jump_pipe=jump_pipe)
         logging.info("\t\tStarting with ID {}".format(result.id))
         processed_path = result.get()
@@ -733,7 +733,7 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
     try:
         for input_file in input_files:
             retrieve_dir = os.path.dirname(input_file)
-            cal_lock, short_name, uncal_file = prep_file(input_file, in_ext)
+            short_name, cal_lock, uncal_file = prep_file(input_file, in_ext)
             output_dirs[short_name] = retrieve_dir
             input_file_paths[short_name] = input_file
             locks[short_name] = cal_lock

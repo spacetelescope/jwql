@@ -85,6 +85,10 @@ have:
   - Find the name of the lock you need to clear
   - ssh to `redis_host` and change to the appropriate service account
   - run `redis-cli del <NAME>` where `<NAME>` is the name of the lock to be deleted
+- **Deleting all Redis file locks:**
+  - *Before you do this, make sure that the process which has the lock has actually crashed or finished without releasing it*
+  - ssh to `redis_host` and change to the appropriate service account
+  - run `redis-cli --scan --pattern 'jw*' | xargs redis-cli del`
 - **Stopping Redis:**
   - ssh to `redis_host` and change to the appropriate service account
   - run `ps -e | grep redis` and mark down the process number of `redis-server`
