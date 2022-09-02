@@ -520,7 +520,7 @@ def prep_file(input_file, in_ext):
     logging.info("\t\tAcquired Lock.")
     logging.info("\t\tCopying {} to {}".format(input_file, send_path))
     copy_files([uncal_file], send_path)
-    return short_name, cal_lock, uncal_file
+    return short_name, cal_lock, os.path.join(send_path, uncal_name)
 
 
 def start_pipeline(input_file, ext_or_exts, instrument, jump_pipe=False):
