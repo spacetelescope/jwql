@@ -262,7 +262,7 @@ def run_calwebb_detector1(input_file_name, instrument, step_args={}):
     input_dir = os.path.join(config['transfer_dir'], "incoming")
     cal_dir = os.path.join(config['outputs'], "calibrated_data")
     output_dir = os.path.join(config['transfer_dir'], "outgoing")
-    logger.info("*****CELERY: Input from {}, calibrate in {}, output to {}".format(input_dir, cal_dir, output_dir))
+    logging.info("*****CELERY: Input from {}, calibrate in {}, output to {}".format(input_dir, cal_dir, output_dir))
     
     input_file = os.path.join(input_dir, input_file_name)
     if not os.path.isfile(input_file):
@@ -762,7 +762,7 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
                 outputs[input_file_paths[short_name]] = retrieve_files(short_name, ext_or_exts, output_dirs[short_name])
                 logging.info("\tFiles copied for {}".format(short_name))
             except Exception as e:
-                logging.error('\tPipeline processing failed for {}'.format(input_name))
+                logging.error('\tPipeline processing failed for {}'.format(short_name))
                 logging.error('\tProcessing raised {}'.format(e))
         logging.info("Finished retrieving results")
     finally:
