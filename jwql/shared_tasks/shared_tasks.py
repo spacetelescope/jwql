@@ -258,22 +258,25 @@ def run_calwebb_detector1(input_file_name, instrument, step_args={}):
     msg = "*****CELERY: Starting {} calibration task for {}"
     logging.info(msg.format(instrument, input_file_name))
     config = get_config()
+    incoming_dir = deepcopy(config['transfer_dir'])
+    calibration_dir = deepcopy(config['outputs'])
+    outgoing_dir = deepcopy(config['transfer_dir'])
     
-    input_dir = os.path.join(config['transfer_dir'], "incoming")
-    cal_dir = os.path.join(config['outputs'], "calibrated_data")
-    output_dir = os.path.join(config['transfer_dir'], "outgoing")
+    input_dir = os.path.join(incoming_dir, "incoming")
+    cal_dir = os.path.join(calibration_dir, "calibrated_data")
+    output_dir = os.path.join(outgoing_dir, "outgoing")
     logging.info("*****CELERY: Input from {}, calibrate in {}, output to {}".format(input_dir, cal_dir, output_dir))
     
-    input_file = os.path.join(input_dir, input_file_name)
+    input_file = os.path.join(deepcopy(input_dir), input_file_name)
     if not os.path.isfile(input_file):
         logging.error("*****CELERY: File {} not found!".format(input_file))
         raise FileNotFoundError("{} not found".format(input_file))
     
-    uncal_file = os.path.join(cal_dir, input_file_name)
-    short_name = input_file_name.replace("_0thgroup", "").replace("_uncal", "").replace("_dark", "").replace(".fits", "")
+    uncal_file = os.path.join(deepcopy(cal_dir), input_file_name)
+    short_name = deepcopy(input_file_name).replace("_0thgroup", "").replace("_uncal", "").replace("_dark", "").replace(".fits", "")
     ensure_dir_exists(cal_dir)
     logging.info("*****CELERY: Copying {} to {}".format(input_file, cal_dir))
-    copy_files([input_file], cal_dir)
+    copy_files([deepcopy(input_file)], deepcopy(cal_dir))
     set_permissions(uncal_file)
     
     steps = get_pipeline_steps(instrument)
@@ -284,18 +287,18 @@ def run_calwebb_detector1(input_file_name, instrument, step_args={}):
         if step_name in step_args:
             kwargs = step_args[step_name]
         if steps[step_name]:
-            output_filename = short_name + "_{}.fits".format(step_name)
-            output_file = os.path.join(cal_dir, output_filename)
+            output_filename = deepcopy(short_name) + "_{}.fits".format(step_name)
+            output_file = os.path.join(deepcopy(cal_dir), deepcopy(output_filename))
             logging.info("*****CELERY: Creating output file {}".format(output_file))
-            transfer_file = os.path.join(output_dir, output_filename)
+            transfer_file = os.path.join(deepcopy(output_dir), output_filename)
             # skip already-done steps
             if not os.path.isfile(output_file):
                 logging.info("*****CELERY: Running Pipeline Step {}".format(step_name))
                 if first_step_to_be_run:
-                    model = PIPELINE_STEP_MAPPING[step_name].call(uncal_file, logcfg=log_config, **kwargs)
+                    model = PIPELINE_STEP_MAPPING[step_name].call(uncal_file, **kwargs)
                     first_step_to_be_run = False
                 else:
-                    model = PIPELINE_STEP_MAPPING[step_name].call(model, logcfg=log_config, **kwargs)
+                    model = PIPELINE_STEP_MAPPING[step_name].call(model, **kwargs)
 
                 if step_name != 'rate':
                     # Make sure the dither_points metadata entry is at integer (was a
