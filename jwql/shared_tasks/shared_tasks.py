@@ -284,10 +284,11 @@ def run_calwebb_detector1(input_file_name, instrument, step_args={}):
         if steps[step_name]:
             output_filename = short_name + "_{}.fits".format(step_name)
             output_file = os.path.join(cal_dir, output_filename)
+            logging.info("*****CELERY: Creating output file {}".format(output_file))
             transfer_file = os.path.join(output_dir, output_filename)
             # skip already-done steps
-            logging.info("*****CELERY: Running Pipeline Step {}".format(step_name))
             if not os.path.isfile(output_file):
+                logging.info("*****CELERY: Running Pipeline Step {}".format(step_name))
                 if first_step_to_be_run:
                     model = PIPELINE_STEP_MAPPING[step_name].call(uncal_file, logcfg=log_config, **kwargs)
                     first_step_to_be_run = False
@@ -306,6 +307,7 @@ def run_calwebb_detector1(input_file_name, instrument, step_args={}):
                         # If the dither_points entry is not populated, then ignore this
                         # change
                         pass
+                    logging.info("*****CELERY: Saving to {}".format(output_file))
                     model.save(output_file)
                 else:
                     try:
@@ -313,12 +315,15 @@ def run_calwebb_detector1(input_file_name, instrument, step_args={}):
                     except TypeError:
                         # If the dither_points entry is not populated, then ignore this change
                         pass
+                    logging.info("*****CELERY: Saving to {}".format(output_file))
                     model[0].save(output_file)
             else:
                 logging.info("*****CELERY: File {} exists".format(output_filename))
-            if not os.path.exists(transfer_file):
+            if not os.path.isfile(transfer_file):
                 logging.info("*****CELERY: Copying {} to {}".format(output_file, output_dir))
                 copy_files([output_file], output_dir)
+            else:
+                logging.info("*****CELERY: File {} already exists".format(transfer_file))
             set_permissions(transfer_file)
 
     logging.info("*****CELERY: Finished calibration.")
@@ -738,6 +743,7 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
     try:
         for input_file in input_files:
             retrieve_dir = os.path.dirname(input_file)
+            logging.info("\tPipeline call for {} requesting {} sent to {}".format(input_file, ext_or_exts, retrieve_dir))
             short_name, cal_lock, uncal_file = prep_file(input_file, in_ext)
             output_dirs[short_name] = retrieve_dir
             input_file_paths[short_name] = input_file
