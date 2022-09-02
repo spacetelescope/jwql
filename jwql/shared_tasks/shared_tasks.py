@@ -257,23 +257,25 @@ def run_calwebb_detector1(input_file_name, instrument, step_args={}):
     """
     msg = "*****CELERY: Starting {} calibration task for {}"
     logging.info(msg.format(instrument, input_file_name))
+    config = get_config()
     
-    input_file = os.path.join(get_config()["transfer_dir"], "incoming", input_file_name)
+    input_dir = os.path.join(config['transfer_dir'], "incoming")
+    cal_dir = os.path.join(config['outputs'], "calibrated_data")
+    output_dir = os.path.join(config['transfer_dir'], "outgoing")
+    logger.info("*****CELERY: Input from {}, calibrate in {}, output to {}".format(input_dir, cal_dir, output_dir))
+    
+    input_file = os.path.join(input_dir, input_file_name)
     if not os.path.isfile(input_file):
         logging.error("*****CELERY: File {} not found!".format(input_file))
         raise FileNotFoundError("{} not found".format(input_file))
     
-    cal_dir = os.path.join(get_config()['outputs'], "calibrated_data")
     uncal_file = os.path.join(cal_dir, input_file_name)
     short_name = input_file_name.replace("_0thgroup", "").replace("_uncal", "").replace("_dark", "").replace(".fits", "")
     ensure_dir_exists(cal_dir)
+    logging.info("*****CELERY: Copying {} to {}".format(input_file, cal_dir))
     copy_files([input_file], cal_dir)
     set_permissions(uncal_file)
     
-    output_dir = os.path.join(get_config()["transfer_dir"], "outgoing")
-    
-    log_config = os.path.join(output_dir, "celery_pipeline_log.cfg")
-
     steps = get_pipeline_steps(instrument)
 
     first_step_to_be_run = True
