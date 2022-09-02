@@ -462,7 +462,7 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
     return jump_output, pipe_output, fitopt_output
 
 
-def prep_file(input_file, input_extension):
+def prep_file(input_file, in_ext):
     """Prepares a file for calibration by:
     
     - Creating a short file-name from the file (i.e. the name without the calibration 
@@ -477,7 +477,7 @@ def prep_file(input_file, input_extension):
     input_file : str
         Name of the fits file to run
     
-    input_extension : str
+    in_ext : str
         The calibration extension currently present on the input file
     
     Returns
