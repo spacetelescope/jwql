@@ -563,9 +563,11 @@ class EdbMnemonic:
         new_dates = [self.data["dates"][0]]
         new_vals = [self.data["euvalues"][0]]
         delta_t = timedelta(microseconds=1)
-        for i, row in enumerate(self.data[1:]):
-            new_dates.append(self.data["dates"][i] - delta_t)
-            new_vals.append(self.data["euvalues"][i - 1])
+        for i, row in enumerate(self.data["dates"][1:]):
+            new_dates.append(self.data["dates"][i + 1] - delta_t)
+            new_vals.append(self.data["euvalues"][i])
+            new_dates.append(self.data["dates"][i + 1])
+            new_vals.append(self.data["euvalues"][i + 1])
         new_table = Table()
         new_table["dates"] = new_dates
         new_table["euvalues"] = new_vals
@@ -1091,10 +1093,12 @@ def change_only_bounding_points(date_list, value_list, starttime, endtime):
     value_list = list(np.array(value_list)[valid_idx])
 
     # Add an entry for starttime and another for endtime
-    date_list.insert(0, starttime)
-    value_list.insert(0, value0)
-    date_list.append(endtime)
-    value_list.append(value_end)
+    if np.isfinite(value0):
+        date_list.insert(0, starttime)
+        value_list.insert(0, value0)
+    if np.isfinite(value_end):
+        date_list.append(endtime)
+        value_list.append(value_end)
 
     return date_list, value_list
 
