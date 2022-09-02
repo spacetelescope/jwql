@@ -254,13 +254,11 @@ class CosmicRay:
             Data Quality array containing jump flags.
 
         """
-
         try:
-            hdu = fits.open(jump_filename)
-            head = hdu[0].header
-            data = hdu[1].data
-            dq = hdu[3].data
-            hdu.close()
+            with fits.open(jump_filename) as hdu:
+                head = hdu[0].header
+                data = hdu[1].data
+                dq = hdu[3].data
         except (IndexError, FileNotFoundError):
             logging.warning(f'Could not open jump file: {jump_file} Skipping')
             head = data = dq = None
@@ -292,6 +290,9 @@ class CosmicRay:
         elif len(temp) == 3:
             for i in range(len(temp[0])):
                 jump_locs.append((temp[0][i], temp[1][i], temp[2][i]))
+        elif len(temp) == 0:
+            # This is the (unlikely) case where the data contain no flagged CRs
+            pass
         else:
             logging.error(f'dq has {len(temp)} dimensions. We expect it to have 3 or 4.')
 
@@ -335,14 +336,14 @@ class CosmicRay:
 
         jump_locs_pre = []
 
-        if len(jump_locs) == 4:
+        if len(jump_locs[0]) == 4:
             for coord in jump_locs:
                 jump_locs_pre.append((coord[0], coord[1] - 1, coord[2], coord[3]))
-        elif len(jump_locs) == 3:
+        elif len(jump_locs[0]) == 3:
             for coord in jump_locs:
                 jump_locs_pre.append((coord[0] - 1, coord[1], coord[2]))
         else:
-            logging.error(f'jump_locs has {len(jump_locs)} dimensions. Expecting 3 or 4.')
+            logging.error(f'jump_locs has {len(jump_locs[0])} dimensions. Expecting 3 or 4.')
 
         return jump_locs_pre
 
