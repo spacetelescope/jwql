@@ -102,9 +102,9 @@ if __name__ == '__main__':
             else:
                 for monitor in monitor_tables:
                     if monitor != 'anomaly':
-                        tables = [x.__table__ for x in monitor_tables[monitor]]
-                        base.metadata.drop_all(tables=tables)
-                        base.metadata.create_all(tables=tables)
+                        for table in monitor_tables[monitor]:
+                            table.__table__.drop()
+                            table.__table__.create()
                 print('\nDatabase instance {} has been reset'.format(connection_string))
                 sys.exit(0)
         
@@ -113,7 +113,6 @@ if __name__ == '__main__':
         for table in base_tables:
             if table in check_tables:
                 if (table not in MONITOR_TABLES['anomaly']) or (args.explicit_anomaly):
-                    tables.append(table.__table__)
-        base.metadata.drop_all(tables=tables)
-        base.metadata.create_all(tables=tables)
+                    table.__table__.drop()
+                    table.__table__.create()
         print('\nDatabase instance {} has been reset'.format(connection_string))
