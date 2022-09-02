@@ -317,6 +317,7 @@ def run_calwebb_detector1(input_file_name, instrument, step_args={}):
             else:
                 logging.info("*****CELERY: File {} exists".format(output_filename))
             if not os.path.exists(transfer_file):
+                logging.info("*****CELERY: Copying {} to {}".format(output_file, output_dir))
                 copy_files([output_file], output_dir)
             set_permissions(transfer_file)
 
@@ -613,8 +614,12 @@ def retrieve_files(short_name, ext_or_exts, dest_dir):
         ext_or_exts = [ext_or_exts]
     file_or_files = ["{}_{}.fits".format(short_name, x) for x in ext_or_exts]
     output_file_or_files = [os.path.join(dest_dir, x) for x in file_or_files]
+    transfer_file_or_files = [os.path.join(receive_path, x) for x in file_or_files]
+    transfer_exists = [os.path.isfile(x) for x in transfer_file_or_files]
     logging.info("\t\tCopying {} to {}".format(file_or_files, dest_dir))
     copy_files([os.path.join(receive_path, x) for x in file_or_files], dest_dir)
+    dest_exists = [os.path.isfile(x) for x in output_file_or_files]
+    logging.info("\t\tOutput files are {}, {} exist in transfer dir, {} exist in destination dir".format(file_or_files, transfer_exists, dest_exists))
     logging.info("\t\tClearing Transfer Files")
     to_clear = glob(os.path.join(send_path, short_name+"*")) + glob(os.path.join(receive_path, short_name+"*"))
     for file in to_clear:
