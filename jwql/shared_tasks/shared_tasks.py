@@ -729,6 +729,7 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
     outputs = {}
     output_dirs = {}
 
+    logging.info("Dispatching celery tasks")
     try:
         for input_file in input_files:
             retrieve_dir = os.path.dirname(input_file)
@@ -738,17 +739,25 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
             locks[short_name] = cal_lock
             results[short_name] = start_pipeline(uncal_file, ext_or_exts, instrument, jump_pipe=jump_pipe)
             logging.info("\tStarting {} with ID {}".format(short_name, results[short_name].id))
+        logging.info("Celery tasks submitted.")
+        logging.info("Waiting for task results")
         for short_name in results:
             try:
+                logging.info("\tWaiting for {} ({})".format(short_name, results[short_name].id))
                 processed_path = results[short_name].get()
+                logging.info("\t{} retrieved".format(short_name))
                 outputs[input_file_paths[short_name]] = retrieve_files(short_name, ext_or_exts, output_dirs[short_name])
+                logging.info("\tFiles copied for {}".format(short_name))
             except Exception as e:
                 logging.error('\tPipeline processing failed for {}'.format(input_name))
                 logging.error('\tProcessing raised {}'.format(e))
+        logging.info("Finished retrieving results")
     finally:
+        logging.info("Releasing locks")
         for short_name in locks:
             locks[short_name].release()
             logging.info("\tReleased Lock {}".format(short_name))
+        logging.info("Finished releasing locks")
     
     logging.info("Pipeline Call Completed")
     return outputs
