@@ -301,8 +301,13 @@ def run_calwebb_detector1(input_file_name, instrument, step_args={}):
             logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
             output_filename = deepcopy(short_name) + "_{}.fits".format(step_name)
             logging.info("*****CELERY: Calibration dir is {}".format(cal_dir))
+            logging.info("*****CELERY: Output File Name is {}".format(output_filename))
             output_file = os.path.join(deepcopy(cal_dir), deepcopy(output_filename))
             logging.info("*****CELERY: Calibration dir is {}".format(cal_dir))
+            logging.info("*****CELERY: Creating output file {}".format(output_file))
+            output_file = deepcopy(cal_dir) + "/" + deepcopy(output_filename)
+            logging.info("*****CELERY: Calibration dir is {}".format(cal_dir))
+            logging.info("*****CELERY: Output File Name is {}".format(output_filename))
             logging.info("*****CELERY: Creating output file {}".format(output_file))
             transfer_file = os.path.join(deepcopy(output_dir), output_filename)
             # skip already-done steps
