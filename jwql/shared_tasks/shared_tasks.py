@@ -231,7 +231,7 @@ def collect_after_task(**kwargs):
 
 
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.run_calwebb_detector1')
-def run_calwebb_detector1(input_file_name, instrument, step_args={}):
+def run_calwebb_detector1(input_file_name, short_name, instrument, step_args={}):
     """Run the steps of ``calwebb_detector1`` on the input file, saving the result of each
     step as a separate output file, then return the name-and-path of the file as reduced
     in the reduction directory.
@@ -259,13 +259,10 @@ def run_calwebb_detector1(input_file_name, instrument, step_args={}):
     msg = "*****CELERY: Starting {} calibration task for {}"
     logging.info(msg.format(instrument, input_file_name))
     config = get_config()
-    incoming_dir = deepcopy(config['transfer_dir'])
-    calibration_dir = deepcopy(config['outputs'])
-    outgoing_dir = deepcopy(config['transfer_dir'])
     
-    input_dir = os.path.join(incoming_dir, "incoming")
-    cal_dir = os.path.join(calibration_dir, "calibrated_data")
-    output_dir = os.path.join(outgoing_dir, "outgoing")
+    input_dir = os.path.join(config['transfer_dir'], "incoming")
+    cal_dir = os.path.join(config['outputs'], "calibrated_data")
+    output_dir = os.path.join(config['transfer_dir'], "outgoing")
     logging.info("*****CELERY: Input from {}, calibrate in {}, output to {}".format(input_dir, cal_dir, output_dir))
     
     input_file = os.path.join(deepcopy(input_dir), input_file_name)
@@ -273,43 +270,25 @@ def run_calwebb_detector1(input_file_name, instrument, step_args={}):
         logging.error("*****CELERY: File {} not found!".format(input_file))
         raise FileNotFoundError("{} not found".format(input_file))
     
-    logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
     uncal_file = os.path.join(deepcopy(cal_dir), input_file_name)
-    logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
-    short_name = deepcopy(input_file_name).replace("_0thgroup", "").replace("_uncal", "").replace("_dark", "").replace(".fits", "")
-    logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
     ensure_dir_exists(deepcopy(cal_dir))
-    logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
     logging.info("*****CELERY: Copying {} to {}".format(input_file, cal_dir))
-    copy_files([deepcopy(input_file)], deepcopy(cal_dir))
-    logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
+    copy_files([input_file], deepcopy(cal_dir))
     set_permissions(uncal_file)
-    logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
     
     steps = get_pipeline_steps(instrument)
-    logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
 
     first_step_to_be_run = True
-    logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
     for step_name in steps:
-        logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
         kwargs = {}
-        logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
         if step_name in step_args:
             kwargs = step_args[step_name]
         if steps[step_name]:
-            logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
-            output_filename = deepcopy(short_name) + "_{}.fits".format(step_name)
-            logging.info("*****CELERY: Calibration dir is {}".format(cal_dir))
+            output_filename = short_name + "_{}.fits".format(step_name)
             logging.info("*****CELERY: Output File Name is {}".format(output_filename))
-            output_file = os.path.join(deepcopy(cal_dir), deepcopy(output_filename))
-            logging.info("*****CELERY: Calibration dir is {}".format(cal_dir))
+            output_file = os.path.join(cal_dir, deepcopy(output_filename))
             logging.info("*****CELERY: Creating output file {}".format(output_file))
-            output_file = deepcopy(cal_dir) + "/" + deepcopy(output_filename)
-            logging.info("*****CELERY: Calibration dir is {}".format(cal_dir))
-            logging.info("*****CELERY: Output File Name is {}".format(output_filename))
-            logging.info("*****CELERY: Creating output file {}".format(output_file))
-            transfer_file = os.path.join(deepcopy(output_dir), output_filename)
+            transfer_file = os.path.join(output_dir, output_filename)
             # skip already-done steps
             if not os.path.isfile(output_file):
                 logging.info("*****CELERY: Running Pipeline Step {}".format(step_name))
@@ -553,7 +532,7 @@ def prep_file(input_file, in_ext):
     return short_name, cal_lock, os.path.join(send_path, uncal_name)
 
 
-def start_pipeline(input_file, ext_or_exts, instrument, jump_pipe=False):
+def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=False):
     """Starts the standard or save_jump pipeline for the provided file.
     
     .. warning::
@@ -605,7 +584,7 @@ def start_pipeline(input_file, ext_or_exts, instrument, jump_pipe=False):
                 save_fitopt = True
         result = calwebb_detector1_save_jump.delay(input_file, ramp_fit=ramp_fit, save_fitopt=save_fitopt)
     else:
-        result = run_calwebb_detector1.delay(input_file, instrument)
+        result = run_calwebb_detector1.delay(input_file, short_name, instrument)
     return result
 
 
@@ -697,7 +676,7 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
     try:
         retrieve_dir = os.path.dirname(input_file)
         short_name, cal_lock, uncal_file = prep_file(input_file, in_ext)
-        result = start_pipeline(uncal_file, ext_or_exts, instrument, jump_pipe=jump_pipe)
+        result = start_pipeline(uncal_file, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe)
         logging.info("\t\tStarting with ID {}".format(result.id))
         processed_path = result.get()
         logging.info("\t\tPipeline Complete")
@@ -772,7 +751,7 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
             output_dirs[short_name] = retrieve_dir
             input_file_paths[short_name] = input_file
             locks[short_name] = cal_lock
-            results[short_name] = start_pipeline(uncal_file, ext_or_exts, instrument, jump_pipe=jump_pipe)
+            results[short_name] = start_pipeline(uncal_file, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe)
             logging.info("\tStarting {} with ID {}".format(short_name, results[short_name].id))
         logging.info("Celery tasks submitted.")
         logging.info("Waiting for task results")
