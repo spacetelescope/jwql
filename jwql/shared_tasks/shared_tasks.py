@@ -273,23 +273,36 @@ def run_calwebb_detector1(input_file_name, instrument, step_args={}):
         logging.error("*****CELERY: File {} not found!".format(input_file))
         raise FileNotFoundError("{} not found".format(input_file))
     
+    logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
     uncal_file = os.path.join(deepcopy(cal_dir), input_file_name)
+    logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
     short_name = deepcopy(input_file_name).replace("_0thgroup", "").replace("_uncal", "").replace("_dark", "").replace(".fits", "")
-    ensure_dir_exists(cal_dir)
+    logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
+    ensure_dir_exists(deepcopy(cal_dir))
+    logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
     logging.info("*****CELERY: Copying {} to {}".format(input_file, cal_dir))
     copy_files([deepcopy(input_file)], deepcopy(cal_dir))
+    logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
     set_permissions(uncal_file)
+    logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
     
     steps = get_pipeline_steps(instrument)
+    logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
 
     first_step_to_be_run = True
+    logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
     for step_name in steps:
+        logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
         kwargs = {}
+        logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
         if step_name in step_args:
             kwargs = step_args[step_name]
         if steps[step_name]:
+            logging.info("*****CELERY: calibration dir is {}".format(cal_dir))
             output_filename = deepcopy(short_name) + "_{}.fits".format(step_name)
+            logging.info("*****CELERY: Calibration dir is {}".format(cal_dir))
             output_file = os.path.join(deepcopy(cal_dir), deepcopy(output_filename))
+            logging.info("*****CELERY: Calibration dir is {}".format(cal_dir))
             logging.info("*****CELERY: Creating output file {}".format(output_file))
             transfer_file = os.path.join(deepcopy(output_dir), output_filename)
             # skip already-done steps
