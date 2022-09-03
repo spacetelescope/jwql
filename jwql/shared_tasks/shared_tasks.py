@@ -99,6 +99,7 @@ synchronously, run a group of tasks with a final callback function, etc. These a
 explained by the celery documentation itself.
 """
 from collections import OrderedDict
+from copy import deepcopy
 import gc
 from glob import glob
 import logging
