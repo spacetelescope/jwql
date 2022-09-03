@@ -676,7 +676,8 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
     try:
         retrieve_dir = os.path.dirname(input_file)
         short_name, cal_lock, uncal_file = prep_file(input_file, in_ext)
-        result = start_pipeline(uncal_file, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe)
+        uncal_name = os.path.basename(uncal_file)
+        result = start_pipeline(uncal_name, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe)
         logging.info("\t\tStarting with ID {}".format(result.id))
         processed_path = result.get()
         logging.info("\t\tPipeline Complete")
@@ -748,10 +749,11 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
             retrieve_dir = os.path.dirname(input_file)
             logging.info("\tPipeline call for {} requesting {} sent to {}".format(input_file, ext_or_exts, retrieve_dir))
             short_name, cal_lock, uncal_file = prep_file(input_file, in_ext)
+            uncal_name = os.path.basename(uncal_file)
             output_dirs[short_name] = retrieve_dir
             input_file_paths[short_name] = input_file
             locks[short_name] = cal_lock
-            results[short_name] = start_pipeline(uncal_file, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe)
+            results[short_name] = start_pipeline(uncal_name, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe)
             logging.info("\tStarting {} with ID {}".format(short_name, results[short_name].id))
         logging.info("Celery tasks submitted.")
         logging.info("Waiting for task results")
