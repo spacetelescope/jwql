@@ -112,7 +112,7 @@ THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'bad_pixel_file_thres
 
 
 def bad_map_to_list(badpix_image, mnemonic):
-    """Given an DQ image and a bad pixel mnemonic, create a list of
+    """Given a DQ image and a bad pixel mnemonic, create a list of
     (x,y) locations of this type of bad pixel in ``badpix_image``
 
     Parameters
