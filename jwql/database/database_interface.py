@@ -144,7 +144,7 @@ def load_connection(connection_string):
 
 # Import a global session.  If running from readthedocs or GitHub Actions,
 # pass a dummy connection string
-if 'build' and 'project' in socket.gethostname() or ON_GITHUB_ACTIONS:
+if all(word in socket.gethostname() for word in ('build', 'project'))  or ON_GITHUB_ACTIONS:
     dummy_connection_string = 'postgresql+psycopg2://account:password@hostname:0000/db_name'
     session, base, engine, meta = load_connection(dummy_connection_string)
 else:
