@@ -76,7 +76,7 @@ from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDar
 from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
-from jwql.shared_tasks.shared_tasks import only_one, run_pipeline
+from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils import calculations, instrument_properties, monitor_utils
 from jwql.utils.constants import ASIC_TEMPLATES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, \
     RAPID_READPATTERNS
@@ -467,6 +467,7 @@ class Dark():
             required_steps['group_scale'] = False
 
         # Run pipeline steps on files, generating slope files
+        pipeline_files = []
         slope_files = []
         for filename in file_list:
 
@@ -485,17 +486,17 @@ class Dark():
                 processed_file = filename.replace("_dark", "_rate")
                 # If the slope file already exists, skip the pipeline call
                 if not os.path.isfile(processed_file):
-                    # Run the file through the necessary pipeline steps
-                    processed_file = run_pipeline(filename, "dark", "rate", self.instrument)
+                    pipeline_files.append(filename)
                 else:
                     msg = '\tSlope file {} already exists. Skipping call to pipeline.'
                     logging.info(msg.format(processed_file))
                     pass
-
-                if os.path.isfile(processed_file):
-                    slope_files.append(processed_file)
-
-                # Delete the original dark ramp file to save disk space
+        
+        outputs = run_parallel_pipeline(pipeline_files, "dark", "rate", self.instrument)
+        for filename in file_list:
+            processed_file = filename.replace("_dark", "_rate")
+            if os.path.isfile(processed_file):
+                slope_files.append(processed_file)
                 os.remove(filename)
 
         obs_times = []

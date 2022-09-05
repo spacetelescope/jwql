@@ -55,7 +55,7 @@ from jwql.database.database_interface import NIRCamReadnoiseQueryHistory, NIRCam
 from jwql.database.database_interface import NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats  # noqa: E348 (comparison to true)
 from jwql.database.database_interface import NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats  # noqa: E348 (comparison to true)
 from jwql.database.database_interface import session  # noqa: E348 (comparison to true)
-from jwql.shared_tasks.shared_tasks import only_one, run_pipeline  # noqa: E348 (comparison to true)
+from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline  # noqa: E348 (comparison to true)
 from jwql.instrument_monitors import pipeline_tools  # noqa: E348 (comparison to true)
 from jwql.utils import instrument_properties, monitor_utils  # noqa: E348 (comparison to true)
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa: E348 (comparison to true)
@@ -408,15 +408,17 @@ class Readnoise():
             List of filenames (including full paths) to the dark current
             files.
         """
+        # Run the files through the necessary pipeline steps
+        outputs = run_parallel_pipeline(file_list, "uncal", "refpix", self.instrument)
+        
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
 
             # Get relevant header information for this file
             self.get_metadata(filename)
 
-            # Run the file through the necessary pipeline steps
-            pipeline_steps = self.determine_pipeline_steps()
-            processed_file = run_pipeline(filename, "uncal", "refpix", self.instrument)
+            # Get the processed file location
+            processed_file = outputs[filename]
 
             # Find amplifier boundaries so per-amp statistics can be calculated
             _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)

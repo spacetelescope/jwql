@@ -574,6 +574,8 @@ def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=Fa
     result : celery.result.AsyncResult
         The task result object
     """
+    if isinstance(ext_or_exts, dict):
+        ext_or_exts = ext_or_exts[short_name]
     if jump_pipe:
         ramp_fit = False
         save_fitopt = False
@@ -612,6 +614,8 @@ def retrieve_files(short_name, ext_or_exts, dest_dir):
     output_file_or_files : str or list of str
         The location of the requested calibrated files                                                                                           
     """
+    if isinstance(ext_or_exts, dict):
+        ext_or_exts = ext_or_exts[short_name]
     config = get_config()
     send_path = os.path.join(config["transfer_dir"], "incoming")
     ensure_dir_exists(send_path)
@@ -719,8 +723,14 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
     in_ext : str
         Input file extension
 
-    ext_or_exts : str or list-of-str
-        The requested output calibrated files
+    ext_or_exts : str or list-of-str or dict
+        The requested output calibrated files. This must be either:
+        
+        - A string indicating a single extension to be retrieved for all files.
+        - A list of strings indicating multiple extensions to be retrieved for all files.
+        - A dict with a key for each input file, containing either a single extension 
+          string or a multiple-extension list of strings to be retrieved for that file
+          (note that a default dict can be used here)
     
     instrument : str
         Name of the instrument being calibrated
