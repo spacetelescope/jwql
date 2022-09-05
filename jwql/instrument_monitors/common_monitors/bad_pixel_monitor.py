@@ -850,7 +850,7 @@ class BadPixels():
                 index += 1
             outputs = run_parallel_pipeline(in_files, "uncal", out_exts, self.instrument, jump_pipe=True)
             index = 0
-            for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files)
+            for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
                 local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
                 short_name = os.path.basename(uncal_file).replace('_uncal.fits', '') 
                 if local_uncal_file in outputs:               
