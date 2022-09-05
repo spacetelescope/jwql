@@ -100,9 +100,9 @@ if __name__ == '__main__':
                 print('\nDatabase instance {} has been reset'.format(connection_string))
                 sys.exit(0)
             else:
-                for monitor in monitor_tables:
+                for monitor in MONITOR_TABLES:
                     if monitor != 'anomaly':
-                        for table in monitor_tables[monitor]:
+                        for table in MONITOR_TABLES[monitor]:
                             table.__table__.drop()
                             table.__table__.create()
                 print('\nDatabase instance {} has been reset'.format(connection_string))
