@@ -33,18 +33,18 @@ from jwql.utils.utils import get_config
 
 if __name__ == '__main__':
 
+    ins_help = "Instrument tables to reset ('all' for all), default 'all'"
+    mon_help = "Monitor tables to reset ('all' for all), default 'all'"
     parser = argparse.ArgumentParser(description='Reset JWQL database tables')
     parser.add_argument('-i', '--instrument', metavar='INSTRUMENT', type=str,
-                        help='instrument tables to reset ("all" for all)',
-                        default='all', dest='instrument')
+                        help=ins_help, default='all', dest='instrument')
     parser.add_argument('-m', '--monitor', metavar='MONITOR', type=str,
-                        help='monitor tables to reset ("all" for all)',
-                        default='all', dest='monitor')
+                        help=mon_help, default='all', dest='monitor')
     parser.add_argument('--explicitly_reset_production', action='store_true',
-                        default=False, help='Needed to reset Production tables',
+                        default=False, help='Needed to allow reset of Production tables',
                         dest='explicit_prod')
     parser.add_argument('--explicitly_reset_anomalies', action='store_true',
-                        default=False, help='Needed to reset anomaly tables',
+                        default=False, help='Needed to allow reset of anomaly tables',
                         dest='explicit_anomaly')
     args = parser.parse_args()
 
