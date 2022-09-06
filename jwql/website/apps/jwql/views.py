@@ -271,33 +271,39 @@ def archived_proposals_ajax(request, inst):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    # Get the appropriate database table
-    inst_table = eval(f'{inst}Archive')
+    # If we use one table per instrument
+    #all_entries = Archive.objects.all()
 
-    # Assuming the table contains a single entry for each proposal/obsnum combination
-    # we can read in the entire table
-    database = session.query(inst_table).all()
+    # If we use one table for all instruments
+    all_entries = Archive.objects.filter(instrument=inst)
 
-    # Generate the information needed for the context
-    proposals = list(set(database.proposals))
+    # Get a list of proppsal numbers
+    proposals = list(set([entry async for entry in all_entries.proposal]))
     num_proposals = len(proposals)
+    thumbnail_paths = [entry async for entry in prop_entries.thumbnail_path]
 
-    min_obsnum = []
-    thumbnail_paths = []
+    min_obsnums = []
     num_files = []
     for proposal in proposals:
-        query the database for the appropriate lines?
-        min_obsnum.append(np.min(lines.obsnum))
-        thumbnail_paths.append(lines[0].thumbnail)
-        num_files.append(np.sum(lines.num_files))
+        # For each proposal number, get the appropriate lines
+        # from the table so that we can generate the info needed
+        #prop_entries = Archive.objects.filter(proposal=proposal)
+        #or do we want to just work from all_entries here?
+        prop_entries = all_entries.filter(proposal=proposal)
+        obsnums = sorted([entry async for entry in prop_entries.observation.obsnum])
+        min_obsnums.append(obsnums[0])
 
+        # Collect the number of files per observation and then sum
+        # to get the number of files per proposal
+        obs_num_files = [entry async for entry in prop_entries.observation.number_of_files]
+        num_files.append(np.sum(np.array(obs_num_files)))
 
     context = {'inst': inst,
-               'num_proposals': num_proposals,
-               'min_obsnum': min_obsnum,
+               'num_proposals': num_proposals
+               'min_obsnum': min_obsnums,
                'thumbnails': {'proposals': proposals,
                               'thumbnail_paths': thumbnail_paths,
-                              'num_files': num_files}}
+                              'num_files': total_files}}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
