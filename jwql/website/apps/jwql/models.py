@@ -119,9 +119,8 @@ class Observation(models.Model):
     # Fields
     obsnum = models.CharField(max_length=3, help_text='Observation number, as a 3 digit string')
     number_of_files = models.IntegerField(help_text='Number of files in the proposal')
-    exposure_type = models.ForeignKey(ExposureTypes, blank=False, null=False, on_delete=models.CASCADE)
+    exposure_type = models.ForeignKey(ExposureTypes, blank=False, null=False, on_delete=models.SET_NULL)
     obsdate = models.DateTimeField(help_text='Datetme of most recent exposure')
-    #last_modified = models.DateTimeField(help_text='Date of last modification')
 
     # …
     # Metadata
@@ -143,7 +142,7 @@ class Proposal(models.Model):
     """
     # Fields
     prop_id = models.CharField(max_length=5, help_text="5-digit proposal ID string")
-    observation = models.ForeignKey(Observation, blank=True, null=True, on_delete=?)
+    observation = models.ForeignKey(Observation, blank=True, null=True, on_delete=models.SET_NULL)
     thumbnail_path = models.CharField(max_length=100, help_text='Path to the proposal thumbnail')
 
     # Metadata
