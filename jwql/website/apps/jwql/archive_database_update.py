@@ -169,6 +169,26 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types):
     """
     """
     logging.info('')
+
+    for exptype in types:
+        search to see if entry exists
+        if not:
+            exptype_entry = ExposureType(exp_type=exptype)
+            exptype_entry.save()
+        if yes:
+            query and return it
+
+    # This is how you associate an exp_type entry with a particular observation entry
+    obs_entry = Observation(obsnum=obs, number_of_files=files, )
+    obs_entry.save()
+    obs_entry.exposure_types.add(exptype_entry)
+
+
+
+
+
+
+
     inst_table = eval(f'{instrument}Archive')
 
     db_entries = session.query(inst_table) \
