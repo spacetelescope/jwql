@@ -30,7 +30,7 @@ from jwql.utils.utils import get_config
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
-def define_test_data():
+def define_test_data(nints):
     """Define the data to test with.
 
     Parameters
