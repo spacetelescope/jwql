@@ -1,562 +1,584 @@
 .anomaly_choice {
-  list-style: none;
-}
-
-.APT_parameters {
-  width: 20%
-}
-
-.banner {
-  position: absolute;
-  top: 55px;
-  width: 100%;
-  height: 3rem;
-  overflow: hidden;
-}
-
-.banner img{
-  position: absolute;
-  top: -9999px;
-  left: -9999px;
-  right: -9999px;
-  bottom: -9999px;
-  width: 100%;
-  margin: auto;
-}
-
-/*Make normal buttons and highlighted outline buttons orange*/
-.btn-primary, .btn-primary.disabled, .btn-outline-primary:hover,
-.btn-outline-primary.active {
-    background-color: #c85108 !important;
-    border-color: #c85108 !important;
-    color: white !important;
-    border-radius: 0px;
-    text-decoration: none;
-}
-
-/*Make outline buttons and highlighted normal buttons white*/
-.btn-primary:hover, .btn-primary.active, .btn-outline-primary,
-.show > .btn-primary.dropdown-toggle {
-    background-color: white !important;
-    border-color: #c85108 !important ;
-    color: #c85108 !important;
-    border-radius: 0px;
-    text-decoration: none;
-}
-
-/*Stop them from glowing blue*/
-.btn.focus, .btn:active:focus, .btn.active:focus, .btn:active,
-.btn.active, .show > .btn.dropdown-toggle:focus {
-    box-shadow: none !important;
-    text-decoration: none;
-}
-
-[class*="col-"] {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-/*  margin: 1rem;
-  background-color: rgba(86, 61, 124, .15);
-  border: 1px solid rgba(86, 61, 124, .2);*/
-}
-
-.dashboard {
-    margin-left: 2%;
-    margin-right: 2%;
-}
-
-/* Show the dropdown menu on hover */
-/* DO NOT how the dropdown menu on hover if the navbar is collapsed */
-@media only screen and (min-width: 1200px) {
-    li.dropdown:hover .dropdown-menu {
-        display: block;
-    }
-}
-
-/* Make disabled dropdown items grey and unclickable */
-.disabled-dropdown {
-    color: #bec4d4 !important;
-    pointer-events: none;
-    cursor: default;
-}
-
-/*Define dropdown menu colors*/
-.dropdown-item:hover{
-    background-color: black;
-}
-
-.dropdown-menu {
-    background-color: #2d353c;
-    border-radius: 0px;
-    max-height:  400px;
-    overflow-y:  auto;
-}
-
-.dropdown-menu .dropdown-item {
-    color: white;
-}
-
-.dropdown-menu .dropdown-heading {
-    color: #c85108 !important;
-    text-transform: uppercase;
-}
-
-/*Stop the search box from glowing blue*/
-.form-control:focus {
-    box-shadow: none;
-    border-color: #cfd4da;
-}
-
-/*Make sure the thumbnails are actually vertically centered*/
-.helper {
-    display: inline-block;
-    height: 100%;
-    vertical-align: middle;
-}
-
-.help-tip {
-    text-align: center;
-    background-color: #D0D7D8;
-    color: black;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 12px;
-    line-height: 20px;
-    font-weight: bold;
-    opacity: 0.5;
-    display: inline-block;
-}
-
-/*Stop the search box from glowing blue*/
-#homepage_filesearch #id_search {
-    width: 500px;
-    height: 100%;
-    padding: 0px;
-}
-
-/* START structures for engineering_database page
-*/
-
-#mnemonic_name_search {
-    width: 100%;
-    height: 100%;
-    padding: 0px;
-}
-
-.mnemonic_name_search_row {
-    display: flex;
-    width: 100%;
-}
-
-.mnemonic_name_search_col {
-  padding: 1em;
-  border: 1px solid #F2CE3A;
-  width: 100%;
-}
-
-.mnemonic_name_search_col1 {
-  padding: 1em;
-  border: 1px solid #F2CE3A;
-  width: 40%;
-}
-
-.mnemonic_query_section {
-    width: 100%;
-    height: 100%;
-    padding: 1em;
-    /*border:solid #000000;*/
-    border: 1px solid #F2CE3A;
-}
-
-.mnemonic_exploration_section {
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    padding: 1em;
-    /*border:solid #000000;*/
-    border: 1px solid #F2CE3A;
-    line-height: 15px
-}
-
-.mnemonic_query_field {
-float:left;
-width:300px;
-list-style-type: none;
-display : inline;
-}
-
-/* END structures for engineering_database page */
-
-
-#homepage_filesearch #id_search:focus {
-    box-shadow: none;
-    border-color: #cfd4da;
-}
-
-/*Make the form fields be inline*/
-.homepage_form_fieldWrapper {
-    display: inline;
-}
-
-#id_anomaly_choices {
-  list-style: none;
-  padding-left: 0;
-}
-
-/*Don't let the search bar be super long*/
-.input-group {
-    width: 250px;
-}
-
-/*Make the search icon look like a button*/
-.input-group-text {
-    background-color: #c85108 !important;
-    border-color: #c85108 !important;
-    color: white !important;
-    border-radius: 0px;
-}
-
-/*Format the color background*/
-.instrument-color-fill {
-    display: none;
-    width: 100%;
-    height: 100%;
-    background-color: #c85108;
-    opacity: 1.0;
-    position: absolute;
-    top: 0%;
-    left: 0%;
-    z-index: 1;
-}
-
-/*To make the instrument logos vertically centered*/
-.instrument_frame {
-    height: 180px;
-    width: 180px;
-    background-color: white;
-    border: 3px solid #c85108;
-    position: relative;
-    display: inline-block;
-}
-
-/*Make H2 header smaller for select pages*/
-#instrument_main h2,  .mnemonic_trending_main h2 {
-    font-size: 1.75rem;
-}
-
-.instrument-name {
-  font-size: 35px;
-  color: white;
-  text-transform: uppercase;
-  display: none;
-  width: 100%;
-  height: 100%;
-  padding-top: 0.5rem;
-  padding-left: 0.5rem;
-  padding-bottom: 0.5rem;
-  padding-right: 0.5rem;
-  position: absolute;
-  top: 0%;
-  left: 0%;
-  /*text-align: left;*/
-  z-index: 2;
-  vertical-align: middle;
-}
-
-.instrument_panel {
-  text-align: center;
-}
-
-.instrument_panel:hover .instrument-color-fill {
-  display: inline;
-}
-
-.instrument_panel:hover .instrument-name {
-  display: inline-block;
-}
-
-.instrument_select {
-  padding-top: 1rem;
-  padding-bottom: 2rem;
-  margin-right: 5rem;
-  margin-left: 5rem;
-}
-
-.image_preview {
-    display: inline-block;
-}
-
-#loading {
-  text-align:center;
-  margin: 0 auto;
-  width: 200px;
-  z-index: 1000;
-}
-
-.monitor-name {
-    background-color: #c85108;
-    color: white;
-    width: 100%;
-    height: 100%;
-}
-
-/* Change color of dropdown links on hover */
-li:hover .nav-link, .navbar-brand:hover {
-    color: #fff !important;
-}
-
-/* Define navbar color*/
-.navbar {
-    background-color: black;
-}
-
-/*Define navbar font color and case*/
-.nav-link {
-    color: #bec4d4 !important;
-    text-transform: uppercase;
-}
-
-/* Set padding around JWST logo*/
-.navbar-left {
-  padding-left:10px;
-  padding-right:10px;
-}
-
-/* Get rid of padding around GitHub logo */
-#github-link {
-    padding-bottom: 0px;
-    padding-top: 0px;
-}
-
-.plot-container {
-    width: 100%;
-    height: 600px;
-    position: relative;
-    display: inline-block;
-    border-color: #c85108 !important ;
-    border-style: solid;
-    border-radius: 0px;
-    border-width: 1px;
-}
-
-.plot-header {
-    background-color: #c85108 !important;
-    border-color: #c85108 !important ;
-    color: #c85108 !important;
-    border-style: solid;
-    border-radius: 0px;
-    border-width: 1px;
-    width: 100%;
-}
-
-/*Define the proposal thumbnails*/
-.proposal {
-    display: inline-block;
-    width: 8rem;
-    height: 8rem;
-    text-align: center;
-    position: relative;
-    display: inline-block;
-    margin: 0.1rem;
-}
-
-.proposal img {
-    filter: grayscale(100%);
-}
-
-.proposal-color-fill {
-    width: 100%;
-    height: 100%;
-    background-color: #356198;
-    opacity: 0.3;
-    position: absolute;
-    top: 0%;
-    left: 0%;
-    z-index: 1;
-}
-
-.proposal:hover {
-    cursor: pointer;
-}
-
-.proposal:hover {
-    background-color: #356198;
-    opacity: 0.75;
-}
-
-.proposal-info {
-    width: 100%;
-    height: 100%;
-    padding-top: 0.5rem;
-    padding-left: 0.5rem;
-    padding-bottom: 0.5rem;
-    padding-right: 0.5rem;
-    position: absolute;
-    top: 0%;
-    left: 0%;
-    text-align: left;
-    color: white;
-    z-index: 2;
-    font-size: 0.75rem;
-}
-
-.row {
-  margin-bottom: 1rem;
-}
-
-.slider{
-  -webkit-appearance: none;
-  width: 250px;
-  height: 15px;
-  background: #BEC4D4;
-  outline: none;
-}
-
-/* slider style for Chrome/Safari/Opera/Edge */
-.slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 15px;
-  height: 30px;
-  background: #C85108;
-  cursor: pointer;
-}
-
-/* slider style for Firefox */
-.slider::-moz-range-thumb {
-  width: 15px;
-  height: 30px;
-  background: #C85108;
-  cursor: pointer;
-}
-
-/* remove slider outline for Firefox */
-.slider::-moz-focus-outer {
-    border: 0;
-    }
-
-.row .row {
-  margin-top: 1rem;
-  margin-bottom: 0;
-}
-
-/*Video for space 404 page*/
-#space_404 {
-  position: fixed;
-  object-fit: cover;
-  width: 100%;
-  height: 100%;
-  right: 0;
-  bottom: 0;
-  align: center;
-}
-
-#space_404_text {
-    position: fixed;
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
-    z-index: 100;
-    align: center;
-    padding: 2rem;
-    display: none;
-}
-
-.thumbnail {
-    width: 8rem;
-    height: 8rem;
-    text-align: center;
-    position: relative;
-    display: inline-block;
-    margin: 0.1rem;
-}
-
-/*Format the color background*/
-.thumbnail-color-fill {
-    display: none;
-    width: 100%;
-    height: 100%;
-    background-color: #356198;
-    opacity: 0.3;
-    position: absolute;
-    top: 0%;
-    left: 0%;
-    z-index: 1;
-}
-
-.thumbnail:hover {
-    cursor: pointer;
-}
-
-.thumbnail:hover .thumbnail-info,
-.thumbnail:hover .thumbnail-color-fill {
-    display: inline;
-}
-
-.thumbnail img {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    vertical-align: middle;
-}
-
-/*Format the proposal number and number of files*/
-.thumbnail-info {
-    display: none;
-    width: 100%;
-    height: 100%;
-    padding-top: 0.5rem;
-    padding-left: 0.5rem;
-    padding-bottom: 0.5rem;
-    padding-right: 0.5rem;
-    position: absolute;
-    top: 0%;
-    left: 0%;
-    text-align: left;
-    color: white;
-    z-index: 2;
-    font-size: 0.75rem;
-}
-
-/*Format the version identifier text in bottom corner*/
-#version-div {
-  float: right;
-  width: 180px;
-  text-align: right;
-  color: white;
-  font-size: 12px
-}
-
-/*Add underline for links*/
-a {
-  text-decoration: underline;
-}
-
-/*Don't add underline for navbar and button links*/
-nav a, .btn {
-  text-decoration: none;
-}
-
-body {
-  padding-top: 8rem;
-}
-
-body {
-    font-family: 'Overpass', sans-serif !important;
-}
-
-h1, h2, h3, h4, h5, h6 {
-    font-family: 'Oswald', sans-serif !important;
-}
-h1, h2, h3, h4 {
-    text-transform: uppercase;
-}
-h1 {
-    letter-spacing: 0.05em;
-}
-
-ul.no-bullets {
     list-style: none;
+  }
+  
+  .APT_parameters {
+    width: 20%
+  }
+  
+  .banner {
+    position: absolute;
+    top: 55px;
+    width: 100%;
+    height: 3rem;
+    overflow: hidden;
+  }
+  
+  .banner img{
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+    right: -9999px;
+    bottom: -9999px;
+    width: 100%;
+    margin: auto;
+  }
+  
+  /*Make normal buttons and highlighted outline buttons orange*/
+  .btn-primary, .btn-primary.disabled, .btn-outline-primary:hover,
+  .btn-outline-primary.active {
+      background-color: #c85108 !important;
+      border-color: #c85108 !important;
+      color: white !important;
+      border-radius: 0px;
+      text-decoration: none;
+  }
+  
+  /*Make outline buttons and highlighted normal buttons white*/
+  .btn-primary:hover, .btn-primary.active, .btn-outline-primary,
+  .show > .btn-primary.dropdown-toggle {
+      background-color: white !important;
+      border-color: #c85108 !important ;
+      color: #c85108 !important;
+      border-radius: 0px;
+      text-decoration: none;
+  }
+  
+  /*Stop them from glowing blue*/
+  .btn.focus, .btn:active:focus, .btn.active:focus, .btn:active,
+  .btn.active, .show > .btn.dropdown-toggle:focus {
+      box-shadow: none !important;
+      text-decoration: none;
+  }
+  
+  [class*="col-"] {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  /*  margin: 1rem;
+    background-color: rgba(86, 61, 124, .15);
+    border: 1px solid rgba(86, 61, 124, .2);*/
+  }
+  
+  .dashboard {
+      margin-left: 2%;
+      margin-right: 2%;
+  }
+  
+  /* Show the dropdown menu on hover */
+  /* DO NOT how the dropdown menu on hover if the navbar is collapsed */
+  @media only screen and (min-width: 1200px) {
+      li.dropdown:hover .dropdown-menu {
+          display: block;
+      }
+  }
+  
+  /* Make disabled dropdown items grey and unclickable */
+  .disabled-dropdown {
+      color: #bec4d4 !important;
+      pointer-events: none;
+      cursor: default;
+  }
+  
+  /* Make disabled sections opaque and unclickable */
+  .disabled_section {
+      pointer-events: none;
+      opacity: 0.4;
+    }
+  
+  /*Define dropdown menu colors*/
+  .dropdown-item:hover{
+      background-color: black;
+  }
+  
+  .dropdown-menu {
+      background-color: #2d353c;
+      border-radius: 0px;
+      max-height:  400px;
+      overflow-y:  auto;
+  }
+  
+  .dropdown-menu .dropdown-item {
+      color: white;
+  }
+  
+  .dropdown-menu .dropdown-heading {
+      color: #c85108 !important;
+      text-transform: uppercase;
+  }
+  
+  .explorer_options {
+      padding-left: 1rem;
+      padding-right: 1rem;
+  }
+  
+  /*Stop the search box from glowing blue*/
+  .form-control:focus {
+      box-shadow: none;
+      border-color: #cfd4da;
+  }
+  
+  /*Make sure the thumbnails are actually vertically centered*/
+  .helper {
+      display: inline-block;
+      height: 100%;
+      vertical-align: middle;
+  }
+  
+  .help-tip {
+      text-align: center;
+      background-color: #D0D7D8;
+      color: black;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      line-height: 20px;
+      font-weight: bold;
+      opacity: 0.5;
+      display: inline-block;
+  }
+  
+  /*Stop the search box from glowing blue*/
+  #homepage_filesearch #id_search {
+      width: 500px;
+      height: 100%;
+      padding: 0px;
+  }
+  
+  /* START structures for engineering_database page
+  */
+  
+  #mnemonic_name_search {
+      width: 100%;
+      height: 100%;
+      padding: 0px;
+  }
+  
+  .mnemonic_name_search_row {
+      display: flex;
+      width: 100%;
+  }
+  
+  .mnemonic_name_search_col {
+    padding: 1em;
+    border: 1px solid #F2CE3A;
+    width: 100%;
+  }
+  
+  .mnemonic_name_search_col1 {
+    padding: 1em;
+    border: 1px solid #F2CE3A;
+    width: 40%;
+  }
+  
+  .mnemonic_query_section {
+      width: 100%;
+      height: 100%;
+      padding: 1em;
+      /*border:solid #000000;*/
+      border: 1px solid #F2CE3A;
+  }
+  
+  .mnemonic_exploration_section {
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      padding: 1em;
+      /*border:solid #000000;*/
+      border: 1px solid #F2CE3A;
+      line-height: 15px
+  }
+  
+  .mnemonic_query_field {
+  float:left;
+  width:300px;
+  list-style-type: none;
+  display : inline;
+  }
+  
+  /* END structures for engineering_database page */
+  
+  
+  #homepage_filesearch #id_search:focus {
+      box-shadow: none;
+      border-color: #cfd4da;
+  }
+  
+  /*Make the form fields be inline*/
+  .homepage_form_fieldWrapper {
+      display: inline;
+  }
+  
+  #id_anomaly_choices {
+    list-style: none;
+    padding-left: 0;
+  }
+  
+  /*Don't let the search bar be super long*/
+  .input-group {
+      width: 250px;
+  }
+  
+  /*Make the search icon look like a button*/
+  .input-group-text {
+      background-color: #c85108 !important;
+      border-color: #c85108 !important;
+      color: white !important;
+      border-radius: 0px;
+  }
+  
+  /*Format the color background*/
+  .instrument-color-fill {
+      display: none;
+      width: 100%;
+      height: 100%;
+      background-color: #c85108;
+      opacity: 1.0;
+      position: absolute;
+      top: 0%;
+      left: 0%;
+      z-index: 1;
+  }
+  
+  /*To make the instrument logos vertically centered*/
+  .instrument_frame {
+      height: 180px;
+      width: 180px;
+      background-color: white;
+      border: 3px solid #c85108;
+      position: relative;
+      display: inline-block;
+  }
+  
+  /*Make H2 header smaller for select pages*/
+  #instrument_main h2,  .mnemonic_trending_main h2 {
+      font-size: 1.75rem;
+  }
+  
+  .instrument-name {
+    font-size: 35px;
+    color: white;
+    text-transform: uppercase;
+    display: none;
+    width: 100%;
+    height: 100%;
+    padding-top: 0.5rem;
+    padding-left: 0.5rem;
+    padding-bottom: 0.5rem;
+    padding-right: 0.5rem;
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    /*text-align: left;*/
+    z-index: 2;
+    vertical-align: middle;
+  }
+  
+  .instrument_panel {
+    text-align: center;
+  }
+  
+  .instrument_panel:hover .instrument-color-fill {
+    display: inline;
+  }
+  
+  .instrument_panel:hover .instrument-name {
+    display: inline-block;
+  }
+  
+  .instrument_select {
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+    margin-right: 5rem;
+    margin-left: 5rem;
+  }
+  
+  .image_preview {
+      display: inline-block;
+  }
+  
+  #loading {
+    text-align:center;
+    margin: 0 auto;
+    width: 200px;
+    z-index: 1000;
+  }
+  
+  .monitor-name {
+      background-color: #c85108;
+      color: white;
+      width: 100%;
+      height: 100%;
+  }
+  
+  /* Change color of dropdown links on hover */
+  li:hover .nav-link, .navbar-brand:hover {
+      color: #fff !important;
+  }
+  
+  /* Define navbar color*/
+  .navbar {
+      background-color: black;
+  }
+  
+  /*Define navbar font color and case*/
+  .nav-link {
+      color: #bec4d4 !important;
+      text-transform: uppercase;
+  }
+  
+  /* Set padding around JWST logo*/
+  .navbar-left {
     padding-left:10px;
-    line-height:25px;
-}
+    padding-right:10px;
+  }
+  
+  /* Get rid of padding around GitHub logo */
+  #github-link {
+      padding-bottom: 0px;
+      padding-top: 0px;
+  }
+  
+  .plot-container {
+      width: 100%;
+      height: 600px;
+      position: relative;
+      display: inline-block;
+      border-color: #c85108 !important ;
+      border-style: solid;
+      border-radius: 0px;
+      border-width: 1px;
+  }
+  
+  .plot-header {
+      background-color: #c85108 !important;
+      border-color: #c85108 !important ;
+      color: #c85108 !important;
+      border-style: solid;
+      border-radius: 0px;
+      border-width: 1px;
+      width: 100%;
+  }
+  
+  /*Define the proposal thumbnails*/
+  .proposal {
+      display: inline-block;
+      width: 8rem;
+      height: 8rem;
+      text-align: center;
+      position: relative;
+      display: inline-block;
+      margin: 0.1rem;
+  }
+  
+  .proposal img {
+      filter: grayscale(100%);
+  }
+  
+  .proposal-color-fill {
+      width: 100%;
+      height: 100%;
+      background-color: #356198;
+      opacity: 0.3;
+      position: absolute;
+      top: 0%;
+      left: 0%;
+      z-index: 1;
+  }
+  
+  .proposal:hover {
+      cursor: pointer;
+  }
+  
+  .proposal:hover {
+      background-color: #356198;
+      opacity: 0.75;
+  }
+  
+  .proposal-info {
+      width: 100%;
+      height: 100%;
+      padding-top: 0.5rem;
+      padding-left: 0.5rem;
+      padding-bottom: 0.5rem;
+      padding-right: 0.5rem;
+      position: absolute;
+      top: 0%;
+      left: 0%;
+      text-align: left;
+      color: white;
+      z-index: 2;
+      font-size: 0.75rem;
+  }
+  
+  .row {
+    margin-bottom: 1rem;
+  }
+  
+  .slider{
+    -webkit-appearance: none;
+    width: 250px;
+    height: 15px;
+    background: #BEC4D4;
+    outline: none;
+  }
+  
+  /* slider style for Chrome/Safari/Opera/Edge */
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 30px;
+    background: #C85108;
+    cursor: pointer;
+  }
+  
+  /* slider style for Firefox */
+  .slider::-moz-range-thumb {
+    width: 15px;
+    height: 30px;
+    background: #C85108;
+    cursor: pointer;
+  }
+  
+  /* remove slider outline for Firefox */
+  .slider::-moz-focus-outer {
+      border: 0;
+      }
+  
+  .row .row {
+    margin-top: 1rem;
+    margin-bottom: 0;
+  }
+  
+  /*Video for space 404 page*/
+  #space_404 {
+    position: fixed;
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    right: 0;
+    bottom: 0;
+    align: center;
+  }
+  
+  #space_404_text {
+      position: fixed;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      z-index: 100;
+      align: center;
+      padding: 2rem;
+      display: none;
+  }
+  
+  .thumbnail {
+      width: 8rem;
+      height: 8rem;
+      text-align: center;
+      position: relative;
+      display: inline-block;
+      margin: 0.1rem;
+  }
+  
+  /*Format the color background*/
+  .thumbnail-color-fill {
+      display: none;
+      width: 100%;
+      height: 100%;
+      background-color: #356198;
+      opacity: 0.3;
+      position: absolute;
+      top: 0%;
+      left: 0%;
+      z-index: 1;
+  }
+  
+  .thumbnail:hover {
+      cursor: pointer;
+  }
+  
+  .thumbnail:hover .thumbnail-info,
+  .thumbnail:hover .thumbnail-color-fill {
+      display: inline;
+  }
+  
+  .thumbnail img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      vertical-align: middle;
+  }
+  
+  /*Format the proposal number and number of files*/
+  .thumbnail-info {
+      display: none;
+      width: 100%;
+      height: 100%;
+      padding-top: 0.5rem;
+      padding-left: 0.5rem;
+      padding-bottom: 0.5rem;
+      padding-right: 0.5rem;
+      position: absolute;
+      top: 0%;
+      left: 0%;
+      text-align: left;
+      color: white;
+      z-index: 2;
+      font-size: 0.75rem;
+  }
+  
+  .thumbnail-staff {
+      width: 15rem;
+      height: 15rem;
+      text-align: center;
+      position: relative;
+      display: inline-block;
+      margin: 0.1rem;
+  }
+  
+  
+  /*Format the version identifier text in bottom corner*/
+  #version-div {
+    float: right;
+    width: 180px;
+    text-align: right;
+    color: white;
+    font-size: 12px
+  }
+  
+  /*Add underline for links*/
+  a {
+    text-decoration: underline;
+  }
+  
+  /*Don't add underline for navbar and button links*/
+  nav a, .btn {
+    text-decoration: none;
+  }
+  
+  body {
+    padding-top: 8rem;
+  }
+  
+  body {
+      font-family: 'Overpass', sans-serif !important;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+      font-family: 'Oswald', sans-serif !important;
+  }
+  h1, h2, h3, h4 {
+      text-transform: uppercase;
+  }
+  h1 {
+      letter-spacing: 0.05em;
+  }
+  
+  ul.no-bullets {
+      list-style: none;
+      padding-left:10px;
+      line-height:25px;
+  }
+  

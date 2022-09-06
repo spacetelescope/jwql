@@ -220,11 +220,34 @@ FILENAME_PARSER_TEST_DATA = [
       'suffix': 'image_cal',
       'visit': '001'}),
 
+    # Test full guider ID filename with 2-digit attempts
+    ('jw00729011001_gs-id_12_image_cal.fits',
+     {'date_time': None,
+      'filename_type': 'guider',
+      'guide_star_attempt_id': '12',
+      'guider_mode': 'id',
+      'instrument': 'fgs',
+      'observation': '011',
+      'program_id': '00729',
+      'suffix': 'image_cal',
+      'visit': '001'}),
+
     # Test root guider ID filename
     ('jw00327001001_gs-id_2',
      {'date_time': None,
       'filename_type': 'guider',
       'guide_star_attempt_id': '2',
+      'guider_mode': 'id',
+      'instrument': 'fgs',
+      'observation': '001',
+      'program_id': '00327',
+      'visit': '001'}),
+
+    # Test root guider ID filename with 2-digit attempts
+    ('jw00327001001_gs-id_12',
+     {'date_time': None,
+      'filename_type': 'guider',
+      'guide_star_attempt_id': '12',
       'guider_mode': 'id',
       'instrument': 'fgs',
       'observation': '001',

@@ -11,6 +11,7 @@ Authors
     - Lauren Chambers
     - Matthew Bourque
     - Teagan King
+    - Bryan Hilbert
 
 Use
 ---
@@ -31,7 +32,6 @@ import re
 import tempfile
 
 from astropy.io import fits
-from astropy.table import Table
 from astropy.time import Time
 from bs4 import BeautifulSoup
 from django.conf import settings
@@ -44,16 +44,19 @@ import requests
 
 from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
-from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info
+from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemonic_inventory
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
-from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, \
-                                 JWST_INSTRUMENT_NAMES_SHORTHAND
+from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND, SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
+from jwql.utils.utils import get_rootnames_for_instrument_proposal
 from .forms import InstrumentAnomalySubmitForm
+from astroquery.mast import Mast
+
 
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
@@ -73,8 +76,6 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     from astropy import config
     conf = config.get_config('astroquery')
     conf['mast'] = {'server': 'https://{}'.format(mast_flavour)}
-from astroquery.mast import Mast
-from jwedb.edb_interface import mnemonic_inventory
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
@@ -213,7 +214,7 @@ def get_all_proposals():
     """
     proprietary_proposals = os.listdir(os.path.join(FILESYSTEM_DIR, 'proprietary'))
     public_proposals = os.listdir(os.path.join(FILESYSTEM_DIR, 'public'))
-    all_proposals = [prop[2:] for prop in proprietary_proposals+public_proposals if 'jw' in prop]
+    all_proposals = [prop[2:] for prop in proprietary_proposals + public_proposals if 'jw' in prop]
     proposals = sorted(list(set(all_proposals)), reverse=True)
     return proposals
 
@@ -731,11 +732,13 @@ def get_header_info(filename, filetype):
         # Get header
         header = hdulist[ext].header
 
-        # Determine the extension name
+        # Determine the extension name and type
         if ext == 0:
             header_info[ext]['EXTNAME'] = 'PRIMARY'
+            header_info[ext]['XTENSION'] = 'PRIMARY'
         else:
             header_info[ext]['EXTNAME'] = header['EXTNAME']
+            header_info[ext]['XTENSION'] = header['XTENSION']
 
         # Get list of keywords and values
         exclude_list = ['', 'COMMENT']
@@ -785,6 +788,7 @@ def get_image_info(file_root, rewrite):
     image_info['suffixes'] = []
     image_info['num_ints'] = {}
     image_info['available_ints'] = {}
+    image_info['total_ints'] = {}
 
     # Find all of the matching files
     proposal_dir = file_root[:7]
@@ -803,7 +807,14 @@ def get_image_info(file_root, rewrite):
     for filename in image_info['all_files']:
 
         # Get suffix information
-        suffix = os.path.basename(filename).split('_')[4].split('.')[0]
+        suffix = filename_parser(filename)['suffix']
+
+        # For crf or crfints suffixes, we need to also include the association value
+        # in the suffix, so that preview images can be found later.
+        if suffix in SUFFIXES_TO_ADD_ASSOCIATION:
+            assn = filename.split('_')[-2]
+            suffix = f'{assn}_{suffix}'
+
         image_info['suffixes'].append(suffix)
 
         # Determine JPEG file location
@@ -815,13 +826,44 @@ def get_image_info(file_root, rewrite):
         if os.path.exists(jpg_filepath) and not rewrite:
             pass
 
-        # Record how many integrations there are per filetype
-        jpgs = glob.glob(os.path.join(prev_img_filesys, observation_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
+        # Record how many integrations have been saved as preview images per filetype
+        jpgs = glob.glob(os.path.join(prev_img_filesys, proposal_dir, '{}_{}_integ*.jpg'.format(file_root, suffix)))
         image_info['num_ints'][suffix] = len(jpgs)
         image_info['available_ints'][suffix] = sorted([int(jpg.split('_')[-1].replace('.jpg', '').replace('integ', '')) for jpg in jpgs])
         image_info['all_jpegs'].append(jpg_filepath)
 
+        # Record how many integrations exist per filetype. crf needs to be treated
+        # separately because the suffix includes the association number, which can't
+        # be predicted for a given program.
+        if ((suffix not in SUFFIXES_WITH_AVERAGED_INTS) and (suffix[-3:] != 'crf')):
+            image_info['total_ints'][suffix] = fits.getheader(filename)['NINTS']
+        else:
+            image_info['total_ints'][suffix] = 1
+
     return image_info
+
+
+def get_explorer_extension_names(fits_file, filetype):
+    """ Return a list of Extensions that can be explored interactively
+
+    Parameters
+    ----------
+    filename : str
+        The name of the file of interest, without the extension
+        (e.g. ``'jw86600008001_02101_00007_guider2_uncal'``).
+    filetype : str
+        The type of the file of interest, (e.g. ``'uncal'``)
+
+    Returns
+    -------
+    extensions : list
+        List of Extensions found in header and allowed to be Explored (extension type "IMAGE")
+    """
+
+    header_info = get_header_info(fits_file, filetype)
+
+    extensions = [header_info[extension]['EXTNAME'] for extension in header_info if header_info[extension]['XTENSION'] == 'IMAGE']
+    return extensions
 
 
 def get_instrument_proposals(instrument):
@@ -977,8 +1019,6 @@ def get_proposal_info(filepaths):
                 except KeyError:
                     pass
             obsnums = sorted(obsnums)
-
-            #obsnums = sorted([filename_parser(fname)['observation'] for fname in files_for_proposal])
             observations.extend(obsnums)
             num_files.append(len(files_for_proposal))
             proposals.append(proposal)
@@ -992,31 +1032,6 @@ def get_proposal_info(filepaths):
     proposal_info['observation_nums'] = observations
 
     return proposal_info
-
-
-def get_rootnames_for_instrument_proposal(instrument, proposal):
-    """Return a list of rootnames for the given instrument and proposal
-
-    Parameters
-    ----------
-    instrument : str
-        Name of the JWST instrument, with first letter capitalized
-        (e.g. ``Fgs``)
-
-    proposal : int or str
-        Proposal ID number
-
-    Returns
-    -------
-    rootnames : list
-        List of rootnames for the given instrument and proposal number
-    """
-    tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
-    #tap_results = tap_service.search(f"select obs_id from dbo.ObsPointing where obs_collection='JWST' and calib_level>0 and instrument_name like '{instrument.lower()}' and proposal_id={proposal}")
-    tap_results = tap_service.search(f"select observationID from dbo.CaomObservation where collection='JWST' and maxLevel=2 and insName like '{instrument.lower()}' and prpID='{int(proposal)}'")
-    prop_table = tap_results.to_table()
-    rootnames = prop_table['observationID'].data
-    return rootnames.compressed()
 
 
 def get_rootnames_for_proposal(proposal):
@@ -1077,7 +1092,7 @@ def get_thumbnails_all_instruments(parameters):
                 and (parameters['detectors'][inst.lower()] == [])
                 and (parameters['filters'][inst.lower()] == [])
                 and (parameters['exposure_types'][inst.lower()] == [])
-                and (parameters['read_patterns'][inst.lower()] == [])):
+                and (parameters['read_patterns'][inst.lower()] == [])):  # noqa: W503
             params = {"columns": "*", "filters": []}
         else:
             query_filters = []
@@ -1319,64 +1334,75 @@ def text_scrape(prop_id):
     # Generate url
     url = 'http://www.stsci.edu/cgi-bin/get-proposal-info?id=' + str(prop_id) + '&submit=Go&observatory=JWST'
     html = BeautifulSoup(requests.get(url).text, 'lxml')
-    lines = html.findAll('p')
-    lines = [str(line) for line in lines]
+    not_available = "not available via this interface" in html.text
 
     program_meta = {}
     program_meta['prop_id'] = prop_id
-    program_meta['phase_two'] = '<a href=https://www.stsci.edu/jwst/phase2-public/{}.pdf target="_blank"> Phase Two</a>'
+    if not not_available:
+        lines = html.findAll('p')
+        lines = [str(line) for line in lines]
 
-    if prop_id[0] == '0':
-        program_meta['phase_two'] = program_meta['phase_two'].format(prop_id[1:])
+        program_meta['phase_two'] = '<a href=https://www.stsci.edu/jwst/phase2-public/{}.pdf target="_blank"> Phase Two</a>'
+
+        if prop_id[0] == '0':
+            program_meta['phase_two'] = program_meta['phase_two'].format(prop_id[1:])
+        else:
+            program_meta['phase_two'] = program_meta['phase_two'].format(prop_id)
+
+        program_meta['phase_two'] = BeautifulSoup(program_meta['phase_two'], 'html.parser')
+
+        links = html.findAll('a')
+        proposal_type = links[0].contents[0]
+
+        program_meta['prop_type'] = proposal_type
+
+        # Scrape for titles/names/contact persons
+        for line in lines:
+            if 'Title' in line:
+                start = line.find('</b>') + 4
+                end = line.find('<', start)
+                title = line[start:end]
+                program_meta['title'] = title
+
+            if 'Principal Investigator:' in line:
+                start = line.find('</b>') + 4
+                end = line.find('<', start)
+                pi = line[start:end]
+                program_meta['pi'] = pi
+
+            if 'Program Coordinator' in line:
+                start = line.find('</b>') + 4
+                mid = line.find('<', start)
+                end = line.find('>', mid) + 1
+                pc = line[mid:end] + line[start:mid] + '</a>'
+                program_meta['pc'] = pc
+
+            if 'Contact Scientist' in line:
+                start = line.find('</b>') + 4
+                mid = line.find('<', start)
+                end = line.find('>', mid) + 1
+                cs = line[mid:end] + line[start:mid] + '</a>'
+                program_meta['cs'] = BeautifulSoup(cs, 'html.parser')
+
+            if 'Program Status' in line:
+                start = line.find('<a')
+                end = line.find('</a>')
+                ps = line[start:end]
+
+                # beautiful soupify text to build absolute link
+                ps = BeautifulSoup(ps, 'html.parser')
+                ps_link = ps('a')[0]
+                ps_link['href'] = 'https://www.stsci.edu' + ps_link['href']
+                ps_link['target'] = '_blank'
+                program_meta['ps'] = ps_link
     else:
-        program_meta['phase_two'] = program_meta['phase_two'].format(prop_id)
-
-    program_meta['phase_two'] = BeautifulSoup(program_meta['phase_two'], 'html.parser')
-
-    links = html.findAll('a')
-    proposal_type = links[0].contents[0]
-
-    program_meta['prop_type'] = proposal_type
-
-    # Scrape for titles/names/contact persons
-    for line in lines:
-        if 'Title' in line:
-            start = line.find('</b>') + 4
-            end = line.find('<', start)
-            title = line[start:end]
-            program_meta['title'] = title
-
-        if 'Principal Investigator:' in line:
-            start = line.find('</b>') + 4
-            end = line.find('<', start)
-            pi = line[start:end]
-            program_meta['pi'] = pi
-
-        if 'Program Coordinator' in line:
-            start = line.find('</b>') + 4
-            mid = line.find('<', start)
-            end = line.find('>', mid) + 1
-            pc = line[mid:end] + line[start:mid] + '</a>'
-            program_meta['pc'] = pc
-
-        if 'Contact Scientist' in line:
-            start = line.find('</b>') + 4
-            mid = line.find('<', start)
-            end = line.find('>', mid) + 1
-            cs = line[mid:end] + line[start:mid] + '</a>'
-            program_meta['cs'] = BeautifulSoup(cs, 'html.parser')
-
-        if 'Program Status' in line:
-            start = line.find('<a')
-            end = line.find('</a>')
-            ps = line[start:end]
-
-            # beautiful soupify text to build absolute link
-            ps = BeautifulSoup(ps, 'html.parser')
-            ps_link = ps('a')[0]
-            ps_link['href'] = 'https://www.stsci.edu' + ps_link['href']
-            ps_link['target'] = '_blank'
-            program_meta['ps'] = ps_link
+        program_meta['phase_two'] = 'N/A'
+        program_meta['prop_type'] = 'N/A'
+        program_meta['title'] = 'Proposal not available or does not exist'
+        program_meta['pi'] = 'N/A'
+        program_meta['pc'] = 'N/A'
+        program_meta['cs'] = 'N/A'
+        program_meta['ps'] = 'N/A'
 
     return program_meta
 
@@ -1400,13 +1426,12 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         Dictionary of data needed for the ``thumbnails`` template
     """
 
-
-    #generate the list of all obs of the proposal here, so that the list can be
-    #properly packaged up and sent to the js scripts. but to do this, we need to call
-    #get_rootnames_for_instrument_proposal, which is largely repeating the work done by
-    #get_filenames_by_instrument above. can we use just get_rootnames? we would have to
-    #filter results by obs_num after the call and after obs_list is created.
-    #But we need the filename list below...hmmm...so maybe we need to do both
+    # generate the list of all obs of the proposal here, so that the list can be
+    # properly packaged up and sent to the js scripts. but to do this, we need to call
+    # get_rootnames_for_instrument_proposal, which is largely repeating the work done by
+    # get_filenames_by_instrument above. can we use just get_rootnames? we would have to
+    # filter results by obs_num after the call and after obs_list is created.
+    # But we need the filename list below...hmmm...so maybe we need to do both
     all_rootnames = get_rootnames_for_instrument_proposal(inst, proposal)
     all_obs = []
     for root in all_rootnames:
@@ -1418,7 +1443,6 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         except KeyError:
             pass
     obs_list = sorted(list(set(all_obs)))
-
 
     # Get the available files for the instrument
     filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart'])
@@ -1467,12 +1491,30 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         data_dict['file_data'][rootname] = {}
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
-        data_dict['file_data'][rootname]['suffixes'] = [filename_parser(filename)['suffix'] for filename in available_files]
+
+        # We generate thumbnails only for rate and dark files. Check if these files
+        # exist in the thumbnail filesystem. In the case where neither rate nor
+        # dark thumbnails are present, revert to 'none', which will then cause the
+        # "thumbnail not available" fallback image to be used.
+        available_thumbnails = get_thumbnails_by_rootname(rootname)
+
+        if len(available_thumbnails) > 0:
+            preferred = [thumb for thumb in available_thumbnails if 'rate' in thumb]
+            if len(preferred) == 0:
+                preferred = [thumb for thumb in available_thumbnails if 'dark' in thumb]
+            if len(preferred) > 0:
+                data_dict['file_data'][rootname]['thumbnail'] = os.path.basename(preferred[0])
+            else:
+                data_dict['file_data'][rootname]['thumbnail'] = 'none'
+        else:
+            data_dict['file_data'][rootname]['thumbnail'] = 'none'
+
         try:
             data_dict['file_data'][rootname]['expstart'] = exp_start
             data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
-        except:
-            print("issue with get_expstart for {}".format(rootname))
+        except (ValueError, TypeError) as e:
+            logging.warning("Unable to populate exp_start info for {}".format(rootname))
+            loggin.warning(e)
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)

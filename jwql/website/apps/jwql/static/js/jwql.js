@@ -3,6 +3,8 @@
  *
  * @author Lauren Chambers
  * @author Matthew Bourque
+ * @author Brad Sappington
+ * @author Bryan Hilbert
  */
 
  /**
@@ -10,13 +12,17 @@
  * @param {String} type - The image type (e.g. "rate", "uncal", etc.)
  * @param {String} file_root - The rootname of the file
  * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
- *                          values are the number of integrations for that suffix
+ *                          values are the number of integrations with an associated
+ *                          preview image for that suffix
  * @param {Dict} available_ints - A dictionary whose keys are suffix types and whose
  *                                values are the integration numbers of the available
  *                                jpgs for that suffix
+ * @param {Dict} total_ints - A dictionary whose keys are suffix types and whose
+ *                                values are the total number of integrations for that
+ *                                filetype.
  * @param {String} inst - The instrument for the given file
  */
-  function change_filetype(type, file_root, num_ints, available_ints, inst) {
+  function change_filetype(type, file_root, num_ints, available_ints, total_ints, inst) {
 
     // Change the radio button to check the right filetype
     document.getElementById(type).checked = true;
@@ -30,6 +36,11 @@
     var available_ints = available_ints.replace(/&#39;/g, '"');
     var available_ints = available_ints.replace(/'/g, '"');
     var available_ints = JSON.parse(available_ints)[type];
+
+    // Get the total number of integrations
+    var total_ints = total_ints.replace(/&#39;/g, '"');
+    var total_ints = total_ints.replace(/'/g, '"');
+    var total_ints = JSON.parse(total_ints);
 
     // Propogate the text fields showing the filename and APT parameters
     var fits_filename = file_root + '_' + type;
@@ -52,7 +63,7 @@
     document.getElementById("slider_range").value = 1;
     document.getElementById("slider_range").max = num_ints[type];
     document.getElementById("slider_val").innerHTML = 1;
-    document.getElementById("total_ints").innerHTML = available_ints[available_ints.length - 1] + 1;
+    document.getElementById("total_ints").innerHTML = total_ints[type];
 
     // Update the integration changing buttons
     if (num_ints[type] > 1) {
@@ -157,22 +168,13 @@ function change_int(file_root, num_ints, available_ints, method, direction = 'ri
  * @param {Integer} i - The index of the thumbnail
  * @param {String} file_root - The rootname of the file corresponding to the thumbnail
  */
-function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root) {
+function determine_filetype_for_thumbnail(thumbnail_dir, thumb_filename, i, file_root) {
 
-    // Update the thumbnail to show the most processed filetype
+    // Update the thumbnail filename
     var img = document.getElementById('thumbnail'+i);
-    if (suffixes.indexOf("cal") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_cal_integ0.thumb';
-        img.src = jpg_path;
-    } else if (suffixes.indexOf("rate") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_rate_integ0.thumb';
-        img.src = jpg_path;
-    } else if (suffixes.indexOf("uncal") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
-        img.src = jpg_path;
-    } else if (suffixes.indexOf("dark") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_dark_integ0.thumb';
-        img.src = jpg_path;
+    if (thumb_filename != 'none') {
+        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + thumb_filename;
+        img.src = jpg_path
     };
 
 };
@@ -232,6 +234,82 @@ function determine_page_title_obs(instrument, proposal, observation) {
     };
 };
 
+/**
+ * adds/removes disabled_section class and clears value
+ * @param {string} element_id 
+ * @param {boolean} set_disable 
+ */
+ function set_disabled_section (element_id, set_disable) {
+
+    if (set_disable) {
+        document.getElementById(element_id).classList.add("disabled_section");
+    } else {
+        document.getElementById(element_id).classList.remove("disabled_section");
+    }
+}
+/**
+ * Interprets number of integrations/groups for the selected extension and disables input for calculating difference accordingly
+ * @param {Dict} integrations - A dictionary whose keys are extensions and whose
+ *                              values are the number of integrations for that suffix
+ * @param {Dict} groups - A dictionary whose keys are extensions and whose
+ *                              values are the number of groups for that suffix
+ */
+function explore_image_update_enable_options(integrations, groups) {
+    
+    // Check nr of integrations and groups of currently selected extension
+    ext_name = get_radio_button_value("extension");
+
+    // Clean the input parameters and get our integrations/groups for this extension
+    var calc_difference = false;
+    var integrations = integrations.replace(/&#39;/g, '"');
+    var integrations = integrations.replace(/'/g, '"');
+    var integrations = JSON.parse(integrations)[ext_name];
+    var groups = groups.replace(/&#39;/g, '"');
+    var groups = groups.replace(/'/g, '"');
+    var groups = JSON.parse(groups)[ext_name];
+    
+    // Zero base our calculations
+    integrations -= 1
+    groups -=1
+
+    // Set max values to those available
+    document.getElementById("integration1").max = integrations;
+    document.getElementById("integration2").max = integrations;
+    document.getElementById("group1").max = groups;
+    document.getElementById("group2").max = groups;
+    
+    
+    // If multiple integrations or groups.  Allow difference calculations
+    //          enable calculate_difference box
+    //          enable subtrahend boxes
+    if (integrations > 0 || groups > 0) {
+        set_disabled_section("calcDifferenceForm", false);
+        calc_difference = document.getElementById("calcDifference").checked;
+        
+    } else {
+        document.getElementById("calcDifference").checked.value = false;
+        set_disabled_section("calcDifferenceForm", true);
+    }
+
+    if (!calc_difference) {
+        document.getElementById("integration2").value = null;
+        document.getElementById("group2").value = null;
+    }
+    if (integrations < 1) {
+        document.getElementById("integration1").value = null;
+        document.getElementById("integration2").value = null;
+    }
+    if (groups < 1){
+        document.getElementById("group1").value = null;
+        document.getElementById("group2").value = null;
+    }
+    // Add/remove disable class to integration/group input if not multiple
+    set_disabled_section("integrationInput1", (integrations < 1));
+    set_disabled_section("groupInput1", (groups < 1));
+    set_disabled_section("integrationInput2", (!calc_difference || integrations < 1));
+    set_disabled_section("groupInput2", (!calc_difference || groups < 1));
+    
+}
 
 /**
  * get_radio_button_value
@@ -240,7 +318,7 @@ function determine_page_title_obs(instrument, proposal, observation) {
  */
 function get_radio_button_value(element_name) {
     var element = document.getElementsByName(element_name);
-      
+
     for(i = 0; i < element.length; i++) {
         if(element[i].checked) {
             return element[i].value;
@@ -261,7 +339,7 @@ function get_number_or_none(element_id) {
     return limit;
 }
 
-/** 
+/**
  * If an image is not found, replace with temporary image sized to thumbnail
  */
 function image_error(image, makeThumbnail=false) {
@@ -464,7 +542,7 @@ function update_archive_page(inst, base_url) {
  * @param {Boolean} do_opt_args - Flag to calculate and send optional arguments in URL
  */
  function update_explore_image_page(inst, file_root, filetype, base_url, do_opt_args=false) {
-    
+
     /* if they exist set up the optional parameters before the ajax call*/
     optional_params = "";
     if(do_opt_args) {
@@ -472,13 +550,23 @@ function update_archive_page(inst, base_url) {
         document.getElementById("loading").style.display = "inline-block";
         document.getElementById("explore_image").style.display = "none";
         document.getElementById("explore_image_fail").style.display = "none";
+        calc_difference = document.getElementById("calcDifference").checked;
 
         // Get the arguments to update
         scaling = get_radio_button_value("scaling");
         low_lim = get_number_or_none("low_lim");
         high_lim = get_number_or_none("high_lim");
-        optional_params = optional_params + "_" + scaling + "_" + low_lim + "_" + high_lim;
-        //optional_params = optional_params + "/" + scaling;
+        ext_name = get_radio_button_value("extension");
+        int1_nr = get_number_or_none("integration1");
+        grp1_nr = get_number_or_none("group1");
+        if (calc_difference) {
+            int2_nr = get_number_or_none("integration2");
+            grp2_nr = get_number_or_none("group2");
+        } else {
+            int2_nr="None";
+            grp2_nr="None";
+        }
+        optional_params = optional_params + "/scaling_" + scaling + "/low_" + low_lim + "/high_" + high_lim + "/ext_" + ext_name + "/int1_" + int1_nr + "/grp1_" + grp1_nr + "/int2_" + int2_nr + "/grp2_" + grp2_nr;
     }
 
     $.ajax({
@@ -488,9 +576,9 @@ function update_archive_page(inst, base_url) {
             // Build div content
             content = data["div"];
             content += data["script"];
-            
+
             /* Add the content to the div
-            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery. 
+            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
             */
             $('#explore_image').html(content);
 
@@ -505,8 +593,6 @@ function update_archive_page(inst, base_url) {
         }
     });
 };
-
-
 
 /**
  * Updates the thumbnail-filter div with filter options
@@ -654,7 +740,7 @@ function update_thumbnail_array(data) {
         $("#thumbnail-array")[0].innerHTML += content;
 
         // Add the appropriate image to the thumbnail
-        determine_filetype_for_thumbnail('/static/thumbnails/' , file.suffixes, i, rootname);
+        determine_filetype_for_thumbnail('/static/thumbnails/' , file.thumbnail, i, rootname);
     };
 };
 

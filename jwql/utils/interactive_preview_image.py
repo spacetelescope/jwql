@@ -34,7 +34,7 @@ class InteractivePreviewImg():
     """
 
     def __init__(self, filename, low_lim=None, high_lim=None, scaling='log', contrast=None, extname='SCI',
-                 group=-1, integ=0, mask=None, save_html=None, show=False):
+                 group=None, integ=None, mask=None, save_html=None, show=False):
         """Populate attributes, read in data, and create the Bokeh figure
         Parameters
         ----------
@@ -79,6 +79,12 @@ class InteractivePreviewImg():
         self.show = show
         self.save_html = save_html
 
+        # Allow sending in of None without overriding defaults
+        if(group is None):
+            group = -1
+        if(integ is None):
+            integ = 0
+
         # Determine the min and max values to use for the display
         if self.contrast is None:
             self.contrast = 0.25
@@ -116,7 +122,7 @@ class InteractivePreviewImg():
                 palette="Viridis256", low=limits[0], high=limits[1])
             ticker = BasicTicker()
         yd, xd = self.data.shape
-        info = dict(image=[self.data], x=[0], y=[0], dw=[yd], dh=[xd])
+        info = dict(image=[self.data], x=[0], y=[0], dw=[xd], dh=[yd])
         if 'DQ' in self.extname:
             info["dq"] = [self.bit_list]
         if not self.show and self.save_html is not None:
@@ -198,7 +204,7 @@ class InteractivePreviewImg():
 
         # If a difference image is requested, create the difference image here
         if len(self.data.shape) == 3 and (isinstance(self.group, list) or isinstance(self.integ, list)):
-            diff_img = self.data[0, :, :]*1. - self.data[1, :, :]
+            diff_img = self.data[0, :, :] * 1. - self.data[1, :, :]
             self.data = diff_img
 
         # Get the units of the data. This will be reported as the title of the colorbar
@@ -254,6 +260,7 @@ class InteractivePreviewImg():
         elif len(shapes) == 3:
             integ = [shapes[0] + i if i < 0 else i for i in integ]
             checks.append(np.all(np.array(integ) < shapes[0]))
+
         if not np.all(checks):
             raise ValueError(
                 f'Requested groups {group} or integs {integ} are larger than the input data size of {shapes}.')

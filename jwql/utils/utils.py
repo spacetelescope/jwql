@@ -30,6 +30,7 @@ References
 import getpass
 import glob
 import json
+import pyvo as vo
 import os
 import re
 import shutil
@@ -38,10 +39,10 @@ import jsonschema
 
 from jwql.utils import permissions
 from jwql.utils.constants import FILE_AC_CAR_ID_LEN, FILE_AC_O_ID_LEN, FILE_ACT_LEN, \
-                                 FILE_DATETIME_LEN, FILE_EPOCH_LEN, FILE_GUIDESTAR_ATTMPT_LEN, \
-                                 FILE_OBS_LEN, FILE_PARALLEL_SEQ_ID_LEN, FILE_PROG_ID_LEN, \
-                                 FILE_SEG_LEN, FILE_SOURCE_ID_LEN, FILE_SUFFIX_TYPES, FILE_TARG_ID_LEN, \
-                                 FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, FILETYPE_WO_STANDARD_SUFFIX, \
+                                 FILE_DATETIME_LEN, FILE_EPOCH_LEN, FILE_GUIDESTAR_ATTMPT_LEN_MIN, \
+                                 FILE_GUIDESTAR_ATTMPT_LEN_MAX, FILE_OBS_LEN, FILE_PARALLEL_SEQ_ID_LEN, \
+                                 FILE_PROG_ID_LEN, FILE_SEG_LEN, FILE_SOURCE_ID_LEN, FILE_SUFFIX_TYPES, \
+                                 FILE_TARG_ID_LEN, FILE_VISIT_GRP_LEN, FILE_VISIT_LEN, FILETYPE_WO_STANDARD_SUFFIX, \
                                  JWST_INSTRUMENT_NAMES_SHORTHAND
 
 __location__ = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -380,7 +381,7 @@ def filename_parser(filename):
         r"(?P<observation>\d{" + f"{FILE_OBS_LEN}" + "})" \
         r"(?P<visit>\d{" + f"{FILE_VISIT_LEN}" + "})" \
         r"_gs-(?P<guider_mode>(id|acq1|acq2|track|fg))" \
-        r"_((?P<date_time>\d{" + f"{FILE_DATETIME_LEN}" + r"})|(?P<guide_star_attempt_id>\d{" + f"{FILE_GUIDESTAR_ATTMPT_LEN}" + "}))"
+        r"_((?P<date_time>\d{" + f"{FILE_DATETIME_LEN}" + r"})|(?P<guide_star_attempt_id>\d{" + f"{FILE_GUIDESTAR_ATTMPT_LEN_MIN},{FILE_GUIDESTAR_ATTMPT_LEN_MAX}" + "}))"
 
     # Segment guider filenames
     # e.g. "jw01118005001_gs-fg_2022150070312-seg002_uncal.fits"
@@ -390,7 +391,7 @@ def filename_parser(filename):
         r"(?P<observation>\d{" + f"{FILE_OBS_LEN}" + "})" \
         r"(?P<visit>\d{" + f"{FILE_VISIT_LEN}" + "})" \
         r"_gs-(?P<guider_mode>(id|acq1|acq2|track|fg))" \
-        r"_((?P<date_time>\d{" + f"{FILE_DATETIME_LEN}" + r"})|(?P<guide_star_attempt_id>\d{" + f"{FILE_GUIDESTAR_ATTMPT_LEN}" + "}))" \
+        r"_((?P<date_time>\d{" + f"{FILE_DATETIME_LEN}" + r"})|(?P<guide_star_attempt_id>\d{" + f"{FILE_GUIDESTAR_ATTMPT_LEN_MIN},{FILE_GUIDESTAR_ATTMPT_LEN_MAX}" + "}))" \
         r"-seg(?P<segment>\d{" + f"{FILE_SEG_LEN}" + "})"
 
     # Build list of filename types
@@ -541,6 +542,30 @@ def get_base_url():
         base_url = 'http://127.0.0.1:8000'
 
     return base_url
+
+
+def get_rootnames_for_instrument_proposal(instrument, proposal):
+    """Return a list of rootnames for the given instrument and proposal
+
+    Parameters
+    ----------
+    instrument : str
+        Name of the JWST instrument, with first letter capitalized
+        (e.g. ``Fgs``)
+
+    proposal : int or str
+        Proposal ID number
+
+    Returns
+    -------
+    rootnames : list
+        List of rootnames for the given instrument and proposal number
+    """
+    tap_service = vo.dal.TAPService("http://vao.stsci.edu/caomtap/tapservice.aspx")
+    tap_results = tap_service.search(f"select observationID from dbo.CaomObservation where collection='JWST' and maxLevel=2 and insName like '{instrument.lower()}' and prpID='{int(proposal)}'")
+    prop_table = tap_results.to_table()
+    rootnames = prop_table['observationID'].data
+    return rootnames.compressed()
 
 
 def check_config_for_key(key):
