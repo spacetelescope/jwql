@@ -410,7 +410,7 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
                'obs': observation,
                'obs_list' : obs_list,
                'prop': proposal,
-               'prop_meta': proposal_meta}
+               'prop_meta': proposal_meta,
                'base_url': get_base_url()}
 
     return render(request, template, context)
