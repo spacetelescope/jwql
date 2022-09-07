@@ -275,9 +275,9 @@ def archived_proposals_ajax(request, inst):
     all_entries = Archive.objects.filter(instrument=inst)
 
     # Get a list of proppsal numbers
-    proposals = [entry.proposal.prop_id async for entry in all_entries]
+    proposals = [entry.proposal.prop_id for entry in all_entries]
     num_proposals = len(proposals)
-    thumbnail_paths = [entry.proposal.thumbnail_path async for entry in all_entries]
+    thumbnail_paths = [entry.proposal.thumbnail_path for entry in all_entries]
 
     min_obsnums = []
     num_files = []
@@ -287,16 +287,16 @@ def archived_proposals_ajax(request, inst):
         #prop_entries = Archive.objects.filter(proposal=proposal)
         #or do we want to just work from all_entries here?
         prop_entries = all_entries.filter(proposal=proposal)
-        obsnums = sorted([entry.proposal.observation.obsnum async for entry in prop_entries])
+        obsnums = sorted([entry.proposal.observation.obsnum for entry in prop_entries])
         min_obsnums.append(obsnums[0])
 
         # Collect the number of files per observation and then sum
         # to get the number of files per proposal
-        obs_num_files = [entry.observation.number_of_files async for entry in prop_entries]
+        obs_num_files = [entry.observation.number_of_files for entry in prop_entries]
         num_files.append(np.sum(np.array(obs_num_files)))
 
     context = {'inst': inst,
-               'num_proposals': num_proposals
+               'num_proposals': num_proposals,
                'min_obsnum': min_obsnums,
                'thumbnails': {'proposals': proposals,
                               'thumbnail_paths': thumbnail_paths,

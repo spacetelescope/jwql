@@ -100,7 +100,7 @@ class ExposureType(models.Model):
     all_exptypes = [(etype, etype) for etype in exptypes]
 
     exp_type = models.CharField(
-        max_length=15,
+        max_length=25,
         choices=all_exptypes,
         blank=False,
         help_text='exposure type',
@@ -120,7 +120,7 @@ class Observation(models.Model):
     # Fields
     obsnum = models.CharField(max_length=3, help_text='Observation number, as a 3 digit string')
     number_of_files = models.IntegerField(help_text='Number of files in the proposal')
-    exposure_type = models.ManyToManyField(ExposureTypes, blank=False, null=False, on_delete=models.CASCADE)
+    exposure_type = models.ManyToManyField(ExposureType, blank=False)
     obsstart = models.FloatField(help_text='Time of the beginning of the observation in MJD')
     obsend = models.FloatField(help_text='Time of the end of the observation in MJD')
 
