@@ -32,6 +32,7 @@ References
 import os
 
 from django.db import models
+import yaml
 
 from jwst.datamodels import schemas
 
