@@ -271,16 +271,13 @@ def archived_proposals_ajax(request, inst):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    # If we use one table per instrument
-    #all_entries = Archive.objects.all()
-
     # If we use one table for all instruments
     all_entries = Archive.objects.filter(instrument=inst)
 
     # Get a list of proppsal numbers
-    proposals = list(set([entry async for entry in all_entries.proposal]))
+    proposals = [entry.proposal.prop_id async for entry in all_entries]
     num_proposals = len(proposals)
-    thumbnail_paths = [entry async for entry in prop_entries.thumbnail_path]
+    thumbnail_paths = [entry.proposal.thumbnail_path async for entry in all_entries]
 
     min_obsnums = []
     num_files = []
@@ -290,12 +287,12 @@ def archived_proposals_ajax(request, inst):
         #prop_entries = Archive.objects.filter(proposal=proposal)
         #or do we want to just work from all_entries here?
         prop_entries = all_entries.filter(proposal=proposal)
-        obsnums = sorted([entry async for entry in prop_entries.observation.obsnum])
+        obsnums = sorted([entry.proposal.observation.obsnum async for entry in prop_entries])
         min_obsnums.append(obsnums[0])
 
         # Collect the number of files per observation and then sum
         # to get the number of files per proposal
-        obs_num_files = [entry async for entry in prop_entries.observation.number_of_files]
+        obs_num_files = [entry.observation.number_of_files async for entry in prop_entries]
         num_files.append(np.sum(np.array(obs_num_files)))
 
     context = {'inst': inst,
