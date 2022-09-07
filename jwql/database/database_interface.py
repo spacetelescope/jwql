@@ -446,6 +446,17 @@ MIRIReadnoiseQueryHistory = monitor_orm_factory('miri_readnoise_query_history')
 MIRIReadnoiseStats = monitor_orm_factory('miri_readnoise_stats')
 FGSReadnoiseQueryHistory = monitor_orm_factory('fgs_readnoise_query_history')
 FGSReadnoiseStats = monitor_orm_factory('fgs_readnoise_stats')
+NIRCamCosmicRayQueryHistory = monitor_orm_factory('nircam_cosmic_ray_query_history')
+NIRCamCosmicRayStats = monitor_orm_factory('nircam_cosmic_ray_stats')
+MIRICosmicRayQueryHistory = monitor_orm_factory('miri_cosmic_ray_query_history')
+MIRICosmicRayStats = monitor_orm_factory('miri_cosmic_ray_stats')
+NIRISSCosmicRayQueryHistory = monitor_orm_factory('niriss_cosmic_ray_query_history')
+NIRISSCosmicRayStats = monitor_orm_factory('niriss_cosmic_ray_stats')
+FGSCosmicRayQueryHistory = monitor_orm_factory('fgs_cosmic_ray_query_history')
+FGSCosmicRayStats = monitor_orm_factory('fgs_cosmic_ray_stats')
+NIRSpecCosmicRayQueryHistory = monitor_orm_factory('nirspec_cosmic_ray_query_history')
+NIRSpecCosmicRayStats = monitor_orm_factory('nirspec_cosmic_ray_stats')
+
 
 if __name__ == '__main__':
     base.metadata.create_all(engine)

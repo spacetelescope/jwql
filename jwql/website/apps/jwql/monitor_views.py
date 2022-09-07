@@ -32,6 +32,7 @@ import os
 from django.shortcuts import render
 
 from . import bokeh_containers
+from jwql.website.apps.jwql import bokeh_containers
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.utils import get_config
 
@@ -93,6 +94,37 @@ def bias_monitor(request, inst):
     tabs_components = bokeh_containers.bias_monitor_tabs(inst)
 
     template = "bias_monitor.html"
+
+    context = {
+        'inst': inst,
+        'tabs_components': tabs_components,
+    }
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
+
+
+def cosmic_ray_monitor(request, inst):
+    """Generate the cosmic ray monitor page for a given instrument
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # Ensure the instrument is correctly capitalized
+    inst = inst.upper()
+
+    tabs_components = bokeh_containers.cosmic_ray_monitor_tabs(inst)
+
+    template = "cosmic_ray_monitor.html"
 
     context = {
         'inst': inst,
