@@ -101,7 +101,7 @@ class ExposureType(models.Model):
     exp_type = models.CharField(
         max_length=15,
         choices=all_exptypes,
-        blank=True,
+        blank=False,
         help_text='exposure type',
     )
 
@@ -119,8 +119,9 @@ class Observation(models.Model):
     # Fields
     obsnum = models.CharField(max_length=3, help_text='Observation number, as a 3 digit string')
     number_of_files = models.IntegerField(help_text='Number of files in the proposal')
-    exposure_type = models.ForeignKey(ExposureTypes, blank=True, null=True, on_delete=models.SET_NULL)
-    obsdate = models.DateTimeField(help_text='Datetme of most recent exposure')
+    exposure_type = models.ManyToManyField(ExposureTypes, blank=False, null=False, on_delete=models.CASCADE)
+    obsstart = models.FloatField(help_text='Time of the beginning of the observation in MJD')
+    obsend = models.FloatField(help_text='Time of the end of the observation in MJD')
 
     # …
     # Metadata
@@ -142,7 +143,7 @@ class Proposal(models.Model):
     """
     # Fields
     prop_id = models.CharField(max_length=5, help_text="5-digit proposal ID string")
-    observation = models.ForeignKey(Observation, blank=True, null=True, on_delete=models.SET_NULL)
+    observation = models.ForeignKey(Observation, blank=False, null=False, on_delete=models.CASCADE)
     thumbnail_path = models.CharField(max_length=100, help_text='Path to the proposal thumbnail')
 
     # Metadata
@@ -164,7 +165,7 @@ class Archive(models.Model):
 
     # Fields
     instrument = models.CharField(max_length=7, help_text="Instrument name")
-    proposal = models.ForeignKey(Proposal, blank=True, null=True, on_delete=?)
+    proposal = models.ForeignKey(Proposal, blank=False, null=False, on_delete=models.CASCADE)
 
     # …
     # Metadata
