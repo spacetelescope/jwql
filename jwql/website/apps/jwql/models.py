@@ -83,46 +83,58 @@ class ImageData(BaseModel):
         db_table = 'imagedata'
 
 
-
-class ExposureType(models.Model):
-    """A class defining the exposure type for a given observation. Observations can have more
-    than one exposure type."""
+class Archive(models.Model):
+    """A class defining the model used to hold information needed for the archive pages."""
 
     # Fields
-    #exp_type = models.CharField(max_length=15, help_text="Exposure type abbreviation")
+    instrument = models.CharField(max_length=7, help_text="Instrument name", primary_key=True)
 
-    # Use the exposure type schema entry from the jwst pacakage to create a list of
-    # all possible exposure types
-    schema_file = os.path.join(os.path.dirname(schemas.__file__), 'core.schema.yaml')
-    with open(schema_file, 'r') as fobj:
-        temp = yaml.safe_load(fobj)
-    exptypes = temp['properties']['meta']['properties']['exposure']['properties']['type']['enum']
-    all_exptypes = [(etype, etype) for etype in exptypes]
-
-    exp_type = models.CharField(
-        max_length=25,
-        choices=all_exptypes,
-        blank=False,
-        help_text='exposure type',
-    )
-
+    # …
+    # Metadata
     class Meta:
-        ordering = ['exp_type']
+        ordering = ['instrument']
+
+    # Methods
+    def get_absolute_url(self):
+        """Returns the URL to access a particular instance of Archive."""
+        return reverse('archive-view', args=[str(self.id)])
 
     def __str__(self):
         """String for representing the Archive object (in Admin site etc.)."""
-        return self.exp_type
+        return self.instrument
+
+
+class Proposal(models.Model):
+    """
+    """
+    # Fields
+    prop_id = models.CharField(max_length=5, help_text="5-digit proposal ID string", primary_key=True)
+    thumbnail_path = models.CharField(max_length=100, help_text='Path to the proposal thumbnail')
+    archive = models.ForeignKey(Archive, blank=False, null=False, on_delete=models.CASCADE)
+
+    # Metadata
+    class Meta:
+        ordering = ['-prop_id']
+
+    # Methods
+    def get_absolute_url(self):
+        """Returns the URL to access a particular instance of Archive."""
+        return reverse('proposal-view', args=[str(self.id)])
+
+    def __str__(self):
+        """String for representing the Archive object (in Admin site etc.)."""
+        return self.prop_id
 
 
 class Observation(models.Model):
     """
     """
     # Fields
-    obsnum = models.CharField(max_length=3, help_text='Observation number, as a 3 digit string')
+    obsnum = models.CharField(max_length=3, help_text='Observation number, as a 3 digit string', primary_key=True)
     number_of_files = models.IntegerField(help_text='Number of files in the proposal')
-    exposure_type = models.ManyToManyField(ExposureType, blank=False)
     obsstart = models.FloatField(help_text='Time of the beginning of the observation in MJD')
     obsend = models.FloatField(help_text='Time of the end of the observation in MJD')
+    proposal = models.ForeignKey(Proposal, blank=False, null=False, on_delete=models.CASCADE)
 
     # …
     # Metadata
@@ -139,45 +151,29 @@ class Observation(models.Model):
         return self.obsnum
 
 
-class Proposal(models.Model):
-    """
-    """
-    # Fields
-    prop_id = models.CharField(max_length=5, help_text="5-digit proposal ID string")
+class ExposureType(models.Model):
+    """A class defining the exposure type for a given observation. Observations can have more
+    than one exposure type."""
+
+    # Use the exposure type schema entry from the jwst pacakage to create a list of
+    # all possible exposure types
+    schema_file = os.path.join(os.path.dirname(schemas.__file__), 'core.schema.yaml')
+    with open(schema_file, 'r') as fobj:
+        temp = yaml.safe_load(fobj)
+    exptypes = temp['properties']['meta']['properties']['exposure']['properties']['type']['enum']
+    all_exptypes = [(etype, etype) for etype in exptypes]
+
+    exp_type = models.CharField(
+        max_length=25,
+        choices=all_exptypes,
+        blank=False,
+        help_text='exposure type',
+    )
     observation = models.ForeignKey(Observation, blank=False, null=False, on_delete=models.CASCADE)
-    thumbnail_path = models.CharField(max_length=100, help_text='Path to the proposal thumbnail')
 
-    # Metadata
     class Meta:
-        ordering = ['-prop_id']
-
-    # Methods
-    def get_absolute_url(self):
-        """Returns the URL to access a particular instance of Archive."""
-        return reverse('proposal-view', args=[str(self.id)])
+        ordering = ['exp_type']
 
     def __str__(self):
         """String for representing the Archive object (in Admin site etc.)."""
-        return self.prop_id
-
-
-class Archive(models.Model):
-    """A class defining the model used to hold information needed for the archive pages."""
-
-    # Fields
-    instrument = models.CharField(max_length=7, help_text="Instrument name")
-    proposal = models.ForeignKey(Proposal, blank=False, null=False, on_delete=models.CASCADE)
-
-    # …
-    # Metadata
-    class Meta:
-        ordering = ['-proposal']
-
-    # Methods
-    def get_absolute_url(self):
-        """Returns the URL to access a particular instance of Archive."""
-        return reverse('archive-view', args=[str(self.id)])
-
-    def __str__(self):
-        """String for representing the Archive object (in Admin site etc.)."""
-        return self.instrument
+        return self.exp_type
