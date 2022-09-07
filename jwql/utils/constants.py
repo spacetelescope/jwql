@@ -250,7 +250,8 @@ IGNORED_SUFFIXES = ['original', 'stream', 'x1d', 'x1dints', 'c1d']
 # Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
     'dark_monitor': ['<instrument>_dark_dark_current', '<instrument>_dark_pixel_stats', '<instrument>_dark_query_history'],
-    'bad_pixel_monitor': ['<instrument>_bad_pixel_stats', '<instrument>_bad_pixel_query_history']}
+    'bad_pixel_monitor': ['<instrument>_bad_pixel_stats', '<instrument>_bad_pixel_query_history'],
+    'cosmic_ray_monitor': ['<instrument>_cosmic_ray_stats', '<instrument>_cosmic_ray_query_history']}
 
 INSTRUMENT_SERVICE_MATCH = {
     'FGS': 'Mast.Jwst.Filtered.Fgs',
@@ -292,12 +293,14 @@ JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
 MONITORS = {
     'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor'),
             ('Readnoise Monitor', '/fgs/readnoise_monitor'),
-            ('Dark Current Monitor', '/fgs/dark_monitor')],
+            ('Dark Current Monitor', '/fgs/dark_monitor'),
+            ('Cosmic Ray Monitor', '/fgs/cosmic_ray_monitor')],
     'miri': [('Dark Current Monitor', '/miri/dark_monitor'),
              ('Data Trending', '#'),
              ('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
+             ('Cosmic Ray Monitor', '/miri/cosmic_ray_monitor'),
              ('Readnoise Monitor', '/miri/readnoise_monitor'),
-             ('Cosmic Ray Monitor', '#'),
+             ('Cosmic Ray Monitor', '/miri/cosmic_ray_monitor'),
              ('Photometry Monitor', '#'),
              ('TA Failure Monitor', '#'),
              ('Blind Pointing Accuracy Monitor', '#'),
@@ -308,13 +311,15 @@ MONITORS = {
                ('Gain Level Monitor', '#'),
                ('Dark Current Monitor', '/nircam/dark_monitor'),
                ('Bad Pixel Monitor', '/nircam/bad_pixel_monitor'),
-               ('Photometric Stability Monitor', '#')],
+               ('Photometric Stability Monitor', '#'),
+               ('Cosmic Ray Monitor', '/nircam/cosmic_ray_monitor')],
     'niriss': [('Bad Pixel Monitor', '/niriss/bad_pixel_monitor'),
                ('Readnoise Monitor', '/niriss/readnoise_monitor'),
                ('AMI Calibrator Monitor', '#'),
                ('TSO RMS Monitor', '#'),
                ('Bias Monitor', '/niriss/bias_monitor'),
-               ('Dark Current Monitor', '/niriss/dark_monitor')],
+               ('Dark Current Monitor', '/niriss/dark_monitor'),
+               ('Cosmic Ray Monitor', '/niriss/cosmic_ray_monitor')],
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
@@ -326,7 +331,8 @@ MONITORS = {
                 ('Instrument Model Updates', '#'),
                 ('Failed-open Shutter Monitor', '#'),
                 ('Bias Monitor', '/nirspec/bias_monitor'),
-                ('Dark Monitor', '/nirspec/dark_monitor')]}
+                ('Dark Monitor', '/nirspec/dark_monitor'),
+                ('Cosmic Ray Monitor', '/nirspec/cosmic_ray_monitor')]}
 
 # Possible suffix types for coronograph exposures
 NIRCAM_CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']
