@@ -266,68 +266,6 @@ def anomaly_orm_factory(class_name):
     return type(class_name, (base,), data_dict)
 
 
-def archive_orm_factory(class_name):
-    """Create a ``SQLAlchemy`` ORM Class for an archive table.
-
-    Parameters
-    ----------
-    class_name : str
-        The name of the class to be created
-
-    Returns
-    -------
-    class : obj
-        The ``SQLAlchemy`` ORM
-    """
-
-    # Initialize a dictionary to hold the column metadata
-    data_dict = {}
-    data_dict['__tablename__'] = class_name.lower()
-
-    instrument = data_dict['__tablename__'].split('_')[0]
-
-
-    # What level of granularity do we want here? Would it be useful to maintain
-    # a list of exp_types that go with each obsnum? That might help for filtering
-    # or sorting down the road?
-
-    # Create a table with the appropriate Columns
-    data_dict['id'] = Column(Integer, primary_key=True, nullable=False)
-    data_dict['date'] = Column(DateTime, unique=True, nullable=False)
-    data_dict['proposal'] = Column(Integer, nullable=False)
-    data_dict['osbnum'] = Column(Integer, nullable=False)
-    data_dict['thumbnail_path'] = Column(String, nullable=False)  string_array_1d
-    data_dict['num_files'] = Column(Integer, nullable=False)
-    data_dict['exp_types'] = Column(ARRAY(String, dimensions=1), nullable=False)
-
-    #data_dict['rootname'] = Column(String(), nullable=False)
-    #data_dict['flag_date'] = Column(DateTime, nullable=False)
-    #data_dict['user'] = Column(String(), nullable=False)
-
-    #for column in data_dict['columns']:
-    #    data_dict[column] = Column(Boolean, nullable=False, default=False)
-
-    #instrument_anomalies = []
-    #for anomaly in ANOMALIES_PER_INSTRUMENT:
-    #    if instrument in ANOMALIES_PER_INSTRUMENT[anomaly]:
-    #        instrument_anomalies.append(anomaly)
-
-    # Define anomaly table column names
-    #data_dict['columns'] = instrument_anomalies
-    #data_dict['names'] = [name.replace('_', ' ') for name in data_dict['columns']]
-
-    # Create a table with the appropriate Columns
-    #data_dict['id'] = Column(Integer, primary_key=True, nullable=False)
-    #data_dict['rootname'] = Column(String(), nullable=False)
-    #data_dict['flag_date'] = Column(DateTime, nullable=False)
-    #data_dict['user'] = Column(String(), nullable=False)
-
-    #for column in data_dict['columns']:
-    #    data_dict[column] = Column(Boolean, nullable=False, default=False)
-
-    return type(class_name, (base,), data_dict)
-
-
 def get_monitor_columns(data_dict, table_name):
     """Read in the corresponding table definition text file to
     generate ``SQLAlchemy`` columns for the table.
@@ -467,11 +405,6 @@ NIRISSAnomaly = anomaly_orm_factory('niriss_anomaly')
 NIRSpecAnomaly = anomaly_orm_factory('nirspec_anomaly')
 MIRIAnomaly = anomaly_orm_factory('miri_anomaly')
 FGSAnomaly = anomaly_orm_factory('fgs_anomaly')
-NIRCamArchive = archive_orm_factory('nircam_archive')
-NIRISSArchive = archive_orm_factory('niriss_archive')
-NIRSpecArchive = archive_orm_factory('nirspec_archive')
-MIRIArchive = archive_orm_factory('miri_archive')
-FGSArchive = archive_orm_factory('fgs_archive')
 NIRCamDarkQueryHistory = monitor_orm_factory('nircam_dark_query_history')
 NIRCamDarkPixelStats = monitor_orm_factory('nircam_dark_pixel_stats')
 NIRCamDarkDarkCurrent = monitor_orm_factory('nircam_dark_dark_current')
