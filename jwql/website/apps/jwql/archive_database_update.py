@@ -23,13 +23,17 @@ Dependencies
     placed in the ``jwql`` directory.
 """
 
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.utils import filename_parser, filesystem_path, get_config
+import logging
 
+from jwql.website.apps.jwql.models import Archive, ExposureType, Observation, Proposal
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.logging_functions import log_info, log_fail
+from jwql.utils.utils import filename_parser, filesystem_path, get_config
 from jwql.website.apps.jwql.data_containers import get_instrument_proposals, get_filenames_by_instrument
 from jwql.website.apps.jwql.data_containers import get_proposal_info, mast_query_filenames_by_instrument
 
-
+@log_info
+@log_fail
 def get_updates(inst):
     """Generate the page listing all archived proposals in the database
 
@@ -42,6 +46,8 @@ def get_updates(inst):
     -------
 
     """
+    logging.info(f'Updating database for {inst} archive page.')
+
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
     filesystem = get_config()['filesystem']
@@ -54,15 +60,14 @@ def get_updates(inst):
                          'thumbnail_paths': [],
                          'num_files': []}
 
-    # Dictionary to hold summary observation of exp_types
-    exp_types = {}
-
     # Get list of all files for the given instrument
     for proposal in all_proposals:
         # Get lists of all public and proprietary files for the program
+        logging.info(f'Working on proposal {proposal}')
         filenames_public, metadata_public, filenames_proprietary, metadata_proprietary = get_all_possible_filenames_for_proposal(inst, proposal)
 
         # Find the location in the filesystem for all files
+        logging.info('Getting all filenames and locating in the filesystem')
         filepaths_public = files_in_filesystem(filenames_public, 'public')
         filepaths_proprietary = files_in_filesystem(filenames_proprietary, 'proprietary')
         filenames = filepaths_public + filepaths_proprietary
@@ -94,6 +99,7 @@ def get_updates(inst):
                 latest_date = np.max(all_end_dates)
 
                 # Update the appropriate database table
+                logging.info('Updating database')
                 update_database_table(inst, proposal, obsnum, proposal_info['thumbnail_paths'][0], num_files,
                                       exp_types, starting_date, latest_date)
 
