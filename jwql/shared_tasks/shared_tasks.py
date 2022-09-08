@@ -30,69 +30,41 @@ Author
 Use
 ---
 
-The basic method of running a celery task is::
+The basic method of running a celery task is to use the provided ``run_pipeline()``
+convenience function::
 
     # This can, of course, be a relative import
-    from jwql.shared_tasks.shared_tasks import <task>
+    from jwql.shared_tasks.shared_tasks import run_pipeline
 
     def some_function(some_arguments):
         # ... do some work ...
-        task_result = <task>.delay(<arguments>)
-
-        # Note that get() is a blocking call, so it will wait for the result to be
-        # available, and then return the result.
-        # Note that if the task raises an exception, then the get() method will raise
-        # the same exception. To avoid this, call get(propagate=False)
-        return_value = task_result.get()
-        if task_result.successful():
-            # ... do work with the return value ...
-        else:
-            # do whatever needs to be done on failure
-            # if you need an exception, look at task_result.traceback
+        
+        # This returns the calibrated file's name and output location, where the output
+        # file will be transferred into the same internal location as the input file. It
+        # will block (i.e. wait) until the calibration has finished before returning. If
+        # the calibration raises an exception, it will also raise an exception.
+        output_file_or_files = run_pipeline(input_file, input_extension, requested_extensions, instrument, jump_pipe=False)
 
         # ... do other work ...
 
 If you want to queue up multiple instances of the same task, and get the results back as
 a list::
 
-    from celery import group
-    from jwql.shared_tasks.shared_tasks import my_task
+    from jwql.shared_tasks.shared_tasks import run_parallel_pipeline
 
     # ...
-    task_results = group(my_task.s(arg) for arg in some_list)
-    for task_result in task_results.get():
-        # do whatever result checking, and whatever work
+    
+    # This version will take a list of input files, and will take either a single list
+    # of requested extensions (which will be applied to every input file) *or* a dictionary
+    # of requested extensions indexed by the names of the input files. It will return a
+    # dictionary of output files, indexed by the names of the input files. It will block
+    # until complete.
+    outputs = run_parallel_pipeline(input_files, input_ext, requested_exts, instrument, jump_pipe=False)
+    
     # ...
 
-Finally, if you want to queue up a bunch of tasks and then work on them as they succeed
-(or fail), then one way to do so is::
-
-    from jwql.shared_tasks.shared_tasks import my_task
-
-    # ...
-    def do_work(work_args):
-        # ...
-
-    # ...
-    task_results = []
-    for item in to_do_items:
-        task_results.append(my_task.delay(item))
-
-    while len(task_results) > 0:
-        i = 0
-        while i < len(task_results):
-            if task_results[i].ready():
-                task_result = task_results.pop(i)
-                if task_result.successful():
-                    do_work(task_result.get())
-                else:
-                    # ... handle failure ...
-                    # REMEMBER that you need to call get() or forget() on the result.
-                task_results.remove
-            else:
-                i += 1
-        # in order to avoid busy-waiting, wait for a minute before checking again.
-        sleep(60)
+It is possible to set up non-blocking celery tasks, or to do other fancy things, but as of
+yet it hasn't been worth putting together a convenience function that will do that.
 
 There are many other ways to call and use tasks, including ways to group tasks, run them
 synchronously, run a group of tasks with a final callback function, etc. These are best
