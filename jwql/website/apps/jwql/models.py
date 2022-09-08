@@ -135,6 +135,7 @@ class Observation(models.Model):
     obsstart = models.FloatField(help_text='Time of the beginning of the observation in MJD')
     obsend = models.FloatField(help_text='Time of the end of the observation in MJD')
     proposal = models.ForeignKey(Proposal, blank=False, null=False, on_delete=models.CASCADE)
+    exptypes = models.CharField(max_length=100, help_text='Comma-separated list of exposure types')
 
     # …
     # Metadata

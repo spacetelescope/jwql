@@ -179,6 +179,15 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
     """
     logging.info('')
 
+
+    #from tutorial:
+    #The get() method only works for single objects. If your search term returns multiple records, you will get an error.
+    #if you try to retrieve a record that doesn’t exist, Django will throw a DoesNotExist error
+
+    #If the search string doesn’t match, filter() will return an empty QuerySet:
+
+
+
     # First, check to see if ExposureType instances exist for all of the elements
     # in types. For any that are missing, create and save an entry to the db.
     for etype in types:
@@ -188,16 +197,30 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
             type_instance.save()
 
     # Check to see if there is an extry for the instrument/proposal/observation
-    existing = Archive.objects.get(instrument=instrument,
-                                   proposal__prop_id=prop,
-                                   proposal__observation__obsnum=obs)
+
+    # Use this if we make exp_type a simple list/array in the observation model
+    existing = Observation.objects.filter(obsnum=obs,
+                                          proposal__prop_id=prop,
+                                          proposal__archive__instrument=instrument)
+
+
+    #or:
+
+    # Use this if we keep ExposureType as a model
+    #existing = ExposureType.objects.filter(exp_type=??,
+    #                                       observation__obsnum=obs,
+    #                                       observation__proposal__prop_id=prop,
+    #                                       observation__proposal__archive__instrument=instrument)
+
+
 
     # If the entry exists, check the exp_type list of the entry and add the current
     # exptype if necessary.
     if len(existing) > 0:
         # exp_type is not allowed to be null, so no need to check for that condition here
         #existing_exps = [entry.instrument.proposal.observation.exposure_type.exp_type async for entry in existing]
-        existing_exps = existing.instrument.proposal.observation.exposure_type.exp_type
+        #existing_exps = existing.instrument.proposal.observation.exposure_type.exp_type
+        existing_exps = existing.exptypes.split(',')  # If exptypes are stored as a list in the Observation model
 
         # Loop over the list of new types
         for etype in types:
@@ -206,42 +229,68 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
             if etype not in existing_exps:
 
                 # Get the ExposureType instance for this new exp_type to be added
-                type_instance = ExposureType.object.get(exp_type=etype)
+                #type_instance = ExposureType.object.get(exp_type=etype)
 
                 # Add the new exptype to the instrument/proposal/observation entry
                 #existing.instrument.proposal.observation.exposure_type.exp_type.append(type_instance)
-                existing_exps.append(type_instance)
+                #existing_exps.append(type_instance)
+                existing_exps.append(etype)
 
         # Update the entry with the new list of exp_types
-        existing.update(exp_type=existing_exps)
+        new_exp_list = ','.join(existing_exps)
+        existing.update(exptypes=new_exp_list)
 
     # If the instrument/proposal/observation entry does not yet exist, we need to create it
     else:
         # Generate a list of the query sets for the exposure types to be added
-        exp_instances = [ExposureType.object.get(exp_type=etype) for etype in types]
+        #exp_instances = [ExposureType.object.get(exp_type=etype) for etype in types]
 
         # Create the instance for the observation
-        obs_instance = Observation(obsnum=obs, number_of_files=files, exposure_type=exp_instances,
-                                   obsstart=startdate, obsend=enddate)
+        types_str = ','.join(types)
+
+        # do we just create an instancce here, or search for an existing instance?
+        #archive_instance = Archive(instrument=instrument)
+        #or:
+        archive_query = Archive.object.filter(instrument=instrument)
+        if len(archive_instance) > 0:
+            archive_instance = archive_query[0]
+        else:
+            archive_instance = Archive(instrument=instrument)
+            archive_instance.save()
+
+        # Same here. Do we filter for an existing entry first? Or just create one?
+        prop_query = Proposal.object.filter(prop_id=prop, archive=archive_instance)
+        if len(prop_instance) > 0:
+            prop_instance = prop_query[0]
+        else:
+            prop_instance = Proposal(prop_id=prop, thumbnail_path=thumbnail, archive=archive_instance)
+            prop_instance.save()
+
+        # Now that we have Archive and Proposal instances, we can create the new Observation instance
+        obs_instance = Observation(obsnum=obs, number_of_files=files, exptypes=types_str,
+                                   obsstart=startdate, obsend=enddate,
+                                   proposal=prop_instance)
+        obs_instance.save()
+
 
         # Check to see if the instrument/proposal combination exists in the db. It may be that
         # there are entries for the proposal already, but for other observation numbers. If that's the case,
         # then we just need to update the observation list. There should only be one entry if there are any
         # at all, so we can use get()
-        prop_instance = Archive.objects.get(instrument=instrument, proposal__prop_id=prop)
+        #prop_instance = Archive.objects.get(instrument=instrument, proposal__prop_id=prop)
 
         # If the proposal entry exists, update the observation list
-        if len(prop_instance) != 0:
-            obs_list = prop_instance.observation
-            obs_list.append(obs_instance)
-            prop_instance.update(observation=obs_list)
+        #if len(prop_instance) != 0:
+        #    obs_list = prop_instance.observation
+        #    obs_list.append(obs_instance)
+        #    prop_instance.update(observation=obs_list)
 
         # If the proposal entry does not exist, we need to create it
-        else:
-            prop_instance = Archive(instrument=instrument, proposal__prop_id=prop,
-                                    proposal__observation=obs_instance,
-                                    proposal__observation__exposure_type=exp_instances)
-            prop_instance.save()
+        #else:
+        #    prop_instance = Archive(instrument=instrument, proposal__prop_id=prop,
+        #                            proposal__observation=obs_instance,
+        #                            proposal__observation__exposure_type=exp_instances)
+        #    prop_instance.save()
 
 
 
