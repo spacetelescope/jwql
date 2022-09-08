@@ -94,9 +94,12 @@
                 </div>
             </div>
         </div>
+
         {% for key, value in file_root_list.items %}
-            <td>{{ key }}</td>
-            <td>{{ value }}</td>
+            <tr>
+                <td> Key: {{ key }} </td> 
+                <td> Value: {{ value }} </td>
+            </tr>
         {% endfor %}
         <!-- <div class="previous-next-buttons">
             <span class="step-links">
