@@ -991,6 +991,4 @@ def view_image(request, inst, file_root, rewrite=False):
                'total_ints': image_info['total_ints'],
                'form': form}
 
-    print(file_root_list, context['prop_id'], file_root)
-
     return render(request, template, context)
