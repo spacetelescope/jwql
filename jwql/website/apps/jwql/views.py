@@ -274,7 +274,8 @@ def archived_proposals_ajax(request, inst):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     # If we use one table for all instruments
-    all_entries = Archive.objects.filter(instrument=inst)
+    #all_entries = Archive.objects.filter(instrument=inst)
+    all_entries = Observation.objects.filter(proposal__archive__instrument=inst)
 
     # Get a list of proppsal numbers
     proposals = [entry.proposal.prop_id for entry in all_entries]
