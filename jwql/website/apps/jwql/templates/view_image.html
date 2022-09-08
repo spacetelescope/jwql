@@ -95,13 +95,13 @@
             </div>
         </div>
 
-        {% for key, value in file_root_list.items %}
+        <!-- {% for key, value in file_root_list.items %}
             <tr>
                 <td> Key: {{ key }} </td> 
                 <td> Value: {{ value }} </td>
             </tr>
-        {% endfor %}
-        <!-- <div class="previous-next-buttons">
+        {% endfor %} -->
+        <div class="previous-next-buttons">
             <span class="step-links">
                 {% set index = file_root_list[obsnum].index(file_root) %}
                 {% if index != 0 %}
@@ -112,7 +112,7 @@
                     <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[obsnum][index+1] }}/" style="float: right;">Next ></a>
                 {% endif %}
             </span>
-        </div> -->
+        </div>
         <!-- Determine which filetype should be shown on load -->
         {% if 'cal' in suffixes %}
             <script>change_filetype('cal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>

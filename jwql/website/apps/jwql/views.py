@@ -965,7 +965,9 @@ def view_image(request, inst, file_root, rewrite=False):
 
     form = get_anomaly_form(request, inst, file_root)
 
-    rootnames = get_rootnames_for_instrument_proposal('nircam', '01465')
+    prop_id = file_root[2:7]
+
+    rootnames = get_rootnames_for_instrument_proposal(inst, prop_id)
     file_root_list = defaultdict(list)
 
     for root in rootnames:
@@ -980,7 +982,7 @@ def view_image(request, inst, file_root, rewrite=False):
     context = {'base_url': get_base_url(),
                'file_root_list': file_root_list,
                'inst': inst,
-               'prop_id': file_root[2:7],
+               'prop_id': prop_id,
                'obsnum': file_root[7:10],
                'file_root': file_root,
                'jpg_files': image_info['all_jpegs'],
