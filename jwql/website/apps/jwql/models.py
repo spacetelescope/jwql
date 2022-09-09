@@ -150,31 +150,3 @@ class Observation(models.Model):
     def __str__(self):
         """String for representing the Archive object (in Admin site etc.)."""
         return self.obsnum
-
-
-class ExposureType(models.Model):
-    """A class defining the exposure type for a given observation. Observations can have more
-    than one exposure type."""
-
-    # Use the exposure type schema entry from the jwst pacakage to create a list of
-    # all possible exposure types
-    schema_file = os.path.join(os.path.dirname(schemas.__file__), 'core.schema.yaml')
-    with open(schema_file, 'r') as fobj:
-        temp = yaml.safe_load(fobj)
-    exptypes = temp['properties']['meta']['properties']['exposure']['properties']['type']['enum']
-    all_exptypes = [(etype, etype) for etype in exptypes]
-
-    exp_type = models.CharField(
-        max_length=25,
-        choices=all_exptypes,
-        blank=False,
-        help_text='exposure type',
-    )
-    observation = models.ForeignKey(Observation, blank=False, null=False, on_delete=models.CASCADE)
-
-    class Meta:
-        ordering = ['exp_type']
-
-    def __str__(self):
-        """String for representing the Archive object (in Admin site etc.)."""
-        return self.exp_type
