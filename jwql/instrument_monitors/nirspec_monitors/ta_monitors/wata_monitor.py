@@ -4,6 +4,9 @@
 
 # HISTORY
 #    Feb 2022 - Vr. 1.0: Completed initial version
+#    Sep 2022 - Vr. 1.1: Modified ColumnDataSource so that data could be recovered
+#                        from an html file of a previous run of the monitor and
+#                        included the code to read and format the data from the html file
 
 
 """
@@ -31,6 +34,8 @@ import os
 import logging
 import numpy as np
 import pandas as pd
+import json
+from bs4 import BeautifulSoup
 from datetime import datetime
 from astropy.time import Time
 from astropy.io import fits
@@ -83,6 +88,44 @@ class WATA():
 
     def __init__(self):
         """ Initialize an instance of the WATA class """
+        # structure to define required keywords to extract and where they live
+        self.keywds2extract = {'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs'},
+                              'OBS_ID': {'loc': 'main_hdr', 'alt_key': 'OBSID', 'name': 'visit_id'},
+                              'FILTER': {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter'},
+                              'READOUT': {'loc': 'main_hdr', 'alt_key': 'READPATT', 'name': 'readout'},
+                              'TASTATUS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ta_status'},
+                              'STAT_RSN': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'status_reason'},
+                              'REFSTNAM': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_name'},
+                              'REFSTRA': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_ra'},
+                              'REFSTDEC': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_dec'},
+                              'REFSTMAG': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_mag'},
+                              'REFSTCAT': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_catalog'},
+                              'V2_PLAND': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'planned_v2'},
+                              'V3_PLAND': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'planned_v3'},
+                              'EXTCOLST': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_start_col'},
+                              'EXTROWST': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_start_row'},
+                              'TA_DTCTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_detector'},
+                              'BOXPKVAL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box'},
+                              'BOXPKCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box_col'},
+                              'BOXPKROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box_row'},
+                              'TA_ITERS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'iterations'},
+                              'CORR_COL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'corr_col'},
+                              'CORR_ROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'corr_row'},
+                              'IMCENCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_final_col'},
+                              'IMCENROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_final_row'},
+                              'DTCENCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'detector_final_col'},
+                              'DTCENROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'detector_final_row'},
+                              'SCIXCNTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'final_sci_x'},
+                              'SCIYCNTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'final_sci_y'},
+                              'TARGETV2': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'measured_v2'},
+                              'TARGETV3': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'measured_v3'},
+                              'V2_REF': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ref_v2'},
+                              'V3_REF': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ref_v3'},
+                              'V2_RESID': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2_offset'},
+                              'V3_RESID': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v3_offset'},
+                              'SAM_X': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'sam_x'},
+                              'SAM_Y': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'sam_y'}
+                              }
 
 
     def get_tainfo_from_fits(self, fits_file):
@@ -126,44 +169,6 @@ class WATA():
         wata_df: data frame object
             Pandas data frame containing all WATA data
         """
-        # structure to define required keywords to extract and where they live
-        keywds2extract = {'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs'},
-                          'OBS_ID': {'loc': 'main_hdr', 'alt_key': 'OBSID', 'name': 'visit_id'},
-                          'FILTER': {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter'},
-                          'READOUT': {'loc': 'main_hdr', 'alt_key': 'READPATT', 'name': 'readout'},
-                          'TASTATUS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ta_status'},
-                          'STAT_RSN': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'status_reason'},
-                          'REFSTNAM': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_name'},
-                          'REFSTRA': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_ra'},
-                          'REFSTDEC': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_dec'},
-                          'REFSTMAG': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_mag'},
-                          'REFSTCAT': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_catalog'},
-                          'V2_PLAND': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'planned_v2'},
-                          'V3_PLAND': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'planned_v3'},
-                          'EXTCOLST': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_start_col'},
-                          'EXTROWST': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_start_row'},
-                          'TA_DTCTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_detector'},
-                          'BOXPKVAL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box'},
-                          'BOXPKCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box_col'},
-                          'BOXPKROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box_row'},
-                          'TA_ITERS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'iterations'},
-                          'CORR_COL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'corr_col'},
-                          'CORR_ROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'corr_row'},
-                          'IMCENCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_final_col'},
-                          'IMCENROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_final_row'},
-                          'DTCENCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'detector_final_col'},
-                          'DTCENROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'detector_final_row'},
-                          'SCIXCNTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'final_sci_x'},
-                          'SCIYCNTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'final_sci_y'},
-                          'TARGETV2': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'measured_v2'},
-                          'TARGETV3': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'measured_v3'},
-                          'V2_REF': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ref_v2'},
-                          'V3_REF': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ref_v3'},
-                          'V2_RESID': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2_offset'},
-                          'V3_RESID': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v3_offset'},
-                          'SAM_X': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'sam_x'},
-                          'SAM_Y': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'sam_y'}
-                          }
         # fill out the dictionary  to create the dataframe
         wata_dict = {}
         for fits_file in new_filenames:
@@ -171,7 +176,7 @@ class WATA():
             if wata_info is None:
                 continue
             main_hdr, ta_hdr = wata_info
-            for key, key_dict in keywds2extract.items():
+            for key, key_dict in self.keywds2extract.items():
                 key_name = key_dict['name']
                 if key_name not in wata_dict:
                     wata_dict[key_name] = []
@@ -180,7 +185,7 @@ class WATA():
                     ext = ta_hdr
                 try:
                     val = ext[key]
-                except:
+                except KeyError:
                     val = ext[key_dict['alt_key']]
                 wata_dict[key_name].append(val)
         # create the pandas dataframe
@@ -473,7 +478,13 @@ class WATA():
     def mk_plt_layout(self):
         """Create the bokeh plot layout"""
         self.source = ColumnDataSource(data=self.wata_data)
-        output_file(os.path.join(self.output_dir, "wata_layout.html"))
+        # make sure all arrays are lists in order to later be able to read the data
+        # from the html file
+        for item in self.source.data:
+            if not isinstance(self.source.data[item], (str, float, int, list)):
+                self.source.data[item] = self.source.data[item].tolist()
+        # set the output html file name and create the plot grid
+        output_file(self.output_file_name)
         p1 = self.plt_status()
         p2 = self.plt_residual_offsets()
         p3 = self.plt_v2offset_time()
@@ -484,7 +495,7 @@ class WATA():
         grid = gridplot([p1, p2, p3, p4, p5, p6], ncols=2, merge_tools=False)
         #show(grid)
         save(grid)
-        # return the needed components for embeding the results in the MSATA html template
+        # return the needed components for embeding the results in the WATA html template
         script, div = components(grid)
         return script, div
 
@@ -524,6 +535,50 @@ class WATA():
         return query_result
 
 
+    def get_data_from_html(self, html_file):
+        """
+        This function gets the data from the Bokeh html file created with
+        the NIRSpec TA monitor script.
+        Parameters
+        ----------
+        html_file: str
+            File created by the monitor script
+        Returns
+        -------
+        prev_data: pandas dataframe
+            Contains all expected columns to be combined with the new data
+        latest_prev_obs: str
+            Date of the latest observation in the previously plotted data
+        """
+
+        # open the html file and get the contents
+        htmlFileToBeOpened = open(html_file, "r")
+        contents = htmlFileToBeOpened.read()
+        soup = BeautifulSoup(contents, 'html.parser')
+
+        # now read as python dictionary and search for the data
+        prev_data_dict = {}
+        html_data = json.loads(soup.find('script', type='application/json').string)
+        for key, val in html_data.items():
+            if 'roots' in val:   # this is a dictionary
+                if 'references' in val['roots']:
+                    for item in val['roots']['references']:    # this is a list
+                        # each item of the list is a dictionary
+                        for item_key, item_val in item.items():
+                            if 'data' in item_val:
+                                # finally the data dictionary!
+                                for data_key, data_val in item_val['data'].items():
+                                    prev_data_dict[data_key] = data_val
+        # set to None if dictionary is empty
+        if not bool(prev_data_dict):
+            prev_data_dict = None
+        # find the latest observation date
+        latest_prev_obs = max(prev_data_dict['time_arr'])
+        # now convert to a panda dataframe to be combined with the new data
+        prev_data = pd.DataFrame(prev_data_dict)
+        return prev_data, latest_prev_obs
+
+
     @log_fail
     @log_info
     def run(self):
@@ -550,6 +605,14 @@ class WATA():
 
         # Locate the record of most recent MAST search; use this time
         self.query_start = self.most_recent_search()
+        # get the data of the plots previously created and set the query start date
+        self.prev_data = None
+        self.output_file_name = os.path.join(self.output_dir, "wata_layout.html")
+        if os.path.isfile(self.output_file_name):
+            self.prev_data, self.query_start = self.get_data_from_html(self.output_file_name)
+            logging.info('\tPrevious data read from html file: {}'.format(self.output_file_name))
+
+        # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
         logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
 
@@ -576,12 +639,17 @@ class WATA():
         monitor_run = False
         if len(new_filenames) > 0:
             # get the data
-            try:
-                self.wata_data = self.get_wata_data(new_filenames)
+            self.new_wata_data = self.get_wata_data(new_filenames)
+            if self.new_wata_data is not None:
+                # concatenate with previous data
+                if self.prev_data is not None:
+                    self.wata_data = pd.concat([self.prev_data, self.new_wata_data])
+                else:
+                    self.wata_data = self.new_wata_data
                 # make the plots
                 self.script, self.div = self.mk_plt_layout()
                 monitor_run = True
-            except:
+            else:
                 logging.info('\tWATA monitor skipped. No WATA data found.')
 
         else:

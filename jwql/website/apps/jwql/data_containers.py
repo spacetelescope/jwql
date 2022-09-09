@@ -12,6 +12,7 @@ Authors
     - Matthew Bourque
     - Teagan King
     - Bryan Hilbert
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -1515,6 +1516,8 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         except (ValueError, TypeError) as e:
             logging.warning("Unable to populate exp_start info for {}".format(rootname))
             loggin.warning(e)
+        except KeyError:
+            print("KeyError with get_expstart for {}".format(rootname))
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)

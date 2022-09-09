@@ -6,6 +6,9 @@
 #    Feb 2022 - Vr. 1.0: Completed initial version
 #    Jul 2022 - Vr. 1.1: Changed keywords to final flight values
 #    Aug 2022 - Vr. 1.2: Modified plots according to NIRSpec team input
+#    Sep 2022 - Vr. 1.3: Modified ColumnDataSource so that data could be recovered
+#                        from an html file of a previous run of the monitor and
+#                        included the code to read and format the data from the html file
 
 
 """
@@ -35,6 +38,8 @@ import os
 import logging
 import numpy as np
 import pandas as pd
+import json
+from bs4 import BeautifulSoup
 from datetime import datetime
 from astropy.time import Time
 from astropy.io import fits
@@ -88,6 +93,46 @@ class MSATA():
 
     def __init__(self):
         """ Initialize an instance of the MSATA class """
+        # dictionary to define required keywords to extract MSATA data and where it lives
+        self.keywds2extract = {'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs', 'type': str},
+                              'OBS_ID':  {'loc': 'main_hdr', 'alt_key': None, 'name': 'visit_id', 'type': str},
+                              'FILTER':  {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter', 'type': str},
+                              'DETECTOR':  {'loc': 'main_hdr', 'alt_key': None, 'name': 'detector', 'type': str},
+                              'READOUT':  {'loc': 'main_hdr', 'alt_key': 'READPATT', 'name': 'readout', 'type': str},
+                              'SUBARRAY':  {'loc': 'main_hdr', 'alt_key': None, 'name': 'subarray', 'type': str},
+                              'NUMREFST':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'num_refstars', 'type': int},
+                              'TASTATUS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ta_status', 'type': str},
+                              'STAT_RSN':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'status_rsn', 'type': str},
+                              'V2HFOFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2halffacet', 'type': float},
+                              'V3HFOFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v3halffacet', 'type': float},
+                              'V2MSACTR':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2msactr', 'type': float},
+                              'V3MSACTR':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v3msactr', 'type': float},
+                              'FITXOFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv2offset', 'type': float},
+                              'FITYOFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv3offset', 'type': float},
+                              'OFFSTMAG':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsoffsetmag', 'type': float},
+                              'FITROFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsrolloffset', 'type': float},
+                              'FITXSIGM':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv2sigma', 'type': float},
+                              'FITYSIGM':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv3sigma', 'type': float},
+                              'ITERATNS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsiterations', 'type': int},
+                              'GUIDERID':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestarid', 'type': str},
+                              'IDEAL_X':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestarx', 'type': float},
+                              'IDEAL_Y':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestary', 'type': float},
+                              'IDL_ROLL':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestarroll', 'type': float},
+                              'SAM_X':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'samx', 'type': float},
+                              'SAM_Y':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'samy', 'type': float},
+                              'SAM_ROLL':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'samroll', 'type': float},
+                              'box_peak_value':  {'loc': 'ta_table', 'alt_key': None, 'name': 'box_peak_value', 'type': float},
+                              'reference_star_mag':  {'loc': 'ta_table', 'alt_key': None, 'name': 'reference_star_mag', 'type': float},
+                              'convergence_status':  {'loc': 'ta_table', 'alt_key': None, 'name': 'convergence_status', 'type': str},
+                              'reference_star_number':  {'loc': 'ta_table', 'alt_key': None, 'name': 'reference_star_number', 'type': int},
+                              'lsf_removed_status':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_status', 'type': str},
+                              'lsf_removed_reason':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_reason', 'type': str},
+                              'lsf_removed_x':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_x', 'type': float},
+                              'lsf_removed_y':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_y', 'type': float},
+                              'planned_v2':  {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v2', 'type': float},
+                              'planned_v3':  {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v3', 'type': float},
+                              'FITTARGS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stars_in_fit', 'type': int}
+                             }
 
 
     def get_tainfo_from_fits(self, fits_file):
@@ -131,46 +176,6 @@ class MSATA():
         msata_df: data frame object
             Pandas data frame containing all MSATA data
         """
-        # structure to define required keywords to extract and where they live
-        keywds2extract = {'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs'},
-                          'OBS_ID':  {'loc': 'main_hdr', 'alt_key': None, 'name': 'visit_id'},
-                          'FILTER':  {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter'},
-                          'DETECTOR':  {'loc': 'main_hdr', 'alt_key': None, 'name': 'detector'},
-                          'READOUT':  {'loc': 'main_hdr', 'alt_key': 'READPATT', 'name': 'readout'},
-                          'SUBARRAY':  {'loc': 'main_hdr', 'alt_key': None, 'name': 'subarray'},
-                          'NUMREFST':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'num_refstars'},
-                          'TASTATUS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ta_status'},
-                          'STAT_RSN':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'status_rsn'},
-                          'V2HFOFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2halffacet'},
-                          'V3HFOFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v3halffacet'},
-                          'V2MSACTR':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2msactr'},
-                          'V3MSACTR':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v3msactr'},
-                          'FITXOFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv2offset'},
-                          'FITYOFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv3offset'},
-                          'OFFSTMAG':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsoffsetmag'},
-                          'FITROFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsrolloffset'},
-                          'FITXSIGM':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv2sigma'},
-                          'FITYSIGM':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv3sigma'},
-                          'ITERATNS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsiterations'},
-                          'GUIDERID':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestarid'},
-                          'IDEAL_X':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestarx'},
-                          'IDEAL_Y':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestary'},
-                          'IDL_ROLL':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestarroll'},
-                          'SAM_X':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'samx'},
-                          'SAM_Y':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'samy'},
-                          'SAM_ROLL':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'samroll'},
-                          'box_peak_value':  {'loc': 'ta_table', 'alt_key': None, 'name': 'box_peak_value'},
-                          'reference_star_mag':  {'loc': 'ta_table', 'alt_key': None, 'name': 'reference_star_mag'},
-                          'convergence_status':  {'loc': 'ta_table', 'alt_key': None, 'name': 'convergence_status'},
-                          'reference_star_number':  {'loc': 'ta_table', 'alt_key': None, 'name': 'reference_star_number'},
-                          'lsf_removed_status':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_status'},
-                          'lsf_removed_reason':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_reason'},
-                          'lsf_removed_x':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_x'},
-                          'lsf_removed_y':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_y'},
-                          'planned_v2':  {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v2'},
-                          'planned_v3':  {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v3'},
-                          'FITTARGS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stars_in_fit'}
-                         }
         # fill out the dictionary to create the dataframe
         msata_dict = {}
         for fits_file in new_filenames:
@@ -178,7 +183,7 @@ class MSATA():
             if msata_info is None:
                 continue
             main_hdr, ta_hdr, ta_table = msata_info
-            for key, key_dict in keywds2extract.items():
+            for key, key_dict in self.keywds2extract.items():
                 key_name = key_dict['name']
                 if key_name not in msata_dict:
                     msata_dict[key_name] = []
@@ -189,7 +194,7 @@ class MSATA():
                     ext = ta_table
                 try:
                     val = ext[key]
-                except:
+                except KeyError:
                     val = ext[key_dict['alt_key']]
                 """ UNCOMMENT THIS BLOCK IN CASE WE DO WANT TO GET RID OF the 999.0 values
                 # remove the 999 values for arrays
@@ -731,7 +736,13 @@ class MSATA():
     def mk_plt_layout(self):
         """Create the bokeh plot layout"""
         self.source = ColumnDataSource(data=self.msata_data)
-        output_file(os.path.join(self.output_dir, "msata_layout.html"))
+        # make sure all arrays are lists in order to later be able to read the data
+        # from the html file
+        for item in self.source.data:
+            if not isinstance(self.source.data[item], (str, float, int, list)):
+                self.source.data[item] = self.source.data[item].tolist()
+        # set the output html file name and create the plot grid
+        output_file(self.output_file_name)
         p1 = self.plt_status()
         p2 = self.plt_residual_offsets()
         p3 = self.plt_res_offsets_corrected()
@@ -790,6 +801,125 @@ class MSATA():
         return query_result
 
 
+    def get_data_from_html(self, html_file):
+        """
+        This function gets the data from the Bokeh html file created with
+        the NIRSpec TA monitor script.
+        Parameters
+        ----------
+        html_file: str
+            File created by the monitor script
+        Returns
+        -------
+        prev_data_dict: dictionary
+            Dictionary containing all data used in the plots
+        """
+
+        # open the html file and get the contents
+        htmlFileToBeOpened = open(html_file, "r")
+        contents = htmlFileToBeOpened.read()
+        soup = BeautifulSoup(contents, 'html.parser')
+
+        # now read as python dictionary and search for the data
+        prev_data_dict = {}
+        html_data = json.loads(soup.find('script', type='application/json').string)
+        for key, val in html_data.items():
+            if 'roots' in val:   # this is a dictionary
+                if 'references' in val['roots']:
+                    for item in val['roots']['references']:    # this is a list
+                        # each item of the list is a dictionary
+                        for item_key, item_val in item.items():
+                            if 'data' in item_val:
+                                # finally the data dictionary!
+                                for data_key, data_val in item_val['data'].items():
+                                    prev_data_dict[data_key] = data_val
+        # set to None if dictionary is empty
+        if not bool(prev_data_dict):
+            prev_data_dict = None
+        return prev_data_dict
+
+
+    def construct_expected_data(self, keywd_dict, tot_number_of_stars):
+        """This function creates the list to append to the dictionary key in the expected format.
+        Parameters
+        ----------
+        keywd_dict: dictonary
+            Dictionary corresponding to the file keyword
+        tot_number_of_stars: integer
+            Number of stars in the observation
+        Returns
+        -------
+        list4dict: list
+            List to be appended to the data structure. Has the right length but no real values
+        """
+        list4dict = []
+        for tns in tot_number_of_stars:   # elements the list of lists should have
+            # set the value to add
+            val = -999
+            # create either the list or return the right type of value
+            if keywd_dict['loc'] != 'ta_table':  # these cases should be singe values per observation
+                if keywd_dict['type'] == float:
+                    val = float(val)
+                if keywd_dict['type'] == str:
+                    val = str(val)
+                list4dict = val
+            else:
+                list2append = []
+                for _ in range(tns):   # elements each sublist should have
+                    if keywd_dict['type'] == float:
+                        val = float(val)
+                    if keywd_dict['type'] == str:
+                        val = str(val)
+                    list2append.append(val)
+                list4dict.append(list2append)
+        return list4dict
+
+
+    def prev_data2expected_format(self, prev_data_dict):
+        """Add all the necessary columns to match expected format to combine previous
+        and new data.
+        Parameters
+        ----------
+        prev_data_dict: dictionary
+            Dictionary containing all data used in the Bokeh html file plots
+        Returns
+        -------
+        prev_data: pandas dataframe
+            Contains all expected columns to be combined with the new data
+        latest_prev_obs: str
+            Date of the latest observation in the previously plotted data
+        """
+        latest_prev_obs = max(prev_data_dict['tarr'])
+        prev_data_expected_cols = {}
+        tot_number_of_stars = prev_data_dict['tot_number_of_stars']
+        for file_keywd, keywd_dict in self.keywds2extract.items():
+            key = keywd_dict['name']
+            if key in prev_data_dict:
+                # case when all the info of all visits and ref stars is in the same list
+                if len(prev_data_dict[key]) > len(tot_number_of_stars):
+                    correct_arrangement = []
+                    correct_start_idx, correct_end_idx = 0, tot_number_of_stars[0]
+                    for idx, tns in enumerate(tot_number_of_stars):
+                        list2append = prev_data_dict[key][correct_start_idx: correct_end_idx]
+                        correct_arrangement.append(list2append)
+                        correct_start_idx = correct_end_idx
+                        correct_end_idx += tns
+                    prev_data_expected_cols[key] = correct_arrangement
+                # case when the html stored thing is just an object but does not have data
+                elif len(prev_data_dict[key]) < len(tot_number_of_stars):
+                    list4dict = self.construct_expected_data(keywd_dict, tot_number_of_stars)
+                    prev_data_expected_cols[key] = list4dict
+                # case when nothing special to do
+                else:
+                    prev_data_expected_cols[key] = prev_data_dict[key]
+            else:
+                list4dict = self.construct_expected_data(keywd_dict, tot_number_of_stars)
+                prev_data_expected_cols[key] = list4dict
+        # now convert to a panda dataframe to be combined with the new data
+        prev_data = pd.DataFrame(prev_data_expected_cols)
+        return prev_data, latest_prev_obs
+
+
     @log_fail
     @log_info
     def run(self):
@@ -816,6 +946,14 @@ class MSATA():
 
         # Locate the record of most recent MAST search; use this time
         self.query_start = self.most_recent_search()
+        # get the data of the plots previously created and set the query start date
+        self.prev_data = None
+        self.output_file_name = os.path.join(self.output_dir, "msata_layout.html")
+        if os.path.isfile(self.output_file_name):
+            prev_data_dict = self.get_data_from_html(self.output_file_name)
+            self.prev_data, self.query_start = self.prev_data2expected_format(prev_data_dict)
+            logging.info('\tPrevious data read from html file: {}'.format(self.output_file_name))
+
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
         logging.info('\tQuery times: {} {}'.format(self.query_start, self.query_end))
@@ -844,12 +982,17 @@ class MSATA():
         monitor_run = False
         if len(new_filenames) > 0:
             # get the data
-            try:
-                self.msata_data = self.get_msata_data(new_filenames)
+            self.new_msata_data = self.get_msata_data(new_filenames)
+            if self.new_msata_data is not None:
+                # concatenate with previous data
+                if self.prev_data is not None:
+                    self.msata_data = pd.concat([self.prev_data, self.new_msata_data])
+                else:
+                    self.msata_data = self.new_msata_data
                 # make the plots
                 self.script, self.div = self.mk_plt_layout()
                 monitor_run = True
-            except:
+            else:
                 logging.info('\tMSATA monitor skipped. No MSATA data found.')
 
         else:
