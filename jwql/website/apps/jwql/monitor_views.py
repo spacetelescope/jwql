@@ -304,4 +304,3 @@ def wata_monitoring_ajax(request):
                'div': monitor.div}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
-

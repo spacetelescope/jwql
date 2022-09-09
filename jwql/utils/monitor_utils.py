@@ -127,8 +127,7 @@ def mast_query_darks(instrument, aperture, start_date, end_date, readpatt=None):
 
         # Create dictionary of parameters to add
         parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
-                      "apername": aperture, "exp_type": template_name,
-                     }
+                      "apername": aperture, "exp_type": template_name, }
 
         if readpatt is not None:
             parameters["readpatt"] = readpatt
@@ -178,15 +177,15 @@ def mast_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
             exp_types = ['NRS_TACQ', 'NRS_MSATA']
 
     # get all the obs IDs that have these keywords and only keep the ones with rate files
-    service = "Mast.Jwst.Filtered."+instrument
+    service = "Mast.Jwst.Filtered." + instrument
     params = {"columns": "filename",
               "filters": [{"paramName": "date_obs_mjd",
                            "values": {"min": start_date, "max": end_date}},
                           {"paramName": "apername",
                            "values": [aperture]},
                           {"paramName": "exp_type",
-                           "values": exp_types}
-                        ]}
+                           "values": exp_types}]}
+
     response = Mast.service_request_async(service, params)
     result = response[0].json()['data']
     wanted_suffix = ['rate']
@@ -198,7 +197,7 @@ def mast_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
         if filename_dict['suffix'] in wanted_suffix:
             suffix2remove = filename_of_interest.split(sep="_")[-1]
             activity_number = filename_of_interest.split(sep="_")[-4]
-            obs_id = filename_of_interest.replace("_"+suffix2remove, "")
+            obs_id = filename_of_interest.replace("_" + suffix2remove, "")
             if activity_number == ta_indicator:
                 if obs_id not in observation_ids:
                     observation_ids.append(obs_id)
@@ -218,7 +217,7 @@ def mast_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
                                                           productSubGroupDescription=['UNCAL'])
             query_results.extend(filtered_query)
         except TimeoutError:
-            #print('MAST TimeoutError with Obs_id: ', obsid, ' -> Not including in processing.')
+            # print('MAST TimeoutError with Obs_id: ', obsid, ' -> Not including in processing.')
             continue
     return query_results
 
