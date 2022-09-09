@@ -133,11 +133,16 @@ REDIS_CLIENT = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
 #   - worker_concurrency is how many task threads a worker can run concurrently on the same
 #     machine. It's set to 1 because an individual pipeline process can consume all of the
 #     available memory, so setting the concurrency higher will result in inevitable crashes.
+#   - the broker visibility timeout is the amount of time that redis will wait for a 
+#     worker to say it has completed a task before it will dispatch the task (again) to
+#     another worker. This should be set to longer than you expect to wait for a single 
+#     task to finish.
 celery_app = Celery('shared_tasks', broker=REDIS_URL, backend=REDIS_URL)
 celery_app.conf.update(worker_max_tasks_per_child=1)
 celery_app.conf.update(worker_prefetch_multiplier=1)
 celery_app.conf.update(task_acks_late=True)
 celery_app.conf.update(worker_concurrency=1)
+celery_app.conf.broker_transport_options = {'visibility_timeout': 86400}
 
 
 def only_one(function=None, key="", timeout=None):
@@ -488,6 +493,9 @@ def prep_file(input_file, in_ext):
     else:
         uncal_file = input_file
         uncal_name = input_name
+        
+    if not os.path.isfile(uncal_file):
+        raise FileNotFoundError("Input File {} does not exist.".format(uncal_file))
     
     output_file_or_files = []
     short_name = input_name.replace("_"+in_ext, "").replace(".fits", "")
@@ -599,11 +607,8 @@ def retrieve_files(short_name, ext_or_exts, dest_dir):
     file_or_files = ["{}_{}.fits".format(short_name, x) for x in ext_or_exts]
     output_file_or_files = [os.path.join(dest_dir, x) for x in file_or_files]
     transfer_file_or_files = [os.path.join(receive_path, x) for x in file_or_files]
-    transfer_exists = [os.path.isfile(x) for x in transfer_file_or_files]
     logging.info("\t\tCopying {} to {}".format(file_or_files, dest_dir))
     copy_files([os.path.join(receive_path, x) for x in file_or_files], dest_dir)
-    dest_exists = [os.path.isfile(x) for x in output_file_or_files]
-    logging.info("\t\tOutput files are {}, {} exist in transfer dir, {} exist in destination dir".format(file_or_files, transfer_exists, dest_exists))
     logging.info("\t\tClearing Transfer Files")
     to_clear = glob(os.path.join(send_path, short_name+"*")) + glob(os.path.join(receive_path, short_name+"*"))
     for file in to_clear:
