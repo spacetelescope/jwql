@@ -190,13 +190,13 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
 
     # First, check to see if ExposureType instances exist for all of the elements
     # in types. For any that are missing, create and save an entry to the db.
-    for etype in types:
-        type_instance = ExposureType.object.get(exp_type=etype)
-        if len(type_instance) == 0:
-            type_instance = ExposureType(exp_type=etype)
-            type_instance.save()
+    #for etype in types:
+    #    type_instance = ExposureType.object.get(exp_type=etype)
+    #    if len(type_instance) == 0:
+    #        type_instance = ExposureType(exp_type=etype)
+    #        type_instance.save()
 
-    # Check to see if there is an extry for the instrument/proposal/observation
+    # Check to see if there is an entry for the instrument/proposal/observation
 
     # Use this if we make exp_type a simple list/array in the observation model
     existing = Observation.objects.filter(obsnum=obs,
@@ -214,13 +214,16 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
 
 
 
-    # If the entry exists, check the exp_type list of the entry and add the current
-    # exptype if necessary.
-    if len(existing) > 0:
+    # If there is an existing entry for the instrument/proposal/observation combination, check the
+    # exp_type list of the entry and add any of the input exptypes that are not present.
+    # In addition, update the number of files if necessary. There should never be more than one
+    # entry.
+    if len(existing) == 1:
         # exp_type is not allowed to be null, so no need to check for that condition here
         #existing_exps = [entry.instrument.proposal.observation.exposure_type.exp_type async for entry in existing]
         #existing_exps = existing.instrument.proposal.observation.exposure_type.exp_type
-        existing_exps = existing.exptypes.split(',')  # If exptypes are stored as a list in the Observation model
+
+        existing_exps = existing[0].exptypes.split(',')  # If exptypes are stored as a list in the Observation model
 
         # Loop over the list of new types
         for etype in types:
@@ -238,10 +241,14 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
 
         # Update the entry with the new list of exp_types
         new_exp_list = ','.join(existing_exps)
-        existing.update(exptypes=new_exp_list)
+
+        # Update the database entry. Also update the number of files, just in case more files have been added
+        # since the last entry was made.
+        existing[0].update(number_of_files=files)
+        existing[0].update(exptypes=new_exp_list)
 
     # If the instrument/proposal/observation entry does not yet exist, we need to create it
-    else:
+    elif len(existing) == 0:
         # Generate a list of the query sets for the exposure types to be added
         #exp_instances = [ExposureType.object.get(exp_type=etype) for etype in types]
 
@@ -266,13 +273,14 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
             prop_instance = Proposal(prop_id=prop, thumbnail_path=thumbnail, archive=archive_instance)
             prop_instance.save()
 
-        # Now that we have Archive and Proposal instances, we can create the new Observation instance
+        # Now that we are sure to have Archive and Proposal instances, we can create the new Observation instance
         obs_instance = Observation(obsnum=obs, number_of_files=files, exptypes=types_str,
                                    obsstart=startdate, obsend=enddate,
                                    proposal=prop_instance)
         obs_instance.save()
 
-
+    else:
+        raise ValueError(f'Multiple database entries found for {inst} PID {prop}, Obs {obs}. There should be only one entry.')
         # Check to see if the instrument/proposal combination exists in the db. It may be that
         # there are entries for the proposal already, but for other observation numbers. If that's the case,
         # then we just need to update the observation list. There should only be one entry if there are any
