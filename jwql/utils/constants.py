@@ -252,7 +252,7 @@ IGNORED_SUFFIXES = ['original', 'stream', 'x1d', 'x1dints', 'c1d']
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
     'dark_monitor': ['<instrument>_dark_dark_current', '<instrument>_dark_pixel_stats', '<instrument>_dark_query_history'],
     'bad_pixel_monitor': ['<instrument>_bad_pixel_stats', '<instrument>_bad_pixel_query_history'],
-    'cosmic_ray_monitor': ['<instrument>_cosmic_ray_stats', '<instrument>_cosmic_ray_query_history']}
+    'cosmic_ray_monitor': ['<instrument>_cosmic_ray_stats', '<instrument>_cosmic_ray_query_history'],
     'msata_monitor': ['<instrument>_ta_stats', '<instrument>_ta_query_history'],
     'wata_monitor': ['<instrument>_ta_stats', '<instrument>_ta_query_history']
 }
