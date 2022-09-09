@@ -24,12 +24,12 @@ This monitor also displays V2, V3, and roll offsets over time.
 Author
 ______
     - Maria Pena-Guerrero
-    
+
 Use
 ---
     This module can be used from the command line as follows:
     python msata_monitor.py
-    
+
 """
 
 
@@ -90,50 +90,47 @@ class MSATA():
 
     """
 
-
     def __init__(self):
         """ Initialize an instance of the MSATA class """
         # dictionary to define required keywords to extract MSATA data and where it lives
         self.keywds2extract = {'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs', 'type': str},
-                              'OBS_ID':  {'loc': 'main_hdr', 'alt_key': None, 'name': 'visit_id', 'type': str},
-                              'FILTER':  {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter', 'type': str},
-                              'DETECTOR':  {'loc': 'main_hdr', 'alt_key': None, 'name': 'detector', 'type': str},
-                              'READOUT':  {'loc': 'main_hdr', 'alt_key': 'READPATT', 'name': 'readout', 'type': str},
-                              'SUBARRAY':  {'loc': 'main_hdr', 'alt_key': None, 'name': 'subarray', 'type': str},
-                              'NUMREFST':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'num_refstars', 'type': int},
-                              'TASTATUS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ta_status', 'type': str},
-                              'STAT_RSN':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'status_rsn', 'type': str},
-                              'V2HFOFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2halffacet', 'type': float},
-                              'V3HFOFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v3halffacet', 'type': float},
-                              'V2MSACTR':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2msactr', 'type': float},
-                              'V3MSACTR':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v3msactr', 'type': float},
-                              'FITXOFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv2offset', 'type': float},
-                              'FITYOFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv3offset', 'type': float},
-                              'OFFSTMAG':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsoffsetmag', 'type': float},
-                              'FITROFFS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsrolloffset', 'type': float},
-                              'FITXSIGM':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv2sigma', 'type': float},
-                              'FITYSIGM':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv3sigma', 'type': float},
-                              'ITERATNS':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsiterations', 'type': int},
-                              'GUIDERID':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestarid', 'type': str},
-                              'IDEAL_X':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestarx', 'type': float},
-                              'IDEAL_Y':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestary', 'type': float},
-                              'IDL_ROLL':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestarroll', 'type': float},
-                              'SAM_X':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'samx', 'type': float},
-                              'SAM_Y':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'samy', 'type': float},
-                              'SAM_ROLL':  {'loc': 'ta_hdr', 'alt_key': None, 'name': 'samroll', 'type': float},
-                              'box_peak_value':  {'loc': 'ta_table', 'alt_key': None, 'name': 'box_peak_value', 'type': float},
-                              'reference_star_mag':  {'loc': 'ta_table', 'alt_key': None, 'name': 'reference_star_mag', 'type': float},
-                              'convergence_status':  {'loc': 'ta_table', 'alt_key': None, 'name': 'convergence_status', 'type': str},
-                              'reference_star_number':  {'loc': 'ta_table', 'alt_key': None, 'name': 'reference_star_number', 'type': int},
-                              'lsf_removed_status':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_status', 'type': str},
-                              'lsf_removed_reason':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_reason', 'type': str},
-                              'lsf_removed_x':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_x', 'type': float},
-                              'lsf_removed_y':  {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_y', 'type': float},
-                              'planned_v2':  {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v2', 'type': float},
-                              'planned_v3':  {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v3', 'type': float},
-                              'FITTARGS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stars_in_fit', 'type': int}
-                             }
-
+                               'OBS_ID': {'loc': 'main_hdr', 'alt_key': None, 'name': 'visit_id', 'type': str},
+                               'FILTER': {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter', 'type': str},
+                               'DETECTOR': {'loc': 'main_hdr', 'alt_key': None, 'name': 'detector', 'type': str},
+                               'READOUT': {'loc': 'main_hdr', 'alt_key': 'READPATT', 'name': 'readout', 'type': str},
+                               'SUBARRAY': {'loc': 'main_hdr', 'alt_key': None, 'name': 'subarray', 'type': str},
+                               'NUMREFST': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'num_refstars', 'type': int},
+                               'TASTATUS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ta_status', 'type': str},
+                               'STAT_RSN': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'status_rsn', 'type': str},
+                               'V2HFOFFS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2halffacet', 'type': float},
+                               'V3HFOFFS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v3halffacet', 'type': float},
+                               'V2MSACTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2msactr', 'type': float},
+                               'V3MSACTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v3msactr', 'type': float},
+                               'FITXOFFS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv2offset', 'type': float},
+                               'FITYOFFS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv3offset', 'type': float},
+                               'OFFSTMAG': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsoffsetmag', 'type': float},
+                               'FITROFFS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsrolloffset', 'type': float},
+                               'FITXSIGM': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv2sigma', 'type': float},
+                               'FITYSIGM': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsv3sigma', 'type': float},
+                               'ITERATNS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'lsiterations', 'type': int},
+                               'GUIDERID': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestarid', 'type': str},
+                               'IDEAL_X': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestarx', 'type': float},
+                               'IDEAL_Y': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestary', 'type': float},
+                               'IDL_ROLL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'guidestarroll', 'type': float},
+                               'SAM_X': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'samx', 'type': float},
+                               'SAM_Y': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'samy', 'type': float},
+                               'SAM_ROLL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'samroll', 'type': float},
+                               'box_peak_value': {'loc': 'ta_table', 'alt_key': None, 'name': 'box_peak_value', 'type': float},
+                               'reference_star_mag': {'loc': 'ta_table', 'alt_key': None, 'name': 'reference_star_mag', 'type': float},
+                               'convergence_status': {'loc': 'ta_table', 'alt_key': None, 'name': 'convergence_status', 'type': str},
+                               'reference_star_number': {'loc': 'ta_table', 'alt_key': None, 'name': 'reference_star_number', 'type': int},
+                               'lsf_removed_status': {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_status', 'type': str},
+                               'lsf_removed_reason': {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_reason', 'type': str},
+                               'lsf_removed_x': {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_x', 'type': float},
+                               'lsf_removed_y': {'loc': 'ta_table', 'alt_key': None, 'name': 'lsf_removed_y', 'type': float},
+                               'planned_v2': {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v2', 'type': float},
+                               'planned_v3': {'loc': 'ta_table', 'alt_key': None, 'name': 'planned_v3', 'type': float},
+                               'FITTARGS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stars_in_fit', 'type': int}}
 
     def get_tainfo_from_fits(self, fits_file):
         """ Get the TA information from the fits file
@@ -154,15 +151,14 @@ class MSATA():
                     msata = True
                     break
             if not msata:
-                #print('\n WARNING! This file is not MSATA: ', fits_file)
-                #print('  Skiping msata_monitor for this file  \n')
+                # print('\n WARNING! This file is not MSATA: ', fits_file)
+                # print('  Skiping msata_monitor for this file  \n')
                 return None
             main_hdr = ff[0].header
             ta_hdr = ff['MSA_TARG_ACQ'].header
             ta_table = ff['MSA_TARG_ACQ'].data
         msata_info = [main_hdr, ta_hdr, ta_table]
         return msata_info
-
 
     def get_msata_data(self, new_filenames):
         """ Get the TA information from the MSATA text table
@@ -212,7 +208,6 @@ class MSATA():
         msata_df.index = msata_df.index + 1
         return msata_df
 
-
     def plt_status(self):
         """ Plot the MSATA status versus time.
         Parameters
@@ -222,7 +217,7 @@ class MSATA():
         -------
             plot: bokeh plot object
         """
-        #ta_status, date_obs = source.data['ta_status'], source.data['date_obs']
+        # ta_status, date_obs = source.data['ta_status'], source.data['date_obs']
         date_obs = self.source.data['date_obs']
         ta_status = self.source.data['ta_status']
         # bokeh does not like to plot strings, turn  into numbers
@@ -251,16 +246,15 @@ class MSATA():
         plot.circle(x='time_arr', y='number_status', source=self.source,
                     color='status_colors', size=7, fill_alpha=0.5)
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('TA status', '@ta_status'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Subarray', '@subarray')
-                        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('TA status', '@ta_status'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Subarray', '@subarray')]
+
         plot.add_tools(hover)
         return plot
-
 
     def plt_residual_offsets(self):
         """ Plot the residual Least Squares V2 and V3 offsets
@@ -278,10 +272,10 @@ class MSATA():
         plot.circle(x='lsv2offset', y='lsv3offset', source=self.source,
                     color="purple", size=7, fill_alpha=0.4)
         v2halffacet, v3halffacet = self.source.data['v2halffacet'], self.source.data['v3halffacet']
-        xstart, ystart, ray_length= -1*v2halffacet[0], -1*v3halffacet[0], 0.05
-        plot.ray(x=xstart-ray_length/2.0, y=ystart, length=ray_length, angle_units="deg", angle=0)
-        plot.ray(x=xstart, y=ystart-ray_length/2.0, length=ray_length, angle_units="deg", angle=90)
-        hflabel = Label(x=xstart/3.0, y=ystart, y_units='data', text='-V2, -V3 half-facets values')
+        xstart, ystart, ray_length = -1 * v2halffacet[0], -1 * v3halffacet[0], 0.05
+        plot.ray(x=xstart - ray_length / 2.0, y=ystart, length=ray_length, angle_units="deg", angle=0)
+        plot.ray(x=xstart, y=ystart - ray_length / 2.0, length=ray_length, angle_units="deg", angle=90)
+        hflabel = Label(x=xstart / 3.0, y=ystart, y_units='data', text='-V2, -V3 half-facets values')
         plot.add_layout(hflabel)
         plot.x_range = Range1d(-0.5, 0.5)
         plot.y_range = Range1d(-0.5, 0.5)
@@ -290,18 +284,17 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Subarray', '@subarray'),
-                        ('LS roll offset', '@lsrolloffset'),
-                        ('LS V2 offset', '@lsv2offset'),
-                        ('LS V3 offset', '@lsv3offset')
-                        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Subarray', '@subarray'),
+                          ('LS roll offset', '@lsrolloffset'),
+                          ('LS V2 offset', '@lsv2offset'),
+                          ('LS V3 offset', '@lsv3offset')]
+
         plot.add_tools(hover)
         return plot
-
 
     def plt_v2offset_time(self):
         """ Plot the residual V2 versus time
@@ -321,23 +314,22 @@ class MSATA():
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         time_arr, v2halffacet = self.source.data['time_arr'], self.source.data['v2halffacet']
-        hfline = Span(location=-1*v2halffacet[0], dimension='width', line_color='green', line_width=3)
+        hfline = Span(location=-1 * v2halffacet[0], dimension='width', line_color='green', line_width=3)
         plot.renderers.extend([hline, hfline])
-        hflabel = Label(x=time_arr[-1], y=-1*v2halffacet[0], y_units='data', text='-V2 half-facet value')
+        hflabel = Label(x=time_arr[-1], y=-1 * v2halffacet[0], y_units='data', text='-V2 half-facet value')
         plot.add_layout(hflabel)
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Subarray', '@subarray'),
-                        ('LS roll offset', '@lsrolloffset'),
-                        ('LS V2 offset', '@lsv2offset'),
-                        ('LS V3 offset', '@lsv3offset')
-                        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Subarray', '@subarray'),
+                          ('LS roll offset', '@lsrolloffset'),
+                          ('LS V2 offset', '@lsv2offset'),
+                          ('LS V3 offset', '@lsv3offset')]
+
         plot.add_tools(hover)
         return plot
-
 
     def plt_v3offset_time(self):
         """ Plot the residual V3 versus time
@@ -357,23 +349,22 @@ class MSATA():
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         time_arr, v3halffacet = self.source.data['time_arr'], self.source.data['v3halffacet']
-        hfline = Span(location=-1*v3halffacet[0], dimension='width', line_color='green', line_width=3)
+        hfline = Span(location=-1 * v3halffacet[0], dimension='width', line_color='green', line_width=3)
         plot.renderers.extend([hline, hfline])
-        hflabel = Label(x=time_arr[-1], y=-1*v3halffacet[0], y_units='data', text='-V3 half-facet value')
+        hflabel = Label(x=time_arr[-1], y=-1 * v3halffacet[0], y_units='data', text='-V3 half-facet value')
         plot.add_layout(hflabel)
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Subarray', '@subarray'),
-                        ('LS roll offset', '@lsrolloffset'),
-                        ('LS V2 offset', '@lsv2offset'),
-                        ('LS V3 offset', '@lsv3offset')
-                        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Subarray', '@subarray'),
+                          ('LS roll offset', '@lsrolloffset'),
+                          ('LS V2 offset', '@lsv2offset'),
+                          ('LS V3 offset', '@lsv3offset')]
+
         plot.add_tools(hover)
         return plot
-
 
     def plt_lsv2v3offsetsigma(self):
         """ Plot the residual Least Squares V2 and V3 sigma offsets
@@ -397,20 +388,19 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Subarray', '@subarray'),
-                        ('LS roll offset', '@lsrolloffset'),
-                        ('LS V2 offset', '@lsv2offset'),
-                        ('LS V2 sigma', '@lsv2sigma'),
-                        ('LS V3 offset', '@lsv3offset'),
-                        ('LS V3 sigma', '@lsv3sigma')
-                        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Subarray', '@subarray'),
+                          ('LS roll offset', '@lsrolloffset'),
+                          ('LS V2 offset', '@lsv2offset'),
+                          ('LS V2 sigma', '@lsv2sigma'),
+                          ('LS V3 offset', '@lsv3offset'),
+                          ('LS V3 sigma', '@lsv3sigma')]
+
         plot.add_tools(hover)
         return plot
-
 
     def plt_res_offsets_corrected(self):
         """ Plot the residual Least Squares V2 and V3 offsets corrected by the half-facet
@@ -440,26 +430,25 @@ class MSATA():
         vline = Span(location=0, dimension='height', line_color='black', line_width=0.7)
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
-        xstart, ystart, ray_length= -1*v2halffacet[0], -1*v3halffacet[0], 0.05
-        plot.ray(x=xstart-ray_length/2.0, y=ystart, length=ray_length, angle_units="deg", angle=0)
-        plot.ray(x=xstart, y=ystart-ray_length/2.0, length=ray_length, angle_units="deg", angle=90)
-        hflabel = Label(x=xstart/3.0, y=ystart, y_units='data', text='-V2, -V3 half-facets values')
+        xstart, ystart, ray_length = -1 * v2halffacet[0], -1 * v3halffacet[0], 0.05
+        plot.ray(x=xstart - ray_length / 2.0, y=ystart, length=ray_length, angle_units="deg", angle=0)
+        plot.ray(x=xstart, y=ystart - ray_length / 2.0, length=ray_length, angle_units="deg", angle=90)
+        hflabel = Label(x=xstart / 3.0, y=ystart, y_units='data', text='-V2, -V3 half-facets values')
         plot.add_layout(hflabel)
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Subarray', '@subarray'),
-                        ('LS roll offset', '@lsrolloffset'),
-                        ('LS V2 offset', '@lsv2offset'),
-                        ('LS V3 offset', '@lsv3offset'),
-                        ('V2 half-facet', '@v2halffacet'),
-                        ('V3 half-facet', '@v3halffacet')
-                        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Subarray', '@subarray'),
+                          ('LS roll offset', '@lsrolloffset'),
+                          ('LS V2 offset', '@lsv2offset'),
+                          ('LS V3 offset', '@lsv3offset'),
+                          ('V2 half-facet', '@v2halffacet'),
+                          ('V3 half-facet', '@v3halffacet')]
+
         plot.add_tools(hover)
         return plot
-
 
     def plt_v2offsigma_time(self):
         """ Plot the residual Least Squares V2 sigma Offset versus time
@@ -480,17 +469,16 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Subarray', '@subarray'),
-                        ('LS V2 offset', '@lsv2offset'),
-                        ('LS V2 sigma', '@lsv2sigma')
-                        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Subarray', '@subarray'),
+                          ('LS V2 offset', '@lsv2offset'),
+                          ('LS V2 sigma', '@lsv2sigma')]
+
         plot.add_tools(hover)
         return plot
-
 
     def plt_v3offsigma_time(self):
         """ Plot the residual Least Squares V3 Offset versus time
@@ -511,18 +499,17 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Subarray', '@subarray'),
-                        ('LS roll offset', '@lsrolloffset'),
-                        ('LS V3 offset', '@lsv3offset'),
-                        ('LS V3 sigma', '@lsv3sigma')
-                        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Subarray', '@subarray'),
+                          ('LS roll offset', '@lsrolloffset'),
+                          ('LS V3 offset', '@lsv3offset'),
+                          ('LS V3 sigma', '@lsv3sigma')]
+
         plot.add_tools(hover)
         return plot
-
 
     def plt_roll_offset(self):
         """ Plot the residual Least Squares roll Offset versus time
@@ -549,18 +536,17 @@ class MSATA():
         plot.add_layout(arlabel)
         plot.renderers.extend([hline, arlinepos, arlineneg])
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Subarray', '@subarray'),
-                        ('LS roll offset', '@lsrolloffset'),
-                        ('LS V2 offset', '@lsv2offset'),
-                        ('LS V3 offset', '@lsv3offset')
-                        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Subarray', '@subarray'),
+                          ('LS roll offset', '@lsrolloffset'),
+                          ('LS V2 offset', '@lsv2offset'),
+                          ('LS V3 offset', '@lsv3offset')]
+
         plot.add_tools(hover)
         return plot
-
 
     def plt_lsoffsetmag(self):
         """ Plot the residual Least Squares Total Slew Magnitude Offset versus time
@@ -573,27 +559,26 @@ class MSATA():
         """
         # create a new bokeh plot
         plot = figure(title="MSATA Least Squares Total Magnitude of the Linear V2, V3 Offset Slew vs Time", x_axis_label='Time',
-                   y_axis_label='sqrt((V2_off)**2 + (V3_off)**2)', x_axis_type='datetime')
+                      y_axis_label='sqrt((V2_off)**2 + (V3_off)**2)', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsoffsetmag', source=self.source,
-                 color="blue", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.5)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Subarray', '@subarray'),
-                        ('LS roll offset', '@lsrolloffset'),
-                        ('LS slew mag offset', '@lsoffsetmag'),
-                        ('LS V2 offset', '@lsv2offset'),
-                        ('LS V3 offset', '@lsv3offset')
-                        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Subarray', '@subarray'),
+                          ('LS roll offset', '@lsrolloffset'),
+                          ('LS slew mag offset', '@lsoffsetmag'),
+                          ('LS V2 offset', '@lsv2offset'),
+                          ('LS V3 offset', '@lsv3offset')]
+
         plot.add_tools(hover)
         return plot
-
 
     def plt_tot_number_of_stars(self):
         """ Plot the total number of stars used versus time
@@ -631,20 +616,19 @@ class MSATA():
                       color='black', size=7, fill_alpha=0.5)
         plot.y_range = Range1d(0.0, 40.0)
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Subarray', '@subarray'),
-                        ('Stars in fit', '@stars_in_fit'),
-                        ('LS roll offset', '@lsrolloffset'),
-                        ('LS slew mag offset', '@lsoffsetmag'),
-                        ('LS V2 offset', '@lsv2offset'),
-                        ('LS V3 offset', '@lsv3offset')
-        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Subarray', '@subarray'),
+                          ('Stars in fit', '@stars_in_fit'),
+                          ('LS roll offset', '@lsrolloffset'),
+                          ('LS slew mag offset', '@lsoffsetmag'),
+                          ('LS V2 offset', '@lsv2offset'),
+                          ('LS V3 offset', '@lsv3offset')]
+
         plot.add_tools(hover)
         return plot
-
 
     def plt_mags_time(self):
         """ Plot the star magnitudes versus time
@@ -671,7 +655,7 @@ class MSATA():
         new_colors_list, vid, dobs, tarr, star_no, status = [], [], [], [], [], []
         peaks, stars_v2, stars_v3 = [], [], []
         for i, _ in enumerate(visit_id):
-            v, d, t, c, s, x, y  = [], [], [], [], [], [], []
+            v, d, t, c, s, x, y = [], [], [], [], [], [], []
             for j in range(len(reference_star_number[i])):
                 v.append(visit_id[i])
                 d.append(date_obs[i])
@@ -695,11 +679,10 @@ class MSATA():
             stars_v3.extend(y)
             peaks.extend(box_peak_value[i])
         # now create the mini ColumnDataSource for this particular plot
-        mini_source={'vid': vid, 'star_no': star_no, 'status': status,
-                     'dobs': dobs, 'tarr': tarr,
-                     'peaks': peaks, 'colors_list': new_colors_list,
-                     'stars_v2': stars_v2, 'stars_v3': stars_v2
-                    }
+        mini_source = {'vid': vid, 'star_no': star_no, 'status': status,
+                       'dobs': dobs, 'tarr': tarr,
+                       'peaks': peaks, 'colors_list': new_colors_list,
+                       'stars_v2': stars_v2, 'stars_v3': stars_v2}
         mini_source = ColumnDataSource(data=mini_source)
         # create a the bokeh plot
         plot = figure(title="MSATA Counts vs Time", x_axis_label='Time', y_axis_label='box_peak [Counts]',
@@ -721,17 +704,16 @@ class MSATA():
         plot.y_range = Range1d(-1000.0, 62000.0)
         # add hover
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@vid'),
-                        ('Star No.', '@star_no'),
-                        ('LS Status', '@status'),
-                        ('Date-Obs', '@dobs'),
-                        ('Box peak', '@peaks'),
-                        ('Measured V2', '@stars_v2'),
-                        ('Measured V3', '@stars_v3')
-                        ]
+        hover.tooltips = [('Visit ID', '@vid'),
+                          ('Star No.', '@star_no'),
+                          ('LS Status', '@status'),
+                          ('Date-Obs', '@dobs'),
+                          ('Box peak', '@peaks'),
+                          ('Measured V2', '@stars_v2'),
+                          ('Measured V3', '@stars_v3')]
+
         plot.add_tools(hover)
         return plot
-
 
     def mk_plt_layout(self):
         """Create the bokeh plot layout"""
@@ -758,19 +740,17 @@ class MSATA():
         # make grid
         grid = gridplot([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12],
                         ncols=2, merge_tools=False)
-        #show(grid)
+        # show(grid)
         save(grid)
         # return the needed components for embeding the results in the MSATA html template
         script, div = components(grid)
         return script, div
-
 
     def identify_tables(self):
         """Determine which database tables to use for a run of the TA monitor."""
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
         self.query_table = eval('{}TAQueryHistory'.format(mixed_case_name))
         self.stats_table = eval('{}TAStats'.format(mixed_case_name))
-
 
     def most_recent_search(self):
         """Query the query history database and return the information
@@ -784,7 +764,7 @@ class MSATA():
             where the msata monitor was run.
         """
         query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
-                              self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
+                                                            self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
 
         dates = np.zeros(0)
         for instance in query:
@@ -799,7 +779,6 @@ class MSATA():
             query_result = np.max(dates)
 
         return query_result
-
 
     def get_data_from_html(self, html_file):
         """
@@ -838,7 +817,6 @@ class MSATA():
             prev_data_dict = None
         return prev_data_dict
 
-
     def construct_expected_data(self, keywd_dict, tot_number_of_stars):
         """This function creates the list to append to the dictionary key in the expected format.
         Parameters
@@ -873,7 +851,6 @@ class MSATA():
                     list2append.append(val)
                 list4dict.append(list2append)
         return list4dict
-
 
     def prev_data2expected_format(self, prev_data_dict):
         """Add all the necessary columns to match expected format to combine previous
@@ -919,12 +896,11 @@ class MSATA():
         prev_data = pd.DataFrame(prev_data_expected_cols)
         return prev_data, latest_prev_obs
 
-
     @log_fail
     @log_info
     def run(self):
         """The main method. See module docstrings for further details."""
-        
+
         logging.info('Begin logging for msata_monitor')
 
         # define MSATA variables
