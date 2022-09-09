@@ -277,31 +277,40 @@ def archived_proposals_ajax(request, inst):
     #all_entries = Archive.objects.filter(instrument=inst)
     all_entries = Observation.objects.filter(proposal__archive__instrument=inst)
 
-    # Get a list of proppsal numbers
-    proposals = [entry.proposal.prop_id for entry in all_entries]
-    num_proposals = len(proposals)
-    thumbnail_paths = [entry.proposal.thumbnail_path for entry in all_entries]
+    # Get a list of proposal numbers.
+    #proposals = [entry.proposal for entry in all_entries]
 
+    proposal_nums = list(set([entry.proposal.prop_id for entry in all_entries]))
+
+    # Put proposals into descending order
+    proposal_nums.sort(reverse=True)
+
+    # Total number of proposals for the instrument
+    num_proposals = len(proposal_nums)
+
+    thumbnail_paths = []
     min_obsnums = []
     num_files = []
-    for proposal in proposals:
-        # For each proposal number, get the appropriate lines
-        # from the table so that we can generate the info needed
-        #prop_entries = Archive.objects.filter(proposal=proposal)
-        #or do we want to just work from all_entries here?
-        prop_entries = all_entries.filter(proposal=proposal)
-        obsnums = sorted([entry.proposal.observation.obsnum for entry in prop_entries])
-        min_obsnums.append(obsnums[0])
+    for proposal_num in proposal_nums:
+        # For each proposal number, get all entries
+        prop_entries = all_entries.filter(proposal__prop_id=proposal_num)
 
-        # Collect the number of files per observation and then sum
-        # to get the number of files per proposal
-        obs_num_files = [entry.observation.number_of_files for entry in prop_entries]
-        num_files.append(np.sum(np.array(obs_num_files)))
+        # All entries will have the same thumbnail_path, so just grab the first
+        thumbnail_paths.append(prop_entries[0].proposal.thumbnail_path)
+
+        # Extract the observation numbers from each entry and find the minimum
+        prop_obsnums = [entry.obsnum for entry in prop_entries]
+        min_obsnums.append(min(prop_obsnums))
+
+        # Sum the file count from all observations to get the total file count for
+        # the proposal
+        prop_filecount = [entry.number_of_files for entry in prop_entries]
+        total_files.append(sum(prop_filecount))
 
     context = {'inst': inst,
                'num_proposals': num_proposals,
                'min_obsnum': min_obsnums,
-               'thumbnails': {'proposals': proposals,
+               'thumbnails': {'proposals': proposal_nums,
                               'thumbnail_paths': thumbnail_paths,
                               'num_files': total_files}}
 
