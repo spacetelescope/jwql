@@ -20,12 +20,12 @@ This monitor also displays V2, V3 offsets over time.
 Author
 ______
     - Maria Pena-Guerrero
-    
+
 Use
 ---
     This module can be used from the command line as follows:
     python wata_monitor.py
-    
+
 """
 
 
@@ -60,7 +60,7 @@ from jwql.utils.utils import ensure_dir_exists, filesystem_path, get_config, fil
 
 class WATA():
     """ Class for executint the NIRSpec WATA monitor.
-    
+
     This class will search for new WATA current files in the file systems
     for NIRSpec and will run the monitor on these files. The monitor will
     extract the TA information from the file headers and perform all
@@ -85,48 +85,45 @@ class WATA():
         "NRS_FULL_MSA", "NRS_S1600A1_SLIT").
     """
 
-
     def __init__(self):
         """ Initialize an instance of the WATA class """
         # structure to define required keywords to extract and where they live
         self.keywds2extract = {'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs'},
-                              'OBS_ID': {'loc': 'main_hdr', 'alt_key': 'OBSID', 'name': 'visit_id'},
-                              'FILTER': {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter'},
-                              'READOUT': {'loc': 'main_hdr', 'alt_key': 'READPATT', 'name': 'readout'},
-                              'TASTATUS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ta_status'},
-                              'STAT_RSN': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'status_reason'},
-                              'REFSTNAM': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_name'},
-                              'REFSTRA': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_ra'},
-                              'REFSTDEC': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_dec'},
-                              'REFSTMAG': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_mag'},
-                              'REFSTCAT': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_catalog'},
-                              'V2_PLAND': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'planned_v2'},
-                              'V3_PLAND': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'planned_v3'},
-                              'EXTCOLST': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_start_col'},
-                              'EXTROWST': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_start_row'},
-                              'TA_DTCTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_detector'},
-                              'BOXPKVAL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box'},
-                              'BOXPKCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box_col'},
-                              'BOXPKROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box_row'},
-                              'TA_ITERS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'iterations'},
-                              'CORR_COL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'corr_col'},
-                              'CORR_ROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'corr_row'},
-                              'IMCENCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_final_col'},
-                              'IMCENROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_final_row'},
-                              'DTCENCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'detector_final_col'},
-                              'DTCENROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'detector_final_row'},
-                              'SCIXCNTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'final_sci_x'},
-                              'SCIYCNTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'final_sci_y'},
-                              'TARGETV2': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'measured_v2'},
-                              'TARGETV3': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'measured_v3'},
-                              'V2_REF': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ref_v2'},
-                              'V3_REF': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ref_v3'},
-                              'V2_RESID': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2_offset'},
-                              'V3_RESID': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v3_offset'},
-                              'SAM_X': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'sam_x'},
-                              'SAM_Y': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'sam_y'}
-                              }
-
+                               'OBS_ID': {'loc': 'main_hdr', 'alt_key': 'OBSID', 'name': 'visit_id'},
+                               'FILTER': {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter'},
+                               'READOUT': {'loc': 'main_hdr', 'alt_key': 'READPATT', 'name': 'readout'},
+                               'TASTATUS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ta_status'},
+                               'STAT_RSN': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'status_reason'},
+                               'REFSTNAM': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_name'},
+                               'REFSTRA': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_ra'},
+                               'REFSTDEC': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_dec'},
+                               'REFSTMAG': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_mag'},
+                               'REFSTCAT': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_catalog'},
+                               'V2_PLAND': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'planned_v2'},
+                               'V3_PLAND': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'planned_v3'},
+                               'EXTCOLST': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_start_col'},
+                               'EXTROWST': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_start_row'},
+                               'TA_DTCTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'star_detector'},
+                               'BOXPKVAL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box'},
+                               'BOXPKCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box_col'},
+                               'BOXPKROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box_row'},
+                               'TA_ITERS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'iterations'},
+                               'CORR_COL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'corr_col'},
+                               'CORR_ROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'corr_row'},
+                               'IMCENCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_final_col'},
+                               'IMCENROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_final_row'},
+                               'DTCENCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'detector_final_col'},
+                               'DTCENROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'detector_final_row'},
+                               'SCIXCNTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'final_sci_x'},
+                               'SCIYCNTR': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'final_sci_y'},
+                               'TARGETV2': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'measured_v2'},
+                               'TARGETV3': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'measured_v3'},
+                               'V2_REF': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ref_v2'},
+                               'V3_REF': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ref_v3'},
+                               'V2_RESID': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2_offset'},
+                               'V3_RESID': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v3_offset'},
+                               'SAM_X': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'sam_x'},
+                               'SAM_Y': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'sam_y'}}
 
     def get_tainfo_from_fits(self, fits_file):
         """ Get the TA information from the fits file
@@ -134,7 +131,7 @@ class WATA():
         ----------
         fits_file: str
             This is the fits file for a specific WATA
-        
+
         Returns
         -------
         hdr: dictionary
@@ -148,14 +145,13 @@ class WATA():
                     wata = True
                     break
             if not wata:
-                #print('\n WARNING! This file is not WATA: ', fits_file)
-                #print('  Skiping wata_monitor for this file  \n')
+                # print('\n WARNING! This file is not WATA: ', fits_file)
+                # print('  Skiping wata_monitor for this file  \n')
                 return None
             main_hdr = ff[0].header
             ta_hdr = ff['TARG_ACQ'].header
         wata_info = [main_hdr, ta_hdr]
         return wata_info
-
 
     def get_wata_data(self, new_filenames):
         """ Create the data array for the WATA input files
@@ -163,7 +159,7 @@ class WATA():
         ----------
         new_filenames: list
             List of WATA file names to consider
-        
+
         Returns
         -------
         wata_df: data frame object
@@ -192,7 +188,6 @@ class WATA():
         wata_df = pd.DataFrame(wata_dict)
         wata_df.index = wata_df.index + 1
         return wata_df
-            
 
     def plt_status(self):
         """ Plot the WATA status (passed = 0 or failed = 1).
@@ -226,18 +221,17 @@ class WATA():
         plot.y_range = Range1d(-0.5, 1.5)
         plot.circle(x='time_arr', y='ta_status_bool', source=self.source,
                     color='status_colors', size=7, fill_alpha=0.5)
-        #output_file("wata_status.html")
+        # output_file("wata_status.html")
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('TA status', '@ta_status'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Magnitude', '@star_mag')
-                        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('TA status', '@ta_status'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Magnitude', '@star_mag')]
+
         plot.add_tools(hover)
         return plot
-
 
     def plt_residual_offsets(self):
         """ Plot the residual V2 and V3 offsets
@@ -260,16 +254,15 @@ class WATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('TA status', '@ta_status'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Magnitude', '@star_mag')
-                        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('TA status', '@ta_status'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Magnitude', '@star_mag')]
+
         plot.add_tools(hover)
         return plot
-
 
     def plt_v2offset_time(self):
         """ Plot the residual V2 versus time
@@ -290,16 +283,15 @@ class WATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('TA status', '@ta_status'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Magnitude', '@star_mag')
-                        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('TA status', '@ta_status'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Magnitude', '@star_mag')]
+
         plot.add_tools(hover)
         return plot
-
 
     def plt_v3offset_time(self):
         """ Plot the residual V3 versus time
@@ -320,16 +312,15 @@ class WATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('TA status', '@ta_status'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Magnitude', '@star_mag')
-                        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('TA status', '@ta_status'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Magnitude', '@star_mag')]
+
         plot.add_tools(hover)
         return plot
-
 
     def plt_mag_time(self):
         """ Plot the star magnitude versus time
@@ -403,17 +394,17 @@ class WATA():
         plot = figure(title="WATA Counts vs Time", x_axis_label='Time',
                       y_axis_label='box_peak [Counts]', x_axis_type='datetime')
         plot.circle(x='time_arr', y='nrsrapid_f140x', source=self.source,
-                    color="blue", size=7, fill_alpha=0.5)#, legend_label='F140X NRSRAPID')
+                    color="blue", size=7, fill_alpha=0.5)
         plot.circle(x='time_arr', y='nrsrapidd6_f140x', source=self.source,
-                    color="blue", size=12, fill_alpha=0.5)#, legend_label='F140X NRSRAPIDD6')
+                    color="blue", size=12, fill_alpha=0.5)
         plot.triangle(x='time_arr', y='nrsrapid_f110w', source=self.source,
-                      color="orange", size=8, fill_alpha=0.7)#, legend_label='F110W NRSRAPID')
+                      color="orange", size=8, fill_alpha=0.7)
         plot.triangle(x='time_arr', y='nrsrapidd6_f110w', source=self.source,
-                      color="orange", size=13, fill_alpha=0.7)#, legend_label='F110W NRSRAPIDD6')
+                      color="orange", size=13, fill_alpha=0.7)
         plot.square(x='time_arr', y='nrsrapid_clear', source=self.source,
-                    color="gray", size=7, fill_alpha=0.4)#, legend_label='CLEAR NRSRAPID')
+                    color="gray", size=7, fill_alpha=0.4)
         plot.square(x='time_arr', y='nrsrapidd6_clear', source=self.source,
-                    color="gray", size=12, fill_alpha=0.4)#, legend_label='CLEAR NRSRAPIDD6')
+                    color="gray", size=12, fill_alpha=0.4)
         # add count saturation warning lines
         loc1, loc2, loc3 = 45000.0, 50000.0, 60000.0
         hline1 = Span(location=loc1, dimension='width', line_color='green', line_width=3)
@@ -429,16 +420,15 @@ class WATA():
         plot.y_range = Range1d(-1000.0, 62000.0)
         # add hover
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('TA status', '@ta_status'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Box peak', '@max_val_box')
-                        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('TA status', '@ta_status'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Box peak', '@max_val_box')]
+
         plot.add_tools(hover)
         return plot
-
 
     def plt_centroid(self):
         """ Plot the WATA centroid
@@ -460,20 +450,19 @@ class WATA():
         plot.x_range = Range1d(0.0, 32.0)
         plot.y_range = Range1d(0.0, 32.0)
         hover = HoverTool()
-        hover.tooltips=[('Visit ID', '@visit_id'),
-                        ('TA status', '@ta_status'),
-                        ('Filter', '@tafilter'),
-                        ('Readout', '@readout'),
-                        ('Date-Obs', '@date_obs'),
-                        ('Magnitude', '@star_mag'),
-                        ('Box Centr Col', '@corr_col'),
-                        ('Box Centr Row', '@corr_row'),
-                        ('Det Centr Col', '@detector_final_col'),
-                        ('Det Centr Row', '@detector_final_row')
-                        ]
+        hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('TA status', '@ta_status'),
+                          ('Filter', '@tafilter'),
+                          ('Readout', '@readout'),
+                          ('Date-Obs', '@date_obs'),
+                          ('Magnitude', '@star_mag'),
+                          ('Box Centr Col', '@corr_col'),
+                          ('Box Centr Row', '@corr_row'),
+                          ('Det Centr Col', '@detector_final_col'),
+                          ('Det Centr Row', '@detector_final_row')]
+
         plot.add_tools(hover)
         return plot
-
 
     def mk_plt_layout(self):
         """Create the bokeh plot layout"""
@@ -493,19 +482,16 @@ class WATA():
         p6 = self.plt_mag_time()
         # make grid
         grid = gridplot([p1, p2, p3, p4, p5, p6], ncols=2, merge_tools=False)
-        #show(grid)
         save(grid)
         # return the needed components for embeding the results in the WATA html template
         script, div = components(grid)
         return script, div
-
 
     def identify_tables(self):
         """Determine which database tables to use for a run of the TA monitor."""
         mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument]
         self.query_table = eval('{}TAQueryHistory'.format(mixed_case_name))
         self.stats_table = eval('{}TAStats'.format(mixed_case_name))
-
 
     def most_recent_search(self):
         """Query the query history database and return the information
@@ -519,7 +505,7 @@ class WATA():
             where the wata monitor was run.
         """
         query = session.query(self.query_table).filter(and_(self.query_table.aperture == self.aperture,
-                              self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
+                                                            self.query_table.run_monitor == True)).order_by(self.query_table.end_time_mjd).all()
 
         dates = np.zeros(0)
         for instance in query:
@@ -533,7 +519,6 @@ class WATA():
             query_result = np.max(dates)
 
         return query_result
-
 
     def get_data_from_html(self, html_file):
         """
@@ -578,12 +563,11 @@ class WATA():
         prev_data = pd.DataFrame(prev_data_dict)
         return prev_data, latest_prev_obs
 
-
     @log_fail
     @log_info
     def run(self):
         """The main method. See module docstrings for further details."""
-        
+
         logging.info('Begin logging for wata_monitor')
 
         # define WATA variables
@@ -657,13 +641,14 @@ class WATA():
 
         # Update the query history
         new_entry = {'instrument': self.instrument,
-                    'aperture': self.aperture,
-                    'start_time_mjd': self.query_start,
-                    'end_time_mjd': self.query_end,
-                    'entries_found': wata_entries,
-                    'files_found': len(new_filenames),
-                    'run_monitor': monitor_run,
-                    'entry_date': datetime.now()}
+                     'aperture': self.aperture,
+                     'start_time_mjd': self.query_start,
+                     'end_time_mjd': self.query_end,
+                     'entries_found': wata_entries,
+                     'files_found': len(new_filenames),
+                     'run_monitor': monitor_run,
+                     'entry_date': datetime.now()}
+
         self.query_table.__table__.insert().execute(new_entry)
         logging.info('\tUpdated the query history table')
 
@@ -679,4 +664,3 @@ if __name__ == '__main__':
     monitor.run()
 
     monitor_utils.update_monitor_table(module, start_time, log_file)
-
