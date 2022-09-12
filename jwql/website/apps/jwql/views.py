@@ -44,7 +44,6 @@ import os
 from bokeh.layouts import layout
 from bokeh.embed import components
 from django.http import HttpResponse, JsonResponse
-from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
 
 from jwql.database.database_interface import load_connection
@@ -403,12 +402,11 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
 
     obs_list = sorted(list(set(all_obs)))
 
-
     template = 'thumbnails_per_obs.html'
     context = {'base_url': get_base_url(),
                'inst': inst,
                'obs': observation,
-               'obs_list' : obs_list,
+               'obs_list': obs_list,
                'prop': proposal,
                'prop_meta': proposal_meta,
                'base_url': get_base_url()}
@@ -976,7 +974,7 @@ def view_image(request, inst, file_root, rewrite=False):
         except KeyError:
             pass
 
-    file_root_list = {key : sorted(file_root_list[key]) for key in sorted(file_root_list)}
+    file_root_list = {key: sorted(file_root_list[key]) for key in sorted(file_root_list)}
 
     # Build the context
     context = {'base_url': get_base_url(),
