@@ -73,7 +73,20 @@
         <div id='thumbnail-array'></div>
         <a id="no_thumbnails_msg" style='display: none'>No data match the selected criteria.</a>
 
-	</main>
+        <div class="previous-next-buttons">
+            <span class="step-links">
+                {% set index = obs_list.index(obs) %}
+                {% if index != 0 %}
+                    <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/archive/{{ prop }}/obs{{ obs_list[index-1] }}/" style="float: left;">< Previous</a>
+                {% endif %}
+
+                {% if obs_list.index(obs) != obs_list|length - 1 %}
+                    <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/archive/{{ prop }}/obs{{ obs_list[index+1] }}/" style="float: right;">Next ></a>
+                {% endif %}
+            </span>
+        </div>
+    
+    </main>
 
 	<script>update_thumbnails_per_observation_page('{{ inst }}', '{{ prop }}', '{{ obs }}', '{{ obs_list }}', '{{ base_url }}');</script>
 
