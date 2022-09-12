@@ -27,7 +27,7 @@ import logging
 import os
 
 import django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")                                                                                                                             \
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
 django.setup()
 
 from jwql.website.apps.jwql.models import Archive, Observation, Proposal
