@@ -264,8 +264,9 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
 
         # Update the database entry. Also update the number of files, just in case more files have been added
         # since the last entry was made.
-        existing[0].update(number_of_files=files)
-        existing[0].update(exptypes=new_exp_list)
+        existing[0].number_of_files = files
+        existing[0].exptypes = new_exp_list
+        existing[0].save(update_fields=['number_of_files', 'exptypes'])
 
     # If the instrument/proposal/observation entry does not yet exist, we need to create it
     elif len(existing) == 0:
