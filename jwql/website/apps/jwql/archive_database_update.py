@@ -96,7 +96,7 @@ def get_updates(inst):
             proposal_info = get_proposal_info(filenames)
 
             # Each observation number in each proposal can have a list of exp_types (e.g. NRC_TACQ, NRC_IMAGE)
-            for obsnum in proposal_info['observation_nums']:
+            for obsnum in set(proposal_info['observation_nums']):
                 # Find the public entries for the observation and get the associated exp_types
                 public_obs = np.array(metadata_public['observtn'])
                 match_pub = public_obs == int(obsnum)
