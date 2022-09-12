@@ -5,6 +5,7 @@ Authors
 
     - Matthew Bourque
     - Bryan Hilbert
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -17,12 +18,14 @@ Use
  """
 import datetime
 import os
+from astroquery.mast import Mast, Observations
 
 
 from jwql.database.database_interface import Monitor
 from jwql.jwql_monitors import monitor_mast
 from jwql.utils.constants import ASIC_TEMPLATES, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import configure_logging, get_log_status
+from jwql.utils.utils import filename_parser
 
 
 def exclude_asic_tuning(mast_results):
@@ -124,8 +127,7 @@ def mast_query_darks(instrument, aperture, start_date, end_date, readpatt=None):
 
         # Create dictionary of parameters to add
         parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
-                      "apername": aperture, "exp_type": template_name,
-                     }
+                      "apername": aperture, "exp_type": template_name, }
 
         if readpatt is not None:
             parameters["readpatt"] = readpatt
@@ -136,6 +138,87 @@ def mast_query_darks(instrument, aperture, start_date, end_date, readpatt=None):
             if len(query['data']) > 0:
                 query_results.extend(query['data'])
 
+    return query_results
+
+
+def mast_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
+    """Use ``astroquery`` to search MAST for TA current data
+
+    Parameters
+    ----------
+    instrument : str
+        Instrument name (e.g. ``nirspec``)
+
+    aperture : str
+        Detector aperture to search for (e.g. ``NRS_S1600A1_SLIT``)
+
+    start_date : float
+        Starting date for the search in MJD
+
+    end_date : float
+        Ending date for the search in MJD
+
+    readpatt : str
+        Readout pattern to search for (e.g. ``RAPID``). If None,
+        readout pattern will not be added to the query parameters.
+
+    Returns
+    -------
+    query_results : list
+        List of dictionaries containing the query results
+    """
+
+    # Make sure instrument is correct case
+    if instrument.lower() == 'nirspec':
+        instrument = 'Nirspec'
+        if aperture == 'NRS_S1600A1_SLIT':
+            exp_types = ['NRS_TASLIT', 'NRS_BOTA', 'NRS_WATA']
+        else:
+            exp_types = ['NRS_TACQ', 'NRS_MSATA']
+
+    # get all the obs IDs that have these keywords and only keep the ones with rate files
+    service = "Mast.Jwst.Filtered." + instrument
+    params = {"columns": "filename",
+              "filters": [{"paramName": "date_obs_mjd",
+                           "values": {"min": start_date, "max": end_date}},
+                          {"paramName": "apername",
+                           "values": [aperture]},
+                          {"paramName": "exp_type",
+                           "values": exp_types}]}
+
+    response = Mast.service_request_async(service, params)
+    result = response[0].json()['data']
+    wanted_suffix = ['rate']
+    observation_ids = []
+    ta_indicator = '02101'  # this is the activity number, always the same for TA
+    for file_entry in result:
+        filename_of_interest = file_entry['filename']
+        filename_dict = filename_parser(filename_of_interest)
+        if filename_dict['suffix'] in wanted_suffix:
+            suffix2remove = filename_of_interest.split(sep="_")[-1]
+            activity_number = filename_of_interest.split(sep="_")[-4]
+            obs_id = filename_of_interest.replace("_" + suffix2remove, "")
+            if activity_number == ta_indicator:
+                if obs_id not in observation_ids:
+                    observation_ids.append(obs_id)
+
+    # now query again for these observations only and filter the uncal files only
+    obs = Observations.query_criteria(obs_collection='JWST',
+                                      instrument_name=instrument,
+                                      obs_id=observation_ids)
+    # Fetch data products connected to each observation. Do one by one in case there
+    # is a timeout error with a specific program
+    query_results = []
+    for obsid in obs:
+        try:
+            products = Observations.get_product_list(obsid)
+            # Filter the data products
+            filtered_query = Observations.filter_products(products,
+                                                          productSubGroupDescription=['UNCAL'])
+            query_results.extend(filtered_query)
+        except TimeoutError:
+            # print('MAST TimeoutError with Obs_id: ', obsid, ' -> Not including in processing.')
+            continue
     return query_results
 
 
