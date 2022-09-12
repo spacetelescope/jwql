@@ -26,6 +26,7 @@ Dependencies
 import logging
 import os
 
+import numpy as np
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
 django.setup()
