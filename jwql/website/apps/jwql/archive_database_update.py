@@ -34,6 +34,7 @@ django.setup()
 from jwql.website.apps.jwql.models import Archive, Observation, Proposal
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
+from jwql.utils.monitor_utils import initialize_instrument_monitor
 from jwql.utils.utils import filename_parser, filesystem_path, get_config
 from jwql.website.apps.jwql.data_containers import get_instrument_proposals, get_filenames_by_instrument
 from jwql.website.apps.jwql.data_containers import get_proposal_info, mast_query_filenames_by_instrument
@@ -324,6 +325,9 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
 
 
 if __name__ == '__main__':
+    module = os.path.basename(__file__).strip('.py')
+    start_time, log_file = initialize_instrument_monitor(module)
+
     instruments = ['nircam', 'miri', 'nirspec', 'niriss', 'fgs']
     for instrument in instruments:
         get_updates(instrument)
