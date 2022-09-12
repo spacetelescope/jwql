@@ -120,7 +120,7 @@ def get_updates(inst):
                 latest_date = np.max(all_end_dates)
 
                 # Update the appropriate database table
-                logging.info('Updating database')
+                logging.info(f'Updating database for {inst}, Proposal {proposal}, Observation {obsnum}')
                 update_database_table(inst, proposal, obsnum, proposal_info['thumbnail_paths'][0], num_files,
                                       exp_types, starting_date, latest_date)
 
@@ -198,7 +198,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
     enddate : float
         Date of the ending of the observation in MJD
     """
-    logging.info('')
+
 
 
     #from tutorial:
@@ -223,6 +223,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
     existing = Observation.objects.filter(obsnum=obs,
                                           proposal__prop_id=prop,
                                           proposal__archive__instrument=instrument)
+    logging.info(f'Found {len(existing)} existing entries')
 
 
     #or:
@@ -265,6 +266,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
 
         # Update the database entry. Also update the number of files, just in case more files have been added
         # since the last entry was made.
+        logging.info(f'Found existing entry for instrument {inst}, Proposal {prop}, Observation {obsnum}. Updating number of files and exp_type list')
         existing[0].number_of_files = files
         existing[0].exptypes = new_exp_list
         existing[0].save(update_fields=['number_of_files', 'exptypes'])
@@ -284,6 +286,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
         if len(archive_query) > 0:
             archive_instance = archive_query[0]
         else:
+            logging.info(f'No existing entries for Archive: {inst}. Creating.')
             archive_instance = Archive(instrument=instrument)
             archive_instance.save()
 
@@ -292,6 +295,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
         if len(prop_query) > 0:
             prop_instance = prop_query[0]
         else:
+            logging.info(f'No existing entries for Proposal: {proposal}. Creating.')
             prop_instance = Proposal(prop_id=prop, thumbnail_path=thumbnail, archive=archive_instance)
             prop_instance.save()
 
@@ -299,6 +303,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
         obs_instance = Observation(obsnum=obs, number_of_files=files, exptypes=types_str,
                                    obsstart=startdate, obsend=enddate,
                                    proposal=prop_instance)
+        logging.info(f'Creating Observation entry for instrument {inst}, Proposal {prop}, Observation {obsnum}')
         obs_instance.save()
 
     else:
