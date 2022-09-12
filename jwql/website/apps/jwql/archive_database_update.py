@@ -211,7 +211,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
     # First, check to see if ExposureType instances exist for all of the elements
     # in types. For any that are missing, create and save an entry to the db.
     #for etype in types:
-    #    type_instance = ExposureType.object.get(exp_type=etype)
+    #    type_instance = ExposureType.objects.get(exp_type=etype)
     #    if len(type_instance) == 0:
     #        type_instance = ExposureType(exp_type=etype)
     #        type_instance.save()
@@ -252,7 +252,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
             if etype not in existing_exps:
 
                 # Get the ExposureType instance for this new exp_type to be added
-                #type_instance = ExposureType.object.get(exp_type=etype)
+                #type_instance = ExposureType.objects.get(exp_type=etype)
 
                 # Add the new exptype to the instrument/proposal/observation entry
                 #existing.instrument.proposal.observation.exposure_type.exp_type.append(type_instance)
@@ -270,7 +270,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
     # If the instrument/proposal/observation entry does not yet exist, we need to create it
     elif len(existing) == 0:
         # Generate a list of the query sets for the exposure types to be added
-        #exp_instances = [ExposureType.object.get(exp_type=etype) for etype in types]
+        #exp_instances = [ExposureType.objects.get(exp_type=etype) for etype in types]
 
         # Create the instance for the observation
         types_str = ','.join(types)
@@ -278,7 +278,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
         # do we just create an instancce here, or search for an existing instance?
         #archive_instance = Archive(instrument=instrument)
         #or:
-        archive_query = Archive.object.filter(instrument=instrument)
+        archive_query = Archive.objects.filter(instrument=instrument)
         if len(archive_instance) > 0:
             archive_instance = archive_query[0]
         else:
@@ -286,7 +286,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
             archive_instance.save()
 
         # Same here. Do we filter for an existing entry first? Or just create one?
-        prop_query = Proposal.object.filter(prop_id=prop, archive=archive_instance)
+        prop_query = Proposal.objects.filter(prop_id=prop, archive=archive_instance)
         if len(prop_instance) > 0:
             prop_instance = prop_query[0]
         else:
