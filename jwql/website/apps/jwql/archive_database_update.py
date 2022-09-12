@@ -24,13 +24,20 @@ Dependencies
 """
 
 import logging
+import os
 
-from jwql.website.apps.jwql.models import Archive, ExposureType, Observation, Proposal
+import django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")                                                                                                                             \
+django.setup()
+
+from jwql.website.apps.jwql.models import Archive, Observation, Proposal
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.utils import filename_parser, filesystem_path, get_config
 from jwql.website.apps.jwql.data_containers import get_instrument_proposals, get_filenames_by_instrument
 from jwql.website.apps.jwql.data_containers import get_proposal_info, mast_query_filenames_by_instrument
+
+FILESYSTEM = get_config()['filesystem']
 
 @log_info
 @log_fail
@@ -50,7 +57,6 @@ def get_updates(inst):
 
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-    filesystem = get_config()['filesystem']
 
     # Dictionary to hold summary information for all proposals
     all_proposals = get_instrument_proposals(inst)
@@ -89,13 +95,26 @@ def get_updates(inst):
 
             # Each observation number in each proposal can have a list of exp_types (e.g. NRC_TACQ, NRC_IMAGE)
             for obsnum in proposal_info['observation_nums']:
-                match_pub = metadata_public['observtn'] == int(obsnum)
-                exp_types = list(set(metadata_public['observtn'][match_pub]))
-                match_prop = metadata_proprietary['observtn'] == int(obsnum)
-                exp_types = list(set(exp_types + metadata_proprietary['observtn'][match_prop]))
-                all_start_dates = np.array(metadata_public['expstart'][match_pub] + metadata_proprietary['expstart'][match_prop])
+                # Find the public entries for the observation and get the associated exp_types
+                public_obs = np.array(metadata_public['observtn'])
+                match_pub = public_obs == int(obsnum)
+                public_exptypes = np.array(metadata_public['exp_type'])
+                exp_types = list(set(public_exptypes[match_pub]))
+
+                # Find the proprietary entries for the observation, get the associated exp_types, and
+                # combine with the public values
+                prop_obs = np.array(metadata_proprietary['observtn'])
+                match_prop = prop_obs == int(obsnum)
+                prop_exptypes = np.array(metadata_proprietary['exp_type'])
+                exp_types = list(set(exp_types + list(set(prop_exptypes[match_prop]))))
+
+                # Find the starting and ending dates for the observation
+                all_start_dates = np.array(metadata_public['expstart'])[match_pub]
+                all_start_dates = np.append(all_start_dates, np.array(metadata_proprietary['expstart'])[match_prop])
+
                 starting_date = np.min(all_start_dates)
-                all_end_dates = np.array(metadata_public['expend'][match_pub] + metadata_proprietary['expend'][match_prop])
+                all_end_dates = np.array(metadata_public['expend'])[match_pub]
+                all_end_dates = np.append(all_end_dates, np.array(metadata_proprietary['expend'])[match_prop])
                 latest_date = np.max(all_end_dates)
 
                 # Update the appropriate database table
@@ -141,7 +160,7 @@ def files_in_filesystem(files, permission_type):
     for filename in files:
         try:
             relative_filepath = filesystem_path(filename, check_existence=False)
-            full_filepath = os.path.join(filesystem, permission_type, relative_filepath)
+            full_filepath = os.path.join(FILESYSTEM, permission_type, relative_filepath)
             filenames.append(full_filepath)
         except ValueError:
             print('Unable to determine filepath for {}'.format(filename))
