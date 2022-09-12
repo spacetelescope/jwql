@@ -14,6 +14,7 @@ Authors
     - Johannes Sahlmann
     - Teagan King
     - Mees Fix
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -155,7 +156,7 @@ def miri_data_trending(request):
 
 
 def nirspec_data_trending(request):
-    """Generate the ``MIRI DATA-TRENDING`` page
+    """Generate the ``NIRSpec DATA-TRENDING`` page
 
     Parameters
     ----------

@@ -9,6 +9,7 @@ Authors
     - Ben Sunnquist
     - Teagan King
     - Mike Engesser
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -251,7 +252,10 @@ IGNORED_SUFFIXES = ['original', 'stream', 'x1d', 'x1dints', 'c1d']
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
     'dark_monitor': ['<instrument>_dark_dark_current', '<instrument>_dark_pixel_stats', '<instrument>_dark_query_history'],
     'bad_pixel_monitor': ['<instrument>_bad_pixel_stats', '<instrument>_bad_pixel_query_history'],
-    'cosmic_ray_monitor': ['<instrument>_cosmic_ray_stats', '<instrument>_cosmic_ray_query_history']}
+    'cosmic_ray_monitor': ['<instrument>_cosmic_ray_stats', '<instrument>_cosmic_ray_query_history'],
+    'msata_monitor': ['<instrument>_ta_stats', '<instrument>_ta_query_history'],
+    'wata_monitor': ['<instrument>_ta_stats', '<instrument>_ta_query_history']
+}
 
 INSTRUMENT_SERVICE_MATCH = {
     'FGS': 'Mast.Jwst.Filtered.Fgs',
@@ -323,7 +327,8 @@ MONITORS = {
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
-                ('Target Acquisition Monitor', '#'),
+                ('MSATA Monitor', '/nirspec/msata_monitor'),
+                ('WATA Monitor', '/nirspec/wata_monitor'),
                 ('Data Trending', '#'),
                 ('Detector Health Monitor', '#'),
                 ('Ref Pix Monitor', '#'),

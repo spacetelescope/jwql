@@ -28,6 +28,7 @@ Authors
     - Bryan Hilbert
     - Misty Cracraft
     - Sara Ogaz
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -456,7 +457,8 @@ FGSCosmicRayQueryHistory = monitor_orm_factory('fgs_cosmic_ray_query_history')
 FGSCosmicRayStats = monitor_orm_factory('fgs_cosmic_ray_stats')
 NIRSpecCosmicRayQueryHistory = monitor_orm_factory('nirspec_cosmic_ray_query_history')
 NIRSpecCosmicRayStats = monitor_orm_factory('nirspec_cosmic_ray_stats')
-
+NIRSpecTAQueryHistory = monitor_orm_factory('nirspec_ta_query_history')
+NIRSpecTAStats = monitor_orm_factory('nirspec_ta_stats')
 
 if __name__ == '__main__':
     base.metadata.create_all(engine)
