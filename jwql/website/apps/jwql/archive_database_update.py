@@ -279,7 +279,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
         #archive_instance = Archive(instrument=instrument)
         #or:
         archive_query = Archive.objects.filter(instrument=instrument)
-        if len(archive_instance) > 0:
+        if len(archive_query) > 0:
             archive_instance = archive_query[0]
         else:
             archive_instance = Archive(instrument=instrument)
@@ -287,7 +287,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
 
         # Same here. Do we filter for an existing entry first? Or just create one?
         prop_query = Proposal.objects.filter(prop_id=prop, archive=archive_instance)
-        if len(prop_instance) > 0:
+        if len(prop_query) > 0:
             prop_instance = prop_query[0]
         else:
             prop_instance = Proposal(prop_id=prop, thumbnail_path=thumbnail, archive=archive_instance)
