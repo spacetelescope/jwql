@@ -266,7 +266,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
 
         # Update the database entry. Also update the number of files, just in case more files have been added
         # since the last entry was made.
-        logging.info(f'Found existing entry for instrument {inst}, Proposal {prop}, Observation {obsnum}. Updating number of files and exp_type list')
+        logging.info(f'Found existing entry for instrument {instrument}, Proposal {prop}, Observation {obs}. Updating number of files and exp_type list')
         existing[0].number_of_files = files
         existing[0].exptypes = new_exp_list
         existing[0].save(update_fields=['number_of_files', 'exptypes'])
@@ -286,7 +286,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
         if len(archive_query) > 0:
             archive_instance = archive_query[0]
         else:
-            logging.info(f'No existing entries for Archive: {inst}. Creating.')
+            logging.info(f'No existing entries for Archive: {instrument}. Creating.')
             archive_instance = Archive(instrument=instrument)
             archive_instance.save()
 
@@ -295,7 +295,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
         if len(prop_query) > 0:
             prop_instance = prop_query[0]
         else:
-            logging.info(f'No existing entries for Proposal: {proposal}. Creating.')
+            logging.info(f'No existing entries for Proposal: {prop}. Creating.')
             prop_instance = Proposal(prop_id=prop, thumbnail_path=thumbnail, archive=archive_instance)
             prop_instance.save()
 
@@ -303,11 +303,11 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
         obs_instance = Observation(obsnum=obs, number_of_files=files, exptypes=types_str,
                                    obsstart=startdate, obsend=enddate,
                                    proposal=prop_instance)
-        logging.info(f'Creating Observation entry for instrument {inst}, Proposal {prop}, Observation {obsnum}')
+        logging.info(f'Creating Observation entry for instrument {instrument}, Proposal {prop}, Observation {obs}')
         obs_instance.save()
 
     else:
-        raise ValueError(f'Multiple database entries found for {inst} PID {prop}, Obs {obs}. There should be only one entry.')
+        raise ValueError(f'Multiple database entries found for {instrument} PID {prop}, Obs {obs}. There should be only one entry.')
         # Check to see if the instrument/proposal combination exists in the db. It may be that
         # there are entries for the proposal already, but for other observation numbers. If that's the case,
         # then we just need to update the observation list. There should only be one entry if there are any
