@@ -28,6 +28,11 @@ import os
 
 import numpy as np
 import django
+
+# These lines are needed in order to use the Django models in a standalone
+# script (as opposed to code run as a result of a webpage request). If these
+# lines are not run, the script will crash when attempting to import the
+# Django models in the line below.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
 django.setup()
 
@@ -270,6 +275,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
         existing[0].number_of_files = files
         existing[0].exptypes = new_exp_list
         existing[0].save(update_fields=['number_of_files', 'exptypes'])
+        logging.info('Done updating')
 
     # If the instrument/proposal/observation entry does not yet exist, we need to create it
     elif len(existing) == 0:
@@ -285,6 +291,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
         archive_query = Archive.objects.filter(instrument=instrument)
         if len(archive_query) > 0:
             archive_instance = archive_query[0]
+            logging.info('Existing Archive entry found.')
         else:
             logging.info(f'No existing entries for Archive: {instrument}. Creating.')
             archive_instance = Archive(instrument=instrument)
@@ -294,6 +301,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
         prop_query = Proposal.objects.filter(prop_id=prop, archive=archive_instance)
         if len(prop_query) > 0:
             prop_instance = prop_query[0]
+            logging.info('Existing Proposal entry found.')
         else:
             logging.info(f'No existing entries for Proposal: {prop}. Creating.')
             prop_instance = Proposal(prop_id=prop, thumbnail_path=thumbnail, archive=archive_instance)
