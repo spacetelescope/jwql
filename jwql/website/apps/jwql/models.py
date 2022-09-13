@@ -108,7 +108,7 @@ class Proposal(models.Model):
     """
     """
     # Fields
-    prop_id = models.CharField(max_length=5, help_text="5-digit proposal ID string", primary_key=True)
+    prop_id = models.CharField(max_length=5, help_text="5-digit proposal ID string")
     thumbnail_path = models.CharField(max_length=100, help_text='Path to the proposal thumbnail')
     archive = models.ForeignKey(Archive, blank=False, null=False, on_delete=models.CASCADE)
 
@@ -130,7 +130,7 @@ class Observation(models.Model):
     """
     """
     # Fields
-    obsnum = models.CharField(max_length=3, help_text='Observation number, as a 3 digit string', primary_key=True)
+    obsnum = models.CharField(max_length=3, help_text='Observation number, as a 3 digit string')
     number_of_files = models.IntegerField(help_text='Number of files in the proposal')
     obsstart = models.FloatField(help_text='Time of the beginning of the observation in MJD')
     obsend = models.FloatField(help_text='Time of the end of the observation in MJD')
