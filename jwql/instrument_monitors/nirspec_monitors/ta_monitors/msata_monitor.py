@@ -414,8 +414,11 @@ class MSATA():
         # create a new bokeh plot
         lsv2offset, lsv3offset = self.source.data['lsv2offset'], self.source.data['lsv3offset']
         v2halffacet, v3halffacet = self.source.data['v2halffacet'], self.source.data['v3halffacet']
-        v2_half_fac_corr = lsv2offset + v2halffacet
-        v3_half_fac_corr = lsv3offset + v3halffacet
+        v2_half_fac_corr, v3_half_fac_corr = [], []
+        for idx, v2hf in enumerate(v2halffacet):
+            v3hf = v3halffacet[idx]
+            v2_half_fac_corr.append(lsv2offset[idx] + v2hf)
+            v3_half_fac_corr.append(lsv3offset[idx] + v3hf)
         # add these to the bokeh data structure
         self.source.data["v2_half_fac_corr"] = v2_half_fac_corr
         self.source.data["v3_half_fac_corr"] = v3_half_fac_corr
