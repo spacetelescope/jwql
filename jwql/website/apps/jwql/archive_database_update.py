@@ -141,6 +141,14 @@ def get_all_possible_filenames_for_proposal(instrument, proposal_num):
     """
     filename_query = mast_query_filenames_by_instrument(instrument, proposal_num,
                                                         other_columns=['exp_type', 'observtn', 'expstart', 'expend'])
+
+    # Check the number of files returned by the MAST query. MAST has a limit of 50,000 rows in
+    # the returned result. If we hit that limit, then we are most likely not getting back all of
+    # the files. In such a case, we will have to start querying by observation or some other property.
+    if len(filename_query['data']) >= MAST_QUERY_LIMIT:
+        raise ValueError((f'WARNING! MAST query limit of {MAST_QUERY_LIMIT} entries has been reached for {instrument} PID {proposal_num}. '
+                          'This means we are not getting a complete list of files. The query must be broken up into multuple queries.'))
+
     public, public_meta = get_filenames_by_instrument(instrument, proposal_num, restriction='public',
                                                       query_response=filename_query,
                                                       other_columns=['exp_type', 'observtn', 'expstart', 'expend'])

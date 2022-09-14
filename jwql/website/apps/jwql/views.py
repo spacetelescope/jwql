@@ -277,8 +277,6 @@ def archived_proposals_ajax(request, inst):
     all_entries = Observation.objects.filter(proposal__archive__instrument=inst)
 
     # Get a list of proposal numbers.
-    #proposals = [entry.proposal for entry in all_entries]
-
     proposal_nums = list(set([entry.proposal.prop_id for entry in all_entries]))
 
     # Put proposals into descending order
