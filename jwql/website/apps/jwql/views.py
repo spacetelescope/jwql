@@ -72,6 +72,7 @@ from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
+from .models import Observation
 from astropy.io import fits
 
 
