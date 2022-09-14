@@ -207,16 +207,16 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
     # Check to see if the required Archive entry exists, and create it if it doesn't
     archive_instance, archive_created = Archive.objects.get_or_create(instrument=instrument)
     if archive_created:
-        logging.info('Existing Archive entry found.')
-    else:
         logging.info(f'No existing entries for Archive: {instrument}. Creating.')
+    else:
+        logging.info('Existing Archive entry found.')
 
     # Check to see if the required Proposal entry exists, and create it if it doesn't
     prop_instance, prop_created = Proposal.objects.get_or_create(prop_id=prop, archive=archive_instance)
     if prop_created:
-        logging.info('Existing Proposal entry found.')
-    else:
         logging.info(f'No existing entries for Proposal: {prop}. Creating.')
+    else:
+        logging.info('Existing Proposal entry found.')
 
     # Update the proposal instance with the thumbnail path
     prop_instance.thumbnail_path = thumbnail
