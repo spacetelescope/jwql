@@ -224,10 +224,51 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
 
     # Check to see if there is an entry for the instrument/proposal/observation
 
-    # Use this if we make exp_type a simple list/array in the observation model
+
+
+
+    # Check to see if the required Archive entry exists, and create it if it doesn't
+    archive_instance, archive_created = Archive.objects.get_or_create(instrument=instrument)
+    if archive_created:
+        logging.info('Existing Archive entry found.')
+    else:
+        logging.info(f'No existing entries for Archive: {instrument}. Creating.')
+
+    # Check to see if the required Proposal entry exists, and create it if it doesn't
+    prop_instance, prop_created = Proposal.objects.get_or_create(prop_id=prop, archive=archive_instance)
+    if prop_created:
+        logging.info('Existing Proposal entry found.')
+    else:
+        logging.info(f'No existing entries for Proposal: {prop}. Creating.')
+
+
+    would this work? how does the creation work in terms of the exp_list? if the object exists, will it overwrite the existing exptype list?
+    note that you'll have to allow some fields to be null in the model definitions in order to do this.
+    obs_instance, obs_created = Observation.objects.get_or_create(obsnum=obs,
+                                                                  proposal=prop_instance,
+                                                                  archive=archive_instance)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    #
     existing = Observation.objects.filter(obsnum=obs,
                                           proposal__prop_id=prop,
                                           proposal__archive__instrument=instrument)
+
+
+
+
     logging.info(f'Found {len(existing)} existing entries')
 
 
@@ -288,24 +329,26 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
         # do we just create an instancce here, or search for an existing instance?
         #archive_instance = Archive(instrument=instrument)
         #or:
-        archive_query = Archive.objects.filter(instrument=instrument)
-        if len(archive_query) > 0:
-            archive_instance = archive_query[0]
+        archive_instance, archive_created = Archive.objects.get_or_create(instrument=instrument)
+        #archive_query = Archive.objects.filter(instrument=instrument)
+        if archive_created:
+            #archive_instance = archive_query[0]
             logging.info('Existing Archive entry found.')
         else:
             logging.info(f'No existing entries for Archive: {instrument}. Creating.')
-            archive_instance = Archive(instrument=instrument)
-            archive_instance.save()
+            #archive_instance = Archive(instrument=instrument)
+            #archive_instance.save()
 
         # Same here. Do we filter for an existing entry first? Or just create one?
-        prop_query = Proposal.objects.filter(prop_id=prop, archive=archive_instance)
-        if len(prop_query) > 0:
-            prop_instance = prop_query[0]
+        prop_instance, prop_created = Proposal.objects.get_or_create(prop_id=prop, archive=archive_instance)
+        #prop_query = Proposal.objects.filter(prop_id=prop, archive=archive_instance)
+        if prop_created:
+            #prop_instance = prop_query[0]
             logging.info('Existing Proposal entry found.')
         else:
             logging.info(f'No existing entries for Proposal: {prop}. Creating.')
-            prop_instance = Proposal(prop_id=prop, thumbnail_path=thumbnail, archive=archive_instance)
-            prop_instance.save()
+            #prop_instance = Proposal(prop_id=prop, thumbnail_path=thumbnail, archive=archive_instance)
+            #prop_instance.save()
 
         # Now that we are sure to have Archive and Proposal instances, we can create the new Observation instance
         obs_instance = Observation(obsnum=obs, number_of_files=files, exptypes=types_str,
