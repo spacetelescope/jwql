@@ -289,7 +289,7 @@ def archived_proposals_ajax(request, inst):
 
     thumbnail_paths = []
     min_obsnums = []
-    num_files = []
+    total_files = []
     for proposal_num in proposal_nums:
         # For each proposal number, get all entries
         prop_entries = all_entries.filter(proposal__prop_id=proposal_num)
