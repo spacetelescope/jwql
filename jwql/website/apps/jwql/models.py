@@ -115,6 +115,8 @@ class Proposal(models.Model):
     # Metadata
     class Meta:
         ordering = ['-prop_id']
+        unique_together = ('prop_id', 'archive')
+        models.UniqueConstraint(fields=['prop_id', 'archive'], name='unique_instrument_proposal')
 
     # Methods
     def get_absolute_url(self):
@@ -141,6 +143,7 @@ class Observation(models.Model):
     # Metadata
     class Meta:
         ordering = ['-obsnum']
+        models.UniqueConstraint(fields=['proposal', 'obsnum'], name='unique_proposal_obsnum')
 
     # Methods
     def get_absolute_url(self):
