@@ -86,15 +86,16 @@ def get_updates(inst):
         filenames = filepaths_public + filepaths_proprietary
 
         # Get set of unique rootnames
-        num_files = 0
-        rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
-        for rootname in rootnames:
+        all_rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
+        rootnames = []
+        for rootname in all_rootnames:
             filename_dict = filename_parser(rootname)
 
             # Weed out file types that are not supported by generate_preview_images
             if 'stage_3' not in filename_dict['filename_type']:
-                num_files += 1
+                rootnames.append(rootname)
 
+        logging.info(f'Identified {len(rootnames)} files for the proposal.')
         if len(filenames) > 0:
 
             # Gather information about the proposals for the given instrument
@@ -124,9 +125,14 @@ def get_updates(inst):
                 all_end_dates = np.append(all_end_dates, np.array(metadata_proprietary['expend'])[match_prop])
                 latest_date = np.max(all_end_dates)
 
+                # Get the number of files in the observation
+                propobs = f'{proposal}{obsnum}'
+                obsfiles = [f for f in rootnames if propobs in f]
+                num_obs_files = len(obsfiles)
+
                 # Update the appropriate database table
                 logging.info(f'Updating database for {inst}, Proposal {proposal}, Observation {obsnum}')
-                update_database_table(inst, proposal, obsnum, proposal_info['thumbnail_paths'][0], num_files,
+                update_database_table(inst, proposal, obsnum, proposal_info['thumbnail_paths'][0], num_obs_files,
                                       exp_types, starting_date, latest_date)
 
 
