@@ -48,9 +48,9 @@ from jwql.utils.utils import get_config
 # Use the 'Agg' backend to avoid invoking $DISPLAY
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-from matplotlib.ticker import AutoMinorLocator
+import matplotlib.pyplot as plt  # noqa
+import matplotlib.colors as colors  # noqa
+from matplotlib.ticker import AutoMinorLocator  # noqa
 
 # Only import jwst if not running from readthedocs
 # Determine if the code is being run as part of a Readthedocs build
@@ -58,8 +58,6 @@ ON_READTHEDOCS = False
 if 'READTHEDOCS' in os.environ:
     ON_READTHEDOCS = os.environ['READTHEDOCS']
 
-#if 'build' and 'project' not in socket.gethostname():
-#    ON_READTHEDOCS = False
 if not ON_READTHEDOCS:
     from jwst.datamodels import dqflags
 
@@ -301,8 +299,6 @@ class PreviewImage():
                                 dq = self.nonsci_from_file()
                                 # ISR2 data are always full frame, so no need to crop to subarray
                                 # and since we are guaranteed to have an uncal file, no need to expand for i2d
-                                #dq = crop_to_subarray(dq, hdulist[0].header, xd, yd)
-                                #dq = expand_for_i2d(dq, xd, yd)
                             elif 'i2d' in filename:
                                 dq = create_nir_nonsci_map()
                                 dq = crop_to_subarray(dq, hdulist[0].header, xd, yd)
@@ -706,7 +702,7 @@ def crop_to_subarray(arr, header, xdim, ydim):
         xstart = (arr_xdim // 2) - (xdim // 2)
         xlen = xdim
         ylen = ydim
-    return arr[ystart : (ystart + ylen), xstart : (xstart + xlen)]
+    return arr[ystart: (ystart + ylen), xstart: (xstart + xlen)]
 
 
 def expand_for_i2d(array, xdim, ydim):
@@ -738,18 +734,18 @@ def expand_for_i2d(array, xdim, ydim):
             new_array_y = np.zeros((ydim, xdim_array), dtype=bool)  # Added rows/cols will be all zeros
             y_offset = abs((ydim - ydim_array) // 2)
             if (ydim_array < ydim):
-                new_array_y[y_offset : (y_offset + ydim_array), :] = array
+                new_array_y[y_offset: (y_offset + ydim_array), :] = array
             elif (ydim_array > ydim):
-                new_array_y = array[y_offset : (y_offset + ydim), :]
+                new_array_y = array[y_offset: (y_offset + ydim), :]
         else:
             new_array_y = array
         if (xdim_array != xdim):
             new_array_x = np.zeros((ydim, xdim), dtype=bool)  # Added rows/cols will be all zeros
             x_offset = abs((xdim - xdim_array) // 2)
             if (xdim_array < xdim):
-                new_array_x[:, x_offset : (x_offset + xdim_array)] = new_array_y
+                new_array_x[:, x_offset: (x_offset + xdim_array)] = new_array_y
             elif (xdim_array > xdim):
-                new_array_x = new_array_y[:, x_offset : (x_offset + xdim)]
+                new_array_x = new_array_y[:, x_offset: (x_offset + xdim)]
         else:
             new_array_x = new_array_y
         return new_array_x

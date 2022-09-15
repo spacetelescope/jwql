@@ -538,10 +538,6 @@ def generate_preview_images():
     program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', 'jw*'))])
     program_list = list(set(program_list))
 
-
-    program_list = ['jw01068', 'jw02260', 'jw01837', 'jw01532', 'jw01566', 'jw02560', 'jw02420', 'jw02736']
-
-
     pool = multiprocessing.Pool(processes=int(SETTINGS['cores']))
     results = pool.map(process_program, program_list)
     pool.close()

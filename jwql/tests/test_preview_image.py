@@ -49,8 +49,8 @@ def test_crop_to_subarray():
     the requested subarray
     """
     # Set up a small DQ array that shows the location of reference pixels on 2 sides
-    dq = np.ones((10,10),dtype=int)
-    dq[0:3,:] = 0
+    dq = np.ones((10, 10), dtype=int)
+    dq[0:3, :] = 0
     dq[:, 0:3] = 0
 
     # Set up a fits header
