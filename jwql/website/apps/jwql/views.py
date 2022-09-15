@@ -15,6 +15,7 @@ Authors
     - Teagan King
     - Mees Fix
     - Maria Pena-Guerrero
+    - Bryan Hilbert
 
 Use
 ---

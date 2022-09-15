@@ -137,7 +137,31 @@ def get_updates(inst):
 
 
 def get_all_possible_filenames_for_proposal(instrument, proposal_num):
-    """
+    """Wrapper around a MAST query for filenames from a given instrument/proposal
+
+    Parameters
+    ----------
+    instrument : str
+        JWST instrument, mixed-case e.g. NIRCam
+
+    proposal_num : str
+        Proposal number to search for
+
+    Returns
+    -------
+    public: list
+        A list of publicly-available filenames
+
+    public_meta : dict
+        Dictionary of other attributes returned from MAST for public data. Keys are the attribute names
+        e.g. 'exptime', and values are lists of the value for each filename. e.g. ['59867.6, 59867.601']
+
+    proprietary list
+        A list of filenames from proprietary programs
+
+    proprietary_meta : dict
+        Dictionary of other attributes returned from MAST for proporietary programs. Keys are the attribute names
+        e.g. 'exptime', and values are lists of the value for each filename. e.g. ['59867.6, 59867.601']
     """
     filename_query = mast_query_filenames_by_instrument(instrument, proposal_num,
                                                         other_columns=['exp_type', 'observtn', 'expstart', 'expend'])
@@ -189,7 +213,7 @@ def files_in_filesystem(files, permission_type):
 
 
 def update_database_table(instrument, prop, obs, thumbnail, files, types, startdate, enddate):
-    """
+    """Update the database tables that contain info about proposals and observations, via Django models.
 
     Parameters
     ----------

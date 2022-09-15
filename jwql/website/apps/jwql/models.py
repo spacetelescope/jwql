@@ -14,6 +14,7 @@ at jwql/website/db.sqlite3.
 Authors
 -------
     - Lauren Chambers
+    - Bryan Hilbert
 
 Use
 ---
@@ -32,9 +33,6 @@ References
 import os
 
 from django.db import models
-import yaml
-
-from jwst.datamodels import schemas
 
 
 INSTRUMENT_LIST = (('FGS', 'FGS'),
@@ -42,45 +40,6 @@ INSTRUMENT_LIST = (('FGS', 'FGS'),
                    ('NIRCam', 'NIRCam'),
                    ('NIRISS', 'NIRISS'),
                    ('NIRSpec', 'NIRSpec'))
-
-
-class BaseModel(models.Model):
-    """A base model that other classes will inherit. Created to avoid
-    an obscure error about a missing ``app_label``.
-    """
-
-    class Meta:
-        abstract = True  # specify this model as an Abstract Model
-        app_label = 'jwql'
-
-
-class ImageData(BaseModel):
-    """A model that collects image filepaths, instrument labels, and
-    publishing date/time. Just an example used for learning django.
-
-    Attributes
-    ----------
-    filepath : FilePathField object
-        The full filepath of the datum
-    inst : CharField object
-        Name of the corresponding JWST instrument
-    pub_date : FilePathField object
-        Date and time when datum was added to the database.
-    """
-
-    inst = models.CharField('instrument', max_length=7, choices=INSTRUMENT_LIST, default=None)
-    pub_date = models.DateTimeField('date published')
-    filepath = models.FilePathField(path='/user/lchambers/jwql/')
-
-    def filename(self):
-        return os.path.basename(self.filepath)
-
-    def __str__(self):
-        return self.filename()
-
-    class Meta:
-        verbose_name_plural = "image data"
-        db_table = 'imagedata'
 
 
 class Archive(models.Model):
@@ -105,8 +64,7 @@ class Archive(models.Model):
 
 
 class Proposal(models.Model):
-    """
-    """
+    """A class defining the model used to hold information about a given proposal"""
     # Fields
     prop_id = models.CharField(max_length=5, help_text="5-digit proposal ID string")
     thumbnail_path = models.CharField(max_length=100, help_text='Path to the proposal thumbnail', default='')
@@ -129,8 +87,7 @@ class Proposal(models.Model):
 
 
 class Observation(models.Model):
-    """
-    """
+    """A class defining the model used to hold information about an observation from a given proposal"""
     # Fields
     obsnum = models.CharField(max_length=3, help_text='Observation number, as a 3 digit string')
     number_of_files = models.IntegerField(help_text='Number of files in the proposal', default=0)
