@@ -4,6 +4,7 @@ Authors
 -------
 
     - Lauren Chambers
+    - Maria Pena-Guerrero
 
 Use
 ---
