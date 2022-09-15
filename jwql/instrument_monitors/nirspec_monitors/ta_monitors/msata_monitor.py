@@ -932,6 +932,8 @@ class MSATA():
             prev_data_dict = self.get_data_from_html(self.output_file_name)
             self.prev_data, self.query_start = self.prev_data2expected_format(prev_data_dict)
             logging.info('\tPrevious data read from html file: {}'.format(self.output_file_name))
+            # move this plot to a previous version
+            os.rename(self.output_file_name, os.path.join(self.output_dir, "prev_msata_layout.html"))
 
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
