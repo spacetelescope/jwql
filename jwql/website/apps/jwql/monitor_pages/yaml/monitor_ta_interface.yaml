@@ -1,0 +1,169 @@
+# Panel 1: Trending all visits
+# Common data source
+- !ColumnDataSource: &offsets_trend_source
+    ref: "trend_source"
+    data:
+        visit: []
+        oss_v2: []
+        oss_v2_lo: []
+        oss_v2_hi: []
+        oss_v3: []
+        oss_v3_lo: []
+        oss_v3_hi: []
+        rep_v2: []
+        rep_v2_lo: []
+        rep_v2_hi: []
+        rep_v3: []
+        rep_v3_lo: []
+        rep_v3_hi: []
+        rep_theta: [] #these aren't being used yet
+        rep_theta_lo: []
+        rep_theta_hi: []
+        oss_theta: []
+        oss_theta_lo: []
+        oss_theta_hi: []
+    selection_on_change: ['indices', !self.select_visit ]
+# V2/V3 offsets trending figure
+- !Range1d: &v2v3_offsets_trend_xr
+    ref: "v2_offsets_trend_range"
+    start: 0
+    end: 1
+    bounds: !!python/tuple [0, 1]
+- !Range1d: &v2v3_offsets_trend_yr
+    ref: "v3_offsets_trend_range"
+    start: 0
+    end: 1
+    bounds: !!python/tuple [0, 1]
+# Whisker models for error bars
+- !Whisker: &rep_v2_err
+    dimension: 'width'
+    source: *offsets_trend_source
+    base: 'rep_v3'
+    lower: 'rep_v2_lo'
+    upper: 'rep_v2_hi'
+- !Whisker: &rep_v3_err
+    dimension: 'height'
+    source: *offsets_trend_source
+    base: 'rep_v2'
+    lower: 'rep_v3_lo'
+    upper: 'rep_v3_hi'
+- !Whisker: &oss_v2_err
+    dimension: 'width'
+    source: *offsets_trend_source
+    base: 'oss_v3'
+    lower: 'oss_v2_lo'
+    upper: 'oss_v2_hi'
+- !Whisker: &oss_v3_err
+    dimension: 'height'
+    source: *offsets_trend_source
+    base: 'oss_v2'
+    lower: 'oss_v3_lo'
+    upper: 'oss_v3_hi'
+# Actual figure
+- !Figure: &v2v3_offsets_trend_fig
+    ref: "v2v3_offsets_trend_fig"
+    title: "NIRSpec MSA Pointing"
+    height: 700
+    width: 700
+    x_axis_label: "V2 offset (arcsec)"
+    y_axis_label: "V3 offset (arcsec)"
+    x_range: *v2v3_offsets_trend_xr
+    y_range: *v2v3_offsets_trend_yr
+    tools: "tap,wheel_zoom"
+    elements:
+        - {'kind': 'circle', 'x': 'oss_v2', 'y': 'oss_v3', 'source': *offsets_trend_source, 'size': 6, 'color': 'orange', 'legend_label': 'OSS'}
+        - {'kind': 'circle', 'x': 'rep_v2', 'y': 'rep_v3', 'source': *offsets_trend_source, 'size': 6, 'color': 'green', 'legend_label': 'replica'}
+        - {'kind': 'layout', 'obj': *oss_v2_err}
+        - {'kind': 'layout', 'obj': *oss_v3_err}
+        - {'kind': 'layout', 'obj': *rep_v2_err}
+        - {'kind': 'layout', 'obj': *rep_v3_err}
+# Offsets vs time trending figure
+- !FactorRange: &visit_offsets_trend_xr
+    ref: "visit_offsets_trend_xr"
+    factors: []
+- !Range1d: &visit_offsets_trend_yr
+    ref: "visit_offsets_trend_yr"
+    start: 0
+    end: 1
+    bounds: !!python/tuple [0, 1]
+# Whisker models for error bars
+- !Whisker: &rep_v2_err_time
+    ref: "rep_v2_err_time"
+    dimension: 'height'
+    source: *offsets_trend_source
+    base: 'visit'
+    lower: 'rep_v2_lo'
+    upper: 'rep_v2_hi'
+- !Whisker: &rep_v3_err_time
+    ref: "rep_v3_err_time"
+    dimension: 'height'
+    source: *offsets_trend_source
+    base: 'visit'
+    lower: 'rep_v3_lo'
+    upper: 'rep_v3_hi'
+- !Whisker: &oss_v2_err_time
+    ref: "oss_v2_err_time"
+    dimension: 'height'
+    source: *offsets_trend_source
+    base: 'visit'
+    lower: 'oss_v2_lo'
+    upper: 'oss_v2_hi'
+- !Whisker: &oss_v3_err_time
+    ref: "oss_v3_err_time"
+    dimension: 'height'
+    source: *offsets_trend_source
+    base: 'visit'
+    lower: 'oss_v3_lo'
+    upper: 'oss_v3_hi'
+- !Figure: &time_offsets_trend_fig
+    ref: "time_offsets_trend_fig"
+    title: "NIRSpec MSA Pointing"
+    height: 700
+    width: 700
+    x_axis_label: "Visit ID"
+    y_axis_label: "Offset (arcsec)"
+    x_range: *visit_offsets_trend_xr
+    y_range: *visit_offsets_trend_yr
+    tools: "tap,wheel_zoom"
+    elements:
+        - {'kind': 'circle', 'x': 'visit', 'y': 'oss_v2', 'source': *offsets_trend_source, 'size': 6, 'color': 'red', 'legend_label': 'V2 (OSS)', "name": "oss_v2"}
+        - {'kind': 'circle', 'x': 'visit', 'y': 'oss_v3', 'source': *offsets_trend_source, 'size': 6, 'color': 'orange', 'legend_label': 'V3 (OSS)', "name": "oss_v3"}
+        - {'kind': 'circle', 'x': 'visit', 'y': 'rep_v2', 'source': *offsets_trend_source, 'size': 6, 'color': 'blue', 'legend_label': 'V2 (replica)', "name": "rep_v2"}
+        - {'kind': 'circle', 'x': 'visit', 'y': 'rep_v3', 'source': *offsets_trend_source, 'size': 6, 'color': 'green', 'legend_label': 'V3 (replica)', "name": "rep_v3"}
+        - {'kind': 'layout', 'obj': *oss_v2_err_time}
+        - {'kind': 'layout', 'obj': *oss_v3_err_time}
+        - {'kind': 'layout', 'obj': *rep_v2_err_time}
+        - {'kind': 'layout', 'obj': *rep_v3_err_time}
+# Open detail tabs:
+- !Select: &visit_select
+    ref: "visit_select"
+    value: ""
+    options: !self.available_visits
+    on_change: ["value", !self.select_visit ]
+- !Button: &detail_button
+    ref: "detail_button"
+    label: "Open visit tab"
+    disabled: true
+    on_click: !self.open_visit_panel
+# Tabs widget
+- !Tabs: &msata_tabs
+    ref: "msata_tabs"
+    sizing_mode: "stretch_width"
+    tabs:
+        - !Panel:
+            title: "Trending"
+            child:
+                !column:
+                    - !row:
+                        - !Div:
+                            text: "Select a visit:"
+                        - *visit_select
+                        - *detail_button
+                    - !row:
+                        - *v2v3_offsets_trend_fig
+                        - *time_offsets_trend_fig
+    
+# Document structure
+- !Document:
+    - *msata_tabs
+            

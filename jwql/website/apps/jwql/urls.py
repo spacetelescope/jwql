@@ -13,6 +13,7 @@ Authors
     - Matthew Bourque
     - Johannes Sahlmann
     - Teagan King
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -61,12 +62,15 @@ urlpatterns = [
 
     # NIRSpec-specific views
     path('nirspec/nirspec_data_trending/', views.nirspec_data_trending, name='nirspec_data_trending'),
+    path('nirspec/msata_monitor/', monitor_views.msata_monitoring, name='msata_monitor'),
+    path('nirspec/wata_monitor/', monitor_views.wata_monitoring, name='wata_monitor'),
 
     # Common monitor views
     re_path(r'^(?P<inst>({}))/dark_monitor/$'.format(instruments), monitor_views.dark_monitor, name='dark_monitor'),
     re_path(r'^(?P<inst>({}))/bad_pixel_monitor/$'.format(instruments), monitor_views.bad_pixel_monitor, name='bad_pixel_monitor'),
     re_path(r'^(?P<inst>({}))/bias_monitor/$'.format(instruments), monitor_views.bias_monitor, name='bias_monitor'),
     re_path(r'^(?P<inst>({}))/readnoise_monitor/$'.format(instruments), monitor_views.readnoise_monitor, name='readnoise_monitor'),
+    re_path(r'^(?P<inst>({}))/cosmic_ray_monitor/$'.format(instruments), monitor_views.cosmic_ray_monitor, name='cosmic_ray_monitor'),
 
     # Main site views
     path('about/', views.about, name='about'),
@@ -92,6 +96,8 @@ urlpatterns = [
     re_path(r'^ajax/(?P<inst>({}))/(?P<file_root>.+)_(?P<filetype>.+)/explore_image/$'.format(instruments), views.explore_image_ajax, name='explore_image_ajax'),
     re_path(r'^ajax/(?P<inst>({}))/(?P<file_root>.+)_(?P<filetype>.+)/explore_image/scaling_(?P<scaling>.+)/low_(?P<low_lim>.+)/high_(?P<high_lim>.+)/ext_(?P<ext_name>.+)/int1_(?P<int1_nr>.+)/grp1_(?P<grp1_nr>.+)/int2_(?P<int2_nr>.+)/grp2_(?P<grp2_nr>.+)/$'.format(instruments), views.explore_image_ajax, name='explore_image_ajax'),
     re_path(r'^ajax/(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/obs(?P<observation>[\d]{{1,3}})/$'.format(instruments), views.archive_thumbnails_ajax, name='archive_thumb_ajax'),
+    re_path('ajax/nirspec/msata/', monitor_views.msata_monitoring_ajax, name='msata_ajax'),
+    re_path('ajax/nirspec/wata/', monitor_views.wata_monitoring_ajax, name='wata_ajax'),
 
     # REST API views
     path('api/proposals/', api_views.all_proposals, name='all_proposals'),
