@@ -15,6 +15,8 @@ Authors
     - Teagan King
     - Mees Fix
     - Bryan Hilbert
+    - Maria Pena-Guerrero
+
 
 Use
 ---
@@ -38,6 +40,7 @@ Dependencies
     placed in the ``jwql`` directory.
 """
 
+from collections import defaultdict
 import csv
 import os
 
@@ -156,7 +159,7 @@ def miri_data_trending(request):
 
 
 def nirspec_data_trending(request):
-    """Generate the ``MIRI DATA-TRENDING`` page
+    """Generate the ``NIRSpec DATA-TRENDING`` page
 
     Parameters
     ----------
@@ -378,13 +381,15 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
             all_obs.append(filename_parser(root)['observation'])
         except KeyError:
             pass
+
     obs_list = sorted(list(set(all_obs)))
 
     template = 'thumbnails_per_obs.html'
-    context = {'inst': inst,
-               'prop': proposal,
+    context = {'base_url': get_base_url(),
+               'inst': inst,
                'obs': observation,
                'obs_list': obs_list,
+               'prop': proposal,
                'prop_meta': proposal_meta,
                'base_url': get_base_url()}
 
@@ -940,9 +945,24 @@ def view_image(request, inst, file_root, rewrite=False):
 
     form = get_anomaly_form(request, inst, file_root)
 
+    prop_id = file_root[2:7]
+
+    rootnames = get_rootnames_for_instrument_proposal(inst, prop_id)
+    file_root_list = defaultdict(list)
+
+    for root in rootnames:
+        try:
+            file_root_list[(filename_parser(root)['observation'])].append(root)
+        except KeyError:
+            pass
+
+    file_root_list = {key: sorted(file_root_list[key]) for key in sorted(file_root_list)}
+
     # Build the context
-    context = {'inst': inst,
-               'prop_id': file_root[2:7],
+    context = {'base_url': get_base_url(),
+               'file_root_list': file_root_list,
+               'inst': inst,
+               'prop_id': prop_id,
                'obsnum': file_root[7:10],
                'file_root': file_root,
                'jpg_files': image_info['all_jpegs'],
