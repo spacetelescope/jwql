@@ -558,7 +558,8 @@ class WATA():
         if not bool(prev_data_dict):
             prev_data_dict = None
         # find the latest observation date
-        latest_prev_obs = max(prev_data_dict['time_arr'])
+        latest_prev_obs = datetime.fromtimestamp(max(prev_data_dict['tarr']))
+        latest_prev_obs = latest_prev_obs.mjd
         # now convert to a panda dataframe to be combined with the new data
         prev_data = pd.DataFrame(prev_data_dict)
         return prev_data, latest_prev_obs

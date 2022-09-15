@@ -869,7 +869,8 @@ class MSATA():
         latest_prev_obs: str
             Date of the latest observation in the previously plotted data
         """
-        latest_prev_obs = max(prev_data_dict['tarr'])
+        latest_prev_obs = datetime.fromtimestamp(max(prev_data_dict['tarr']))
+        latest_prev_obs = latest_prev_obs.mjd
         prev_data_expected_cols = {}
         tot_number_of_stars = prev_data_dict['tot_number_of_stars']
         for file_keywd, keywd_dict in self.keywds2extract.items():
@@ -932,8 +933,6 @@ class MSATA():
             prev_data_dict = self.get_data_from_html(self.output_file_name)
             self.prev_data, self.query_start = self.prev_data2expected_format(prev_data_dict)
             logging.info('\tPrevious data read from html file: {}'.format(self.output_file_name))
-            # move this plot to a previous version
-            os.rename(self.output_file_name, os.path.join(self.output_dir, "prev_msata_layout.html"))
 
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
