@@ -9,6 +9,7 @@ Authors
 -------
 
     - Lauren Chambers
+    - Bryan Hilbert
 
 References
 ----------
