@@ -957,7 +957,7 @@ class MSATA():
 
         # Run the monitor on any new files
         logging.info('\tMSATA monitor found {} new uncal files.'.format(len(new_filenames)))
-        self.script, self.div = None, None
+        self.script, self.div, self.msata_data = None, None, None
         monitor_run = False
         if len(new_filenames) > 0:
             # get the data
@@ -968,12 +968,16 @@ class MSATA():
                     self.msata_data = pd.concat([self.prev_data, self.new_msata_data])
                 else:
                     self.msata_data = self.new_msata_data
-                # make the plots
-                self.script, self.div = self.mk_plt_layout()
-                monitor_run = True
             else:
                 logging.info('\tMSATA monitor skipped. No MSATA data found.')
+        # make sure to return the old data if no new data is found
+        elif self.prev_data is not None:
+            self.msata_data = self.prev_data
 
+        # make the plots if there is data
+        if self.msata_data is not None:
+            self.script, self.div = self.mk_plt_layout()
+            monitor_run = True
         else:
             logging.info('\tMSATA monitor skipped.')
 
