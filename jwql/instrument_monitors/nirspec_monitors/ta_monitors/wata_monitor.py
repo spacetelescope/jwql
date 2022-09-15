@@ -619,9 +619,9 @@ class WATA():
             logging.warning('\t\t ** Unable to locate any file in filesystem. Nothing to process. ** ')
 
         # Run the monitor on any new files
-        self.script, self.div = None, None
+        self.script, self.div, self.wata_data = None, None, None
         monitor_run = False
-        if len(new_filenames) > 0:
+        if len(new_filenames) > 0:   # new data was found
             # get the data
             self.new_wata_data = self.get_wata_data(new_filenames)
             if self.new_wata_data is not None:
@@ -630,12 +630,15 @@ class WATA():
                     self.wata_data = pd.concat([self.prev_data, self.new_wata_data])
                 else:
                     self.wata_data = self.new_wata_data
-                # make the plots
-                self.script, self.div = self.mk_plt_layout()
-                monitor_run = True
             else:
                 logging.info('\tWATA monitor skipped. No WATA data found.')
-
+        # make sure to return the old data if no new data is found
+        elif self.prev_data is not None:
+            self.wata_data = self.prev_data
+        # do the plots if there is any data
+        if self.wata_data is not None:
+            self.script, self.div = self.mk_plt_layout()
+            monitor_run = True
         else:
             logging.info('\tWATA monitor skipped.')
 

@@ -414,8 +414,11 @@ class MSATA():
         # create a new bokeh plot
         lsv2offset, lsv3offset = self.source.data['lsv2offset'], self.source.data['lsv3offset']
         v2halffacet, v3halffacet = self.source.data['v2halffacet'], self.source.data['v3halffacet']
-        v2_half_fac_corr = lsv2offset + v2halffacet
-        v3_half_fac_corr = lsv3offset + v3halffacet
+        v2_half_fac_corr, v3_half_fac_corr = [], []
+        for idx, v2hf in enumerate(v2halffacet):
+            v3hf = v3halffacet[idx]
+            v2_half_fac_corr.append(lsv2offset[idx] + v2hf)
+            v3_half_fac_corr.append(lsv3offset[idx] + v3hf)
         # add these to the bokeh data structure
         self.source.data["v2_half_fac_corr"] = v2_half_fac_corr
         self.source.data["v3_half_fac_corr"] = v3_half_fac_corr
@@ -954,9 +957,9 @@ class MSATA():
 
         # Run the monitor on any new files
         logging.info('\tMSATA monitor found {} new uncal files.'.format(len(new_filenames)))
-        self.script, self.div = None, None
+        self.script, self.div, self.msata_data = None, None, None
         monitor_run = False
-        if len(new_filenames) > 0:
+        if len(new_filenames) > 0:   # new data was found
             # get the data
             self.new_msata_data = self.get_msata_data(new_filenames)
             if self.new_msata_data is not None:
@@ -965,12 +968,15 @@ class MSATA():
                     self.msata_data = pd.concat([self.prev_data, self.new_msata_data])
                 else:
                     self.msata_data = self.new_msata_data
-                # make the plots
-                self.script, self.div = self.mk_plt_layout()
-                monitor_run = True
             else:
                 logging.info('\tMSATA monitor skipped. No MSATA data found.')
-
+        # make sure to return the old data if no new data is found
+        elif self.prev_data is not None:
+            self.msata_data = self.prev_data
+        # make the plots if there is data
+        if self.msata_data is not None:
+            self.script, self.div = self.mk_plt_layout()
+            monitor_run = True
         else:
             logging.info('\tMSATA monitor skipped.')
 
