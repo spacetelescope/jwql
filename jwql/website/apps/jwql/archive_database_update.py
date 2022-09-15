@@ -36,15 +36,16 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
 django.setup()
 
-from jwql.website.apps.jwql.models import Archive, Observation, Proposal
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.logging_functions import log_info, log_fail
-from jwql.utils.monitor_utils import initialize_instrument_monitor
-from jwql.utils.utils import filename_parser, filesystem_path, get_config
-from jwql.website.apps.jwql.data_containers import get_instrument_proposals, get_filenames_by_instrument
-from jwql.website.apps.jwql.data_containers import get_proposal_info, mast_query_filenames_by_instrument
+from jwql.website.apps.jwql.models import Archive, Observation, Proposal  #noqa
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE  #noqa
+from jwql.utils.logging_functions import log_info, log_fail  #noqa
+from jwql.utils.monitor_utils import initialize_instrument_monitor  #noqa
+from jwql.utils.utils import filename_parser, filesystem_path, get_config  #noqa
+from jwql.website.apps.jwql.data_containers import get_instrument_proposals, get_filenames_by_instrument  #noqa
+from jwql.website.apps.jwql.data_containers import get_proposal_info, mast_query_filenames_by_instrument  #noqa
 
 FILESYSTEM = get_config()['filesystem']
+
 
 @log_info
 @log_fail
@@ -55,10 +56,6 @@ def get_updates(inst):
     ----------
     inst : str
         Name of JWST instrument
-
-    Returns
-    -------
-
     """
     logging.info(f'Updating database for {inst} archive page.')
 
