@@ -54,9 +54,9 @@ class Archive(models.Model):
         ordering = ['instrument']
 
     # Methods
-    def get_absolute_url(self):
-        """Returns the URL to access a particular instance of Archive."""
-        return reverse('archive-view', args=[str(self.id)])
+    #def get_absolute_url(self):
+    #    """Returns the URL to access a particular instance of Archive."""
+    #    return reverse('archive-view', args=[str(self.id)])
 
     def __str__(self):
         """String for representing the Archive object (in Admin site etc.)."""
@@ -77,9 +77,9 @@ class Proposal(models.Model):
         models.UniqueConstraint(fields=['prop_id', 'archive'], name='unique_instrument_proposal')
 
     # Methods
-    def get_absolute_url(self):
-        """Returns the URL to access a particular instance of Archive."""
-        return reverse('proposal-view', args=[str(self.id)])
+    #def get_absolute_url(self):
+    #    """Returns the URL to access a particular instance of Archive."""
+    #    return reverse('proposal-view', args=[str(self.id)])
 
     def __str__(self):
         """String for representing the Archive object (in Admin site etc.)."""
@@ -103,9 +103,9 @@ class Observation(models.Model):
         models.UniqueConstraint(fields=['proposal', 'obsnum'], name='unique_proposal_obsnum')
 
     # Methods
-    def get_absolute_url(self):
-        """Returns the URL to access a particular instance of Archive."""
-        return reverse('observation-view', args=[str(self.id)])
+    #def get_absolute_url(self):
+    #    """Returns the URL to access a particular instance of Archive."""
+    #    return reverse('observation-view', args=[str(self.id)])
 
     def __str__(self):
         """String for representing the Archive object (in Admin site etc.)."""
