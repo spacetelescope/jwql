@@ -54,7 +54,8 @@ from django import forms
 from django.shortcuts import redirect
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from jwedb.edb_interface import is_valid_mnemonic
+from jwql.edb.engineering_database import is_valid_mnemonic
+
 
 from jwql.database import database_interface as di
 from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT
@@ -309,7 +310,7 @@ class FileSearchForm(forms.Form):
                     # Technically all proposal have multiple instruments if you include guider data. Remove Guider Data
                     instrument_routes = [format_html('<a href="/{}/archive/{}/obs{}">{}</a>', instrument, proposal_string[1:], all_observations[instrument][0], instrument) for instrument in set(all_instruments)]
                     raise forms.ValidationError(
-                        mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))# nosec
+                        mark_safe(('Proposal contains multiple instruments, please click instrument link to view data: {}.').format(', '.join(instrument_routes))))  # nosec
 
                 self.instrument = all_instruments[0]
             else:

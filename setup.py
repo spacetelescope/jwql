@@ -25,7 +25,6 @@ REQUIRES = [
     'ipython',
     'jinja2',
     'jsonschema',
-    'jwedb>=0.0.3',
     'jwst',
     'jwst_reffiles',
     'matplotlib',
