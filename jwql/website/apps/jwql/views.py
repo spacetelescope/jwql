@@ -70,7 +70,7 @@ from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
-from .models import Observation
+from .models import Observation, Proposal
 from astropy.io import fits
 
 
@@ -272,12 +272,12 @@ def archived_proposals_ajax(request, inst):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    # If we use one table for all instruments
-    #all_entries = Archive.objects.filter(instrument=inst)
+    # Get a list of Observation entries for the given instrument
     all_entries = Observation.objects.filter(proposal__archive__instrument=inst)
 
     # Get a list of proposal numbers.
-    proposal_nums = list(set([entry.proposal.prop_id for entry in all_entries]))
+    prop_objects = Proposal.objects.filter(archive__instrument=inst)
+    proposal_nums = [entry.prop_id for entry in prop_objects]
 
     # Put proposals into descending order
     proposal_nums.sort(reverse=True)
