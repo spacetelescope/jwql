@@ -568,7 +568,7 @@ class WATA():
         if not bool(prev_data_dict):
             prev_data_dict = None
         # find the latest observation date
-        latest_prev_obs = datetime.fromtimestamp(max(prev_data_dict['tarr']))
+        latest_prev_obs = fromtimestamp(max(prev_data_dict['tarr']))
         latest_prev_obs = latest_prev_obs.mjd
         # now convert to a panda dataframe to be combined with the new data
         prev_data = pd.DataFrame(prev_data_dict)
@@ -627,6 +627,11 @@ class WATA():
         new_filenames = []
         for entry_dict in new_entries:
             filename_of_interest = entry_dict['productFilename']
+
+            ###################### REMOVE AFTER DEBUGGING ######################
+            print('WATA file name: ', filename_of_interest)
+            ###################### REMOVE AFTER DEBUGGING ######################
+
             try:
                 new_filenames.append(filesystem_path(filename_of_interest))
             except FileNotFoundError:
@@ -651,7 +656,7 @@ class WATA():
                     logging.info('\tData from previous html output file and new data concatenated.')
                 else:
                     self.wata_data = self.new_wata_data
-                    logging.info('\Only new data was found - no previous html file.')
+                    logging.info('\tOnly new data was found - no previous html file.')
             else:
                 logging.info('\tWATA monitor skipped. No WATA data found.')
         # make sure to return the old data if no new data is found
@@ -662,7 +667,7 @@ class WATA():
         if self.wata_data is not None:
             self.script, self.div = self.mk_plt_layout()
             monitor_run = True
-            logging.info('\Output html plot file created: {}'.format(self.output_file_name))
+            logging.info('\tOutput html plot file created: {}'.format(self.output_file_name))
         else:
             logging.info('\tWATA monitor skipped.')
 

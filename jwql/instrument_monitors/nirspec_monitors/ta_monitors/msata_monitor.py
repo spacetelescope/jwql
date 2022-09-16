@@ -880,7 +880,7 @@ class MSATA():
             Date of the latest observation in the previously plotted data
         """
         # remember that the time array created is in milliseconds, removing to get time object
-        latest_prev_obs = datetime.fromtimestamp(max(prev_data_dict['tarr']) / 1000.0)
+        latest_prev_obs = fromtimestamp(max(prev_data_dict['tarr']) / 1000.0)
         latest_prev_obs = latest_prev_obs.mjd
         prev_data_expected_cols = {}
         tot_number_of_stars = prev_data_dict['tot_number_of_stars']
@@ -963,6 +963,11 @@ class MSATA():
         new_filenames = []
         for entry_dict in new_entries:
             filename_of_interest = entry_dict['productFilename']
+            
+            ###################### REMOVE AFTER DEBUGGING ######################
+            print('WATA file name: ', filename_of_interest)
+            ###################### REMOVE AFTER DEBUGGING ######################
+
             try:
                 new_filenames.append(filesystem_path(filename_of_interest))
             except FileNotFoundError:
