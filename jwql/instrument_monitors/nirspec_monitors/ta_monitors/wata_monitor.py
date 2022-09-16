@@ -574,6 +574,37 @@ class WATA():
         prev_data = pd.DataFrame(prev_data_dict)
         return prev_data, latest_prev_obs
 
+    def filter_bases(self, file_list):
+        """Filter a list of input files to only keep uncal files. Strip off everything after
+        the last underscore (e.g. "i2d.fits"), and keep only once instance of the
+        remaining basename.
+
+        Parameters
+        ----------
+        file_list : list
+            List of fits files
+
+        Returns
+        -------
+        good_files : list
+            Filtered list of uncal file names
+        """
+        good_files = []
+        for filename in file_list:
+            # Search the first part of the filename for letters. (e.g. jw01059007003
+            # without the jw). If there aren't any, then it's not a stage 3 product and
+            # we can continue.
+            substr = filename[2:13]
+            letters = re.findall("\D", substr)  # noqa: W605
+            if len(letters) == 0:
+                rev = filename[::-1]
+                under = rev.find('_')
+                base = rev[under + 1:][::-1]
+                uncal_file = f'{base}_uncal.fits'
+                if uncal_file not in good_files:
+                    good_files.append(uncal_file)
+        return good_files
+
     @log_fail
     @log_info
     def run(self):
@@ -621,19 +652,20 @@ class WATA():
         # most recent previous search as the starting time
         new_entries = monitor_utils.mast_query_ta(self.instrument, self.aperture, self.query_start, self.query_end)
         wata_entries = len(new_entries)
-        logging.info('\tMAST query has returned {} new WATA files for {}, {} to run the WATA monitor.'.format(wata_entries, self.instrument, self.aperture))
+        logging.info('\tMAST query has returned {} WATA files for {}, {}.'.format(wata_entries, self.instrument, self.aperture))
+
+        # Filter new entries to only keep uncal files
+        new_entries = self.filter_bases(new_entries)
+        wata_entries = len(new_entries)
+        logging.info('\tThere are {} uncal TA files to run the WATA monitor.'.format(wata_entries))
 
         # Get full paths to the files
         new_filenames = []
         for entry_dict in new_entries:
             filename_of_interest = entry_dict['productFilename']
-
-            ###################### REMOVE AFTER DEBUGGING ######################
-            print('WATA file name: ', filename_of_interest)
-            ###################### REMOVE AFTER DEBUGGING ######################
-
             try:
                 new_filenames.append(filesystem_path(filename_of_interest))
+                logging.warning('\tFile {} included for processing.'.format(filename_of_interest))
             except FileNotFoundError:
                 logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'.format(filename_of_interest))
 
