@@ -294,6 +294,7 @@ def archived_proposals_ajax(request, inst):
     thumbnail_paths = []
     min_obsnums = []
     total_files = []
+    exptimes = []
     for proposal_num in proposal_nums:
         # For each proposal number, get all entries
         prop_entries = all_entries.filter(proposal__prop_id=proposal_num)
@@ -310,15 +311,18 @@ def archived_proposals_ajax(request, inst):
         prop_filecount = [entry.number_of_files for entry in prop_entries]
         total_files.append(sum(prop_filecount))
 
+        # Get the most recent observation starting time for the proposal
+        prop_exptimes = [entry.obsstart for entry in prop_entries]
+        exptimes.append(max(prop_exptimes))
+
     # Sort proposals from most recent to oldest, in order to have this as the
     # default when the page is loaded
-    #print('should we do this? or should we keep the default to be increasing proposal ID order?')
-    indexes = np.flip(np.argsort(all_proposal_info['expstart']))
-    all_proposal_info['proposals'] = np.array(all_proposal_info['proposals'])[indexes].tolist()
-    all_proposal_info['min_obsnum'] = np.array(all_proposal_info['min_obsnum'])[indexes].tolist()
-    all_proposal_info['thumbnail_paths'] = np.array(all_proposal_info['thumbnail_paths'])[indexes].tolist()
-    all_proposal_info['num_files'] = np.array(all_proposal_info['num_files'])[indexes].tolist()
-    all_proposal_info['expstart'] = np.array(all_proposal_info['expstart'])[indexes].tolist()
+    indexes = np.flip(np.argsort(np.array(exptimes)))
+    min_obsnums = np.array(min_obsnums)[indexes].tolist()
+    proposal_nums = np.array(proposal_nums)[indexes].tolist()
+    thumbnail_paths = np.array(thumbnail_paths)[indexes].tolist()
+    total_files = np.array(total_files)[indexes].tolist()
+    expstart = np.array(expstart)[indexes].tolist()
 
     context = {'inst': inst,
                'num_proposals': num_proposals,
@@ -326,7 +330,7 @@ def archived_proposals_ajax(request, inst):
                'thumbnails': {'proposals': proposal_nums,
                               'thumbnail_paths': thumbnail_paths,
                               'num_files': total_files,
-                              'expstart': all_proposal_info['expstart']}}
+                              'expstart': exptimes}}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
