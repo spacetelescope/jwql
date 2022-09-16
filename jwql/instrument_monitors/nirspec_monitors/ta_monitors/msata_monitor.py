@@ -778,7 +778,7 @@ class MSATA():
 
         query_count = len(dates)
         if query_count == 0:
-            query_result = query_very_beginning
+            query_result = self.query_very_beginning
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
                          .format(self.aperture, self.query_very_beginning)))
         else:
