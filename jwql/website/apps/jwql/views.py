@@ -331,9 +331,6 @@ def archived_proposals_ajax(request, inst):
                               'thumbnail_paths': all_proposal_info['thumbnail_paths'],
                               'num_files': all_proposal_info['num_files']}}
 
-    print('in archived_proposals_ajax')
-    print(all_proposal_info['min_obsnum'])
-
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
@@ -975,7 +972,12 @@ def view_image(request, inst, file_root, rewrite=False):
         except KeyError:
             pass
 
-    file_root_list = {key: sorted(file_root_list[key]) for key in sorted(file_root_list)}
+    sort_type = request.GET['sort_dropdownMenuButton']
+
+    if sortype in ['exptype', 'descending']:
+        file_root_list = {key: sorted(file_root_list[key]) for key in sorted(file_root_list)}
+    else:
+        file_root_list = {key: sorted(file_root_list[key], reverse=true) for key in sorted(file_root_list)}
 
     # Build the context
     context = {'base_url': get_base_url(),
