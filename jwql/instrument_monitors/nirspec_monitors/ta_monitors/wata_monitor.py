@@ -123,8 +123,8 @@ class WATA():
                                'TARGETV3': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'measured_v3'},
                                'V2_REF': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ref_v2'},
                                'V3_REF': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ref_v3'},
-                               'V2_RESID': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2_offset'},
-                               'V3_RESID': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v3_offset'},
+                               'V2_RESID': {'loc': 'ta_hdr', 'alt_key': 'V2_OFFST', 'name': 'v2_offset'},
+                               'V3_RESID': {'loc': 'ta_hdr', 'alt_key': 'V3_OFFST', 'name': 'v3_offset'},
                                'SAM_X': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'sam_x'},
                                'SAM_Y': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'sam_y'}}
 

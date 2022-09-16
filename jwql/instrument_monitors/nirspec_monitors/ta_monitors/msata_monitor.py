@@ -242,7 +242,7 @@ class MSATA():
             else:
                 number_status.append(0.0)
                 status_colors.append('red')
-            # convert time string into an array of time (this is in UT)
+            # convert time string into an array of time (this is in UT with 0.0 milliseconds)
             t = datetime.fromisoformat(do_str)
             time_arr.append(t)
         # add these to the bokeh data structure
@@ -879,8 +879,8 @@ class MSATA():
         latest_prev_obs: str
             Date of the latest observation in the previously plotted data
         """
-        latest_prev_obs = datetime.fromtimestamp(max(prev_data_dict['tarr']))
-        print('latest_prev_obs = ', latest_prev_obs)
+        # remember that the time array created is in milliseconds, removing to get time object
+        latest_prev_obs = datetime.fromtimestamp(max(prev_data_dict['tarr']) / 1000.0)
         latest_prev_obs = latest_prev_obs.mjd
         prev_data_expected_cols = {}
         tot_number_of_stars = prev_data_dict['tot_number_of_stars']
