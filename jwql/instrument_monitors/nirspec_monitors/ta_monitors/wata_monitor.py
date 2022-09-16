@@ -110,7 +110,7 @@ class WATA():
                                'BOXPKVAL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box'},
                                'BOXPKCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box_col'},
                                'BOXPKROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box_row'},
-                               'TA_ITERS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'iterations'},
+                               'TA_ITERS': {'loc': 'ta_hdr', 'alt_key': 'CENITERS', 'name': 'iterations'},
                                'CORR_COL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'corr_col'},
                                'CORR_ROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'corr_row'},
                                'IMCENCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_final_col'},
