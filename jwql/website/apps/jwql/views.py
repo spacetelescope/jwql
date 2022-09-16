@@ -315,6 +315,7 @@ def archived_proposals_ajax(request, inst):
                               'thumbnail_paths': thumbnail_paths,
                               'num_files': total_files}}
 
+
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
