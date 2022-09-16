@@ -879,14 +879,9 @@ class MSATA():
         latest_prev_obs: str
             Date of the latest observation in the previously plotted data
         """
-        latest_prev_obs = max(prev_data_dict['tarr'])
-
-        ###################### REMOVE AFTER DEBUGGING ######################
-        print('latest_prev_obs = ', latest_prev_obs)
-        ###################### REMOVE AFTER DEBUGGING ######################
-
-        #latest_prev_obs = datetime.fromtimestamp()
-        #latest_prev_obs = latest_prev_obs.mjd
+        latest_prev_obs = max(prev_data_dict['tarr']) / 1000.
+        latest_prev_obs = datetime.fromtimestamp(latest_prev_obs)
+        latest_prev_obs = latest_prev_obs.mjd
         prev_data_expected_cols = {}
         tot_number_of_stars = prev_data_dict['tot_number_of_stars']
         for file_keywd, keywd_dict in self.keywds2extract.items():
