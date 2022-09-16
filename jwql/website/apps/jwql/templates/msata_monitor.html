@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>{{ inst }} MSATA Monitor- JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+
+		<h1>{{ inst }} MSATA Monitor</h1>
+        <!--Horizontal line-->
+        <hr>
+        <!--Include an image located at jwql/website/apps/jwql/static/img/-->
+        <div style="text-align: center">
+          <img src={{ static('img/jwql_logo_full_transparent.png') }}
+               width=20%
+               alt="JWQL Logo"
+               title="JWQL Logo">
+        </div>
+
+        <p id= "description">
+          <h2>Updates to this monitor only occur with new data</h2>
+          This monitor uses all MSATA data available and the plots include all data.
+          The plots will only be updated if new MSATA data is in MAST, otherwise, the
+          monitor will show all data previously obtained.
+          <br>
+          <br>
+
+        </p>
+
+        <!-- Loading animation -->
+        <div id="loading">
+            <div class="lds-css ng-scope">
+                <div style="width:100%;height:100%" class="lds-magnify">
+                    <div>
+                        <div>
+                            <div>
+                            </div>
+                            <div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                Searching MAST ...
+            </div>
+        </div>
+
+        <!-- Display the data -->
+        <div id='ta_data'></div>
+        <a id="msata_fail" style='display: none'>No MSATA data found</a>
+
+	</main>
+    <script>update_msata_page('{{inst}}', '{{base_url}}');</script>
+
+{% endblock %}

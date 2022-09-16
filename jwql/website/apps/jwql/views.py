@@ -14,6 +14,9 @@ Authors
     - Johannes Sahlmann
     - Teagan King
     - Mees Fix
+    - Bryan Hilbert
+    - Maria Pena-Guerrero
+
 
 Use
 ---
@@ -37,6 +40,7 @@ Dependencies
     placed in the ``jwql`` directory.
 """
 
+from collections import defaultdict
 import csv
 import os
 
@@ -51,7 +55,7 @@ from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT
-from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get_config, query_unformat
+from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
 from .data_containers import data_trending
@@ -64,7 +68,6 @@ from .data_containers import get_filenames_by_instrument, mast_query_filenames_b
 from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_proposal_info
-from .data_containers import get_rootnames_for_instrument_proposal
 from .data_containers import get_thumbnails_all_instruments
 from .data_containers import nirspec_trending
 from .data_containers import random_404_page
@@ -73,6 +76,7 @@ from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
+from .models import Observation, Proposal
 from astropy.io import fits
 
 
@@ -157,7 +161,7 @@ def miri_data_trending(request):
 
 
 def nirspec_data_trending(request):
-    """Generate the ``MIRI DATA-TRENDING`` page
+    """Generate the ``NIRSpec DATA-TRENDING`` page
 
     Parameters
     ----------
@@ -273,67 +277,38 @@ def archived_proposals_ajax(request, inst):
     """
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-    filesystem = get_config()['filesystem']
 
-    # Dictionary to hold summary information for all proposals
-    all_proposals = get_instrument_proposals(inst)
-    all_proposal_info = {'num_proposals': 0,
-                         'proposals': [],
-                         'min_obsnum': [],
-                         'thumbnail_paths': [],
-                         'num_files': [],
-                         'expstart': []}
+    # Get a list of Observation entries for the given instrument
+    all_entries = Observation.objects.filter(proposal__archive__instrument=inst)
 
-    # Get list of all files for the given instrument
-    for proposal in all_proposals:
-        filename_query = mast_query_filenames_by_instrument(inst, proposal, other_columns=['expstart'])
-        filenames_public = get_filenames_by_instrument(inst, proposal, restriction='public', query_response=filename_query)
-        filenames_proprietary = get_filenames_by_instrument(inst, proposal, restriction='proprietary', query_response=filename_query)
+    # Get a list of proposal numbers.
+    prop_objects = Proposal.objects.filter(archive__instrument=inst)
+    proposal_nums = [entry.prop_id for entry in prop_objects]
 
-        # The expstart time is used only for sorting the proposal-level thumbnails,
-        # so we only need one value per proposal. Since not all observations of a
-        # given proposal are observed at the same time, and other proposals' observations
-        # may be interleaved, grab the most recent expstart for each proposal.
-        exp_start = Time.now().mjd
-        if len(filename_query['data']) > 0:
-            exp_start = sorted([float(entry['expstart']) for entry in filename_query['data']])[-1]
+    # Put proposals into descending order
+    proposal_nums.sort(reverse=True)
 
-        # Determine locations to the files
-        filenames = []
-        for filename in filenames_public:
-            try:
-                relative_filepath = filesystem_path(filename, check_existence=False)
-                full_filepath = os.path.join(filesystem, 'public', relative_filepath)
-                filenames.append(full_filepath)
-            except ValueError:
-                print('Unable to determine filepath for {}'.format(filename))
-        for filename in filenames_proprietary:
-            try:
-                relative_filepath = filesystem_path(filename, check_existence=False)
-                full_filepath = os.path.join(filesystem, 'proprietary', relative_filepath)
-                filenames.append(full_filepath)
-            except ValueError:
-                print('Unable to determine filepath for {}'.format(filename))
+    # Total number of proposals for the instrument
+    num_proposals = len(proposal_nums)
 
-        # Get set of unique rootnames
-        num_files = 0
-        rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
-        for rootname in rootnames:
-            filename_dict = filename_parser(rootname)
+    thumbnail_paths = []
+    min_obsnums = []
+    total_files = []
+    for proposal_num in proposal_nums:
+        # For each proposal number, get all entries
+        prop_entries = all_entries.filter(proposal__prop_id=proposal_num)
 
-            # Weed out file types that are not supported by generate_preview_images
-            if 'stage_3' not in filename_dict['filename_type']:
-                num_files += 1
+        # All entries will have the same thumbnail_path, so just grab the first
+        thumbnail_paths.append(prop_entries[0].proposal.thumbnail_path)
 
-        if len(filenames) > 0:
-            # Gather information about the proposals for the given instrument
-            proposal_info = get_proposal_info(filenames)
-            all_proposal_info['num_proposals'] = int(all_proposal_info['num_proposals'] + 1)
-            all_proposal_info['proposals'].append(proposal)
-            all_proposal_info['min_obsnum'].append(proposal_info['observation_nums'][0])
-            all_proposal_info['thumbnail_paths'].append(proposal_info['thumbnail_paths'][0])
-            all_proposal_info['num_files'].append(num_files)
-            all_proposal_info['expstart'].append(exp_start)
+        # Extract the observation numbers from each entry and find the minimum
+        prop_obsnums = [entry.obsnum for entry in prop_entries]
+        min_obsnums.append(min(prop_obsnums))
+
+        # Sum the file count from all observations to get the total file count for
+        # the proposal
+        prop_filecount = [entry.number_of_files for entry in prop_entries]
+        total_files.append(sum(prop_filecount))
 
     # Sort proposals from most recent to oldest, in order to have this as the
     # default when the page is loaded
@@ -346,11 +321,11 @@ def archived_proposals_ajax(request, inst):
     all_proposal_info['expstart'] = np.array(all_proposal_info['expstart'])[indexes].tolist()
 
     context = {'inst': inst,
-               'num_proposals': all_proposal_info['num_proposals'],
-               'min_obsnum': all_proposal_info['min_obsnum'],
-               'thumbnails': {'proposals': all_proposal_info['proposals'],
-                              'thumbnail_paths': all_proposal_info['thumbnail_paths'],
-                              'num_files': all_proposal_info['num_files'],
+               'num_proposals': num_proposals,
+               'min_obsnum': min_obsnums,
+               'thumbnails': {'proposals': proposal_nums,
+                              'thumbnail_paths': thumbnail_paths,
+                              'num_files': total_files,
                               'expstart': all_proposal_info['expstart']}}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
@@ -419,13 +394,15 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
             all_obs.append(filename_parser(root)['observation'])
         except KeyError:
             pass
+
     obs_list = sorted(list(set(all_obs)))
 
     template = 'thumbnails_per_obs.html'
-    context = {'inst': inst,
-               'prop': proposal,
+    context = {'base_url': get_base_url(),
+               'inst': inst,
                'obs': observation,
                'obs_list': obs_list,
+               'prop': proposal,
                'prop_meta': proposal_meta,
                'base_url': get_base_url()}
 
@@ -981,9 +958,24 @@ def view_image(request, inst, file_root, rewrite=False):
 
     form = get_anomaly_form(request, inst, file_root)
 
+    prop_id = file_root[2:7]
+
+    rootnames = get_rootnames_for_instrument_proposal(inst, prop_id)
+    file_root_list = defaultdict(list)
+
+    for root in rootnames:
+        try:
+            file_root_list[(filename_parser(root)['observation'])].append(root)
+        except KeyError:
+            pass
+
+    file_root_list = {key: sorted(file_root_list[key]) for key in sorted(file_root_list)}
+
     # Build the context
-    context = {'inst': inst,
-               'prop_id': file_root[2:7],
+    context = {'base_url': get_base_url(),
+               'file_root_list': file_root_list,
+               'inst': inst,
+               'prop_id': prop_id,
                'obsnum': file_root[7:10],
                'file_root': file_root,
                'jpg_files': image_info['all_jpegs'],
@@ -991,6 +983,7 @@ def view_image(request, inst, file_root, rewrite=False):
                'suffixes': image_info['suffixes'],
                'num_ints': image_info['num_ints'],
                'available_ints': image_info['available_ints'],
+               'total_ints': image_info['total_ints'],
                'form': form}
 
     return render(request, template, context)

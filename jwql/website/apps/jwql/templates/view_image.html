@@ -29,7 +29,7 @@
 	    </a><br>
 	    <form class="my-2" action="change_filetype(value, {{file_root}}, {{num_ints}}, {{inst}})">
 	    	{% for suffix in suffixes %}
-	    		<input type="radio" name="filetype" value="{{ suffix }}" id="{{ suffix }}" onclick='change_filetype("{{suffix}}", "{{file_root}}", "{{num_ints}}", "{{available_ints}}", "{{inst}}");'> {{ suffix }} &nbsp;&nbsp;&nbsp;&nbsp;
+	    		<input type="radio" name="filetype" value="{{ suffix }}" id="{{ suffix }}" onclick='change_filetype("{{suffix}}", "{{file_root}}", "{{num_ints}}", "{{available_ints}}", "{{total_ints}}", "{{inst}}");'> {{ suffix }} &nbsp;&nbsp;&nbsp;&nbsp;
 	    	{% endfor %}
 		</form>
 		<br>
@@ -58,6 +58,19 @@
                     <input type="range" min="1" max="5" value="1" class="slider" id="slider_range" onchange='change_int("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "slider")'>
                     <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "button", "right");' disabled>&#9658;</button>
                     <p>Integration: <span id="slider_val"></span>/<span id="total_ints"></span></p>
+                </div>
+
+                <div class="previous-next-buttons">
+                    <span class="step-links">
+                        {% set index = file_root_list[obsnum].index(file_root) %}
+                        {% if index != 0 %}
+                            <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[obsnum][index-1] }}/" style="float: left;">< Previous</a>
+                        {% endif %}
+        
+                        {% if index != file_root_list[obsnum]|length - 1 %}
+                            <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[obsnum][index+1] }}/" style="float: right;">Next ></a>
+                        {% endif %}
+                    </span>
                 </div>
             </div>
 
@@ -97,13 +110,13 @@
 
         <!-- Determine which filetype should be shown on load -->
         {% if 'cal' in suffixes %}
-            <script>change_filetype('cal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", '{{inst}}');</script>
+            <script>change_filetype('cal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif 'rate' in suffixes %}
-            <script>change_filetype('rate', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", '{{inst}}');</script>
+            <script>change_filetype('rate', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif 'uncal' in suffixes %}
-            <script>change_filetype('uncal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", '{{inst}}');</script>
+            <script>change_filetype('uncal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif suffixes|length == 1 %}
-            <script>change_filetype('{{suffixes.0}}', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", '{{inst}}');</script>
+            <script>change_filetype('{{suffixes.0}}', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% else %}
             <a>Unable to show image for: {{suffixes}}</a>
         {% endif %}

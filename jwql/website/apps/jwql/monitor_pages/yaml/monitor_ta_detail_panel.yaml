@@ -1,0 +1,363 @@
+# Panel 2: individual selected visit
+# Primary V2/V3 offsets figure
+- !ColumnDataSource: &offsets_source
+    ref: "offsets_source_visit_{vid}"
+    data:
+        dv2: []
+        dv3: []
+        v2m: []
+        v3m: []
+        v2d: []
+        v3d: []
+        nrs: []
+        ccs: []
+        rcs: []
+        gxt: []
+        gyt: []
+        bkg: []
+        cl1: []
+        rl1: []
+        cbx: []
+        cc1: []
+        rc1: []
+        cfx: []
+        cdc: []
+        rdc: []
+        csc: []
+        ysx: []
+        xsx: []
+        refstar_no: []
+    selection_on_change: ['indices', !self.select_stamp ]
+- !Range1d: &offsets_xr
+    ref: "offsets_xr_visit_{vid}"
+    start: 0
+    end: 1
+    bounds: !!python/tuple [0, 1]
+- !Range1d: &offsets_yr
+    ref: "offsets_yr_visit_{vid}"
+    start: 0
+    end: 1
+    bounds: !!python/tuple [0, 1]
+- !Figure: &offsets_visit_fig
+    ref: "offsets_fig_visit_{vid}"
+    title: "V2/V3 Offsets"
+    height: 700
+    width: 700
+#    x_axis_label: "V2 Offset (arcsec)"
+#    y_axis_label: "V3 Offset (arcsec)"
+    x_axis_location: null
+    y_axis_location: null
+    min_border: 10
+    min_border_left: 50
+    x_range: *offsets_xr
+    y_range: *offsets_yr
+    toolbar_location: "above"
+    tools: "tap,wheel_zoom"
+    elements:
+        - {{'kind': 'circle', 'x': 'dv2', 'y': 'dv3', 'source': *offsets_source, 'size': 6}}
+# Residuals histograms
+- !ColumnDataSource: &resid_source
+    ref: "resid_source_visit_{vid}"
+    data:
+        bottom: []
+        v2_l: []
+        v2_r: []
+        v2_t: []
+        v3_l: []
+        v3_r: []
+        v3_t: []
+- !Range1d: &resid_xr
+    ref: "resid_xr_visit_{vid}"
+    start: 0
+    end: 20
+    bounds: 'auto'
+- !Range1d: &resid_yr
+    ref: "resid_yr_visit_{vid}"
+    start: 0
+    end: 20
+    bounds: 'auto'
+- !Figure: &residuals_hist_v2
+    ref: "resid_hist_v2_visit_{vid}"
+    toolbar_location: null
+#    title: "V2 Residuals"
+    x_axis_label: "V2 offset (arcsec)"
+    y_axis_label: "Number of stars"
+    y_axis_location: "right"
+    min_border: 10
+    min_border_left: 50
+    tools: ""
+    height: 200
+    width: 700
+    x_range: *offsets_xr
+    y_range: *resid_yr
+    elements:
+        - {{"kind": 'quad', "top": "v2_t", "left": "v2_l", "right": "v2_r", "bottom": "bottom", "source": *resid_source, "fill_color": "blue", "line_color": "white", "alpha": 0.7}}
+- !Figure: &residuals_hist_v3
+    ref: "resid_hist_v3_visit_{vid}"
+#    title: "V3 Residuals"
+    y_axis_label: "V3 offset (arcsec)"
+    x_axis_label: "Number of stars"
+    y_axis_location: "right"
+    min_border: 10
+    tools: ""
+    height: 700
+    width: 200
+    toolbar_location: null
+    x_range: *resid_xr
+    y_range: *offsets_yr
+    elements:
+        - {{"kind": 'quad', "top": "v3_r", "left": "bottom", "right": "v3_t", "bottom": "v3_l", "source": *resid_source, "fill_color": "green", "line_color": "white", "alpha": 0.7}}
+# Common objects for all postage stamp figures
+- !ColumnDataSource: &stamp_source
+    ref: "stamp_source_visit_{vid}"
+    data:
+        x: [0]
+        y: [0]
+        dh: [1]
+        dw: [1]
+        slope1: [[[1,0], [0, 1]]]
+        slope2: [[[1,0], [0, 1]]]
+        crj: [[[1,0], [0, 1]]]
+        bkg: [[[1,0], [0, 1]]]
+        flat: [[[1,0], [0, 1]]]
+- !ColumnDataSource: &checkbox_source
+    ref: "checkbox_source_visit_{vid}"
+    data:
+        l: [0]
+        r: [1]
+        t: [1]
+        b: [1]
+        x: [0]
+        y: [1]
+- !Range1d: &stamp_xr
+    ref: "stamp_xr_visit_{vid}"
+    start: 0
+    end: 1
+    bounds: !!python/tuple [0, 1]
+- !Range1d: &stamp_yr
+    ref: "stamp_yr_visit_{vid}"
+    start: 0
+    end: 1
+    bounds: !!python/tuple [0, 1]
+# slope1 stamp figure
+- !LinearColorMapper: &slope1_mapper
+    ref: "slope1_mapper_visit_{vid}"
+    palette: "Plasma256"
+    low: 0.
+    high: 1.
+- !ColorBar: &slope1_cbar
+    color_mapper: *slope1_mapper
+    location: !!python/tuple [0, 0]
+- !Figure: &slope1_fig
+    ref: "slope1_fig_visit_{vid}"
+    title: "slope1 stamp"
+    x_axis_label: "Col = SIAF det Y"
+    y_axis_label: "Row = SIAF det X"
+    x_range: *stamp_xr
+    y_range: *stamp_yr
+    tools: ""
+    toolbar_location: null
+    height: 300
+    width: 400
+    visible: False
+    elements:
+        - {{"kind": "image", "image": "slope1", "x": "x", "y": "y", "dh": "dh", "dw": "dw", "source": *stamp_source, "color_mapper": *slope1_mapper}}
+        - {{"kind": "layout", "obj": *slope1_cbar, "place": "right"}}
+        - {{"kind": "quad", "left": "l", "right": "r", "top": "t", "bottom": "b", "source": *checkbox_source, "fill_alpha": 0., "line_color": "cyan"}}
+        - {{"kind": "x", "x": "x", "y": "y", "source": *checkbox_source, "color": "cyan", "size": 5}}
+# slope2 stamp figure
+- !LinearColorMapper: &slope2_mapper
+    ref: "slope2_mapper_visit_{vid}"
+    palette: "Plasma256"
+    low: 0.
+    high: 1.
+- !ColorBar: &slope2_cbar
+    color_mapper: *slope2_mapper
+    location: !!python/tuple [0, 0]
+- !Figure: &slope2_fig
+    ref: "slope2_fig_visit_{vid}"
+    title: "slope2 stamp"
+    x_axis_label: "Col = SIAF det Y"
+    y_axis_label: "Row = SIAF det X"
+    tools: ""
+    toolbar_location: null
+    height: 300
+    width: 400
+    x_range: *stamp_xr
+    y_range: *stamp_yr
+    visible: False
+    elements:
+        - {{"kind": "image", "image": "slope2", "x": "x", "y": "y", "dh": "dh", "dw": "dw", "source": *stamp_source, "color_mapper": *slope2_mapper}}
+        - {{"kind": "layout", "obj": *slope2_cbar, "place": "right"}}
+        - {{"kind": "quad", "left": "l", "right": "r", "top": "t", "bottom": "b", "source": *checkbox_source, "fill_alpha": 0., "line_color": "cyan"}}
+        - {{"kind": "x", "x": "x", "y": "y", "source": *checkbox_source, "color": "cyan", "size": 5}}
+# crj stamp figure
+- !LinearColorMapper: &crj_mapper
+    ref: "crj_mapper_visit_{vid}"
+    palette: "Plasma256"
+    low: 0.
+    high: 1.
+- !ColorBar: &crj_cbar
+    color_mapper: *crj_mapper
+    location: !!python/tuple [0, 0]
+- !Figure: &crj_fig
+    ref: "crj_fig_visit_{vid}"
+    title: "crj stamp"
+    x_axis_label: "Col = SIAF det Y"
+    y_axis_label: "Row = SIAF det X"
+    tools: ""
+    toolbar_location: null
+    height: 300
+    width: 400
+    x_range: *stamp_xr
+    y_range: *stamp_yr
+    visible: False
+    elements:
+        - {{"kind": "image", "image": "crj", "x": "x", "y": "y", "dh": "dh", "dw": "dw", "source": *stamp_source, "color_mapper": *crj_mapper}}
+        - {{"kind": "layout", "obj": *crj_cbar, "place": "right"}}
+        - {{"kind": "quad", "left": "l", "right": "r", "top": "t", "bottom": "b", "source": *checkbox_source, "fill_alpha": 0., "line_color": "cyan"}}
+        - {{"kind": "x", "x": "x", "y": "y", "source": *checkbox_source, "color": "cyan", "size": 5}}
+# bkg_subtracted stamp figure
+- !LinearColorMapper: &bkg_mapper
+    ref: "bkg_mapper_visit_{vid}"
+    palette: "Plasma256"
+    low: 0.
+    high: 1.
+- !ColorBar: &bkg_cbar
+    color_mapper: *bkg_mapper
+    location: !!python/tuple [0, 0]
+- !Figure: &bkg_fig
+    ref: "bkg_fig_visit_{vid}"
+    title: "bkg_subtracted stamp"
+    x_axis_label: "Col = SIAF det Y"
+    y_axis_label: "Row = SIAF det X"
+    tools: ""
+    toolbar_location: null
+    height: 300
+    width: 400
+    x_range: *stamp_xr
+    y_range: *stamp_yr
+    visible: False
+    elements:
+        - {{"kind": "image", "image": "bkg", "x": "x", "y": "y", "dh": "dh", "dw": "dw", "source": *stamp_source, "color_mapper": *bkg_mapper}}
+        - {{"kind": "layout", "obj": *bkg_cbar, "place": "right"}}
+        - {{"kind": "quad", "left": "l", "right": "r", "top": "t", "bottom": "b", "source": *checkbox_source, "fill_alpha": 0., "line_color": "cyan"}}
+        - {{"kind": "x", "x": "x", "y": "y", "source": *checkbox_source, "color": "cyan", "size": 5}}
+# stamp_flat stamp figure
+- !LinearColorMapper: &flat_mapper
+    ref: "flat_mapper_visit_{vid}"
+    palette: "Greys256"
+    low: 0.
+    high: 1.
+- !ColorBar: &flat_cbar
+    color_mapper: *flat_mapper
+    location: !!python/tuple [0, 0]
+- !Figure: &flat_fig
+    ref: "flat_fig_visit_{vid}"
+    title: "stamp_flat stamp"
+    x_axis_label: "Col = SIAF det Y"
+    y_axis_label: "Row = SIAF det X"
+    toolbar_location: null
+    tools: ""
+    height: 300
+    width: 400
+    x_range: *stamp_xr
+    y_range: *stamp_yr
+    visible: False
+    elements:
+        - {{"kind": "image", "image": "flat", "x": "x", "y": "y", "dh": "dh", "dw": "dw", "source": *stamp_source, "color_mapper": *flat_mapper}}
+        - {{"kind": "layout", "obj": *flat_cbar, "place": "right"}}
+        - {{"kind": "quad", "left": "l", "right": "r", "top": "t", "bottom": "b", "source": *checkbox_source, "fill_alpha": 0., "line_color": "cyan"}}
+        - {{"kind": "x", "x": "x", "y": "y", "source": *checkbox_source, "color": "cyan", "size": 5}}
+# Div for long-form star output
+- !Div: &output_div
+    ref: "output_div_visit_{vid}"
+# Table display of stamp data
+- !DataTable: &output_table
+    ref: "output_table_visit_{vid}"
+    sizing_mode: "stretch_width"
+    width_policy: "max"
+    height: 500
+    source: *offsets_source
+    columns:
+        - !TableColumn:
+            field: "refstar_no"
+            title: "Star Number"
+        - !TableColumn:
+            field: "v2d"
+            title: "V2 desired"
+        - !TableColumn:
+            field: "v3d"
+            title: "V3 desired"
+        - !TableColumn:
+            field: "nrs"
+            title: "Detector"
+        - !TableColumn:
+            field: "ccs"
+            title: "Corner col"
+        - !TableColumn:
+            field: "rcs"
+            title: "Corner row"
+        - !TableColumn:
+            field: "gxt"
+            title: "GWA x tilt"
+        - !TableColumn:
+            field: "gyt"
+            title: "GWA y tilt"
+        - !TableColumn:
+            field: "bkg"
+            title: "Background measured"
+        - !TableColumn:
+            field: "cl1"
+            title: "Locate col"
+        - !TableColumn:
+            field: "rl1"
+            title: "Locate row"
+        - !TableColumn:
+            field: "cc1"
+            title: "Center col"
+        - !TableColumn:
+            field: "rc1"
+            title: "Center row"
+        - !TableColumn:
+            field: "cfx"
+            title: "Centroid flux"
+        - !TableColumn:
+            field: "cdc"
+            title: "Detector center col"
+        - !TableColumn:
+            field: "rdc"
+            title: "Detector center row"
+        - !TableColumn:
+            field: "csc"
+            title: "Centroid success"
+        - !TableColumn:
+            field: "v2m"
+            title: "V2 measured"
+        - !TableColumn:
+            field: "v3m"
+            title: "V3 measured"
+        - !TableColumn:
+            field: "ysx"
+            title: "Expected SIAF y"
+        - !TableColumn:
+            field: "xsx"
+            title: "Expected SIAF x"
+- !Panel:
+    ref: "panel_visit_{vid}"
+    title: "{vid}"
+    tags: ["{vid}"]
+    #closable: true #uncomment this when the bug is fixed
+    child:
+        !column:
+            - !row:
+                - !gridplot:
+                    children:
+                        - [*offsets_visit_fig, *residuals_hist_v3]
+                        - [*residuals_hist_v2, null]
+                    merge_tools: False
+                - !layout:
+                    - [*slope1_fig, *slope2_fig]
+                    - [*crj_fig, *bkg_fig]
+                    - [*flat_fig, *output_div]
+            - *output_table

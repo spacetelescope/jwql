@@ -5,6 +5,7 @@
  * @author Matthew Bourque
  * @author Brad Sappington
  * @author Bryan Hilbert
+ * @author Maria Pena-Guerrero
  */
 
  /**
@@ -12,13 +13,17 @@
  * @param {String} type - The image type (e.g. "rate", "uncal", etc.)
  * @param {String} file_root - The rootname of the file
  * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
- *                          values are the number of integrations for that suffix
+ *                          values are the number of integrations with an associated
+ *                          preview image for that suffix
  * @param {Dict} available_ints - A dictionary whose keys are suffix types and whose
  *                                values are the integration numbers of the available
  *                                jpgs for that suffix
+ * @param {Dict} total_ints - A dictionary whose keys are suffix types and whose
+ *                                values are the total number of integrations for that
+ *                                filetype.
  * @param {String} inst - The instrument for the given file
  */
-  function change_filetype(type, file_root, num_ints, available_ints, inst) {
+  function change_filetype(type, file_root, num_ints, available_ints, total_ints, inst) {
 
     // Change the radio button to check the right filetype
     document.getElementById(type).checked = true;
@@ -32,6 +37,11 @@
     var available_ints = available_ints.replace(/&#39;/g, '"');
     var available_ints = available_ints.replace(/'/g, '"');
     var available_ints = JSON.parse(available_ints)[type];
+
+    // Get the total number of integrations
+    var total_ints = total_ints.replace(/&#39;/g, '"');
+    var total_ints = total_ints.replace(/'/g, '"');
+    var total_ints = JSON.parse(total_ints);
 
     // Propogate the text fields showing the filename and APT parameters
     var fits_filename = file_root + '_' + type;
@@ -54,7 +64,7 @@
     document.getElementById("slider_range").value = 1;
     document.getElementById("slider_range").max = num_ints[type];
     document.getElementById("slider_val").innerHTML = 1;
-    document.getElementById("total_ints").innerHTML = available_ints[available_ints.length - 1] + 1;
+    document.getElementById("total_ints").innerHTML = total_ints[type];
 
     // Update the integration changing buttons
     if (num_ints[type] > 1) {
@@ -526,6 +536,70 @@ function update_archive_page(inst, base_url) {
             document.getElementById("proposal-array").style.display = "block";
             };
     }});
+};
+
+
+/**
+ * Updates various compnents on the MSATA page
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function update_msata_page(base_url) {
+    $.ajax({
+        url: base_url + '/ajax/nirspec/msata/',
+        success: function(data){
+
+            // Build div content
+            content = data["div"];
+            content += data["script"];
+
+            /* Add the content to the div
+            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
+            */
+            $('#ta_data').html(content);
+
+            // Replace loading screen
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("ta_data").style.display = "inline-block";
+            document.getElementById('msata_fail').style.display = "none";
+        },
+        error : function(response) {
+            document.getElementById("loading").style.display = "none";
+            document.getElementById('msata_fail').style.display = "inline-block";
+        }
+    });
+};
+
+
+/**
+ * Updates various compnents on the WATA page
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function update_wata_page(base_url) {
+    $.ajax({
+        url: base_url + '/ajax/nirspec/wata/',
+        success: function(data){
+
+            // Build div content
+            content = data["div"];
+            content += data["script"];
+
+            /* Add the content to the div
+            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
+            */
+            $('#ta_data').html(content);
+
+            // Replace loading screen
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("ta_data").style.display = "inline-block";
+            document.getElementById('wata_fail').style.display = "none";
+        },
+        error : function(response) {
+            document.getElementById("loading").style.display = "none";
+            document.getElementById('wata_fail').style.display = "inline-block";
+        }
+    });
 };
 
 
