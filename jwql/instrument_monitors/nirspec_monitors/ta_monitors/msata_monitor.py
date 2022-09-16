@@ -92,6 +92,9 @@ class MSATA():
 
     def __init__(self):
         """ Initialize an instance of the MSATA class """
+        # Very beginning of intake of images: Jan 28, 2022 == First JWST images (MIRI)
+        self.query_very_beginning = 59607.0
+
         # dictionary to define required keywords to extract MSATA data and where it lives
         self.keywds2extract = {'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs', 'type': str},
                                'OBS_ID': {'loc': 'main_hdr', 'alt_key': None, 'name': 'visit_id', 'type': str},
@@ -775,9 +778,9 @@ class MSATA():
 
         query_count = len(dates)
         if query_count == 0:
-            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
+            query_result = query_very_beginning
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
-                         .format(self.aperture, query_result)))
+                         .format(self.aperture, self.query_very_beginning)))
         else:
             query_result = np.max(dates)
 
@@ -933,6 +936,10 @@ class MSATA():
             prev_data_dict = self.get_data_from_html(self.output_file_name)
             self.prev_data, self.query_start = self.prev_data2expected_format(prev_data_dict)
             logging.info('\tPrevious data read from html file: {}'.format(self.output_file_name))
+        # fail save - start from the beginning if there is no html file
+        else:
+            self.query_start = self.query_very_beginning
+            logging.info('\tPrevious output html file not found. Starting MAST query from Jan 28, 2022 == First JWST images (MIRI)')
 
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
@@ -943,6 +950,11 @@ class MSATA():
         new_entries = monitor_utils.mast_query_ta(self.instrument, self.aperture, self.query_start, self.query_end)
         msata_entries = len(new_entries)
         logging.info('\tMAST query has returned {} new MSATA files for {}, {} to run the MSATA monitor.'.format(msata_entries, self.instrument, self.aperture))
+
+        ###################### REMOVE AFTER DEBUGGING ######################
+        logging.info('\t *** First entry of MAST products: '.format(new_entries[0]))
+        logging.info('\t *** Last entry of MAST products: '.format(new_entries[-1]))
+        ###################### REMOVE AFTER DEBUGGING ######################
 
         # Get full paths to the files
         new_filenames = []
@@ -961,23 +973,33 @@ class MSATA():
         self.script, self.div, self.msata_data = None, None, None
         monitor_run = False
         if len(new_filenames) > 0:   # new data was found
+
+            ###################### REMOVE AFTER DEBUGGING ######################
+            logging.info('\t *** First uncal MAST file: '.format(new_filenames[0]))
+            logging.info('\t *** Last uncal MAST file: '.format(new_filenames[-1]))
+            ###################### REMOVE AFTER DEBUGGING ######################
+
             # get the data
             self.new_msata_data = self.get_msata_data(new_filenames)
             if self.new_msata_data is not None:
                 # concatenate with previous data
                 if self.prev_data is not None:
                     self.msata_data = pd.concat([self.prev_data, self.new_msata_data])
+                    logging.info('\tData from previous html output file and new data concatenated.')
                 else:
                     self.msata_data = self.new_msata_data
+                    logging.info('\Only new data was found - no previous html file.')
             else:
                 logging.info('\tMSATA monitor skipped. No MSATA data found.')
         # make sure to return the old data if no new data is found
         elif self.prev_data is not None:
             self.msata_data = self.prev_data
+            logging.info('\tNo new data found. Using data from previous html output file.')
         # make the plots if there is data
         if self.msata_data is not None:
             self.script, self.div = self.mk_plt_layout()
             monitor_run = True
+            logging.info('\Output html plot file created: {}'.format(self.output_file_name))
         else:
             logging.info('\tMSATA monitor skipped.')
 

@@ -87,6 +87,9 @@ class WATA():
 
     def __init__(self):
         """ Initialize an instance of the WATA class """
+        # Very beginning of intake of images: Jan 28, 2022 == First JWST images (MIRI)
+        self.query_very_beginning = 59607.0
+
         # structure to define required keywords to extract and where they live
         self.keywds2extract = {'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs'},
                                'OBS_ID': {'loc': 'main_hdr', 'alt_key': 'OBSID', 'name': 'visit_id'},
@@ -513,8 +516,8 @@ class WATA():
 
         query_count = len(dates)
         if query_count == 0:
-            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
-            logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, query_result)))
+            query_result = query_very_beginning
+            logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, self.query_very_beginning)))
         else:
             query_result = np.max(dates)
 
@@ -598,6 +601,10 @@ class WATA():
             logging.info('\tPrevious data read from html file: {}'.format(self.output_file_name))
             # move this plot to a previous version
             os.rename(self.output_file_name, os.path.join(self.output_dir, "prev_wata_layout.html"))
+        # fail save - start from the beginning if there is no html file
+        else:
+            self.query_start = self.query_very_beginning
+            logging.info('\tPrevious output html file not found. Starting MAST query from Jan 28, 2022 == First JWST images (MIRI)')
 
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
@@ -631,17 +638,21 @@ class WATA():
                 # concatenate with previous data
                 if self.prev_data is not None:
                     self.wata_data = pd.concat([self.prev_data, self.new_wata_data])
+                    logging.info('\tData from previous html output file and new data concatenated.')
                 else:
                     self.wata_data = self.new_wata_data
+                    logging.info('\Only new data was found - no previous html file.')
             else:
                 logging.info('\tWATA monitor skipped. No WATA data found.')
         # make sure to return the old data if no new data is found
         elif self.prev_data is not None:
             self.wata_data = self.prev_data
+            logging.info('\tNo new data found. Using data from previous html output file.')
         # do the plots if there is any data
         if self.wata_data is not None:
             self.script, self.div = self.mk_plt_layout()
             monitor_run = True
+            logging.info('\Output html plot file created: {}'.format(self.output_file_name))
         else:
             logging.info('\tWATA monitor skipped.')
 
