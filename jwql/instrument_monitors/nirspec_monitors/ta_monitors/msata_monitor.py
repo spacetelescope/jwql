@@ -158,8 +158,12 @@ class MSATA():
                 # print('  Skiping msata_monitor for this file  \n')
                 return None
             main_hdr = ff[0].header
-            ta_hdr = ff['MSA_TARG_ACQ'].header
-            ta_table = ff['MSA_TARG_ACQ'].data
+            try:
+                ta_hdr = ff['MSA_TARG_ACQ'].header
+                ta_table = ff['MSA_TARG_ACQ'].data
+            except KeyError:
+                no_ta_ext_msg = 'No TARG_ACQ extension in file '+fits_file
+                return no_ta_ext_msg
         msata_info = [main_hdr, ta_hdr, ta_table]
         return msata_info
 
@@ -176,9 +180,12 @@ class MSATA():
             Pandas data frame containing all MSATA data
         """
         # fill out the dictionary to create the dataframe
-        msata_dict = {}
+        msata_dict, no_ta_ext_msgs = {}, []
         for fits_file in new_filenames:
             msata_info = self.get_tainfo_from_fits(fits_file)
+            if isinstance(msata_info, str):
+                no_ta_ext_msgs.append(msata_info)
+                continue
             if msata_info is None:
                 continue
             main_hdr, ta_hdr, ta_table = msata_info
@@ -951,11 +958,6 @@ class MSATA():
         msata_entries = len(new_entries)
         logging.info('\tMAST query has returned {} new MSATA files for {}, {} to run the MSATA monitor.'.format(msata_entries, self.instrument, self.aperture))
 
-        ###################### REMOVE AFTER DEBUGGING ######################
-        logging.info('\t *** First entry of MAST products: '.format(new_entries[0]))
-        logging.info('\t *** Last entry of MAST products: '.format(new_entries[-1]))
-        ###################### REMOVE AFTER DEBUGGING ######################
-
         # Get full paths to the files
         new_filenames = []
         for entry_dict in new_entries:
@@ -980,7 +982,10 @@ class MSATA():
             ###################### REMOVE AFTER DEBUGGING ######################
 
             # get the data
-            self.new_msata_data = self.get_msata_data(new_filenames)
+            self.new_msata_data, no_ta_ext_msgs = self.get_msata_data(new_filenames)
+            if len(no_ta_ext_msgs) >= 1:
+                for item in no_ta_ext_msgs:
+                    logging.info(item)
             if self.new_msata_data is not None:
                 # concatenate with previous data
                 if self.prev_data is not None:

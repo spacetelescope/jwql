@@ -152,7 +152,11 @@ class WATA():
                 # print('  Skiping wata_monitor for this file  \n')
                 return None
             main_hdr = ff[0].header
-            ta_hdr = ff['TARG_ACQ'].header
+            try:
+                ta_hdr = ff['TARG_ACQ'].header
+            except KeyError:
+                no_ta_ext_msg = 'No TARG_ACQ extension in file '+fits_file
+                return no_ta_ext_msg
         wata_info = [main_hdr, ta_hdr]
         return wata_info
 
@@ -168,10 +172,13 @@ class WATA():
         wata_df: data frame object
             Pandas data frame containing all WATA data
         """
-        # fill out the dictionary  to create the dataframe
-        wata_dict = {}
+        # fill out the dictionary to create the dataframe
+        wata_dict, no_ta_ext_msgs = {}, []
         for fits_file in new_filenames:
             wata_info = self.get_tainfo_from_fits(fits_file)
+            if isinstance(wata_info, str):
+                no_ta_ext_msgs.append(wata_info)
+                continue
             if wata_info is None:
                 continue
             main_hdr, ta_hdr = wata_info
@@ -190,7 +197,7 @@ class WATA():
         # create the pandas dataframe
         wata_df = pd.DataFrame(wata_dict)
         wata_df.index = wata_df.index + 1
-        return wata_df
+        return wata_df, no_ta_ext_msgs
 
     def plt_status(self):
         """ Plot the WATA status (passed = 0 or failed = 1).
@@ -633,7 +640,10 @@ class WATA():
         monitor_run = False
         if len(new_filenames) > 0:   # new data was found
             # get the data
-            self.new_wata_data = self.get_wata_data(new_filenames)
+            self.new_wata_data, no_ta_ext_msgs = self.get_wata_data(new_filenames)
+            if len(no_ta_ext_msgs) >= 1:
+                for item in no_ta_ext_msgs:
+                    logging.info(item)
             if self.new_wata_data is not None:
                 # concatenate with previous data
                 if self.prev_data is not None:
