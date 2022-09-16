@@ -879,7 +879,6 @@ class MSATA():
         latest_prev_obs: str
             Date of the latest observation in the previously plotted data
         """
-        from arg_common.mjd import mjd_to_datetime
         latest_prev_obs = max(prev_data_dict['tarr'])
 
         ###################### REMOVE AFTER DEBUGGING ######################
