@@ -574,6 +574,23 @@ class WATA():
         prev_data = pd.DataFrame(prev_data_dict)
         return prev_data, latest_prev_obs
 
+    def pull_filenames(self, file_info):
+        """Extract filenames from the list of file information returned from
+        query_mast.
+
+        Parameters
+        ----------
+        file_info : dict
+            Dictionary of file information returned by ``query_mast``
+
+        Returns
+        -------
+        files : list
+            List of filenames (without paths) extracted from ``file_info``
+        """
+        files = [element['filename'] for element in file_info['data']]
+        return files
+
     def filter_bases(self, file_list):
         """Filter a list of input files to only keep uncal files. Strip off everything after
         the last underscore (e.g. "i2d.fits"), and keep only once instance of the
@@ -655,6 +672,7 @@ class WATA():
         logging.info('\tMAST query has returned {} WATA files for {}, {}.'.format(wata_entries, self.instrument, self.aperture))
 
         # Filter new entries to only keep uncal files
+        new_entries = self.pull_filenames(new_entries)
         new_entries = self.filter_bases(new_entries)
         wata_entries = len(new_entries)
         logging.info('\tThere are {} uncal TA files to run the WATA monitor.'.format(wata_entries))
@@ -662,7 +680,6 @@ class WATA():
         # Get full paths to the files
         new_filenames = []
         for entry_dict in new_entries:
-            filename_of_interest = entry_dict['productFilename']
             try:
                 new_filenames.append(filesystem_path(filename_of_interest))
                 logging.warning('\tFile {} included for processing.'.format(filename_of_interest))
