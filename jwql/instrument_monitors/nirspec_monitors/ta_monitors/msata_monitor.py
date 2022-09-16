@@ -879,9 +879,7 @@ class MSATA():
         latest_prev_obs: str
             Date of the latest observation in the previously plotted data
         """
-        latest_prev_obs = max(prev_data_dict['tarr']) / 1000.
-        print(latest_prev_obs, 'type(latest_prev_obs) = ', type(latest_prev_obs))
-        latest_prev_obs = datetime.fromtimestamp(latest_prev_obs)
+        latest_prev_obs = datetime.fromtimestamp(max(prev_data_dict['tarr']))
         latest_prev_obs = latest_prev_obs.mjd
         prev_data_expected_cols = {}
         tot_number_of_stars = prev_data_dict['tot_number_of_stars']
