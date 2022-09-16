@@ -14,7 +14,9 @@ Authors
     - Johannes Sahlmann
     - Teagan King
     - Mees Fix
+    - Bryan Hilbert
     - Maria Pena-Guerrero
+
 
 Use
 ---
@@ -72,6 +74,7 @@ from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
+from .models import Observation, Proposal
 from astropy.io import fits
 
 
@@ -272,64 +275,45 @@ def archived_proposals_ajax(request, inst):
     """
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-    filesystem = get_config()['filesystem']
 
-    # Dictionary to hold summary information for all proposals
-    all_proposals = get_instrument_proposals(inst)
-    all_proposal_info = {'num_proposals': 0,
-                         'proposals': [],
-                         'min_obsnum': [],
-                         'thumbnail_paths': [],
-                         'num_files': []}
+    # Get a list of Observation entries for the given instrument
+    all_entries = Observation.objects.filter(proposal__archive__instrument=inst)
 
-    # Get list of all files for the given instrument
-    for proposal in all_proposals:
-        filename_query = mast_query_filenames_by_instrument(inst, proposal)
-        filenames_public = get_filenames_by_instrument(inst, proposal, restriction='public', query_response=filename_query)
-        filenames_proprietary = get_filenames_by_instrument(inst, proposal, restriction='proprietary', query_response=filename_query)
+    # Get a list of proposal numbers.
+    prop_objects = Proposal.objects.filter(archive__instrument=inst)
+    proposal_nums = [entry.prop_id for entry in prop_objects]
 
-        # Determine locations to the files
-        filenames = []
-        for filename in filenames_public:
-            try:
-                relative_filepath = filesystem_path(filename, check_existence=False)
-                full_filepath = os.path.join(filesystem, 'public', relative_filepath)
-                filenames.append(full_filepath)
-            except ValueError:
-                print('Unable to determine filepath for {}'.format(filename))
-        for filename in filenames_proprietary:
-            try:
-                relative_filepath = filesystem_path(filename, check_existence=False)
-                full_filepath = os.path.join(filesystem, 'proprietary', relative_filepath)
-                filenames.append(full_filepath)
-            except ValueError:
-                print('Unable to determine filepath for {}'.format(filename))
+    # Put proposals into descending order
+    proposal_nums.sort(reverse=True)
 
-        # Get set of unique rootnames
-        num_files = 0
-        rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
-        for rootname in rootnames:
-            filename_dict = filename_parser(rootname)
+    # Total number of proposals for the instrument
+    num_proposals = len(proposal_nums)
 
-            # Weed out file types that are not supported by generate_preview_images
-            if 'stage_3' not in filename_dict['filename_type']:
-                num_files += 1
+    thumbnail_paths = []
+    min_obsnums = []
+    total_files = []
+    for proposal_num in proposal_nums:
+        # For each proposal number, get all entries
+        prop_entries = all_entries.filter(proposal__prop_id=proposal_num)
 
-        if len(filenames) > 0:
-            # Gather information about the proposals for the given instrument
-            proposal_info = get_proposal_info(filenames)
-            all_proposal_info['num_proposals'] = all_proposal_info['num_proposals'] + 1
-            all_proposal_info['proposals'].append(proposal)
-            all_proposal_info['min_obsnum'].append(proposal_info['observation_nums'][0])
-            all_proposal_info['thumbnail_paths'].append(proposal_info['thumbnail_paths'][0])
-            all_proposal_info['num_files'].append(num_files)
+        # All entries will have the same thumbnail_path, so just grab the first
+        thumbnail_paths.append(prop_entries[0].proposal.thumbnail_path)
+
+        # Extract the observation numbers from each entry and find the minimum
+        prop_obsnums = [entry.obsnum for entry in prop_entries]
+        min_obsnums.append(min(prop_obsnums))
+
+        # Sum the file count from all observations to get the total file count for
+        # the proposal
+        prop_filecount = [entry.number_of_files for entry in prop_entries]
+        total_files.append(sum(prop_filecount))
 
     context = {'inst': inst,
-               'num_proposals': all_proposal_info['num_proposals'],
-               'min_obsnum': all_proposal_info['min_obsnum'],
-               'thumbnails': {'proposals': all_proposal_info['proposals'],
-                              'thumbnail_paths': all_proposal_info['thumbnail_paths'],
-                              'num_files': all_proposal_info['num_files']}}
+               'num_proposals': num_proposals,
+               'min_obsnum': min_obsnums,
+               'thumbnails': {'proposals': proposal_nums,
+                              'thumbnail_paths': thumbnail_paths,
+                              'num_files': total_files}}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
