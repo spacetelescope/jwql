@@ -199,11 +199,14 @@ class MSATA():
                 if key_dict['loc'] == 'ta_table':
                     ext = ta_table
                 try:
+                    print('checking first key')
                     val = ext[key]
                 except KeyError:
                     try:
+                        print('checking alternative key')
                         val = ext[key_dict['alt_key']]
-                    except KeyError:
+                    except KeyError, ValueError:
+                        print('got either a KeyError or ValueError')
                         print('Keyword '+key+' not found. Skipping file '+fits_file)
                         no_ta_ext_msgs.append('Keyword '+key+' not found. Skipping file '+fits_file)
                         break
