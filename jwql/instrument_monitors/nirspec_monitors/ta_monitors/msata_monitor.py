@@ -226,7 +226,7 @@ class MSATA():
                 file_data_dict[key_name].append(val)
             # only update the data dictionary if all the keywords were found
             if len(file_errs) == 0:
-                msata_dict.update(file_dict)
+                msata_dict.update(file_data_dict)
             else:
                 no_ta_ext_msgs.extend(file_errs)
         # create the pandas dataframe
