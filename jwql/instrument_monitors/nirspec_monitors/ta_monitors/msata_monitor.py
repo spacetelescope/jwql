@@ -201,9 +201,9 @@ class MSATA():
                 try:
                     val = ext[key]
                 except KeyError:
-                    # deal with a special case: NUMREFST not defined in first position
+                    # deal with a special case: NUMREFST not defined in first files
                     if key == 'NUMREFST':
-                        val = len(ta_table['planned_v2'])
+                        val = len(ta_table['reference_star_number'])
                     else:
                         val = ext[key_dict['alt_key']]
                 """ UNCOMMENT THIS BLOCK IN CASE WE DO WANT TO GET RID OF the 999.0 values
