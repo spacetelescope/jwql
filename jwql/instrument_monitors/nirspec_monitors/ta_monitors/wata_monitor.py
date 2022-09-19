@@ -589,7 +589,10 @@ class WATA():
         files : list
             List of filenames (without paths) extracted from ``file_info``
         """
-        files = [element['filename'] for element in file_info['data']]
+        files = []
+        for list_element in file_info:
+            if 'filename' in list_element:
+                files.append(list_element['filename'])
         return files
 
     def filter_bases(self, file_list):
@@ -609,18 +612,10 @@ class WATA():
         """
         good_files = []
         for filename in file_list:
-            # Search the first part of the filename for letters. (e.g. jw01059007003
-            # without the jw). If there aren't any, then it's not a stage 3 product and
-            # we can continue.
-            substr = filename[2:13]
-            letters = re.findall("\D", substr)  # noqa: W605
-            if len(letters) == 0:
-                rev = filename[::-1]
-                under = rev.find('_')
-                base = rev[under + 1:][::-1]
-                uncal_file = f'{base}_uncal.fits'
-                if uncal_file not in good_files:
-                    good_files.append(uncal_file)
+            # Names look like: jw01133003001_02101_00001_nrs2_cal.fits
+            if '_uncal' in filename:
+                if filename not in good_files:
+                    good_files.append(filename)
         return good_files
 
     @log_fail
@@ -652,6 +647,7 @@ class WATA():
         # get the data of the plots previously created and set the query start date
         self.prev_data = None
         self.output_file_name = os.path.join(self.output_dir, "wata_layout.html")
+        logging.info('\tNew output plot file will be written as: {}'.format(self.output_file_name))
         if os.path.isfile(self.output_file_name):
             self.prev_data, self.query_start = self.get_data_from_html(self.output_file_name)
             logging.info('\tPrevious data read from html file: {}'.format(self.output_file_name))
@@ -680,7 +676,7 @@ class WATA():
 
         # Get full paths to the files
         new_filenames = []
-        for entry_dict in new_entries:
+        for filename_of_interest in new_entries:
             try:
                 new_filenames.append(filesystem_path(filename_of_interest))
                 logging.warning('\tFile {} included for processing.'.format(filename_of_interest))
