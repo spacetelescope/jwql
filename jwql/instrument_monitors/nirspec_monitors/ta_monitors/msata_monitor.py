@@ -201,15 +201,12 @@ class MSATA():
                 try:
                     val = ext[key]
                 except KeyError:
-                    # deal with a special case: NUMREFST not defined in first files
-                    if key == 'NUMREFST':
-                        val = len(ta_table['reference_star_number'])
-                    else:
-                        try:
-                            val = ext[key_dict['alt_key']]
-                        except KeyError:
-                            no_ta_ext_msgs.append('Keyword '+key+' not found. Skipping file '+fits_file)
-                            continue
+                    try:
+                        val = ext[key_dict['alt_key']]
+                    except KeyError:
+                        print('Keyword '+key+' not found. Skipping file '+fits_file)
+                        no_ta_ext_msgs.append('Keyword '+key+' not found. Skipping file '+fits_file)
+                        break
                 """ UNCOMMENT THIS BLOCK IN CASE WE DO WANT TO GET RID OF the 999.0 values
                 # remove the 999 values for arrays
                 if isinstance(val, np.ndarray):
