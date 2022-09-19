@@ -102,7 +102,7 @@ class MSATA():
                                'DETECTOR': {'loc': 'main_hdr', 'alt_key': None, 'name': 'detector', 'type': str},
                                'READOUT': {'loc': 'main_hdr', 'alt_key': 'READPATT', 'name': 'readout', 'type': str},
                                'SUBARRAY': {'loc': 'main_hdr', 'alt_key': None, 'name': 'subarray', 'type': str},
-                               'NUMREFST': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'num_refstars', 'type': int},
+                               'NUMREFST': {'loc': 'ta_hdr', 'alt_key': 'reference_star_number', 'name': 'num_refstars', 'type': int},
                                'TASTATUS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ta_status', 'type': str},
                                'STAT_RSN': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'status_rsn', 'type': str},
                                'V2HFOFFS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2halffacet', 'type': float},
