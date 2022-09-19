@@ -223,7 +223,7 @@ class MSATA():
                 msata_dict[key_name].append(val)
         # create the pandas dataframe
         for k, v in msata_dict.items():
-            print(k, len(v), v)
+            print(k, len(v))
         msata_df = pd.DataFrame(msata_dict)
         msata_df.index = msata_df.index + 1
         return msata_df, no_ta_ext_msgs
