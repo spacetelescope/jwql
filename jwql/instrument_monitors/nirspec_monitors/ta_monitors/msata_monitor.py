@@ -225,10 +225,14 @@ class MSATA():
                 """
                 file_data_dict[key_name].append(val)
             # only update the data dictionary if all the keywords were found
-            print(len(file_errs))
-            print(len(msata_dict), msata_dict)
             if len(file_errs) == 0:
-                msata_dict.update(file_data_dict)
+                # if starting from scratch, simply update
+                if len(msata_dict) == 0:
+                    msata_dict.update(file_data_dict)
+                # if msata_dict is not empty then extend the lists
+                else:
+                    for msata_dict_key in msata_dict:
+                        msata_dict[msata_dict_key].extend(file_data_dict[msata_dict_key])
             else:
                 no_ta_ext_msgs.extend(file_errs)
         # create the pandas dataframe
