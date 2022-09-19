@@ -1026,11 +1026,6 @@ class MSATA():
         monitor_run = False
         if len(new_filenames) > 0:   # new data was found
 
-            ###################### REMOVE AFTER DEBUGGING ######################
-            logging.info('\t *** First uncal MAST file: '.format(new_filenames[0]))
-            logging.info('\t *** Last uncal MAST file: '.format(new_filenames[-1]))
-            ###################### REMOVE AFTER DEBUGGING ######################
-
             # get the data
             self.new_msata_data, no_ta_ext_msgs = self.get_msata_data(new_filenames)
             if len(no_ta_ext_msgs) >= 1:

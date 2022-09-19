@@ -250,10 +250,6 @@ def msata_monitoring_ajax(request):
     monitor.run()
     monitor_utils.update_monitor_table(module, start_time, log_file)
 
-    ###################### REMOVE AFTER DEBUGGING ######################
-    print('monitor.script = ', monitor.script)
-    ###################### REMOVE AFTER DEBUGGING ######################
-
     context = {'script': monitor.script,
                'div': monitor.div}
 
