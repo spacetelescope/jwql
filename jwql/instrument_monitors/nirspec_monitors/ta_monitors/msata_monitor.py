@@ -222,10 +222,10 @@ class MSATA():
                 """
                 msata_dict[key_name].append(val)
         # create the pandas dataframe
+        for k, va in msata_dict.items():
+            print(k, len(v), v)
         msata_df = pd.DataFrame(msata_dict)
         msata_df.index = msata_df.index + 1
-        msata_df.info
-        print(len(no_ta_ext_msgs), no_ta_ext_msgs)
         return msata_df, no_ta_ext_msgs
 
     def plt_status(self):
