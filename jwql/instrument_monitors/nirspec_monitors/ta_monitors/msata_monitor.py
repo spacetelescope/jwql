@@ -189,11 +189,11 @@ class MSATA():
             if msata_info is None:
                 continue
             main_hdr, ta_hdr, ta_table = msata_info
-            file_dict, file_errs = {}, []
+            file_data_dict, file_errs = {}, []
             for key, key_dict in self.keywds2extract.items():
                 key_name = key_dict['name']
-                if key_name not in msata_dict:
-                    file_dict[key_name] = []
+                if key_name not in file_data_dict:
+                    file_data_dict[key_name] = []
                 ext = main_hdr
                 if key_dict['loc'] == 'ta_hdr':
                     ext = ta_hdr
@@ -223,7 +223,7 @@ class MSATA():
                     if float(abs(val)) == 999.0:
                         val = 0.0
                 """
-                file_dict[key_name].append(val)
+                file_data_dict[key_name].append(val)
             # only update the data dictionary if all the keywords were found
             if len(file_errs) == 0:
                 msata_dict.update(file_dict)
