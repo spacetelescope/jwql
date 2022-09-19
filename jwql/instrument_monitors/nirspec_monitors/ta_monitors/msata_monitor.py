@@ -205,7 +205,11 @@ class MSATA():
                     if key == 'NUMREFST':
                         val = len(ta_table['reference_star_number'])
                     else:
-                        val = ext[key_dict['alt_key']]
+                        try:
+                            val = ext[key_dict['alt_key']]
+                        except KeyError:
+                            no_ta_ext_msgs.append('Keyword '+key+' not found. Skipping file '+fits_file)
+                            continue
                 """ UNCOMMENT THIS BLOCK IN CASE WE DO WANT TO GET RID OF the 999.0 values
                 # remove the 999 values for arrays
                 if isinstance(val, np.ndarray):
