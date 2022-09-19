@@ -383,6 +383,9 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
         except KeyError:
             pass
 
+    image_sort_value = request.GET['thumbnail-sort']
+    request.session['image_sort_value'] = image_sort_value
+
     obs_list = sorted(list(set(all_obs)))
 
     template = 'thumbnails_per_obs.html'
@@ -957,7 +960,7 @@ def view_image(request, inst, file_root, rewrite=False):
         except KeyError:
             pass
 
-    sort_type = request.GET['sort_dropdownMenuButton']
+    sort_type = request.session['image_sort_value']
 
     if sortype in ['exptype', 'descending']:
         file_root_list = {key: sorted(file_root_list[key]) for key in sorted(file_root_list)}
