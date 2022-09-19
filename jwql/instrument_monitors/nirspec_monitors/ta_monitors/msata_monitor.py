@@ -166,6 +166,7 @@ class MSATA():
                 no_ta_ext_msg = 'No TARG_ACQ extension in file '+fits_file
                 return no_ta_ext_msg
         msata_info = [main_hdr, ta_hdr, ta_table]
+        print(ta_hdr)
         return msata_info
 
     def get_msata_data(self, new_filenames):
