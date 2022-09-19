@@ -205,7 +205,7 @@ class MSATA():
                     try:
                         print('checking alternative key')
                         val = ext[key_dict['alt_key']]
-                    except (NameError, TypeError) as error::
+                    except (NameError, TypeError) as error:
                         print(error, type(error))
                         print(' in file '+fits_file)
                         no_ta_ext_msgs.append('Keyword '+key+' not found. Skipping file '+fits_file)
