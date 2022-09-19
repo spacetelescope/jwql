@@ -205,9 +205,9 @@ class MSATA():
                     try:
                         print('checking alternative key')
                         val = ext[key_dict['alt_key']]
-                    except KeyError, ValueError:
-                        print('got either a KeyError or ValueError')
-                        print('Keyword '+key+' not found. Skipping file '+fits_file)
+                    except (NameError, TypeError) as error::
+                        print(error, type(error))
+                        print(' in file '+fits_file)
                         no_ta_ext_msgs.append('Keyword '+key+' not found. Skipping file '+fits_file)
                         break
                 """ UNCOMMENT THIS BLOCK IN CASE WE DO WANT TO GET RID OF the 999.0 values
