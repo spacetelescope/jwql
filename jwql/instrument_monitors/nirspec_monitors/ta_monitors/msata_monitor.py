@@ -199,15 +199,12 @@ class MSATA():
                 if key_dict['loc'] == 'ta_table':
                     ext = ta_table
                 try:
-                    print('checking first key')
                     val = ext[key]
                 except KeyError:
                     if key_dict['alt_key'] is not None:
                         try:
-                            print('checking alternative key')
                             val = ext[key_dict['alt_key']]
                         except (NameError, TypeError) as error:
-                            print(error+' in file '+fits_file)
                             no_ta_ext_msgs.append(error+' in file '+fits_file)
                             break
                     else:
@@ -227,6 +224,8 @@ class MSATA():
         # create the pandas dataframe
         msata_df = pd.DataFrame(msata_dict)
         msata_df.index = msata_df.index + 1
+        msata_df.info
+        print(len(no_ta_ext_msgs), no_ta_ext_msgs)
         return msata_df, no_ta_ext_msgs
 
     def plt_status(self):
