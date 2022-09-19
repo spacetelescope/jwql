@@ -165,8 +165,6 @@ class MSATA():
                 no_ta_ext_msg = 'No TARG_ACQ extension in file '+fits_file
                 return no_ta_ext_msg
         msata_info = [main_hdr, ta_hdr, ta_table]
-        for k in ta_hdr:
-            print(k)
         return msata_info
 
     def get_msata_data(self, new_filenames):
@@ -203,7 +201,11 @@ class MSATA():
                 try:
                     val = ext[key]
                 except KeyError:
-                    val = ext[key_dict['alt_key']]
+                    # deal with a special case: NUMREFST not defined in first position
+                    if key == 'NUMREFST':
+                        val = len(ta_table['planned_v2'])
+                    else:
+                        val = ext[key_dict['alt_key']]
                 """ UNCOMMENT THIS BLOCK IN CASE WE DO WANT TO GET RID OF the 999.0 values
                 # remove the 999 values for arrays
                 if isinstance(val, np.ndarray):
