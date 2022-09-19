@@ -225,6 +225,8 @@ class MSATA():
                 """
                 file_data_dict[key_name].append(val)
             # only update the data dictionary if all the keywords were found
+            print(len(file_errs))
+            print(len(msata_dict), msata_dict)
             if len(file_errs) == 0:
                 msata_dict.update(file_data_dict)
             else:
