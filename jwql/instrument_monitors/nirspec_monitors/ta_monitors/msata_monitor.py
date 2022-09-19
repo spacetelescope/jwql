@@ -932,16 +932,12 @@ class MSATA():
                 files.append(list_element['filename'])
         return files
 
-    def filter_bases(self, file_list):
-        """Filter a list of input files to only keep uncal files. Strip off everything after
-        the last underscore (e.g. "i2d.fits"), and keep only once instance of the
-        remaining basename.
-
+    def get_uncal_names(self, file_list):
+        """Replace the last suffix for _uncal and return list.
         Parameters
         ----------
         file_list : list
             List of fits files
-
         Returns
         -------
         good_files : list
@@ -950,9 +946,11 @@ class MSATA():
         good_files = []
         for filename in file_list:
             # Names look like: jw01133003001_02101_00001_nrs2_cal.fits
-            if '_uncal' in filename:
-                if filename not in good_files:
-                    good_files.append(filename)
+            if '_uncal' not in filename:
+                suffix2replace = filename.split('_')[-1]
+                filename = filename.replace(suffix2replace, 'uncal.fits')
+            if filename not in good_files:
+                good_files.append(filename)
         return good_files
 
     @log_fail
@@ -1006,7 +1004,7 @@ class MSATA():
 
         # Filter new entries to only keep uncal files
         new_entries = self.pull_filenames(new_entries)
-        new_entries = self.filter_bases(new_entries)
+        new_entries = self.get_uncal_names(new_entries)
         msata_entries = len(new_entries)
         logging.info('\tThere are {} uncal TA files to run the MSATA monitor.'.format(msata_entries))
 
