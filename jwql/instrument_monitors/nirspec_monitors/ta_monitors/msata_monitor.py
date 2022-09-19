@@ -1044,6 +1044,8 @@ class MSATA():
 
             # get the data
             self.new_msata_data, no_ta_ext_msgs = self.get_msata_data(new_filenames)
+            msata_files_used4plots = len(self.new_msata_data['visit_id'])
+            logging.info('\t{} MSATA files were used to make plots.'.format(msata_files_used4plots))
             if len(no_ta_ext_msgs) >= 1:
                 for item in no_ta_ext_msgs:
                     logging.info(item)
