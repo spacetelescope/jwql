@@ -189,10 +189,11 @@ class MSATA():
             if msata_info is None:
                 continue
             main_hdr, ta_hdr, ta_table = msata_info
+            file_dict, file_errs = {}, []
             for key, key_dict in self.keywds2extract.items():
                 key_name = key_dict['name']
                 if key_name not in msata_dict:
-                    msata_dict[key_name] = []
+                    file_dict[key_name] = []
                 ext = main_hdr
                 if key_dict['loc'] == 'ta_hdr':
                     ext = ta_hdr
@@ -205,10 +206,12 @@ class MSATA():
                         try:
                             val = ext[key_dict['alt_key']]
                         except (NameError, TypeError) as error:
-                            no_ta_ext_msgs.append(error+' in file '+fits_file)
+                            msg = error+' in file '+fits_file
+                            file_errs.append(msg)
                             break
                     else:
-                        no_ta_ext_msgs.append('Keyword '+key+' not found. Skipping file '+fits_file)
+                        msg = 'Keyword '+key+' not found. Skipping file '+fits_file
+                        file_errs.append(msg)
                         break
                 """ UNCOMMENT THIS BLOCK IN CASE WE DO WANT TO GET RID OF the 999.0 values
                 # remove the 999 values for arrays
@@ -220,10 +223,13 @@ class MSATA():
                     if float(abs(val)) == 999.0:
                         val = 0.0
                 """
-                msata_dict[key_name].append(val)
+                file_dict[key_name].append(val)
+            # only update the data dictionary if all the keywords were found
+            if len(file_errs) == 0:
+                msata_dict.update(file_dict)
+            else:
+                no_ta_ext_msgs.extend(file_errs)
         # create the pandas dataframe
-        for k, v in msata_dict.items():
-            print(k, len(v))
         msata_df = pd.DataFrame(msata_dict)
         msata_df.index = msata_df.index + 1
         return msata_df, no_ta_ext_msgs
