@@ -252,25 +252,31 @@ class MSATA():
         # ta_status, date_obs = source.data['ta_status'], source.data['date_obs']
         date_obs = self.source.data['date_obs']
         ta_status = self.source.data['ta_status']
-        # bokeh does not like to plot strings, turn  into numbers
-        number_status, time_arr, status_colors = [], [], []
-        for tas, do_str in zip(ta_status, date_obs):
-            if 'success' in tas.lower():
-                number_status.append(1.0)
-                status_colors.append('blue')
-            elif 'progress' in tas.lower():
-                number_status.append(0.5)
-                status_colors.append('green')
-            else:
-                number_status.append(0.0)
-                status_colors.append('red')
-            # convert time string into an array of time (this is in UT with 0.0 milliseconds)
-            t = datetime.fromisoformat(do_str)
-            time_arr.append(t)
-        # add these to the bokeh data structure
-        self.source.data["time_arr"] = time_arr
-        self.source.data["number_status"] = number_status
-        self.source.data["status_colors"] = status_colors
+        # check if this column exists in the data already (the other 2 will exist too), else create it
+        try:
+            time_arr = self.source.data['time_arr']
+            bool_status = self.source.data['bool_status']
+            status_colors = self.source.data['status_colors']
+        except KeyError:
+            # bokeh does not like to plot strings, turn  into numbers
+            number_status, time_arr, status_colors = [], [], []
+            for tas, do_str in zip(ta_status, date_obs):
+                if 'success' in tas.lower():
+                    number_status.append(1.0)
+                    status_colors.append('blue')
+                elif 'progress' in tas.lower():
+                    number_status.append(0.5)
+                    status_colors.append('green')
+                else:
+                    number_status.append(0.0)
+                    status_colors.append('red')
+                # convert time string into an array of time (this is in UT with 0.0 milliseconds)
+                t = datetime.fromisoformat(do_str)
+                time_arr.append(t)
+            # add these to the bokeh data structure
+            self.source.data["time_arr"] = time_arr
+            self.source.data["number_status"] = number_status
+            self.source.data["status_colors"] = status_colors
         # create a new bokeh plot
         plot = figure(title="MSATA Status [Succes=1, In_Progress=0.5, Fail=0]", x_axis_label='Time',
                       y_axis_label='MSATA Status', x_axis_type='datetime',)
@@ -446,14 +452,19 @@ class MSATA():
         # create a new bokeh plot
         lsv2offset, lsv3offset = self.source.data['lsv2offset'], self.source.data['lsv3offset']
         v2halffacet, v3halffacet = self.source.data['v2halffacet'], self.source.data['v3halffacet']
-        v2_half_fac_corr, v3_half_fac_corr = [], []
-        for idx, v2hf in enumerate(v2halffacet):
-            v3hf = v3halffacet[idx]
-            v2_half_fac_corr.append(lsv2offset[idx] + v2hf)
-            v3_half_fac_corr.append(lsv3offset[idx] + v3hf)
-        # add these to the bokeh data structure
-        self.source.data["v2_half_fac_corr"] = v2_half_fac_corr
-        self.source.data["v3_half_fac_corr"] = v3_half_fac_corr
+        # check if this column exists in the data already (the other 2 will exist too), else create it
+        try:
+            v2_half_fac_corr = self.source.data['v2_half_fac_corr']
+            v3_half_fac_corr = self.source.data['v3_half_fac_corr']
+        except KeyError:
+            v2_half_fac_corr, v3_half_fac_corr = [], []
+            for idx, v2hf in enumerate(v2halffacet):
+                v3hf = v3halffacet[idx]
+                v2_half_fac_corr.append(lsv2offset[idx] + v2hf)
+                v3_half_fac_corr.append(lsv3offset[idx] + v3hf)
+            # add these to the bokeh data structure
+            self.source.data["v2_half_fac_corr"] = v2_half_fac_corr
+            self.source.data["v3_half_fac_corr"] = v3_half_fac_corr
         plot = figure(title="MSATA Least Squares Residual V2-V3 Offsets Half-facet corrected",
                       x_axis_label='Least Squares Residual V2 Offset + half-facet',
                       y_axis_label='Least Squares Residual V3 Offset + half-facet')
@@ -629,19 +640,24 @@ class MSATA():
         reference_star_number = self.source.data['reference_star_number']
         stars_in_fit = self.source.data['stars_in_fit']
         date_obs, time_arr = self.source.data['date_obs'], self.source.data['time_arr']
-        # create the list of color per visit and tot_number_of_stars
-        colors_list, tot_number_of_stars = [], []
-        color_dict = {}
-        for i, _ in enumerate(visit_id):
-            tot_stars = len(reference_star_number[i])
-            tot_number_of_stars.append(tot_stars)
-            ci = '#%06X' % randint(0, 0xFFFFFF)
-            if visit_id[i] not in color_dict:
-                color_dict[visit_id[i]] = ci
-            colors_list.append(color_dict[visit_id[i]])
-        # add these to the bokeh data structure
-        self.source.data["tot_number_of_stars"] = tot_number_of_stars
-        self.source.data["colors_list"] = colors_list
+        # check if this column exists in the data already (the other 2 will exist too), else create it
+        try:
+            tot_number_of_stars = self.source.data['tot_number_of_stars']
+            colors_list = self.source.data['colors_list']
+        except KeyError:
+            # create the list of color per visit and tot_number_of_stars
+            colors_list, tot_number_of_stars = [], []
+            color_dict = {}
+            for i, _ in enumerate(visit_id):
+                tot_stars = len(reference_star_number[i])
+                tot_number_of_stars.append(tot_stars)
+                ci = '#%06X' % randint(0, 0xFFFFFF)
+                if visit_id[i] not in color_dict:
+                    color_dict[visit_id[i]] = ci
+                colors_list.append(color_dict[visit_id[i]])
+            # add these to the bokeh data structure
+            self.source.data["tot_number_of_stars"] = tot_number_of_stars
+            self.source.data["colors_list"] = colors_list
         # create a new bokeh plot
         plot = figure(title="Total Number of Measurements vs Time", x_axis_label='Time',
                       y_axis_label='Total number of measurements', x_axis_type='datetime')
@@ -931,7 +947,7 @@ class MSATA():
                 list4dict = self.construct_expected_data(keywd_dict, tot_number_of_stars)
                 prev_data_expected_cols[key] = list4dict
         # now convert to a panda dataframe to be combined with the new data
-        prev_data = pd.DataFrame(prev_data_expected_cols)
+        prev_data = pd.DataFrame(prev_data_expected_cols).reset_index(drop=True)
         return prev_data, latest_prev_obs
 
     def pull_filenames(self, file_info):

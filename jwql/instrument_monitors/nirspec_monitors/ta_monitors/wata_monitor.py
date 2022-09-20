@@ -209,22 +209,28 @@ class WATA():
             plot: bokeh plot object
         """
         ta_status, date_obs = self.source.data['ta_status'], self.source.data['date_obs']
-        # bokeh does not like to plot strings, turn  into binary type
-        bool_status, time_arr, status_colors = [], [], []
-        for tas, do_str in zip(ta_status, date_obs):
-            if 'success' in tas.lower():
-                bool_status.append(1)
-                status_colors.append('blue')
-            else:
-                bool_status.append(0)
-                status_colors.append('red')
-            # convert time string into an array of time (this is in UT)
-            t = datetime.fromisoformat(do_str)
-            time_arr.append(t)
-        # add these to the bokeh data structure
-        self.source.data["time_arr"] = time_arr
-        self.source.data["ta_status_bool"] = bool_status
-        self.source.data["status_colors"] = status_colors
+        # check if this column exists in the data already (the other 2 will exist too), else create it
+        try:
+            time_arr = self.source.data['time_arr']
+            bool_status = self.source.data['bool_status']
+            status_colors = self.source.data['status_colors']
+        except KeyError:
+            # bokeh does not like to plot strings, turn  into binary type
+            bool_status, time_arr, status_colors = [], [], []
+            for tas, do_str in zip(ta_status, date_obs):
+                if 'success' in tas.lower():
+                    bool_status.append(1)
+                    status_colors.append('blue')
+                else:
+                    bool_status.append(0)
+                    status_colors.append('red')
+                # convert time string into an array of time (this is in UT)
+                t = datetime.fromisoformat(do_str)
+                time_arr.append(t)
+            # add these to the bokeh data structure
+            self.source.data["time_arr"] = time_arr
+            self.source.data["ta_status_bool"] = bool_status
+            self.source.data["status_colors"] = status_colors
         # create a new bokeh plot
         plot = figure(title="WATA Status [Succes=1, Fail=0]", x_axis_label='Time',
                       y_axis_label='WATA Status', x_axis_type='datetime',)
@@ -315,7 +321,7 @@ class WATA():
         # create a new bokeh plot
         plot = figure(title="WATA V3 Offset vs Time", x_axis_label='Time',
                       y_axis_label='Residual V3 Offset', x_axis_type='datetime')
-        plot.circle(x='time_arr', y='v2_offset', source=self.source,
+        plot.circle(x='time_arr', y='v3_offset', source=self.source,
                     color="blue", size=7, fill_alpha=0.5)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin line
@@ -343,63 +349,72 @@ class WATA():
         """
         # calculate the pseudo magnitudes
         max_val_box, time_arr = self.source.data['max_val_box'], self.source.data['time_arr']
-        # create the arrays per filter and readout pattern
-        nrsrapid_f140x, nrsrapid_f110w, nrsrapid_clear = [], [], []
-        nrsrapidd6_f140x, nrsrapidd6_f110w, nrsrapidd6_clear = [], [], []
-        filter_used, readout = self.source.data['tafilter'], self.source.data['readout']
-        for i, val in enumerate(max_val_box):
-            if '140' in filter_used[i]:
-                if readout[i].lower() == 'nrsrapid':
-                    nrsrapid_f140x.append(val)
-                    nrsrapid_f110w.append(np.NaN)
-                    nrsrapid_clear.append(np.NaN)
-                    nrsrapidd6_f140x.append(np.NaN)
-                    nrsrapidd6_f110w.append(np.NaN)
-                    nrsrapidd6_clear.append(np.NaN)
-                elif readout[i].lower() == 'nrsrapidd6':
-                    nrsrapid_f140x.append(np.NaN)
-                    nrsrapid_f110w.append(np.NaN)
-                    nrsrapid_clear.append(np.NaN)
-                    nrsrapidd6_f140x.append(val)
-                    nrsrapidd6_f110w.append(np.NaN)
-                    nrsrapidd6_clear.append(np.NaN)
-            elif '110' in filter_used[i]:
-                if readout[i].lower() == 'nrsrapid':
-                    nrsrapid_f140x.append(np.NaN)
-                    nrsrapid_f110w.append(val)
-                    nrsrapid_clear.append(np.NaN)
-                    nrsrapidd6_f140x.append(np.NaN)
-                    nrsrapidd6_f110w.append(np.NaN)
-                    nrsrapidd6_clear.append(np.NaN)
-                elif readout[i].lower() == 'nrsrapidd6':
-                    nrsrapid_f140x.append(np.NaN)
-                    nrsrapid_f110w.append(np.NaN)
-                    nrsrapid_clear.append(np.NaN)
-                    nrsrapidd6_f140x.append(np.NaN)
-                    nrsrapidd6_f110w.append(val)
-                    nrsrapidd6_clear.append(np.NaN)
-            else:
-                if readout[i].lower() == 'nrsrapid':
-                    nrsrapid_f140x.append(np.NaN)
-                    nrsrapid_f110w.append(np.NaN)
-                    nrsrapid_clear.append(val)
-                    nrsrapidd6_f140x.append(np.NaN)
-                    nrsrapidd6_f110w.append(np.NaN)
-                    nrsrapidd6_clear.append(np.NaN)
-                elif readout[i].lower() == 'nrsrapidd6':
-                    nrsrapid_f140x.append(np.NaN)
-                    nrsrapid_f110w.append(np.NaN)
-                    nrsrapid_clear.append(np.NaN)
-                    nrsrapidd6_f140x.append(np.NaN)
-                    nrsrapidd6_f110w.append(np.NaN)
-                    nrsrapidd6_clear.append(val)
-        # add to the bokeh data structure
-        self.source.data["nrsrapid_f140x"] = nrsrapid_f140x
-        self.source.data["nrsrapid_f110w"] = nrsrapid_f110w
-        self.source.data["nrsrapid_clear"] = nrsrapid_clear
-        self.source.data["nrsrapidd6_f140x"] = nrsrapidd6_f140x
-        self.source.data["nrsrapidd6_f110w"] = nrsrapidd6_f110w
-        self.source.data["nrsrapidd6_clear"] = nrsrapidd6_clear
+        # check if this column exists in the data already (the other 2 will exist too), else create it
+        try:
+            nrsrapid_f140x = self.source.data["nrsrapid_f140x"]
+            nrsrapid_f110w = self.source.data["nrsrapid_f110w"]
+            nrsrapid_clear = self.source.data["nrsrapid_clear"]
+            nrsrapidd6_f140x = self.source.data["nrsrapidd6_f140x"]
+            nrsrapidd6_f110w = self.source.data["nrsrapidd6_f110w"]
+            nrsrapidd6_clear = self.source.data["nrsrapidd6_clear"]
+        except KeyError:
+            # create the arrays per filter and readout pattern
+            nrsrapid_f140x, nrsrapid_f110w, nrsrapid_clear = [], [], []
+            nrsrapidd6_f140x, nrsrapidd6_f110w, nrsrapidd6_clear = [], [], []
+            filter_used, readout = self.source.data['tafilter'], self.source.data['readout']
+            for i, val in enumerate(max_val_box):
+                if '140' in filter_used[i]:
+                    if readout[i].lower() == 'nrsrapid':
+                        nrsrapid_f140x.append(val)
+                        nrsrapid_f110w.append(np.NaN)
+                        nrsrapid_clear.append(np.NaN)
+                        nrsrapidd6_f140x.append(np.NaN)
+                        nrsrapidd6_f110w.append(np.NaN)
+                        nrsrapidd6_clear.append(np.NaN)
+                    elif readout[i].lower() == 'nrsrapidd6':
+                        nrsrapid_f140x.append(np.NaN)
+                        nrsrapid_f110w.append(np.NaN)
+                        nrsrapid_clear.append(np.NaN)
+                        nrsrapidd6_f140x.append(val)
+                        nrsrapidd6_f110w.append(np.NaN)
+                        nrsrapidd6_clear.append(np.NaN)
+                elif '110' in filter_used[i]:
+                    if readout[i].lower() == 'nrsrapid':
+                        nrsrapid_f140x.append(np.NaN)
+                        nrsrapid_f110w.append(val)
+                        nrsrapid_clear.append(np.NaN)
+                        nrsrapidd6_f140x.append(np.NaN)
+                        nrsrapidd6_f110w.append(np.NaN)
+                        nrsrapidd6_clear.append(np.NaN)
+                    elif readout[i].lower() == 'nrsrapidd6':
+                        nrsrapid_f140x.append(np.NaN)
+                        nrsrapid_f110w.append(np.NaN)
+                        nrsrapid_clear.append(np.NaN)
+                        nrsrapidd6_f140x.append(np.NaN)
+                        nrsrapidd6_f110w.append(val)
+                        nrsrapidd6_clear.append(np.NaN)
+                else:
+                    if readout[i].lower() == 'nrsrapid':
+                        nrsrapid_f140x.append(np.NaN)
+                        nrsrapid_f110w.append(np.NaN)
+                        nrsrapid_clear.append(val)
+                        nrsrapidd6_f140x.append(np.NaN)
+                        nrsrapidd6_f110w.append(np.NaN)
+                        nrsrapidd6_clear.append(np.NaN)
+                    elif readout[i].lower() == 'nrsrapidd6':
+                        nrsrapid_f140x.append(np.NaN)
+                        nrsrapid_f110w.append(np.NaN)
+                        nrsrapid_clear.append(np.NaN)
+                        nrsrapidd6_f140x.append(np.NaN)
+                        nrsrapidd6_f110w.append(np.NaN)
+                        nrsrapidd6_clear.append(val)
+            # add to the bokeh data structure
+            self.source.data["nrsrapid_f140x"] = nrsrapid_f140x
+            self.source.data["nrsrapid_f110w"] = nrsrapid_f110w
+            self.source.data["nrsrapid_clear"] = nrsrapid_clear
+            self.source.data["nrsrapidd6_f140x"] = nrsrapidd6_f140x
+            self.source.data["nrsrapidd6_f110w"] = nrsrapidd6_f110w
+            self.source.data["nrsrapidd6_clear"] = nrsrapidd6_clear
         # create a new bokeh plot
         plot = figure(title="WATA Counts vs Time", x_axis_label='Time',
                       y_axis_label='box_peak [Counts]', x_axis_type='datetime')
@@ -572,7 +587,7 @@ class WATA():
         latest_prev_obs = Time(time_in_millis / 1000., format='unix')
         latest_prev_obs = latest_prev_obs.mjd
         # now convert to a panda dataframe to be combined with the new data
-        prev_data = pd.DataFrame(prev_data_dict)
+        prev_data = pd.DataFrame(prev_data_dict).reset_index(drop=True)
         return prev_data, latest_prev_obs
 
     def pull_filenames(self, file_info):
