@@ -573,6 +573,9 @@ class EdbMnemonic:
         new_table["euvalues"] = new_vals
         self.data = new_table
 
+        # Update the metadata to say that this is no longer change-only data
+        self.meta['TlmMnemonics'][0]['AllPoints'] = 1
+
     def daily_stats(self, sigma=3):
         """Calculate the statistics for each day in the data
         contained in data["data"]. Should we add a check for a
