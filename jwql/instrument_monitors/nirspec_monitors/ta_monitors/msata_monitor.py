@@ -237,7 +237,6 @@ class MSATA():
                 no_ta_ext_msgs.extend(file_errs)
         # create the pandas dataframe
         msata_df = pd.DataFrame(msata_dict)
-        msata_df.index = msata_df.index + 1
         return msata_df, no_ta_ext_msgs
 
     def plt_status(self):
@@ -947,7 +946,7 @@ class MSATA():
                 list4dict = self.construct_expected_data(keywd_dict, tot_number_of_stars)
                 prev_data_expected_cols[key] = list4dict
         # now convert to a panda dataframe to be combined with the new data
-        prev_data = pd.DataFrame(prev_data_expected_cols).reset_index(drop=True)
+        prev_data = pd.DataFrame(prev_data_expected_cols)
         return prev_data, latest_prev_obs
 
     def pull_filenames(self, file_info):

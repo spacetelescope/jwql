@@ -196,7 +196,6 @@ class WATA():
                 wata_dict[key_name].append(val)
         # create the pandas dataframe
         wata_df = pd.DataFrame(wata_dict)
-        wata_df.index = wata_df.index + 1
         return wata_df, no_ta_ext_msgs
 
     def plt_status(self):
@@ -579,15 +578,28 @@ class WATA():
                                 # finally the data dictionary!
                                 for data_key, data_val in item_val['data'].items():
                                     prev_data_dict[data_key] = data_val
-        # set to None if dictionary is empty
-        if not bool(prev_data_dict):
-            prev_data_dict = None
         # find the latest observation date
         time_in_millis = max(prev_data_dict['time_arr'])
         latest_prev_obs = Time(time_in_millis / 1000., format='unix')
         latest_prev_obs = latest_prev_obs.mjd
+        # put data in expected format
+        prev_data_expected_cols = {}
+        visit_ids = prev_data_dict['visit_id']
+        for file_keywd, keywd_dict in self.keywds2extract.items():
+            key = keywd_dict['name']
+            if key in prev_data_dict:
+                # case when the html stored thing is just an object but does not have data
+                if len(prev_data_dict[key]) < len(visit_ids):
+                    list4dict = self.construct_expected_data(keywd_dict, visit_ids)
+                    prev_data_expected_cols[key] = list4dict
+                # case when nothing special to do
+                else:
+                    prev_data_expected_cols[key] = prev_data_dict[key]
+            else:
+                list4dict = self.construct_expected_data(keywd_dict, visit_ids)
+                prev_data_expected_cols[key] = list4dict
         # now convert to a panda dataframe to be combined with the new data
-        prev_data = pd.DataFrame(prev_data_dict).reset_index(drop=True)
+        prev_data = pd.DataFrame(prev_data_expected_cols)
         return prev_data, latest_prev_obs
 
     def pull_filenames(self, file_info):
