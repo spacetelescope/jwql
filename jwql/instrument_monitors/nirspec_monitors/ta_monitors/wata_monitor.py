@@ -568,7 +568,7 @@ class WATA():
         if not bool(prev_data_dict):
             prev_data_dict = None
         # find the latest observation date
-        time_in_millis = max(prev_data_dict['tarr'])
+        time_in_millis = max(prev_data_dict['time_arr'])
         latest_prev_obs = Time(time_in_millis / 1000., format='unix')
         latest_prev_obs = latest_prev_obs.mjd
         # now convert to a panda dataframe to be combined with the new data
@@ -690,6 +690,8 @@ class WATA():
         if len(new_filenames) > 0:   # new data was found
             # get the data
             self.new_wata_data, no_ta_ext_msgs = self.get_wata_data(new_filenames)
+            wata_files_used4plots = len(self.new_wata_data['visit_id'])
+            logging.info('\t{} WATA files were used to make plots.'.format(wata_files_used4plots))
             if len(no_ta_ext_msgs) >= 1:
                 for item in no_ta_ext_msgs:
                     logging.info(item)

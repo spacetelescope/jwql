@@ -1047,7 +1047,6 @@ class MSATA():
         self.script, self.div, self.msata_data = None, None, None
         monitor_run = False
         if len(new_filenames) > 0:   # new data was found
-
             # get the data
             self.new_msata_data, no_ta_ext_msgs = self.get_msata_data(new_filenames)
             msata_files_used4plots = len(self.new_msata_data['visit_id'])
