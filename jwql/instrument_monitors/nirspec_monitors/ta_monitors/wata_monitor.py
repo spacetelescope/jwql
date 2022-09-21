@@ -235,7 +235,7 @@ class WATA():
                       y_axis_label='WATA Status', x_axis_type='datetime',)
         plot.y_range = Range1d(-0.5, 1.5)
         plot.circle(x='time_arr', y='ta_status_bool', source=self.source,
-                    color='status_colors', size=7, fill_alpha=0.5)
+                    color='status_colors', size=7, fill_alpha=0.3)
         # output_file("wata_status.html")
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
@@ -261,7 +261,7 @@ class WATA():
         plot = figure(title="WATA Residual V2-V3 Offsets", x_axis_label='Residual V2 Offset',
                       y_axis_label='Residual V3 Offset')
         plot.circle(x='v2_offset', y='v3_offset', source=self.source,
-                    color="blue", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.3)
         plot.x_range = Range1d(-0.5, 0.5)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin lines
@@ -292,7 +292,7 @@ class WATA():
         plot = figure(title="WATA V2 Offset vs Time", x_axis_label='Time',
                       y_axis_label='Residual V2 Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='v2_offset', source=self.source,
-                    color="blue", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.3)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
@@ -321,7 +321,7 @@ class WATA():
         plot = figure(title="WATA V3 Offset vs Time", x_axis_label='Time',
                       y_axis_label='Residual V3 Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='v3_offset', source=self.source,
-                    color="blue", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.3)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
@@ -418,13 +418,13 @@ class WATA():
         plot = figure(title="WATA Counts vs Time", x_axis_label='Time',
                       y_axis_label='box_peak [Counts]', x_axis_type='datetime')
         plot.circle(x='time_arr', y='nrsrapid_f140x', source=self.source,
-                    color="purple", size=7, fill_alpha=0.5)
+                    color="purple", size=7, fill_alpha=0.4)
         plot.circle(x='time_arr', y='nrsrapidd6_f140x', source=self.source,
-                    color="purple", size=12, fill_alpha=0.5)
+                    color="purple", size=12, fill_alpha=0.4)
         plot.triangle(x='time_arr', y='nrsrapid_f110w', source=self.source,
-                      color="orange", size=8, fill_alpha=0.7)
+                      color="orange", size=8, fill_alpha=0.4)
         plot.triangle(x='time_arr', y='nrsrapidd6_f110w', source=self.source,
-                      color="orange", size=13, fill_alpha=0.7)
+                      color="orange", size=13, fill_alpha=0.4)
         plot.square(x='time_arr', y='nrsrapid_clear', source=self.source,
                     color="gray", size=7, fill_alpha=0.4)
         plot.square(x='time_arr', y='nrsrapidd6_clear', source=self.source,
