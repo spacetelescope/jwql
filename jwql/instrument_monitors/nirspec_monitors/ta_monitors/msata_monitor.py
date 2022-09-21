@@ -260,15 +260,15 @@ class MSATA():
             # bokeh does not like to plot strings, turn  into numbers
             number_status, time_arr, status_colors = [], [], []
             for tas, do_str in zip(ta_status, date_obs):
-                if 'unsuccessful' not in tas.lower():
-                    number_status.append(1.0)
-                    status_colors.append('blue')
-                elif 'progress' in tas.lower():
-                    number_status.append(0.5)
-                    status_colors.append('green')
-                else:
+                if tas.lower() == 'unsuccessful':
                     number_status.append(0.0)
                     status_colors.append('red')
+                elif 'progress' in tas.lower():
+                    number_status.append(0.5)
+                    status_colors.append('gray')
+                else:
+                    number_status.append(1.0)
+                    status_colors.append('blue')
                 # convert time string into an array of time (this is in UT with 0.0 milliseconds)
                 t = datetime.fromisoformat(do_str)
                 time_arr.append(t)
@@ -285,6 +285,7 @@ class MSATA():
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
                           ('TA status', '@ta_status'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -307,11 +308,13 @@ class MSATA():
                       x_axis_label='Least Squares Residual V2 Offset',
                       y_axis_label='Least Squares Residual V3 Offset')
         plot.circle(x='lsv2offset', y='lsv3offset', source=self.source,
-                    color="purple", size=7, fill_alpha=0.4)
+                    color="blue", size=7, fill_alpha=0.4)
         v2halffacet, v3halffacet = self.source.data['v2halffacet'], self.source.data['v3halffacet']
         xstart, ystart, ray_length = -1 * v2halffacet[0], -1 * v3halffacet[0], 0.05
-        plot.ray(x=xstart - ray_length / 2.0, y=ystart, length=ray_length, angle_units="deg", angle=0)
-        plot.ray(x=xstart, y=ystart - ray_length / 2.0, length=ray_length, angle_units="deg", angle=90)
+        plot.ray(x=xstart - ray_length / 2.0, y=ystart, length=ray_length, angle_units="deg",
+                 angle=0, line_color='purple', line_width=3)
+        plot.ray(x=xstart, y=ystart - ray_length / 2.0, length=ray_length, angle_units="deg",
+                 angle=90, line_color='purple', line_width=3)
         hflabel = Label(x=xstart / 3.0, y=ystart, y_units='data', text='-V2, -V3 half-facets values')
         plot.add_layout(hflabel)
         plot.x_range = Range1d(-0.5, 0.5)
@@ -322,6 +325,7 @@ class MSATA():
         plot.renderers.extend([vline, hline])
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -357,6 +361,7 @@ class MSATA():
         plot.add_layout(hflabel)
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -392,6 +397,7 @@ class MSATA():
         plot.add_layout(hflabel)
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -417,7 +423,7 @@ class MSATA():
                       x_axis_label='Least Squares Residual V2 Sigma Offset',
                       y_axis_label='Least Squares Residual V3 Sigma Offset')
         plot.circle(x='lsv2sigma', y='lsv3sigma', source=self.source,
-                    color="purple", size=7, fill_alpha=0.4)
+                    color="blue", size=7, fill_alpha=0.4)
         plot.x_range = Range1d(-0.1, 0.1)
         plot.y_range = Range1d(-0.1, 0.1)
         # mark origin lines
@@ -426,6 +432,7 @@ class MSATA():
         plot.renderers.extend([vline, hline])
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -468,7 +475,7 @@ class MSATA():
                       x_axis_label='Least Squares Residual V2 Offset + half-facet',
                       y_axis_label='Least Squares Residual V3 Offset + half-facet')
         plot.circle(x='v2_half_fac_corr', y='v3_half_fac_corr', source=self.source,
-                    color="purple", size=7, fill_alpha=0.4)
+                    color="blue", size=7, fill_alpha=0.4)
         plot.x_range = Range1d(-0.5, 0.5)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin lines
@@ -476,12 +483,15 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
         xstart, ystart, ray_length = -1 * v2halffacet[0], -1 * v3halffacet[0], 0.05
-        plot.ray(x=xstart - ray_length / 2.0, y=ystart, length=ray_length, angle_units="deg", angle=0)
-        plot.ray(x=xstart, y=ystart - ray_length / 2.0, length=ray_length, angle_units="deg", angle=90)
+        plot.ray(x=xstart - ray_length / 2.0, y=ystart, length=ray_length, angle_units="deg",
+                 angle=0, line_color='purple', line_width=3)
+        plot.ray(x=xstart, y=ystart - ray_length / 2.0, length=ray_length, angle_units="deg",
+                 angle=90, line_color='purple', line_width=3)
         hflabel = Label(x=xstart / 3.0, y=ystart, y_units='data', text='-V2, -V3 half-facets values')
         plot.add_layout(hflabel)
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -515,6 +525,7 @@ class MSATA():
         plot.renderers.extend([hline])
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -545,6 +556,7 @@ class MSATA():
         plot.renderers.extend([hline])
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -582,6 +594,7 @@ class MSATA():
         plot.renderers.extend([hline, arlinepos, arlineneg])
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -613,6 +626,7 @@ class MSATA():
         plot.renderers.extend([hline])
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -667,6 +681,7 @@ class MSATA():
         plot.y_range = Range1d(0.0, 40.0)
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -701,9 +716,10 @@ class MSATA():
         box_peak_value = self.source.data['box_peak_value']
         date_obs, time_arr = self.source.data['date_obs'], self.source.data['time_arr']
         colors_list = self.source.data['colors_list']
+        detector_list = self.source.data['detector']
         # create the structure matching the number of visits and reference stars
         new_colors_list, vid, dobs, tarr, star_no, status = [], [], [], [], [], []
-        peaks, stars_v2, stars_v3 = [], [], []
+        peaks, stars_v2, stars_v3, det = [], [], [], []
         for i, _ in enumerate(visit_id):
             v, d, t, c, s, x, y = [], [], [], [], [], [], []
             for j in range(len(reference_star_number[i])):
@@ -728,9 +744,10 @@ class MSATA():
             stars_v2.extend(x)
             stars_v3.extend(y)
             peaks.extend(box_peak_value[i])
+            det.extend(detector_list[i])
         # now create the mini ColumnDataSource for this particular plot
         mini_source = {'vid': vid, 'star_no': star_no, 'status': status,
-                       'dobs': dobs, 'tarr': tarr,
+                       'dobs': dobs, 'tarr': tarr, 'det': det,
                        'peaks': peaks, 'colors_list': new_colors_list,
                        'stars_v2': stars_v2, 'stars_v3': stars_v2}
         mini_source = ColumnDataSource(data=mini_source)
@@ -755,6 +772,7 @@ class MSATA():
         # add hover
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@vid'),
+                          ('Detector', '@det'),
                           ('Star No.', '@star_no'),
                           ('LS Status', '@status'),
                           ('Date-Obs', '@dobs'),

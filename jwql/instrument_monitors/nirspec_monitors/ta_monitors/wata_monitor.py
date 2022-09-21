@@ -261,7 +261,7 @@ class WATA():
         plot = figure(title="WATA Residual V2-V3 Offsets", x_axis_label='Residual V2 Offset',
                       y_axis_label='Residual V3 Offset')
         plot.circle(x='v2_offset', y='v3_offset', source=self.source,
-                    color="purple", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.5)
         plot.x_range = Range1d(-0.5, 0.5)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin lines
@@ -418,9 +418,9 @@ class WATA():
         plot = figure(title="WATA Counts vs Time", x_axis_label='Time',
                       y_axis_label='box_peak [Counts]', x_axis_type='datetime')
         plot.circle(x='time_arr', y='nrsrapid_f140x', source=self.source,
-                    color="blue", size=7, fill_alpha=0.5)
+                    color="purple", size=7, fill_alpha=0.5)
         plot.circle(x='time_arr', y='nrsrapidd6_f140x', source=self.source,
-                    color="blue", size=12, fill_alpha=0.5)
+                    color="purple", size=12, fill_alpha=0.5)
         plot.triangle(x='time_arr', y='nrsrapid_f110w', source=self.source,
                       color="orange", size=8, fill_alpha=0.7)
         plot.triangle(x='time_arr', y='nrsrapidd6_f110w', source=self.source,
@@ -454,6 +454,27 @@ class WATA():
         plot.add_tools(hover)
         return plot
 
+    def get_unsucessful_ta(self, arr_name):
+        """ Find unsucessful TAs in this set (to be plotted in red)
+        Parameters
+        ----------
+            arr_name: str, name of the array of interest
+        Returns
+        -------
+            new_list_failed: list, failed TA values from array of interest
+            new_list_else: list, non-failed TA values from array of interest
+        """
+        bool_status = self.source.data["ta_status_bool"]
+        new_list_failed, new_list_else = [], []
+        for idx, val in enumerate(self.source.data[arr_name]):
+            if bool_status[idx] == 0.0:
+                new_list_failed.append(val)
+                new_list_else.append(np.NaN)
+            else:
+                new_list_failed.append(np.NaN)
+                new_list_else.append(val)
+        return new_list_failed, new_list_else
+
     def plt_centroid(self):
         """ Plot the WATA centroid
         Parameters
@@ -463,14 +484,27 @@ class WATA():
         -------
             plot: bokeh plot object
         """
+        # get the failed TAs to plot in red
+        try:
+            corr_col_failed = self.source.data["corr_col_failed"]
+        except KeyError:
+            corr_col_failed, corr_col_not_failed = self.get_unsucessful_ta('corr_col')
+            corr_row_failed, corr_row_not_failed = self.get_unsucessful_ta('corr_row')
+            # add these to the bokeh data structure
+            self.source.data["corr_col_failed"] = corr_col_failed
+            self.source.data["corr_col_not_failed"] = corr_col_not_failed
+            self.source.data["corr_row_failed"] = corr_row_failed
+            self.source.data["corr_row_not_failed"] = corr_row_not_failed
         # create a new bokeh plot
         plot = figure(title="WATA Centroid", x_axis_label='Column',
                       y_axis_label='Row')
         limits = [10, 25]
         plot.x_range = Range1d(limits[0], limits[1])
         plot.y_range = Range1d(limits[0], limits[1])
-        plot.circle(x='corr_col', y='corr_row', source=self.source,
-                    color="purple", size=7, fill_alpha=0.5)
+        plot.circle(x='corr_col_not_failed', y='corr_row_not_failed', source=self.source,
+                    color="blue", size=7, fill_alpha=0.5)
+        plot.circle(x='corr_col_failed', y='corr_row_failed', source=self.source,
+                    color="red", size=7, fill_alpha=0.5)
         plot.x_range = Range1d(0.0, 32.0)
         plot.y_range = Range1d(0.0, 32.0)
         hover = HoverTool()
