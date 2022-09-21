@@ -1142,11 +1142,46 @@ def change_only_stats(times, values, sigma=3):
         times = np.array(times)
         values = np.array(values)
         delta_time = times[1:] - times[0:-1]
+        delta_time_weight = np.array([e.total_seconds() for e in delta_time])
 
-        time_fractions = delta_time / np.min(delta_time) * 100.
-        arr_for_median = [[val] * int(time) for val, time in zip(values, time_fractions)]
-        flat_list_for_median = [item for sublist in arr_for_median for item in sublist]
-        meanval, medianval, stdevval = sigma_clipped_stats(flat_list_for_median, sigma=sigma)
+        # Add weight for the final point. Set it to 1 microsecond
+        delta_time_weight = np.append(delta_time_weight, 1e-6)
+
+        meanval = np.average(values, weights=delta_time_weight)
+        stdevval = np.sqrt(np.average((values-meanval)**2, weights=delta_time_weight))
+
+        # In order to calculate the median, we need to adjust the weights such that
+        # the weight represents the number of times a given value is present. Scale
+        # it so that the minimum weight is 1
+        delta_time_weight = (delta_time_weight / np.min(delta_time_weight)).astype(int)
+
+        # Now we find the median by sorting the values, keeping a running total of the
+        # total number of entries given that each value will have a number of instances
+        # dictat<ed by the weight, and selecting the value associated with the central
+        # element.
+        total_num = np.sum(delta_time_weight)
+        if np.mod(total_num, 2) == 1:
+            midpt = total_num / 2
+            odd = True
+        else:
+            midpt = total_num / 2 - 1
+            odd = False
+        sorted_idx = np.argsort(values)
+        values = values[sorted_idx]
+        delta_time_weight = delta_time_weight[sorted_idx]
+        total_idx = 0
+        for i, (val, weight) in enumerate(zip(values, delta_time_weight)):
+            total_idx += weight
+            if total_idx >= midpt:
+                if odd:
+                    medianval = val
+                else:
+                    if total_idx > midpt:
+                        medianval = val
+                    else:
+                        medianval = (val + values[i+1]) / 2.
+                break
+
     return meanval, medianval, stdevval
 
 
