@@ -260,7 +260,7 @@ class MSATA():
             # bokeh does not like to plot strings, turn  into numbers
             number_status, time_arr, status_colors = [], [], []
             for tas, do_str in zip(ta_status, date_obs):
-                if 'success' in tas.lower():
+                if 'unsuccessful' not in tas.lower():
                     number_status.append(1.0)
                     status_colors.append('blue')
                 elif 'progress' in tas.lower():

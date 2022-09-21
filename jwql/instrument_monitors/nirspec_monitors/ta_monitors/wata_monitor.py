@@ -217,7 +217,7 @@ class WATA():
             # bokeh does not like to plot strings, turn  into binary type
             bool_status, time_arr, status_colors = [], [], []
             for tas, do_str in zip(ta_status, date_obs):
-                if 'success' in tas.lower():
+                if 'unsuccessful' not in tas.lower():
                     bool_status.append(1)
                     status_colors.append('blue')
                 else:
