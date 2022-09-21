@@ -721,12 +721,13 @@ class MSATA():
         new_colors_list, vid, dobs, tarr, star_no, status = [], [], [], [], [], []
         peaks, stars_v2, stars_v3, det = [], [], [], []
         for i, _ in enumerate(visit_id):
-            v, d, t, c, s, x, y = [], [], [], [], [], [], []
+            v, d, t, c, s, x, y, dt = [], [], [], [], [], [], [], []
             for j in range(len(reference_star_number[i])):
                 v.append(visit_id[i])
                 d.append(date_obs[i])
                 t.append(time_arr[i])
                 c.append(colors_list[i])
+                dt.append(detector_list[i])
                 if 'not_removed' in lsf_removed_status[i][j]:
                     s.append('SUCCESS')
                     x.append(planned_v2[i][j])
@@ -744,7 +745,7 @@ class MSATA():
             stars_v2.extend(x)
             stars_v3.extend(y)
             peaks.extend(box_peak_value[i])
-            det.extend(detector_list[i])
+            det.extend(dt)
         # now create the mini ColumnDataSource for this particular plot
         mini_source = {'vid': vid, 'star_no': star_no, 'status': status,
                        'dobs': dobs, 'tarr': tarr, 'det': det,
