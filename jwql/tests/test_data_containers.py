@@ -68,7 +68,7 @@ def test_get_filenames_by_instrument():
 def test_get_filenames_by_proposal():
     """Tests the ``get_filenames_by_proposal`` function."""
 
-    filenames = data_containers.get_filenames_by_proposal('88600')
+    filenames = data_containers.get_filenames_by_proposal('1068')
     assert isinstance(filenames, list)
     assert len(filenames) > 0
 
