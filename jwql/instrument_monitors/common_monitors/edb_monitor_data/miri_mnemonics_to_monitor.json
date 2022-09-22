@@ -88,18 +88,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
@@ -122,18 +122,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
@@ -156,18 +156,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
@@ -190,18 +190,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
@@ -224,18 +224,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
@@ -258,18 +258,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
@@ -292,18 +292,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
@@ -326,18 +326,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
@@ -360,18 +360,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
@@ -394,18 +394,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
@@ -428,18 +428,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
@@ -462,18 +462,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
@@ -496,18 +496,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
@@ -530,18 +530,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
@@ -564,18 +564,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
@@ -598,18 +598,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
@@ -632,18 +632,18 @@
                 },
                 {
                     "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 },
                 {
                     "name": "IMIR_HK_POM_LOOP",
-                    "relation": "OFF",
-                    "threshold": 0
+                    "relation": "=",
+                    "threshold": "OFF"
                 }
             ],
             "plot_data": "nominal",
