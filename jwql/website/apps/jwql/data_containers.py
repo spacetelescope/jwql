@@ -694,7 +694,7 @@ def get_filenames_by_rootname(rootname):
     filenames.extend(glob.glob(os.path.join(FILESYSTEM_DIR, 'proprietary', proposal_dir, observation_dir, '{}*'.format(rootname))))
 
     # Certain suffixes are always ignored
-    filenames = [filename for filename in filenames if os.path.splitext(filename).split('_')[-1] not in IGNORED_SUFFIXES]
+    filenames = [filename for filename in filenames if os.path.splitext(filename)[0].split('_')[-1] not in IGNORED_SUFFIXES]
     filenames = sorted([os.path.basename(filename) for filename in filenames])
 
     return filenames
@@ -975,7 +975,7 @@ def get_preview_images_by_rootname(rootname):
         'jw{}'.format(proposal),
         '{}*'.format(rootname))))
     preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
-    preview_images = [item for item in preview_images if os.path.splitext(item).split('_')[-1] not in IGNORED_SUFFIXES]
+    preview_images = [item for item in preview_images if os.path.splitext(item)[0].split('_')[-1] not in IGNORED_SUFFIXES]
 
     return preview_images
 
@@ -1171,6 +1171,8 @@ def get_thumbnails_by_instrument(inst):
         A list of thumbnails available in the filesystem for the
         given instrument.
     """
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE(inst.lower())
+
     # Get list of all thumbnails
     thumb_inventory = f'{THUMBNAIL_LISTFILE}_{inst.lower()}.txt'
     all_thumbnails = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, thumb_inventory))
