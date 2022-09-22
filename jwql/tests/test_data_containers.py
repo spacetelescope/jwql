@@ -126,7 +126,7 @@ def test_get_preview_images_by_instrument():
 def test_get_preview_images_by_proposal():
     """Tests the ``get_preview_images_by_proposal`` function."""
 
-    preview_images = data_containers.get_preview_images_by_proposal('88600')
+    preview_images = data_containers.get_preview_images_by_proposal('1068')
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 

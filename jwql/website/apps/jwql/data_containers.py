@@ -947,7 +947,7 @@ def get_preview_images_by_proposal(proposal):
     proposal_string = '{:05d}'.format(int(proposal))
     preview_images = glob.glob(os.path.join(PREVIEW_IMAGE_FILESYSTEM, 'jw{}'.format(proposal_string), '*'))
     preview_images = [os.path.basename(preview_image) for preview_image in preview_images]
-    preview_images = [item for item in preview_images if os.path.splitext(item).split('_')[-1] not in IGNORED_SUFFIXES]
+    preview_images = [item for item in preview_images if os.path.splitext(item)[0].split('_')[-1] not in IGNORED_SUFFIXES]
 
     return preview_images
 
