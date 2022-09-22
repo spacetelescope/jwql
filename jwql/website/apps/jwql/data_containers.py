@@ -31,6 +31,7 @@ from operator import getitem
 import os
 import re
 import tempfile
+import logging
 
 from astropy.io import fits
 from astropy.time import Time
@@ -50,9 +51,8 @@ from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as mi
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
-from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND, SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS
-from jwql.utils.preview_image import PreviewImage
+from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
 from .forms import InstrumentAnomalySubmitForm
@@ -1118,10 +1118,8 @@ def get_thumbnails_all_instruments(parameters):
 
         inst_filenames = [result['filename'].split('.')[0] for result in results]
         inst_filenames = [filename for filename in inst_filenames if os.path.splitext(filename).split('_')[-1] not in IGNORED_SUFFIXES]
-        filenames.extend(inst_filenames)
 
         # Get list of all thumbnails
-        thumbnail_list_file = f"{THUMBNAIL_LISTFILE}_{inst.lower()}.txt"
         thumbnail_inst_list = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, THUMBNAIL_LISTFILE))
 
         # Get subset of thumbnail images that match the filenames
@@ -1178,7 +1176,7 @@ def get_thumbnails_by_instrument(inst):
     thumbnails = []
     all_proposals = get_instrument_proposals(inst)
     for proposal in all_proposals:
-        result = mast_query_filenames_by_instrument(inst, proposal)
+        results = mast_query_filenames_by_instrument(inst, proposal)
 
         # Parse the results to get the rootnames
         filenames = [result['filename'].split('.')[0] for result in results]
@@ -1515,7 +1513,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
         except (ValueError, TypeError) as e:
             logging.warning("Unable to populate exp_start info for {}".format(rootname))
-            loggin.warning(e)
+            logging.warning(e)
         except KeyError:
             print("KeyError with get_expstart for {}".format(rootname))
 

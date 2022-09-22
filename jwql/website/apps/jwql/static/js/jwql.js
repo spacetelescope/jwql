@@ -489,6 +489,16 @@ function sort_by_thumbnails(sort_type) {
 };
 
 
+function toggle_viewed(file_root, instrument, base_url) {
+    $.ajax({
+        url: base_url + '/ajax/viewed/' + instrument + '/' + file_root,
+        success: function(data){
+            update_viewed_button(data["marked_viewed"])
+    }});
+}
+
+
+
 /**
  * Updates various compnents on the archive page
  * @param {String} inst - The instrument of interest (e.g. "FGS")
@@ -875,6 +885,17 @@ function update_thumbnails_query_page(base_url) {
             document.getElementById("thumbnail-array").style.display = "block";
         }});
 };
+
+function update_viewed_button(viewed) {
+    var elem = document.getElementById("viewed");
+    if (viewed) {
+        elem.classList.add("btn-outline-primary")
+        elem.value = "Viewed";
+    } else {
+        elem.classList.remove("btn-outline-primary")
+        elem.value = "New";
+    }
+}
 
 /**
  * Construct the URL corresponding to a specific GitHub release

@@ -1,7 +1,5 @@
 """Defines the models for the ``jwql`` app.
 
-** CURRENTLY NOT IN USE **
-
 In Django, "a model is the single, definitive source of information
 about your data. It contains the essential fields and behaviors of the
 data you’re storing. Generally, each model maps to a single database
@@ -15,7 +13,7 @@ Authors
 -------
     - Lauren Chambers
     - Bryan Hilbert
-
+    - Brad Sappington
 Use
 ---
     This module is used as such:
@@ -30,11 +28,9 @@ References
         ```https://docs.djangoproject.com/en/2.0/topics/db/models/```
 """
 
-import os
-
 from django.db import models
 
-
+# Below is old test code that is not used
 INSTRUMENT_LIST = (('FGS', 'FGS'),
                    ('MIRI', 'MIRI'),
                    ('NIRCam', 'NIRCam'),
@@ -54,7 +50,7 @@ class Archive(models.Model):
         ordering = ['instrument']
 
     # Methods
-    #def get_absolute_url(self):
+    # def get_absolute_url(self):
     #    """Returns the URL to access a particular instance of Archive."""
     #    return reverse('archive-view', args=[str(self.id)])
 
@@ -77,7 +73,7 @@ class Proposal(models.Model):
         models.UniqueConstraint(fields=['prop_id', 'archive'], name='unique_instrument_proposal')
 
     # Methods
-    #def get_absolute_url(self):
+    # def get_absolute_url(self):
     #    """Returns the URL to access a particular instance of Archive."""
     #    return reverse('proposal-view', args=[str(self.id)])
 
@@ -103,10 +99,27 @@ class Observation(models.Model):
         models.UniqueConstraint(fields=['proposal', 'obsnum'], name='unique_proposal_obsnum')
 
     # Methods
-    #def get_absolute_url(self):
+    # def get_absolute_url(self):
     #    """Returns the URL to access a particular instance of Archive."""
     #    return reverse('observation-view', args=[str(self.id)])
 
     def __str__(self):
         """String for representing the Archive object (in Admin site etc.)."""
         return self.obsnum
+
+
+class RootFileInfo(models.Model):
+    """ All info stored with root file for ease of sorting """
+    instrument = models.CharField(max_length=7, help_text="Instrument name")
+    obsnum = models.ForeignKey(Observation, blank=False, null=False, on_delete=models.CASCADE)
+    proposal = models.CharField(max_length=5, help_text="5-digit proposal ID string")
+    root_name = models.TextField(primary_key=True, max_length=300)
+    viewed = models.BooleanField(default=False)
+
+    # Metadata
+    class Meta:
+        ordering = ['-root_name']
+
+    def __str__(self):
+        """String for representing the RootFileInfo object (in Admin site etc.)."""
+        return self.root_name
