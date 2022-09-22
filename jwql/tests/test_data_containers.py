@@ -86,7 +86,7 @@ def test_get_filenames_by_rootname():
 def test_get_header_info():
     """Tests the ``get_header_info`` function."""
 
-    header = data_containers.get_header_info('jw01068001001_02102_00001_nrcb3_uncal.fits', 'uncal')
+    header = data_containers.get_header_info('jw01068001001_02102_00001_nrcb3', 'uncal')
     assert isinstance(header, dict)
     assert len(header) > 0
 
