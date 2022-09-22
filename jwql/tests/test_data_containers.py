@@ -77,7 +77,7 @@ def test_get_filenames_by_proposal():
 def test_get_filenames_by_rootname():
     """Tests the ``get_filenames_by_rootname`` function."""
 
-    filenames = data_containers.get_filenames_by_rootname('jw86600008001_02101_00007_guider2')
+    filenames = data_containers.get_filenames_by_rootname('jw1068001001_02101_00001_nrcb1')
     assert isinstance(filenames, list)
     assert len(filenames) > 0
 
@@ -86,7 +86,7 @@ def test_get_filenames_by_rootname():
 def test_get_header_info():
     """Tests the ``get_header_info`` function."""
 
-    header = data_containers.get_header_info('jw86600008001_02101_00007_guider2_uncal.fits')
+    header = data_containers.get_header_info('jw1068001001_02101_00001_nrcb1_uncal.fits')
     assert isinstance(header, dict)
     assert len(header) > 0
 
@@ -95,7 +95,7 @@ def test_get_header_info():
 def test_get_image_info():
     """Tests the ``get_image_info`` function."""
 
-    image_info = data_containers.get_image_info('jw86600008001_02101_00007_guider2', False)
+    image_info = data_containers.get_image_info('jw1068001001_02101_00001_nrcb1', False)
 
     assert isinstance(image_info, dict)
 
@@ -135,7 +135,7 @@ def test_get_preview_images_by_proposal():
 def test_get_preview_images_by_rootname():
     """Tests the ``get_preview_images_by_rootname`` function."""
 
-    preview_images = data_containers.get_preview_images_by_rootname('jw86600008001_02101_00007_guider2')
+    preview_images = data_containers.get_preview_images_by_rootname('jw1068001001_02101_00001_nrcb1')
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
@@ -144,7 +144,7 @@ def test_get_preview_images_by_rootname():
 def test_get_proposal_info():
     """Tests the ``get_proposal_info`` function."""
 
-    filepaths = glob.glob(os.path.join(get_config()['filesystem'], 'jw00300', '*.fits'))
+    filepaths = glob.glob(os.path.join(get_config()['filesystem'], 'jw01068', '*.fits'))
     proposal_info = data_containers.get_proposal_info(filepaths)
 
     assert isinstance(proposal_info, dict)
@@ -167,7 +167,7 @@ def test_get_thumbnails_by_instrument():
 def test_get_thumbnails_by_proposal():
     """Tests the ``get_thumbnails_by_proposal`` function."""
 
-    preview_images = data_containers.get_thumbnails_by_proposal('88600')
+    preview_images = data_containers.get_thumbnails_by_proposal('01068')
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
@@ -176,7 +176,7 @@ def test_get_thumbnails_by_proposal():
 def test_get_thumbnails_by_rootname():
     """Tests the ``get_thumbnails_by_rootname`` function."""
 
-    preview_images = data_containers.get_thumbnails_by_rootname('jw86600008001_02101_00007_guider2')
+    preview_images = data_containers.get_thumbnails_by_rootname('jw1068001001_02101_00001_nrcb1')
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
