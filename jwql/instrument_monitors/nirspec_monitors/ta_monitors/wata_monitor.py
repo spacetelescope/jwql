@@ -91,7 +91,8 @@ class WATA():
         self.query_very_beginning = 59607.0
 
         # structure to define required keywords to extract and where they live
-        self.keywds2extract = {'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs'},
+        self.keywds2extract = {'FILENAME': {'loc': 'main_hdr', 'alt_key': None, 'name': 'filename', 'type': str},
+                               'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs'},
                                'OBS_ID': {'loc': 'main_hdr', 'alt_key': 'OBSID', 'name': 'visit_id'},
                                'FILTER': {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter'},
                                'READOUT': {'loc': 'main_hdr', 'alt_key': 'READPATT', 'name': 'readout'},
@@ -191,6 +192,8 @@ class WATA():
                     ext = ta_hdr
                 try:
                     val = ext[key]
+                    if key == 'filename':
+                        val = fits_file
                 except KeyError:
                     val = ext[key_dict['alt_key']]
                 wata_dict[key_name].append(val)
@@ -578,6 +581,29 @@ class WATA():
 
         return query_result
 
+    def get_expected_data(self, keywd_dict, tot_number_of_stars):
+        """This function gets the value append to the dictionary key in the expected format.
+        Parameters
+        ----------
+        keywd_dict: dictonary
+            Dictionary corresponding to the file keyword
+        tot_number_of_stars: integer
+            Number of stars in the observation
+        Returns
+        -------
+        val4dict: value
+            Value appended to the data structure; either string, float or integer
+        """
+        # set the value to add
+        val = -999
+        # return the right type of value
+        if keywd_dict['type'] == float:
+            val = float(val)
+        if keywd_dict['type'] == str:
+            val = str(val)
+        val4dict = val
+        return val4dict
+
     def get_data_from_html(self, html_file):
         """
         This function gets the data from the Bokeh html file created with
@@ -624,13 +650,13 @@ class WATA():
             if key in prev_data_dict:
                 # case when the html stored thing is just an object but does not have data
                 if len(prev_data_dict[key]) < len(visit_ids):
-                    list4dict = self.construct_expected_data(keywd_dict, visit_ids)
+                    list4dict = self.get_expected_data(keywd_dict, visit_ids)
                     prev_data_expected_cols[key] = list4dict
                 # case when nothing special to do
                 else:
                     prev_data_expected_cols[key] = prev_data_dict[key]
             else:
-                list4dict = self.construct_expected_data(keywd_dict, visit_ids)
+                list4dict = self.get_expected_data(keywd_dict, visit_ids)
                 prev_data_expected_cols[key] = list4dict
         # now convert to a panda dataframe to be combined with the new data
         prev_data = pd.DataFrame(prev_data_expected_cols)
@@ -676,6 +702,74 @@ class WATA():
             if filename not in good_files:
                 good_files.append(filename)
         return good_files
+
+    def get_uncal_names(self, file_list):
+        """Replace the last suffix for _uncal and return list.
+        Parameters
+        ----------
+        file_list : list
+            List of fits files
+        Returns
+        -------
+        good_files : list
+            Filtered list of uncal file names
+        """
+        good_files = []
+        for filename in file_list:
+            # Names look like: jw01133003001_02101_00001_nrs2_cal.fits
+            if '_uncal' not in filename:
+                suffix2replace = filename.split('_')[-1]
+                filename = filename.replace(suffix2replace, 'uncal.fits')
+            if filename not in good_files:
+                good_files.append(filename)
+        return good_files
+
+    def update_ta_success_txtfile(self):
+        """Create a text file with all the failed and successful WATA.
+        Parameters
+        ----------
+            None
+        Returns
+        -------
+            Nothing
+        """
+        output_success_ta_txtfile = os.path.join(self.output_dir, "wata_success.txt")
+        # check if previous file exsists and read the data from it
+        if os.path.isfile(output_success_ta_txtfile):
+            # now rename the the previous file, for backup
+            os.rename(output_success_ta_txtfile, os.path.join(self.output_dir, "prev_wata_success.txt"))
+        # get the new data
+        ta_success, ta_failure = [], []
+        filenames, ta_status = self.wata_data.loc[:,'filename'], self.wata_data.loc[:,'ta_status']
+        for fname, ta_stat in zip(filenames, ta_status):
+            # select the appriopriate list to append to
+            if ta_stat == 'SUCCESSFUL':
+                ta_success.append(fname)
+            else:
+                ta_failure.append(fname)
+        # find which one is the longest list (to make sure the other lists have the same length)
+        successes, failures = len(ta_success), len(ta_failure)
+        longest_list = None
+        if successes >= failures:
+            longest_list = successes
+        else:
+            longest_list = failures
+        # match length of the lists
+        for ta_list in [ta_success, ta_failure]:
+            remaining_items = longest_list - len(ta_list)
+            if remaining_items != 0:
+                for _ in range(remaining_items):
+                    ta_list.append("")
+        # write the new output file
+        with open(output_success_ta_txtfile, 'w+') as txt:
+            txt.write("# WATA successes and failure file names \n")
+            filehdr1 = "# {} Total successful and {} total failed WATA ".format(successes, failures)
+            filehdr2 = "# {:<50} {:<50}".format("Successes", "Failures")
+            txt.write(filehdr1 + "\n")
+            txt.write(filehdr2 + "\n")
+            for idx, suc in enumerate(ta_success):
+                line = "{:<50} {:<50}".format(suc, ta_failure[idx])
+                txt.write(line + "\n")
 
     @log_fail
     @log_info
@@ -751,8 +845,6 @@ class WATA():
         if len(new_filenames) > 0:   # new data was found
             # get the data
             self.new_wata_data, no_ta_ext_msgs = self.get_wata_data(new_filenames)
-            wata_files_used4plots = len(self.new_wata_data['visit_id'])
-            logging.info('\t{} WATA files were used to make plots.'.format(wata_files_used4plots))
             if len(no_ta_ext_msgs) >= 1:
                 for item in no_ta_ext_msgs:
                     logging.info(item)
@@ -775,6 +867,11 @@ class WATA():
             self.script, self.div = self.mk_plt_layout()
             monitor_run = True
             logging.info('\tOutput html plot file created: {}'.format(self.output_file_name))
+            wata_files_used4plots = len(self.wata_data['visit_id'])
+            logging.info('\t{} WATA files were used to make plots.'.format(wata_files_used4plots))
+            # update the list of successful and failed TAs
+            self.update_ta_success_txtfile()
+            logging.info('\t{} WATA status file was updated')
         else:
             logging.info('\tWATA monitor skipped.')
 

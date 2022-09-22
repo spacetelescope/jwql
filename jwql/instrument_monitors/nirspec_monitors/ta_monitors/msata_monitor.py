@@ -96,7 +96,8 @@ class MSATA():
         self.query_very_beginning = 59607.0
 
         # dictionary to define required keywords to extract MSATA data and where it lives
-        self.keywds2extract = {'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs', 'type': str},
+        self.keywds2extract = {'FILENAME': {'loc': 'main_hdr', 'alt_key': None, 'name': 'filename', 'type': str},
+                               'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs', 'type': str},
                                'OBS_ID': {'loc': 'main_hdr', 'alt_key': None, 'name': 'visit_id', 'type': str},
                                'FILTER': {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter', 'type': str},
                                'DETECTOR': {'loc': 'main_hdr', 'alt_key': None, 'name': 'detector', 'type': str},
@@ -201,6 +202,8 @@ class MSATA():
                     ext = ta_table
                 try:
                     val = ext[key]
+                    if key == 'filename':
+                        val = fits_file
                 except KeyError:
                     if key_dict['alt_key'] is not None:
                         try:
@@ -899,18 +902,18 @@ class MSATA():
         list4dict: list
             List to be appended to the data structure. Has the right length but no real values
         """
+        # set the value to add
+        val = -999
         list4dict = []
-        for tns in tot_number_of_stars:   # elements the list of lists should have
-            # set the value to add
-            val = -999
-            # create either the list or return the right type of value
-            if keywd_dict['loc'] != 'ta_table':  # these cases should be singe values per observation
-                if keywd_dict['type'] == float:
-                    val = float(val)
-                if keywd_dict['type'] == str:
-                    val = str(val)
-                list4dict = val
-            else:
+        # create either the list or return the right type of value
+        if keywd_dict['loc'] != 'ta_table':  # these cases should be singe values per observation
+            if keywd_dict['type'] == float:
+                val = float(val)
+            if keywd_dict['type'] == str:
+                val = str(val)
+            list4dict = val
+        else:
+            for tns in tot_number_of_stars:   # elements the list of lists should have
                 list2append = []
                 for _ in range(tns):   # elements each sublist should have
                     if keywd_dict['type'] == float:
@@ -1009,6 +1012,57 @@ class MSATA():
                 good_files.append(filename)
         return good_files
 
+    def update_ta_success_txtfile(self):
+        """Create a text file with all the failed and successful MSATA.
+        Parameters
+        ----------
+            None
+        Returns
+        -------
+            Nothing
+        """
+        output_success_ta_txtfile = os.path.join(self.output_dir, "msata_success.txt")
+        # check if previous file exsists and read the data from it
+        if os.path.isfile(output_success_ta_txtfile):
+            # now rename the the previous file, for backup
+            os.rename(output_success_ta_txtfile, os.path.join(self.output_dir, "prev_msata_success.txt"))
+        # get the new data
+        ta_success, ta_inprogress, ta_failure = [], [], []
+        filenames, ta_status = self.msata_data.loc[:,'filename'], self.msata_data.loc[:,'ta_status']
+        for fname, ta_stat in zip(filenames, ta_status):
+            # select the appriopriate list to append to
+            if ta_stat == 'SUCCESSFUL':
+                ta_success.append(fname)
+            elif ta_stat == 'IN_PROGRESS':
+                ta_inprogress.append(fname)
+            else:
+                ta_failure.append(fname)
+        # find which one is the longest list (to make sure the other lists have the same length)
+        successes, inprogress, failures = len(ta_success), len(ta_inprogress), len(ta_failure)
+        longest_list = None
+        if successes >= inprogress:
+            longest_list = successes
+        else:
+            longest_list = inprogress
+        if longest_list < failures:
+            longest_list = failures
+        # match length of the lists
+        for ta_list in [ta_success, ta_inprogress, ta_failure]:
+            remaining_items = longest_list - len(ta_list)
+            if remaining_items > 0:
+                for _ in range(remaining_items):
+                    ta_list.append("")
+        # write the new output file
+        with open(output_success_ta_txtfile, 'w+') as txt:
+            txt.write("# MSATA successes and failure file names \n")
+            filehdr1 = "# {} Total successful and {} total failed MSATA ".format(successes, failures)
+            filehdr2 = "# {:<50} {:<50} {:<50}".format("Successes", "In_Progress", "Failures")
+            txt.write(filehdr1 + "\n")
+            txt.write(filehdr2 + "\n")
+            for idx, suc in enumerate(ta_success):
+                line = "{:<50} {:<50} {:<50}".format(suc, ta_inprogress[idx], ta_failure[idx])
+                txt.write(line + "\n")
+
     @log_fail
     @log_info
     def run(self):
@@ -1043,6 +1097,8 @@ class MSATA():
             prev_data_dict = self.get_data_from_html(self.output_file_name)
             self.prev_data, self.query_start = self.prev_data2expected_format(prev_data_dict)
             logging.info('\tPrevious data read from html file: {}'.format(self.output_file_name))
+            # move this plot to a previous version
+            os.rename(self.output_file_name, os.path.join(self.output_dir, "prev_msata_layout.html"))
         # fail save - start from the beginning if there is no html file
         else:
             self.query_start = self.query_very_beginning
@@ -1083,8 +1139,6 @@ class MSATA():
         if len(new_filenames) > 0:   # new data was found
             # get the data
             self.new_msata_data, no_ta_ext_msgs = self.get_msata_data(new_filenames)
-            msata_files_used4plots = len(self.new_msata_data['visit_id'])
-            logging.info('\t{} MSATA files were used to make plots.'.format(msata_files_used4plots))
             if len(no_ta_ext_msgs) >= 1:
                 for item in no_ta_ext_msgs:
                     logging.info(item)
@@ -1107,6 +1161,11 @@ class MSATA():
             self.script, self.div = self.mk_plt_layout()
             monitor_run = True
             logging.info('\Output html plot file created: {}'.format(self.output_file_name))
+            msata_files_used4plots = len(self.msata_data['visit_id'])
+            logging.info('\t{} MSATA files were used to make plots.'.format(msata_files_used4plots))
+            # update the list of successful and failed TAs
+            self.update_ta_success_txtfile()
+            logging.info('\t{} MSATA status file was updated')
         else:
             logging.info('\tMSATA monitor skipped.')
 

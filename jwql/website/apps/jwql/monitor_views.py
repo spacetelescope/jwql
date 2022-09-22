@@ -295,7 +295,7 @@ def wata_monitoring_ajax(request):
         Outgoing response sent to the webpage
     """
     # run the monitor
-    module = 'wata_monitor.py'
+    module = 'wata_monitor'
     start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
     monitor = wata_monitor.WATA()
     monitor.run()
