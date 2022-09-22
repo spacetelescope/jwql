@@ -630,6 +630,9 @@ def mast_query_filenames_by_instrument(instrument, proposal_id, observation_id=N
     result : dict
         Dictionary of file information
     """
+    # Be sure the instrument name is properly capitalized
+    instrument = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
+
     if other_columns is None:
         columns = "filename, isRestricted"
     else:
@@ -1180,7 +1183,7 @@ def get_thumbnails_by_instrument(inst):
     thumbnails = []
     all_proposals = get_instrument_proposals(inst)
     for proposal in all_proposals:
-        result = mast_query_filenames_by_instrument(inst, proposal)
+        results = mast_query_filenames_by_instrument(inst, proposal)
 
         # Parse the results to get the rootnames
         filenames = [result['filename'].split('.')[0] for result in results]
