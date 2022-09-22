@@ -51,7 +51,7 @@ def test_get_all_proposals():
 def test_get_expstart():
     """Tests the ``get_expstart`` function."""
 
-    expstart = data_containers.get_expstart('FGS', 'jw00624008002_06201_00002_guider2')
+    expstart = data_containers.get_expstart('NIRCam', 'jw1068001001_02102_00001_nrcb1')
     assert isinstance(expstart, float)
 
 
@@ -59,7 +59,7 @@ def test_get_expstart():
 def test_get_filenames_by_instrument():
     """Tests the ``get_filenames_by_instrument`` function."""
 
-    filepaths = data_containers.get_filenames_by_instrument('FGS')
+    filepaths = data_containers.get_filenames_by_instrument('NIRCam', '1068')
     assert isinstance(filepaths, list)
     assert len(filepaths) > 0
 
@@ -77,7 +77,7 @@ def test_get_filenames_by_proposal():
 def test_get_filenames_by_rootname():
     """Tests the ``get_filenames_by_rootname`` function."""
 
-    filenames = data_containers.get_filenames_by_rootname('jw1068001001_02101_00001_nrcb1')
+    filenames = data_containers.get_filenames_by_rootname('jw01068001001_02102_00001_nrcb1')
     assert isinstance(filenames, list)
     assert len(filenames) > 0
 
@@ -86,7 +86,7 @@ def test_get_filenames_by_rootname():
 def test_get_header_info():
     """Tests the ``get_header_info`` function."""
 
-    header = data_containers.get_header_info('jw1068001001_02101_00001_nrcb1_uncal.fits')
+    header = data_containers.get_header_info('jw1068001001_02102_00001_nrcb1_uncal.fits')
     assert isinstance(header, dict)
     assert len(header) > 0
 
@@ -95,7 +95,7 @@ def test_get_header_info():
 def test_get_image_info():
     """Tests the ``get_image_info`` function."""
 
-    image_info = data_containers.get_image_info('jw1068001001_02101_00001_nrcb1', False)
+    image_info = data_containers.get_image_info('jw1068001001_02102_00001_nrcb1', False)
 
     assert isinstance(image_info, dict)
 
@@ -135,7 +135,7 @@ def test_get_preview_images_by_proposal():
 def test_get_preview_images_by_rootname():
     """Tests the ``get_preview_images_by_rootname`` function."""
 
-    preview_images = data_containers.get_preview_images_by_rootname('jw1068001001_02101_00001_nrcb1')
+    preview_images = data_containers.get_preview_images_by_rootname('jw1068001001_02102_00001_nrcb1')
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
@@ -176,7 +176,7 @@ def test_get_thumbnails_by_proposal():
 def test_get_thumbnails_by_rootname():
     """Tests the ``get_thumbnails_by_rootname`` function."""
 
-    preview_images = data_containers.get_thumbnails_by_rootname('jw1068001001_02101_00001_nrcb1')
+    preview_images = data_containers.get_thumbnails_by_rootname('jw1068001001_02102_00001_nrcb1')
     assert isinstance(preview_images, list)
     assert len(preview_images) > 0
 
