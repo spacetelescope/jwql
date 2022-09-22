@@ -919,7 +919,9 @@ def get_preview_images_by_instrument(inst):
         prop_result = mast_query_filenames_by_instrument(inst, prop)
 
         # Parse the results to get the rootnames
-        filenames = [result['filename'].split('.')[0] for result in prop_result]
+        filenames = []
+        if 'data' in prop_result:
+            filenames = [result['filename'].split('.')[0] for result in prop_result["data"]]
 
         if len(filenames) > 0:
             # Get subset of preview images that match the filenames
@@ -1186,7 +1188,9 @@ def get_thumbnails_by_instrument(inst):
         results = mast_query_filenames_by_instrument(inst, proposal)
 
         # Parse the results to get the rootnames
-        filenames = [result['filename'].split('.')[0] for result in results]
+        filenames = []
+        if 'data' in results:
+            filenames = [result['filename'].split('.')[0] for result in results["data"]]
 
         if len(filenames) > 0:
             # Get subset of preview images that match the filenames
