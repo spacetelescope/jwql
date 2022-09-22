@@ -489,14 +489,13 @@ function sort_by_thumbnails(sort_type) {
 };
 
 
-function toggle_viewed(file_root, instrument, base_url) {
+function toggle_viewed(file_root, base_url) {
     $.ajax({
-        url: base_url + '/ajax/viewed/' + instrument + '/' + file_root,
+        url: base_url + '/ajax/viewed/' + file_root,
         success: function(data){
             update_viewed_button(data["marked_viewed"])
     }});
 }
-
 
 
 /**
