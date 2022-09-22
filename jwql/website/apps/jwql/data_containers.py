@@ -1171,7 +1171,7 @@ def get_thumbnails_by_instrument(inst):
         A list of thumbnails available in the filesystem for the
         given instrument.
     """
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE(inst.lower())
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     # Get list of all thumbnails
     thumb_inventory = f'{THUMBNAIL_LISTFILE}_{inst.lower()}.txt'
