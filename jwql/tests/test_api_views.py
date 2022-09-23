@@ -65,7 +65,7 @@ for rootname in rootnames:
     urls.append('api/{}/thumbnails/'.format(rootname))  # thumbnails_by_rootname
 
 
-#@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason="Can't access webpage without VPN access")  # Can be removed once public-facing server exists
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason="Can't access webpage without VPN access")  # Can be removed once public-facing server exists
 @pytest.mark.parametrize('url', urls)
 def test_api_views(url):
     """Test to see if the given ``url`` returns a populated JSON object
