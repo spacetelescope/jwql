@@ -187,7 +187,10 @@ class condition:
         self.block_indexes = filtered_indexes
 
         # Add the index of the final element if it's not there already
-        if self.block_indexes[-1] < len(good_data):
+        if len(self.block_indexes) > 0:
+            if self.block_indexes[-1] < len(good_data):
+                self.block_indexes.append(len(good_data))
+        else:
             self.block_indexes.append(len(good_data))
 
     def get_interval(self, time):
