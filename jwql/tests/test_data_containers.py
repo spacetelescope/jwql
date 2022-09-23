@@ -114,15 +114,6 @@ def test_get_instrument_proposals():
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_get_preview_images_by_instrument():
-    """Tests the ``get_preview_images_by_instrument`` function."""
-
-    preview_images = data_containers.get_preview_images_by_instrument('fgs')
-    assert isinstance(preview_images, list)
-    assert len(preview_images) > 0
-
-
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_preview_images_by_proposal():
     """Tests the ``get_preview_images_by_proposal`` function."""
 
@@ -152,15 +143,6 @@ def test_get_proposal_info():
     keys = ['num_proposals', 'proposals', 'thumbnail_paths', 'num_files']
     for key in keys:
         assert key in proposal_info
-
-
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_get_thumbnails_by_instrument():
-    """Tests the ``get_thumbnails_by_instrument`` function."""
-
-    preview_images = data_containers.get_thumbnails_by_instrument('fgs')
-    assert isinstance(preview_images, list)
-    assert len(preview_images) > 0
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')

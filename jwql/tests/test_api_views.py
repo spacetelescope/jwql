@@ -39,8 +39,6 @@ urls.append('api/proposals/')  # all_proposals
 # Instrument-specific URLs
 for instrument in JWST_INSTRUMENT_NAMES:
     urls.append('api/{}/proposals/'.format(instrument))  # instrument_proposals
-    urls.append('api/{}/preview_images/'.format(instrument))  # preview_images_by_instrument
-    urls.append('api/{}/thumbnails/'.format(instrument))  # thumbnails_by_instrument
 
 # Proposal-specific URLs
 proposals = ['86700',  # FGS

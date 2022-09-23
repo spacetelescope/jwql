@@ -892,47 +892,6 @@ def get_instrument_proposals(instrument):
     return inst_proposals
 
 
-def get_preview_images_by_instrument(inst):
-    """Return a list of preview images available in the filesystem for
-    the given instrument.
-
-    Parameters
-    ----------
-    inst : str
-        The instrument of interest (e.g. ``NIRCam``).
-
-    Returns
-    -------
-    preview_images : list
-        A list of preview images available in the filesystem for the
-        given instrument.
-    """
-    # Get list of all preview_images. Text file contains only preview
-    # images for a single instrument.
-    preview_list_file = f"{PREVIEW_IMAGE_LISTFILE}_{inst.lower()}.txt"
-    preview_images = retrieve_filelist(os.path.join(PREVIEW_IMAGE_FILESYSTEM, preview_list_file))
-
-    # Query MAST for all rootnames for the instrument
-    all_preview_images = []
-    all_proposals = get_instrument_proposals(inst)
-    for prop in all_proposals:
-        prop_result = mast_query_filenames_by_instrument(inst, prop)
-
-        # Parse the results to get the rootnames
-        filenames = []
-        if 'data' in prop_result:
-            filenames = [result['filename'].split('.')[0] for result in prop_result["data"]]
-
-        if len(filenames) > 0:
-            # Get subset of preview images that match the filenames
-            prop_preview_images = [os.path.basename(item) for item in preview_images if
-                                   os.path.basename(item).split('_integ')[0] in filenames]
-            all_preview_images.extend(prop_preview_images)
-
-    # Return only preview images that match the filenames retrieved from MAST
-    return all_preview_images
-
-
 def get_preview_images_by_proposal(proposal):
     """Return a list of preview images available in the filesystem for
     the given ``proposal``.
@@ -1159,47 +1118,6 @@ def get_thumbnails_all_instruments(parameters):
         final_subset = thumbnails_subset
 
     return list(set(final_subset))
-
-
-def get_thumbnails_by_instrument(inst):
-    """Return a list of thumbnails available in the filesystem for the
-    given instrument.
-
-    Parameters
-    ----------
-    inst : str
-        The instrument of interest (e.g. ``NIRCam``).
-
-    Returns
-    -------
-    preview_images : list
-        A list of thumbnails available in the filesystem for the
-        given instrument.
-    """
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-
-    # Get list of all thumbnails
-    thumb_inventory = f'{THUMBNAIL_LISTFILE}_{inst.lower()}.txt'
-    all_thumbnails = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, thumb_inventory))
-
-    thumbnails = []
-    all_proposals = get_instrument_proposals(inst)
-    for proposal in all_proposals:
-        results = mast_query_filenames_by_instrument(inst, proposal)
-
-        # Parse the results to get the rootnames
-        filenames = []
-        if 'data' in results:
-            filenames = [result['filename'].split('.')[0] for result in results["data"]]
-
-        if len(filenames) > 0:
-            # Get subset of preview images that match the filenames
-            prop_thumbnails = [os.path.basename(item) for item in all_thumbnails if
-                               os.path.basename(item).split('_integ')[0] in filenames]
-
-            thumbnails.extend(prop_thumbnails)
-
-    return thumbnails
 
 
 def get_thumbnails_by_proposal(proposal):
