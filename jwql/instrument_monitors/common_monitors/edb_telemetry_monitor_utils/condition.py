@@ -186,8 +186,9 @@ class condition:
             filtered_indexes.append(switch_to_true[i])
         self.block_indexes = filtered_indexes
 
-        # Add the index of the final element
-        self.block_indexes.append(len(good_data))
+        # Add the index of the final element if it's not there already
+        if self.block_indexes[-1] < len(good_data):
+            self.block_indexes.append(len(good_data))
 
     def get_interval(self, time):
         """Returns time interval if "time" is in between starting and

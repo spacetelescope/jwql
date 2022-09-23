@@ -313,25 +313,29 @@ class EdbMnemonic:
         medtimes = []
         if type(self.data["euvalues"].data[0]) not in [np.str_, str]:
             for i, index in enumerate(self.blocks[0:-1]):
-                if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
-                    meanval, medianval, stdevval = sigma_clipped_stats(self.data["euvalues"].data[index:self.blocks[i + 1]], sigma=sigma)
-                else:
-                    meanval, medianval, stdevval = change_only_stats(self.data["dates"].data[index:self.blocks[i + 1]],
+                # Protect against repeated block indexes
+                if index < self.blocks[i+1]:
+                    if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
+                        meanval, medianval, stdevval = sigma_clipped_stats(self.data["euvalues"].data[index:self.blocks[i + 1]], sigma=sigma)
+                    else:
+                        meanval, medianval, stdevval = change_only_stats(self.data["dates"].data[index:self.blocks[i + 1]],
                                                                      self.data["euvalues"].data[index:self.blocks[i + 1]], sigma=sigma)
-                medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i + 1]]))
-                means.append(meanval)
-                medians.append(medianval)
-                stdevs.append(stdevval)
+                    medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i + 1]]))
+                    means.append(meanval)
+                    medians.append(medianval)
+                    stdevs.append(stdevval)
         else:
             # If the data are strings, then set the mean to be the data value at the block index
             for i, index in enumerate(self.blocks[0:-1]):
-                meanval = self.data["euvalues"].data[index]
-                medianval = meanval
-                stdevval = 0
-                medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i + 1]]))
-                means.append(meanval)
-                medians.append(medianval)
-                stdevs.append(stdevval)
+                # Protect against repeated block indexes
+                if index < self.blocks[i+1]:
+                    meanval = self.data["euvalues"].data[index]
+                    medianval = meanval
+                    stdevval = 0
+                    medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i + 1]]))
+                    means.append(meanval)
+                    medians.append(medianval)
+                    stdevs.append(stdevval)
         self.mean = means
         self.median = medians
         self.stdev = stdevs
@@ -699,7 +703,10 @@ class EdbMnemonic:
 
                 if len(good) > 0:
                     new_blocks.append(good[0])
-            new_blocks.append(len(new_tab["dates"]))
+
+            # Add en entry for the final element if it's not already there
+            if new_blocks[-1] < len(new_tab["dates"]):
+                new_blocks.append(len(new_tab["dates"]))
             self.blocks = np.array(new_blocks)
 
         # Update the data in the instance.
