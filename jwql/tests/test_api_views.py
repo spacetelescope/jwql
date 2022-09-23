@@ -6,6 +6,7 @@ Authors
 -------
 
     - Matthew Bourque
+    - Bryan Hilbert
 
 Use
 ---
@@ -41,30 +42,30 @@ for instrument in JWST_INSTRUMENT_NAMES:
     urls.append('api/{}/proposals/'.format(instrument))  # instrument_proposals
 
 # Proposal-specific URLs
-proposals = ['86700',  # FGS
-             '98012',  # MIRI
-             '93025',  # NIRCam
-             '00308',  # NIRISS
-             '308',  # NIRISS
-             '96213']  # NIRSpec
+proposals = ['01018',  # FGS
+             '01022',  # MIRI
+             '01068',  # NIRCam
+             '01059',  # NIRISS
+             '1059',  # NIRISS
+             '01106']  # NIRSpec
 for proposal in proposals:
     urls.append('api/{}/filenames/'.format(proposal))  # filenames_by_proposal
     urls.append('api/{}/preview_images/'.format(proposal))  # preview_images_by_proposal
     urls.append('api/{}/thumbnails/'.format(proposal))  # thumbnails_by_proposal
 
 # Filename-specific URLs
-rootnames = ['jw86600007001_02101_00001_guider2',  # FGS
-             'jw98012001001_02102_00001_mirimage',  # MIRI
-             'jw93025001001_02102_00001_nrca2',  # NIRCam
-             'jw00308001001_02103_00001_nis',  # NIRISS
-             'jw96213001001_02101_00001_nrs1']  # NIRSpec
+rootnames = ['jw01018001004_02101_00001_guider1',  # FGS
+             'Jjw1022017001_03101_00001_mirimage',  # MIRI
+             'jw01068001001_02102_00001_nrcb1',  # NIRCam
+             'jw01059121001_02107_00001_nis',  # NIRISS
+             'jw01106002001_02101_00002_nrs1']  # NIRSpec
 for rootname in rootnames:
     urls.append('api/{}/filenames/'.format(rootname))  # filenames_by_rootname
     urls.append('api/{}/preview_images/'.format(rootname))  # preview_images_by_rootname
     urls.append('api/{}/thumbnails/'.format(rootname))  # thumbnails_by_rootname
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason="Can't access webpage without VPN access")  # Can be removed once public-facing server exists
+#@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason="Can't access webpage without VPN access")  # Can be removed once public-facing server exists
 @pytest.mark.parametrize('url', urls)
 def test_api_views(url):
     """Test to see if the given ``url`` returns a populated JSON object
@@ -91,7 +92,7 @@ def test_api_views(url):
         url = request.urlopen(url)
     except error.HTTPError as e:
         if e.code == 502:
-            pytest.skip("Dev server problem")
+            pytest.skip("Server problem")
         raise(e)
 
     try:
