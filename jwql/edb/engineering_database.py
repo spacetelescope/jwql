@@ -1095,11 +1095,21 @@ def change_only_bounding_points(date_list, value_list, starttime, endtime):
     date_list = list(np.array(date_list)[valid_idx])
     value_list = list(np.array(value_list)[valid_idx])
 
-    # Add an entry for starttime and another for endtime
-    if not np.isnan(value0):
+    # Add an entry for starttime and another for endtime, but not if
+    # the values are NaN
+    if isinstance(value0, Number):
+        if not np.isnan(value0):
+            date_list.insert(0, starttime)
+            value_list.insert(0, value0)
+    elif isinstance(value0, str):
         date_list.insert(0, starttime)
         value_list.insert(0, value0)
-    if not np.isnan(value_end):
+
+    if isinstance(value_end, Number):
+        if not np.isnan(value_end):
+            date_list.append(endtime)
+            value_list.append(value_end)
+    elif isinstance(value_end, str):
         date_list.append(endtime)
         value_list.append(value_end)
 
