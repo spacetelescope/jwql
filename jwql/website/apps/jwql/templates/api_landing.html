@@ -142,12 +142,34 @@
 
                     print(filenames)
 
-                    {'filenames': ['jw01068001001_02102_00001_nrca2_cal.fits',
-                                   'jw01068001001_02102_00001_nrca2_i2d.fits',
-                                   'jw01068001001_02102_00001_nrca2_rate.fits',
-                                   'jw01068001001_02102_00001_nrca2_rateints.fits',
-                                   'jw01068001001_02102_00001_nrca2_trapsfilled.fits',
-                                   'jw01068001001_02102_00001_nrca2_uncal.fits']}
+                    {
+                        "filenames": [
+                            "jw01068001001_02102_00001_nrcb1.pod",
+                            "jw01068001001_02102_00001_nrcb1.sqlite",
+                            "jw01068001001_02102_00001_nrcb1_cal.fits",
+                            "jw01068001001_02102_00001_nrcb1_cal.jpg",
+                            "jw01068001001_02102_00001_nrcb1_cal_thumb.jpg",
+                            "jw01068001001_02102_00001_nrcb1_i2d.fits",
+                            "jw01068001001_02102_00001_nrcb1_o001_crf.fits",
+                            "jw01068001001_02102_00001_nrcb1_o001_crf.jpg",
+                            "jw01068001001_02102_00001_nrcb1_o001_crf_thumb.jpg",
+                            "jw01068001001_02102_00001_nrcb1_original_thumb.jpg",
+                            "jw01068001001_02102_00001_nrcb1_rate.fits",
+                            "jw01068001001_02102_00001_nrcb1_rate.jpg",
+                            "jw01068001001_02102_00001_nrcb1_rate_thumb.jpg",
+                            "jw01068001001_02102_00001_nrcb1_rateints.fits",
+                            "jw01068001001_02102_00001_nrcb1_rateints.jpg",
+                            "jw01068001001_02102_00001_nrcb1_rateints_thumb.jpg",
+                            "jw01068001001_02102_00001_nrcb1_trapsfilled.fits",
+                            "jw01068001001_02102_00001_nrcb1_trapsfilled.jpg",
+                            "jw01068001001_02102_00001_nrcb1_trapsfilled_thumb.jpg",
+                            "jw01068001001_02102_00001_nrcb1_uncal.cal_outputs",
+                            "jw01068001001_02102_00001_nrcb1_uncal.fits",
+                            "jw01068001001_02102_00001_nrcb1_uncal.jpg",
+                            "jw01068001001_02102_00001_nrcb1_uncal_thumb.jpg"
+                            ]
+                    }
+
                     </code>
              </pre>
 
@@ -159,8 +181,9 @@
                 <ul>
                     <li>All Proposals (<code class="python">https://jwql.stsci.edu/api/proposals/</code>)</li>
                     <li>Instrument Proposals (<code class="python">https://jwql.stsci.edu/api/&lt;instrument&gt;/proposals/</code>)</li>
-                    <li>Filenames by Proposal (<code class="python">https://jwql.stsci.edu/api/&lt;instrument&gt;/proposals/</code>)</li>
+                    <li>Filenames by Proposal (<code class="python">https://jwql.stsci.edu/api/&lt;proposal&gt;/filenames/</code>)</li>
                     <li>Preview Images by Proposal (<code class="python">https://jwql.stsci.edu/api/&lt;proposal&gt;/preview_images/</code>)</li>
+                    <li>Thumbnails by Proposal (<code class="python">https://jwql.stsci.edu/api/&lt;proposal&gt;/thumbnails/</code>)</li>
                     <li>Filenames by Rootname (<code class="python">https://jwql.stsci.edu/api/&lt;rootname&gt;/filenames/</code>)</li>
                     <li>Preview Images by Rootname (<code class="python">https://jwql.stsci.edu/api/&lt;rootname&gt;/preview_images/</code>)</li>
                     <li>Thumbnails by Rootname (<code class="python">https://jwql.stsci.edu/api/&lt;rootname&gt;/thumbnails/</code>)</li>
