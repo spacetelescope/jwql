@@ -753,7 +753,7 @@ class MSATA():
         mini_source = {'vid': vid, 'star_no': star_no, 'status': status,
                        'dobs': dobs, 'tarr': tarr, 'det': det,
                        'peaks': peaks, 'colors_list': new_colors_list,
-                       'stars_v2': stars_v2, 'stars_v3': stars_v2}
+                       'stars_v2': stars_v2, 'stars_v3': stars_v3}
         mini_source = ColumnDataSource(data=mini_source)
         # create a the bokeh plot
         plot = figure(title="MSATA Counts vs Time", x_axis_label='Time', y_axis_label='box_peak [Counts]',
