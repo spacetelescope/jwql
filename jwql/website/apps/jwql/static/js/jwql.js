@@ -409,15 +409,16 @@ function show_only(filter_type, value, dropdown_keys, num_fileids) {
     // Update dropdown menu text
     document.getElementById(filter_type + '_dropdownMenuButton').innerHTML = value;
 
-    // Find all thumbnail elements
-    var thumbnails = document.getElementsByClassName("thumbnail");
-
     // Determine the current value for each filter
     var filter_values = [];
     for (j = 0; j < all_filters.length; j++) {
         var filter_value = document.getElementById(all_filters[j] + '_dropdownMenuButton').innerHTML;
         filter_values.push(filter_value);
     }
+
+
+    // Find all thumbnail elements
+    var thumbnails = document.getElementsByClassName("thumbnail");
 
     // Determine whether or not to display each thumbnail
     var num_thumbnails_displayed = 0;
@@ -447,6 +448,84 @@ function show_only(filter_type, value, dropdown_keys, num_fileids) {
 
     // Update the count of how many images are being shown
     document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/' + num_fileids + ' activities'
+};
+
+/**
+ * Limit the displayed thumbnails based on filter criteria
+ * @param {String} filter_type - The filter type.  Currently only "sort" is supported.
+ * @param {Integer} value - The filter value
+ * @param {List} dropdown_keys - A list of dropdown menu keys
+ * @param {Integer} num_fileids - The number of files that are available to display
+ */
+function show_only(filter_type, value, dropdown_keys, num_fileids) {
+
+    // Get all filter options from {{dropdown_menus}} variable
+    var all_filters = dropdown_keys.split(',');
+
+    // Update dropdown menu text
+    document.getElementById(filter_type + '_dropdownMenuButton').innerHTML = value;
+
+    // Determine the current value for each filter
+    var filter_values = [];
+    for (j = 0; j < all_filters.length; j++) {
+        var filter_value = document.getElementById(all_filters[j] + '_dropdownMenuButton').innerHTML;
+        filter_values.push(filter_value);
+    }
+
+
+    // Find all thumbnail elements
+    var thumbnails = document.getElementsByClassName("thumbnail");
+
+    // Determine whether or not to display each thumbnail
+    var num_thumbnails_displayed = 0;
+    for (i = 0; i < thumbnails.length; i++) {
+        // Evaluate if the thumbnail meets all filter criteria
+        var criteria = [];
+        for (j = 0; j < all_filters.length; j++) {
+            var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0) 
+                          || check_attribute_vs_filter(all_filters[j], thumbnails[i].getAttribute(all_filters[j]), filter_values[j]);
+            criteria.push(criterion);
+        };
+
+        // Only display if all filter criteria are met
+        if (criteria.every(function(r){return r})) {
+            thumbnails[i].style.display = "inline-block";
+            num_thumbnails_displayed++;
+        } else {
+            thumbnails[i].style.display = "none";
+        }
+    };
+
+    // If there are no thumbnails to display, tell the user
+    if (num_thumbnails_displayed == 0) {
+        document.getElementById('no_thumbnails_msg').style.display = 'inline-block';
+    } else {
+        document.getElementById('no_thumbnails_msg').style.display = 'none';
+    };
+
+    // Update the count of how many images are being shown
+    document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/' + num_fileids + ' activities'
+};
+
+/**
+ * Limit the displayed thumbnails based on filter criteria
+ * @param {String} filter_type - The filter type.
+ * @param {String} attribute - HTML attribute to compare against filter
+ * @param {String} filter_value - The filter value
+ */
+ function check_attribute_vs_filter(filter_type, attribute, filter_value) {
+
+    // 'look' filter is boolean, convert selections to comparable attributes.
+    // If different filter, just do a direct comparison
+    if (filter_type == 'look') {
+        if (filter_value == 'Viewed') {
+            filter_value = "true";
+        } else {
+            filter_value = "false";
+        }
+    }
+    return (attribute == filter_value);
+    
 };
 
 
@@ -790,14 +869,15 @@ function update_thumbnail_array(data) {
         // Parse out useful variables
         rootname = Object.keys(data.file_data)[i];
         file = data.file_data[rootname];
+        viewed = file.viewed;
         filename_dict = file.filename_dict;
 
         // Build div content
         if (data.inst!="all") {
-            content = '<div class="thumbnail" instrument = ' + data.inst + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
+            content = '<div class="thumbnail" instrument = ' + data.inst + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '" look="' + viewed + '">';
             content += '<a href="/' + data.inst + '/' + rootname + '/">';
         } else {
-            content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
+            content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '" look="' + viewed + '">';
             content += '<a href="/' + filename_dict.instrument + '/' + rootname + '/">';
         }
         content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="image_error(this);">';

@@ -44,6 +44,7 @@ import pandas as pd
 import pyvo as vo
 import requests
 
+from jwql.website.apps.jwql.models import RootFileInfo
 from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemonic_inventory
@@ -1486,10 +1487,18 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         available_files = [item for item in filenames if rootname in item]
         exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
 
+        # Viewed is stored by rootname in the Model db.  Save it with the data_dict
+        try:
+            root_file_info = RootFileInfo.objects.get(root_name=rootname)
+            viewed = root_file_info.viewed
+        except RootFileInfo.DoesNotExist:
+            viewed = False
+
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
+        data_dict['file_data'][rootname]["viewed"] = viewed
 
         # We generate thumbnails only for rate and dark files. Check if these files
         # exist in the thumbnail filesystem. In the case where neither rate nor
@@ -1527,11 +1536,16 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         except KeyError:
             pass
 
+    # Include dropdown information for non-dynamic filtering
+    looks = ['New', 'Viewed']
+
     if proposal is not None:
-        dropdown_menus = {'detector': sorted(detectors)}
+        dropdown_menus = {'detector': sorted(detectors),
+                          'look': looks}
     else:
         dropdown_menus = {'detector': sorted(detectors),
-                          'proposal': sorted(proposals)}
+                          'proposal': sorted(proposals),
+                          'look': looks}
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
