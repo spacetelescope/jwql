@@ -161,6 +161,12 @@ class PreviewImage():
         # Ignore any pixels that are NaN
         finite = np.isfinite(data)
 
+        # If all non-science pixels are NaN then we're sunk. Scale
+        # from 0 to 1.
+        if not np.any(finite):
+            logging.info('No pixels with finite signal. Scaling from 0 to 1')
+            return (0., 1.)
+
         # Combine maps of science pixels and finite pixels
         pixmap = self.dq & finite
 

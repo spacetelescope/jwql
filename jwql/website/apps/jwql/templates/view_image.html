@@ -59,6 +59,19 @@
                     <button id="int_after" class="btn btn-primary mx-2" role="button" onclick='change_int("{{file_root}}", "{{num_ints}}",  "{{available_ints}}", "button", "right");' disabled>&#9658;</button>
                     <p>Integration: <span id="slider_val"></span>/<span id="total_ints"></span></p>
                 </div>
+
+                <div class="previous-next-buttons">
+                    <span class="step-links">
+                        {% set index = file_root_list[obsnum].index(file_root) %}
+                        {% if index != 0 %}
+                            <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[obsnum][index-1] }}/" style="float: left;">< Previous</a>
+                        {% endif %}
+        
+                        {% if index != file_root_list[obsnum]|length - 1 %}
+                            <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[obsnum][index+1] }}/" style="float: right;">Next ></a>
+                        {% endif %}
+                    </span>
+                </div>
             </div>
 
             <!-- Display the anomaly form -->

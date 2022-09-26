@@ -5,6 +5,7 @@
  * @author Matthew Bourque
  * @author Brad Sappington
  * @author Bryan Hilbert
+ * @author Maria Pena-Guerrero
  */
 
  /**
@@ -530,6 +531,70 @@ function update_archive_page(inst, base_url) {
             document.getElementById("proposal-array").style.display = "block";
             };
     }});
+};
+
+
+/**
+ * Updates various compnents on the MSATA page
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function update_msata_page(base_url) {
+    $.ajax({
+        url: base_url + '/ajax/nirspec/msata/',
+        success: function(data){
+
+            // Build div content
+            content = data["div"];
+            content += data["script"];
+
+            /* Add the content to the div
+            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
+            */
+            $('#ta_data').html(content);
+
+            // Replace loading screen
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("ta_data").style.display = "inline-block";
+            document.getElementById('msata_fail').style.display = "none";
+        },
+        error : function(response) {
+            document.getElementById("loading").style.display = "none";
+            document.getElementById('msata_fail').style.display = "inline-block";
+        }
+    });
+};
+
+
+/**
+ * Updates various compnents on the WATA page
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function update_wata_page(base_url) {
+    $.ajax({
+        url: base_url + '/ajax/nirspec/wata/',
+        success: function(data){
+
+            // Build div content
+            content = data["div"];
+            content += data["script"];
+
+            /* Add the content to the div
+            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
+            */
+            $('#ta_data').html(content);
+
+            // Replace loading screen
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("ta_data").style.display = "inline-block";
+            document.getElementById('wata_fail').style.display = "none";
+        },
+        error : function(response) {
+            document.getElementById("loading").style.display = "none";
+            document.getElementById('wata_fail').style.display = "inline-block";
+        }
+    });
 };
 
 
