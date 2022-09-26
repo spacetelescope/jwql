@@ -51,7 +51,7 @@ from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemo
 from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
 from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
-from jwql.utils.constants import MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
+from jwql.utils.constants import MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
 from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
 from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS
 from jwql.utils.credentials import get_mast_token
@@ -1488,11 +1488,13 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
 
         # Viewed is stored by rootname in the Model db.  Save it with the data_dict
+        # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
         try:
             root_file_info = RootFileInfo.objects.get(root_name=rootname)
-            viewed = root_file_info.viewed
+            viewed = THUMBNAIL_FILTER_LOOK[root_file_info.viewed]
         except RootFileInfo.DoesNotExist:
-            viewed = False
+
+            viewed = THUMBNAIL_FILTER_LOOK[0]
 
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
@@ -1536,16 +1538,13 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         except KeyError:
             pass
 
-    # Include dropdown information for non-dynamic filtering
-    looks = ['New', 'Viewed']
-
     if proposal is not None:
         dropdown_menus = {'detector': sorted(detectors),
-                          'look': looks}
+                          'look': THUMBNAIL_FILTER_LOOK}
     else:
         dropdown_menus = {'detector': sorted(detectors),
                           'proposal': sorted(proposals),
-                          'look': looks}
+                          'look': THUMBNAIL_FILTER_LOOK}
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus

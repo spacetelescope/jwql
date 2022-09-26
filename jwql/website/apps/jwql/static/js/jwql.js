@@ -483,7 +483,7 @@ function show_only(filter_type, value, dropdown_keys, num_fileids) {
         var criteria = [];
         for (j = 0; j < all_filters.length; j++) {
             var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0) 
-                          || check_attribute_vs_filter(all_filters[j], thumbnails[i].getAttribute(all_filters[j]), filter_values[j]);
+                         || (thumbnails[i].getAttribute(all_filters[j]) == filter_values[j]);
             criteria.push(criterion);
         };
 
@@ -506,28 +506,6 @@ function show_only(filter_type, value, dropdown_keys, num_fileids) {
     // Update the count of how many images are being shown
     document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/' + num_fileids + ' activities'
 };
-
-/**
- * Limit the displayed thumbnails based on filter criteria
- * @param {String} filter_type - The filter type.
- * @param {String} attribute - HTML attribute to compare against filter
- * @param {String} filter_value - The filter value
- */
- function check_attribute_vs_filter(filter_type, attribute, filter_value) {
-
-    // 'look' filter is boolean, convert selections to comparable attributes.
-    // If different filter, just do a direct comparison
-    if (filter_type == 'look') {
-        if (filter_value == 'Viewed') {
-            filter_value = "true";
-        } else {
-            filter_value = "false";
-        }
-    }
-    return (attribute == filter_value);
-    
-};
-
 
 /**
  * Sort thumbnail display by proposal number
