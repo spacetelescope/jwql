@@ -546,12 +546,31 @@ function sort_by_thumbnails(sort_type) {
 };
 
 
+/**
+ * Toggle a viewed button when pressed.  
+ * Ajax call to update RootFileInfo model with toggled value
+ * 
+ * @param {String} file_root - The rootname of the file corresponding to the thumbnail
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
 function toggle_viewed(file_root, base_url) {
+    // Toggle the button immediately so user insn't confused (ajax result will confirm choice or fix on failure)
+    var elem = document.getElementById("viewed");
+    update_viewed_button(elem == "New" ? true : false);
+
+    // Ajax Call to update RootFileInfo model with "viewed" info
     $.ajax({
         url: base_url + '/ajax/viewed/' + file_root,
         success: function(data){
-            update_viewed_button(data["marked_viewed"])
-    }});
+            // Update button with actual value (paranoia update, should not yield visible change)
+            update_viewed_button(data["marked_viewed"]);
+        },
+        error : function(response) {
+            // If update fails put button back to original state
+            update_viewed_button(elem == "New" ? false : true);
+
+        }
+    });
 }
 
 
