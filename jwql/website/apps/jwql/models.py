@@ -30,7 +30,7 @@ References
 
 from django.db import models
 
-# Below is old test code that is not used
+
 INSTRUMENT_LIST = (('FGS', 'FGS'),
                    ('MIRI', 'MIRI'),
                    ('NIRCam', 'NIRCam'),
