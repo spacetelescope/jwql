@@ -44,7 +44,6 @@ import pandas as pd
 import pyvo as vo
 import requests
 
-from jwql.website.apps.jwql.models import RootFileInfo
 from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemonic_inventory
@@ -71,6 +70,7 @@ if 'READTHEDOCS' in os.environ:
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
+    from jwql.website.apps.jwql.models import RootFileInfo
     check_config_for_key('auth_mast')
     configs = get_config()
     auth_mast = configs['auth_mast']
