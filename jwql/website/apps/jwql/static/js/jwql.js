@@ -556,7 +556,7 @@ function sort_by_thumbnails(sort_type) {
 function toggle_viewed(file_root, base_url) {
     // Toggle the button immediately so user insn't confused (ajax result will confirm choice or fix on failure)
     var elem = document.getElementById("viewed");
-    update_viewed_button(elem == "New" ? true : false);
+    update_viewed_button(elem.value == "New" ? true : false);
 
     // Ajax Call to update RootFileInfo model with "viewed" info
     $.ajax({
@@ -567,7 +567,7 @@ function toggle_viewed(file_root, base_url) {
         },
         error : function(response) {
             // If update fails put button back to original state
-            update_viewed_button(elem == "New" ? false : true);
+            update_viewed_button(elem.value == "New" ? false : true);
 
         }
     });
