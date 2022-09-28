@@ -216,8 +216,6 @@ class PreviewImage():
             logging.info('No pixels with finite signal. Scaling from 0 to 1')
             return (0., 1.)
 
-        pixmap = pixmap & finite
-
         # Combine maps of science pixels and finite pixels
         pixmap = self.dq & finite
 
