@@ -557,17 +557,20 @@ function toggle_viewed(file_root, base_url) {
     // Toggle the button immediately so user insn't confused (ajax result will confirm choice or fix on failure)
     var elem = document.getElementById("viewed");
     update_viewed_button(elem.value == "New" ? true : false);
-
+    elem.disabled=true;
+    
     // Ajax Call to update RootFileInfo model with "viewed" info
     $.ajax({
         url: base_url + '/ajax/viewed/' + file_root,
         success: function(data){
             // Update button with actual value (paranoia update, should not yield visible change)
             update_viewed_button(data["marked_viewed"]);
+            elem.disabled=false;
         },
         error : function(response) {
             // If update fails put button back to original state
             update_viewed_button(elem.value == "New" ? false : true);
+            elem.disabled=false;
 
         }
     });
