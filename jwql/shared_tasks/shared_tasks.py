@@ -136,13 +136,13 @@ REDIS_CLIENT = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
 #   - the broker visibility timeout is the amount of time that redis will wait for a 
 #     worker to say it has completed a task before it will dispatch the task (again) to
 #     another worker. This should be set to longer than you expect to wait for a single 
-#     task to finish.
+#     task to finish. Currently set to 10 days.
 celery_app = Celery('shared_tasks', broker=REDIS_URL, backend=REDIS_URL)
 celery_app.conf.update(worker_max_tasks_per_child=1)
 celery_app.conf.update(worker_prefetch_multiplier=1)
 celery_app.conf.update(task_acks_late=True)
 celery_app.conf.update(worker_concurrency=1)
-celery_app.conf.broker_transport_options = {'visibility_timeout': 86400}
+celery_app.conf.broker_transport_options = {'visibility_timeout': 85400*10}
 
 
 def only_one(function=None, key="", timeout=None):

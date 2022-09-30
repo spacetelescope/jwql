@@ -65,4 +65,4 @@ dependencies:
     - git+https://github.com/spacetelescope/jwst_reffiles
 
     # Current package
-    - -e .
+#     - -e .
