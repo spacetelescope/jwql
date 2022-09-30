@@ -33,6 +33,7 @@ jobs:
         uses: supercharge/redis-github-action@1.4.0
         with:
           redis-version: 5.0
+        if: runner.os == 'Linux'
 
       - name: Build jwql conda environment and run tests
         shell: bash -l {0}
