@@ -306,15 +306,6 @@ def archived_proposals_ajax(request, inst):
         prop_filecount = [entry.number_of_files for entry in prop_entries]
         total_files.append(sum(prop_filecount))
 
-        # Extract the observation numbers from each entry and find the minimum
-        prop_obsnums = [entry.obsnum for entry in prop_entries]
-        min_obsnums.append(min(prop_obsnums))
-
-        # Sum the file count from all observations to get the total file count for
-        # the proposal
-        prop_filecount = [entry.number_of_files for entry in prop_entries]
-        total_files.append(sum(prop_filecount))
-
     context = {'inst': inst,
                'num_proposals': num_proposals,
                'min_obsnum': min_obsnums,
