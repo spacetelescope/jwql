@@ -72,6 +72,14 @@ FILENAME_PARSER_TEST_DATA = [
       'visit': '001',
       'visit_group': '02'}),
 
+    # Test stage 2 MSA metadata filename
+    ('jw01118008001_01_msa.fits',
+        {'filename_type': 'stage_2_msa',
+         'instrument': 'nirspec',
+         'observation': '008',
+         'program_id': '01118',
+         'visit': '001'}),
+
     # Test full stage 2c filename
     ('jw94015002002_02108_00001_mirimage_o002_crf.fits',
      {'ac_id': 'o002',
@@ -212,11 +220,34 @@ FILENAME_PARSER_TEST_DATA = [
       'suffix': 'image_cal',
       'visit': '001'}),
 
+    # Test full guider ID filename with 2-digit attempts
+    ('jw00729011001_gs-id_12_image_cal.fits',
+     {'date_time': None,
+      'filename_type': 'guider',
+      'guide_star_attempt_id': '12',
+      'guider_mode': 'id',
+      'instrument': 'fgs',
+      'observation': '011',
+      'program_id': '00729',
+      'suffix': 'image_cal',
+      'visit': '001'}),
+
     # Test root guider ID filename
     ('jw00327001001_gs-id_2',
      {'date_time': None,
       'filename_type': 'guider',
       'guide_star_attempt_id': '2',
+      'guider_mode': 'id',
+      'instrument': 'fgs',
+      'observation': '001',
+      'program_id': '00327',
+      'visit': '001'}),
+
+    # Test root guider ID filename with 2-digit attempts
+    ('jw00327001001_gs-id_12',
+     {'date_time': None,
+      'filename_type': 'guider',
+      'guide_star_attempt_id': '12',
       'guider_mode': 'id',
       'instrument': 'fgs',
       'observation': '001',
@@ -244,8 +275,20 @@ FILENAME_PARSER_TEST_DATA = [
       'instrument': 'fgs',
       'observation': '011',
       'program_id': '00729',
-      'visit': '001'})
+      'visit': '001'}),
 
+    # Test segmented guider file
+    ('jw01118005001_gs-fg_2022150070312-seg002_uncal.fits',
+     {'date_time': '2022150070312',
+      'filename_type': 'guider_segment',
+      'guide_star_attempt_id': None,
+      'guider_mode': 'fg',
+      'instrument': 'fgs',
+      'observation': '005',
+      'program_id': '01118',
+      'segment': '002',
+      'suffix': 'uncal',
+      'visit': '001'}),
 ]
 
 

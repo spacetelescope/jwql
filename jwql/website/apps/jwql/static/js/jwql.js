@@ -3,6 +3,9 @@
  *
  * @author Lauren Chambers
  * @author Matthew Bourque
+ * @author Brad Sappington
+ * @author Bryan Hilbert
+ * @author Maria Pena-Guerrero
  */
 
  /**
@@ -10,13 +13,17 @@
  * @param {String} type - The image type (e.g. "rate", "uncal", etc.)
  * @param {String} file_root - The rootname of the file
  * @param {Dict} num_ints - A dictionary whose keys are suffix types and whose
- *                          values are the number of integrations for that suffix
+ *                          values are the number of integrations with an associated
+ *                          preview image for that suffix
  * @param {Dict} available_ints - A dictionary whose keys are suffix types and whose
  *                                values are the integration numbers of the available
  *                                jpgs for that suffix
+ * @param {Dict} total_ints - A dictionary whose keys are suffix types and whose
+ *                                values are the total number of integrations for that
+ *                                filetype.
  * @param {String} inst - The instrument for the given file
  */
-function change_filetype(type, file_root, num_ints, available_ints, inst) {
+  function change_filetype(type, file_root, num_ints, available_ints, total_ints, inst) {
 
     // Change the radio button to check the right filetype
     document.getElementById(type).checked = true;
@@ -30,6 +37,11 @@ function change_filetype(type, file_root, num_ints, available_ints, inst) {
     var available_ints = available_ints.replace(/&#39;/g, '"');
     var available_ints = available_ints.replace(/'/g, '"');
     var available_ints = JSON.parse(available_ints)[type];
+
+    // Get the total number of integrations
+    var total_ints = total_ints.replace(/&#39;/g, '"');
+    var total_ints = total_ints.replace(/'/g, '"');
+    var total_ints = JSON.parse(total_ints);
 
     // Propogate the text fields showing the filename and APT parameters
     var fits_filename = file_root + '_' + type;
@@ -45,12 +57,14 @@ function change_filetype(type, file_root, num_ints, available_ints, inst) {
     var jpg_filepath = '/static/preview_images/' + file_root.slice(0,7) + '/' + file_root + '_' + type + '_integ0.jpg';
     img.src = jpg_filepath;
     img.alt = jpg_filepath;
+    // if previous image had error, remove error sizing
+    img.classList.remove("thumbnail");
 
     // Reset the slider values
     document.getElementById("slider_range").value = 1;
     document.getElementById("slider_range").max = num_ints[type];
     document.getElementById("slider_val").innerHTML = 1;
-    document.getElementById("total_ints").innerHTML = available_ints[available_ints.length - 1] + 1;
+    document.getElementById("total_ints").innerHTML = total_ints[type];
 
     // Update the integration changing buttons
     if (num_ints[type] > 1) {
@@ -63,6 +77,7 @@ function change_filetype(type, file_root, num_ints, available_ints, inst) {
     // document.getElementById("download_fits").href = '/static/filesystem/' + file_root.slice(0,7) + '/' + fits_filename + '.fits';
     // document.getElementById("download_jpg").href = jpg_filepath;
     document.getElementById("view_header").href = '/' + inst + '/' + file_root + '_' + type + '/header/';
+    document.getElementById("explore_image").href = '/' + inst + '/' + file_root + '_' + type + '/explore_image/';
 
     // Disable the "left" button, since this will be showing integ0
     document.getElementById("int_before").disabled = true;
@@ -154,22 +169,13 @@ function change_int(file_root, num_ints, available_ints, method, direction = 'ri
  * @param {Integer} i - The index of the thumbnail
  * @param {String} file_root - The rootname of the file corresponding to the thumbnail
  */
-function determine_filetype_for_thumbnail(thumbnail_dir, suffixes, i, file_root) {
+function determine_filetype_for_thumbnail(thumbnail_dir, thumb_filename, i, file_root) {
 
-    // Update the thumbnail to show the most processed filetype
+    // Update the thumbnail filename
     var img = document.getElementById('thumbnail'+i);
-    if (suffixes.indexOf("cal") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_cal_integ0.thumb';
-        img.src = jpg_path;
-    } else if (suffixes.indexOf("rate") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_rate_integ0.thumb';
-        img.src = jpg_path;
-    } else if (suffixes.indexOf("uncal") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_uncal_integ0.thumb';
-        img.src = jpg_path;
-    } else if (suffixes.indexOf("dark") >= 0) {
-        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + file_root + '_dark_integ0.thumb';
-        img.src = jpg_path;
+    if (thumb_filename != 'none') {
+        var jpg_path = thumbnail_dir + file_root.slice(0,7) + '/' + thumb_filename;
+        img.src = jpg_path
     };
 
 };
@@ -200,12 +206,144 @@ function determine_page_title(instrument, proposal) {
     };
 };
 
+/**
+ * Determine whether the page is archive or unlooked
+ * @param {String} instrument - The instrument of interest
+ * @param {Integer} proposal - The proposal of interest
+ * @param {Integer} observation - The observation number of interest
+ */
+function determine_page_title_obs(instrument, proposal, observation) {
+    // Determine if the URL is 'archive' or 'unlooked'
+    var url = document.URL;
+    var url_split = url.split('/');
+    var url_title = url_split[url_split.length - 3];
+    var url_end = url_split[url_split.length - 1];
+    if (url_title == 'archive') {
+        final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal + ', Observation ' + observation
+    } else if (url_title == 'unlooked') {
+        final_title = 'Unlooked ' + instrument + ' Images';
+    } else if (isNaN(url_title) == false) {
+        final_title = 'Archived ' + instrument + ' Images: Proposal ' + proposal + ', Observation ' + observation
+    }
 
-/** 
+    // Update the titles accordingly
+    if (typeof final_title !== 'undefined') {
+        document.getElementById('title').innerHTML = final_title;
+        if (document.title != final_title) {
+            document.title = final_title;
+        };
+    };
+};
+
+/**
+ * adds/removes disabled_section class and clears value
+ * @param {string} element_id 
+ * @param {boolean} set_disable 
+ */
+ function set_disabled_section (element_id, set_disable) {
+
+    if (set_disable) {
+        document.getElementById(element_id).classList.add("disabled_section");
+    } else {
+        document.getElementById(element_id).classList.remove("disabled_section");
+    }
+}
+/**
+ * Interprets number of integrations/groups for the selected extension and disables input for calculating difference accordingly
+ * @param {Dict} integrations - A dictionary whose keys are extensions and whose
+ *                              values are the number of integrations for that suffix
+ * @param {Dict} groups - A dictionary whose keys are extensions and whose
+ *                              values are the number of groups for that suffix
+ */
+function explore_image_update_enable_options(integrations, groups) {
+    
+    // Check nr of integrations and groups of currently selected extension
+    ext_name = get_radio_button_value("extension");
+
+    // Clean the input parameters and get our integrations/groups for this extension
+    var calc_difference = false;
+    var integrations = integrations.replace(/&#39;/g, '"');
+    var integrations = integrations.replace(/'/g, '"');
+    var integrations = JSON.parse(integrations)[ext_name];
+    var groups = groups.replace(/&#39;/g, '"');
+    var groups = groups.replace(/'/g, '"');
+    var groups = JSON.parse(groups)[ext_name];
+    
+    // Zero base our calculations
+    integrations -= 1
+    groups -=1
+
+    // Set max values to those available
+    document.getElementById("integration1").max = integrations;
+    document.getElementById("integration2").max = integrations;
+    document.getElementById("group1").max = groups;
+    document.getElementById("group2").max = groups;
+    
+    
+    // If multiple integrations or groups.  Allow difference calculations
+    //          enable calculate_difference box
+    //          enable subtrahend boxes
+    if (integrations > 0 || groups > 0) {
+        set_disabled_section("calcDifferenceForm", false);
+        calc_difference = document.getElementById("calcDifference").checked;
+        
+    } else {
+        document.getElementById("calcDifference").checked.value = false;
+        set_disabled_section("calcDifferenceForm", true);
+    }
+
+    if (!calc_difference) {
+        document.getElementById("integration2").value = null;
+        document.getElementById("group2").value = null;
+    }
+    if (integrations < 1) {
+        document.getElementById("integration1").value = null;
+        document.getElementById("integration2").value = null;
+    }
+    if (groups < 1){
+        document.getElementById("group1").value = null;
+        document.getElementById("group2").value = null;
+    }
+    // Add/remove disable class to integration/group input if not multiple
+    set_disabled_section("integrationInput1", (integrations < 1));
+    set_disabled_section("groupInput1", (groups < 1));
+    set_disabled_section("integrationInput2", (!calc_difference || integrations < 1));
+    set_disabled_section("groupInput2", (!calc_difference || groups < 1));
+    
+}
+
+/**
+ * get_radio_button_value
+ * @param {String} element_name - The name of the radio buttons
+ * @returns value - value of checked radio button
+ */
+function get_radio_button_value(element_name) {
+    var element = document.getElementsByName(element_name);
+
+    for(i = 0; i < element.length; i++) {
+        if(element[i].checked) {
+            return element[i].value;
+        }
+    }
+    return "";
+}
+
+/**
+ * get_scaling_value
+ * @param {String} element_id - The element id
+ * @returns value - value of element id or "None" if empty or not a number
+*/
+function get_number_or_none(element_id) {
+
+    var limit = document.getElementById(element_id).value;
+    if (limit.length == 0 || isNaN(limit)) limit = "None";
+    return limit;
+}
+
+/**
  * If an image is not found, replace with temporary image sized to thumbnail
  */
-function imageError(image, makeThumbnail=false) {
-    image.onerror = "";
+function image_error(image, makeThumbnail=false) {
     image.src = "/static/img/imagenotfound.png";
     /* Use thumbnail settings to keep it tidy */
     if (makeThumbnail) {
@@ -370,12 +508,13 @@ function update_archive_page(inst, base_url) {
 
                 // Parse out useful variables
                 prop = data.thumbnails.proposals[i];
+                min_obsnum = data.min_obsnum[i];
                 thumb = data.thumbnails.thumbnail_paths[i];
                 n = data.thumbnails.num_files[i];
 
                 // Build div content
                 content = '<div class="proposal text-center">';
-                content += '<a href="/' + inst + '/archive/' + prop + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
+                content += '<a href="/' + inst + '/archive/' + prop + '/obs' + min_obsnum + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
                 content += '<span class="helper"></span>'
                 content += '<img src="/static/thumbnails/' + thumb + '" alt="" title="Thumbnail for ' + prop + '" width=100%>';
                 content += '<div class="proposal-color-fill" ></div>';
@@ -394,6 +533,131 @@ function update_archive_page(inst, base_url) {
     }});
 };
 
+
+/**
+ * Updates various compnents on the MSATA page
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function update_msata_page(base_url) {
+    $.ajax({
+        url: base_url + '/ajax/nirspec/msata/',
+        success: function(data){
+
+            // Build div content
+            content = data["div"];
+            content += data["script"];
+
+            /* Add the content to the div
+            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
+            */
+            $('#ta_data').html(content);
+
+            // Replace loading screen
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("ta_data").style.display = "inline-block";
+            document.getElementById('msata_fail').style.display = "none";
+        },
+        error : function(response) {
+            document.getElementById("loading").style.display = "none";
+            document.getElementById('msata_fail').style.display = "inline-block";
+        }
+    });
+};
+
+
+/**
+ * Updates various compnents on the WATA page
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function update_wata_page(base_url) {
+    $.ajax({
+        url: base_url + '/ajax/nirspec/wata/',
+        success: function(data){
+
+            // Build div content
+            content = data["div"];
+            content += data["script"];
+
+            /* Add the content to the div
+            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
+            */
+            $('#ta_data').html(content);
+
+            // Replace loading screen
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("ta_data").style.display = "inline-block";
+            document.getElementById('wata_fail').style.display = "none";
+        },
+        error : function(response) {
+            document.getElementById("loading").style.display = "none";
+            document.getElementById('wata_fail').style.display = "inline-block";
+        }
+    });
+};
+
+
+/**
+ * Updates various compnents on the thumbnails page
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} file_root - The rootname of the file forresponding tot he instrument (e.g. "JW01473015001_04101_00001_MIRIMAGE")
+ * @param {String} filetype - The type to be viewed (e.g. "cal" or "rate").
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ * @param {Boolean} do_opt_args - Flag to calculate and send optional arguments in URL
+ */
+ function update_explore_image_page(inst, file_root, filetype, base_url, do_opt_args=false) {
+
+    /* if they exist set up the optional parameters before the ajax call*/
+    optional_params = "";
+    if(do_opt_args) {
+        // Reset loading
+        document.getElementById("loading").style.display = "inline-block";
+        document.getElementById("explore_image").style.display = "none";
+        document.getElementById("explore_image_fail").style.display = "none";
+        calc_difference = document.getElementById("calcDifference").checked;
+
+        // Get the arguments to update
+        scaling = get_radio_button_value("scaling");
+        low_lim = get_number_or_none("low_lim");
+        high_lim = get_number_or_none("high_lim");
+        ext_name = get_radio_button_value("extension");
+        int1_nr = get_number_or_none("integration1");
+        grp1_nr = get_number_or_none("group1");
+        if (calc_difference) {
+            int2_nr = get_number_or_none("integration2");
+            grp2_nr = get_number_or_none("group2");
+        } else {
+            int2_nr="None";
+            grp2_nr="None";
+        }
+        optional_params = optional_params + "/scaling_" + scaling + "/low_" + low_lim + "/high_" + high_lim + "/ext_" + ext_name + "/int1_" + int1_nr + "/grp1_" + grp1_nr + "/int2_" + int2_nr + "/grp2_" + grp2_nr;
+    }
+
+    $.ajax({
+        url: base_url + '/ajax/' + inst + '/' + file_root + '_' + filetype + '/explore_image' + optional_params,
+        success: function(data){
+
+            // Build div content
+            content = data["div"];
+            content += data["script"];
+
+            /* Add the content to the div
+            *    Note: <script> elements inserted via innerHTML are intentionally disabled/ignored by the browser.  Directly inserting script via jquery.
+            */
+            $('#explore_image').html(content);
+
+            // Replace loading screen
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("explore_image").style.display = "inline-block";
+            document.getElementById('explore_image_fail').style.display = "none";
+        },
+        error : function(response) {
+            document.getElementById("loading").style.display = "none";
+            document.getElementById('explore_image_fail').style.display = "inline-block";
+        }
+    });
+};
 
 /**
  * Updates the thumbnail-filter div with filter options
@@ -452,6 +716,28 @@ function update_header_display(extension, num_extensions) {
 };
 
 /**
+ * Updates the obs-list div with observation number options
+ * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ * @param {String} inst - Instrument name
+ * @param {String} prop - Proposal ID
+ * @param {List} obslist - List of observation number strings
+ */
+function update_obs_options(data, inst, prop, obslist) {
+    // Build div content
+    content = 'Available observations:';
+    content += '<div class="dropdown">';
+    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="obs_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Obs Nums</button>';
+    content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
+    for (var i = 0; i < data.obs_list.length; i++) {
+        content += '<a class="dropdown-item" href="/' + inst + '/archive/' + prop + '/obs' + data.obs_list[i] + '/" > Obs' + data.obs_list[i] + '</a>';
+    }
+    content += '</div></div>';
+
+    // Add the content to the div
+    $("#obs-list")[0].innerHTML = content;
+};
+
+/**
  * Updates the img_show_count component
  * @param {Integer} count - The count to display
  * @param {String} type - The type of the count (e.g. "activities")
@@ -505,7 +791,7 @@ function update_thumbnail_array(data) {
             content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
             content += '<a href="/' + filename_dict.instrument + '/' + rootname + '/">';
         }
-        content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="imageError(this);">';
+        content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="image_error(this);">';
         content += '<div class="thumbnail-color-fill" ></div>';
         content += '<div class="thumbnail-info">';
         content += 'Proposal: ' + filename_dict.program_id + '<br>';
@@ -519,7 +805,7 @@ function update_thumbnail_array(data) {
         $("#thumbnail-array")[0].innerHTML += content;
 
         // Add the appropriate image to the thumbnail
-        determine_filetype_for_thumbnail('/static/thumbnails/' , file.suffixes, i, rootname);
+        determine_filetype_for_thumbnail('/static/thumbnails/' , file.thumbnail, i, rootname);
     };
 };
 
@@ -536,6 +822,31 @@ function update_thumbnails_page(inst, proposal, base_url) {
             // Perform various updates to divs
             update_show_count(Object.keys(data.file_data).length, 'activities');
             update_thumbnail_array(data);
+            update_filter_options(data);
+            update_sort_options(data);
+
+            // Replace loading screen with the proposal array div
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("thumbnail-array").style.display = "block";
+        }});
+};
+
+/**
+ * Updates various compnents on the thumbnails page
+ * @param {String} inst - The instrument of interest (e.g. "FGS")
+ * @param {String} proposal - The proposal number of interest (e.g. "88660")
+ * @param {String} observation - The observation number within the proposal (e.g. "001")
+ * @param {List} observation_list - List of all observations in this proposal
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function update_thumbnails_per_observation_page(inst, proposal, observation, observation_list, base_url) {
+    $.ajax({
+        url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/obs' + observation + '/',
+        success: function(data){
+            // Perform various updates to divs
+            update_show_count(Object.keys(data.file_data).length, 'activities');
+            update_thumbnail_array(data);
+            update_obs_options(data, inst, proposal);
             update_filter_options(data);
             update_sort_options(data);
 
@@ -575,5 +886,3 @@ function version_url(version_string) {
     a_line += '">JWQL v' + version_string + '</a>';
     return a_line;
 };
-
-

@@ -14,6 +14,7 @@ at jwql/website/db.sqlite3.
 Authors
 -------
     - Lauren Chambers
+    - Bryan Hilbert
 
 Use
 ---
@@ -41,40 +42,71 @@ INSTRUMENT_LIST = (('FGS', 'FGS'),
                    ('NIRSpec', 'NIRSpec'))
 
 
-class BaseModel(models.Model):
-    """A base model that other classes will inherit. Created to avoid
-    an obscure error about a missing ``app_label``.
-    """
+class Archive(models.Model):
+    """A class defining the model used to hold information needed for the archive pages."""
 
+    # Fields
+    instrument = models.CharField(max_length=7, help_text="Instrument name", primary_key=True)
+
+    # …
+    # Metadata
     class Meta:
-        abstract = True  # specify this model as an Abstract Model
-        app_label = 'jwql'
+        ordering = ['instrument']
 
-
-class ImageData(BaseModel):
-    """A model that collects image filepaths, instrument labels, and
-    publishing date/time. Just an example used for learning django.
-
-    Attributes
-    ----------
-    filepath : FilePathField object
-        The full filepath of the datum
-    inst : CharField object
-        Name of the corresponding JWST instrument
-    pub_date : FilePathField object
-        Date and time when datum was added to the database.
-    """
-
-    inst = models.CharField('instrument', max_length=7, choices=INSTRUMENT_LIST, default=None)
-    pub_date = models.DateTimeField('date published')
-    filepath = models.FilePathField(path='/user/lchambers/jwql/')
-
-    def filename(self):
-        return os.path.basename(self.filepath)
+    # Methods
+    #def get_absolute_url(self):
+    #    """Returns the URL to access a particular instance of Archive."""
+    #    return reverse('archive-view', args=[str(self.id)])
 
     def __str__(self):
-        return self.filename()
+        """String for representing the Archive object (in Admin site etc.)."""
+        return self.instrument
 
+
+class Proposal(models.Model):
+    """A class defining the model used to hold information about a given proposal"""
+    # Fields
+    prop_id = models.CharField(max_length=5, help_text="5-digit proposal ID string")
+    thumbnail_path = models.CharField(max_length=100, help_text='Path to the proposal thumbnail', default='')
+    archive = models.ForeignKey(Archive, blank=False, null=False, on_delete=models.CASCADE)
+
+    # Metadata
     class Meta:
-        verbose_name_plural = "image data"
-        db_table = 'imagedata'
+        ordering = ['-prop_id']
+        unique_together = ('prop_id', 'archive')
+        models.UniqueConstraint(fields=['prop_id', 'archive'], name='unique_instrument_proposal')
+
+    # Methods
+    #def get_absolute_url(self):
+    #    """Returns the URL to access a particular instance of Archive."""
+    #    return reverse('proposal-view', args=[str(self.id)])
+
+    def __str__(self):
+        """String for representing the Archive object (in Admin site etc.)."""
+        return self.prop_id
+
+
+class Observation(models.Model):
+    """A class defining the model used to hold information about an observation from a given proposal"""
+    # Fields
+    obsnum = models.CharField(max_length=3, help_text='Observation number, as a 3 digit string')
+    number_of_files = models.IntegerField(help_text='Number of files in the proposal', default=0)
+    obsstart = models.FloatField(help_text='Time of the beginning of the observation in MJD', default=0.)
+    obsend = models.FloatField(help_text='Time of the end of the observation in MJD', default=0.)
+    proposal = models.ForeignKey(Proposal, blank=False, null=False, on_delete=models.CASCADE)
+    exptypes = models.CharField(max_length=100, help_text='Comma-separated list of exposure types', default='')
+
+    # …
+    # Metadata
+    class Meta:
+        ordering = ['-obsnum']
+        models.UniqueConstraint(fields=['proposal', 'obsnum'], name='unique_proposal_obsnum')
+
+    # Methods
+    #def get_absolute_url(self):
+    #    """Returns the URL to access a particular instance of Archive."""
+    #    return reverse('observation-view', args=[str(self.id)])
+
+    def __str__(self):
+        """String for representing the Archive object (in Admin site etc.)."""
+        return self.obsnum

@@ -28,6 +28,7 @@ Authors
     - Bryan Hilbert
     - Misty Cracraft
     - Sara Ogaz
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -446,6 +447,56 @@ MIRIReadnoiseQueryHistory = monitor_orm_factory('miri_readnoise_query_history')
 MIRIReadnoiseStats = monitor_orm_factory('miri_readnoise_stats')
 FGSReadnoiseQueryHistory = monitor_orm_factory('fgs_readnoise_query_history')
 FGSReadnoiseStats = monitor_orm_factory('fgs_readnoise_stats')
+NIRCamCosmicRayQueryHistory = monitor_orm_factory('nircam_cosmic_ray_query_history')
+NIRCamCosmicRayStats = monitor_orm_factory('nircam_cosmic_ray_stats')
+MIRICosmicRayQueryHistory = monitor_orm_factory('miri_cosmic_ray_query_history')
+MIRICosmicRayStats = monitor_orm_factory('miri_cosmic_ray_stats')
+NIRISSCosmicRayQueryHistory = monitor_orm_factory('niriss_cosmic_ray_query_history')
+NIRISSCosmicRayStats = monitor_orm_factory('niriss_cosmic_ray_stats')
+FGSCosmicRayQueryHistory = monitor_orm_factory('fgs_cosmic_ray_query_history')
+FGSCosmicRayStats = monitor_orm_factory('fgs_cosmic_ray_stats')
+NIRSpecCosmicRayQueryHistory = monitor_orm_factory('nirspec_cosmic_ray_query_history')
+NIRSpecCosmicRayStats = monitor_orm_factory('nirspec_cosmic_ray_stats')
+NIRSpecTAQueryHistory = monitor_orm_factory('nirspec_ta_query_history')
+NIRSpecTAStats = monitor_orm_factory('nirspec_ta_stats')
+
+INSTRUMENT_TABLES = {
+    'nircam': [NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent,
+               NIRCamBiasQueryHistory, NIRCamBiasStats, NIRCamBadPixelQueryHistory,
+               NIRCamBadPixelStats, NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats,
+               NIRCamAnomaly],
+    'niriss': [NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent,
+               NIRISSBiasQueryHistory, NIRISSBiasStats, NIRISSBadPixelQueryHistory,
+               NIRISSBadPixelStats, NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats,
+               NIRISSAnomaly],
+    'miri': [MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent,
+             MIRIBadPixelQueryHistory, MIRIBadPixelStats, MIRIReadnoiseQueryHistory,
+             MIRIReadnoiseStats, MIRIAnomaly],
+    'nirspec': [NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent,
+                NIRSpecBiasQueryHistory, NIRSpecBiasStats, NIRSpecBadPixelQueryHistory,
+                NIRSpecBadPixelStats, NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats,
+                NIRSpecAnomaly],
+    'fgs': [FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent,
+            FGSBadPixelQueryHistory, FGSBadPixelStats, FGSReadnoiseQueryHistory,
+            FGSReadnoiseStats, FGSAnomaly]}
+
+MONITOR_TABLES = {
+    'dark': [NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent, 
+             NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent,
+             NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent,
+             MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent,
+             FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent],
+    'bias': [NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory,
+             NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats],
+    'bad_pixel': [NIRCamBadPixelQueryHistory, NIRCamBadPixelStats, NIRISSBadPixelStats, 
+                  NIRISSBadPixelQueryHistory, FGSBadPixelQueryHistory, FGSBadPixelStats,
+                  MIRIBadPixelQueryHistory, MIRIBadPixelStats, NIRSpecBadPixelQueryHistory,
+                  NIRSpecBadPixelStats],
+    'readnoise': [NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats, NIRISSReadnoiseStats,
+                  NIRISSReadnoiseQueryHistory, NIRSpecReadnoiseQueryHistory, 
+                  NIRSpecReadnoiseStats, MIRIReadnoiseQueryHistory, MIRIReadnoiseStats,
+                  FGSReadnoiseQueryHistory, FGSReadnoiseStats],
+    'anomaly': [NIRCamAnomaly, NIRISSAnomaly, NIRSpecAnomaly, MIRIAnomaly, FGSAnomaly]}
 
 if __name__ == '__main__':
     base.metadata.create_all(engine)

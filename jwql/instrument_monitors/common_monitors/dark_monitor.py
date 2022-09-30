@@ -515,35 +515,38 @@ class Dark():
         
         try:
 
-            # Read in all slope images and place into a list
-            slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files)
+        # Read in all slope images and place into a list
+        slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files)
 
-            # Calculate a mean slope image from the inputs
-            slope_image, stdev_image = calculations.mean_image(slope_image_stack, sigma_threshold=3)
-            mean_slope_file = self.save_mean_slope_image(slope_image, stdev_image, slope_files)
-            logging.info('\tSigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
+        # Calculate a mean slope image from the inputs
+        slope_image, stdev_image = calculations.mean_image(slope_image_stack, sigma_threshold=3)
+        mean_slope_file = self.save_mean_slope_image(slope_image, stdev_image, slope_files)
+        logging.info('\tSigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
 
-            # ----- Search for new hot/dead/noisy pixels -----
-            # Read in baseline mean slope image and stdev image
-            # The baseline image is used to look for hot/dead/noisy pixels,
-            # but not for comparing mean dark rates. Therefore, updates to
-            # the baseline can be minimal.
+        # Free up memory
+        del slope_image_stack
 
-            # Limit checks for hot/dead/noisy pixels to full frame data since
-            # subarray data have much shorter exposure times and therefore lower
-            # signal-to-noise
-            aperture_type = Siaf(self.instrument)[self.aperture].AperType
-            if aperture_type == 'FULLSCA':
-                baseline_file = self.get_baseline_filename()
-                if (baseline_file is None) or (not os.path.isfile(baseline_file)):
-                    logging.warning(('\tNo baseline dark current countrate image for {} {}. Setting the '
-                                     'current mean slope image to be the new baseline.'.format(self.instrument, self.aperture)))
-                    baseline_file = mean_slope_file
-                    baseline_mean = deepcopy(slope_image)
-                    baseline_stdev = deepcopy(stdev_image)
-                else:
-                    logging.info('\tBaseline file is {}'.format(baseline_file))
-                    baseline_mean, baseline_stdev = self.read_baseline_slope_image(baseline_file)
+        # ----- Search for new hot/dead/noisy pixels -----
+        # Read in baseline mean slope image and stdev image
+        # The baseline image is used to look for hot/dead/noisy pixels,
+        # but not for comparing mean dark rates. Therefore, updates to
+        # the baseline can be minimal.
+
+        # Limit checks for hot/dead/noisy pixels to full frame data since
+        # subarray data have much shorter exposure times and therefore lower
+        # signal-to-noise
+        aperture_type = Siaf(self.instrument)[self.aperture].AperType
+        if aperture_type == 'FULLSCA':
+            baseline_file = self.get_baseline_filename()
+            if baseline_file is None:
+                logging.warning(('\tNo baseline dark current countrate image for {} {}. Setting the '
+                                 'current mean slope image to be the new baseline.'.format(self.instrument, self.aperture)))
+                baseline_file = mean_slope_file
+                baseline_mean = deepcopy(slope_image)
+                baseline_stdev = deepcopy(stdev_image)
+            else:
+                logging.info('\tBaseline file is {}'.format(baseline_file))
+                baseline_mean, baseline_stdev = self.read_baseline_slope_image(baseline_file)
 
                 # Check the hot/dead pixel population for changes
                 new_hot_pix, new_dead_pix = self.find_hot_dead_pixels(slope_image, baseline_mean)

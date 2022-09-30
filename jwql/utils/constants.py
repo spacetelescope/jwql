@@ -8,6 +8,8 @@ Authors
     - Bryan Hilbert
     - Ben Sunnquist
     - Teagan King
+    - Mike Engesser
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -66,12 +68,17 @@ ANOMALIES_PER_INSTRUMENT = {
     'snowball': ['fgs', 'nircam', 'niriss', 'nirspec'],
     # instrument-specific anomalies:
     'column_pull_up': ['miri'],
+    'column_pull_down': ['miri'],
     'dominant_msa_leakage': ['nirspec'],
     'dragons_breath': ['nircam'],
-    'glow': ['miri'],
+    'MRS_glow': ['miri'],
+    'MRS_zipper': ['miri'],
     'internal_reflection': ['miri'],
     'optical_short': ['nirspec'],  # Only for MOS observations
+    'row_pull_up': ['miri'],
     'row_pull_down': ['miri'],
+    'LRS_Contamination': ['miri'],
+    'tree_rings': ['miri'],
     # additional anomalies:
     'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
 
@@ -168,6 +175,26 @@ EXPTYPES = {"nircam": {"imaging": "NRC_IMAGE", "ts_imaging": "NRC_TSIMAGE",
                        "pom": "NIS_IMAGE", "wfss": "NIS_WFSS"},
             "fgs": {"imaging": "FGS_IMAGE"}}
 
+# Filename Component Lengths
+FILE_AC_CAR_ID_LEN = 4
+FILE_AC_O_ID_LEN = 3
+FILE_ACT_LEN = 2
+FILE_DATETIME_LEN = 13
+FILE_EPOCH_LEN = 1
+FILE_GUIDESTAR_ATTMPT_LEN_MIN = 1
+FILE_GUIDESTAR_ATTMPT_LEN_MAX = 3
+FILE_OBS_LEN = 3
+FILE_PARALLEL_SEQ_ID_LEN = 1
+FILE_PROG_ID_LEN = 5
+FILE_SEG_LEN = 3
+FILE_SOURCE_ID_LEN = 5
+FILE_TARG_ID_LEN = 3
+FILE_VISIT_GRP_LEN = 2
+FILE_VISIT_LEN = 3
+
+# MSA metadata file do not have a standard suffix attached
+FILETYPE_WO_STANDARD_SUFFIX = 'msa.fits'
+
 FLAT_EXP_TYPES = {'nircam': ['NRC_FLAT'],
                   'niriss': ['NIS_LAMP'],
                   'miri': ['MIR_FLATIMAGE', 'MIR_FLATMRS'],
@@ -212,16 +239,23 @@ GRATING_PER_INSTRUMENT = {'fgs': [],
                                       'G235H', 'G395H', 'PRISM']
                           }
 
+# Filename extensions for guider data
+GUIDER_FILENAME_TYPE = ['gs-fg', 'gs-track', 'gs-id', 'gs-acq1', 'gs-acq2']
+
 # Possible suffix types for guider exposures
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
 
 # JWQL should ignore some filetypes in the filesystem.
-IGNORED_SUFFIXES = ['original', 'stream']
+IGNORED_SUFFIXES = ['original', 'stream', 'x1d', 'x1dints', 'c1d']
 
 # Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
     'dark_monitor': ['<instrument>_dark_dark_current', '<instrument>_dark_pixel_stats', '<instrument>_dark_query_history'],
-    'bad_pixel_monitor': ['<instrument>_bad_pixel_stats', '<instrument>_bad_pixel_query_history']}
+    'bad_pixel_monitor': ['<instrument>_bad_pixel_stats', '<instrument>_bad_pixel_query_history'],
+    'cosmic_ray_monitor': ['<instrument>_cosmic_ray_stats', '<instrument>_cosmic_ray_query_history'],
+    'msata_monitor': ['<instrument>_ta_stats', '<instrument>_ta_query_history'],
+    'wata_monitor': ['<instrument>_ta_stats', '<instrument>_ta_query_history']
+}
 
 INSTRUMENT_SERVICE_MATCH = {
     'FGS': 'Mast.Jwst.Filtered.Fgs',
@@ -259,16 +293,21 @@ JWST_INSTRUMENT_NAMES_UPPERCASE = {key: value.upper() for key, value in
 JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
                       JWST_INSTRUMENT_NAMES]
 
+# Maximum number of records returned by MAST for a single query
+MAST_QUERY_LIMIT = 50000
+
 # Available monitor names and their location for each JWST instrument
 MONITORS = {
     'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor'),
             ('Readnoise Monitor', '/fgs/readnoise_monitor'),
-            ('Dark Current Monitor', '/fgs/dark_monitor')],
+            ('Dark Current Monitor', '/fgs/dark_monitor'),
+            ('Cosmic Ray Monitor', '/fgs/cosmic_ray_monitor')],
     'miri': [('Dark Current Monitor', '/miri/dark_monitor'),
              ('Data Trending', '#'),
              ('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
+             ('Cosmic Ray Monitor', '/miri/cosmic_ray_monitor'),
              ('Readnoise Monitor', '/miri/readnoise_monitor'),
-             ('Cosmic Ray Monitor', '#'),
+             ('Cosmic Ray Monitor', '/miri/cosmic_ray_monitor'),
              ('Photometry Monitor', '#'),
              ('TA Failure Monitor', '#'),
              ('Blind Pointing Accuracy Monitor', '#'),
@@ -279,17 +318,20 @@ MONITORS = {
                ('Gain Level Monitor', '#'),
                ('Dark Current Monitor', '/nircam/dark_monitor'),
                ('Bad Pixel Monitor', '/nircam/bad_pixel_monitor'),
-               ('Photometric Stability Monitor', '#')],
+               ('Photometric Stability Monitor', '#'),
+               ('Cosmic Ray Monitor', '/nircam/cosmic_ray_monitor')],
     'niriss': [('Bad Pixel Monitor', '/niriss/bad_pixel_monitor'),
                ('Readnoise Monitor', '/niriss/readnoise_monitor'),
                ('AMI Calibrator Monitor', '#'),
                ('TSO RMS Monitor', '#'),
                ('Bias Monitor', '/niriss/bias_monitor'),
-               ('Dark Current Monitor', '/niriss/dark_monitor')],
+               ('Dark Current Monitor', '/niriss/dark_monitor'),
+               ('Cosmic Ray Monitor', '/niriss/cosmic_ray_monitor')],
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
-                ('Target Acquisition Monitor', '#'),
+                ('MSATA Monitor', '/nirspec/msata_monitor'),
+                ('WATA Monitor', '/nirspec/wata_monitor'),
                 ('Data Trending', '#'),
                 ('Detector Health Monitor', '#'),
                 ('Ref Pix Monitor', '#'),
@@ -297,7 +339,8 @@ MONITORS = {
                 ('Instrument Model Updates', '#'),
                 ('Failed-open Shutter Monitor', '#'),
                 ('Bias Monitor', '/nirspec/bias_monitor'),
-                ('Dark Monitor', '/nirspec/dark_monitor')]}
+                ('Dark Monitor', '/nirspec/dark_monitor'),
+                ('Cosmic Ray Monitor', '/nirspec/cosmic_ray_monitor')]}
 
 # Possible suffix types for coronograph exposures
 NIRCAM_CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']
@@ -343,6 +386,14 @@ READPATT_PER_INSTRUMENT = {'fgs': ['FGS', 'FGSRAPID', 'FGS60', 'FGS840', 'FGS837
                                        'NRSRAPIDD2', 'NRSRAPIDD6']}
 
 SUBARRAYS_ONE_OR_FOUR_AMPS = ['SUBGRISMSTRIPE64', 'SUBGRISMSTRIPE128', 'SUBGRISMSTRIPE256']
+
+# Filename suffixes that need to include the association value in the suffix in
+# order to identify the preview image file. This should only be crf and crfints,
+# since those are essentially level 2 files that are output by the level 3 pipeline.
+SUFFIXES_TO_ADD_ASSOCIATION = ['crf', 'crfints']
+
+# Filename suffixes where data have been averaged over integrations
+SUFFIXES_WITH_AVERAGED_INTS = ['rate', 'cal', 'crf', 'i2d', 'bsub']
 
 # Base name for the file listing the thumbnail images for a given instrument.
 # The complete name will have "_{instrument.lower}.txt" added to the end of this.
