@@ -64,6 +64,7 @@ dependencies:
     - stsci_rtd_theme==0.0.2
     - git+https://github.com/spacetelescope/jwst_reffiles
     - vine==1.3.0
+    - redis
 
     # Current package
     - -e .
