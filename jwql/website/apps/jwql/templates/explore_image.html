@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>Explore {{ inst }} Image - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+    	<!-- Show fits file name -->
+        <h3>Explore Mode </h3>
+    	<h3>{{ file_root }}_{{ filetype }}.fits</h3>
+    	<p>
+            <a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:view_image', args=[inst, file_root]) }}>View Image</a>
+            <a class="btn btn-primary my-2 mx-2" role="button" href={{ url('jwql:archive_thumb_per_obs', args=[inst, file_root[2:7], file_root[7:10]]) }}> View Proposal</a>
+	    </p>
+
+        <!-- Allow the user to change the settings in the image to explore -->
+        <h4>Image Settings</h4>
+        <div class="mt-4">
+            Scaling:&nbsp;&nbsp;
+            <input type="radio" name="scaling" value="log" id="log" checked="checked"> log &nbsp;&nbsp;&nbsp;&nbsp;
+            <input type="radio" name="scaling" value="lin" id="lin"> linear &nbsp;&nbsp;
+            <br>
+            Z-Scale Limits:&nbsp;&nbsp;
+            <input type="number" id="low_lim" size="15" step="any">&nbsp;Low &nbsp;&nbsp;&nbsp;&nbsp;
+            <input type="number" id="high_lim" size="15" step="any">&nbsp;High &nbsp;&nbsp;&nbsp;&nbsp;
+            <br>
+            <br>
+            Extension:&nbsp;&nbsp;
+            {% for extension in extensions %}
+                {% if extension == 'SCI' %}
+                    <input type="radio" name="extension" value="{{ extension }}" id="{{ extension }}" checked="checked" onclick='explore_image_update_enable_options("{{ extension_ints }}", "{{ extension_groups }}");'> {{ extension }} &nbsp;&nbsp;&nbsp;&nbsp;
+                {% else %}
+                    <input type="radio" name="extension" value="{{ extension }}" id="{{ extension }}" onclick='explore_image_update_enable_options("{{ extension_ints }}", "{{ extension_groups }}");'> {{ extension }} &nbsp;&nbsp;&nbsp;&nbsp;
+                {% endif %}
+            {% endfor %}
+            <div class="row">
+                <div class="explorer_options" id="integrationInput1">
+                    <input type="number" id="integration1" min="0" size="3" step="1">
+                    <label id="integration1-name" for="integration1">Integration</label>
+                </div>
+                <div class="explorer_options" id="groupInput1">
+                    <input type="number" id="group1" min="0" size="3" step="1">
+                    <label id="group1-name" for="group1">Group</label>
+                </div>
+            </div>
+            <div class="form-check" id="calcDifferenceForm">
+                <input class="form-check-input" type="checkbox" id="calcDifference" onclick='explore_image_update_enable_options("{{ extension_ints }}", "{{ extension_groups }}");'>
+                <label class="form-check-label" for="calcDifference">Calculate Difference</label>
+            </div>
+            <div class="row">
+                <div class="explorer_options" id="integrationInput2">
+                    <input type="number" id="integration2" min="0" size="3" step="1">
+                    <label id="integration2-name" for="integration2">Integration</label>
+                </div>
+                <div class="explorer_options" id="groupInput2">
+                    <input type="number" id="group2" min="0" size="3" step="1">
+                    <label id="group2-name" for="group2">Group</label>
+                </div>
+            </div>
+        </div>
+        <p>
+            <a class="btn btn-primary my-2 mx-2" role="button" onclick="update_explore_image_page('{{inst}}', '{{file_root}}', '{{filetype}}', '{{base_url}}', true)"> Apply Settings</a>
+	    </p>
+		<div class="row">
+            <!-- Display the image -->
+    	    <div class="col-xl-9 text-center">
+    		    <!-- Loading animation -->
+                <div id="loading">
+                    <div class="lds-css ng-scope">
+                        <div style="width:100%;height:100%" class="lds-magnify">
+                            <div>
+                                <div>
+                                    <div>
+                                    </div>
+                                    <div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        Loading ...
+                    </div>
+                </div>
+
+                <!-- Display the data -->
+                <div id='explore_image'></div>
+                <a id="explore_image_fail" style='display: none'>Image explorer failed to load</a>
+            </div>
+
+            <!-- Display the anomaly form -->
+            <div class="col-xl-3 text-left">
+                <!--Load the file search form from the view-->
+                <div class="anomaly_form">
+                    <h5>Submit Anomaly</h5>
+                    <form action="" method="post">
+                        <!--Show any errors from a previous form submission-->
+                        {% if form.errors %}
+                            <fieldset>
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <div class="alert alert-danger">
+                                            <strong>{{ error|escape }}</strong>
+                                        </div>
+                                    {% endfor %}
+                                {% endfor %}
+                            </fieldset>
+                        {% endif %}
+
+                        <!--Django Cross-Site Request Forgery magic-->
+                        {{ csrf_input }}
+
+                        <!--Show the field forms-->
+                        {% for field in form %}
+                            {% for subwidget in field.subwidgets %}
+                                <li class="anomaly_choice">{{subwidget}}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        <button class="btn btn-primary" type="submit" style="float: right;">Submit</button>
+                    </form>
+                </div>
+            </div>
+            <!-- Display the anomaly form above -->
+        </div>
+
+    </main>
+    <script>explore_image_update_enable_options('{{ extension_ints }}', '{{ extension_groups }}');</script>
+    <script>update_explore_image_page('{{inst}}', '{{file_root}}', '{{filetype}}', '{{base_url}}');</script>
+
+{% endblock %}
