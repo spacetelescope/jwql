@@ -63,7 +63,7 @@ dependencies:
     - pyvo==1.3
     - stsci_rtd_theme==0.0.2
     - git+https://github.com/spacetelescope/jwst_reffiles
-    - vine
+    - vine>=5.0
 
     # Current package
     - -e .
