@@ -29,6 +29,11 @@ jobs:
         continue-on-error: false
         if: runner.os == 'Linux'
 
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.4.0
+        with:
+          redis-version: 5.0
+
       - name: Build jwql conda environment and run tests
         shell: bash -l {0}
         run: |

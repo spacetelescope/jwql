@@ -110,8 +110,12 @@ from celery.app.log import TaskFormatter
 from celery.signals import after_setup_logger, after_setup_task_logger, task_postrun
 from celery.utils.log import get_task_logger
 
-REDIS_HOST = get_config()["redis_host"]
-REDIS_PORT = get_config()["redis_port"]
+try:
+    REDIS_HOST = get_config()["redis_host"]
+    REDIS_PORT = get_config()["redis_port"]
+except FileNotFoundError as e:
+    REDIS_HOST = "127.0.0.1"
+    REDIS_PORT = "6379"
 REDIS_URL = "redis://{}:{}".format(REDIS_HOST, REDIS_PORT)
 REDIS_CLIENT = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
 
