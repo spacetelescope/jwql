@@ -548,52 +548,52 @@ class Dark():
                     logging.info('\tBaseline file is {}'.format(baseline_file))
                     baseline_mean, baseline_stdev = self.read_baseline_slope_image(baseline_file)
 
-                    # Check the hot/dead pixel population for changes
-                    new_hot_pix, new_dead_pix = self.find_hot_dead_pixels(slope_image, baseline_mean)
+                # Check the hot/dead pixel population for changes
+                new_hot_pix, new_dead_pix = self.find_hot_dead_pixels(slope_image, baseline_mean)
 
-                    # Shift the coordinates to be in full frame coordinate system
-                    new_hot_pix = self.shift_to_full_frame(new_hot_pix)
-                    new_dead_pix = self.shift_to_full_frame(new_dead_pix)
+                # Shift the coordinates to be in full frame coordinate system
+                new_hot_pix = self.shift_to_full_frame(new_hot_pix)
+                new_dead_pix = self.shift_to_full_frame(new_dead_pix)
 
-                    # Exclude hot and dead pixels found previously
-                    new_hot_pix = self.exclude_existing_badpix(new_hot_pix, 'hot')
-                    new_dead_pix = self.exclude_existing_badpix(new_dead_pix, 'dead')
+                # Exclude hot and dead pixels found previously
+                new_hot_pix = self.exclude_existing_badpix(new_hot_pix, 'hot')
+                new_dead_pix = self.exclude_existing_badpix(new_dead_pix, 'dead')
 
-                    # Add new hot and dead pixels to the database
-                    logging.info('\tFound {} new hot pixels'.format(len(new_hot_pix[0])))
-                    logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix[0])))
-                    self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
-                    self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
+                # Add new hot and dead pixels to the database
+                logging.info('\tFound {} new hot pixels'.format(len(new_hot_pix[0])))
+                logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix[0])))
+                self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
+                self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
-                    # Check for any pixels that are significantly more noisy than
-                    # in the baseline stdev image
-                    new_noisy_pixels = self.noise_check(stdev_image, baseline_stdev)
+                # Check for any pixels that are significantly more noisy than
+                # in the baseline stdev image
+                new_noisy_pixels = self.noise_check(stdev_image, baseline_stdev)
 
-                    # Shift coordinates to be in full_frame coordinate system
-                    new_noisy_pixels = self.shift_to_full_frame(new_noisy_pixels)
+                # Shift coordinates to be in full_frame coordinate system
+                new_noisy_pixels = self.shift_to_full_frame(new_noisy_pixels)
 
-                    # Exclude previously found noisy pixels
-                    new_noisy_pixels = self.exclude_existing_badpix(new_noisy_pixels, 'noisy')
+                # Exclude previously found noisy pixels
+                new_noisy_pixels = self.exclude_existing_badpix(new_noisy_pixels, 'noisy')
 
-                    # Add new noisy pixels to the database
-                    logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
-                    self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
+                # Add new noisy pixels to the database
+                logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
+                self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
-                # ----- Calculate image statistics -----
+            # ----- Calculate image statistics -----
 
-                # Find amplifier boundaries so per-amp statistics can be calculated
-                number_of_amps, amp_bounds = instrument_properties.amplifier_info(slope_files[0])
-                logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
+            # Find amplifier boundaries so per-amp statistics can be calculated
+            number_of_amps, amp_bounds = instrument_properties.amplifier_info(slope_files[0])
+            logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
 
-                # Calculate mean and stdev values, and fit a Gaussian to the
-                # histogram of the pixels in each amp
-                (amp_mean, amp_stdev, gauss_param, gauss_chisquared, double_gauss_params, double_gauss_chisquared,
-                    histogram, bins) = self.stats_by_amp(slope_image, amp_bounds)
+            # Calculate mean and stdev values, and fit a Gaussian to the
+            # histogram of the pixels in each amp
+            (amp_mean, amp_stdev, gauss_param, gauss_chisquared, double_gauss_params, double_gauss_chisquared,
+                histogram, bins) = self.stats_by_amp(slope_image, amp_bounds)
 
-                # Remove the input files in order to save disk space
-                files_to_remove = glob(f'{self.data_dir}/*fits')
-                for filename in files_to_remove:
-                    os.remove(filename)
+            # Remove the input files in order to save disk space
+            files_to_remove = glob(f'{self.data_dir}/*fits')
+            for filename in files_to_remove:
+                os.remove(filename)
         
         except Exception as e:
             logging.critical("ERROR: {}".format(e))

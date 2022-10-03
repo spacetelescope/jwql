@@ -464,23 +464,30 @@ INSTRUMENT_TABLES = {
     'nircam': [NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent,
                NIRCamBiasQueryHistory, NIRCamBiasStats, NIRCamBadPixelQueryHistory,
                NIRCamBadPixelStats, NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats,
-               NIRCamAnomaly],
+               NIRCamAnomaly, NIRCamCosmicRayQueryHistory, NIRCamCosmicRayStats],
     'niriss': [NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent,
                NIRISSBiasQueryHistory, NIRISSBiasStats, NIRISSBadPixelQueryHistory,
                NIRISSBadPixelStats, NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats,
-               NIRISSAnomaly],
+               NIRISSAnomaly, NIRISSCosmicRayQueryHistory, NIRISSCosmicRayStats],
     'miri': [MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent,
              MIRIBadPixelQueryHistory, MIRIBadPixelStats, MIRIReadnoiseQueryHistory,
-             MIRIReadnoiseStats, MIRIAnomaly],
+             MIRIReadnoiseStats, MIRIAnomaly, MIRICosmicRayQueryHistory, MIRICosmicRayStats],
     'nirspec': [NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent,
                 NIRSpecBiasQueryHistory, NIRSpecBiasStats, NIRSpecBadPixelQueryHistory,
                 NIRSpecBadPixelStats, NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats,
-                NIRSpecAnomaly],
+                NIRSpecAnomaly, NIRSpecTAQueryHistory, NIRSpecTAStats, 
+                NIRSpecCosmicRayQueryHistory, NIRSpecCosmicRayStats],
     'fgs': [FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent,
             FGSBadPixelQueryHistory, FGSBadPixelStats, FGSReadnoiseQueryHistory,
-            FGSReadnoiseStats, FGSAnomaly]}
+            FGSReadnoiseStats, FGSAnomaly, FGSCosmicRayQueryHistory, FGSCosmicRayStats]}
 
 MONITOR_TABLES = {
+    'anomaly': [NIRCamAnomaly, NIRISSAnomaly, NIRSpecAnomaly, MIRIAnomaly, FGSAnomaly],
+    'cosmic_ray': [NIRCamCosmicRayQueryHistory, NIRCamCosmicRayStats, 
+                   MIRICosmicRayQueryHistory, MIRICosmicRayStats, 
+                   NIRISSCosmicRayQueryHistory, NIRISSCosmicRayStats, 
+                   FGSCosmicRayQueryHistory, FGSCosmicRayStats, 
+                   NIRSpecCosmicRayQueryHistory, NIRSpecCosmicRayStats],
     'dark': [NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent, 
              NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent,
              NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent,
@@ -496,7 +503,7 @@ MONITOR_TABLES = {
                   NIRISSReadnoiseQueryHistory, NIRSpecReadnoiseQueryHistory, 
                   NIRSpecReadnoiseStats, MIRIReadnoiseQueryHistory, MIRIReadnoiseStats,
                   FGSReadnoiseQueryHistory, FGSReadnoiseStats],
-    'anomaly': [NIRCamAnomaly, NIRISSAnomaly, NIRSpecAnomaly, MIRIAnomaly, FGSAnomaly]}
+    'ta': [NIRSpecTAQueryHistory, NIRSpecTAStats]}
 
 if __name__ == '__main__':
     base.metadata.create_all(engine)

@@ -60,6 +60,7 @@ from jwql.database.database_interface import FGSCosmicRayStats
 from jwql.database.database_interface import session
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
+from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
 from jwql.utils.logging_functions import configure_logging
 from jwql.utils.logging_functions import log_info
@@ -519,6 +520,12 @@ class CosmicRay:
 
                 try:
                     logging.info(f'Running calwebb_detector1 on {uncal_file}')
+                    out_exts = ['jump']
+                    if self.nints == 1:
+                        out_exts.append('0_ramp_fit')
+                    else:
+                        out_exts.append('1_ramp_fit')
+                    output_files = run_pipeline(uncal_file, "uncal", out_exts, self.instrument, jump_pipe=True)
                     pipeline_tools.calwebb_detector1_save_jump(uncal_file, self.obs_dir, ramp_fit=True, save_fitopt=False)
                 except Exception as e:
                     logging.warning('Failed to complete pipeline steps on {}.'.format(uncal_file))
