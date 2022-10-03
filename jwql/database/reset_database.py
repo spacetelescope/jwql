@@ -108,8 +108,11 @@ if __name__ == '__main__':
                             try:
                                 table.__table__.drop()
                             except ProgrammingError as pe:
+                                print("*****ERROR*****")
                                 print(pe)
+                                print("*****ERROR TYPE*****")
                                 print(type(pe))
+                                print("*****ERROR CODE*****")
                                 print(pe.pgerror)
                                 raise pe
                             table.__table__.create()
@@ -124,8 +127,11 @@ if __name__ == '__main__':
                     try:
                         table.__table__.drop()
                     except ProgrammingError as pe:
+                        print("*****ERROR*****")
                         print(pe)
+                        print("*****ERROR TYPE*****")
                         print(type(pe))
+                        print("*****ERROR CODE*****")
                         print(pe.pgerror)
                         raise pe
                     table.__table__.create()
