@@ -58,7 +58,6 @@ from jwql.database.database_interface import NIRSpecCosmicRayStats
 from jwql.database.database_interface import FGSCosmicRayQueryHistory
 from jwql.database.database_interface import FGSCosmicRayStats
 from jwql.database.database_interface import session
-from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
 from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS
@@ -499,6 +498,13 @@ class CosmicRay:
             files
         """
 
+# def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pipe=False):
+
+        input_files = []
+        in_ext = "uncal"
+        out_exts = {}
+        instrument = self.instrument
+
         for file_name in file_list:
             if 'uncal' in file_name:
                 dir_name = '_'.join(file_name.split('_')[:4])  # file_name[51:76]
@@ -518,89 +524,90 @@ class CosmicRay:
                 # Next we run the pipeline on the files to get the proper outputs
                 uncal_file = os.path.join(self.obs_dir, os.path.basename(file_name))
 
-                try:
-                    logging.info(f'Running calwebb_detector1 on {uncal_file}')
-                    out_exts = ['jump']
-                    if self.nints == 1:
-                        out_exts.append('0_ramp_fit')
-                    else:
-                        out_exts.append('1_ramp_fit')
-                    output_files = run_pipeline(uncal_file, "uncal", out_exts, self.instrument, jump_pipe=True)
-                    pipeline_tools.calwebb_detector1_save_jump(uncal_file, self.obs_dir, ramp_fit=True, save_fitopt=False)
-                except Exception as e:
-                    logging.warning('Failed to complete pipeline steps on {}.'.format(uncal_file))
-                    logging.warning(e)
-                    pass
+                logging.info("Adding {} to calibration tasks".format(uncal_file))
+                input_files.append(uncal_file)
+                out_exts[uncal_file] = ['jump']
+                if self.nints == 1:
+                    out_exts[uncal_file].append('0_ramp_fit')
+                else:
+                    out_exts[uncal_file].append('1_ramp_fit')
+            else:
+                existing_files.append(file_name)
+        
+        output_files = run_parallel_pipeline(input_files, in_ext, out_exts, instrument, jump_pipe=True)
+        
+        for file_name in input_files:
+        
+            obs_files = output_files[file_name]
 
-                # Next we analyze the cosmic rays in the new data
-                obs_files = os.listdir(self.obs_dir)
-                for output_file in obs_files:
+            # Next we analyze the cosmic rays in the new data
+            for output_file in obs_files:
 
-                    if 'jump' in output_file:
-                        jump_file = os.path.join(self.obs_dir, output_file)
+                if 'jump' in output_file:
+                    jump_file = os.path.join(self.obs_dir, os.path.basename(output_file))
 
-                    if self.nints == 1:
-                        if '0_ramp_fit' in output_file:
-                            rate_file = os.path.join(self.obs_dir, output_file)
+                if self.nints == 1:
+                    if '0_ramp_fit' in output_file:
+                        rate_file = os.path.join(self.obs_dir, os.path.basename(output_file))
 
-                    elif self.nints > 1:
-                        if '1_ramp_fit' in output_file:
-                            rate_file = os.path.join(self.obs_dir, output_file)
+                elif self.nints > 1:
+                    if '1_ramp_fit' in output_file:
+                        rate_file = os.path.join(self.obs_dir, os.path.basename(output_file))
 
-                logging.info(f'\tUsing {jump_file} and {rate_file} to monitor CRs.')
+            logging.info(f'\tUsing {jump_file} and {rate_file} to monitor CRs.')
 
-                jump_head, jump_data, jump_dq = self.get_jump_data(jump_file)
-                rate_data = self.get_rate_data(rate_file)
-                if jump_head is None or rate_data is None:
-                    continue
+            jump_head, jump_data, jump_dq = self.get_jump_data(jump_file)
+            rate_data = self.get_rate_data(rate_file)
+            if jump_head is None or rate_data is None:
+                continue
 
-                jump_locs = self.get_jump_locs(jump_dq)
-                jump_locs_pre = self.group_before(jump_locs)
-                cosmic_ray_num = len(jump_locs)
+            jump_locs = self.get_jump_locs(jump_dq)
+            jump_locs_pre = self.group_before(jump_locs)
+            cosmic_ray_num = len(jump_locs)
 
-                logging.info(f'\tFound {cosmic_ray_num} CR-flags.')
+            logging.info(f'\tFound {cosmic_ray_num} CR-flags.')
 
-                # Translate CR count into a CR rate per pixel, so that all exposures
-                # can go on one plot regardless of exposure time and aperture size
-                cr_rate = self.get_cr_rate(cosmic_ray_num, jump_head)
-                logging.info(f'\tNormalizing by time and area, this is {cr_rate} jumps/sec/pixel.')
+            # Translate CR count into a CR rate per pixel, so that all exposures
+            # can go on one plot regardless of exposure time and aperture size
+            cr_rate = self.get_cr_rate(cosmic_ray_num, jump_head)
+            logging.info(f'\tNormalizing by time and area, this is {cr_rate} jumps/sec/pixel.')
 
-                # Get observation time info
-                obs_start_time = jump_head['EXPSTART']
-                obs_end_time = jump_head['EXPEND']
-                start_time = Time(obs_start_time, format='mjd', scale='utc').isot.replace('T', ' ')
-                end_time = Time(obs_end_time, format='mjd', scale='utc').isot.replace('T', ' ')
+            # Get observation time info
+            obs_start_time = jump_head['EXPSTART']
+            obs_end_time = jump_head['EXPEND']
+            start_time = Time(obs_start_time, format='mjd', scale='utc').isot.replace('T', ' ')
+            end_time = Time(obs_end_time, format='mjd', scale='utc').isot.replace('T', ' ')
 
-                cosmic_ray_mags = self.get_cr_mags(jump_locs, jump_locs_pre, rate_data, jump_data, jump_head)
+            cosmic_ray_mags = self.get_cr_mags(jump_locs, jump_locs_pre, rate_data, jump_data, jump_head)
 
-                # Insert new data into database
-                try:
-                    cosmic_ray_db_entry = {'entry_date': datetime.datetime.now(),
-                                           'aperture': self.aperture,
-                                           'source_file': file_name,
-                                           'obs_start_time': start_time,
-                                           'obs_end_time': end_time,
-                                           'jump_count': cosmic_ray_num,
-                                           'jump_rate': cr_rate,
-                                           'magnitude': cosmic_ray_mags
-                                           }
-                    self.stats_table.__table__.insert().execute(cosmic_ray_db_entry)
+            # Insert new data into database
+            try:
+                cosmic_ray_db_entry = {'entry_date': datetime.datetime.now(),
+                                       'aperture': self.aperture,
+                                       'source_file': file_name,
+                                       'obs_start_time': start_time,
+                                       'obs_end_time': end_time,
+                                       'jump_count': cosmic_ray_num,
+                                       'jump_rate': cr_rate,
+                                       'magnitude': cosmic_ray_mags
+                                       }
+                self.stats_table.__table__.insert().execute(cosmic_ray_db_entry)
 
-                    logging.info("Successfully inserted into database. \n")
-                except (StatementError, DataError, DatabaseError, InvalidRequestError, OperationalError) as e:
-                    logging.error("Could not insert entry into database. \n")
-                    logging.error(e)
+                logging.info("Successfully inserted into database. \n")
+            except (StatementError, DataError, DatabaseError, InvalidRequestError, OperationalError) as e:
+                logging.error("Could not insert entry into database. \n")
+                logging.error(e)
 
-                # Delete fits files in order to save disk space
-                logging.info("Removing pipeline products in order to save disk space. \n")
-                try:
-                    shutil.rmtree(self.obs_dir)
-                except OSError as e:
-                    logging.error(f"Unable to delete {self.obs_dir}")
-                    logging.error(e)
+            # Delete fits files in order to save disk space
+            logging.info("Removing pipeline products in order to save disk space. \n")
+            try:
+                shutil.rmtree(self.obs_dir)
+            except OSError as e:
+                logging.error(f"Unable to delete {self.obs_dir}")
+                logging.error(e)
 
-                # Remove initial copy of input file as well
-                os.remove(file_name)
+            # Remove initial copy of input file as well
+            os.remove(file_name)
 
     def pull_filenames(self, file_info):
         """Extract filenames from the list of file information returned from
@@ -621,6 +628,7 @@ class CosmicRay:
 
     @log_fail
     @log_info
+    @only_one(key='cosmic_ray_monitor')
     def run(self):
         """The main method. See module docstrings for additional info
 
