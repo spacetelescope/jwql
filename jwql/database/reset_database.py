@@ -114,7 +114,9 @@ if __name__ == '__main__':
                                 print(type(pe))
                                 print("*****ERROR CODE*****")
                                 print(pe.orig)
-                                print("*****DONE ERROR CODE*****")
+                                print("*****ERROR CODE TYPE*****")
+                                print(type(pe.orig))
+                                print("*****DONE*****")
                                 raise pe
                             table.__table__.create()
                 print('\nDatabase instance {} has been reset'.format(connection_string))
@@ -134,7 +136,9 @@ if __name__ == '__main__':
                         print(type(pe))
                         print("*****ERROR CODE*****")
                         print(pe.orig)
-                        print("*****DONE ERROR CODE*****")
+                        print("*****ERROR CODE TYPE*****")
+                        print(type(pe.orig))
+                        print("*****DONE*****")
                         raise pe
                     table.__table__.create()
         print('\nDatabase instance {} has been reset'.format(connection_string))
