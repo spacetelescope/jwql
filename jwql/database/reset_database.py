@@ -116,6 +116,8 @@ if __name__ == '__main__':
                                 print(pe.orig)
                                 print("*****ERROR CODE TYPE*****")
                                 print(type(pe.orig))
+                                print("*****ORIG INFO*****")
+                                print(pe.orig.__dict__)
                                 print("*****DONE*****")
                                 raise pe
                             table.__table__.create()
@@ -138,6 +140,8 @@ if __name__ == '__main__':
                         print(pe.orig)
                         print("*****ERROR CODE TYPE*****")
                         print(type(pe.orig))
+                        print("*****ORIG INFO*****")
+                        print(pe.orig.__dict__)
                         print("*****DONE*****")
                         raise pe
                     table.__table__.create()
