@@ -109,20 +109,9 @@ if __name__ == '__main__':
                             try:
                                 table.__table__.drop()
                             except ProgrammingError as pe:
-                                print("*****ERROR*****")
-                                print(pe)
-                                print("*****ERROR TYPE*****")
-                                print(type(pe))
-                                print("*****ERROR CODE*****")
-                                print(pe.orig)
-                                print("*****ERROR CODE TYPE*****")
-                                print(type(pe.orig))
-                                print("*****ORIG INFO*****")
-                                print(pe.orig.__dict__)
-                                print("*****INSTANCE CHECK*****")
-                                print(isinstance(pe.orig, UndefinedTable))
-                                print("*****DONE*****")
-                                raise pe
+                                if not isinstance(pe.orig, UndefinedTable):
+                                    raise pe
+                                print("Table {} is undefined. Skipping drop table.".format(table))
                             table.__table__.create()
                 print('\nDatabase instance {} has been reset'.format(connection_string))
                 sys.exit(0)
@@ -135,19 +124,8 @@ if __name__ == '__main__':
                     try:
                         table.__table__.drop()
                     except ProgrammingError as pe:
-                        print("*****ERROR*****")
-                        print(pe)
-                        print("*****ERROR TYPE*****")
-                        print(type(pe))
-                        print("*****ERROR CODE*****")
-                        print(pe.orig)
-                        print("*****ERROR CODE TYPE*****")
-                        print(type(pe.orig))
-                        print("*****ORIG INFO*****")
-                        print(pe.orig.__dict__)
-                        print("*****INSTANCE CHECK*****")
-                        print(isinstance(pe.orig, UndefinedTable))
-                        print("*****DONE*****")
-                        raise pe
+                        if not isinstance(pe.orig, UndefinedTable):
+                            raise pe
+                        print("Table {} is undefined. Skipping drop table.".format(table))
                     table.__table__.create()
         print('\nDatabase instance {} has been reset'.format(connection_string))
