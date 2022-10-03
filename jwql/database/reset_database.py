@@ -24,7 +24,9 @@ Dependencies
     ``postgresql+psycopg2://user:password@host:port/database``.
 """
 
-import argparse, sys
+import argparse
+from sqlalchemy.exc import ProgrammingError
+import sys
 
 from jwql.database.database_interface import base, set_read_permissions
 from jwql.database.database_interface import INSTRUMENT_TABLES, MONITOR_TABLES
@@ -103,7 +105,13 @@ if __name__ == '__main__':
                 for monitor in MONITOR_TABLES:
                     if monitor != 'anomaly':
                         for table in MONITOR_TABLES[monitor]:
-                            table.__table__.drop()
+                            try:
+                                table.__table__.drop()
+                            except ProgrammingError as pe:
+                                print(pe)
+                                print(type(pe))
+                                print(pe.pgerror)
+                                raise pe
                             table.__table__.create()
                 print('\nDatabase instance {} has been reset'.format(connection_string))
                 sys.exit(0)
@@ -113,6 +121,12 @@ if __name__ == '__main__':
         for table in base_tables:
             if table in check_tables:
                 if (table not in MONITOR_TABLES['anomaly']) or (args.explicit_anomaly):
-                    table.__table__.drop()
+                    try:
+                        table.__table__.drop()
+                    except ProgrammingError as pe:
+                        print(pe)
+                        print(type(pe))
+                        print(pe.pgerror)
+                        raise pe
                     table.__table__.create()
         print('\nDatabase instance {} has been reset'.format(connection_string))
