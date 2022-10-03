@@ -25,6 +25,7 @@ Dependencies
 """
 
 import argparse
+from psycopg2.errors import UndefinedTable
 from sqlalchemy.exc import ProgrammingError
 import sys
 
@@ -118,6 +119,8 @@ if __name__ == '__main__':
                                 print(type(pe.orig))
                                 print("*****ORIG INFO*****")
                                 print(pe.orig.__dict__)
+                                print("*****INSTANCE CHECK*****")
+                                print(isinstance(pe.orig, UndefinedTable))
                                 print("*****DONE*****")
                                 raise pe
                             table.__table__.create()
@@ -142,6 +145,8 @@ if __name__ == '__main__':
                         print(type(pe.orig))
                         print("*****ORIG INFO*****")
                         print(pe.orig.__dict__)
+                        print("*****INSTANCE CHECK*****")
+                        print(isinstance(pe.orig, UndefinedTable))
                         print("*****DONE*****")
                         raise pe
                     table.__table__.create()
