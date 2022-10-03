@@ -502,7 +502,7 @@ class CosmicRay:
 
         input_files = []
         in_ext = "uncal"
-        out_exts = {}
+        out_exts = defaultdict(lambda: ['jump', '0_ramp_fit'])
         instrument = self.instrument
 
         for file_name in file_list:
@@ -523,14 +523,13 @@ class CosmicRay:
 
                 # Next we run the pipeline on the files to get the proper outputs
                 uncal_file = os.path.join(self.obs_dir, os.path.basename(file_name))
+                
+                short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
 
                 logging.info("Adding {} to calibration tasks".format(uncal_file))
                 input_files.append(uncal_file)
-                out_exts[uncal_file] = ['jump']
-                if self.nints == 1:
-                    out_exts[uncal_file].append('0_ramp_fit')
-                else:
-                    out_exts[uncal_file].append('1_ramp_fit')
+                if self.nints > 1:
+                    out_exts[short_name] = ['jump', '1_ramp_fit']
             else:
                 existing_files.append(file_name)
         

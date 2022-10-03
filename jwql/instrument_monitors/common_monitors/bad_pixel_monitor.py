@@ -793,7 +793,7 @@ class BadPixels():
                     logging.info("Copying raw file to {}".format(self.data_dir))
                     copy_files([uncal_file], self.data_dir)
                     if hasattr(self, 'nints') and self.nints > 1:
-                        out_exts[short_name] = ['jump', '0_ramp_fits']
+                        out_exts[short_name] = ['jump', '1_ramp_fit']
                     in_files.append(local_uncal_file)
             outputs = run_parallel_pipeline(in_files, "uncal", out_exts, self.instrument, jump_pipe=True)
             index = 0
