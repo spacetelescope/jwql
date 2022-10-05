@@ -472,7 +472,7 @@ function sort_by_proposals(sort_type) {
  * Sort thumbnail display by a given sort type
  * @param {String} sort_type - The sort type (e.g. file_root", "exp_start")
  */
-function sort_by_thumbnails(sort_type) {
+function sort_by_thumbnails(sort_type, base_url) {
 
     // Update dropdown menu text
     document.getElementById('sort_dropdownMenuButton').innerHTML = sort_type;
@@ -486,6 +486,15 @@ function sort_by_thumbnails(sort_type) {
     } else if (sort_type == 'Exposure Start Time') {
         tinysort(thumbs, {attr:'exp_start'});
     }
+    $.ajax({
+        url: base_url + '/ajax/session/image_sort/' + sort_type + '/',
+        success: function(data){
+            console.log("session item image_sort is:" + data.item);
+        },
+        error : function(response) {
+            console.log("session update failed");
+        }
+    });
 };
 
 
@@ -753,16 +762,16 @@ function update_show_count(count, type) {
  * Updates the thumbnail-sort div with sorting options
  * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
  */
-function update_sort_options(data) {
+function update_sort_options(data, base_url) {
 
     // Build div content
     content = 'Sort by:';
     content += '<div class="dropdown">';
     content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Default</button>';
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
-    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Default\');">Default</a>';
-    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Name\');">Name</a>';
-    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Exposure Start Time\');">Exposure Start Time</a>';
+    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Default\', \'' + base_url + '\');">Default</a>';
+    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Name\', \'' + base_url + '\');">Name</a>';
+    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Exposure Start Time\', \'' + base_url + '\');">Exposure Start Time</a>';
     content += '</div></div>';
 
     // Add the content to the div
@@ -823,7 +832,7 @@ function update_thumbnails_page(inst, proposal, base_url) {
             update_show_count(Object.keys(data.file_data).length, 'activities');
             update_thumbnail_array(data);
             update_filter_options(data);
-            update_sort_options(data);
+            update_sort_options(data, base_url);
 
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
@@ -848,7 +857,7 @@ function update_thumbnails_per_observation_page(inst, proposal, observation, obs
             update_thumbnail_array(data);
             update_obs_options(data, inst, proposal);
             update_filter_options(data);
-            update_sort_options(data);
+            update_sort_options(data, base_url);
 
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
@@ -869,7 +878,7 @@ function update_thumbnails_query_page(base_url) {
             update_show_count(Object.keys(data.file_data).length, 'activities');
             update_thumbnail_array(data);
             update_filter_options(data);
-            update_sort_options(data);
+            update_sort_options(data, base_url);
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
             document.getElementById("thumbnail-array").style.display = "block";

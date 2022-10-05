@@ -53,19 +53,17 @@ from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT
-from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
+from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
 from .data_containers import data_trending
-from .data_containers import get_acknowledgements, get_instrument_proposals
+from .data_containers import get_acknowledgements
 from .data_containers import get_anomaly_form
 from .data_containers import get_dashboard_components
 from .data_containers import get_edb_components
 from .data_containers import get_explorer_extension_names
-from .data_containers import get_filenames_by_instrument, mast_query_filenames_by_instrument
 from .data_containers import get_header_info
 from .data_containers import get_image_info
-from .data_containers import get_proposal_info
 from .data_containers import get_thumbnails_all_instruments
 from .data_containers import nirspec_trending
 from .data_containers import random_404_page
@@ -390,8 +388,7 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
                'obs': observation,
                'obs_list': obs_list,
                'prop': proposal,
-               'prop_meta': proposal_meta,
-               'base_url': get_base_url()}
+               'prop_meta': proposal_meta}
 
     return render(request, template, context)
 
@@ -917,6 +914,12 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
+def update_session_value_ajax(request, session_item, session_value):
+    request.session[session_item] = session_value
+    context = {'item': request.session[session_item]}
+    return JsonResponse(context, json_dumps_params={'indent': 2})
+
+
 def view_image(request, inst, file_root, rewrite=False):
     """Generate the image view page
 
@@ -956,7 +959,11 @@ def view_image(request, inst, file_root, rewrite=False):
         except KeyError:
             pass
 
-    file_root_list = {key: sorted(file_root_list[key]) for key in sorted(file_root_list)}
+    sort_type = request.session.get('image_sort', 'default')
+    if sort_type in ['Exposure Start Time', 'default']:
+        file_root_list = {key: sorted(file_root_list[key], reverse=True) for key in sorted(file_root_list)}
+    else:
+        file_root_list = {key: sorted(file_root_list[key]) for key in sorted(file_root_list)}
 
     # Build the context
     context = {'base_url': get_base_url(),
