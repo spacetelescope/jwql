@@ -49,11 +49,6 @@ class Archive(models.Model):
     class Meta:
         ordering = ['instrument']
 
-    # Methods
-    # def get_absolute_url(self):
-    #    """Returns the URL to access a particular instance of Archive."""
-    #    return reverse('archive-view', args=[str(self.id)])
-
     def __str__(self):
         """String for representing the Archive object (in Admin site etc.)."""
         return self.instrument
@@ -71,11 +66,6 @@ class Proposal(models.Model):
         ordering = ['-prop_id']
         unique_together = ('prop_id', 'archive')
         models.UniqueConstraint(fields=['prop_id', 'archive'], name='unique_instrument_proposal')
-
-    # Methods
-    # def get_absolute_url(self):
-    #    """Returns the URL to access a particular instance of Archive."""
-    #    return reverse('proposal-view', args=[str(self.id)])
 
     def __str__(self):
         """String for representing the Archive object (in Admin site etc.)."""
@@ -97,11 +87,6 @@ class Observation(models.Model):
     class Meta:
         ordering = ['-obsnum']
         models.UniqueConstraint(fields=['proposal', 'obsnum'], name='unique_proposal_obsnum')
-
-    # Methods
-    # def get_absolute_url(self):
-    #    """Returns the URL to access a particular instance of Archive."""
-    #    return reverse('observation-view', args=[str(self.id)])
 
     def __str__(self):
         """String for representing the Archive object (in Admin site etc.)."""
