@@ -507,13 +507,13 @@ class CosmicRay:
         instrument = self.instrument
 
         for file_name in file_list:
+            dir_name = '_'.join(file_name.split('_')[:4])  # file_name[51:76]
+
+            self.obs_dir = os.path.join(self.data_dir, dir_name)
+            ensure_dir_exists(self.obs_dir)
+            logging.info(f'Setting obs_dir to {self.obs_dir}')
+            
             if 'uncal' in file_name:
-                dir_name = '_'.join(file_name.split('_')[:4])  # file_name[51:76]
-
-                self.obs_dir = os.path.join(self.data_dir, dir_name)
-                ensure_dir_exists(self.obs_dir)
-                logging.info(f'Setting obs_dir to {self.obs_dir}')
-
                 head = fits.getheader(file_name)
                 self.nints = head['NINTS']
 
@@ -531,8 +531,6 @@ class CosmicRay:
                 input_files.append(uncal_file)
                 if self.nints > 1:
                     out_exts[short_name] = ['jump', '1_ramp_fit']
-            else:
-                existing_files.append(file_name)
         
         output_files = run_parallel_pipeline(input_files, in_ext, out_exts, instrument, jump_pipe=True)
         
@@ -542,6 +540,7 @@ class CosmicRay:
 
             # Next we analyze the cosmic rays in the new data
             for output_file in obs_files:
+                logging.info("Checking output file {}".format(output_file))
 
                 if 'jump' in output_file:
                     jump_file = os.path.join(self.obs_dir, os.path.basename(output_file))
