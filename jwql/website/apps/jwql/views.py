@@ -382,8 +382,7 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
 
     obs_list = sorted(list(set(all_obs)))
 
-    # TODO SAPP ADD HERE
-    sort = request.session.get("image_sort", "Ascending")
+    sort_type = request.session.get('image_sort', 'Ascending')
     template = 'thumbnails_per_obs.html'
     context = {'base_url': get_base_url(),
                'inst': inst,
@@ -391,7 +390,7 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
                'obs_list': obs_list,
                'prop': proposal,
                'prop_meta': proposal_meta,
-               'sort': sort}
+               'sort': sort_type}
 
     return render(request, template, context)
 
@@ -703,8 +702,11 @@ def query_submit(request):
 
     anomaly_query_config.PARAMETERS = parameters
 
+    sort_type = request.session.get('image_sort', 'Ascending')
+
     context = {'inst': '',
-               'base_url': get_base_url()
+               'base_url': get_base_url(),
+               'sort': sort_type
                }
 
     return render(request, template, context)

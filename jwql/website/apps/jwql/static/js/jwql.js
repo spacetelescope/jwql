@@ -819,8 +819,9 @@ function update_thumbnail_array(data) {
  * @param {String} observation - The observation number within the proposal (e.g. "001")
  * @param {List} observation_list - List of all observations in this proposal
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ * @param {String} sort - Sort method string saved in session data image_sort
  */
-function update_thumbnails_per_observation_page(inst, proposal, observation, observation_list, base_url) {
+function update_thumbnails_per_observation_page(inst, proposal, observation, observation_list, base_url, sort) {
     $.ajax({
         url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/obs' + observation + '/',
         success: function(data){
@@ -831,6 +832,9 @@ function update_thumbnails_per_observation_page(inst, proposal, observation, obs
             update_filter_options(data);
             update_sort_options(data, base_url);
 
+            // Do initial sort to match sort button display
+            sort_by_thumbnails(sort, base_url);
+
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
             document.getElementById("thumbnail-array").style.display = "block";
@@ -840,9 +844,9 @@ function update_thumbnails_per_observation_page(inst, proposal, observation, obs
 /**
  * Updates various components on the thumbnails anomaly query page
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
- * @param {List} rootnames
+ * @param {String} sort - Sort method string saved in session data image_sort
  */
-function update_thumbnails_query_page(base_url) {
+function update_thumbnails_query_page(base_url, sort) {
     $.ajax({
         url: base_url + '/ajax/query_submit/',
         success: function(data){
@@ -851,6 +855,10 @@ function update_thumbnails_query_page(base_url) {
             update_thumbnail_array(data);
             update_filter_options(data);
             update_sort_options(data, base_url);
+
+            // Do initial sort to match sort button display
+            sort_by_thumbnails(sort, base_url);
+
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
             document.getElementById("thumbnail-array").style.display = "block";
