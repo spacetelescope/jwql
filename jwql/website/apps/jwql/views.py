@@ -340,7 +340,7 @@ def archive_thumbnails_ajax(request, inst, proposal, observation=None):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     data = thumbnails_ajax(inst, proposal, obs_num=observation)
-
+    data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
@@ -382,13 +382,16 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
 
     obs_list = sorted(list(set(all_obs)))
 
+    # TODO SAPP ADD HERE
+    sort = request.session.get("image_sort", "Ascending")
     template = 'thumbnails_per_obs.html'
     context = {'base_url': get_base_url(),
                'inst': inst,
                'obs': observation,
                'obs_list': obs_list,
                'prop': proposal,
-               'prop_meta': proposal_meta}
+               'prop_meta': proposal_meta,
+               'sort': sort}
 
     return render(request, template, context)
 
@@ -426,7 +429,7 @@ def archive_thumbnails_query_ajax(request):
     anomaly_query_config.THUMBNAILS = thumbnails
 
     data = thumbnails_query_ajax(thumbnails)
-
+    data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
@@ -959,11 +962,11 @@ def view_image(request, inst, file_root, rewrite=False):
         except KeyError:
             pass
 
-    sort_type = request.session.get('image_sort', 'default')
-    if sort_type in ['Exposure Start Time', 'default']:
-        file_root_list = {key: sorted(file_root_list[key], reverse=True) for key in sorted(file_root_list)}
-    else:
+    sort_type = request.session.get('image_sort', 'Ascending')
+    if sort_type in ['Ascending']:
         file_root_list = {key: sorted(file_root_list[key]) for key in sorted(file_root_list)}
+    else:
+        file_root_list = {key: sorted(file_root_list[key], reverse=True) for key in sorted(file_root_list)}
 
     # Build the context
     context = {'base_url': get_base_url(),

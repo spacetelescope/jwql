@@ -469,8 +469,8 @@ function sort_by_proposals(sort_type) {
 
 
 /**
- * Sort thumbnail display by a given sort type
- * @param {String} sort_type - The sort type (e.g. file_root", "exp_start")
+ * Sort thumbnail display by a given sort type, save sort type in session for use in previous/next buttons
+ * @param {String} sort_type - The sort type by file name
  */
 function sort_by_thumbnails(sort_type, base_url) {
 
@@ -479,18 +479,13 @@ function sort_by_thumbnails(sort_type, base_url) {
 
     // Sort the thumbnails accordingly
     var thumbs = $('div#thumbnail-array>div')
-    if (sort_type == 'Name') {
-        tinysort(thumbs, {attr:'file_root'});
-    } else if (sort_type == 'Default') {
-        tinysort(thumbs, {selector: 'img', attr:'id'});
-    } else if (sort_type == 'Exposure Start Time') {
-        tinysort(thumbs, {attr:'exp_start'});
+    if (sort_type == 'Ascending') {
+        tinysort(thumbs, {attr:'file_root', order:'asc'});
+    } else if (sort_type == 'Descending') {
+        tinysort(thumbs, {attr:'file_root', order:'desc'});
     }
     $.ajax({
         url: base_url + '/ajax/session/image_sort/' + sort_type + '/',
-        success: function(data){
-            console.log("session item image_sort is:" + data.item);
-        },
         error : function(response) {
             console.log("session update failed");
         }
@@ -767,11 +762,10 @@ function update_sort_options(data, base_url) {
     // Build div content
     content = 'Sort by:';
     content += '<div class="dropdown">';
-    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Default</button>';
+    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + data.thumbnail_sort + '</button>';
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
-    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Default\', \'' + base_url + '\');">Default</a>';
-    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Name\', \'' + base_url + '\');">Name</a>';
-    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Exposure Start Time\', \'' + base_url + '\');">Exposure Start Time</a>';
+    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Ascending\', \'' + base_url + '\');">Ascending</a>';
+    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Descending\', \'' + base_url + '\');">Descending</a>';
     content += '</div></div>';
 
     // Add the content to the div
@@ -780,7 +774,7 @@ function update_sort_options(data, base_url) {
 
 /**
  * Updates the thumbnail-array div with interactive images of thumbnails
- * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ * @param {Object} data - The data returned by the update_thumbnails_per_observation_page/update_thumbnails_query_page AJAX methods
  */
 function update_thumbnail_array(data) {
 
@@ -816,28 +810,6 @@ function update_thumbnail_array(data) {
         // Add the appropriate image to the thumbnail
         determine_filetype_for_thumbnail('/static/thumbnails/' , file.thumbnail, i, rootname);
     };
-};
-
-/**
- * Updates various compnents on the thumbnails page
- * @param {String} inst - The instrument of interest (e.g. "FGS")
- * @param {String} proposal - The proposal number of interest (e.g. "88660")
- * @param {String} base_url - The base URL for gathering data from the AJAX view.
- */
-function update_thumbnails_page(inst, proposal, base_url) {
-    $.ajax({
-        url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/',
-        success: function(data){
-            // Perform various updates to divs
-            update_show_count(Object.keys(data.file_data).length, 'activities');
-            update_thumbnail_array(data);
-            update_filter_options(data);
-            update_sort_options(data, base_url);
-
-            // Replace loading screen with the proposal array div
-            document.getElementById("loading").style.display = "none";
-            document.getElementById("thumbnail-array").style.display = "block";
-        }});
 };
 
 /**
