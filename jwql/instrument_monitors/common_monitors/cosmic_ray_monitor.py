@@ -505,6 +505,7 @@ class CosmicRay:
         in_ext = "uncal"
         out_exts = defaultdict(lambda: ['jump', '0_ramp_fit'])
         instrument = self.instrument
+        existing_files = {}
 
         for file_name in file_list:
             dir_name = '_'.join(file_name.split('_')[:4])  # file_name[51:76]
@@ -524,17 +525,32 @@ class CosmicRay:
 
                 # Next we run the pipeline on the files to get the proper outputs
                 uncal_file = os.path.join(self.obs_dir, os.path.basename(file_name))
-                
-                short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
-
-                logging.info("Adding {} to calibration tasks".format(uncal_file))
-                input_files.append(uncal_file)
+                jump_file = uncal_file.replace("_uncal", "jump")
+                rate_file = uncal_file.replace("_uncal", "0_ramp_fit")
                 if self.nints > 1:
-                    out_exts[short_name] = ['jump', '1_ramp_fit']
+                    rate_file = rate_file.replace("0_ramp_fit", "1_ramp_fit")
+                
+                if (not os.path.isfile(jump_file)) or (not os.path.isfile(rate_file)):
+                    logging.info("Adding {} to calibration tasks".format(uncal_file))
+                
+                    short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
+
+                    input_files.append(uncal_file)
+                    if self.nints > 1:
+                        out_exts[short_name] = ['jump', '1_ramp_fit']
+                else:
+                    existing_files[uncal_file] = [jump_file, rate_file]
         
         output_files = run_parallel_pipeline(input_files, in_ext, out_exts, instrument, jump_pipe=True)
+        for file_name in existing_files:
+            if file_name not in input_files:
+                input_files.append(file_name)
+                output_files[file_name] = existing_files[file_name]
         
         for file_name in input_files:
+
+            head = fits.getheader(file_name)
+            self.nints = head['NINTS']
         
             obs_files = output_files[file_name]
 
@@ -543,14 +559,19 @@ class CosmicRay:
                 logging.info("Checking output file {}".format(output_file))
 
                 if 'jump' in output_file:
+                    logging.debug("Adding jump file {}".format(os.path.basename(output_file)))
                     jump_file = os.path.join(self.obs_dir, os.path.basename(output_file))
 
                 if self.nints == 1:
+                    logging.debug("Looking for single integration rate file")
                     if '0_ramp_fit' in output_file:
+                        logging.debug("Adding rate file {}".format(os.path.basename(output_file)))
                         rate_file = os.path.join(self.obs_dir, os.path.basename(output_file))
 
                 elif self.nints > 1:
+                    logging.debug("Looking for multi-integration rate file")
                     if '1_ramp_fit' in output_file:
+                        logging.debug("Adding rate file {}".format(os.path.basename(output_file)))
                         rate_file = os.path.join(self.obs_dir, os.path.basename(output_file))
 
             logging.info(f'\tUsing {jump_file} and {rate_file} to monitor CRs.')
