@@ -554,7 +554,7 @@ class CosmicRay:
             head = fits.getheader(file_name)
             self.nints = head['NINTS']
 
-            dir_name = '_'.join(os.path.basename(file_name).split('_')[:4])  # file_name[51:76]
+            dir_name = '_'.join(os.path.basename(file_name).split('_')[:2])  # file_name[51:76]
             self.obs_dir = os.path.join(self.data_dir, dir_name)
         
             obs_files = output_files[file_name]
