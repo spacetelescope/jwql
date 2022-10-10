@@ -32,6 +32,7 @@ Use
 # Native Imports
 from collections import defaultdict
 import datetime
+from glob import glob
 import logging
 import os
 import re
@@ -525,8 +526,8 @@ class CosmicRay:
 
                 # Next we run the pipeline on the files to get the proper outputs
                 uncal_file = os.path.join(self.obs_dir, os.path.basename(file_name))
-                jump_file = uncal_file.replace("_uncal", "jump")
-                rate_file = uncal_file.replace("_uncal", "0_ramp_fit")
+                jump_file = uncal_file.replace("uncal", "jump")
+                rate_file = uncal_file.replace("uncal", "0_ramp_fit")
                 if self.nints > 1:
                     rate_file = rate_file.replace("0_ramp_fit", "1_ramp_fit")
                 
@@ -539,6 +540,7 @@ class CosmicRay:
                     if self.nints > 1:
                         out_exts[short_name] = ['jump', '1_ramp_fit']
                 else:
+                    logging.info("Calibrated files for {} already exist".format(uncal_file))
                     existing_files[uncal_file] = [jump_file, rate_file]
         
         output_files = run_parallel_pipeline(input_files, in_ext, out_exts, instrument, jump_pipe=True)
@@ -551,6 +553,9 @@ class CosmicRay:
 
             head = fits.getheader(file_name)
             self.nints = head['NINTS']
+
+            dir_name = '_'.join(os.path.basename(file_name).split('_')[:4])  # file_name[51:76]
+            self.obs_dir = os.path.join(self.data_dir, dir_name)
         
             obs_files = output_files[file_name]
 
