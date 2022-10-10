@@ -221,7 +221,7 @@ class CosmicRay:
         """
 
         query = session.query(self.stats_table)
-        results = query.filter(self.stats_table.uncal_filename == filename).all()
+        results = query.filter(self.stats_table.source_file == filename).all()
 
         if len(results) != 0:
             file_exists = True
