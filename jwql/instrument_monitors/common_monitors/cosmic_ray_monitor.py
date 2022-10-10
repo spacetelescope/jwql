@@ -205,6 +205,32 @@ class CosmicRay:
 
         return mags
 
+    def file_exists_in_database(self, filename):
+        """Checks if an entry for filename exists in the bias stats
+        database.
+
+        Parameters
+        ----------
+        filename : str
+            The full path to the uncal filename.
+
+        Returns
+        -------
+        file_exists : bool
+            ``True`` if filename exists in the bias stats database.
+        """
+
+        query = session.query(self.stats_table)
+        results = query.filter(self.stats_table.uncal_filename == filename).all()
+
+        if len(results) != 0:
+            file_exists = True
+        else:
+            file_exists = False
+
+        session.close()
+        return file_exists
+
     def get_cr_rate(self, cr_num, header):
         """Given a number of CR hits, as well as the header from an observation file,
         calculate the rate of CR hits per pixel
@@ -509,6 +535,13 @@ class CosmicRay:
         existing_files = {}
 
         for file_name in file_list:
+        
+            # Dont process files that already exist in the bias stats database
+            file_exists = self.file_exists_in_database(file_name)
+            if file_exists:
+                logging.info('\t{} already exists in the bias database table.'.format(file_name))
+                continue
+        
             dir_name = '_'.join(file_name.split('_')[:4])  # file_name[51:76]
 
             self.obs_dir = os.path.join(self.data_dir, dir_name)
