@@ -626,14 +626,12 @@ class CosmicRay:
             # Delete fits files in order to save disk space
             logging.info("Removing pipeline products in order to save disk space. \n")
             try:
-                shutil.rmtree(self.obs_dir)
+                for file in [file_name, jump_file, rate_file]:
+                    os.remove(file)
             except OSError as e:
                 logging.error(f"Unable to delete {self.obs_dir}")
                 logging.error(e)
 
-            # Remove initial copy of input file as well
-            if os.path.isfile(file_name):
-                os.remove(file_name)
 
     def pull_filenames(self, file_info):
         """Extract filenames from the list of file information returned from
