@@ -632,7 +632,8 @@ class CosmicRay:
                 logging.error(e)
 
             # Remove initial copy of input file as well
-            os.remove(file_name)
+            if os.path.isfile(file_name):
+                os.remove(file_name)
 
     def pull_filenames(self, file_info):
         """Extract filenames from the list of file information returned from
