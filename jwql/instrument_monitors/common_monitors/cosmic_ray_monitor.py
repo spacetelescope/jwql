@@ -552,6 +552,7 @@ class CosmicRay:
         out_exts = defaultdict(lambda: ['jump', '0_ramp_fit'])
         instrument = self.instrument
         existing_files = {}
+        no_coord_files = []
 
         for file_name in file_list:
         
@@ -645,6 +646,8 @@ class CosmicRay:
                 continue
 
             jump_locs = self.get_jump_locs(jump_dq)
+            if len(jump_locs) == 0:
+                no_coord_files.append(os.path.basename(file_name))
             jump_locs_pre = self.group_before(jump_locs)
             cosmic_ray_num = len(jump_locs)
 
@@ -690,7 +693,11 @@ class CosmicRay:
             except (StatementError, DataError, DatabaseError, InvalidRequestError, OperationalError) as e:
                 logging.error("Could not insert entry into database. \n")
                 logging.error(e)
-        # end process()
+        
+        if len(no_coord_files) > 0:
+            logging.error("{} files had no jump co-ordinates".format(len(no_coord_files)))
+            for file_name in no_coord_files:
+                logging.error("\t{} had no jump co-ordinates".format(file_name))
 
     def pull_filenames(self, file_info):
         """Extract filenames from the list of file information returned from
