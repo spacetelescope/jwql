@@ -364,6 +364,10 @@ class CosmicRay:
 
         jump_locs_pre = []
 
+        if len(jump_locs) == 0:
+            logging.error("No entries in jump_locs!")
+            return []
+
         if len(jump_locs[0]) == 4:
             for coord in jump_locs:
                 jump_locs_pre.append((coord[0], coord[1] - 1, coord[2], coord[3]))
@@ -537,6 +541,7 @@ class CosmicRay:
         for file_name in file_list:
         
             # Dont process files that already exist in the bias stats database
+            logging.info("Checking for {} in database".format(file_name))
             file_exists = self.file_exists_in_database(file_name)
             if file_exists:
                 logging.info('\t{} already exists in the bias database table.'.format(file_name))
@@ -640,6 +645,7 @@ class CosmicRay:
 
             # Insert new data into database
             try:
+                logging.info("Inserting {} in database".format(file_name))
                 cosmic_ray_db_entry = {'entry_date': datetime.datetime.now(),
                                        'aperture': self.aperture,
                                        'source_file': file_name,
