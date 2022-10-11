@@ -920,8 +920,12 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
 
 
 def update_session_value_ajax(request, session_item, session_value):
-    request.session[session_item] = session_value
-    context = {'item': request.session[session_item]}
+    session_options = ["image_sort"]
+    context = {}
+    # Only allow updates of sessions that we expect
+    if session_item in session_options:
+        request.session[session_item] = session_value
+        context = {'item': request.session[session_item]}
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
