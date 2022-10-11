@@ -28,7 +28,6 @@ References
 """
 
 import inflection
-from jwql.utils.utils import query_unformat
 
 # Each amplifier is represented by 2 tuples, the first for x coordinates
 # and the second for y coordinates. Within each tuple are value for
@@ -88,14 +87,14 @@ special_cases = ['Dominant_MSA_Leakage','MRS_Glow','MRS_Zipper','LRS_Contaminati
 
 # Defines the possible anomalies to flag through the web app
 ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
-                        else (anomaly, query_unformat(anomaly))
+                        else (anomaly, anomaly.replace('_',' '))
                         for anomaly in ANOMALIES_PER_INSTRUMENT]
 
 ANOMALY_CHOICES_FGS = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
                        if 'fgs' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
 ANOMALY_CHOICES_MIRI = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
-                        else (anomaly, query_unformat(anomaly))
+                        else (anomaly, anomaly.replace('_',' '))
                         for anomaly in ANOMALIES_PER_INSTRUMENT
                         if 'miri' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
@@ -106,7 +105,7 @@ ANOMALY_CHOICES_NIRISS = [(anomaly, inflection.titleize(anomaly)) for anomaly in
                           if 'niriss' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
 ANOMALY_CHOICES_NIRSPEC = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
-                            else (anomaly, query_unformat(anomaly))
+                            else (anomaly, anomaly.replace('_',' '))
                             for anomaly in ANOMALIES_PER_INSTRUMENT
                             if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
