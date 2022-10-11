@@ -546,6 +546,11 @@ class CosmicRay:
             if file_exists:
                 logging.info('\t{} already exists in the bias database table.'.format(file_name))
                 continue
+            logging.info("Checking for {} in database".format(os.path.basename(file_name)))
+            file_exists = self.file_exists_in_database(os.path.basename(file_name))
+            if file_exists:
+                logging.info('\t{} already exists in the bias database table.'.format(file_name))
+                continue
         
             dir_name = '_'.join(file_name.split('_')[:4])  # file_name[51:76]
 
