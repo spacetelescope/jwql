@@ -665,10 +665,10 @@ class CosmicRay:
 
             # Insert new data into database
             try:
-                logging.info("Inserting {} in database".format(file_name))
+                logging.info("Inserting {} in database".format(os.path.basename(file_name)))
                 cosmic_ray_db_entry = {'entry_date': datetime.datetime.now(),
                                        'aperture': self.aperture,
-                                       'source_file': file_name,
+                                       'source_file': os.path.basename(file_name),
                                        'obs_start_time': start_time,
                                        'obs_end_time': end_time,
                                        'jump_count': cosmic_ray_num,
@@ -678,19 +678,19 @@ class CosmicRay:
                 self.stats_table.__table__.insert().execute(cosmic_ray_db_entry)
 
                 logging.info("Successfully inserted into database. \n")
+
+                # Delete fits files in order to save disk space
+                logging.info("Removing pipeline products in order to save disk space. \n")
+                try:
+                    for file in [file_name, jump_file, rate_file]:
+                        os.remove(file)
+                except OSError as e:
+                    logging.error(f"Unable to delete {self.obs_dir}")
+                    logging.error(e)
             except (StatementError, DataError, DatabaseError, InvalidRequestError, OperationalError) as e:
                 logging.error("Could not insert entry into database. \n")
                 logging.error(e)
-
-            # Delete fits files in order to save disk space
-            logging.info("Removing pipeline products in order to save disk space. \n")
-            try:
-                for file in [file_name, jump_file, rate_file]:
-                    os.remove(file)
-            except OSError as e:
-                logging.error(f"Unable to delete {self.obs_dir}")
-                logging.error(e)
-
+        # end process()
 
     def pull_filenames(self, file_info):
         """Extract filenames from the list of file information returned from
