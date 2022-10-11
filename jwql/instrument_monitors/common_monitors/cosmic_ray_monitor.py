@@ -206,7 +206,7 @@ class CosmicRay:
         return mags
 
     def file_exists_in_database(self, filename):
-        """Checks if an entry for filename exists in the bias stats
+        """Checks if an entry for filename exists in the cosmic ray stats
         database.
 
         Parameters
@@ -230,6 +230,20 @@ class CosmicRay:
 
         session.close()
         return file_exists
+
+    def files_in_database(self):
+        """Checks all entries in the cosmic ray stats database.
+
+        Returns
+        -------
+        files : list
+            All files in the stats database
+        """
+
+        query = session.query(self.stats_table.source_file)
+        results = query.all()
+        session.close()
+        return results
 
     def get_cr_rate(self, cr_num, header):
         """Given a number of CR hits, as well as the header from an observation file,
@@ -529,8 +543,9 @@ class CosmicRay:
             List of filenames (including full paths) to the cosmic ray
             files
         """
-
-# def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pipe=False):
+        logging.info("Checking all files in database")
+        existing_entries = self.files_in_database()
+        logging.info("{}".format(existing_entries))
 
         input_files = []
         in_ext = "uncal"
