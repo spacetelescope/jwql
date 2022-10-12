@@ -258,14 +258,14 @@ def run_calwebb_detector1(input_file_name, short_name, instrument, step_args={})
     copy_files([input_file], deepcopy(cal_dir))
     set_permissions(uncal_file)
     
-    # Check for exposures with too many frames
-    max_frames = config.get("max_frames", 1000)
+    # Check for exposures with too many groups
+    max_groups = config.get("max_groups", 1000)
     with fits.open(uncal_file) as inf:
-        total_frames = fits[0].header["NINTS"] * fits[0].header["NGROUPS"] * fits[0].header["NFRAMES"]
-    if total_frames > max_frames:
-        msg = "File {} has {} frames (greater than maximum of {})"
-        logging.error(msg.format(os.path.basename(uncal_file), total_frames, max_frames))
-        raise ValueError(msg.format(os.path.basename(uncal_file), total_frames, max_frames))
+        total_groups = fits[0].header["NINTS"] * fits[0].header["NGROUPS"]
+    if total_groups > max_groups:
+        msg = "File {} has {} groups (greater than maximum of {})"
+        logging.error(msg.format(os.path.basename(uncal_file), total_groups, max_groups))
+        raise ValueError(msg.format(os.path.basename(uncal_file), total_groups, max_groups))
     
     steps = get_pipeline_steps(instrument)
 
@@ -382,14 +382,14 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
     copy_files([input_file], cal_dir)
     set_permissions(uncal_file)
 
-    # Check for exposures with too many frames
-    max_frames = config.get("max_frames", 1000)
+    # Check for exposures with too many groups
+    max_groups = config.get("max_groups", 1000)
     with fits.open(uncal_file) as inf:
-        total_frames = fits[0].header["NINTS"] * fits[0].header["NGROUPS"] * fits[0].header["NFRAMES"]
-    if total_frames > max_frames:
-        msg = "File {} has {} frames (greater than maximum of {})"
-        logging.error(msg.format(os.path.basename(uncal_file), total_frames, max_frames))
-        raise ValueError(msg.format(os.path.basename(uncal_file), total_frames, max_frames))
+        total_groups = fits[0].header["NINTS"] * fits[0].header["NGROUPS"]
+    if total_groups > max_groups:
+        msg = "File {} has {} groups (greater than maximum of {})"
+        logging.error(msg.format(os.path.basename(uncal_file), total_groups, max_groups))
+        raise ValueError(msg.format(os.path.basename(uncal_file), total_groups, max_groups))
     
     output_dir = os.path.join(get_config()["transfer_dir"], "outgoing")
 
