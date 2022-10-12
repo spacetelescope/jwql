@@ -4,4 +4,4 @@ OBS_START_TIME, datetime
 OBS_END_TIME, datetime
 JUMP_COUNT, integer
 JUMP_RATE, float
-MAGNITUDE, float_array_1d
+MAGNITUDE, integer_array_1d
