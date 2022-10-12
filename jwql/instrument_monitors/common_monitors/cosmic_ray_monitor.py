@@ -34,6 +34,7 @@ from collections import defaultdict
 import datetime
 from glob import glob
 import logging
+import numpy as np
 import os
 import re
 import shutil
@@ -429,7 +430,7 @@ class CosmicRay:
             rate = rateints[coord[0]][coord[-2]][coord[-1]]
             cr_mag = data[coord] - data[coord_gb] - rate * grouptime
 
-        return cr_mag
+        return int(np.round(cr_mag))
 
     def most_recent_search(self):
         """Adapted from Dark Monitor (Bryan Hilbert)
