@@ -309,6 +309,12 @@ def run_calwebb_detector1(input_file_name, short_name, instrument, step_args={})
             else:
                 logging.info("*****CELERY: File {} already exists".format(transfer_file))
             set_permissions(transfer_file)
+    
+    logging.info("*****CELERY: Removing local files.")
+    files_to_remove = glob(os.path.join(cal_dir, short_name+"*"))
+    for file_name in files_to_remove:
+        logging.info("\tRemoving {}".format(file_name))
+        os.remove(file_name)
 
     logging.info("*****CELERY: Finished calibration.")
     return output_dir
@@ -447,6 +453,12 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
     calibrated_files = glob(uncal_file.replace("_uncal.fits", "*"))
     logging.info("*****CELERY: Pipeline Output is {}".format(calibrated_files))
     copy_files(calibrated_files, output_dir)
+
+    logging.info("*****CELERY: Removing local files.")
+    files_to_remove = glob(os.path.join(cal_dir, short_name+"*"))
+    for file_name in files_to_remove:
+        logging.info("\tRemoving {}".format(file_name))
+        os.remove(file_name)
 
     logging.info("*****CELERY: Finished pipeline")
     return jump_output, pipe_output, fitopt_output
