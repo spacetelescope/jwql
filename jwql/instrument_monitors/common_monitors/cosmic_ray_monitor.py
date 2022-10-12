@@ -430,7 +430,7 @@ class CosmicRay:
             rate = rateints[coord[0]][coord[-2]][coord[-1]]
             cr_mag = data[coord] - data[coord_gb] - rate * grouptime
 
-        return int(np.round(cr_mag))
+        return int(np.round(np.nan_to_num(cr_mag)))
 
     def most_recent_search(self):
         """Adapted from Dark Monitor (Bryan Hilbert)

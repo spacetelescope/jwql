@@ -70,6 +70,7 @@ There are many other ways to call and use tasks, including ways to group tasks, 
 synchronously, run a group of tasks with a final callback function, etc. These are best
 explained by the celery documentation itself.
 """
+from astropy.io import fits
 from collections import OrderedDict
 from copy import deepcopy
 import gc
@@ -257,6 +258,15 @@ def run_calwebb_detector1(input_file_name, short_name, instrument, step_args={})
     copy_files([input_file], deepcopy(cal_dir))
     set_permissions(uncal_file)
     
+    # Check for exposures with too many frames
+    max_frames = config.get("max_frames", 1000)
+    with fits.open(uncal_file) as inf:
+        total_frames = fits[0].header["NINTS"] * fits[0].header["NGROUPS"] * fits[0].header["NFRAMES"]
+    if total_frames > max_frames:
+        msg = "File {} has {} frames (greater than maximum of {})"
+        logging.error(msg.format(os.path.basename(uncal_file), total_frames, max_frames))
+        raise ValueError(msg.format(os.path.basename(uncal_file), total_frames, max_frames))
+    
     steps = get_pipeline_steps(instrument)
 
     first_step_to_be_run = True
@@ -311,7 +321,7 @@ def run_calwebb_detector1(input_file_name, short_name, instrument, step_args={})
             set_permissions(transfer_file)
     
     logging.info("*****CELERY: Removing local files.")
-    files_to_remove = glob(os.path.join(cal_dir, short_name+"*"))
+    files_to_remove = glob(uncal_file.replace("_uncal.fits", "*"))
     for file_name in files_to_remove:
         logging.info("\tRemoving {}".format(file_name))
         os.remove(file_name)
@@ -371,6 +381,15 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
     ensure_dir_exists(cal_dir)
     copy_files([input_file], cal_dir)
     set_permissions(uncal_file)
+
+    # Check for exposures with too many frames
+    max_frames = config.get("max_frames", 1000)
+    with fits.open(uncal_file) as inf:
+        total_frames = fits[0].header["NINTS"] * fits[0].header["NGROUPS"] * fits[0].header["NFRAMES"]
+    if total_frames > max_frames:
+        msg = "File {} has {} frames (greater than maximum of {})"
+        logging.error(msg.format(os.path.basename(uncal_file), total_frames, max_frames))
+        raise ValueError(msg.format(os.path.basename(uncal_file), total_frames, max_frames))
     
     output_dir = os.path.join(get_config()["transfer_dir"], "outgoing")
 
@@ -455,8 +474,7 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
     copy_files(calibrated_files, output_dir)
 
     logging.info("*****CELERY: Removing local files.")
-    files_to_remove = glob(os.path.join(cal_dir, short_name+"*"))
-    for file_name in files_to_remove:
+    for file_name in calibrated_files:
         logging.info("\tRemoving {}".format(file_name))
         os.remove(file_name)
 
