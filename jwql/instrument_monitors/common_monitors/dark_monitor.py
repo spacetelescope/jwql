@@ -188,6 +188,18 @@ class Dark():
         """
 
         logging.info('Adding {} {} pixels to database.'.format(len(coordinates[0]), pixel_type))
+        
+        logging.info("Add bad pixels:")
+        logging.info("\tcoordinates: {}".format(type(coordinates)))
+        logging.info("\tx coordinates: {}".format(type(coordinates[0])))
+        logging.info("\ty coordinates: {}".format(type(coordinates[1])))
+        logging.info("\tpixel_type: {}".format(type(pixel_type)))
+        logging.info("\tfiles: {}".format(type(files)))
+        logging.info("\tmean_filename: {}".format(type(mean_filename)))
+        logging.info("\tbaseline_filename: {}".format(type(baseline_filename)))
+        logging.info("\tobservation_start_time: {}".format(type(observation_start_time)))
+        logging.info("\tobservation_mid_time: {}".format(type(observation_mid_time)))
+        logging.info("\tobservation_end_time: {}".format(type(observation_end_time)))
 
         source_files = [os.path.basename(item) for item in files]
         entry = {'detector': self.detector,
