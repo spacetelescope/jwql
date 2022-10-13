@@ -261,7 +261,7 @@ def run_calwebb_detector1(input_file_name, short_name, instrument, step_args={})
     # Check for exposures with too many groups
     max_groups = config.get("max_groups", 1000)
     with fits.open(uncal_file) as inf:
-        total_groups = fits[0].header["NINTS"] * fits[0].header["NGROUPS"]
+        total_groups = inf[0].header["NINTS"] * inf[0].header["NGROUPS"]
     if total_groups > max_groups:
         msg = "File {} has {} groups (greater than maximum of {})"
         logging.error(msg.format(os.path.basename(uncal_file), total_groups, max_groups))
@@ -386,7 +386,7 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
     # Check for exposures with too many groups
     max_groups = config.get("max_groups", 1000)
     with fits.open(uncal_file) as inf:
-        total_groups = fits[0].header["NINTS"] * fits[0].header["NGROUPS"]
+        total_groups = inf[0].header["NINTS"] * inf[0].header["NGROUPS"]
     if total_groups > max_groups:
         msg = "File {} has {} groups (greater than maximum of {})"
         logging.error(msg.format(os.path.basename(uncal_file), total_groups, max_groups))
