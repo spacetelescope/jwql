@@ -1,5 +1,31 @@
 # Cheatsheet on using the JWQL `celery` and `redis` task server
 
+## Very quick start-up
+
+Note that this start-up assumes that *nothing* is currently running anywhere in terms of 
+redis or celery. Or at least that nothing is *supposed* to be running.
+
+- **Set up config.json**: Make sure that it has the following entries:
+  - `"redis_host"`: `"pljwql2.stsci.edu"`,
+  - `"redis_port"`: `"6379"`,
+  - `"transfer_dir"`: `"/grp/jwst/ins/jwql/transfer/dev"`
+- **Start Redis**: 
+  - Log into `pljwql2` and change to the `svc_jwqladm_mon` account
+  - Activate the celery environment (currently named `jwql_celery_38`)
+  - Run `ps -e | grep redis-server`. If any process shows up, kill it.
+  - Run `redis-server --protected-mode no &`
+- **Start Celery**: Do this on *each* of `pljwql3`, `pljwql4`, `pljwql5`, and `pljwql6`
+  - Log in to the server and change to the `svc_jwqladm_mon` account
+  - Activate the `jwql_celery_38` environment
+  - Go to the `~/jwql/jwql/jwql/shared_tasks` directory
+  - Run `ps -e | grep python`. If there are any running processes, run `ps auxww | grep 'python' | awk '{print $2}' | xargs kill -9`
+  - Run `celery -A shared_tasks purge`. Hit "y" at the prompt. **NOTE** You only need to do this on one of the servers.
+  - Run `celery -A shared_tasks worker -D -E -ldebug -Ofair -c1 --max-tasks-per-child=1 --prefetch-multiplier 1`
+
+Now, the next time that any of the monitors starts up, it should see the celery servers and
+be able to give them tasks. The monitor logs should show this activity, and there should be
+logs of the celery servers available in the usual log location under the name "shared_tasks".
+
 ## Introduction
 
 `celery` is a task server infrastructure, which means that, if you have processing work 
