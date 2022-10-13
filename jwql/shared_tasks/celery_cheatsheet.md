@@ -8,7 +8,7 @@ redis or celery. Or at least that nothing is *supposed* to be running.
 - **Set up config.json**: Make sure that it has the following entries:
   - `"redis_host"`: `"pljwql2.stsci.edu"`,
   - `"redis_port"`: `"6379"`,
-  - `"transfer_dir"`: `"/grp/jwst/ins/jwql/transfer/dev"`
+  - `"transfer_dir"`: `"$CENTRAL_STORAGE/transfer/dev"`
 - **Start Redis**: 
   - Log into `pljwql2` and change to the `svc_jwqladm_mon` account
   - Activate the celery environment (currently named `jwql_celery_38`)
@@ -17,7 +17,7 @@ redis or celery. Or at least that nothing is *supposed* to be running.
 - **Start Celery**: Do this on *each* of `pljwql3`, `pljwql4`, `pljwql5`, and `pljwql6`
   - Log in to the server and change to the `svc_jwqladm_mon` account
   - Activate the `jwql_celery_38` environment
-  - Go to the `~/jwql/jwql/jwql/shared_tasks` directory
+  - Go to the `$REPOSITORY/jwql/shared_tasks` directory
   - Run `ps -e | grep python`. If there are any running processes, run `ps auxww | grep 'python' | awk '{print $2}' | xargs kill -9`
   - Run `celery -A shared_tasks purge`. Hit "y" at the prompt. **NOTE** You only need to do this on one of the servers.
   - Run `celery -A shared_tasks worker -D -E -ldebug -Ofair -c1 --max-tasks-per-child=1 --prefetch-multiplier 1`
@@ -65,7 +65,7 @@ have:
     processes are already running on that server. Currently `pljwql3..6` are reserved for
     `celery` workers.
   - Log in as the appropriate service user
-  - Change to the JWQL `shared_tasks` directory (`~/jwql/jwql/jwql/shared_tasks`)
+  - Change to the JWQL `shared_tasks` directory (`$REPOSITORY/jwql/shared_tasks`)
   - Start `celery` in detached mode with `celery -A shared_tasks worker -D -E -ldebug -Ofair -c1 --max-tasks-per-child=1 --prefetch-multiplier 1`
 - **Shutting Down Celery Workers:**
   - Log in to any server on which `celery` is running (`pljwql3..6`)
@@ -175,10 +175,10 @@ time out, don't provide any value for the `timeout` parameter.
 
 ### Using a custom lock
 
-For a worked example of this, look at the `run_pipeline` function in `jwql/shared\_tasks/shared\_tasks.py`.
+For a worked example of this, look at the `run_pipeline` function in `jwql/shared_tasks/shared_tasks.py`.
 
 In order to create a custom lock, you need to import the `REDIS_CLIENT` instance from 
-`jwql.shared\_tasks.shared\_tasks`, and then use the `redis` `lock()` and `acquire()` 
+`jwql.shared_tasks.shared_tasks`, and then use the `redis` `lock()` and `acquire()` 
 functions. As an example,
 
 ```
