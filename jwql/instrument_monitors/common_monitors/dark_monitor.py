@@ -191,8 +191,8 @@ class Dark():
         
         logging.info("Add bad pixels:")
         logging.info("\tcoordinates: {}".format(type(coordinates)))
-        logging.info("\tx coordinates: {}".format(type(coordinates[0])))
-        logging.info("\ty coordinates: {}".format(type(coordinates[1])))
+        logging.info("\tx coordinates: {} {}".format(type(coordinates[0]), type(coordinates[0][0])))
+        logging.info("\ty coordinates: {} {}".format(type(coordinates[1]), type(coordinates[1][0])))
         logging.info("\tpixel_type: {}".format(type(pixel_type)))
         logging.info("\tfiles: {}".format(type(files)))
         logging.info("\tmean_filename: {}".format(type(mean_filename)))
