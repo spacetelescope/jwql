@@ -189,22 +189,15 @@ class Dark():
 
         logging.info('Adding {} {} pixels to database.'.format(len(coordinates[0]), pixel_type))
         
-        logging.info("Add bad pixels:")
-        logging.info("\tcoordinates: {}".format(type(coordinates)))
-        logging.info("\tx coordinates: {} {}".format(type(coordinates[0]), type(coordinates[0][0])))
-        logging.info("\ty coordinates: {} {}".format(type(coordinates[1]), type(coordinates[1][0])))
-        logging.info("\tpixel_type: {}".format(type(pixel_type)))
-        logging.info("\tfiles: {}".format(type(files)))
-        logging.info("\tmean_filename: {}".format(type(mean_filename)))
-        logging.info("\tbaseline_filename: {}".format(type(baseline_filename)))
-        logging.info("\tobservation_start_time: {}".format(type(observation_start_time)))
-        logging.info("\tobservation_mid_time: {}".format(type(observation_mid_time)))
-        logging.info("\tobservation_end_time: {}".format(type(observation_end_time)))
-
+        # Change to int from numpy.int64 because the latter can't be put into the 
+        # database apparently.
+        x_coord = [int(x) for x in coordinates[0]]
+        y_coord = [int(y) for y in coordinates[1]]
+        
         source_files = [os.path.basename(item) for item in files]
         entry = {'detector': self.detector,
-                 'x_coord': coordinates[0],
-                 'y_coord': coordinates[1],
+                 'x_coord': x_coord,
+                 'y_coord': y_coord,
                  'type': pixel_type,
                  'source_files': source_files,
                  'obs_start_time': observation_start_time,
