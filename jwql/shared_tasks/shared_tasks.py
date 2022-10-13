@@ -367,15 +367,16 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
         Name of the saved file containing the output after ramp-fitting
         is performed (if requested). Otherwise ``None``.
     """
+    config = get_config()
     msg = "*****CELERY: Started Save Jump Task on {}. ramp_fit={}, save_fitopt={}"
     logging.info(msg.format(input_file_name, ramp_fit, save_fitopt))
 
-    input_file = os.path.join(get_config()["transfer_dir"], "incoming", input_file_name)
+    input_file = os.path.join(config["transfer_dir"], "incoming", input_file_name)
     if not os.path.isfile(input_file):
         logging.error("*****CELERY: File {} not found!".format(input_file))
         raise FileNotFoundError("{} not found".format(input_file))
     
-    cal_dir = os.path.join(get_config()['outputs'], "calibrated_data")
+    cal_dir = os.path.join(config['outputs'], "calibrated_data")
     uncal_file = os.path.join(cal_dir, input_file_name)
     short_name = input_file_name.replace("_uncal", "").replace("_0thgroup", "")
     ensure_dir_exists(cal_dir)
@@ -391,7 +392,7 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
         logging.error(msg.format(os.path.basename(uncal_file), total_groups, max_groups))
         raise ValueError(msg.format(os.path.basename(uncal_file), total_groups, max_groups))
     
-    output_dir = os.path.join(get_config()["transfer_dir"], "outgoing")
+    output_dir = os.path.join(config["transfer_dir"], "outgoing")
 
     log_config = os.path.join(output_dir, "celery_pipeline_log.cfg")
 
