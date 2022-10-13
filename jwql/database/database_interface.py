@@ -134,7 +134,7 @@ def load_connection(connection_string):
     ``ascql``:
         https://github.com/spacetelescope/acsql/blob/master/acsql/database/database_interface.py
     """
-    engine = create_engine(connection_string, echo=False, client_encoding='utf8')
+    engine = create_engine(connection_string, echo=False, client_encoding='utf8', encoding='utf8')
     base = declarative_base(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
