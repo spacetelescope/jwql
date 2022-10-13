@@ -554,7 +554,6 @@ def generate_preview_images(overwrite):
     program_list = [os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'public', 'jw*'))]
     program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', 'jw*'))])
     program_list = list(set(program_list))
-    program_list = [(element, overwrite) for element in program_list]
     pool = multiprocessing.Pool(processes=int(SETTINGS['cores']))
     results = pool.starmap(process_program, program_list)
     pool.close()
