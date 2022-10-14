@@ -214,7 +214,7 @@ class CosmicRay:
             else:
                 mags[mag_bins[mag]] += 1
 
-        return mags
+        return [int(x) for x in mags]
 
     def file_exists_in_database(self, filename):
         """Checks if an entry for filename exists in the cosmic ray stats
