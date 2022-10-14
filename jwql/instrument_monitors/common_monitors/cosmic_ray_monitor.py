@@ -202,18 +202,24 @@ class CosmicRay:
         """
         mag_bins = np.arange(65536*2+1, dtype=np.int32) - 65536
         mags = np.zeros_like(mag_bins, dtype=np.int32)
+        outliers = 0
+        total = 0
 
         for coord, coord_gb in zip(jump_locs, jump_locs_pre):
+            total += 1
             mag = self.magnitude(coord, coord_gb, rateints, jump_data, jump_head)
             if mag > 65535:
+                outliers += 1
                 logging.warning("\tCosmic ray with magnitude {} reported as 65536".format(mag))
                 mags[-1] += 1
             elif mag < -65535:
+                outliers += 1
                 logging.warning("\tCosmic ray with magnitude {} reported as -65536".format(mag))
                 mags[0] += 1
             else:
                 mags[mag_bins[mag]] += 1
 
+        logging.info("{} of {} cosmic rays are beyond bin boundaries".format(outliers, total))
         return [int(x) for x in mags]
 
     def file_exists_in_database(self, filename):
