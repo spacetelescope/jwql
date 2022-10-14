@@ -195,14 +195,17 @@ class CosmicRay:
         Returns:
         -------
 
-        mags: list
-            A list of cosmic ray magnitudes corresponding to each jump.
+        mags: numpy.array
+            A histogram of cosmic ray magnitudes, from -65536 to 65536, with the number of
+            cosmic rays of each magnitude.
 
         """
+        mag_bins = np.arange(65536*2+1, dtype=np.int32) - 65536
+        mags = np.zeros_like(mag_bins, dtype=np.int32)
 
-        mags = []
         for coord, coord_gb in zip(jump_locs, jump_locs_pre):
-            mags.append(self.magnitude(coord, coord_gb, rateints, jump_data, jump_head))
+            mag = self.magnitude(coord, coord_gb, rateints, jump_data, jump_head)
+            mags[mag_bins[mag]] += 1
 
         return mags
 
