@@ -205,7 +205,14 @@ class CosmicRay:
 
         for coord, coord_gb in zip(jump_locs, jump_locs_pre):
             mag = self.magnitude(coord, coord_gb, rateints, jump_data, jump_head)
-            mags[mag_bins[mag]] += 1
+            if mag > 65535:
+                logging.warning("\tCosmic ray with magnitude {} reported as 65536".format(mag))
+                mags[-1] += 1
+            elif mag < -65535:
+                logging.warning("\tCosmic ray with magnitude {} reported as -65536".format(mag))
+                mags[0] += 1
+            else:
+                mags[mag_bins[mag]] += 1
 
         return mags
 
