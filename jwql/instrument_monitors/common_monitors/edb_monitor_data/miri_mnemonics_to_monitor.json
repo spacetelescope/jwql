@@ -662,17 +662,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "*SE_ZBUSVLT",
@@ -692,17 +692,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -722,17 +722,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -750,17 +750,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -780,17 +780,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -808,17 +808,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -838,17 +838,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -866,17 +866,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -896,17 +896,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -924,17 +924,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -954,17 +954,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -982,17 +982,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1012,17 +1012,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1040,17 +1040,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1068,17 +1068,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1096,17 +1096,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1124,17 +1124,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1152,17 +1152,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1180,17 +1180,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1208,17 +1208,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1236,17 +1236,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1264,17 +1264,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1292,17 +1292,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1320,17 +1320,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1348,17 +1348,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1376,17 +1376,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1404,17 +1404,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1432,17 +1432,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1460,17 +1460,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1489,17 +1489,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1517,17 +1517,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1545,17 +1545,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1574,17 +1574,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1603,17 +1603,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1632,17 +1632,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1661,17 +1661,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1690,17 +1690,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1719,17 +1719,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1747,17 +1747,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",
@@ -1775,17 +1775,17 @@
                 {
                     "name": "IGDP_IT_MIR_IC_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_LW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 },
                 {
                     "name": "IGDP_IT_MIR_SW_STATUS",
                     "relation": "=",
-                    "threshold": "DETECTOR READY"
+                    "threshold": "DETECTOR_READY"
                 }
             ],
             "plot_data": "nominal",

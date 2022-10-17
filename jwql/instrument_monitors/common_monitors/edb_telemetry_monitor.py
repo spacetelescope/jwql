@@ -1914,7 +1914,9 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
             # earlier, calculate an overall mean for each key, and use that for
             # normalization.
             overall_mean, overall_median, overall_stdev = sigma_clipped_stats(val_data)
-            val_data /= overall_mean
+            logging.info(f'key: {key}, len_data: {len(val_data)}, firstentry: {val_data[0]}, stats: {overall_mean}, {overall_median}, {overall_stdev}')
+            if overall_mean != 0.0:
+                val_data /= overall_mean
 
             source = ColumnDataSource(data={'x': val_times, 'y': val_data, 'dep': dependency_val})
 
