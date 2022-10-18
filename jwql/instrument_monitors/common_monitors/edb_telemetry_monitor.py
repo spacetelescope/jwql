@@ -1107,11 +1107,9 @@ class EdbMnemonicMonitor():
             base_time = '2022-04-12 00:00:0.0'
             query_result = datetime.datetime.strptime(base_time, '%Y-%m-%d %H:%M:%S.%f')
             logging.info(f'\tNo query history for {telem_name}. Returning default "previous query" date of {base_time}.')
-            print(f'\tNo query history for {telem_name}. Returning default "previous query" date of {base_time}.')
         else:
             query_result = query[-1].latest_query
             logging.info(f'For {telem_name}, the previous query time is {query_result}')
-            print(f'For {telem_name}, the previous query time is {query_result}')
 
         return query_result
 
@@ -1160,13 +1158,10 @@ class EdbMnemonicMonitor():
         if '*' in mnemonic_dict["plot_data"]:
             # Define the mnemonic identifier to be <mnemonic_name_1>*<mnemonic_name_2>
             product_identifier = f'{mnemonic_dict[self._usename]}{mnemonic_dict["plot_data"]}'
-            print('in multiday, product_identifier is:', product_identifier)
+            logging.info(f'In multiday, product_identifier is: {product_identifier}')
 
         # Work one start time/end time pair at a time.
         for i, (starttime, endtime) in enumerate(zip(starting_time_list, ending_time_list)):
-
-            print('WORKING ON DATE: ', starttime, endtime)
-
             # This function wraps around the EDB query and dependency filtering.
             mnemonic_info = self.get_mnemonic_info(mnemonic_dict, starttime, endtime, telemetry_type)
 
@@ -1340,10 +1335,7 @@ class EdbMnemonicMonitor():
 
             # Work on mnemonic at a time
             for mnemonic in mnemonic_dict[telemetry_kind]:
-
                 logging.info(f'Working on {mnemonic["name"]}')
-
-                print(f'Working on {mnemonic["name"]}')
 
                 # Only two types of plots are currently supported. Plotting the data in the EdbMnemonic
                 # directly, and plotting it as the product with a second EdbMnemonic
@@ -1408,7 +1400,6 @@ class EdbMnemonicMonitor():
                         new_data = empty_edb_instance(mnemonic[self._usename], plot_start, plot_end, info=info)
                         new_data.mnemonic_identifier = product_identifier
                         logging.info(f'All data needed are already in JWQLDB.')
-                        print(f'All data needed are already in JWQLDB.')
                 else:
                     # For data where no averaging is done, all data must be retrieved from EDB. They are not
                     # stored in the JWQLDB
@@ -1472,6 +1463,7 @@ class EdbMnemonicMonitor():
                         for kk in historical_data:
                             logging.debug(f'{kk}, {len(historical_data[kk])}')
 
+                        # Note that the line below will change mnemonic_info into a dictionary
                         mnemonic_info = add_every_change_history(historical_data, every_change_data)
                         logging.info(f'Combined new data plus historical data. Number of data points per key:')
                         for key in mnemonic_info:
@@ -1863,6 +1855,7 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
     min_time = datetime.datetime.today()
     max_time = datetime.datetime(2021, 12, 25)
 
+    logging.info('In plot_every_change_data:')
     for (key, value), color in zip(data.items(), colors):
         if len(value) > 0:
             val_times, val_data, meanval, stdevval = value
