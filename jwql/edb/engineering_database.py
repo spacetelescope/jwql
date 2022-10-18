@@ -705,9 +705,10 @@ class EdbMnemonic:
                     new_blocks.append(good[0])
 
             # Add en entry for the final element if it's not already there
-            if new_blocks[-1] < len(new_tab["dates"]):
-                new_blocks.append(len(new_tab["dates"]))
-            self.blocks = np.array(new_blocks)
+            if len(new_blocks) > 0:
+                if new_blocks[-1] < len(new_tab["dates"]):
+                    new_blocks.append(len(new_tab["dates"]))
+                self.blocks = np.array(new_blocks)
 
         # Update the data in the instance.
         self.data = new_tab

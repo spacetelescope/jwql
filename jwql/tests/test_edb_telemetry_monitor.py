@@ -148,7 +148,7 @@ def test_every_change_to_allPoints():
     assert np.all(expected["dates"] == updated["dates"])
     assert np.all(expected["euvalues"] == updated["euvalues"])
 
-"""
+
 def test_find_all_changes():
     inst = etm.EdbMnemonicMonitor()
 
@@ -157,33 +157,28 @@ def test_find_all_changes():
     end_time = Time('2022-02-03')
     temp_data = Table()
     temp_data["euvalues"] = [350., 350.1, 350.2, 360., 360.1, 360.2, 370.1, 370., 360., 360.]
-    #temp_data["dates"] = np.arange(10)*0.1 + 59612.
-    temp_data["dates"] = np.array([Time('2022-02-02') + TimeDelta(0.1 * i, format='jd') for i in range(10)])
-    meta = {}
+    temp_data["dates"] = np.array([datetime.datetime(2022, 2, 2) + datetime.timedelta(days=0.1 * i) for i in range(10)])
+    #temp_data["dates"] = np.array([Time('2022-02-02') + TimeDelta(0.1 * i, format='jd') for i in range(10)])
+    meta = {'TlmMnemonics': [{'AllPoints': 1}]}
     info = {}
     temperature = EdbMnemonic("TEMPERATURE", start_time, end_time, temp_data, meta, info)
+    temperature.blocks = []
 
     # Create dictionary of dependency info
     dependency = [{"name": "CURRENT", "relation": "none", "threshold": 0}]
 
     # Create dependency data
     current_data = Table()
-    current_data["euvalues"] = [1., 1., 1., 25., 25., 25., 55., 55., 25., 25.]
-    #current_data["dates"] = np.arange(10)*0.1001 + 59612.
-    current_data["dates"] = np.array([Time('2022-02-02') + TimeDelta(0.1001 * i, format='jd') for i in range(10)])
+    current_data["euvalues"] = ['LOW', 'LOW', 'LOW', 'MEDIUM', 'MEDIUM', 'MEDIUM', 'HIGH', 'HIGH', 'MEDIUM', 'MEDIUM']
+    current_data["dates"] = np.array([datetime.datetime(2022, 2, 2) + datetime.timedelta(days=0.1001 * i) for i in range(10)])
+    #current_data["dates"] = np.array([Time('2022-02-02') + TimeDelta(0.1001 * i, format='jd') for i in range(10)])
     inst.query_results[dependency[0]["name"]] = EdbMnemonic("CURRENT", start_time, end_time, current_data, meta, info)
 
-
     vals = inst.find_all_changes(temperature, dependency)
-    means, meds, devs, times, dep_means, dep_meds, dep_devs, dep_times = vals
-    assert means == [35.1, 36.1, 37.05, 36.]
-    assert meds == [35.1, 36.1, 37.05, 36.]
-    assert devs == []
-    assert dep_means == [1., 2., 3., 2.]
-    assert dep_meds == [1., 2., 3., 2.]
-    assert dep_devs == [0., 0., 0., 0.]
-    This is not working well. Strategy for how to find different values in the condition may need to change.
-    """
+    assert vals.mean == [359.07]
+    assert vals.median == [360.0]
+    assert np.isclose(vals.stdev[0], 6.9818407314976785)
+
 
 def test_multiple_conditions():
     """Test that filtering using multiple conditions is working as expected.

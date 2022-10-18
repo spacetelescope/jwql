@@ -421,10 +421,6 @@ class EdbMnemonicMonitor():
             times = ensure_list(times)
             values = ensure_list(values)
 
-            print('GOING INTO JWQLDB:')
-            print(key, times, values, means, stdevs)
-
-
             db_entry = {'mnemonic': mnem,
                         'dependency_mnemonic': dependency_name,
                         'dependency_value': key,
@@ -575,7 +571,6 @@ class EdbMnemonicMonitor():
 
                 # For development
                 if instrument_name == 'miri':
-                    #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_test.json')
                     mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_mnemonics_to_monitor.json')
                 elif instrument_name == 'nircam':
                     mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'nircam_mnemonics_to_monitor.json')
@@ -747,12 +742,22 @@ class EdbMnemonicMonitor():
             # If dates differ between the mnemonic of interest and the dependency, then interpolate to match
             # If the mnemonic of interest is change-only data, then we need to interpolate onto a list of dates
             # that include those originally in the mnemonic plus those in the dependency)
-            if not np.all(dependency["dates"] == mnem_data.data["dates"].data):
+            if (len(dependency["dates"]) != len(mnem_data.data["dates"].value)) or not np.all(dependency["dates"] == mnem_data.data["dates"].value):
                 if mnem_data.meta['TlmMnemonics'][0]['AllPoints'] != 0:
                     mnem_data.interpolate(dependency["dates"])
                 else:
+                    # In practice, we should never end up in this block, because change-only data are transformed
+                    # into every-point data after being returned by the query. It might be useful to keep this
+                    # here for now, in case that situation changes later.
                     all_dates = sorted(np.append(np.array(dependency["dates"]), np.array(mnem_data.data["dates"].data)))
                     mnem_data.interpolate(all_dates)
+
+                    # We also need to interpolate the dependency onto the same dates here, so that we know
+                    # the new indexes where the values change
+                    temp_dep = ed.EdbMnemonic(dep_list[0]['name'], dependency["dates"][0], dependency["dates"][-1],
+                                              dependency, meta = {'TlmMnemonics': [{'AllPoints': 1}]}, info={}, blocks=change_indexes)
+                    temp_dep.interpolate(all_dates)
+                    change_indexes = temp_dep.blocks
 
             # Get the dependency values for each change.
             vals = dependency["euvalues"][change_indexes[0:-1]].data
@@ -852,8 +857,8 @@ class EdbMnemonicMonitor():
         if dependency["name"] in self.query_results:
 
             # We need the full time to be covered
-            if ((self.query_results[dependency["name"]].requested_start_time <= starttime) and
-                (self.query_results[dependency["name"]].requested_end_time >= endtime)):
+            if ((self.query_results[dependency["name"]].requested_start_time <= starttime)
+                and (self.query_results[dependency["name"]].requested_end_time >= endtime)):
 
                 logging.info(f'Dependency {dependency["name"]} is already present in self.query_results.')
 
@@ -1099,7 +1104,6 @@ class EdbMnemonicMonitor():
         query = session.query(self.history_table).filter(self.history_table.mnemonic == telem_name).order_by(self.history_table.latest_query).all()
 
         if len(query) == 0:
-            #base_time = '2021-09-01 00:00:0.0'
             base_time = '2022-04-12 00:00:0.0'
             query_result = datetime.datetime.strptime(base_time, '%Y-%m-%d %H:%M:%S.%f')
             logging.info(f'\tNo query history for {telem_name}. Returning default "previous query" date of {base_time}.')
@@ -1296,10 +1300,7 @@ class EdbMnemonicMonitor():
         # Container to hold and organize all plots
         self.figures = {}
         self.instrument = instrument
-
-        self._today = datetime.datetime(2022, 6, 20, 0, 0, 0)
-        #self._today = datetime.datetime(2021, 9, 4, 9, 0, 0)
-        #self._today = datetime.now()
+        self._today = datetime.now()
 
         # Set the limits for the telemetry plots if necessary
         if plot_start is None:
@@ -1370,14 +1371,11 @@ class EdbMnemonicMonitor():
                 if telem_type != 'all':
                     # Find the end time of the previous query from the database.
                     most_recent_search = self.most_recent_search(product_identifier)
-                    #most_recent_search = datetime.datetime(2021, 9, 1, 9, 0, 0) # for development
-
                     logging.info(f'Most recent search is {most_recent_search}.')
                     logging.info(f'Query cadence is {self.query_cadence}')
 
                     if plot_end > (most_recent_search + self.query_cadence):
                         # Here we need to query the EDB to cover the entire plot range
-                        #starttime = most_recent_search + TimeDelta(self.query_cadence)
                         logging.info("Plot range extends outside the time contained in the JWQLDB. Need to query the EDB.")
                         starttime = most_recent_search + self.query_cadence
                     else:
@@ -1456,22 +1454,9 @@ class EdbMnemonicMonitor():
                         for key in historical_data:
                             logging.info(f'Key: {key}, Num of Points: {len(historical_data[key][0])}')
 
-
-                        print('GRABBED HISTORICAL DATA FROM DB:')
-                        print(historical_data.keys())
-                        for key in historical_data:
-                            print(historical_data[key])
-
-
                         # Before we can add the every-change data to the database, organize it to make it
                         # easier to access. Note that every_change_data is now a dict rather than an EDBMnemonic instance
                         every_change_data = organize_every_change(new_data)
-
-
-                        print('DONE ORGANIZING EVERY CHANGE:')
-                        print(every_change_data.keys())
-                        for key in every_change_data:
-                            print(every_change_data[key])
 
                         # If query_start_times is None, then no new data were retrieved from the EDB, and there
                         # is no need to add an entry to the JWQLDB
@@ -1480,14 +1465,12 @@ class EdbMnemonicMonitor():
                                                                query_start_times[-1])
 
                         # Combine the historical data with the new data from the EDB
-                        print('new every change data:')
+                        logging.debug('New every change data:')
                         for kk in every_change_data:
-                            print(kk, len(every_change_data[kk]))
-                        print('historical data:')
+                            logging.debug(f'{kk}, {len(every_change_data[kk])}')
+                        logging.debug('Historical data:')
                         for kk in historical_data:
-                            print(kk, len(historical_data[kk]))
-
-
+                            logging.debug(f'{kk}, {len(historical_data[kk])}')
 
                         mnemonic_info = add_every_change_history(historical_data, every_change_data)
                         logging.info(f'Combined new data plus historical data. Number of data points per key:')
@@ -1496,14 +1479,6 @@ class EdbMnemonicMonitor():
 
                 else:
                     mnemonic_info = new_data
-
-
-                try:
-                    print('AFTER COMBINING HISTORY AND NEW')
-                    print(mnemonic_info.requested_start_time, type(mnemonic_info.requested_start_time))
-                except:
-                    pass
-
 
                 # For a telemetry_kind that is a combination of all+something, here we work on the "all" part.
                 if telemetry_kind in ALLOWED_COMBINATION_TYPES:
@@ -1612,11 +1587,6 @@ def add_every_change_history(dict1, dict2):
 
     for key, value in dict1.items():
         if key in dict2:
-
-
-            print('DICT LENGTHS: ', len(dict2[key]), len(value))
-
-
 
             if np.min(value[0]) < np.min(dict2[key][0]):
                 all_dates = np.append(value[0], dict2[key][0])
@@ -1775,10 +1745,6 @@ def organize_every_change(mnemonic):
 
     unique_vals = np.unique(mnemonic.every_change_values)
 
-    print('ORGANIZING EVERY CHANGE')
-    print('UNIQUE_VALS: ', unique_vals)
-
-
     if not isinstance(mnemonic.every_change_values, np.ndarray):
         every_change = np.array(mnemonic.every_change_values)
     else:
@@ -1790,14 +1756,8 @@ def organize_every_change(mnemonic):
         val_times = mnemonic.data["dates"].data[good]
         val_data = mnemonic.data["euvalues"].data[good]
 
-        print(val_data)
-
-
         # Calculate the mean for each dependency value, and normalize the data
         meanval, medianval, stdevval = sigma_clipped_stats(val_data, sigma=3)
-
-        print(val, val_data, meanval, stdevval)
-
         all_data[val] = (val_times, val_data, meanval, stdevval)
 
     return all_data
@@ -1987,7 +1947,7 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
         fig.y_range.end = yrange[1]
 
     fig.legend.location = "top_left"
-    fig.legend.click_policy="hide"
+    fig.legend.click_policy = "hide"
 
     if savefig:
         output_file(filename=filename, title=mnem_name)
