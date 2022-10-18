@@ -543,8 +543,10 @@ class EdbMnemonicMonitor():
                     ensure_dir_exists(self.plot_output_dir)
 
                     # For development
-                    mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_test.json')
-                    #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'nircam_mnemonic_to_monitor.json')
+                    if instrument_name == 'miri':
+                        mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_mnemonics_to_monitor.json')
+                    elif instrument_name == 'nircam':
+                        mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'nircam_mnemonics_to_monitor.json')
 
                     # Read in file with nominal list of mnemonics
                     with open(mnemonic_file) as json_file:
@@ -565,7 +567,7 @@ class EdbMnemonicMonitor():
             # Here, no input was provided on specific mnemonics to run, so we run the entire suite
             # as defined by the json files. This is the default operation.
 
-            # Loop over all instruments
+            # Loop over instruments
             for instrument_name in ['miri', 'nircam']:  #JWST_INSTRUMENT_NAMES:
                 monitor_dir = os.path.dirname(os.path.abspath(__file__))
 

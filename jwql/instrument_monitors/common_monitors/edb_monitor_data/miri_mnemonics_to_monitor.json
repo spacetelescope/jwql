@@ -655,7 +655,7 @@
             "description": "FPE drive current (READY)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -685,7 +685,7 @@
             "description": "FPE 5V Digital Voltage (V)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -715,7 +715,7 @@
             "description": "FPE 5V Digital Current (mA)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -743,7 +743,7 @@
             "description": "FPE +5V Analog Voltage (V)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -773,7 +773,7 @@
             "description": "FPE +5V Analog Current (mA)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -801,7 +801,7 @@
             "description": "FPE -5V Analog V (V)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -831,7 +831,7 @@
             "description": "FPE -5V Analog Current (mA)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -859,7 +859,7 @@
             "description": "FPE +7V Analog Voltage (V)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -889,7 +889,7 @@
             "description": "FPE +7V Analog Current (mA)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -917,7 +917,7 @@
             "description": "FPE -5V Analog V (V)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -947,7 +947,7 @@
             "description": "FPE -7V Analog Current (mA)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -975,7 +975,7 @@
             "description": "FPE 2.5V Digital Voltage (V)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1005,7 +1005,7 @@
             "description": "FPE 2.5V PDU Ref voltage (V)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1033,7 +1033,7 @@
             "description": "Detector Bias VDETCOM (IC)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1061,7 +1061,7 @@
             "description": "Detector Bias VDETCOM (SW)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1089,7 +1089,7 @@
             "description": "Detector Bias VDETCOM (LW)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1117,7 +1117,7 @@
             "description": "Detector Bias VSSOUT (IC)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1145,7 +1145,7 @@
             "description": "Detector Bias VSSOUT (SW)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1173,7 +1173,7 @@
             "description": "Detector Bias VSSOUT (LW)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1201,7 +1201,7 @@
             "description": "Detector Bias VRSTOFF (IC)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1229,7 +1229,7 @@
             "description": "Detector Bias VRSTOFF (SW)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1257,7 +1257,7 @@
             "description": "Detector Bias VRSTOFF (LW)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1285,7 +1285,7 @@
             "description": "Detector Bias (IC)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1313,7 +1313,7 @@
             "description": "Detector Bias (SW)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1341,7 +1341,7 @@
             "description": "Detector Bias (LW)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1369,7 +1369,7 @@
             "description": "Detector Bias VDDUC (IC)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1397,7 +1397,7 @@
             "description": "Detector Bias VDDUC (SW)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1425,7 +1425,7 @@
             "description": "Detector Bias VDDUC (LW)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1453,7 +1453,7 @@
             "description": "FPE PDU Temperature",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1482,7 +1482,7 @@
             "description": "FPE A IEC panel temperature",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1510,7 +1510,7 @@
             "description": "FPE A IEC panel temperature",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1538,7 +1538,7 @@
             "description": "FPE SCE Analogue board Temperature (IC)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1567,7 +1567,7 @@
             "description": "FPE SCE Analogue board Temperature (SW)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1596,7 +1596,7 @@
             "description": "FPE SCE Analogue board Temperature (LW)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1625,7 +1625,7 @@
             "description": "FPE SCE Digital board Temperature (IC)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1654,7 +1654,7 @@
             "description": "FPE SCE Digital board Temperature (SW)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1683,7 +1683,7 @@
             "description": "FPE SCE Digital board Temperature (LW)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1712,7 +1712,7 @@
             "description": "Detector Temperature (IC)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1740,7 +1740,7 @@
             "description": "Detector Temperature (SW)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },
@@ -1768,7 +1768,7 @@
             "description": "Detector Temperature (LW)",
             "dependency": [
                 {
-                    "name": "SE_ZIMIRFPEA ",
+                    "name": "SE_ZIMIRFPEA",
                     "relation": ">",
                     "threshold": 0.5
                 },

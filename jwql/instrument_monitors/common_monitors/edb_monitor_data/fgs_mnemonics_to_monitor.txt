@@ -1,2 +1,20 @@
-IFGS_ACQ_INUM
-IFGS_EVENTG2_GROUPCNT
+{
+    "all": [
+    	{
+    		"name": "IFGS_ACQ_INUM",
+            "database_id": "IFGS_ACQ_INUM",
+            "description": "FGS ACQ Image Data Processing Telemetry Integration Number",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "Groups and Ints"
+        },
+    	{
+    		"name": "IFGS_EVENTG2_GROUPCNT",
+            "database_id": "IFGS_EVENTG2_GROUPCNT",
+            "description": "SCP_EVENT_TLM event group count",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "Groups and Ints"
+        }
+    ]
+}
