@@ -107,40 +107,6 @@
             "plot_category": "ICE_temperature"
         },
         {
-            "name": "SI_GZMPT1AK",
-            "description": "ICE A IEC panel Temp",
-            "dependency": [
-                {
-                    "name": "SE_ZIMIRICEA",
-                    "relation": ">",
-                    "threshold": 0.2
-                },
-                {
-                    "name": "IMIR_HK_ICE_SEC_VOLT1",
-                    "relation": "<",
-                    "threshold": 1
-                },
-                {
-                    "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "=",
-                    "threshold": "OFF"
-                },
-                {
-                    "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "=",
-                    "threshold": "OFF"
-                },
-                {
-                    "name": "IMIR_HK_POM_LOOP",
-                    "relation": "=",
-                    "threshold": "OFF"
-                }
-            ],
-            "plot_data": "nominal",
-            "yellow_limits": [],
-            "plot_category": "ICE_temperature"
-        },
-        {
             "name": "IGDP_MIR_ICE_T1P_CRYO",
             "description": "Deck Nominal Temperature (T1)",
             "dependency": [
@@ -1475,34 +1441,6 @@
             ],
             "plot_data": "nominal",
             "yellow_limits": [238.15, 366.15],
-            "plot_category": "FPE_temperature"
-        },
-        {
-            "name": "SI_GZMPT2AK",
-            "description": "FPE A IEC panel temperature",
-            "dependency": [
-                {
-                    "name": "SE_ZIMIRFPEA",
-                    "relation": ">",
-                    "threshold": 0.5
-                },
-                {
-                    "name": "IGDP_IT_MIR_IC_STATUS",
-                    "relation": "=",
-                    "threshold": "DETECTOR_READY"
-                },
-                {
-                    "name": "IGDP_IT_MIR_LW_STATUS",
-                    "relation": "=",
-                    "threshold": "DETECTOR_READY"
-                },
-                {
-                    "name": "IGDP_IT_MIR_SW_STATUS",
-                    "relation": "=",
-                    "threshold": "DETECTOR_READY"
-                }
-            ],
-            "plot_data": "nominal",
             "plot_category": "FPE_temperature"
         },
         {

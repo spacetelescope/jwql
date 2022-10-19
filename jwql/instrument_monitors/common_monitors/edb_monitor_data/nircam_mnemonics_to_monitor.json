@@ -306,46 +306,6 @@
     ],
     "all+time_interval": [
         {
-            "name": "SE_ZINRCICE1",
-            "description": "ICE1 current monitor",
-            "dependency": [],
-            "plot_data": "nominal",
-            "yellow_limits": [0.36, 0.8],
-            "red_limits": [0, 1.367],
-            "plot_category": "Box_current",
-            "mean_time_block": "1_day"
-        },
-        {
-            "name": "SE_ZINRCICE2",
-            "description": "ICE2 current monitor",
-            "dependency": [],
-            "plot_data": "nominal",
-            "yellow_limits": [0.38, 0.86],
-            "red_limits": [0, 1.372],
-            "plot_category": "Box_current",
-            "mean_time_block": "1_day"
-        },
-        {
-            "name": "SE_ZINRCFPAA",
-            "description": "FPE-AA current",
-            "dependency": [],
-            "plot_data": "nominal",
-            "yellow_limits": [0.49, 0.515],
-            "red_limits": [0, 0.59],
-            "plot_category": "Box_current",
-            "mean_time_block": "1_day"
-        },
-        {
-            "name": "SE_ZINRCFPBA",
-            "description": "FPE-BA current",
-            "dependency": [],
-            "plot_data": "nominal",
-            "yellow_limits": [0.485, 0.535],
-            "red_limits": [0, 0.589],
-            "plot_category": "Box_current",
-            "mean_time_block": "1_day"
-        },
-        {
             "name": "SE_ZBUSVLT",
             "description": "Bus voltage",
             "dependency": [],
@@ -835,7 +795,7 @@
             "mean_time_block": "1_day"
         },
         {
-            "name": "INRC_FA_PSC_IMNACE23_N",
+            "name": "INRC_FA_PSC_IMNACE3_N",
             "description": "ModA ACE3 -5V reference current monitor",
             "dependency": [],
             "plot_data": "nominal",

@@ -254,15 +254,20 @@ class EdbMnemonic:
         common_dates, self_idx, mnem_idx = np.intersect1d(self.data["dates"], mnem.data["dates"],
                                                           return_indices=True)
 
-        # We should be able to keep blocks from the shorter of the two arrays.
-        # i.e. whichever array does not have elements removed in the intersection
-        # command above
-        if len(self_idx) == len(self.data):
-            use_blocks = self.blocks
-        elif len(mnem_idx) == len(mnem.data):
-            use_blocks = mnem.blocks
-        else:
-            raise ValueError('Both EdbMnemonic instances changed lengths when searching for the intersection.')
+        # Adjust self.blocks based on the new dates. For each block, find the index of common_dates
+        # that corresponds to its previous date, and use that index in the new blocks list. Note that
+        # we will do this for self.blocks. mnem.blocks is ignored and will not factor in to the
+        # new blocks list. We have to choose either self.blocks or mnem.blocks to keep, and it makes
+        # more sense to keep with self.blocks since this is a method of self.data
+        new_blocks = []
+        for block in self.blocks:
+            prev_date = self.data['dates'][block]
+            before = np.where(common_dates < self.data['dates'][block])[0]
+            if len(before) > 0:
+                new_blocks.append(before + 1)
+        # The last element of blocks should be the final element of the data
+        if new_blocks[-1] != len(common_dates):
+            new_blocks.append(len(common_dates))
 
         # Strip away any rows from the tables that are not common to both instances
         self_data = self.data[self_idx]
@@ -274,7 +279,7 @@ class EdbMnemonic:
         new_tab["euvalues"] = self_data["euvalues"] * mnem_data["euvalues"]
 
         new_obj = EdbMnemonic(self.mnemonic_identifier, self.requested_start_time, self.requested_end_time,
-                              new_tab, self.meta, self.info, blocks=use_blocks)
+                              new_tab, self.meta, self.info, blocks=new_blocks)
         if self.mean_time_block is not None:
             new_obj.mean_time_block = self.mean_time_block
         elif mnem.mean_time_block is not None:
