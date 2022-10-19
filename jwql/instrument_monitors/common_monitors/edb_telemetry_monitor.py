@@ -542,11 +542,8 @@ class EdbMnemonicMonitor():
                     self.plot_output_dir = os.path.join(base_dir, instrument_name)
                     ensure_dir_exists(self.plot_output_dir)
 
-                    # For development
-                    if instrument_name == 'miri':
-                        mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_mnemonics_to_monitor.json')
-                    elif instrument_name == 'nircam':
-                        mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'nircam_mnemonics_to_monitor.json')
+                    # File of mnemonics to monitor
+                    mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', f'{instrument_name}_mnemonics_to_monitor.json')
 
                     # Read in file with nominal list of mnemonics
                     with open(mnemonic_file) as json_file:
@@ -568,14 +565,11 @@ class EdbMnemonicMonitor():
             # as defined by the json files. This is the default operation.
 
             # Loop over instruments
-            for instrument_name in ['miri', 'nircam']:  #JWST_INSTRUMENT_NAMES:
+            for instrument_name in JWST_INSTRUMENT_NAMES:
                 monitor_dir = os.path.dirname(os.path.abspath(__file__))
 
-                # For development
-                if instrument_name == 'miri':
-                    mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'miri_mnemonics_to_monitor.json')
-                elif instrument_name == 'nircam':
-                    mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', 'nircam_mnemonics_to_monitor.json')
+                # File of mnemonics to monitor
+                mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', f'{instrument_name}_mnemonics_to_monitor.json')
 
                 # Define the output directory in which the html files will be saved
                 self.plot_output_dir = os.path.join(base_dir, instrument_name)
