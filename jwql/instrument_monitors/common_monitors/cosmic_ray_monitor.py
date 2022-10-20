@@ -705,7 +705,7 @@ class CosmicRay:
                 logging.info("Removing pipeline products in order to save disk space. \n")
                 try:
                     for file in [file_name, jump_file, rate_file]:
-                        if os.path.isfile(file)
+                        if os.path.isfile(file):
                             os.remove(file)
                     if os.path.exists(self.obs_dir):
                         os.rmdir(self.obs_dir)
