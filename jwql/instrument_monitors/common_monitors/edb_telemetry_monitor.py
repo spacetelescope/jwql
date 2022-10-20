@@ -1483,6 +1483,7 @@ class EdbMnemonicMonitor():
                     tmp_table = Table()
                     tmp_table["dates"] = additional_data.data["dates"]
                     tmp_table["euvalues"] = additional_data.data["euvalues"]
+                    mnemonic_info.data = tmp_table
 
                 # Create plot
                 # If there is a nominal value, or yellow/red limits to be included in the plot, get those here
