@@ -210,7 +210,7 @@ def test_get_cr_mags_fake_data():
     cr_one_int.nints = 1
     int1_jump_coords = [c[1:] for c in jump_coords[0:2]]
     int1_prior_coords = [c[1:] for c in prior_coords[0:2]]
-    mags = cr_one_int.get_cr_mags(int1_jump_coords, int1_prior_coords, rate[0, :, :], data, header)
+    mags, outliers = cr_one_int.get_cr_mags(int1_jump_coords, int1_prior_coords, rate[0, :, :], data, header)
     assert mags[bin_indices[10]] == 1
     assert mags[bin_indices[-5]] == 1
     assert mags[bin_indices[3]] == 0
