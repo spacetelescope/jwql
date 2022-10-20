@@ -454,8 +454,7 @@ def filename_parser(filename):
                     filename_dict['detector'][:3].lower()
                 ]
             elif name_match == 'stage_2_msa':
-                    filename_dict['instrument'] = 'nirspec'
-
+                filename_dict['instrument'] = 'nirspec'
 
     # Raise error if unable to parse the filename
     except AttributeError:
@@ -580,18 +579,16 @@ def check_config_for_key(key):
     try:
         get_config()[key]
     except KeyError:
-        raise KeyError(
-            'The key `{}` is not present in config.json. Please add it.'.format(key) +
-            ' See the relevant wiki page (https://github.com/spacetelescope/' +
-            'jwql/wiki/Config-file) for more information.'
-        )
+        msg = 'The key `{}` is not present in config.json. Please add it.'.format(key)
+        msg += ' See the relevant wiki page (https://github.com/spacetelescope/'
+        msg += 'jwql/wiki/Config-file) for more information.'
+        raise KeyError(msg)
 
     if get_config()[key] == "":
-        raise ValueError(
-            'Please complete the `{}` field in your config.json. '.format(key) +
-            ' See the relevant wiki page (https://github.com/spacetelescope/' +
-            'jwql/wiki/Config-file) for more information.'
-        )
+        msg = 'Please complete the `{}` field in your config.json. '.format(key)
+        msg += ' See the relevant wiki page (https://github.com/spacetelescope/'
+        msg += 'jwql/wiki/Config-file) for more information.'
+        raise ValueError(msg)
 
 
 def query_format(string):

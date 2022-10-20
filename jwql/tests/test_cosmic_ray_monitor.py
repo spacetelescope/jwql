@@ -196,12 +196,12 @@ def test_get_cr_mags():
 def test_get_cr_mags_fake_data():
     """Test the calculation of multiple CR magnitudes"""
     data, rate, header, jump_coords, prior_coords = define_fake_test_data()
-    bin_indices = np.arange(65536*2+1, dtype=np.int32) - 65536
+    bin_indices = np.arange(65536 * 2 + 1, dtype=np.int32) - 65536
 
     cr = CosmicRay()
     cr.nints = 2
     mags, outliers = cr.get_cr_mags(jump_coords, prior_coords, rate, data, header)
-    assert len(mags) == 65536*2+1 # assert that it's a bin
+    assert len(mags) == 65536 * 2 + 1  # assert that it's a bin
     assert mags[bin_indices[10]] == 1
     assert mags[bin_indices[-5]] == 1
     assert mags[bin_indices[3]] == 1

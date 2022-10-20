@@ -200,7 +200,7 @@ class CosmicRay:
             cosmic rays of each magnitude.
 
         """
-        mag_bins = np.arange(65536*2+1, dtype=int) - 65536
+        mag_bins = np.arange(65536 * 2 + 1, dtype=int) - 65536
         mags = np.zeros_like(mag_bins, dtype=int)
         outliers = []
         num_outliers = 0
@@ -568,7 +568,7 @@ class CosmicRay:
         no_coord_files = []
 
         for file_name in file_list:
-        
+
             # Dont process files that already exist in the bias stats database
             logging.info("Checking for {} in database".format(file_name))
             file_exists = self.file_exists_in_database(file_name)
@@ -580,13 +580,13 @@ class CosmicRay:
             if file_exists:
                 logging.info('\t{} already exists in the bias database table.'.format(file_name))
                 continue
-        
+
             dir_name = '_'.join(file_name.split('_')[:4])  # file_name[51:76]
 
             self.obs_dir = os.path.join(self.data_dir, dir_name)
             ensure_dir_exists(self.obs_dir)
             logging.info(f'Setting obs_dir to {self.obs_dir}')
-            
+
             if 'uncal' in file_name:
                 head = fits.getheader(file_name)
                 self.nints = head['NINTS']
@@ -602,10 +602,10 @@ class CosmicRay:
                 rate_file = uncal_file.replace("uncal", "0_ramp_fit")
                 if self.nints > 1:
                     rate_file = rate_file.replace("0_ramp_fit", "1_ramp_fit")
-                
+
                 if (not os.path.isfile(jump_file)) or (not os.path.isfile(rate_file)):
                     logging.info("Adding {} to calibration tasks".format(uncal_file))
-                
+
                     short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
 
                     input_files.append(uncal_file)
@@ -614,18 +614,18 @@ class CosmicRay:
                 else:
                     logging.info("Calibrated files for {} already exist".format(uncal_file))
                     existing_files[uncal_file] = [jump_file, rate_file]
-        
+
         output_files = run_parallel_pipeline(input_files, in_ext, out_exts, instrument, jump_pipe=True)
         for file_name in existing_files:
             if file_name not in input_files:
                 input_files.append(file_name)
                 output_files[file_name] = existing_files[file_name]
-        
+
         for file_name in file_list:
             if os.path.isfile(file_name):
                 logging.info("Removing input file {}".format(file_name))
                 os.remove(file_name)
-        
+
         for file_name in input_files:
 
             head = fits.getheader(file_name)
@@ -633,7 +633,7 @@ class CosmicRay:
 
             dir_name = '_'.join(os.path.basename(file_name).split('_')[:2])  # file_name[51:76]
             self.obs_dir = os.path.join(self.data_dir, dir_name)
-        
+
             obs_files = output_files[file_name]
 
             # Next we analyze the cosmic rays in the new data
@@ -715,7 +715,7 @@ class CosmicRay:
             except (StatementError, DataError, DatabaseError, InvalidRequestError, OperationalError) as e:
                 logging.error("Could not insert entry into database. \n")
                 logging.error(e)
-        
+
         if len(no_coord_files) > 0:
             logging.error("{} files had no jump co-ordinates".format(len(no_coord_files)))
             for file_name in no_coord_files:

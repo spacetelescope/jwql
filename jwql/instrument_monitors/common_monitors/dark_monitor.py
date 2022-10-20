@@ -805,8 +805,8 @@ class Dark():
 
                     else:
                         logging.info(('\tDark monitor skipped. MAST query has returned {} new dark files for '
-                                      '{}, {}, {}. {} new files are required to run dark current monitor.')
-                                      .format(len(new_entries), instrument, aperture, self.readpatt, file_count_threshold))
+                                     '{}, {}, {}. {} new files are required to run dark current monitor.')
+                                     .format(len(new_entries), instrument, aperture, self.readpatt, file_count_threshold))
                         monitor_run = False
 
                     # Update the query history
