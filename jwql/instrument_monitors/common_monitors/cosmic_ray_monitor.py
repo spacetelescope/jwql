@@ -200,8 +200,8 @@ class CosmicRay:
             cosmic rays of each magnitude.
 
         """
-        mag_bins = np.arange(65536*2+1, dtype=np.int32) - 65536
-        mags = np.zeros_like(mag_bins, dtype=np.int32)
+        mag_bins = np.arange(65536*2+1, dtype=int) - 65536
+        mags = np.zeros_like(mag_bins, dtype=int)
         outliers = []
         num_outliers = 0
         total = 0
@@ -216,7 +216,7 @@ class CosmicRay:
                 mags[mag_bins[mag]] += 1
 
         logging.info("{} of {} cosmic rays are beyond bin boundaries".format(num_outliers, total))
-        return [int(x) for x in mags], outliers
+        return mags, outliers
 
     def file_exists_in_database(self, filename):
         """Checks if an entry for filename exists in the cosmic ray stats
