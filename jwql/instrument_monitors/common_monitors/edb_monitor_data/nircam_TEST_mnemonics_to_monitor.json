@@ -17,24 +17,6 @@
             "yellow_limits": [13.9, 14.7],
             "red_limits": [11.5, 16.5],
             "plot_category": "ICE_voltage"
-        },
-        {
-            "name": "INRC_FB_PSC_VDCR_5P",
-            "description": "ModB PSC reference +5V analog voltage",
-            "dependency": [],
-            "plot_data": "nominal",
-            "yellow_limits": [5.05, 5.25],
-            "red_limits": [-1.0, 5.4],
-            "plot_category": "ModB_PSC_voltages+currents"
-        },
-        {
-            "name": "INRC_FB_PSC_VDCR_5N",
-            "description": "ModB PSC reference -5V analog voltage",
-            "dependency": [],
-            "plot_data": "nominal",
-            "yellow_limits": [-5.15, -4.95],
-            "red_limits": [-5.4, 1.0],
-            "plot_category": "ModB_PSC_voltages+currents"
         }
     ],
     "block_means": [
@@ -84,21 +66,45 @@
             "mean_time_block": "1_day"
         },
         {
-            "name": "IGDP_NRC_FB_TMC1_SW_TS1",
-            "description": "T-offset for ModB SW FPA relative to zero-power, based on comparing TMC1 and OBA TS1 sensors",
+            "name": "INRC_ICE_DC_CUR_P15_MOT",
+            "description": "ICE HK +15V current for FWA & PIL motor drive",
             "dependency": [],
             "plot_data": "nominal",
-            "red_limits": [0, 1],
-            "plot_category": "FPA_heater_setpt",
+            "yellow_limits": [0.01, 0.34],
+            "red_limits": [-0.01, 0.8426],
+            "plot_category": "ICE_current",
             "mean_time_block": "1_day"
         },
         {
-            "name": "IGDP_NRC_FB_TMC1_SW_TS2",
-            "description": "T-offset for ModB SW FPA relative to zero-power, based on comparing TMC1 and OBA TS2 sensors",
-            "dependency": [],
+            "name": "INRC_A_M_PIL_AS_POS",
+            "description": "ModA PIL SensorA position",
+            "dependency": [
+                {
+                    "name": "IGDP_NRC_A_PIL_STATE",
+                    "relation": "=",
+                    "threshold": "DEPLOYED"
+                }
+            ],
             "plot_data": "nominal",
-            "red_limits": [0, 1],
-            "plot_category": "FPA_heater_setpt",
+            "yellow_limits": [-23490, 20982],
+            "red_limits": [-24000, 24000],
+            "plot_category": "PIL_pos",
+            "mean_time_block": "1_day"
+        },
+        {
+            "name": "INRC_A_M_PIL_BS_POS",
+            "description": "ModA PIL SensorB position",
+            "dependency": [
+                {
+                    "name": "IGDP_NRC_A_PIL_STATE",
+                    "relation": "=",
+                    "threshold": "DEPLOYED"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [-22382, 17863],
+            "red_limits": [-24000, 24000],
+            "plot_category": "PIL_pos",
             "mean_time_block": "1_day"
         }
     ]
