@@ -1291,7 +1291,8 @@ class EdbMnemonicMonitor():
         # Container to hold and organize all plots
         self.figures = {}
         self.instrument = instrument
-        self._today = datetime.now()
+        self._today = datetime.datetime(2022,7,8)
+        #self._today = datetime.datetime.now()
 
         # Set the limits for the telemetry plots if necessary
         if plot_start is None:
