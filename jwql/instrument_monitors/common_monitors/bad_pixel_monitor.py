@@ -895,9 +895,7 @@ class BadPixels():
         output_file = os.path.join(self.output_dir, output_file)
 
         logging.info("Calling bad_pixel_mask.bad_pixels")
-        logging.info("\tflat_slope_files are:")
-        for file in illuminated_slope_files:
-            logging.info("\t\t{}".format(file))
+        logging.info("\tflat_slope_files are: {}".format(illuminated_slope_files))
         logging.info("\tdead__search_type={}".format(dead_search_type))
         logging.info("\tflat_mean_normalization_method={}".format(flat_mean_normalization_method))
         logging.info("\tdead_flux_check_files are:")

@@ -202,25 +202,21 @@ class CosmicRay:
         """
         mag_bins = np.arange(65536*2+1, dtype=np.int32) - 65536
         mags = np.zeros_like(mag_bins, dtype=np.int32)
-        outliers = 0
+        outliers = []
+        num_outliers = 0
         total = 0
 
         for coord, coord_gb in zip(jump_locs, jump_locs_pre):
             total += 1
             mag = self.magnitude(coord, coord_gb, rateints, jump_data, jump_head)
-            if mag > 65535:
-                outliers += 1
-                logging.warning("\tCosmic ray with magnitude {} reported as 65536".format(mag))
-                mags[-1] += 1
-            elif mag < -65535:
-                outliers += 1
-                logging.warning("\tCosmic ray with magnitude {} reported as -65536".format(mag))
-                mags[0] += 1
+            if abs(mag) > 65535:
+                num_outliers += 1
+                outliers.append(int(mag))
             else:
                 mags[mag_bins[mag]] += 1
 
-        logging.info("{} of {} cosmic rays are beyond bin boundaries".format(outliers, total))
-        return [int(x) for x in mags]
+        logging.info("{} of {} cosmic rays are beyond bin boundaries".format(num_outliers, total))
+        return [int(x) for x in mags], outliers
 
     def file_exists_in_database(self, filename):
         """Checks if an entry for filename exists in the cosmic ray stats
@@ -625,6 +621,11 @@ class CosmicRay:
                 input_files.append(file_name)
                 output_files[file_name] = existing_files[file_name]
         
+        for file_name in file_list:
+            if os.path.isfile(file_name)
+            logging.info("Removing input file {}".format(file_name))
+            os.remove(file_name)
+        
         for file_name in input_files:
 
             head = fits.getheader(file_name)
@@ -681,7 +682,7 @@ class CosmicRay:
             start_time = Time(obs_start_time, format='mjd', scale='utc').isot.replace('T', ' ')
             end_time = Time(obs_end_time, format='mjd', scale='utc').isot.replace('T', ' ')
 
-            cosmic_ray_mags = self.get_cr_mags(jump_locs, jump_locs_pre, rate_data, jump_data, jump_head)
+            cosmic_ray_mags, outlier_mags = self.get_cr_mags(jump_locs, jump_locs_pre, rate_data, jump_data, jump_head)
 
             # Insert new data into database
             try:
@@ -693,7 +694,8 @@ class CosmicRay:
                                        'obs_end_time': end_time,
                                        'jump_count': cosmic_ray_num,
                                        'jump_rate': cr_rate,
-                                       'magnitude': cosmic_ray_mags
+                                       'magnitude': cosmic_ray_mags,
+                                       'outliers': outlier_mags
                                        }
                 self.stats_table.__table__.insert().execute(cosmic_ray_db_entry)
 
@@ -703,7 +705,10 @@ class CosmicRay:
                 logging.info("Removing pipeline products in order to save disk space. \n")
                 try:
                     for file in [file_name, jump_file, rate_file]:
-                        os.remove(file)
+                        if os.path.isfile(file)
+                            os.remove(file)
+                    if os.path.exists(self.obs_dir):
+                        os.rmdir(self.obs_dir)
                 except OSError as e:
                     logging.error(f"Unable to delete {self.obs_dir}")
                     logging.error(e)
