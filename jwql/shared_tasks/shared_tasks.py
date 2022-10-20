@@ -38,7 +38,7 @@ convenience function::
 
     def some_function(some_arguments):
         # ... do some work ...
-        
+
         # This returns the calibrated file's name and output location, where the output
         # file will be transferred into the same internal location as the input file. It
         # will block (i.e. wait) until the calibration has finished before returning. If
@@ -53,14 +53,14 @@ a list::
     from jwql.shared_tasks.shared_tasks import run_parallel_pipeline
 
     # ...
-    
+
     # This version will take a list of input files, and will take either a single list
     # of requested extensions (which will be applied to every input file) *or* a dictionary
     # of requested extensions indexed by the names of the input files. It will return a
     # dictionary of output files, indexed by the names of the input files. It will block
     # until complete.
     outputs = run_parallel_pipeline(input_files, input_ext, requested_exts, instrument, jump_pipe=False)
-    
+
     # ...
 
 It is possible to set up non-blocking celery tasks, or to do other fancy things, but as of
@@ -123,24 +123,24 @@ REDIS_CLIENT = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
 # Okay, let's explain these options:
 #   - the first argument ('shared_tasks') is the task queue to listen to. We only have one,
 #     and we've named it 'shared_tasks'. Both the clients (monitors) and the server(s)
-#     (workers) need to use the same queue so that the workers are taking tasks from the 
+#     (workers) need to use the same queue so that the workers are taking tasks from the
 #     same place that the monitors are putting them.
 #   - the broker is the server that keeps track of tasks and task IDs. redis does this
 #   - the backend is the server that keeps track of events. redis does this too
 #   - worker_mask_tasks_per_child is how many tasks a process can run before it gets
 #     restarted and replaced. This is set to 1 because the pipeline has memory leaks.
-#   - worker_prefetch_multiplier is how many tasks a worker can reserve for itself at a 
+#   - worker_prefetch_multiplier is how many tasks a worker can reserve for itself at a
 #     time. If set to 0, a worker can reserve any number. If set to an integer, a single
-#     worker can reserve that many tasks. We don't really want workers reserving tasks 
+#     worker can reserve that many tasks. We don't really want workers reserving tasks
 #     while they're already running a task, because tasks can take a long time to finish,
 #     and there's no reason for the other workers to be sitting around doing nothing while
 #     all the monitors are waiting on a single worker.
 #   - worker_concurrency is how many task threads a worker can run concurrently on the same
 #     machine. It's set to 1 because an individual pipeline process can consume all of the
 #     available memory, so setting the concurrency higher will result in inevitable crashes.
-#   - the broker visibility timeout is the amount of time that redis will wait for a 
+#   - the broker visibility timeout is the amount of time that redis will wait for a
 #     worker to say it has completed a task before it will dispatch the task (again) to
-#     another worker. This should be set to longer than you expect to wait for a single 
+#     another worker. This should be set to longer than you expect to wait for a single
 #     task to finish. Currently set to 10 days.
 celery_app = Celery('shared_tasks', broker=REDIS_URL, backend=REDIS_URL)
 celery_app.conf.update(worker_max_tasks_per_child=1)
@@ -180,6 +180,7 @@ def only_one(function=None, key="", timeout=None):
 
     return _dec(function) if function is not None else _dec
 
+
 def create_task_log_handler(logger, propagate):
     log_file_name = configure_logging('shared_tasks')
     output_dir = os.path.join(get_config()['outputs'], 'calibrated_data')
@@ -194,6 +195,7 @@ def create_task_log_handler(logger, propagate):
             cfg_file.write("[*]\n")
             cfg_file.write("level = WARNING\n")
             cfg_file.write("handler = append:{}\n".format(log_file_name))
+
 
 @after_setup_task_logger.connect
 def after_setup_celery_task_logger(logger, **kwargs):
@@ -222,14 +224,14 @@ def run_calwebb_detector1(input_file_name, short_name, instrument, step_args={})
     ----------
     input_file : str
         File on which to run the pipeline steps
-    
+
     instrument : str
         Instrument that was used for the observation contained in input_file_name.
 
     step_args : dict
-        A dictionary containing custom arguments to supply to individual pipeline steps. 
-        When a step is run, the dictionary will be checked for a key matching the step 
-        name (as defined in jwql.utils.utils.get_pipeline_steps() for the provided 
+        A dictionary containing custom arguments to supply to individual pipeline steps.
+        When a step is run, the dictionary will be checked for a key matching the step
+        name (as defined in jwql.utils.utils.get_pipeline_steps() for the provided
         instrument). The value matching the step key should, itself, be a dictionary that
         can be spliced in to step.call() via dereferencing (**dict)
 
@@ -241,23 +243,23 @@ def run_calwebb_detector1(input_file_name, short_name, instrument, step_args={})
     msg = "*****CELERY: Starting {} calibration task for {}"
     logging.info(msg.format(instrument, input_file_name))
     config = get_config()
-    
+
     input_dir = os.path.join(config['transfer_dir'], "incoming")
     cal_dir = os.path.join(config['outputs'], "calibrated_data")
     output_dir = os.path.join(config['transfer_dir'], "outgoing")
     logging.info("*****CELERY: Input from {}, calibrate in {}, output to {}".format(input_dir, cal_dir, output_dir))
-    
+
     input_file = os.path.join(deepcopy(input_dir), input_file_name)
     if not os.path.isfile(input_file):
         logging.error("*****CELERY: File {} not found!".format(input_file))
         raise FileNotFoundError("{} not found".format(input_file))
-    
+
     uncal_file = os.path.join(deepcopy(cal_dir), input_file_name)
     ensure_dir_exists(deepcopy(cal_dir))
     logging.info("*****CELERY: Copying {} to {}".format(input_file, cal_dir))
     copy_files([input_file], deepcopy(cal_dir))
     set_permissions(uncal_file)
-    
+
     # Check for exposures with too many groups
     max_groups = config.get("max_groups", 1000)
     with fits.open(uncal_file) as inf:
@@ -266,7 +268,7 @@ def run_calwebb_detector1(input_file_name, short_name, instrument, step_args={})
         msg = "File {} has {} groups (greater than maximum of {})"
         logging.error(msg.format(os.path.basename(uncal_file), total_groups, max_groups))
         raise ValueError(msg.format(os.path.basename(uncal_file), total_groups, max_groups))
-    
+
     steps = get_pipeline_steps(instrument)
 
     first_step_to_be_run = True
@@ -319,7 +321,7 @@ def run_calwebb_detector1(input_file_name, short_name, instrument, step_args={})
             else:
                 logging.info("*****CELERY: File {} already exists".format(transfer_file))
             set_permissions(transfer_file)
-    
+
     logging.info("*****CELERY: Removing local files.")
     files_to_remove = glob(uncal_file.replace("_uncal.fits", "*"))
     for file_name in files_to_remove:
@@ -375,7 +377,7 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
     if not os.path.isfile(input_file):
         logging.error("*****CELERY: File {} not found!".format(input_file))
         raise FileNotFoundError("{} not found".format(input_file))
-    
+
     cal_dir = os.path.join(config['outputs'], "calibrated_data")
     uncal_file = os.path.join(cal_dir, input_file_name)
     short_name = input_file_name.replace("_uncal", "").replace("_0thgroup", "")
@@ -391,7 +393,7 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
         msg = "File {} has {} groups (greater than maximum of {})"
         logging.error(msg.format(os.path.basename(uncal_file), total_groups, max_groups))
         raise ValueError(msg.format(os.path.basename(uncal_file), total_groups, max_groups))
-    
+
     output_dir = os.path.join(config["transfer_dir"], "outgoing")
 
     log_config = os.path.join(output_dir, "celery_pipeline_log.cfg")
@@ -432,7 +434,7 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
     model.jump.save_results = True
     model.jump.output_dir = cal_dir
     jump_output = os.path.join(cal_dir, input_file.replace('uncal', 'jump'))
-    
+
     model.logcfg = log_config
 
     # Check to see if the jump version of the requested file is already
@@ -469,7 +471,7 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
     else:
         print(("Files with all requested calibration states for {} already present in "
                "output directory. Skipping pipeline call.".format(input_file)))
-    
+
     calibrated_files = glob(uncal_file.replace("_uncal.fits", "*"))
     logging.info("*****CELERY: Pipeline Output is {}".format(calibrated_files))
     copy_files(calibrated_files, output_dir)
@@ -485,30 +487,30 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
 
 def prep_file(input_file, in_ext):
     """Prepares a file for calibration by:
-    
-    - Creating a short file-name from the file (i.e. the name without the calibration 
+
+    - Creating a short file-name from the file (i.e. the name without the calibration
       extension)
     - Creating a redis lock on the short name
     - Copying the uncalibrated file into the transfer directory
-    
+
     Returns the lock and the short name.
-    
+
     Parameters
     ----------
     input_file : str
         Name of the fits file to run
-    
+
     in_ext : str
         The calibration extension currently present on the input file
-    
+
     Returns
     -------
     lock : redis lock
         Acquired lock on the input file
-    
+
     short_name : str
         The exposure ID with the calibration tag and the fits extension chopped off.
-    
+
     uncal_file : str
         The raw file to be calibrated
     """
@@ -517,7 +519,7 @@ def prep_file(input_file, in_ext):
     ensure_dir_exists(send_path)
     receive_path = os.path.join(config["transfer_dir"], "outgoing")
     ensure_dir_exists(receive_path)
-    
+
     input_path, input_name = os.path.split(input_file)
     logging.info("\tPath is {}, file is {}".format(input_path, input_name))
 
@@ -528,12 +530,12 @@ def prep_file(input_file, in_ext):
     else:
         uncal_file = input_file
         uncal_name = input_name
-        
+
     if not os.path.isfile(uncal_file):
         raise FileNotFoundError("Input File {} does not exist.".format(uncal_file))
-    
+
     output_file_or_files = []
-    short_name = input_name.replace("_"+in_ext, "").replace(".fits", "")
+    short_name = input_name.replace("_" + in_ext, "").replace(".fits", "")
     logging.info("\tLocking {}".format(short_name))
     cal_lock = REDIS_CLIENT.lock(short_name)
     have_lock = cal_lock.acquire(blocking=True)
@@ -549,24 +551,24 @@ def prep_file(input_file, in_ext):
 
 def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=False):
     """Starts the standard or save_jump pipeline for the provided file.
-    
+
     .. warning::
-    
+
         Only call this function if you have already locked the file using Redis.
-    
+
     This function performs the following steps:
-    
+
     - Determine whether to call calwebb_detector1 or save_jump tasks
     - If calling save_jump, determine which outputs are expected
     - Call the task
     - return the task result object (so that it can be dealt with appropriately)
-    
-    When this function returns, the task may or may not have started, and probably will 
-    not have finished. Because the task was called using the ``delay()`` method, calling 
+
+    When this function returns, the task may or may not have started, and probably will
+    not have finished. Because the task was called using the ``delay()`` method, calling
     ``result.get()`` will block until the result is available.
-    
+
     .. warning::
-    
+
         This function will not use the ``celery`` settings to trap exceptions, so calling
         ``result.get()`` *may* raise an exception if the task itself raises an exception.
 
@@ -577,10 +579,10 @@ def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=Fa
 
     ext_or_exts : str or list-of-str
         The requested output calibrated files
-    
+
     instrument : str
         Name of the instrument being calibrated
-    
+
     jump_pipe : bool
         Whether the detector1 jump pipeline is being used (e.g. the bad pixel monitor)
 
@@ -608,11 +610,11 @@ def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=Fa
 def retrieve_files(short_name, ext_or_exts, dest_dir):
     """This function takes the name of a calibrated file, the desired extensions, the
     directory to which they should be copied, and a redis lock. It then does the following:
-    
+
     - Copy the file(s) with the provided extensions to the output directory
     - Deletes the files from the transfer directory
     - Releases the lock
-    
+
     Parameters
     ----------
     short_name : str
@@ -620,14 +622,14 @@ def retrieve_files(short_name, ext_or_exts, dest_dir):
 
     ext_or_exts : str or list of str
         Desired extension(s)
-    
+
     dest_dir : str
         Location for the desired extensions
-    
+
     Returns
     -------
     output_file_or_files : str or list of str
-        The location of the requested calibrated files                                                                                           
+        The location of the requested calibrated files
     """
     if isinstance(ext_or_exts, dict):
         ext_or_exts = ext_or_exts[short_name]
@@ -636,7 +638,7 @@ def retrieve_files(short_name, ext_or_exts, dest_dir):
     ensure_dir_exists(send_path)
     receive_path = os.path.join(config["transfer_dir"], "outgoing")
     ensure_dir_exists(receive_path)
-    
+
     if isinstance(ext_or_exts, str):
         ext_or_exts = [ext_or_exts]
     file_or_files = ["{}_{}.fits".format(short_name, x) for x in ext_or_exts]
@@ -645,7 +647,7 @@ def retrieve_files(short_name, ext_or_exts, dest_dir):
     logging.info("\t\tCopying {} to {}".format(file_or_files, dest_dir))
     copy_files([os.path.join(receive_path, x) for x in file_or_files], dest_dir)
     logging.info("\t\tClearing Transfer Files")
-    to_clear = glob(os.path.join(send_path, short_name+"*")) + glob(os.path.join(receive_path, short_name+"*"))
+    to_clear = glob(os.path.join(send_path, short_name + "*")) + glob(os.path.join(receive_path, short_name + "*"))
     for file in to_clear:
         os.remove(file)
     if len(output_file_or_files) == 1:
@@ -654,19 +656,19 @@ def retrieve_files(short_name, ext_or_exts, dest_dir):
 
 
 def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
-    """Convenience function for using the ``run_calwebb_detector1`` function on a data 
+    """Convenience function for using the ``run_calwebb_detector1`` function on a data
     file, including the following steps:
-    
+
     - Lock the file ID so that no other calibration happens at the same time
     - Copy the input (raw) file to the (central storage) transfer location
     - Call the ``run_calwebb_detector1`` task
     - For the extension (or extensions) (where by "extension" we mean 'uncal' or 'refpix'
-      or 'jump' rather than something like '.fits') requested, copy the files from the 
+      or 'jump' rather than something like '.fits') requested, copy the files from the
       outgoing transfer location to the same directory as the input file
     - Delete the input file from the transfer location
     - Delete the output files from the transfer location
-    
-    It will then return what it was given – either a single file+path or a list of 
+
+    It will then return what it was given – either a single file+path or a list of
     files+paths, depending on what ``out_exts`` was provided as.
 
     Parameters
@@ -676,10 +678,10 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
 
     ext_or_exts : str or list-of-str
         The requested output calibrated files
-    
+
     instrument : str
         Name of the instrument being calibrated
-    
+
     jump_pipe : bool
         Whether the detector1 jump pipeline is being used (e.g. the bad pixel monitor)
 
@@ -704,7 +706,7 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
     finally:
         cal_lock.release()
         logging.info("\tReleased Lock {}".format(short_name))
-    
+
     logging.info("Pipeline Call Completed")
     return output
 
@@ -714,39 +716,39 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
     data files, breaking them into parallel celery calls, collecting the results together,
     and returning the results as another list. In particular, this function will do the
     following:
-    
+
     - Lock the file ID so that no other calibration happens at the same time
     - Copy the input (raw) file to the (central storage) transfer location
     - Call the ``run_calwebb_detector1`` task
     - For the extension (or extensions) (where by "extension" we mean 'uncal' or 'refpix'
-      or 'jump' rather than something like '.fits') requested, copy the files from the 
+      or 'jump' rather than something like '.fits') requested, copy the files from the
       outgoing transfer location to the same directory as the input file
     - Delete the input file from the transfer location
     - Delete the output files from the transfer location
-    
-    It will then return what it was given – either a single file+path or a list of 
+
+    It will then return what it was given – either a single file+path or a list of
     files+paths, depending on what ``out_exts`` was provided as.
 
     Parameters
     ----------
     input_file : str
         Name of fits file to run on the pipeline
-    
+
     in_ext : str
         Input file extension
 
     ext_or_exts : str or list-of-str or dict
         The requested output calibrated files. This must be either:
-        
+
         - A string indicating a single extension to be retrieved for all files.
         - A list of strings indicating multiple extensions to be retrieved for all files.
-        - A dict with a key for each input file, containing either a single extension 
+        - A dict with a key for each input file, containing either a single extension
           string or a multiple-extension list of strings to be retrieved for that file
           (note that a default dict can be used here)
-    
+
     instrument : str
         Name of the instrument being calibrated
-    
+
     jump_pipe : bool
         Whether the detector1 jump pipeline is being used (e.g. the bad pixel monitor)
 
@@ -758,7 +760,7 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
     logging.info("Pipeline call requestion calibrated extensions {}".format(ext_or_exts))
     for input_file in input_files:
         logging.info("\tCalibrating {}".format(input_file))
-    
+
     input_file_paths = {}
     results = {}
     locks = {}
@@ -796,7 +798,7 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
             locks[short_name].release()
             logging.info("\tReleased Lock {}".format(short_name))
         logging.info("Finished releasing locks")
-    
+
     logging.info("Pipeline Call Completed")
     return outputs
 

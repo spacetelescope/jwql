@@ -86,6 +86,7 @@ from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesyst
 
 THRESHOLDS_FILE = os.path.join(os.path.split(__file__)[0], 'dark_monitor_file_thresholds.txt')
 
+
 class Dark():
     """Class for executing the dark current monitor.
 
@@ -188,12 +189,12 @@ class Dark():
         """
 
         logging.info('Adding {} {} pixels to database.'.format(len(coordinates[0]), pixel_type))
-        
-        # Change to int from numpy.int64 because the latter can't be put into the 
+
+        # Change to int from numpy.int64 because the latter can't be put into the
         # database apparently.
         x_coord = [int(x) for x in coordinates[0]]
         y_coord = [int(y) for y in coordinates[1]]
-        
+
         source_files = [os.path.basename(item) for item in files]
         entry = {'detector': self.detector,
                  'x_coord': x_coord,
@@ -496,7 +497,7 @@ class Dark():
                     msg = '\tSlope file {} already exists. Skipping call to pipeline.'
                     logging.info(msg.format(processed_file))
                     pass
-        
+
         outputs = run_parallel_pipeline(pipeline_files, "dark", "rate", self.instrument)
         for filename in file_list:
             processed_file = filename.replace("_dark", "_rate")
@@ -517,7 +518,7 @@ class Dark():
         min_time = np.min(obs_times)
         max_time = np.max(obs_times)
         mid_time = instrument_properties.mean_time(obs_times)
-        
+
         try:
 
             # Read in all slope images and place into a list
@@ -599,7 +600,7 @@ class Dark():
             files_to_remove = glob(f'{self.data_dir}/*fits')
             for filename in files_to_remove:
                 os.remove(filename)
-        
+
         except Exception as e:
             logging.critical("ERROR: {}".format(e))
             raise e

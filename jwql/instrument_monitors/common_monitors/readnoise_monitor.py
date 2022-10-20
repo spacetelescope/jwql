@@ -355,10 +355,10 @@ class Readnoise():
             # ramp data, combining multiple integrations if necessary.
             for integration in range(num_ints):
                 if num_groups % 2 == 0:
-                    cds = data[integration, 1::2, :, idx:idx+slice_width] - data[integration, ::2, :, idx:idx+slice_width]
+                    cds = data[integration, 1::2, :, idx:idx + slice_width] - data[integration, ::2, :, idx:idx + slice_width]
                 else:
                     # Omit the last group if the number of groups is odd
-                    cds = data[integration, 1::2, :, idx:idx+slice_width] - data[integration, ::2, :, idx:idx+slice_width][:-1]
+                    cds = data[integration, 1::2, :, idx:idx + slice_width] - data[integration, ::2, :, idx:idx + slice_width][:-1]
 
                 if integration == 0:
                     cds_stack = cds
@@ -370,7 +370,7 @@ class Readnoise():
             readnoise_slice = np.ma.std(clipped, axis=0)
 
             # Add the readnoise in this slice to the full readnoise image
-            readnoise[:, idx:idx+slice_width] = readnoise_slice
+            readnoise[:, idx:idx + slice_width] = readnoise_slice
 
         return readnoise
 
@@ -410,7 +410,7 @@ class Readnoise():
         """
         # Run the files through the necessary pipeline steps
         outputs = run_parallel_pipeline(file_list, "uncal", "refpix", self.instrument)
-        
+
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
 
@@ -432,8 +432,8 @@ class Readnoise():
             # Make the readnoise image
             readnoise_outfile = os.path.join(self.data_dir, os.path.basename(processed_file.replace('.fits', '_readnoise.fits')))
             readnoise = self.make_readnoise_image(cal_data)
-            #fits.writeto(readnoise_outfile, readnoise, overwrite=True)
-            #logging.info('\tReadnoise image saved to {}'.format(readnoise_outfile))
+            # fits.writeto(readnoise_outfile, readnoise, overwrite=True)
+            # logging.info('\tReadnoise image saved to {}'.format(readnoise_outfile))
 
             # Calculate the full image readnoise stats
             clipped = sigma_clip(readnoise, sigma=3.0, maxiters=5)
@@ -602,9 +602,9 @@ class Readnoise():
                             num_groups = fits.getheader(uncal_filename)['NGROUPS']
                             num_ints = fits.getheader(uncal_filename)['NINTS']
                             if instrument == 'miri':
-                                total_cds_frames = int((num_groups-6)/2) * num_ints
+                                total_cds_frames = int((num_groups - 6) / 2) * num_ints
                             else:
-                                total_cds_frames = int(num_groups/2) * num_ints
+                                total_cds_frames = int(num_groups / 2) * num_ints
                             # Skip processing if the file doesnt have enough groups/ints to calculate the readnoise.
                             # MIRI needs extra since they omit the first five and last group before calculating the readnoise.
                             if total_cds_frames >= 10:

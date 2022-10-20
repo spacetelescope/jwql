@@ -369,14 +369,14 @@ class Bias():
         """
         logging.info("Creating calibration tasks")
         outputs = run_parallel_pipeline(file_list, "uncal_0thgroup", "refpix", self.instrument)
-        
+
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
 
             # Get relevant header info for this file
             self.read_pattern = fits.getheader(filename, 0)['READPATT']
             self.expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'], fits.getheader(filename, 0)['TIME-OBS'])
-            
+
             # Run the file through the necessary pipeline steps
             processed_file = outputs[filename]
 

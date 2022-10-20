@@ -802,7 +802,7 @@ class BadPixels():
                 if local_uncal_file in outputs:
                     illuminated_slope_files[index] = deepcopy(outputs[local_uncal_file][1])
                 index += 1
-                
+
                 # Get observation time for all files
                 illuminated_obstimes.append(instrument_properties.get_obstime(uncal_file))
 
@@ -852,8 +852,8 @@ class BadPixels():
             index = 0
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
                 local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
-                short_name = os.path.basename(uncal_file).replace('_uncal.fits', '') 
-                if local_uncal_file in outputs:               
+                short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
+                if local_uncal_file in outputs:
                     dark_jump_files[index] = outputs[local_uncal_file][0]
                     dark_fitopt_files[index] = outputs[local_uncal_file][1]
                     dark_slope_files[index] = deepcopy(outputs[local_uncal_file][2])
