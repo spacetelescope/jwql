@@ -898,21 +898,11 @@ class BadPixels():
         logging.info("\tflat_slope_files are: {}".format(illuminated_slope_files))
         logging.info("\tdead__search_type={}".format(dead_search_type))
         logging.info("\tflat_mean_normalization_method={}".format(flat_mean_normalization_method))
-        logging.info("\tdead_flux_check_files are:")
-        for file in dead_flux_files:
-            logging.info("\t\t{}".format(file))
-        logging.info("\tdark_slope_files are:")
-        for file in dark_slope_files:
-            logging.info("\t\t{}".format(file))
-        logging.info("\tdark_uncal_files are:")
-        for file in dark_raw_files:
-            logging.info("\t\t{}".format(file))
-        logging.info("\tdark_jump_files are:")
-        for file in dark_jump_files:
-            logging.info("\t\t{}".format(file))
-        logging.info("\tdark_fitopt_files are:")
-        for file in dark_fitopt_files:
-            logging.info("\t\t{}".format(file))
+        logging.info("\tdead_flux_check_files are: {}".format(dead_flux_files))
+        logging.info("\tdark_slope_files are: {}".format(dark_slope_files))
+        logging.info("\tdark_uncal_files are: {}".format(dark_raw_files))
+        logging.info("\tdark_jump_files are: {}".format(dark_jump_files))
+        logging.info("\tdark_fitopt_files are: {}".format(dark_fitopt_files))
         logging.info("\toutput_file={}".format(output_file))
 
         bad_pixel_mask.bad_pixels(flat_slope_files=illuminated_slope_files, dead_search_type=dead_search_type,
