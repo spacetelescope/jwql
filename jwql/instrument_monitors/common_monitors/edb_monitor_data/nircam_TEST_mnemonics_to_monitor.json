@@ -1,0 +1,105 @@
+{
+    "daily_means": [
+        {
+            "name": "INRC_ICE_DC_VOL_P5_DIG",
+            "description": "ICE HK +5V voltage for digital electronics",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [4.99, 5.04],
+            "red_limits": [4.5, 5.5],
+            "plot_category": "ICE_voltage"
+        },
+        {
+            "name": "INRC_ICE_DC_VOL_P15_ALL",
+            "description": "ICE HK +15V voltage for all functions",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [13.9, 14.7],
+            "red_limits": [11.5, 16.5],
+            "plot_category": "ICE_voltage"
+        },
+        {
+            "name": "INRC_FB_PSC_VDCR_5P",
+            "description": "ModB PSC reference +5V analog voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [5.05, 5.25],
+            "red_limits": [-1.0, 5.4],
+            "plot_category": "ModB_PSC_voltages+currents"
+        },
+        {
+            "name": "INRC_FB_PSC_VDCR_5N",
+            "description": "ModB PSC reference -5V analog voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [-5.15, -4.95],
+            "red_limits": [-5.4, 1.0],
+            "plot_category": "ModB_PSC_voltages+currents"
+        }
+    ],
+    "block_means": [
+    ],
+    "every_change": [
+    ],
+    "time_interval": [
+    ],
+    "all+time_interval": [
+        {
+            "name": "SE_ZBUSVLT",
+            "description": "Bus voltage",
+            "dependency": [],
+            "plot_data": "nominal",
+            "red_limits": [30.7, 31.7],
+            "plot_category": "Box_current",
+            "mean_time_block": "1_day"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_P5_DIG",
+            "description": "ICE HK +5V current for Digital electronics",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.4, 0.9],
+            "red_limits": [-0.01, 1.408],
+            "plot_category": "ICE_current",
+            "mean_time_block": "1_day"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_P15_ALL",
+            "description": "ICE HK +15V current for all functions",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.15, 0.35],
+            "red_limits": [-0.01, 0.8426],
+            "plot_category": "ICE_current",
+            "mean_time_block": "1_day"
+        },
+        {
+            "name": "INRC_ICE_DC_CUR_N15_ALL",
+            "description": "ICE HK -15V current for all functions",
+            "dependency": [],
+            "plot_data": "nominal",
+            "yellow_limits": [0.21, 0.35],
+            "red_limits": [-0.01, 0.8426],
+            "plot_category": "ICE_current",
+            "mean_time_block": "1_day"
+        },
+        {
+            "name": "IGDP_NRC_FB_TMC1_SW_TS1",
+            "description": "T-offset for ModB SW FPA relative to zero-power, based on comparing TMC1 and OBA TS1 sensors",
+            "dependency": [],
+            "plot_data": "nominal",
+            "red_limits": [0, 1],
+            "plot_category": "FPA_heater_setpt",
+            "mean_time_block": "1_day"
+        },
+        {
+            "name": "IGDP_NRC_FB_TMC1_SW_TS2",
+            "description": "T-offset for ModB SW FPA relative to zero-power, based on comparing TMC1 and OBA TS2 sensors",
+            "dependency": [],
+            "plot_data": "nominal",
+            "red_limits": [0, 1],
+            "plot_category": "FPA_heater_setpt",
+            "mean_time_block": "1_day"
+        }
+    ]
+}
