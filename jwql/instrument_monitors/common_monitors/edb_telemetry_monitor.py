@@ -565,11 +565,13 @@ class EdbMnemonicMonitor():
             # as defined by the json files. This is the default operation.
 
             # Loop over instruments
-            for instrument_name in JWST_INSTRUMENT_NAMES:
+            for instrument_name in ['niriss', 'nircam', 'nirspec', 'fgs']: #JWST_INSTRUMENT_NAMES:
                 monitor_dir = os.path.dirname(os.path.abspath(__file__))
 
                 # File of mnemonics to monitor
                 mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', f'{instrument_name}_mnemonics_to_monitor.json')
+                if instrument_name == 'nircam':
+                    mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', f'{instrument_name}_TEST_mnemonics_to_monitor.json')
 
                 # Define the output directory in which the html files will be saved
                 self.plot_output_dir = os.path.join(base_dir, instrument_name)
