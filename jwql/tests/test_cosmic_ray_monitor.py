@@ -200,7 +200,7 @@ def test_get_cr_mags_fake_data():
 
     cr = CosmicRay()
     cr.nints = 2
-    mags = cr.get_cr_mags(jump_coords, prior_coords, rate, data, header)
+    mags, outliers = cr.get_cr_mags(jump_coords, prior_coords, rate, data, header)
     assert len(mags) == 65536*2+1 # assert that it's a bin
     assert mags[bin_indices[10]] == 1
     assert mags[bin_indices[-5]] == 1
