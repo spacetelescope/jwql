@@ -303,8 +303,6 @@
     "every_change": [
     ],
     "time_interval": [
-    ],
-    "all+time_interval": [
         {
             "name": "SE_ZBUSVLT",
             "description": "Bus voltage",

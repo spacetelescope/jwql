@@ -753,7 +753,7 @@ class EdbMnemonicMonitor():
                     # We also need to interpolate the dependency onto the same dates here, so that we know
                     # the new indexes where the values change
                     temp_dep = ed.EdbMnemonic(dep_list[0]['name'], dependency["dates"][0], dependency["dates"][-1],
-                                              dependency, meta = {'TlmMnemonics': [{'AllPoints': 1}]}, info={}, blocks=change_indexes)
+                                              dependency, meta={'TlmMnemonics': [{'AllPoints': 1}]}, info={}, blocks=change_indexes)
                     temp_dep.interpolate(all_dates)
                     change_indexes = temp_dep.blocks
 
@@ -856,13 +856,13 @@ class EdbMnemonicMonitor():
 
             # We need the full time to be covered
             if ((self.query_results[dependency["name"]].requested_start_time <= starttime)
-                and (self.query_results[dependency["name"]].requested_end_time >= endtime)):
+                 and (self.query_results[dependency["name"]].requested_end_time >= endtime)):
 
                 logging.info(f'Dependency {dependency["name"]} is already present in self.query_results.')
 
                 # Extract data for the requested time range
-                matching_times = np.where((self.query_results[dependency["name"]].data["dates"] > starttime) &
-                                          (self.query_results[dependency["name"]].data["dates"] < endtime))
+                matching_times = np.where((self.query_results[dependency["name"]].data["dates"] > starttime)
+                                          & (self.query_results[dependency["name"]].data["dates"] < endtime))
                 dep_mnemonic = {"dates": self.query_results[dependency["name"]].data["dates"][matching_times],
                                 "euvalues": self.query_results[dependency["name"]].data["euvalues"][matching_times]}
 
@@ -1891,8 +1891,8 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
     # If the input dictionary is empty, then create an empty plot with reasonable
     # x range
     if len(data.keys()) == 0:
-        null_dates = [self.requested_start_time, self.requested_end_time,]
-        source = ColumnDataSource(data={'x': null_times, 'y': [0, 0], 'dep': 'None'})
+        null_dates = [self.requested_start_time, self.requested_end_time]
+        source = ColumnDataSource(data={'x': null_dates, 'y': [0, 0], 'dep': 'None'})
         ldata = fig.line(x='x', y='y', line_width=1, line_color=0, source=source, legend_label='None')
         ldata.visible = False
         totpts = 0
@@ -1920,13 +1920,13 @@ def plot_every_change_data(data, mnem_name, units, show_plot=False, savefig=True
         fig = add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
 
     # Make the x axis tick labels look nice
-    fig.xaxis.formatter=DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
-                                              seconds=["%d %b %H:%M:%S.%3N"],
-                                              hours=["%d %b %H:%M"],
-                                              days=["%d %b %H:%M"],
-                                              months=["%d %b %Y %H:%M"],
-                                              years=["%d %b %Y"]
-                                              )
+    fig.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
+                                                seconds=["%d %b %H:%M:%S.%3N"],
+                                                hours=["%d %b %H:%M"],
+                                                days=["%d %b %H:%M"],
+                                                months=["%d %b %Y %H:%M"],
+                                                years=["%d %b %Y"]
+                                                )
     fig.xaxis.major_label_orientation = np.pi / 4
 
     # Force the axes' range if requested

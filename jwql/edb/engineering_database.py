@@ -319,12 +319,12 @@ class EdbMnemonic:
         if type(self.data["euvalues"].data[0]) not in [np.str_, str]:
             for i, index in enumerate(self.blocks[0:-1]):
                 # Protect against repeated block indexes
-                if index < self.blocks[i+1]:
+                if index < self.blocks[i + 1]:
                     if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
                         meanval, medianval, stdevval = sigma_clipped_stats(self.data["euvalues"].data[index:self.blocks[i + 1]], sigma=sigma)
                     else:
                         meanval, medianval, stdevval = change_only_stats(self.data["dates"].data[index:self.blocks[i + 1]],
-                                                                     self.data["euvalues"].data[index:self.blocks[i + 1]], sigma=sigma)
+                                                                         self.data["euvalues"].data[index:self.blocks[i + 1]], sigma=sigma)
                     medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i + 1]]))
                     means.append(meanval)
                     medians.append(medianval)
@@ -333,7 +333,7 @@ class EdbMnemonic:
             # If the data are strings, then set the mean to be the data value at the block index
             for i, index in enumerate(self.blocks[0:-1]):
                 # Protect against repeated block indexes
-                if index < self.blocks[i+1]:
+                if index < self.blocks[i + 1]:
                     meanval = self.data["euvalues"].data[index]
                     medianval = meanval
                     stdevval = 0
@@ -458,9 +458,9 @@ class EdbMnemonic:
             fig.x_range = Range1d(self.requested_start_time - timedelta(days=1), self.requested_end_time)
             bottom, top = (-1, 1)
             if yellow_limits is not None:
-                    bottom, top = yellow_limits
+                bottom, top = yellow_limits
             if red_limits is not None:
-                    bottom, top = red_limits
+                bottom, top = red_limits
             fig.y_range = Range1d(bottom, top)
 
         data = fig.scatter(x='x', y='y', line_width=1, line_color='blue', source=source)
@@ -1171,7 +1171,7 @@ def change_only_stats(times, values, sigma=3):
         delta_time_weight = np.append(delta_time_weight, 1e-6)
 
         meanval = np.average(values, weights=delta_time_weight)
-        stdevval = np.sqrt(np.average((values-meanval)**2, weights=delta_time_weight))
+        stdevval = np.sqrt(np.average((values - meanval) ** 2, weights=delta_time_weight))
 
         # In order to calculate the median, we need to adjust the weights such that
         # the weight represents the number of times a given value is present. Scale
@@ -1202,7 +1202,7 @@ def change_only_stats(times, values, sigma=3):
                     if total_idx > midpt:
                         medianval = val
                     else:
-                        medianval = (val + values[i+1]) / 2.
+                        medianval = (val + values[i + 1]) / 2.
                 break
 
     return meanval, medianval, stdevval
@@ -1371,12 +1371,6 @@ def interpolate_datetimes(new_times, old_times, old_data):
     if len(old_data) >= 2:
         interp_times = np.array([create_time_offset(ele, old_times[0]) for ele in new_times])
         mnem_times = np.array([create_time_offset(ele, old_times[0]) for ele in old_times])
-
-        # Do not extrapolate. Any requested interoplation times that are outside the range
-        # or the original data will be ignored.
-        #good_times = ((interp_times >= mnem_times[0]) & (interp_times <= mnem_times[-1]))
-        #interp_times = interp_times[good_times]
-
         new_data = np.interp(interp_times, mnem_times, old_data)
     else:
         # If there are not enough data and we are unable to interpolate,

@@ -3,14 +3,26 @@
         {
             "name": "SA_ZFGGSPOSX",
             "description": "FGS Guide star position in x",
-            "dependency": [],
+            "dependency": [
+                {
+                    "name": "INIS_EXP_STAT",
+                    "relation": "=",
+                    "threshold": "STARTED"
+                }
+            ],
             "plot_data": "nominal",
             "plot_category": "guide_star"
         },
         {
             "name": "SA_ZFGGSPOSY",
             "description": "FGS Guide star position in y",
-            "dependency": [],
+            "dependency": [
+                {
+                    "name": "INIS_EXP_STAT",
+                    "relation": "=",
+                    "threshold": "STARTED"
+                }
+            ],
             "plot_data": "nominal",
             "plot_category": "guide_star"
         },

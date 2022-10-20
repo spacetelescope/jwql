@@ -158,7 +158,6 @@ def test_find_all_changes():
     temp_data = Table()
     temp_data["euvalues"] = [350., 350.1, 350.2, 360., 360.1, 360.2, 370.1, 370., 360., 360.]
     temp_data["dates"] = np.array([datetime.datetime(2022, 2, 2) + datetime.timedelta(days=0.1 * i) for i in range(10)])
-    #temp_data["dates"] = np.array([Time('2022-02-02') + TimeDelta(0.1 * i, format='jd') for i in range(10)])
     meta = {'TlmMnemonics': [{'AllPoints': 1}]}
     info = {}
     temperature = EdbMnemonic("TEMPERATURE", start_time, end_time, temp_data, meta, info)
@@ -171,7 +170,6 @@ def test_find_all_changes():
     current_data = Table()
     current_data["euvalues"] = ['LOW', 'LOW', 'LOW', 'MEDIUM', 'MEDIUM', 'MEDIUM', 'HIGH', 'HIGH', 'MEDIUM', 'MEDIUM']
     current_data["dates"] = np.array([datetime.datetime(2022, 2, 2) + datetime.timedelta(days=0.1001 * i) for i in range(10)])
-    #current_data["dates"] = np.array([Time('2022-02-02') + TimeDelta(0.1001 * i, format='jd') for i in range(10)])
     inst.query_results[dependency[0]["name"]] = EdbMnemonic("CURRENT", start_time, end_time, current_data, meta, info)
 
     vals = inst.find_all_changes(temperature, dependency)
