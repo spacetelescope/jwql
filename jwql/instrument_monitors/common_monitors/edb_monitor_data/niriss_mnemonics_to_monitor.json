@@ -5,7 +5,7 @@
             "description": "FGS Guide star position in x",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "guide_star",
+            "plot_category": "guide_star"
         },
         {
             "name": "SA_ZFGGSPOSY",
@@ -13,76 +13,6 @@
             "dependency": [],
             "plot_data": "nominal",
             "plot_category": "guide_star"
-        },
-        {
-            "name": "SA_ZSUNSCX",
-            "description": "Sun position relative to spacecraft, x",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "sun_position"
-        },
-        {
-            "name": "SA_ZSUNSCY",
-            "description": "Sun position relative to spacecraft, y",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "sun_position"
-        },
-        {
-            "name": "SA_ZSUNSCZ",
-            "description": "Sun position relative to spacecraft, z",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "sun_position"
-        },
-        {
-            "name": "SA_ZSUNVLSCX",
-            "description": "Velocity of sun relative to spacecraft, x",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "sun_position"
-        },
-        {
-            "name": "SA_ZSUNVLSCY",
-            "description": "Velocity of sun relative to spacecraft, y",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "sun_position"
-        },
-        {
-            "name": "SA_ZSUNVLSCZ",
-            "description": "Velocity of sun relative to spacecraft, z",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "sun_position"
-        },
-        {
-            "name": "SA_ZATTEST1",
-            "description": "First component quaternion",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "quaternions"
-        },
-        {
-            "name": "SA_ZATTEST2",
-            "description": "Second component quaternion",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "quaternions"
-        },
-        {
-            "name": "SA_ZATTEST3",
-            "description": "Third component quaternion",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "quaternions"
-        },
-        {
-            "name": "SA_ZATTEST4",
-            "description": "Fourth component quaternion",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "quaternions"
         },
         {
             "name": "SA_ZHGAUPST",
@@ -269,7 +199,40 @@
             "plot_data": "nominal",
             "plot_category": "Temperatures",
             "mean_time_block": "15_minutes"
-        }
+        },
+        {
+           "name": "SA_ZATTEST1",
+            "description": "First component quaternion",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "quaternions",
+            "mean_time_block": "30_minutes"
+        },
+        {
+            "name": "SA_ZATTEST2",
+            "description": "Second component quaternion",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "quaternions",
+            "mean_time_block": "30_minutes"
+        },
+        {
+            "name": "SA_ZATTEST3",
+            "description": "Third component quaternion",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "quaternions",
+            "mean_time_block": "30_minutes"
+        },
+        {
+            "name": "SA_ZATTEST4",
+            "description": "Fourth component quaternion",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "quaternions",
+            "mean_time_block": "30_minutes"
+        },
+
     ]
 }
 

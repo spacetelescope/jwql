@@ -24,8 +24,6 @@
     "every_change": [
     ],
     "time_interval": [
-    ],
-    "all+time_interval": [
         {
             "name": "SE_ZBUSVLT",
             "description": "Bus voltage",
@@ -75,6 +73,8 @@
             "plot_category": "ICE_current",
             "mean_time_block": "1_day"
         },
+    ],
+    "all+time_interval": [
         {
             "name": "INRC_A_M_PIL_AS_POS",
             "description": "ModA PIL SensorA position",
@@ -105,6 +105,16 @@
             "yellow_limits": [-22382, 17863],
             "red_limits": [-24000, 24000],
             "plot_category": "PIL_pos",
+            "mean_time_block": "1_day"
+        },
+        {
+            "name": "IGDP_NRC_B_T_PIL",
+            "description": "ModB PIL Cernox T-sensor",
+            "dependency": [],
+            "plot_data": "nominal",
+            "nominal_value": 38.3,
+            "red_limits": [35.0, 314],
+            "plot_category": "PIL_temp",
             "mean_time_block": "1_day"
         }
     ]
