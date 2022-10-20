@@ -622,7 +622,7 @@ class CosmicRay:
                 output_files[file_name] = existing_files[file_name]
         
         for file_name in file_list:
-            if os.path.isfile(file_name)
+            if os.path.isfile(file_name):
             logging.info("Removing input file {}".format(file_name))
             os.remove(file_name)
         
