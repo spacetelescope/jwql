@@ -12,140 +12,140 @@
             "description": "FGS Guide star position in y",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "guide_star",
+            "plot_category": "guide_star"
         },
         {
             "name": "SA_ZSUNSCX",
             "description": "Sun position relative to spacecraft, x",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "sun_position",
+            "plot_category": "sun_position"
         },
         {
             "name": "SA_ZSUNSCY",
             "description": "Sun position relative to spacecraft, y",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "sun_position",
+            "plot_category": "sun_position"
         },
         {
             "name": "SA_ZSUNSCZ",
             "description": "Sun position relative to spacecraft, z",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "sun_position",
+            "plot_category": "sun_position"
         },
         {
             "name": "SA_ZSUNVLSCX",
             "description": "Velocity of sun relative to spacecraft, x",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "sun_position",
+            "plot_category": "sun_position"
         },
         {
             "name": "SA_ZSUNVLSCY",
             "description": "Velocity of sun relative to spacecraft, y",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "sun_position",
+            "plot_category": "sun_position"
         },
         {
             "name": "SA_ZSUNVLSCZ",
             "description": "Velocity of sun relative to spacecraft, z",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "sun_position",
+            "plot_category": "sun_position"
         },
         {
             "name": "SA_ZATTEST1",
             "description": "First component quaternion",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "quaternions",
+            "plot_category": "quaternions"
         },
         {
             "name": "SA_ZATTEST2",
             "description": "Second component quaternion",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "quaternions",
+            "plot_category": "quaternions"
         },
         {
             "name": "SA_ZATTEST3",
             "description": "Third component quaternion",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "quaternions",
+            "plot_category": "quaternions"
         },
         {
             "name": "SA_ZATTEST4",
             "description": "Fourth component quaternion",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "quaternions",
+            "plot_category": "quaternions"
         },
         {
             "name": "SA_ZHGAUPST",
             "description": "High Gain Antenna update status",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "observatory",
+            "plot_category": "observatory"
         },
         {
             "name": "SA_ZMOMECIX",
             "description": "Observatory momentum unit vector",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "observatory",
+            "plot_category": "observatory"
         },
         {
             "name": "SA_ZMOMECIY",
             "description": "Observatory momentum unit vector",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "observatory",
+            "plot_category": "observatory"
         },
         {
             "name": "SA_ZMOMECIZ",
             "description": "Observatory momentum unit vector",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "observatory",
+            "plot_category": "observatory"
         },
         {
             "name": "SA_ZMOMMAG",
             "description": "Observatory momentum unit vector",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "observatory",
+            "plot_category": "observatory"
         },
         {
             "name": "INIS_PWC_MOV",
             "description": "Pupil wheel movement",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "FW/PW",
+            "plot_category": "FW/PW"
         },
         {
             "name": "INIS_PWC_POS",
             "description": "Pupil wheel position",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "FW/PW",
+            "plot_category": "FW/PW"
         },
         {
             "name": "INIS_CMD_ACC_CNT",
             "description": "ISIM NIS Command Accepted Counter",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "Commanding",
+            "plot_category": "Commanding"
         },
         {
             "name": "INIS_FWC_POS",
             "description": "Position of NIS Filter Wheel Mechanism",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "FW/PW",
+            "plot_category": "FW/PW"
         },
         {
             "name": "INIS_FPATEMP",
@@ -158,7 +158,7 @@
                 }
             ],
             "plot_data": "nominal",
-            "plot_category": "Temperatures",
+            "plot_category": "Temperatures"
         },
         {
             "name": "INIS_SCE_FPATEMP1_2",
@@ -200,14 +200,14 @@
             "description": "NIS SIDECAR Housekeeping FPA Temperature 1 word 1",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "Temperatures",
+            "plot_category": "Temperatures"
         },
         {
             "name": "INIS_SCE_FPATEMP2_1",
             "description": "NIS SIDECAR Housekeeping FPA Temperature 2 word 1",
             "dependency": [],
             "plot_data": "nominal",
-            "plot_category": "Temperatures",
+            "plot_category": "Temperatures"
         }
     ],
     "all+time_interval": [
