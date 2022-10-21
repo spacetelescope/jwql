@@ -215,6 +215,7 @@ def log_info(func):
         logging.info('System: ' + socket.gethostname())
         logging.info('Python Version: ' + sys.version.replace('\n', ''))
         logging.info('Python Executable Path: ' + sys.executable)
+        logging.info('Running as PID {}' + os.getpid())
 
         # Read in setup.py file to build list of required modules
         with open(get_config()['setup_file']) as f:
