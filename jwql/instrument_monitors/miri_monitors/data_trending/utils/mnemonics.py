@@ -51,7 +51,7 @@ mnemonic_cond_1 = [
 "IGDP_MIR_ICE_IMG_CRYO"]
 
 # all mnemonics used for condition 2 (see: draft)
-mnemonic_cond_2=[
+mnemonic_cond_2 = [
 "SE_ZIMIRFPEA",
 
 "IMIR_PDU_V_DIG_5V",
@@ -108,10 +108,10 @@ mnemonic_cond_2=[
 "IGDP_MIR_LW_DET_TEMP",
 "IGDP_MIR_SW_DET_TEMP"]
 
-#mnemonics for 15 min evaluation
+# mnemonics for 15 min evaluation
 mnemonic_set_15min = mnemonic_cond_1 + mnemonic_cond_2
 
-#ICE secondary voltages -> apply to condition3
+# ICE secondary voltages -> apply to condition3
 mnemonic_cond_3 = [
 "IMIR_HK_ICE_SEC_VOLT1",
 "IMIR_HK_ICE_SEC_VOLT2",
@@ -119,7 +119,7 @@ mnemonic_cond_3 = [
 "IMIR_HK_ICE_SEC_VOLT4",
 "SE_ZIMIRICEA"]
 
-#filter weel positions
+# filter weel positions
 fw_positions = [
 "FND",
 "OPAQUE",
