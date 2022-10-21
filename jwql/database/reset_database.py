@@ -24,7 +24,10 @@ Dependencies
     ``postgresql+psycopg2://user:password@host:port/database``.
 """
 
-import argparse, sys
+import argparse
+from psycopg2.errors import UndefinedTable
+from sqlalchemy.exc import ProgrammingError
+import sys
 
 from jwql.database.database_interface import base, set_read_permissions
 from jwql.database.database_interface import INSTRUMENT_TABLES, MONITOR_TABLES
@@ -50,7 +53,7 @@ if __name__ == '__main__':
 
     instrument = args.instrument.lower()
     monitor = args.monitor.lower()
-    
+
     if instrument != 'all' and instrument not in INSTRUMENT_TABLES:
         sys.stderr.write("ERROR: Unknown instrument {}".format(instrument))
         sys.exit(1)
@@ -60,13 +63,13 @@ if __name__ == '__main__':
 
     connection_string = get_config()['connection_string']
     server_type = connection_string.split('@')[-1][0]
-    
+
     if server_type == 'p' and not args.explicit_prod:
         msg = "ERROR: Can't reset production databases without explicitly setting the "
         msg += "--explicitly_reset_production flag!"
         sys.stderr.write(msg)
         sys.exit(1)
-    
+
     if monitor == 'anomaly' and not args.explicit_anomaly:
         msg = "ERROR: Can't reset anomaly tables without explicitly setting the "
         msg += "--explicitly_reset_anomalies flag!"
@@ -93,8 +96,8 @@ if __name__ == '__main__':
                 check_tables = base_tables
             else:
                 check_tables = INSTRUMENT_TABLES[instrument]
-        else: # instrument and monitor are both 'all'
-            if args.explicit_anomaly: # really delete everything
+        else:  # instrument and monitor are both 'all'
+            if args.explicit_anomaly:  # really delete everything
                 base.metadata.drop_all()
                 base.metadata.create_all()
                 print('\nDatabase instance {} has been reset'.format(connection_string))
@@ -103,16 +106,26 @@ if __name__ == '__main__':
                 for monitor in MONITOR_TABLES:
                     if monitor != 'anomaly':
                         for table in MONITOR_TABLES[monitor]:
-                            table.__table__.drop()
+                            try:
+                                table.__table__.drop()
+                            except ProgrammingError as pe:
+                                if not isinstance(pe.orig, UndefinedTable):
+                                    raise pe
+                                print("Table {} is undefined. Skipping drop table.".format(table))
                             table.__table__.create()
                 print('\nDatabase instance {} has been reset'.format(connection_string))
                 sys.exit(0)
-        
+
         # Choosing what to reset. We want every table in base_tables that is *also* in
         # check_tables.
         for table in base_tables:
             if table in check_tables:
                 if (table not in MONITOR_TABLES['anomaly']) or (args.explicit_anomaly):
-                    table.__table__.drop()
+                    try:
+                        table.__table__.drop()
+                    except ProgrammingError as pe:
+                        if not isinstance(pe.orig, UndefinedTable):
+                            raise pe
+                        print("Table {} is undefined. Skipping drop table.".format(table))
                     table.__table__.create()
         print('\nDatabase instance {} has been reset'.format(connection_string))
