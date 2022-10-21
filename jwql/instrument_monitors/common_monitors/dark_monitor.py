@@ -76,9 +76,10 @@ from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDar
 from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
 from jwql.instrument_monitors import pipeline_tools
 from jwql.jwql_monitors import monitor_mast
+from jwql.shared_tasks.shared_tasks import only_one, run_pipeline, run_parallel_pipeline
 from jwql.utils import calculations, instrument_properties, monitor_utils
 from jwql.utils.constants import ASIC_TEMPLATES, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_DATAPRODUCTS, \
-                                 RAPID_READPATTERNS
+    RAPID_READPATTERNS
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
@@ -189,10 +190,15 @@ class Dark():
 
         logging.info('Adding {} {} pixels to database.'.format(len(coordinates[0]), pixel_type))
 
+        # Change to int from numpy.int64 because the latter can't be put into the
+        # database apparently.
+        x_coord = [int(x) for x in coordinates[0]]
+        y_coord = [int(y) for y in coordinates[1]]
+
         source_files = [os.path.basename(item) for item in files]
         entry = {'detector': self.detector,
-                 'x_coord': coordinates[0],
-                 'y_coord': coordinates[1],
+                 'x_coord': x_coord,
+                 'y_coord': y_coord,
                  'type': pixel_type,
                  'source_files': source_files,
                  'obs_start_time': observation_start_time,
@@ -384,7 +390,7 @@ class Dark():
         """
         query = session.query(self.query_table).filter(self.query_table.aperture == self.aperture,
                                                        self.query_table.readpattern == self.readpatt). \
-                              filter(self.query_table.run_monitor == True)
+                filter(self.query_table.run_monitor == True)  # noqa: E348 (comparison to true)
 
         dates = np.zeros(0)
         for instance in query:
@@ -467,6 +473,7 @@ class Dark():
             required_steps['group_scale'] = False
 
         # Run pipeline steps on files, generating slope files
+        pipeline_files = []
         slope_files = []
         for filename in file_list:
 
@@ -482,22 +489,20 @@ class Dark():
             if any(steps_to_run.values()) is False:
                 slope_files.append(filename)
             else:
-                processed_file = filename.replace('.fits', '_{}.fits'.format('rate'))
-
+                processed_file = filename.replace("_dark", "_rate")
                 # If the slope file already exists, skip the pipeline call
                 if not os.path.isfile(processed_file):
-                    logging.info('\tRunning pipeline on {}'.format(filename))
-                    processed_file = pipeline_tools.run_calwebb_detector1_steps(os.path.abspath(filename), steps_to_run)
-                    logging.info('\tPipeline complete. Output: {}'.format(processed_file))
-
+                    pipeline_files.append(filename)
                 else:
-                    logging.info('\tSlope file {} already exists. Skipping call to pipeline.'
-                                 .format(processed_file))
+                    msg = '\tSlope file {} already exists. Skipping call to pipeline.'
+                    logging.info(msg.format(processed_file))
                     pass
 
+        outputs = run_parallel_pipeline(pipeline_files, "dark", "rate", self.instrument)
+        for filename in file_list:
+            processed_file = filename.replace("_dark", "_rate")
+            if os.path.isfile(processed_file):
                 slope_files.append(processed_file)
-
-                # Delete the original dark ramp file to save disk space
                 os.remove(filename)
 
         obs_times = []
@@ -514,85 +519,91 @@ class Dark():
         max_time = np.max(obs_times)
         mid_time = instrument_properties.mean_time(obs_times)
 
-        # Read in all slope images and place into a list
-        slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files)
+        try:
 
-        # Calculate a mean slope image from the inputs
-        slope_image, stdev_image = calculations.mean_image(slope_image_stack, sigma_threshold=3)
-        mean_slope_file = self.save_mean_slope_image(slope_image, stdev_image, slope_files)
-        logging.info('\tSigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
+            # Read in all slope images and place into a list
+            slope_image_stack, slope_exptimes = pipeline_tools.image_stack(slope_files)
 
-        # Free up memory
-        del slope_image_stack
+            # Calculate a mean slope image from the inputs
+            slope_image, stdev_image = calculations.mean_image(slope_image_stack, sigma_threshold=3)
+            mean_slope_file = self.save_mean_slope_image(slope_image, stdev_image, slope_files)
+            logging.info('\tSigma-clipped mean of the slope images saved to: {}'.format(mean_slope_file))
 
-        # ----- Search for new hot/dead/noisy pixels -----
-        # Read in baseline mean slope image and stdev image
-        # The baseline image is used to look for hot/dead/noisy pixels,
-        # but not for comparing mean dark rates. Therefore, updates to
-        # the baseline can be minimal.
+            # Free up memory
+            del slope_image_stack
 
-        # Limit checks for hot/dead/noisy pixels to full frame data since
-        # subarray data have much shorter exposure times and therefore lower
-        # signal-to-noise
-        aperture_type = Siaf(self.instrument)[self.aperture].AperType
-        if aperture_type == 'FULLSCA':
-            baseline_file = self.get_baseline_filename()
-            if baseline_file is None:
-                logging.warning(('\tNo baseline dark current countrate image for {} {}. Setting the '
-                                 'current mean slope image to be the new baseline.'.format(self.instrument, self.aperture)))
-                baseline_file = mean_slope_file
-                baseline_mean = deepcopy(slope_image)
-                baseline_stdev = deepcopy(stdev_image)
-            else:
-                logging.info('\tBaseline file is {}'.format(baseline_file))
-                baseline_mean, baseline_stdev = self.read_baseline_slope_image(baseline_file)
+            # ----- Search for new hot/dead/noisy pixels -----
+            # Read in baseline mean slope image and stdev image
+            # The baseline image is used to look for hot/dead/noisy pixels,
+            # but not for comparing mean dark rates. Therefore, updates to
+            # the baseline can be minimal.
 
-            # Check the hot/dead pixel population for changes
-            new_hot_pix, new_dead_pix = self.find_hot_dead_pixels(slope_image, baseline_mean)
+            # Limit checks for hot/dead/noisy pixels to full frame data since
+            # subarray data have much shorter exposure times and therefore lower
+            # signal-to-noise
+            aperture_type = Siaf(self.instrument)[self.aperture].AperType
+            if aperture_type == 'FULLSCA':
+                baseline_file = self.get_baseline_filename()
+                if baseline_file is None:
+                    logging.warning(('\tNo baseline dark current countrate image for {} {}. Setting the '
+                                     'current mean slope image to be the new baseline.'.format(self.instrument, self.aperture)))
+                    baseline_file = mean_slope_file
+                    baseline_mean = deepcopy(slope_image)
+                    baseline_stdev = deepcopy(stdev_image)
+                else:
+                    logging.info('\tBaseline file is {}'.format(baseline_file))
+                    baseline_mean, baseline_stdev = self.read_baseline_slope_image(baseline_file)
 
-            # Shift the coordinates to be in full frame coordinate system
-            new_hot_pix = self.shift_to_full_frame(new_hot_pix)
-            new_dead_pix = self.shift_to_full_frame(new_dead_pix)
+                # Check the hot/dead pixel population for changes
+                new_hot_pix, new_dead_pix = self.find_hot_dead_pixels(slope_image, baseline_mean)
 
-            # Exclude hot and dead pixels found previously
-            new_hot_pix = self.exclude_existing_badpix(new_hot_pix, 'hot')
-            new_dead_pix = self.exclude_existing_badpix(new_dead_pix, 'dead')
+                # Shift the coordinates to be in full frame coordinate system
+                new_hot_pix = self.shift_to_full_frame(new_hot_pix)
+                new_dead_pix = self.shift_to_full_frame(new_dead_pix)
 
-            # Add new hot and dead pixels to the database
-            logging.info('\tFound {} new hot pixels'.format(len(new_hot_pix[0])))
-            logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix[0])))
-            self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
-            self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
+                # Exclude hot and dead pixels found previously
+                new_hot_pix = self.exclude_existing_badpix(new_hot_pix, 'hot')
+                new_dead_pix = self.exclude_existing_badpix(new_dead_pix, 'dead')
 
-            # Check for any pixels that are significantly more noisy than
-            # in the baseline stdev image
-            new_noisy_pixels = self.noise_check(stdev_image, baseline_stdev)
+                # Add new hot and dead pixels to the database
+                logging.info('\tFound {} new hot pixels'.format(len(new_hot_pix[0])))
+                logging.info('\tFound {} new dead pixels'.format(len(new_dead_pix[0])))
+                self.add_bad_pix(new_hot_pix, 'hot', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
+                self.add_bad_pix(new_dead_pix, 'dead', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
-            # Shift coordinates to be in full_frame coordinate system
-            new_noisy_pixels = self.shift_to_full_frame(new_noisy_pixels)
+                # Check for any pixels that are significantly more noisy than
+                # in the baseline stdev image
+                new_noisy_pixels = self.noise_check(stdev_image, baseline_stdev)
 
-            # Exclude previously found noisy pixels
-            new_noisy_pixels = self.exclude_existing_badpix(new_noisy_pixels, 'noisy')
+                # Shift coordinates to be in full_frame coordinate system
+                new_noisy_pixels = self.shift_to_full_frame(new_noisy_pixels)
 
-            # Add new noisy pixels to the database
-            logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
-            self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
+                # Exclude previously found noisy pixels
+                new_noisy_pixels = self.exclude_existing_badpix(new_noisy_pixels, 'noisy')
 
-        # ----- Calculate image statistics -----
+                # Add new noisy pixels to the database
+                logging.info('\tFound {} new noisy pixels'.format(len(new_noisy_pixels[0])))
+                self.add_bad_pix(new_noisy_pixels, 'noisy', file_list, mean_slope_file, baseline_file, min_time, mid_time, max_time)
 
-        # Find amplifier boundaries so per-amp statistics can be calculated
-        number_of_amps, amp_bounds = instrument_properties.amplifier_info(slope_files[0])
-        logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
+            # ----- Calculate image statistics -----
 
-        # Calculate mean and stdev values, and fit a Gaussian to the
-        # histogram of the pixels in each amp
-        (amp_mean, amp_stdev, gauss_param, gauss_chisquared, double_gauss_params, double_gauss_chisquared,
-            histogram, bins) = self.stats_by_amp(slope_image, amp_bounds)
+            # Find amplifier boundaries so per-amp statistics can be calculated
+            number_of_amps, amp_bounds = instrument_properties.amplifier_info(slope_files[0])
+            logging.info('\tAmplifier boundaries: {}'.format(amp_bounds))
 
-        # Remove the input files in order to save disk space
-        files_to_remove = glob(f'{self.data_dir}/*fits')
-        for filename in files_to_remove:
-            os.remove(filename)
+            # Calculate mean and stdev values, and fit a Gaussian to the
+            # histogram of the pixels in each amp
+            (amp_mean, amp_stdev, gauss_param, gauss_chisquared, double_gauss_params, double_gauss_chisquared,
+                histogram, bins) = self.stats_by_amp(slope_image, amp_bounds)
+
+            # Remove the input files in order to save disk space
+            files_to_remove = glob(f'{self.data_dir}/*fits')
+            for filename in files_to_remove:
+                os.remove(filename)
+
+        except Exception as e:
+            logging.critical("ERROR: {}".format(e))
+            raise e
 
         # Construct new entry for dark database table
         source_files = [os.path.basename(item) for item in file_list]
@@ -649,6 +660,7 @@ class Dark():
 
     @log_fail
     @log_info
+    @only_one(key='dark_monitor')
     def run(self):
         """The main method.  See module docstrings for further
         details.
@@ -793,8 +805,8 @@ class Dark():
 
                     else:
                         logging.info(('\tDark monitor skipped. MAST query has returned {} new dark files for '
-                                      '{}, {}, {}. {} new files are required to run dark current monitor.')
-                                      .format(len(new_entries), instrument, aperture, self.readpatt, file_count_threshold))
+                                     '{}, {}, {}. {} new files are required to run dark current monitor.')
+                                     .format(len(new_entries), instrument, aperture, self.readpatt, file_count_threshold))
                         monitor_run = False
 
                     # Update the query history
