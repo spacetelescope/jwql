@@ -116,7 +116,7 @@ class mnemonics:
             try:
                 if item['Telemetry Mnemonic'] == mnemonic:
                     # convert time string to mjd format
-                    temp = item['Secondary Time'].replace('/','-').replace(' ', 'T')
+                    temp = item['Secondary Time'].replace('/', '-').replace(' ', 'T')
                     t = Time(temp, format='isot')
 
                     temp1.append(t.mjd)
@@ -124,16 +124,16 @@ class mnemonics:
             except KeyError:
                 warnings.warn("{} is not in mnemonic table".format(mnemonic))
 
-        description = ('time','value')
+        description = ('time', 'value')
         data = [temp1, temp2]
 
         # add some meta data
         if len(temp1) > 0:
             date_start = temp1[0]
-            date_end = temp1[len(temp1)-1]
-            info = {'start':date_start, 'end':date_end}
+            date_end = temp1[len(temp1) - 1]
+            info = {'start': date_start, 'end': date_end}
         else:
-            info = {"n":"n"}
+            info = {"n": "n"}
 
         # add name of mnemonic to meta data of list
         info['mnemonic'] = mnemonic

@@ -64,10 +64,10 @@ def organize_filesystem():
             dst = os.path.join(destination_directory, os.path.basename(src))
 
             # Create parent directories if necessary
-            #ensure_dir_exists(destination_directory)
+            # ensure_dir_exists(destination_directory)
 
             # Move the file over
-            #shutil.move(src, dst)
+            # shutil.move(src, dst)
             print('\tMoved {} to {}'.format(src, dst))
 
 
@@ -103,10 +103,10 @@ def revert_filesystem():
             dst = os.path.join(destination_directory, os.path.basename(src))
 
             # Create parent directories if necessary
-            #ensure_dir_exists(destination_directory)
+            # ensure_dir_exists(destination_directory)
 
             # Move the file over
-            #shutil.move(src, dst)
+            # shutil.move(src, dst)
             print('\tMoved {} to {}'.format(src, dst))
 
 
