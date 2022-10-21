@@ -243,8 +243,7 @@
             "plot_data": "nominal",
             "plot_category": "quaternions",
             "mean_time_block": "30_minutes"
-        },
-
+        }
     ]
 }
 
