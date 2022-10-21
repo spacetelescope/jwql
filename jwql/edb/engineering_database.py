@@ -855,7 +855,8 @@ class EdbMnemonic:
 
         # Plot the mean value over time
         if len(self.median_times) > 0:
-            mean_data = fig.line(self.median_times, self.mean, line_width=1, line_color='orange', alpha=0.75)
+            if self.median_times[0] is not None:
+                mean_data = fig.line(self.median_times, self.mean, line_width=1, line_color='orange', alpha=0.75)
 
         if len(self.data["dates"]) == 0:
             data.visible = False
@@ -898,7 +899,10 @@ class EdbMnemonic:
             interp_means = interpolate_datetimes(data_dates, self.median_times, self.mean)
             dev = data_vals - interp_means
         elif len(self.median_times) == 1:
-            dev = data_vals - self.mean
+            if self.median_times[0] is not None:
+                dev = data_vals - self.mean
+            else:
+                dev = [0] * len(data_vals)
         else:
             # No median data, so we can't calculate any deviation
             dev = [0] * len(data_vals)
