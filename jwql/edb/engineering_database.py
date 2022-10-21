@@ -595,32 +595,40 @@ class EdbMnemonic:
         sigma : int
             Number of sigma to use for sigma clipping
         """
-        min_date = np.min(self.data["dates"])
-        date_range = np.max(self.data["dates"]) - min_date
-        num_days = date_range.days
-        num_seconds = date_range.seconds
-        range_days = num_days + 1
+        if type(self.data["euvalues"].data[0]) not in [np.str_, str]:
+            min_date = np.min(self.data["dates"])
+            date_range = np.max(self.data["dates"]) - min_date
+            num_days = date_range.days
+            num_seconds = date_range.seconds
+            range_days = num_days + 1
 
-        # Generate a list of times to use as boundaries for calculating means
-        limits = np.array([min_date + timedelta(days=x) for x in range(range_days)])
-        limits = np.append(limits, np.max(self.data["dates"]))
+            # Generate a list of times to use as boundaries for calculating means
+            limits = np.array([min_date + timedelta(days=x) for x in range(range_days)])
+            limits = np.append(limits, np.max(self.data["dates"]))
 
-        means, meds, devs, times = [], [], [], []
-        for i in range(len(limits) - 1):
-            good = np.where((self.data["dates"] >= limits[i]) & (self.data["dates"] < limits[i + 1]))
+            means, meds, devs, times = [], [], [], []
+            for i in range(len(limits) - 1):
+                good = np.where((self.data["dates"] >= limits[i]) & (self.data["dates"] < limits[i + 1]))
 
-            if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
-                avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
-            else:
-                avg, med, dev = change_only_stats(self.data["dates"][good], self.data["euvalues"][good], sigma=sigma)
-            means.append(avg)
-            meds.append(med)
-            devs.append(dev)
-            times.append(limits[i] + (limits[i + 1] - limits[i]) / 2.)
-        self.mean = means
-        self.median = meds
-        self.stdev = devs
-        self.median_times = times
+                if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
+                    avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
+                else:
+                    avg, med, dev = change_only_stats(self.data["dates"][good], self.data["euvalues"][good], sigma=sigma)
+                means.append(avg)
+                meds.append(med)
+                devs.append(dev)
+                times.append(limits[i] + (limits[i + 1] - limits[i]) / 2.)
+            self.mean = means
+            self.median = meds
+            self.stdev = devs
+            self.median_times = times
+        else:
+            # If the mnemonic data are strings, we don't compute statistics
+            self.mean = [None]
+            self.median = [None]
+            self.stdev = [None]
+            self.median_times = [None]
+
 
     def full_stats(self, sigma=3):
         """Calculate the mean/median/stdev of the full compliment of data
@@ -630,14 +638,22 @@ class EdbMnemonic:
         sigma : int
             Number of sigma to use for sigma clipping
         """
-        if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
-            self.mean, self.median, self.stdev = sigma_clipped_stats(self.data["euvalues"], sigma=sigma)
+        if type(self.data["euvalues"].data[0]) not in [np.str_, str]:
+            if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
+                self.mean, self.median, self.stdev = sigma_clipped_stats(self.data["euvalues"], sigma=sigma)
+            else:
+                self.mean, self.median, self.stdev = change_only_stats(self.data["dates"], self.data["euvalues"], sigma=sigma)
+            self.mean = [self.mean]
+            self.median = [self.median]
+            self.stdev = [self.stdev]
+            self.median_times = [calc_median_time(self.data["dates"])]
         else:
-            self.mean, self.median, self.stdev = change_only_stats(self.data["dates"], self.data["euvalues"], sigma=sigma)
-        self.mean = [self.mean]
-        self.median = [self.median]
-        self.stdev = [self.stdev]
-        self.median_times = [calc_median_time(self.data["dates"])]
+            # If the mnemonic values are strings, don't compute statistics
+            self.mean = [None]
+            self.median = [None]
+            self.stdev = [None]
+            self.median_times = [None]
+
 
     def get_table_data(self):
         """Get data needed to make interactivate table in template."""
@@ -934,29 +950,35 @@ class EdbMnemonic:
         sigma : int
             Number of sigma to use in sigma-clipping
         """
-        duration_secs = self.mean_time_block.to('second').value
-        date_arr = np.array(self.data["dates"])
-        num_bins = (np.max(self.data["dates"]) - np.min(self.data["dates"])).total_seconds() / duration_secs
+        if type(self.data["euvalues"].data[0]) not in [np.str_, str]:
+            duration_secs = self.mean_time_block.to('second').value
+            date_arr = np.array(self.data["dates"])
+            num_bins = (np.max(self.data["dates"]) - np.min(self.data["dates"])).total_seconds() / duration_secs
 
-        # Round up to the next integer if there is a fractional number of bins
-        num_bins = np.ceil(num_bins)
+            # Round up to the next integer if there is a fractional number of bins
+            num_bins = np.ceil(num_bins)
 
-        self.mean = []
-        self.median = []
-        self.stdev = []
-        self.median_times = []
-        for i in range(int(num_bins)):
-            min_date = self.data["dates"][0] + timedelta(seconds=i * duration_secs)
-            max_date = min_date + timedelta(seconds=duration_secs)
-            good = ((date_arr >= min_date) & (date_arr < max_date))
-            if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
-                avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
-            else:
-                avg, med, dev = change_only_stats(self.data["dates"][good], self.data["euvalues"][good], sigma=sigma)
-            self.mean.append(avg)
-            self.median.append(med)
-            self.stdev.append(dev)
-            self.median_times.append(calc_median_time(self.data["dates"].data[good]))
+            self.mean = []
+            self.median = []
+            self.stdev = []
+            self.median_times = []
+            for i in range(int(num_bins)):
+                min_date = self.data["dates"][0] + timedelta(seconds=i * duration_secs)
+                max_date = min_date + timedelta(seconds=duration_secs)
+                good = ((date_arr >= min_date) & (date_arr < max_date))
+                if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
+                    avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
+                else:
+                    avg, med, dev = change_only_stats(self.data["dates"][good], self.data["euvalues"][good], sigma=sigma)
+                self.mean.append(avg)
+                self.median.append(med)
+                self.stdev.append(dev)
+                self.median_times.append(calc_median_time(self.data["dates"].data[good]))
+        else:
+            self.mean = [None]
+            self.median = [None]
+            self.stdev = [None]
+            self.median_times = [None]
 
 
 def add_limit_boxes(fig, yellow=None, red=None):
