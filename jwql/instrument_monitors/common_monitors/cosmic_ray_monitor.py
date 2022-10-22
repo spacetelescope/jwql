@@ -216,7 +216,7 @@ class CosmicRay:
                 mags[mag_bins[mag]] += 1
 
         logging.info("{} of {} cosmic rays are beyond bin boundaries".format(num_outliers, total))
-        return mags, outliers
+        return [int(m) for m in mags], outliers
 
     def file_exists_in_database(self, filename):
         """Checks if an entry for filename exists in the cosmic ray stats
