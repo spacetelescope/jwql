@@ -53,19 +53,17 @@ from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT
-from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
+from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
 from .data_containers import data_trending
-from .data_containers import get_acknowledgements, get_instrument_proposals
+from .data_containers import get_acknowledgements
 from .data_containers import get_anomaly_form
 from .data_containers import get_dashboard_components
 from .data_containers import get_edb_components
 from .data_containers import get_explorer_extension_names
-from .data_containers import get_filenames_by_instrument, mast_query_filenames_by_instrument
 from .data_containers import get_header_info
 from .data_containers import get_image_info
-from .data_containers import get_proposal_info
 from .data_containers import get_thumbnails_all_instruments
 from .data_containers import nirspec_trending
 from .data_containers import random_404_page
@@ -74,7 +72,7 @@ from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
-from .models import Observation, Proposal
+from .models import Observation, Proposal, RootFileInfo
 from astropy.io import fits
 
 
@@ -342,7 +340,7 @@ def archive_thumbnails_ajax(request, inst, proposal, observation=None):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     data = thumbnails_ajax(inst, proposal, obs_num=observation)
-
+    data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
@@ -384,6 +382,7 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
 
     obs_list = sorted(list(set(all_obs)))
 
+    sort_type = request.session.get('image_sort', 'Ascending')
     template = 'thumbnails_per_obs.html'
     context = {'base_url': get_base_url(),
                'inst': inst,
@@ -391,7 +390,7 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
                'obs_list': obs_list,
                'prop': proposal,
                'prop_meta': proposal_meta,
-               'base_url': get_base_url()}
+               'sort': sort_type}
 
     return render(request, template, context)
 
@@ -429,7 +428,7 @@ def archive_thumbnails_query_ajax(request):
     anomaly_query_config.THUMBNAILS = thumbnails
 
     data = thumbnails_query_ajax(thumbnails)
-
+    data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
@@ -703,8 +702,11 @@ def query_submit(request):
 
     anomaly_query_config.PARAMETERS = parameters
 
+    sort_type = request.session.get('image_sort', 'Ascending')
+
     context = {'inst': '',
-               'base_url': get_base_url()
+               'base_url': get_base_url(),
+               'sort': sort_type
                }
 
     return render(request, template, context)
@@ -917,6 +919,41 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
+
+def toggle_viewed_ajax(request, file_root):
+    """Update the model's "mark_viewed" field and save in the database
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    file_root : str
+        FITS file_root of selected image in filesystem
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+    root_file_info = RootFileInfo.objects.get(root_name=file_root)
+    root_file_info.viewed = not root_file_info.viewed
+    root_file_info.save()
+
+    # Build the context
+    context = {'marked_viewed': root_file_info.viewed}
+    return JsonResponse(context, json_dumps_params={'indent': 2})
+  
+
+def update_session_value_ajax(request, session_item, session_value):
+    session_options = ["image_sort"]
+    context = {}
+    # Only allow updates of sessions that we expect
+    if session_item in session_options:
+        request.session[session_item] = session_value
+        context = {'item': request.session[session_item]}
+    return JsonResponse(context, json_dumps_params={'indent': 2})
+
+
 def view_image(request, inst, file_root, rewrite=False):
     """Generate the image view page
 
@@ -956,7 +993,14 @@ def view_image(request, inst, file_root, rewrite=False):
         except KeyError:
             pass
 
-    file_root_list = {key: sorted(file_root_list[key]) for key in sorted(file_root_list)}
+    sort_type = request.session.get('image_sort', 'Ascending')
+    if sort_type in ['Ascending']:
+        file_root_list = {key: sorted(file_root_list[key]) for key in sorted(file_root_list)}
+    else:
+        file_root_list = {key: sorted(file_root_list[key], reverse=True) for key in sorted(file_root_list)}
+
+    # Get our current views RootFileInfo model and send our "viewed/new" information
+    root_file_info = RootFileInfo.objects.get(root_name=file_root)
 
     # Build the context
     context = {'base_url': get_base_url(),
@@ -971,6 +1015,7 @@ def view_image(request, inst, file_root, rewrite=False):
                'num_ints': image_info['num_ints'],
                'available_ints': image_info['available_ints'],
                'total_ints': image_info['total_ints'],
-               'form': form}
+               'form': form,
+               'marked_viewed': root_file_info.viewed}
 
     return render(request, template, context)
