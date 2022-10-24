@@ -63,6 +63,7 @@ import os
 import socket
 import pandas as pd
 
+from sqlalchemy import BigInteger
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import create_engine
@@ -288,6 +289,7 @@ def get_monitor_columns(data_dict, table_name):
 
     # Define column types
     data_type_dict = {'integer': Integer(),
+                      'bigint': BigInteger(),
                       'string': String(),
                       'float': Float(precision=32),
                       'decimal': Float(precision='13,8'),
