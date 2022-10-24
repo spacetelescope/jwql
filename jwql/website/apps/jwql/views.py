@@ -72,7 +72,7 @@ from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
-from .models import Observation, Proposal
+from .models import Observation, Proposal, RootFileInfo
 from astropy.io import fits
 
 
@@ -919,6 +919,31 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
+
+def toggle_viewed_ajax(request, file_root):
+    """Update the model's "mark_viewed" field and save in the database
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    file_root : str
+        FITS file_root of selected image in filesystem
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+    root_file_info = RootFileInfo.objects.get(root_name=file_root)
+    root_file_info.viewed = not root_file_info.viewed
+    root_file_info.save()
+
+    # Build the context
+    context = {'marked_viewed': root_file_info.viewed}
+    return JsonResponse(context, json_dumps_params={'indent': 2})
+  
+
 def update_session_value_ajax(request, session_item, session_value):
     session_options = ["image_sort"]
     context = {}
@@ -974,6 +999,9 @@ def view_image(request, inst, file_root, rewrite=False):
     else:
         file_root_list = {key: sorted(file_root_list[key], reverse=True) for key in sorted(file_root_list)}
 
+    # Get our current views RootFileInfo model and send our "viewed/new" information
+    root_file_info = RootFileInfo.objects.get(root_name=file_root)
+
     # Build the context
     context = {'base_url': get_base_url(),
                'file_root_list': file_root_list,
@@ -987,6 +1015,7 @@ def view_image(request, inst, file_root, rewrite=False):
                'num_ints': image_info['num_ints'],
                'available_ints': image_info['available_ints'],
                'total_ints': image_info['total_ints'],
-               'form': form}
+               'form': form,
+               'marked_viewed': root_file_info.viewed}
 
     return render(request, template, context)

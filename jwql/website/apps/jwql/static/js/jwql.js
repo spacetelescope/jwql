@@ -409,15 +409,16 @@ function show_only(filter_type, value, dropdown_keys, num_fileids) {
     // Update dropdown menu text
     document.getElementById(filter_type + '_dropdownMenuButton').innerHTML = value;
 
-    // Find all thumbnail elements
-    var thumbnails = document.getElementsByClassName("thumbnail");
-
     // Determine the current value for each filter
     var filter_values = [];
     for (j = 0; j < all_filters.length; j++) {
         var filter_value = document.getElementById(all_filters[j] + '_dropdownMenuButton').innerHTML;
         filter_values.push(filter_value);
     }
+
+
+    // Find all thumbnail elements
+    var thumbnails = document.getElementsByClassName("thumbnail");
 
     // Determine whether or not to display each thumbnail
     var num_thumbnails_displayed = 0;
@@ -449,6 +450,62 @@ function show_only(filter_type, value, dropdown_keys, num_fileids) {
     document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/' + num_fileids + ' activities'
 };
 
+/**
+ * Limit the displayed thumbnails based on filter criteria
+ * @param {String} filter_type - The filter type.  Currently only "sort" is supported.
+ * @param {Integer} value - The filter value
+ * @param {List} dropdown_keys - A list of dropdown menu keys
+ * @param {Integer} num_fileids - The number of files that are available to display
+ */
+function show_only(filter_type, value, dropdown_keys, num_fileids) {
+
+    // Get all filter options from {{dropdown_menus}} variable
+    var all_filters = dropdown_keys.split(',');
+
+    // Update dropdown menu text
+    document.getElementById(filter_type + '_dropdownMenuButton').innerHTML = value;
+
+    // Determine the current value for each filter
+    var filter_values = [];
+    for (j = 0; j < all_filters.length; j++) {
+        var filter_value = document.getElementById(all_filters[j] + '_dropdownMenuButton').innerHTML;
+        filter_values.push(filter_value);
+    }
+
+
+    // Find all thumbnail elements
+    var thumbnails = document.getElementsByClassName("thumbnail");
+
+    // Determine whether or not to display each thumbnail
+    var num_thumbnails_displayed = 0;
+    for (i = 0; i < thumbnails.length; i++) {
+        // Evaluate if the thumbnail meets all filter criteria
+        var criteria = [];
+        for (j = 0; j < all_filters.length; j++) {
+            var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0) 
+                         || (thumbnails[i].getAttribute(all_filters[j]) == filter_values[j]);
+            criteria.push(criterion);
+        };
+
+        // Only display if all filter criteria are met
+        if (criteria.every(function(r){return r})) {
+            thumbnails[i].style.display = "inline-block";
+            num_thumbnails_displayed++;
+        } else {
+            thumbnails[i].style.display = "none";
+        }
+    };
+
+    // If there are no thumbnails to display, tell the user
+    if (num_thumbnails_displayed == 0) {
+        document.getElementById('no_thumbnails_msg').style.display = 'inline-block';
+    } else {
+        document.getElementById('no_thumbnails_msg').style.display = 'none';
+    };
+
+    // Update the count of how many images are being shown
+    document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/' + num_fileids + ' activities'
+};
 
 /**
  * Sort thumbnail display by proposal number
@@ -491,6 +548,37 @@ function sort_by_thumbnails(sort_type, base_url) {
         }
     });
 };
+
+
+/**
+ * Toggle a viewed button when pressed.  
+ * Ajax call to update RootFileInfo model with toggled value
+ * 
+ * @param {String} file_root - The rootname of the file corresponding to the thumbnail
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function toggle_viewed(file_root, base_url) {
+    // Toggle the button immediately so user insn't confused (ajax result will confirm choice or fix on failure)
+    var elem = document.getElementById("viewed");
+    update_viewed_button(elem.value == "New" ? true : false);
+    elem.disabled=true;
+    
+    // Ajax Call to update RootFileInfo model with "viewed" info
+    $.ajax({
+        url: base_url + '/ajax/viewed/' + file_root,
+        success: function(data){
+            // Update button with actual value (paranoia update, should not yield visible change)
+            update_viewed_button(data["marked_viewed"]);
+            elem.disabled=false;
+        },
+        error : function(response) {
+            // If update fails put button back to original state
+            update_viewed_button(elem.value == "New" ? false : true);
+            elem.disabled=false;
+
+        }
+    });
+}
 
 
 /**
@@ -784,14 +872,15 @@ function update_thumbnail_array(data) {
         // Parse out useful variables
         rootname = Object.keys(data.file_data)[i];
         file = data.file_data[rootname];
+        viewed = file.viewed;
         filename_dict = file.filename_dict;
 
         // Build div content
         if (data.inst!="all") {
-            content = '<div class="thumbnail" instrument = ' + data.inst + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
+            content = '<div class="thumbnail" instrument = ' + data.inst + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '" look="' + viewed + '">';
             content += '<a href="/' + data.inst + '/' + rootname + '/">';
         } else {
-            content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
+            content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '" look="' + viewed + '">';
             content += '<a href="/' + filename_dict.instrument + '/' + rootname + '/">';
         }
         content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="image_error(this);">';
@@ -864,6 +953,17 @@ function update_thumbnails_query_page(base_url, sort) {
             document.getElementById("thumbnail-array").style.display = "block";
         }});
 };
+
+function update_viewed_button(viewed) {
+    var elem = document.getElementById("viewed");
+    if (viewed) {
+        elem.classList.add("btn-outline-primary")
+        elem.value = "Viewed";
+    } else {
+        elem.classList.remove("btn-outline-primary")
+        elem.value = "New";
+    }
+}
 
 /**
  * Construct the URL corresponding to a specific GitHub release
