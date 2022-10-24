@@ -5,4 +5,4 @@ OBS_END_TIME, datetime
 JUMP_COUNT, integer
 JUMP_RATE, float
 MAGNITUDE, integer_array_1d
-OUTLIERS, integer_array_1d
+OUTLIERS, bigint_array_1d
