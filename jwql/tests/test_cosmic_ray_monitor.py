@@ -196,18 +196,24 @@ def test_get_cr_mags():
 def test_get_cr_mags_fake_data():
     """Test the calculation of multiple CR magnitudes"""
     data, rate, header, jump_coords, prior_coords = define_fake_test_data()
+    bin_indices = np.arange(65536 * 2 + 1, dtype=np.int32) - 65536
 
     cr = CosmicRay()
     cr.nints = 2
-    mags = cr.get_cr_mags(jump_coords, prior_coords, rate, data, header)
-    assert mags == [10., -5., 3.]
+    mags, outliers = cr.get_cr_mags(jump_coords, prior_coords, rate, data, header)
+    assert len(mags) == 65536 * 2 + 1  # assert that it's a bin
+    assert mags[bin_indices[10]] == 1
+    assert mags[bin_indices[-5]] == 1
+    assert mags[bin_indices[3]] == 1
 
     cr_one_int = CosmicRay()
     cr_one_int.nints = 1
     int1_jump_coords = [c[1:] for c in jump_coords[0:2]]
     int1_prior_coords = [c[1:] for c in prior_coords[0:2]]
-    mags = cr_one_int.get_cr_mags(int1_jump_coords, int1_prior_coords, rate[0, :, :], data, header)
-    assert mags == [10., -5.]
+    mags, outliers = cr_one_int.get_cr_mags(int1_jump_coords, int1_prior_coords, rate[0, :, :], data, header)
+    assert mags[bin_indices[10]] == 1
+    assert mags[bin_indices[-5]] == 1
+    assert mags[bin_indices[3]] == 0
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')

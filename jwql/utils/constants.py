@@ -10,6 +10,7 @@ Authors
     - Teagan King
     - Mike Engesser
     - Maria Pena-Guerrero
+    - Rachel Cooper
 
 Use
 ---
@@ -69,10 +70,10 @@ ANOMALIES_PER_INSTRUMENT = {
     # instrument-specific anomalies:
     'column_pull_up': ['miri'],
     'column_pull_down': ['miri'],
-    'dominant_msa_leakage': ['nirspec'],
+    'Dominant_MSA_Leakage': ['nirspec'],
     'dragons_breath': ['nircam'],
-    'MRS_glow': ['miri'],
-    'MRS_zipper': ['miri'],
+    'MRS_Glow': ['miri'],
+    'MRS_Zipper': ['miri'],
     'internal_reflection': ['miri'],
     'optical_short': ['nirspec'],  # Only for MOS observations
     'row_pull_up': ['miri'],
@@ -81,16 +82,20 @@ ANOMALIES_PER_INSTRUMENT = {
     'tree_rings': ['miri'],
     # additional anomalies:
     'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
+# anomalies that shouldn't be 'titleized'
+special_cases = ['Dominant_MSA_Leakage','MRS_Glow','MRS_Zipper','LRS_Contamination'] 
 
 # Defines the possible anomalies to flag through the web app
-ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage"
-                   else (anomaly, "Dominant MSA Leakage")
-                   for anomaly in ANOMALIES_PER_INSTRUMENT]
+ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
+                        else (anomaly, anomaly.replace('_',' '))
+                        for anomaly in ANOMALIES_PER_INSTRUMENT]
 
 ANOMALY_CHOICES_FGS = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
                        if 'fgs' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
-ANOMALY_CHOICES_MIRI = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
+ANOMALY_CHOICES_MIRI = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
+                        else (anomaly, anomaly.replace('_',' '))
+                        for anomaly in ANOMALIES_PER_INSTRUMENT
                         if 'miri' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
 ANOMALY_CHOICES_NIRCAM = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
@@ -99,10 +104,10 @@ ANOMALY_CHOICES_NIRCAM = [(anomaly, inflection.titleize(anomaly)) for anomaly in
 ANOMALY_CHOICES_NIRISS = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
                           if 'niriss' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
-ANOMALY_CHOICES_NIRSPEC = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage"
-                           else (anomaly, "Dominant MSA Leakage")
-                           for anomaly in ANOMALIES_PER_INSTRUMENT
-                           if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+ANOMALY_CHOICES_NIRSPEC = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
+                            else (anomaly, anomaly.replace('_',' '))
+                            for anomaly in ANOMALIES_PER_INSTRUMENT
+                            if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
 ANOMALY_CHOICES_PER_INSTRUMENT = {'fgs': ANOMALY_CHOICES_FGS,
                                   'miri': ANOMALY_CHOICES_MIRI,
@@ -294,7 +299,7 @@ JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
                       JWST_INSTRUMENT_NAMES]
 
 # Maximum number of records returned by MAST for a single query
-MAST_QUERY_LIMIT = 50000
+MAST_QUERY_LIMIT = 500000
 
 # Available monitor names and their location for each JWST instrument
 MONITORS = {

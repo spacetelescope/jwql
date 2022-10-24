@@ -58,6 +58,9 @@ from jwql.utils.utils import get_rootnames_for_instrument_proposal
 from .forms import InstrumentAnomalySubmitForm
 from astroquery.mast import Mast
 
+# Increase the limit on the number of entries that can be returned by
+# a MAST query.
+Mast._portal_api_connection.PAGESIZE = MAST_QUERY_LIMIT
 
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
@@ -88,7 +91,6 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
-# Temporary until JWST operations: switch to test string for MAST request URL
 if not ON_GITHUB_ACTIONS:
     Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
 
