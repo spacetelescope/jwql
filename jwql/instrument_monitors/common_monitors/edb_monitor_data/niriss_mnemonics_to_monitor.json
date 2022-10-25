@@ -153,14 +153,6 @@
         }
     ],
     "all+time_interval": [
-        {
-            "name": "SA_ZFGINSTCT",
-            "description": "FGS Guide star instrument count",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "guide_star",
-            "mean_time_block": "20_sec"
-        }
     ],
     "time_interval": [
         {
