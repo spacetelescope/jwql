@@ -159,7 +159,7 @@
             "dependency": [],
             "plot_data": "nominal",
             "plot_category": "guide_star",
-            "mean_time_block": "20_sec",
+            "mean_time_block": "20_sec"
         }
     ],
     "time_interval": [
