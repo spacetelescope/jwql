@@ -44,7 +44,7 @@ def generate_proposal_thumbnails():
     """The main function of the ``generate_proposal_thumbnails`` module.
     See module docstring for further details."""
 
-    proposal_dirs = glob.glob(os.path.join(SETTINGS['thumbnail_filesystem'], '*'))
+    proposal_dirs = glob.glob(os.path.join(SETTINGS['thumbnail_filesystem'], 'jw*'))
 
     for proposal_dir in proposal_dirs:
         rate_thumbnails = glob.glob(os.path.join(proposal_dir, '*rate*.thumb'))
