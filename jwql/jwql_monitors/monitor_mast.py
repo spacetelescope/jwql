@@ -26,7 +26,7 @@ from bokeh.embed import components
 from bokeh.io import save, output_file
 import pandas as pd
 
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_DATAPRODUCTS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_DATAPRODUCTS, MAST_QUERY_LIMIT
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.permissions import set_permissions
 from jwql.utils.utils import get_config
@@ -39,6 +39,10 @@ from jwql.utils.protect_module import lock_module
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 if not ON_GITHUB_ACTIONS:
     Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
+
+# Increase the limit on the number of entries that can be returned by
+# a MAST query.
+Mast._portal_api_connection.PAGESIZE = MAST_QUERY_LIMIT
 
 
 def instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,

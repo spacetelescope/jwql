@@ -36,13 +36,14 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jwql.website.jwql_proj.settings")
 django.setup()
 
-from jwql.website.apps.jwql.models import Archive, Observation, Proposal  #noqa
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE  #noqa
-from jwql.utils.logging_functions import log_info, log_fail  #noqa
-from jwql.utils.monitor_utils import initialize_instrument_monitor  #noqa
-from jwql.utils.utils import filename_parser, filesystem_path, get_config  #noqa
-from jwql.website.apps.jwql.data_containers import get_instrument_proposals, get_filenames_by_instrument  #noqa
-from jwql.website.apps.jwql.data_containers import get_proposal_info, mast_query_filenames_by_instrument  #noqa
+from jwql.website.apps.jwql.models import Archive, Observation, Proposal, RootFileInfo  # noqa
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE  # noqa
+from jwql.utils.logging_functions import log_info, log_fail  # noqa
+from jwql.utils.monitor_utils import initialize_instrument_monitor  # noqa
+from jwql.utils.constants import MAST_QUERY_LIMIT  # noqa
+from jwql.utils.utils import filename_parser, filesystem_path, get_config  # noqa
+from jwql.website.apps.jwql.data_containers import get_instrument_proposals, get_filenames_by_instrument  # noqa
+from jwql.website.apps.jwql.data_containers import get_proposal_info, mast_query_filenames_by_instrument  # noqa
 
 FILESYSTEM = get_config()['filesystem']
 
@@ -64,11 +65,6 @@ def get_updates(inst):
 
     # Dictionary to hold summary information for all proposals
     all_proposals = get_instrument_proposals(inst)
-    all_proposal_info = {'num_proposals': 0,
-                         'proposals': [],
-                         'min_obsnum': [],
-                         'thumbnail_paths': [],
-                         'num_files': []}
 
     # Get list of all files for the given instrument
     for proposal in all_proposals:
@@ -125,11 +121,10 @@ def get_updates(inst):
                 # Get the number of files in the observation
                 propobs = f'{proposal}{obsnum}'
                 obsfiles = [f for f in rootnames if propobs in f]
-                num_obs_files = len(obsfiles)
 
                 # Update the appropriate database table
                 logging.info(f'Updating database for {inst}, Proposal {proposal}, Observation {obsnum}')
-                update_database_table(inst, proposal, obsnum, proposal_info['thumbnail_paths'][0], num_obs_files,
+                update_database_table(inst, proposal, obsnum, proposal_info['thumbnail_paths'][0], obsfiles,
                                       exp_types, starting_date, latest_date)
 
 
@@ -209,7 +204,7 @@ def files_in_filesystem(files, permission_type):
     return filenames
 
 
-def update_database_table(instrument, prop, obs, thumbnail, files, types, startdate, enddate):
+def update_database_table(instrument, prop, obs, thumbnail, obsfiles, types, startdate, enddate):
     """Update the database tables that contain info about proposals and observations, via Django models.
 
     Parameters
@@ -226,8 +221,8 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
     thumbnail : str
         Full path to the thumbnail image for the proposal
 
-    files : int
-        Number of files in the observation
+    obsfiles : list
+        list of file rootnames in the observation
 
     types : list
         List of exposure types of the data in the observation
@@ -267,7 +262,7 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
     # already existed we are overwriting the old values for number of files and dates.
     # This is done in case new files have appeared in MAST since the last run of
     # this script (i.e. the pipeline wasn't finished at the time of the last run)
-    obs_instance.number_of_files = files
+    obs_instance.number_of_files = len(obsfiles)
     obs_instance.obsstart = startdate
     obs_instance.obsend = enddate
 
@@ -291,6 +286,18 @@ def update_database_table(instrument, prop, obs, thumbnail, files, types, startd
             new_exp_list = ','.join(existing_exps)
             obs_instance.exptypes = new_exp_list
     obs_instance.save(update_fields=['number_of_files', 'obsstart', 'obsend', 'exptypes'])
+
+    # Get all unsaved root names in the Observation to store in the database
+    nr_files_created = 0
+    for file in obsfiles:
+        root_file_info_instance, rfi_created = RootFileInfo.objects.get_or_create(root_name=file,
+                                                                                  instrument=instrument,
+                                                                                  obsnum=obs_instance,
+                                                                                  proposal=prop)
+        if rfi_created:
+            nr_files_created += 1
+            root_file_info_instance.save()
+    logging.info(f'Created {nr_files_created} root_file_info entries for: {instrument} - proposal:{prop} - obs:{obs}')
 
 
 if __name__ == '__main__':
