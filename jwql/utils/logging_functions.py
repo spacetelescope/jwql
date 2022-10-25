@@ -159,7 +159,8 @@ def make_log_file(module):
 
     # Build filename
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M')
-    filename = '{0}_{1}.log'.format(module, timestamp)
+    hostname = socket.gethostname()
+    filename = '{0}_{1}_{2}.log'.format(module, hostname, timestamp)
 
     # Determine save location
     user = pwd.getpwuid(os.getuid()).pw_name
@@ -214,6 +215,7 @@ def log_info(func):
         logging.info('System: ' + socket.gethostname())
         logging.info('Python Version: ' + sys.version.replace('\n', ''))
         logging.info('Python Executable Path: ' + sys.executable)
+        logging.info('Running as PID {}'.format(os.getpid()))
 
         # Read in setup.py file to build list of required modules
         with open(get_config()['setup_file']) as f:

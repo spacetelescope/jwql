@@ -23,9 +23,14 @@ from astroquery.mast import Mast, Observations
 
 from jwql.database.database_interface import Monitor
 from jwql.jwql_monitors import monitor_mast
-from jwql.utils.constants import ASIC_TEMPLATES, JWST_DATAPRODUCTS
+from jwql.utils.constants import ASIC_TEMPLATES, JWST_DATAPRODUCTS, MAST_QUERY_LIMIT
 from jwql.utils.logging_functions import configure_logging, get_log_status
 from jwql.utils.utils import filename_parser
+
+
+# Increase the limit on the number of entries that can be returned by
+# a MAST query.
+Mast._portal_api_connection.PAGESIZE = MAST_QUERY_LIMIT
 
 
 def exclude_asic_tuning(mast_results):
