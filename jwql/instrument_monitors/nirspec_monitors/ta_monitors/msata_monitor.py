@@ -92,8 +92,12 @@ class MSATA():
 
     def __init__(self):
         """ Initialize an instance of the MSATA class """
+        # Very beginning of intake of images: Jan 28, 2022 == First JWST images (MIRI)
+        self.query_very_beginning = 59607.0
+
         # dictionary to define required keywords to extract MSATA data and where it lives
-        self.keywds2extract = {'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs', 'type': str},
+        self.keywds2extract = {'FILENAME': {'loc': 'main_hdr', 'alt_key': None, 'name': 'filename', 'type': str},
+                               'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs', 'type': str},
                                'OBS_ID': {'loc': 'main_hdr', 'alt_key': None, 'name': 'visit_id', 'type': str},
                                'FILTER': {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter', 'type': str},
                                'DETECTOR': {'loc': 'main_hdr', 'alt_key': None, 'name': 'detector', 'type': str},
@@ -155,8 +159,12 @@ class MSATA():
                 # print('  Skiping msata_monitor for this file  \n')
                 return None
             main_hdr = ff[0].header
-            ta_hdr = ff['MSA_TARG_ACQ'].header
-            ta_table = ff['MSA_TARG_ACQ'].data
+            try:
+                ta_hdr = ff['MSA_TARG_ACQ'].header
+                ta_table = ff['MSA_TARG_ACQ'].data
+            except KeyError:
+                no_ta_ext_msg = 'No TARG_ACQ extension in file '+fits_file
+                return no_ta_ext_msg
         msata_info = [main_hdr, ta_hdr, ta_table]
         return msata_info
 
@@ -173,16 +181,20 @@ class MSATA():
             Pandas data frame containing all MSATA data
         """
         # fill out the dictionary to create the dataframe
-        msata_dict = {}
+        msata_dict, no_ta_ext_msgs = {}, []
         for fits_file in new_filenames:
             msata_info = self.get_tainfo_from_fits(fits_file)
+            if isinstance(msata_info, str):
+                no_ta_ext_msgs.append(msata_info)
+                continue
             if msata_info is None:
                 continue
             main_hdr, ta_hdr, ta_table = msata_info
+            file_data_dict, file_errs = {}, []
             for key, key_dict in self.keywds2extract.items():
                 key_name = key_dict['name']
-                if key_name not in msata_dict:
-                    msata_dict[key_name] = []
+                if key_name not in file_data_dict:
+                    file_data_dict[key_name] = []
                 ext = main_hdr
                 if key_dict['loc'] == 'ta_hdr':
                     ext = ta_hdr
@@ -190,8 +202,20 @@ class MSATA():
                     ext = ta_table
                 try:
                     val = ext[key]
+                    if key == 'filename':
+                        val = fits_file
                 except KeyError:
-                    val = ext[key_dict['alt_key']]
+                    if key_dict['alt_key'] is not None:
+                        try:
+                            val = ext[key_dict['alt_key']]
+                        except (NameError, TypeError) as error:
+                            msg = error+' in file '+fits_file
+                            file_errs.append(msg)
+                            break
+                    else:
+                        msg = 'Keyword '+key+' not found. Skipping file '+fits_file
+                        file_errs.append(msg)
+                        break
                 """ UNCOMMENT THIS BLOCK IN CASE WE DO WANT TO GET RID OF the 999.0 values
                 # remove the 999 values for arrays
                 if isinstance(val, np.ndarray):
@@ -202,11 +226,21 @@ class MSATA():
                     if float(abs(val)) == 999.0:
                         val = 0.0
                 """
-                msata_dict[key_name].append(val)
+                file_data_dict[key_name].append(val)
+            # only update the data dictionary if all the keywords were found
+            if len(file_errs) == 0:
+                # if starting from scratch, simply update
+                if len(msata_dict) == 0:
+                    msata_dict.update(file_data_dict)
+                # if msata_dict is not empty then extend the lists
+                else:
+                    for msata_dict_key in msata_dict:
+                        msata_dict[msata_dict_key].extend(file_data_dict[msata_dict_key])
+            else:
+                no_ta_ext_msgs.extend(file_errs)
         # create the pandas dataframe
         msata_df = pd.DataFrame(msata_dict)
-        msata_df.index = msata_df.index + 1
-        return msata_df
+        return msata_df, no_ta_ext_msgs
 
     def plt_status(self):
         """ Plot the MSATA status versus time.
@@ -220,34 +254,41 @@ class MSATA():
         # ta_status, date_obs = source.data['ta_status'], source.data['date_obs']
         date_obs = self.source.data['date_obs']
         ta_status = self.source.data['ta_status']
-        # bokeh does not like to plot strings, turn  into numbers
-        number_status, time_arr, status_colors = [], [], []
-        for tas, do_str in zip(ta_status, date_obs):
-            if 'success' in tas.lower():
-                number_status.append(1.0)
-                status_colors.append('blue')
-            elif 'progress' in tas.lower():
-                number_status.append(0.5)
-                status_colors.append('green')
-            else:
-                number_status.append(0.0)
-                status_colors.append('red')
-            # convert time string into an array of time (this is in UT)
-            t = datetime.fromisoformat(do_str)
-            time_arr.append(t)
-        # add these to the bokeh data structure
-        self.source.data["time_arr"] = time_arr
-        self.source.data["number_status"] = number_status
-        self.source.data["status_colors"] = status_colors
+        # check if this column exists in the data already (the other 2 will exist too), else create it
+        try:
+            time_arr = self.source.data['time_arr']
+            bool_status = self.source.data['bool_status']
+            status_colors = self.source.data['status_colors']
+        except KeyError:
+            # bokeh does not like to plot strings, turn  into numbers
+            number_status, time_arr, status_colors = [], [], []
+            for tas, do_str in zip(ta_status, date_obs):
+                if tas.lower() == 'unsuccessful':
+                    number_status.append(0.0)
+                    status_colors.append('red')
+                elif 'progress' in tas.lower():
+                    number_status.append(0.5)
+                    status_colors.append('gray')
+                else:
+                    number_status.append(1.0)
+                    status_colors.append('blue')
+                # convert time string into an array of time (this is in UT with 0.0 milliseconds)
+                t = datetime.fromisoformat(do_str)
+                time_arr.append(t)
+            # add these to the bokeh data structure
+            self.source.data["time_arr"] = time_arr
+            self.source.data["number_status"] = number_status
+            self.source.data["status_colors"] = status_colors
         # create a new bokeh plot
         plot = figure(title="MSATA Status [Succes=1, In_Progress=0.5, Fail=0]", x_axis_label='Time',
                       y_axis_label='MSATA Status', x_axis_type='datetime',)
         plot.y_range = Range1d(-0.5, 1.5)
         plot.circle(x='time_arr', y='number_status', source=self.source,
-                    color='status_colors', size=7, fill_alpha=0.5)
+                    color='status_colors', size=7, fill_alpha=0.3)
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
                           ('TA status', '@ta_status'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -270,11 +311,13 @@ class MSATA():
                       x_axis_label='Least Squares Residual V2 Offset',
                       y_axis_label='Least Squares Residual V3 Offset')
         plot.circle(x='lsv2offset', y='lsv3offset', source=self.source,
-                    color="purple", size=7, fill_alpha=0.4)
+                    color="blue", size=7, fill_alpha=0.3)
         v2halffacet, v3halffacet = self.source.data['v2halffacet'], self.source.data['v3halffacet']
         xstart, ystart, ray_length = -1 * v2halffacet[0], -1 * v3halffacet[0], 0.05
-        plot.ray(x=xstart - ray_length / 2.0, y=ystart, length=ray_length, angle_units="deg", angle=0)
-        plot.ray(x=xstart, y=ystart - ray_length / 2.0, length=ray_length, angle_units="deg", angle=90)
+        plot.ray(x=xstart - ray_length / 2.0, y=ystart, length=ray_length, angle_units="deg",
+                 angle=0, line_color='purple', line_width=3)
+        plot.ray(x=xstart, y=ystart - ray_length / 2.0, length=ray_length, angle_units="deg",
+                 angle=90, line_color='purple', line_width=3)
         hflabel = Label(x=xstart / 3.0, y=ystart, y_units='data', text='-V2, -V3 half-facets values')
         plot.add_layout(hflabel)
         plot.x_range = Range1d(-0.5, 0.5)
@@ -285,6 +328,7 @@ class MSATA():
         plot.renderers.extend([vline, hline])
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -309,7 +353,7 @@ class MSATA():
         plot = figure(title="MSATA Least Squares V2 Offset vs Time", x_axis_label='Time',
                       y_axis_label='Least Squares Residual V2 Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsv2offset', source=self.source,
-                    color="blue", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.3)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
@@ -320,6 +364,7 @@ class MSATA():
         plot.add_layout(hflabel)
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -344,7 +389,7 @@ class MSATA():
         plot = figure(title="MSATA Least Squares V3 Offset vs Time", x_axis_label='Time',
                       y_axis_label='Least Squares Residual V3 Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsv3offset', source=self.source,
-                    color="blue", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.3)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
@@ -355,6 +400,7 @@ class MSATA():
         plot.add_layout(hflabel)
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -380,7 +426,7 @@ class MSATA():
                       x_axis_label='Least Squares Residual V2 Sigma Offset',
                       y_axis_label='Least Squares Residual V3 Sigma Offset')
         plot.circle(x='lsv2sigma', y='lsv3sigma', source=self.source,
-                    color="purple", size=7, fill_alpha=0.4)
+                    color="blue", size=7, fill_alpha=0.3)
         plot.x_range = Range1d(-0.1, 0.1)
         plot.y_range = Range1d(-0.1, 0.1)
         # mark origin lines
@@ -389,6 +435,7 @@ class MSATA():
         plot.renderers.extend([vline, hline])
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -414,16 +461,24 @@ class MSATA():
         # create a new bokeh plot
         lsv2offset, lsv3offset = self.source.data['lsv2offset'], self.source.data['lsv3offset']
         v2halffacet, v3halffacet = self.source.data['v2halffacet'], self.source.data['v3halffacet']
-        v2_half_fac_corr = lsv2offset + v2halffacet
-        v3_half_fac_corr = lsv3offset + v3halffacet
-        # add these to the bokeh data structure
-        self.source.data["v2_half_fac_corr"] = v2_half_fac_corr
-        self.source.data["v3_half_fac_corr"] = v3_half_fac_corr
+        # check if this column exists in the data already (the other 2 will exist too), else create it
+        try:
+            v2_half_fac_corr = self.source.data['v2_half_fac_corr']
+            v3_half_fac_corr = self.source.data['v3_half_fac_corr']
+        except KeyError:
+            v2_half_fac_corr, v3_half_fac_corr = [], []
+            for idx, v2hf in enumerate(v2halffacet):
+                v3hf = v3halffacet[idx]
+                v2_half_fac_corr.append(lsv2offset[idx] + v2hf)
+                v3_half_fac_corr.append(lsv3offset[idx] + v3hf)
+            # add these to the bokeh data structure
+            self.source.data["v2_half_fac_corr"] = v2_half_fac_corr
+            self.source.data["v3_half_fac_corr"] = v3_half_fac_corr
         plot = figure(title="MSATA Least Squares Residual V2-V3 Offsets Half-facet corrected",
                       x_axis_label='Least Squares Residual V2 Offset + half-facet',
                       y_axis_label='Least Squares Residual V3 Offset + half-facet')
         plot.circle(x='v2_half_fac_corr', y='v3_half_fac_corr', source=self.source,
-                    color="purple", size=7, fill_alpha=0.4)
+                    color="blue", size=7, fill_alpha=0.3)
         plot.x_range = Range1d(-0.5, 0.5)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin lines
@@ -431,12 +486,15 @@ class MSATA():
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([vline, hline])
         xstart, ystart, ray_length = -1 * v2halffacet[0], -1 * v3halffacet[0], 0.05
-        plot.ray(x=xstart - ray_length / 2.0, y=ystart, length=ray_length, angle_units="deg", angle=0)
-        plot.ray(x=xstart, y=ystart - ray_length / 2.0, length=ray_length, angle_units="deg", angle=90)
+        plot.ray(x=xstart - ray_length / 2.0, y=ystart, length=ray_length, angle_units="deg",
+                 angle=0, line_color='purple', line_width=3)
+        plot.ray(x=xstart, y=ystart - ray_length / 2.0, length=ray_length, angle_units="deg",
+                 angle=90, line_color='purple', line_width=3)
         hflabel = Label(x=xstart / 3.0, y=ystart, y_units='data', text='-V2, -V3 half-facets values')
         plot.add_layout(hflabel)
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -463,13 +521,14 @@ class MSATA():
         plot = figure(title="MSATA Least Squares V2 Sigma Offset vs Time", x_axis_label='Time',
                       y_axis_label='Least Squares Residual V2 Sigma Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsv2sigma', source=self.source,
-                    color="blue", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.3)
         plot.y_range = Range1d(-0.1, 0.1)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -493,13 +552,14 @@ class MSATA():
         plot = figure(title="MSATA Least Squares V3 Sigma Offset vs Time", x_axis_label='Time',
                       y_axis_label='Least Squares Residual V3 Sigma Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsv3sigma', source=self.source,
-                    color="blue", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.3)
         plot.y_range = Range1d(-0.1, 0.1)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -524,7 +584,7 @@ class MSATA():
         plot = figure(title="MSATA Least Squares Roll Offset vs Time", x_axis_label='Time',
                       y_axis_label='Least Squares Residual Roll Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsrolloffset', source=self.source,
-                    color="blue", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.3)
         plot.y_range = Range1d(-600.0, 600.0)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
@@ -537,6 +597,7 @@ class MSATA():
         plot.renderers.extend([hline, arlinepos, arlineneg])
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -561,13 +622,14 @@ class MSATA():
         plot = figure(title="MSATA Least Squares Total Magnitude of the Linear V2, V3 Offset Slew vs Time", x_axis_label='Time',
                       y_axis_label='sqrt((V2_off)**2 + (V3_off)**2)', x_axis_type='datetime')
         plot.circle(x='time_arr', y='lsoffsetmag', source=self.source,
-                    color="blue", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.3)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
         plot.renderers.extend([hline])
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -594,29 +656,35 @@ class MSATA():
         reference_star_number = self.source.data['reference_star_number']
         stars_in_fit = self.source.data['stars_in_fit']
         date_obs, time_arr = self.source.data['date_obs'], self.source.data['time_arr']
-        # create the list of color per visit and tot_number_of_stars
-        colors_list, tot_number_of_stars = [], []
-        color_dict = {}
-        for i, _ in enumerate(visit_id):
-            tot_stars = len(reference_star_number[i])
-            tot_number_of_stars.append(tot_stars)
-            ci = '#%06X' % randint(0, 0xFFFFFF)
-            if visit_id[i] not in color_dict:
-                color_dict[visit_id[i]] = ci
-            colors_list.append(color_dict[visit_id[i]])
-        # add these to the bokeh data structure
-        self.source.data["tot_number_of_stars"] = tot_number_of_stars
-        self.source.data["colors_list"] = colors_list
+        # check if this column exists in the data already (the other 2 will exist too), else create it
+        try:
+            tot_number_of_stars = self.source.data['tot_number_of_stars']
+            colors_list = self.source.data['colors_list']
+        except KeyError:
+            # create the list of color per visit and tot_number_of_stars
+            colors_list, tot_number_of_stars = [], []
+            color_dict = {}
+            for i, _ in enumerate(visit_id):
+                tot_stars = len(reference_star_number[i])
+                tot_number_of_stars.append(tot_stars)
+                ci = '#%06X' % randint(0, 0xFFFFFF)
+                if visit_id[i] not in color_dict:
+                    color_dict[visit_id[i]] = ci
+                colors_list.append(color_dict[visit_id[i]])
+            # add these to the bokeh data structure
+            self.source.data["tot_number_of_stars"] = tot_number_of_stars
+            self.source.data["colors_list"] = colors_list
         # create a new bokeh plot
         plot = figure(title="Total Number of Measurements vs Time", x_axis_label='Time',
                       y_axis_label='Total number of measurements', x_axis_type='datetime')
         plot.circle(x='time_arr', y='tot_number_of_stars', source=self.source,
-                    color='colors_list', size=7, fill_alpha=0.5)
+                    color='colors_list', size=7, fill_alpha=0.3)
         plot.triangle(x='time_arr', y='stars_in_fit', source=self.source,
-                      color='black', size=7, fill_alpha=0.5)
+                      color='black', size=7, fill_alpha=0.3)
         plot.y_range = Range1d(0.0, 40.0)
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
+                          ('Detector', '@detector'),
                           ('Filter', '@tafilter'),
                           ('Readout', '@readout'),
                           ('Date-Obs', '@date_obs'),
@@ -651,16 +719,18 @@ class MSATA():
         box_peak_value = self.source.data['box_peak_value']
         date_obs, time_arr = self.source.data['date_obs'], self.source.data['time_arr']
         colors_list = self.source.data['colors_list']
+        detector_list = self.source.data['detector']
         # create the structure matching the number of visits and reference stars
         new_colors_list, vid, dobs, tarr, star_no, status = [], [], [], [], [], []
-        peaks, stars_v2, stars_v3 = [], [], []
+        peaks, stars_v2, stars_v3, det = [], [], [], []
         for i, _ in enumerate(visit_id):
-            v, d, t, c, s, x, y = [], [], [], [], [], [], []
+            v, d, t, c, s, x, y, dt = [], [], [], [], [], [], [], []
             for j in range(len(reference_star_number[i])):
                 v.append(visit_id[i])
                 d.append(date_obs[i])
                 t.append(time_arr[i])
                 c.append(colors_list[i])
+                dt.append(detector_list[i])
                 if 'not_removed' in lsf_removed_status[i][j]:
                     s.append('SUCCESS')
                     x.append(planned_v2[i][j])
@@ -678,17 +748,18 @@ class MSATA():
             stars_v2.extend(x)
             stars_v3.extend(y)
             peaks.extend(box_peak_value[i])
+            det.extend(dt)
         # now create the mini ColumnDataSource for this particular plot
         mini_source = {'vid': vid, 'star_no': star_no, 'status': status,
-                       'dobs': dobs, 'tarr': tarr,
+                       'dobs': dobs, 'tarr': tarr, 'det': det,
                        'peaks': peaks, 'colors_list': new_colors_list,
-                       'stars_v2': stars_v2, 'stars_v3': stars_v2}
+                       'stars_v2': stars_v2, 'stars_v3': stars_v3}
         mini_source = ColumnDataSource(data=mini_source)
         # create a the bokeh plot
         plot = figure(title="MSATA Counts vs Time", x_axis_label='Time', y_axis_label='box_peak [Counts]',
                       x_axis_type='datetime')
         plot.circle(x='tarr', y='peaks', source=mini_source,
-                    color='colors_list', size=7, fill_alpha=0.5)
+                    color='colors_list', size=7, fill_alpha=0.3)
         # add count saturation warning lines
         loc1, loc2, loc3 = 45000.0, 50000.0, 60000.0
         hline1 = Span(location=loc1, dimension='width', line_color='green', line_width=3)
@@ -705,6 +776,7 @@ class MSATA():
         # add hover
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@vid'),
+                          ('Detector', '@det'),
                           ('Star No.', '@star_no'),
                           ('LS Status', '@status'),
                           ('Date-Obs', '@dobs'),
@@ -772,9 +844,9 @@ class MSATA():
 
         query_count = len(dates)
         if query_count == 0:
-            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
+            query_result = self.query_very_beginning
             logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'
-                         .format(self.aperture, query_result)))
+                         .format(self.aperture, self.query_very_beginning)))
         else:
             query_result = np.max(dates)
 
@@ -830,18 +902,18 @@ class MSATA():
         list4dict: list
             List to be appended to the data structure. Has the right length but no real values
         """
+        # set the value to add
+        val = -999
         list4dict = []
-        for tns in tot_number_of_stars:   # elements the list of lists should have
-            # set the value to add
-            val = -999
-            # create either the list or return the right type of value
-            if keywd_dict['loc'] != 'ta_table':  # these cases should be singe values per observation
-                if keywd_dict['type'] == float:
-                    val = float(val)
-                if keywd_dict['type'] == str:
-                    val = str(val)
-                list4dict = val
-            else:
+        # create either the list or return the right type of value
+        if keywd_dict['loc'] != 'ta_table':  # these cases should be singe values per observation
+            if keywd_dict['type'] == float:
+                val = float(val)
+            if keywd_dict['type'] == str:
+                val = str(val)
+            list4dict = val
+        else:
+            for tns in tot_number_of_stars:   # elements the list of lists should have
                 list2append = []
                 for _ in range(tns):   # elements each sublist should have
                     if keywd_dict['type'] == float:
@@ -866,7 +938,10 @@ class MSATA():
         latest_prev_obs: str
             Date of the latest observation in the previously plotted data
         """
-        latest_prev_obs = max(prev_data_dict['tarr'])
+        # remember that the time array created is in milliseconds, removing to get time object
+        time_in_millis = max(prev_data_dict['tarr'])
+        latest_prev_obs = Time(time_in_millis / 1000., format='unix')
+        latest_prev_obs = latest_prev_obs.mjd
         prev_data_expected_cols = {}
         tot_number_of_stars = prev_data_dict['tot_number_of_stars']
         for file_keywd, keywd_dict in self.keywds2extract.items():
@@ -895,6 +970,98 @@ class MSATA():
         # now convert to a panda dataframe to be combined with the new data
         prev_data = pd.DataFrame(prev_data_expected_cols)
         return prev_data, latest_prev_obs
+
+    def pull_filenames(self, file_info):
+        """Extract filenames from the list of file information returned from
+        query_mast.
+
+        Parameters
+        ----------
+        file_info : dict
+            Dictionary of file information returned by ``query_mast``
+
+        Returns
+        -------
+        files : list
+            List of filenames (without paths) extracted from ``file_info``
+        """
+        files = []
+        for list_element in file_info:
+            if 'filename' in list_element:
+                files.append(list_element['filename'])
+        return files
+
+    def get_uncal_names(self, file_list):
+        """Replace the last suffix for _uncal and return list.
+        Parameters
+        ----------
+        file_list : list
+            List of fits files
+        Returns
+        -------
+        good_files : list
+            Filtered list of uncal file names
+        """
+        good_files = []
+        for filename in file_list:
+            # Names look like: jw01133003001_02101_00001_nrs2_cal.fits
+            if '_uncal' not in filename:
+                suffix2replace = filename.split('_')[-1]
+                filename = filename.replace(suffix2replace, 'uncal.fits')
+            if filename not in good_files:
+                good_files.append(filename)
+        return good_files
+
+    def update_ta_success_txtfile(self):
+        """Create a text file with all the failed and successful MSATA.
+        Parameters
+        ----------
+            None
+        Returns
+        -------
+            Nothing
+        """
+        output_success_ta_txtfile = os.path.join(self.output_dir, "msata_success.txt")
+        # check if previous file exsists and read the data from it
+        if os.path.isfile(output_success_ta_txtfile):
+            # now rename the the previous file, for backup
+            os.rename(output_success_ta_txtfile, os.path.join(self.output_dir, "prev_msata_success.txt"))
+        # get the new data
+        ta_success, ta_inprogress, ta_failure = [], [], []
+        filenames, ta_status = self.msata_data.loc[:,'filename'], self.msata_data.loc[:,'ta_status']
+        for fname, ta_stat in zip(filenames, ta_status):
+            # select the appriopriate list to append to
+            if ta_stat == 'SUCCESSFUL':
+                ta_success.append(fname)
+            elif ta_stat == 'IN_PROGRESS':
+                ta_inprogress.append(fname)
+            else:
+                ta_failure.append(fname)
+        # find which one is the longest list (to make sure the other lists have the same length)
+        successes, inprogress, failures = len(ta_success), len(ta_inprogress), len(ta_failure)
+        longest_list = None
+        if successes >= inprogress:
+            longest_list = successes
+        else:
+            longest_list = inprogress
+        if longest_list < failures:
+            longest_list = failures
+        # match length of the lists
+        for ta_list in [ta_success, ta_inprogress, ta_failure]:
+            remaining_items = longest_list - len(ta_list)
+            if remaining_items > 0:
+                for _ in range(remaining_items):
+                    ta_list.append("")
+        # write the new output file
+        with open(output_success_ta_txtfile, 'w+') as txt:
+            txt.write("# MSATA successes and failure file names \n")
+            filehdr1 = "# {} Total successful and {} total failed MSATA ".format(successes, failures)
+            filehdr2 = "# {:<50} {:<50} {:<50}".format("Successes", "In_Progress", "Failures")
+            txt.write(filehdr1 + "\n")
+            txt.write(filehdr2 + "\n")
+            for idx, suc in enumerate(ta_success):
+                line = "{:<50} {:<50} {:<50}".format(suc, ta_inprogress[idx], ta_failure[idx])
+                txt.write(line + "\n")
 
     @log_fail
     @log_info
@@ -925,10 +1092,17 @@ class MSATA():
         # get the data of the plots previously created and set the query start date
         self.prev_data = None
         self.output_file_name = os.path.join(self.output_dir, "msata_layout.html")
+        logging.info('\tNew output plot file will be written as: {}'.format(self.output_file_name))
         if os.path.isfile(self.output_file_name):
             prev_data_dict = self.get_data_from_html(self.output_file_name)
             self.prev_data, self.query_start = self.prev_data2expected_format(prev_data_dict)
             logging.info('\tPrevious data read from html file: {}'.format(self.output_file_name))
+            # move this plot to a previous version
+            os.rename(self.output_file_name, os.path.join(self.output_dir, "prev_msata_layout.html"))
+        # fail save - start from the beginning if there is no html file
+        else:
+            self.query_start = self.query_very_beginning
+            logging.info('\tPrevious output html file not found. Starting MAST query from Jan 28, 2022 == First JWST images (MIRI)')
 
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
@@ -938,14 +1112,20 @@ class MSATA():
         # most recent previous search as the starting time
         new_entries = monitor_utils.mast_query_ta(self.instrument, self.aperture, self.query_start, self.query_end)
         msata_entries = len(new_entries)
-        logging.info('\tMAST query has returned {} new MSATA files for {}, {} to run the MSATA monitor.'.format(msata_entries, self.instrument, self.aperture))
+        logging.info('\tMAST query has returned {} MSATA files for {}, {}.'.format(msata_entries, self.instrument, self.aperture))
+
+        # Filter new entries to only keep uncal files
+        new_entries = self.pull_filenames(new_entries)
+        new_entries = self.get_uncal_names(new_entries)
+        msata_entries = len(new_entries)
+        logging.info('\tThere are {} uncal TA files to run the MSATA monitor.'.format(msata_entries))
 
         # Get full paths to the files
         new_filenames = []
-        for entry_dict in new_entries:
-            filename_of_interest = entry_dict['productFilename']
+        for filename_of_interest in new_entries:
             try:
                 new_filenames.append(filesystem_path(filename_of_interest))
+                logging.warning('\tFile {} included for processing.'.format(filename_of_interest))
             except FileNotFoundError:
                 logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'.format(filename_of_interest))
 
@@ -954,23 +1134,38 @@ class MSATA():
 
         # Run the monitor on any new files
         logging.info('\tMSATA monitor found {} new uncal files.'.format(len(new_filenames)))
-        self.script, self.div = None, None
+        self.script, self.div, self.msata_data = None, None, None
         monitor_run = False
-        if len(new_filenames) > 0:
+        if len(new_filenames) > 0:   # new data was found
             # get the data
-            self.new_msata_data = self.get_msata_data(new_filenames)
+            self.new_msata_data, no_ta_ext_msgs = self.get_msata_data(new_filenames)
+            if len(no_ta_ext_msgs) >= 1:
+                for item in no_ta_ext_msgs:
+                    logging.info(item)
             if self.new_msata_data is not None:
                 # concatenate with previous data
                 if self.prev_data is not None:
                     self.msata_data = pd.concat([self.prev_data, self.new_msata_data])
+                    logging.info('\tData from previous html output file and new data concatenated.')
                 else:
                     self.msata_data = self.new_msata_data
-                # make the plots
-                self.script, self.div = self.mk_plt_layout()
-                monitor_run = True
+                    logging.info('\Only new data was found - no previous html file.')
             else:
                 logging.info('\tMSATA monitor skipped. No MSATA data found.')
-
+        # make sure to return the old data if no new data is found
+        elif self.prev_data is not None:
+            self.msata_data = self.prev_data
+            logging.info('\tNo new data found. Using data from previous html output file.')
+        # make the plots if there is data
+        if self.msata_data is not None:
+            self.script, self.div = self.mk_plt_layout()
+            monitor_run = True
+            logging.info('\Output html plot file created: {}'.format(self.output_file_name))
+            msata_files_used4plots = len(self.msata_data['visit_id'])
+            logging.info('\t{} MSATA files were used to make plots.'.format(msata_files_used4plots))
+            # update the list of successful and failed TAs
+            self.update_ta_success_txtfile()
+            logging.info('\t{} MSATA status file was updated')
         else:
             logging.info('\tMSATA monitor skipped.')
 
