@@ -325,10 +325,11 @@ class EdbMnemonic:
                     else:
                         meanval, medianval, stdevval = change_only_stats(self.data["dates"].data[index:self.blocks[i + 1]],
                                                                          self.data["euvalues"].data[index:self.blocks[i + 1]], sigma=sigma)
-                    medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i + 1]]))
-                    means.append(meanval)
-                    medians.append(medianval)
-                    stdevs.append(stdevval)
+                    if np.isfinite(meanval):
+                        medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i + 1]]))
+                        means.append(meanval)
+                        medians.append(medianval)
+                        stdevs.append(stdevval)
         else:
             # If the data are strings, then set the mean to be the data value at the block index
             for i, index in enumerate(self.blocks[0:-1]):
@@ -972,10 +973,11 @@ class EdbMnemonic:
                     avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
                 else:
                     avg, med, dev = change_only_stats(self.data["dates"][good], self.data["euvalues"][good], sigma=sigma)
-                self.mean.append(avg)
-                self.median.append(med)
-                self.stdev.append(dev)
-                self.median_times.append(calc_median_time(self.data["dates"].data[good]))
+                if np.isfinite(avg):
+                    self.mean.append(avg)
+                    self.median.append(med)
+                    self.stdev.append(dev)
+                    self.median_times.append(calc_median_time(self.data["dates"].data[good]))
         else:
             self.mean = [None]
             self.median = [None]
@@ -1071,7 +1073,10 @@ def calc_median_time(time_arr):
     med_time : datetime.datetime
         Median time, as a datetime object
     """
-    med_time = time_arr[0] + ((time_arr[-1] - time_arr[0]) / 2.)
+    if len(time_arr) > 0:
+        med_time = time_arr[0] + ((time_arr[-1] - time_arr[0]) / 2.)
+    else:
+        med_time = np.nan
     return med_time
 
 
