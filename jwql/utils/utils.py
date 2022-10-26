@@ -591,25 +591,24 @@ def check_config_for_key(key):
         raise ValueError(msg)
 
 
-def delete_non_rate_thumbnails(extension='_rate_'):
-    """We now create thumbnails using only rate.fits files. This script will go
-    through all the thumbnail directories and delete all thumbnails that do not
-    contain the given extension.
+def delete_non_rate_thumbnails(extensions=['_rate_', '_dark']):
+    """This script will go through all the thumbnail directories and delete all
+    thumbnails that do not contain the given extensions. We currently create thumbnails
+    using only rate.fits and dark.fits files, so the default is to keep only those.
 
     Parameters
     ----------
-    extension : str
-        If a thumbnail filename contains this string, it will not be deleted
+    extension : list
+        If a thumbnail filename contains tany of these strings, it will not be deleted
     """
     base_dir = get_config()["thumbnail_filesystem"]
-    dir_list = sorted(glob.glob('jw*'))
+    dir_list = sorted(glob.glob(os.path.join(base_dir, 'jw*')))
 
     for dirname in dir_list:
-        fulldir = os.path.join(base_dir, dirname)
-        fulldir_files = glob.glob(os.path.join(fulldir, '*.thumb'))
-        files_to_delete = [f for f in fulldir_files if extension not in f]
-        for file in files_to_delete:
-            os.remove(file)
+        files = glob.glob(os.path.join(dirname, '*.thumb'))
+        for file in files:
+            if not any([x in file for x in extensions]):
+                os.remove(file)
 
 
 def query_format(string):
