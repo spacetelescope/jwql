@@ -47,8 +47,6 @@ import requests
 from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemonic_inventory
-from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
-from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
 from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
@@ -140,38 +138,6 @@ def build_table(tablename):
 
     session.close()
     return table_meta_data
-
-
-def data_trending():
-    """Container for Miri datatrending dashboard and components
-
-    Returns
-    -------
-    variables : int
-        nonsense
-    dashboard : list
-        A list containing the JavaScript and HTML content for the
-        dashboard
-    """
-    dashboard, variables = miri_dash.data_trending_dashboard()
-
-    return variables, dashboard
-
-
-def nirspec_trending():
-    """Container for NIRSpec datatrending dashboard and components
-
-    Returns
-    -------
-    variables : int
-        nonsense
-    dashboard : list
-        A list containing the JavaScript and HTML content for the
-        dashboard
-    """
-    dashboard, variables = nirspec_dash.data_trending_dashboard()
-
-    return variables, dashboard
 
 
 def get_acknowledgements():

@@ -58,11 +58,7 @@ urlpatterns = [
     # Home
     path('', views.home, name='home'),
 
-    # MIRI-specific views
-    path('miri/miri_data_trending/', views.miri_data_trending, name='miri_data_trending'),
-
     # NIRSpec-specific views
-    path('nirspec/nirspec_data_trending/', views.nirspec_data_trending, name='nirspec_data_trending'),
     path('nirspec/msata_monitor/', monitor_views.msata_monitoring, name='msata_monitor'),
     path('nirspec/wata_monitor/', monitor_views.wata_monitoring, name='wata_monitor'),
 

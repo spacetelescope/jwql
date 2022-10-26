@@ -56,7 +56,6 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_
 from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
-from .data_containers import data_trending
 from .data_containers import get_acknowledgements
 from .data_containers import get_anomaly_form
 from .data_containers import get_dashboard_components
@@ -65,7 +64,6 @@ from .data_containers import get_explorer_extension_names
 from .data_containers import get_header_info
 from .data_containers import get_image_info
 from .data_containers import get_thumbnails_all_instruments
-from .data_containers import nirspec_trending
 from .data_containers import random_404_page
 from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
@@ -121,70 +119,6 @@ def anomaly_query(request):
                'inst': ''}
     template = 'anomaly_query.html'
 
-    return render(request, template, context)
-
-
-def miri_data_trending(request):
-    """Generate the ``MIRI DATA-TRENDING`` page
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-
-    template = "miri_data_trending.html"
-    variables, dash = data_trending()
-
-    context = {
-        'dashboard': dash,
-        'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
-        'inst_list': JWST_INSTRUMENT_NAMES_MIXEDCASE,  # Do not edit; Required for navigation bar
-        'tools': MONITORS,  # Do not edit; Required for navigation bar
-        'user': None  # Do not edit; Required for authentication
-    }
-
-    # append variables to context
-    context.update(variables)
-
-    # Return a HTTP response with the template and dictionary of variables
-    return render(request, template, context)
-
-
-def nirspec_data_trending(request):
-    """Generate the ``NIRSpec DATA-TRENDING`` page
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-
-    Returns
-    -------
-    HttpResponse object
-        Outgoing response sent to the webpage
-    """
-
-    template = "nirspec_data_trending.html"
-    variables, dash = nirspec_trending()
-
-    context = {
-        'dashboard': dash,
-        'inst': '',  # Leave as empty string or instrument name; Required for navigation bar
-        'inst_list': JWST_INSTRUMENT_NAMES_MIXEDCASE,  # Do not edit; Required for navigation bar
-        'tools': MONITORS,  # Do not edit; Required for navigation bar
-        'user': None  # Do not edit; Required for authentication
-    }
-
-    # append variables to context
-    context.update(variables)
-
-    # Return a HTTP response with the template and dictionary of variables
     return render(request, template, context)
 
 
@@ -942,7 +876,7 @@ def toggle_viewed_ajax(request, file_root):
     # Build the context
     context = {'marked_viewed': root_file_info.viewed}
     return JsonResponse(context, json_dumps_params={'indent': 2})
-  
+
 
 def update_session_value_ajax(request, session_item, session_value):
     session_options = ["image_sort"]
