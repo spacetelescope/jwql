@@ -1362,6 +1362,15 @@ class EdbMnemonicMonitor():
                 if telem_type != 'all':
                     # Find the end time of the previous query from the database.
                     most_recent_search = self.most_recent_search(product_identifier)
+
+
+
+                    # FOR TESTING! REMOVE BEFORE MERGING
+                    most_recent_search = self._today - datetime.timedelta(days=(EDB_DEFAULT_PLOT_RANGE+1))
+                    # FOR TESTING! REMOVE BEFORE MERGING
+
+
+
                     logging.info(f'Most recent search is {most_recent_search}.')
                     logging.info(f'Query cadence is {self.query_cadence}')
 
