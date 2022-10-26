@@ -599,7 +599,7 @@ def delete_non_rate_thumbnails(extensions=['_rate_', '_dark']):
     Parameters
     ----------
     extension : list
-        If a thumbnail filename contains tany of these strings, it will not be deleted
+        If a thumbnail filename contains any of these strings, it will not be deleted
     """
     base_dir = get_config()["thumbnail_filesystem"]
     dir_list = sorted(glob.glob(os.path.join(base_dir, 'jw*')))
