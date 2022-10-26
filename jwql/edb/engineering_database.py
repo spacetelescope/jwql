@@ -629,7 +629,6 @@ class EdbMnemonic:
             self.stdev = [None]
             self.median_times = [None]
 
-
     def full_stats(self, sigma=3):
         """Calculate the mean/median/stdev of the full compliment of data
 
@@ -653,7 +652,6 @@ class EdbMnemonic:
             self.median = [None]
             self.stdev = [None]
             self.median_times = [None]
-
 
     def get_table_data(self):
         """Get data needed to make interactivate table in template."""
