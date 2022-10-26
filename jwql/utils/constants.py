@@ -83,7 +83,7 @@ ANOMALIES_PER_INSTRUMENT = {
     # additional anomalies:
     'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
 # anomalies that shouldn't be 'titleized'
-special_cases = ['Dominant_MSA_Leakage','MRS_Glow','MRS_Zipper','LRS_Contamination'] 
+special_cases = ['Dominant_MSA_Leakage','MRS_Glow','MRS_Zipper','LRS_Contamination']
 
 # Defines the possible anomalies to flag through the web app
 ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
@@ -310,7 +310,8 @@ MONITORS = {
     'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor'),
             ('Readnoise Monitor', '/fgs/readnoise_monitor'),
             ('Dark Current Monitor', '/fgs/dark_monitor'),
-            ('Cosmic Ray Monitor', '/fgs/cosmic_ray_monitor')],
+            ('Cosmic Ray Monitor', '/fgs/cosmic_ray_monitor'),
+            ('EDB Telemetry Monitor', '/fgs/edb_monitor')],
     'miri': [('Dark Current Monitor', '/miri/dark_monitor'),
              ('Data Trending', '#'),
              ('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
@@ -337,7 +338,8 @@ MONITORS = {
                ('TSO RMS Monitor', '#'),
                ('Bias Monitor', '/niriss/bias_monitor'),
                ('Dark Current Monitor', '/niriss/dark_monitor'),
-               ('Cosmic Ray Monitor', '/niriss/cosmic_ray_monitor')],
+               ('Cosmic Ray Monitor', '/niriss/cosmic_ray_monitor'),
+               ('EDB Telemetry Monitor', '/niriss/edb_monitor')],
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
@@ -351,7 +353,8 @@ MONITORS = {
                 ('Failed-open Shutter Monitor', '#'),
                 ('Bias Monitor', '/nirspec/bias_monitor'),
                 ('Dark Monitor', '/nirspec/dark_monitor'),
-                ('Cosmic Ray Monitor', '/nirspec/cosmic_ray_monitor')]}
+                ('Cosmic Ray Monitor', '/nirspec/cosmic_ray_monitor'),
+                ('EDB Telemetry Monitor', '/nirspec/edb_monitor')]}
 
 # Possible suffix types for coronograph exposures
 NIRCAM_CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']
