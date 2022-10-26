@@ -128,7 +128,6 @@
             "plot_data": "nominal",
             "plot_category": "Temperatures"
         },
-
         {
             "name": "INIS_SCE_ASICTEMP1",
             "description": "NIS SIDECAR Housekeeping ASIC Temperature 1",
