@@ -8,6 +8,7 @@ Authors
 -------
 
     - Gray Kanarek
+    - Bryan Hilbert
 
 Use
 ---
@@ -225,6 +226,92 @@ def bias_monitor_tabs(instrument):
 
     # Build tabs
     tabs = Tabs(tabs=tabs)
+
+    # Return tab HTML and JavaScript to web app
+    script, div = components(tabs)
+
+    return div, script
+
+
+def cosmic_ray_monitor_tabs(instrument):
+    """Creates the various tabs of the cosmic monitor results page.
+
+    Parameters
+    ----------
+    instrument : str
+        The JWST instrument of interest (e.g. ``nircam``).
+
+    Returns
+    -------
+    div : str
+        The HTML div to render cosmic ray monitor plots
+    script : str
+        The JS script to render cosmic ray monitor plots
+    """
+
+    full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
+
+    histograms_all_apertures = []
+    history_all_apertures = []
+    for aperture in full_apertures:
+
+        # Start with default values for instrument and aperture because
+        # BokehTemplate's __init__ method does not allow input arguments
+        monitor_template = monitor_pages.CosmicRayMonitor(instrument.lower(), aperture)
+
+        # Set instrument and monitor using CosmicRayMonitor's setters
+        # monitor_template.aperture_info = (instrument, aperture)
+        # templates_all_apertures[aperture] = monitor_template
+        histograms_all_apertures.append(monitor_template.histogram_figure)
+        history_all_apertures.append(monitor_template.history_figure)
+
+    if instrument.lower() == 'nircam':
+        # Histogram tab
+        a1, a2, a3, a4, a5, b1, b2, b3, b4, b5 = histograms_all_apertures
+        histogram_layout = layout(
+            [a2, a4, b3, b1],
+            [a1, a3, b4, b2],
+            [a5, b5]
+        )
+
+        # CR Rate History tab
+        a1_line, a2_line, a3_line, a4_line, a5_line, b1_line, b2_line, b3_line, b4_line, b5_line = history_all_apertures
+        line_layout = layout(
+            [a2_line, a4_line, b3_line, b1_line],
+            [a1_line, a3_line, b4_line, b2_line],
+            [a5_line, b5_line]
+        )
+
+    elif instrument.lower() in ['miri', 'niriss', 'nirspec']:
+        # Histogram tab
+        single_aperture = histograms_all_apertures[0]
+        histogram_layout = layout(
+            [single_aperture]
+        )
+
+        # CR Rate History tab
+        single_aperture_line = history_all_apertures[0]
+        line_layout = layout(
+            [single_aperture_line]
+        )
+
+    elif instrument.lower() == 'fgs':
+        # Histogram tab
+        g1, g2 = histograms_all_apertures
+        histogram_layout = layout([g1, g2])
+
+        # CR Rate History tab
+        g1_line, g2_line = history_all_apertures
+        line_layout = layout([g1_line, g2_line])
+
+    # Allow figure sizes to scale with window
+    histogram_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+    histogram_tab = Panel(child=histogram_layout, title="Histogram")
+    line_layout.sizing_mode = "scale_width"  # Make sure the sizing is adjustable
+    line_tab = Panel(child=line_layout, title="Trending")
+
+    # Build tabs
+    tabs = Tabs(tabs=[histogram_tab, line_tab])
 
     # Return tab HTML and JavaScript to web app
     script, div = components(tabs)

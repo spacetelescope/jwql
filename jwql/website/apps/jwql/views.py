@@ -14,6 +14,9 @@ Authors
     - Johannes Sahlmann
     - Teagan King
     - Mees Fix
+    - Bryan Hilbert
+    - Maria Pena-Guerrero
+
 
 Use
 ---
@@ -37,39 +40,40 @@ Dependencies
     placed in the ``jwql`` directory.
 """
 
+from collections import defaultdict
 import csv
 import os
 
 from bokeh.layouts import layout
 from bokeh.embed import components
 from django.http import HttpResponse, JsonResponse
-from django.contrib import messages
 from django.shortcuts import redirect, render
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
+from jwql.utils.interactive_preview_image import InteractivePreviewImg
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT
-from jwql.utils.utils import filename_parser, filesystem_path, get_base_url, get_config, query_unformat
+from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
 from .data_containers import data_trending
-from .data_containers import get_acknowledgements, get_instrument_proposals
-from .data_containers import get_current_flagged_anomalies
+from .data_containers import get_acknowledgements
+from .data_containers import get_anomaly_form
 from .data_containers import get_dashboard_components
 from .data_containers import get_edb_components
-from .data_containers import get_filenames_by_instrument, mast_query_filenames_by_instrument
+from .data_containers import get_explorer_extension_names
 from .data_containers import get_header_info
 from .data_containers import get_image_info
-from .data_containers import get_proposal_info
 from .data_containers import get_thumbnails_all_instruments
 from .data_containers import nirspec_trending
 from .data_containers import random_404_page
 from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
-from .forms import InstrumentAnomalySubmitForm
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
+from .models import Observation, Proposal, RootFileInfo
+from astropy.io import fits
 
 
 def anomaly_query(request):
@@ -153,7 +157,7 @@ def miri_data_trending(request):
 
 
 def nirspec_data_trending(request):
-    """Generate the ``MIRI DATA-TRENDING`` page
+    """Generate the ``NIRSpec DATA-TRENDING`` page
 
     Parameters
     ----------
@@ -269,68 +273,50 @@ def archived_proposals_ajax(request, inst):
     """
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-    filesystem = get_config()['filesystem']
 
-    # Dictionary to hold summary information for all proposals
-    all_proposals = get_instrument_proposals(inst)
-    all_proposal_info = {'num_proposals': 0,
-                         'proposals': [],
-                         'thumbnail_paths': [],
-                         'num_files': []}
+    # Get a list of Observation entries for the given instrument
+    all_entries = Observation.objects.filter(proposal__archive__instrument=inst)
 
-    # Get list of all files for the given instrument
-    for proposal in all_proposals:
-        filename_query = mast_query_filenames_by_instrument(inst, proposal)
-        filenames_public = get_filenames_by_instrument(inst, proposal, restriction='public', query_response=filename_query)
-        filenames_proprietary = get_filenames_by_instrument(inst, proposal, restriction='proprietary', query_response=filename_query)
+    # Get a list of proposal numbers.
+    prop_objects = Proposal.objects.filter(archive__instrument=inst)
+    proposal_nums = [entry.prop_id for entry in prop_objects]
 
-        # Determine locations to the files
-        filenames = []
-        for filename in filenames_public:
-            try:
-                relative_filepath = filesystem_path(filename, check_existence=False)
-                full_filepath = os.path.join(filesystem, 'public', relative_filepath)
-                filenames.append(full_filepath)
-            except ValueError:
-                print('Unable to determine filepath for {}'.format(filename))
-        for filename in filenames_proprietary:
-            try:
-                relative_filepath = filesystem_path(filename, check_existence=False)
-                full_filepath = os.path.join(filesystem, 'proprietary', relative_filepath)
-                filenames.append(full_filepath)
-            except ValueError:
-                print('Unable to determine filepath for {}'.format(filename))
+    # Put proposals into descending order
+    proposal_nums.sort(reverse=True)
 
+    # Total number of proposals for the instrument
+    num_proposals = len(proposal_nums)
 
-        # Get set of unique rootnames
-        num_files = 0
-        rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
-        for rootname in rootnames:
-            filename_dict = filename_parser(rootname)
+    thumbnail_paths = []
+    min_obsnums = []
+    total_files = []
+    for proposal_num in proposal_nums:
+        # For each proposal number, get all entries
+        prop_entries = all_entries.filter(proposal__prop_id=proposal_num)
 
-            # Weed out file types that are not supported by generate_preview_images
-            if 'stage_3' not in filename_dict['filename_type']:
-                num_files += 1
+        # All entries will have the same thumbnail_path, so just grab the first
+        thumbnail_paths.append(prop_entries[0].proposal.thumbnail_path)
 
-        if len(filenames) > 0:
-            # Gather information about the proposals for the given instrument
-            proposal_info = get_proposal_info(filenames)
-            all_proposal_info['num_proposals'] = all_proposal_info['num_proposals'] + 1
-            all_proposal_info['proposals'].append(proposal)
-            all_proposal_info['thumbnail_paths'].append(proposal_info['thumbnail_paths'][0])
-            all_proposal_info['num_files'].append(num_files)
-            #all_proposal_info['num_files'].append(proposal_info['num_files'][0])
+        # Extract the observation numbers from each entry and find the minimum
+        prop_obsnums = [entry.obsnum for entry in prop_entries]
+        min_obsnums.append(min(prop_obsnums))
+
+        # Sum the file count from all observations to get the total file count for
+        # the proposal
+        prop_filecount = [entry.number_of_files for entry in prop_entries]
+        total_files.append(sum(prop_filecount))
 
     context = {'inst': inst,
-               'num_proposals': all_proposal_info['num_proposals'],
-               'thumbnails': {'proposals': all_proposal_info['proposals'],
-                              'thumbnail_paths': all_proposal_info['thumbnail_paths'],
-                              'num_files': all_proposal_info['num_files']}}
+               'num_proposals': num_proposals,
+               'min_obsnum': min_obsnums,
+               'thumbnails': {'proposals': proposal_nums,
+                              'thumbnail_paths': thumbnail_paths,
+                              'num_files': total_files}}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-def archive_thumbnails(request, inst, proposal):
+def archive_thumbnails_ajax(request, inst, proposal, observation=None):
     """Generate the page listing all archived images in the database
     for a certain proposal
 
@@ -342,6 +328,36 @@ def archive_thumbnails(request, inst, proposal):
         Name of JWST instrument
     proposal : str
         Number of observing proposal
+    observation : str
+        Observation number within the proposal
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+    # Ensure the instrument is correctly capitalized
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+
+    data = thumbnails_ajax(inst, proposal, obs_num=observation)
+    data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
+    return JsonResponse(data, json_dumps_params={'indent': 2})
+
+
+def archive_thumbnails_per_observation(request, inst, proposal, observation):
+    """Generate the page listing all archived images in the database
+    for a certain proposal
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    proposal : str
+        Number of observing proposal
+    observation : str
+    Observation number within the proposal
 
     Returns
     -------
@@ -353,39 +369,30 @@ def archive_thumbnails(request, inst, proposal):
 
     proposal_meta = text_scrape(proposal)
 
-    template = 'thumbnails.html'
-    context = {'inst': inst,
+    # Get a list of all observation numbers for the proposal
+    # This will be used to create buttons for observation-specific
+    # pages
+    rootnames = get_rootnames_for_instrument_proposal(inst, proposal)
+    all_obs = []
+    for root in rootnames:
+        try:
+            all_obs.append(filename_parser(root)['observation'])
+        except KeyError:
+            pass
+
+    obs_list = sorted(list(set(all_obs)))
+
+    sort_type = request.session.get('image_sort', 'Ascending')
+    template = 'thumbnails_per_obs.html'
+    context = {'base_url': get_base_url(),
+               'inst': inst,
+               'obs': observation,
+               'obs_list': obs_list,
                'prop': proposal,
                'prop_meta': proposal_meta,
-               'base_url': get_base_url()}
+               'sort': sort_type}
 
     return render(request, template, context)
-
-
-def archive_thumbnails_ajax(request, inst, proposal):
-    """Generate the page listing all archived images in the database
-    for a certain proposal
-
-    Parameters
-    ----------
-    request : HttpRequest object
-        Incoming request from the webpage
-    inst : str
-        Name of JWST instrument
-    proposal : str
-        Number of observing proposal
-
-    Returns
-    -------
-    JsonResponse object
-        Outgoing response sent to the webpage
-    """
-    # Ensure the instrument is correctly capitalized
-    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-
-    data = thumbnails_ajax(inst, proposal)
-
-    return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
 def archive_thumbnails_query_ajax(request):
@@ -421,7 +428,7 @@ def archive_thumbnails_query_ajax(request):
     anomaly_query_config.THUMBNAILS = thumbnails
 
     data = thumbnails_query_ajax(thumbnails)
-
+    data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
@@ -695,8 +702,11 @@ def query_submit(request):
 
     anomaly_query_config.PARAMETERS = parameters
 
+    sort_type = request.session.get('image_sort', 'Ascending')
+
     context = {'inst': '',
-               'base_url': get_base_url()
+               'base_url': get_base_url(),
+               'sort': sort_type
                }
 
     return render(request, template, context)
@@ -756,6 +766,194 @@ def view_header(request, inst, filename, filetype):
     return render(request, template, context)
 
 
+def explore_image(request, inst, file_root, filetype, rewrite=False):
+    """Generate the header view page
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    file_root : str
+        FITS file_root of selected image in filesystem
+    filetype : str
+        Type of file (e.g. ``uncal``)
+    rewrite : bool, optional
+        Regenerate if bokeh image already exists?
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # Ensure the instrument is correctly capitalized
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+    template = 'explore_image.html'
+
+    # get explorable extensions from header
+    extensions = get_explorer_extension_names(file_root, filetype)
+
+    fits_file = file_root + '_' + filetype + '.fits'
+    # Get image info containing all paths to fits files
+    image_info_list = get_image_info(file_root, rewrite)
+    # Find index of our fits file
+    fits_index = next(ix for ix, fits_path in enumerate(image_info_list['all_files']) if fits_file in fits_path)
+    # get full path of fits file to open and extract extension info
+    full_fits_file = image_info_list['all_files'][fits_index]
+    extension_ints = {}
+    extension_groups = {}
+
+    # gather extension group/integration information to send
+    if os.path.isfile(full_fits_file):
+        with fits.open(full_fits_file) as hdulist:
+            for exten in extensions:
+                dims = hdulist[exten].shape
+                if len(dims) == 4:
+                    extension_ints[exten], extension_groups[exten], ny, nx = dims
+                elif len(dims) == 3:
+                    extension_groups[exten] = 0
+                    extension_ints[exten], ny, nx = dims
+                else:
+                    extension_ints[exten] = 0
+                    extension_groups[exten] = 0
+    else:
+        raise FileNotFoundError(f'WARNING: {full_fits_file} does not exist!')
+
+    form = get_anomaly_form(request, inst, file_root)
+
+    context = {'inst': inst,
+               'file_root': file_root,
+               'filetype': filetype,
+               'extensions': extensions,
+               'extension_groups': extension_groups,
+               'extension_ints': extension_ints,
+               'base_url': get_base_url(),
+               'form': form}
+
+    return render(request, template, context)
+
+
+def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_lim=None, high_lim=None, ext_name="SCI", int1_nr=None, grp1_nr=None, int2_nr=None, grp2_nr=None, rewrite=False):
+    """Generate the page listing all archived images in the database
+    for a certain proposal
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    file_root : str
+        FITS file_root of selected image in filesystem
+    filetype : str
+        Type of file (e.g. ``uncal``)
+    scaling : str
+        Scaling to implement in interactive preview image ("log" or "lin")
+    low_lim : str
+        Signal value to use as the lower limit of the displayed image. If "None", it will be calculated using the ZScale function
+    high_lim : str
+        Signal value to use as the upper limit of the displayed image. If "None", it will be calculated using the ZScale function
+    ext_name : str
+        Extension to implement in interactive preview image ("SCI", "DQ", "GROUPDQ", "PIXELDQ", "ERR"...)
+    rewrite : bool, optional
+        Regenerate if bokeh image already exists?
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+    # Ensure the instrument is correctly capitalized
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+
+    # Get image info containing all paths to fits files
+    image_info_list = get_image_info(file_root, rewrite)
+
+    # Save fits file name to use for bokeh image
+    fits_file = file_root + '_' + filetype + '.fits'
+    # Find index of our fits file
+    fits_index = next(ix for ix, fits_path in enumerate(image_info_list['all_files']) if fits_file in fits_path)
+
+    # get full path of fits file to send to InteractivePreviewImg
+    full_fits_file = image_info_list['all_files'][fits_index]
+    # sent floats not strings to init
+    if low_lim == "None":
+        low_lim = None
+    if high_lim == "None":
+        high_lim = None
+    if int1_nr == "None":
+        int1_nr = None
+    if grp1_nr == "None":
+        grp1_nr = None
+    if int2_nr == "None":
+        int2_nr = None
+    if grp2_nr == "None":
+        grp2_nr = None
+
+    if low_lim is not None:
+        low_lim = float(low_lim)
+    if high_lim is not None:
+        high_lim = float(high_lim)
+
+    group = None
+    integ = None
+    if (grp1_nr):
+        if (grp2_nr):
+            group = [int(grp1_nr), int(grp2_nr)]
+        else:
+            group = int(grp1_nr)
+    if (int1_nr):
+        if (int2_nr):
+            integ = [int(int1_nr), int(int2_nr)]
+        else:
+            integ = int(int1_nr)
+
+    int_preview_image = InteractivePreviewImg(full_fits_file, low_lim, high_lim, scaling, None, ext_name, group, integ)
+
+    context = {'inst': "inst",
+               'script': int_preview_image.script,
+               'div': int_preview_image.div}
+
+    return JsonResponse(context, json_dumps_params={'indent': 2})
+
+
+
+def toggle_viewed_ajax(request, file_root):
+    """Update the model's "mark_viewed" field and save in the database
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    file_root : str
+        FITS file_root of selected image in filesystem
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+    root_file_info = RootFileInfo.objects.get(root_name=file_root)
+    root_file_info.viewed = not root_file_info.viewed
+    root_file_info.save()
+
+    # Build the context
+    context = {'marked_viewed': root_file_info.viewed}
+    return JsonResponse(context, json_dumps_params={'indent': 2})
+  
+
+def update_session_value_ajax(request, session_item, session_value):
+    session_options = ["image_sort"]
+    context = {}
+    # Only allow updates of sessions that we expect
+    if session_item in session_options:
+        request.session[session_item] = session_value
+        context = {'item': request.session[session_item]}
+    return JsonResponse(context, json_dumps_params={'indent': 2})
+
+
 def view_image(request, inst, file_root, rewrite=False):
     """Generate the image view page
 
@@ -782,30 +980,42 @@ def view_image(request, inst, file_root, rewrite=False):
     template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
 
-    # Determine current flagged anomalies
-    current_anomalies = get_current_flagged_anomalies(file_root, inst)
+    form = get_anomaly_form(request, inst, file_root)
 
-    # Create a form instance
-    form = InstrumentAnomalySubmitForm(request.POST or None, instrument=inst.lower(), initial={'anomaly_choices': current_anomalies})
+    prop_id = file_root[2:7]
 
-    # If this is a POST request and the form is filled out, process the form data
-    if request.method == 'POST' and 'anomaly_choices' in dict(request.POST):
-        anomaly_choices = dict(request.POST)['anomaly_choices']
-        if form.is_valid():
-            form.update_anomaly_table(file_root, 'unknown', anomaly_choices)
-            messages.success(request, "Anomaly submitted successfully")
-        else:
-            messages.error(request, "Failed to submit anomaly")
+    rootnames = get_rootnames_for_instrument_proposal(inst, prop_id)
+    file_root_list = defaultdict(list)
+
+    for root in rootnames:
+        try:
+            file_root_list[(filename_parser(root)['observation'])].append(root)
+        except KeyError:
+            pass
+
+    sort_type = request.session.get('image_sort', 'Ascending')
+    if sort_type in ['Ascending']:
+        file_root_list = {key: sorted(file_root_list[key]) for key in sorted(file_root_list)}
+    else:
+        file_root_list = {key: sorted(file_root_list[key], reverse=True) for key in sorted(file_root_list)}
+
+    # Get our current views RootFileInfo model and send our "viewed/new" information
+    root_file_info = RootFileInfo.objects.get(root_name=file_root)
 
     # Build the context
-    context = {'inst': inst,
-               'prop_id': file_root[2:7],
+    context = {'base_url': get_base_url(),
+               'file_root_list': file_root_list,
+               'inst': inst,
+               'prop_id': prop_id,
+               'obsnum': file_root[7:10],
                'file_root': file_root,
                'jpg_files': image_info['all_jpegs'],
                'fits_files': image_info['all_files'],
                'suffixes': image_info['suffixes'],
                'num_ints': image_info['num_ints'],
                'available_ints': image_info['available_ints'],
-               'form': form}
+               'total_ints': image_info['total_ints'],
+               'form': form,
+               'marked_viewed': root_file_info.viewed}
 
     return render(request, template, context)

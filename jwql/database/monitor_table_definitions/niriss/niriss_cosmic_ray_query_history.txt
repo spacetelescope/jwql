@@ -1,0 +1,6 @@
+INSTRUMENT, string
+APERTURE, string
+START_TIME_MJD, float
+END_TIME_MJD, float
+FILES_FOUND, integer
+RUN_MONITOR, bool

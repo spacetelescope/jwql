@@ -24,5 +24,8 @@
     "test_data" : "",
     "test_dir" : "",
     "thumbnail_filesystem" : "",
-    "cores" : ""
+    "cores" : "",
+    "redis_host": "",
+    "redis_port": "",
+    "transfer_dir": ""
 }

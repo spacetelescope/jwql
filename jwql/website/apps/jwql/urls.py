@@ -14,6 +14,7 @@ Authors
     - Johannes Sahlmann
     - Teagan King
     - Bryan Hilbert
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -62,6 +63,8 @@ urlpatterns = [
 
     # NIRSpec-specific views
     path('nirspec/nirspec_data_trending/', views.nirspec_data_trending, name='nirspec_data_trending'),
+    path('nirspec/msata_monitor/', monitor_views.msata_monitoring, name='msata_monitor'),
+    path('nirspec/wata_monitor/', monitor_views.wata_monitoring, name='wata_monitor'),
 
     # Common monitor views
     re_path(r'^(?P<inst>({}))/dark_monitor/$'.format(instruments), monitor_views.dark_monitor, name='dark_monitor'),
@@ -69,6 +72,7 @@ urlpatterns = [
     re_path(r'^(?P<inst>({}))/bias_monitor/$'.format(instruments), monitor_views.bias_monitor, name='bias_monitor'),
     re_path(r'^(?P<inst>({}))/readnoise_monitor/$'.format(instruments), monitor_views.readnoise_monitor, name='readnoise_monitor'),
     re_path(r'^(?P<inst>({}))/edb_monitor/$'.format(instruments), monitor_views.edb_monitor, name='edb_monitor'),
+    re_path(r'^(?P<inst>({}))/cosmic_ray_monitor/$'.format(instruments), monitor_views.cosmic_ray_monitor, name='cosmic_ray_monitor'),
 
     # Main site views
     path('about/', views.about, name='about'),
@@ -83,14 +87,21 @@ urlpatterns = [
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
     re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),
-    re_path(r'^(?P<inst>({}))/(?P<file_root>[\w]+)/$'.format(instruments), views.view_image, name='view_image'),
+    re_path(r'^(?P<inst>({}))/(?P<file_root>[\w-]+)/$'.format(instruments), views.view_image, name='view_image'),
+    re_path(r'^(?P<inst>({}))/(?P<file_root>.+)_(?P<filetype>.+)/explore_image/'.format(instruments), views.explore_image, name='explore_image'),
     re_path(r'^(?P<inst>({}))/(?P<filename>.+)_(?P<filetype>.+)/header/'.format(instruments), views.view_header, name='view_header'),
-    re_path(r'^(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/$'.format(instruments), views.archive_thumbnails, name='archive_thumb'),
+    re_path(r'^(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/obs(?P<observation>[\d]{{1,3}})/$'.format(instruments), views.archive_thumbnails_per_observation, name='archive_thumb_per_obs'),
 
     # AJAX views
     re_path('ajax/query_submit/', views.archive_thumbnails_query_ajax, name='archive_thumb_query_ajax'),
     re_path(r'^ajax/(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals_ajax, name='archive_ajax'),
-    re_path(r'^ajax/(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/$'.format(instruments), views.archive_thumbnails_ajax, name='archive_thumb_ajax'),
+    re_path(r'^ajax/(?P<inst>({}))/(?P<file_root>.+)_(?P<filetype>.+)/explore_image/$'.format(instruments), views.explore_image_ajax, name='explore_image_ajax'),
+    re_path(r'^ajax/(?P<inst>({}))/(?P<file_root>.+)_(?P<filetype>.+)/explore_image/scaling_(?P<scaling>.+)/low_(?P<low_lim>.+)/high_(?P<high_lim>.+)/ext_(?P<ext_name>.+)/int1_(?P<int1_nr>.+)/grp1_(?P<grp1_nr>.+)/int2_(?P<int2_nr>.+)/grp2_(?P<grp2_nr>.+)/$'.format(instruments), views.explore_image_ajax, name='explore_image_ajax'),
+    re_path(r'^ajax/(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/obs(?P<observation>[\d]{{1,3}})/$'.format(instruments), views.archive_thumbnails_ajax, name='archive_thumb_ajax'),
+    re_path(r'^ajax/viewed/(?P<file_root>.+)/$', views.toggle_viewed_ajax, name='toggle_viewed_ajax'),
+    re_path(r'^ajax/session/(?P<session_item>.+)/(?P<session_value>.+)/$', views.update_session_value_ajax, name='update_session_value_ajax'),
+    re_path('ajax/nirspec/msata/', monitor_views.msata_monitoring_ajax, name='msata_ajax'),
+    re_path('ajax/nirspec/wata/', monitor_views.wata_monitoring_ajax, name='wata_ajax'),
 
     # REST API views
     path('api/proposals/', api_views.all_proposals, name='all_proposals'),

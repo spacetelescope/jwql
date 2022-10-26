@@ -79,7 +79,7 @@ class condition:
         """Print conditions time pairs on command line (developement)"""
         print('Available time pairs:')
         for times in self.cond_time_pairs:
-            print('list: '+str(times))
+            print('list: ' + str(times))
 
     # returns a interval if time is anywhere in between
     def get_interval(self, time):
@@ -195,12 +195,12 @@ class condition:
             return False
 
         for time_pair in cond:
-            #if just a positive time is availlable, return true
+            # if just a positive time is availlable, return true
             if (time_pair[1] == 0) and (time > time_pair[0]):
 
                 return True
 
-            #if given time occurs between a time pair, return true
+            # if given time occurs between a time pair, return true
             elif (time_pair[0]) <= time and (time < time_pair[1]):
 
                 return True

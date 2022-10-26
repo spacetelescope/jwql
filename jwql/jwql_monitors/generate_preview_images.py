@@ -26,6 +26,7 @@ Use
         python generate_preview_images.py
 """
 
+import argparse
 import glob
 import logging
 import multiprocessing
@@ -430,6 +431,16 @@ def create_dq_array(xd, yd, mosaic, module):
     return dq
 
 
+def define_options(parser=None, usage=None, conflict_handler='resolve'):
+    """
+    """
+    if parser is None:
+        parser = argparse.ArgumentParser(usage=usage, conflict_handler=conflict_handler)
+
+    parser.add_argument('--overwrite', action='store_true', default=None, help='If set, existing preview images will be re-created and overwritten.')
+    return parser
+
+
 def detector_check(detector_list, search_string):
     """Search a given list of detector names for the provided regular
     expression sting.
@@ -529,16 +540,22 @@ def get_base_output_name(filename_dict):
 
 @log_fail
 @log_info
-def generate_preview_images():
+def generate_preview_images(overwrite):
     """The main function of the ``generate_preview_image`` module.
-    See module docstring for further details."""
+    See module docstring for further details.
+
+    Parameters
+    ----------
+    overwrite : bool
+        If True, any existing preview images and thumbnails are overwritten
+    """
 
     # Process programs in parallel
     program_list = [os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'public', 'jw*'))]
     program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', 'jw*'))])
-    program_list = list(set(program_list))
+    program_list = [(element, overwrite) for element in program_list]
     pool = multiprocessing.Pool(processes=int(SETTINGS['cores']))
-    results = pool.map(process_program, program_list)
+    results = pool.starmap(process_program, program_list)
     pool.close()
     pool.join()
 
@@ -653,31 +670,49 @@ def group_filenames(filenames):
     return grouped
 
 
-def process_program(program):
+def process_program(program, overwrite):
     """Generate preview images and thumbnails for the given program.
 
     Parameters
     ----------
     program : str
         The program identifier (e.g. ``88600``)
+    overwrite : bool
+        If False, skip over preview images/thumbnails that already exist.
+        Only create images that do not currenlty exist. If True, create
+        preview_images and thumbnails for all input files, regardless of
+        whether the images already exist.
+
+    Returns
+    -------
+    preview_image_files : list
+        List of preview image filenames
+    thumbnail_files : list
+        List of thumbnail image filenames
     """
 
     logging.info('')
     logging.info('Processing {}'.format(program))
 
     # Gather files to process
-    filenames = glob.glob(os.path.join(SETTINGS['filesystem'], 'public', program, '*/*.fits'))
-    filenames.extend(glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', program, '*/*.fits')))
+    filenames = glob.glob(os.path.join(SETTINGS['filesystem'], 'public', program, 'jw*/*.fits'))
+    filenames.extend(glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', program, 'jw*/*.fits')))
     filenames = list(set(filenames))
 
     # remove specific "ignored" suffix files (currently "original" and "stream")
     filenames = [filename for filename in filenames if os.path.splitext(filename.split('_')[-1])[0] not in IGNORED_SUFFIXES]
+
+    # Remove guiding files, as these are not currently visible in JWQL anyway
+    filenames = [filename for filename in filenames if 'guider_mode' not in filename_parser(filename)]
+
     logging.info('Found {} filenames'.format(len(filenames)))
     logging.info('')
 
     thumbnail_files = []
     preview_image_files = []
     for filename in filenames:
+
+        logging.info(f'Working on {filename}')
 
         # Determine the save location
         try:
@@ -688,10 +723,16 @@ def process_program(program):
         thumbnail_output_directory = os.path.join(SETTINGS['thumbnail_filesystem'], identifier)
 
         # Check to see if the preview images already exist and skip if they do
-        file_exists = check_existence([filename], preview_output_directory)
-        if file_exists:
-            logging.info("\tJPG already exists for {}, skipping.".format(filename))
-            continue
+        if not overwrite:
+            # If overwrite is False, we create preview images only for files that
+            # don't have them yet.
+            file_exists = check_existence([filename], preview_output_directory)
+            if file_exists:
+                logging.info("\tJPG already exists for {}, skipping.".format(filename))
+                continue
+        else:
+            # If overwrite is set to True, then we always create a new image
+            file_exists = False
 
         # Create the output directories if necessary
         if not os.path.exists(preview_output_directory):
@@ -712,10 +753,19 @@ def process_program(program):
             im.output_format = 'jpg'
             im.preview_output_directory = preview_output_directory
             im.thumbnail_output_directory = thumbnail_output_directory
-            im.make_image(max_img_size=8)
-            thumbnail_files.extend(im.thumbnail_images)
+
+            # Create a thumbnail for rate or dark files only. Create preview
+            # images for all filetypes
+            if 'rate.fits' in filename or 'dark.fits' in filename:
+                im.make_image(max_img_size=8, create_thumbnail=True)
+                thumbnail_files.extend(im.thumbnail_images)
+                logging.info('\tCreated preview image and thumbnail for: {}'.format(filename))
+            else:
+                im.make_image(max_img_size=8, create_thumbnail=False)
+                logging.info('\tCreated preview image for: {}'.format(filename))
+
             preview_image_files.extend(im.preview_images)
-            logging.info('\tCreated preview image and thumbnail for: {}'.format(filename))
+
         except (ValueError, AttributeError) as error:
             logging.warning(error)
 
@@ -760,14 +810,22 @@ def update_listfile(filename, file_list, filetype):
 
 
 @lock_module
-def protected_code():
-    """Protected code ensures only 1 instance of module will run at any given time"""
+def protected_code(overwrite):
+    """Protected code ensures only 1 instance of module will run at any given time
+
+    Parameters
+    ----------
+    overwrite : bool
+        If True, any existing preview images and thumbnails are overwritten
+    """
     module = os.path.basename(__file__).strip('.py')
     start_time, log_file = initialize_instrument_monitor(module)
 
-    generate_preview_images()
+    generate_preview_images(overwrite)
     update_monitor_table(module, start_time, log_file)
 
 
 if __name__ == '__main__':
-    protected_code()
+    parser = define_options()
+    args = parser.parse_args()
+    protected_code(args.overwrite)

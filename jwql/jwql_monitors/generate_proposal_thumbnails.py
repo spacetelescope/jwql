@@ -44,18 +44,21 @@ def generate_proposal_thumbnails():
     """The main function of the ``generate_proposal_thumbnails`` module.
     See module docstring for further details."""
 
-    proposal_dirs = glob.glob(os.path.join(SETTINGS['thumbnail_filesystem'], '*'))
+    proposal_dirs = glob.glob(os.path.join(SETTINGS['thumbnail_filesystem'], 'jw*'))
 
     for proposal_dir in proposal_dirs:
         rate_thumbnails = glob.glob(os.path.join(proposal_dir, '*rate*.thumb'))
+        dark_thumbnails = glob.glob(os.path.join(proposal_dir, '*dark*.thumb'))
         uncal_thumbnails = glob.glob(os.path.join(proposal_dir, '*uncal*.thumb'))
         if rate_thumbnails:
             thumbnail = rate_thumbnails[0]
+        elif dark_thumbnails:
+            thumbnail = dark_thumbnails[0]
         elif uncal_thumbnails:
             thumbnail = uncal_thumbnails[0]
         else:
             thumbnail = None
-            logging.info('No uncal or rate files found for {}.  No thumbnail generated.'.format(proposal_dir))
+            logging.info('No uncal, dark,  or rate files found for {}.  No thumbnail generated.'.format(proposal_dir))
 
         if thumbnail:
             proposal = os.path.basename(thumbnail)[0:7]
