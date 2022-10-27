@@ -574,11 +574,12 @@ class CosmicRay:
                     logging.info('\t{} already exists in the bias database table.'.format(file_name))
                     continue
 
-                dir_name = '_'.join(file_name.split('_')[:4])  # file_name[51:76]
+                file_basename = os.path.basename(file_name)
+                dir_name = file_basename[:19]  # jw###########_#####
 
                 self.obs_dir = os.path.join(self.data_dir, dir_name)
-                ensure_dir_exists(self.obs_dir)
                 logging.info(f'Setting obs_dir to {self.obs_dir}')
+                ensure_dir_exists(self.obs_dir)
 
                 if 'uncal' in file_name:
                     head = fits.getheader(file_name)
