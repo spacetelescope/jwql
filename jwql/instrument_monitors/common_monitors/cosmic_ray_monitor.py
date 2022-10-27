@@ -624,7 +624,7 @@ class CosmicRay:
                     logging.info("Removing input file {}".format(file_name))
                     os.remove(file_name)
 
-        for file_name in file_chunk:
+            for file_name in file_chunk:
 
                 head = fits.getheader(file_name)
                 self.nints = head['NINTS']
@@ -714,10 +714,10 @@ class CosmicRay:
                     logging.error("Could not insert entry into database. \n")
                     logging.error(e)
 
-            if len(no_coord_files) > 0:
-                logging.error("{} files had no jump co-ordinates".format(len(no_coord_files)))
-                for file_name in no_coord_files:
-                    logging.error("\t{} had no jump co-ordinates".format(file_name))
+                if len(no_coord_files) > 0:
+                    logging.error("{} files had no jump co-ordinates".format(len(no_coord_files)))
+                    for file_name in no_coord_files:
+                        logging.error("\t{} had no jump co-ordinates".format(file_name))
 
 
     def pull_filenames(self, file_info):
