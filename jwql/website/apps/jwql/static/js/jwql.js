@@ -396,63 +396,7 @@ function search() {
 
 /**
  * Limit the displayed thumbnails based on filter criteria
- * @param {String} filter_type - The filter type.  Currently only "sort" is supported.
- * @param {Integer} value - The filter value
- * @param {List} dropdown_keys - A list of dropdown menu keys
- * @param {Integer} num_fileids - The number of files that are available to display
- */
-function show_only(filter_type, value, dropdown_keys, num_fileids) {
-
-    // Get all filter options from {{dropdown_menus}} variable
-    var all_filters = dropdown_keys.split(',');
-
-    // Update dropdown menu text
-    document.getElementById(filter_type + '_dropdownMenuButton').innerHTML = value;
-
-    // Determine the current value for each filter
-    var filter_values = [];
-    for (j = 0; j < all_filters.length; j++) {
-        var filter_value = document.getElementById(all_filters[j] + '_dropdownMenuButton').innerHTML;
-        filter_values.push(filter_value);
-    }
-
-
-    // Find all thumbnail elements
-    var thumbnails = document.getElementsByClassName("thumbnail");
-
-    // Determine whether or not to display each thumbnail
-    var num_thumbnails_displayed = 0;
-    for (i = 0; i < thumbnails.length; i++) {
-        // Evaluate if the thumbnail meets all filter criteria
-        var criteria = [];
-        for (j = 0; j < all_filters.length; j++) {
-            var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0) || (thumbnails[i].getAttribute(all_filters[j]) == filter_values[j]);
-            criteria.push(criterion);
-        };
-
-        // Only display if all filter criteria are met
-        if (criteria.every(function(r){return r})) {
-            thumbnails[i].style.display = "inline-block";
-            num_thumbnails_displayed++;
-        } else {
-            thumbnails[i].style.display = "none";
-        }
-    };
-
-    // If there are no thumbnails to display, tell the user
-    if (num_thumbnails_displayed == 0) {
-        document.getElementById('no_thumbnails_msg').style.display = 'inline-block';
-    } else {
-        document.getElementById('no_thumbnails_msg').style.display = 'none';
-    };
-
-    // Update the count of how many images are being shown
-    document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/' + num_fileids + ' activities'
-};
-
-/**
- * Limit the displayed thumbnails based on filter criteria
- * @param {String} filter_type - The filter type.  Currently only "sort" is supported.
+ * @param {String} filter_type - The filter type.
  * @param {Integer} value - The filter value
  * @param {List} dropdown_keys - A list of dropdown menu keys
  * @param {Integer} num_fileids - The number of files that are available to display
@@ -496,12 +440,14 @@ function show_only(filter_type, value, dropdown_keys, num_fileids) {
         }
     };
 
-    // If there are no thumbnails to display, tell the user
-    if (num_thumbnails_displayed == 0) {
-        document.getElementById('no_thumbnails_msg').style.display = 'inline-block';
-    } else {
-        document.getElementById('no_thumbnails_msg').style.display = 'none';
-    };
+    if (document.getElementById('no_thumbnails_msg') != null) {
+        // If there are no thumbnails to display, tell the user
+        if (num_thumbnails_displayed == 0) {
+            document.getElementById('no_thumbnails_msg').style.display = 'inline-block';
+        } else {
+            document.getElementById('no_thumbnails_msg').style.display = 'none';
+        };
+    }
 
     // Update the count of how many images are being shown
     document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/' + num_fileids + ' activities'
@@ -594,6 +540,7 @@ function update_archive_page(inst, base_url) {
             // Update the number of proposals displayed
             num_proposals = data.thumbnails.proposals.length;
             update_show_count(num_proposals, 'proposals')
+            update_filter_options(data, num_proposals);
 
             // Add content to the proposal array div
             for (var i = 0; i < data.thumbnails.proposals.length; i++) {
@@ -603,9 +550,10 @@ function update_archive_page(inst, base_url) {
                 min_obsnum = data.min_obsnum[i];
                 thumb = data.thumbnails.thumbnail_paths[i];
                 n = data.thumbnails.num_files[i];
+                viewed = data.thumbnails.viewed[i];
 
                 // Build div content
-                content = '<div class="proposal text-center">';
+                content = '<div class="proposal text-center" look="' + viewed + '">';
                 content += '<a href="/' + inst + '/archive/' + prop + '/obs' + min_obsnum + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
                 content += '<span class="helper"></span>'
                 content += '<img src="/static/thumbnails/' + thumb + '" alt="" title="Thumbnail for ' + prop + '" width=100%>';
@@ -755,13 +703,13 @@ function update_wata_page(base_url) {
  * Updates the thumbnail-filter div with filter options
  * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
  */
-function update_filter_options(data) {
+function update_filter_options(data, num_items) {
     content = 'Filter by:'
     for (var i = 0; i < Object.keys(data.dropdown_menus).length; i++) {
         // Parse out useful variables
         filter_type = Object.keys(data.dropdown_menus)[i];
         filter_options = Array.from(new Set(data.dropdown_menus[filter_type]));
-        num_rootnames = Object.keys(data.file_data).length;
+        num_rootnames = num_items;
         dropdown_key_list = Object.keys(data.dropdown_menus);
 
         // Build div content
@@ -915,10 +863,11 @@ function update_thumbnails_per_observation_page(inst, proposal, observation, obs
         url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/obs' + observation + '/',
         success: function(data){
             // Perform various updates to divs
-            update_show_count(Object.keys(data.file_data).length, 'activities');
+            num_thumbnails = Object.keys(data.file_data).length;
+            update_show_count(num_thumbnails, 'activities');
             update_thumbnail_array(data);
             update_obs_options(data, inst, proposal);
-            update_filter_options(data);
+            update_filter_options(data, num_thumbnails);
             update_sort_options(data, base_url);
 
             // Do initial sort to match sort button display
@@ -940,9 +889,10 @@ function update_thumbnails_query_page(base_url, sort) {
         url: base_url + '/ajax/query_submit/',
         success: function(data){
             // Perform various updates to divs
-            update_show_count(Object.keys(data.file_data).length, 'activities');
+            num_thumbnails = Object.keys(data.file_data).length;
+            update_show_count(num_thumbnails, 'activities');
             update_thumbnail_array(data);
-            update_filter_options(data);
+            update_filter_options(data, num_thumbnails);
             update_sort_options(data, base_url);
 
             // Do initial sort to match sort button display
