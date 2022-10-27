@@ -591,6 +591,27 @@ def check_config_for_key(key):
         raise ValueError(msg)
 
 
+def delete_non_rate_thumbnails(extension='_rate_'):
+    """We now create thumbnails using only rate.fits files. This script will go
+    through all the thumbnail directories and delete all thumbnails that do not
+    contain the given extension.
+
+    Parameters
+    ----------
+    extension : str
+        If a thumbnail filename contains this string, it will not be deleted
+    """
+    base_dir = get_config()["thumbnail_filesystem"]
+    dir_list = sorted(glob.glob('jw*'))
+
+    for dirname in dir_list:
+        fulldir = os.path.join(base_dir, dirname)
+        fulldir_files = glob.glob(os.path.join(fulldir, '*.thumb'))
+        files_to_delete = [f for f in fulldir_files if extension not in f]
+        for file in files_to_delete:
+            os.remove(file)
+
+
 def query_format(string):
     """Take a string of format lower_case and change it to UPPER CASE"""
     upper_case = string.upper()

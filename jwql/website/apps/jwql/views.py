@@ -16,6 +16,7 @@ Authors
     - Mees Fix
     - Bryan Hilbert
     - Maria Pena-Guerrero
+    - Bryan Hilbert
 
 
 Use
