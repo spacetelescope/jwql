@@ -67,7 +67,7 @@ from jwql.utils.constants import JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MI
 from jwql.utils.logging_functions import configure_logging
 from jwql.utils.logging_functions import log_info
 from jwql.utils.logging_functions import log_fail
-from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path
+from jwql.utils.utils import copy_files, ensure_dir_exists, get_config, filesystem_path, grouper
 
 
 class CosmicRay:
@@ -556,170 +556,169 @@ class CosmicRay:
             List of filenames (including full paths) to the cosmic ray
             files
         """
-        logging.info("Checking all files in database")
-        existing_entries = self.files_in_database()
-        logging.info("{}".format(existing_entries))
+        for file_chunk in grouper(file_list, 100):
+        
+            input_files = []
+            in_ext = "uncal"
+            out_exts = defaultdict(lambda: ['jump', '0_ramp_fit'])
+            instrument = self.instrument
+            existing_files = {}
+            no_coord_files = []
 
-        input_files = []
-        in_ext = "uncal"
-        out_exts = defaultdict(lambda: ['jump', '0_ramp_fit'])
-        instrument = self.instrument
-        existing_files = {}
-        no_coord_files = []
+            for file_name in file_chunk:
 
-        for file_name in file_list:
+                # Dont process files that already exist in the bias stats database
+                logging.info("Checking for {} in database".format(file_name))
+                file_exists = self.file_exists_in_database(file_name)
+                if file_exists:
+                    logging.info('\t{} already exists in the bias database table.'.format(file_name))
+                    continue
+                logging.info("Checking for {} in database".format(os.path.basename(file_name)))
+                file_exists = self.file_exists_in_database(os.path.basename(file_name))
+                if file_exists:
+                    logging.info('\t{} already exists in the bias database table.'.format(file_name))
+                    continue
 
-            # Dont process files that already exist in the bias stats database
-            logging.info("Checking for {} in database".format(file_name))
-            file_exists = self.file_exists_in_database(file_name)
-            if file_exists:
-                logging.info('\t{} already exists in the bias database table.'.format(file_name))
-                continue
-            logging.info("Checking for {} in database".format(os.path.basename(file_name)))
-            file_exists = self.file_exists_in_database(os.path.basename(file_name))
-            if file_exists:
-                logging.info('\t{} already exists in the bias database table.'.format(file_name))
-                continue
+                dir_name = '_'.join(file_name.split('_')[:4])  # file_name[51:76]
 
-            dir_name = '_'.join(file_name.split('_')[:4])  # file_name[51:76]
+                self.obs_dir = os.path.join(self.data_dir, dir_name)
+                ensure_dir_exists(self.obs_dir)
+                logging.info(f'Setting obs_dir to {self.obs_dir}')
 
-            self.obs_dir = os.path.join(self.data_dir, dir_name)
-            ensure_dir_exists(self.obs_dir)
-            logging.info(f'Setting obs_dir to {self.obs_dir}')
+                if 'uncal' in file_name:
+                    head = fits.getheader(file_name)
+                    self.nints = head['NINTS']
 
-            if 'uncal' in file_name:
+                    copied, failed_to_copy = copy_files([file_name], self.obs_dir)
+                    # If the file cannot be copied to the working directory, skip it
+                    if len(failed_to_copy) > 0:
+                        continue
+
+                    # Next we run the pipeline on the files to get the proper outputs
+                    uncal_file = os.path.join(self.obs_dir, os.path.basename(file_name))
+                    jump_file = uncal_file.replace("uncal", "jump")
+                    rate_file = uncal_file.replace("uncal", "0_ramp_fit")
+                    if self.nints > 1:
+                        rate_file = rate_file.replace("0_ramp_fit", "1_ramp_fit")
+
+                    if (not os.path.isfile(jump_file)) or (not os.path.isfile(rate_file)):
+                        logging.info("Adding {} to calibration tasks".format(uncal_file))
+
+                        short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
+
+                        input_files.append(uncal_file)
+                        if self.nints > 1:
+                            out_exts[short_name] = ['jump', '1_ramp_fit']
+                    else:
+                        logging.info("Calibrated files for {} already exist".format(uncal_file))
+                        existing_files[uncal_file] = [jump_file, rate_file]
+
+            output_files = run_parallel_pipeline(input_files, in_ext, out_exts, instrument, jump_pipe=True)
+            for file_name in existing_files:
+                if file_name not in input_files:
+                    input_files.append(file_name)
+                    output_files[file_name] = existing_files[file_name]
+
+            for file_name in file_chunk:
+                if os.path.isfile(file_name):
+                    logging.info("Removing input file {}".format(file_name))
+                    os.remove(file_name)
+
+            for file_name in file_chunk:
+
                 head = fits.getheader(file_name)
                 self.nints = head['NINTS']
 
-                copied, failed_to_copy = copy_files([file_name], self.obs_dir)
-                # If the file cannot be copied to the working directory, skip it
-                if len(failed_to_copy) > 0:
+                dir_name = '_'.join(os.path.basename(file_name).split('_')[:2])  # file_name[51:76]
+                self.obs_dir = os.path.join(self.data_dir, dir_name)
+
+                obs_files = output_files[file_name]
+
+                # Next we analyze the cosmic rays in the new data
+                for output_file in obs_files:
+                    logging.info("Checking output file {}".format(output_file))
+
+                    if 'jump' in output_file:
+                        logging.debug("Adding jump file {}".format(os.path.basename(output_file)))
+                        jump_file = os.path.join(self.obs_dir, os.path.basename(output_file))
+
+                    if self.nints == 1:
+                        logging.debug("Looking for single integration rate file")
+                        if '0_ramp_fit' in output_file:
+                            logging.debug("Adding rate file {}".format(os.path.basename(output_file)))
+                            rate_file = os.path.join(self.obs_dir, os.path.basename(output_file))
+
+                    elif self.nints > 1:
+                        logging.debug("Looking for multi-integration rate file")
+                        if '1_ramp_fit' in output_file:
+                            logging.debug("Adding rate file {}".format(os.path.basename(output_file)))
+                            rate_file = os.path.join(self.obs_dir, os.path.basename(output_file))
+
+                logging.info(f'\tUsing {jump_file} and {rate_file} to monitor CRs.')
+
+                jump_head, jump_data, jump_dq = self.get_jump_data(jump_file)
+                rate_data = self.get_rate_data(rate_file)
+                if jump_head is None or rate_data is None:
                     continue
 
-                # Next we run the pipeline on the files to get the proper outputs
-                uncal_file = os.path.join(self.obs_dir, os.path.basename(file_name))
-                jump_file = uncal_file.replace("uncal", "jump")
-                rate_file = uncal_file.replace("uncal", "0_ramp_fit")
-                if self.nints > 1:
-                    rate_file = rate_file.replace("0_ramp_fit", "1_ramp_fit")
+                jump_locs = self.get_jump_locs(jump_dq)
+                if len(jump_locs) == 0:
+                    no_coord_files.append(os.path.basename(file_name))
+                jump_locs_pre = self.group_before(jump_locs)
+                cosmic_ray_num = len(jump_locs)
 
-                if (not os.path.isfile(jump_file)) or (not os.path.isfile(rate_file)):
-                    logging.info("Adding {} to calibration tasks".format(uncal_file))
+                logging.info(f'\tFound {cosmic_ray_num} CR-flags.')
 
-                    short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
+                # Translate CR count into a CR rate per pixel, so that all exposures
+                # can go on one plot regardless of exposure time and aperture size
+                cr_rate = self.get_cr_rate(cosmic_ray_num, jump_head)
+                logging.info(f'\tNormalizing by time and area, this is {cr_rate} jumps/sec/pixel.')
 
-                    input_files.append(uncal_file)
-                    if self.nints > 1:
-                        out_exts[short_name] = ['jump', '1_ramp_fit']
-                else:
-                    logging.info("Calibrated files for {} already exist".format(uncal_file))
-                    existing_files[uncal_file] = [jump_file, rate_file]
+                # Get observation time info
+                obs_start_time = jump_head['EXPSTART']
+                obs_end_time = jump_head['EXPEND']
+                start_time = Time(obs_start_time, format='mjd', scale='utc').isot.replace('T', ' ')
+                end_time = Time(obs_end_time, format='mjd', scale='utc').isot.replace('T', ' ')
 
-        output_files = run_parallel_pipeline(input_files, in_ext, out_exts, instrument, jump_pipe=True)
-        for file_name in existing_files:
-            if file_name not in input_files:
-                input_files.append(file_name)
-                output_files[file_name] = existing_files[file_name]
+                cosmic_ray_mags, outlier_mags = self.get_cr_mags(jump_locs, jump_locs_pre, rate_data, jump_data, jump_head)
 
-        for file_name in file_list:
-            if os.path.isfile(file_name):
-                logging.info("Removing input file {}".format(file_name))
-                os.remove(file_name)
-
-        for file_name in input_files:
-
-            head = fits.getheader(file_name)
-            self.nints = head['NINTS']
-
-            dir_name = '_'.join(os.path.basename(file_name).split('_')[:2])  # file_name[51:76]
-            self.obs_dir = os.path.join(self.data_dir, dir_name)
-
-            obs_files = output_files[file_name]
-
-            # Next we analyze the cosmic rays in the new data
-            for output_file in obs_files:
-                logging.info("Checking output file {}".format(output_file))
-
-                if 'jump' in output_file:
-                    logging.debug("Adding jump file {}".format(os.path.basename(output_file)))
-                    jump_file = os.path.join(self.obs_dir, os.path.basename(output_file))
-
-                if self.nints == 1:
-                    logging.debug("Looking for single integration rate file")
-                    if '0_ramp_fit' in output_file:
-                        logging.debug("Adding rate file {}".format(os.path.basename(output_file)))
-                        rate_file = os.path.join(self.obs_dir, os.path.basename(output_file))
-
-                elif self.nints > 1:
-                    logging.debug("Looking for multi-integration rate file")
-                    if '1_ramp_fit' in output_file:
-                        logging.debug("Adding rate file {}".format(os.path.basename(output_file)))
-                        rate_file = os.path.join(self.obs_dir, os.path.basename(output_file))
-
-            logging.info(f'\tUsing {jump_file} and {rate_file} to monitor CRs.')
-
-            jump_head, jump_data, jump_dq = self.get_jump_data(jump_file)
-            rate_data = self.get_rate_data(rate_file)
-            if jump_head is None or rate_data is None:
-                continue
-
-            jump_locs = self.get_jump_locs(jump_dq)
-            if len(jump_locs) == 0:
-                no_coord_files.append(os.path.basename(file_name))
-            jump_locs_pre = self.group_before(jump_locs)
-            cosmic_ray_num = len(jump_locs)
-
-            logging.info(f'\tFound {cosmic_ray_num} CR-flags.')
-
-            # Translate CR count into a CR rate per pixel, so that all exposures
-            # can go on one plot regardless of exposure time and aperture size
-            cr_rate = self.get_cr_rate(cosmic_ray_num, jump_head)
-            logging.info(f'\tNormalizing by time and area, this is {cr_rate} jumps/sec/pixel.')
-
-            # Get observation time info
-            obs_start_time = jump_head['EXPSTART']
-            obs_end_time = jump_head['EXPEND']
-            start_time = Time(obs_start_time, format='mjd', scale='utc').isot.replace('T', ' ')
-            end_time = Time(obs_end_time, format='mjd', scale='utc').isot.replace('T', ' ')
-
-            cosmic_ray_mags, outlier_mags = self.get_cr_mags(jump_locs, jump_locs_pre, rate_data, jump_data, jump_head)
-
-            # Insert new data into database
-            try:
-                logging.info("Inserting {} in database".format(os.path.basename(file_name)))
-                cosmic_ray_db_entry = {'entry_date': datetime.datetime.now(),
-                                       'aperture': self.aperture,
-                                       'source_file': os.path.basename(file_name),
-                                       'obs_start_time': start_time,
-                                       'obs_end_time': end_time,
-                                       'jump_count': cosmic_ray_num,
-                                       'jump_rate': cr_rate,
-                                       'magnitude': cosmic_ray_mags,
-                                       'outliers': outlier_mags
-                                       }
-                self.stats_table.__table__.insert().execute(cosmic_ray_db_entry)
-
-                logging.info("Successfully inserted into database. \n")
-
-                # Delete fits files in order to save disk space
-                logging.info("Removing pipeline products in order to save disk space. \n")
+                # Insert new data into database
                 try:
-                    for file in [file_name, jump_file, rate_file]:
-                        if os.path.isfile(file):
-                            os.remove(file)
-                    if os.path.exists(self.obs_dir):
-                        os.rmdir(self.obs_dir)
-                except OSError as e:
-                    logging.error(f"Unable to delete {self.obs_dir}")
-                    logging.error(e)
-            except (StatementError, DataError, DatabaseError, InvalidRequestError, OperationalError) as e:
-                logging.error("Could not insert entry into database. \n")
-                logging.error(e)
+                    logging.info("Inserting {} in database".format(os.path.basename(file_name)))
+                    cosmic_ray_db_entry = {'entry_date': datetime.datetime.now(),
+                                           'aperture': self.aperture,
+                                           'source_file': os.path.basename(file_name),
+                                           'obs_start_time': start_time,
+                                           'obs_end_time': end_time,
+                                           'jump_count': cosmic_ray_num,
+                                           'jump_rate': cr_rate,
+                                           'magnitude': cosmic_ray_mags,
+                                           'outliers': outlier_mags
+                                           }
+                    self.stats_table.__table__.insert().execute(cosmic_ray_db_entry)
 
-        if len(no_coord_files) > 0:
-            logging.error("{} files had no jump co-ordinates".format(len(no_coord_files)))
-            for file_name in no_coord_files:
-                logging.error("\t{} had no jump co-ordinates".format(file_name))
+                    logging.info("Successfully inserted into database. \n")
+
+                    # Delete fits files in order to save disk space
+                    logging.info("Removing pipeline products in order to save disk space. \n")
+                    try:
+                        for file in [file_name, jump_file, rate_file]:
+                            if os.path.isfile(file):
+                                os.remove(file)
+                        if os.path.exists(self.obs_dir):
+                            os.rmdir(self.obs_dir)
+                    except OSError as e:
+                        logging.error(f"Unable to delete {self.obs_dir}")
+                        logging.error(e)
+                except (StatementError, DataError, DatabaseError, InvalidRequestError, OperationalError) as e:
+                    logging.error("Could not insert entry into database. \n")
+                    logging.error(e)
+
+                if len(no_coord_files) > 0:
+                    logging.error("{} files had no jump co-ordinates".format(len(no_coord_files)))
+                    for file_name in no_coord_files:
+                        logging.error("\t{} had no jump co-ordinates".format(file_name))
+
 
     def pull_filenames(self, file_info):
         """Extract filenames from the list of file information returned from
