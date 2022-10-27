@@ -568,11 +568,6 @@ class CosmicRay:
             for file_name in file_chunk:
 
                 # Dont process files that already exist in the bias stats database
-                logging.info("Checking for {} in database".format(file_name))
-                file_exists = self.file_exists_in_database(file_name)
-                if file_exists:
-                    logging.info('\t{} already exists in the bias database table.'.format(file_name))
-                    continue
                 logging.info("Checking for {} in database".format(os.path.basename(file_name)))
                 file_exists = self.file_exists_in_database(os.path.basename(file_name))
                 if file_exists:
@@ -618,11 +613,6 @@ class CosmicRay:
                 if file_name not in input_files:
                     input_files.append(file_name)
                     output_files[file_name] = existing_files[file_name]
-
-            for file_name in file_chunk:
-                if os.path.isfile(file_name):
-                    logging.info("Removing input file {}".format(file_name))
-                    os.remove(file_name)
 
             for file_name in file_chunk:
 
@@ -801,9 +791,6 @@ class CosmicRay:
 
                 self.data_dir = os.path.join(output_dir, 'data')
                 ensure_dir_exists(self.data_dir)
-
-                cosmic_ray_files, not_copied = copy_files(new_filenames, self.data_dir)
-                logging.info(f'\tCopied {len(cosmic_ray_files)} to the working directory {self.data_dir}.')
 
                 self.process(cosmic_ray_files)
 
