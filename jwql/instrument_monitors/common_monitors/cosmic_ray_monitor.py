@@ -792,7 +792,7 @@ class CosmicRay:
                 self.data_dir = os.path.join(output_dir, 'data')
                 ensure_dir_exists(self.data_dir)
 
-                self.process(cosmic_ray_files)
+                self.process(new_filenames)
 
                 monitor_run = True
 
