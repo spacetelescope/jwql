@@ -312,7 +312,7 @@ def archived_proposals_ajax(request, inst):
 
         # In order to know if a proposal contains all observations that are entirely viewed, check for at least one existing viewed=False in RootFileInfo
         unviewed_root_file_infos = RootFileInfo.objects.filter(instrument=inst, proposal=proposal_num, viewed=False)
-        proposal_viewed.append(unviewed_root_file_infos.count() == 0)
+        proposal_viewed.append("Viewed" if unviewed_root_file_infos.count() == 0 else "New")
 
     context = {'inst': inst,
                'num_proposals': num_proposals,
