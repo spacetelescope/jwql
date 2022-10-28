@@ -119,7 +119,7 @@ def get_updates(inst):
                 latest_date = np.max(all_end_dates)
 
                 # Get the number of files in the observation
-                propobs = f'{proposal}{obsnum}'
+                propobs = f'jw{int(proposal):05}{obsnum}'
                 obsfiles = [f for f in rootnames if propobs in f]
 
                 # Update the appropriate database table
