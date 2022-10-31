@@ -119,7 +119,7 @@ def get_updates(inst):
                 latest_date = np.max(all_end_dates)
 
                 # Get the number of files in the observation
-                propobs = f'{proposal}{obsnum}'
+                propobs = f'jw{int(proposal):05}{obsnum}'
                 obsfiles = [f for f in rootnames if propobs in f]
 
                 # Update the appropriate database table
@@ -290,13 +290,17 @@ def update_database_table(instrument, prop, obs, thumbnail, obsfiles, types, sta
     # Get all unsaved root names in the Observation to store in the database
     nr_files_created = 0
     for file in obsfiles:
-        root_file_info_instance, rfi_created = RootFileInfo.objects.get_or_create(root_name=file,
-                                                                                  instrument=instrument,
-                                                                                  obsnum=obs_instance,
-                                                                                  proposal=prop)
-        if rfi_created:
-            nr_files_created += 1
-            root_file_info_instance.save()
+        try:
+            root_file_info_instance, rfi_created = RootFileInfo.objects.get_or_create(root_name=file,
+                                                                                      instrument=instrument,
+                                                                                      obsnum=obs_instance,
+                                                                                      proposal=prop)
+            if rfi_created:
+                nr_files_created += 1
+                root_file_info_instance.save()
+        except Exception as e:
+            logging.warning(f'\tError {e} was raised')
+            logging.warning(f'\tError with root_name: {file} inst: {instrument} obsnum: {obs_instance} proposal: {prop}')
     logging.info(f'Created {nr_files_created} root_file_info entries for: {instrument} - proposal:{prop} - obs:{obs}')
 
 
