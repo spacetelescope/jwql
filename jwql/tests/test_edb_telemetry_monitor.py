@@ -214,7 +214,9 @@ def test_multiple_conditions():
 
     # Compare to expectations
     expected_table = temp_data[2:6]
-    assert np.all(condition.extracted_data == expected_table)
+
+    assert np.all(condition.extracted_data["euvalues"] == expected_table["euvalues"])
+    assert np.all(condition.extracted_data["dates"] == expected_table["dates"])
     assert condition.block_indexes == [0, 4]
 
 
