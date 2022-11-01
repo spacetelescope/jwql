@@ -63,6 +63,9 @@ def test_daily_stats():
     tab["dates"] = dates
     tab["euvalues"] = data
     mnemonic = ed.EdbMnemonic('SOMETHING', Time('2021-12-18T02:00:00'), Time('2021-12-21T14:00:00'), tab, {}, {})
+    mnemonic.meta = {'Count': 1,
+                     'TlmMnemonics': [{'TlmMnemonic': 'SOMETHING',
+                                       'AllPoints': 1}]}
 
     mnemonic.daily_stats()
     assert np.all(mnemonic.mean == np.array([10., 25., 12., 50.]))
@@ -80,11 +83,14 @@ def test_full_stats():
     tab["dates"] = dates
     tab["euvalues"] = data
     mnemonic = ed.EdbMnemonic('SOMETHING', Time('2021-12-18T07:20:00'), Time('2021-12-18T07:30:00'), tab, {}, {})
+    mnemonic.meta = {'Count': 1,
+                     'TlmMnemonics': [{'TlmMnemonic': 'SOMETHING',
+                                       'AllPoints': 1}]}
     mnemonic.full_stats()
-    assert mnemonic.mean == 5.5
-    assert mnemonic.median == 5.5
-    assert np.isclose(mnemonic.stdev, 2.8722813232690143)
-    assert mnemonic.median_time == datetime(2021, 12, 18, 7, 24, 30)
+    assert mnemonic.mean[0] == 5.5
+    assert mnemonic.median[0] == 5.5
+    assert np.isclose(mnemonic.stdev[0], 2.8722813232690143)
+    assert mnemonic.median_times[0] == datetime(2021, 12, 18, 7, 24, 30)
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
@@ -98,7 +104,6 @@ def test_get_mnemonic():
 
     mnemonic = get_mnemonic(mnemonic_identifier, start_time, end_time)
     assert len(mnemonic) == len(mnemonic.data["dates"])
-    assert len(mnemonic) == 2637
     assert mnemonic.meta == {'Count': 1,
                              'TlmMnemonics': [{'TlmMnemonic': 'IMIR_HK_ICE_SEC_VOLT4',
                                                'Subsystem': 'MIRI',
@@ -231,29 +236,35 @@ def test_multiplication():
     tab = Table()
     tab["dates"] = dates1
     tab["euvalues"] = data1
-    blocks1 = [0, 3, 8]
+    blocks1 = [0, 3, 8, 10]
     info = {}
     info['unit'] = 'V'
     info['tlmMnemonic'] = 'TEST_VOLTAGE'
     info['description'] = 'Voltage at some place'
     mnemonic1 = ed.EdbMnemonic('TEST_VOLTAGE', Time('2021-12-18T07:20:00'), Time('2021-12-18T07:30:00'), tab, {}, info, blocks=blocks1)
+    mnemonic1.meta = {'Count': 1,
+                     'TlmMnemonics': [{'TlmMnemonic': 'TEST_VOLTAGE',
+                                       'AllPoints': 1}]}
 
     dates2 = np.array([datetime(2021, 12, 18, 7, n, 10) for n in range(20, 30)])
     data2 = np.array([15, 15, 15, 19, 19, 19, 19, 19, 12, 12])
     tab = Table()
     tab["dates"] = dates2
     tab["euvalues"] = data2
-    blocks2 = [0, 3, 8]
+    blocks2 = [0, 3, 8, 10]
     info = {}
     info['unit'] = 'A'
     info['tlmMnemonic'] = 'TEST_CURRENT'
     info['description'] = 'Current at some place'
     mnemonic2 = ed.EdbMnemonic('TEST_CURRENT', Time('2021-12-18T07:20:10'), Time('2021-12-18T07:30:10'), tab, {}, info, blocks=blocks2)
+    mnemonic2.meta = {'Count': 1,
+                     'TlmMnemonics': [{'TlmMnemonic': 'TEST_CURRENT',
+                                       'AllPoints': 1}]}
 
     prod = mnemonic1 * mnemonic2
     assert all(prod.data["euvalues"].data == np.array([75.0, 75.0, 165.0, 171.0, 171.0, 171.0, 171.0, 26.333333333333336, 24.0]))
     assert all(prod.data["dates"].data == mnemonic1.data["dates"][1:])
-    assert all(prod.blocks == np.array([0, 3, 8]))
+    assert all(prod.blocks == [0, 2, 7, 9])
     assert prod.info['unit'] == 'W'
     assert prod.info['tlmMnemonic'] == 'TEST_VOLTAGE * TEST_CURRENT'
 
@@ -269,9 +280,10 @@ def test_timed_stats():
     tab["dates"] = dates
     tab["euvalues"] = data
     mnemonic = ed.EdbMnemonic('SOMETHING', Time('2021-12-18T02:00:00'), Time('2021-12-21T14:00:00'), tab, {}, {})
-
+    mnemonic.meta = {'Count': 1,
+                     'TlmMnemonics': [{'TlmMnemonic': 'SOMETHING',
+                                       'AllPoints': 1}]}
     duration = 12 * u.hour
-    mnemonic.timed_stats(duration, sigma=3)
-    print(mnemonic.mean)
-    print(np.append(np.arange(1.05, 6.05, 1), 96.))
+    mnemonic.mean_time_block = duration
+    mnemonic.timed_stats(sigma=3)
     assert np.all(np.isclose(mnemonic.mean, np.append(np.arange(1.05, 6.06, 1), 96.)))

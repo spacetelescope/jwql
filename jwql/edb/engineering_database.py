@@ -259,12 +259,21 @@ class EdbMnemonic:
         # we will do this for self.blocks. mnem.blocks is ignored and will not factor in to the
         # new blocks list. We have to choose either self.blocks or mnem.blocks to keep, and it makes
         # more sense to keep with self.blocks since this is a method of self.data
-        new_blocks = []
+        new_blocks = [0]
         for block in self.blocks:
-            prev_date = self.data['dates'][block]
-            before = np.where(common_dates < self.data['dates'][block])[0]
-            if len(before) > 0:
-                new_blocks.append(before + 1)
+            try:
+                prev_date = self.data['dates'][block]
+                before = np.where(common_dates == self.data['dates'][block])[0]
+
+                if len(before) > 0:
+                    new_blocks.append(before[0]) # + 1)
+            except IndexError:
+                # The final block value is usually equal to the length of the array, and will
+                # therefore cause an Index Error in the lines above. Ignore that error here.
+                # This way, if the final block is less than the length of the array, we can
+                # still process it properly.
+                pass
+
         # The last element of blocks should be the final element of the data
         if new_blocks[-1] != len(common_dates):
             new_blocks.append(len(common_dates))

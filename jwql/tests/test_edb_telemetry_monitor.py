@@ -17,6 +17,7 @@ Use
         pytest -s test_edb_telemetry_monitor.py
 """
 from collections import defaultdict
+from copy import deepcopy
 import numpy as np
 import os
 import pytest
@@ -82,11 +83,14 @@ def test_conditions():
     """Test the extraction of data using the ```equal``` class.
     """
     # Create data for mnemonic of interest
-    start_time = Time('2022-02-02')
-    end_time = Time('2022-02-03')
+    #start_time = Time('2022-02-02')
+    #end_time = Time('2022-02-03')
+    start_time = datetime.datetime(2022, 2, 2)
+    end_time = datetime.datetime(2022, 2, 3)
     temp_data = Table()
     temp_data["euvalues"] = np.array([35., 35.1, 35.2, 36., 36.1, 36.2, 37.1, 37., 36., 36.])
-    temp_data["dates"] = np.array([Time('2022-02-02') + TimeDelta(0.1 * i, format='jd') for i in range(10)])
+    #temp_data["dates"] = np.array([Time('2022-02-02') + TimeDelta(0.1 * i, format='jd') for i in range(10)])
+    temp_data["dates"] = np.array([start_time + datetime.timedelta(days=0.1 * i) for i in range(10)])
     meta = {}
     info = {}
     temperature = EdbMnemonic("TEMPERATURE", start_time, end_time, temp_data, meta, info)
@@ -94,7 +98,7 @@ def test_conditions():
     # Create conditional data
     current_data = {}
     current_data["euvalues"] = np.array([1., 1., 1., 2.5, 2.5, 2.5, 5.5, 5.5, 2.5, 2.5])
-    current_data["dates"] = np.array([Time('2022-02-02') + TimeDelta(0.1001 * i, format='jd') for i in range(10)])
+    current_data["dates"] = np.array([start_time + datetime.timedelta(days=0.1001 * i) for i in range(10)])
 
     # Using a single relation class
     eq25 = cond.relation_test(current_data, '==', 2.5)
@@ -107,46 +111,46 @@ def test_conditions():
     # Expected results
     expected_table = Table()
     frac_days = [0.4, 0.5, 0.9]
-    expected_table["dates"] = [Time('2022-02-02') + TimeDelta(frac, format='jd') for frac in frac_days]
+    expected_table["dates"] = [start_time + datetime.timedelta(days=frac) for frac in frac_days]
     expected_table["euvalues"] = [36.1, 36.2, 36.0]
 
     assert np.all(condition_1.extracted_data == expected_table)
-    assert condition_1.block_indexes == [0, 2]
+    assert condition_1.block_indexes == [0, 2, 3]
 
     grt0 = cond.relation_test(current_data, '>', 0)
     condition_list.append(grt0)
     condition_2 = cond.condition(condition_list)
     condition_2.extract_data(temperature.data)
     assert np.all(condition_2.extracted_data == expected_table)
-    assert condition_2.block_indexes == [0, 2]
+    assert condition_2.block_indexes == [0, 2, 3]
 
     less10 = cond.relation_test(current_data, '<', 10)
     condition_list.append(less10)
     condition_3 = cond.condition(condition_list)
     condition_3.extract_data(temperature.data)
     assert np.all(condition_3.extracted_data == expected_table)
-    assert condition_3.block_indexes == [0, 2]
+    assert condition_3.block_indexes == [0, 2, 3]
 
 
-def test_every_change_to_allPoints():
-    """Make sure we convert every-change data to AllPoints data correctly
+def test_change_only_add_points():
+    """Make sure we convert change-only data to AllPoints data correctly
     """
-    dates = [datetime.datetime(2021, 7, 14, 5, 24, 39 + i) for i in range(10)]
-    delta = datetime.timedelta(seconds=0.9999)
-    values = np.arange(10)
+    dates = [datetime.datetime(2021, 7, 14, 5, 24 + i, 0) for i in range(3)]
+    values = np.arange(3)
     data = Table([dates, values], names=('dates', 'euvalues'))
+    mnem = EdbMnemonic('SOMETHING', datetime.datetime(2021, 7, 14), datetime.datetime(2021, 7, 14, 6), data, {}, {})
+    mnem.meta = {'TlmMnemonics': [{'TlmMnemonic': 'SOMETHING',
+                                   'AllPoints': 0}]}
+    mnem.change_only_add_points()
 
-    expected_dates = [datetime.datetime(2021, 7, 14, 5, 24, 39 + i) for i in range(10)]
-    expected_dates = [dates[0]]
-    expected_values = [values[0]]
-    for i, val in enumerate(values[0:-1]):
-        expected_values.extend([val, values[i + 1]])
-        expected_dates.extend([dates[i] + delta, dates[i + 1]])
-
+    expected_dates = [datetime.datetime(2021, 7, 14, 5, 24, 0), datetime.datetime(2021, 7, 14, 5, 24, 59, 999999),
+                      datetime.datetime(2021, 7, 14, 5, 25, 0), datetime.datetime(2021, 7, 14, 5, 25, 59, 999999),
+                      datetime.datetime(2021, 7, 14, 5, 26, 0)]
+    expected_values = [0, 0, 1, 1, 2]
     expected = Table([expected_dates, expected_values], names=('dates', 'euvalues'))
-    updated = etm.every_change_to_allPoints(data)
-    assert np.all(expected["dates"] == updated["dates"])
-    assert np.all(expected["euvalues"] == updated["euvalues"])
+
+    assert np.all(expected["dates"] == mnem.data["dates"])
+    assert np.all(expected["euvalues"] == mnem.data["euvalues"])
 
 
 def test_find_all_changes():
@@ -182,11 +186,11 @@ def test_multiple_conditions():
     """Test that filtering using multiple conditions is working as expected.
     """
     # Create data for mnemonic of interest
-    start_time = Time('2022-02-02')
-    end_time = Time('2022-02-03')
+    start_time = datetime.datetime(2022, 2, 2)
+    end_time = datetime.datetime(2022, 2, 3)
     temp_data = Table()
     temp_data["euvalues"] = Column(np.array([35., 35.1, 35.2, 36., 36.1, 36.2, 37.1, 37., 36., 36.]))
-    temp_data["dates"] = Column(np.array([Time('2022-02-02') + TimeDelta(0.1 * i, format='jd') for i in range(10)]))
+    temp_data["dates"] = Column(np.array([start_time + datetime.timedelta(days=0.1 * i) for i in range(10)]))
     meta = {}
     info = {}
     temperature = EdbMnemonic("TEMPERATURE", start_time, end_time, temp_data, meta, info)
@@ -194,12 +198,12 @@ def test_multiple_conditions():
     # Create conditional data
     current_data = {}
     current_data["euvalues"] = Column(np.array([1., 2.5, 2.5, 2.5, 2.5, 2.5, 5.5, 5.5, 2.5, 2.5]))
-    current_data["dates"] = Column(np.array([Time('2022-02-02') + TimeDelta(0.1001 * i, format='jd') for i in range(10)]))
+    current_data["dates"] = Column(np.array([start_time + datetime.timedelta(days=0.1001 * i) for i in range(10)]))
 
     element_data = {}
     element_data["euvalues"] = Column(np.repeat("OFF", 20))
     element_data["euvalues"][13:] = "ON"
-    element_data["dates"] = Column(np.array([Time('2022-02-02') + TimeDelta(0.06 * i, format='jd') for i in range(20)]))
+    element_data["dates"] = Column(np.array([start_time + datetime.timedelta(days=0.06 * i) for i in range(20)]))
 
     grt35 = cond.relation_test(temp_data, '>', 35.11)
     eq25 = cond.relation_test(current_data, '==', 2.5)
@@ -218,8 +222,9 @@ def test_organize_every_change():
     """Test the reorganization of every_change data from an EdbMnemonic into something
     easier to plot
     """
-    basetime = Time('2021-04-06 14:00:00')
-    dates = np.array([basetime + TimeDelta(600 * i, format='sec') for i in range(20)])
+    basetime = datetime.datetime(2021, 4, 6, 14, 0, 0)
+    dates = np.array([basetime + datetime.timedelta(seconds=600 * i) for i in range(20)])
+    #dates = np.array([basetime + TimeDelta(600 * i, format='sec') for i in range(20)])
     vals = np.array([300.5, 310.3, -250.5, -500.9, 32.2,
                      300.1, 310.8, -250.2, -500.2, 32.7,
                      300.2, 310.4, -250.6, -500.8, 32.3,
@@ -254,11 +259,17 @@ def test_organize_every_change():
     f770mean, _, _ = sigma_clipped_stats(f770_vals, sigma=3)
     f1000mean, _, _ = sigma_clipped_stats(f1000_vals, sigma=3)
     f1500mean, _, _ = sigma_clipped_stats(f1500_vals, sigma=3)
-    expected = {'F2550W': (np.array([e.datetime for e in dates[f2550_idx]]), f2550_vals, f2550mean),
-                'F560W': (np.array([e.datetime for e in dates[f560_idx]]), f560_vals, f560mean),
-                'F770W': (np.array([e.datetime for e in dates[f770_idx]]), f770_vals, f770mean),
-                'F1000W': (np.array([e.datetime for e in dates[f1000_idx]]), f1000_vals, f1000mean),
-                'F1500W': (np.array([e.datetime for e in dates[f1500_idx]]), f1500_vals, f1500mean)}
+    #expected = {'F2550W': (np.array([e.datetime for e in dates[f2550_idx]]), f2550_vals, f2550mean),
+    #            'F560W': (np.array([e.datetime for e in dates[f560_idx]]), f560_vals, f560mean),
+    #            'F770W': (np.array([e.datetime for e in dates[f770_idx]]), f770_vals, f770mean),
+    #            'F1000W': (np.array([e.datetime for e in dates[f1000_idx]]), f1000_vals, f1000mean),
+    #            'F1500W': (np.array([e.datetime for e in dates[f1500_idx]]), f1500_vals, f1500mean)}
+    expected = {'F2550W': (np.array(dates[f2550_idx]), f2550_vals, f2550mean),
+                'F560W': (np.array(dates[f560_idx]), f560_vals, f560mean),
+                'F770W': (np.array(dates[f770_idx]), f770_vals, f770mean),
+                'F1000W': (np.array(dates[f1000_idx]), f1000_vals, f1000mean),
+                'F1500W': (np.array(dates[f1500_idx]), f1500_vals, f1500mean)}
+
     for key, val in expected.items():
         assert np.all(val[0] == data[key][0])
         assert np.all(val[1] == data[key][1])
@@ -269,12 +280,13 @@ def test_remove_outer_points():
     """Test that points outside the requested time are removed for change-only data
     """
     data = Table()
-    data["dates"] = [Time('2014-12-08') + TimeDelta(0.5 * (i + 1), format='jd') for i in range(5)]
+    data["dates"] = [datetime.datetime(2014, 12, 8) + datetime.timedelta(days=0.5 * (i + 1)) for i in range(5)]
     data["euvalues"] = [1, 2, 3, 4, 5]
-    mnem = EdbMnemonic('TEST', Time('2022-12-09'), Time('2022-12-10'), data, {}, {})
+    mnem = EdbMnemonic('TEST', datetime.datetime(2022, 12, 9), datetime.datetime(2022, 12, 10), data, {}, {})
+    orig = deepcopy(mnem)
     etm_utils.remove_outer_points(mnem)
-    assert all(mnem.data['MJD'][1:-1] == new.data['dates'])
-    assert all(mnem.data['data'][1:-1] == new.data['euvalues'])
+    assert all(orig.data['dates'][1:-1] == mnem.data['dates'])
+    assert all(orig.data['euvalues'][1:-1] == mnem.data['euvalues'])
 
 
 def test_get_averaging_time_duration():
@@ -296,8 +308,9 @@ def test_get_averaging_time_duration():
 def test_get_query_duration():
     """Test that the correct query duration is found
     """
-    in_strings = ['daily_means', "every_change", "block_means", "time_interval", "none"]
-    expected_vals = [15 * u.minute, 1 * u.day, 1 * u.day, 1 * u.day, 1 * u.day]
+    in_strings = ['daily_means', "every_change", "block_means", "time_interval", "all"]
+    expected_vals = [datetime.timedelta(days=0.01041667), datetime.timedelta(days=1), datetime.timedelta(days=1),
+                     datetime.timedelta(days=1), datetime.timedelta(days=1)]
     for inval, outval in zip(in_strings, expected_vals):
         output = etm_utils.get_query_duration(inval)
         assert output == outval
