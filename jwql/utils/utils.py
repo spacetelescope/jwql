@@ -29,6 +29,7 @@ References
 
 import getpass
 import glob
+import itertools
 import json
 import pyvo as vo
 import os
@@ -591,6 +592,26 @@ def check_config_for_key(key):
         raise ValueError(msg)
 
 
+def delete_non_rate_thumbnails(extensions=['_rate_', '_dark']):
+    """This script will go through all the thumbnail directories and delete all
+    thumbnails that do not contain the given extensions. We currently create thumbnails
+    using only rate.fits and dark.fits files, so the default is to keep only those.
+
+    Parameters
+    ----------
+    extension : list
+        If a thumbnail filename contains any of these strings, it will not be deleted
+    """
+    base_dir = get_config()["thumbnail_filesystem"]
+    dir_list = sorted(glob.glob(os.path.join(base_dir, 'jw*')))
+
+    for dirname in dir_list:
+        files = glob.glob(os.path.join(dirname, '*.thumb'))
+        for file in files:
+            if not any([x in file for x in extensions]):
+                os.remove(file)
+
+
 def query_format(string):
     """Take a string of format lower_case and change it to UPPER CASE"""
     upper_case = string.upper()
@@ -604,3 +625,31 @@ def query_unformat(string):
     unsplit_string = string.replace(" ", "_")
 
     return unsplit_string
+
+
+def grouper(iterable, chunksize):
+    """
+    Take a list of items (iterable), and group it into chunks of chunksize, with the
+    last chunk being any remaining items. This allows you to batch-iterate through a 
+    potentially very long list without missing any items, and where each individual
+    iteration can involve a much smaller number of files. Particularly useful for 
+    operations that you want to execute in batches, but don't want the batches to be too
+    long.
+    
+    Examples
+    --------
+    
+    grouper([1, 2, 3, 4, 5], 2)
+    produces
+    (1, 2), (3, 4), (5, )
+    
+    grouper([1, 2, 3, 4, 5], 6)
+    produces
+    (1, 2, 3, 4, 5)
+    """
+    it = iter(iterable)
+    while True:
+        chunk = tuple(itertools.islice(it, chunksize))
+        if not chunk:
+            return
+        yield chunk
