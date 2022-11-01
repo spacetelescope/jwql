@@ -790,8 +790,11 @@ class BadPixels():
                     short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
                     local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
                     logging.info('Calling pipeline for {}'.format(uncal_file))
-                    logging.info("Copying raw file to {}".format(self.data_dir))
-                    copy_files([uncal_file], self.data_dir)
+                    if os.path.isfile(local_uncal_file):
+                        logging.info("Local uncalibrated file exists")
+                    else:
+                        logging.info("Copying raw file to {}".format(self.data_dir))
+                        copy_files([uncal_file], self.data_dir)
                     if hasattr(self, 'nints') and self.nints > 1:
                         out_exts[short_name] = ['jump', '1_ramp_fit']
                     in_files.append(local_uncal_file)
@@ -828,9 +831,12 @@ class BadPixels():
             out_exts = defaultdict(lambda: ['jump', 'fitopt', '0_ramp_fit'])
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
                 logging.info('Calling pipeline for {} {}'.format(uncal_file, rate_file))
-                logging.info("Copying raw file to {}".format(self.data_dir))
-                copy_files([uncal_file], self.data_dir)
                 local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
+                if os.path.isfile(local_uncal_file):
+                    logging.info("Local uncalibrated file exists")
+                else:
+                    logging.info("Copying raw file to {}".format(self.data_dir))
+                    copy_files([uncal_file], self.data_dir)
                 short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
                 if hasattr(self, 'nints') and self.nints > 1:
                     out_exts[short_name] = ['jump', 'fitopt', '1_ramp_fit']
