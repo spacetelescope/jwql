@@ -267,6 +267,7 @@ from jwql.database.database_interface import NIRCamEDBDailyStats, NIRCamEDBBlock
 from jwql.edb import engineering_database as ed
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import condition
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils
+from jwql.shared_tasks.shared_tasks import only_one
 from jwql.utils import monitor_utils
 from jwql.utils.logging_functions import log_info, log_fail
 from jwql.utils.constants import EDB_DEFAULT_PLOT_RANGE, JWST_INSTRUMENT_NAMES, JWST_INSTRUMENT_NAMES_MIXEDCASE
@@ -486,6 +487,7 @@ class EdbMnemonicMonitor():
 
     @log_fail
     @log_info
+    @only_one(key='edb_monitor')
     def execute(self, mnem_to_query=None, plot_start=None, plot_end=None):
         """Top-level wrapper to run the monitor. Take a requested list of mnemonics to
         process, or assume that mnemonics will be processed.
@@ -565,7 +567,7 @@ class EdbMnemonicMonitor():
             # as defined by the json files. This is the default operation.
 
             # Loop over instruments
-            for instrument_name in ['niriss', 'nircam', 'nirspec', 'fgs']: #JWST_INSTRUMENT_NAMES:
+            for instrument_name in JWST_INSTRUMENT_NAMES:
                 monitor_dir = os.path.dirname(os.path.abspath(__file__))
 
                 # File of mnemonics to monitor
@@ -1291,8 +1293,7 @@ class EdbMnemonicMonitor():
         # Container to hold and organize all plots
         self.figures = {}
         self.instrument = instrument
-        self._today = datetime.datetime(2022,7,8)
-        #self._today = datetime.datetime.now()
+        self._today = datetime.datetime.now()
 
         # Set the limits for the telemetry plots if necessary
         if plot_start is None:
