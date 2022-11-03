@@ -663,6 +663,38 @@ def jwqldb_table_viewer(request):
     return render(request, template, context)
 
 
+def log_view(request):
+    """Access JWQL monitoring logs from the web app.
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    template = 'log_view.html'
+    log_path = get_config()['log_dir']
+
+    try:
+        log = request.POST['log_select']
+        with open(log) as f:
+            log_text = f.read()
+    except KeyError:
+        log= None
+
+    all_logs = {}
+    for server in ['ops', 'dev', 'test']:
+        all_logs[server] = glob.glob(os.path.join(log_path, server, '*'))
+
+    context = {'all_logs': all_logs,
+               'log_text': log_text}
+
+
 def not_found(request, *kwargs):
     """Generate a ``not_found`` page
 

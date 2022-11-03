@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>Monitor Log Viewer - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+    <main role="main" class="container">
+    	<h2>Explore JWQL monitoring logs through the web browser.</h2><hr>
+
+        <p align="justify">
+            This page allows users to load monitoring logs into the web browsers. This feature
+            obtains logs from all JWQL servers (ops, dev, and test). 
+
+            <br><br>
+        </p>
+
+        <hr>
+        <form action="" method="post" id="view_log">
+            {{ csrf_input }}
+            <!--LOG SELECT DROPDOWN-->
+            <h4>Select JWQL Database Table</h4>
+            <div class="db_table_select">
+                <select name="log_select" id="log_select" onchange="this.form.submit()">
+                    {% for server in all_logs %}
+                    <optgroup label="{{ server }}">
+                        {% for log in all_logs[server] %}
+                            <option value="{{ log }}">{{ log|filename }}</option>
+                        {% endfor %}
+                    {% if log %}
+                        <option value="{{ log }}" selected>{{ log|filename }}</option>
+                    {% endif %}
+                    </optgroup>
+                    {% endfor %}
+                </select>
+            </div>
+            <br><br>
+
+            <!-- If log is passed, render log. -->
+            <!-- Log is not rendered when coming from home/monitor views -->
+            {% if log_name %}
+                <h4> {{ log_name|filename|safe }} </h4><hr>
+                <!-- Show Logs here -->
+                <pre>
+                    log_text
+                </pre>
+
+{% endblock %}
