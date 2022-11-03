@@ -455,53 +455,26 @@ class Dark():
         # Basic metadata that will be needed later
         self.get_metadata(file_list[0])
 
-        # Determine which pipeline steps need to be executed
-        required_steps = pipeline_tools.get_pipeline_steps(self.instrument)
-        logging.info('\tRequired calwebb1_detector pipeline steps to have'
-                     'data in correct format:')
-        for item in required_steps:
-            logging.info('\t\t{}: {}'.format(item, required_steps[item]))
-
-        # Modify the list of pipeline steps to skip those not needed for the
-        # preparation of dark current data
-        required_steps['dark_current'] = False
-        required_steps['persistence'] = False
-
-        # NIRSpec IR^2 readout pattern NRSIRS2 is the only one with
-        # nframes not a power of 2
-        if self.read_pattern not in pipeline_tools.GROUPSCALE_READOUT_PATTERNS:
-            required_steps['group_scale'] = False
-
         # Run pipeline steps on files, generating slope files
         pipeline_files = []
         slope_files = []
         for filename in file_list:
 
-            completed_steps = pipeline_tools.completed_pipeline_steps(filename)
-            steps_to_run = pipeline_tools.steps_to_run(required_steps, completed_steps)
-
             logging.info('\tWorking on file: {}'.format(filename))
-            logging.info('\tPipeline steps that remain to be run:')
-            for item in steps_to_run:
-                logging.info('\t\t{}: {}'.format(item, steps_to_run[item]))
-
-            # Run any remaining required pipeline steps
-            if any(steps_to_run.values()) is False:
+            
+            rate_file = filename.replace("dark", "rate")
+            
+            if os.path.isfile(rate_file):
+                logging.info("\t\tFile {} exists, skipping pipeline".format(rate_file))
                 slope_files.append(filename)
             else:
-                processed_file = filename.replace("_dark", "_rate")
-                # If the slope file already exists, skip the pipeline call
-                if not os.path.isfile(processed_file):
-                    pipeline_files.append(filename)
-                else:
-                    msg = '\tSlope file {} already exists. Skipping call to pipeline.'
-                    logging.info(msg.format(processed_file))
-                    pass
+                logging.info("\t\tAdding {} to calibration set".format(filename))
+                pipeline_files.append(filename)
 
         outputs = run_parallel_pipeline(pipeline_files, "dark", "rate", self.instrument)
         for filename in file_list:
             processed_file = filename.replace("_dark", "_rate")
-            if os.path.isfile(processed_file):
+            if processed_file not in slope_files and os.path.isfile(processed_file):
                 slope_files.append(processed_file)
                 os.remove(filename)
 
