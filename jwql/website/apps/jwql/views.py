@@ -682,7 +682,7 @@ def log_view(request):
     log_path = get_config()['log_dir']
 
     try:
-        log = request.POST['log_select']
+        log_name = request.POST['log_select']
         with open(log) as f:
             log_text = f.read()
     except KeyError:
@@ -693,6 +693,7 @@ def log_view(request):
         all_logs[server] = glob.glob(os.path.join(log_path, server, '*'))
 
     context = {'all_logs': all_logs,
+               'log_name': log_name,
                'log_text': log_text}
 
     return render(request, template, context)

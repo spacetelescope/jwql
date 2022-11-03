@@ -28,10 +28,10 @@
                     {% for server in all_logs %}
                     <optgroup label="{{ server }}">
                         {% for log in all_logs[server] %}
-                            <option value="{{ log }}">{{ log|filename }}</option>
+                            <option value="{{ log }}">{{ log }}</option>
                         {% endfor %}
                     {% if log %}
-                        <option value="{{ log }}" selected>{{ log|filename }}</option>
+                        <option value="{{ log }}" selected>{{ log }}</option>
                     {% endif %}
                     </optgroup>
                     {% endfor %}
@@ -42,7 +42,7 @@
             <!-- If log is passed, render log. -->
             <!-- Log is not rendered when coming from home/monitor views -->
             {% if log_text %}
-                <h4> {{ log_name|filename|safe }} </h4><hr>
+                <h4> {{ log_name|safe }} </h4><hr>
                 <!-- Show Logs here -->
                 <pre>
                     log_text
