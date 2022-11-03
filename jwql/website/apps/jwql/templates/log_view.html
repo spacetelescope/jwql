@@ -22,7 +22,7 @@
         <form action="" method="post" id="view_log">
             {{ csrf_input }}
             <!--LOG SELECT DROPDOWN-->
-            <h4>Select JWQL Database Table</h4>
+            <h4>Select JWQL Monitoring Log</h4>
             <div class="db_table_select">
                 <select name="log_select" id="log_select" onchange="this.form.submit()">
                     {% for server in all_logs %}
@@ -48,5 +48,6 @@
                     {{ log_text }}
                 </pre>
             {% endif %}
+    </main>
 
 {% endblock %}
