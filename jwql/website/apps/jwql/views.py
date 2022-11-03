@@ -676,6 +676,7 @@ def log_view(request):
     HttpResponse object
         Outgoing response sent to the webpage
     """
+    import glob
 
     template = 'log_view.html'
     log_path = get_config()['log_dir']
