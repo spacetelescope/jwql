@@ -686,6 +686,7 @@ def log_view(request):
         with open(log) as f:
             log_text = f.read()
     except KeyError:
+        log_name = None
         log_text = None
 
     all_logs = {}
