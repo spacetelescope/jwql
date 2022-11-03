@@ -686,7 +686,7 @@ def log_view(request):
         with open(log) as f:
             log_text = f.read()
     except KeyError:
-        log= None
+        log_text = None
 
     all_logs = {}
     for server in ['ops', 'dev', 'test']:
