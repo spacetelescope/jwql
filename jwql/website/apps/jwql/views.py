@@ -694,6 +694,7 @@ def log_view(request):
     context = {'all_logs': all_logs,
                'log_text': log_text}
 
+    return render(request, template, context)
 
 def not_found(request, *kwargs):
     """Generate a ``not_found`` page
