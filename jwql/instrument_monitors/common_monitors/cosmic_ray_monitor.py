@@ -615,13 +615,26 @@ class CosmicRay:
                     input_files.append(file_name)
                     output_files[file_name] = existing_files[file_name]
 
-            for file_name in file_chunk:
+            for file_name in input_files:
 
                 head = fits.getheader(file_name)
                 self.nints = head['NINTS']
 
                 dir_name = '_'.join(os.path.basename(file_name).split('_')[:2])  # file_name[51:76]
                 self.obs_dir = os.path.join(self.data_dir, dir_name)
+                
+                if file_name not in obs_files:
+                    head = fits.getheader(file_name)
+                    nints = head['NINTS']
+                    out_exts = ["jump", "0_ramp_fit"]
+                    if nints > 1:
+                        out_exts[-1] = "1_ramp_fit"
+                    for ext in out_exts:
+                        ext_file = os.path.basename(file_name).replace("uncal", "ext")
+                        if not os.path.isfile(os.path.join(self.obs_dir, ext_file)):
+                            logging.warning("\tOutput {} missing".format(ext_file))
+                            logging.warning("\tSkipping {}".format(os.path.basename(file_name)))
+                            continue
 
                 obs_files = output_files[file_name]
 
@@ -705,10 +718,10 @@ class CosmicRay:
                     logging.error("Could not insert entry into database. \n")
                     logging.error(e)
 
-                if len(no_coord_files) > 0:
-                    logging.error("{} files had no jump co-ordinates".format(len(no_coord_files)))
-                    for file_name in no_coord_files:
-                        logging.error("\t{} had no jump co-ordinates".format(file_name))
+            if len(no_coord_files) > 0:
+                logging.error("{} files had no jump co-ordinates".format(len(no_coord_files)))
+                for file_name in no_coord_files:
+                    logging.error("\t{} had no jump co-ordinates".format(file_name))
 
 
     def pull_filenames(self, file_info):
