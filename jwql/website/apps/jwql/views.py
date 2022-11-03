@@ -691,7 +691,7 @@ def log_view(request):
 
     all_logs = {}
     for server in ['ops', 'dev', 'test']:
-        all_logs[server] = glob.glob(os.path.join(log_path, server, '*'))
+        all_logs[server] = glob.glob(os.path.join(log_path, server, '*', '*'))
 
     context = {'all_logs': all_logs,
                'log_name': log_name,
