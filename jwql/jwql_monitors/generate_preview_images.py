@@ -555,6 +555,7 @@ def generate_preview_images(overwrite):
     program_list.extend([os.path.basename(item) for item in glob.glob(os.path.join(SETTINGS['filesystem'], 'proprietary', 'jw*'))])
     program_list = list(set(program_list))
     pool = multiprocessing.Pool(processes=int(SETTINGS['cores']))
+    program_list = [(element, overwrite) for element in program_list]
     results = pool.starmap(process_program, program_list)
     pool.close()
     pool.join()
@@ -708,11 +709,13 @@ def process_program(program, overwrite):
     logging.info('Found {} filenames'.format(len(filenames)))
     logging.info('')
 
+    new_preview_counter = 0
+    existing_preview_counter = 0
     thumbnail_files = []
     preview_image_files = []
     for filename in filenames:
 
-        logging.info(f'Working on {filename}')
+        logging.debug(f'Working on {filename}')
 
         # Determine the save location
         try:
@@ -728,7 +731,8 @@ def process_program(program, overwrite):
             # don't have them yet.
             file_exists = check_existence([filename], preview_output_directory)
             if file_exists:
-                logging.info("\tJPG already exists for {}, skipping.".format(filename))
+                logging.debug("\tJPG already exists for {}, skipping.".format(filename))
+                existing_preview_counter += 1
                 continue
         else:
             # If overwrite is set to True, then we always create a new image
@@ -758,16 +762,21 @@ def process_program(program, overwrite):
             # images for all filetypes
             if 'rate.fits' in filename or 'dark.fits' in filename:
                 im.make_image(max_img_size=8, create_thumbnail=True)
+                new_preview_counter += 1
                 thumbnail_files.extend(im.thumbnail_images)
-                logging.info('\tCreated preview image and thumbnail for: {}'.format(filename))
+                logging.debug('\tCreated preview image and thumbnail for: {}'.format(filename))
             else:
                 im.make_image(max_img_size=8, create_thumbnail=False)
-                logging.info('\tCreated preview image for: {}'.format(filename))
+                new_preview_counter += 1
+                logging.debug('\tCreated preview image for: {}'.format(filename))
 
             preview_image_files.extend(im.preview_images)
 
         except (ValueError, AttributeError) as error:
             logging.warning(error)
+
+    logging.info(f"Created {new_preview_counter} new preview images.")
+    logging.info(f"Skipped {existing_preview_counter} previously-existing preview images.")
 
     return preview_image_files, thumbnail_files
 
