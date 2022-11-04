@@ -35,7 +35,7 @@ dependencies:
   - jsonschema=4.16.0
   - matplotlib=3.5.3
   - nodejs=10.13.0
-  - numpy=1.21.5
+  - numpy=1.23.3
   - numpydoc=1.4.0
   - pandas=1.4.4
   - pip=22.2.2

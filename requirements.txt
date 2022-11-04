@@ -14,7 +14,7 @@ jsonschema==4.16.0
 jwst==1.8.2
 matplotlib==3.5.3
 nodejs==0.1.1
-numpy==1.21.5
+numpy==1.23.3
 numpydoc==1.4
 pandas==1.4.4
 psycopg2-binary==2.8.6
