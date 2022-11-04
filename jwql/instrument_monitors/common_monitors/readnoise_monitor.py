@@ -408,17 +408,32 @@ class Readnoise():
             List of filenames (including full paths) to the dark current
             files.
         """
+        files_to_calibrate = []
+        for file in file_list:
+            processed_file = file.replace("uncal", "refpix")
+            if not os.path.isfile(processed_file):
+                files_to_calibrate.append(file)
+        
         # Run the files through the necessary pipeline steps
-        outputs = run_parallel_pipeline(file_list, "uncal", "refpix", self.instrument)
+        outputs = run_parallel_pipeline(files_to_calibrate, "uncal", "refpix", self.instrument)
 
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
 
             # Get relevant header information for this file
             self.get_metadata(filename)
-
-            # Get the processed file location
-            processed_file = outputs[filename]
+            
+            if filename in outputs:
+                processed_file = outputs[filename]
+            else:
+                refpix_file = filename.replace("uncal", "refpix")
+                if os.path.isfile(refpix_file):
+                    processed_file = refpix_file
+                else:
+                    # Processed file not available
+                    logging.warning("Calibrated file {} not found".format(refpix_file))
+                    logging.warning("Skipping file {}".format(filename))
+                    continue
 
             # Find amplifier boundaries so per-amp statistics can be calculated
             _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)
