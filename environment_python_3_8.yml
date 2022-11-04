@@ -32,9 +32,9 @@ dependencies:
   - inflection=0.5.1
   - ipython=8.4.0
   - jinja2=3.1.2
-  - jsonschema=3.2.0
+  - jsonschema=4.16.0
   - matplotlib=3.5.3
-  - nodejs=10.13.0
+  - nodejs=16.13.1
   - numpy=1.21.5
   - numpydoc=1.4.0
   - pandas=1.4.4
