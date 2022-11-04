@@ -333,7 +333,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
         # subsequent pipeline steps)
         done = True
         for ext in ext_or_exts:
-            if not os.path.isfile("{}_{}.fits".format(short_name, ext))
+            if not os.path.isfile("{}_{}.fits".format(short_name, ext)):
                 done = False
         if done:
             print("*****CELERY: Created all files in {}. Finished.".format(ext_or_exts))
