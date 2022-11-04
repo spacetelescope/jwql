@@ -34,7 +34,7 @@ dependencies:
   - jinja2=3.1.2
   - jsonschema=4.16.0
   - matplotlib=3.5.3
-  - nodejs=16.13.1
+  - nodejs=10.13.0
   - numpy=1.21.5
   - numpydoc=1.4.0
   - pandas=1.4.4
