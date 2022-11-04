@@ -743,7 +743,7 @@ class BadPixels():
                 parameters['CHANNEL'] = 'SHORT'
         return parameters
 
-    def process(self, illuminated_raw_files, illuminated_slope_files, dark_raw_files, dark_slope_files):
+    def process(self, illuminated_raw_files, illuminated_slope_files, flat_file_count_threshold, dark_raw_files, dark_slope_files, dark_file_count_threshold):
         """The main method for processing darks.  See module docstrings
         for further details.
 
@@ -773,9 +773,9 @@ class BadPixels():
             For cases where a raw file exists but no slope file, the
             slope file should be ``None``
         """
+
         # Illuminated files - run entirety of calwebb_detector1 for uncal
         # files where corresponding rate file is 'None'
-        all_files = []
         badpix_types = []
         badpix_types_from_flats = ['DEAD', 'LOW_QE', 'OPEN', 'ADJ_OPEN']
         badpix_types_from_darks = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
@@ -794,19 +794,42 @@ class BadPixels():
                     copy_files([uncal_file], self.data_dir)
                     if hasattr(self, 'nints') and self.nints > 1:
                         out_exts[short_name] = ['jump', '1_ramp_fit']
-                    in_files.append(local_uncal_file)
+                    needs_calibration = False
+                    for file_type in out_exts[short_name]:
+                        if not os.path.isfile(local_uncal_file.replace("uncal", file_type)):
+                            needs_calibration = True
+                    if needs_calibration:
+                        in_files.append(local_uncal_file)
+                    else:
+                        logging.info("Calibrated files already exist for {}".format(short_name))
             outputs = run_parallel_pipeline(in_files, "uncal", out_exts, self.instrument, jump_pipe=True)
             index = 0
             for uncal_file, rate_file in zip(illuminated_raw_files, illuminated_slope_files):
                 local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
                 if local_uncal_file in outputs:
                     illuminated_slope_files[index] = deepcopy(outputs[local_uncal_file][1])
+                else:
+                    self.get_metadata(illuminated_raw_files[index])
+                    local_ramp_file = local_uncal_file.replace("uncal", "0_ramp_fit")
+                    if hasattr(self, 'nints') and self.nints > 1:
+                        local_ramp_file = local_ramp_file.replace("0_ramp_fit", "1_ramp_fit")
+                    if os.path.isfile(local_ramp_file):
+                        illuminated_slope_files[index] = local_ramp_file
+                    else:
+                        illuminated_slope_files[index] = None
                 index += 1
 
                 # Get observation time for all files
                 illuminated_obstimes.append(instrument_properties.get_obstime(uncal_file))
-
-            all_files = deepcopy(illuminated_slope_files)
+            
+            index = 0
+            while index < len(illuminated_raw_files):
+                if illuminated_slope_files[index] is None or illuminated_slope_files[index] == 'None':
+                    del illuminated_raw_files[index]
+                    del illuminated_slope_files[index]
+                    del illuminated_obstimes[index]
+                else:
+                    index += 1
 
             min_illum_time = min(illuminated_obstimes)
             max_illum_time = max(illuminated_obstimes)
@@ -827,6 +850,7 @@ class BadPixels():
             in_files = []
             out_exts = defaultdict(lambda: ['jump', 'fitopt', '0_ramp_fit'])
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
+                self.get_metadata(uncal_file)
                 logging.info('Calling pipeline for {} {}'.format(uncal_file, rate_file))
                 logging.info("Copying raw file to {}".format(self.data_dir))
                 copy_files([uncal_file], self.data_dir)
@@ -857,16 +881,38 @@ class BadPixels():
                     dark_jump_files[index] = outputs[local_uncal_file][0]
                     dark_fitopt_files[index] = outputs[local_uncal_file][1]
                     dark_slope_files[index] = deepcopy(outputs[local_uncal_file][2])
+                else:
+                    self.get_metadata(local_uncal_file)
+                    local_ramp_file = local_uncal_file.replace("uncal", "0_ramp_fit")
+                    if hasattr(self, 'nints') and self.nints > 1:
+                        local_ramp_file = local_ramp_file.replace("0_ramp_fit", "1_ramp_fit")
+                    if not os.path.isfile(local_uncal_file.replace("uncal", "jump")):
+                        dark_jump_files[index] = None
+                    if not os.path.isfile(local_uncal_file.replace("uncal", "fitopt")):
+                        dark_fitopt_files[index] = None
+                    if not os.path.isfile(local_ramp_file):
+                        dark_slope_files[index] = None
                 index += 1
-
-            if len(all_files) == 0:
-                all_files = deepcopy(dark_slope_files)
-            else:
-                all_files = all_files + dark_slope_files
+            
+            index = 0
+            while index < len(dark_raw_files):
+                if dark_jump_files[index] is None or dark_fitopt_files[index] is None or dark_slope_files[index] is None:
+                    del dark_raw_files[index]
+                    del dark_jump_files[index]
+                    del dark_fitopt_files[index]
+                    del dark_slope_files[index]
+                    del dark_obstimes[index]
+                else:
+                    index += 1
 
             min_dark_time = min(dark_obstimes)
             max_dark_time = max(dark_obstimes)
             mid_dark_time = instrument_properties.mean_time(dark_obstimes)
+        
+        # Check whether there are still enough files left to meet the threshold
+        if not (len(illuminated_slope_files) > flat_file_count_threshold or len(dark_slope_files) > dark_file_count_threshold):
+            logging.info("After removing failed files, not enough new files remian.")
+            return
 
         # For the dead flux check, filter out any files that have less than
         # 4 groups
@@ -894,16 +940,16 @@ class BadPixels():
         output_file = '{}_{}_{}_bpm.fits'.format(self.instrument, self.aperture, query_string)
         output_file = os.path.join(self.output_dir, output_file)
 
-        logging.info("Calling bad_pixel_mask.bad_pixels")
-        logging.info("\tflat_slope_files are: {}".format(illuminated_slope_files))
-        logging.info("\tdead__search_type={}".format(dead_search_type))
-        logging.info("\tflat_mean_normalization_method={}".format(flat_mean_normalization_method))
-        logging.info("\tdead_flux_check_files are: {}".format(dead_flux_files))
-        logging.info("\tdark_slope_files are: {}".format(dark_slope_files))
-        logging.info("\tdark_uncal_files are: {}".format(dark_raw_files))
-        logging.info("\tdark_jump_files are: {}".format(dark_jump_files))
-        logging.info("\tdark_fitopt_files are: {}".format(dark_fitopt_files))
-        logging.info("\toutput_file={}".format(output_file))
+#         logging.info("Calling bad_pixel_mask.bad_pixels")
+#         logging.info("\tflat_slope_files are: {}".format(illuminated_slope_files))
+#         logging.info("\tdead__search_type={}".format(dead_search_type))
+#         logging.info("\tflat_mean_normalization_method={}".format(flat_mean_normalization_method))
+#         logging.info("\tdead_flux_check_files are: {}".format(dead_flux_files))
+#         logging.info("\tdark_slope_files are: {}".format(dark_slope_files))
+#         logging.info("\tdark_uncal_files are: {}".format(dark_raw_files))
+#         logging.info("\tdark_jump_files are: {}".format(dark_jump_files))
+#         logging.info("\tdark_fitopt_files are: {}".format(dark_fitopt_files))
+#         logging.info("\toutput_file={}".format(output_file))
 
         bad_pixel_mask.bad_pixels(flat_slope_files=illuminated_slope_files, dead_search_type=dead_search_type,
                                   flat_mean_normalization_method=flat_mean_normalization_method,
@@ -1126,7 +1172,7 @@ class BadPixels():
 
                 # Run the bad pixel monitor
                 if run_flats or run_darks:
-                    self.process(flat_uncal_files, flat_rate_files, dark_uncal_files, dark_rate_files)
+                    self.process(flat_uncal_files, flat_rate_files, flat_file_count_threshold, dark_uncal_files, dark_rate_files, dark_file_count_threshold)
 
                 # Update the query history
                 if dark_uncal_files is None:
