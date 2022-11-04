@@ -27,7 +27,7 @@ dependencies:
   - celery=5.0.5
   - codecov=2.1.11
   - cryptography=38.0.1
-  - django=3.2.5
+  - django=4.1
   - flake8=4.0.1
   - inflection=0.5.1
   - ipython=8.4.0
