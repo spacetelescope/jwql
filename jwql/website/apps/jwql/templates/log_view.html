@@ -28,7 +28,7 @@
                     {% for server in all_logs %}
                     <optgroup label="{{ server }}">
                         {% for log_name in all_logs[server] %}
-                            <option value="{{ log_name }}">{{ all_logs[server][log_name] }}</option>
+                            <option value="{{ all_logs[server][log_name] }}">{{ log_name }}</option>
                         {% endfor %}
                     {% if log %}
                         <option value="{{ log }}" selected>{{ log }}</option>
