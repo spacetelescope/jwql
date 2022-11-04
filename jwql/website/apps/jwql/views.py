@@ -16,6 +16,7 @@ Authors
     - Mees Fix
     - Bryan Hilbert
     - Maria Pena-Guerrero
+    - Bryan Hilbert
 
 
 Use
@@ -52,7 +53,7 @@ from django.shortcuts import redirect, render
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT, THUMBNAIL_FILTER_LOOK
 from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
@@ -290,6 +291,10 @@ def archived_proposals_ajax(request, inst):
     thumbnail_paths = []
     min_obsnums = []
     total_files = []
+    proposal_viewed = []
+    # The naming conventions for dropdown_menus are tightly coupled with the code, this should be changed down the line.
+    dropdown_menus = {'look': THUMBNAIL_FILTER_LOOK}
+
     for proposal_num in proposal_nums:
         # For each proposal number, get all entries
         prop_entries = all_entries.filter(proposal__prop_id=proposal_num)
@@ -306,12 +311,18 @@ def archived_proposals_ajax(request, inst):
         prop_filecount = [entry.number_of_files for entry in prop_entries]
         total_files.append(sum(prop_filecount))
 
+        # In order to know if a proposal contains all observations that are entirely viewed, check for at least one existing viewed=False in RootFileInfo
+        unviewed_root_file_infos = RootFileInfo.objects.filter(instrument=inst, proposal=proposal_num, viewed=False)
+        proposal_viewed.append("Viewed" if unviewed_root_file_infos.count() == 0 else "New")
+
     context = {'inst': inst,
                'num_proposals': num_proposals,
                'min_obsnum': min_obsnums,
                'thumbnails': {'proposals': proposal_nums,
                               'thumbnail_paths': thumbnail_paths,
-                              'num_files': total_files}}
+                              'num_files': total_files,
+                              'viewed': proposal_viewed},
+               'dropdown_menus': dropdown_menus}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
@@ -919,7 +930,6 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-
 def toggle_viewed_ajax(request, file_root):
     """Update the model's "mark_viewed" field and save in the database
 
@@ -942,7 +952,7 @@ def toggle_viewed_ajax(request, file_root):
     # Build the context
     context = {'marked_viewed': root_file_info.viewed}
     return JsonResponse(context, json_dumps_params={'indent': 2})
-  
+
 
 def update_session_value_ajax(request, session_item, session_value):
     session_options = ["image_sort"]

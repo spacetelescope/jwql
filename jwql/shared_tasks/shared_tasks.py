@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+ #! /usr/bin/env python
 
 """This module contains code for the celery application, which is used for any demanding
 work which should be restricted in terms of how many iterations are run simultaneously, or
@@ -215,15 +215,22 @@ def collect_after_task(**kwargs):
 
 
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.run_calwebb_detector1')
-def run_calwebb_detector1(input_file_name, short_name, instrument, step_args={}):
+def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, step_args={}):
     """Run the steps of ``calwebb_detector1`` on the input file, saving the result of each
     step as a separate output file, then return the name-and-path of the file as reduced
-    in the reduction directory.
+    in the reduction directory. Once all requested extensions have been produced, the 
+    pipeline will return.
 
     Parameters
     ----------
-    input_file : str
+    input_file_name : str
         File on which to run the pipeline steps
+    
+    short_name : str
+        Name of the file to be calibrated after any extensions have been stripped off.
+    
+    ext_or_exts : list
+        List of extensions to be retrieved.
 
     instrument : str
         Instrument that was used for the observation contained in input_file_name.
@@ -321,6 +328,16 @@ def run_calwebb_detector1(input_file_name, short_name, instrument, step_args={})
             else:
                 logging.info("*****CELERY: File {} already exists".format(transfer_file))
             set_permissions(transfer_file)
+
+        # Check for everything being done (in which case we don't need to run 
+        # subsequent pipeline steps)
+        done = True
+        for ext in ext_or_exts:
+            if not os.path.isfile("{}_{}.fits".format(short_name, ext)):
+                done = False
+        if done:
+            print("*****CELERY: Created all files in {}. Finished.".format(ext_or_exts))
+            break
 
     logging.info("*****CELERY: Removing local files.")
     files_to_remove = glob(uncal_file.replace("_uncal.fits", "*"))
@@ -603,7 +620,7 @@ def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=Fa
                 save_fitopt = True
         result = calwebb_detector1_save_jump.delay(input_file, ramp_fit=ramp_fit, save_fitopt=save_fitopt)
     else:
-        result = run_calwebb_detector1.delay(input_file, short_name, instrument)
+        result = run_calwebb_detector1.delay(input_file, short_name, ext_or_exts, instrument)
     return result
 
 
