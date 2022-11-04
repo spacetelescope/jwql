@@ -38,7 +38,7 @@ dependencies:
   - numpy=1.21.5
   - numpydoc=1.4.0
   - pandas=1.4.4
-  - pip=21.0.1
+  - pip=22.2.2
   - postgresql=12.2
   - psycopg2=2.8.6
   - pytest=7.1.2
