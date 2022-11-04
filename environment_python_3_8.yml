@@ -47,7 +47,7 @@ dependencies:
   - pyyaml=6.0
   - redis
   - scipy=1.9.1
-  - setuptools=52.0.0
+  - setuptools=65.5.0
   - sphinx=5.0.2
   - sphinx_rtd_theme=0.4.3
   - sqlalchemy=1.4.39
