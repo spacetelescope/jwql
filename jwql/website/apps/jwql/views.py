@@ -691,7 +691,10 @@ def log_view(request):
 
     all_logs = {}
     for server in ['ops', 'dev', 'test']:
-        all_logs[server] = glob.glob(os.path.join(log_path, server, '*', '*'))
+        full_log_paths = glob.glob(os.path.join(log_path, server, '*', '*'))
+        full_log_paths = [log for log in path_list if not os.path.basename(log).startswith('.')]
+        log_dictionary = {os.path.basename(path): for path in full_log_paths}
+        all_logs[server] = log_dictionary
 
     context = {'all_logs': all_logs,
                'log_name': log_name,
