@@ -614,10 +614,10 @@ def jwqldb_table_viewer(request, tablename_param=None):
     try:
         tablename = request.POST['db_table_select']
     except KeyError:
-        tablename = None
-
-    if tablename_param:
-        tablename = tablename_param
+        if tablename_param:
+            tablename = tablename_param
+        else:
+            tablename = None
 
     if tablename is None:
         table_meta = None
