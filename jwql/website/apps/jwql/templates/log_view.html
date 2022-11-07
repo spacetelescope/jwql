@@ -35,6 +35,7 @@
                 <input class="form-check-input" type="radio" name="inlineRadioOptions" id="dev" value={{servers}}>
                 <label class="form-check-label" for="inlineRadio1">dev </label>
             </div>
+            <br>
             <div class="db_table_select">
                 <select name="log_select" id="log_select">
                     {% for server in all_logs %}
@@ -48,8 +49,9 @@
                     </optgroup>
                     {% endfor %}
                 </select>
-                <button class="btn btn-primary" type="submit" style="float: right;">Submit</button>
             </div>
+            <br>
+            <button class="btn btn-primary" type="submit" style="float: left;">Submit</button>
             <br><br>
 
             <!-- If log is passed, render log. -->
