@@ -594,7 +594,7 @@ def instrument(request, inst):
     return render(request, template, context)
 
 
-def jwqldb_table_viewer(request):
+def jwqldb_table_viewer(request, tablename_param):
     """Generate the JWQL Table Viewer view.
 
     Parameters
@@ -614,6 +614,8 @@ def jwqldb_table_viewer(request):
     try:
         tablename = request.POST['db_table_select']
     except KeyError:
+        tablename = request.GET.get('tablename_param')
+    finally:
         tablename = None
 
     if tablename is None:
