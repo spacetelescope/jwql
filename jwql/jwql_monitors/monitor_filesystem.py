@@ -102,22 +102,27 @@ def gather_statistics(general_results_dict, instrument_results_dict):
                         filename_dict = filename_parser(filename)
                     except ValueError:
                         break
-                    filetype = filename_dict['suffix']
-                    instrument = filename_dict['instrument']
+                    try:
+                        filetype = filename_dict['suffix']
+                        instrument = filename_dict['instrument']
+                    except KeyError:
+                        filetype = None
+                        instrument = None
 
                     # Populate general stats
                     general_results_dict['fits_file_count'] += 1
                     general_results_dict['fits_file_size'] += os.path.getsize(file_path)
 
-                    # Populate instrument specific stats
-                    if instrument not in instrument_results_dict:
-                        instrument_results_dict[instrument] = {}
-                    if filetype not in instrument_results_dict[instrument]:
-                        instrument_results_dict[instrument][filetype] = {}
-                        instrument_results_dict[instrument][filetype]['count'] = 0
-                        instrument_results_dict[instrument][filetype]['size'] = 0
-                    instrument_results_dict[instrument][filetype]['count'] += 1
-                    instrument_results_dict[instrument][filetype]['size'] += os.path.getsize(file_path) / (2**40)
+                    if filetype is not None:
+                        # Populate instrument specific stats
+                        if instrument not in instrument_results_dict:
+                            instrument_results_dict[instrument] = {}
+                        if filetype not in instrument_results_dict[instrument]:
+                            instrument_results_dict[instrument][filetype] = {}
+                            instrument_results_dict[instrument][filetype]['count'] = 0
+                            instrument_results_dict[instrument][filetype]['size'] = 0
+                        instrument_results_dict[instrument][filetype]['count'] += 1
+                        instrument_results_dict[instrument][filetype]['size'] += os.path.getsize(file_path) / (2**40)
 
     # Convert file sizes to terabytes
     general_results_dict['total_file_size'] = general_results_dict['total_file_size'] / (2**40)
