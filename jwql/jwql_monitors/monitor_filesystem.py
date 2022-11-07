@@ -102,6 +102,13 @@ def gather_statistics(general_results_dict, instrument_results_dict):
                         filename_dict = filename_parser(filename)
                     except ValueError:
                         break
+
+                    # For MSA files, which do not have traditional suffixes, set the
+                    # suffix to "msa"
+                    if 'suffix' not in filename_dict:
+                        if filename_dict['filename_type'] == 'stage_2_msa':
+                            filename_dict['suffix'] = 'msa'
+
                     try:
                         filetype = filename_dict['suffix']
                         instrument = filename_dict['instrument']
