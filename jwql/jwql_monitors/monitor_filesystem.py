@@ -106,6 +106,7 @@ def gather_statistics(general_results_dict, instrument_results_dict):
                         filetype = filename_dict['suffix']
                         instrument = filename_dict['instrument']
                     except KeyError:
+                        logging.info(f'File {filename} skipped as it contains either no suffix or no instrument name from the filename parser.')
                         filetype = None
                         instrument = None
 
