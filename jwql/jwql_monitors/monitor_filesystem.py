@@ -93,7 +93,10 @@ def gather_statistics(general_results_dict, instrument_results_dict):
             for filename in files:
 
                 file_path = os.path.join(dirpath, filename)
-                general_results_dict['total_file_size'] += os.path.getsize(file_path)
+                try:
+                    general_results_dict['total_file_size'] += os.path.getsize(file_path)
+                except FileNotFoundError:
+                    pass
 
                 if filename.endswith(".fits"):
 
