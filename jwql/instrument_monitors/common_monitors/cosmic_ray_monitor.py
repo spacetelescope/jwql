@@ -623,7 +623,8 @@ class CosmicRay:
                 dir_name = '_'.join(os.path.basename(file_name).split('_')[:2])  # file_name[51:76]
                 self.obs_dir = os.path.join(self.data_dir, dir_name)
                 
-                if file_name not in obs_files:
+                if file_name not in output_files:
+                    skip = False
                     head = fits.getheader(file_name)
                     nints = head['NINTS']
                     out_exts = ["jump", "0_ramp_fit"]
@@ -634,7 +635,9 @@ class CosmicRay:
                         if not os.path.isfile(os.path.join(self.obs_dir, ext_file)):
                             logging.warning("\tOutput {} missing".format(ext_file))
                             logging.warning("\tSkipping {}".format(os.path.basename(file_name)))
-                            continue
+                            skip = True
+                    if skip:
+                        continue
 
                 obs_files = output_files[file_name]
 

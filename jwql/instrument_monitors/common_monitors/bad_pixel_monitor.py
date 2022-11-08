@@ -910,14 +910,22 @@ class BadPixels():
             mid_dark_time = instrument_properties.mean_time(dark_obstimes)
         
         # Check whether there are still enough files left to meet the threshold
-        if not (len(illuminated_slope_files) > flat_file_count_threshold or len(dark_slope_files) > dark_file_count_threshold):
+        if illuminated_slope_files is None:
+            flat_length = 0
+        else:
+            flat_length = len(illuminated_slope_files)
+        if dark_slope_files is None:
+            dark_length = 0
+        else:
+            dark_length = len(dark_slope_files)
+        if (flat_length < flat_file_count_threshold) and (dark_length < dark_file_count_threshold):
             logging.info("After removing failed files, not enough new files remian.")
             return
 
         # For the dead flux check, filter out any files that have less than
         # 4 groups
         dead_flux_files = []
-        if illuminated_raw_files:
+        if illuminated_raw_files is not None:
             for illum_file in illuminated_raw_files:
                 ngroup = fits.getheader(illum_file)['NGROUPS']
                 if ngroup >= 4:
