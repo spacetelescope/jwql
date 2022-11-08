@@ -24,7 +24,7 @@ dependencies:
   - astropy=5.1
   - bokeh=2.4.3
   - beautifulsoup4=4.11.1
-  - celery=5.0.5
+  - celery=4.4.0
   - codecov=2.1.11
   - cryptography=38.0.1
   - django=4.1
