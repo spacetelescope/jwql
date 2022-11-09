@@ -1558,7 +1558,7 @@ class EdbMnemonicMonitor():
         tabbed = Tabs(tabs=panel_list)
 
         # Save the tabbed plot to a json file
-        item_text = json.dumps(json_item(tabbed, "myplot"))
+        item_text = json.dumps(json_item(tabbed, "tabbed_edb_plot"))
         basename = f'edb_{self.instrument}_tabbed_plots.json'
         output_file = os.path.join(self.plot_output_dir, basename)
         with open(output_file, 'w') as outfile:
