@@ -292,8 +292,17 @@ def archived_proposals_ajax(request, inst):
     min_obsnums = []
     total_files = []
     proposal_viewed = []
+    proposal_exp_types = []
+    thumb_exp_types = []
+
+    # Get a set of all exposure types used in the observations associated with this proposal
+    exp_types = [exposure_type for observation in all_entries for exposure_type in observation.exptypes.split(',')]
+    exp_types = sorted(list(set(exp_types)))
+
     # The naming conventions for dropdown_menus are tightly coupled with the code, this should be changed down the line.
-    dropdown_menus = {'look': THUMBNAIL_FILTER_LOOK}
+    dropdown_menus = {'look': THUMBNAIL_FILTER_LOOK,
+                      'exp_type': exp_types}
+    thumbnails_dict = {}
 
     for proposal_num in proposal_nums:
         # For each proposal number, get all entries
@@ -315,13 +324,21 @@ def archived_proposals_ajax(request, inst):
         unviewed_root_file_infos = RootFileInfo.objects.filter(instrument=inst, proposal=proposal_num, viewed=False)
         proposal_viewed.append("Viewed" if unviewed_root_file_infos.count() == 0 else "New")
 
+        # Store comma separated list of exp_types associated with each proposal
+        proposal_exp_types = [exposure_type for observation in prop_entries for exposure_type in observation.exptypes.split(',')]
+        proposal_exp_types = list(set(proposal_exp_types))
+        thumb_exp_types.append(','.join(proposal_exp_types))
+
+    thumbnails_dict['proposals'] = proposal_nums
+    thumbnails_dict['thumbnail_paths'] = thumbnail_paths
+    thumbnails_dict['num_files'] = total_files
+    thumbnails_dict['viewed'] = proposal_viewed
+    thumbnails_dict['exp_types'] = thumb_exp_types
+
     context = {'inst': inst,
                'num_proposals': num_proposals,
                'min_obsnum': min_obsnums,
-               'thumbnails': {'proposals': proposal_nums,
-                              'thumbnail_paths': thumbnail_paths,
-                              'num_files': total_files,
-                              'viewed': proposal_viewed},
+               'thumbnails': thumbnails_dict,
                'dropdown_menus': dropdown_menus}
 
     return JsonResponse(context, json_dumps_params={'indent': 2})

@@ -402,7 +402,7 @@ function search() {
  * @param {Integer} num_fileids - The number of files that are available to display
  * @param {String} thumbnail_class - The class name of the thumbnails that will be filtered.
  */
-function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_class) {
+function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_class, find_substring) {
 
     // Get all filter options from {{dropdown_menus}} variable
     var all_filters = dropdown_keys.split(',');
@@ -427,8 +427,10 @@ function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_cla
         // Evaluate if the thumbnail meets all filter criteria
         var criteria = [];
         for (j = 0; j < all_filters.length; j++) {
+            var filter_attribute = thumbnails[i].getAttribute(all_filters[j])
             var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0) 
-                         || (thumbnails[i].getAttribute(all_filters[j]) == filter_values[j]);
+                         || (filter_attribute == filter_values[j])
+                         || (find_substring && filter_attribute.includes(filter_values[j]));
             criteria.push(criterion);
         };
 
@@ -542,7 +544,7 @@ function update_archive_page(inst, base_url) {
             // Update the number of proposals displayed
             num_proposals = data.thumbnails.proposals.length;
             update_show_count(num_proposals, 'proposals')
-            update_archive_filter_options(data, num_proposals, 'proposal');
+            update_filter_options(data, num_proposals, 'proposal');
 
             // Add content to the proposal array div
             for (var i = 0; i < data.thumbnails.proposals.length; i++) {
@@ -553,9 +555,10 @@ function update_archive_page(inst, base_url) {
                 thumb = data.thumbnails.thumbnail_paths[i];
                 n = data.thumbnails.num_files[i];
                 viewed = data.thumbnails.viewed[i];
+                exp_types = data.thumbnails.exp_types[i];
 
                 // Build div content
-                content = '<div class="proposal text-center" look="' + viewed + '">';
+                content = '<div class="proposal text-center" look="' + viewed + '" exp_type="' + exp_types + '">';
                 content += '<a href="/' + inst + '/archive/' + prop + '/obs' + min_obsnum + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
                 content += '<span class="helper"></span>'
                 content += '<img src="/static/thumbnails/' + thumb + '" alt="" title="Thumbnail for ' + prop + '" width=100%>';
@@ -708,14 +711,22 @@ function update_wata_page(base_url) {
  * @param {Integer} num_items - The total number of items that will be filtered upon
  * @param {String} thumbnail_class - the class name of the thumbnails that will be filtered
  */
- function update_archive_filter_options(data, num_items, thumbnail_class) {
+ function update_filter_options(data, num_items, thumbnail_class) {
     content = 'Filter by:'
+
     for (var i = 0; i < Object.keys(data.dropdown_menus).length; i++) {
         // Parse out useful variables
         filter_type = Object.keys(data.dropdown_menus)[i];
         filter_options = Array.from(new Set(data.dropdown_menus[filter_type]));
         num_rootnames = num_items;
         dropdown_key_list = Object.keys(data.dropdown_menus);
+        
+        if (filter_type == "exp_type") {
+            // Any filters where there may be a list as a string for the attribute to filter on
+            find_substring = true;
+        } else {
+            find_substring = false;
+        } 
 
         // Build div content
         content += '<div style="display: flex">';
@@ -723,82 +734,10 @@ function update_wata_page(base_url) {
         content += '<div class="dropdown">';
         content += '<button class="btn btn-primary dropdown-toggle" type="button" id="' + filter_type + '_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> All ' + filter_type + 's </button>';
         content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
-        content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'All ' + filter_type + 's\', \'' + dropdown_key_list + '\',\'' + num_rootnames + '\',\'' + thumbnail_class + '\');">All ' + filter_type + 's</a>';
+        content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'All ' + filter_type + 's\', \'' + dropdown_key_list + '\',\'' + num_rootnames + '\',\'' + thumbnail_class + '\',\'' + find_substring + '\');">All ' + filter_type + 's</a>';
 
         for (var j = 0; j < filter_options.length; j++) {
-            content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + dropdown_key_list + '\', \'' + num_rootnames + '\',\'' + thumbnail_class + '\');">' + filter_options[j] + '</a>';
-        };
-
-        content += '</div>';
-        content += '</div></div>';
-    };
-
-    // Add the content to the div
-    $("#thumbnail-filter")[0].innerHTML = content;
-};
-
-
-/**
- * Updates the thumbnail-filter div with filter options
- * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
- * @param {Integer} num_items - The total number of items that will be filtered upon
- * @param {String} thumbnail_class - the class name of the thumbnails that will be filtered
- */
-function update_obs_filter_options(data, num_items, thumbnail_class) {
-    content = 'Filter by:'
-    for (var i = 0; i < Object.keys(data.dropdown_menus).length; i++) {
-        // Parse out useful variables
-        filter_type = Object.keys(data.dropdown_menus)[i];
-        filter_options = Array.from(new Set(data.dropdown_menus[filter_type]));
-        num_rootnames = num_items;
-        dropdown_key_list = Object.keys(data.dropdown_menus);
-
-        // Build div content
-        content += '<div style="display: flex">';
-        content += '<div class="mr-4">';
-        content += '<div class="dropdown">';
-        content += '<button class="btn btn-primary dropdown-toggle" type="button" id="' + filter_type + '_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> All ' + filter_type + 's </button>';
-        content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
-        content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'All ' + filter_type + 's\', \'' + dropdown_key_list + '\',\'' + num_rootnames + '\',\'' + thumbnail_class + '\');">All ' + filter_type + 's</a>';
-
-        for (var j = 0; j < filter_options.length; j++) {
-            content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + dropdown_key_list + '\', \'' + num_rootnames + '\',\'' + thumbnail_class + '\');">' + filter_options[j] + '</a>';
-        };
-
-        content += '</div>';
-        content += '</div></div>';
-    };
-
-    // Add the content to the div
-    $("#thumbnail-filter")[0].innerHTML = content;
-};
-
-
-/**
- * Updates the thumbnail-filter div with filter options
- * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
- * @param {Integer} num_items - The total number of items that will be filtered upon
- * @param {String} thumbnail_class - the class name of the thumbnails that will be filtered
- */
- function update_query_filter_options(data, num_items, thumbnail_class) {
-    content = 'Filter by:'
-    for (var i = 0; i < Object.keys(data.dropdown_menus).length; i++) {
-        // Parse out useful variables
-        filter_type = Object.keys(data.dropdown_menus)[i];
-        filter_options = Array.from(new Set(data.dropdown_menus[filter_type]));
-        num_rootnames = num_items;
-        dropdown_key_list = Object.keys(data.dropdown_menus);
-
-        // Build div content
-        content += '<div style="display: flex">';
-        content += '<div class="mr-4">';
-        content += '<div class="dropdown">';
-        content += '<button class="btn btn-primary dropdown-toggle" type="button" id="' + filter_type + '_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> All ' + filter_type + 's </button>';
-        content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
-        content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'All ' + filter_type + 's\', \'' + dropdown_key_list + '\',\'' + num_rootnames + '\',\'' + thumbnail_class + '\');">All ' + filter_type + 's</a>';
-
-        for (var j = 0; j < filter_options.length; j++) {
-            content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + dropdown_key_list + '\', \'' + num_rootnames + '\',\'' + thumbnail_class + '\');">' + filter_options[j] + '</a>';
+            content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + dropdown_key_list + '\', \'' + num_rootnames + '\',\'' + thumbnail_class + '\',\'' + find_substring + '\');">' + filter_options[j] + '</a>';
         };
 
         content += '</div>';
@@ -945,7 +884,7 @@ function update_thumbnails_per_observation_page(inst, proposal, observation, obs
             update_show_count(num_thumbnails, 'activities');
             update_thumbnail_array(data);
             update_obs_options(data, inst, proposal, observation);
-            update_obs_filter_options(data, num_thumbnails, 'thumbnail');
+            update_filter_options(data, num_thumbnails, 'thumbnail');
             update_sort_options(data, base_url);
 
             // Do initial sort to match sort button display
@@ -970,7 +909,7 @@ function update_thumbnails_query_page(base_url, sort) {
             num_thumbnails = Object.keys(data.file_data).length;
             update_show_count(num_thumbnails, 'activities');
             update_thumbnail_array(data);
-            update_query_filter_options(data, num_thumbnails, 'thumbnail');
+            update_filter_options(data, num_thumbnails, 'thumbnail');
             update_sort_options(data, base_url);
 
             // Do initial sort to match sort button display
