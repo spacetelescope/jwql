@@ -833,19 +833,20 @@ function update_thumbnail_array(data) {
 
       // Add content to the thumbail array div
     for (var i = 0; i < Object.keys(data.file_data).length; i++) {
-
+        
         // Parse out useful variables
         rootname = Object.keys(data.file_data)[i];
         file = data.file_data[rootname];
         viewed = file.viewed;
+        exp_type = file.exp_type;
         filename_dict = file.filename_dict;
 
         // Build div content
         if (data.inst!="all") {
-            content = '<div class="thumbnail" instrument = ' + data.inst + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '" look="' + viewed + '">';
+            content = '<div class="thumbnail" instrument = ' + data.inst + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '" look="' + viewed + '" exp_type="' + exp_type + '">';
             content += '<a href="/' + data.inst + '/' + rootname + '/">';
         } else {
-            content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '" look="' + viewed + '">';
+            content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '" look="' + viewed + '" exp_type="' + exp_type + '">';
             content += '<a href="/' + filename_dict.instrument + '/' + rootname + '/">';
         }
         content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="image_error(this);">';
