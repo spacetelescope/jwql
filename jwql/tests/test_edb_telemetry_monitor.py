@@ -79,6 +79,27 @@ def test_add_every_change_history():
             assert np.all(cele == expected2[key][i])
 
 
+def test_change_only_add_points():
+    """Make sure we convert change-only data to AllPoints data correctly
+    """
+    dates = [datetime.datetime(2021, 7, 14, 5, 24 + i, 0) for i in range(3)]
+    values = np.arange(3)
+    data = Table([dates, values], names=('dates', 'euvalues'))
+    mnem = EdbMnemonic('SOMETHING', datetime.datetime(2021, 7, 14), datetime.datetime(2021, 7, 14, 6), data, {}, {})
+    mnem.meta = {'TlmMnemonics': [{'TlmMnemonic': 'SOMETHING',
+                                   'AllPoints': 0}]}
+    mnem.change_only_add_points()
+
+    expected_dates = [datetime.datetime(2021, 7, 14, 5, 24, 0), datetime.datetime(2021, 7, 14, 5, 24, 59, 999999),
+                      datetime.datetime(2021, 7, 14, 5, 25, 0), datetime.datetime(2021, 7, 14, 5, 25, 59, 999999),
+                      datetime.datetime(2021, 7, 14, 5, 26, 0)]
+    expected_values = [0, 0, 1, 1, 2]
+    expected = Table([expected_dates, expected_values], names=('dates', 'euvalues'))
+
+    assert np.all(expected["dates"] == mnem.data["dates"])
+    assert np.all(expected["euvalues"] == mnem.data["euvalues"])
+
+
 def test_conditions():
     """Test the extraction of data using the ```equal``` class.
     """
@@ -132,27 +153,6 @@ def test_conditions():
     assert condition_3.block_indexes == [0, 2, 3]
 
 
-def test_change_only_add_points():
-    """Make sure we convert change-only data to AllPoints data correctly
-    """
-    dates = [datetime.datetime(2021, 7, 14, 5, 24 + i, 0) for i in range(3)]
-    values = np.arange(3)
-    data = Table([dates, values], names=('dates', 'euvalues'))
-    mnem = EdbMnemonic('SOMETHING', datetime.datetime(2021, 7, 14), datetime.datetime(2021, 7, 14, 6), data, {}, {})
-    mnem.meta = {'TlmMnemonics': [{'TlmMnemonic': 'SOMETHING',
-                                   'AllPoints': 0}]}
-    mnem.change_only_add_points()
-
-    expected_dates = [datetime.datetime(2021, 7, 14, 5, 24, 0), datetime.datetime(2021, 7, 14, 5, 24, 59, 999999),
-                      datetime.datetime(2021, 7, 14, 5, 25, 0), datetime.datetime(2021, 7, 14, 5, 25, 59, 999999),
-                      datetime.datetime(2021, 7, 14, 5, 26, 0)]
-    expected_values = [0, 0, 1, 1, 2]
-    expected = Table([expected_dates, expected_values], names=('dates', 'euvalues'))
-
-    assert np.all(expected["dates"] == mnem.data["dates"])
-    assert np.all(expected["euvalues"] == mnem.data["euvalues"])
-
-
 def test_find_all_changes():
     inst = etm.EdbMnemonicMonitor()
 
@@ -180,6 +180,44 @@ def test_find_all_changes():
     assert vals.mean == [359.07]
     assert vals.median == [360.0]
     assert np.isclose(vals.stdev[0], 6.9818407314976785)
+
+
+def test_get_averaging_time_duration():
+    """Test that only allowed string formats are used for averaging time duration
+    """
+    in_strings = ["5_minute", "45_second", "10_day", "2_hour"]
+    expected_vals = [5 * u.minute, 45 * u.second, 10 * u.day, 2 * u.hour]
+
+    for inval, outval in zip(in_strings, expected_vals):
+        output = etm_utils.get_averaging_time_duration(inval)
+        assert output == outval
+
+    bad_strings = ["7_years", "nonsense"]
+    for inval in bad_strings:
+        with pytest.raises(ValueError) as e_info:
+            output = etm_utils.get_averaging_time_duration(inval)
+
+
+def test_get_query_duration():
+    """Test that the correct query duration is found
+    """
+    in_strings = ['daily_means', "every_change", "block_means", "time_interval", "all"]
+    expected_vals = [datetime.timedelta(days=0.01041667), datetime.timedelta(days=1), datetime.timedelta(days=1),
+                     datetime.timedelta(days=1), datetime.timedelta(days=1)]
+    for inval, outval in zip(in_strings, expected_vals):
+        output = etm_utils.get_query_duration(inval)
+        assert output == outval
+
+    with pytest.raises(ValueError) as e_info:
+        output = etm_utils.get_query_duration("bad_string")
+
+
+def test_key_check():
+    """Test the dictionary key checker
+    """
+    d = {'key1': [1, 2, 3], 'key4': 'a'}
+    assert etm_utils.check_key(d, 'key1') == d['key1']
+    assert etm_utils.check_key(d, 'key2') is None
 
 
 def test_multiple_conditions():
@@ -261,11 +299,6 @@ def test_organize_every_change():
     f770mean, _, _ = sigma_clipped_stats(f770_vals, sigma=3)
     f1000mean, _, _ = sigma_clipped_stats(f1000_vals, sigma=3)
     f1500mean, _, _ = sigma_clipped_stats(f1500_vals, sigma=3)
-    #expected = {'F2550W': (np.array([e.datetime for e in dates[f2550_idx]]), f2550_vals, f2550mean),
-    #            'F560W': (np.array([e.datetime for e in dates[f560_idx]]), f560_vals, f560mean),
-    #            'F770W': (np.array([e.datetime for e in dates[f770_idx]]), f770_vals, f770mean),
-    #            'F1000W': (np.array([e.datetime for e in dates[f1000_idx]]), f1000_vals, f1000mean),
-    #            'F1500W': (np.array([e.datetime for e in dates[f1500_idx]]), f1500_vals, f1500mean)}
     expected = {'F2550W': (np.array(dates[f2550_idx]), f2550_vals, f2550mean),
                 'F560W': (np.array(dates[f560_idx]), f560_vals, f560mean),
                 'F770W': (np.array(dates[f770_idx]), f770_vals, f770mean),
@@ -289,41 +322,3 @@ def test_remove_outer_points():
     etm_utils.remove_outer_points(mnem)
     assert all(orig.data['dates'][1:-1] == mnem.data['dates'])
     assert all(orig.data['euvalues'][1:-1] == mnem.data['euvalues'])
-
-
-def test_get_averaging_time_duration():
-    """Test that only allowed string formats are used for averaging time duration
-    """
-    in_strings = ["5_minute", "45_second", "10_day", "2_hour"]
-    expected_vals = [5 * u.minute, 45 * u.second, 10 * u.day, 2 * u.hour]
-
-    for inval, outval in zip(in_strings, expected_vals):
-        output = etm_utils.get_averaging_time_duration(inval)
-        assert output == outval
-
-    bad_strings = ["7_years", "nonsense"]
-    for inval in bad_strings:
-        with pytest.raises(ValueError) as e_info:
-            output = etm_utils.get_averaging_time_duration(inval)
-
-
-def test_get_query_duration():
-    """Test that the correct query duration is found
-    """
-    in_strings = ['daily_means', "every_change", "block_means", "time_interval", "all"]
-    expected_vals = [datetime.timedelta(days=0.01041667), datetime.timedelta(days=1), datetime.timedelta(days=1),
-                     datetime.timedelta(days=1), datetime.timedelta(days=1)]
-    for inval, outval in zip(in_strings, expected_vals):
-        output = etm_utils.get_query_duration(inval)
-        assert output == outval
-
-    with pytest.raises(ValueError) as e_info:
-        output = etm_utils.get_query_duration("bad_string")
-
-
-def test_key_check():
-    """Test the dictionary key checker
-    """
-    d = {'key1': [1, 2, 3], 'key4': 'a'}
-    assert etm_utils.check_key(d, 'key1') == d['key1']
-    assert etm_utils.check_key(d, 'key2') is None

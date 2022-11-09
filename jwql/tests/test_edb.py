@@ -33,6 +33,36 @@ from jwql.edb import engineering_database as ed
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
 
 
+def test_add():
+    """Test addition (i.e. concatenation) of two EdbMnemonic objects"""
+    dates1 = np.array([datetime(2021, 12, 18, 7, n, 0) for n in range(20, 30)])
+    data1 = np.array([5, 5, 5, 9, 9, 9, 9, 9, 2, 2])
+    tab = Table()
+    tab["dates"] = dates1
+    tab["euvalues"] = data1
+    blocks = [0, 3, 8]
+    info = {}
+    info['unit'] = 'V'
+    info['tlmMnemonic'] = 'TEST_VOLTAGE'
+    mnemonic1 = ed.EdbMnemonic('TEST_VOLTAGE', Time('2021-12-18T07:20:00'), Time('2021-12-18T07:30:00'), tab, {}, info, blocks=blocks)
+
+    dates2 = np.array([datetime(2021, 12, 18, 7, n, 0) for n in range(27, 37)])
+    data2 = np.array([9, 2, 2, 2, 19, 19, 19, 19, 12, 12])
+    tab = Table()
+    tab["dates"] = dates2
+    tab["euvalues"] = data2
+    blocks = [0, 1, 4, 8]
+    info = {}
+    info['unit'] = 'V'
+    info['tlmMnemonic'] = 'TEST_VOLTAGE'
+    mnemonic2 = ed.EdbMnemonic('TEST_VOLTAGE', Time('2021-12-18T07:27:00'), Time('2021-12-18T07:33:00'), tab, {}, info, blocks=blocks)
+
+    added = mnemonic1 + mnemonic2
+    assert all(added.data["euvalues"] == np.array([5, 5, 5, 9, 9, 9, 9, 9, 2, 2, 2, 19, 19, 19, 19, 12, 12]))
+    assert all(added.data["dates"] == np.append(dates1, dates2[3:]))
+    assert added.info['unit'] == 'V'
+
+
 def test_change_only_bounding_points():
     """Make sure we correctly add starting and ending time entries to
     a set of change-only data
@@ -121,6 +151,19 @@ def test_get_mnemonic():
 
 
 @pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
+def test_get_mnemonics():
+    """Test the query of a list of mnemonics."""
+    from jwql.edb.engineering_database import get_mnemonics
+
+    mnemonics = ['SA_ZFGOUTFOV', 'SA_ZFGBADCNT']
+    start_time = Time(2018.0, format='decimalyear')
+    end_time = Time(2018.1, format='decimalyear')
+
+    mnemonic_dict = get_mnemonics(mnemonics, start_time, end_time)
+    assert len(mnemonic_dict) == len(mnemonics)
+
+
+@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
 def test_get_mnemonic_info():
     """Test retrieval of mnemonic info."""
     from jwql.edb.engineering_database import get_mnemonic_info
@@ -134,49 +177,6 @@ def test_get_mnemonic_info():
                     'sqlDataType': 'real',
                     'unit': 'V',
                     'longDescription': None}
-
-
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to central storage.')
-def test_get_mnemonics():
-    """Test the query of a list of mnemonics."""
-    from jwql.edb.engineering_database import get_mnemonics
-
-    mnemonics = ['SA_ZFGOUTFOV', 'SA_ZFGBADCNT']
-    start_time = Time(2018.0, format='decimalyear')
-    end_time = Time(2018.1, format='decimalyear')
-
-    mnemonic_dict = get_mnemonics(mnemonics, start_time, end_time)
-    assert len(mnemonic_dict) == len(mnemonics)
-
-
-def test_add():
-    """Test addition (i.e. concatenation) of two EdbMnemonic objects"""
-    dates1 = np.array([datetime(2021, 12, 18, 7, n, 0) for n in range(20, 30)])
-    data1 = np.array([5, 5, 5, 9, 9, 9, 9, 9, 2, 2])
-    tab = Table()
-    tab["dates"] = dates1
-    tab["euvalues"] = data1
-    blocks = [0, 3, 8]
-    info = {}
-    info['unit'] = 'V'
-    info['tlmMnemonic'] = 'TEST_VOLTAGE'
-    mnemonic1 = ed.EdbMnemonic('TEST_VOLTAGE', Time('2021-12-18T07:20:00'), Time('2021-12-18T07:30:00'), tab, {}, info, blocks=blocks)
-
-    dates2 = np.array([datetime(2021, 12, 18, 7, n, 0) for n in range(27, 37)])
-    data2 = np.array([9, 2, 2, 2, 19, 19, 19, 19, 12, 12])
-    tab = Table()
-    tab["dates"] = dates2
-    tab["euvalues"] = data2
-    blocks = [0, 1, 4, 8]
-    info = {}
-    info['unit'] = 'V'
-    info['tlmMnemonic'] = 'TEST_VOLTAGE'
-    mnemonic2 = ed.EdbMnemonic('TEST_VOLTAGE', Time('2021-12-18T07:27:00'), Time('2021-12-18T07:33:00'), tab, {}, info, blocks=blocks)
-
-    added = mnemonic1 + mnemonic2
-    assert all(added.data["euvalues"] == np.array([5, 5, 5, 9, 9, 9, 9, 9, 2, 2, 2, 19, 19, 19, 19, 12, 12]))
-    assert all(added.data["dates"] == np.append(dates1, dates2[3:]))
-    assert added.info['unit'] == 'V'
 
 
 def test_interpolation():
