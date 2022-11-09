@@ -450,23 +450,6 @@ function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_cla
         } else {
             document.getElementById('no_thumbnails_msg').style.display = 'none';
         };
-
-        // Only display if all filter criteria are met
-        if (criteria.every(function(r){return r})) {
-            thumbnails[i].style.display = "inline-block";
-            num_thumbnails_displayed++;
-        } else {
-            thumbnails[i].style.display = "none";
-        }
-    };
-
-    if (document.getElementById('no_thumbnails_msg') != null) {
-        // If there are no thumbnails to display, tell the user
-        if (num_thumbnails_displayed == 0) {
-            document.getElementById('no_thumbnails_msg').style.display = 'inline-block';
-        } else {
-            document.getElementById('no_thumbnails_msg').style.display = 'none';
-        };
     }
 
     // Update the count of how many images are being shown
