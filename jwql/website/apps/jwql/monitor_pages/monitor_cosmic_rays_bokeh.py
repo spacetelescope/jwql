@@ -69,8 +69,20 @@ class CosmicRayMonitor():
         """Get data required to create cosmic ray histogram from the
         database query.
         """
-
-        self.mags = [row.magnitude for row in self.cosmic_ray_table]
+        
+        self.mags_hist = [row.magnitude for row in self.cosmic_ray_table]
+        self.mags_outliers = [row.outliers for row in self.cosmic_ray_table]
+        
+        self.mags = []
+        cr_zeropoint = -65536
+        for stats_index in range(len(self.mags_hist)):
+            mags = []
+            for bin_index in range(len(self.mags_hist[stats_index])):
+                for i in range(self.mags_hist[stats_index][bin_index]):
+                    mags.append(bin_index+cr_zeropoint)
+            for outlier_cr in self.mags_outliers[stats_index]:
+                mags.append(outlier_cr)
+            self.mags.append(np.array(mags))
 
         # If there are no data, then create something reasonable
         if len(self.mags) == 0:
@@ -78,6 +90,9 @@ class CosmicRayMonitor():
 
         last_hist_index = -1
         # We'll never see CRs with magnitudes above 65535.
+        # Note by BQ on 2022-11-11: Yes, we will. They're not physical, but we'll sure
+        # see them.
+        #
         # Let's fix the bins for now, and see some data to check
         # if they are reasonable
         bins = np.arange(-65000, 66000, 5000)

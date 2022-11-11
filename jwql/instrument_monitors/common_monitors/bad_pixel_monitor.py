@@ -804,19 +804,22 @@ class BadPixels():
                         logging.info("Calibrated files already exist for {}".format(short_name))
             outputs = run_parallel_pipeline(in_files, "uncal", out_exts, self.instrument, jump_pipe=True)
             index = 0
+            logging.info("Checking files post-calibration")
             for uncal_file, rate_file in zip(illuminated_raw_files, illuminated_slope_files):
+                logging.info("Checking files {}, {}".format(os.path.basename(uncal_file), os.path.basename(rate_file)))
                 local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
                 if local_uncal_file in outputs:
                     illuminated_slope_files[index] = deepcopy(outputs[local_uncal_file][1])
                 else:
                     self.get_metadata(illuminated_raw_files[index])
-                    local_ramp_file = local_uncal_file.replace("uncal", "0_ramp_fit")
-                    if hasattr(self, 'nints') and self.nints > 1:
-                        local_ramp_file = local_ramp_file.replace("0_ramp_fit", "1_ramp_fit")
-                    if os.path.isfile(local_ramp_file):
-                        illuminated_slope_files[index] = local_ramp_file
-                    else:
-                        illuminated_slope_files[index] = None
+                    if not os.path.isfile(illuminated_slope_files[index]):
+                        logging.info("\tLooking for local rate file")
+                        local_rate_file = local_uncal_file.replace("uncal", "rateint")
+                        if os.path.isfile(local_rate_file):
+                            illuminated_slope_files[index] = local_rate_file
+                        else:
+                            logging.info("\tCould not find local rate file {}".format(local_rate_file))
+                            illuminated_slope_files[index] = None
                 index += 1
 
                 # Get observation time for all files
