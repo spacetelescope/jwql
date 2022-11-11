@@ -8,8 +8,6 @@
 
 {% block content %}
 
-    <script>update_msata_page('{{base_url}}');</script>
-
     <main role="main" class="container">
 
 		<h1>{{ inst }} MSATA Monitor</h1>
@@ -52,6 +50,7 @@
 
         <!-- Display the data -->
         <div id='ta_data'></div>
+        <script>update_msata_page('{{base_url}}');</script>
         <a id="msata_fail" style='display: none'>No MSATA data found</a>
 
 	</main>

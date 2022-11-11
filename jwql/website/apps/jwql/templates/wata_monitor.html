@@ -8,8 +8,6 @@
 
 {% block content %}
 
-    <script>update_wata_page('{{base_url}}');</script>
-
     <main role="main" class="container">
 
 		<h1>{{ inst }} WATA Monitor</h1>
@@ -52,6 +50,7 @@
 
         <!-- Display the data -->
         <div id='ta_data'></div>
+        <script>update_wata_page('{{base_url}}');</script>
         <a id="wata_fail" style='display: none'>No WATA data found</a>
 
     </main>
