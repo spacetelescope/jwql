@@ -73,36 +73,42 @@ class CosmicRayMonitor():
         self.mags_hist = [row.magnitude for row in self.cosmic_ray_table]
         self.mags_outliers = [row.outliers for row in self.cosmic_ray_table]
         
-        self.mags = []
-        cr_zeropoint = -65536
-        for stats_index in range(len(self.mags_hist)):
-            mags = []
-            for bin_index in range(len(self.mags_hist[stats_index])):
-                for i in range(self.mags_hist[stats_index][bin_index]):
-                    mags.append(bin_index+cr_zeropoint)
-            for outlier_cr in self.mags_outliers[stats_index]:
-                mags.append(outlier_cr)
-            self.mags.append(np.array(mags))
-
+        self.mags = np.zeros((65536*2+1), dtype=np.int64)
+        for mag_histogram in self.mags_hist:
+            self.mags += mag_histogram
+        
         # If there are no data, then create something reasonable
-        if len(self.mags) == 0:
-            self.mags = [[0]]
-
-        last_hist_index = -1
-        # We'll never see CRs with magnitudes above 65535.
+        if len(self.mags_hist) == 0:
+            self.mags[65527] = 1
+            self.mags[65528] = 2
+            self.mags[65529] = 3
+            self.mags[65530] = 4
+            self.mags[65531] = 5
+            self.mags[65532] = 6
+            self.mags[65533] = 7
+            self.mags[65534] = 8
+            self.mags[65535] = 9
+            self.mags[65536] = 10
+            self.mags[65537] = 9
+            self.mags[65538] = 8
+            self.mags[65539] = 7
+            self.mags[65540] = 6
+            self.mags[65541] = 5
+            self.mags[65542] = 4
+            self.mags[65543] = 3
+            self.mags[65544] = 2
+            self.mags[65545] = 1
+        
+        # For the moment, we're using a single bin per cosmic ray magnitude, between
+        # -65536 and +65536.
+        # Previous comment:
+        #   We'll never see CRs with magnitudes above 65535.
         # Note by BQ on 2022-11-11: Yes, we will. They're not physical, but we'll sure
         # see them.
-        #
-        # Let's fix the bins for now, and see some data to check
-        # if they are reasonable
-        bins = np.arange(-65000, 66000, 5000)
-        hist = plt.hist(self.mags[last_hist_index], bins=bins)
-
-        self.bin_left = np.array([bar.get_x() for bar in hist[2]])
-        self.amplitude = [bar.get_height() for bar in hist[2]]
-        self.bottom = [bar.get_y() for bar in hist[2]]
-        deltas = self.bin_left[1:] - self.bin_left[0: -1]
-        self.bin_width = np.append(deltas[0], deltas)
+        self.bin_left = np.arange(65536*2+1, dtype=np.int32) - 65536
+        self.amplitude = self.mags
+        self.bottomn = np.zeros((65536*2+1,), dtype=np.int32)
+        self.bin_width = np.ones((65536*2+1,), dtype=np.int32)
 
     def get_history_data(self):
         """Extract data on the history of cosmic ray numbers from the
