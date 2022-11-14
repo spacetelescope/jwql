@@ -781,16 +781,18 @@ class BadPixels():
         badpix_types_from_darks = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
         illuminated_obstimes = []
         if illuminated_raw_files:
+            logging.info("Found {} uncalibrated flat fields".format(len(illuminated_raw_files)))
             badpix_types.extend(badpix_types_from_flats)
             out_exts = defaultdict(lambda: ['jump', '0_ramp_fit'])
             in_files = []
             for uncal_file, rate_file in zip(illuminated_raw_files, illuminated_slope_files):
+                logging.info("\tChecking illuminated raw file {} with rate file {}".format(uncal_file, rate_file))
                 self.get_metadata(uncal_file)
                 if rate_file == 'None':
                     short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
                     local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
-                    logging.info('Calling pipeline for {}'.format(uncal_file))
-                    logging.info("Copying raw file to {}".format(self.data_dir))
+                    logging.info('\t\tCalling pipeline for {}'.format(uncal_file))
+                    logging.info("\t\tCopying uncal file to {}".format(self.data_dir))
                     copy_files([uncal_file], self.data_dir)
                     if hasattr(self, 'nints') and self.nints > 1:
                         out_exts[short_name] = ['jump', '1_ramp_fit']
@@ -801,7 +803,7 @@ class BadPixels():
                     if needs_calibration:
                         in_files.append(local_uncal_file)
                     else:
-                        logging.info("Calibrated files already exist for {}".format(short_name))
+                        logging.info("\t\tCalibrated files already exist for {}".format(short_name))
             outputs = run_parallel_pipeline(in_files, "uncal", out_exts, self.instrument, jump_pipe=True)
             index = 0
             logging.info("Checking files post-calibration")
