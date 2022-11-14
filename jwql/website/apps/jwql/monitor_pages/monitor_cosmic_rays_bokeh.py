@@ -125,7 +125,7 @@ class CosmicRayMonitor():
         title = f'Magnitudes: {self._instrument}, {self._aperture}'
         fig = figure(title=title, tools='zoom_in, zoom_out, box_zoom, pan, reset, save', background_fill_color="#fafafa")
         fig.quad(top=self.amplitude, bottom=0, left=self.bin_left, right=self.bin_left + self.bin_width,
-                 fill_color="navy", line_color="white", alpha=0.5)
+                 fill_color="navy", line_color="black", alpha=0.5)
 
         fig.y_range.start = 0
         fig.xaxis.formatter.use_scientific = False
