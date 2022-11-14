@@ -1,4 +1,4 @@
-#! /usr/bin env python
+#! /usr/bin/env python
 
 """Script that can be used to query MAST and return basic info
 about all proposals. This information is used to help populate

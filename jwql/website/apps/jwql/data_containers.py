@@ -47,12 +47,11 @@ import requests
 from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemonic_inventory
-from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
-from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
 from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
 from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
-from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND, SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS
+from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
 from .forms import InstrumentAnomalySubmitForm
@@ -139,38 +138,6 @@ def build_table(tablename):
 
     session.close()
     return table_meta_data
-
-
-def data_trending():
-    """Container for Miri datatrending dashboard and components
-
-    Returns
-    -------
-    variables : int
-        nonsense
-    dashboard : list
-        A list containing the JavaScript and HTML content for the
-        dashboard
-    """
-    dashboard, variables = miri_dash.data_trending_dashboard()
-
-    return variables, dashboard
-
-
-def nirspec_trending():
-    """Container for NIRSpec datatrending dashboard and components
-
-    Returns
-    -------
-    variables : int
-        nonsense
-    dashboard : list
-        A list containing the JavaScript and HTML content for the
-        dashboard
-    """
-    dashboard, variables = nirspec_dash.data_trending_dashboard()
-
-    return variables, dashboard
 
 
 def get_acknowledgements():
@@ -420,7 +387,7 @@ def get_edb_components(request):
                         comments.append(' ')
                         result_table.write(path_for_download, format='ascii.fixed_width',
                                            overwrite=True, delimiter=',', bookend=False)
-                        mnemonic_query_result.file_for_download = file_for_download
+                        mnemonic_query_result.file_for_download = path_for_download
 
             # create forms for search fields not clicked
             mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
@@ -469,7 +436,7 @@ def get_edb_components(request):
                 path_for_download = os.path.join(static_dir, file_for_download)
                 display_table.write(path_for_download, format='ascii.fixed_width',
                                     overwrite=True, delimiter=',', bookend=False)
-                mnemonic_exploration_result.file_for_download = file_for_download
+                mnemonic_exploration_result.file_for_download = path_for_download
 
                 if mnemonic_exploration_result.n_rows == 0:
                     mnemonic_exploration_result = 'empty'
