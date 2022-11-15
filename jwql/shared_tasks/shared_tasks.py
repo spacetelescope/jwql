@@ -250,6 +250,9 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     msg = "*****CELERY: Starting {} calibration task for {}"
     logging.info(msg.format(instrument, input_file_name))
     config = get_config()
+    
+    if isinstance(ext_or_exts, str):
+        ext_or_exts = [ext_or_exts]
 
     input_dir = os.path.join(config['transfer_dir'], "incoming")
     cal_dir = os.path.join(config['outputs'], "calibrated_data")
