@@ -116,6 +116,7 @@ class CosmicRayMonitor():
         """
         self.times = [row.obs_end_time for row in self.cosmic_ray_table]
         self.rate = [row.jump_rate for row in self.cosmic_ray_table]
+        self.files = [row.source_file.replace("_uncal.fits", "") for row in self.cosmic_ray_table]
 
     def histogram_plot(self):
         """Create the histogram figure of CR magnitudes.
@@ -149,8 +150,9 @@ class CosmicRayMonitor():
         if len(self.times) == 0:
             self.times = [datetime(2021, 12, 25), datetime(2021, 12, 26)]
             self.rate = [0, 0]
+            self.files = ["dummy", "dummy"]
 
-        source = ColumnDataSource(data={'x': self.times, 'y': self.rate})
+        source = ColumnDataSource(data={'x': self.times, 'y': self.rate, 'filename': self.files})
 
         # Create a useful plot title
         title = f'CR Rates: {self._instrument}, {self._aperture}'
@@ -179,7 +181,8 @@ class CosmicRayMonitor():
         fig.yaxis[0].formatter = BasicTickFormatter(use_scientific=True, precision=2)
 
         hover_tool = HoverTool(tooltips=[('Value', '@y'),
-                                         ('Date', '@x{%d %b %Y %H:%M:%S}')
+                                         ('Date', '@x{%d %b %Y %H:%M:%S}'),
+                                         ('File', '@filename')
                                          ], mode='mouse', renderers=[data])
         hover_tool.formatters = {'@x': 'datetime'}
         fig.tools.append(hover_tool)
