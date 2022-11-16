@@ -119,7 +119,7 @@
             <script>change_filetype('rate', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif 'dark' in suffixes %}
             <script>change_filetype('dark', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
-        {% elif 'rateints' in suffixes %}
+        {% elif 'uncal' in suffixes %}
             <script>change_filetype('uncal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif suffixes|length == 1 %}
             <script>change_filetype('{{suffixes.0}}', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
