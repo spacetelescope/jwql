@@ -42,6 +42,7 @@ Dependencies
 """
 
 from collections import defaultdict
+from copy import deepcopy
 import csv
 import os
 
