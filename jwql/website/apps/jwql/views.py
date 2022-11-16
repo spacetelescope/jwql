@@ -44,6 +44,7 @@ Dependencies
 from collections import defaultdict
 from copy import deepcopy
 import csv
+import logging
 import os
 
 from bokeh.layouts import layout
@@ -52,7 +53,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 
 from jwql.database.database_interface import load_connection
-from jwql.utils import anomaly_query_config
+from jwql.utils import anomaly_query_config, monitor_utils
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
 from jwql.utils.constants import EXPOSURE_PAGE_SUFFIX_ORDER, JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT, THUMBNAIL_FILTER_LOOK
 from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
@@ -943,9 +944,13 @@ def view_image(request, inst, file_root, rewrite=False):
             untracked_files.remove(image_info['all_files'][loc])
 
     # If the data contain any suffixes that are not in the list that specifies the order
-    # to use, make a note in the log and add them to the end of the suffixes list.
+    # to use, make a note in the log (so that they can be added to EXPOSURE_PAGE_SUFFIX_ORDER)
+    # later. Then add them to the end of the suffixes list. Their order will be random since
+    # they are not in EXPOSURE_PAGE_SUFFIX_ORDER.
     if len(untracked_suffixes) > 0:
-        logging.warning((f'For {inst}, {file_root}, the following suffixes are present in the data, '
+        module = os.path.basename(__file__).strip('.py')
+        start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
+        logging.warning((f'In view_image(), for {inst}, {file_root}, the following suffixes are present in the data, '
                          f'but not in EXPOSURE_PAGE_SUFFIX_ORDER in constants.py: {untracked_suffixes} '
                          'Please add them, so that they will appear in a consistent order on the webpage.'))
         suffixes.extend(untracked_suffixes)
