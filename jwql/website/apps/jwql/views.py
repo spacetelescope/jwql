@@ -53,7 +53,7 @@ from django.shortcuts import redirect, render
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT, THUMBNAIL_FILTER_LOOK
+from jwql.utils.constants import EXPOSURE_PAGE_SUFFIX_ORDER, JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT, THUMBNAIL_FILTER_LOOK
 from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
@@ -924,6 +924,32 @@ def view_image(request, inst, file_root, rewrite=False):
     template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
 
+    # Put suffixes in a consistent order. Check if any of the
+    # suffixes are not in the list that specifies order.
+    # Reorder the list of filenames to match the reordered list
+    # of suffixes.
+    suffixes = []
+    all_files = []
+    untracked_suffixes = deepcopy(image_info['suffixes'])
+    untracked_files = deepcopy(image_info['all_files'])
+    for poss_suffix in EXPOSURE_PAGE_SUFFIX_ORDER:
+        if poss_suffix in image_info['suffixes']:
+            suffixes.append(poss_suffix)
+            loc = image_info['suffixes'].index(poss_suffix)
+
+            all_files.append(image_info['all_files'][loc])
+            untracked_suffixes.remove(poss_suffix)
+            untracked_files.remove(image_info['all_files'][loc])
+
+    # If the data contain any suffixes that are not in the list that specifies the order
+    # to use, make a note in the log and add them to the end of the suffixes list.
+    if len(untracked_suffixes) > 0:
+        logging.warning((f'For {inst}, {file_root}, the following suffixes are present in the data, '
+                         f'but not in EXPOSURE_PAGE_SUFFIX_ORDER in constants.py: {untracked_suffixes} '
+                         'Please add them, so that they will appear in a consistent order on the webpage.'))
+        suffixes.extend(untracked_suffixes)
+        all_files.extend(untracked_files)
+
     form = get_anomaly_form(request, inst, file_root)
 
     prop_id = file_root[2:7]
@@ -954,8 +980,8 @@ def view_image(request, inst, file_root, rewrite=False):
                'obsnum': file_root[7:10],
                'file_root': file_root,
                'jpg_files': image_info['all_jpegs'],
-               'fits_files': image_info['all_files'],
-               'suffixes': image_info['suffixes'],
+               'fits_files': all_files,
+               'suffixes': suffixes,
                'num_ints': image_info['num_ints'],
                'available_ints': image_info['available_ints'],
                'total_ints': image_info['total_ints'],
