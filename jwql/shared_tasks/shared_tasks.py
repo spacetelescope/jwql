@@ -337,9 +337,10 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
         done = True
         for ext in ext_or_exts:
             logging.info("*****CELERY: Checking for {} output".format(ext))
-            if not os.path.isfile("{}_{}.fits".format(short_name, ext)):
+            check_file = output_file.replace(step_name, ext)
+            if not os.path.isfile(check_file):
                 done = False
-                logging.info("*****CELERY: {} not found. Continuing.".format("{}_{}.fits".format(short_name, ext)))
+                logging.info("*****CELERY: {} not found. Continuing.".format(check_file))
         if done:
             print("*****CELERY: Created all files in {}. Finished.".format(ext_or_exts))
             break
