@@ -51,6 +51,7 @@ from bokeh.layouts import layout
 from bokeh.embed import components
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+import numpy as np
 
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config, monitor_utils
