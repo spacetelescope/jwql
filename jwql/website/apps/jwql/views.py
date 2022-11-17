@@ -957,8 +957,11 @@ def view_image(request, inst, file_root, rewrite=False):
                 file_entries = list(files_arr[idxs])
                 suffixes.extend(suff_entries)
                 all_files.extend(file_entries)
-                untracked_suffixes = np.delete(untracked_suffixes, idxs)
-                untracked_files = np.delete(untracked_files, idxs)
+
+                untracked_splits = np.array([ele.split('_')[-1] for ele in untracked_suffixes])
+                untracked_idxs = np.where(untracked_splits == poss_suffix)[0]
+                untracked_suffixes = np.delete(untracked_suffixes, untracked_idxs)
+                untracked_files = np.delete(untracked_files, untracked_idxs)
 
     # If the data contain any suffixes that are not in the list that specifies the order
     # to use, make a note in the log (so that they can be added to EXPOSURE_PAGE_SUFFIX_ORDER)
