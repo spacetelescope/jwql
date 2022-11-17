@@ -935,13 +935,29 @@ def view_image(request, inst, file_root, rewrite=False):
     untracked_suffixes = deepcopy(image_info['suffixes'])
     untracked_files = deepcopy(image_info['all_files'])
     for poss_suffix in EXPOSURE_PAGE_SUFFIX_ORDER:
-        if poss_suffix in image_info['suffixes']:
-            suffixes.append(poss_suffix)
-            loc = image_info['suffixes'].index(poss_suffix)
-
-            all_files.append(image_info['all_files'][loc])
-            untracked_suffixes.remove(poss_suffix)
-            untracked_files.remove(image_info['all_files'][loc])
+        if 'crf' not in poss_suffix:
+            if poss_suffix in image_info['suffixes']:
+                suffixes.append(poss_suffix)
+                loc = image_info['suffixes'].index(poss_suffix)
+                all_files.append(image_info['all_files'][loc])
+                untracked_suffixes.remove(poss_suffix)
+                untracked_files.remove(image_info['all_files'][loc])
+        else:
+            # EXPOSURE_PAGE_SUFFIX_ORDER contains crf and crfints, but the actual suffixes
+            # in the data will be e.g. o001_crf, and there may be more than one crf file
+            # in the list of suffixes. So in this case, we strip the e.g. o001 from the
+            # suffixes and check which list elements match.
+            suff_arr = np.array(image_info['suffixes'])
+            files_arr = np.array(image_info['all_files'])
+            splits = np.array([ele.split('_')[-1] for ele in image_info['suffixes']])
+            idxs = np.where(splits == poss_suffix)[0]
+            if len(idxs) > 0:
+                suff_entries = list(suff_arr[idxs])
+                file_entries = list(files_arr[idxs])
+                suffixes.extend(suff_entries)
+                all_files.extend(file_entries)
+                untracked_suffixes = np.remove(untracked_suffixes, idx)
+                untracked_files = np.remove(untracked_files, idx)
 
     # If the data contain any suffixes that are not in the list that specifies the order
     # to use, make a note in the log (so that they can be added to EXPOSURE_PAGE_SUFFIX_ORDER)
