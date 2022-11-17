@@ -900,7 +900,7 @@ class BadPixels():
             index = 0
             logging.info("Checking files post-calibration")
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
-                logging.info("\tChecking files {}, {}".format(os.path.basename(uncal_file), os.path.basename(rate_file)))
+                logging.info("\tChecking files {}, {}".format(uncal_file, rate_file))
                 local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
                 short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
                 if local_uncal_file in outputs:
