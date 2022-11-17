@@ -13,6 +13,7 @@ Authors
     - Matthew Bourque
     - Johannes Sahlmann
     - Teagan King
+    - Bryan Hilbert
     - Maria Pena-Guerrero
 
 Use
@@ -57,11 +58,7 @@ urlpatterns = [
     # Home
     path('', views.home, name='home'),
 
-    # MIRI-specific views
-    path('miri/miri_data_trending/', views.miri_data_trending, name='miri_data_trending'),
-
     # NIRSpec-specific views
-    path('nirspec/nirspec_data_trending/', views.nirspec_data_trending, name='nirspec_data_trending'),
     path('nirspec/msata_monitor/', monitor_views.msata_monitoring, name='msata_monitor'),
     path('nirspec/wata_monitor/', monitor_views.wata_monitoring, name='wata_monitor'),
 
@@ -70,6 +67,7 @@ urlpatterns = [
     re_path(r'^(?P<inst>({}))/bad_pixel_monitor/$'.format(instruments), monitor_views.bad_pixel_monitor, name='bad_pixel_monitor'),
     re_path(r'^(?P<inst>({}))/bias_monitor/$'.format(instruments), monitor_views.bias_monitor, name='bias_monitor'),
     re_path(r'^(?P<inst>({}))/readnoise_monitor/$'.format(instruments), monitor_views.readnoise_monitor, name='readnoise_monitor'),
+    re_path(r'^(?P<inst>({}))/edb_monitor/$'.format(instruments), monitor_views.edb_monitor, name='edb_monitor'),
     re_path(r'^(?P<inst>({}))/cosmic_ray_monitor/$'.format(instruments), monitor_views.cosmic_ray_monitor, name='cosmic_ray_monitor'),
 
     # Main site views
