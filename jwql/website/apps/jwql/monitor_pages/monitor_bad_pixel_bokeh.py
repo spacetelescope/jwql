@@ -189,8 +189,9 @@ class BadPixelMonitor(BokehTemplate):
         else:
             self.detector = self._aperture.split('_')[0]
         
+        instrument = self._instrument
         aperture = self._aperture
-        detector = self._detector
+        detector = self.detector
 
         # App design
         self.format_string = None
