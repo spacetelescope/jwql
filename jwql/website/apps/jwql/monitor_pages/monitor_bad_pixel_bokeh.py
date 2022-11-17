@@ -172,10 +172,12 @@ class BadPixelMonitor(BokehTemplate):
     def pre_init(self):
         # Start with default values for instrument and aperture because
         # BokehTemplate's __init__ method does not allow input arguments
+        got_init_aperture = True
         try:
             dummy_instrument = self._instrument
             dummy_aperture = self._aperture
         except AttributeError:
+            got_init_aperture = False
             self._instrument = 'NIRCam'
             self._aperture = 'NRCA1_FULL'
 
@@ -186,6 +188,9 @@ class BadPixelMonitor(BokehTemplate):
             self.detector = '{}LONG'.format(self._aperture[0:4])
         else:
             self.detector = self._aperture.split('_')[0]
+        
+        aperture = self._aperture
+        detector = self._detector
 
         # App design
         self.format_string = None
