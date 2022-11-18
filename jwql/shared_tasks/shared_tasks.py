@@ -732,7 +732,7 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False, m
     return output
 
 
-def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pipe=False, max_groups=max_groups):
+def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pipe=False, max_groups=1000):
     """Convenience function for using the ``run_calwebb_detector1`` function on a list of
     data files, breaking them into parallel celery calls, collecting the results together,
     and returning the results as another list. In particular, this function will do the
