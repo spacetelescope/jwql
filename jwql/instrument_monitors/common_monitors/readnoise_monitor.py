@@ -415,7 +415,11 @@ class Readnoise():
                 files_to_calibrate.append(file)
         
         # Run the files through the necessary pipeline steps
-        outputs = run_parallel_pipeline(files_to_calibrate, "uncal", "refpix", self.instrument)
+        #   NOTE: Because the readnoise monitor only needs to get as far as the "refpix"
+        #   pipeline stage, it doesn't have the incredibly increased run times that are 
+        #   otherwise associated with files with a lot of groups, so the readnoise
+        #   monitor can pretty much calibrate anything as far as it goes.
+        outputs = run_parallel_pipeline(files_to_calibrate, "uncal", "refpix", self.instrument, max_groups=20000)
 
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
@@ -623,9 +627,12 @@ class Readnoise():
                             # Skip processing if the file doesnt have enough groups/ints to calculate the readnoise.
                             # MIRI needs extra since they omit the first five and last group before calculating the readnoise.
                             if total_cds_frames >= 10:
-                                shutil.copy(uncal_filename, self.data_dir)
-                                logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
-                                set_permissions(output_filename)
+                                if os.path.isfile(os.path.join(self.data_dir, os.path.basename(uncal_filename))):
+                                    logging.info("\tRaw file already exists locally.")
+                                else:
+                                    shutil.copy(uncal_filename, self.data_dir)
+                                    logging.info('\tCopied {} to {}'.format(uncal_filename, output_filename))
+                                    set_permissions(output_filename)
                                 new_files.append(output_filename)
                             else:
                                 logging.info('\tNot enough groups/ints to calculate readnoise in {}'.format(uncal_filename))
