@@ -53,7 +53,7 @@ from django.shortcuts import redirect, render
 from jwql.database.database_interface import load_connection
 from jwql.utils import anomaly_query_config
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT, THUMBNAIL_FILTER_LOOK
+from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, THUMBNAIL_FILTER_LOOK
 from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
@@ -228,6 +228,8 @@ def archived_proposals_ajax(request, inst):
     proposal_viewed = []
     proposal_exp_types = []
     thumb_exp_types = []
+    proposal_obs_times = []
+    thumb_obs_time = []
 
     # Get a set of all exposure types used in the observations associated with this proposal
     exp_types = [exposure_type for observation in all_entries for exposure_type in observation.exptypes.split(',')]
@@ -263,11 +265,16 @@ def archived_proposals_ajax(request, inst):
         proposal_exp_types = list(set(proposal_exp_types))
         thumb_exp_types.append(','.join(proposal_exp_types))
 
+        # Get Most recent observation start time
+        proposal_obs_times = [observation.obsstart for observation in prop_entries]
+        thumb_obs_time.append(max(proposal_obs_times))
+
     thumbnails_dict['proposals'] = proposal_nums
     thumbnails_dict['thumbnail_paths'] = thumbnail_paths
     thumbnails_dict['num_files'] = total_files
     thumbnails_dict['viewed'] = proposal_viewed
     thumbnails_dict['exp_types'] = thumb_exp_types
+    thumbnails_dict['obs_time'] = thumb_obs_time
 
     context = {'inst': inst,
                'num_proposals': num_proposals,

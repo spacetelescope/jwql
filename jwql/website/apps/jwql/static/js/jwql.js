@@ -482,6 +482,9 @@ function sort_by_proposals(sort_type) {
         tinysort(props, {order:'asc'});
     } else if (sort_type == 'Descending') {
         tinysort(props, {order:'desc'});
+    } else if (sort_type == 'Recent') {
+        // Sort by the most recent Observation Start
+        tinysort(props, {order:'desc', attr:'obs_time'});
     }
 };
 
@@ -568,9 +571,10 @@ function update_archive_page(inst, base_url) {
                 n = data.thumbnails.num_files[i];
                 viewed = data.thumbnails.viewed[i];
                 exp_types = data.thumbnails.exp_types[i];
+                obs_time = data.thumbnails.obs_time[i];
 
                 // Build div content
-                content = '<div class="proposal text-center" look="' + viewed + '" exp_type="' + exp_types + '">';
+                content = '<div class="proposal text-center" look="' + viewed + '" exp_type="' + exp_types + '" obs_time="' + obs_time + '">';
                 content += '<a href="/' + inst + '/archive/' + prop + '/obs' + min_obsnum + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
                 content += '<span class="helper"></span>'
                 content += '<img src="/static/thumbnails/' + thumb + '" alt="" title="Thumbnail for ' + prop + '" width=100%>';
