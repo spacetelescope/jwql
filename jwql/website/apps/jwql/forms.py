@@ -458,19 +458,17 @@ class MnemonicSearchForm(forms.Form):
 class MnemonicQueryForm(forms.Form):
     """A triple-field form to query mnemonic records in the DMS EDB."""
 
-    production_mode = False
+    production_mode = True
 
     if production_mode:
         # times for default query (one day one week ago)
         now = Time.now()
-        delta_day = -7.
-        range_day = 1.
-        default_start_time = now + TimeDelta(delta_day, format='jd')
-        default_end_time = now + TimeDelta(delta_day + range_day, format='jd')
+        default_start_time = now + TimeDelta(3600., format='sec')
+        default_end_time = now
     else:
         # example for testing
-        default_start_time = Time('2019-04-02 00:00:00.000', format='iso')
-        default_end_time = Time('2019-04-02 00:01:00.000', format='iso')
+        default_start_time = Time('2022-06-20 00:00:00.000', format='iso')
+        default_end_time = Time('2022-06-21 00:00:00.000', format='iso')
 
     default_mnemonic_identifier = 'IMIR_HK_ICE_SEC_VOLT4'
 

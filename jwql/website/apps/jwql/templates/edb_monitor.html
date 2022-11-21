@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+        <title>{{ inst }} Engineering Database Telemetry Monitor - JWQL</title>
+
+{% endblock %}
+
+
+{% block content %}
+
+    <main role="main" class="container">
+
+                <h1>{{ inst }} EDB Telemetry Monitor</h1>
+                <hr>
+
+                <div id='tabbed_edb_plot' width=100%>
+                    <script>
+                    $(document).ready(function() {
+                    Bokeh.embed.embed_item({{ json_object|safe }});
+                    });
+                </script>
+
+                </div>
+
+        </main>
+
+{% endblock %}

@@ -20,6 +20,12 @@ dark_monitor.py
     :members:
     :undoc-members:
 
+edb_telemetry_monitor.py
+------------------------
+.. automodule:: jwql.instrument_monitors.common_monitors.edb_telemetry_monitor
+    :members:
+    :undoc-members:
+
 readnoise_monitor.py
 --------------------
 .. automodule:: jwql.instrument_monitors.common_monitors.readnoise_monitor
