@@ -505,6 +505,8 @@ function sort_by_thumbnails(sort_type, base_url) {
         tinysort(thumbs, {attr:'file_root', order:'asc'});
     } else if (sort_type == 'Descending') {
         tinysort(thumbs, {attr:'file_root', order:'desc'});
+    } else if (sort_type == 'Recent') {
+        tinysort(thumbs, {attr:'exp_start', order:'desc'});
     }
     $.ajax({
         url: base_url + '/ajax/session/image_sort/' + sort_type + '/',
@@ -835,6 +837,7 @@ function update_sort_options(data, base_url) {
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
     content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Ascending\', \'' + base_url + '\');">Ascending</a>';
     content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Descending\', \'' + base_url + '\');">Descending</a>';
+    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Recent\', \'' + base_url + '\');">Recent</a>';
     content += '</div></div>';
 
     // Add the content to the div
