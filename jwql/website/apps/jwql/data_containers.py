@@ -1414,8 +1414,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     obs_list = sorted(list(set(all_obs)))
 
     # Get the available files for the instrument
-    filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart'])
-
+    filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart', 'exp_type'])
     # Get set of unique rootnames
     rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
 
@@ -1423,6 +1422,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     data_dict = {}
     data_dict['inst'] = inst
     data_dict['file_data'] = {}
+    exp_types = []
 
     # Gather data for each rootname, and construct a list of all observations
     # in the proposal
@@ -1455,7 +1455,8 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         # rootname will have the same exposure start time, so just keep the first.
         available_files = [item for item in filenames if rootname in item]
         exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
-
+        exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
+        exp_types.append(exp_type)
         # Viewed is stored by rootname in the Model db.  Save it with the data_dict
         # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
         try:
@@ -1470,6 +1471,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
         data_dict['file_data'][rootname]["viewed"] = viewed
+        data_dict['file_data'][rootname]["exp_type"] = exp_type
 
         # We generate thumbnails only for rate and dark files. Check if these files
         # exist in the thumbnail filesystem. In the case where neither rate nor
@@ -1509,11 +1511,13 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
 
     if proposal is not None:
         dropdown_menus = {'detector': sorted(detectors),
-                          'look': THUMBNAIL_FILTER_LOOK}
+                          'look': THUMBNAIL_FILTER_LOOK,
+                          'exp_type': sorted(set(exp_types))}
     else:
         dropdown_menus = {'detector': sorted(detectors),
                           'proposal': sorted(proposals),
-                          'look': THUMBNAIL_FILTER_LOOK}
+                          'look': THUMBNAIL_FILTER_LOOK,
+                          'exp_type': sorted(set(exp_types))}
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
