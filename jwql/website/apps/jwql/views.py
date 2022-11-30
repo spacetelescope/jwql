@@ -42,18 +42,21 @@ Dependencies
 """
 
 from collections import defaultdict
+from copy import deepcopy
 import csv
+import logging
 import os
 
 from bokeh.layouts import layout
 from bokeh.embed import components
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+import numpy as np
 
 from jwql.database.database_interface import load_connection
-from jwql.utils import anomaly_query_config
+from jwql.utils import anomaly_query_config, monitor_utils
 from jwql.utils.interactive_preview_image import InteractivePreviewImg
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, MONITORS, URL_DICT, THUMBNAIL_FILTER_LOOK
+from jwql.utils.constants import EXPOSURE_PAGE_SUFFIX_ORDER, JWST_INSTRUMENT_NAMES_MIXEDCASE, URL_DICT, THUMBNAIL_FILTER_LOOK
 from jwql.utils.utils import filename_parser, get_base_url, get_config, get_rootnames_for_instrument_proposal, query_unformat
 
 from .data_containers import build_table
@@ -228,6 +231,8 @@ def archived_proposals_ajax(request, inst):
     proposal_viewed = []
     proposal_exp_types = []
     thumb_exp_types = []
+    proposal_obs_times = []
+    thumb_obs_time = []
 
     # Get a set of all exposure types used in the observations associated with this proposal
     exp_types = [exposure_type for observation in all_entries for exposure_type in observation.exptypes.split(',')]
@@ -263,11 +268,16 @@ def archived_proposals_ajax(request, inst):
         proposal_exp_types = list(set(proposal_exp_types))
         thumb_exp_types.append(','.join(proposal_exp_types))
 
+        # Get Most recent observation start time
+        proposal_obs_times = [observation.obsstart for observation in prop_entries]
+        thumb_obs_time.append(max(proposal_obs_times))
+
     thumbnails_dict['proposals'] = proposal_nums
     thumbnails_dict['thumbnail_paths'] = thumbnail_paths
     thumbnails_dict['num_files'] = total_files
     thumbnails_dict['viewed'] = proposal_viewed
     thumbnails_dict['exp_types'] = thumb_exp_types
+    thumbnails_dict['obs_time'] = thumb_obs_time
 
     context = {'inst': inst,
                'num_proposals': num_proposals,
@@ -941,6 +951,55 @@ def view_image(request, inst, file_root, rewrite=False):
     template = 'view_image.html'
     image_info = get_image_info(file_root, rewrite)
 
+    # Put suffixes in a consistent order. Check if any of the
+    # suffixes are not in the list that specifies order.
+    # Reorder the list of filenames to match the reordered list
+    # of suffixes.
+    suffixes = []
+    all_files = []
+    untracked_suffixes = deepcopy(image_info['suffixes'])
+    untracked_files = deepcopy(image_info['all_files'])
+    for poss_suffix in EXPOSURE_PAGE_SUFFIX_ORDER:
+        if 'crf' not in poss_suffix:
+            if poss_suffix in image_info['suffixes']:
+                suffixes.append(poss_suffix)
+                loc = image_info['suffixes'].index(poss_suffix)
+                all_files.append(image_info['all_files'][loc])
+                untracked_suffixes.remove(poss_suffix)
+                untracked_files.remove(image_info['all_files'][loc])
+        else:
+            # EXPOSURE_PAGE_SUFFIX_ORDER contains crf and crfints, but the actual suffixes
+            # in the data will be e.g. o001_crf, and there may be more than one crf file
+            # in the list of suffixes. So in this case, we strip the e.g. o001 from the
+            # suffixes and check which list elements match.
+            suff_arr = np.array(image_info['suffixes'])
+            files_arr = np.array(image_info['all_files'])
+            splits = np.array([ele.split('_')[-1] for ele in image_info['suffixes']])
+            idxs = np.where(splits == poss_suffix)[0]
+            if len(idxs) > 0:
+                suff_entries = list(suff_arr[idxs])
+                file_entries = list(files_arr[idxs])
+                suffixes.extend(suff_entries)
+                all_files.extend(file_entries)
+
+                untracked_splits = np.array([ele.split('_')[-1] for ele in untracked_suffixes])
+                untracked_idxs = np.where(untracked_splits == poss_suffix)[0]
+                untracked_suffixes = list(np.delete(untracked_suffixes, untracked_idxs))
+                untracked_files = list(np.delete(untracked_files, untracked_idxs))
+
+    # If the data contain any suffixes that are not in the list that specifies the order
+    # to use, make a note in the log (so that they can be added to EXPOSURE_PAGE_SUFFIX_ORDER)
+    # later. Then add them to the end of the suffixes list. Their order will be random since
+    # they are not in EXPOSURE_PAGE_SUFFIX_ORDER.
+    if len(untracked_suffixes) > 0:
+        module = os.path.basename(__file__).strip('.py')
+        start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
+        logging.warning((f'In view_image(), for {inst}, {file_root}, the following suffixes are present in the data, '
+                         f'but not in EXPOSURE_PAGE_SUFFIX_ORDER in constants.py: {untracked_suffixes} '
+                         'Please add them, so that they will appear in a consistent order on the webpage.'))
+        suffixes.extend(untracked_suffixes)
+        all_files.extend(untracked_files)
+
     form = get_anomaly_form(request, inst, file_root)
 
     prop_id = file_root[2:7]
@@ -971,8 +1030,8 @@ def view_image(request, inst, file_root, rewrite=False):
                'obsnum': file_root[7:10],
                'file_root': file_root,
                'jpg_files': image_info['all_jpegs'],
-               'fits_files': image_info['all_files'],
-               'suffixes': image_info['suffixes'],
+               'fits_files': all_files,
+               'suffixes': suffixes,
                'num_ints': image_info['num_ints'],
                'available_ints': image_info['available_ints'],
                'total_ints': image_info['total_ints'],
