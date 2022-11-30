@@ -1,0 +1,1937 @@
+{
+    "daily_means": [
+        {
+            "name": "SE_ZIMIRICEA",
+            "database_id": "SE_ZIMIRICEA_NO_OPS",
+            "description": "ICE drive current (no ops)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "*SE_ZBUSVLT",
+            "nominal_value": 7.57,
+            "yellow_limits": [7.0, 8.13],
+            "plot_category": "Power"
+        },
+        {
+            "name": "IMIR_HK_ICE_SEC_VOLT4",
+            "database_id": "IMIR_HK_ICE_SEC_VOLT4_NO_OPS",
+            "description": "ICE Secondary Voltage 4 (no ops)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "nominal_value": 4.53,
+            "yellow_limits": [4.52, 4.55],
+            "plot_category": "ICE_voltage"
+        },
+        {
+            "name": "IGDP_MIR_ICE_INTER_TEMP",
+            "description": "ICE internal temperature",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.0, 30.0],
+            "plot_category": "ICE_temperature"
+        },
+        {
+            "name": "IGDP_MIR_ICE_T1P_CRYO",
+            "description": "Deck Nominal Temperature (T1)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "Deck_temperature"
+        },
+        {
+            "name": "IGDP_MIR_ICE_T2R_CRYO",
+            "description": "Deck Redundant Temperature (T2)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "Deck_temperature"
+        },
+        {
+            "name": "IGDP_MIR_ICE_T3LW_CRYO",
+            "description": "LW FPM I/F Temperature (T3)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "FPM_temperature"
+        },
+        {
+            "name": "IGDP_MIR_ICE_T4SW_CRYO",
+            "description": "SW FPM I/F Temperature (T4)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "FPM_temperature"
+        },
+        {
+            "name": "IGDP_MIR_ICE_T5IMG_CRYO",
+            "description": "IM FPM I/F Temperature (T5)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "FPM_temperature"
+        },
+        {
+            "name": "IGDP_MIR_ICE_T6DECKCRYO",
+            "description": "Deck Opp. Nom. Temperature (T6)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "Deck_temperature"
+        },
+        {
+            "name": "IGDP_MIR_ICE_T7IOC_CRYO",
+            "description": "Deck Opp. Red. Temperature (T7)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "Deck_temperature"
+        },
+       {
+            "name": "IGDP_MIR_ICE_FW_CRYO",
+            "description": "FWA Temperature",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "FW_temperature"
+        },
+        {
+            "name": "IGDP_MIR_ICE_CCC_CRYO",
+            "description": "CCC Temperature",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "FW_temperature"
+        },
+        {
+            "name": "IGDP_MIR_ICE_GW14_CRYO",
+            "description": "DGA-A (GW14) Temperature",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "FW_temperature"
+        },
+        {
+            "name": "IGDP_MIR_ICE_GW23_CRYO",
+            "description": "DGA-B (GW23) Temperature",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "FW_temperature"
+        },
+        {
+            "name": "IGDP_MIR_ICE_POMP_CRYO",
+            "description": "POMH Nominal Temperature",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "POM_temperature"
+        },
+        {
+            "name": "IGDP_MIR_ICE_POMR_CRYO",
+            "description": "POMH Redundant Temperature",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "POM_temperature"
+        },
+        {
+            "name": "IGDP_MIR_ICE_IFU_CRYO",
+            "description": "MRS (CF) Cal. Source Temperature",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "Cal_src_temperature"
+        },
+        {
+            "name": "IGDP_MIR_ICE_IMG_CRYO",
+            "description": "Imager (CI) Cal. Source Temperature",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.7, 7.5],
+            "plot_category": "Cal_src_temperature"
+        },
+        {
+            "name": "SE_ZIMIRFPEA",
+            "description": "FPE drive current (READY)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "*SE_ZBUSVLT",
+            "nominal_value": 30.31,
+            "yellow_limits": [27.94, 32.67],
+            "plot_category": "Power"
+        },
+        {
+            "name": "IMIR_PDU_V_DIG_5V",
+            "description": "FPE 5V Digital Voltage (V)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "nominal_value": 5.0,
+            "yellow_limits": [4.95, 5.05],
+            "plot_category": "FPE_voltage"
+        },
+        {
+            "name": "IMIR_PDU_I_DIG_5V",
+            "description": "FPE 5V Digital Current (mA)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "FPE_current"
+        },
+        {
+            "name": "IMIR_PDU_V_ANA_5V",
+            "description": "FPE +5V Analog Voltage (V)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "nominal_value": 5.0,
+            "yellow_limits": [4.95, 5.05],
+            "plot_category": "FPE_voltage"
+        },
+        {
+            "name": "IMIR_PDU_I_ANA_5V",
+            "description": "FPE +5V Analog Current (mA)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "FPE_current"
+        },
+        {
+            "name": "IMIR_PDU_V_ANA_N5V",
+            "description": "FPE -5V Analog V (V)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "nominal_value": 5.0,
+            "yellow_limits": [-5.05, -4.95],
+            "plot_category": "FPE_voltage"
+        },
+        {
+            "name": "IMIR_PDU_I_ANA_N5V",
+            "description": "FPE -5V Analog Current (mA)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "FPE_current"
+        },
+        {
+            "name": "IMIR_PDU_V_ANA_7V",
+            "description": "FPE +7V Analog Voltage (V)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "nominal_value": 7.0,
+            "yellow_limits": [6.95, 7.05],
+            "plot_category": "FPE_voltage"
+        },
+        {
+            "name": "IMIR_PDU_I_ANA_7V",
+            "description": "FPE +7V Analog Current (mA)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "FPE_current"
+        },
+        {
+            "name": "IMIR_PDU_V_ANA_N7V",
+            "description": "FPE -5V Analog V (V)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "nominal_value": -7.0,
+            "yellow_limits": [-7.05, -6.95],
+            "plot_category": "FPE_voltage"
+        },
+        {
+            "name": "IMIR_PDU_I_ANA_N7V",
+            "description": "FPE -7V Analog Current (mA)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "FPE_current"
+        },
+        {
+            "name": "IMIR_SPW_V_DIG_2R5V",
+            "description": "FPE 2.5V Digital Voltage (V)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "nominal_value": 2.5,
+            "yellow_limits": [2.45, 2.55],
+            "plot_category": "FPE_voltage"
+        },
+        {
+            "name": "IMIR_PDU_V_REF_2R5V",
+            "description": "FPE 2.5V PDU Ref voltage (V)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "FPE_voltage"
+        },
+        {
+            "name": "IGDP_MIR_IC_V_VDETCOM",
+            "description": "Detector Bias VDETCOM (IC)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Detector_bias"
+        },
+        {
+            "name": "IGDP_MIR_SW_V_VDETCOM",
+            "description": "Detector Bias VDETCOM (SW)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Detector_bias"
+        },
+        {
+            "name": "IGDP_MIR_LW_V_VDETCOM",
+            "description": "Detector Bias VDETCOM (LW)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Detector_bias"
+        },
+        {
+            "name": "IGDP_MIR_IC_V_VSSOUT",
+            "description": "Detector Bias VSSOUT (IC)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Detector_bias"
+        },
+        {
+            "name": "IGDP_MIR_SW_V_VSSOUT",
+            "description": "Detector Bias VSSOUT (SW)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Detector_bias"
+        },
+        {
+            "name": "IGDP_MIR_LW_V_VSSOUT",
+            "description": "Detector Bias VSSOUT (LW)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Detector_bias"
+        },
+        {
+            "name": "IGDP_MIR_IC_V_VRSTOFF",
+            "description": "Detector Bias VRSTOFF (IC)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Detector_bias"
+        },
+        {
+            "name": "IGDP_MIR_SW_V_VRSTOFF",
+            "description": "Detector Bias VRSTOFF (SW)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Detector_bias"
+        },
+        {
+            "name": "IGDP_MIR_LW_V_VRSTOFF",
+            "description": "Detector Bias VRSTOFF (LW)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Detector_bias"
+        },
+        {
+            "name": "IGDP_MIR_IC_V_VP",
+            "description": "Detector Bias (IC)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Detector_bias"
+        },
+        {
+            "name": "IGDP_MIR_SW_V_VP",
+            "description": "Detector Bias (SW)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Detector_bias"
+        },
+        {
+            "name": "IGDP_MIR_LW_V_VP",
+            "description": "Detector Bias (LW)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Detector_bias"
+        },
+        {
+            "name": "IGDP_MIR_IC_V_VDDUC",
+            "description": "Detector Bias VDDUC (IC)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Detector_bias"
+        },
+        {
+            "name": "IGDP_MIR_SW_V_VDDUC",
+            "description": "Detector Bias VDDUC (SW)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Detector_bias"
+        },
+        {
+            "name": "IGDP_MIR_LW_V_VDDUC",
+            "description": "Detector Bias VDDUC (LW)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Detector_bias"
+        },
+        {
+            "name": "IMIR_PDU_TEMP",
+            "description": "FPE PDU Temperature",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [238.15, 366.15],
+            "plot_category": "FPE_temperature"
+        },
+        {
+            "name": "ST_ZTC2MIRIA",
+            "description": "FPE A IEC panel temperature",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "FPE_temperature"
+        },
+        {
+            "name": "IMIR_IC_SCE_ANA_TEMP1",
+            "description": "FPE SCE Analogue board Temperature (IC)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [238.2, 350.0],
+            "plot_category": "FPE_temperature"
+        },
+        {
+            "name": "IMIR_SW_SCE_ANA_TEMP1",
+            "description": "FPE SCE Analogue board Temperature (SW)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_trendlines": [238.2, 350.0],
+            "plot_category": "FPE_temperature"
+        },
+        {
+            "name": "IMIR_LW_SCE_ANA_TEMP1",
+            "description": "FPE SCE Analogue board Temperature (LW)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [238.2, 350.0],
+            "plot_category": "FPE_temperature"
+        },
+        {
+            "name": "IMIR_IC_SCE_DIG_TEMP",
+            "description": "FPE SCE Digital board Temperature (IC)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [238.2, 350.0],
+            "plot_category": "FPE_temperature"
+        },
+        {
+            "name": "IMIR_SW_SCE_DIG_TEMP",
+            "description": "FPE SCE Digital board Temperature (SW)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [238.2, 350.0],
+            "plot_category": "FPE_temperature"
+        },
+        {
+            "name": "IMIR_LW_SCE_DIG_TEMP",
+            "description": "FPE SCE Digital board Temperature (LW)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [238.2, 350.0],
+            "plot_category": "FPE_temperature"
+        },
+        {
+            "name": "IGDP_MIR_IC_DET_TEMP",
+            "description": "Detector Temperature (IC)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "FPE_temperature"
+        },
+        {
+            "name": "IGDP_MIR_SW_DET_TEMP",
+            "description": "Detector Temperature (SW)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "FPE_temperature"
+        },
+        {
+            "name": "IGDP_MIR_LW_DET_TEMP",
+            "description": "Detector Temperature (LW)",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRFPEA",
+                    "relation": ">",
+                    "threshold": 0.5
+                },
+                {
+                    "name": "IGDP_IT_MIR_IC_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_LW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                },
+                {
+                    "name": "IGDP_IT_MIR_SW_STATUS",
+                    "relation": "=",
+                    "threshold": "DETECTOR_READY"
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "FPE_temperature"
+        }
+    ],
+    "block_means":[
+        {
+            "name": "IMIR_HK_ICE_SEC_VOLT1",
+            "database_id": "IMIR_HK_ICE_SEC_VOLT1_OPS",
+            "description": "ICE Secondary Voltage (HV) 1",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": ">",
+                    "threshold": 25
+                }
+            ],
+            "plot_data": "nominal",
+            "nominal_value": 39.21,
+            "yellow_limits": [39.11, 39.31],
+            "plot_category": "ICE_voltage"
+        },
+        {
+            "name": "IMIR_HK_ICE_SEC_VOLT2",
+            "database_id": "IMIR_HK_ICE_SEC_VOLT2_OPS",
+            "description": "ICE Secondary Voltage (HV) 2",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": ">",
+                    "threshold": 25
+                }
+            ],
+            "plot_data": "nominal",
+            "nominal_value": 79.19,
+            "yellow_limits": [78.99, 79.39],
+            "plot_category": "ICE_voltage"
+        },
+        {
+            "name": "IMIR_HK_ICE_SEC_VOLT3",
+            "database_id": "IMIR_HK_ICE_SEC_VOLT3_OPS",
+            "description": "ICE Secondary Voltage (HV) 3",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": ">",
+                    "threshold": 25
+                }
+            ],
+            "plot_data": "nominal",
+            "nominal_value": 39.87,
+            "yellow_limits": [39.82, 39.92],
+            "plot_category": "ICE_voltage"
+        },
+        {
+            "name": "IMIR_HK_ICE_SEC_VOLT4",
+            "database_id": "IMIR_HK_ICE_SEC_VOLT4_OPS",
+            "description": "ICE Secondary Voltage (HV) 4",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": ">",
+                    "threshold": 25
+                }
+            ],
+            "plot_data": "nominal",
+            "nominal_value": 4.88,
+            "yellow_limits": [4.86, 4.91],
+            "plot_category": "ICE_voltage"
+        },
+        {
+            "name": "SE_ZIMIRICEA",
+            "database_id": "SE_ZIMIRICEA_OPS",
+            "description": "ICE drive current",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": ">",
+                    "threshold": 25
+                }
+            ],
+            "plot_data": "*SE_ZBUSVLT",
+            "nominal_value": 11.13,
+            "yellow_limits": [10.23, 12.02],
+            "plot_category": "ICE_power"
+        },
+        {
+            "name": "IMIR_HK_FW_POS_VOLT",
+            "database_id": "IMIR_HK_FW_POS_VOLT",
+            "description": "FW position sensor supply voltage",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_FW_POS_VOLT",
+                    "relation": ">",
+                    "threshold": 0.25
+                }
+            ],
+            "plot_data": "nominal",
+            "nominal_value": 292.39,
+            "yellow_limits": [290.39, 294.39],
+            "plot_category": "filter_wheel"
+        },
+        {
+            "name": "IMIR_HK_GW14_POS_VOLT",
+            "database_id": "IMIR_HK_GW14_POS_VOLT",
+            "description": "GW14 position sensor supply voltage",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_GW14_POS_VOLT",
+                    "relation": ">",
+                    "threshold": 0.25
+                }
+            ],
+            "plot_data": "nominal",
+            "nominal_value": 293.92,
+            "yellow_limits": [291.92, 295.92],
+            "plot_category": "filter_wheel"
+        },
+        {
+            "name": "IMIR_HK_GW23_POS_VOLT",
+            "database_id": "IMIR_HK_GW23_POS_VOLT",
+            "description": "GW23 position sensor supply voltage",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_GW23_POS_VOLT",
+                    "relation": ">",
+                    "threshold": 0.25
+                }
+            ],
+            "plot_data": "nominal",
+            "nominal_value": 297.52,
+            "yellow_limits": [295.52, 299.52],
+            "plot_category": "filter_wheel"
+        },
+        {
+            "name": "IMIR_HK_CCC_POS_VOLT",
+            "database_id": "IMIR_HK_CCC_POS_VOLT",
+            "description": "CCC position sensor supply voltage",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_CCC_POS_VOLT",
+                    "relation": ">",
+                    "threshold": 0.25
+                }
+            ],
+            "plot_data": "nominal",
+            "nominal_value": 296.31,
+            "yellow_limits": [294.31, 298.31],
+            "plot_category": "filter_wheel"
+        }
+    ],
+    "every_change": [
+        {
+            "name": "IMIR_HK_FW_POS_RATIO",
+            "description": "FW position sensor ratio",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_FW_CUR_POS",
+                    "relation": "none",
+                    "threshold": 0
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [-1.6, 1.6],
+            "plot_category": "wheel_ratios"
+        },
+        {
+            "name": "IMIR_HK_GW14_POS_RATIO",
+            "description": "GW14 commanded position",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_GW14_CUR_POS",
+                    "relation": "none",
+                    "threshold": 0
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [-1.6, 1.6],
+            "plot_category": "filter_wheel"
+        },
+        {
+            "name": "IMIR_HK_GW23_POS_RATIO",
+            "description": "GW23 commanded position",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_GW23_CUR_POS",
+                    "relation": "none",
+                    "threshold": 0
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [-1.6, 1.6],
+            "plot_category": "filter_wheel"
+        },
+        {
+            "name": "IMIR_HK_CCC_POS_RATIO",
+            "description": "CCC commanded position",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_CCC_CUR_POS",
+                    "relation": "none",
+                    "threshold": 0
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [-6.0, 6.0],
+            "plot_category": "filter_wheel"
+        }
+    ]
+}
