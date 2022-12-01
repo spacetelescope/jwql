@@ -32,8 +32,8 @@
                 }
             ],
             "plot_data": "*SE_ZBUSVLT",
-            "nominal_value": 7.57,
-            "yellow_limits": [7.0, 8.13],
+            "nominal_value": 7.11,
+            "yellow_limits": [6.54, 7.68],
             "plot_category": "Power"
         },
         {
@@ -68,8 +68,8 @@
                 }
             ],
             "plot_data": "nominal",
-            "nominal_value": 4.53,
-            "yellow_limits": [4.52, 4.55],
+            "nominal_value": 4.533,
+            "yellow_limits": [4.523, 4.543],
             "plot_category": "ICE_voltage"
         },
         {
@@ -106,6 +106,41 @@
             "yellow_limits": [5.0, 30.0],
             "plot_category": "ICE_temperature"
         },
+        {
+            "name": "ST_ZTC1MIRIA",
+            "description": "HTCL14 Thermistor #1 - MIRI/DITCE Panel Temperature A",
+            "dependency": [
+                {
+                    "name": "SE_ZIMIRICEA",
+                    "relation": ">",
+                    "threshold": 0.2
+                },
+                {
+                    "name": "IMIR_HK_ICE_SEC_VOLT1",
+                    "relation": "<",
+                    "threshold": 1
+                },
+                {
+                    "name": "IMIR_HK_IMG_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_IFU_CAL_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                },
+                {
+                    "name": "IMIR_HK_POM_LOOP",
+                    "relation": "=",
+                    "threshold": "OFF"
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [5.0, 30.0],
+            "plot_category": "ICE_temperature"
+        },
+
         {
             "name": "IGDP_MIR_ICE_T1P_CRYO",
             "description": "Deck Nominal Temperature (T1)",
@@ -376,7 +411,7 @@
             ],
             "plot_data": "nominal",
             "yellow_limits": [5.7, 7.5],
-            "plot_category": "FW_temperature"
+            "plot_category": "Mech_temp"
         },
         {
             "name": "IGDP_MIR_ICE_CCC_CRYO",
@@ -410,7 +445,7 @@
             ],
             "plot_data": "nominal",
             "yellow_limits": [5.7, 7.5],
-            "plot_category": "FW_temperature"
+            "plot_category": "Mech_temp"
         },
         {
             "name": "IGDP_MIR_ICE_GW14_CRYO",
@@ -444,7 +479,7 @@
             ],
             "plot_data": "nominal",
             "yellow_limits": [5.7, 7.5],
-            "plot_category": "FW_temperature"
+            "plot_category": "Mech_temp"
         },
         {
             "name": "IGDP_MIR_ICE_GW23_CRYO",
@@ -478,7 +513,7 @@
             ],
             "plot_data": "nominal",
             "yellow_limits": [5.7, 7.5],
-            "plot_category": "FW_temperature"
+            "plot_category": "Mech_temp"
         },
         {
             "name": "IGDP_MIR_ICE_POMP_CRYO",
@@ -642,8 +677,8 @@
                 }
             ],
             "plot_data": "*SE_ZBUSVLT",
-            "nominal_value": 30.31,
-            "yellow_limits": [27.94, 32.67],
+            "nominal_value": 28.5,
+            "yellow_limits": [26.13, 30.87],
             "plot_category": "Power"
         },
         {
@@ -672,8 +707,8 @@
                 }
             ],
             "plot_data": "nominal",
-            "nominal_value": 5.0,
-            "yellow_limits": [4.95, 5.05],
+            "nominal_value": 4.978,
+            "yellow_limits": [4.928, 5.028],
             "plot_category": "FPE_voltage"
         },
         {
@@ -730,8 +765,8 @@
                 }
             ],
             "plot_data": "nominal",
-            "nominal_value": 5.0,
-            "yellow_limits": [4.95, 5.05],
+            "nominal_value": 4.991,
+            "yellow_limits": [4.941, 5.041],
             "plot_category": "FPE_voltage"
         },
         {
@@ -788,8 +823,8 @@
                 }
             ],
             "plot_data": "nominal",
-            "nominal_value": 5.0,
-            "yellow_limits": [-5.05, -4.95],
+            "nominal_value": -5.023,
+            "yellow_limits": [-5.073, -4.973],
             "plot_category": "FPE_voltage"
         },
         {
@@ -846,8 +881,8 @@
                 }
             ],
             "plot_data": "nominal",
-            "nominal_value": 7.0,
-            "yellow_limits": [6.95, 7.05],
+            "nominal_value": 6.953,
+            "yellow_limits": [6.903, 7.053],
             "plot_category": "FPE_voltage"
         },
         {
@@ -880,7 +915,7 @@
         },
         {
             "name": "IMIR_PDU_V_ANA_N7V",
-            "description": "FPE -5V Analog V (V)",
+            "description": "FPE -7V Analog V (V)",
             "dependency": [
                 {
                     "name": "SE_ZIMIRFPEA",
@@ -904,8 +939,8 @@
                 }
             ],
             "plot_data": "nominal",
-            "nominal_value": -7.0,
-            "yellow_limits": [-7.05, -6.95],
+            "nominal_value": -6.943,
+            "yellow_limits": [-6.993, -6.893],
             "plot_category": "FPE_voltage"
         },
         {
@@ -962,8 +997,8 @@
                 }
             ],
             "plot_data": "nominal",
-            "nominal_value": 2.5,
-            "yellow_limits": [2.45, 2.55],
+            "nominal_value": 2.5043,
+            "yellow_limits": [2.4543, 2.5543],
             "plot_category": "FPE_voltage"
         },
         {
@@ -1526,7 +1561,7 @@
                 }
             ],
             "plot_data": "nominal",
-            "plot_trendlines": [238.2, 350.0],
+            "yellow_limits": [238.2, 350.0],
             "plot_category": "FPE_temperature"
         },
         {
@@ -1671,7 +1706,7 @@
                 }
             ],
             "plot_data": "nominal",
-            "plot_category": "FPE_temperature"
+            "plot_category": "Detector_temperature"
         },
         {
             "name": "IGDP_MIR_SW_DET_TEMP",
@@ -1699,7 +1734,7 @@
                 }
             ],
             "plot_data": "nominal",
-            "plot_category": "FPE_temperature"
+            "plot_category": "Detector_temperature"
         },
         {
             "name": "IGDP_MIR_LW_DET_TEMP",
@@ -1727,7 +1762,7 @@
                 }
             ],
             "plot_data": "nominal",
-            "plot_category": "FPE_temperature"
+            "plot_category": "Detector_temperature"
         }
     ],
     "block_means":[
@@ -1743,8 +1778,8 @@
                 }
             ],
             "plot_data": "nominal",
-            "nominal_value": 39.21,
-            "yellow_limits": [39.11, 39.31],
+            "nominal_value": 39.24,
+            "yellow_limits": [39.14, 39.34],
             "plot_category": "ICE_voltage"
         },
         {
@@ -1759,8 +1794,8 @@
                 }
             ],
             "plot_data": "nominal",
-            "nominal_value": 79.19,
-            "yellow_limits": [78.99, 79.39],
+            "nominal_value": 79.256,
+            "yellow_limits": [79.006, 79.506],
             "plot_category": "ICE_voltage"
         },
         {
@@ -1775,8 +1810,8 @@
                 }
             ],
             "plot_data": "nominal",
-            "nominal_value": 39.87,
-            "yellow_limits": [39.82, 39.92],
+            "nominal_value": 39.868,
+            "yellow_limits": [39.818, 39.918],
             "plot_category": "ICE_voltage"
         },
         {
@@ -1791,8 +1826,8 @@
                 }
             ],
             "plot_data": "nominal",
-            "nominal_value": 4.88,
-            "yellow_limits": [4.86, 4.91],
+            "nominal_value": 4.881,
+            "yellow_limits": [4.861, 4.911],
             "plot_category": "ICE_voltage"
         },
         {
@@ -1807,9 +1842,9 @@
                 }
             ],
             "plot_data": "*SE_ZBUSVLT",
-            "nominal_value": 11.13,
+            "nominal_value": 11.4,
             "yellow_limits": [10.23, 12.02],
-            "plot_category": "ICE_power"
+            "plot_category": "Power"
         },
         {
             "name": "IMIR_HK_FW_POS_VOLT",
@@ -1823,9 +1858,9 @@
                 }
             ],
             "plot_data": "nominal",
-            "nominal_value": 292.39,
-            "yellow_limits": [290.39, 294.39],
-            "plot_category": "filter_wheel"
+            "nominal_value": 296.79,
+            "yellow_limits": [294.79, 298.79],
+            "plot_category": "Pos_Sen_Volts"
         },
         {
             "name": "IMIR_HK_GW14_POS_VOLT",
@@ -1839,9 +1874,9 @@
                 }
             ],
             "plot_data": "nominal",
-            "nominal_value": 293.92,
-            "yellow_limits": [291.92, 295.92],
-            "plot_category": "filter_wheel"
+            "nominal_value": 291.62,
+            "yellow_limits": [289.62, 293.62],
+            "plot_category": "Pos_Sen_Volts"
         },
         {
             "name": "IMIR_HK_GW23_POS_VOLT",
@@ -1855,9 +1890,9 @@
                 }
             ],
             "plot_data": "nominal",
-            "nominal_value": 297.52,
-            "yellow_limits": [295.52, 299.52],
-            "plot_category": "filter_wheel"
+            "nominal_value": 293.503,
+            "yellow_limits": [291.503, 295.503],
+            "plot_category": "Pos_Sen_Volts"
         },
         {
             "name": "IMIR_HK_CCC_POS_VOLT",
@@ -1871,15 +1906,15 @@
                 }
             ],
             "plot_data": "nominal",
-            "nominal_value": 296.31,
-            "yellow_limits": [294.31, 298.31],
-            "plot_category": "filter_wheel"
+            "nominal_value": 296.057,
+            "yellow_limits": [294.057, 298.057],
+            "plot_category": "Pos_Sen_Volts"
         }
     ],
     "every_change": [
         {
             "name": "IMIR_HK_FW_POS_RATIO",
-            "description": "FW position sensor ratio",
+            "description": "FW normalized position sensor voltage ratio",
             "dependency": [
                 {
                     "name": "IMIR_HK_FW_CUR_POS",
@@ -1889,11 +1924,11 @@
             ],
             "plot_data": "nominal",
             "yellow_limits": [-1.6, 1.6],
-            "plot_category": "wheel_ratios"
+            "plot_category": "Position_sensors"
         },
         {
             "name": "IMIR_HK_GW14_POS_RATIO",
-            "description": "GW14 commanded position",
+            "description": "GW14 normalized position sensor voltage ratio",
             "dependency": [
                 {
                     "name": "IMIR_HK_GW14_CUR_POS",
@@ -1903,11 +1938,11 @@
             ],
             "plot_data": "nominal",
             "yellow_limits": [-1.6, 1.6],
-            "plot_category": "filter_wheel"
+            "plot_category": "Position_sensors"
         },
         {
             "name": "IMIR_HK_GW23_POS_RATIO",
-            "description": "GW23 commanded position",
+            "description": "GW23 normalized position sensor voltage ratio",
             "dependency": [
                 {
                     "name": "IMIR_HK_GW23_CUR_POS",
@@ -1917,11 +1952,11 @@
             ],
             "plot_data": "nominal",
             "yellow_limits": [-1.6, 1.6],
-            "plot_category": "filter_wheel"
+            "plot_category": "Position_sensors"
         },
         {
             "name": "IMIR_HK_CCC_POS_RATIO",
-            "description": "CCC commanded position",
+            "description": "CCC normalized position sensor voltage ratio",
             "dependency": [
                 {
                     "name": "IMIR_HK_CCC_CUR_POS",
@@ -1931,7 +1966,7 @@
             ],
             "plot_data": "nominal",
             "yellow_limits": [-6.0, 6.0],
-            "plot_category": "filter_wheel"
+            "plot_category": "Position_sensors"
         }
     ]
 }
