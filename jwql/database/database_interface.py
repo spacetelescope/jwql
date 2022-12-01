@@ -28,6 +28,7 @@ Authors
     - Bryan Hilbert
     - Misty Cracraft
     - Sara Ogaz
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -62,6 +63,7 @@ import os
 import socket
 import pandas as pd
 
+from sqlalchemy import BigInteger
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import create_engine
@@ -133,7 +135,7 @@ def load_connection(connection_string):
     ``ascql``:
         https://github.com/spacetelescope/acsql/blob/master/acsql/database/database_interface.py
     """
-    engine = create_engine(connection_string, echo=False)
+    engine = create_engine(connection_string, echo=False, client_encoding='utf8', encoding='utf8')
     base = declarative_base(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
@@ -287,6 +289,7 @@ def get_monitor_columns(data_dict, table_name):
 
     # Define column types
     data_type_dict = {'integer': Integer(),
+                      'bigint': BigInteger(),
                       'string': String(),
                       'float': Float(precision=32),
                       'decimal': Float(precision='13,8'),
@@ -446,6 +449,26 @@ MIRIReadnoiseQueryHistory = monitor_orm_factory('miri_readnoise_query_history')
 MIRIReadnoiseStats = monitor_orm_factory('miri_readnoise_stats')
 FGSReadnoiseQueryHistory = monitor_orm_factory('fgs_readnoise_query_history')
 FGSReadnoiseStats = monitor_orm_factory('fgs_readnoise_stats')
+NIRCamEDBDailyStats = monitor_orm_factory('nircam_edb_daily_stats')
+NIRCamEDBBlockStats = monitor_orm_factory('nircam_edb_blocks_stats')
+NIRCamEDBTimeIntervalStats = monitor_orm_factory('nircam_edb_time_interval_stats')
+NIRCamEDBEveryChangeStats = monitor_orm_factory('nircam_edb_every_change_stats')
+MIRIEDBDailyStats = monitor_orm_factory('miri_edb_daily_stats')
+MIRIEDBBlockStats = monitor_orm_factory('miri_edb_blocks_stats')
+MIRIEDBTimeIntervalStats = monitor_orm_factory('miri_edb_time_interval_stats')
+MIRIEDBEveryChangeStats = monitor_orm_factory('miri_edb_every_change_stats')
+NIRISSEDBDailyStats = monitor_orm_factory('niriss_edb_daily_stats')
+NIRISSEDBBlockStats = monitor_orm_factory('niriss_edb_blocks_stats')
+NIRISSEDBTimeIntervalStats = monitor_orm_factory('niriss_edb_time_interval_stats')
+NIRISSEDBEveryChangeStats = monitor_orm_factory('niriss_edb_every_change_stats')
+FGSEDBDailyStats = monitor_orm_factory('fgs_edb_daily_stats')
+FGSEDBBlockStats = monitor_orm_factory('fgs_edb_blocks_stats')
+FGSEDBTimeIntervalStats = monitor_orm_factory('fgs_edb_time_interval_stats')
+FGSEDBEveryChangeStats = monitor_orm_factory('fgs_edb_every_change_stats')
+NIRSpecEDBDailyStats = monitor_orm_factory('nirspec_edb_daily_stats')
+NIRSpecEDBBlockStats = monitor_orm_factory('nirspec_edb_blocks_stats')
+NIRSpecEDBTimeIntervalStats = monitor_orm_factory('nirspec_edb_time_interval_stats')
+NIRSpecEDBEveryChangeStats = monitor_orm_factory('nirspec_edb_every_change_stats')
 NIRCamCosmicRayQueryHistory = monitor_orm_factory('nircam_cosmic_ray_query_history')
 NIRCamCosmicRayStats = monitor_orm_factory('nircam_cosmic_ray_stats')
 MIRICosmicRayQueryHistory = monitor_orm_factory('miri_cosmic_ray_query_history')
@@ -456,7 +479,70 @@ FGSCosmicRayQueryHistory = monitor_orm_factory('fgs_cosmic_ray_query_history')
 FGSCosmicRayStats = monitor_orm_factory('fgs_cosmic_ray_stats')
 NIRSpecCosmicRayQueryHistory = monitor_orm_factory('nirspec_cosmic_ray_query_history')
 NIRSpecCosmicRayStats = monitor_orm_factory('nirspec_cosmic_ray_stats')
+NIRSpecTAQueryHistory = monitor_orm_factory('nirspec_ta_query_history')
+NIRSpecTAStats = monitor_orm_factory('nirspec_ta_stats')
 
+INSTRUMENT_TABLES = {
+    'nircam': [NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent,
+               NIRCamBiasQueryHistory, NIRCamBiasStats, NIRCamBadPixelQueryHistory,
+               NIRCamBadPixelStats, NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats,
+               NIRCamAnomaly, NIRCamCosmicRayQueryHistory, NIRCamCosmicRayStats,
+               NIRCamEDBDailyStats, NIRCamEDBBlockStats, NIRCamEDBTimeIntervalStats,
+               NIRCamEDBEveryChangeStats],
+    'niriss': [NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent,
+               NIRISSBiasQueryHistory, NIRISSBiasStats, NIRISSBadPixelQueryHistory,
+               NIRISSBadPixelStats, NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats,
+               NIRISSAnomaly, NIRISSCosmicRayQueryHistory, NIRISSCosmicRayStats,
+               NIRISSEDBDailyStats, NIRISSEDBBlockStats, NIRISSEDBTimeIntervalStats,
+               NIRISSEDBEveryChangeStats],
+    'miri': [MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent,
+             MIRIBadPixelQueryHistory, MIRIBadPixelStats, MIRIReadnoiseQueryHistory,
+             MIRIReadnoiseStats, MIRIAnomaly, MIRICosmicRayQueryHistory, MIRICosmicRayStats,
+             MIRIEDBDailyStats, MIRIEDBBlockStats, MIRIEDBTimeIntervalStats,
+             MIRIEDBEveryChangeStats],
+    'nirspec': [NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent,
+                NIRSpecBiasQueryHistory, NIRSpecBiasStats, NIRSpecBadPixelQueryHistory,
+                NIRSpecBadPixelStats, NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats,
+                NIRSpecAnomaly, NIRSpecTAQueryHistory, NIRSpecTAStats,
+                NIRSpecCosmicRayQueryHistory, NIRSpecCosmicRayStats,
+                NIRSpecEDBDailyStats, NIRSpecEDBBlockStats, NIRSpecEDBTimeIntervalStats,
+                NIRSpecEDBEveryChangeStats],
+    'fgs': [FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent,
+            FGSBadPixelQueryHistory, FGSBadPixelStats, FGSReadnoiseQueryHistory,
+            FGSReadnoiseStats, FGSAnomaly, FGSCosmicRayQueryHistory, FGSCosmicRayStats,
+            FGSEDBDailyStats, FGSEDBBlockStats, FGSEDBTimeIntervalStats,
+            FGSEDBEveryChangeStats]}
+
+MONITOR_TABLES = {
+    'anomaly': [NIRCamAnomaly, NIRISSAnomaly, NIRSpecAnomaly, MIRIAnomaly, FGSAnomaly],
+    'cosmic_ray': [NIRCamCosmicRayQueryHistory, NIRCamCosmicRayStats,
+                   MIRICosmicRayQueryHistory, MIRICosmicRayStats,
+                   NIRISSCosmicRayQueryHistory, NIRISSCosmicRayStats,
+                   FGSCosmicRayQueryHistory, FGSCosmicRayStats,
+                   NIRSpecCosmicRayQueryHistory, NIRSpecCosmicRayStats],
+    'dark': [NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent,
+             NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent,
+             NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent,
+             MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent,
+             FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent],
+    'bias': [NIRCamBiasQueryHistory, NIRCamBiasStats, NIRISSBiasQueryHistory,
+             NIRISSBiasStats, NIRSpecBiasQueryHistory, NIRSpecBiasStats],
+    'bad_pixel': [NIRCamBadPixelQueryHistory, NIRCamBadPixelStats, NIRISSBadPixelStats,
+                  NIRISSBadPixelQueryHistory, FGSBadPixelQueryHistory, FGSBadPixelStats,
+                  MIRIBadPixelQueryHistory, MIRIBadPixelStats, NIRSpecBadPixelQueryHistory,
+                  NIRSpecBadPixelStats],
+    'readnoise': [NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats, NIRISSReadnoiseStats,
+                  NIRISSReadnoiseQueryHistory, NIRSpecReadnoiseQueryHistory,
+                  NIRSpecReadnoiseStats, MIRIReadnoiseQueryHistory, MIRIReadnoiseStats,
+                  FGSReadnoiseQueryHistory, FGSReadnoiseStats],
+    'ta': [NIRSpecTAQueryHistory, NIRSpecTAStats],
+    'edb': [NIRCamEDBDailyStats, NIRCamEDBBlockStats, NIRCamEDBTimeIntervalStats,
+            NIRCamEDBEveryChangeStats, NIRISSEDBDailyStats, NIRISSEDBBlockStats,
+            NIRISSEDBTimeIntervalStats, NIRISSEDBEveryChangeStats, MIRIEDBDailyStats,
+            MIRIEDBBlockStats, MIRIEDBTimeIntervalStats, MIRIEDBEveryChangeStats,
+            NIRSpecEDBDailyStats, NIRSpecEDBBlockStats, NIRSpecEDBTimeIntervalStats,
+            NIRSpecEDBEveryChangeStats, FGSEDBDailyStats, FGSEDBBlockStats,
+            FGSEDBTimeIntervalStats, FGSEDBEveryChangeStats]}
 
 if __name__ == '__main__':
     base.metadata.create_all(engine)

@@ -29,6 +29,7 @@ References
 
 import getpass
 import glob
+import itertools
 import json
 import pyvo as vo
 import os
@@ -454,8 +455,7 @@ def filename_parser(filename):
                     filename_dict['detector'][:3].lower()
                 ]
             elif name_match == 'stage_2_msa':
-                    filename_dict['instrument'] = 'nirspec'
-
+                filename_dict['instrument'] = 'nirspec'
 
     # Raise error if unable to parse the filename
     except AttributeError:
@@ -580,18 +580,36 @@ def check_config_for_key(key):
     try:
         get_config()[key]
     except KeyError:
-        raise KeyError(
-            'The key `{}` is not present in config.json. Please add it.'.format(key) +
-            ' See the relevant wiki page (https://github.com/spacetelescope/' +
-            'jwql/wiki/Config-file) for more information.'
-        )
+        msg = 'The key `{}` is not present in config.json. Please add it.'.format(key)
+        msg += ' See the relevant wiki page (https://github.com/spacetelescope/'
+        msg += 'jwql/wiki/Config-file) for more information.'
+        raise KeyError(msg)
 
     if get_config()[key] == "":
-        raise ValueError(
-            'Please complete the `{}` field in your config.json. '.format(key) +
-            ' See the relevant wiki page (https://github.com/spacetelescope/' +
-            'jwql/wiki/Config-file) for more information.'
-        )
+        msg = 'Please complete the `{}` field in your config.json. '.format(key)
+        msg += ' See the relevant wiki page (https://github.com/spacetelescope/'
+        msg += 'jwql/wiki/Config-file) for more information.'
+        raise ValueError(msg)
+
+
+def delete_non_rate_thumbnails(extensions=['_rate_', '_dark']):
+    """This script will go through all the thumbnail directories and delete all
+    thumbnails that do not contain the given extensions. We currently create thumbnails
+    using only rate.fits and dark.fits files, so the default is to keep only those.
+
+    Parameters
+    ----------
+    extension : list
+        If a thumbnail filename contains any of these strings, it will not be deleted
+    """
+    base_dir = get_config()["thumbnail_filesystem"]
+    dir_list = sorted(glob.glob(os.path.join(base_dir, 'jw*')))
+
+    for dirname in dir_list:
+        files = glob.glob(os.path.join(dirname, '*.thumb'))
+        for file in files:
+            if not any([x in file for x in extensions]):
+                os.remove(file)
 
 
 def query_format(string):
@@ -607,3 +625,31 @@ def query_unformat(string):
     unsplit_string = string.replace(" ", "_")
 
     return unsplit_string
+
+
+def grouper(iterable, chunksize):
+    """
+    Take a list of items (iterable), and group it into chunks of chunksize, with the
+    last chunk being any remaining items. This allows you to batch-iterate through a 
+    potentially very long list without missing any items, and where each individual
+    iteration can involve a much smaller number of files. Particularly useful for 
+    operations that you want to execute in batches, but don't want the batches to be too
+    long.
+    
+    Examples
+    --------
+    
+    grouper([1, 2, 3, 4, 5], 2)
+    produces
+    (1, 2), (3, 4), (5, )
+    
+    grouper([1, 2, 3, 4, 5], 6)
+    produces
+    (1, 2, 3, 4, 5)
+    """
+    it = iter(iterable)
+    while True:
+        chunk = tuple(itertools.islice(it, chunksize))
+        if not chunk:
+            return
+        yield chunk

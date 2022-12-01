@@ -9,6 +9,8 @@ Authors
     - Ben Sunnquist
     - Teagan King
     - Mike Engesser
+    - Maria Pena-Guerrero
+    - Rachel Cooper
 
 Use
 ---
@@ -68,10 +70,10 @@ ANOMALIES_PER_INSTRUMENT = {
     # instrument-specific anomalies:
     'column_pull_up': ['miri'],
     'column_pull_down': ['miri'],
-    'dominant_msa_leakage': ['nirspec'],
+    'Dominant_MSA_Leakage': ['nirspec'],
     'dragons_breath': ['nircam'],
-    'MRS_glow': ['miri'],
-    'MRS_zipper': ['miri'],
+    'MRS_Glow': ['miri'],
+    'MRS_Zipper': ['miri'],
     'internal_reflection': ['miri'],
     'optical_short': ['nirspec'],  # Only for MOS observations
     'row_pull_up': ['miri'],
@@ -80,16 +82,20 @@ ANOMALIES_PER_INSTRUMENT = {
     'tree_rings': ['miri'],
     # additional anomalies:
     'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
+# anomalies that shouldn't be 'titleized'
+special_cases = ['Dominant_MSA_Leakage','MRS_Glow','MRS_Zipper','LRS_Contamination']
 
 # Defines the possible anomalies to flag through the web app
-ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage"
-                   else (anomaly, "Dominant MSA Leakage")
-                   for anomaly in ANOMALIES_PER_INSTRUMENT]
+ANOMALY_CHOICES = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
+                        else (anomaly, anomaly.replace('_',' '))
+                        for anomaly in ANOMALIES_PER_INSTRUMENT]
 
 ANOMALY_CHOICES_FGS = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
                        if 'fgs' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
-ANOMALY_CHOICES_MIRI = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
+ANOMALY_CHOICES_MIRI = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
+                        else (anomaly, anomaly.replace('_',' '))
+                        for anomaly in ANOMALIES_PER_INSTRUMENT
                         if 'miri' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
 ANOMALY_CHOICES_NIRCAM = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
@@ -98,10 +104,10 @@ ANOMALY_CHOICES_NIRCAM = [(anomaly, inflection.titleize(anomaly)) for anomaly in
 ANOMALY_CHOICES_NIRISS = [(anomaly, inflection.titleize(anomaly)) for anomaly in ANOMALIES_PER_INSTRUMENT
                           if 'niriss' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
-ANOMALY_CHOICES_NIRSPEC = [(anomaly, inflection.titleize(anomaly)) if anomaly != "dominant_msa_leakage"
-                           else (anomaly, "Dominant MSA Leakage")
-                           for anomaly in ANOMALIES_PER_INSTRUMENT
-                           if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]]
+ANOMALY_CHOICES_NIRSPEC = [(anomaly, inflection.titleize(anomaly)) if anomaly not in special_cases
+                            else (anomaly, anomaly.replace('_',' '))
+                            for anomaly in ANOMALIES_PER_INSTRUMENT
+                            if 'nirspec' in ANOMALIES_PER_INSTRUMENT[anomaly]]
 
 ANOMALY_CHOICES_PER_INSTRUMENT = {'fgs': ANOMALY_CHOICES_FGS,
                                   'miri': ANOMALY_CHOICES_MIRI,
@@ -148,6 +154,10 @@ DETECTOR_PER_INSTRUMENT = {'miri': ['MIRIFULONG', 'MIRIFUSHORT', 'MIRIMAGE'],
                            'nirspec': ['NRS1', 'NRS2'],
                            'fgs': ['GUIDER1', 'GUIDER2']}
 
+# Default time range to use for EDB monitor telemetry plots. The plots will
+# go from this starting time to the monitor run time, unless otherwise requested.
+EDB_DEFAULT_PLOT_RANGE = 14  # days.
+
 EXP_TYPE_PER_INSTRUMENT = {'fgs': ['FGS_FOCUS', 'FGS_IMAGE', 'FGS_INTFLAT',
                                    'FGS_SKYFLAT', 'FGS_DARK'],
                            'miri': ['MIR_FLATMRS', 'MIR_MRS', 'MIR_FLATIMAGE',
@@ -173,6 +183,11 @@ EXPTYPES = {"nircam": {"imaging": "NRC_IMAGE", "ts_imaging": "NRC_TSIMAGE",
             "niriss": {"imaging": "NIS_IMAGE", "ami": "NIS_IMAGE",
                        "pom": "NIS_IMAGE", "wfss": "NIS_WFSS"},
             "fgs": {"imaging": "FGS_IMAGE"}}
+
+EXPOSURE_PAGE_SUFFIX_ORDER = ['uncal', 'dark', 'trapsfilled', 'ramp', 'rate', 'rateints', 'fitopt', 'cal', 'calints',
+                              'msa', 'crf', 'crfints', 'bsub', 'bsubints', 'i2d', 's2d', 's3d', 'x1d', 'x1dints',
+                              'cat', 'segm', 'c1d', 'psfstack', 'psfalign', 'psfsub', 'amiavg', 'aminorm', 'ami',
+                              'psf-amiavg', 'phot', 'whtlt', 'wfscmb']
 
 # Filename Component Lengths
 FILE_AC_CAR_ID_LEN = 4
@@ -245,13 +260,16 @@ GUIDER_FILENAME_TYPE = ['gs-fg', 'gs-track', 'gs-id', 'gs-acq1', 'gs-acq2']
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
 
 # JWQL should ignore some filetypes in the filesystem.
-IGNORED_SUFFIXES = ['original', 'stream', 'x1d', 'x1dints', 'c1d']
+IGNORED_SUFFIXES = ['original', 'stream', 'x1d', 'x1dints', 'c1d', 'pre-image']
 
 # Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
     'dark_monitor': ['<instrument>_dark_dark_current', '<instrument>_dark_pixel_stats', '<instrument>_dark_query_history'],
     'bad_pixel_monitor': ['<instrument>_bad_pixel_stats', '<instrument>_bad_pixel_query_history'],
-    'cosmic_ray_monitor': ['<instrument>_cosmic_ray_stats', '<instrument>_cosmic_ray_query_history']}
+    'cosmic_ray_monitor': ['<instrument>_cosmic_ray_stats', '<instrument>_cosmic_ray_query_history'],
+    'msata_monitor': ['<instrument>_ta_stats', '<instrument>_ta_query_history'],
+    'wata_monitor': ['<instrument>_ta_stats', '<instrument>_ta_query_history']
+}
 
 INSTRUMENT_SERVICE_MATCH = {
     'FGS': 'Mast.Jwst.Filtered.Fgs',
@@ -289,17 +307,22 @@ JWST_INSTRUMENT_NAMES_UPPERCASE = {key: value.upper() for key, value in
 JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
                       JWST_INSTRUMENT_NAMES]
 
+# Maximum number of records returned by MAST for a single query
+MAST_QUERY_LIMIT = 500000
+
 # Available monitor names and their location for each JWST instrument
 MONITORS = {
     'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor'),
             ('Readnoise Monitor', '/fgs/readnoise_monitor'),
             ('Dark Current Monitor', '/fgs/dark_monitor'),
-            ('Cosmic Ray Monitor', '/fgs/cosmic_ray_monitor')],
+            ('Cosmic Ray Monitor', '/fgs/cosmic_ray_monitor'),
+            ('EDB Telemetry Monitor', '/fgs/edb_monitor')],
     'miri': [('Dark Current Monitor', '/miri/dark_monitor'),
              ('Data Trending', '#'),
              ('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
              ('Cosmic Ray Monitor', '/miri/cosmic_ray_monitor'),
              ('Readnoise Monitor', '/miri/readnoise_monitor'),
+             ('EDB Telemetry Monitor', '/miri/edb_monitor'),
              ('Cosmic Ray Monitor', '/miri/cosmic_ray_monitor'),
              ('Photometry Monitor', '#'),
              ('TA Failure Monitor', '#'),
@@ -311,6 +334,7 @@ MONITORS = {
                ('Gain Level Monitor', '#'),
                ('Dark Current Monitor', '/nircam/dark_monitor'),
                ('Bad Pixel Monitor', '/nircam/bad_pixel_monitor'),
+               ('EDB Telemetry Monitor', '/nircam/edb_monitor'),
                ('Photometric Stability Monitor', '#'),
                ('Cosmic Ray Monitor', '/nircam/cosmic_ray_monitor')],
     'niriss': [('Bad Pixel Monitor', '/niriss/bad_pixel_monitor'),
@@ -319,11 +343,13 @@ MONITORS = {
                ('TSO RMS Monitor', '#'),
                ('Bias Monitor', '/niriss/bias_monitor'),
                ('Dark Current Monitor', '/niriss/dark_monitor'),
-               ('Cosmic Ray Monitor', '/niriss/cosmic_ray_monitor')],
+               ('Cosmic Ray Monitor', '/niriss/cosmic_ray_monitor'),
+               ('EDB Telemetry Monitor', '/niriss/edb_monitor')],
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
-                ('Target Acquisition Monitor', '#'),
+                ('MSATA Monitor', '/nirspec/msata_monitor'),
+                ('WATA Monitor', '/nirspec/wata_monitor'),
                 ('Data Trending', '#'),
                 ('Detector Health Monitor', '#'),
                 ('Ref Pix Monitor', '#'),
@@ -332,7 +358,8 @@ MONITORS = {
                 ('Failed-open Shutter Monitor', '#'),
                 ('Bias Monitor', '/nirspec/bias_monitor'),
                 ('Dark Monitor', '/nirspec/dark_monitor'),
-                ('Cosmic Ray Monitor', '/nirspec/cosmic_ray_monitor')]}
+                ('Cosmic Ray Monitor', '/nirspec/cosmic_ray_monitor'),
+                ('EDB Telemetry Monitor', '/nirspec/edb_monitor')]}
 
 # Possible suffix types for coronograph exposures
 NIRCAM_CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']
@@ -386,6 +413,9 @@ SUFFIXES_TO_ADD_ASSOCIATION = ['crf', 'crfints']
 
 # Filename suffixes where data have been averaged over integrations
 SUFFIXES_WITH_AVERAGED_INTS = ['rate', 'cal', 'crf', 'i2d', 'bsub']
+
+# boolean accessed according to a viewed flag
+THUMBNAIL_FILTER_LOOK = ['New', 'Viewed']
 
 # Base name for the file listing the thumbnail images for a given instrument.
 # The complete name will have "_{instrument.lower}.txt" added to the end of this.

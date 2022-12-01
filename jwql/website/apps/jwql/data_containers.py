@@ -12,6 +12,7 @@ Authors
     - Matthew Bourque
     - Teagan King
     - Bryan Hilbert
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -30,6 +31,7 @@ from operator import getitem
 import os
 import re
 import tempfile
+import logging
 
 from astropy.io import fits
 from astropy.time import Time
@@ -45,11 +47,9 @@ import requests
 from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemonic_inventory
-from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
-from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
-from jwql.utils.constants import MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
-from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE
+from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
+from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
 from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND, SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS
 from jwql.utils.preview_image import PreviewImage
 from jwql.utils.credentials import get_mast_token
@@ -57,6 +57,9 @@ from jwql.utils.utils import get_rootnames_for_instrument_proposal
 from .forms import InstrumentAnomalySubmitForm
 from astroquery.mast import Mast
 
+# Increase the limit on the number of entries that can be returned by
+# a MAST query.
+Mast._portal_api_connection.PAGESIZE = MAST_QUERY_LIMIT
 
 # astroquery.mast import that depends on value of auth_mast
 # this import has to be made before any other import of astroquery.mast
@@ -69,6 +72,7 @@ if 'READTHEDOCS' in os.environ:
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
+    from jwql.website.apps.jwql.models import RootFileInfo
     check_config_for_key('auth_mast')
     configs = get_config()
     auth_mast = configs['auth_mast']
@@ -86,7 +90,6 @@ if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
 
-# Temporary until JWST operations: switch to test string for MAST request URL
 if not ON_GITHUB_ACTIONS:
     Mast._portal_api_connection.MAST_REQUEST_URL = get_config()['mast_request_url']
 
@@ -135,38 +138,6 @@ def build_table(tablename):
 
     session.close()
     return table_meta_data
-
-
-def data_trending():
-    """Container for Miri datatrending dashboard and components
-
-    Returns
-    -------
-    variables : int
-        nonsense
-    dashboard : list
-        A list containing the JavaScript and HTML content for the
-        dashboard
-    """
-    dashboard, variables = miri_dash.data_trending_dashboard()
-
-    return variables, dashboard
-
-
-def nirspec_trending():
-    """Container for Miri datatrending dashboard and components
-
-    Returns
-    -------
-    variables : int
-        nonsense
-    dashboard : list
-        A list containing the JavaScript and HTML content for the
-        dashboard
-    """
-    dashboard, variables = nirspec_dash.data_trending_dashboard()
-
-    return variables, dashboard
 
 
 def get_acknowledgements():
@@ -416,7 +387,7 @@ def get_edb_components(request):
                         comments.append(' ')
                         result_table.write(path_for_download, format='ascii.fixed_width',
                                            overwrite=True, delimiter=',', bookend=False)
-                        mnemonic_query_result.file_for_download = file_for_download
+                        mnemonic_query_result.file_for_download = path_for_download
 
             # create forms for search fields not clicked
             mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
@@ -465,7 +436,7 @@ def get_edb_components(request):
                 path_for_download = os.path.join(static_dir, file_for_download)
                 display_table.write(path_for_download, format='ascii.fixed_width',
                                     overwrite=True, delimiter=',', bookend=False)
-                mnemonic_exploration_result.file_for_download = file_for_download
+                mnemonic_exploration_result.file_for_download = path_for_download
 
                 if mnemonic_exploration_result.n_rows == 0:
                     mnemonic_exploration_result = 'empty'
@@ -1117,10 +1088,8 @@ def get_thumbnails_all_instruments(parameters):
 
         inst_filenames = [result['filename'].split('.')[0] for result in results]
         inst_filenames = [filename for filename in inst_filenames if os.path.splitext(filename).split('_')[-1] not in IGNORED_SUFFIXES]
-        filenames.extend(inst_filenames)
 
         # Get list of all thumbnails
-        thumbnail_list_file = f"{THUMBNAIL_LISTFILE}_{inst.lower()}.txt"
         thumbnail_inst_list = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, THUMBNAIL_LISTFILE))
 
         # Get subset of thumbnail images that match the filenames
@@ -1177,7 +1146,7 @@ def get_thumbnails_by_instrument(inst):
     thumbnails = []
     all_proposals = get_instrument_proposals(inst)
     for proposal in all_proposals:
-        result = mast_query_filenames_by_instrument(inst, proposal)
+        results = mast_query_filenames_by_instrument(inst, proposal)
 
         # Parse the results to get the rootnames
         filenames = [result['filename'].split('.')[0] for result in results]
@@ -1445,8 +1414,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     obs_list = sorted(list(set(all_obs)))
 
     # Get the available files for the instrument
-    filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart'])
-
+    filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart', 'exp_type'])
     # Get set of unique rootnames
     rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
 
@@ -1454,6 +1422,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     data_dict = {}
     data_dict['inst'] = inst
     data_dict['file_data'] = {}
+    exp_types = []
 
     # Gather data for each rootname, and construct a list of all observations
     # in the proposal
@@ -1486,11 +1455,23 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         # rootname will have the same exposure start time, so just keep the first.
         available_files = [item for item in filenames if rootname in item]
         exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
+        exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
+        exp_types.append(exp_type)
+        # Viewed is stored by rootname in the Model db.  Save it with the data_dict
+        # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
+        try:
+            root_file_info = RootFileInfo.objects.get(root_name=rootname)
+            viewed = THUMBNAIL_FILTER_LOOK[root_file_info.viewed]
+        except RootFileInfo.DoesNotExist:
+
+            viewed = THUMBNAIL_FILTER_LOOK[0]
 
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
+        data_dict['file_data'][rootname]["viewed"] = viewed
+        data_dict['file_data'][rootname]["exp_type"] = exp_type
 
         # We generate thumbnails only for rate and dark files. Check if these files
         # exist in the thumbnail filesystem. In the case where neither rate nor
@@ -1514,7 +1495,9 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
         except (ValueError, TypeError) as e:
             logging.warning("Unable to populate exp_start info for {}".format(rootname))
-            loggin.warning(e)
+            logging.warning(e)
+        except KeyError:
+            print("KeyError with get_expstart for {}".format(rootname))
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
@@ -1527,10 +1510,14 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             pass
 
     if proposal is not None:
-        dropdown_menus = {'detector': sorted(detectors)}
+        dropdown_menus = {'detector': sorted(detectors),
+                          'look': THUMBNAIL_FILTER_LOOK,
+                          'exp_type': sorted(set(exp_types))}
     else:
         dropdown_menus = {'detector': sorted(detectors),
-                          'proposal': sorted(proposals)}
+                          'proposal': sorted(proposals),
+                          'look': THUMBNAIL_FILTER_LOOK,
+                          'exp_type': sorted(set(exp_types))}
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus

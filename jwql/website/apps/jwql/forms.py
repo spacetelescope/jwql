@@ -58,20 +58,10 @@ from jwql.edb.engineering_database import is_valid_mnemonic
 
 
 from jwql.database import database_interface as di
-from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT
-from jwql.utils.constants import ANOMALIES_PER_INSTRUMENT
-from jwql.utils.constants import APERTURES_PER_INSTRUMENT
-from jwql.utils.constants import DETECTOR_PER_INSTRUMENT
-from jwql.utils.constants import EXP_TYPE_PER_INSTRUMENT
-from jwql.utils.constants import FILTERS_PER_INSTRUMENT
-from jwql.utils.constants import GENERIC_SUFFIX_TYPES
-from jwql.utils.constants import GRATING_PER_INSTRUMENT
-from jwql.utils.constants import GUIDER_FILENAME_TYPE
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND
-from jwql.utils.constants import READPATT_PER_INSTRUMENT
-from jwql.utils.utils import get_config, get_rootnames_for_instrument_proposal, filename_parser
-from jwql.utils.utils import query_format
+from jwql.utils.constants import (ANOMALY_CHOICES_PER_INSTRUMENT, ANOMALIES_PER_INSTRUMENT, APERTURES_PER_INSTRUMENT, DETECTOR_PER_INSTRUMENT, EXP_TYPE_PER_INSTRUMENT,
+                                  FILTERS_PER_INSTRUMENT, GENERIC_SUFFIX_TYPES, GRATING_PER_INSTRUMENT, GUIDER_FILENAME_TYPE, JWST_INSTRUMENT_NAMES_MIXEDCASE,
+                                  JWST_INSTRUMENT_NAMES_SHORTHAND, READPATT_PER_INSTRUMENT, IGNORED_SUFFIXES)
+from jwql.utils.utils import (get_config, get_rootnames_for_instrument_proposal, filename_parser, query_format)
 
 from wtforms import SubmitField, StringField
 
@@ -282,8 +272,8 @@ class FileSearchForm(forms.Form):
             all_files = glob.glob(search_string_public)
             all_files.extend(glob.glob(search_string_proprietary))
 
-            # Ignore "original" files
-            all_files = [filename for filename in all_files if 'original' not in filename]
+            # Gather all files that do not have the 'IGNORED_SUFFIXES' in them
+            all_files = [filename for filename in all_files if not any(name in filename for name in IGNORED_SUFFIXES)]
 
             if len(all_files) > 0:
                 all_instruments = []
@@ -458,19 +448,17 @@ class MnemonicSearchForm(forms.Form):
 class MnemonicQueryForm(forms.Form):
     """A triple-field form to query mnemonic records in the DMS EDB."""
 
-    production_mode = False
+    production_mode = True
 
     if production_mode:
         # times for default query (one day one week ago)
         now = Time.now()
-        delta_day = -7.
-        range_day = 1.
-        default_start_time = now + TimeDelta(delta_day, format='jd')
-        default_end_time = now + TimeDelta(delta_day + range_day, format='jd')
+        default_start_time = now + TimeDelta(3600., format='sec')
+        default_end_time = now
     else:
         # example for testing
-        default_start_time = Time('2019-04-02 00:00:00.000', format='iso')
-        default_end_time = Time('2019-04-02 00:01:00.000', format='iso')
+        default_start_time = Time('2022-06-20 00:00:00.000', format='iso')
+        default_end_time = Time('2022-06-21 00:00:00.000', format='iso')
 
     default_mnemonic_identifier = 'IMIR_HK_ICE_SEC_VOLT4'
 

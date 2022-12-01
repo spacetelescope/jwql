@@ -5,6 +5,7 @@ Authors
 
     - Matthew Bourque
     - Bryan Hilbert
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -17,12 +18,19 @@ Use
  """
 import datetime
 import os
+from astroquery.mast import Mast, Observations
 
 
 from jwql.database.database_interface import Monitor
 from jwql.jwql_monitors import monitor_mast
-from jwql.utils.constants import ASIC_TEMPLATES, JWST_DATAPRODUCTS
+from jwql.utils.constants import ASIC_TEMPLATES, JWST_DATAPRODUCTS, MAST_QUERY_LIMIT
 from jwql.utils.logging_functions import configure_logging, get_log_status
+from jwql.utils.utils import filename_parser
+
+
+# Increase the limit on the number of entries that can be returned by
+# a MAST query.
+Mast._portal_api_connection.PAGESIZE = MAST_QUERY_LIMIT
 
 
 def exclude_asic_tuning(mast_results):
@@ -124,8 +132,67 @@ def mast_query_darks(instrument, aperture, start_date, end_date, readpatt=None):
 
         # Create dictionary of parameters to add
         parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
-                      "apername": aperture, "exp_type": template_name,
-                     }
+                      "apername": aperture, "exp_type": template_name, }
+
+        if readpatt is not None:
+            parameters["readpatt"] = readpatt
+
+        query = monitor_mast.instrument_inventory(instrument, dataproduct=JWST_DATAPRODUCTS,
+                                                  add_filters=parameters, return_data=True, caom=False)
+        if 'data' in query.keys():
+            if len(query['data']) > 0:
+                query_results.extend(query['data'])
+
+    return query_results
+
+
+def mast_query_ta(instrument, aperture, start_date, end_date, readpatt=None):
+    """Use ``astroquery`` to search MAST for TA current data
+
+    Parameters
+    ----------
+    instrument : str
+        Instrument name (e.g. ``nirspec``)
+
+    aperture : str
+        Detector aperture to search for (e.g. ``NRS_S1600A1_SLIT``)
+
+    start_date : float
+        Starting date for the search in MJD
+
+    end_date : float
+        Ending date for the search in MJD
+
+    readpatt : str
+        Readout pattern to search for (e.g. ``RAPID``). If None,
+        readout pattern will not be added to the query parameters.
+
+    Returns
+    -------
+    query_results : list
+        List of dictionaries containing the query results
+    """
+
+    # Make sure instrument is correct case
+    if instrument.lower() == 'nirspec':
+        instrument = 'Nirspec'
+        if aperture == 'NRS_S1600A1_SLIT':
+            exp_types = ['NRS_TASLIT', 'NRS_BOTA', 'NRS_WATA']
+        else:
+            exp_types = ['NRS_TACQ', 'NRS_MSATA']
+
+    # monitor_mast.instrument_inventory does not allow list inputs to
+    # the added_filters input (or at least if you do provide a list, then
+    # it becomes a nested list when it sends the query to MAST. The
+    # nested list is subsequently ignored by MAST.)
+    # So query once for each exp_type, and combine outputs into a
+    # single list.
+    query_results = []
+    for template_name in exp_types:
+
+        # Create dictionary of parameters to add
+        parameters = {"date_obs_mjd": {"min": start_date, "max": end_date},
+                      "apername": aperture, "exp_type": template_name }
 
         if readpatt is not None:
             parameters["readpatt"] = readpatt
