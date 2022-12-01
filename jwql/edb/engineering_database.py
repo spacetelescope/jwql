@@ -664,7 +664,7 @@ class EdbMnemonic:
             self.median_times = [None]
 
     def get_table_data(self):
-        """Get data needed to make interactivate table in template."""
+        """Get data needed to make interactive table in template."""
 
         # generate tables for display and download in web app
         display_table = copy.deepcopy(self.data)
@@ -1270,7 +1270,7 @@ def create_time_offset(dt_obj, epoch):
 
 
 def get_mnemonic(mnemonic_identifier, start_time, end_time):
-    """Execute query and return a ``EdbMnemonic`` instance.
+    """Execute query and return an ``EdbMnemonic`` instance.
 
     The underlying MAST service returns data that include the
     datapoint preceding the requested start time and the datapoint
