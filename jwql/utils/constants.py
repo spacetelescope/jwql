@@ -184,6 +184,11 @@ EXPTYPES = {"nircam": {"imaging": "NRC_IMAGE", "ts_imaging": "NRC_TSIMAGE",
                        "pom": "NIS_IMAGE", "wfss": "NIS_WFSS"},
             "fgs": {"imaging": "FGS_IMAGE"}}
 
+EXPOSURE_PAGE_SUFFIX_ORDER = ['uncal', 'dark', 'trapsfilled', 'ramp', 'rate', 'rateints', 'fitopt', 'cal', 'calints',
+                              'msa', 'crf', 'crfints', 'bsub', 'bsubints', 'i2d', 's2d', 's3d', 'x1d', 'x1dints',
+                              'cat', 'segm', 'c1d', 'psfstack', 'psfalign', 'psfsub', 'amiavg', 'aminorm', 'ami',
+                              'psf-amiavg', 'phot', 'whtlt', 'wfscmb']
+
 # Filename Component Lengths
 FILE_AC_CAR_ID_LEN = 4
 FILE_AC_O_ID_LEN = 3
@@ -255,7 +260,7 @@ GUIDER_FILENAME_TYPE = ['gs-fg', 'gs-track', 'gs-id', 'gs-acq1', 'gs-acq2']
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
 
 # JWQL should ignore some filetypes in the filesystem.
-IGNORED_SUFFIXES = ['original', 'stream', 'x1d', 'x1dints', 'c1d']
+IGNORED_SUFFIXES = ['original', 'stream', 'x1d', 'x1dints', 'c1d', 'pre-image']
 
 # Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
