@@ -781,16 +781,18 @@ class BadPixels():
         badpix_types_from_darks = ['HOT', 'RC', 'OTHER_BAD_PIXEL', 'TELEGRAPH']
         illuminated_obstimes = []
         if illuminated_raw_files:
+            logging.info("Found {} uncalibrated flat fields".format(len(illuminated_raw_files)))
             badpix_types.extend(badpix_types_from_flats)
             out_exts = defaultdict(lambda: ['jump', '0_ramp_fit'])
             in_files = []
             for uncal_file, rate_file in zip(illuminated_raw_files, illuminated_slope_files):
+                logging.info("\tChecking illuminated raw file {} with rate file {}".format(uncal_file, rate_file))
                 self.get_metadata(uncal_file)
                 if rate_file == 'None':
                     short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
                     local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
-                    logging.info('Calling pipeline for {}'.format(uncal_file))
-                    logging.info("Copying raw file to {}".format(self.data_dir))
+                    logging.info('\t\tCalling pipeline for {}'.format(uncal_file))
+                    logging.info("\t\tCopying uncal file to {}".format(self.data_dir))
                     copy_files([uncal_file], self.data_dir)
                     if hasattr(self, 'nints') and self.nints > 1:
                         out_exts[short_name] = ['jump', '1_ramp_fit']
@@ -801,30 +803,44 @@ class BadPixels():
                     if needs_calibration:
                         in_files.append(local_uncal_file)
                     else:
-                        logging.info("Calibrated files already exist for {}".format(short_name))
-            outputs = run_parallel_pipeline(in_files, "uncal", out_exts, self.instrument, jump_pipe=True)
+                        logging.info("\t\tCalibrated files already exist for {}".format(short_name))
+                else:
+                    logging.info("\tRate file found for {}".format(uncal_file))
+
+            outputs = {}
+            if len(in_files) > 0:
+                logging.info("Running pipeline for {} files".format(len(in_files)))
+                outputs = run_parallel_pipeline(in_files, "uncal", out_exts, self.instrument, jump_pipe=True)
+
             index = 0
+            logging.info("Checking files post-calibration")
             for uncal_file, rate_file in zip(illuminated_raw_files, illuminated_slope_files):
+                logging.info("\tChecking files {}, {}".format(os.path.basename(uncal_file), os.path.basename(rate_file)))
                 local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
                 if local_uncal_file in outputs:
+                    logging.info("\t\tAdding calibrated file.")
                     illuminated_slope_files[index] = deepcopy(outputs[local_uncal_file][1])
                 else:
+                    logging.info("\t\tCalibration was skipped for file")
                     self.get_metadata(illuminated_raw_files[index])
-                    local_ramp_file = local_uncal_file.replace("uncal", "0_ramp_fit")
-                    if hasattr(self, 'nints') and self.nints > 1:
-                        local_ramp_file = local_ramp_file.replace("0_ramp_fit", "1_ramp_fit")
-                    if os.path.isfile(local_ramp_file):
-                        illuminated_slope_files[index] = local_ramp_file
-                    else:
-                        illuminated_slope_files[index] = None
+                    if not os.path.isfile(illuminated_slope_files[index]):
+                        logging.info("\t\tLooking for local rate file")
+                        local_rate_file = local_uncal_file.replace("uncal", "rateint")
+                        if os.path.isfile(local_rate_file):
+                            illuminated_slope_files[index] = local_rate_file
+                        else:
+                            logging.info("\tCould not find local rate file {}".format(local_rate_file))
+                            illuminated_slope_files[index] = None
                 index += 1
 
                 # Get observation time for all files
                 illuminated_obstimes.append(instrument_properties.get_obstime(uncal_file))
             
+            logging.info("Trimming unfound files.")
             index = 0
             while index < len(illuminated_raw_files):
                 if illuminated_slope_files[index] is None or illuminated_slope_files[index] == 'None':
+                    logging.info("\tRemoving {}".format(illuminated_raw_files[index]))
                     del illuminated_raw_files[index]
                     del illuminated_slope_files[index]
                     del illuminated_obstimes[index]
@@ -842,6 +858,7 @@ class BadPixels():
         dark_fitopt_files = []
         dark_obstimes = []
         if dark_raw_files:
+            logging.info("Found {} uncalibrated darks".format(len(dark_raw_files)))
             index = 0
             badpix_types.extend(badpix_types_from_darks)
             # In this case we need to run the pipeline on all input files,
@@ -850,17 +867,19 @@ class BadPixels():
             in_files = []
             out_exts = defaultdict(lambda: ['jump', 'fitopt', '0_ramp_fit'])
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
+                logging.info("Checking dark file {} with rate file {}".format(uncal_file, rate_file))
                 self.get_metadata(uncal_file)
-                logging.info('Calling pipeline for {} {}'.format(uncal_file, rate_file))
-                logging.info("Copying raw file to {}".format(self.data_dir))
-                copy_files([uncal_file], self.data_dir)
-                local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
                 short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
+                local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
+                if not os.path.isfile(local_uncal_file):
+                    logging.info("\tCopying raw file to {}".format(self.data_dir))
+                    copy_files([uncal_file], self.data_dir)
                 if hasattr(self, 'nints') and self.nints > 1:
                     out_exts[short_name] = ['jump', 'fitopt', '1_ramp_fit']
                 local_processed_files = [local_uncal_file.replace("uncal", x) for x in out_exts[short_name]]
                 calibrated_data = [os.path.isfile(x) for x in local_processed_files]
                 if not all(calibrated_data):
+                    logging.info('\tCalling pipeline for {} {}'.format(uncal_file, rate_file))
                     in_files.append(local_uncal_file)
                     dark_jump_files.append(None)
                     dark_fitopt_files.append(None)
@@ -872,16 +891,25 @@ class BadPixels():
                     dark_slope_files[index] = deepcopy(local_processed_files[2])
                 dark_obstimes.append(instrument_properties.get_obstime(uncal_file))
                 index += 1
-            outputs = run_parallel_pipeline(in_files, "uncal", out_exts, self.instrument, jump_pipe=True)
+
+            outputs = {}
+            if len(in_files) > 0:
+                logging.info("Running pipeline for {} files".format(len(in_files)))
+                outputs = run_parallel_pipeline(in_files, "uncal", out_exts, self.instrument, jump_pipe=True)
+
             index = 0
+            logging.info("Checking files post-calibration")
             for uncal_file, rate_file in zip(dark_raw_files, dark_slope_files):
+                logging.info("\tChecking files {}, {}".format(uncal_file, rate_file))
                 local_uncal_file = os.path.join(self.data_dir, os.path.basename(uncal_file))
                 short_name = os.path.basename(uncal_file).replace('_uncal.fits', '')
                 if local_uncal_file in outputs:
+                    logging.info("\t\tAdding calibrated files")
                     dark_jump_files[index] = outputs[local_uncal_file][0]
                     dark_fitopt_files[index] = outputs[local_uncal_file][1]
                     dark_slope_files[index] = deepcopy(outputs[local_uncal_file][2])
                 else:
+                    logging.info("\t\tCalibration skipped for file")
                     self.get_metadata(local_uncal_file)
                     local_ramp_file = local_uncal_file.replace("uncal", "0_ramp_fit")
                     if hasattr(self, 'nints') and self.nints > 1:
@@ -893,10 +921,12 @@ class BadPixels():
                     if not os.path.isfile(local_ramp_file):
                         dark_slope_files[index] = None
                 index += 1
-            
+
             index = 0
+            logging.info("Trimming unfound files.")
             while index < len(dark_raw_files):
                 if dark_jump_files[index] is None or dark_fitopt_files[index] is None or dark_slope_files[index] is None:
+                    logging.info("\tRemoving {}".format(dark_raw_files[index]))
                     del dark_raw_files[index]
                     del dark_jump_files[index]
                     del dark_fitopt_files[index]

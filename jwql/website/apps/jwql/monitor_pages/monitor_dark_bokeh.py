@@ -25,6 +25,7 @@ from astropy.io import fits
 from astropy.time import Time
 from bokeh.models.tickers import LogTicker
 from datetime import datetime
+from glob import glob
 import numpy as np
 
 from jwql.database.database_interface import session
@@ -63,6 +64,11 @@ class DarkMonitor(BokehTemplate):
             mean_dark_image_file = self.pixel_table[-1].mean_dark_image_file
             mean_slope_dir = os.path.join(OUTPUTS_DIR, 'dark_monitor', 'mean_slope_images')
             mean_dark_image_path = os.path.join(mean_slope_dir, mean_dark_image_file)
+            if not os.path.isfile(mean_dark_image_path):
+                possible_files = glob(os.path.join(mean_slope_dir, "_".join(mean_dark_image_file.split("_")[:3])+"*"))
+                if len(possible_files) > 0:
+                    # Pick the bottom file because it's likely the most recent
+                    mean_dark_image_path = possible_files[-1]
             with fits.open(mean_dark_image_path) as hdulist:
                 data = hdulist[1].data
         else:
@@ -130,7 +136,7 @@ class DarkMonitor(BokehTemplate):
             self.full_dark_amplitude = [0., 1., 0.]
         else:
             self.dark_current = [row.mean for row in self.dark_table]
-            self.full_dark_bin_center = np.array([row.hist_dark_values for
+            self.full_dark_bin_center = np.array([np.array(row.hist_dark_values) for
                                                  row in self.dark_table])[last_hist_index]
             self.full_dark_amplitude = [row.hist_amplitudes for
                                         row in self.dark_table][last_hist_index]

@@ -69,25 +69,46 @@ class CosmicRayMonitor():
         """Get data required to create cosmic ray histogram from the
         database query.
         """
-
-        self.mags = [row.magnitude for row in self.cosmic_ray_table]
-
+        
+        self.mags_hist = [row.magnitude for row in self.cosmic_ray_table]
+        self.mags_outliers = [row.outliers for row in self.cosmic_ray_table]
+        
+        self.mags = np.zeros((65536*2+1), dtype=np.int64)
+        for mag_histogram in self.mags_hist:
+            self.mags += mag_histogram
+        
         # If there are no data, then create something reasonable
-        if len(self.mags) == 0:
-            self.mags = [[0]]
-
-        last_hist_index = -1
-        # We'll never see CRs with magnitudes above 65535.
-        # Let's fix the bins for now, and see some data to check
-        # if they are reasonable
-        bins = np.arange(-65000, 66000, 5000)
-        hist = plt.hist(self.mags[last_hist_index], bins=bins)
-
-        self.bin_left = np.array([bar.get_x() for bar in hist[2]])
-        self.amplitude = [bar.get_height() for bar in hist[2]]
-        self.bottom = [bar.get_y() for bar in hist[2]]
-        deltas = self.bin_left[1:] - self.bin_left[0: -1]
-        self.bin_width = np.append(deltas[0], deltas)
+        if len(self.mags_hist) == 0:
+            self.mags[65527] = 1
+            self.mags[65528] = 2
+            self.mags[65529] = 3
+            self.mags[65530] = 4
+            self.mags[65531] = 5
+            self.mags[65532] = 6
+            self.mags[65533] = 7
+            self.mags[65534] = 8
+            self.mags[65535] = 9
+            self.mags[65536] = 10
+            self.mags[65537] = 9
+            self.mags[65538] = 8
+            self.mags[65539] = 7
+            self.mags[65540] = 6
+            self.mags[65541] = 5
+            self.mags[65542] = 4
+            self.mags[65543] = 3
+            self.mags[65544] = 2
+            self.mags[65545] = 1
+        
+        # For the moment, we're using a single bin per cosmic ray magnitude, between
+        # -65536 and +65536.
+        # Previous comment:
+        #   We'll never see CRs with magnitudes above 65535.
+        # Note by BQ on 2022-11-11: Yes, we will. They're not physical, but we'll sure
+        # see them.
+        self.bin_left = np.arange(65536*2+1, dtype=np.int32) - 65536
+        self.amplitude = self.mags
+        self.bottomn = np.zeros((65536*2+1,), dtype=np.int32)
+        self.bin_width = np.ones((65536*2+1,), dtype=np.int32)
 
     def get_history_data(self):
         """Extract data on the history of cosmic ray numbers from the
@@ -95,6 +116,7 @@ class CosmicRayMonitor():
         """
         self.times = [row.obs_end_time for row in self.cosmic_ray_table]
         self.rate = [row.jump_rate for row in self.cosmic_ray_table]
+        self.files = [row.source_file.replace("_uncal.fits", "") for row in self.cosmic_ray_table]
 
     def histogram_plot(self):
         """Create the histogram figure of CR magnitudes.
@@ -104,7 +126,7 @@ class CosmicRayMonitor():
         title = f'Magnitudes: {self._instrument}, {self._aperture}'
         fig = figure(title=title, tools='zoom_in, zoom_out, box_zoom, pan, reset, save', background_fill_color="#fafafa")
         fig.quad(top=self.amplitude, bottom=0, left=self.bin_left, right=self.bin_left + self.bin_width,
-                 fill_color="navy", line_color="white", alpha=0.5)
+                 fill_color="navy", line_color="black", alpha=0.5)
 
         fig.y_range.start = 0
         fig.xaxis.formatter.use_scientific = False
@@ -128,8 +150,9 @@ class CosmicRayMonitor():
         if len(self.times) == 0:
             self.times = [datetime(2021, 12, 25), datetime(2021, 12, 26)]
             self.rate = [0, 0]
+            self.files = ["dummy", "dummy"]
 
-        source = ColumnDataSource(data={'x': self.times, 'y': self.rate})
+        source = ColumnDataSource(data={'x': self.times, 'y': self.rate, 'filename': self.files})
 
         # Create a useful plot title
         title = f'CR Rates: {self._instrument}, {self._aperture}'
@@ -158,7 +181,8 @@ class CosmicRayMonitor():
         fig.yaxis[0].formatter = BasicTickFormatter(use_scientific=True, precision=2)
 
         hover_tool = HoverTool(tooltips=[('Value', '@y'),
-                                         ('Date', '@x{%d %b %Y %H:%M:%S}')
+                                         ('Date', '@x{%d %b %Y %H:%M:%S}'),
+                                         ('File', '@filename')
                                          ], mode='mouse', renderers=[data])
         hover_tool.formatters = {'@x': 'datetime'}
         fig.tools.append(hover_tool)

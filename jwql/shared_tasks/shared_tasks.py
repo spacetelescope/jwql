@@ -215,7 +215,7 @@ def collect_after_task(**kwargs):
 
 
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.run_calwebb_detector1')
-def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, step_args={}):
+def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, step_args={}, max_groups=1000):
     """Run the steps of ``calwebb_detector1`` on the input file, saving the result of each
     step as a separate output file, then return the name-and-path of the file as reduced
     in the reduction directory. Once all requested extensions have been produced, the 
@@ -250,6 +250,9 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     msg = "*****CELERY: Starting {} calibration task for {}"
     logging.info(msg.format(instrument, input_file_name))
     config = get_config()
+    
+    if isinstance(ext_or_exts, str):
+        ext_or_exts = [ext_or_exts]
 
     input_dir = os.path.join(config['transfer_dir'], "incoming")
     cal_dir = os.path.join(config['outputs'], "calibrated_data")
@@ -268,7 +271,6 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
     set_permissions(uncal_file)
 
     # Check for exposures with too many groups
-    max_groups = config.get("max_groups", 1000)
     with fits.open(uncal_file) as inf:
         total_groups = inf[0].header["NINTS"] * inf[0].header["NGROUPS"]
     if total_groups > max_groups:
@@ -333,8 +335,11 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
         # subsequent pipeline steps)
         done = True
         for ext in ext_or_exts:
-            if not os.path.isfile("{}_{}.fits".format(short_name, ext)):
+            logging.info("*****CELERY: Checking for {} output".format(ext))
+            check_file = output_file.replace(step_name, ext)
+            if not os.path.isfile(check_file):
                 done = False
+                logging.info("*****CELERY: {} not found. Continuing.".format(check_file))
         if done:
             print("*****CELERY: Created all files in {}. Finished.".format(ext_or_exts))
             break
@@ -350,7 +355,7 @@ def run_calwebb_detector1(input_file_name, short_name, ext_or_exts, instrument, 
 
 
 @celery_app.task(name='jwql.shared_tasks.shared_tasks.calwebb_detector1_save_jump')
-def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True):
+def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True, max_groups=1000):
     """Call ``calwebb_detector1`` on the provided file, running all
     steps up to the ``ramp_fit`` step, and save the result. Optionally
     run the ``ramp_fit`` step and save the resulting slope file as well.
@@ -403,7 +408,6 @@ def calwebb_detector1_save_jump(input_file_name, ramp_fit=True, save_fitopt=True
     set_permissions(uncal_file)
 
     # Check for exposures with too many groups
-    max_groups = config.get("max_groups", 1000)
     with fits.open(uncal_file) as inf:
         total_groups = inf[0].header["NINTS"] * inf[0].header["NGROUPS"]
     if total_groups > max_groups:
@@ -566,7 +570,7 @@ def prep_file(input_file, in_ext):
     return short_name, cal_lock, os.path.join(send_path, uncal_name)
 
 
-def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=False):
+def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=False, max_groups=1000):
     """Starts the standard or save_jump pipeline for the provided file.
 
     .. warning::
@@ -618,9 +622,9 @@ def start_pipeline(input_file, short_name, ext_or_exts, instrument, jump_pipe=Fa
                 ramp_fit = True
             elif "fitopt" in ext:
                 save_fitopt = True
-        result = calwebb_detector1_save_jump.delay(input_file, ramp_fit=ramp_fit, save_fitopt=save_fitopt)
+        result = calwebb_detector1_save_jump.delay(input_file, ramp_fit=ramp_fit, save_fitopt=save_fitopt, max_groups=max_groups)
     else:
-        result = run_calwebb_detector1.delay(input_file, short_name, ext_or_exts, instrument)
+        result = run_calwebb_detector1.delay(input_file, short_name, ext_or_exts, instrument, max_groups=max_groups)
     return result
 
 
@@ -672,7 +676,7 @@ def retrieve_files(short_name, ext_or_exts, dest_dir):
     return output_file_or_files
 
 
-def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
+def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False, max_groups=1000):
     """Convenience function for using the ``run_calwebb_detector1`` function on a data
     file, including the following steps:
 
@@ -712,7 +716,7 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
         retrieve_dir = os.path.dirname(input_file)
         short_name, cal_lock, uncal_file = prep_file(input_file, in_ext)
         uncal_name = os.path.basename(uncal_file)
-        result = start_pipeline(uncal_name, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe)
+        result = start_pipeline(uncal_name, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe, max_groups=max_groups)
         logging.info("\t\tStarting with ID {}".format(result.id))
         processed_path = result.get()
         logging.info("\t\tPipeline Complete")
@@ -728,7 +732,7 @@ def run_pipeline(input_file, in_ext, ext_or_exts, instrument, jump_pipe=False):
     return output
 
 
-def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pipe=False):
+def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pipe=False, max_groups=1000):
     """Convenience function for using the ``run_calwebb_detector1`` function on a list of
     data files, breaking them into parallel celery calls, collecting the results together,
     and returning the results as another list. In particular, this function will do the
@@ -794,7 +798,7 @@ def run_parallel_pipeline(input_files, in_ext, ext_or_exts, instrument, jump_pip
             output_dirs[short_name] = retrieve_dir
             input_file_paths[short_name] = input_file
             locks[short_name] = cal_lock
-            results[short_name] = start_pipeline(uncal_name, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe)
+            results[short_name] = start_pipeline(uncal_name, short_name, ext_or_exts, instrument, jump_pipe=jump_pipe, max_groups=max_groups)
             logging.info("\tStarting {} with ID {}".format(short_name, results[short_name].id))
         logging.info("Celery tasks submitted.")
         logging.info("Waiting for task results")
