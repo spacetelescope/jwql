@@ -948,11 +948,13 @@ class EdbMnemonicMonitor():
         all_dates = []
         all_values = []
         all_medians = []
+        all_means = []
         all_maxs = []
         all_mins = []
         for row in data:
             all_dates.extend(row.times)
             all_values.extend(row.data)
+            all_means.extend(row.data)
             all_medians.extend(row.median)
             all_maxs.extend(row.max)
             all_mins.extend(row.min)
@@ -963,6 +965,7 @@ class EdbMnemonicMonitor():
         hist.median_times = all_dates
         hist.max = all_maxs
         hist.min = all_mins
+        hist.mean = all_means
         return hist
 
     def get_history_every_change(self, mnemonic, start_date, end_date):
@@ -1662,12 +1665,12 @@ def add_every_change_history(dict1, dict2):
             if np.min(value[0]) < np.min(dict2[key][0]):
                 all_dates = np.append(value[0], dict2[key][0])
                 all_data = np.append(value[1], dict2[key][1])
-                all_means = np.append(value[2], dict2[key][2])
+                all_medians = np.append(value[2], dict2[key][2])
                 all_devs = np.append(value[3], dict2[key][3])
             else:
                 all_dates = np.append(dict2[key][0], value[0])
                 all_data = np.append(dict2[key][1], value[1])
-                all_means = np.append(dict2[key][2], value[2])
+                all_medians = np.append(dict2[key][2], value[2])
                 all_devs = np.append(dict2[key][3], value[3])
 
             # Not sure how to treat duplicates here. If we remove duplicates, then
@@ -1681,7 +1684,7 @@ def add_every_change_history(dict1, dict2):
                 logging.info(("WARNING - There are duplicate entries in the every-change history "
                               "and the new entry. Keeping and plotting all values, but be sure the "
                               "data look ok."))
-            updated_value = (all_dates, all_data, all_means, all_devs)
+            updated_value = (all_dates, all_data, all_medians, all_devs)
             combined[key] = updated_value
         else:
             combined[key] = value

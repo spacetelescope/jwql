@@ -165,6 +165,20 @@ class EdbMnemonic:
         else:
             new_obj.mean_time_block = None
 
+        # Combine any existing mean, median, min, max data, removing overlaps
+        # All of these are populated in concert with median_times, so we can
+        # use that to look for overlap values
+        all_median_times = np.array(list(self.median_times) + list(mnem.median_times))
+        srt = np.argsort(all_median_times)
+        comb_median_times = all_median_times[srt]
+        unique_median_times, idx_median_times = np.unique(comb_median_times, return_index=True)
+
+        new_obj.median_times = unique_median_times
+        new_obj.mean = np.array(list(self.mean) + list(mnem.mean))[srt][idx_median_times]
+        new_obj.median = np.array(list(self.median) + list(mnem.median))[srt][idx_median_times]
+        new_obj.max = np.array(list(self.max) + list(mnem.max))[srt][idx_median_times]
+        new_obj.min = np.array(list(self.min) + list(mnem.min))[srt][idx_median_times]
+
         return new_obj
 
     def __init__(self, mnemonic_identifier, start_time, end_time, data, meta, info, blocks=[None],
@@ -199,10 +213,12 @@ class EdbMnemonic:
         self.requested_end_time = end_time
         self.data = data
 
-        self.mean = None
-        self.median = None
-        self.stdev = None
-        self.median_times = None
+        self.mean = []
+        self.median = []
+        self.stdev = []
+        self.median_times = []
+        self.min = []
+        self.max = []
         self.mean_time_block = mean_time_block
 
         self.meta = meta
@@ -352,7 +368,7 @@ class EdbMnemonic:
 
                         empty_block = False
                         uvals = np.unique(block)
-                        if np.all(np.array(sorted(ignore_vals)) == uvals):
+                        if np.array_equal(np.array(sorted(ignore_vals)), uvals):
                             empty_block = True
                             meanval, medianval, stdevval, maxval, minval = np.nan, np.nan, np.nan, np.nan, np.nan
 
@@ -405,6 +421,9 @@ class EdbMnemonic:
                         maxs.append(maxval)
                         mins.append(minval)
                         stdevs.append(stdevval)
+                    else:
+                        print('infinite mean', meanval, medianval, maxval, minval, stdevval)
+                        print(medtimes)
 
             # If there were blocks composed entirely of bad data, meaning no mean values were
             # calculated, remove those every change values and block values from the EdbMnemonic
@@ -878,12 +897,12 @@ class EdbMnemonic:
 
         else:
             # If the mnemonic data are strings, we don't compute statistics
-            self.mean = [None]
-            self.median = [None]
-            self.stdev = [None]
-            self.median_times = [None]
-            self.max = [None]
-            self.min = [None]
+            self.mean = []
+            self.median = []
+            self.stdev = []
+            self.median_times = []
+            self.max = []
+            self.min = []
 
     def full_stats(self, sigma=3):
         """Calculate the mean/median/stdev of the full compliment of data
@@ -908,12 +927,12 @@ class EdbMnemonic:
             self.median_times = [calc_median_time(self.data["dates"])]
         else:
             # If the mnemonic values are strings, don't compute statistics
-            self.mean = [None]
-            self.median = [None]
-            self.stdev = [None]
-            self.max = [None]
-            self.min = [None]
-            self.median_times = [None]
+            self.mean = []
+            self.median = []
+            self.stdev = []
+            self.max = []
+            self.min = []
+            self.median_times = []
 
     def get_table_data(self):
         """Get data needed to make interactivate table in template."""
@@ -1269,12 +1288,12 @@ class EdbMnemonic:
                     self.min.append(minval)
                     self.median_times.append(calc_median_time(self.data["dates"].data[good]))
         else:
-            self.mean = [None]
-            self.median = [None]
-            self.stdev = [None]
-            self.max = [None]
-            self.min = [None]
-            self.median_times = [None]
+            self.mean = []
+            self.median = []
+            self.stdev = []
+            self.max = []
+            self.min = []
+            self.median_times = []
 
 
 def add_limit_boxes(fig, yellow=None, red=None):
