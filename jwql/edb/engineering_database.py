@@ -63,6 +63,7 @@ from bokeh.plotting import figure, output_file, show, save
 import numpy as np
 
 from jwst.lib.engdb_tools import ENGDB_Service
+from jwql.utils.constants import MIRI_POS_RATIO_VALUES
 from jwql.utils.credentials import get_mast_base_url, get_mast_token
 from jwql.utils.utils import get_config
 
@@ -352,15 +353,8 @@ class EdbMnemonic:
                         empty_block = False
                         uvals = np.unique(block)
                         if np.all(np.array(sorted(ignore_vals)) == uvals):
-                            print('empty block')
                             empty_block = True
                             meanval, medianval, stdevval, maxval, minval = np.nan, np.nan, np.nan, np.nan, np.nan
-                            print('uvals and ignore vals:')
-                            print(uvals)
-                            print(ignore_vals)
-                            print(len(self.data["euvalues"].data[index:self.blocks[i + 1]]))
-                            print(self.data["dates"].data[index], self.data["dates"].data[self.blocks[i+1]-1])
-                            print('done')
 
                             # If the block is composed entirely of data to be ignored, then we don't
                             # add new mean, median, max, min, stdev values, and we also need to remove
@@ -390,9 +384,6 @@ class EdbMnemonic:
                                     if not ignore_first:
                                         block = block[2:]
 
-                            print('BLOCK:')
-                            print(block)
-
                             meanval, medianval, stdevval = sigma_clipped_stats(block, sigma=sigma)
                             maxval = np.max(block)
                             minval = np.min(block)
@@ -414,31 +405,116 @@ class EdbMnemonic:
                         maxs.append(maxval)
                         mins.append(minval)
                         stdevs.append(stdevval)
-                        #if hasattr(self, 'every_change_values'):
-                        #    updated_every_change_vals.append(ev_chng)
-
-
-                        print('\n\n')
-                        print('BLOCK_STATS')
-                        print(self.blocks[i:i+1])
-                        print(self.data["dates"].data[index:self.blocks[i + 1]])
-                        print(self.data["euvalues"].data[index:self.blocks[i + 1]])
-                        print(meanval, medianval, stdevval, maxval, minval)
-                        print('\n\n')
 
             # If there were blocks composed entirely of bad data, meaning no mean values were
             # calculated, remove those every change values and block values from the EdbMnemonic
             # instance.
             if every_change:
                 if len(remove_change_indexes)  > 0:
-                    print('BLOCK_STATS END: ')
-                    print('Removing entries from every_change_values and blocks: ', remove_change_indexes)
                     self.every_change_values = np.delete(self.every_change_values, remove_change_indexes)
                     self.blocks = np.delete(self.blocks, remove_change_indexes)
 
-            print('DONE LOOPING:')
-            print(len(means))
-            print(len(self.blocks[0:-1]))
+        else:
+            # If the data are strings, then set the mean to be the data value at the block index
+            for i, index in enumerate(self.blocks[0:-1]):
+                # Protect against repeated block indexes
+                if index < self.blocks[i + 1]:
+                    meanval = self.data["euvalues"].data[index]
+                    medianval = meanval
+                    stdevval = 0
+                    medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i + 1]]))
+                    means.append(meanval)
+                    medians.append(medianval)
+                    stdevs.append(stdevval)
+                    maxs.append(meanval)
+                    mins.append(meanval)
+                    #if hasattr(self, 'every_change_values'):
+                    #        updated_every_change_vals.append(self.every_change_values[i + 1])
+        self.mean = means
+        self.median = medians
+        self.stdev = stdevs
+        self.median_times = medtimes
+        self.max = maxs
+        self.min = mins
+
+    def block_stats_filter_positions(self, sigma=5):
+        """Calculate stats for a mnemonic where we want a mean value for
+        each block of good data, where blocks are separated by times where
+        the data are ignored. In this case, there are custom adjustments meant
+        to work on the MIRI filter position mnemonics (e.g. IMIR_HK_GW14_POS_RATIO,
+        IMIR_HK_FW_POS_RATIO).
+
+        Parameters
+        ----------
+        sigma : int
+            Number of sigma to use for sigma clipping
+        """
+        means = []
+        medians = []
+        maxs = []
+        mins = []
+        stdevs = []
+        medtimes = []
+        remove_change_indexes = []
+        if type(self.data["euvalues"].data[0]) not in [np.str_, str]:
+            for i, index in enumerate(self.blocks[0:-1]):
+                # Protect against repeated block indexes
+                if index < self.blocks[i + 1]:
+                    if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
+                        block = self.data["euvalues"].data[index:self.blocks[i + 1]]
+                        filter_value = self.every_change_values[i]
+                        pos_type = self.mnemonic_identifier.split('_')[2]
+                        if pos_type not in MIRI_POS_RATIO_VALUES:
+                            raise ValueError((f'Unrecognized filter position type: {pos_type} in {self.mnemonic_identifier}.'
+                                              f'Expected one of {MIRI_POS_RATIO_VALUES.keys()}'))
+                        if filter_value not in MIRI_POS_RATIO_VALUES[pos_type]:
+                            raise ValueError((f'Unrecognized filter value: {filter_value} in block {i} of {self.mnemonic_identifier}'))
+
+                        nominal_value, std_value = MIRI_POS_RATIO_VALUES[pos_type][filter_value]
+                        max_value = nominal_value + sigma * std_value
+                        min_value = nominal_value - sigma * std_value
+
+                        empty_block = False
+                        good = np.where((block <= max_value) & (block >= min_value))[0]
+                        if len(good) == 0:
+                            empty_block = True
+                            meanval, medianval, stdevval, maxval, minval = np.nan, np.nan, np.nan, np.nan, np.nan
+
+                            # If the block is composed entirely of data to be ignored, then we don't
+                            # add new mean, median, max, min, stdev values, and we also need to remove
+                            # the associated entry from self.every_change_values and self.blocks
+                            # (only in the case of every_change data)
+                            remove_change_indexes.append(i)
+
+                        else:
+                            # If there are values to be ignored, remove those from the array
+                            # of elements. Keep track of whether the first and last are ignored.
+                            block = block[good]
+                            meanval, medianval, stdevval = sigma_clipped_stats(block, sigma=sigma)
+                            maxval = np.max(block)
+                            minval = np.min(block)
+
+                    else:
+                        meanval, medianval, stdevval, maxval, minval = change_only_stats(self.data["dates"].data[index:self.blocks[i + 1]],
+                                                                                         self.data["euvalues"].data[index:self.blocks[i + 1]],
+                                                                                         sigma=sigma)
+                    if np.isfinite(meanval):
+                        #this is preventing the nans above from being added. not sure what to do here.
+                        #bokeh cannot deal with nans. but we need entries in order to have the blocks indexes
+                        #remain correct. but maybe we dont care about the block indexes after averaging
+                        medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i + 1]][good]))
+                        means.append(meanval)
+                        medians.append(medianval)
+                        maxs.append(maxval)
+                        mins.append(minval)
+                        stdevs.append(stdevval)
+
+            # If there were blocks composed entirely of bad data, meaning no mean values were
+            # calculated, remove those every change values and block values from the EdbMnemonic
+            # instance.
+            if len(remove_change_indexes)  > 0:
+                self.every_change_values = np.delete(self.every_change_values, remove_change_indexes)
+                self.blocks = np.delete(self.blocks, remove_change_indexes)
 
         else:
             # If the data are strings, then set the mean to be the data value at the block index
@@ -565,7 +641,6 @@ class EdbMnemonic:
 
         if savefig:
             filename = os.path.join(out_dir, f"telem_plot_{self.mnemonic_identifier.replace(' ','_')}.html")
-            print(f'\n\nSAVING HTML FILE TO: {filename}')
 
         if self.info is None:
             units = 'Unknown'
@@ -1014,7 +1089,6 @@ class EdbMnemonic:
 
         if savefig:
             filename = os.path.join(out_dir, f"telem_plot_{self.mnemonic_identifier.replace(' ','_')}.html")
-            print(f'\n\nSAVING HTML FILE TO: {filename}')
 
         if self.info is None:
             units = 'Unknown'

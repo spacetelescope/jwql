@@ -305,6 +305,41 @@ JWST_MAST_SERVICES = ['Mast.Jwst.Filtered.{}'.format(value.title()) for value in
 # Maximum number of records returned by MAST for a single query
 MAST_QUERY_LIMIT = 500000
 
+# Expected position sensor values for MIRI. Used by the EDB monitor
+# to filter out bad values. Tuple values are the expected value and
+# the standard deviation associated with the value
+MIRI_POS_RATIO_VALUES = {'FW': {'FND': (-164.8728073, 0.204655346),
+                                'OPAQUE':  (380.6122145, 0.078856646),
+                                'F1000W':  (-24.15638797, 0.182865887),
+                                'F1130W':  (137.8245397, 0.24910941),
+                                'F1280W':  (-298.7062532, 0.229963508),
+                                'P750L':   (12.39439777, 0.246932037),
+                                'F1500W':  (-377.9888235, 0.263432415),
+                                'F1800W':  (435.9046314, 0.27885876),
+                                'F2100W':  (-126.5991201, 0.197193968),
+                                'F560W':   (218.0010353, 0.282554884),
+                                'FLENS':   (-212.7978283, 0.409300208),
+                                'F2300C':  (306.0488778, 0.265448583),
+                                'F770W':   (-62.48455213, 0.340861733),
+                                'F1550C':  (188.7366748, 0.291288105),
+                                'F2550W':  (-324.2364737, 0.176262309),
+                                'F1140C':  (82.81057729, 0.169772457),
+                                'F2550WR': (-255.5816917, 0.251581688),
+                                'F1065C':  (261.4486618, 0.16177981),
+                                },
+                         'CCC': {'CLOSED': (398.0376386, 0.173703628),
+                                 'OPEN': (504.0482685, 0.328112274)
+                                },
+                         'GW14': {'SHORT': (626.9411005, 0.116034024),
+                                  'MEDIUM': (342.8685233, 0.127123169),
+                                  'LONG': (408.8339259, 0.117079193)
+                                 },
+                         'GW23': {'SHORT': (619.7948107, 0.215417336),
+                                  'MEDIUM': (373.1697309, 0.204314122),
+                                  'LONG': (441.6632325, 0.349161169)
+                                 }
+                         }
+
 # Available monitor names and their location for each JWST instrument
 MONITORS = {
     'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor'),
