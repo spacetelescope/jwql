@@ -435,8 +435,6 @@ class EdbMnemonicMonitor():
                         'time': times,
                         'median': medians,
                         'stdev': stdevs,
-                        'max': maxs,
-                        'min': mins,
                         'latest_query': query_time,
                         'entry_date': datetime.datetime.now()
                         }
@@ -1005,22 +1003,22 @@ class EdbMnemonicMonitor():
             if row.dependency_value in hist:
                 if len(hist[row.dependency_value]) > 0:
                     below needs to be updated
-                    times, values, means, devs = hist[row.dependency_value]
-                    means = [means]
+                    times, values, medians, devs = hist[row.dependency_value]
+                    medians = [medians]
                     devs = [devs]
                 else:
                     times = []
                     values = []
-                    means = []
+                    medians = []
                     devs = []
 
                 times.extend(row.time)
                 values.extend(row.mnemonic_value)
-                means.append(row.mean)
+                medians.append(row.median)
                 devs.append(row.stdev)
-                hist[row.dependency_value] = (times, values, means, devs)
+                hist[row.dependency_value] = (times, values, medians, devs)
             else:
-                hist[row.dependency_value] = (row.time, row.mnemonic_value, row.mean, row.stdev)
+                hist[row.dependency_value] = (row.time, row.mnemonic_value, row.median, row.stdev)
 
         return hist
 
