@@ -82,6 +82,7 @@ urlpatterns = [
     path('query_submit/', views.query_submit, name='query_submit'),
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
+    re_path(r'^(?P<inst>({}))/date_range/$'.format(instruments), views.date_range, name='date_range'),
     re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),
     re_path(r'^(?P<inst>({}))/(?P<file_root>[\w-]+)/$'.format(instruments), views.view_image, name='view_image'),
     re_path(r'^(?P<inst>({}))/(?P<file_root>.+)_(?P<filetype>.+)/explore_image/'.format(instruments), views.explore_image, name='explore_image'),

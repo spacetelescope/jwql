@@ -886,6 +886,37 @@ function update_thumbnail_array(data) {
     };
 };
 
+function submit_date_range_form(date_range_form) {
+
+    start_date = date_range_form.start_date_range.value;
+    stop_date = date_range_form.stop_date_range.value;
+
+    $.ajax({
+        // SAPP TODO - create in views/urls
+        url: base_url + '/ajax/' + inst + '/start_date_' + start_date + '/stop_date_' + stop_date + '/',
+        success: function(data){
+
+            // SAPP TODO UPDATE BELOW CODE
+            // Perform various updates to divs
+            
+            // num_thumbnails = Object.keys(data.file_data).length;
+            // update_show_count(num_thumbnails, 'activities');
+            // update_thumbnail_array(data);
+            // update_obs_options(data, inst, proposal, observation);
+            // update_filter_options(data, num_thumbnails, 'thumbnail');
+            // update_sort_options(data, base_url);
+
+            // // Do initial sort to match sort button display
+            // sort_by_thumbnails(sort, base_url);
+
+            // // Replace loading screen with the proposal array div
+            // document.getElementById("loading").style.display = "none";
+            // document.getElementById("thumbnail-array").style.display = "block";
+        }
+    });
+};
+
+
 /**
  * Updates various compnents on the thumbnails page
  * @param {String} inst - The instrument of interest (e.g. "FGS")

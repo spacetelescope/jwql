@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>Date Range {{ inst }} Images - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+<main role="main" class="container">
+
+    <h3 id='title'>Date Range {{ inst }} Images</h3>
+
+    <p id='img_show_count'></p>
+    <hr>
+
+    <!-- Filter and sort options -->
+    <div class="d-flex flex-row">
+        <div class="mr-auto">
+            Date Range:<br>
+            <form onsubmit="submit_date_range_form(this)">
+                <input type="date" id="start_date_range" name="start_date_range" required>
+                <input type="date" id="stop_date_range" name="stop_date_range" required>
+                <input class="btn btn-primary" type="submit">
+            </form>
+        </div>
+        <div class="mr-4 mr-5" id="thumbnail-filter"></div>
+        <!-- Sort Options -->
+        <div class="mx-4 mr-5 ml-auto">
+            Sort by:<br>
+            <span class="dropdown">
+              <button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Ascending</button>
+              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <a class="dropdown-item" href="#" onclick="sort_by_proposals('Ascending');">Ascending</a>
+                <a class="dropdown-item" href="#" onclick="sort_by_proposals('Descending');">Descending</a>
+                <a class="dropdown-item" href="#" onclick="sort_by_proposals('Recent');">Recent</a>
+              </div>
+            </span>
+        </div>
+    </div>
+
+    <hr>
+    <hr>
+
+    <!-- Loading animation -->
+    <div id="loading">
+        <div class="lds-css ng-scope">
+            <div style="width:100%;height:100%" class="lds-magnify">
+                <div>
+                    <div>
+                        <div>
+                        </div>
+                        <div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            Loading ...
+        </div>
+    </div>
+
+    <!-- Display the data -->
+    <div id='thumbnail-array'></div>
+    <a id="no_thumbnails_msg">No data match the date range.</a>
+</main>
+<script>update_thumbnails_per_observation_page('{{ inst }}', '{{ prop }}', '{{ obs }}', '{{ obs_list }}', '{{ base_url }}', '{{ sort }}');</script>
+
+{% endblock %}

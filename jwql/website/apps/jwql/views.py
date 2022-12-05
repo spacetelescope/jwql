@@ -168,6 +168,31 @@ def api_landing(request):
     return render(request, template, context)
 
 
+def date_range (request, inst):
+    """Generate the page for date range images
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # Ensure the instrument is correctly capitalized
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+
+    template = 'date_range.html'
+    context = {'inst': inst,
+               'base_url': get_base_url()}
+
+    return render(request, template, context)
+
 def archived_proposals(request, inst):
     """Generate the page listing all archived proposals in the database
 
