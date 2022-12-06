@@ -1212,6 +1212,7 @@ class EdbMnemonicMonitor():
                 meta = mnemonic_info.meta
 
                 # Calculate mean/median/stdev
+                logging.info(f'Length of data going into calculate_statistics: {len(mnemonic_info)}')
                 mnemonic_info = calculate_statistics(mnemonic_info, telemetry_type)
 
                 # If this mnemonic is going to be plotted as a product with another mnemonic, then
