@@ -577,8 +577,8 @@ class EdbMnemonicMonitor():
                 monitor_dir = os.path.dirname(os.path.abspath(__file__))
 
                 # File of mnemonics to monitor
-                #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', f'{instrument_name}_mnemonics_to_monitor.json')
-                mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data/miri_pos_ratio.json')  # used for position ratio plots
+                mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', f'{instrument_name}_mnemonics_to_monitor.json')
+                #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data/miri_pos_ratio.json')  # used for position ratio plots
                 #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data/miri_maxplot.json')  # used for simulataneous mean/max plots
 
                 # Define the output directory in which the html files will be saved
