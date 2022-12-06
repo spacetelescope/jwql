@@ -1005,7 +1005,6 @@ class EdbMnemonicMonitor():
         for row in data:
             if row.dependency_value in hist:
                 if len(hist[row.dependency_value]) > 0:
-                    below needs to be updated
                     times, values, medians, devs = hist[row.dependency_value]
                     medians = [medians]
                     devs = [devs]
