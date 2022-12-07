@@ -577,10 +577,7 @@ class EdbMnemonicMonitor():
                 monitor_dir = os.path.dirname(os.path.abspath(__file__))
 
                 # File of mnemonics to monitor
-                #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', f'{instrument_name}_mnemonics_to_monitor.json')
-                mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data/miri_test.json')  # used for position ratio plots
-                #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data/miri_pos_ratio.json')  # used for position ratio plots
-                #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data/miri_maxplot.json')  # used for simulataneous mean/max plots
+                mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', f'{instrument_name}_mnemonics_to_monitor.json')
 
                 # Define the output directory in which the html files will be saved
                 self.plot_output_dir = os.path.join(base_dir, instrument_name)
@@ -1290,8 +1287,6 @@ class EdbMnemonicMonitor():
                     # Multiply the mnemonics together to get the quantity to be plotted
                     combined = mnemonic_info * product_mnemonic_info
                     logging.info(f'Length of data for product of mnemonics: {len(combined)}')
-
-                    combined.save_table(f'combined_{strttime}_{edtime}')
 
                     # Calculate mean/median/stdev of the product data
                     mnemonic_info = calculate_statistics(combined, telemetry_type)
