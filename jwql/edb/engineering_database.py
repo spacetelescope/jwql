@@ -403,18 +403,11 @@ class EdbMnemonic:
                             meanval, medianval, stdevval = sigma_clipped_stats(block, sigma=sigma)
                             maxval = np.max(block)
                             minval = np.min(block)
-
-                            #if hasattr(self, 'every_change_values'):
-                            #    ev_chng = self.every_change_values[index]
-
                     else:
                         meanval, medianval, stdevval, maxval, minval = change_only_stats(self.data["dates"].data[index:self.blocks[i + 1]],
                                                                                          self.data["euvalues"].data[index:self.blocks[i + 1]],
                                                                                          sigma=sigma)
                     if np.isfinite(meanval):
-                        #this is preventing the nans above from being added. not sure what to do here.
-                        #bokeh cannot deal with nans. but we need entries in order to have the blocks indexes
-                        #remain correct. but maybe we dont care about the block indexes after averaging
                         medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i + 1]]))
                         means.append(meanval)
                         medians.append(medianval)
@@ -422,8 +415,7 @@ class EdbMnemonic:
                         mins.append(minval)
                         stdevs.append(stdevval)
                     else:
-                        print('infinite mean', meanval, medianval, maxval, minval, stdevval)
-                        print(medtimes)
+                        pass
 
             # If there were blocks composed entirely of bad data, meaning no mean values were
             # calculated, remove those every change values and block values from the EdbMnemonic

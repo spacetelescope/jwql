@@ -1242,9 +1242,6 @@ class EdbMnemonicMonitor():
                     temp_dict["name"] = mnemonic_dict["plot_data"].split(',')[0].strip('*')
                     product_mnemonic_info = self.get_mnemonic_info(temp_dict, starttime, endtime, telemetry_type)
                     logging.info(f'Length of data for product mnemonic: {len(mnemonic_info)}')
-                    if temp_dict["name"] == 'SE_ZBUSVLT':
-                        print(starttime, endtime)
-                        print(product_mnemonic_info.data)
 
                     if product_mnemonic_info is None:
                         logging.info(f'{temp_dict["name"]} to use as product has no data between {starttime} and {endtime}.\n\n')
@@ -1519,10 +1516,6 @@ class EdbMnemonicMonitor():
 
                         logging.info(f'Retrieved data from JWQLDB. Number of data points: {len(historical_data)}')
 
-
-                        print('HISTORY DATA:')
-                        print(historical_data.data)
-
                         # Add the data newly filtered and averaged data retrieved from the EDB to the JWQLDB
                         # If no new data were retrieved from the EDB, then there is no need to add an entry to the JWQLDB
                         if create_new_history_entry:
@@ -1531,19 +1524,9 @@ class EdbMnemonicMonitor():
                         else:
                             logging.info("No new data retrieved from EDB, so no new entry added to JWQLDB")
 
-
-                        print('Add new to database data:')
-
-                        print(new_data.data)
-                        print('\n\n')
-                        print(historical_data.data)
-                        print('\n\n')
-
                         # Now add the new data to the historical data
                         mnemonic_info = new_data + historical_data
                         logging.info(f'Combined new data plus historical data contains {len(mnemonic_info)} data points.')
-
-
                     else:
                         # "every_change" data is more complex, and requires custom functions
                         # Retrieve the historical data from the database, so that we can add the new data
@@ -1647,17 +1630,6 @@ class EdbMnemonicMonitor():
                     if 'min' in plot_parts:
                         plot_min = True
 
-
-                    print('going into plotting:')
-                    print(mnemonic_info.data)
-                    print(plot_mean, plot_median, plot_max, plot_min)
-
-
-                    logging.debug(f'Plot for {mnemonic_info.mnemonic_identifier}')
-                    logging.debug(f'plot_mean: {plot_mean}')
-                    logging.debug(f'plot_median: {plot_median}')
-                    logging.debug(f'plot_max: {plot_max}')
-                    logging.debug(f'plot_min: {plot_min}')
                     figure = mnemonic_info.bokeh_plot(savefig=False, out_dir=self.plot_output_dir, nominal_value=nominal,
                                                       yellow_limits=yellow, red_limits=red, return_components=False,
                                                       return_fig=True, show_plot=False, title=plot_title, plot_mean=plot_mean,
