@@ -168,7 +168,7 @@ def api_landing(request):
     return render(request, template, context)
 
 
-def date_range (request, inst):
+def archive_date_range(request, inst):
     """Generate the page for date range images
 
     Parameters
@@ -187,11 +187,46 @@ def date_range (request, inst):
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    template = 'date_range.html'
+    template = 'archive_date_range.html'
     context = {'inst': inst,
                'base_url': get_base_url()}
 
     return render(request, template, context)
+
+
+def archive_date_range_ajax(request, inst, start_date, stop_date):
+    """Generate the page listing all archived images within the inclusive date range for all proposals
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    start_date : str
+        Start date for date range
+    stop_date : str
+        stop date for date range
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+    # Ensure the instrument is correctly capitalized
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+
+    # SAPP TODO - fix the start_date and the stop_date to be in MJD time changed to a float.
+
+    # Get a list of all Observation entries for the given instrument after the start date
+    all_entries_after_start = Observation.objects.filter(proposal__archive__instrument=inst, obsstart__gte=start_date)
+    # Query that set for all before the stop date
+    all_entries = all_entries_after_start.filter(obsstart__lte=stop_date)
+
+
+    return JsonResponse(data, json_dumps_params={'indent': 2})
+
+
 
 def archived_proposals(request, inst):
     """Generate the page listing all archived proposals in the database
