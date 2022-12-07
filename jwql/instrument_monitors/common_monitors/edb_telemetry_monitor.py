@@ -577,7 +577,8 @@ class EdbMnemonicMonitor():
                 monitor_dir = os.path.dirname(os.path.abspath(__file__))
 
                 # File of mnemonics to monitor
-                mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', f'{instrument_name}_mnemonics_to_monitor.json')
+                #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data', f'{instrument_name}_mnemonics_to_monitor.json')
+                mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data/miri_test.json')  # used for position ratio plots
                 #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data/miri_pos_ratio.json')  # used for position ratio plots
                 #mnemonic_file = os.path.join(monitor_dir, 'edb_monitor_data/miri_maxplot.json')  # used for simulataneous mean/max plots
 
@@ -874,43 +875,47 @@ class EdbMnemonicMonitor():
         """
         # If we have already queried the EDB for the dependency's data in the time
         # range of interest, then use that data rather than re-querying.
-        if dependency["name"] in self.query_results:
 
-            # We need the full time to be covered
-            if ((self.query_results[dependency["name"]].requested_start_time <= starttime)
-                 and (self.query_results[dependency["name"]].requested_end_time >= endtime)):
 
-                logging.info(f'Dependency {dependency["name"]} is already present in self.query_results.')
+        # Something is fishy with the results from this. Try querying the EDB all the time.
 
-                # Extract data for the requested time range
-                matching_times = np.where((self.query_results[dependency["name"]].data["dates"] > starttime)
-                                          & (self.query_results[dependency["name"]].data["dates"] < endtime))
-                dep_mnemonic = {"dates": self.query_results[dependency["name"]].data["dates"][matching_times],
-                                "euvalues": self.query_results[dependency["name"]].data["euvalues"][matching_times]}
+        #if dependency["name"] in self.query_results:
+        #
+        #    # We need the full time to be covered
+        #    if ((self.query_results[dependency["name"]].requested_start_time <= starttime)
+        #         and (self.query_results[dependency["name"]].requested_end_time >= endtime)):
+        #
+        #        logging.info(f'Dependency {dependency["name"]} is already present in self.query_results.')
+        #
+        #        # Extract data for the requested time range
+        #        matching_times = np.where((self.query_results[dependency["name"]].data["dates"] > starttime)
+        #                                  & (self.query_results[dependency["name"]].data["dates"] < endtime))
+        #        dep_mnemonic = {"dates": self.query_results[dependency["name"]].data["dates"][matching_times],
+        #                        "euvalues": self.query_results[dependency["name"]].data["euvalues"][matching_times]}
+        #
+        #        logging.info(f'Length of returned data: {len(dep_mnemonic["dates"])}')
+        #    else:
+        #        # If what we have from previous queries doesn't cover the time range we need, then query the EDB.
+        #        logging.info(f'Dependency {dependency["name"]} is present in self.query results, but does not cover the needed time. Querying EDB for the dependency.')
+        #        mnemonic_data = ed.get_mnemonic(dependency["name"], starttime, endtime)
+        #        logging.info(f'Length of returned data: {len(mnemonic_data)}, {starttime}, {endtime}')
+        #
+        #        # Place the data in a dictionary
+        #        dep_mnemonic = {"dates": mnemonic_data.data["dates"], "euvalues": mnemonic_data.data["euvalues"]}
+        #
+        #        # This is to save the data so that we may avoid an EDB query next time
+        #        # Add the new data to the saved query results. This should also filter out
+        #        # any duplicate rows.
+        #        self.query_results[dependency["name"]] = self.query_results[dependency["name"]] + mnemonic_data
+        #else:
+        # In this case, the dependency is not present at all in the dictionary of past query results.
+        # So here we again have to query the EDB.
+        logging.info(f'Dependency {dependency["name"]} is not in self.query_results. Querying the EDB.')
+        self.query_results[dependency["name"]] = ed.get_mnemonic(dependency["name"], starttime, endtime)
+        logging.info(f'Length of data: {len(self.query_results[dependency["name"]])}, {starttime}, {endtime}')
 
-                logging.info(f'Length of returned data: {len(dep_mnemonic["dates"])}')
-            else:
-                # If what we have from previous queries doesn't cover the time range we need, then query the EDB.
-                logging.info(f'Dependency {dependency["name"]} is present in self.query results, but does not cover the needed time. Querying EDB for the dependency.')
-                mnemonic_data = ed.get_mnemonic(dependency["name"], starttime, endtime)
-                logging.info(f'Length of returned data: {len(mnemonic_data)}, {starttime}, {endtime}')
-
-                # Place the data in a dictionary
-                dep_mnemonic = {"dates": mnemonic_data.data["dates"], "euvalues": mnemonic_data.data["euvalues"]}
-
-                # This is to save the data so that we may avoid an EDB query next time
-                # Add the new data to the saved query results. This should also filter out
-                # any duplicate rows.
-                self.query_results[dependency["name"]] = self.query_results[dependency["name"]] + mnemonic_data
-        else:
-            # In this case, the dependency is not present at all in the dictionary of past query results.
-            # So here we again have to query the EDB.
-            logging.info(f'Dependency {dependency["name"]} is not in self.query_results. Querying the EDB.')
-            self.query_results[dependency["name"]] = ed.get_mnemonic(dependency["name"], starttime, endtime)
-            logging.info(f'Length of data: {len(self.query_results[dependency["name"]])}, {starttime}, {endtime}')
-
-            dep_mnemonic = {"dates": self.query_results[dependency["name"]].data["dates"],
-                            "euvalues": self.query_results[dependency["name"]].data["euvalues"]}
+        dep_mnemonic = {"dates": self.query_results[dependency["name"]].data["dates"],
+                        "euvalues": self.query_results[dependency["name"]].data["euvalues"]}
 
         return dep_mnemonic
 
@@ -1096,8 +1101,10 @@ class EdbMnemonicMonitor():
 
         # If the filtered data contains enough entries, then proceed.
         if len(good_mnemonic_data) > 0:
+            logging.info(f'get_mnemonic_info returning data of length {len(good_mnemonic_data)}')
             return good_mnemonic_data
         else:
+            logging.info(f'get_mnemonic_info returning data with zero length')
             return None
 
     def identify_tables(self, inst, tel_type):
@@ -1212,7 +1219,6 @@ class EdbMnemonicMonitor():
                 meta = mnemonic_info.meta
 
                 # Calculate mean/median/stdev
-                logging.info(f'Length of data going into calculate_statistics: {len(mnemonic_info)}')
                 mnemonic_info = calculate_statistics(mnemonic_info, telemetry_type)
 
                 # If this mnemonic is going to be plotted as a product with another mnemonic, then
@@ -1225,6 +1231,10 @@ class EdbMnemonicMonitor():
                     temp_dict = deepcopy(mnemonic_dict)
                     temp_dict["name"] = mnemonic_dict["plot_data"].split(',')[0].strip('*')
                     product_mnemonic_info = self.get_mnemonic_info(temp_dict, starttime, endtime, telemetry_type)
+                    logging.info(f'Length of data for product mnemonic: {len(mnemonic_info)}')
+                    if temp_dict["name"] == 'SE_ZBUSVLT':
+                        print(starttime, endtime)
+                        print(product_mnemonic_info.data)
 
                     if product_mnemonic_info is None:
                         logging.info(f'{temp_dict["name"]} to use as product has no data between {starttime} and {endtime}.\n\n')
@@ -1253,7 +1263,7 @@ class EdbMnemonicMonitor():
                             product_mnemonic_info.meta['TlmMnemonics'][0]['AllPoints'] = 1
                         else:
                             mnemonic_info.interpolate(product_mnemonic_info.data["dates"])
-                        # Now that we have effectively converted the every-change data into allPoints data,
+                        # Now that we have effectively converted the change-only data into allPoints data,
                         # modify the metadata to reflect that
                         mnemonic_info.meta['TlmMnemonics'][0]['AllPoints'] = 1
                     else:
@@ -1265,10 +1275,33 @@ class EdbMnemonicMonitor():
                             pass
 
                     # Multiply the mnemonics together to get the quantity to be plotted
+
+
+                    # for development
+                    strttime = starttime.strftime("%m-%d-%Y_%H:%M:%S")
+                    edtime = endtime.strftime("%m-%d-%Y_%H:%M:%S")
+                    logging.info(f'{mnemonic_info.mnemonic_identifier}_{strttime}_{edtime}')
+                    logging.info(f'{temp_dict["name"]}_{strttime}_{edtime}')
+                    mnemonic_info.save_table(f'{mnemonic_info.mnemonic_identifier}_{strttime}_{edtime}')
+                    product_mnemonic_info.save_table(f'{temp_dict["name"]}_{strttime}_{edtime}')
+
+
+
+                    # Calculate stats for the product mnemonic
+                    #product_mnemonic_info = calculate_statistics(product_mnemonic_info, telemetry_type)
+
+
+                    #product_mnemonic_info.save_table(f'{temp_dict["name"]}_{strttime}_{edtime}_STATS')
+
+
                     combined = mnemonic_info * product_mnemonic_info
+                    logging.info(f'Length of data for product of mnemonics: {len(combined)}')
+
+                    combined.save_table(f'combined_{strttime}_{edtime}')
 
                     # Calculate mean/median/stdev of the product data
                     mnemonic_info = calculate_statistics(combined, telemetry_type)
+                    #mnemonic_info = combined
 
                 # Combine information from multiple days here. If averaging is done, keep track of
                 # only the averaged data. If no averaging is done, keep all data.
@@ -1422,6 +1455,11 @@ class EdbMnemonicMonitor():
                     # FOR TESTING! REMOVE BEFORE MERGING
 
 
+                    # For daily_means mnemonics, we force the search to always start at noon, and
+                    # have a 1 day cadence
+                    if telem_type == 'daily_means':
+                        most_recent_search = datetime.datetime.combine(most_recent_search.date(), datetime.time(hour=12))
+
 
                     logging.info(f'Most recent search is {most_recent_search}.')
                     logging.info(f'Query cadence is {self.query_cadence}')
@@ -1429,6 +1467,10 @@ class EdbMnemonicMonitor():
                     if plot_end > (most_recent_search + self.query_cadence):
                         # Here we need to query the EDB to cover the entire plot range
                         logging.info("Plot range extends outside the time contained in the JWQLDB. Need to query the EDB.")
+                        logging.info(f"Plot_end: {plot_end}")
+                        logging.info(f"Most recent search: {most_recent_search}")
+                        logging.info(f"Query cadence: {self.query_cadence}")
+                        logging.info(f"Search end: {most_recent_search + self.query_cadence}")
                         starttime = most_recent_search + self.query_cadence
                     else:
                         # Here the entire plot range is before the most recent search,
@@ -1493,9 +1535,19 @@ class EdbMnemonicMonitor():
                             self.add_new_block_db_entry(new_data, query_start_times[-1])
                             logging.info('New data added to the JWQLDB.')
 
+
+                        print('Add new to database data:')
+
+                        print(new_data.data)
+                        print('\n\n')
+                        print(historical_data.data)
+                        print('\n\n')
+
                         # Now add the new data to the historical data
                         mnemonic_info = new_data + historical_data
                         logging.info(f'Combined new data plus historical data contains {len(mnemonic_info)} data points.')
+
+
                     else:
                         # "every_change" data is more complex, and requires custom functions
                         # Retrieve the historical data from the database, so that we can add the new data
@@ -1596,6 +1648,12 @@ class EdbMnemonicMonitor():
                         plot_max = True
                     if 'min' in plot_parts:
                         plot_min = True
+
+
+                    print('going into plotting:')
+                    print(mnemonic_info.data)
+                    print(plot_mean, plot_median, plot_max, plot_min)
+
 
                     logging.debug(f'Plot for {mnemonic_info.mnemonic_identifier}')
                     logging.debug(f'plot_mean: {plot_mean}')

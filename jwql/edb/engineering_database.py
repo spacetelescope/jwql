@@ -861,48 +861,55 @@ class EdbMnemonic:
         sigma : int
             Number of sigma to use for sigma clipping
         """
-        if type(self.data["euvalues"].data[0]) not in [np.str_, str]:
-            min_date = np.min(self.data["dates"])
-            date_range = np.max(self.data["dates"]) - min_date
-            num_days = date_range.days
-            num_seconds = date_range.seconds
-            range_days = num_days + 1
-
-            # Generate a list of times to use as boundaries for calculating means
-            limits = np.array([min_date + timedelta(days=x) for x in range(range_days)])
-            limits = np.append(limits, np.max(self.data["dates"]))
-
-            means, meds, devs, maxs, mins, times = [], [], [], [], [], []
-            for i in range(len(limits) - 1):
-                good = np.where((self.data["dates"] >= limits[i]) & (self.data["dates"] < limits[i + 1]))
-
-                if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
-                    avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
-                    maxval = np.max(self.data["euvalues"][good])
-                    minval = np.min(self.data["euvalues"][good])
-                else:
-                    avg, med, dev, maxval, minval = change_only_stats(self.data["dates"][good], self.data["euvalues"][good], sigma=sigma)
-                means.append(avg)
-                meds.append(med)
-                maxs.append(maxval)
-                mins.append(minval)
-                devs.append(dev)
-                times.append(limits[i] + (limits[i + 1] - limits[i]) / 2.)
-            self.mean = means
-            self.median = meds
-            self.stdev = devs
-            self.median_times = times
-            self.max = maxs
-            self.min = mins
-
-        else:
-            # If the mnemonic data are strings, we don't compute statistics
+        if len(self.data["euvalues"]) == 0:
             self.mean = []
             self.median = []
             self.stdev = []
             self.median_times = []
             self.max = []
             self.min = []
+        else:
+            if type(self.data["euvalues"].data[0]) not in [np.str_, str]:
+                min_date = np.min(self.data["dates"])
+                date_range = np.max(self.data["dates"]) - min_date
+                num_days = date_range.days
+                num_seconds = date_range.seconds
+                range_days = num_days + 1
+
+                # Generate a list of times to use as boundaries for calculating means
+                limits = np.array([min_date + timedelta(days=x) for x in range(range_days)])
+                limits = np.append(limits, np.max(self.data["dates"]))
+
+                means, meds, devs, maxs, mins, times = [], [], [], [], [], []
+                for i in range(len(limits) - 1):
+                    good = np.where((self.data["dates"] >= limits[i]) & (self.data["dates"] < limits[i + 1]))
+
+                    if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
+                        avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
+                        maxval = np.max(self.data["euvalues"][good])
+                        minval = np.min(self.data["euvalues"][good])
+                    else:
+                        avg, med, dev, maxval, minval = change_only_stats(self.data["dates"][good], self.data["euvalues"][good], sigma=sigma)
+                    means.append(avg)
+                    meds.append(med)
+                    maxs.append(maxval)
+                    mins.append(minval)
+                    devs.append(dev)
+                    times.append(limits[i] + (limits[i + 1] - limits[i]) / 2.)
+                self.mean = means
+                self.median = meds
+                self.stdev = devs
+                self.median_times = times
+                self.max = maxs
+                self.min = mins
+            else:
+                # If the mnemonic data are strings, we don't compute statistics
+                self.mean = []
+                self.median = []
+                self.stdev = []
+                self.median_times = []
+                self.max = []
+                self.min = []
 
     def full_stats(self, sigma=3):
         """Calculate the mean/median/stdev of the full compliment of data
