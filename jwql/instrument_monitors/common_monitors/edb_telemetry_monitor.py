@@ -766,20 +766,6 @@ class EdbMnemonicMonitor():
             # Get the dependency values for each change.
             vals = dependency["euvalues"][change_indexes[0:-1]].data
 
-
-
-            # For development: save dependency results for examination
-            start_time = mnem_data.requested_start_time
-            end_time = mnem_data.requested_end_time
-            deptab = Table()
-            deptab['dates'] = dependency['dates']
-            deptab['euvalues'] = dependency['euvalues']
-            deptab.write(f'DEP_{dep_list[0]["name"]}_{start_time}__{end_time}.txt', format='ascii', overwrite=True)
-            tmptable = Table()
-            tmptable['change_indexes'] = change_indexes
-            tmptable['dep_values'] = np.append(vals, -1)
-            tmptable.write(f'DEP_change_vals_{dep_list[0]}_{start_time}__{end_time}.txt', format='ascii', overwrite=True)
-
             # Place the dependency values in the every_change_values attribute, and the corresponding
             # indexes where the changes happen into the blocks attribute.
             mnem_data.blocks = change_indexes
