@@ -1155,7 +1155,7 @@ class EdbMnemonicMonitor():
         query = session.query(self.history_table).filter(self.history_table.mnemonic == telem_name).order_by(self.history_table.latest_query).all()
 
         if len(query) == 0:
-            base_time = '2022-04-12 00:00:0.0'
+            base_time = '2022-11-15 00:00:0.0'
             query_result = datetime.datetime.strptime(base_time, '%Y-%m-%d %H:%M:%S.%f')
             logging.info(f'\tNo query history for {telem_name}. Returning default "previous query" date of {base_time}.')
         else:
