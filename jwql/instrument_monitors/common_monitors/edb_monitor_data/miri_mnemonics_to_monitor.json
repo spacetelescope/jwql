@@ -1806,7 +1806,7 @@
                     "threshold": 25
                 }
             ],
-            "plot_data": "*SE_ZBUSVLT,median,max",
+            "plot_data": "*SE_ZBUSVLT,max",
             "nominal_value": 11.13,
             "yellow_limits": [10.23, 12.02],
             "plot_category": "ICE_power"

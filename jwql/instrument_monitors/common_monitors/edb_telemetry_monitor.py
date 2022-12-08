@@ -1319,7 +1319,7 @@ class EdbMnemonicMonitor():
         # Combine the mean values and median time data from multiple days into a single EdbMnemonic
         # instance.
         multiday_table["dates"] = multiday_median_times
-        multiday_table["euvalues"] = multiday_mean_vals
+        multiday_table["euvalues"] = multiday_median_vals
         all_data = ed.EdbMnemonic(identifier, starting_time_list[0], ending_time_list[-1],
                                   multiday_table, meta, info)
         all_data.stdev = multiday_stdev_vals
