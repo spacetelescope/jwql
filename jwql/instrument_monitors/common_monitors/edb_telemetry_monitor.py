@@ -773,8 +773,7 @@ class EdbMnemonicMonitor():
 
         return mnem_data
 
-    def
-    y_start_times(self, starting_time):
+    def generate_query_start_times(self, starting_time):
         """Generate a list of starting and ending query times such that the entire time range
         is covered, but we are only querying the EDB for one day's worth of data at a time.
         Start times are once per day between the previous query time and the present. End
