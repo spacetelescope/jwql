@@ -1,62 +1,8 @@
 {
     "all": [
         {
-            "name": "SA_ZFGGSPOSX",
-            "description": "FGS Guide star position in x",
-            "dependency": [
-                {
-                    "name": "INIS_EXP_STAT",
-                    "relation": "=",
-                    "threshold": "STARTED"
-                }
-            ],
-            "plot_data": "nominal",
-            "plot_category": "guide_star"
-        },
-        {
-            "name": "SA_ZFGGSPOSY",
-            "description": "FGS Guide star position in y",
-            "dependency": [
-                {
-                    "name": "INIS_EXP_STAT",
-                    "relation": "=",
-                    "threshold": "STARTED"
-                }
-            ],
-            "plot_data": "nominal",
-            "plot_category": "guide_star"
-        },
-        {
             "name": "SA_ZHGAUPST",
             "description": "High Gain Antenna update status",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "observatory"
-        },
-        {
-            "name": "SA_ZMOMECIX",
-            "description": "Observatory momentum unit vector",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "observatory"
-        },
-        {
-            "name": "SA_ZMOMECIY",
-            "description": "Observatory momentum unit vector",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "observatory"
-        },
-        {
-            "name": "SA_ZMOMECIZ",
-            "description": "Observatory momentum unit vector",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "observatory"
-        },
-        {
-            "name": "SA_ZMOMMAG",
-            "description": "Observatory momentum unit vector",
             "dependency": [],
             "plot_data": "nominal",
             "plot_category": "observatory"
@@ -69,25 +15,11 @@
             "plot_category": "FW/PW"
         },
         {
-            "name": "INIS_PWC_POS",
-            "description": "Pupil wheel position",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "FW/PW"
-        },
-        {
             "name": "INIS_CMD_ACC_CNT",
             "description": "ISIM NIS Command Accepted Counter",
             "dependency": [],
             "plot_data": "nominal",
             "plot_category": "Commanding"
-        },
-        {
-            "name": "INIS_FWC_POS",
-            "description": "Position of NIS Filter Wheel Mechanism",
-            "dependency": [],
-            "plot_data": "nominal",
-            "plot_category": "FW/PW"
         },
         {
             "name": "INIS_FPATEMP",
