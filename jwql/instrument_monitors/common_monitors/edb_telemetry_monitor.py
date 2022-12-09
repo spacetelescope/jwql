@@ -1604,7 +1604,7 @@ class EdbMnemonicMonitor():
                     # behavior is to return the Bokeh figure itself, rather than the script and div. Also, do not
                     # save the figure and return the figure, or else Bokeh will later fail with an error that figure
                     # elements are shared between documents.
-                    plot_mean = True
+                    plot_mean = False
                     plot_median = False
                     plot_max = False
                     plot_min = False
