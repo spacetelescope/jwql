@@ -493,7 +493,7 @@ class EdbMnemonicMonitor():
 
     @log_fail
     @log_info
-    #@only_one(key='edb_monitor')
+    @only_one(key='edb_monitor')
     def execute(self, mnem_to_query=None, plot_start=None, plot_end=None):
         """Top-level wrapper to run the monitor. Take a requested list of mnemonics to
         process, or assume that mnemonics will be processed.
@@ -573,7 +573,7 @@ class EdbMnemonicMonitor():
             # as defined by the json files. This is the default operation.
 
             # Loop over instruments
-            for instrument_name in ['miri']:  #JWST_INSTRUMENT_NAMES:
+            for instrument_name in JWST_INSTRUMENT_NAMES:
                 monitor_dir = os.path.dirname(os.path.abspath(__file__))
 
                 # File of mnemonics to monitor
@@ -856,44 +856,6 @@ class EdbMnemonicMonitor():
             Data for the dependency mnemonic. Keys are "dates" and "euvalues". This is
             essentially the data in the ```data``` attribute of an EDBMnemonic instance
         """
-        # If we have already queried the EDB for the dependency's data in the time
-        # range of interest, then use that data rather than re-querying.
-
-
-        # Something is fishy with the results from this. Try querying the EDB all the time.
-
-        #if dependency["name"] in self.query_results:
-        #
-        #    # We need the full time to be covered
-        #    if ((self.query_results[dependency["name"]].requested_start_time <= starttime)
-        #         and (self.query_results[dependency["name"]].requested_end_time >= endtime)):
-        #
-        #        logging.info(f'Dependency {dependency["name"]} is already present in self.query_results.')
-        #
-        #        # Extract data for the requested time range
-        #        matching_times = np.where((self.query_results[dependency["name"]].data["dates"] > starttime)
-        #                                  & (self.query_results[dependency["name"]].data["dates"] < endtime))
-        #        dep_mnemonic = {"dates": self.query_results[dependency["name"]].data["dates"][matching_times],
-        #                        "euvalues": self.query_results[dependency["name"]].data["euvalues"][matching_times]}
-        #
-        #        logging.info(f'Length of returned data: {len(dep_mnemonic["dates"])}')
-        #    else:
-        #        # If what we have from previous queries doesn't cover the time range we need, then query the EDB.
-        #        logging.info(f'Dependency {dependency["name"]} is present in self.query results, but does not cover the needed time. Querying EDB for the dependency.')
-        #        mnemonic_data = ed.get_mnemonic(dependency["name"], starttime, endtime)
-        #        logging.info(f'Length of returned data: {len(mnemonic_data)}, {starttime}, {endtime}')
-        #
-        #        # Place the data in a dictionary
-        #        dep_mnemonic = {"dates": mnemonic_data.data["dates"], "euvalues": mnemonic_data.data["euvalues"]}
-        #
-        #        # This is to save the data so that we may avoid an EDB query next time
-        #        # Add the new data to the saved query results. This should also filter out
-        #        # any duplicate rows.
-        #        self.query_results[dependency["name"]] = self.query_results[dependency["name"]] + mnemonic_data
-        #else:
-        # In this case, the dependency is not present at all in the dictionary of past query results.
-        # So here we again have to query the EDB.
-        logging.info(f'Dependency {dependency["name"]} is not in self.query_results. Querying the EDB.')
         self.query_results[dependency["name"]] = ed.get_mnemonic(dependency["name"], starttime, endtime)
         logging.info(f'Length of data: {len(self.query_results[dependency["name"]])}, {starttime}, {endtime}')
 
@@ -1421,18 +1383,10 @@ class EdbMnemonicMonitor():
                     # Find the end time of the previous query from the database.
                     most_recent_search = self.most_recent_search(product_identifier)
 
-
-
-                    # FOR TESTING! REMOVE BEFORE MERGING
-                    #most_recent_search = self._today - datetime.timedelta(days=(EDB_DEFAULT_PLOT_RANGE+1))
-                    # FOR TESTING! REMOVE BEFORE MERGING
-
-
                     # For daily_means mnemonics, we force the search to always start at noon, and
                     # have a 1 day cadence
                     if telem_type == 'daily_means':
                         most_recent_search = datetime.datetime.combine(most_recent_search.date(), datetime.time(hour=12))
-
 
                     logging.info(f'Most recent search is {most_recent_search}.')
                     logging.info(f'Query cadence is {self.query_cadence}')
@@ -2077,5 +2031,4 @@ if __name__ == '__main__':
 
     monitor = EdbMnemonicMonitor()
     monitor.execute(args.mnem_to_query, plot_start_dt, plot_end_dt)
-
-    #monitor_utils.update_monitor_table(module, start_time, log_file)
+    monitor_utils.update_monitor_table(module, start_time, log_file)

@@ -541,8 +541,7 @@ class EdbMnemonic:
                     stdevs.append(stdevval)
                     maxs.append(meanval)
                     mins.append(meanval)
-                    #if hasattr(self, 'every_change_values'):
-                    #        updated_every_change_vals.append(self.every_change_values[i + 1])
+
         self.mean = means
         self.median = medians
         self.stdev = stdevs
