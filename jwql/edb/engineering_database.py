@@ -684,6 +684,7 @@ class EdbMnemonic:
 
         if plot_data:
             data = fig.scatter(x='x', y='y', line_width=1, line_color='blue', source=source)
+            data_line = fig.line(x='x', y='y', line_width=1, line_color='blue', source=source)
             hover_tool = HoverTool(tooltips=[('Value', '@y'),
                                              ('Date', '@x{%d %b %Y %H:%M:%S}')
                                              ], mode='mouse', renderers=[data])
