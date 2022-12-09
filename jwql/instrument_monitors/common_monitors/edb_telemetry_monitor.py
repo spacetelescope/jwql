@@ -856,11 +856,45 @@ class EdbMnemonicMonitor():
             Data for the dependency mnemonic. Keys are "dates" and "euvalues". This is
             essentially the data in the ```data``` attribute of an EDBMnemonic instance
         """
-        self.query_results[dependency["name"]] = ed.get_mnemonic(dependency["name"], starttime, endtime)
-        logging.info(f'Length of data: {len(self.query_results[dependency["name"]])}, {starttime}, {endtime}')
+        # If we have already queried the EDB for the dependency's data in the time
+        # range of interest, then use that data rather than re-querying.
+        if dependency["name"] in self.query_results:
 
-        dep_mnemonic = {"dates": self.query_results[dependency["name"]].data["dates"],
-                        "euvalues": self.query_results[dependency["name"]].data["euvalues"]}
+            # We need the full time to be covered
+            if ((self.query_results[dependency["name"]].requested_start_time <= starttime)
+                 and (self.query_results[dependency["name"]].requested_end_time >= endtime)):
+
+                logging.info(f'Dependency {dependency["name"]} is already present in self.query_results.')
+
+                # Extract data for the requested time range
+                matching_times = np.where((self.query_results[dependency["name"]].data["dates"] >= starttime)
+                                          & (self.query_results[dependency["name"]].data["dates"] <= endtime))
+                dep_mnemonic = {"dates": self.query_results[dependency["name"]].data["dates"][matching_times],
+                                "euvalues": self.query_results[dependency["name"]].data["euvalues"][matching_times]}
+
+                logging.info(f'Length of returned data: {len(dep_mnemonic["dates"])}')
+            else:
+                # If what we have from previous queries doesn't cover the time range we need, then query the EDB.
+                logging.info(f'Dependency {dependency["name"]} is present in self.query results, but does not cover the needed time. Querying EDB for the dependency.')
+                mnemonic_data = ed.get_mnemonic(dependency["name"], starttime, endtime)
+                logging.info(f'Length of returned data: {len(mnemonic_data)}, {starttime}, {endtime}')
+
+                # Place the data in a dictionary
+                dep_mnemonic = {"dates": mnemonic_data.data["dates"], "euvalues": mnemonic_data.data["euvalues"]}
+
+                # This is to save the data so that we may avoid an EDB query next time
+                # Add the new data to the saved query results. This should also filter out
+                # any duplicate rows.
+                self.query_results[dependency["name"]] = self.query_results[dependency["name"]] + mnemonic_data
+        else:
+            # In this case, the dependency is not present at all in the dictionary of past query results.
+            # So here we again have to query the EDB.
+            logging.info(f'Dependency {dependency["name"]} is not in self.query_results. Querying the EDB.')
+            self.query_results[dependency["name"]] = ed.get_mnemonic(dependency["name"], starttime, endtime)
+            logging.info(f'Length of data: {len(self.query_results[dependency["name"]])}, {starttime}, {endtime}')
+
+            dep_mnemonic = {"dates": self.query_results[dependency["name"]].data["dates"],
+                            "euvalues": self.query_results[dependency["name"]].data["euvalues"]}
 
         return dep_mnemonic
 
