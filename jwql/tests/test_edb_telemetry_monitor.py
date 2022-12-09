@@ -154,7 +154,6 @@ def test_conditions():
     assert condition_3.block_indexes == [0, 2, 3]
 
 
-@pytest.mark.skipif(ON_GITHUB_ACTIONS, reason='Requires access to config file.')
 def test_find_all_changes():
     inst = etm.EdbMnemonicMonitor()
 
