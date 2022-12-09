@@ -311,7 +311,7 @@ MONITORS = {
             ('Cosmic Ray Monitor', '#'),
             ('Dark Current Monitor', '/fgs/dark_monitor'),
             ('EDB Telemetry Monitor', '/fgs/edb_monitor'),
-            ('Readnoise Monitor', '/fgs/readnoise_monitor'),],
+            ('Readnoise Monitor', '/fgs/readnoise_monitor')],
     'miri': [('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
              ('Cosmic Ray Monitor', '#'),
              ('Dark Current Monitor', '/miri/dark_monitor'),
@@ -337,13 +337,13 @@ MONITORS = {
                ('EDB Telemetry Monitor', '/niriss/edb_monitor'),
                ('Readnoise Monitor', '/niriss/readnoise_monitor'),
                ('AMI Calibrator Monitor', '#'),
-               ('TSO RMS Monitor', '#'),],
+               ('TSO RMS Monitor', '#')],
     'nirspec': [('Optical Short Monitor', '#'),
                 ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Bias Monitor', '/nirspec/bias_monitor'),
                 ('Dark Monitor', '/nirspec/dark_monitor'),
                 ('Cosmic Ray Monitor', '#'),
-                ('EDB Telemetry Monitor', '/nirspec/edb_monitor')
+                ('EDB Telemetry Monitor', '/nirspec/edb_monitor'),
                 ('MSATA Monitor', '/nirspec/msata_monitor'),
                 ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
                 ('WATA Monitor', '/nirspec/wata_monitor'),
@@ -351,7 +351,7 @@ MONITORS = {
                 ('Ref Pix Monitor', '#'),
                 ('Internal Lamp Monitor', '#'),
                 ('Instrument Model Updates', '#'),
-                ('Failed-open Shutter Monitor', '#'),
+                ('Failed-open Shutter Monitor', '#')
                 ]}
 
 # Possible suffix types for coronograph exposures
