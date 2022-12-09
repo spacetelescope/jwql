@@ -773,7 +773,8 @@ class EdbMnemonicMonitor():
 
         return mnem_data
 
-    def generate_query_start_times(self, starting_time):
+    def
+    y_start_times(self, starting_time):
         """Generate a list of starting and ending query times such that the entire time range
         is covered, but we are only querying the EDB for one day's worth of data at a time.
         Start times are once per day between the previous query time and the present. End
@@ -1294,7 +1295,7 @@ class EdbMnemonicMonitor():
                     multiday_min_vals.extend(mnemonic_info.min)
 
             else:
-                logging.info(f'{mnemonic_dict["name"]} has no data between {starttime} and {endtime}.\n\n')
+                logging.info(f'{mnemonic_dict["name"]} has no data between {starttime} and {endtime}.')
                 continue
 
         # If all daily queries return empty results, get the info metadata from the EDB, so
@@ -1442,9 +1443,9 @@ class EdbMnemonicMonitor():
                         logging.info("Plot range extends outside the time contained in the JWQLDB. Need to query the EDB.")
                         logging.info(f"Plot_end: {plot_end}")
                         logging.info(f"Most recent search: {most_recent_search}")
-                        logging.info(f"Query cadence: {self.query_cadence}")
                         logging.info(f"Search end: {most_recent_search + self.query_cadence}")
                         starttime = most_recent_search + self.query_cadence
+                        logging.info(f"New starttime: {starttime}")
                     else:
                         # Here the entire plot range is before the most recent search,
                         # so all we need to do is query the JWQL database for the data.
@@ -1458,6 +1459,7 @@ class EdbMnemonicMonitor():
                     # all of the data from the EDB directly, from some default start time until the
                     # present day.
                     starttime = plot_start
+                    create_new_history_entry = False
 
                 query_start_times, query_end_times = self.generate_query_start_times(starttime)
                 logging.info(f'Query start times: {query_start_times}')
@@ -1476,6 +1478,7 @@ class EdbMnemonicMonitor():
                         new_data = empty_edb_instance(mnemonic[self._usename], plot_start, plot_end, info=info)
                         new_data.mnemonic_identifier = product_identifier
                         logging.info(f'All data needed are already in JWQLDB.')
+                        create_new_history_entry = False
                 else:
                     # For data where no averaging is done, all data must be retrieved from EDB. They are not
                     # stored in the JWQLDB
