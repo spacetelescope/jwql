@@ -248,6 +248,7 @@ def archive_date_range_ajax(request, inst, start_date, stop_date):
     all_observations = list(set(obs_beginning + obs_ending + obs_spanning))
     # Get all thumbnails that occurred within the time frame for these observations
     data = thumbnails_date_range_ajax(inst, all_observations, inclusive_start_time.mjd, exclusive_stop_time.mjd)
+    data['thumbnail_sort'] = request.session.get("image_sort", "Recent")
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 

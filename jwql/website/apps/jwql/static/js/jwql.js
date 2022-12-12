@@ -840,6 +840,7 @@ function update_sort_options(data, base_url) {
     content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Ascending\', \'' + base_url + '\');">Ascending</a>';
     content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Descending\', \'' + base_url + '\');">Descending</a>';
     content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Recent\', \'' + base_url + '\');">Recent</a>';
+    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Oldest\', \'' + base_url + '\');">Oldest</a>';
     content += '</div></div>';
 
     // Add the content to the div
@@ -900,32 +901,29 @@ function submit_date_range_form(inst, base_url) {
     } else if (start_date > stop_date) {
         alert("Start Date must be earlier or equal to Stop Date")
     } else {
-        document.getElementById("loading").style.display = "inline-block";
+        document.getElementById("loading").style.display = "block";
         document.getElementById("thumbnail-array").style.display = "none";
         document.getElementById("no_thumbnails_msg").style.display = "none";
         $.ajax({
             url: base_url + '/ajax/' + inst + '/archive_date_range/start_date_' + start_date + '/stop_date_' + stop_date,
             success: function(data){
-    
-                // SAPP TODO UPDATE BELOW CODE
-                // Perform various updates to divs
-
+                // Handle DIV updates
                 num_thumbnails = Object.keys(data.file_data).length;
-                if (num_thumbnails == 0) {
+                if (num_thumbnails > 0) {
+                    update_show_count(num_thumbnails, 'activities');
+                    update_thumbnail_array(data);
+                    update_filter_options(data, num_thumbnails, 'thumbnail');
+                    // Do initial sort to match sort button display
+                    update_sort_options(data, base_url);
+                    sort_by_thumbnails(sort, base_url);
+                    // Replace loading screen with the proposal array div
+                    document.getElementById("loading").style.display = "none";
+                    document.getElementById("thumbnail-array").style.display = "block";
+                    document.getElementById("no_thumbnails_msg").style.display = "none";
+                } else {
+                    document.getElementById("loading").style.display = "none";
                     document.getElementById("no_thumbnails_msg").style.display = "inline-block";
                 }
-                update_show_count(num_thumbnails, 'activities');
-                update_thumbnail_array(data);
-                update_filter_options(data, num_thumbnails, 'thumbnail');
-                //  SAPP TODO - hardcoded sort options? update_sort_options(data, base_url);
-    
-                // Do initial sort to match sort button display
-                //  SAPP TODO - Hardcoded sort sort_by_thumbnails(sort, base_url);
-    
-                // Replace loading screen with the proposal array div
-                document.getElementById("loading").style.display = "none";
-                document.getElementById("thumbnail-array").style.display = "block";
-                document.getElementById("no_thumbnails_msg").style.display = "none";
             },
             error : function(response) {
                 document.getElementById("loading").style.display = "none";

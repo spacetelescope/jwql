@@ -18,17 +18,7 @@
     <!-- Filter and sort options -->
     <div class="d-flex flex-row">
         <div class="mr-4 mr-5" id="thumbnail-filter"></div>
-        <!-- Sort Options -->
-        <div class="mx-4 mr-5 ml-auto">
-            Sort by:<br>
-            <span class="dropdown">
-              <button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">None</button>
-              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                <a class="dropdown-item" href="#" onclick="sort_by_thumbnails('Recent');">Recent</a>
-                <a class="dropdown-item" href="#" onclick="sort_by_thumbnails('Oldest');">Oldest</a>
-              </div>
-            </span>
-        </div>
+        <div class="mx-4 mr-5 ml-auto" id="thumbnail-sort"></div>
     </div>
 
     <hr>
@@ -55,11 +45,13 @@
                     </div>
                 </div>
             </div>
+            Loading ...
         </div>
     </div>
 
     <!-- Display the data -->
     <div id='thumbnail-array'></div>
+    <br>
     <a id="no_thumbnails_msg">No data match the date range.</a>
 </main>
 
