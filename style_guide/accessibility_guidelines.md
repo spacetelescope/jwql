@@ -17,7 +17,7 @@ Every contribution to the web application must include the following features:
     - When plotting data, use both colors AND symbols to distinguish datasets
     - Avoid using images of text
 - Text
-    - Ensure sure headers are in order (i.e. `<h1>` before `<h2>`, `<h2>` before `<h3>`, etc.) and do not skip (i.e. `<h3>` comes after `<h2>`, not `<h1>`)
+    - Ensure headers are in order (i.e. `<h1>` before `<h2>`, `<h2>` before `<h3>`, etc.) and do not skip (i.e. `<h3>` comes after `<h2>`, not `<h1>`)
     - Don't write explicit navigation instructions involving placement or direction (e.g. "in the upper right corner")
     - Differentiate links from normal text (different color and/or underline)
     - Describe the link purpose in link text (e.g. avoid using "here" as link text)

@@ -92,7 +92,7 @@ conda env create -f environment_python_3_8.yml
 or
 
 ```
-conda env create -f environment_python_3.9.yml
+conda env create -f environment_python_3_9.yml
 ```
 
 ### Configuration File
