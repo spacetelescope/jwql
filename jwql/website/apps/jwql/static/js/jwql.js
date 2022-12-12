@@ -889,7 +889,7 @@ function update_thumbnail_array(data) {
     };
 };
 
-function submit_date_range_form(inst, base_url) {
+function submit_date_range_form(inst, base_url, sort) {
 
     start_date = document.getElementById("start_date_range").value;
     stop_date = document.getElementById("stop_date_range").value;
