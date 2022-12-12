@@ -191,8 +191,10 @@ def archive_date_range(request, inst):
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
     template = 'archive_date_range.html'
+    sort_type = request.session.get('image_sort', 'Recent')
     context = {'inst': inst,
-               'base_url': get_base_url()}
+               'base_url': get_base_url(),
+               'sort': sort_type}
 
     return render(request, template, context)
 
