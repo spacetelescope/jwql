@@ -507,6 +507,8 @@ function sort_by_thumbnails(sort_type, base_url) {
         tinysort(thumbs, {attr:'file_root', order:'desc'});
     } else if (sort_type == 'Recent') {
         tinysort(thumbs, {attr:'exp_start', order:'desc'});
+    } else if (sort_type == 'Oldest') {
+        tinysort(thumbs, {attr:'exp_start', order:'asc'});
     }
     $.ajax({
         url: base_url + '/ajax/session/image_sort/' + sort_type + '/',
@@ -886,35 +888,55 @@ function update_thumbnail_array(data) {
     };
 };
 
-function submit_date_range_form(date_range_form) {
+function submit_date_range_form(inst, base_url) {
 
-    start_date = date_range_form.start_date_range.value;
-    stop_date = date_range_form.stop_date_range.value;
-    alert(start_date);
-    alert(stop_date);
+    start_date = document.getElementById("start_date_range").value;
+    stop_date = document.getElementById("stop_date_range").value;
 
-    // $.ajax({
-    //     url: base_url + '/ajax/archive_date_range/' + inst + '/start_date_' + start_date + '/stop_date_' + stop_date,
-    //     success: function(data){
+    if (!start_date) {
+        alert("You must enter a Start Date")
+    } else if (!stop_date) {
+        alert("You must enter a Stop Date")
+    } else if (start_date > stop_date) {
+        alert("Start Date must be earlier or equal to Stop Date")
+    } else {
+        document.getElementById("loading").style.display = "inline-block";
+        document.getElementById("thumbnail-array").style.display = "none";
+        document.getElementById("no_thumbnails_msg").style.display = "none";
+        $.ajax({
+            url: base_url + '/ajax/' + inst + '/archive_date_range/start_date_' + start_date + '/stop_date_' + stop_date,
+            success: function(data){
+    
+                // SAPP TODO UPDATE BELOW CODE
+                // Perform various updates to divs
 
-    //         // SAPP TODO UPDATE BELOW CODE
-    //         // Perform various updates to divs
-
-    //         // num_thumbnails = Object.keys(data.file_data).length;
-    //         // update_show_count(num_thumbnails, 'activities');
-    //         // update_thumbnail_array(data);
-    //         // update_obs_options(data, inst, proposal, observation);
-    //         // update_filter_options(data, num_thumbnails, 'thumbnail');
-    //         // update_sort_options(data, base_url);
-
-    //         // // Do initial sort to match sort button display
-    //         // sort_by_thumbnails(sort, base_url);
-
-    //         // // Replace loading screen with the proposal array div
-    //         // document.getElementById("loading").style.display = "none";
-    //         // document.getElementById("thumbnail-array").style.display = "block";
-    //     }
-    // });
+                num_thumbnails = Object.keys(data.file_data).length;
+                if (num_thumbnails == 0) {
+                    document.getElementById("no_thumbnails_msg").style.display = "inline-block";
+                }
+                alert(num_thumbnails)
+                update_show_count(num_thumbnails, 'activities');
+                alert(data)
+                update_thumbnail_array(data);
+                update_filter_options(data, num_thumbnails, 'thumbnail');
+                //  SAPP TODO - hardcoded sort options? update_sort_options(data, base_url);
+    
+                // Do initial sort to match sort button display
+                //  SAPP TODO - Hardcoded sort sort_by_thumbnails(sort, base_url);
+    
+                // Replace loading screen with the proposal array div
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("thumbnail-array").style.display = "block";
+                document.getElementById("no_thumbnails_msg").style.display = "none";
+            },
+            error : function(response) {
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("thumbnail-array").style.display = "none";
+                document.getElementById("no_thumbnails_msg").style.display = "inline-block";
+    
+            }
+        });
+    }
 };
 
 

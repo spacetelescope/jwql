@@ -72,10 +72,13 @@ from .data_containers import random_404_page
 from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
+from .data_containers import thumbnails_date_range_ajax
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
 from .models import Observation, Proposal, RootFileInfo
 from astropy.io import fits
+from astropy.time import Time
+import astropy.units as u
 
 
 def anomaly_query(request):
@@ -213,19 +216,39 @@ def archive_date_range_ajax(request, inst, start_date, stop_date):
     JsonResponse object
         Outgoing response sent to the webpage
     """
+
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
 
-    # SAPP TODO - fix the start_date and the stop_date to be in MJD time changed to a float.
+    # Calculate start date/time in MJD format to begin our range
+    inclusive_start_time = Time(start_date)
+    # Add a day to the stop time and mark it 'exclusive' for code clarity, doing this to get all times during previous day
+    exclusive_stop_time = Time(stop_date) + (1 * u.day)
 
-    # Get a list of all Observation entries for the given instrument after the start date
-    all_entries_after_start = Observation.objects.filter(proposal__archive__instrument=inst, obsstart__gte=start_date)
-    # Query that set for all before the stop date
-    all_entries = all_entries_after_start.filter(obsstart__lte=stop_date)
+    # Get a queryset of all observations STARTING WITHIN our date range
+    begin_after_start = Observation.objects.filter(proposal__archive__instrument=inst, obsstart__gte=inclusive_start_time.mjd)
+    all_entries_beginning_in_range = begin_after_start.filter(obsstart__lt=exclusive_stop_time.mjd)
 
+    # Get a queryset of all observations ENDING WITHIN our date range
+    end_after_start = Observation.objects.filter(proposal__archive__instrument=inst, obsend__gte=inclusive_start_time.mjd)
+    all_entries_ending_in_range = end_after_start.filter(obsend__lt=exclusive_stop_time.mjd)
 
+    # Get a queryset of all observations SPANNING (starting before and ending after) our date range.  Bump our window out a few days to catch hypothetical 
+    # observations that last over 24 hours.  The larger the window the more time the query takes so keeping it tight.
+    two_days_before_start_time = Time(start_date) - (2 * u.day)
+    two_days_after_end_time = Time(stop_date) + (3 * u.day)
+    end_after_stop = Observation.objects.filter(proposal__archive__instrument=inst, obsend__gte=two_days_after_end_time.mjd)
+    all_entries_spanning_range = end_after_stop.filter(obsstart__lt=two_days_before_start_time.mjd)
+
+    obs_beginning = [observation for observation in all_entries_beginning_in_range]
+    obs_ending = [observation for observation in all_entries_ending_in_range]
+    obs_spanning = [observation for observation in all_entries_spanning_range]
+    
+    # Create a single list of all pertinent observations
+    all_observations = list(set(obs_beginning + obs_ending + obs_spanning))
+    # Get all thumbnails that occurred within the time frame for these observations
+    data = thumbnails_date_range_ajax(inst, all_observations, inclusive_start_time.mjd, exclusive_stop_time.mjd)
     return JsonResponse(data, json_dumps_params={'indent': 2})
-
 
 
 def archived_proposals(request, inst):
