@@ -501,14 +501,15 @@ function sort_by_thumbnails(sort_type, base_url) {
 
     // Sort the thumbnails accordingly
     var thumbs = $('div#thumbnail-array>div')
-    if (sort_type == 'Ascending') {
-        tinysort(thumbs, {attr:'file_root', order:'asc'});
-    } else if (sort_type == 'Descending') {
+    if (sort_type == 'Descending') {
         tinysort(thumbs, {attr:'file_root', order:'desc'});
     } else if (sort_type == 'Recent') {
         tinysort(thumbs, {attr:'exp_start', order:'desc'});
     } else if (sort_type == 'Oldest') {
         tinysort(thumbs, {attr:'exp_start', order:'asc'});
+    } else {
+        // Default to 'Ascending'
+        tinysort(thumbs, {attr:'file_root', order:'asc'});
     }
     $.ajax({
         url: base_url + '/ajax/session/image_sort/' + sort_type + '/',
@@ -908,6 +909,8 @@ function submit_date_range_form(inst, base_url, sort) {
             url: base_url + '/ajax/' + inst + '/archive_date_range/start_date_' + start_date + '/stop_date_' + stop_date,
             success: function(data){
                 // Handle DIV updates
+                // Clear our existing array
+                $("#thumbnail-array")[0].innerHTML = "";
                 num_thumbnails = Object.keys(data.file_data).length;
                 if (num_thumbnails > 0) {
                     update_show_count(num_thumbnails, 'activities');
@@ -915,7 +918,7 @@ function submit_date_range_form(inst, base_url, sort) {
                     update_filter_options(data, num_thumbnails, 'thumbnail');
                     // Do initial sort to match sort button display
                     update_sort_options(data, base_url);
-                    sort_by_thumbnails(sort, base_url);
+                    sort_by_thumbnails(data.thumbnail_sort, base_url);
                     // Replace loading screen with the proposal array div
                     document.getElementById("loading").style.display = "none";
                     document.getElementById("thumbnail-array").style.display = "block";
