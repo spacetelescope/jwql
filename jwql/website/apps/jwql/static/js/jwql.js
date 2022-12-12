@@ -914,9 +914,7 @@ function submit_date_range_form(inst, base_url) {
                 if (num_thumbnails == 0) {
                     document.getElementById("no_thumbnails_msg").style.display = "inline-block";
                 }
-                alert(num_thumbnails)
                 update_show_count(num_thumbnails, 'activities');
-                alert(data)
                 update_thumbnail_array(data);
                 update_filter_options(data, num_thumbnails, 'thumbnail');
                 //  SAPP TODO - hardcoded sort options? update_sort_options(data, base_url);
