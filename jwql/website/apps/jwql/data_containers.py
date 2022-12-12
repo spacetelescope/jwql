@@ -1624,6 +1624,8 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
 
             viewed = THUMBNAIL_FILTER_LOOK[0]
 
+        exp_num = filename_dict['exposure_id']#.lstrip('0')
+
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
@@ -1635,6 +1637,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         try:
             data_dict['file_data'][rootname]['expstart'] = exp_start
             data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
+            data_dict['file_data'][rootname]['exp_num'] = exp_num
         except (ValueError, TypeError) as e:
             logging.warning("Unable to populate exp_start info for {}".format(rootname))
             logging.warning(e)
