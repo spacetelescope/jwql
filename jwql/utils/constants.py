@@ -184,6 +184,11 @@ EXPTYPES = {"nircam": {"imaging": "NRC_IMAGE", "ts_imaging": "NRC_TSIMAGE",
                        "pom": "NIS_IMAGE", "wfss": "NIS_WFSS"},
             "fgs": {"imaging": "FGS_IMAGE"}}
 
+EXPOSURE_PAGE_SUFFIX_ORDER = ['uncal', 'dark', 'trapsfilled', 'ramp', 'rate', 'rateints', 'fitopt', 'cal', 'calints',
+                              'msa', 'crf', 'crfints', 'bsub', 'bsubints', 'i2d', 's2d', 's3d', 'x1d', 'x1dints',
+                              'cat', 'segm', 'c1d', 'psfstack', 'psfalign', 'psfsub', 'amiavg', 'aminorm', 'ami',
+                              'psf-amiavg', 'phot', 'whtlt', 'wfscmb']
+
 # Filename Component Lengths
 FILE_AC_CAR_ID_LEN = 4
 FILE_AC_O_ID_LEN = 3
@@ -255,7 +260,7 @@ GUIDER_FILENAME_TYPE = ['gs-fg', 'gs-track', 'gs-id', 'gs-acq1', 'gs-acq2']
 GUIDER_SUFFIX_TYPES = ['stream', 'stacked_uncal', 'image_uncal', 'stacked_cal', 'image_cal']
 
 # JWQL should ignore some filetypes in the filesystem.
-IGNORED_SUFFIXES = ['original', 'stream', 'x1d', 'x1dints', 'c1d']
+IGNORED_SUFFIXES = ['original', 'stream', 'x1d', 'x1dints', 'c1d', 'pre-image']
 
 # Instrument monitor database tables
 INSTRUMENT_MONITOR_DATABASE_TABLES = {
@@ -308,53 +313,36 @@ MAST_QUERY_LIMIT = 500000
 # Available monitor names and their location for each JWST instrument
 MONITORS = {
     'fgs': [('Bad Pixel Monitor', '/fgs/bad_pixel_monitor'),
-            ('Readnoise Monitor', '/fgs/readnoise_monitor'),
+            ('Cosmic Ray Monitor', '#'),
             ('Dark Current Monitor', '/fgs/dark_monitor'),
-            ('Cosmic Ray Monitor', '/fgs/cosmic_ray_monitor'),
-            ('EDB Telemetry Monitor', '/fgs/edb_monitor')],
-    'miri': [('Dark Current Monitor', '/miri/dark_monitor'),
-             ('Data Trending', '#'),
-             ('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
-             ('Cosmic Ray Monitor', '/miri/cosmic_ray_monitor'),
-             ('Readnoise Monitor', '/miri/readnoise_monitor'),
+            ('EDB Telemetry Monitor', '/fgs/edb_monitor'),
+            ('Readnoise Monitor', '/fgs/readnoise_monitor')],
+    'miri': [('Bad Pixel Monitor', '/miri/bad_pixel_monitor'),
+             ('Cosmic Ray Monitor', '#'),
+             ('Dark Current Monitor', '/miri/dark_monitor'),
              ('EDB Telemetry Monitor', '/miri/edb_monitor'),
-             ('Cosmic Ray Monitor', '/miri/cosmic_ray_monitor'),
-             ('Photometry Monitor', '#'),
-             ('TA Failure Monitor', '#'),
-             ('Blind Pointing Accuracy Monitor', '#'),
-             ('Filter and Calibration Lamp Monitor', '#'),
-             ('Thermal Emission Monitor', '#')],
-    'nircam': [('Bias Monitor', '/nircam/bias_monitor'),
-               ('Readnoise Monitor', '/nircam/readnoise_monitor'),
-               ('Gain Level Monitor', '#'),
+             ('Readnoise Monitor', '/miri/readnoise_monitor')],
+    'nircam': [('Bad Pixel Monitor', '/nircam/bad_pixel_monitor'),
+               ('Bias Monitor', '/nircam/bias_monitor'),
+               ('Cosmic Ray Monitor', '#'),
                ('Dark Current Monitor', '/nircam/dark_monitor'),
-               ('Bad Pixel Monitor', '/nircam/bad_pixel_monitor'),
                ('EDB Telemetry Monitor', '/nircam/edb_monitor'),
-               ('Photometric Stability Monitor', '#'),
-               ('Cosmic Ray Monitor', '/nircam/cosmic_ray_monitor')],
+               ('Readnoise Monitor', '/nircam/readnoise_monitor')],
     'niriss': [('Bad Pixel Monitor', '/niriss/bad_pixel_monitor'),
-               ('Readnoise Monitor', '/niriss/readnoise_monitor'),
-               ('AMI Calibrator Monitor', '#'),
-               ('TSO RMS Monitor', '#'),
                ('Bias Monitor', '/niriss/bias_monitor'),
+               ('Cosmic Ray Monitor', '#'),
                ('Dark Current Monitor', '/niriss/dark_monitor'),
-               ('Cosmic Ray Monitor', '/niriss/cosmic_ray_monitor'),
-               ('EDB Telemetry Monitor', '/niriss/edb_monitor')],
-    'nirspec': [('Optical Short Monitor', '#'),
-                ('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
-                ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
-                ('MSATA Monitor', '/nirspec/msata_monitor'),
-                ('WATA Monitor', '/nirspec/wata_monitor'),
-                ('Data Trending', '#'),
-                ('Detector Health Monitor', '#'),
-                ('Ref Pix Monitor', '#'),
-                ('Internal Lamp Monitor', '#'),
-                ('Instrument Model Updates', '#'),
-                ('Failed-open Shutter Monitor', '#'),
+               ('EDB Telemetry Monitor', '/niriss/edb_monitor'),
+               ('Readnoise Monitor', '/niriss/readnoise_monitor')],
+    'nirspec': [('Bad Pixel Monitor', '/nirspec/bad_pixel_monitor'),
                 ('Bias Monitor', '/nirspec/bias_monitor'),
                 ('Dark Monitor', '/nirspec/dark_monitor'),
-                ('Cosmic Ray Monitor', '/nirspec/cosmic_ray_monitor'),
-                ('EDB Telemetry Monitor', '/nirspec/edb_monitor')]}
+                ('Cosmic Ray Monitor', '#'),
+                ('EDB Telemetry Monitor', '/nirspec/edb_monitor'),
+                ('MSATA Monitor', '/nirspec/msata_monitor'),
+                ('Readnoise Monitor', '/nirspec/readnoise_monitor'),
+                ('WATA Monitor', '/nirspec/wata_monitor')
+                ]}
 
 # Possible suffix types for coronograph exposures
 NIRCAM_CORONAGRAPHY_SUFFIX_TYPES = ['psfstack', 'psfalign', 'psfsub']

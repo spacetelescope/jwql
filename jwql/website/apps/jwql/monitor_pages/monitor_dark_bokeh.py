@@ -130,10 +130,12 @@ class DarkMonitor(BokehTemplate):
             self.full_dark_amplitude = [0., 1., 0.]
         else:
             self.dark_current = [row.mean for row in self.dark_table]
-            self.full_dark_bin_center = np.array([row.hist_dark_values for
-                                                 row in self.dark_table])[last_hist_index]
-            self.full_dark_amplitude = [row.hist_amplitudes for
-                                        row in self.dark_table][last_hist_index]
+            #self.full_dark_bin_center = np.array([np.array(row.hist_dark_values) for
+            #                                     row in self.dark_table])[last_hist_index]
+            self.full_dark_bin_center = np.array(self.dark_table[last_hist_index].hist_dark_values)
+            #self.full_dark_amplitude = [row.hist_amplitudes for
+            #                            row in self.dark_table][last_hist_index]
+            self.full_dark_amplitude = self.dark_table[last_hist_index].hist_amplitudes
 
         times = Time(datetime_stamps, format='datetime', scale='utc')  # Convert to MJD
         self.timestamps = times.mjd

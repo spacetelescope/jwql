@@ -67,7 +67,7 @@
                         {% if index != 0 %}
                             <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[obsnum][index-1] }}/" style="float: left;">< Previous</a>
                         {% endif %}
-        
+
                         {% if index != file_root_list[obsnum]|length - 1 %}
                             <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[obsnum][index+1] }}/" style="float: right;">Next ></a>
                         {% endif %}
@@ -115,10 +115,10 @@
             <script>update_viewed_button(false)</script>
         {% endif %}
         <!-- Determine which filetype should be shown on load -->
-        {% if 'cal' in suffixes %}
-            <script>change_filetype('cal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
-        {% elif 'rate' in suffixes %}
+        {% if 'rate' in suffixes %}
             <script>change_filetype('rate', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
+        {% elif 'dark' in suffixes %}
+            <script>change_filetype('dark', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif 'uncal' in suffixes %}
             <script>change_filetype('uncal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif suffixes|length == 1 %}
