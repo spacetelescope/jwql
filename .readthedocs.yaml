@@ -19,4 +19,4 @@ python:
    install:
     - method: pip
     path: .
-   - requirements: rtd_requirements.txt
+    - requirements: rtd_requirements.txt
