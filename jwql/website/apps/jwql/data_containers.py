@@ -1534,7 +1534,6 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     return data_dict
 
 
-# SAPP TODO figure out if you should send in the MJD time, or just hte date strings?
 def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exclusive_stop_time_mjd):
     """Generate a page that provides data necessary to render thumbnails for 
     ``archive_date_range`` template.
@@ -1556,7 +1555,6 @@ def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exc
         Dictionary of data needed for the ``thumbnails`` template
     """
 
-    # SAPP TODO make this bit of code funciton, then fill in what you need to to return data
     data_dict = {}
     data_dict['inst'] = inst
     data_dict['file_data'] = {}
@@ -1597,48 +1595,49 @@ def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exc
             # rootname will have the same exposure start time, so just keep the first.
             available_files = [item for item in filenames if rootname in item]
             exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
-            exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
-            exp_types.append(exp_type)
-            # Viewed is stored by rootname in the Model db.  Save it with the data_dict
-            # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
-            try:
-                root_file_info = RootFileInfo.objects.get(root_name=rootname)
-                viewed = THUMBNAIL_FILTER_LOOK[root_file_info.viewed]
-            except RootFileInfo.DoesNotExist:
+            if exp_start >= inclusive_start_time_mjd and exp_start < exclusive_stop_time_mjd:
+                exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
+                exp_types.append(exp_type)
+                # Viewed is stored by rootname in the Model db.  Save it with the data_dict
+                # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
+                try:
+                    root_file_info = RootFileInfo.objects.get(root_name=rootname)
+                    viewed = THUMBNAIL_FILTER_LOOK[root_file_info.viewed]
+                except RootFileInfo.DoesNotExist:
 
-                viewed = THUMBNAIL_FILTER_LOOK[0]
+                    viewed = THUMBNAIL_FILTER_LOOK[0]
 
-            # Add data to dictionary
-            data_dict['file_data'][rootname] = {}
-            data_dict['file_data'][rootname]['filename_dict'] = filename_dict
-            data_dict['file_data'][rootname]['available_files'] = available_files
-            data_dict['file_data'][rootname]["viewed"] = viewed
-            data_dict['file_data'][rootname]["exp_type"] = exp_type
+                # Add data to dictionary
+                data_dict['file_data'][rootname] = {}
+                data_dict['file_data'][rootname]['filename_dict'] = filename_dict
+                data_dict['file_data'][rootname]['available_files'] = available_files
+                data_dict['file_data'][rootname]["viewed"] = viewed
+                data_dict['file_data'][rootname]["exp_type"] = exp_type
 
-            # We generate thumbnails only for rate and dark files. Check if these files
-            # exist in the thumbnail filesystem. In the case where neither rate nor
-            # dark thumbnails are present, revert to 'none', which will then cause the
-            # "thumbnail not available" fallback image to be used.
-            available_thumbnails = get_thumbnails_by_rootname(rootname)
-            if len(available_thumbnails) > 0:
-                preferred = [thumb for thumb in available_thumbnails if 'rate' in thumb]
-                if len(preferred) == 0:
-                    preferred = [thumb for thumb in available_thumbnails if 'dark' in thumb]
-                if len(preferred) > 0:
-                    data_dict['file_data'][rootname]['thumbnail'] = os.path.basename(preferred[0])
+                # We generate thumbnails only for rate and dark files. Check if these files
+                # exist in the thumbnail filesystem. In the case where neither rate nor
+                # dark thumbnails are present, revert to 'none', which will then cause the
+                # "thumbnail not available" fallback image to be used.
+                available_thumbnails = get_thumbnails_by_rootname(rootname)
+                if len(available_thumbnails) > 0:
+                    preferred = [thumb for thumb in available_thumbnails if 'rate' in thumb]
+                    if len(preferred) == 0:
+                        preferred = [thumb for thumb in available_thumbnails if 'dark' in thumb]
+                    if len(preferred) > 0:
+                        data_dict['file_data'][rootname]['thumbnail'] = os.path.basename(preferred[0])
+                    else:
+                        data_dict['file_data'][rootname]['thumbnail'] = 'none'
                 else:
                     data_dict['file_data'][rootname]['thumbnail'] = 'none'
-            else:
-                data_dict['file_data'][rootname]['thumbnail'] = 'none'
 
-            try:
-                data_dict['file_data'][rootname]['expstart'] = exp_start
-                data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
-            except (ValueError, TypeError) as e:
-                logging.warning("Unable to populate exp_start info for {}".format(rootname))
-                logging.warning(e)
-            except KeyError:
-                print("KeyError with get_expstart for {}".format(rootname))
+                try:
+                    data_dict['file_data'][rootname]['expstart'] = exp_start
+                    data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
+                except (ValueError, TypeError) as e:
+                    logging.warning("Unable to populate exp_start info for {}".format(rootname))
+                    logging.warning(e)
+                except KeyError:
+                    print("KeyError with get_expstart for {}".format(rootname))
 
     # Extract information for sorting with dropdown menus
     # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
