@@ -363,8 +363,8 @@ class EdbMnemonic:
         nominal (expected) value, as well as yellow and red background regions to denote values that
         may be unexpected.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         show_plot : bool
             If True, show plot on screen rather than returning div and script
 
@@ -750,8 +750,8 @@ class EdbMnemonic:
         may be unexpected. Also add a plot of the mean value over time and in a second figure, a plot of
         the devaition from the mean.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         show_plot : bool
             If True, show plot on screen rather than returning div and script
 
@@ -1250,8 +1250,8 @@ def create_time_offset(dt_obj, epoch):
     """Subtract input epoch from a datetime object and return the
     residual number of seconds
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     dt_obj : datetime.datetime
         Original datetiem object
 
