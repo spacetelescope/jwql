@@ -405,8 +405,6 @@ class EdbMnemonic:
         return_fig : bool
             If True, return the plot as a bokeh Figure object
 
-        Parameters
-        ----------
         show_plot : boolean
             A switch to show the plot in the browser or not.
 
