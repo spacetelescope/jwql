@@ -251,6 +251,9 @@ def archive_date_range_ajax(request, inst, start_date, stop_date):
     # Get all thumbnails that occurred within the time frame for these observations
     data = thumbnails_date_range_ajax(inst, all_observations, inclusive_start_time.mjd, exclusive_stop_time.mjd)
     data['thumbnail_sort'] = request.session.get("image_sort", "Recent")
+    
+    # Create Dictionary of Rootnames with expstart
+    save_page_navigation_data(request, data)
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
@@ -399,6 +402,8 @@ def archive_thumbnails_ajax(request, inst, proposal, observation=None):
 
     data = thumbnails_ajax(inst, proposal, obs_num=observation)
     data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
+
+    save_page_navigation_data(request, data)
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
@@ -424,7 +429,6 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
     """
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-
     proposal_meta = text_scrape(proposal)
 
     # Get a list of all observation numbers for the proposal
@@ -485,8 +489,10 @@ def archive_thumbnails_query_ajax(request):
 
     anomaly_query_config.THUMBNAILS = thumbnails
 
+    # SAPP TODO make a template for this data strucuture
     data = thumbnails_query_ajax(thumbnails)
     data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
+    save_page_navigation_data(request, data)
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
@@ -980,6 +986,28 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
+def save_page_navigation_data(request, data):
+    """
+    It saves the data from the current page in the session so that the user can navigate to the next or
+    previous page.  Our current sort options are Ascending/Descending, and Recent/Oldest so we need to 
+    preserve 'rootname' and 'expstart'.
+    
+    Parameters
+    ----------
+    request: HttpRequest object
+    data: dictionary
+        the data dictionary to be returned from the calling view function
+    nav_by_date_range: boolean
+        when viewing an image, will the next/previous buttons be sorted by date? (the other option is rootname)
+    """
+    navigate_data = {}
+    for rootname in data['file_data']:
+        navigate_data[rootname] = data['file_data'][rootname]['expstart']
+
+    request.session['navigation_data'] = navigate_data
+    return
+
+
 def toggle_viewed_ajax(request, file_root):
     """Update the model's "mark_viewed" field and save in the database
 
@@ -1093,21 +1121,25 @@ def view_image(request, inst, file_root, rewrite=False):
 
     prop_id = file_root[2:7]
 
-    rootnames = get_rootnames_for_instrument_proposal(inst, prop_id)
-    file_root_list = defaultdict(list)
+    # if we get to this page without any navigation data (i.e. direct link), just use the file_root with no expstart time
+    # navigate_data is dict of format rootname:expstart
+    navigation_data = request.session.get('navigation_data', {file_root: 0})
 
-    for root in rootnames:
-        try:
-            file_root_list[(filename_parser(root)['observation'])].append(root)
-        except KeyError:
-            pass
-
+    # SAPP TODO make sort types constants
+    # For time based sorting options, sort to "Recent" first to create sorting consistency when times are the same.
+    # This is consistent with how Tinysort is utilized in jwql.js->sort_by_thumbnails
     sort_type = request.session.get('image_sort', 'Ascending')
-    if sort_type in ['Ascending']:
-        file_root_list = {key: sorted(file_root_list[key]) for key in sorted(file_root_list)}
+    if sort_type in ['Descending']:
+        file_root_list = sorted(navigation_data, reverse=True)
+    elif sort_type in ['Recent']:
+        navigation_data = dict(sorted(navigation_data.items()))
+        file_root_list = sorted(navigation_data, key=lambda x: x[1])
+    elif sort_type in ['Oldest']:
+        navigation_data = dict(sorted(navigation_data.items()))
+        file_root_list = sorted(navigation_data, key=lambda x: x[1], reverse=True)
     else:
-        file_root_list = {key: sorted(file_root_list[key], reverse=True) for key in sorted(file_root_list)}
-
+        file_root_list = sorted(navigation_data)
+       
     # Get our current views RootFileInfo model and send our "viewed/new" information
     root_file_info = RootFileInfo.objects.get(root_name=file_root)
 

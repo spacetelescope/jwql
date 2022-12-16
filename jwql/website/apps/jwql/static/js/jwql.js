@@ -435,6 +435,7 @@ function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_cla
 
     // Determine whether or not to display each thumbnail
     var num_thumbnails_displayed = 0;
+    var list_of_rootnames = "";
     for (i = 0; i < thumbnails.length; i++) {
         // Evaluate if the thumbnail meets all filter criteria
         var criteria = [];
@@ -450,6 +451,7 @@ function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_cla
         if (criteria.every(function(r){return r})) {
             thumbnails[i].style.display = "inline-block";
             num_thumbnails_displayed++;
+            list_of_rootnames = list_of_rootnames + thumbnails[i].getAttribute("file_root") + ',';
         } else {
             thumbnails[i].style.display = "none";
         }
@@ -466,6 +468,13 @@ function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_cla
 
     // Update the count of how many images are being shown
     document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/' + num_fileids + ' activities'
+    // SAPP TODO -> Create functionality to create this session that updates the navigation session
+    // $.ajax({
+    //     url: base_url + '/ajax/session/show_only/' + list_of_rootnames + '/',
+    //     error : function(response) {
+    //         console.log("session update failed");
+    //     }
+    // });
 };
 
 /**
@@ -499,14 +508,16 @@ function sort_by_thumbnails(sort_type, base_url) {
     // Update dropdown menu text
     document.getElementById('sort_dropdownMenuButton').innerHTML = sort_type;
 
-    // Sort the thumbnails accordingly
+    // Sort the thumbnails accordingly.  
+    // Note: Because thumbnails will sort relating to their current order (when the exp_start is the same between thumbnails), we need to do multiple sorts to guarantee consistency.
+
     var thumbs = $('div#thumbnail-array>div')
     if (sort_type == 'Descending') {
         tinysort(thumbs, {attr:'file_root', order:'desc'});
     } else if (sort_type == 'Recent') {
-        tinysort(thumbs, {attr:'exp_start', order:'desc'});
+        tinysort(thumbs, {attr:'exp_start', order:'desc'}, {attr:'file_root', order:'asc'});
     } else if (sort_type == 'Oldest') {
-        tinysort(thumbs, {attr:'exp_start', order:'asc'});
+        tinysort(thumbs, {attr:'exp_start', order:'asc'}, {attr:'file_root', order:'asc'});
     } else {
         // Default to 'Ascending'
         tinysort(thumbs, {attr:'file_root', order:'asc'});
@@ -897,58 +908,61 @@ function submit_date_range_form(inst, base_url, sort) {
 
     if (!start_date) {
         alert("You must enter a Start Date");
-    } else if (!stop_date) {
-        // auto fill stop date to start date if empty
-        stop_date = start_date;
-        document.getElementById("stop_date_range").value = stop_date;
-    } else if (start_date > stop_date) {
-        alert("Start Date must be earlier or equal to Stop Date");
-    } else {
-        document.getElementById("loading").style.display = "block";
-        document.getElementById("thumbnail-array").style.display = "none";
-        document.getElementById("no_thumbnails_msg").style.display = "none";
-        $.ajax({
-            url: base_url + '/ajax/' + inst + '/archive_date_range/start_date_' + start_date + '/stop_date_' + stop_date,
-            success: function(data){
-                var show_thumbs = true;
-                num_thumbnails = Object.keys(data.file_data).length;
-                // verify we want to continue with results
-                if (num_thumbnails > 1000) {
-                    show_thumbs = false;
-                    alert("Returning " + num_thumbnails + " images shorten your date range for page to load correctly");
-                }
-                if (show_thumbs) {
-                    // Handle DIV updates
-                    // Clear our existing array
-                    $("#thumbnail-array")[0].innerHTML = "";
-                    if (num_thumbnails > 0) {
-                        update_show_count(num_thumbnails, 'activities');
-                        update_thumbnail_array(data);
-                        update_filter_options(data, num_thumbnails, 'thumbnail');
-                        // Do initial sort to match sort button display
-                        update_sort_options(data, base_url);
-                        sort_by_thumbnails(data.thumbnail_sort, base_url);
-                        // Replace loading screen with the proposal array div
-                        document.getElementById("loading").style.display = "none";
-                        document.getElementById("thumbnail-array").style.display = "block";
-                        document.getElementById("no_thumbnails_msg").style.display = "none";
-                    } else {
+    }  else {
+        if (!stop_date) {
+            // auto fill stop date to start date if empty
+            stop_date = start_date;
+            document.getElementById("stop_date_range").value = stop_date;
+        } 
+        if (start_date > stop_date) {
+            alert("Start Date must be earlier or equal to Stop Date");
+        } else {
+            document.getElementById("loading").style.display = "block";
+            document.getElementById("thumbnail-array").style.display = "none";
+            document.getElementById("no_thumbnails_msg").style.display = "none";
+            $.ajax({
+                url: base_url + '/ajax/' + inst + '/archive_date_range/start_date_' + start_date + '/stop_date_' + stop_date,
+                success: function(data){
+                    var show_thumbs = true;
+                    num_thumbnails = Object.keys(data.file_data).length;
+                    // verify we want to continue with results
+                    if (num_thumbnails > 1000) {
                         show_thumbs = false;
+                        alert("Returning " + num_thumbnails + " images shorten your date range for page to load correctly");
                     }
-                } 
-                if (!show_thumbs) {
-                    document.getElementById("loading").style.display = "none";
-                    document.getElementById("no_thumbnails_msg").style.display = "inline-block";
-                }
+                    if (show_thumbs) {
+                        // Handle DIV updates
+                        // Clear our existing array
+                        $("#thumbnail-array")[0].innerHTML = "";
+                        if (num_thumbnails > 0) {
+                            update_show_count(num_thumbnails, 'activities');
+                            update_thumbnail_array(data);
+                            update_filter_options(data, num_thumbnails, 'thumbnail');
+                            // Do initial sort to match sort button display
+                            update_sort_options(data, base_url);
+                            sort_by_thumbnails(data.thumbnail_sort, base_url);
+                            // Replace loading screen with the proposal array div
+                            document.getElementById("loading").style.display = "none";
+                            document.getElementById("thumbnail-array").style.display = "block";
+                            document.getElementById("no_thumbnails_msg").style.display = "none";
+                        } else {
+                            show_thumbs = false;
+                        }
+                    } 
+                    if (!show_thumbs) {
+                        document.getElementById("loading").style.display = "none";
+                        document.getElementById("no_thumbnails_msg").style.display = "inline-block";
+                    }
 
-            },
-            error : function(response) {
-                document.getElementById("loading").style.display = "none";
-                document.getElementById("thumbnail-array").style.display = "none";
-                document.getElementById("no_thumbnails_msg").style.display = "inline-block";
-    
-            }
-        });
+                },
+                error : function(response) {
+                    document.getElementById("loading").style.display = "none";
+                    document.getElementById("thumbnail-array").style.display = "none";
+                    document.getElementById("no_thumbnails_msg").style.display = "inline-block";
+        
+                }
+            });
+        }
     }
 };
 
