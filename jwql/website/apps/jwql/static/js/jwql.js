@@ -470,15 +470,18 @@ function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_cla
     if (num_thumbnails_displayed) {
         // remove trailing ','.
         list_of_rootnames = list_of_rootnames.slice(0, -1);
-        
         $.ajax({
-            url: base_url + '/ajax/navigate_filter/' + list_of_rootnames + '/',
+            url: base_url + '/ajax/navigate_filter/',
+            data:{
+                'navigate_dict': list_of_rootnames
+            },
             error : function(response) {
                 console.log("navigate_filter update failed");
             }
         });
     }
 };
+
 
 /**
  * Sort thumbnail display by proposal number
@@ -526,9 +529,12 @@ function sort_by_thumbnails(sort_type, base_url) {
         tinysort(thumbs, {attr:'file_root', order:'asc'});
     }
     $.ajax({
-        url: base_url + '/ajax/session/image_sort/' + sort_type + '/',
+        url: base_url + '/ajax/image_sort/',
+        data: {
+            'sort_type': sort_type
+        },
         error : function(response) {
-            console.log("session update failed");
+            console.log("session image sort update failed");
         }
     });
 };

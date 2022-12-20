@@ -172,7 +172,7 @@ def api_landing(request):
     return render(request, template, context)
 
 
-def save_page_navigation_data_ajax(request, navigate_dict):
+def save_page_navigation_data_ajax(request):
     """
     Takes a bracketless string of rootnames and expstarts, and saves it as a session dictionary
     
@@ -180,22 +180,23 @@ def save_page_navigation_data_ajax(request, navigate_dict):
     ----------
     request: HttpRequest object
         Incoming request from the webpage
-    navigate_dict: String
-        a string of the form " 'rootname1'='expstart1', 'rootname2'='expstart2', ..."
-
+    
 
     Returns
     -------
     HttpResponse object
         Outgoing response sent to the webpage
     """
-    
+
+    # a string of the form " 'rootname1'='expstart1', 'rootname2'='expstart2', ..."
+    navigate_dict = request.GET['navigate_dict']
+
     # Save session in form {rootname:expstart}
     rootname_expstarts = dict(item.split("=") for item in navigate_dict.split(","))
     request.session['navigation_data'] = rootname_expstarts
     context = {'item': request.session['navigation_data']}
     return JsonResponse(context, json_dumps_params={'indent': 2})
-
+    
 
 def archive_date_range(request, inst):
     """Generate the page for date range images
@@ -1058,13 +1059,13 @@ def toggle_viewed_ajax(request, file_root):
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-def update_session_value_ajax(request, session_item, session_value):
-    session_options = ["image_sort"]
-    context = {}
-    # Only allow updates of sessions that we expect
-    if session_item in session_options:
-        request.session[session_item] = session_value
-        context = {'item': request.session[session_item]}
+def save_image_sort_ajax(request):
+
+    # a string of the form " 'rootname1'='expstart1', 'rootname2'='expstart2', ..."
+    image_sort = request.GET['sort_type']
+
+    request.session['image_sort'] = image_sort
+    context = {'item': request.session['image_sort']}
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
