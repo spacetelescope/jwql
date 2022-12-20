@@ -80,6 +80,8 @@ ANOMALIES_PER_INSTRUMENT = {
     'row_pull_down': ['miri'],
     'LRS_Contamination': ['miri'],
     'tree_rings': ['miri'],
+    'scattered_light': ['niriss'],
+    'light_saber': ['niriss'],
     # additional anomalies:
     'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
 # anomalies that shouldn't be 'titleized'
