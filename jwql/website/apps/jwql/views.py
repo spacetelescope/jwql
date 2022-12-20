@@ -46,6 +46,7 @@ from copy import deepcopy
 import csv
 import logging
 import os
+import operator
 
 from bokeh.layouts import layout
 from bokeh.embed import components
@@ -169,6 +170,31 @@ def api_landing(request):
     context = {'inst': ''}
 
     return render(request, template, context)
+
+
+def save_page_navigation_data_ajax(request, navigate_dict):
+    """
+    Takes a bracketless string of rootnames and expstarts, and saves it as a session dictionary
+    
+    Parameters
+    ----------
+    request: HttpRequest object
+        Incoming request from the webpage
+    navigate_dict: String
+        a string of the form " 'rootname1'='expstart1', 'rootname2'='expstart2', ..."
+
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    
+    # Save session in form {rootname:expstart}
+    rootname_expstarts = dict(item.split("=") for item in navigate_dict.split(","))
+    request.session['navigation_data'] = rootname_expstarts
+    context = {'item': request.session['navigation_data']}
+    return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
 def archive_date_range(request, inst):
@@ -1133,13 +1159,15 @@ def view_image(request, inst, file_root, rewrite=False):
         file_root_list = sorted(navigation_data, reverse=True)
     elif sort_type in ['Recent']:
         navigation_data = dict(sorted(navigation_data.items()))
-        file_root_list = sorted(navigation_data, key=lambda x: x[1])
+        navigation_data = dict(sorted(navigation_data.items(), key=operator.itemgetter(1), reverse=True))
+        file_root_list = list(navigation_data.keys())
     elif sort_type in ['Oldest']:
         navigation_data = dict(sorted(navigation_data.items()))
-        file_root_list = sorted(navigation_data, key=lambda x: x[1], reverse=True)
+        navigation_data = dict(sorted(navigation_data.items(), key=operator.itemgetter(1)))
+        file_root_list = list(navigation_data.keys())
     else:
         file_root_list = sorted(navigation_data)
-       
+
     # Get our current views RootFileInfo model and send our "viewed/new" information
     root_file_info = RootFileInfo.objects.get(root_name=file_root)
 
