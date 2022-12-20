@@ -84,6 +84,7 @@ ANOMALIES_PER_INSTRUMENT = {
     'claws': ['nircam'],
     'wisps': ['nircam'],
     'tilt_event': ['nircam'],
+    'light_saber': ['niriss'],
     # additional anomalies:
     'other': ['fgs', 'miri', 'nircam', 'niriss', 'nirspec']}
 # anomalies that shouldn't be 'titleized'
