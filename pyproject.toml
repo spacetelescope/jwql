@@ -1,6 +1,6 @@
 # pyproject.toml
 [build-system]
 requires = ["setuptools<=65.5.0",
-		    "numpy",
+			"numpy",
 			"wheel",
 			"setuptools_scm"]
