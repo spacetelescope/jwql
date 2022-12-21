@@ -1,0 +1,61 @@
+# This file describes a conda environment that can be used to install the jwql
+# pipeline processing environment. It is not a standalone environment, but instead is 
+# intended as a supplement to the JWST pipeline environments stored online at STScI.
+#
+# Run the following command to set up this environment:
+# $ source environment_pipeline.sh
+#
+# Note that this environment takes the pipeline version from the file
+# 
+#   environment_pipeline_version.txt
+#
+# Run the following command to activate the environment:
+# $ source activate jwql-pipeline
+#
+# To deactivate the environment run the following command:
+# $ source deactivate
+#
+# To remove the environment entirely, run the following command:
+# $ conda env remove -n jwql-pipeline
+
+name: jwql-pipeline
+
+channels:
+  - defaults
+
+dependencies:
+  - bokeh=2.4.2
+  - beautifulsoup4=4.11.1
+  - celery
+  - cryptography=36.0.0
+  - django=3.2.5
+  - inflection=0.5.1
+  - ipython=8.2.0
+  - jinja2=3.0.2
+  - nodejs=10.13.0
+  - numpydoc
+  - pandas=1.4.2
+  - pip=21.0.1
+  - postgresql=12.2
+  - psycopg2=2.8.6
+  - redis
+  - setuptools=52.0.0
+  - sphinx=4.2.0
+  - sphinx_rtd_theme=0.4.3
+  - sqlalchemy=1.4.32
+  - twine=3.7.1
+  - wtforms=2.3.3
+
+  - pip:
+    - astroquery==0.4.6
+    - bandit==1.7.4
+    - pysiaf==0.15.0
+    - pysqlite3==0.4.7
+    - pyvo==1.3
+    - stsci_rtd_theme==0.0.2
+    - git+https://github.com/spacetelescope/jwst_reffiles
+    - vine==1.3.0
+    - redis
+
+    # Current package
+    - -e .
