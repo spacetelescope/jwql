@@ -189,11 +189,11 @@ def save_page_navigation_data_ajax(request):
     """
 
     # a string of the form " 'rootname1'='expstart1', 'rootname2'='expstart2', ..."
-    navigate_dict = request.POST.get('navigate_dict')
-
-    # Save session in form {rootname:expstart}
-    rootname_expstarts = dict(item.split("=") for item in navigate_dict.split(","))
-    request.session['navigation_data'] = rootname_expstarts
+    if request.method == 'POST':
+        navigate_dict = request.POST.get('navigate_dict')
+        # Save session in form {rootname:expstart}
+        rootname_expstarts = dict(item.split("=") for item in navigate_dict.split(","))
+        request.session['navigation_data'] = rootname_expstarts
     context = {'item': request.session['navigation_data']}
     return JsonResponse(context, json_dumps_params={'indent': 2})
     
