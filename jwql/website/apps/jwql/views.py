@@ -516,7 +516,6 @@ def archive_thumbnails_query_ajax(request):
 
     anomaly_query_config.THUMBNAILS = thumbnails
 
-    # SAPP TODO make a template for this data strucuture
     data = thumbnails_query_ajax(thumbnails)
     data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
     save_page_navigation_data(request, data)
@@ -1152,7 +1151,6 @@ def view_image(request, inst, file_root, rewrite=False):
     # navigate_data is dict of format rootname:expstart
     navigation_data = request.session.get('navigation_data', {file_root: 0})
 
-    # SAPP TODO make sort types constants
     # For time based sorting options, sort to "Recent" first to create sorting consistency when times are the same.
     # This is consistent with how Tinysort is utilized in jwql.js->sort_by_thumbnails
     sort_type = request.session.get('image_sort', 'Ascending')
