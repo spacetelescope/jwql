@@ -23,7 +23,7 @@
  *                                filetype.
  * @param {String} inst - The instrument for the given file
  */
-  function change_filetype(type, file_root, num_ints, available_ints, total_ints, inst) {
+ function change_filetype(type, file_root, num_ints, available_ints, total_ints, inst) {
 
     // Change the radio button to check the right filetype
     document.getElementById(type).checked = true;
@@ -312,6 +312,30 @@ function explore_image_update_enable_options(integrations, groups) {
     
 }
 
+
+/**
+ * getCookie
+ *      taken from https://docs.djangoproject.com/en/4.1/howto/csrf/
+ * @param {String} name - The name of the cookie element you want to extract
+ * @returns value - value of the extracted cookie element
+ */
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
 /**
  * get_radio_button_value
  * @param {String} element_name - The name of the radio buttons
@@ -470,8 +494,11 @@ function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_cla
     if (num_thumbnails_displayed) {
         // remove trailing ','.
         list_of_rootnames = list_of_rootnames.slice(0, -1);
+        const csrftoken = getCookie('csrftoken');
         $.ajax({
+            type: 'POST',
             url: base_url + '/ajax/navigate_filter/',
+            headers: { "X-CSRFToken": csrftoken },
             data:{
                 'navigate_dict': list_of_rootnames
             },

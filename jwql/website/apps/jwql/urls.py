@@ -97,8 +97,8 @@ urlpatterns = [
     re_path(r'^ajax/(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/obs(?P<observation>[\d]{{1,3}})/$'.format(instruments), views.archive_thumbnails_ajax, name='archive_thumb_ajax'),
     re_path(r'^ajax/viewed/(?P<file_root>.+)/$', views.toggle_viewed_ajax, name='toggle_viewed_ajax'),
     re_path(r'^ajax/(?P<inst>({}))/archive_date_range/start_date_(?P<start_date>.+)/stop_date_(?P<stop_date>.+)/$'.format(instruments), views.archive_date_range_ajax, name='archive_date_range_ajax'),
-    re_path('ajax/image_sort/', views.save_image_sort_ajax, name='save_image_sort_ajax'),
-    re_path('ajax/navigate_filter/', views.save_page_navigation_data_ajax, name='save_page_navigation_data_ajax'),
+    re_path(r'^ajax/image_sort/$', views.save_image_sort_ajax, name='save_image_sort_ajax'),
+    re_path(r'^ajax/navigate_filter/$', views.save_page_navigation_data_ajax, name='save_page_navigation_data_ajax'),
     re_path('ajax/nirspec/msata/', monitor_views.msata_monitoring_ajax, name='msata_ajax'),
     re_path('ajax/nirspec/wata/', monitor_views.wata_monitoring_ajax, name='wata_ajax'),
 

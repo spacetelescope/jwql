@@ -189,7 +189,7 @@ def save_page_navigation_data_ajax(request):
     """
 
     # a string of the form " 'rootname1'='expstart1', 'rootname2'='expstart2', ..."
-    navigate_dict = request.GET['navigate_dict']
+    navigate_dict = request.POST.get('navigate_dict')
 
     # Save session in form {rootname:expstart}
     rootname_expstarts = dict(item.split("=") for item in navigate_dict.split(","))
