@@ -1,6 +1,9 @@
 #! /usr/bin/env python
 
-"""Engineering Database Mnemonics Trending Monitor (EDB Trending Monitor)
+"""
+######################################################################
+Engineering Database Mnemonics Trending Monitor (EDB Trending Monitor)
+######################################################################
 
 This module contains code for the Engineering Database Telemetry monitor. For a given mnemonic,
 this monitor retrieves telemetry data from the EDB, filters the data based on optional conditions,
@@ -12,55 +15,94 @@ on the values of the mnemonic's own data (e.g. keep only entries where the volta
 filtering based on the values of dependency mnemonics. For example, keep data for mnemonic A only
 when mnemonic B is > 0.25V and mnemonic C is less than 38K.
 
+Statistics
+----------
+
 After filtering the data, the monitor calcualtes statistics. The monitor supports several different types
 averaging. These include:
 
-1. "daily_means" - This is designed for mnemonics whose values do not change much over the course of a
+1. **daily\_means** - This is designed for mnemonics whose values do not change much over the course of a
 day. In this case, mnemonic data is retrieved over a small amount of time each day (e.g. 12:00 - 12:15).
 From these data, a daily mean is calculated. For all other types of telemetry, the EDB queries span
 the full day.
 
-2. "block_means" - These are mnemonics where the user wishes to see mean values associated with each
+2. **block\_means** - These are mnemonics where the user wishes to see mean values associated with each
 block of entries in the retrieved and filtered data. For example, you want to examine a voltage at times
 when some other current is less than 0.25A. The script will read in all telemetry data, and filter out
 data points for times where the current did not meet the criteria. It will then calculate the mean of
 each remaining block of continuous good data. So if the data were good from 2:00 to 2:30, then bad until
-3:00, and good again from 3:00 - 4:00, then the monitor will calculate a mean value for the 2:00-2:30
+3:00, and good again from 3:00-4:00, then the monitor will calculate a mean value for the 2:00-2:30
 period, and a mean from the 3:00-4:00 period.
 
-3. "time_interval" - Mnemonics in this category have their data retrieved and filtered, and then averaged
+3. **time\_interval** - Mnemonics in this category have their data retrieved and filtered, and then averaged
 over the requested time interval. For example, if the user sets a time interval of 5 minutes, then the
 monitor caculates the mean value within each 5-minute block of the total time range of the data, and plots
 the average values.
 
-4. "every_change" - This is the most complex case. Mnemonics in this category have their data filtered
-and organized based on the value of a secondary mnemonic. For example, the IMIR_HK_GW14_POS_RATIO returns
+4. **every\_change** - This is the most complex case. Mnemonics in this category have their data filtered
+and organized based on the value of a secondary mnemonic. For example, the IMIR\_HK\_GW14\_POS\_RATIO returns
 a measure of the position of MIRI's grating wheel. We can plot this position as a function of the commanded
-location of the grating wheel, which is provided by IMIR_HK_GW14_CUR_POS. In this case, the monitor will
+location of the grating wheel, which is provided by IMIR\_HK\_GW14\_CUR\_POS. In this case, the monitor will
 loop over the commanded positions and for each, gather the measured position information. The measured
 positions associated with each commanded position will then be plotted separately. Note that this use
 of "every change" is separate from the idea of every-change telemetry, in which telemetry points are
 only generated at times when the telemetry value changes. Some of the mnemonics in the EDB do contain
 change-only telemetry data, but this should be largely invisible to the EDB Telemetry Monitor user.
 
-5. "all" - In this case, no averaging is done. (Although filtering is still done) All filtered data
+5. **all** - In this case, no averaging is done. (Although filtering is still done) All filtered data
 are kept as they are retrived from the EDB, and plotted without any modification.
 
-6. "all+daily_means" - This is a combination of the "all" and "daily_means" cases above. All data points
+6. **all+daily\_means** - This is a combination of the "all" and "daily\_means" cases above. All data points
 are retrieved from the EDB and optionally filtered by dependencies. Then daily means are calculated.
 Both the full set of data and the daily means are plotted, along with deviations from the mean.
 
-7. "all+block_means" - This is a combination of the "all" and "block_means" cases above. All data points
+7. **all+block\_means** - This is a combination of the "all" and "block\_means" cases above. All data points
 are retrieved from the EDB and optionally filtered by dependencies. Then means for each block of good data
 are calculated. Both the full set of data and the means are plotted, along with deviations from the mean.
 
-8. "all+time_interval" - This is a combination of the "all" and "time_interval" cases above. All data points
+8. **all+time\_interval** - This is a combination of the "all" and "time\_interval" cases above. All data points
 are retrieved from the EDB and optionally filtered by dependencies. Then means are calculated for each block
 of time lasting the duration of the time interval. Both the full set of data and the means are plotted, along
 with deviations from the mean.
 
+JSON file format
+----------------
 
-Here is an example of two daily_mean telemetry entries in the json file. In both, SE_ZIMIRICEA values are retrieved.
+The type of data averaging is at the top level of the JSON file. Values must match the 8 types described above.
+The entry for each mnemonic has several pieces of information, described below.
+
+- **name**: Name of the mnemonic as it appears in the EDB.
+- **database\_id** Optional name to use in the plot title for this mnemonic. Any averaged data saved to the JWQL database will be saved under this name if it is present.
+- **description**: Summary describing the data contained in the mnemonic. Placed in the plot title.
+- **dependency**: This is a list of mnemonics and conditions that will be used to filter the data
+- **plot\_data**: Description of how the data are to be plotted. There are two options: "nominal", in which case
+  the mnemonic data are plotted as-is, and "*<mnem>" where <mnem> is the name of another mnemonic. In this case, the
+  data for this second mnemonic are retrieved using the same dependencies as the primary mnemonic. The primary mnemonic
+  and this second mnemonic are then multiplied together and plotted. This option was designed around plotting power as
+  the product of current and voltage.
+
+A further option for the **"plot\_data"** field is the addition of a comma-separated list of statistics to be overplotted.
+Options are: "mean", "median", "max", and "min". Note that this is a little confusing, because in many cases the menmonic's
+data will already contain the median value of the data (and the original data as returned from the EDB will not be
+available). The monitor realized this though, so if you specify "mean" for a mnemonic in the "daily\_mean" list, it will simply
+plot the same data twice, on top of itself.
+
+As an example, in order to plot the daily mean and maximum values of the product of SE\_ZIMIRICEA and SE\_ZBUSVLT, the plot\_data
+entry would be: "*SE\_ZBUSVLT,max". If you also wanted to plot the minimum daily value, the entry would be: "*SE\_ZBUSVLT,max,min".
+And similarly, to plot SE\_ZIMIRICEA on its own (not as a product), the plot\_data entries shown above would become: "nominal,max"
+and "nominal,max,min".
+
+* **nominal_value**: Optional. The "expected" value for this mnemonic. If provided, a horizontal dashed line will be added at this value.
+* **yellow_limits**: Optional. This is a list of two values that describe the lower and upper limits of the expected range of the mnemonic's value. If these are present, a green background is added to the plot at values between these limits. Outside of these limits, the background is yellow.
+* **red_limits**: Optional. Similar to yellow_limits above. In this case the lower and upper limits represent the thresholds outside of which there may be a problem. In this case, the background of the plot outside of these values is red.
+* **plot_category**: This is the name of the tab on the website into which this plot should be placed.
+* **mean_time_block**: Optional. This is only used for ``time_interval`` mnemonics. It describes the length of time over which to bin and average the data. The value consists of a number and a unit of time: e.g. "15_minutes"
+
+Below we present details on how to construct json entries for these specific cases.
+
+"daily_means" entries
+=====================
+Here is an example of two **daily_mean** telemetry entries in the json file. In both, SE_ZIMIRICEA values are retrieved.
 For the first plot, data are only kept for the times where the following dependencies are true:
 
 1. SE_ZIMIRICEA is > 0.2 A
@@ -69,52 +111,103 @@ For the first plot, data are only kept for the times where the following depende
 4. IMIR_HK_IFU_CAL_LOOP is OFF
 5. IMIR_HK_POM_LOOP is OFF
 
-For the second plot, data are kept for the times where IMIR_HK_ICE_SEC_VOLT1 is > 25 V. Note that the "database_id"
-entry is used to differentiate the plots of these two cases, as well as the entries in the JWQLDB.
+For the second plot, data are kept for the times where:
 
-{
-    "daily_means": [
+1. IMIR_HK_ICE_SEC_VOLT1 is > 25 V
+
+Note that the "database_id" entry is used to differentiate the plot labels of these two cases, as well as their entries in the JWQLDB.
+In both cases, the data are plotted as the product of SE_ZIMIRICEA and SE_ZBUSVLT. In the second case, the maximum daily value is also
+plotted. Both plots are placed in the ``power`` tab on the webpage.
+
+.. code-block:: json
+
+    {
+        "daily_means": [
+            {
+                "name": "SE_ZIMIRICEA",
+                "database_id": "SE_ZIMIRICEA_NO_OPS",
+                "description": "ICE drive current (no ops)",
+                "dependency": [
+                    {
+                        "name": "SE_ZIMIRICEA",
+                        "relation": ">",
+                        "threshold": 0.2
+                    },
+                    {
+                        "name": "IMIR_HK_ICE_SEC_VOLT1",
+                        "relation": "<",
+                        "threshold": 1
+                    },
+                    {
+                        "name": "IMIR_HK_IMG_CAL_LOOP",
+                        "relation": "=",
+                        "threshold": "OFF"
+                    },
+                    {
+                        "name": "IMIR_HK_IFU_CAL_LOOP",
+                        "relation": "=",
+                        "threshold": "OFF"
+                    },
+                    {
+                        "name": "IMIR_HK_POM_LOOP",
+                        "relation": "=",
+                        "threshold": "OFF"
+                    }
+                ],
+                "plot_data": "*SE_ZBUSVLT",
+                "nominal_value": 7.57,
+                "yellow_limits": [7.0, 8.13],
+                "plot_category": "power"
+            },
+            {
+                "name": "SE_ZIMIRICEA",
+                "database_id": "SE_ZIMIRICEA_OPS",
+                "description": "ICE drive current (ops)",
+                "dependency": [
+                    {
+                        "name": "IMIR_HK_ICE_SEC_VOLT1",
+                        "relation": ">",
+                        "threshold": 25
+                    }
+                ],
+                "plot_data": "*SE_ZBUSVLT,max",
+                "nominal_value": 11.13,
+                "yellow_limits": [10.23, 12.02],
+                "plot_category": "power"
+            }
+        ]
+    }
+
+
+For a case with no dependencies, the "dependencies" keyword can be left empty:
+
+.. code-block:: json
+
+    {
+        "name": "INRC_ICE_DC_VOL_P5_DIG",
+        "description": "ICE HK +5V voltage for digital electronics",
+        "dependency": [],
+        "plot_data": "nominal",
+        "yellow_limits": [4.99, 5.04],
+        "red_limits": [4.5, 5.5],
+        "plot_category": "ice_voltage"
+    }
+
+
+"block_means" entries
+=====================
+In the example shown below, we want to plot IMIR_HK_ICE_SEC_VOLT1 at times when it has values higher
+than 25V. In this case, the EDB monitor will find times when the voltage is under the 25V limit. These
+times will separate the blocks of time when the voltage does meet the threshold value. It then calculates
+and plots the median voltage within each of these blocks.
+
+.. code-block:: json
+
+    "block_means":[
         {
-            "name": "SE_ZIMIRICEA",
-            "database_id": "SE_ZIMIRICEA_NO_OPS",
-            "description": "ICE drive current (no ops)",
-            "dependency": [
-                {
-                    "name": "SE_ZIMIRICEA",
-                    "relation": ">",
-                    "threshold": 0.2
-                },
-                {
-                    "name": "IMIR_HK_ICE_SEC_VOLT1",
-                    "relation": "<",
-                    "threshold": 1
-                },
-                {
-                    "name": "IMIR_HK_IMG_CAL_LOOP",
-                    "relation": "=",
-                    "threshold": "OFF"
-                },
-                {
-                    "name": "IMIR_HK_IFU_CAL_LOOP",
-                    "relation": "=",
-                    "threshold": "OFF"
-                },
-                {
-                    "name": "IMIR_HK_POM_LOOP",
-                    "relation": "=",
-                    "threshold": "OFF"
-                }
-            ],
-            "plot_data": "*SE_ZBUSVLT",
-            "nominal_value": 7.57,
-            "yellow_limits": [7.0, 8.13],
-            "plot_category": "power",
-            "query_duration": "15 minutes"
-        },
-        {
-            "name": "SE_ZIMIRICEA",
-            "database_id": "SE_ZIMIRICEA_OPS",
-            "description": "ICE drive current (ops)",
+            "name": "IMIR_HK_ICE_SEC_VOLT1",
+            "database_id": "IMIR_HK_ICE_SEC_VOLT1_OPS",
+            "description": "ICE Secondary Voltage (HV) 1",
             "dependency": [
                 {
                     "name": "IMIR_HK_ICE_SEC_VOLT1",
@@ -122,42 +215,77 @@ entry is used to differentiate the plots of these two cases, as well as the entr
                     "threshold": 25
                 }
             ],
-            "plot_data": "*SE_ZBUSVLT",
-            "nominal_value": 11.13,
-            "yellow_limits": [10.23, 12.02],
-            "plot_category": "power",
-            "query_duration": "15 minutes"
+            "plot_data": "nominal",
+            "nominal_value": 39.24,
+            "yellow_limits": [39.14, 39.34],
+            "plot_category": "ICE_voltage"
         }
-    ]
-}
 
-Also note the plotting-related entries. In this case, the filtered SE_ZIMIRICEA data
-will be plotted as the product of SE_ZIMIRICEA*SE_ZBUSVLT. In addition, the plot will
-contain a "nominal_value". This is a horizontal line indicating the expected location
-of the data. In addition, the json entry defines yellow and red limits for the plot.
-These limits define background colors that are added to the plots. Areas of the plot
-below the lower yellow limit, and those greater than the larger yellow limit, will be
-colored yellow. Areas below the lower red limit, and those greater than the upper red
-limit, will be colored red. In the case where yellow and/or red areas are added, the
-central area of the plot will have a green background. These colors, as well as the
-nomincal_value line, are meant to help the user analyze the plot and see data that may
-be uncharacteristic or outside of desired limits.
+"time_interval" entries
+=======================
 
-For a case with no dependencies, the "dependencies" keyword can be left empty:
+For mnemonics to be averaged over some time period, use the "mean_time_block" entry.
+The value of mean_time_block should be a number followed by an underscore and a unit
+of time. Currently, the unit must contain one of "min", "sec", "hour", or "day". The
+monitor looks for one of these strings within the mean_time_block entry, meaning that
+"second", "seconds", "minutes", "minute", "hours", "days", etc are all valid entries.
 
+In the example below, the EDB monitor will bin the SE_ZINRCICE1 data into 5 minute blocks,
+and calculate and plot the mean of each block.
+
+.. code-block:: json
+
+    "time_interval": [
         {
-            "name": "INRC_ICE_DC_VOL_P5_DIG",
-            "description": "ICE HK +5V voltage for digital electronics",
+            "name": "SE_ZINRCICE1",
+            "description": "ICE1 current",
+            "mean_time_block": "5_min",
             "dependency": [],
             "plot_data": "nominal",
-            "yellow_limits": [4.99, 5.04],
-            "red_limits": [4.5, 5.5],
-            "plot_category": "ice_voltage"
+            "yellow_limits": [0.36, 0.8],
+            "red_limits": [0, 1.367],
+            "plot_category": "box_current"
         }
+    ]
 
+"every_change" entries
+======================
 
-For the case where no averaging is to be done, place the entries under the top-level
-"all" entry.
+This is a complex case and at the moment is customized for the MIRI filter wheel position
+mnemonics such as IMIR_HK_FW_POS_RATIO. In this case, the EDB monitor will retrieve data for
+the filter wheel position, which is a float at each time. It will also retrive the commmanded
+position of the filter wheel, which is a string at each time (e.g. OPEN, CLOSED). It then divides
+the filter wheel postiion data into groups based on the value of the commanded position (i.e. group
+together all of the postion data when the commanded position is OPEN). It then computes the median
+value of the filter position within each continuous block of time where the commanded position is
+constant. This median value is then normalized by the expected location value (retrieved from
+constants.py). One line is plotted for each commanded position.
+
+.. code-block:: json
+
+    "every_change": [
+        {
+            "name": "IMIR_HK_FW_POS_RATIO",
+            "description": "FW normalized position sensor voltage ratio",
+            "dependency": [
+                {
+                    "name": "IMIR_HK_FW_CUR_POS",
+                    "relation": "none",
+                    "threshold": 0
+                }
+            ],
+            "plot_data": "nominal",
+            "yellow_limits": [-1.6, 1.6],
+            "plot_category": "Position_sensors"
+        }
+    ]
+
+"all" entries
+=============
+In this case, no grouping or averaging of data from the EDB are done. Data are retrieved from the EDB,
+filtered by any dependencies, and plotted.
+
+.. code-block:: json
 
     "all": [
         {
@@ -178,25 +306,23 @@ For the case where no averaging is to be done, place the entries under the top-l
             "red_limits": [0, 1.372],
             "plot_category": "box_current"
         }
-
-For mnemonics to be averaged over some time period, use the "mean_time_block" entry.
-The value of mean_time_block should be a number followed by an underscore and a unit
-of time. Currently, the unit must contain one of "min", "sec", "hour", or "day". The
-monitor looks for one of these strings within the mean_time_block entry, meaning that
-"second", "seconds", "minutes", "minute", "hours", "days", etc are all valid entries.
-
-"time_interval": [
-        {
-            "name": "SE_ZINRCICE1",
-            "description": "ICE1 current",
-            "mean_time_block": "5_min",
-            "dependency": [],
-            "plot_data": "nominal",
-            "yellow_limits": [0.36, 0.8],
-            "red_limits": [0, 1.367],
-            "plot_category": "box_current"
-        }
     ]
+
+"all+daily_means" entries
+=========================
+This is a combination of the "daily_means" and "all" cases above.
+
+"all+block_means" entries
+=========================
+This is a combination of the "all" and "block_means" cases above.
+
+"all+time_interval" entries
+===========================
+This is a combination of the "all" and "time_interval" cases above.
+
+
+Summary of the EDB monitor operation
+------------------------------------
 
 The monitor is set up to find the total span of time over which the plots are requested
 (with the default being contolled by the value in jwql.utils.constants). It loops over
@@ -227,9 +353,10 @@ done asynchronously, which means that the EDB Telemetry Monitor web page shoudl 
 Author
 ------
     - Bryan Hilbert
+
 Use
 ---
-    This module can be used from the command line as such:
+    This module can be called from the command line like this:
 
     ::
 
