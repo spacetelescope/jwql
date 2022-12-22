@@ -76,8 +76,8 @@ if __name__ == '__main__':
         sys.stderr.write(msg)
         sys.exit(1)
 
-    msg = 'About to reset instruments: {} and monitors: {} tables for database instance {}. Do you wish to proceed? (y/N)'
-    response = input(msg.format(monitor, instrument, connection_string))
+    msg = 'About to reset instruments: [{}] and monitors: [{}] tables for database instance {}. Do you wish to proceed? (y/N)'
+    response = input(msg.format(instrument, monitor, connection_string))
 
     if response.lower() != 'y':
         print("Did not enter y/Y. Stopping.")
