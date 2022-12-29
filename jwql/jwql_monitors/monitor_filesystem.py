@@ -93,47 +93,45 @@ def gather_statistics(general_results_dict, instrument_results_dict):
             for filename in files:
 
                 file_path = os.path.join(dirpath, filename)
-                try:
+                if os.path.isfile(file_path):
                     general_results_dict['total_file_size'] += os.path.getsize(file_path)
-                except FileNotFoundError:
-                    pass
 
-                if filename.endswith(".fits"):
+                    if filename.endswith(".fits"):
 
-                    # Parse out filename information
-                    try:
-                        filename_dict = filename_parser(filename)
-                    except ValueError:
-                        break
+                        # Parse out filename information
+                        try:
+                            filename_dict = filename_parser(filename)
+                        except ValueError:
+                            break
 
-                    # For MSA files, which do not have traditional suffixes, set the
-                    # suffix to "msa"
-                    if 'suffix' not in filename_dict:
-                        if filename_dict['filename_type'] == 'stage_2_msa':
-                            filename_dict['suffix'] = 'msa'
+                        # For MSA files, which do not have traditional suffixes, set the
+                        # suffix to "msa"
+                        if 'suffix' not in filename_dict:
+                            if filename_dict['filename_type'] == 'stage_2_msa':
+                                filename_dict['suffix'] = 'msa'
 
-                    try:
-                        filetype = filename_dict['suffix']
-                        instrument = filename_dict['instrument']
-                    except KeyError:
-                        logging.info(f'File {filename} skipped as it contains either no suffix or no instrument name from the filename parser.')
-                        filetype = None
-                        instrument = None
+                        try:
+                            filetype = filename_dict['suffix']
+                            instrument = filename_dict['instrument']
+                        except KeyError:
+                            logging.info(f'File {filename} skipped as it contains either no suffix or no instrument name from the filename parser.')
+                            filetype = None
+                            instrument = None
 
-                    # Populate general stats
-                    general_results_dict['fits_file_count'] += 1
-                    general_results_dict['fits_file_size'] += os.path.getsize(file_path)
+                        # Populate general stats
+                        general_results_dict['fits_file_count'] += 1
+                        general_results_dict['fits_file_size'] += os.path.getsize(file_path)
 
-                    if filetype is not None:
-                        # Populate instrument specific stats
-                        if instrument not in instrument_results_dict:
-                            instrument_results_dict[instrument] = {}
-                        if filetype not in instrument_results_dict[instrument]:
-                            instrument_results_dict[instrument][filetype] = {}
-                            instrument_results_dict[instrument][filetype]['count'] = 0
-                            instrument_results_dict[instrument][filetype]['size'] = 0
-                        instrument_results_dict[instrument][filetype]['count'] += 1
-                        instrument_results_dict[instrument][filetype]['size'] += os.path.getsize(file_path) / (2**40)
+                        if filetype is not None:
+                            # Populate instrument specific stats
+                            if instrument not in instrument_results_dict:
+                                instrument_results_dict[instrument] = {}
+                            if filetype not in instrument_results_dict[instrument]:
+                                instrument_results_dict[instrument][filetype] = {}
+                                instrument_results_dict[instrument][filetype]['count'] = 0
+                                instrument_results_dict[instrument][filetype]['size'] = 0
+                            instrument_results_dict[instrument][filetype]['count'] += 1
+                            instrument_results_dict[instrument][filetype]['size'] += os.path.getsize(file_path) / (2**40)
 
     # Convert file sizes to terabytes
     general_results_dict['total_file_size'] = general_results_dict['total_file_size'] / (2**40)
