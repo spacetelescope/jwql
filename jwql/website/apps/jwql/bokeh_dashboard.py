@@ -278,7 +278,7 @@ class GeneralDashboard:
         """
 
         # Set title and figures list to make panels
-        title = 'Anamoly Types per Instrument'
+        title = 'Anomaly Types per Instrument'
         figures = []
 
         # For unique instrument values, loop through data
@@ -289,8 +289,8 @@ class GeneralDashboard:
             data = data.drop(columns=['id', 'rootname', 'user'])
             if not pd.isnull(self.delta_t) and not data.empty:
                 data = data[(data['flag_date'] >= (self.date - self.delta_t)) & (data['flag_date'] <= self.date)]
-            summed_anamoly_columns = data.sum(axis=0, numeric_only=True).to_frame(name='counts')
-            figures.append(self.make_panel(summed_anamoly_columns.index.values, summed_anamoly_columns['counts'], instrument, title, 'Anomaly Type'))
+            summed_anomaly_columns = data.sum(axis=0, numeric_only=True).to_frame(name='counts')
+            figures.append(self.make_panel(summed_anomaly_columns.index.values, summed_anomaly_columns['counts'], instrument, title, 'Anomaly Type'))
 
         tabs = Tabs(tabs=figures)
 
