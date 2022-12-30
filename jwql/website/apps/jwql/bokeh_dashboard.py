@@ -115,7 +115,7 @@ class GeneralDashboard:
         data = data[data['date'] == data['date'].max()]
 
         try:
-            file_counts = {'nircam': data[data.instrument == 'nircam']['count'].sum()
+            file_counts = {'nircam': data[data.instrument == 'nircam']['count'].sum(),
                            'nirspec': data[data.instrument == 'nirspec']['count'].sum(),
                            'niriss': data[data.instrument == 'niriss']['count'].sum(),
                            'miri': data[data.instrument == 'miri']['count'].sum(),
