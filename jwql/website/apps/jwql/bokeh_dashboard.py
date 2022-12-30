@@ -92,8 +92,8 @@ class GeneralDashboard:
         # Find all entries for instrument/filetype combo
         # Make figure and append it to list.
         for instrument in data.instrument.unique():
-            index = data_by_filetype["instrument"] == instrument
-            figures.append(self.make_panel(data_by_filetype['filetype'][index], data_by_filetype['count'][index], instrument, title, 'File Type'))
+            index = data["instrument"] == instrument
+            figures.append(self.make_panel(data['filetype'][index], data['count'][index], instrument, title, 'File Type'))
 
         tabs = Tabs(tabs=figures)
 
