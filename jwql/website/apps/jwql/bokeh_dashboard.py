@@ -93,7 +93,8 @@ class GeneralDashboard:
         # Make figure and append it to list.
         for instrument in data.instrument.unique():
             index = data["instrument"] == instrument
-            figures.append(self.make_panel(data['filetype'][index], data['count'][index], instrument, title, 'File Type'))
+            inst_only = data[index].sort_values('filetype')
+            figures.append(self.make_panel(inst_only['filetype'], inst_only['count'], instrument, title, 'File Type'))
 
         tabs = Tabs(tabs=figures)
 
