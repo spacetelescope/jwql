@@ -80,15 +80,13 @@ class GeneralDashboard:
         # Make Pandas DF for filesystem_instrument
         # If time delta exists, filter data based on that.
         data = build_table('filesystem_instrument')
-        if not pd.isnull(self.delta_t):
-            data = data[(data['date'] >= (self.date - self.delta_t)) & (data['date'] <= self.date)]
+
+        # Keep only the rows containing the most recent timestamp
+        data = data[data['date'] == data['date'].max()]
 
         # Set title and figures list to make panels
-        title = 'File Types per Instrument'
+        title = 'Files per Filetype by Instrument'
         figures = []
-
-        # Group by instrument/filetype and sum the number of files that have that specific combination
-        data_by_filetype = data.groupby(["instrument", "filetype"]).size().reset_index(name="count")
 
         # For unique instrument values, loop through data
         # Find all entries for instrument/filetype combo
@@ -112,15 +110,16 @@ class GeneralDashboard:
 
         # Replace with jwql.website.apps.jwql.data_containers.build_table
         data = build_table('filesystem_instrument')
-        if not pd.isnull(self.delta_t):
-            data = data[(data['date'] >= self.date - self.delta_t) & (data['date'] <= self.date)]
+
+        # Keep only the rows containing the most recent timestamp
+        data = data[data['date'] == data['date'].max()]
 
         try:
-            file_counts = {'nircam': data.instrument.str.count('nircam').sum(),
-                           'nirspec': data.instrument.str.count('nirspec').sum(),
-                           'niriss': data.instrument.str.count('niriss').sum(),
-                           'miri': data.instrument.str.count('miri').sum(),
-                           'fgs': data.instrument.str.count('fgs').sum()}
+            file_counts = {'nircam': data[data.instrument == 'nircam']['count'].sum()
+                           'nirspec': data[data.instrument == 'nirspec']['count'].sum(),
+                           'niriss': data[data.instrument == 'niriss']['count'].sum(),
+                           'miri': data[data.instrument == 'miri']['count'].sum(),
+                           'fgs': data[data.instrument == 'fgs']['count'].sum()}
         except AttributeError:
             file_counts = {'nircam': 0,
                            'nirspec': 0,
@@ -131,7 +130,7 @@ class GeneralDashboard:
         data = pd.Series(file_counts).reset_index(name='value').rename(columns={'index': 'instrument'})
         data['angle'] = data['value'] / data['value'].sum() * 2 * pi
         data['color'] = ['#F8B195', '#F67280', '#C06C84', '#6C5B7B', '#355C7D']
-        plot = figure(title="Number of Files Per Instruments", toolbar_location=None,
+        plot = figure(title="Number of Files Per Instrument", toolbar_location=None,
                       tools="hover,tap", tooltips="@instrument: @value", x_range=(-0.5, 1.0))
 
         plot.wedge(x=0, y=1, radius=0.4,
@@ -164,7 +163,7 @@ class GeneralDashboard:
         date_times = [pd.to_datetime(datetime).date() for datetime in source['date'].values]
         source['datestr'] = [date_time.strftime("%Y-%m-%d") for date_time in date_times]
 
-        p1 = figure(title="Number of Files Added by Day", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=1700, x_axis_label='Date', y_axis_label='Number of Files Added')
+        p1 = figure(title="Number of Files in Filesystem", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=1700, x_axis_label='Date', y_axis_label='Number of Files Added')
         p1.line(x='date', y='total_file_count', source=source, color='#6C5B7B', line_dash='dashed', line_width=3)
         disable_scientific_notation(p1)
         tab1 = Panel(child=p1, title='Files Per Day')
@@ -259,9 +258,10 @@ class GeneralDashboard:
         tabs : bokeh.models.widgets.widget.Widget
             A figure with tabs for each instrument.
         """
-
+        # We don't have this information, and collecting it while looping over fits files within montior_filesystem.py
+        # is a non-starter because opening and retrieving the info from each of the millions of fits files would take forever.
         title = 'File Counts Per Filter'
-        figures = [self.make_panel(FILTERS_PER_INSTRUMENT[instrument], np.random.rand(len(FILTERS_PER_INSTRUMENT[instrument])) * 10e7, instrument, title, 'Filters') for instrument in FILTERS_PER_INSTRUMENT]
+        figures = [self.make_panel(FILTERS_PER_INSTRUMENT[instrument], np.random.rand(len(FILTERS_PER_INSTRUMENT[instrument])) * 0, instrument, title, 'Filters') for instrument in FILTERS_PER_INSTRUMENT]
 
         tabs = Tabs(tabs=figures)
 
@@ -288,7 +288,7 @@ class GeneralDashboard:
             data = data.drop(columns=['id', 'rootname', 'user'])
             if not pd.isnull(self.delta_t) and not data.empty:
                 data = data[(data['flag_date'] >= (self.date - self.delta_t)) & (data['flag_date'] <= self.date)]
-            summed_anamoly_columns = data.sum(axis=0).to_frame(name='counts')
+            summed_anamoly_columns = data.sum(axis=0, numeric_only=True).to_frame(name='counts')
             figures.append(self.make_panel(summed_anamoly_columns.index.values, summed_anamoly_columns['counts'], instrument, title, 'Anomaly Type'))
 
         tabs = Tabs(tabs=figures)
