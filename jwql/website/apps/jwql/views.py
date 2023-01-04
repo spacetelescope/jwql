@@ -251,8 +251,8 @@ def archive_date_range_ajax(request, inst, start_date, stop_date):
 
     # Calculate start date/time in MJD format to begin our range
     inclusive_start_time = Time(start_date)
-    # Add a day to the stop time and mark it 'exclusive' for code clarity, doing this to get all times during previous day
-    exclusive_stop_time = Time(stop_date) + (1 * u.day)
+    # Add a minute to the stop time and mark it 'exclusive' for code clarity, doing this to get all seconds selected minute
+    exclusive_stop_time = Time(stop_date) + (1 * u.minute)
 
     # Get a queryset of all observations STARTING WITHIN our date range
     begin_after_start = Observation.objects.filter(proposal__archive__instrument=inst, obsstart__gte=inclusive_start_time.mjd)
