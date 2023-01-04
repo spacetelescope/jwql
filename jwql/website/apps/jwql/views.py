@@ -76,7 +76,8 @@ from .data_containers import thumbnails_query_ajax
 from .data_containers import thumbnails_date_range_ajax
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
-from .models import Observation, Proposal, RootFileInfo
+if not os.environ.get("READTHEDOCS"):
+    from .models import Observation, Proposal, RootFileInfo
 from astropy.io import fits
 from astropy.time import Time
 import astropy.units as u
