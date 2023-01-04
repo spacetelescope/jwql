@@ -372,13 +372,19 @@ class Bias():
 
         for filename in file_list:
             logging.info('\tWorking on file: {}'.format(filename))
+            
+            if filename not in outputs:
+                processed_file = filename.replace("uncal_0thgroup", "refpix")
+                if not os.path.isfile(processed_file):
+                    logging.warning("Pipeline was unable to process {}".format(filename))
+                    logging.warning("File will be skipped.")
+                    continue
+            else:
+                processed_file = outputs[filename]
 
             # Get relevant header info for this file
             self.read_pattern = fits.getheader(filename, 0)['READPATT']
             self.expstart = '{}T{}'.format(fits.getheader(filename, 0)['DATE-OBS'], fits.getheader(filename, 0)['TIME-OBS'])
-
-            # Run the file through the necessary pipeline steps
-            processed_file = outputs[filename]
 
             # Find amplifier boundaries so per-amp statistics can be calculated
             _, amp_bounds = instrument_properties.amplifier_info(processed_file, omit_reference_pixels=True)

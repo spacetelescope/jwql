@@ -1,0 +1,36 @@
+{
+    "all": [
+    	{
+    		"name": "IGDPM_MSA_Q1_365IDD",
+            "database_id": "IGDPM_MSA_Q1_365IDD",
+            "description": "NIRSpec Mce Quad 1 Vdd 365 current",
+            "dependency": [
+            	{
+                    "name": "IGDPM_MSA_Q1_365IDD",
+                    "relation": ">",
+                    "threshold": 0.001
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Currents"
+        },
+    	{
+    		"name": "INRSD_A1_IPREAMPBIAS_V",
+            "database_id": "INRSD_A1_IPREAMPBIAS_V",
+            "description": "NIRSpec ASIC1 IPreAmpBias voltage measurement (Preamp bias v)",
+            "dependency": [
+            	{
+                    "name": "INRSD_A1_IPREAMPBIAS_V",
+                    "relation": ">",
+                    "threshold": 1.5
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Voltages"
+        }
+    ]
+}
+
+
+
+
