@@ -63,13 +63,13 @@
 
                 <div class="previous-next-buttons">
                     <span class="step-links">
-                        {% set index = file_root_list[obsnum].index(file_root) %}
+                        {% set index = file_root_list.index(file_root) %}
                         {% if index != 0 %}
-                            <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[obsnum][index-1] }}/" style="float: left;">< Previous</a>
+                            <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[index-1] }}/" style="float: left;">< Previous</a>
                         {% endif %}
 
-                        {% if index != file_root_list[obsnum]|length - 1 %}
-                            <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[obsnum][index+1] }}/" style="float: right;">Next ></a>
+                        {% if index != file_root_list|length - 1 %}
+                            <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[index+1] }}/" style="float: right;">Next ></a>
                         {% endif %}
                     </span>
                 </div>

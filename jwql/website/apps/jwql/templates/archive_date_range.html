@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block preamble %}
+
+	<title>Archive Date Range {{ inst }} Images - JWQL</title>
+
+{% endblock %}
+
+{% block content %}
+
+<main role="main" class="container">
+
+    <h3 id='title'>Archive Date Range {{ inst }} Images</h3>
+
+    <p id='img_show_count'></p>
+    <hr>
+
+    <!-- Filter and sort options -->
+    <div class="d-flex flex-row">
+        <div class="mr-4 mr-5" id="thumbnail-filter"></div>
+        <div class="mx-4 mr-5 ml-auto" id="thumbnail-sort"></div>
+    </div>
+
+    <hr>
+    <div class="d-flex flex-row">
+        <div class="mr-auto">
+            Date Range:<br>
+            <input type="datetime-local" id="start_date_range" name="start_date_range">
+            <input type="datetime-local" id="stop_date_range" name="stop_date_range">
+            <button class="btn btn-primary" type="button" href='#' onclick="submit_date_range_form('{{inst}}', '{{base_url}}');">Submit</button>
+        </div>
+    </div>
+    <hr>
+
+    <!-- Loading animation -->
+    <div id="loading" style='display: none'>
+        <div class="lds-css ng-scope">
+            <div style="width:100%;height:100%" class="lds-magnify">
+                <div>
+                    <div>
+                        <div>
+                        </div>
+                        <div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            Loading ...
+        </div>
+    </div>
+
+    <!-- Display the data -->
+    <div id='thumbnail-array'></div>
+    <br>
+    <a id="no_thumbnails_msg">No data match the date range.</a>
+</main>
+
+{% endblock %}
