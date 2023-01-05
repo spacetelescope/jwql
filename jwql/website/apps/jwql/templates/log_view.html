@@ -21,6 +21,7 @@
         <hr>
         <form action="" method="post" id="view_log">
             {{ csrf_input }}
+
             <!--LOG SELECT DROPDOWN-->
             <h4>Select JWQL Monitoring Log</h4>
             <div class="form-check">
@@ -36,20 +37,16 @@
                 <label class="form-check-label" for="inlineRadio1">dev </label>
             </div>
             <br>
-            <div class="db_table_select">
-                <select name="log_select" id="log_select">
-                    {% for server in all_logs %}
-                    <optgroup label="{{ server }}">
-                        {% for log_name in all_logs[server] %}
-                            <option value="{{ all_logs[server][log_name] }}">{{ log_name }}</option>
-                        {% endfor %}
-                    {% if log %}
-                        <option value="{{ log }}" selected>{{ log }}</option>
-                    {% endif %}
-                    </optgroup>
+
+            <div class="col-6 mx-auto text-center mt-5">
+                <input type="text" placeholder="Log Name" class="form-control">
+                <datalist id="logs">
+                    {% for log_name in all_logs["dev"] %}
+                        <option value="{{ all_logs[server][log_name] }}">{{ log_name }}</option>
                     {% endfor %}
-                </select>
+                </datalist>
             </div>
+
             <br>
             <button class="btn btn-primary" type="submit" style="float: left;">Submit</button>
             <br><br>
