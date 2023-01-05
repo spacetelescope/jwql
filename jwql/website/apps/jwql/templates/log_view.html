@@ -42,7 +42,7 @@
                 <input type="text" placeholder="Log Name" class="form-control">
                 <datalist id="logs">
                     {% for log_name in all_logs["dev"] %}
-                        <option value="{{ all_logs[server][log_name] }}">{{ log_name }}</option>
+                        <option value="{{ all_logs['dev'][log_name] }}">{{ log_name }}</option>
                     {% endfor %}
                 </datalist>
             </div>
