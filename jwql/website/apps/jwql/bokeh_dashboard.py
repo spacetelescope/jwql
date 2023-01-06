@@ -32,7 +32,7 @@ Dependencies
 from datetime import datetime as dt
 from math import pi
 
-from bokeh.layouts import row
+from bokeh.layouts import column
 from bokeh.models import Axis, ColumnDataSource, DatetimeTickFormatter, OpenURL, TapTool
 from bokeh.models.widgets import Panel, Tabs
 from bokeh.plotting import figure
@@ -105,11 +105,10 @@ def build_table_latest_entry(tablename):
 def create_filter_based_pie_chart(title, source):
     """
     """
-    title = 'Percentage of observations using filter/pupil combinations'
-    pie = figure(height=350, title=title, toolbar_location=None,
-                 tools="hover", tooltips="@filter: @value", x_range=(-0.5, 1.0))
+    pie = figure(height=400, title=title, toolbar_location=None,
+                 tools="hover", tooltips="@filter: @value", x_range=(-0.5, 0.5), y_range=(0.5, 1.5))
 
-    pie.wedge(x=0, y=1, radius=0.4,
+    pie.wedge(x=0, y=1, radius=0.3,
               start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
               line_color="white", fill_color='colors', source=source)
 
@@ -410,8 +409,6 @@ class GeneralDashboard:
        'F480M/GRISMC', 'F480M/GRISMR', 'F480M/MASKBAR', 'F480M/MASKRND',
        'N/A/FLAT', 'WLP4/CLEAR', 'WLP4/MASKIPR', 'WLP4/WLM8', 'WLP4/WLP8'])
 
-            #filterpupil = [f'filter{i}' for i in range(100)]
-
             # Sort by num_obs in order to make the plot more readable
             idx = np.argsort(num_obs)
             num_obs = num_obs[idx]
@@ -426,7 +423,6 @@ class GeneralDashboard:
                 data_dict[filt] = val
 
             data = pd.Series(data_dict).reset_index(name='value').rename(columns={'index': 'filter'})
-            #data['angle'] = data['value']/data['value'].sum() * 2*np.pi
 
             if instrument != 'nircam':
                 # Calculate the angle covered by each filter
@@ -444,20 +440,20 @@ class GeneralDashboard:
 
                 # Recompute the angles for these, and make them all the same color.
                 small['angle'] = small['value'] / small['value'].sum() * 2 * np.pi
-                small['colors'] = ['#c85108'] * len(small)
+                small['colors'] = ['#bec4d4'] * len(small)
 
                 # Create two pie charts
-                pie_fig = create_filter_based_pie_chart("All Filters", data)
-                small_pie_fig = create_filter_based_pie_chart("Low Contributors", sw_small)
+                pie_fig = create_filter_based_pie_chart("Percentage of observations using filter/pupil combinations: All Filters", data)
+                small_pie_fig = create_filter_based_pie_chart("Low Percentage Filters (gray wedges from above)", sw_small)
 
-                # Place the pie charts in a row/Panel, and append to the figure
-                rowplots = row(pie_fig, small_pie_fig)
-                tab = Panel(child=rowplots, title=f'{instrument}')
+                # Place the pie charts in a column/Panel, and append to the figure
+                colplots = column(pie_fig, small_pie_fig)
+                tab = Panel(child=colplots, title=f'{instrument}')
                 figures.append(tab)
 
             else:
                 # For NIRCam, we split the SW and LW channels and put each in its own tab.
-                #  This will cut down on the number of entries in each and make the pie
+                # This will cut down on the number of entries in each and make the pie
                 # charts more readable.
 
                 # Add a column designating the channel. Exclude darks.
@@ -497,6 +493,8 @@ class GeneralDashboard:
                 lw_small = lw_data.loc[lw_data['value'] <0.5].copy()
                 sw_small['angle'] = sw_small['value'] / sw_small['value'].sum() * 2 * np.pi
                 lw_small['angle'] = lw_small['value'] / lw_small['value'].sum() * 2 * np.pi
+                sw_small['colors'] = ['#bec4d4'] * len(sw_small)
+                lw_small['colors'] = ['#bec4d4'] * len(lw_small)
 
                 # Set the filters that are used in less than 0.5% of observations to be grey.
                 # These will be plotted in a second pie chart on theor own, in order to make
@@ -585,21 +583,35 @@ class GeneralDashboard:
 
                 # Create pie charts for SW/LW, the main set of filters, and those that aren't used
                 # as much.
-                sw_pie_fig = create_filter_based_pie_chart("SW All Filters", sw_data)
-                sw_small_pie_fig = create_filter_based_pie_chart("SW Low Contributors", sw_small)
-                lw_pie_fig = create_filter_based_pie_chart("LW All Filters", lw_data)
-                lw_small_pie_fig = create_filter_based_pie_chart("LW Low Contributors", lw_small)
+                sw_pie_fig = create_filter_based_pie_chart("Percentage of observations using filter/pupil combinations: All Filters", sw_data)
+                sw_small_pie_fig = create_filter_based_pie_chart("Low Percentage Filters (gray wedges from above)", sw_small)
+                lw_pie_fig = create_filter_based_pie_chart("Percentage of observations using filter/pupil combinations: All Filters", lw_data)
+                lw_small_pie_fig = create_filter_based_pie_chart("Low Percentage Filters (gray wedges from above)", lw_small)
 
-                # Create rows and Panels
-                sw_rowplots = row(sw_pie_fig, sw_small_pie_fig)
-                lw_rowplots = row(lw_pie_fig, lw_small_pie_fig)
+                # Create columns and Panels
+                sw_colplots = column(sw_pie_fig, sw_small_pie_fig)
+                lw_colplots = column(lw_pie_fig, lw_small_pie_fig)
 
-                tab_sw = Panel(child=sw_rowplots, title=f'{instrument} SW')
-                tab_lw = Panel(child=lw_rowplots, title=f'{instrument} LW')
+                tab_sw = Panel(child=sw_colplots, title=f'{instrument} SW')
+                tab_lw = Panel(child=lw_colplots, title=f'{instrument} LW')
                 figures.append(tab_sw)
                 figures.append(tab_lw)
 
-                #figures.append(self.make_panel(data.loc[i]['filter_pupil'], data_loc[i]['obs_per_filter_pupil'], data_loc[i]['instrument'], title, 'Filter/Pupil'))
+            # Add in a placeholder plot for FGS, in order to keep the page looking consistent
+            # from instrument to instrument
+            instrument = 'fgs'
+            data_dict = {}
+            data_dict['None'] = 100.
+            data = pd.Series(data_dict).reset_index(name='value').rename(columns={'index': 'filter'})
+            data['angle'] = 2 * np.pi
+            data['colors'] = ['#c85108']
+            pie_fig = create_filter_based_pie_chart("FGS has no filters", data)
+            small_pie_fig = create_filter_based_pie_chart("FGS has no filters", data)
+
+            # Place the pie charts in a column/Panel, and append to the figure
+            colplots = column(pie_fig, small_pie_fig)
+            tab = Panel(child=colplots, title=f'{instrument}')
+            figures.append(tab)
 
         tabs = Tabs(tabs=figures)
 

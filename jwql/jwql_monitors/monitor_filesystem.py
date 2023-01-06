@@ -292,7 +292,7 @@ def get_observation_characteristics():
         observations that use the filter/pupil value.
     """
     n_obs = {}
-    for instrument in ['nircam']:  # Skip FGS here. It has no filters #JWST_INSTRUMENT_NAMES:
+    for instrument in ['nircam', 'niriss', 'nirspec', 'miri']:  # Skip FGS here. It has no filters
         service = INSTRUMENT_SERVICE_MATCH[JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument]]
         n_obs[instrument] = {}
 
