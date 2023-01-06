@@ -24,27 +24,20 @@
 
             <!--LOG SELECT DROPDOWN-->
             <h4>Select JWQL Monitoring Log</h4>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="inlineRadioOptions" id="ops" value={{servers}}>
-                <label class="form-check-label" for="inlineRadio1">ops </label>
-            </div>
-            <div class="form-check">
-                    <input class="form-check-input" type="radio" name="inlineRadioOptions" id="test" value={{servers}}>
-                <label class="form-check-label" for="inlineRadio1">test </label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="inlineRadioOptions" id="dev" value={{servers}}>
-                <label class="form-check-label" for="inlineRadio1">dev </label>
-            </div>
-            <br>
 
-            <div class="col-6 mx-auto text-center mt-5">
-                <input type="text" placeholder="Log Name" class="form-control">
+            <div class="col-6 mx-auto text-left mt-5">
+                <input type="text" list="logs" placeholder="Log Name" class="form-control">
                 <datalist id="logs">
                     {% for log_name in all_logs["dev"] %}
                         <option value="{{ all_logs['dev'][log_name] }}">{{ log_name }}</option>
                     {% endfor %}
                 </datalist>
+
+                <select name="servers" id="servers">
+                    <option value="ops">Production</option>
+                    <option value="dev">Develop</option>
+                    <option value="test">Test</option>
+                </select>
             </div>
 
             <br>
