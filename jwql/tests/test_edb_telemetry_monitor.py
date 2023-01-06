@@ -283,10 +283,6 @@ def test_organize_every_change():
     mnem.every_change_values = ec_vals
     data = etm.organize_every_change(mnem)
 
-
-    print(data)
-
-
     f2550_idx = [0, 5, 10, 15]
     f560_idx = [1, 6, 11, 16]
     f770_idx = [2, 7, 12, 17]
