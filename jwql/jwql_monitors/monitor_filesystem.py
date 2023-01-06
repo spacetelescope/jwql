@@ -648,7 +648,7 @@ def update_characteristics_database(char_info):
     now = datetime.datetime.now()
 
     # Add data to filesystem_instrument table
-    for instrument in JWST_INSTRUMENT_NAMES:
+    for instrument in ['nircam', 'niriss', 'nirspec', 'miri']:
         new_record = {}
         new_record['date'] = now
         new_record['instrument'] = instrument
