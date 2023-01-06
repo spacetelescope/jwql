@@ -4,7 +4,7 @@ bandit==1.7.4
 beautifulsoup4==4.11.1
 bokeh==2.4.3
 codecov==2.1.11
-cryptography==38.0.1
+cryptography==38.0.3
 django==4.1
 flake8==4.0.1
 inflection==0.5.1
