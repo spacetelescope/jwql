@@ -248,6 +248,7 @@ class GeneralDashboard:
 
         p1 = figure(title="Number of Files in Filesystem", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=1700, x_axis_label='Date', y_axis_label='Number of Files Added')
         p1.line(x='date', y='total_file_count', source=source, color='#6C5B7B', line_dash='dashed', line_width=3)
+        p1.scatter(x='date', y='total_file_count', source=source, color='#C85108', size=10)
         disable_scientific_notation(p1)
         tab1 = Panel(child=p1, title='Files Per Day')
 
@@ -257,6 +258,8 @@ class GeneralDashboard:
         p2 = figure(title="Available & Used Storage", tools="reset,hover,box_zoom,wheel_zoom", tooltips="@datestr: @total_file_count", plot_width=1700, x_axis_label='Date', y_axis_label='Storage Space [Terabytes?]')
         p2.line(x='date', y='available', source=source, color='#F8B195', line_dash='dashed', line_width=3, legend='Available Storage')
         p2.line(x='date', y='used', source=source, color='#355C7D', line_dash='dashed', line_width=3, legend='Used Storage')
+        p2.scatter(x='date', y='available', source=source, color='#C85108', size=10)
+        p2.scatter(x='date', y='used', source=source, color='#C85108', size=10)
         disable_scientific_notation(p2)
         tab2 = Panel(child=p2, title='Storage')
 
