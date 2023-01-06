@@ -34,6 +34,7 @@ from jwql.edb.engineering_database import EdbMnemonic
 from jwql.instrument_monitors.common_monitors import edb_telemetry_monitor as etm
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import condition as cond
 from jwql.instrument_monitors.common_monitors.edb_telemetry_monitor_utils import utils as etm_utils
+from jwql.utils.constants import MIRI_POS_RATIO_VALUES
 
 # Determine if tests are being run on Github Actions
 ON_GITHUB_ACTIONS = '/home/runner' in os.path.expanduser('~') or '/Users/runner' in os.path.expanduser('~')
@@ -299,11 +300,11 @@ def test_organize_every_change():
     f770mean, _, _ = sigma_clipped_stats(f770_vals, sigma=3)
     f1000mean, _, _ = sigma_clipped_stats(f1000_vals, sigma=3)
     f1500mean, _, _ = sigma_clipped_stats(f1500_vals, sigma=3)
-    expected = {'F2550W': (np.array(dates[f2550_idx]), f2550_vals, f2550mean),
-                'F560W': (np.array(dates[f560_idx]), f560_vals, f560mean),
-                'F770W': (np.array(dates[f770_idx]), f770_vals, f770mean),
-                'F1000W': (np.array(dates[f1000_idx]), f1000_vals, f1000mean),
-                'F1500W': (np.array(dates[f1500_idx]), f1500_vals, f1500mean)}
+    expected = {'F2550W': (np.array(dates[f2550_idx]), f2550_vals, MIRI_POS_RATIO_VALUES['FW']['F2550W'][0]),
+                'F560W': (np.array(dates[f560_idx]), f560_vals, MIRI_POS_RATIO_VALUES['FW']['F560W'][0]),
+                'F770W': (np.array(dates[f770_idx]), f770_vals, MIRI_POS_RATIO_VALUES['FW']['F770W'][0]),
+                'F1000W': (np.array(dates[f1000_idx]), f1000_vals, MIRI_POS_RATIO_VALUES['FW']['F1000W'][0]),
+                'F1500W': (np.array(dates[f1500_idx]), f1500_vals, MIRI_POS_RATIO_VALUES['FW']['F1500W'][0])}
 
     for key, val in expected.items():
         assert np.all(val[0] == data[key][0])

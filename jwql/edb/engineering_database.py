@@ -63,6 +63,7 @@ from bokeh.plotting import figure, output_file, show, save
 import numpy as np
 
 from jwst.lib.engdb_tools import ENGDB_Service
+from jwql.utils.constants import MIRI_POS_RATIO_VALUES
 from jwql.utils.credentials import get_mast_base_url, get_mast_token
 from jwql.utils.utils import get_config
 
@@ -164,6 +165,20 @@ class EdbMnemonic:
         else:
             new_obj.mean_time_block = None
 
+        # Combine any existing mean, median, min, max data, removing overlaps
+        # All of these are populated in concert with median_times, so we can
+        # use that to look for overlap values
+        all_median_times = np.array(list(self.median_times) + list(mnem.median_times))
+        srt = np.argsort(all_median_times)
+        comb_median_times = all_median_times[srt]
+        unique_median_times, idx_median_times = np.unique(comb_median_times, return_index=True)
+
+        new_obj.median_times = unique_median_times
+        new_obj.mean = np.array(list(self.mean) + list(mnem.mean))[srt][idx_median_times]
+        new_obj.median = np.array(list(self.median) + list(mnem.median))[srt][idx_median_times]
+        new_obj.max = np.array(list(self.max) + list(mnem.max))[srt][idx_median_times]
+        new_obj.min = np.array(list(self.min) + list(mnem.min))[srt][idx_median_times]
+
         return new_obj
 
     def __init__(self, mnemonic_identifier, start_time, end_time, data, meta, info, blocks=[None],
@@ -198,10 +213,12 @@ class EdbMnemonic:
         self.requested_end_time = end_time
         self.data = data
 
-        self.mean = None
-        self.median = None
-        self.stdev = None
-        self.median_times = None
+        self.mean = []
+        self.median = []
+        self.stdev = []
+        self.median_times = []
+        self.min = []
+        self.max = []
         self.mean_time_block = mean_time_block
 
         self.meta = meta
@@ -311,7 +328,7 @@ class EdbMnemonic:
             self.mnemonic_identifier, len(self.data), self.data_start_time,
             self.data_end_time)
 
-    def block_stats(self, sigma=3):
+    def block_stats(self, sigma=3, ignore_vals=[], ignore_edges=False, every_change=False):
         """Calculate stats for a mnemonic where we want a mean value for
         each block of good data, where blocks are separated by times where
         the data are ignored.
@@ -320,25 +337,94 @@ class EdbMnemonic:
         ----------
         sigma : int
             Number of sigma to use for sigma clipping
+
+        ignore_vals : list
+            Any elements with values matching values in this list will be ignored
+
+        ignore_edges : bool
+            If True, the first and last elements of each block will be ignored. This
+            is intended primarily for the MIRI ever_change data in IMIR_HK_xxx_POS_RATIO,
+            where the position ratio values are not exactly synced up with the IMIR_HK_xxx_CUR_POS
+            value. In that case, the first or last elements can have values from a time when
+            the ratio has not yet settled to its final value.
+
+        every_change : bool
+            If True, the data are assumed to be every_change data. This is used when dealing with
+            blocks that exclusively contain data to be ignored
         """
         means = []
         medians = []
+        maxs = []
+        mins = []
         stdevs = []
         medtimes = []
+        remove_change_indexes = []
         if type(self.data["euvalues"].data[0]) not in [np.str_, str]:
             for i, index in enumerate(self.blocks[0:-1]):
                 # Protect against repeated block indexes
                 if index < self.blocks[i + 1]:
                     if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
-                        meanval, medianval, stdevval = sigma_clipped_stats(self.data["euvalues"].data[index:self.blocks[i + 1]], sigma=sigma)
+                        block = self.data["euvalues"].data[index:self.blocks[i + 1]]
+
+                        empty_block = False
+                        uvals = np.unique(block)
+                        if np.array_equal(np.array(sorted(ignore_vals)), uvals):
+                            empty_block = True
+                            meanval, medianval, stdevval, maxval, minval = np.nan, np.nan, np.nan, np.nan, np.nan
+
+                            # If the block is composed entirely of data to be ignored, then we don't
+                            # add new mean, median, max, min, stdev values, and we also need to remove
+                            # the associated entry from self.every_change_values and self.blocks
+                            # (only in the case of every_change data)
+                            if every_change:
+                                remove_change_indexes.append(i)
+
+                        else:
+                            # If there are values to be ignored, remove those from the array
+                            # of elements. Keep track of whether the first and last are ignored.
+                            ignore_first = False
+                            ignore_last = False
+                            for ignore_val in ignore_vals:
+                                ignore_idx = np.where(block == ignore_val)
+                                block = np.delete(block, ignore_idx)
+                                if 0 in ignore_idx[0]:
+                                    ignore_first = True
+                                if len(block) - 1 in ignore_idx[0]:
+                                    ignore_last = True
+
+                            # If we want to ignore the first and last elements, do that here
+                            if ignore_edges:
+                                if len(block) > 3:
+                                    if not ignore_last:
+                                        block = block[0:-1]
+                                    if not ignore_first:
+                                        block = block[2:]
+
+                            meanval, medianval, stdevval = sigma_clipped_stats(block, sigma=sigma)
+                            maxval = np.max(block)
+                            minval = np.min(block)
                     else:
-                        meanval, medianval, stdevval = change_only_stats(self.data["dates"].data[index:self.blocks[i + 1]],
-                                                                         self.data["euvalues"].data[index:self.blocks[i + 1]], sigma=sigma)
+                        meanval, medianval, stdevval, maxval, minval = change_only_stats(self.data["dates"].data[index:self.blocks[i + 1]],
+                                                                                         self.data["euvalues"].data[index:self.blocks[i + 1]],
+                                                                                         sigma=sigma)
                     if np.isfinite(meanval):
                         medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i + 1]]))
                         means.append(meanval)
                         medians.append(medianval)
+                        maxs.append(maxval)
+                        mins.append(minval)
                         stdevs.append(stdevval)
+                    else:
+                        pass
+
+            # If there were blocks composed entirely of bad data, meaning no mean values were
+            # calculated, remove those every change values and block values from the EdbMnemonic
+            # instance.
+            if every_change:
+                if len(remove_change_indexes)  > 0:
+                    self.every_change_values = np.delete(self.every_change_values, remove_change_indexes)
+                    self.blocks = np.delete(self.blocks, remove_change_indexes)
+
         else:
             # If the data are strings, then set the mean to be the data value at the block index
             for i, index in enumerate(self.blocks[0:-1]):
@@ -351,14 +437,121 @@ class EdbMnemonic:
                     means.append(meanval)
                     medians.append(medianval)
                     stdevs.append(stdevval)
+                    maxs.append(meanval)
+                    mins.append(meanval)
+                    #if hasattr(self, 'every_change_values'):
+                    #        updated_every_change_vals.append(self.every_change_values[i + 1])
         self.mean = means
         self.median = medians
         self.stdev = stdevs
         self.median_times = medtimes
+        self.max = maxs
+        self.min = mins
+
+    def block_stats_filter_positions(self, sigma=5):
+        """Calculate stats for a mnemonic where we want a mean value for
+        each block of good data, where blocks are separated by times where
+        the data are ignored. In this case, there are custom adjustments meant
+        to work on the MIRI filter position mnemonics (e.g. IMIR_HK_GW14_POS_RATIO,
+        IMIR_HK_FW_POS_RATIO).
+
+        Parameters
+        ----------
+        sigma : int
+            Number of sigma to use for sigma clipping
+        """
+        means = []
+        medians = []
+        maxs = []
+        mins = []
+        stdevs = []
+        medtimes = []
+        remove_change_indexes = []
+        if type(self.data["euvalues"].data[0]) not in [np.str_, str]:
+            for i, index in enumerate(self.blocks[0:-1]):
+                # Protect against repeated block indexes
+                if index < self.blocks[i + 1]:
+                    if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
+                        block = self.data["euvalues"].data[index:self.blocks[i + 1]]
+                        filter_value = self.every_change_values[i]
+                        pos_type = self.mnemonic_identifier.split('_')[2]
+                        if pos_type not in MIRI_POS_RATIO_VALUES:
+                            raise ValueError((f'Unrecognized filter position type: {pos_type} in {self.mnemonic_identifier}.'
+                                              f'Expected one of {MIRI_POS_RATIO_VALUES.keys()}'))
+                        if filter_value not in MIRI_POS_RATIO_VALUES[pos_type]:
+                            raise ValueError((f'Unrecognized filter value: {filter_value} in block {i} of {self.mnemonic_identifier}'))
+
+                        nominal_value, std_value = MIRI_POS_RATIO_VALUES[pos_type][filter_value]
+                        max_value = nominal_value + sigma * std_value
+                        min_value = nominal_value - sigma * std_value
+
+                        empty_block = False
+                        good = np.where((block <= max_value) & (block >= min_value))[0]
+                        if len(good) == 0:
+                            empty_block = True
+                            meanval, medianval, stdevval, maxval, minval = np.nan, np.nan, np.nan, np.nan, np.nan
+
+                            # If the block is composed entirely of data to be ignored, then we don't
+                            # add new mean, median, max, min, stdev values, and we also need to remove
+                            # the associated entry from self.every_change_values and self.blocks
+                            # (only in the case of every_change data)
+                            remove_change_indexes.append(i)
+
+                        else:
+                            # If there are values to be ignored, remove those from the array
+                            # of elements. Keep track of whether the first and last are ignored.
+                            block = block[good]
+                            meanval, medianval, stdevval = sigma_clipped_stats(block, sigma=sigma)
+                            maxval = np.max(block)
+                            minval = np.min(block)
+
+                    else:
+                        meanval, medianval, stdevval, maxval, minval = change_only_stats(self.data["dates"].data[index:self.blocks[i + 1]],
+                                                                                         self.data["euvalues"].data[index:self.blocks[i + 1]],
+                                                                                         sigma=sigma)
+                    if np.isfinite(meanval):
+                        #this is preventing the nans above from being added. not sure what to do here.
+                        #bokeh cannot deal with nans. but we need entries in order to have the blocks indexes
+                        #remain correct. but maybe we dont care about the block indexes after averaging
+                        medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i + 1]][good]))
+                        means.append(meanval)
+                        medians.append(medianval)
+                        maxs.append(maxval)
+                        mins.append(minval)
+                        stdevs.append(stdevval)
+
+            # If there were blocks composed entirely of bad data, meaning no mean values were
+            # calculated, remove those every change values and block values from the EdbMnemonic
+            # instance.
+            if len(remove_change_indexes)  > 0:
+                self.every_change_values = np.delete(self.every_change_values, remove_change_indexes)
+                self.blocks = np.delete(self.blocks, remove_change_indexes)
+
+        else:
+            # If the data are strings, then set the mean to be the data value at the block index
+            for i, index in enumerate(self.blocks[0:-1]):
+                # Protect against repeated block indexes
+                if index < self.blocks[i + 1]:
+                    meanval = self.data["euvalues"].data[index]
+                    medianval = meanval
+                    stdevval = 0
+                    medtimes.append(calc_median_time(self.data["dates"].data[index:self.blocks[i + 1]]))
+                    means.append(meanval)
+                    medians.append(medianval)
+                    stdevs.append(stdevval)
+                    maxs.append(meanval)
+                    mins.append(meanval)
+
+        self.mean = means
+        self.median = medians
+        self.stdev = stdevs
+        self.median_times = medtimes
+        self.max = maxs
+        self.min = mins
 
     def bokeh_plot(self, show_plot=False, savefig=False, out_dir='./', nominal_value=None, yellow_limits=None,
                    red_limits=None, title=None, xrange=(None, None), yrange=(None, None), return_components=True,
-                   return_fig=False):
+                   return_fig=False, plot_data=True, plot_mean=False, plot_median=False, plot_max=False, plot_min=False):
         """Make basic bokeh plot showing value as a function of time. Optionally add a line indicating
         nominal (expected) value, as well as yellow and red background regions to denote values that
         may be unexpected.
@@ -405,8 +598,20 @@ class EdbMnemonic:
         return_fig : bool
             If True, return the plot as a bokeh Figure object
 
-        show_plot : boolean
-            A switch to show the plot in the browser or not.
+        plot_data : bool
+            If True, plot the data in the EdbMnemonic.data table
+
+        plot_mean : bool
+            If True, also plot the line showing the self.mean values
+
+        plot_median : bool
+            If True, also plot the line showing the self.median values
+
+        plot_max : bool
+            If True, also plot the line showing the self.max values
+
+        plot_min : bool
+            If True, also plot the line showing the self.min values
 
         Returns
         -------
@@ -440,7 +645,6 @@ class EdbMnemonic:
 
         if savefig:
             filename = os.path.join(out_dir, f"telem_plot_{self.mnemonic_identifier.replace(' ','_')}.html")
-            print(f'\n\nSAVING HTML FILE TO: {filename}')
 
         if self.info is None:
             units = 'Unknown'
@@ -471,7 +675,54 @@ class EdbMnemonic:
                 bottom, top = red_limits
             fig.y_range = Range1d(bottom, top)
 
-        data = fig.scatter(x='x', y='y', line_width=1, line_color='blue', source=source)
+        if plot_data:
+            data = fig.scatter(x='x', y='y', line_width=1, line_color='blue', source=source)
+            data_line = fig.line(x='x', y='y', line_width=1, line_color='blue', source=source)
+            hover_tool = HoverTool(tooltips=[('Value', '@y'),
+                                             ('Date', '@x{%d %b %Y %H:%M:%S}')
+                                             ], mode='mouse', renderers=[data])
+            hover_tool.formatters = {'@x': 'datetime'}
+            fig.tools.append(hover_tool)
+
+        # Plot the mean value over time
+        if len(self.median_times) > 0:
+            if self.median_times[0] is not None:
+                if plot_mean:
+                    source_mean = ColumnDataSource(data={'mean_x': self.median_times, 'mean_y': self.mean})
+                    mean_data = fig.scatter(x='mean_x', y='mean_y', line_width=1, line_color='orange', alpha=0.75, source=source_mean)
+                    mean_hover_tool = HoverTool(tooltips=[('Mean', '@mean_y'),
+                                                          ('Date', '@mean_x{%d %b %Y %H:%M:%S}')
+                                                         ], mode='mouse', renderers=[mean_data])
+                    mean_hover_tool.formatters = {'@mean_x': 'datetime'}
+                    fig.tools.append(mean_hover_tool)
+
+                if plot_median:
+                    source_median = ColumnDataSource(data={'median_x': self.median_times, 'median_y': self.median})
+                    median_data = fig.scatter(x='median_x', y='median_y', line_width=1, line_color='orangered', alpha=0.75, source=source_median)
+                    median_hover_tool = HoverTool(tooltips=[('Median', '@median_y'),
+                                                            ('Date', '@median_x{%d %b %Y %H:%M:%S}')
+                                                           ], mode='mouse', renderers=[median_data])
+                    median_hover_tool.formatters = {'@median_x': 'datetime'}
+                    fig.tools.append(median_hover_tool)
+
+                 # If the max and min arrays are to be plotted, create columndata sources for them as well
+                if plot_max:
+                    source_max = ColumnDataSource(data={'max_x': self.median_times, 'max_y': self.max})
+                    max_data = fig.scatter(x='max_x', y='max_y', line_width=1, color='black', line_color='black', source=source_max)
+                    max_hover_tool = HoverTool(tooltips=[('Max', '@max_y'),
+                                                         ('Date', '@max_x{%d %b %Y %H:%M:%S}')
+                                                        ], mode='mouse', renderers=[max_data])
+                    max_hover_tool.formatters = {'@max_x': 'datetime'}
+                    fig.tools.append(max_hover_tool)
+
+                if plot_min:
+                    source_min = ColumnDataSource(data={'min_x': self.median_times, 'min_y': self.min})
+                    min_data = fig.scatter(x='min_x', y='min_y', line_width=1, color='black', line_color='black', source=source_min)
+                    minn_hover_tool = HoverTool(tooltips=[('Min', '@min_y'),
+                                                          ('Date', '@min_x{%d %b %Y %H:%M:%S}')
+                                                         ], mode='mouse', renderers=[min_data])
+                    min_hover_tool.formatters = {'@min_x': 'datetime'}
+                    fig.tools.append(min_hover_tool)
 
         if len(self.data["dates"]) == 0:
             data.visible = False
@@ -497,13 +748,6 @@ class EdbMnemonic:
                                                     years=["%d %b %Y"]
                                                     )
         fig.xaxis.major_label_orientation = np.pi / 4
-
-        hover_tool = HoverTool(tooltips=[('Value', '@y'),
-                                         ('Date', '@x{%d %b %Y %H:%M:%S}')
-                                         ], mode='mouse', renderers=[data])
-        hover_tool.formatters = {'@x': 'datetime'}
-
-        fig.tools.append(hover_tool)
 
         # Force the axes' range if requested
         if xrange[0] is not None:
@@ -603,39 +847,55 @@ class EdbMnemonic:
         sigma : int
             Number of sigma to use for sigma clipping
         """
-        if type(self.data["euvalues"].data[0]) not in [np.str_, str]:
-            min_date = np.min(self.data["dates"])
-            date_range = np.max(self.data["dates"]) - min_date
-            num_days = date_range.days
-            num_seconds = date_range.seconds
-            range_days = num_days + 1
-
-            # Generate a list of times to use as boundaries for calculating means
-            limits = np.array([min_date + timedelta(days=x) for x in range(range_days)])
-            limits = np.append(limits, np.max(self.data["dates"]))
-
-            means, meds, devs, times = [], [], [], []
-            for i in range(len(limits) - 1):
-                good = np.where((self.data["dates"] >= limits[i]) & (self.data["dates"] < limits[i + 1]))
-
-                if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
-                    avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
-                else:
-                    avg, med, dev = change_only_stats(self.data["dates"][good], self.data["euvalues"][good], sigma=sigma)
-                means.append(avg)
-                meds.append(med)
-                devs.append(dev)
-                times.append(limits[i] + (limits[i + 1] - limits[i]) / 2.)
-            self.mean = means
-            self.median = meds
-            self.stdev = devs
-            self.median_times = times
+        if len(self.data["euvalues"]) == 0:
+            self.mean = []
+            self.median = []
+            self.stdev = []
+            self.median_times = []
+            self.max = []
+            self.min = []
         else:
-            # If the mnemonic data are strings, we don't compute statistics
-            self.mean = [None]
-            self.median = [None]
-            self.stdev = [None]
-            self.median_times = [None]
+            if type(self.data["euvalues"].data[0]) not in [np.str_, str]:
+                min_date = np.min(self.data["dates"])
+                date_range = np.max(self.data["dates"]) - min_date
+                num_days = date_range.days
+                num_seconds = date_range.seconds
+                range_days = num_days + 1
+
+                # Generate a list of times to use as boundaries for calculating means
+                limits = np.array([min_date + timedelta(days=x) for x in range(range_days)])
+                limits = np.append(limits, np.max(self.data["dates"]))
+
+                means, meds, devs, maxs, mins, times = [], [], [], [], [], []
+                for i in range(len(limits) - 1):
+                    good = np.where((self.data["dates"] >= limits[i]) & (self.data["dates"] < limits[i + 1]))
+
+                    if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
+                        avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
+                        maxval = np.max(self.data["euvalues"][good])
+                        minval = np.min(self.data["euvalues"][good])
+                    else:
+                        avg, med, dev, maxval, minval = change_only_stats(self.data["dates"][good], self.data["euvalues"][good], sigma=sigma)
+                    means.append(avg)
+                    meds.append(med)
+                    maxs.append(maxval)
+                    mins.append(minval)
+                    devs.append(dev)
+                    times.append(limits[i] + (limits[i + 1] - limits[i]) / 2.)
+                self.mean = means
+                self.median = meds
+                self.stdev = devs
+                self.median_times = times
+                self.max = maxs
+                self.min = mins
+            else:
+                # If the mnemonic data are strings, we don't compute statistics
+                self.mean = []
+                self.median = []
+                self.stdev = []
+                self.median_times = []
+                self.max = []
+                self.min = []
 
     def full_stats(self, sigma=3):
         """Calculate the mean/median/stdev of the full compliment of data
@@ -648,18 +908,24 @@ class EdbMnemonic:
         if type(self.data["euvalues"].data[0]) not in [np.str_, str]:
             if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
                 self.mean, self.median, self.stdev = sigma_clipped_stats(self.data["euvalues"], sigma=sigma)
+                self.max = np.max(self.data["euvalues"])
+                self.min = np.min(self.data["euvalues"])
             else:
-                self.mean, self.median, self.stdev = change_only_stats(self.data["dates"], self.data["euvalues"], sigma=sigma)
+                self.mean, self.median, self.stdev, self.max, self.min = change_only_stats(self.data["dates"], self.data["euvalues"], sigma=sigma)
             self.mean = [self.mean]
             self.median = [self.median]
             self.stdev = [self.stdev]
+            self.max = [self.max]
+            self.min = [self.min]
             self.median_times = [calc_median_time(self.data["dates"])]
         else:
             # If the mnemonic values are strings, don't compute statistics
-            self.mean = [None]
-            self.median = [None]
-            self.stdev = [None]
-            self.median_times = [None]
+            self.mean = []
+            self.median = []
+            self.stdev = []
+            self.max = []
+            self.min = []
+            self.median_times = []
 
     def get_table_data(self):
         """Get data needed to make interactive table in template."""
@@ -740,16 +1006,20 @@ class EdbMnemonic:
         # Update the data in the instance.
         self.data = new_tab
 
-    def plot_data_plus_devs(self, show_plot=False, savefig=False, out_dir='./', nominal_value=None, yellow_limits=None,
+    def plot_data_plus_devs(self, use_median=False, show_plot=False, savefig=False, out_dir='./', nominal_value=None, yellow_limits=None,
                             red_limits=None, xrange=(None, None), yrange=(None, None), title=None, return_components=True,
-                            return_fig=False):
+                            return_fig=False, plot_max=False, plot_min=False):
         """Make basic bokeh plot showing value as a function of time. Optionally add a line indicating
         nominal (expected) value, as well as yellow and red background regions to denote values that
         may be unexpected. Also add a plot of the mean value over time and in a second figure, a plot of
         the devaition from the mean.
 
-        Parameters
-        ----------
+        Paramters
+        ---------
+        use_median : bool
+            If True, plot the median rather than the mean, as well as the deviation from the
+            median rather than from the mean
+
         show_plot : bool
             If True, show plot on screen rather than returning div and script
 
@@ -790,6 +1060,12 @@ class EdbMnemonic:
         return_fig : bool
             If True, return the plot as a bokeh Figure object
 
+        plot_max : bool
+            If True, also plot the line showing the self.max values
+
+        plot_min : bool
+            If True, also plot the line showing the self.min values
+
         Returns
         -------
         obj : list or bokeh.plotting.figure
@@ -825,7 +1101,6 @@ class EdbMnemonic:
 
         if savefig:
             filename = os.path.join(out_dir, f"telem_plot_{self.mnemonic_identifier.replace(' ','_')}.html")
-            print(f'\n\nSAVING HTML FILE TO: {filename}')
 
         if self.info is None:
             units = 'Unknown'
@@ -862,7 +1137,21 @@ class EdbMnemonic:
         # Plot the mean value over time
         if len(self.median_times) > 0:
             if self.median_times[0] is not None:
-                mean_data = fig.line(self.median_times, self.mean, line_width=1, line_color='orange', alpha=0.75)
+                if use_median:
+                    meanvals = self.median
+                else:
+                    meanvals = self.mean
+
+                mean_data = fig.line(self.median_times, meanvals, line_width=1, line_color='orange', alpha=0.75)
+
+                # If the max and min arrays are to be plotted, create columndata sources for them as well
+                if plot_max:
+                    source_max = ColumnDataSource(data={'max_x': self.median_times, 'max_y': self.max})
+                    fig.scatter(x='max_x', y='max_y', line_width=1, line_color='black', source=source_max)
+
+                if plot_min:
+                    source_min = ColumnDataSource(data={'min_x': self.median_times, 'min_y': self.min})
+                    fig.scatter(x='min_x', y='min_y', line_width=1, line_color='black', source=source_min)
 
         if len(self.data["dates"]) == 0:
             data.visible = False
@@ -902,11 +1191,11 @@ class EdbMnemonic:
 
         # Interpolate the mean values so that we can subtract the original data
         if len(self.median_times) > 1:
-            interp_means = interpolate_datetimes(data_dates, self.median_times, self.mean)
+            interp_means = interpolate_datetimes(data_dates, self.median_times, meanvals)
             dev = data_vals - interp_means
         elif len(self.median_times) == 1:
             if self.median_times[0] is not None:
-                dev = data_vals - self.mean
+                dev = data_vals - meanvals
             else:
                 dev = [0] * len(data_vals)
         else:
@@ -970,6 +1259,8 @@ class EdbMnemonic:
 
             self.mean = []
             self.median = []
+            self.max = []
+            self.min = []
             self.stdev = []
             self.median_times = []
             for i in range(int(num_bins)):
@@ -978,18 +1269,24 @@ class EdbMnemonic:
                 good = ((date_arr >= min_date) & (date_arr < max_date))
                 if self.meta['TlmMnemonics'][0]['AllPoints'] != 0:
                     avg, med, dev = sigma_clipped_stats(self.data["euvalues"][good], sigma=sigma)
+                    maxval = np.max(self.data["euvalues"][good])
+                    minval = np.min(self.data["euvalues"][good])
                 else:
-                    avg, med, dev = change_only_stats(self.data["dates"][good], self.data["euvalues"][good], sigma=sigma)
+                    avg, med, dev, maxval, minval = change_only_stats(self.data["dates"][good], self.data["euvalues"][good], sigma=sigma)
                 if np.isfinite(avg):
                     self.mean.append(avg)
                     self.median.append(med)
                     self.stdev.append(dev)
+                    self.max.append(maxval)
+                    self.min.append(minval)
                     self.median_times.append(calc_median_time(self.data["dates"].data[good]))
         else:
-            self.mean = [None]
-            self.median = [None]
-            self.stdev = [None]
-            self.median_times = [None]
+            self.mean = []
+            self.median = []
+            self.stdev = []
+            self.max = []
+            self.min = []
+            self.median_times = []
 
 
 def add_limit_boxes(fig, yellow=None, red=None):
@@ -1194,9 +1491,9 @@ def change_only_stats(times, values, sigma=3):
     # If there is only a single datapoint, then the mean will be
     # equal to it.
     if len(times) == 0:
-        return None, None, None
+        return None, None, None, None, None
     if len(times) == 1:
-        return values, values, 0.
+        return values, values, 0., values, values
     else:
         times = np.array(times)
         values = np.array(values)
@@ -1208,6 +1505,8 @@ def change_only_stats(times, values, sigma=3):
 
         meanval = np.average(values, weights=delta_time_weight)
         stdevval = np.sqrt(np.average((values - meanval) ** 2, weights=delta_time_weight))
+        maxval = np.max(values)
+        minval = np.min(values)
 
         # In order to calculate the median, we need to adjust the weights such that
         # the weight represents the number of times a given value is present. Scale
@@ -1241,7 +1540,7 @@ def change_only_stats(times, values, sigma=3):
                         medianval = (val + values[i + 1]) / 2.
                 break
 
-    return meanval, medianval, stdevval
+    return meanval, medianval, stdevval, maxval, minval
 
 
 def create_time_offset(dt_obj, epoch):
