@@ -357,23 +357,26 @@ class GeneralDashboard:
         ##################################################
 
 
-        title = 'File Counts Per Filter'
+        #title = 'File Counts Per Filter'
         figures = []
 
 
 
-        outer_radii = vals / np.max(vals) * 100. + 0.1
-        inner_radii = [0.1] * len(waves)
-        start_angle = np.arange(len(waves))*360./len(waves)
-        end_angle = np.arange(1, len(waves)+1)*360./len(waves)
+        #outer_radii = vals / np.max(vals) * 100. + 0.1
+        #inner_radii = [0.1] * len(waves)
+        #start_angle = np.arange(len(waves))*360./len(waves)
+        #end_angle = np.arange(1, len(waves)+1)*360./len(waves)
 
         # This is a loop over instruments
-        for i in range(len(data)):
-            instrument = data.loc[i]['instrument']
-            filterpupil = data.loc[i]['filter_pupil']
-            num_obs = data.loc[i]['obs_per_filter_pupil']
+        #for i in range(len(data)):
+        for i in [0]:
+            # commented out for testing
+            #instrument = data.loc[i]['instrument']
+            #filterpupil = data.loc[i]['filter_pupil']
+            #num_obs = data.loc[i]['obs_per_filter_pupil']
 
             # For testing
+            instrument = 'nircam'
             #num_obs = np.linspace(0.01, 30., 100)
             #num_obs = np.linspace(1, 400, 100)
             num_obs = np.array([88, 3, 95, 187, 1, 1, 1, 60, 10, 10, 6, 175, 3, 56, 32, 35, 8, 5, 1, 36, 8, 4, 12, 43, 3, 3, 8, 15, 255, 1, 12, 6, 12, 6, 9, 115, 19, 17, 14, 560, 6, 3, 5, 3, 241, 273, 61, 8, 6, 10, 9, 219, 1, 12, 6, 5, 2, 45, 8, 6, 5, 9, 57, 50, 1, 29, 66, 6, 109, 6, 8, 6, 35, 75, 216, 16, 36, 4, 39, 37, 8, 6, 5, 6, 73, 10, 7, 8, 9, 38, 10, 9, 8, 13, 202, 315, 27, 44, 14, 38, 5, 39, 29, 10, 9, 8, 6, 327, 10, 10, 9, 6, 253,109,5,57,57])
