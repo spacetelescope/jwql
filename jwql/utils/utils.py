@@ -630,19 +630,19 @@ def query_unformat(string):
 def grouper(iterable, chunksize):
     """
     Take a list of items (iterable), and group it into chunks of chunksize, with the
-    last chunk being any remaining items. This allows you to batch-iterate through a 
+    last chunk being any remaining items. This allows you to batch-iterate through a
     potentially very long list without missing any items, and where each individual
-    iteration can involve a much smaller number of files. Particularly useful for 
+    iteration can involve a much smaller number of files. Particularly useful for
     operations that you want to execute in batches, but don't want the batches to be too
     long.
-    
+
     Examples
     --------
-    
+
     grouper([1, 2, 3, 4, 5], 2)
     produces
     (1, 2), (3, 4), (5, )
-    
+
     grouper([1, 2, 3, 4, 5], 6)
     produces
     (1, 2, 3, 4, 5)
@@ -653,3 +653,31 @@ def grouper(iterable, chunksize):
         if not chunk:
             return
         yield chunk
+
+def map_filterpupil_name_to_wavelength(filterpupil):
+    """Note that this is pretty nircam-specific at the moment. need to generalize a bit for other instruments
+    """
+    wlp4_wave = 2.12
+    dark_fake_wave = 0.6
+    for e in filterpupil:
+        if e[0:3] == 'N/A':
+            filtername = 'N/A'
+            pupilname = e[4:]
+        else:
+            filtername, pupilname = e.split('/')
+        if filtername == 'WLP4':
+            waves.append(wlp4_wave)
+        elif pupilname[0] == 'F' and pupilname != 'FLAT':
+            waves.append(int(pupilname[1:4])/100.)
+        elif pupilname != 'FLAT':
+            waves.append(int(filtername[1:4])/100.)
+        elif pupilname == 'FLAT':
+            if filtername[0] == 'F':
+                waves.append(int(filtername[1:4])/100.)
+            elif filtername == 'N/A':
+                waves.append(dark_fake_wave)
+            else:
+                print('missing: ', e)
+        else:
+            print('missing', e)
+    return waves

@@ -154,6 +154,23 @@ else:
     session, base, engine, meta = load_connection(SETTINGS['connection_string'])
 
 
+class FilesystemCharacteristics(base):
+    """ORM for table containing instrument-specific lists of the number of
+    obervations corresponding to various instrument characteristics (e.g.
+    filters)
+    """
+
+    # Name the table
+    __tablename__ = 'filesystem_characteristics'
+
+    # Define the columns
+    id = Column(Integer, primary_key=True, nullable=False)
+    date = Column(DateTime, nullable=False)
+    instrument = Column(Enum(*JWST_INSTRUMENT_NAMES, name='instrument_enum'), nullable=False)
+    filter_pupil = Column(ARRAY(String, dimensions=1))
+    obs_per_filter_pupil = Column(ARRAY(Integer, dimensions=1))
+
+
 class FilesystemGeneral(base):
     """ORM for the general (non instrument specific) filesystem monitor
     table"""
