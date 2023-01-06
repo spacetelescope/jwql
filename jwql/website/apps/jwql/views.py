@@ -46,6 +46,7 @@ from copy import deepcopy
 import csv
 import logging
 import os
+import operator
 
 from bokeh.layouts import layout
 from bokeh.embed import components
@@ -72,10 +73,14 @@ from .data_containers import random_404_page
 from .data_containers import text_scrape
 from .data_containers import thumbnails_ajax
 from .data_containers import thumbnails_query_ajax
+from .data_containers import thumbnails_date_range_ajax
 from .forms import AnomalyQueryForm
 from .forms import FileSearchForm
-from .models import Observation, Proposal, RootFileInfo
+if not os.environ.get("READTHEDOCS"):
+    from .models import Observation, Proposal, RootFileInfo
 from astropy.io import fits
+from astropy.time import Time
+import astropy.units as u
 
 
 def anomaly_query(request):
@@ -166,6 +171,118 @@ def api_landing(request):
     context = {'inst': ''}
 
     return render(request, template, context)
+
+
+def save_page_navigation_data_ajax(request):
+    """
+    Takes a bracketless string of rootnames and expstarts, and saves it as a session dictionary
+    
+    Parameters
+    ----------
+    request: HttpRequest object
+        Incoming request from the webpage
+    
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # a string of the form " 'rootname1'='expstart1', 'rootname2'='expstart2', ..."
+    if request.method == 'POST':
+        navigate_dict = request.POST.get('navigate_dict')
+        # Save session in form {rootname:expstart}
+        rootname_expstarts = dict(item.split("=") for item in navigate_dict.split(","))
+        request.session['navigation_data'] = rootname_expstarts
+    context = {'item': request.session['navigation_data']}
+    return JsonResponse(context, json_dumps_params={'indent': 2})
+    
+
+def archive_date_range(request, inst):
+    """Generate the page for date range images
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # Ensure the instrument is correctly capitalized
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+
+    template = 'archive_date_range.html'
+    sort_type = request.session.get('image_sort', 'Recent')
+    context = {'inst': inst,
+               'base_url': get_base_url(),
+               'sort': sort_type}
+
+    return render(request, template, context)
+
+
+def archive_date_range_ajax(request, inst, start_date, stop_date):
+    """Generate the page listing all archived images within the inclusive date range for all proposals
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+    inst : str
+        Name of JWST instrument
+    start_date : str
+        Start date for date range
+    stop_date : str
+        stop date for date range
+
+    Returns
+    -------
+    JsonResponse object
+        Outgoing response sent to the webpage
+    """
+
+    # Ensure the instrument is correctly capitalized
+    inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
+
+    # Calculate start date/time in MJD format to begin our range
+    inclusive_start_time = Time(start_date)
+    # Add a minute to the stop time and mark it 'exclusive' for code clarity, doing this to get all seconds selected minute
+    exclusive_stop_time = Time(stop_date) + (1 * u.minute)
+
+    # Get a queryset of all observations STARTING WITHIN our date range
+    begin_after_start = Observation.objects.filter(proposal__archive__instrument=inst, obsstart__gte=inclusive_start_time.mjd)
+    all_entries_beginning_in_range = begin_after_start.filter(obsstart__lt=exclusive_stop_time.mjd)
+
+    # Get a queryset of all observations ENDING WITHIN our date range
+    end_after_start = Observation.objects.filter(proposal__archive__instrument=inst, obsend__gte=inclusive_start_time.mjd)
+    all_entries_ending_in_range = end_after_start.filter(obsend__lt=exclusive_stop_time.mjd)
+
+    # Get a queryset of all observations SPANNING (starting before and ending after) our date range.  Bump our window out a few days to catch hypothetical 
+    # observations that last over 24 hours.  The larger the window the more time the query takes so keeping it tight.
+    two_days_before_start_time = Time(start_date) - (2 * u.day)
+    two_days_after_end_time = Time(stop_date) + (3 * u.day)
+    end_after_stop = Observation.objects.filter(proposal__archive__instrument=inst, obsend__gte=two_days_after_end_time.mjd)
+    all_entries_spanning_range = end_after_stop.filter(obsstart__lt=two_days_before_start_time.mjd)
+
+    obs_beginning = [observation for observation in all_entries_beginning_in_range]
+    obs_ending = [observation for observation in all_entries_ending_in_range]
+    obs_spanning = [observation for observation in all_entries_spanning_range]
+    
+    # Create a single list of all pertinent observations
+    all_observations = list(set(obs_beginning + obs_ending + obs_spanning))
+    # Get all thumbnails that occurred within the time frame for these observations
+    data = thumbnails_date_range_ajax(inst, all_observations, inclusive_start_time.mjd, exclusive_stop_time.mjd)
+    data['thumbnail_sort'] = request.session.get("image_sort", "Recent")
+    
+    # Create Dictionary of Rootnames with expstart
+    save_page_navigation_data(request, data)
+    return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
 def archived_proposals(request, inst):
@@ -313,6 +430,8 @@ def archive_thumbnails_ajax(request, inst, proposal, observation=None):
 
     data = thumbnails_ajax(inst, proposal, obs_num=observation)
     data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
+
+    save_page_navigation_data(request, data)
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
@@ -338,7 +457,6 @@ def archive_thumbnails_per_observation(request, inst, proposal, observation):
     """
     # Ensure the instrument is correctly capitalized
     inst = JWST_INSTRUMENT_NAMES_MIXEDCASE[inst.lower()]
-
     proposal_meta = text_scrape(proposal)
 
     # Get a list of all observation numbers for the proposal
@@ -401,6 +519,7 @@ def archive_thumbnails_query_ajax(request):
 
     data = thumbnails_query_ajax(thumbnails)
     data['thumbnail_sort'] = request.session.get("image_sort", "Ascending")
+    save_page_navigation_data(request, data)
     return JsonResponse(data, json_dumps_params={'indent': 2})
 
 
@@ -894,6 +1013,28 @@ def explore_image_ajax(request, inst, file_root, filetype, scaling="log", low_li
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
+def save_page_navigation_data(request, data):
+    """
+    It saves the data from the current page in the session so that the user can navigate to the next or
+    previous page.  Our current sort options are Ascending/Descending, and Recent/Oldest so we need to 
+    preserve 'rootname' and 'expstart'.
+    
+    Parameters
+    ----------
+    request: HttpRequest object
+    data: dictionary
+        the data dictionary to be returned from the calling view function
+    nav_by_date_range: boolean
+        when viewing an image, will the next/previous buttons be sorted by date? (the other option is rootname)
+    """
+    navigate_data = {}
+    for rootname in data['file_data']:
+        navigate_data[rootname] = data['file_data'][rootname]['expstart']
+
+    request.session['navigation_data'] = navigate_data
+    return
+
+
 def toggle_viewed_ajax(request, file_root):
     """Update the model's "mark_viewed" field and save in the database
 
@@ -918,13 +1059,13 @@ def toggle_viewed_ajax(request, file_root):
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
-def update_session_value_ajax(request, session_item, session_value):
-    session_options = ["image_sort"]
-    context = {}
-    # Only allow updates of sessions that we expect
-    if session_item in session_options:
-        request.session[session_item] = session_value
-        context = {'item': request.session[session_item]}
+def save_image_sort_ajax(request):
+
+    # a string of the form " 'rootname1'='expstart1', 'rootname2'='expstart2', ..."
+    image_sort = request.GET['sort_type']
+
+    request.session['image_sort'] = image_sort
+    context = {'item': request.session['image_sort']}
     return JsonResponse(context, json_dumps_params={'indent': 2})
 
 
@@ -1007,20 +1148,25 @@ def view_image(request, inst, file_root, rewrite=False):
 
     prop_id = file_root[2:7]
 
-    rootnames = get_rootnames_for_instrument_proposal(inst, prop_id)
-    file_root_list = defaultdict(list)
+    # if we get to this page without any navigation data (i.e. direct link), just use the file_root with no expstart time
+    # navigate_data is dict of format rootname:expstart
+    navigation_data = request.session.get('navigation_data', {file_root: 0})
 
-    for root in rootnames:
-        try:
-            file_root_list[(filename_parser(root)['observation'])].append(root)
-        except KeyError:
-            pass
-
+    # For time based sorting options, sort to "Recent" first to create sorting consistency when times are the same.
+    # This is consistent with how Tinysort is utilized in jwql.js->sort_by_thumbnails
     sort_type = request.session.get('image_sort', 'Ascending')
-    if sort_type in ['Ascending']:
-        file_root_list = {key: sorted(file_root_list[key]) for key in sorted(file_root_list)}
+    if sort_type in ['Descending']:
+        file_root_list = sorted(navigation_data, reverse=True)
+    elif sort_type in ['Recent']:
+        navigation_data = dict(sorted(navigation_data.items()))
+        navigation_data = dict(sorted(navigation_data.items(), key=operator.itemgetter(1), reverse=True))
+        file_root_list = list(navigation_data.keys())
+    elif sort_type in ['Oldest']:
+        navigation_data = dict(sorted(navigation_data.items()))
+        navigation_data = dict(sorted(navigation_data.items(), key=operator.itemgetter(1)))
+        file_root_list = list(navigation_data.keys())
     else:
-        file_root_list = {key: sorted(file_root_list[key], reverse=True) for key in sorted(file_root_list)}
+        file_root_list = sorted(navigation_data)
 
     # Get our current views RootFileInfo model and send our "viewed/new" information
     root_file_info = RootFileInfo.objects.get(root_name=file_root)

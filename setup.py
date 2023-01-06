@@ -15,7 +15,7 @@ REQUIRES = [
     'astropy>=3.2.1',
     'astroquery>=0.3.9',
     'bandit',
-    'bokeh',
+    'bokeh==2.4.3',
     'codecov',
     'crds',
     'cryptography',

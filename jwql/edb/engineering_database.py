@@ -556,8 +556,8 @@ class EdbMnemonic:
         nominal (expected) value, as well as yellow and red background regions to denote values that
         may be unexpected.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         show_plot : bool
             If True, show plot on screen rather than returning div and script
 
@@ -612,12 +612,6 @@ class EdbMnemonic:
 
         plot_min : bool
             If True, also plot the line showing the self.min values
-
-
-        Parameters
-        ----------
-        show_plot : boolean
-            A switch to show the plot in the browser or not.
 
         Returns
         -------
@@ -1553,8 +1547,8 @@ def create_time_offset(dt_obj, epoch):
     """Subtract input epoch from a datetime object and return the
     residual number of seconds
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     dt_obj : datetime.datetime
         Original datetiem object
 
