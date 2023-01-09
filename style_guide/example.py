@@ -3,9 +3,9 @@
 
 The module docstring should have a one line description (as above) as
 well as a more detailed description in a paragraph below the one line
-description (i.e. this).  Module dosctring lines should be limited to
-72 characters.  Monospace font can be achived with ``two single
-forward-apostrophes``.  The description should provided a detailed
+description (e.g. this).  Module dosctring lines should be limited to
+72 characters.  Monospace font can be achieved with ``two single
+backticks``.  The description should provided a detailed
 overview of the purpose of the module (what does it do) and how it
 achieves this purpose (how does it do it).
 
@@ -17,7 +17,7 @@ Authors
 Use
 ---
 
-    This module can be executed via the command line as such:
+    This module can be executed via the command line as follows:
 
     ::
         python example.py [path] [-f|--filter filter]
@@ -28,7 +28,7 @@ Use
 
     Optional arguments:
 
-    ``-f|--filter`` - The filter to process.  if not provided, the
+    ``-f|--filter`` - The filter to process.  If not provided, the
         defult value is "F606W".
 
 Dependencies
@@ -46,7 +46,7 @@ References
     Here is where any references to external sources related to the
     code can be listed or described.  For example:
 
-    Code adopted from IDL routine written by Hilbert et al., 2009.
+    Code adapted from IDL routine written by Hilbert et al., 2009.
 
 Notes
 -----

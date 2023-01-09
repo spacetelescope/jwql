@@ -466,6 +466,26 @@ MIRIReadnoiseQueryHistory = monitor_orm_factory('miri_readnoise_query_history')
 MIRIReadnoiseStats = monitor_orm_factory('miri_readnoise_stats')
 FGSReadnoiseQueryHistory = monitor_orm_factory('fgs_readnoise_query_history')
 FGSReadnoiseStats = monitor_orm_factory('fgs_readnoise_stats')
+NIRCamEDBDailyStats = monitor_orm_factory('nircam_edb_daily_stats')
+NIRCamEDBBlockStats = monitor_orm_factory('nircam_edb_blocks_stats')
+NIRCamEDBTimeIntervalStats = monitor_orm_factory('nircam_edb_time_interval_stats')
+NIRCamEDBEveryChangeStats = monitor_orm_factory('nircam_edb_every_change_stats')
+MIRIEDBDailyStats = monitor_orm_factory('miri_edb_daily_stats')
+MIRIEDBBlockStats = monitor_orm_factory('miri_edb_blocks_stats')
+MIRIEDBTimeIntervalStats = monitor_orm_factory('miri_edb_time_interval_stats')
+MIRIEDBEveryChangeStats = monitor_orm_factory('miri_edb_every_change_stats')
+NIRISSEDBDailyStats = monitor_orm_factory('niriss_edb_daily_stats')
+NIRISSEDBBlockStats = monitor_orm_factory('niriss_edb_blocks_stats')
+NIRISSEDBTimeIntervalStats = monitor_orm_factory('niriss_edb_time_interval_stats')
+NIRISSEDBEveryChangeStats = monitor_orm_factory('niriss_edb_every_change_stats')
+FGSEDBDailyStats = monitor_orm_factory('fgs_edb_daily_stats')
+FGSEDBBlockStats = monitor_orm_factory('fgs_edb_blocks_stats')
+FGSEDBTimeIntervalStats = monitor_orm_factory('fgs_edb_time_interval_stats')
+FGSEDBEveryChangeStats = monitor_orm_factory('fgs_edb_every_change_stats')
+NIRSpecEDBDailyStats = monitor_orm_factory('nirspec_edb_daily_stats')
+NIRSpecEDBBlockStats = monitor_orm_factory('nirspec_edb_blocks_stats')
+NIRSpecEDBTimeIntervalStats = monitor_orm_factory('nirspec_edb_time_interval_stats')
+NIRSpecEDBEveryChangeStats = monitor_orm_factory('nirspec_edb_every_change_stats')
 NIRCamCosmicRayQueryHistory = monitor_orm_factory('nircam_cosmic_ray_query_history')
 NIRCamCosmicRayStats = monitor_orm_factory('nircam_cosmic_ray_stats')
 MIRICosmicRayQueryHistory = monitor_orm_factory('miri_cosmic_ray_query_history')
@@ -483,22 +503,32 @@ INSTRUMENT_TABLES = {
     'nircam': [NIRCamDarkQueryHistory, NIRCamDarkPixelStats, NIRCamDarkDarkCurrent,
                NIRCamBiasQueryHistory, NIRCamBiasStats, NIRCamBadPixelQueryHistory,
                NIRCamBadPixelStats, NIRCamReadnoiseQueryHistory, NIRCamReadnoiseStats,
-               NIRCamAnomaly, NIRCamCosmicRayQueryHistory, NIRCamCosmicRayStats],
+               NIRCamAnomaly, NIRCamCosmicRayQueryHistory, NIRCamCosmicRayStats,
+               NIRCamEDBDailyStats, NIRCamEDBBlockStats, NIRCamEDBTimeIntervalStats,
+               NIRCamEDBEveryChangeStats],
     'niriss': [NIRISSDarkQueryHistory, NIRISSDarkPixelStats, NIRISSDarkDarkCurrent,
                NIRISSBiasQueryHistory, NIRISSBiasStats, NIRISSBadPixelQueryHistory,
                NIRISSBadPixelStats, NIRISSReadnoiseQueryHistory, NIRISSReadnoiseStats,
-               NIRISSAnomaly, NIRISSCosmicRayQueryHistory, NIRISSCosmicRayStats],
+               NIRISSAnomaly, NIRISSCosmicRayQueryHistory, NIRISSCosmicRayStats,
+               NIRISSEDBDailyStats, NIRISSEDBBlockStats, NIRISSEDBTimeIntervalStats,
+               NIRISSEDBEveryChangeStats],
     'miri': [MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent,
              MIRIBadPixelQueryHistory, MIRIBadPixelStats, MIRIReadnoiseQueryHistory,
-             MIRIReadnoiseStats, MIRIAnomaly, MIRICosmicRayQueryHistory, MIRICosmicRayStats],
+             MIRIReadnoiseStats, MIRIAnomaly, MIRICosmicRayQueryHistory, MIRICosmicRayStats,
+             MIRIEDBDailyStats, MIRIEDBBlockStats, MIRIEDBTimeIntervalStats,
+             MIRIEDBEveryChangeStats],
     'nirspec': [NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent,
                 NIRSpecBiasQueryHistory, NIRSpecBiasStats, NIRSpecBadPixelQueryHistory,
                 NIRSpecBadPixelStats, NIRSpecReadnoiseQueryHistory, NIRSpecReadnoiseStats,
                 NIRSpecAnomaly, NIRSpecTAQueryHistory, NIRSpecTAStats,
-                NIRSpecCosmicRayQueryHistory, NIRSpecCosmicRayStats],
+                NIRSpecCosmicRayQueryHistory, NIRSpecCosmicRayStats,
+                NIRSpecEDBDailyStats, NIRSpecEDBBlockStats, NIRSpecEDBTimeIntervalStats,
+                NIRSpecEDBEveryChangeStats],
     'fgs': [FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent,
             FGSBadPixelQueryHistory, FGSBadPixelStats, FGSReadnoiseQueryHistory,
-            FGSReadnoiseStats, FGSAnomaly, FGSCosmicRayQueryHistory, FGSCosmicRayStats]}
+            FGSReadnoiseStats, FGSAnomaly, FGSCosmicRayQueryHistory, FGSCosmicRayStats,
+            FGSEDBDailyStats, FGSEDBBlockStats, FGSEDBTimeIntervalStats,
+            FGSEDBEveryChangeStats]}
 
 MONITOR_TABLES = {
     'anomaly': [NIRCamAnomaly, NIRISSAnomaly, NIRSpecAnomaly, MIRIAnomaly, FGSAnomaly],
@@ -522,7 +552,14 @@ MONITOR_TABLES = {
                   NIRISSReadnoiseQueryHistory, NIRSpecReadnoiseQueryHistory,
                   NIRSpecReadnoiseStats, MIRIReadnoiseQueryHistory, MIRIReadnoiseStats,
                   FGSReadnoiseQueryHistory, FGSReadnoiseStats],
-    'ta': [NIRSpecTAQueryHistory, NIRSpecTAStats]}
+    'ta': [NIRSpecTAQueryHistory, NIRSpecTAStats],
+    'edb': [NIRCamEDBDailyStats, NIRCamEDBBlockStats, NIRCamEDBTimeIntervalStats,
+            NIRCamEDBEveryChangeStats, NIRISSEDBDailyStats, NIRISSEDBBlockStats,
+            NIRISSEDBTimeIntervalStats, NIRISSEDBEveryChangeStats, MIRIEDBDailyStats,
+            MIRIEDBBlockStats, MIRIEDBTimeIntervalStats, MIRIEDBEveryChangeStats,
+            NIRSpecEDBDailyStats, NIRSpecEDBBlockStats, NIRSpecEDBTimeIntervalStats,
+            NIRSpecEDBEveryChangeStats, FGSEDBDailyStats, FGSEDBBlockStats,
+            FGSEDBTimeIntervalStats, FGSEDBEveryChangeStats]}
 
 if __name__ == '__main__':
     base.metadata.create_all(engine)
