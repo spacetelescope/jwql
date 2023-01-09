@@ -764,8 +764,8 @@ def log_view(request):
     template = 'log_view.html'
     log_path = get_config()['log_dir']
 
-    try:
-        log_name = request.POST['log_select']
+    if 'log_submit' in request.POST:
+        log_name = request.POST['log_submit']
         with open(log_name) as f:
             log_text = f.read()
     except KeyError:
@@ -785,7 +785,9 @@ def log_view(request):
     full_log_paths = [log for log in full_log_paths if not os.path.basename(log).startswith('.')]
     log_dictionary = {os.path.basename(path): path for path in full_log_paths}
     
-    context = {'all_logs': log_dictionary}
+    context = {'all_logs': log_dictionary,
+               'log_text': log_text,
+               'log_name': log_name}
 
     return render(request, template, context)
 
