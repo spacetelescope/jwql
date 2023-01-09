@@ -785,8 +785,7 @@ def log_view(request):
     full_log_paths = [log for log in full_log_paths if not os.path.basename(log).startswith('.')]
     log_dictionary = {os.path.basename(path): path for path in full_log_paths}
     
-    context = {'all_logs': all_logs,
-               'server': server}
+    context = {'all_logs': log_dictionary}
 
     return render(request, template, context)
 

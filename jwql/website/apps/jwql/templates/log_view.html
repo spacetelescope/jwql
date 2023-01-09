@@ -27,14 +27,14 @@
                 <div class="col-6 mx-auto text-left mt-5">
                     <input type="text" list="logs" placeholder="Log Name" class="form-control">
                     <datalist id="logs">
-                        {% for log_name in all_logs[{{ server }}] %}
+                        {% for log_name in all_logs %}
                             <option value="{{ log_name }}">{{ log_name }}</option>
                         {% endfor %}
                     </datalist>
                 </div>
 
             <br>
-            <button class="btn btn-primary" type="submit" value="{{ all_logs[server][log_name]}}" style="float: left;">Submit</button>
+            <button class="btn btn-primary" type="submit" value="{{ all_logs[log_name] }}" style="float: left;">Submit</button>
             <br><br>
 
             <!-- If log is passed, render log. -->
