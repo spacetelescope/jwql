@@ -772,16 +772,21 @@ def log_view(request):
         log_name = None
         log_text = None
 
-    all_logs = {}
-    for server in ['ops', 'dev', 'test']:
-        full_log_paths = glob.glob(os.path.join(log_path, server, '*', '*'))
-        full_log_paths = [log for log in full_log_paths if not os.path.basename(log).startswith('.')]
-        log_dictionary = {os.path.basename(path): path for path in full_log_paths}
-        all_logs[server] = log_dictionary
+    full_uri = request.build_absolute_uri()
 
+    if 'dljwql' in full_uri:
+        server = 'dev'
+    elif 'tljwql' in full_uri:
+        server = 'test'
+    else:
+        server = 'ops'
+
+    full_log_paths = glob.glob(os.path.join(log_path, server, '*', '*'))
+    full_log_paths = [log for log in full_log_paths if not os.path.basename(log).startswith('.')]
+    log_dictionary = {os.path.basename(path): path for path in full_log_paths}
+    
     context = {'all_logs': all_logs,
-               'log_name': log_name,
-               'log_text': log_text}
+               'server': server}
 
     return render(request, template, context)
 
