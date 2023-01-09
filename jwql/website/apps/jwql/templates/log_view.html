@@ -24,24 +24,29 @@
 
             <!--LOG SELECT DROPDOWN-->
             <h4>Select JWQL Monitoring Log</h4>
-
-            <div class="col-6 mx-auto text-left mt-5">
-                <input type="text" list="logs" placeholder="Log Name" class="form-control">
-                <datalist id="logs">
-                    {% for log_name in all_logs["dev"] %}
-                        <option value="{{ all_logs['dev'][log_name] }}">{{ log_name }}</option>
-                    {% endfor %}
-                </datalist>
-
-                <select name="servers" id="servers">
-                    <option value="ops">Production</option>
-                    <option value="dev">Develop</option>
-                    <option value="test">Test</option>
-                </select>
+            
+            <div class="container">
+                <div class="row">
+                    <div class="col-xs-6">
+                        <input type="text" list="logs" placeholder="Log Name" class="form-control">
+                        <datalist id="logs">
+                            {% for log_name in all_logs["dev"] %}
+                                <option value="{{ log_name }}">{{ log_name }}</option>
+                            {% endfor %}
+                        </datalist>
+                    </div>
+                    <div class="col-xs-6">
+                        <select name="servers" id="servers">
+                            <option value="ops">Production</option>
+                            <option value="dev">Develop</option>
+                            <option value="test">Test</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <br>
-            <button class="btn btn-primary" type="submit" style="float: left;">Submit</button>
+            <button class="btn btn-primary" type="submit" value="{{ all_logs['dev'][log_name]}}" style="float: left;">Submit</button>
             <br><br>
 
             <!-- If log is passed, render log. -->
