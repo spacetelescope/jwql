@@ -25,6 +25,8 @@ import os
 from bokeh.embed import components
 from bokeh.layouts import layout
 from bokeh.models.widgets import Tabs, Panel
+from bokeh.plotting import figure, output_file
+import numpy as np
 
 from . import monitor_pages
 from jwql.utils.constants import BAD_PIXEL_TYPES, FULL_FRAME_APERTURES
@@ -34,6 +36,54 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
 PACKAGE_DIR = os.path.dirname(__location__.split('website')[0])
 REPO_DIR = os.path.split(PACKAGE_DIR)[0]
+
+
+def add_limit_boxes(fig, yellow=None, red=None):
+    """Add gree/yellow/red background colors
+
+    Parameters
+    ----------
+    fig : bokeh.plotting.figure
+        Bokeh figure of the telemetry values
+
+    yellow : tup
+        2-Tuple of (low, high) values. If provided, the areas of the plot less than <low>
+        and greater than <high> will be given a yellow background, to indicate an area
+        of concern.
+
+    red : tup
+        2-Tuple of (low, high) values. If provided, the areas of the plot less than <low>
+        and greater than <high> will be given a red background, to indicate values that
+        may indicate an error. It is assumed that the low value of red is less
+        than the low value of yellow, and that the high value of red is
+        greater than the high value of yellow.
+    """
+    if yellow is not None:
+        green = BoxAnnotation(bottom=yellow_limits[0], top=yellow_limits[1], fill_color='chartreuse', fill_alpha=0.2)
+        fig.add_layout(green)
+        if red is not None:
+            yellow_high = BoxAnnotation(bottom=yellow_limits[1], top=red_limits[1], fill_color='gold', fill_alpha=0.2)
+            fig.add_layout(yellow_high)
+            yellow_low = BoxAnnotation(bottom=red_limits[0], top=yellow_limits[0], fill_color='gold', fill_alpha=0.2)
+            fig.add_layout(yellow_low)
+            red_high = BoxAnnotation(bottom=red_limits[1], top=red_limits[1] + 100, fill_color='red', fill_alpha=0.1)
+            fig.add_layout(red_high)
+            red_low = BoxAnnotation(bottom=red_limits[0] - 100, top=red_limits[0], fill_color='red', fill_alpha=0.1)
+            fig.add_layout(red_low)
+        else:
+            yellow_high = BoxAnnotation(bottom=yellow_limits[1], top=yellow_limits[1] + 100, fill_color='gold', fill_alpha=0.2)
+            fig.add_layout(yellow_high)
+            yellow_low = BoxAnnotation(bottom=yellow_limits[0] - 100, top=yellow_limits[0], fill_color='gold', fill_alpha=0.2)
+            fig.add_layout(yellow_low)
+    else:
+        if red is not None:
+            green = BoxAnnotation(bottom=red_limits[0], top=red_limits[1], fill_color='chartreuse', fill_alpha=0.2)
+            fig.add_layout(green)
+            red_high = BoxAnnotation(bottom=red_limits[1], top=red_limits[1] + 100, fill_color='red', fill_alpha=0.1)
+            fig.add_layout(red_high)
+            red_low = BoxAnnotation(bottom=red_limits[0] - 100, top=red_limits[0], fill_color='red', fill_alpha=0.1)
+            fig.add_layout(red_low)
+    return fig
 
 
 def bad_pixel_monitor_tabs(instrument):
@@ -377,6 +427,88 @@ def dark_monitor_tabs(instrument):
     script, div = components(tabs)
 
     return div, script
+
+
+def edb_monitor_tabs(instrument):
+    """Creates the various tabs of the dark monitor results page.
+
+    Parameters
+    ----------
+    instrument : str
+        The JWST instrument of interest (e.g. ``nircam``).
+
+    Returns
+    -------
+    div : str
+        The HTML div to render dark monitor plots
+    script : str
+        The JS script to render dark monitor plots
+    """
+    html_file_list = file_list[instrument]
+    print('read in html files')
+
+
+def generic_telemetry_plot(times, values, name, nominal_value=None, yellow_limits=None,
+                           red_limits=None, save=True):
+    """Create a value versus time plot of a single telemetry mnemonic. Optionally
+    add background colors corresponding to good (green), warning (yellow), and red
+    (error) values.
+
+    Parameters
+    ----------
+    times : list
+        List of datetime instances
+
+    values : list
+        Telemetry values
+
+    name : str
+        Name of the telemetry mnemonic (e.g. 'SE_ZINRCICE1')
+
+    nominal_value : float
+        Optional expected value for the mnemonic. If provided, a horizontal dashed line
+        at this value will be added to the plot.
+
+    yellow_limits : tup
+        Tuple of (low, high) values. If provided, the areas of the plot less than <low>
+        and greater than <high> will be given a yellow background, to indicate an area
+        of concern.
+
+    red_limits : tup
+        Tuple of (low, high) values. If provided, the areas of the plot less than <low>
+        and greater than <high> will be given a red background, to indicate values that
+        may indicate an error. It is assumed that the low value of red_limits is less
+        than the low value of yellow_limits, and that the high value of red_limits is
+        greater than the high value of yellow_limits.
+
+    save : bool
+        If True, save the plot to an html file.
+
+    Returns
+    -------
+    fig : bokeh.plotting.figure
+        Telemetry plot object
+    """
+    if save:
+        output_file(f"telem_plot_{name}.html")
+
+    fig = figure(width=400, height=400, x_axis_label='Date', y_axis_label='Voltage',
+                 x_axis_type='datetime')
+    fig.circle(times, values, size=4, color='navy', alpha=0.5)
+
+    if nominal_value is not None:
+        fig.line(times, np.repeat(nominal_value, len(times)), line_dash='dashed')
+
+    fig.xaxis.formatter = DatetimeTickFormatter(hours=["%d %b %H:%M"],
+                                                days=["%d %b %H:%M"],
+                                                months=["%d %b %Y %H:%M"],
+                                                years=["%d %b %Y"],
+                                                )
+    fig.xaxis.major_label_orientation = np.pi / 4
+
+    fig = add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
+
+    return fig
 
 
 def readnoise_monitor_tabs(instrument):

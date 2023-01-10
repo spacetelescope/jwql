@@ -2,7 +2,7 @@
 ==================
 
 This document serves as a style guide for all `jwql` software development.  Any requested contribution to the `jwql` code repository should be checked against this guide, and any violation of the guide should be fixed before the code is committed to
-the `master` or `develop` branch.  Please refer to the accompanying [`example.py`](https://github.com/spacetelescope/jwql/blob/master/style_guide/example.py) script for a example code that abides by this style guide.
+the `master` or `develop` branch.  Please refer to the accompanying [`example.py`](https://github.com/spacetelescope/jwql/blob/master/style_guide/example.py) script for an example of code that abides by this style guide.
 
 Prerequisite Reading
 --------------------
@@ -42,7 +42,7 @@ The following items should never be committed in the `jwql` source code or GitHu
 
 If `jwql` code needs to be aware of this information, it should be stored in a configuration file that is not part of the `jwql` repository.
 
-Additionally, developers of this project should be mindful of application security risks, and should adhere to the [OWASP Top 10](https://www.owasp.org/images/7/72/OWASP_Top_10-2017_%28en%29.pdf.pdf) as best possible.
+Additionally, developers of this project should be mindful of application security risks, and should adhere to the [OWASP Top 10](https://www.owasp.org/images/7/72/OWASP_Top_10-2017_%28en%29.pdf.pdf) as well as possible.
 
 
 `jwql`-specific Code Standards
@@ -50,7 +50,7 @@ Additionally, developers of this project should be mindful of application securi
 
 `jwql` code shall adhere to the `PEP8` conventions save for the following exceptions:
 
- - Lines of code need not to be restricted to 79 characters.  However, it is encouraged to break up obnoxiously long lines into several lines if it benefits the overall readability of the code
+ - Lines of code need not be restricted to 79 characters.  However, it is encouraged to break up obnoxiously long lines into several lines if it benefits the overall readability of the code
 
  Additionally, the code shall adhere to the following special guidelines:
 
@@ -63,8 +63,8 @@ Additionally, developers of this project should be mindful of application securi
 
 `jwql` code shall adhere to the `PEP257` and `numpydoc` conventions.  The following are further recommendations:
 
-- Each module should have at minimum a description, `Authors` and `Use` section.
-- Each function/method should have at minimum a description, `Parameters` (if necessary), and `Returns` (if necessary) sections
+- Each module should have at minimum a description, and `Authors` and `Use` sections.
+- Each function/method should have at minimum a description, and `Parameters` (if necessary) and `Returns` (if necessary) sections.
 
 
 `jwql`-Specific Logging Standards
@@ -77,7 +77,7 @@ Additionally, developers of this project should be mindful of application securi
 
 To the extent possible, `jwql` shall define frequently-used variable types/values consistently. A list of adopted standards is provided below:
 
-- **JWST instrument names**: In all internal references and structures (e.g. dictionaries) instrument names shall be all lower-case strings, i.e. one of `fgs`, `miri`, `niriss`, `nircam`, `nirspec`. When variations are required for interfaces, e.g. `Nircam` for MAST, `NIRCam` or `NIRCAM` for SIAF, etc. these should be defined as dictionaries in [`jwql/utils/constants.py`](https://github.com/spacetelescope/jwql/blob/master/jwql/utils/constants.py) and imported from there.
+- **JWST instrument names**: In all internal references and structures (e.g. dictionaries) instrument names shall be all lower-case strings, e.g. one of `fgs`, `miri`, `niriss`, `nircam`, `nirspec`. When variations are required for interfaces, e.g. `Nircam` for MAST, `NIRCam` or `NIRCAM` for SIAF, etc. these should be defined as dictionaries in [`jwql/utils/constants.py`](https://github.com/spacetelescope/jwql/blob/master/jwql/utils/constants.py) and imported from there.
 
 - **Program/proposal identifiers**: JWST program IDs shall be stored and referred to internally as integers and parsed to strings only when needed. For example, the inputs `"001144"` and `"1144"` shall both be converted to an integer variable with value `1144`.
 

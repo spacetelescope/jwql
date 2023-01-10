@@ -4,6 +4,7 @@ Authors
 -------
 
     - Lauren Chambers
+    - Maria Pena-Guerrero
 
 Use
 ---
@@ -29,8 +30,10 @@ Dependencies
 
 import os
 
-from django.shortcuts import render
+from bokeh.resources import CDN, INLINE
 from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render
+import json
 
 from . import bokeh_containers
 from jwql.website.apps.jwql import bokeh_containers
@@ -40,7 +43,8 @@ from jwql.instrument_monitors.nirspec_monitors.ta_monitors import msata_monitor
 from jwql.instrument_monitors.nirspec_monitors.ta_monitors import wata_monitor
 from jwql.utils import monitor_utils
 
-FILESYSTEM_DIR = os.path.join(get_config()['jwql_dir'], 'filesystem')
+CONFIG = get_config()
+FILESYSTEM_DIR = os.path.join(CONFIG['jwql_dir'], 'filesystem')
 
 
 def bad_pixel_monitor(request, inst):
@@ -171,6 +175,42 @@ def dark_monitor(request, inst):
     return render(request, template, context)
 
 
+def edb_monitor(request, inst):
+    """Generate the EDB telemetry monitor page for a given instrument
+
+    Parameters
+    ----------
+    request : HttpRequest object
+        Incoming request from the webpage
+
+    inst : str
+        Name of JWST instrument
+
+    Returns
+    -------
+    HttpResponse object
+        Outgoing response sent to the webpage
+    """
+    inst = inst.lower()
+    plot_dir = os.path.join(CONFIG["outputs"], "edb_telemetry_monitor", inst)
+    json_file = f'edb_{inst}_tabbed_plots.json'
+
+    # Get the json data that contains the tabbed plots
+    with open(os.path.join(plot_dir, json_file), 'r') as fp:
+        data = json.dumps(json.loads(fp.read()))
+
+    template = "edb_monitor.html"
+
+    context = {
+        'inst': JWST_INSTRUMENT_NAMES_MIXEDCASE[inst],
+        'json_object': data,
+        'resources': CDN.render()
+    }
+
+    # Return a HTTP response with the template and dictionary of variables
+    return render(request, template, context)
+
+
 def readnoise_monitor(request, inst):
     """Generate the readnoise monitor page for a given instrument
 
@@ -243,7 +283,7 @@ def msata_monitoring_ajax(request):
         Outgoing response sent to the webpage
     """
     # run the monitor
-    module = 'msata_monitor.py'
+    module = 'msata_monitor'
     start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
     monitor = msata_monitor.MSATA()
     monitor.run()
@@ -294,7 +334,7 @@ def wata_monitoring_ajax(request):
         Outgoing response sent to the webpage
     """
     # run the monitor
-    module = 'wata_monitor.py'
+    module = 'wata_monitor'
     start_time, log_file = monitor_utils.initialize_instrument_monitor(module)
     monitor = wata_monitor.WATA()
     monitor.run()

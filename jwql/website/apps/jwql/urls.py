@@ -13,6 +13,7 @@ Authors
     - Matthew Bourque
     - Johannes Sahlmann
     - Teagan King
+    - Bryan Hilbert
     - Maria Pena-Guerrero
 
 Use
@@ -57,11 +58,7 @@ urlpatterns = [
     # Home
     path('', views.home, name='home'),
 
-    # MIRI-specific views
-    path('miri/miri_data_trending/', views.miri_data_trending, name='miri_data_trending'),
-
     # NIRSpec-specific views
-    path('nirspec/nirspec_data_trending/', views.nirspec_data_trending, name='nirspec_data_trending'),
     path('nirspec/msata_monitor/', monitor_views.msata_monitoring, name='msata_monitor'),
     path('nirspec/wata_monitor/', monitor_views.wata_monitoring, name='wata_monitor'),
 
@@ -70,6 +67,7 @@ urlpatterns = [
     re_path(r'^(?P<inst>({}))/bad_pixel_monitor/$'.format(instruments), monitor_views.bad_pixel_monitor, name='bad_pixel_monitor'),
     re_path(r'^(?P<inst>({}))/bias_monitor/$'.format(instruments), monitor_views.bias_monitor, name='bias_monitor'),
     re_path(r'^(?P<inst>({}))/readnoise_monitor/$'.format(instruments), monitor_views.readnoise_monitor, name='readnoise_monitor'),
+    re_path(r'^(?P<inst>({}))/edb_monitor/$'.format(instruments), monitor_views.edb_monitor, name='edb_monitor'),
     re_path(r'^(?P<inst>({}))/cosmic_ray_monitor/$'.format(instruments), monitor_views.cosmic_ray_monitor, name='cosmic_ray_monitor'),
 
     # Main site views
@@ -84,6 +82,7 @@ urlpatterns = [
     path('query_submit/', views.query_submit, name='query_submit'),
     re_path(r'^(?P<inst>({}))/$'.format(instruments), views.instrument, name='instrument'),
     re_path(r'^(?P<inst>({}))/archive/$'.format(instruments), views.archived_proposals, name='archive'),
+    re_path(r'^(?P<inst>({}))/archive_date_range/$'.format(instruments), views.archive_date_range, name='archive_date_range'),
     re_path(r'^(?P<inst>({}))/unlooked/$'.format(instruments), views.unlooked_images, name='unlooked'),
     re_path(r'^(?P<inst>({}))/(?P<file_root>[\w-]+)/$'.format(instruments), views.view_image, name='view_image'),
     re_path(r'^(?P<inst>({}))/(?P<file_root>.+)_(?P<filetype>.+)/explore_image/'.format(instruments), views.explore_image, name='explore_image'),
@@ -96,6 +95,10 @@ urlpatterns = [
     re_path(r'^ajax/(?P<inst>({}))/(?P<file_root>.+)_(?P<filetype>.+)/explore_image/$'.format(instruments), views.explore_image_ajax, name='explore_image_ajax'),
     re_path(r'^ajax/(?P<inst>({}))/(?P<file_root>.+)_(?P<filetype>.+)/explore_image/scaling_(?P<scaling>.+)/low_(?P<low_lim>.+)/high_(?P<high_lim>.+)/ext_(?P<ext_name>.+)/int1_(?P<int1_nr>.+)/grp1_(?P<grp1_nr>.+)/int2_(?P<int2_nr>.+)/grp2_(?P<grp2_nr>.+)/$'.format(instruments), views.explore_image_ajax, name='explore_image_ajax'),
     re_path(r'^ajax/(?P<inst>({}))/archive/(?P<proposal>[\d]{{1,5}})/obs(?P<observation>[\d]{{1,3}})/$'.format(instruments), views.archive_thumbnails_ajax, name='archive_thumb_ajax'),
+    re_path(r'^ajax/viewed/(?P<file_root>.+)/$', views.toggle_viewed_ajax, name='toggle_viewed_ajax'),
+    re_path(r'^ajax/(?P<inst>({}))/archive_date_range/start_date_(?P<start_date>.+)/stop_date_(?P<stop_date>.+)/$'.format(instruments), views.archive_date_range_ajax, name='archive_date_range_ajax'),
+    re_path(r'^ajax/image_sort/$', views.save_image_sort_ajax, name='save_image_sort_ajax'),
+    re_path(r'^ajax/navigate_filter/$', views.save_page_navigation_data_ajax, name='save_page_navigation_data_ajax'),
     re_path('ajax/nirspec/msata/', monitor_views.msata_monitoring_ajax, name='msata_ajax'),
     re_path('ajax/nirspec/wata/', monitor_views.wata_monitoring_ajax, name='wata_ajax'),
 

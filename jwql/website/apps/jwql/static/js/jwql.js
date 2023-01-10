@@ -23,7 +23,7 @@
  *                                filetype.
  * @param {String} inst - The instrument for the given file
  */
-  function change_filetype(type, file_root, num_ints, available_ints, total_ints, inst) {
+ function change_filetype(type, file_root, num_ints, available_ints, total_ints, inst) {
 
     // Change the radio button to check the right filetype
     document.getElementById(type).checked = true;
@@ -312,6 +312,30 @@ function explore_image_update_enable_options(integrations, groups) {
     
 }
 
+
+/**
+ * getCookie
+ *      taken from https://docs.djangoproject.com/en/4.1/howto/csrf/
+ * @param {String} name - The name of the cookie element you want to extract
+ * @returns value - value of the extracted cookie element
+ */
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
 /**
  * get_radio_button_value
  * @param {String} element_name - The name of the radio buttons
@@ -351,6 +375,18 @@ function image_error(image, makeThumbnail=false) {
     }
     return true;
 }
+
+
+/**
+ * Parse a JSON string containing a Bokeh plot
+ * @param {String} element - json-formatted string
+ */
+function parse_plot_json(element) {
+    // Determine if the URL is 'archive' or 'unlooked'
+    var formatted = Object;
+    formatted = JSON.parse(element)
+};
+
 
 
 /**
@@ -396,21 +432,19 @@ function search() {
 
 /**
  * Limit the displayed thumbnails based on filter criteria
- * @param {String} filter_type - The filter type.  Currently only "sort" is supported.
+ * @param {String} filter_type - The filter type.
  * @param {Integer} value - The filter value
  * @param {List} dropdown_keys - A list of dropdown menu keys
  * @param {Integer} num_fileids - The number of files that are available to display
+ * @param {String} thumbnail_class - The class name of the thumbnails that will be filtered.
  */
-function show_only(filter_type, value, dropdown_keys, num_fileids) {
+function show_only(filter_type, value, dropdown_keys, num_fileids, thumbnail_class, find_substring, base_url) {
 
     // Get all filter options from {{dropdown_menus}} variable
     var all_filters = dropdown_keys.split(',');
 
     // Update dropdown menu text
     document.getElementById(filter_type + '_dropdownMenuButton').innerHTML = value;
-
-    // Find all thumbnail elements
-    var thumbnails = document.getElementsByClassName("thumbnail");
 
     // Determine the current value for each filter
     var filter_values = [];
@@ -419,13 +453,21 @@ function show_only(filter_type, value, dropdown_keys, num_fileids) {
         filter_values.push(filter_value);
     }
 
+
+    // Find all thumbnail elements
+    var thumbnails = document.getElementsByClassName(thumbnail_class);
+
     // Determine whether or not to display each thumbnail
     var num_thumbnails_displayed = 0;
+    var list_of_rootnames = "";
     for (i = 0; i < thumbnails.length; i++) {
         // Evaluate if the thumbnail meets all filter criteria
         var criteria = [];
         for (j = 0; j < all_filters.length; j++) {
-            var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0) || (thumbnails[i].getAttribute(all_filters[j]) == filter_values[j]);
+            var filter_attribute = thumbnails[i].getAttribute(all_filters[j])
+            var criterion = (filter_values[j].indexOf('All '+ all_filters[j] + 's') >=0) 
+                         || (filter_attribute == filter_values[j])
+                         || (find_substring && filter_attribute.includes(filter_values[j]));
             criteria.push(criterion);
         };
 
@@ -433,20 +475,38 @@ function show_only(filter_type, value, dropdown_keys, num_fileids) {
         if (criteria.every(function(r){return r})) {
             thumbnails[i].style.display = "inline-block";
             num_thumbnails_displayed++;
+            list_of_rootnames = list_of_rootnames + thumbnails[i].getAttribute("file_root") + '=' + thumbnails[i].getAttribute("exp_start") + ',';
         } else {
             thumbnails[i].style.display = "none";
         }
     };
-
-    // If there are no thumbnails to display, tell the user
-    if (num_thumbnails_displayed == 0) {
-        document.getElementById('no_thumbnails_msg').style.display = 'inline-block';
-    } else {
-        document.getElementById('no_thumbnails_msg').style.display = 'none';
-    };
+    if (document.getElementById('no_thumbnails_msg') != null) {
+        // If there are no thumbnails to display, tell the user
+        if (num_thumbnails_displayed == 0) {
+            document.getElementById('no_thumbnails_msg').style.display = 'inline-block';
+        } else {
+            document.getElementById('no_thumbnails_msg').style.display = 'none';
+        };
+    }
 
     // Update the count of how many images are being shown
     document.getElementById('img_show_count').innerHTML = 'Showing ' + num_thumbnails_displayed + '/' + num_fileids + ' activities'
+    if (num_thumbnails_displayed) {
+        // remove trailing ','.
+        list_of_rootnames = list_of_rootnames.slice(0, -1);
+        const csrftoken = getCookie('csrftoken');
+        $.ajax({
+            type: 'POST',
+            url: base_url + '/ajax/navigate_filter/',
+            headers: { "X-CSRFToken": csrftoken },
+            data:{
+                'navigate_dict': list_of_rootnames
+            },
+            error : function(response) {
+                console.log("navigate_filter update failed");
+            }
+        });
+    }
 };
 
 
@@ -464,29 +524,78 @@ function sort_by_proposals(sort_type) {
         tinysort(props, {order:'asc'});
     } else if (sort_type == 'Descending') {
         tinysort(props, {order:'desc'});
+    } else if (sort_type == 'Recent') {
+        // Sort by the most recent Observation Start
+        tinysort(props, {order:'desc', attr:'obs_time'});
     }
 };
 
 
 /**
- * Sort thumbnail display by a given sort type
- * @param {String} sort_type - The sort type (e.g. file_root", "exp_start")
+ * Sort thumbnail display by a given sort type, save sort type in session for use in previous/next buttons
+ * @param {String} sort_type - The sort type by file name
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
  */
-function sort_by_thumbnails(sort_type) {
+function sort_by_thumbnails(sort_type, base_url) {
 
     // Update dropdown menu text
     document.getElementById('sort_dropdownMenuButton').innerHTML = sort_type;
 
-    // Sort the thumbnails accordingly
+    // Sort the thumbnails accordingly.  
+    // Note: Because thumbnails will sort relating to their current order (when the exp_start is the same between thumbnails), we need to do multiple sorts to guarantee consistency.
+
     var thumbs = $('div#thumbnail-array>div')
-    if (sort_type == 'Name') {
-        tinysort(thumbs, {attr:'file_root'});
-    } else if (sort_type == 'Default') {
-        tinysort(thumbs, {selector: 'img', attr:'id'});
-    } else if (sort_type == 'Exposure Start Time') {
-        tinysort(thumbs, {attr:'exp_start'});
+    if (sort_type == 'Descending') {
+        tinysort(thumbs, {attr:'file_root', order:'desc'});
+    } else if (sort_type == 'Recent') {
+        tinysort(thumbs, {attr:'exp_start', order:'desc'}, {attr:'file_root', order:'asc'});
+    } else if (sort_type == 'Oldest') {
+        tinysort(thumbs, {attr:'exp_start', order:'asc'}, {attr:'file_root', order:'asc'});
+    } else {
+        // Default to 'Ascending'
+        tinysort(thumbs, {attr:'file_root', order:'asc'});
     }
+    $.ajax({
+        url: base_url + '/ajax/image_sort/',
+        data: {
+            'sort_type': sort_type
+        },
+        error : function(response) {
+            console.log("session image sort update failed");
+        }
+    });
 };
+
+
+/**
+ * Toggle a viewed button when pressed.  
+ * Ajax call to update RootFileInfo model with toggled value
+ * 
+ * @param {String} file_root - The rootname of the file corresponding to the thumbnail
+ * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ */
+function toggle_viewed(file_root, base_url) {
+    // Toggle the button immediately so user insn't confused (ajax result will confirm choice or fix on failure)
+    var elem = document.getElementById("viewed");
+    update_viewed_button(elem.value == "New" ? true : false);
+    elem.disabled=true;
+    
+    // Ajax Call to update RootFileInfo model with "viewed" info
+    $.ajax({
+        url: base_url + '/ajax/viewed/' + file_root,
+        success: function(data){
+            // Update button with actual value (paranoia update, should not yield visible change)
+            update_viewed_button(data["marked_viewed"]);
+            elem.disabled=false;
+        },
+        error : function(response) {
+            // If update fails put button back to original state
+            update_viewed_button(elem.value == "New" ? false : true);
+            elem.disabled=false;
+
+        }
+    });
+}
 
 
 /**
@@ -502,6 +611,7 @@ function update_archive_page(inst, base_url) {
             // Update the number of proposals displayed
             num_proposals = data.thumbnails.proposals.length;
             update_show_count(num_proposals, 'proposals')
+            update_filter_options(data, base_url, num_proposals, 'proposal');
 
             // Add content to the proposal array div
             for (var i = 0; i < data.thumbnails.proposals.length; i++) {
@@ -511,9 +621,12 @@ function update_archive_page(inst, base_url) {
                 min_obsnum = data.min_obsnum[i];
                 thumb = data.thumbnails.thumbnail_paths[i];
                 n = data.thumbnails.num_files[i];
+                viewed = data.thumbnails.viewed[i];
+                exp_types = data.thumbnails.exp_types[i];
+                obs_time = data.thumbnails.obs_time[i];
 
                 // Build div content
-                content = '<div class="proposal text-center">';
+                content = '<div class="proposal text-center" look="' + viewed + '" exp_type="' + exp_types + '" obs_time="' + obs_time + '">';
                 content += '<a href="/' + inst + '/archive/' + prop + '/obs' + min_obsnum + '/" id="proposal' + (i + 1) + '" proposal="' + prop + '"';
                 content += '<span class="helper"></span>'
                 content += '<img src="/static/thumbnails/' + thumb + '" alt="" title="Thumbnail for ' + prop + '" width=100%>';
@@ -659,18 +772,29 @@ function update_wata_page(base_url) {
     });
 };
 
+
 /**
  * Updates the thumbnail-filter div with filter options
  * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ * @param {Integer} num_items - The total number of items that will be filtered upon
+ * @param {String} thumbnail_class - the class name of the thumbnails that will be filtered
  */
-function update_filter_options(data) {
+ function update_filter_options(data, base_url, num_items, thumbnail_class) {
     content = 'Filter by:'
+
     for (var i = 0; i < Object.keys(data.dropdown_menus).length; i++) {
         // Parse out useful variables
         filter_type = Object.keys(data.dropdown_menus)[i];
         filter_options = Array.from(new Set(data.dropdown_menus[filter_type]));
-        num_rootnames = Object.keys(data.file_data).length;
+        num_rootnames = num_items;
         dropdown_key_list = Object.keys(data.dropdown_menus);
+        
+        if (filter_type == "exp_type") {
+            // Any filters where there may be a list as a string for the attribute to filter on
+            find_substring = true;
+        } else {
+            find_substring = false;
+        } 
 
         // Build div content
         content += '<div style="display: flex">';
@@ -678,10 +802,10 @@ function update_filter_options(data) {
         content += '<div class="dropdown">';
         content += '<button class="btn btn-primary dropdown-toggle" type="button" id="' + filter_type + '_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> All ' + filter_type + 's </button>';
         content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
-        content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'All ' + filter_type + 's\', \'' + dropdown_key_list + '\',\'' + num_rootnames + '\');">All ' + filter_type + 's</a>';
+        content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'All ' + filter_type + 's\', \'' + dropdown_key_list + '\',\'' + num_rootnames + '\',\'' + thumbnail_class + '\',\'' + find_substring + '\',\'' + base_url + '\');">All ' + filter_type + 's</a>';
 
         for (var j = 0; j < filter_options.length; j++) {
-            content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + dropdown_key_list + '\', \'' + num_rootnames + '\');">' + filter_options[j] + '</a>';
+            content += '<a class="dropdown-item" href="#" onclick="show_only(\'' + filter_type + '\', \'' + filter_options[j] + '\', \'' + dropdown_key_list + '\', \'' + num_rootnames + '\',\'' + thumbnail_class + '\',\'' + find_substring + '\',\'' + base_url + '\');">' + filter_options[j] + '</a>';
         };
 
         content += '</div>';
@@ -691,6 +815,7 @@ function update_filter_options(data) {
     // Add the content to the div
     $("#thumbnail-filter")[0].innerHTML = content;
 };
+
 
 /**
  * Change the header extension displayed
@@ -722,11 +847,11 @@ function update_header_display(extension, num_extensions) {
  * @param {String} prop - Proposal ID
  * @param {List} obslist - List of observation number strings
  */
-function update_obs_options(data, inst, prop, obslist) {
+function update_obs_options(data, inst, prop, observation) {
     // Build div content
     content = 'Available observations:';
     content += '<div class="dropdown">';
-    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="obs_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Obs Nums</button>';
+    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="obs_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Obs' + observation + '</button>';
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
     for (var i = 0; i < data.obs_list.length; i++) {
         content += '<a class="dropdown-item" href="/' + inst + '/archive/' + prop + '/obs' + data.obs_list[i] + '/" > Obs' + data.obs_list[i] + '</a>';
@@ -753,16 +878,17 @@ function update_show_count(count, type) {
  * Updates the thumbnail-sort div with sorting options
  * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
  */
-function update_sort_options(data) {
+function update_sort_options(data, base_url) {
 
     // Build div content
     content = 'Sort by:';
     content += '<div class="dropdown">';
-    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Default</button>';
+    content += '<button class="btn btn-primary dropdown-toggle" type="button" id="sort_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + data.thumbnail_sort + '</button>';
     content += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
-    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Default\');">Default</a>';
-    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Name\');">Name</a>';
-    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Exposure Start Time\');">Exposure Start Time</a>';
+    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Ascending\', \'' + base_url + '\');">Ascending</a>';
+    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Descending\', \'' + base_url + '\');">Descending</a>';
+    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Recent\', \'' + base_url + '\');">Recent</a>';
+    content += '<a class="dropdown-item" href="#" onclick="sort_by_thumbnails(\'Oldest\', \'' + base_url + '\');">Oldest</a>';
     content += '</div></div>';
 
     // Add the content to the div
@@ -771,24 +897,26 @@ function update_sort_options(data) {
 
 /**
  * Updates the thumbnail-array div with interactive images of thumbnails
- * @param {Object} data - The data returned by the update_thumbnails_page AJAX method
+ * @param {Object} data - The data returned by the update_thumbnails_per_observation_page/update_thumbnails_query_page AJAX methods
  */
 function update_thumbnail_array(data) {
 
       // Add content to the thumbail array div
     for (var i = 0; i < Object.keys(data.file_data).length; i++) {
-
+        
         // Parse out useful variables
         rootname = Object.keys(data.file_data)[i];
         file = data.file_data[rootname];
+        viewed = file.viewed;
+        exp_type = file.exp_type;
         filename_dict = file.filename_dict;
 
         // Build div content
         if (data.inst!="all") {
-            content = '<div class="thumbnail" instrument = ' + data.inst + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
+            content = '<div class="thumbnail" instrument = ' + data.inst + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '" look="' + viewed + '" exp_type="' + exp_type + '">';
             content += '<a href="/' + data.inst + '/' + rootname + '/">';
         } else {
-            content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '">';
+            content = '<div class="thumbnail" instrument = ' +filename_dict.instrument + ' detector="' + filename_dict.detector + '" proposal="' + filename_dict.program_id + '" file_root="' + rootname + '", exp_start="' + file.expstart + '" look="' + viewed + '" exp_type="' + exp_type + '">';
             content += '<a href="/' + filename_dict.instrument + '/' + rootname + '/">';
         }
         content += '<span class="helper"></span><img id="thumbnail' + i + '" onerror="image_error(this);">';
@@ -809,27 +937,66 @@ function update_thumbnail_array(data) {
     };
 };
 
-/**
- * Updates various compnents on the thumbnails page
- * @param {String} inst - The instrument of interest (e.g. "FGS")
- * @param {String} proposal - The proposal number of interest (e.g. "88660")
- * @param {String} base_url - The base URL for gathering data from the AJAX view.
- */
-function update_thumbnails_page(inst, proposal, base_url) {
-    $.ajax({
-        url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/',
-        success: function(data){
-            // Perform various updates to divs
-            update_show_count(Object.keys(data.file_data).length, 'activities');
-            update_thumbnail_array(data);
-            update_filter_options(data);
-            update_sort_options(data);
+function submit_date_range_form(inst, base_url) {
 
-            // Replace loading screen with the proposal array div
-            document.getElementById("loading").style.display = "none";
-            document.getElementById("thumbnail-array").style.display = "block";
-        }});
+    start_date = document.getElementById("start_date_range").value;
+    stop_date = document.getElementById("stop_date_range").value;
+
+    if (!start_date) {
+        alert("You must enter a Start Date/Time");
+    }  else if (!stop_date) {
+        alert("You must enter a Stop Date/Time");
+    } else if (start_date >= stop_date) {
+        alert("Start Time must be earlier than Stop Time");
+    } else {
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("thumbnail-array").style.display = "none";
+        document.getElementById("no_thumbnails_msg").style.display = "none";
+        $.ajax({
+            url: base_url + '/ajax/' + inst + '/archive_date_range/start_date_' + start_date + '/stop_date_' + stop_date,
+            success: function(data){
+                var show_thumbs = true;
+                num_thumbnails = Object.keys(data.file_data).length;
+                // verify we want to continue with results
+                if (num_thumbnails > 1000) {
+                    show_thumbs = false;
+                    alert("Returning " + num_thumbnails + " images reduce your date/time range for page to load correctly");
+                }
+                if (show_thumbs) {
+                    // Handle DIV updates
+                    // Clear our existing array
+                    $("#thumbnail-array")[0].innerHTML = "";
+                    if (num_thumbnails > 0) {
+                        update_show_count(num_thumbnails, 'activities');
+                        update_thumbnail_array(data);
+                        update_filter_options(data, base_url, num_thumbnails, 'thumbnail');
+                        // Do initial sort to match sort button display
+                        update_sort_options(data, base_url);
+                        sort_by_thumbnails(data.thumbnail_sort, base_url);
+                        // Replace loading screen with the proposal array div
+                        document.getElementById("loading").style.display = "none";
+                        document.getElementById("thumbnail-array").style.display = "block";
+                        document.getElementById("no_thumbnails_msg").style.display = "none";
+                    } else {
+                        show_thumbs = false;
+                    }
+                } 
+                if (!show_thumbs) {
+                    document.getElementById("loading").style.display = "none";
+                    document.getElementById("no_thumbnails_msg").style.display = "inline-block";
+                }
+
+            },
+            error : function(response) {
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("thumbnail-array").style.display = "none";
+                document.getElementById("no_thumbnails_msg").style.display = "inline-block";
+    
+            }
+        });
+    }
 };
+
 
 /**
  * Updates various compnents on the thumbnails page
@@ -838,17 +1005,22 @@ function update_thumbnails_page(inst, proposal, base_url) {
  * @param {String} observation - The observation number within the proposal (e.g. "001")
  * @param {List} observation_list - List of all observations in this proposal
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
+ * @param {String} sort - Sort method string saved in session data image_sort
  */
-function update_thumbnails_per_observation_page(inst, proposal, observation, observation_list, base_url) {
+function update_thumbnails_per_observation_page(inst, proposal, observation, observation_list, base_url, sort) {
     $.ajax({
         url: base_url + '/ajax/' + inst + '/archive/' + proposal + '/obs' + observation + '/',
         success: function(data){
             // Perform various updates to divs
-            update_show_count(Object.keys(data.file_data).length, 'activities');
+            num_thumbnails = Object.keys(data.file_data).length;
+            update_show_count(num_thumbnails, 'activities');
             update_thumbnail_array(data);
-            update_obs_options(data, inst, proposal);
-            update_filter_options(data);
-            update_sort_options(data);
+            update_obs_options(data, inst, proposal, observation);
+            update_filter_options(data, base_url, num_thumbnails, 'thumbnail');
+            update_sort_options(data, base_url);
+
+            // Do initial sort to match sort button display
+            sort_by_thumbnails(sort, base_url);
 
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
@@ -859,22 +1031,38 @@ function update_thumbnails_per_observation_page(inst, proposal, observation, obs
 /**
  * Updates various components on the thumbnails anomaly query page
  * @param {String} base_url - The base URL for gathering data from the AJAX view.
- * @param {List} rootnames
+ * @param {String} sort - Sort method string saved in session data image_sort
  */
-function update_thumbnails_query_page(base_url) {
+function update_thumbnails_query_page(base_url, sort) {
     $.ajax({
         url: base_url + '/ajax/query_submit/',
         success: function(data){
             // Perform various updates to divs
-            update_show_count(Object.keys(data.file_data).length, 'activities');
+            num_thumbnails = Object.keys(data.file_data).length;
+            update_show_count(num_thumbnails, 'activities');
             update_thumbnail_array(data);
-            update_filter_options(data);
-            update_sort_options(data);
+            update_filter_options(data, base_url, num_thumbnails, 'thumbnail');
+            update_sort_options(data, base_url);
+
+            // Do initial sort to match sort button display
+            sort_by_thumbnails(sort, base_url);
+
             // Replace loading screen with the proposal array div
             document.getElementById("loading").style.display = "none";
             document.getElementById("thumbnail-array").style.display = "block";
         }});
 };
+
+function update_viewed_button(viewed) {
+    var elem = document.getElementById("viewed");
+    if (viewed) {
+        elem.classList.add("btn-outline-primary")
+        elem.value = "Viewed";
+    } else {
+        elem.classList.remove("btn-outline-primary")
+        elem.value = "New";
+    }
+}
 
 /**
  * Construct the URL corresponding to a specific GitHub release

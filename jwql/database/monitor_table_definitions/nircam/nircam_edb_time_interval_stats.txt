@@ -1,0 +1,9 @@
+MNEMONIC, string
+LATEST_QUERY, datetime
+TIMES, datetime_array_1d
+DATA, float_array_1d
+STDEV, float_array_1d
+MEDIAN, float_array_1d
+MAX, float_array_1d
+MIN, float_array_1d
+ENTRY_DATE, datetime

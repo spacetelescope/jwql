@@ -31,6 +31,7 @@ from operator import getitem
 import os
 import re
 import tempfile
+import logging
 
 from astropy.io import fits
 from astropy.time import Time
@@ -46,12 +47,10 @@ import requests
 from jwql.database import database_interface as di
 from jwql.database.database_interface import load_connection
 from jwql.edb.engineering_database import get_mnemonic, get_mnemonic_info, mnemonic_inventory
-from jwql.instrument_monitors.miri_monitors.data_trending import dashboard as miri_dash
-from jwql.instrument_monitors.nirspec_monitors.data_trending import dashboard as nirspec_dash
 from jwql.utils.utils import check_config_for_key, ensure_dir_exists, filesystem_path, filename_parser, get_config
-from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE
-from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_SHORTHAND, SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS
+from jwql.utils.constants import MAST_QUERY_LIMIT, MONITORS, PREVIEW_IMAGE_LISTFILE, THUMBNAIL_LISTFILE, THUMBNAIL_FILTER_LOOK
+from jwql.utils.constants import IGNORED_SUFFIXES, INSTRUMENT_SERVICE_MATCH, JWST_INSTRUMENT_NAMES_MIXEDCASE, JWST_INSTRUMENT_NAMES
+from jwql.utils.constants import SUFFIXES_TO_ADD_ASSOCIATION, SUFFIXES_WITH_AVERAGED_INTS
 from jwql.utils.credentials import get_mast_token
 from jwql.utils.utils import get_rootnames_for_instrument_proposal
 from .forms import InstrumentAnomalySubmitForm
@@ -72,6 +71,7 @@ if 'READTHEDOCS' in os.environ:
 
 if not ON_GITHUB_ACTIONS and not ON_READTHEDOCS:
     from .forms import MnemonicSearchForm, MnemonicQueryForm, MnemonicExplorationForm
+    from jwql.website.apps.jwql.models import RootFileInfo
     check_config_for_key('auth_mast')
     configs = get_config()
     auth_mast = configs['auth_mast']
@@ -137,38 +137,6 @@ def build_table(tablename):
 
     session.close()
     return table_meta_data
-
-
-def data_trending():
-    """Container for Miri datatrending dashboard and components
-
-    Returns
-    -------
-    variables : int
-        nonsense
-    dashboard : list
-        A list containing the JavaScript and HTML content for the
-        dashboard
-    """
-    dashboard, variables = miri_dash.data_trending_dashboard()
-
-    return variables, dashboard
-
-
-def nirspec_trending():
-    """Container for NIRSpec datatrending dashboard and components
-
-    Returns
-    -------
-    variables : int
-        nonsense
-    dashboard : list
-        A list containing the JavaScript and HTML content for the
-        dashboard
-    """
-    dashboard, variables = nirspec_dash.data_trending_dashboard()
-
-    return variables, dashboard
 
 
 def get_acknowledgements():
@@ -418,7 +386,7 @@ def get_edb_components(request):
                         comments.append(' ')
                         result_table.write(path_for_download, format='ascii.fixed_width',
                                            overwrite=True, delimiter=',', bookend=False)
-                        mnemonic_query_result.file_for_download = file_for_download
+                        mnemonic_query_result.file_for_download = path_for_download
 
             # create forms for search fields not clicked
             mnemonic_name_search_form = MnemonicSearchForm(prefix='mnemonic_name_search')
@@ -467,7 +435,7 @@ def get_edb_components(request):
                 path_for_download = os.path.join(static_dir, file_for_download)
                 display_table.write(path_for_download, format='ascii.fixed_width',
                                     overwrite=True, delimiter=',', bookend=False)
-                mnemonic_exploration_result.file_for_download = file_for_download
+                mnemonic_exploration_result.file_for_download = path_for_download
 
                 if mnemonic_exploration_result.n_rows == 0:
                     mnemonic_exploration_result = 'empty'
@@ -1083,10 +1051,8 @@ def get_thumbnails_all_instruments(parameters):
 
         inst_filenames = [result['filename'].split('.')[0] for result in results]
         inst_filenames = [filename for filename in inst_filenames if os.path.splitext(filename).split('_')[-1] not in IGNORED_SUFFIXES]
-        filenames.extend(inst_filenames)
 
         # Get list of all thumbnails
-        thumbnail_list_file = f"{THUMBNAIL_LISTFILE}_{inst.lower()}.txt"
         thumbnail_inst_list = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, THUMBNAIL_LISTFILE))
 
         # Get subset of thumbnail images that match the filenames
@@ -1119,6 +1085,43 @@ def get_thumbnails_all_instruments(parameters):
         final_subset = thumbnails_subset
 
     return list(set(final_subset))
+
+
+def get_thumbnails_by_instrument(inst):
+    """Return a list of thumbnails available in the filesystem for the
+    given instrument.
+
+    Parameters
+    ----------
+    inst : str
+        The instrument of interest (e.g. ``NIRCam``).
+
+    Returns
+    -------
+    preview_images : list
+        A list of thumbnails available in the filesystem for the
+        given instrument.
+    """
+    # Get list of all thumbnails
+    thumb_inventory = f'{THUMBNAIL_LISTFILE}_{inst.lower()}.txt'
+    all_thumbnails = retrieve_filelist(os.path.join(THUMBNAIL_FILESYSTEM, thumb_inventory))
+
+    thumbnails = []
+    all_proposals = get_instrument_proposals(inst)
+    for proposal in all_proposals:
+        results = mast_query_filenames_by_instrument(inst, proposal)
+
+        # Parse the results to get the rootnames
+        filenames = [result['filename'].split('.')[0] for result in results]
+
+        if len(filenames) > 0:
+            # Get subset of preview images that match the filenames
+            prop_thumbnails = [os.path.basename(item) for item in all_thumbnails if
+                               os.path.basename(item).split('_integ')[0] in filenames]
+
+            thumbnails.extend(prop_thumbnails)
+
+    return thumbnails
 
 
 def get_thumbnails_by_proposal(proposal):
@@ -1374,8 +1377,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     obs_list = sorted(list(set(all_obs)))
 
     # Get the available files for the instrument
-    filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart'])
-
+    filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart', 'exp_type'])
     # Get set of unique rootnames
     rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
 
@@ -1383,6 +1385,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     data_dict = {}
     data_dict['inst'] = inst
     data_dict['file_data'] = {}
+    exp_types = []
 
     # Gather data for each rootname, and construct a list of all observations
     # in the proposal
@@ -1415,11 +1418,23 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
         # rootname will have the same exposure start time, so just keep the first.
         available_files = [item for item in filenames if rootname in item]
         exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
+        exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
+        exp_types.append(exp_type)
+        # Viewed is stored by rootname in the Model db.  Save it with the data_dict
+        # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
+        try:
+            root_file_info = RootFileInfo.objects.get(root_name=rootname)
+            viewed = THUMBNAIL_FILTER_LOOK[root_file_info.viewed]
+        except RootFileInfo.DoesNotExist:
+
+            viewed = THUMBNAIL_FILTER_LOOK[0]
 
         # Add data to dictionary
         data_dict['file_data'][rootname] = {}
         data_dict['file_data'][rootname]['filename_dict'] = filename_dict
         data_dict['file_data'][rootname]['available_files'] = available_files
+        data_dict['file_data'][rootname]["viewed"] = viewed
+        data_dict['file_data'][rootname]["exp_type"] = exp_type
 
         # We generate thumbnails only for rate and dark files. Check if these files
         # exist in the thumbnail filesystem. In the case where neither rate nor
@@ -1443,7 +1458,7 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
         except (ValueError, TypeError) as e:
             logging.warning("Unable to populate exp_start info for {}".format(rootname))
-            loggin.warning(e)
+            logging.warning(e)
         except KeyError:
             print("KeyError with get_expstart for {}".format(rootname))
 
@@ -1458,10 +1473,14 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
             pass
 
     if proposal is not None:
-        dropdown_menus = {'detector': sorted(detectors)}
+        dropdown_menus = {'detector': sorted(detectors),
+                          'look': THUMBNAIL_FILTER_LOOK,
+                          'exp_type': sorted(set(exp_types))}
     else:
         dropdown_menus = {'detector': sorted(detectors),
-                          'proposal': sorted(proposals)}
+                          'proposal': sorted(proposals),
+                          'look': THUMBNAIL_FILTER_LOOK,
+                          'exp_type': sorted(set(exp_types))}
 
     data_dict['tools'] = MONITORS
     data_dict['dropdown_menus'] = dropdown_menus
@@ -1476,6 +1495,138 @@ def thumbnails_ajax(inst, proposal, obs_num=None):
     # Add list of observation numbers
     data_dict['obs_list'] = obs_list
 
+    return data_dict
+
+
+def thumbnails_date_range_ajax(inst, observations, inclusive_start_time_mjd, exclusive_stop_time_mjd):
+    """Generate a page that provides data necessary to render thumbnails for 
+    ``archive_date_range`` template.
+
+    Parameters
+    ----------
+    inst : str
+        Name of JWST instrument
+    observations: list
+        observation models to use to get filenames
+    inclusive_start_time_mjd : float
+        Start time in mjd format for date range
+    exclusive_stop_time_mjd : float
+        Stop time in mjd format for date range
+
+    Returns
+    -------
+    data_dict : dict
+        Dictionary of data needed for the ``thumbnails`` template
+    """
+
+    data_dict = {}
+    data_dict['inst'] = inst
+    data_dict['file_data'] = {}
+    exp_types = []
+    # Get the available files for the instrument
+    for observation in observations:
+        obs_num = observation.obsnum
+        proposal = observation.proposal.prop_id
+        filenames, columns = get_filenames_by_instrument(inst, proposal, observation_id=obs_num, other_columns=['expstart', 'exp_type'])
+        # Get set of unique rootnames
+        rootnames = set(['_'.join(f.split('/')[-1].split('_')[:-1]) for f in filenames])
+        # Gather data for each rootname, and construct a list of all observations in the proposal
+        for rootname in rootnames:
+            # Parse filename
+            try:
+                filename_dict = filename_parser(rootname)
+
+                # The detector keyword is expected in thumbnails_query_ajax() for generating filterable dropdown menus
+                if 'detector' not in filename_dict.keys():
+                    filename_dict['detector'] = 'Unknown'
+
+                # Weed out file types that are not supported by generate_preview_images
+                if 'stage_3' in filename_dict['filename_type']:
+                    continue
+
+            except ValueError:
+                # Temporary workaround for noncompliant files in filesystem
+                filename_dict = {'activity': rootname[17:19],
+                                 'detector': rootname[26:],
+                                 'exposure_id': rootname[20:25],
+                                 'observation': rootname[7:10],
+                                 'parallel_seq_id': rootname[16],
+                                 'program_id': rootname[2:7],
+                                 'visit': rootname[10:13],
+                                 'visit_group': rootname[14:16]}
+
+            # Get list of available filenames and exposure start times. All files with a given
+            # rootname will have the same exposure start time, so just keep the first.
+            available_files = [item for item in filenames if rootname in item]
+            exp_start = [expstart for fname, expstart in zip(filenames, columns['expstart']) if rootname in fname][0]
+            if exp_start >= inclusive_start_time_mjd and exp_start < exclusive_stop_time_mjd:
+                exp_type = [exp_type for fname, exp_type in zip(filenames, columns['exp_type']) if rootname in fname][0]
+                exp_types.append(exp_type)
+                # Viewed is stored by rootname in the Model db.  Save it with the data_dict
+                # THUMBNAIL_FILTER_LOOK is boolean accessed according to a viewed flag
+                try:
+                    root_file_info = RootFileInfo.objects.get(root_name=rootname)
+                    viewed = THUMBNAIL_FILTER_LOOK[root_file_info.viewed]
+                except RootFileInfo.DoesNotExist:
+
+                    viewed = THUMBNAIL_FILTER_LOOK[0]
+
+                # Add data to dictionary
+                data_dict['file_data'][rootname] = {}
+                data_dict['file_data'][rootname]['filename_dict'] = filename_dict
+                data_dict['file_data'][rootname]['available_files'] = available_files
+                data_dict['file_data'][rootname]["viewed"] = viewed
+                data_dict['file_data'][rootname]["exp_type"] = exp_type
+
+                # We generate thumbnails only for rate and dark files. Check if these files
+                # exist in the thumbnail filesystem. In the case where neither rate nor
+                # dark thumbnails are present, revert to 'none', which will then cause the
+                # "thumbnail not available" fallback image to be used.
+                available_thumbnails = get_thumbnails_by_rootname(rootname)
+                if len(available_thumbnails) > 0:
+                    preferred = [thumb for thumb in available_thumbnails if 'rate' in thumb]
+                    if len(preferred) == 0:
+                        preferred = [thumb for thumb in available_thumbnails if 'dark' in thumb]
+                    if len(preferred) > 0:
+                        data_dict['file_data'][rootname]['thumbnail'] = os.path.basename(preferred[0])
+                    else:
+                        data_dict['file_data'][rootname]['thumbnail'] = 'none'
+                else:
+                    data_dict['file_data'][rootname]['thumbnail'] = 'none'
+
+                try:
+                    data_dict['file_data'][rootname]['expstart'] = exp_start
+                    data_dict['file_data'][rootname]['expstart_iso'] = Time(exp_start, format='mjd').iso.split('.')[0]
+                except (ValueError, TypeError) as e:
+                    logging.warning("Unable to populate exp_start info for {}".format(rootname))
+                    logging.warning(e)
+                except KeyError:
+                    print("KeyError with get_expstart for {}".format(rootname))
+
+    # Extract information for sorting with dropdown menus
+    # (Don't include the proposal as a sorting parameter if the proposal has already been specified)
+    detectors, proposals = [], []
+    for rootname in list(data_dict['file_data'].keys()):
+        proposals.append(data_dict['file_data'][rootname]['filename_dict']['program_id'])
+        try:  # Some rootnames cannot parse out detectors
+            detectors.append(data_dict['file_data'][rootname]['filename_dict']['detector'])
+        except KeyError:
+            pass
+
+    dropdown_menus = {'detector': sorted(detectors),
+                      'proposal': sorted(proposals),
+                      'look': THUMBNAIL_FILTER_LOOK,
+                      'exp_type': sorted(set(exp_types))}
+
+    data_dict['tools'] = MONITORS
+    data_dict['dropdown_menus'] = dropdown_menus
+
+
+    # Order dictionary by descending expstart time.
+    sorted_file_data = OrderedDict(sorted(data_dict['file_data'].items(),
+                                   key=lambda x: getitem(x[1], 'expstart'), reverse=True))
+
+    data_dict['file_data'] = sorted_file_data
     return data_dict
 
 

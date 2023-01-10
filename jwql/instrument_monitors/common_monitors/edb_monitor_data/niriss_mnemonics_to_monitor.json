@@ -1,0 +1,174 @@
+{
+    "all": [
+        {
+            "name": "SA_ZHGAUPST",
+            "description": "High Gain Antenna update status",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "observatory"
+        },
+        {
+            "name": "INIS_PWC_MOV",
+            "description": "Pupil wheel movement",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "FW/PW"
+        },
+        {
+            "name": "INIS_CMD_ACC_CNT",
+            "description": "ISIM NIS Command Accepted Counter",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "Commanding"
+        },
+        {
+            "name": "INIS_FPATEMP",
+            "description": "NIS HW Engineering Telemetry Focus Plate Electronics FPA Temperature",
+            "dependency": [
+                {
+                    "name": "INIS_SCE_ASICTEMP2",
+                    "relation": "<",
+                    "threshold": 22000
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Temperatures"
+        },
+        {
+            "name": "INIS_SCE_FPATEMP1_2",
+            "description": "NIS SIDECAR Housekeeping FPA Temperature 1 word 2",
+            "dependency": [
+                {
+                    "name": "INIS_SCE_ASICTEMP2",
+                    "relation": "<",
+                    "threshold": 22000
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Temperatures"
+        },
+        {
+            "name": "INIS_SCE_FPATEMP2_2",
+            "description": "NIS SIDECAR Housekeeping FPA Temperature 2 word 2",
+            "dependency": [
+                {
+                    "name": "INIS_SCE_ASICTEMP2",
+                    "relation": "<",
+                    "threshold": 22000
+                }
+            ],
+            "plot_data": "nominal",
+            "plot_category": "Temperatures"
+        },
+        {
+            "name": "INIS_SCE_ASICTEMP1",
+            "description": "NIS SIDECAR Housekeeping ASIC Temperature 1",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "Temperatures",
+            "mean_time_block": "15_minutes"
+        },
+        {
+            "name": "INIS_SCE_FPATEMP1_1",
+            "description": "NIS SIDECAR Housekeeping FPA Temperature 1 word 1",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "Temperatures"
+        },
+        {
+            "name": "INIS_SCE_FPATEMP2_1",
+            "description": "NIS SIDECAR Housekeeping FPA Temperature 2 word 1",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "Temperatures"
+        }
+    ],
+    "all+time_interval": [
+    ],
+    "time_interval": [
+        {
+            "name": "INIS_ASICTEMP",
+            "description": "NIS HW Engineering Telemetry Focus Plate Electronics ASIC Temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "Temperatures",
+            "mean_time_block": "15_minutes"
+        },
+        {
+            "name": "INIS_FPATEMP",
+            "description": "NIS HW Engineering Telemetry Focus Plate Electronics FPA Temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "Temperatures",
+            "mean_time_block": "15_minutes"
+        },
+        {
+            "name": "INIS_SCE_ASICTEMP2",
+            "description": "NIS SIDECAR Housekeeping ASIC Temperature 2",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "Temperatures",
+            "mean_time_block": "15_minutes"
+        },
+        {
+            "name": "INIS_SCE_FPATEMP1_2",
+            "description": "NIS SIDECAR Housekeeping FPA Temperature 1 word 2",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "Temperatures",
+            "mean_time_block": "15_minutes"
+        },
+        {
+            "name": "INIS_SCE_FPATEMP2_2",
+            "description": "NIS SIDECAR Housekeeping FPA Temperature 2 word 2",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "Temperatures",
+            "mean_time_block": "15_minutes"
+        },
+        {
+            "name": "INIS_TMP_CFM",
+            "description": "CFM Temperature",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "Temperatures",
+            "mean_time_block": "15_minutes"
+        },
+        {
+           "name": "SA_ZATTEST1",
+            "description": "First component quaternion",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "quaternions",
+            "mean_time_block": "30_minutes"
+        },
+        {
+            "name": "SA_ZATTEST2",
+            "description": "Second component quaternion",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "quaternions",
+            "mean_time_block": "30_minutes"
+        },
+        {
+            "name": "SA_ZATTEST3",
+            "description": "Third component quaternion",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "quaternions",
+            "mean_time_block": "30_minutes"
+        },
+        {
+            "name": "SA_ZATTEST4",
+            "description": "Fourth component quaternion",
+            "dependency": [],
+            "plot_data": "nominal",
+            "plot_category": "quaternions",
+            "mean_time_block": "30_minutes"
+        }
+    ]
+}
+
+
+
+

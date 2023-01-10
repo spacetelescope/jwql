@@ -87,8 +87,12 @@ class WATA():
 
     def __init__(self):
         """ Initialize an instance of the WATA class """
+        # Very beginning of intake of images: Jan 28, 2022 == First JWST images (MIRI)
+        self.query_very_beginning = 59607.0
+
         # structure to define required keywords to extract and where they live
-        self.keywds2extract = {'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs'},
+        self.keywds2extract = {'FILENAME': {'loc': 'main_hdr', 'alt_key': None, 'name': 'filename', 'type': str},
+                               'DATE-OBS': {'loc': 'main_hdr', 'alt_key': None, 'name': 'date_obs'},
                                'OBS_ID': {'loc': 'main_hdr', 'alt_key': 'OBSID', 'name': 'visit_id'},
                                'FILTER': {'loc': 'main_hdr', 'alt_key': 'FWA_POS', 'name': 'tafilter'},
                                'READOUT': {'loc': 'main_hdr', 'alt_key': 'READPATT', 'name': 'readout'},
@@ -107,7 +111,7 @@ class WATA():
                                'BOXPKVAL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box'},
                                'BOXPKCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box_col'},
                                'BOXPKROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'max_val_box_row'},
-                               'TA_ITERS': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'iterations'},
+                               'TA_ITERS': {'loc': 'ta_hdr', 'alt_key': 'CENITERS', 'name': 'iterations'},
                                'CORR_COL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'corr_col'},
                                'CORR_ROW': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'corr_row'},
                                'IMCENCOL': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'stamp_final_col'},
@@ -120,8 +124,8 @@ class WATA():
                                'TARGETV3': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'measured_v3'},
                                'V2_REF': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ref_v2'},
                                'V3_REF': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'ref_v3'},
-                               'V2_RESID': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v2_offset'},
-                               'V3_RESID': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'v3_offset'},
+                               'V2_RESID': {'loc': 'ta_hdr', 'alt_key': 'V2_OFFST', 'name': 'v2_offset'},
+                               'V3_RESID': {'loc': 'ta_hdr', 'alt_key': 'V3_OFFST', 'name': 'v3_offset'},
                                'SAM_X': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'sam_x'},
                                'SAM_Y': {'loc': 'ta_hdr', 'alt_key': None, 'name': 'sam_y'}}
 
@@ -149,7 +153,11 @@ class WATA():
                 # print('  Skiping wata_monitor for this file  \n')
                 return None
             main_hdr = ff[0].header
-            ta_hdr = ff['TARG_ACQ'].header
+            try:
+                ta_hdr = ff['TARG_ACQ'].header
+            except KeyError:
+                no_ta_ext_msg = 'No TARG_ACQ extension in file '+fits_file
+                return no_ta_ext_msg
         wata_info = [main_hdr, ta_hdr]
         return wata_info
 
@@ -165,10 +173,13 @@ class WATA():
         wata_df: data frame object
             Pandas data frame containing all WATA data
         """
-        # fill out the dictionary  to create the dataframe
-        wata_dict = {}
+        # fill out the dictionary to create the dataframe
+        wata_dict, no_ta_ext_msgs = {}, []
         for fits_file in new_filenames:
             wata_info = self.get_tainfo_from_fits(fits_file)
+            if isinstance(wata_info, str):
+                no_ta_ext_msgs.append(wata_info)
+                continue
             if wata_info is None:
                 continue
             main_hdr, ta_hdr = wata_info
@@ -181,13 +192,14 @@ class WATA():
                     ext = ta_hdr
                 try:
                     val = ext[key]
+                    if key == 'filename':
+                        val = fits_file
                 except KeyError:
                     val = ext[key_dict['alt_key']]
                 wata_dict[key_name].append(val)
         # create the pandas dataframe
         wata_df = pd.DataFrame(wata_dict)
-        wata_df.index = wata_df.index + 1
-        return wata_df
+        return wata_df, no_ta_ext_msgs
 
     def plt_status(self):
         """ Plot the WATA status (passed = 0 or failed = 1).
@@ -199,28 +211,34 @@ class WATA():
             plot: bokeh plot object
         """
         ta_status, date_obs = self.source.data['ta_status'], self.source.data['date_obs']
-        # bokeh does not like to plot strings, turn  into binary type
-        bool_status, time_arr, status_colors = [], [], []
-        for tas, do_str in zip(ta_status, date_obs):
-            if 'success' in tas.lower():
-                bool_status.append(1)
-                status_colors.append('blue')
-            else:
-                bool_status.append(0)
-                status_colors.append('red')
-            # convert time string into an array of time (this is in UT)
-            t = datetime.fromisoformat(do_str)
-            time_arr.append(t)
-        # add these to the bokeh data structure
-        self.source.data["time_arr"] = time_arr
-        self.source.data["ta_status_bool"] = bool_status
-        self.source.data["status_colors"] = status_colors
+        # check if this column exists in the data already (the other 2 will exist too), else create it
+        try:
+            time_arr = self.source.data['time_arr']
+            bool_status = self.source.data['bool_status']
+            status_colors = self.source.data['status_colors']
+        except KeyError:
+            # bokeh does not like to plot strings, turn  into binary type
+            bool_status, time_arr, status_colors = [], [], []
+            for tas, do_str in zip(ta_status, date_obs):
+                if 'unsuccessful' not in tas.lower():
+                    bool_status.append(1)
+                    status_colors.append('blue')
+                else:
+                    bool_status.append(0)
+                    status_colors.append('red')
+                # convert time string into an array of time (this is in UT)
+                t = datetime.fromisoformat(do_str)
+                time_arr.append(t)
+            # add these to the bokeh data structure
+            self.source.data["time_arr"] = time_arr
+            self.source.data["ta_status_bool"] = bool_status
+            self.source.data["status_colors"] = status_colors
         # create a new bokeh plot
         plot = figure(title="WATA Status [Succes=1, Fail=0]", x_axis_label='Time',
                       y_axis_label='WATA Status', x_axis_type='datetime',)
         plot.y_range = Range1d(-0.5, 1.5)
         plot.circle(x='time_arr', y='ta_status_bool', source=self.source,
-                    color='status_colors', size=7, fill_alpha=0.5)
+                    color='status_colors', size=7, fill_alpha=0.3)
         # output_file("wata_status.html")
         hover = HoverTool()
         hover.tooltips = [('Visit ID', '@visit_id'),
@@ -246,7 +264,7 @@ class WATA():
         plot = figure(title="WATA Residual V2-V3 Offsets", x_axis_label='Residual V2 Offset',
                       y_axis_label='Residual V3 Offset')
         plot.circle(x='v2_offset', y='v3_offset', source=self.source,
-                    color="purple", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.3)
         plot.x_range = Range1d(-0.5, 0.5)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin lines
@@ -277,7 +295,7 @@ class WATA():
         plot = figure(title="WATA V2 Offset vs Time", x_axis_label='Time',
                       y_axis_label='Residual V2 Offset', x_axis_type='datetime')
         plot.circle(x='time_arr', y='v2_offset', source=self.source,
-                    color="blue", size=7, fill_alpha=0.5)
+                    color="blue", size=7, fill_alpha=0.3)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
@@ -305,8 +323,8 @@ class WATA():
         # create a new bokeh plot
         plot = figure(title="WATA V3 Offset vs Time", x_axis_label='Time',
                       y_axis_label='Residual V3 Offset', x_axis_type='datetime')
-        plot.circle(x='time_arr', y='v2_offset', source=self.source,
-                    color="blue", size=7, fill_alpha=0.5)
+        plot.circle(x='time_arr', y='v3_offset', source=self.source,
+                    color="blue", size=7, fill_alpha=0.3)
         plot.y_range = Range1d(-0.5, 0.5)
         # mark origin line
         hline = Span(location=0, dimension='width', line_color='black', line_width=0.7)
@@ -333,74 +351,83 @@ class WATA():
         """
         # calculate the pseudo magnitudes
         max_val_box, time_arr = self.source.data['max_val_box'], self.source.data['time_arr']
-        # create the arrays per filter and readout pattern
-        nrsrapid_f140x, nrsrapid_f110w, nrsrapid_clear = [], [], []
-        nrsrapidd6_f140x, nrsrapidd6_f110w, nrsrapidd6_clear = [], [], []
-        filter_used, readout = self.source.data['tafilter'], self.source.data['readout']
-        for i, val in enumerate(max_val_box):
-            if '140' in filter_used[i]:
-                if readout[i].lower() == 'nrsrapid':
-                    nrsrapid_f140x.append(val)
-                    nrsrapid_f110w.append(np.NaN)
-                    nrsrapid_clear.append(np.NaN)
-                    nrsrapidd6_f140x.append(np.NaN)
-                    nrsrapidd6_f110w.append(np.NaN)
-                    nrsrapidd6_clear.append(np.NaN)
-                elif readout[i].lower() == 'nrsrapidd6':
-                    nrsrapid_f140x.append(np.NaN)
-                    nrsrapid_f110w.append(np.NaN)
-                    nrsrapid_clear.append(np.NaN)
-                    nrsrapidd6_f140x.append(val)
-                    nrsrapidd6_f110w.append(np.NaN)
-                    nrsrapidd6_clear.append(np.NaN)
-            elif '110' in filter_used[i]:
-                if readout[i].lower() == 'nrsrapid':
-                    nrsrapid_f140x.append(np.NaN)
-                    nrsrapid_f110w.append(val)
-                    nrsrapid_clear.append(np.NaN)
-                    nrsrapidd6_f140x.append(np.NaN)
-                    nrsrapidd6_f110w.append(np.NaN)
-                    nrsrapidd6_clear.append(np.NaN)
-                elif readout[i].lower() == 'nrsrapidd6':
-                    nrsrapid_f140x.append(np.NaN)
-                    nrsrapid_f110w.append(np.NaN)
-                    nrsrapid_clear.append(np.NaN)
-                    nrsrapidd6_f140x.append(np.NaN)
-                    nrsrapidd6_f110w.append(val)
-                    nrsrapidd6_clear.append(np.NaN)
-            else:
-                if readout[i].lower() == 'nrsrapid':
-                    nrsrapid_f140x.append(np.NaN)
-                    nrsrapid_f110w.append(np.NaN)
-                    nrsrapid_clear.append(val)
-                    nrsrapidd6_f140x.append(np.NaN)
-                    nrsrapidd6_f110w.append(np.NaN)
-                    nrsrapidd6_clear.append(np.NaN)
-                elif readout[i].lower() == 'nrsrapidd6':
-                    nrsrapid_f140x.append(np.NaN)
-                    nrsrapid_f110w.append(np.NaN)
-                    nrsrapid_clear.append(np.NaN)
-                    nrsrapidd6_f140x.append(np.NaN)
-                    nrsrapidd6_f110w.append(np.NaN)
-                    nrsrapidd6_clear.append(val)
-        # add to the bokeh data structure
-        self.source.data["nrsrapid_f140x"] = nrsrapid_f140x
-        self.source.data["nrsrapid_f110w"] = nrsrapid_f110w
-        self.source.data["nrsrapid_clear"] = nrsrapid_clear
-        self.source.data["nrsrapidd6_f140x"] = nrsrapidd6_f140x
-        self.source.data["nrsrapidd6_f110w"] = nrsrapidd6_f110w
-        self.source.data["nrsrapidd6_clear"] = nrsrapidd6_clear
+        # check if this column exists in the data already (the other 2 will exist too), else create it
+        try:
+            nrsrapid_f140x = self.source.data["nrsrapid_f140x"]
+            nrsrapid_f110w = self.source.data["nrsrapid_f110w"]
+            nrsrapid_clear = self.source.data["nrsrapid_clear"]
+            nrsrapidd6_f140x = self.source.data["nrsrapidd6_f140x"]
+            nrsrapidd6_f110w = self.source.data["nrsrapidd6_f110w"]
+            nrsrapidd6_clear = self.source.data["nrsrapidd6_clear"]
+        except KeyError:
+            # create the arrays per filter and readout pattern
+            nrsrapid_f140x, nrsrapid_f110w, nrsrapid_clear = [], [], []
+            nrsrapidd6_f140x, nrsrapidd6_f110w, nrsrapidd6_clear = [], [], []
+            filter_used, readout = self.source.data['tafilter'], self.source.data['readout']
+            for i, val in enumerate(max_val_box):
+                if '140' in filter_used[i]:
+                    if readout[i].lower() == 'nrsrapid':
+                        nrsrapid_f140x.append(val)
+                        nrsrapid_f110w.append(np.NaN)
+                        nrsrapid_clear.append(np.NaN)
+                        nrsrapidd6_f140x.append(np.NaN)
+                        nrsrapidd6_f110w.append(np.NaN)
+                        nrsrapidd6_clear.append(np.NaN)
+                    elif readout[i].lower() == 'nrsrapidd6':
+                        nrsrapid_f140x.append(np.NaN)
+                        nrsrapid_f110w.append(np.NaN)
+                        nrsrapid_clear.append(np.NaN)
+                        nrsrapidd6_f140x.append(val)
+                        nrsrapidd6_f110w.append(np.NaN)
+                        nrsrapidd6_clear.append(np.NaN)
+                elif '110' in filter_used[i]:
+                    if readout[i].lower() == 'nrsrapid':
+                        nrsrapid_f140x.append(np.NaN)
+                        nrsrapid_f110w.append(val)
+                        nrsrapid_clear.append(np.NaN)
+                        nrsrapidd6_f140x.append(np.NaN)
+                        nrsrapidd6_f110w.append(np.NaN)
+                        nrsrapidd6_clear.append(np.NaN)
+                    elif readout[i].lower() == 'nrsrapidd6':
+                        nrsrapid_f140x.append(np.NaN)
+                        nrsrapid_f110w.append(np.NaN)
+                        nrsrapid_clear.append(np.NaN)
+                        nrsrapidd6_f140x.append(np.NaN)
+                        nrsrapidd6_f110w.append(val)
+                        nrsrapidd6_clear.append(np.NaN)
+                else:
+                    if readout[i].lower() == 'nrsrapid':
+                        nrsrapid_f140x.append(np.NaN)
+                        nrsrapid_f110w.append(np.NaN)
+                        nrsrapid_clear.append(val)
+                        nrsrapidd6_f140x.append(np.NaN)
+                        nrsrapidd6_f110w.append(np.NaN)
+                        nrsrapidd6_clear.append(np.NaN)
+                    elif readout[i].lower() == 'nrsrapidd6':
+                        nrsrapid_f140x.append(np.NaN)
+                        nrsrapid_f110w.append(np.NaN)
+                        nrsrapid_clear.append(np.NaN)
+                        nrsrapidd6_f140x.append(np.NaN)
+                        nrsrapidd6_f110w.append(np.NaN)
+                        nrsrapidd6_clear.append(val)
+            # add to the bokeh data structure
+            self.source.data["nrsrapid_f140x"] = nrsrapid_f140x
+            self.source.data["nrsrapid_f110w"] = nrsrapid_f110w
+            self.source.data["nrsrapid_clear"] = nrsrapid_clear
+            self.source.data["nrsrapidd6_f140x"] = nrsrapidd6_f140x
+            self.source.data["nrsrapidd6_f110w"] = nrsrapidd6_f110w
+            self.source.data["nrsrapidd6_clear"] = nrsrapidd6_clear
         # create a new bokeh plot
         plot = figure(title="WATA Counts vs Time", x_axis_label='Time',
                       y_axis_label='box_peak [Counts]', x_axis_type='datetime')
         plot.circle(x='time_arr', y='nrsrapid_f140x', source=self.source,
-                    color="blue", size=7, fill_alpha=0.5)
+                    color="purple", size=7, fill_alpha=0.4)
         plot.circle(x='time_arr', y='nrsrapidd6_f140x', source=self.source,
-                    color="blue", size=12, fill_alpha=0.5)
+                    color="purple", size=12, fill_alpha=0.4)
         plot.triangle(x='time_arr', y='nrsrapid_f110w', source=self.source,
-                      color="orange", size=8, fill_alpha=0.7)
+                      color="orange", size=8, fill_alpha=0.4)
         plot.triangle(x='time_arr', y='nrsrapidd6_f110w', source=self.source,
-                      color="orange", size=13, fill_alpha=0.7)
+                      color="orange", size=13, fill_alpha=0.4)
         plot.square(x='time_arr', y='nrsrapid_clear', source=self.source,
                     color="gray", size=7, fill_alpha=0.4)
         plot.square(x='time_arr', y='nrsrapidd6_clear', source=self.source,
@@ -430,6 +457,27 @@ class WATA():
         plot.add_tools(hover)
         return plot
 
+    def get_unsucessful_ta(self, arr_name):
+        """ Find unsucessful TAs in this set (to be plotted in red)
+        Parameters
+        ----------
+            arr_name: str, name of the array of interest
+        Returns
+        -------
+            new_list_failed: list, failed TA values from array of interest
+            new_list_else: list, non-failed TA values from array of interest
+        """
+        bool_status = self.source.data["ta_status_bool"]
+        new_list_failed, new_list_else = [], []
+        for idx, val in enumerate(self.source.data[arr_name]):
+            if bool_status[idx] == 0.0:
+                new_list_failed.append(val)
+                new_list_else.append(np.NaN)
+            else:
+                new_list_failed.append(np.NaN)
+                new_list_else.append(val)
+        return new_list_failed, new_list_else
+
     def plt_centroid(self):
         """ Plot the WATA centroid
         Parameters
@@ -439,14 +487,27 @@ class WATA():
         -------
             plot: bokeh plot object
         """
+        # get the failed TAs to plot in red
+        try:
+            corr_col_failed = self.source.data["corr_col_failed"]
+        except KeyError:
+            corr_col_failed, corr_col_not_failed = self.get_unsucessful_ta('corr_col')
+            corr_row_failed, corr_row_not_failed = self.get_unsucessful_ta('corr_row')
+            # add these to the bokeh data structure
+            self.source.data["corr_col_failed"] = corr_col_failed
+            self.source.data["corr_col_not_failed"] = corr_col_not_failed
+            self.source.data["corr_row_failed"] = corr_row_failed
+            self.source.data["corr_row_not_failed"] = corr_row_not_failed
         # create a new bokeh plot
         plot = figure(title="WATA Centroid", x_axis_label='Column',
                       y_axis_label='Row')
         limits = [10, 25]
         plot.x_range = Range1d(limits[0], limits[1])
         plot.y_range = Range1d(limits[0], limits[1])
-        plot.circle(x='corr_col', y='corr_row', source=self.source,
-                    color="purple", size=7, fill_alpha=0.5)
+        plot.circle(x='corr_col_not_failed', y='corr_row_not_failed', source=self.source,
+                    color="blue", size=7, fill_alpha=0.5)
+        plot.circle(x='corr_col_failed', y='corr_row_failed', source=self.source,
+                    color="red", size=7, fill_alpha=0.5)
         plot.x_range = Range1d(0.0, 32.0)
         plot.y_range = Range1d(0.0, 32.0)
         hover = HoverTool()
@@ -513,12 +574,35 @@ class WATA():
 
         query_count = len(dates)
         if query_count == 0:
-            query_result = 59607.0  # a.k.a. Jan 28, 2022 == First JWST images (MIRI)
-            logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, query_result)))
+            query_result = self.query_very_beginning
+            logging.info(('\tNo query history for {}. Beginning search date will be set to {}.'.format(self.aperture, self.query_very_beginning)))
         else:
             query_result = np.max(dates)
 
         return query_result
+
+    def get_expected_data(self, keywd_dict, tot_number_of_stars):
+        """This function gets the value append to the dictionary key in the expected format.
+        Parameters
+        ----------
+        keywd_dict: dictonary
+            Dictionary corresponding to the file keyword
+        tot_number_of_stars: integer
+            Number of stars in the observation
+        Returns
+        -------
+        val4dict: value
+            Value appended to the data structure; either string, float or integer
+        """
+        # set the value to add
+        val = -999
+        # return the right type of value
+        if keywd_dict['type'] == float:
+            val = float(val)
+        if keywd_dict['type'] == str:
+            val = str(val)
+        val4dict = val
+        return val4dict
 
     def get_data_from_html(self, html_file):
         """
@@ -554,14 +638,138 @@ class WATA():
                                 # finally the data dictionary!
                                 for data_key, data_val in item_val['data'].items():
                                     prev_data_dict[data_key] = data_val
-        # set to None if dictionary is empty
-        if not bool(prev_data_dict):
-            prev_data_dict = None
         # find the latest observation date
-        latest_prev_obs = max(prev_data_dict['time_arr'])
+        time_in_millis = max(prev_data_dict['time_arr'])
+        latest_prev_obs = Time(time_in_millis / 1000., format='unix')
+        latest_prev_obs = latest_prev_obs.mjd
+        # put data in expected format
+        prev_data_expected_cols = {}
+        visit_ids = prev_data_dict['visit_id']
+        for file_keywd, keywd_dict in self.keywds2extract.items():
+            key = keywd_dict['name']
+            if key in prev_data_dict:
+                # case when the html stored thing is just an object but does not have data
+                if len(prev_data_dict[key]) < len(visit_ids):
+                    list4dict = self.get_expected_data(keywd_dict, visit_ids)
+                    prev_data_expected_cols[key] = list4dict
+                # case when nothing special to do
+                else:
+                    prev_data_expected_cols[key] = prev_data_dict[key]
+            else:
+                list4dict = self.get_expected_data(keywd_dict, visit_ids)
+                prev_data_expected_cols[key] = list4dict
         # now convert to a panda dataframe to be combined with the new data
-        prev_data = pd.DataFrame(prev_data_dict)
+        prev_data = pd.DataFrame(prev_data_expected_cols)
         return prev_data, latest_prev_obs
+
+    def pull_filenames(self, file_info):
+        """Extract filenames from the list of file information returned from
+        query_mast.
+
+        Parameters
+        ----------
+        file_info : dict
+            Dictionary of file information returned by ``query_mast``
+
+        Returns
+        -------
+        files : list
+            List of filenames (without paths) extracted from ``file_info``
+        """
+        files = []
+        for list_element in file_info:
+            if 'filename' in list_element:
+                files.append(list_element['filename'])
+        return files
+
+    def get_uncal_names(self, file_list):
+        """Replace the last suffix for _uncal and return list.
+        Parameters
+        ----------
+        file_list : list
+            List of fits files
+        Returns
+        -------
+        good_files : list
+            Filtered list of uncal file names
+        """
+        good_files = []
+        for filename in file_list:
+            # Names look like: jw01133003001_02101_00001_nrs2_cal.fits
+            if '_uncal' not in filename:
+                suffix2replace = filename.split('_')[-1]
+                filename = filename.replace(suffix2replace, 'uncal.fits')
+            if filename not in good_files:
+                good_files.append(filename)
+        return good_files
+
+    def get_uncal_names(self, file_list):
+        """Replace the last suffix for _uncal and return list.
+        Parameters
+        ----------
+        file_list : list
+            List of fits files
+        Returns
+        -------
+        good_files : list
+            Filtered list of uncal file names
+        """
+        good_files = []
+        for filename in file_list:
+            # Names look like: jw01133003001_02101_00001_nrs2_cal.fits
+            if '_uncal' not in filename:
+                suffix2replace = filename.split('_')[-1]
+                filename = filename.replace(suffix2replace, 'uncal.fits')
+            if filename not in good_files:
+                good_files.append(filename)
+        return good_files
+
+    def update_ta_success_txtfile(self):
+        """Create a text file with all the failed and successful WATA.
+        Parameters
+        ----------
+            None
+        Returns
+        -------
+            Nothing
+        """
+        output_success_ta_txtfile = os.path.join(self.output_dir, "wata_success.txt")
+        # check if previous file exsists and read the data from it
+        if os.path.isfile(output_success_ta_txtfile):
+            # now rename the the previous file, for backup
+            os.rename(output_success_ta_txtfile, os.path.join(self.output_dir, "prev_wata_success.txt"))
+        # get the new data
+        ta_success, ta_failure = [], []
+        filenames, ta_status = self.wata_data.loc[:,'filename'], self.wata_data.loc[:,'ta_status']
+        for fname, ta_stat in zip(filenames, ta_status):
+            # select the appriopriate list to append to
+            if ta_stat == 'SUCCESSFUL':
+                ta_success.append(fname)
+            else:
+                ta_failure.append(fname)
+        # find which one is the longest list (to make sure the other lists have the same length)
+        successes, failures = len(ta_success), len(ta_failure)
+        longest_list = None
+        if successes >= failures:
+            longest_list = successes
+        else:
+            longest_list = failures
+        # match length of the lists
+        for ta_list in [ta_success, ta_failure]:
+            remaining_items = longest_list - len(ta_list)
+            if remaining_items != 0:
+                for _ in range(remaining_items):
+                    ta_list.append("")
+        # write the new output file
+        with open(output_success_ta_txtfile, 'w+') as txt:
+            txt.write("# WATA successes and failure file names \n")
+            filehdr1 = "# {} Total successful and {} total failed WATA ".format(successes, failures)
+            filehdr2 = "# {:<50} {:<50}".format("Successes", "Failures")
+            txt.write(filehdr1 + "\n")
+            txt.write(filehdr2 + "\n")
+            for idx, suc in enumerate(ta_success):
+                line = "{:<50} {:<50}".format(suc, ta_failure[idx])
+                txt.write(line + "\n")
 
     @log_fail
     @log_info
@@ -592,9 +800,16 @@ class WATA():
         # get the data of the plots previously created and set the query start date
         self.prev_data = None
         self.output_file_name = os.path.join(self.output_dir, "wata_layout.html")
+        logging.info('\tNew output plot file will be written as: {}'.format(self.output_file_name))
         if os.path.isfile(self.output_file_name):
             self.prev_data, self.query_start = self.get_data_from_html(self.output_file_name)
             logging.info('\tPrevious data read from html file: {}'.format(self.output_file_name))
+            # move this plot to a previous version
+            os.rename(self.output_file_name, os.path.join(self.output_dir, "prev_wata_layout.html"))
+        # fail save - start from the beginning if there is no html file
+        else:
+            self.query_start = self.query_very_beginning
+            logging.info('\tPrevious output html file not found. Starting MAST query from Jan 28, 2022 == First JWST images (MIRI)')
 
         # Use the current time as the end time for MAST query
         self.query_end = Time.now().mjd
@@ -604,14 +819,20 @@ class WATA():
         # most recent previous search as the starting time
         new_entries = monitor_utils.mast_query_ta(self.instrument, self.aperture, self.query_start, self.query_end)
         wata_entries = len(new_entries)
-        logging.info('\tMAST query has returned {} new WATA files for {}, {} to run the WATA monitor.'.format(wata_entries, self.instrument, self.aperture))
+        logging.info('\tMAST query has returned {} WATA files for {}, {}.'.format(wata_entries, self.instrument, self.aperture))
+
+        # Filter new entries to only keep uncal files
+        new_entries = self.pull_filenames(new_entries)
+        new_entries = self.get_uncal_names(new_entries)
+        wata_entries = len(new_entries)
+        logging.info('\tThere are {} uncal TA files to run the WATA monitor.'.format(wata_entries))
 
         # Get full paths to the files
         new_filenames = []
-        for entry_dict in new_entries:
-            filename_of_interest = entry_dict['productFilename']
+        for filename_of_interest in new_entries:
             try:
                 new_filenames.append(filesystem_path(filename_of_interest))
+                logging.warning('\tFile {} included for processing.'.format(filename_of_interest))
             except FileNotFoundError:
                 logging.warning('\t\tUnable to locate {} in filesystem. Not including in processing.'.format(filename_of_interest))
 
@@ -619,23 +840,38 @@ class WATA():
             logging.warning('\t\t ** Unable to locate any file in filesystem. Nothing to process. ** ')
 
         # Run the monitor on any new files
-        self.script, self.div = None, None
+        self.script, self.div, self.wata_data = None, None, None
         monitor_run = False
-        if len(new_filenames) > 0:
+        if len(new_filenames) > 0:   # new data was found
             # get the data
-            self.new_wata_data = self.get_wata_data(new_filenames)
+            self.new_wata_data, no_ta_ext_msgs = self.get_wata_data(new_filenames)
+            if len(no_ta_ext_msgs) >= 1:
+                for item in no_ta_ext_msgs:
+                    logging.info(item)
             if self.new_wata_data is not None:
                 # concatenate with previous data
                 if self.prev_data is not None:
                     self.wata_data = pd.concat([self.prev_data, self.new_wata_data])
+                    logging.info('\tData from previous html output file and new data concatenated.')
                 else:
                     self.wata_data = self.new_wata_data
-                # make the plots
-                self.script, self.div = self.mk_plt_layout()
-                monitor_run = True
+                    logging.info('\tOnly new data was found - no previous html file.')
             else:
                 logging.info('\tWATA monitor skipped. No WATA data found.')
-
+        # make sure to return the old data if no new data is found
+        elif self.prev_data is not None:
+            self.wata_data = self.prev_data
+            logging.info('\tNo new data found. Using data from previous html output file.')
+        # do the plots if there is any data
+        if self.wata_data is not None:
+            self.script, self.div = self.mk_plt_layout()
+            monitor_run = True
+            logging.info('\tOutput html plot file created: {}'.format(self.output_file_name))
+            wata_files_used4plots = len(self.wata_data['visit_id'])
+            logging.info('\t{} WATA files were used to make plots.'.format(wata_files_used4plots))
+            # update the list of successful and failed TAs
+            self.update_ta_success_txtfile()
+            logging.info('\t{} WATA status file was updated')
         else:
             logging.info('\tWATA monitor skipped.')
 

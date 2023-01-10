@@ -18,6 +18,7 @@
     		<div class="APT_parameters">Observation: <a id="obs_id"></a></div>
     		<div class="APT_parameters">Visit: <a id="visit_id"></a></div>
     		<div class="APT_parameters">Detector: <a id="detector"></a></div>
+            <input class="btn btn-primary" id="viewed" value=" " type="button" onclick='toggle_viewed("{{file_root}}", "{{base_url}}");'>
     	</div>
     	FITS Filename: <a id="fits_filename"></a><br>
     	JPG Filename: <a id="jpg_filename"></a><br><br>
@@ -62,13 +63,13 @@
 
                 <div class="previous-next-buttons">
                     <span class="step-links">
-                        {% set index = file_root_list[obsnum].index(file_root) %}
+                        {% set index = file_root_list.index(file_root) %}
                         {% if index != 0 %}
-                            <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[obsnum][index-1] }}/" style="float: left;">< Previous</a>
+                            <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[index-1] }}/" style="float: left;">< Previous</a>
                         {% endif %}
-        
-                        {% if index != file_root_list[obsnum]|length - 1 %}
-                            <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[obsnum][index+1] }}/" style="float: right;">Next ></a>
+
+                        {% if index != file_root_list|length - 1 %}
+                            <a role="button" class="btn btn-primary my-2" type="submit" href="{{ base_url }}/{{ inst }}/{{ file_root_list[index+1] }}/" style="float: right;">Next ></a>
                         {% endif %}
                     </span>
                 </div>
@@ -108,11 +109,16 @@
             </div>
         </div>
 
+        {% if marked_viewed %}
+            <script>update_viewed_button(true)</script>
+        {% else %}
+            <script>update_viewed_button(false)</script>
+        {% endif %}
         <!-- Determine which filetype should be shown on load -->
-        {% if 'cal' in suffixes %}
-            <script>change_filetype('cal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
-        {% elif 'rate' in suffixes %}
+        {% if 'rate' in suffixes %}
             <script>change_filetype('rate', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
+        {% elif 'dark' in suffixes %}
+            <script>change_filetype('dark', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif 'uncal' in suffixes %}
             <script>change_filetype('uncal', '{{file_root}}', '{{num_ints}}', "{{available_ints}}", "{{total_ints}}", '{{inst}}');</script>
         {% elif suffixes|length == 1 %}
