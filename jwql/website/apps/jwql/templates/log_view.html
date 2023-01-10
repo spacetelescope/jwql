@@ -25,7 +25,7 @@
             <!--LOG SELECT DROPDOWN-->
             <h4>Select JWQL Monitoring Log</h4>
                 <div class="col-6 mx-auto text-left mt-5">
-                    <input type="text" list="logs" placeholder="Log Name" class="form-control">
+                    <input id="log" type="text" list="logs" placeholder="Log Name" class="form-control">
                     <datalist id="logs">
                         {% for log_name in all_logs %}
                             <option value="{{ log_name }}">{{ log_name }}</option>
@@ -34,10 +34,25 @@
                 </div>
 
             <br>
-            <button class="btn btn-primary" name='log_submit' type="submit" value="{{ all_logs[{{ log_name }}] }}" style="float: left;">Submit</button>
+            <button hidden id="log_submit" class="btn btn-primary" type="submit" value="" style="float: left;">Submit</button>
             <br><br>
+            
 
-            <!-- If log is passed, render log. -->
+            <script>
+                $(document).ready(function(){
+                    const logs = "{{ all_logs.keys() }}";
+                    $("#log").on("input", function(){
+                        if (logs.includes($(this).val())) {
+                              $("#log_submit").show();
+                            } else {
+                              $("#log_submit").hide();
+                            }
+                    });
+                });
+            </script>
+
+
+             <!-- If log is passed, render log. -->
             <!-- Log is not rendered when coming from home/monitor views -->
             {% if log_text %}
                 <h4> {{ log_name|safe }} </h4><hr>
