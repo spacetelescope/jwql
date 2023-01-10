@@ -768,7 +768,7 @@ def log_view(request):
         log_name = request.POST['log_submit']
         with open(log_name) as f:
             log_text = f.read()
-    except KeyError:
+    else:
         log_name = None
         log_text = None
 
