@@ -28,29 +28,25 @@
                     <input id="log" type="text" list="logs" placeholder="Log Name" class="form-control">
                     <datalist id="logs">
                         {% for log_name in all_logs %}
-                            <option value="{{ log_name }}">{{ log_name }}</option>
+                            <option id="{{ log_name }}" value="{{ log_name }}"></option>
                         {% endfor %}
                     </datalist>
+                    <script>
+                        const idInputField = document.getElementById('log');
+                        var logsList = document.getElementById("logs");
+                        idInputField.addEventListener('input', function () {
+                            if (logsList.options.namedItem(this.value) != null) {
+                                document.getElementById("log_submit").disabled = false;
+                            } else {
+                                document.getElementById("log_submit").disabled = true;
+                            }
+                        });
+                    </script>
                 </div>
 
             <br>
-            <button hidden id="log_submit" class="btn btn-primary" type="submit" value="" style="float: left;">Submit</button>
+            <button id="log_submit" class="btn btn-primary" type="submit" value="" style="float: left;" disabled>Submit</button>
             <br><br>
-            
-
-            <script>
-                $(document).ready(function(){
-                    const logs = "{{ all_logs.keys() }}";
-                    $("#log").on("input", function(){
-                        if (logs.includes($(this).val())) {
-                              $("#log_submit").show();
-                            } else {
-                              $("#log_submit").hide();
-                            }
-                    });
-                });
-            </script>
-
 
              <!-- If log is passed, render log. -->
             <!-- Log is not rendered when coming from home/monitor views -->
