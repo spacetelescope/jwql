@@ -30,8 +30,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from photutils import detect_sources, detect_threshold
 
-from jwql.utils import monitor_utils
-from jwql.utils.logging_functions import log_info, log_fail
+#from jwql.utils import monitor_utils  # todo uncomment
+#from jwql.utils.logging_functions import log_info, log_fail  # todo uncomment
 
 
 class ClawMonitor():
@@ -59,8 +59,8 @@ class ClawMonitor():
             cols, rows = 3, 1
             grid = plt.GridSpec(rows, cols, hspace=.2, wspace=.2, width_ratios=[1,1,.1])
             fig = plt.figure(figsize=(20, 10))
-            cbar_fs = 15
-            fs = 25
+            cbar_fs = 10
+            fs = 20
         
         # Make source-masked, median-stack of each detector's images
         print(self.outfile)
@@ -123,6 +123,7 @@ class ClawMonitor():
         
         # Add colobar, save figure if any detector stacks exist
         if found_scale:
+            fig.suptitle('PID-{} OBS-{} {} {}\n{}  pa_v3={}\n'.format(self.proposal, self.obs, self.fltr.upper(), self.pupil.upper(), obs_start.split('.')[0], pa_v3), fontsize=fs*1.5)
             cax = fig.add_subplot(grid[0:rows, cols-1:cols])
             cbar = fig.colorbar(im, cax=cax, orientation='vertical')
             cbar.ax.tick_params(labelsize=cbar_fs)
