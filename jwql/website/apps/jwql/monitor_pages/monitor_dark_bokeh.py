@@ -23,7 +23,7 @@ import os
 
 from astropy.io import fits
 from astropy.time import Time
-from bokeh.models import ColumnDataSource, HoverTool,  LinearAxis, Range1d
+from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool,  LinearAxis, Range1d
 from bokeh.models.tickers import LogTicker
 from bokeh.plotting import figure, show
 from datetime import datetime, timedelta
@@ -72,7 +72,7 @@ class DarkMonitorPlots():
 
             # Now that we have all the data, create the acutal plots
             self.hist_plots[aperture] = DarkHistPlot(self.hist_data, self.aperture)
-            self.trending_plots = DarkTrendPlot(self.mean_dark, self.stdev_dark, self.obstime)
+            self.trending_plots[aperture] = DarkTrendPlot(self.mean_dark, self.stdev_dark, self.obstime)
             dark_image = DarkImagePlot(self.mean_dark_image)
 
             self.hist_plots[aperture] = hist.plot
@@ -237,6 +237,16 @@ class DarkHistPlot():
 
         self.plot = figure(title=self.aperture, tools='pan,box_zoom,reset,wheel_zoom,save', background_fill_color="#fafafa")
 
+        # Plot the histogram for the "main" amp
+        self.plot.quad(top='num_pix', bottom=0, left='left_edges', right='right_edges',
+                       fill_color="navy", line_color="white", alpha=0.5, source=source)
+        hover_tool = HoverTool(tooltips=[('Dark rate:', '@dark_rate'),
+                                         ('Num Pix:', '@num_pix'),
+                                         ('CDF:', '@cdf')
+                                        ])
+        self.plot.tools.append(hover_tool)
+
+        # If there are multiple amps to be plotted, do that here
         if per_amp:
             self.plot.quad(top=mainy, bottom=0, left=left_edges, right=right_edges,
                            fill_color="navy", line_color="white", alpha=0.5, legend_label='Full Aperture')
@@ -250,15 +260,7 @@ class DarkHistPlot():
                     self.plot.quad(top=y, bottom=0, left=amp_left_edges, right=amp_right_edges,
                                    fill_color=color, line_color="white", alpha=0.25, legend_label=f'Amp {amp}')
 
-        else:
-            self.plot.quad(top='num_pix', bottom=0, left='left_edges', right='right_edges',
-                                fill_color="navy", line_color="white", alpha=0.5, source=source)
-            hover_tool = HoverTool(tooltips=[('Dark rate:', '@dark_rate'),
-                                             ('Num Pix:', '@num_pix'),
-                                             ('CDF:', '@cdf')
-                                             ])
-            self.plot.tools.append(hover_tool)
-
+        # Set labels and ranges
         self.plot.xaxis.axis_label = 'Dark Rate (DN/sec)'
         self.plot.yaxis.axis_label = 'Number of Pixels'
         self.plot.extra_y_ranges = {"cdf_line": Range1d(0,1)}
@@ -318,10 +320,10 @@ class DarkTrendPlot():
 
         # Plot the "main" amp data
         self.plot.scatter(x='time', y='mean_dark', fill_color="navy", alpha=0.75, source=source, legend_label='Full Aperture')
-        hover_tool = HoverTool(tooltips=[('Dark rate:', '@y'),
-                                         ('Date:', '@x{%d %b %Y %H:%M:%S}')
-                                        ], mode='mouse')
-        hover_tool.formatters = {'@x': 'datetime'}
+        hover_tool = HoverTool(tooltips=[('Dark rate:', '@mean_dark'),
+                                         ('Date:', '@time{%d %b %Y}')
+                                        ])
+        hover_tool.formatters = {'@time': 'datetime'}
         self.plot.tools.append(hover_tool)
 
         # If there are multiple amps to plot, do that here
@@ -348,7 +350,26 @@ class DarkTrendPlot():
                                                 )
         self.plot.xaxis.major_label_orientation = np.pi / 4
 
+        # Set x range
+        time_pad = (max(self.obstime[use_amp]) - min(self.obstime[use_amp])) * 0.05
+        self.plot.x_range.start = min(self.obstime[use_amp]) - time_pad
+        self.plot.x_range.end = max(self.obstime[use_amp]) + time_pad
 
+        # Set y range
+        max_val = -99999.
+        min_val = 99999.
+        for key in mean_dark:
+            mx = np.max(mean_dark[key])
+            mn = np.min(mean_dark[key])
+            if mx > max_val:
+                max_val = mx
+            if mn < min_val:
+                min_val = mn
+        self.plot.y_range.start = min_val * 0.95
+        self.plot.y_range.end = max_val * 1.05
+        self.plot.legend.location = "top_right"
+        self.plot.legend.background_fill_color = "#fefefe"
+        self.plot.grid.grid_line_color="white"
 
 
 class DarkImagePlot():
