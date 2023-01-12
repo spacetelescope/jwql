@@ -71,13 +71,9 @@ class DarkMonitorPlots():
             self.get_trending_data()
 
             # Now that we have all the data, create the acutal plots
-            self.hist_plots[aperture] = DarkHistPlot(self.hist_data, self.aperture)
-            self.trending_plots[aperture] = DarkTrendPlot(self.mean_dark, self.stdev_dark, self.obstime)
-            dark_image = DarkImagePlot(self.mean_dark_image)
-
-            self.hist_plots[aperture] = hist.plot
-
-
+            self.hist_plots[aperture] = DarkHistPlot(self.aperture, self.hist_data)
+            self.trending_plots[aperture] = DarkTrendPlot(self.aperture, self.mean_dark, self.stdev_dark, self.obstime)
+            self.images[aperture] = DarkImagePlot(self.mean_dark_image)
 
     def stats_data_to_lists(self):
         """Create lists from some of the stats database columns that are
@@ -169,10 +165,13 @@ class DarkMonitorPlots():
 class DarkHistPlot():
     """
     """
-    def __init__(self, data, aperture):
+    def __init__(self, aperture, data):
         """
         Parameters
         ----------
+        aperture : str
+            Name of the aperture (e.g. 'NRCA1_FULL')
+
         data : dict
             Histogram data. Keys are amplifier values (e.g. '1'). Values are
             tuples of (x values, y values)
@@ -283,9 +282,28 @@ class DarkHistPlot():
 
 
 class DarkTrendPlot():
-    """
+    """Create the dark current trending plot (mean dark rate vs time) for
+    the given aperture.
     """
     def __init__(self, aperture, mean_dark, stdev_dark, obstime):
+        """
+        Parameters
+        ----------
+        aperture : str
+            Name of the aperture (e.g. 'NRCA1_FULL')
+
+        mean_dark : dict
+            Trending data. Keys are amplifier values (e.g. '1'). Values are
+            lists of mean dark rates
+
+        stdev_dark : dict
+            Standard deviation of the dark rate data. Keys are amplifier values
+            (e.g. '1'). Values are lists of dark rate standard deviations
+
+        obstime : dict
+            Observation time associated with the dark rates. Keys are amplifier
+            values (e.g. '1'). Values are lists of datetime objects
+        """
         self.aperture = aperture
         self.mean_dark = mean_dark
         self.stdev_dark = stdev_dark
@@ -375,7 +393,7 @@ class DarkTrendPlot():
 class DarkImagePlot():
     """
     """
-    def __init__(self):
+    def __init__(self, aperture, ):
         ...
 
 
