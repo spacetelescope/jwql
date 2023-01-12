@@ -48,6 +48,8 @@ class DarkMonitorPlots():
     """
     def __init__(self, instrument):
         self.instrument = instrument
+        self.hist_plots = {}
+        self.trending_plots = {}
 
         # Get the data from the database
         self.db = DarkMonitorData(self.instrument)
@@ -58,7 +60,6 @@ class DarkMonitorPlots():
         # List of full frame aperture names
         full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
 
-        hist_plots = {}
         for aperture in available_apertures:
             self.aperture = aperture
             self.stats_data_to_lists()
@@ -70,11 +71,12 @@ class DarkMonitorPlots():
             self.get_trending_data()
 
             # Now that we have all the data, create the acutal plots
-            hist = DarkHistPlot(self.hist_data, self.aperture)
-            trending_plots = DarkTrendPlot(self.mean_dark, self.stdev_dark, self.obstime)
+            self.hist_plots[aperture] = DarkHistPlot(self.hist_data, self.aperture)
+            self.trending_plots = DarkTrendPlot(self.mean_dark, self.stdev_dark, self.obstime)
             dark_image = DarkImagePlot(self.mean_dark_image)
 
-            hist_plots[aperture] = hist.plot
+            self.hist_plots[aperture] = hist.plot
+
 
 
     def stats_data_to_lists(self):
@@ -142,7 +144,6 @@ class DarkMonitorPlots():
                 self.mean_dark_image = hdulist[1].data
         else:
             self.mean_dark_image = None
-
 
     def get_trending_data(self):
         """Organize data for the trending plot. Here we need all the data for
@@ -279,14 +280,76 @@ class DarkHistPlot():
         self.plot.grid.grid_line_color="white"
 
 
-
-
-
 class DarkTrendPlot():
     """
     """
-    def __init__(self):
-        ...
+    def __init__(self, aperture, mean_dark, stdev_dark, obstime):
+        self.aperture = aperture
+        self.mean_dark = mean_dark
+        self.stdev_dark = stdev_dark
+        self.obstime = obstime
+        self.create_plot()
+
+    def create_plot(self):
+        """
+        """
+        # Specify which keycontains the entire-aperture set of data
+        if len(self.mean_dark) > 1:
+            use_amp = '5'
+            # Looks like the histogram data for the individual amps is not being saved
+            # correctly. The data are identical for the full aperture and all amps. So
+            # for the moment, show only the full aperture data.
+            per_amp = False
+            main_label = 'Full Aperture'
+
+            # Colors to use for the amp-dpendent plots
+            colors = []
+        else:
+            use_amp = '1'
+            per_amp = False
+
+        # Create a ColumnDataSource for the main amp to use
+        source = ColumnDataSource(data=dict(mean_dark=self.mean_dark[use_amp],
+                                            stdev_dark=self.stdev_dark[use_amp],
+                                            time=self.obstime[use_amp]
+                                            )
+                                  )
+        self.plot = figure(title=self.aperture, tools='pan,box_zoom,reset,wheel_zoom,save', background_fill_color="#fafafa")
+
+        # Plot the "main" amp data
+        self.plot.scatter(x='time', y='mean_dark', fill_color="navy", alpha=0.75, source=source, legend_label='Full Aperture')
+        hover_tool = HoverTool(tooltips=[('Dark rate:', '@y'),
+                                         ('Date:', '@x{%d %b %Y %H:%M:%S}')
+                                        ], mode='mouse')
+        hover_tool.formatters = {'@x': 'datetime'}
+        self.plot.tools.append(hover_tool)
+
+        # If there are multiple amps to plot, do that here
+        if per_amp:
+            amp_source = {}
+            # Repeat for all amps. Be sure to skip the amp that's already completed
+            for amp, color in zip(self.mean_dark, colors):
+                if amp != use_amp:
+                    amp_source[amp] = ColumnDataSource(data=dict(mean_dark=self.mean_dark[amp],
+                                                                 stdev_dark=self.stdev_dark[amp],
+                                                                 time=self.obstime[amp]
+                                                                 )
+                                                       )
+                    self.plot.scatter(x='time', y='mean_dark', fill_color=color, alpha=0.5, source=amp_source[amp],
+                                      alpha=0.25, legend_label=f'Amp {amp}')
+
+        # Make the x axis tick labels look nice
+        self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
+                                                seconds=["%d %b %H:%M:%S.%3N"],
+                                                hours=["%d %b %H:%M"],
+                                                days=["%d %b %H:%M"],
+                                                months=["%d %b %Y %H:%M"],
+                                                years=["%d %b %Y"]
+                                                )
+        self.plot.xaxis.major_label_orientation = np.pi / 4
+
+
+
 
 class DarkImagePlot():
     """

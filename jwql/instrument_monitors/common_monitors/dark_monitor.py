@@ -461,9 +461,9 @@ class Dark():
         for filename in file_list:
 
             logging.info('\tWorking on file: {}'.format(filename))
-            
+
             rate_file = filename.replace("dark", "rate")
-            
+
             if os.path.isfile(rate_file):
                 logging.info("\t\tFile {} exists, skipping pipeline".format(rate_file))
                 slope_files.append(filename)
@@ -599,8 +599,8 @@ class Dark():
                              'double_gauss_width2': double_gauss_params[key][5],
                              'double_gauss_chisq': double_gauss_chisquared[key],
                              'mean_dark_image_file': os.path.basename(mean_slope_file),
-                             'hist_dark_values': bins,
-                             'hist_amplitudes': histogram,
+                             'hist_dark_values': bins[key],
+                             'hist_amplitudes': histogram[key],
                              'entry_date': datetime.datetime.now()
                              }
             self.stats_table.__table__.insert().execute(dark_db_entry)
@@ -915,11 +915,11 @@ class Dark():
             Reduced chi-squared for the best-fit parameters. Keys are
             amp numbers as strings
 
-        hist : numpy.ndarray
-            1D array of histogram values
+        hist : dict
+            Dictionary of 1D arrays of histogram values
 
-        bin_centers : numpy.ndarray
-            1D array of bin centers that match the ``hist`` values.
+        bins : dict
+            Dictionary of 1D arrays of bin centers that match the ``hist`` values.
         """
 
         amp_means = {}
@@ -928,6 +928,8 @@ class Dark():
         gaussian_chi_squared = {}
         double_gaussian_params = {}
         double_gaussian_chi_squared = {}
+        hists = {}
+        bins = {}
 
         # Add full image coords to the list of amp_boundaries, so that full
         # frame stats are also calculated.
@@ -970,6 +972,8 @@ class Dark():
                                                range=(lower_bound, upper_bound))
 
             bin_centers = (bin_edges[1:] + bin_edges[0: -1]) / 2.
+            hists[key] = hist.astype(float)
+            bins[key] = bin_centers
             initial_params = [np.max(hist), amp_mean, amp_stdev]
 
             # Fit a Gaussian to the histogram. Save best-fit params and
@@ -1016,7 +1020,7 @@ class Dark():
                      .format(double_gaussian_chi_squared))
 
         return (amp_means, amp_stdevs, gaussian_params, gaussian_chi_squared, double_gaussian_params,
-                double_gaussian_chi_squared, hist.astype(float), bin_centers)
+                double_gaussian_chi_squared, hists, bins)
 
 
 if __name__ == '__main__':
