@@ -23,6 +23,7 @@ import os
 
 from astropy.io import fits
 from astropy.time import Time
+from bokeh.models import ColumnDataSource, HoverTool,  LinearAxis, Range1d
 from bokeh.models.tickers import LogTicker
 from bokeh.plotting import figure, show
 from datetime import datetime, timedelta
@@ -179,7 +180,6 @@ class DarkHistPlot():
         self.aperture = aperture
         self.create_plot()
 
-
     def calc_bin_edges(self, centers):
         """Given an array of values corresponding to the center of a series
         of histogram bars, calculate the bar edges
@@ -195,8 +195,6 @@ class DarkHistPlot():
         left = centers - 0.5 * deltax_left
         right = centers + 0.5 * deltax_right
         return left, right
-
-
 
     def create_plot(self):
         """
@@ -221,11 +219,20 @@ class DarkHistPlot():
         mainy = np.array(mainy)
 
         # Calculate edge values
-        left_edges, right_edges = calc_bin_edges(mainx)
+        left_edges, right_edges = self.calc_bin_edges(mainx)
 
         # Create the CDF
         pdf = mainy / sum(mainy)
         cdf = np.cumsum(pdf)
+
+        # Create ColumnDataSource for main plot and CDF line
+        source = ColumnDataSource(data=dict(dark_rate=mainx,
+                                            num_pix=mainy,
+                                            cdf=cdf,
+                                            left_edges=left_edges,
+                                            right_edges=right_edges
+                                            )
+                                  )
 
         self.plot = figure(title=self.aperture, tools='pan,box_zoom,reset,wheel_zoom,save', background_fill_color="#fafafa")
 
@@ -243,14 +250,22 @@ class DarkHistPlot():
                                    fill_color=color, line_color="white", alpha=0.25, legend_label=f'Amp {amp}')
 
         else:
-            self.plot.quad(top=mainy, bottom=0, left=left_edges, right=right_edges,
-                                fill_color="navy", line_color="white", alpha=0.5)
+            self.plot.quad(top='num_pix', bottom=0, left='left_edges', right='right_edges',
+                                fill_color="navy", line_color="white", alpha=0.5, source=source)
+            hover_tool = HoverTool(tooltips=[('Dark rate:', '@dark_rate'),
+                                             ('Num Pix:', '@num_pix'),
+                                             ('CDF:', '@cdf')
+                                             ])
+            self.plot.tools.append(hover_tool)
 
         self.plot.xaxis.axis_label = 'Dark Rate (DN/sec)'
         self.plot.yaxis.axis_label = 'Number of Pixels'
         self.plot.extra_y_ranges = {"cdf_line": Range1d(0,1)}
         self.plot.add_layout(LinearAxis(y_range_name='cdf_line', axis_label="Cumulative Distribution"), "right")
-        self.plot.line(mainx, cdf, line_color="orange", line_width=2, alpha=0.7, y_range_name='cdf_line', color="red", legend_label="CDF")
+
+        # Add cumulative distribution function
+        self.plot.line('dark_rate', 'cdf', source=source, line_color="orange", line_width=2, alpha=0.7,
+                       y_range_name='cdf_line', color="red", legend_label="CDF")
 
         # Set the initial x range to include 99.8% of the distribution
         disp_index = np.where((cdf > 0.001) & (cdf < 0.999))[0]
