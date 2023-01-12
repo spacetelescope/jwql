@@ -31,6 +31,7 @@ Dependencies
 
 from datetime import datetime as dt
 from math import pi
+from operator import itemgetter
 
 from bokeh.layouts import column
 from bokeh.models import Axis, ColumnDataSource, DatetimeTickFormatter, OpenURL, TapTool
@@ -41,8 +42,9 @@ import numpy as np
 import pandas as pd
 from sqlalchemy import func, and_
 
+import jwql.database.database_interface as di
 from jwql.utils.constants import ANOMALY_CHOICES_PER_INSTRUMENT, FILTERS_PER_INSTRUMENT
-from jwql.utils.utils import get_base_url
+from jwql.utils.utils import get_base_url, get_config
 from jwql.website.apps.jwql.data_containers import build_table
 
 
@@ -68,7 +70,7 @@ def build_table_latest_entry(tablename):
         if hasattr(table, '__tablename__'):
             tables_of_interest[table.__tablename__] = table
 
-    session, _, _, _ = load_connection(get_config()['connection_string'])
+    session, _, _, _ = di.load_connection(get_config()['connection_string'])
     table_object = tables_of_interest[tablename]  # Select table object
 
     subq = session.query(table_object.instrument,
@@ -78,7 +80,7 @@ def build_table_latest_entry(tablename):
     result = session.query(table_object).join(
         subq,
         and_(
-            table_object.istrument == subq.c.instrument,
+            table_object.instrument == subq.c.instrument,
             table_object.date == subq.c.maxdate
         )
     )
