@@ -166,7 +166,7 @@ class FilesystemCharacteristics(base):
     # Define the columns
     id = Column(Integer, primary_key=True, nullable=False)
     date = Column(DateTime, nullable=False)
-    instrument = Column(Enum(*JWST_INSTRUMENT_NAMES, name='instrument_enum'), nullable=False)
+    instrument = Column(Enum(*JWST_INSTRUMENT_NAMES, name='instrument_name_enum'), nullable=False)
     filter_pupil = Column(ARRAY(String, dimensions=1))
     obs_per_filter_pupil = Column(ARRAY(Integer, dimensions=1))
 
