@@ -45,10 +45,11 @@
                 </div>
 
             <br>
-            <button id="log_submit" class="btn btn-primary" type="submit" value="" style="float: left;" disabled>Submit</button>
+            <button id="log_submit" class="btn btn-primary" type="submit" style="float: left;" disabled>Submit</button>
             <br><br>
-
-             <!-- If log is passed, render log. -->
+        </form>
+            
+            <!-- If log is passed, render log. -->
             <!-- Log is not rendered when coming from home/monitor views -->
             {% if log_text %}
                 <h4> {{ log_name|safe }} </h4><hr>
