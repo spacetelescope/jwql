@@ -334,6 +334,17 @@ def dark_monitor_tabs(instrument):
     script : str
         The JS script to render dark monitor plots
     """
+    get all dark data here. then loop over the apertures and call
+    the monitor_dark_bokeh.DarkMonitor for each.
+    # Apertures that do not correspond to single subarrays on a detector
+    apertures_to_skip = ['NRCALL_FULL', 'NRCAS_FULL', 'NRCBS_FULL']
+
+    # This will query for the data and produce the plots
+    plot_list, or_something = DarkMonitorPlots(instrument)
+
+    # Now we need to organize the plots into Panels, etc.
+
+
 
     full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
 
@@ -342,7 +353,7 @@ def dark_monitor_tabs(instrument):
 
         # Start with default values for instrument and aperture because
         # BokehTemplate's __init__ method does not allow input arguments
-        monitor_template = monitor_pages.DarkMonitor()
+        monitor_template = monitor_pages.DarkMonitor(instrument, aperture)
 
         # Set instrument and monitor using DarkMonitor's setters
         monitor_template.aperture_info = (instrument, aperture)
@@ -509,6 +520,17 @@ def generic_telemetry_plot(times, values, name, nominal_value=None, yellow_limit
     fig = add_limit_boxes(fig, yellow=yellow_limits, red=red_limits)
 
     return fig
+
+
+def identify_dark_monitor_tables(instrument):
+    """Determine which dark current database tables as associated with
+    a given instrument"""
+
+    mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[instrument.lower()]
+    query_table = eval('{}DarkQueryHistory'.format(mixed_case_name))
+    pixel_table = eval('{}DarkPixelStats'.format(mixed_case_name))
+    stats_table = eval('{}DarkDarkCurrent'.format(mixed_case_name))
+    return query_table, pixel_table, stats_table
 
 
 def readnoise_monitor_tabs(instrument):
