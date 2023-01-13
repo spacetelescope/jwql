@@ -47,6 +47,7 @@ class DarkMonitorPlots():
     DarkMonitorData and AperturePlots.
     """
     def __init__(self, instrument):
+        mean_slope_dir = os.path.join(OUTPUTS_DIR, 'dark_monitor', 'mean_slope_images')
         self.instrument = instrument
         self.hist_plots = {}
         self.trending_plots = {}
@@ -70,31 +71,47 @@ class DarkMonitorPlots():
             # Organize the data to create the trending plot
             self.get_trending_data()
 
+            # For mean dark images and potential bad pixels, we have data for each
+            # full frame aperture, rather than for all apertures
+            if self.aperture in full_apertures:
+                # Convert query results for the pixel data to a series of dictionaries
+                self.pixel_data_to_lists()
+
+                # Organize the information that will be used to show the mean dark images
+                # and possible bad pixels
+                self.get_mean_dark_images()
+
+                # Create the fiugure
+                self.images[self.detector] = DarkImagePlot(self.detector, self.image_data)
+
             # Now that we have all the data, create the acutal plots
             self.hist_plots[aperture] = DarkHistPlot(self.aperture, self.hist_data)
             self.trending_plots[aperture] = DarkTrendPlot(self.aperture, self.mean_dark, self.stdev_dark, self.obstime)
-            self.images[aperture] = DarkImagePlot(self.mean_dark_image)
 
-    def stats_data_to_lists(self):
-        """Create lists from some of the stats database columns that are
-        used by multiple plot types
 
-        Parameters
-        ----------
-        aperture : str
-            Aperture name (e.g. NRCA1_FULL)
+    def get_mean_dark_images(self):
+        """Organize data for the tab of the dark monitor plots that shows
+        the mean dark current images. In this case there are only images
+        for full frame apertures.
         """
-        # Locate the entries corresponding to the given aperture
-        apertures = np.array([e.aperture for e in self.db.stats_data])
-        self._ap_idx = np.where((apertures == self.aperture))[0]
+        there will be up to three entries with the same detector/mean dark file/obstimes/basefile
+        one each for bad pixel types 'hot', 'dead', 'noisy'. we need to make sure to get all three,
+        and condense down into one, since all info other than the bad pixel type and coords will be the
+        same for all three.
 
-        self._apertures = np.array([e.aperture for e in self.db.stats_data[self._ap_idx]])
-        self._amplifiers = np.array([e.amplifier for e in self.db.stats_data[self._ap_idx]])
-        self._entry_dates = np.array([e.entry_date for e in self.db.stats_data[self._ap_idx]])
-        self._mean = np.array([e.mean for e in self.db.stats_data[self._ap_idx]])
-        self._stdev = np.array([e.stdev for e in self.db.stats_data[self._ap_idx]])
-        self._obs_mid_time = np.array([e.obs_mid_time for e in self.db.stats_data[self._ap_idx]])
-        self._mean_dark_file = np.array([e.mean_dark_image_file for e in self.db.stats_data[self._ap_idx]])
+        # Find the index of the most recent entry
+        latest_date = np.max(self._pixel_entry_dates)
+        most_recent_idx = np.where(self._pixel_entry_dates == latest_date)[0]
+
+        image_path = os.path.join(self.mean_slope_dir, self._mean_dark_image_files[most_recent_idx])
+        mean_dark_image = fits.getdata(mean_dark_image_path, 1)
+
+        self.image_data[self.detector] = (mean_dark_image,
+                                          self._types[most_recent_idx],
+                                          self._x_coords[most_recent_idx],
+                                          self._y_coords[most_recent_idx],
+                                          self._baseline_files[most_recent_idx]
+                                          )
 
     def get_latest_histogram_data(self):
         """Organize data for histogram plot. In this case, we only need the
@@ -128,19 +145,6 @@ class DarkMonitorPlots():
             self.hist_data[db.stats_data[idx].amplifier] = (db.stats_data[idx].hist_dark_values,
                                                             db.stats_data[idx].hist_amplitudes)
 
-        # If the we are working with a full frame aperture, collect the name of
-        # the mean dark image file that is associated with the aperture. In this
-        # case, we only need one filename, since it will cover all amplifiers.
-        # And we're only interested in the latest entry.
-        if self.aperture in FULL_FRAME_APERTURES:
-            mean_slope_dir = os.path.join(OUTPUTS_DIR, 'dark_monitor', 'mean_slope_images')
-            self.mean_dark_image_file = db.stats_data[most_recent_idx[0]].mean_dark_image_file
-            mean_dark_image_path = os.path.join(mean_slope_dir, mean_dark_image_file)
-            with fits.open(mean_dark_image_path) as hdulist:
-                self.mean_dark_image = hdulist[1].data
-        else:
-            self.mean_dark_image = None
-
     def get_trending_data(self):
         """Organize data for the trending plot. Here we need all the data for
         the aperture. Keep amplifier-specific data separated.
@@ -156,9 +160,43 @@ class DarkMonitorPlots():
             self.stdev_dark[amp] = self._stdev[amp_rows]
             self.obstime[amp] = self._obs_mid_time[amp_rows]
 
+    def pixel_data_to_lists(self):
+        """
+        """
+        # Locate the entries corresponding to the given detector
+        detectors = np.array([e.detector for e in self.db.pixel_data])
 
+        # The detector name is the first part of the aperture name
+        self.detector = self.aperture.split('_')[0]
+        self._det_idx = np.where((detectors == self.detector))[0]
 
+        self._pixel_entry_dates = np.array([e.entry_date for e in self.db.pixel_data[self._det_idx]])
+        self._detectors = detectors[self._det_idx]
+        self._x_coords = np.array([e.x_coord for e in self.db.pixel_data[self._det_idx]])
+        self._y_coords = np.array([e.y_coord for e in self.db.pixel_data[self._det_idx]])
+        self._types = np.array([e.type for e in self.db.pixel_data[self._det_idx]])
+        self._mean_dark_image_files = np.array([e.mean_dark_image_file for e in self.db.pixel_data[self._det_idx]])
+        self._baseline_files = np.array([e.baseline_file for e in self.db.pixel_data[self._det_idx]])
 
+    def stats_data_to_lists(self):
+        """Create lists from some of the stats database columns that are
+        used by multiple plot types
+
+        Parameters
+        ----------
+        aperture : str
+            Aperture name (e.g. NRCA1_FULL)
+        """
+        # Locate the entries corresponding to the given aperture
+        apertures = np.array([e.aperture for e in self.db.stats_data])
+        self._ap_idx = np.where((apertures == self.aperture))[0]
+
+        self._apertures = apertures[self._ap_idx]
+        self._amplifiers = np.array([e.amplifier for e in self.db.stats_data[self._ap_idx]])
+        self._entry_dates = np.array([e.entry_date for e in self.db.stats_data[self._ap_idx]])
+        self._mean = np.array([e.mean for e in self.db.stats_data[self._ap_idx]])
+        self._stdev = np.array([e.stdev for e in self.db.stats_data[self._ap_idx]])
+        self._obs_mid_time = np.array([e.obs_mid_time for e in self.db.stats_data[self._ap_idx]])
 
 
 
@@ -393,12 +431,43 @@ class DarkTrendPlot():
 class DarkImagePlot():
     """
     """
-    def __init__(self, aperture, ):
-        ...
+    def __init__(self, detector, data):
+        self.detector = detector
+        self.data = data
 
+        self.create_plot()
 
+    def create_plot(self):
+        """
+        """
 
+        # definition used:
+        #self.image_data[self.detector] = (mean_dark_image,
+        #                                  self._types[most_recent_idx],
+        #                                  self._x_coords[most_recent_idx],
+        #                                  self._y_coords[most_recent_idx],
+        #                                  self._baseline_files[most_recent_idx]
+        #                                  )
 
+        source = ColumnDataSource(data=dict(image=self.image_data[self.detector][0],.....)
+                                            )
+        ny, nx = self.image_data[self.detector][0].shape
+
+        self.plot = figure(tooltips=[("x", "$x"), ("y", "$y"), ("value", "@image")])
+        self.plot.x_range.range_padding = self.plot.y_range.range_padding = 0
+
+        need to get scaling right
+
+        # must give a vector of image data for image parameter
+        self.plot.image(image=[self.image_data[self.detector][0]], x=0, y=0, dw=nx, dh=ny, palette="Spectral11", level="image")
+
+        pix_types = self.image_data[self.detector][1]
+        x_coord = self.image_data[self.detector][2]
+        y_coord = self.image_data[self.detector][3]
+
+        for
+
+        self.plot.scatter()
 
 
 
