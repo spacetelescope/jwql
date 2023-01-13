@@ -92,26 +92,33 @@ class DarkMonitorPlots():
     def get_mean_dark_images(self):
         """Organize data for the tab of the dark monitor plots that shows
         the mean dark current images. In this case there are only images
-        for full frame apertures.
+        for full frame apertures. There will be three entries with the same
+        detector/mean dark file/obstimes/basefile, one each for bad pixel
+        types 'hot', 'dead', 'noisy'. Make sure to get all three.
         """
-        there will be up to three entries with the same detector/mean dark file/obstimes/basefile
-        one each for bad pixel types 'hot', 'dead', 'noisy'. we need to make sure to get all three,
-        and condense down into one, since all info other than the bad pixel type and coords will be the
-        same for all three.
+        # Use the most recent entry for each of the three bad pixel types
+        hot_idx = np.where(self._types == 'hot')[0][-1]
+        dead_idx = np.where(self._types == 'dead')[0][-1]
+        noisy_idx = np.where(self._types == 'noisy')[0][-1]
 
-        # Find the index of the most recent entry
-        latest_date = np.max(self._pixel_entry_dates)
-        most_recent_idx = np.where(self._pixel_entry_dates == latest_date)[0]
-
-        image_path = os.path.join(self.mean_slope_dir, self._mean_dark_image_files[most_recent_idx])
+        # Store the bad pixel data in a dictionary where the keys are the
+        # type of bad pixel ('hot', 'dead', or 'noisy'), and the
+        # values are tuples of (x, y) lists
+        image_path = os.path.join(self.mean_slope_dir, self._mean_dark_image_files[hot_idx])
         mean_dark_image = fits.getdata(mean_dark_image_path, 1)
 
-        self.image_data[self.detector] = (mean_dark_image,
-                                          self._types[most_recent_idx],
-                                          self._x_coords[most_recent_idx],
-                                          self._y_coords[most_recent_idx],
-                                          self._baseline_files[most_recent_idx]
-                                          )
+        self.image_data[self.detector] = {"image_array": mean_dark_image,
+                                          "hot_pixels": (self._x_coords[hot_idx],
+                                                         self._y_coords[hot_idx]
+                                                         ),
+                                          "dead_pixels": (self._x_coords[dead_idx],
+                                                          self._y_coords[dead_idx]
+                                                          ),
+                                          "noisy_pixels": (self._x_coords[noisy_idx],
+                                                           self._y_coords[noisy_idx]
+                                                           ),
+                                          "baseline_file": self._baseline_files[most_recent_idx]
+                                          }
 
     def get_latest_histogram_data(self):
         """Organize data for histogram plot. In this case, we only need the
@@ -441,17 +448,33 @@ class DarkImagePlot():
         """
         """
 
-        # definition used:
-        #self.image_data[self.detector] = (mean_dark_image,
-        #                                  self._types[most_recent_idx],
-        #                                  self._x_coords[most_recent_idx],
-        #                                  self._y_coords[most_recent_idx],
-        #                                  self._baseline_files[most_recent_idx]
-        #                                  )
+        """
+                self.image_data[self.detector] = {"image_array": mean_dark_image,
+                                          "hot_pixels": (self._x_coords[hot_idx],
+                                                         self._y_coords[hot_idx]
+                                                         ),
+                                          "dead_pixels": (self._x_coords[dead_idx],
+                                                          self._y_coords[dead_idx]
+                                                          ),
+                                          "noisy_pixels": (self._x_coords[noisy_idx],
+                                                           self._y_coords[noisy_idx]
+                                                           ),
+                                          "baseline_file": self._baseline_files[most_recent_idx]
+                                          }
+        """
 
-        source = ColumnDataSource(data=dict(image=self.image_data[self.detector][0],.....)
+
+        source = ColumnDataSource(data=dict(image=self.image_data[self.detector]["image_array"],
+                                            hot_pixels_x=self.image_data[self.detector]["hot_pixels"][0],
+                                            hot_pixels_y=self.image_data[self.detector]["hot_pixels"][1],
+                                            dead_pixels_x=self.image_data[self.detector]["dead_pixels"][0],
+                                            dead_pixels_y=self.image_data[self.detector]["dead_pixels"][1],
+                                            noisy_pixels_x=self.image_data[self.detector]["noisy_pixels"][0],
+                                            noisy_pixels_y=self.image_data[self.detector]["noisy_pixels"][1],
+                                            baseline_file=self.image_data[self.detector]["baseline_file"]
                                             )
-        ny, nx = self.image_data[self.detector][0].shape
+                                  )
+        ny, nx = self.image_data[self.detector]["image_array"].shape
 
         self.plot = figure(tooltips=[("x", "$x"), ("y", "$y"), ("value", "@image")])
         self.plot.x_range.range_padding = self.plot.y_range.range_padding = 0
@@ -461,9 +484,10 @@ class DarkImagePlot():
         # must give a vector of image data for image parameter
         self.plot.image(image=[self.image_data[self.detector][0]], x=0, y=0, dw=nx, dh=ny, palette="Spectral11", level="image")
 
-        pix_types = self.image_data[self.detector][1]
-        x_coord = self.image_data[self.detector][2]
-        y_coord = self.image_data[self.detector][3]
+        # Overplot the bad pixel locations
+        self.plot.scatter(x='hot_pixels_x', y='hot_pixels_y', source=source, color='red', legend_label='')
+        self.plot.scatter(x='dead_pixels_x', y='dead_pixels_y', source=source, color='blue', legend_label='')
+        self.plot.scatter(x='noisy_pixels_x', y='noisy_pixels_y', source=source, color='pink', legend_label='')
 
         for
 
