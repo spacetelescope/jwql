@@ -301,11 +301,11 @@ def get_observation_characteristics():
 
         # Different instruments hold the optical elements in different fields
         if instrument in ['nircam', 'niriss']:
-            colval = "filter, pupil, observtn"
+            colval = "filter,pupil,observtn"
         elif instrument == 'nirspec':
-            colval = "filter, grating, observtn"
+            colval = "filter,grating,observtn"
         elif instrument == 'miri':
-            colval = "filter, observtn"
+            colval = "filter,observtn"
         optics = colval.split(',')
 
         for proposal in proposal_list:
