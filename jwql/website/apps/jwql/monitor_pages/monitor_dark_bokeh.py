@@ -37,7 +37,7 @@ from jwql.database.database_interface import NIRISSDarkQueryHistory, NIRISSDarkP
 from jwql.database.database_interface import MIRIDarkQueryHistory, MIRIDarkPixelStats, MIRIDarkDarkCurrent
 from jwql.database.database_interface import NIRSpecDarkQueryHistory, NIRSpecDarkPixelStats, NIRSpecDarkDarkCurrent
 from jwql.database.database_interface import FGSDarkQueryHistory, FGSDarkPixelStats, FGSDarkDarkCurrent
-from jwql.utils.constants import JWST_INSTRUMENT_NAMES_MIXEDCASE, RAPID_READPATTERNS
+from jwql.utils.constants import FULL_FRAME_APERTURES, JWST_INSTRUMENT_NAMES_MIXEDCASE, RAPID_READPATTERNS
 from jwql.utils.utils import get_config
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -49,22 +49,50 @@ class DarkMonitorPlots():
     DarkMonitorData and AperturePlots.
     """
     def __init__(self, instrument):
-        mean_slope_dir = os.path.join(OUTPUTS_DIR, 'dark_monitor', 'mean_slope_images')
+        self.mean_slope_dir = os.path.join(OUTPUTS_DIR, 'dark_monitor', 'mean_slope_images')
         self.instrument = instrument
         self.hist_plots = {}
         self.trending_plots = {}
+        self.dark_images = {}
 
         # Get the data from the database
         self.db = DarkMonitorData(self.instrument)
 
         # Now we need to loop over the available apertures and create plots for each
-        available_apertures = np.unique(np.array(self.db.stats_table.apertures))
+        available_apertures = self.db.get_unique_stats_column_vals('aperture')
+        #available_apertures = np.unique(np.array(self.db.stats_table.apertures))
 
         # List of full frame aperture names
         full_apertures = FULL_FRAME_APERTURES[instrument.upper()]
 
         for aperture in available_apertures:
             self.aperture = aperture
+
+            # Retrieve data from database. Retrieve bad pixel data (which is
+            # associated with the detector rather than the aperture) only if
+            # the aperture is a full frame aperture.
+            if self.aperture in full_apertures:
+                self.db.retrieve_data(self.aperture, get_pixtable_for_detector=True)
+
+                # Convert query results for the bad pixel data to a series of arrays
+                self.pixel_data_to_lists()
+
+                # Organize the information that will be used to show the mean dark images
+                # and possible bad pixels
+                self.get_mean_dark_images()
+
+                # Create the mean dark image fiugure
+                self.dark_images[self.aperture] = DarkImagePlot(self.detector, self.image_data).plot
+
+            else:
+                # For apertures that are not full frame, we retrieve only the histogram
+                # and trending data. No mean dark image nor bad pixel lists
+                self.db.retrieve_data(self.aperture, get_pixtable_for_detector=False)
+
+            # In all cases, full frame as well as subarray apertures, we create dark
+            # current histogram and trending plots.
+
+            # Convert the columns we are interested in to lists
             self.stats_data_to_lists()
 
             # Organize the data to create the histogram plot
@@ -72,19 +100,6 @@ class DarkMonitorPlots():
 
             # Organize the data to create the trending plot
             self.get_trending_data()
-
-            # For mean dark images and potential bad pixels, we have data for each
-            # full frame aperture, rather than for all apertures
-            if self.aperture in full_apertures:
-                # Convert query results for the pixel data to a series of dictionaries
-                self.pixel_data_to_lists()
-
-                # Organize the information that will be used to show the mean dark images
-                # and possible bad pixels
-                self.get_mean_dark_images()
-
-                # Create the fiugure
-                self.dark_images[self.aperture] = DarkImagePlot(self.detector, self.image_data).plot
 
             # Now that we have all the data, create the acutal plots
             self.hist_plots[aperture] = DarkHistPlot(self.aperture, self.hist_data).plot
@@ -107,7 +122,7 @@ class DarkMonitorPlots():
         # type of bad pixel ('hot', 'dead', or 'noisy'), and the
         # values are tuples of (x, y) lists
         image_path = os.path.join(self.mean_slope_dir, self._mean_dark_image_files[hot_idx])
-        mean_dark_image = fits.getdata(mean_dark_image_path, 1)
+        mean_dark_image = fits.getdata(image_path, 1)
 
         self.image_data[self.detector] = {"image_array": mean_dark_image,
                                           "hot_pixels": (self._x_coords[hot_idx],
@@ -170,42 +185,26 @@ class DarkMonitorPlots():
             self.obstime[amp] = self._obs_mid_time[amp_rows]
 
     def pixel_data_to_lists(self):
+        """Convert db query results to arrays
         """
-        """
-        # Locate the entries corresponding to the given detector
-        detectors = np.array([e.detector for e in self.db.pixel_data])
-
-        # The detector name is the first part of the aperture name
-        self.detector = self.aperture.split('_')[0]
-        self._det_idx = np.where((detectors == self.detector))[0]
-
-        self._pixel_entry_dates = np.array([e.entry_date for e in self.db.pixel_data[self._det_idx]])
-        self._detectors = detectors[self._det_idx]
-        self._x_coords = np.array([e.x_coord for e in self.db.pixel_data[self._det_idx]])
-        self._y_coords = np.array([e.y_coord for e in self.db.pixel_data[self._det_idx]])
-        self._types = np.array([e.type for e in self.db.pixel_data[self._det_idx]])
-        self._mean_dark_image_files = np.array([e.mean_dark_image_file for e in self.db.pixel_data[self._det_idx]])
-        self._baseline_files = np.array([e.baseline_file for e in self.db.pixel_data[self._det_idx]])
+        self._pixel_entry_dates = np.array([e.entry_date for e in self.db.pixel_data])#[self._det_idx]])
+        self._detectors = np.array([e.detector for e in self.db.pixel_data])
+        self._x_coords = np.array([e.x_coord for e in self.db.pixel_data])#[self._det_idx]])
+        self._y_coords = np.array([e.y_coord for e in self.db.pixel_data])#[self._det_idx]])
+        self._types = np.array([e.type for e in self.db.pixel_data])#[self._det_idx]])
+        self._mean_dark_image_files = np.array([e.mean_dark_image_file for e in self.db.pixel_data])#[self._det_idx]])
+        self._baseline_files = np.array([e.baseline_file for e in self.db.pixel_data])#[self._det_idx]])
 
     def stats_data_to_lists(self):
-        """Create lists from some of the stats database columns that are
+        """Create arrays from some of the stats database columns that are
         used by multiple plot types
-
-        Parameters
-        ----------
-        aperture : str
-            Aperture name (e.g. NRCA1_FULL)
         """
-        # Locate the entries corresponding to the given aperture
         apertures = np.array([e.aperture for e in self.db.stats_data])
-        self._ap_idx = np.where((apertures == self.aperture))[0]
-
-        self._apertures = apertures[self._ap_idx]
-        self._amplifiers = np.array([e.amplifier for e in self.db.stats_data[self._ap_idx]])
-        self._entry_dates = np.array([e.entry_date for e in self.db.stats_data[self._ap_idx]])
-        self._mean = np.array([e.mean for e in self.db.stats_data[self._ap_idx]])
-        self._stdev = np.array([e.stdev for e in self.db.stats_data[self._ap_idx]])
-        self._obs_mid_time = np.array([e.obs_mid_time for e in self.db.stats_data[self._ap_idx]])
+        self._amplifiers = np.array([e.amplifier for e in self.db.stats_data])#[self._ap_idx]])
+        self._entry_dates = np.array([e.entry_date for e in self.db.stats_data])#[self._ap_idx]])
+        self._mean = np.array([e.mean for e in self.db.stats_data])#[self._ap_idx]])
+        self._stdev = np.array([e.stdev for e in self.db.stats_data])#[self._ap_idx]])
+        self._obs_mid_time = np.array([e.obs_mid_time for e in self.db.stats_data])#[self._ap_idx]])
 
 
 
@@ -409,7 +408,7 @@ class DarkTrendPlot():
                                                                  )
                                                        )
                     self.plot.scatter(x='time', y='mean_dark', fill_color=color, alpha=0.5, source=amp_source[amp],
-                                      alpha=0.25, legend_label=f'Amp {amp}')
+                                      legend_label=f'Amp {amp}')
 
         # Make the x axis tick labels look nice
         self.plot.xaxis.formatter = DatetimeTickFormatter(microseconds=["%d %b %H:%M:%S.%3N"],
@@ -632,13 +631,9 @@ class DarkImagePlot():
 
 
 
-
+"""
 class AperturePlots():
 
-
-Assume that this class is used for a single instrument/aperture. The calling
-module will need to filter the data and supply just the data for the particular
-aperture
 
     def __init__(instrument, aperture):
         self._instrument = instrument
@@ -656,15 +651,8 @@ aperture
         # Get mean dark images
         self.get_mean_dark_images()
 
-        mean image tab:
-        show the mean dark image (with good scaling)
-        show the ratio image of mean dark / baseline
-        on the mean dark image, scatter plot the new hot pixels (from db table)
-
 
     def create_histograms(self):
-        """
-        """
 
         # Get a list of all possible apertures from pysiaf
         #possible_apertures = list(Siaf(self.instrument).apernames)
@@ -704,7 +692,7 @@ aperture
 
 
     def _dark_mean_image(self):
-        """Update bokeh objects with mean dark image data."""
+        Update bokeh objects with mean dark image data.
 
         # Open the mean dark current file and get the data
         if len(self.pixel_table) != 0:
@@ -716,7 +704,7 @@ aperture
         else:
             # Cover the case where the database is empty
             data = np.zeros((10, 10))
-
+"""
 
 
 
@@ -726,229 +714,55 @@ class DarkMonitorData():
 
     def __init__(self, instrument_name):
         self.instrument = instrument_name
+        self.identify_tables()
 
     def identify_tables(self):
         """Determine which dark current database tables as associated with
         a given instrument"""
-        mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument_name.lower()]
+        mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self.instrument.lower()]
         self.query_table = eval('{}DarkQueryHistory'.format(mixed_case_name))
         self.pixel_table = eval('{}DarkPixelStats'.format(mixed_case_name))
         self.stats_table = eval('{}DarkDarkCurrent'.format(mixed_case_name))
 
         # Get a list of column names for each
-        self.stats_table_columns = self.stats_table.metadata.tables[f'{instrument_name.lower()}_dark_dark_current'].columns.keys()
-        self.pixel_table_columns = self.pixel_table.metadata.tables[f'{instrument_name.lower()}_dark_pixel_stats'].columns.keys()
-        self.query_table_columns = self.query_table.metadata.tables[f'{instrument_name.lower()}_dark_query_history'].columns.keys()
+        self.stats_table_columns = self.stats_table.metadata.tables[f'{self.instrument.lower()}_dark_dark_current'].columns.keys()
+        self.pixel_table_columns = self.pixel_table.metadata.tables[f'{self.instrument.lower()}_dark_pixel_stats'].columns.keys()
+        self.query_table_columns = self.query_table.metadata.tables[f'{self.instrument.lower()}_dark_query_history'].columns.keys()
 
-    def retrieve_data(self):
-        """Get all nedded data from the database
+    def get_unique_stats_column_vals(self, column_name):
+        """Return a list of the unique values from a particular column in the
+        <Instrument>DarkDarkCurrent table (self.stats_table)
+
+        Parameters
+        ----------
+        column_name : str
+            Table column name to query
         """
-        # Determine which database tables to use
-        self.identify_tables()
+        colvals = session.query(eval(f'self.stats_table.{column_name}')).distinct()
+        distinct_colvals = [eval(f'x.{column_name}') for x in colvals]
+        return distinct_colvals
 
+    def retrieve_data(self, aperture, get_pixtable_for_detector=False):
+        """Get all nedded data from the database
+
+        Parameters
+        ----------
+        aperture : str
+            Name of aperture for which data are retrieved (e.g. NRCA1_FULL)
+
+        get_pixtable_for_detector : bool
+            If True, query self.pixel_table (e.g. NIRCamDarkPixelStats) for the
+            detector associated with the given aperture.
+        """
         # Query database for all data in <instrument>DarkDarkCurrent with a matching aperture
         self.stats_data = session.query(self.stats_table) \
-            .filter(self.stats_table.aperture == self._aperture) \
+            .filter(self.stats_table.aperture == aperture) \
             .all()
 
-        self.pixel_data = session.query(self.pixel_table) \
-            .filter(self.pixel_table.detector == self.detector) \
-            .all()
+        if get_pixtable_for_detector:
+            detector = aperture.split('_')[0].upper()
+            self.pixel_data = session.query(self.pixel_table) \
+                .filter(self.pixel_table.detector == detector) \
+                .all()
 
         session.close()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class DarkMonitor(BokehTemplate):
-
-    # Combine instrument and aperture into a single property because we
-    # do not want to invoke the setter unless both are updated
-    @property
-    def aperture_info(self):
-        return (self._instrument, self._aperture)
-
-    @aperture_info.setter
-    def aperture_info(self, info):
-        self._instrument, self._aperture = info
-        self.pre_init()
-        self.post_init()
-
-    def _dark_mean_image(self):
-        """Update bokeh objects with mean dark image data."""
-
-        # Open the mean dark current file and get the data
-        if len(self.pixel_table) != 0:
-            mean_dark_image_file = self.pixel_table[-1].mean_dark_image_file
-            mean_slope_dir = os.path.join(OUTPUTS_DIR, 'dark_monitor', 'mean_slope_images')
-            mean_dark_image_path = os.path.join(mean_slope_dir, mean_dark_image_file)
-            with fits.open(mean_dark_image_path) as hdulist:
-                data = hdulist[1].data
-        else:
-            # Cover the case where the database is empty
-            data = np.zeros((10, 10))
-
-        # Update the plot with the data and boundaries
-        y_size, x_size = np.shape(data)
-        self.refs["mean_dark_source"].data['image'] = [data]
-        self.refs["stamp_xr"].end = x_size
-        self.refs["stamp_yr"].end = y_size
-        self.refs["mean_dark_source"].data['dw'] = [x_size]
-        self.refs["mean_dark_source"].data['dh'] = [x_size]
-
-        # Set the image color scale
-        self.refs["log_mapper"].high = 0
-        self.refs["log_mapper"].low = -.2
-
-        # This should add ticks to the colorbar, but it doesn't
-        self.refs["mean_dark_cbar"].ticker = LogTicker()
-
-        # Add a title
-        self.refs['mean_dark_image_figure'].title.text = self._aperture
-        self.refs['mean_dark_image_figure'].title.align = "center"
-        self.refs['mean_dark_image_figure'].title.text_font_size = "20px"
-
-    def pre_init(self):
-        # Start with default values for instrument and aperture because
-        # BokehTemplate's __init__ method does not allow input arguments
-        try:
-            dummy_instrument = self._instrument
-            dummy_aperture = self._aperture
-        except AttributeError:
-            self._instrument = 'NIRCam'
-            self._aperture = 'NRCA1_FULL'
-
-        self._embed = True
-
-        # Fix aperture/detector name discrepency
-        if self._aperture in ['NRCA5_FULL', 'NRCB5_FULL']:
-            self.detector = '{}LONG'.format(self._aperture[0:4])
-        else:
-            self.detector = self._aperture.split('_')[0]
-
-        # App design
-        self.format_string = None
-        self.interface_file = os.path.join(SCRIPT_DIR, "yaml", "dark_monitor_interface.yaml")
-
-        # Load data tables
-        self.load_data()
-
-        # Data for mean dark versus time plot
-        datetime_stamps = [row.obs_mid_time for row in self.dark_table]
-
-        # Data for dark current histogram plot (full detector)
-        # Just show the last histogram, which is the one most recently
-        # added to the database
-        last_hist_index = -1
-
-        # Return dummy data if the database was empty
-        if len(datetime_stamps) == 0:
-            datetime_stamps = [datetime(2014, 1, 1, 12, 0, 0), datetime(2014, 1, 2, 12, 0, 0)]
-            self.dark_current = [0., 0.1]
-            self.full_dark_bin_center = np.array([0., 0.01, 0.02])
-            self.full_dark_amplitude = [0., 1., 0.]
-        else:
-            self.dark_current = [row.mean for row in self.dark_table]
-            #self.full_dark_bin_center = np.array([np.array(row.hist_dark_values) for
-            #                                     row in self.dark_table])[last_hist_index]
-            self.full_dark_bin_center = np.array(self.dark_table[last_hist_index].hist_dark_values)
-            #self.full_dark_amplitude = [row.hist_amplitudes for
-            #                            row in self.dark_table][last_hist_index]
-            self.full_dark_amplitude = self.dark_table[last_hist_index].hist_amplitudes
-
-        times = Time(datetime_stamps, format='datetime', scale='utc')  # Convert to MJD
-        self.timestamps = times.mjd
-        self.last_timestamp = datetime_stamps[last_hist_index].isoformat()
-        self.full_dark_bottom = np.zeros(len(self.full_dark_amplitude))
-        deltas = self.full_dark_bin_center[1:] - self.full_dark_bin_center[0: -1]
-        self.full_dark_bin_width = np.append(deltas[0], deltas)
-
-    def post_init(self):
-
-        self._update_dark_v_time()
-        self._update_hist()
-        self._dark_mean_image()
-
-    def identify_tables(self):
-        """Determine which dark current database tables as associated with
-        a given instrument"""
-
-        mixed_case_name = JWST_INSTRUMENT_NAMES_MIXEDCASE[self._instrument.lower()]
-        self.query_table = eval('{}DarkQueryHistory'.format(mixed_case_name))
-        self.pixel_table = eval('{}DarkPixelStats'.format(mixed_case_name))
-        self.stats_table = eval('{}DarkDarkCurrent'.format(mixed_case_name))
-
-    def load_data(self):
-        """Query the database tables to get data"""
-
-        # Determine which database tables are needed based on instrument
-        self.identify_tables()
-
-        # Query database for all data in NIRCamDarkDarkCurrent with a matching aperture
-        self.dark_table = session.query(self.stats_table) \
-            .filter(self.stats_table.aperture == self._aperture) \
-            .all()
-
-        self.pixel_table = session.query(self.pixel_table) \
-            .filter(self.pixel_table.detector == self.detector) \
-            .all()
-
-        session.close()
-
-    def _update_dark_v_time(self):
-
-        # Define y range of dark current v. time plot
-        buffer_size = 0.05 * (max(self.dark_current) - min(self.dark_current))
-        self.refs['dark_current_yrange'].start = min(self.dark_current) - buffer_size
-        self.refs['dark_current_yrange'].end = max(self.dark_current) + buffer_size
-
-        # Define x range of dark current v. time plot
-        horizontal_half_buffer = (max(self.timestamps) - min(self.timestamps)) * 0.05
-        if horizontal_half_buffer == 0:
-            horizontal_half_buffer = 1.  # day
-        self.refs['dark_current_xrange'].start = min(self.timestamps) - horizontal_half_buffer
-        self.refs['dark_current_xrange'].end = max(self.timestamps) + horizontal_half_buffer
-
-        # Add a title
-        self.refs['dark_current_time_figure'].title.text = self._aperture
-        self.refs['dark_current_time_figure'].title.align = "center"
-        self.refs['dark_current_time_figure'].title.text_font_size = "20px"
-
-    def _update_hist(self):
-
-        # Define y range of dark current histogram
-        buffer_size = 0.05 * (max(self.full_dark_amplitude) - min(self.full_dark_bottom))
-        self.refs['dark_histogram_yrange'].start = min(self.full_dark_bottom)
-        self.refs['dark_histogram_yrange'].end = max(self.full_dark_amplitude) + buffer_size
-
-        # Define x range of dark current histogram
-        self.refs['dark_histogram_xrange'].start = min(self.full_dark_bin_center)
-        self.refs['dark_histogram_xrange'].end = max(self.full_dark_bin_center)
-
-        # Add a title
-        self.refs['dark_full_histogram_figure'].title.text = self._aperture
-        self.refs['dark_full_histogram_figure'].title.align = "center"
-        self.refs['dark_full_histogram_figure'].title.text_font_size = "20px"
