@@ -427,9 +427,9 @@ class DarkTrendPlot():
         # Set y range
         max_val = -99999.
         min_val = 99999.
-        for key in mean_dark:
-            mx = np.max(mean_dark[key])
-            mn = np.min(mean_dark[key])
+        for key in self.mean_dark:
+            mx = np.max(self.mean_dark[key])
+            mn = np.min(self.mean_dark[key])
             if mx > max_val:
                 max_val = mx
             if mn < min_val:
