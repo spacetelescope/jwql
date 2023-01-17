@@ -428,7 +428,7 @@ def dark_monitor_tabs(instrument):
 
     # Create a tab for each type of plot
     histogram_tab = Panel(child=histogram_layout, title="Histogram")
-    line_tab = Panel(child=line_layout, title="Trending")
+    line_tab = Panel(child=trending_layout, title="Trending")
     image_tab = Panel(child=image_layout, title="Mean Dark Image")
 
     # Build tabs
