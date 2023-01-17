@@ -187,13 +187,19 @@ class DarkMonitorPlots():
     def pixel_data_to_lists(self):
         """Convert db query results to arrays
         """
-        self._pixel_entry_dates = np.array([e.entry_date for e in self.db.pixel_data])#[self._det_idx]])
-        self._detectors = np.array([e.detector for e in self.db.pixel_data])
-        self._x_coords = np.array([e.x_coord for e in self.db.pixel_data])#[self._det_idx]])
-        self._y_coords = np.array([e.y_coord for e in self.db.pixel_data])#[self._det_idx]])
-        self._types = np.array([e.type for e in self.db.pixel_data])#[self._det_idx]])
-        self._mean_dark_image_files = np.array([e.mean_dark_image_file for e in self.db.pixel_data])#[self._det_idx]])
-        self._baseline_files = np.array([e.baseline_file for e in self.db.pixel_data])#[self._det_idx]])
+        self._pixel_entry_dates = np.array([e.entry_date for e in self.db.pixel_data])
+        self._x_coords = np.array([e.x_coord for e in self.db.pixel_data])
+        self._y_coords = np.array([e.y_coord for e in self.db.pixel_data])
+        self._types = np.array([e.type for e in self.db.pixel_data])
+        self._mean_dark_image_files = np.array([e.mean_dark_image_file for e in self.db.pixel_data])
+        self._baseline_files = np.array([e.baseline_file for e in self.db.pixel_data])
+
+        # Change nircam LW detectors to use '5' rather than 'LONG', for consistency
+        # with the stats table
+        if self.instrument.lower() == 'nircam':
+            self._detectors = np.array([e.detector.replace('LONG', '5') for e in self.db.pixel_data])
+        else:
+            self._detectors = np.array([e.detector for e in self.db.pixel_data])
 
     def stats_data_to_lists(self):
         """Create arrays from some of the stats database columns that are
@@ -761,6 +767,10 @@ class DarkMonitorData():
 
         if get_pixtable_for_detector:
             self.detector = aperture.split('_')[0].upper()
+            # NIRCam LW detectors use 'LONG' rather than 5 in the pixel_table
+            if '5' in self.detector:
+                self.detector = self.detector.replace('5', 'LONG')
+
             self.pixel_data = session.query(self.pixel_table) \
                 .filter(self.pixel_table.detector == self.detector) \
                 .all()
