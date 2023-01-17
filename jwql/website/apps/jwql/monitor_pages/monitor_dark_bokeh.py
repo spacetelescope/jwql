@@ -376,19 +376,30 @@ class DarkTrendPlot():
     def create_plot(self):
         """
         """
-        # Specify which keycontains the entire-aperture set of data
-        if len(self.mean_dark) > 1:
+        # Specify which key ("amplifier") to show. If there is data for amp='5',
+        # show that, as it will be the data for the entire detector. If not then
+        # we have subarray data and should use amp='1'.
+        # A bug in the dark monitor means that for NIRISS, there is no amp = '5'
+        # entry at the moment. So we set amp=1. Normally this would only plot the
+        # histogram for amp 1, but since the dark_monitor output at the moment is
+        # wrong and the histogram for the entire detector is being saved in the entries
+        # for each amp, we can get away with using use_amp=1 at the moment.
+        if '5' in self.data:
             use_amp = '5'
+        else:
+            use_amp = '1'
+
+        # If there are trending data for multiple amps, then we can plot each
+        if len(self.mean_dark) > 1:
             # Looks like the histogram data for the individual amps is not being saved
             # correctly. The data are identical for the full aperture and all amps. So
-            # for the moment, show only the full aperture data.
+            # for the moment, show only the full aperture data (by setting per_amp=False).
             per_amp = False
             main_label = 'Full Aperture'
 
             # Colors to use for the amp-dpendent plots
-            colors = []
+            colors = ['red', 'orange', 'green', 'grey']
         else:
-            use_amp = '1'
             per_amp = False
 
         error_lower = self.mean_dark[use_amp] - self.stdev_dark[use_amp]
