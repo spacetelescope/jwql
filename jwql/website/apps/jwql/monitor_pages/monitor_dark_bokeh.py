@@ -114,29 +114,58 @@ class DarkMonitorPlots():
         types 'hot', 'dead', 'noisy'. Make sure to get all three.
         """
         # Use the most recent entry for each of the three bad pixel types
-        check_types = self._types
         hot_idx = np.where(self._types == 'hot')[0][-1]
         dead_idx = np.where(self._types == 'dead')[0][-1]
         noisy_idx = np.where(self._types == 'noisy')[0][-1]
 
         # Store the bad pixel data in a dictionary where the keys are the
-        # type of bad pixel ('hot', 'dead', or 'noisy'), and the
-        # values are tuples of (x, y) lists
-        image_path = os.path.join(self.mean_slope_dir, self._mean_dark_image_files[hot_idx])
-        mean_dark_image = fits.getdata(image_path, 1)
+        # type of bad pixel ('hot_pixel', 'dead_pixel', or 'noisy_pixel'),
+        # and the values are tuples of (x, y) lists. If there is no database
+        # entry for the bad pixels, then set them to empty lists.
+        if len(hot_idx) > 0:
+            hot_idx = hot_idx[-1]
+            self.image_data["hot_pixels"]: (self._x_coords[hot_idx],
+                                           self._y_coords[hot_idx]
+                                           )
+            self.image_data["baseline_file"] = self._baseline_files[hot_idx]
 
-        self.image_data = {"image_array": mean_dark_image,
-                           "hot_pixels": (self._x_coords[hot_idx],
-                                          self._y_coords[hot_idx]
-                                          ),
-                           "dead_pixels": (self._x_coords[dead_idx],
-                                           self._y_coords[dead_idx]
-                                           ),
-                           "noisy_pixels": (self._x_coords[noisy_idx],
-                                            self._y_coords[noisy_idx]
-                                            ),
-                           "baseline_file": self._baseline_files[hot_idx]
-                           }
+            image_path = os.path.join(self.mean_slope_dir, self._mean_dark_image_files[hot_idx])
+            if os.path.isfile(image_path):
+                mean_dark_image = fits.getdata(image_path, 1)
+            else:
+                mean_dark_image = None
+            self.image_data = {"image_array": mean_dark_image}
+
+        else:
+            self.image_data["hot_pixels"]: ([], [])
+            self.image_data["baseline_file"] = ''
+
+        if len(dead_idx) > 0:
+            dead_idx = dead_idx[-1]
+            self.image_data["dead_pixels"]: (self._x_coords[dead_idx],
+                                            self._y_coords[dead_idx]
+                                            )
+        else:
+            self.image_data["dead_pixels"]: ([], [])
+
+        if len(noisy_idx) > 0:
+            noisy_idx = noisy_idx[-1]
+            self.image_data["noisy_pixels"]: (self._x_coords[noisy_idx],
+                                             self._y_coords[noisy_idx]
+                                             )
+        else:
+            self.image_data["noisy_pixels"]: ([], [])
+
+        #If there is no entry for the mean image file in the pixel table, we
+        # may be able to retrieve it from the stats table
+        if mean_dark_image is None:
+            if len(self._stats_mean_dark_image_files) > 0:
+                image_path = os.path.join(self.mean_slope_dir, self._stats_mean_dark_image_files[0])
+            if os.path.isfile(image_path):
+                mean_dark_image = fits.getdata(image_path, 1)
+            else:
+                mean_dark_image = None
+            self.image_data = {"image_array": mean_dark_image}
 
     def get_latest_histogram_data(self):
         """Organize data for histogram plot. In this case, we only need the
@@ -205,12 +234,13 @@ class DarkMonitorPlots():
         """Create arrays from some of the stats database columns that are
         used by multiple plot types
         """
-        apertures = np.array([e.aperture for e in self.db.stats_data])
-        self._amplifiers = np.array([e.amplifier for e in self.db.stats_data])#[self._ap_idx]])
-        self._entry_dates = np.array([e.entry_date for e in self.db.stats_data])#[self._ap_idx]])
-        self._mean = np.array([e.mean for e in self.db.stats_data])#[self._ap_idx]])
-        self._stdev = np.array([e.stdev for e in self.db.stats_data])#[self._ap_idx]])
-        self._obs_mid_time = np.array([e.obs_mid_time for e in self.db.stats_data])#[self._ap_idx]])
+        #apertures = np.array([e.aperture for e in self.db.stats_data])
+        self._amplifiers = np.array([e.amplifier for e in self.db.stats_data])
+        self._entry_dates = np.array([e.entry_date for e in self.db.stats_data])
+        self._mean = np.array([e.mean for e in self.db.stats_data])
+        self._stdev = np.array([e.stdev for e in self.db.stats_data])
+        self._obs_mid_time = np.array([e.obs_mid_time for e in self.db.stats_data])
+        self._stats_mean_dark_image_files = np.array([e.mean_dark_image_file for e in self.db.stats_data])
 
 
 
@@ -563,94 +593,94 @@ class DarkImagePlot():
         show(plot)
 
         """
+        if self.image_data["image_array"] is not None:
 
+            # Get info on image for better display later
+            ny, nx = self.image_data["image_array"].shape
+            img_mn, img_med, img_dev = sigma_clipped_stats(self.image_data["image_array"][4: ny - 4, 4: nx - 4])
 
+            # Create figure
+            self.plot = figure(title=self.detector, tools='pan,box_zoom,reset,wheel_zoom,save')
+            self.plot.x_range.range_padding = self.plot.y_range.range_padding = 0
 
-        # Get info on image for better display later
-        ny, nx = self.image_data["image_array"].shape
-        img_mn, img_med, img_dev = sigma_clipped_stats(self.image_data["image_array"][4: ny - 4, 4: nx - 4])
+            # Create the color mapper that will be used to scale the image
+            mapper = LinearColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
 
-        # Create figure
-        self.plot = figure(title=self.detector, tools='pan,box_zoom,reset,wheel_zoom,save')
-        self.plot.x_range.range_padding = self.plot.y_range.range_padding = 0
+            # Plot image and add color bar
+            imgplot = self.plot.image(image=[self.image_data["image_array"]], x=0, y=0, dw=nx, dh=ny,
+                                      color_mapper=mapper, level="image")
 
-        # Create the color mapper that will be used to scale the image
-        mapper = LinearColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+            color_bar = ColorBar(color_mapper=mapper, width=8, title='DN/sec')
+            self.plot.add_layout(color_bar, 'right')
 
-        # Plot image and add color bar
-        imgplot = self.plot.image(image=[self.image_data["image_array"]], x=0, y=0, dw=nx, dh=ny,
-                                  color_mapper=mapper, level="image")
-
-        color_bar = ColorBar(color_mapper=mapper, width=8, title='DN/sec')
-        self.plot.add_layout(color_bar, 'right')
-
-        # Add hover tool for all pixel values
-        hover_tool = HoverTool(tooltips=[('(x, y):', '($x{int}, $y{int})'),
-                                         ('value:', '@image')
-                                        ],
-                               renderers=[imgplot])
-        self.plot.tools.append(hover_tool)
-
-        # Create lists of hot/dead/noisy pixel values
-        hot_vals = []
-        for x, y in zip(self.image_data["hot_pixels"][0], self.image_data["hot_pixels"][1]):
-            hot_vals.append(self.image_data["image_array"][y, x])
-        dead_vals = []
-        for x, y in zip(self.image_data["dead_pixels"][0], self.image_data["dead_pixels"][1]):
-            dead_vals.append(self.image_data["image_array"][y, x])
-        noisy_vals = []
-        for x, y in zip(self.image_data["noisy_pixels"][0], self.image_data["noisy_pixels"][1]):
-            noisy_vals.append(self.image_data["image_array"][y, x])
-
-        source = ColumnDataSource(data=dict(hot_pixels_x=self.image_data["hot_pixels"][0],
-                                            hot_pixels_y=self.image_data["hot_pixels"][1],
-                                            hot_values=hot_vals,
-                                            dead_pixels_x=self.image_data["dead_pixels"][0],
-                                            dead_pixels_y=self.image_data["dead_pixels"][1],
-                                            dead_values=dead_vals,
-                                            noisy_pixels_x=self.image_data["noisy_pixels"][0],
-                                            noisy_pixels_y=self.image_data["noisy_pixels"][1],
-                                            noisy_values=noisy_vals,
-                                            )
-                                  )
-
-        # Overplot the bad pixel locations
-        hot = self.plot.circle(x='hot_pixels_x', y='hot_pixels_y', source=source, color='red')
-        dead = self.plot.circle(x='dead_pixels_x', y='dead_pixels_y', source=source, color='blue')
-        noisy = self.plot.circle(x='noisy_pixels_x', y='noisy_pixels_y', source=source, color='pink')
-
-        # Create hover tools for the bad pixel types
-        hover_tool_hot = HoverTool(tooltips=[('hot (x, y):', '(@hot_pixels_x, @hot_pixels_y)'),
-                                             ('value:', '@hot_values'),
+            # Add hover tool for all pixel values
+            hover_tool = HoverTool(tooltips=[('(x, y):', '($x{int}, $y{int})'),
+                                             ('value:', '@image')
                                              ],
-                                   renderers=[hot])
+                                   renderers=[imgplot])
+            self.plot.tools.append(hover_tool)
 
-        hover_tool_dead = HoverTool(tooltips=[('dead (x, y):', '(@dead_pixels_x, @dead_pixels_y)'),
-                                              ('value:', '@dead_values'),
-                                              ],
-                                    renderers=[dead])
+            # Create lists of hot/dead/noisy pixel values
+            hot_vals = []
+            for x, y in zip(self.image_data["hot_pixels"][0], self.image_data["hot_pixels"][1]):
+                hot_vals.append(self.image_data["image_array"][y, x])
+            dead_vals = []
+            for x, y in zip(self.image_data["dead_pixels"][0], self.image_data["dead_pixels"][1]):
+                dead_vals.append(self.image_data["image_array"][y, x])
+            noisy_vals = []
+            for x, y in zip(self.image_data["noisy_pixels"][0], self.image_data["noisy_pixels"][1]):
+                noisy_vals.append(self.image_data["image_array"][y, x])
 
-        hover_tool_noisy = HoverTool(tooltips=[('noisy (x, y):', '(@noisy_pixels_x, @noisy_pixels_y)'),
-                                               ('value:', '@noisy_values'),
-                                               ],
-                                     renderers=[noisy])
+            source = ColumnDataSource(data=dict(hot_pixels_x=self.image_data["hot_pixels"][0],
+                                                hot_pixels_y=self.image_data["hot_pixels"][1],
+                                                hot_values=hot_vals,
+                                                dead_pixels_x=self.image_data["dead_pixels"][0],
+                                                dead_pixels_y=self.image_data["dead_pixels"][1],
+                                                dead_values=dead_vals,
+                                                noisy_pixels_x=self.image_data["noisy_pixels"][0],
+                                                noisy_pixels_y=self.image_data["noisy_pixels"][1],
+                                                noisy_values=noisy_vals,
+                                                )
+                                      )
 
-        self.plot.tools.append(hover_tool_hot)
-        self.plot.tools.append(hover_tool_dead)
-        self.plot.tools.append(hover_tool_noisy)
+            # Overplot the bad pixel locations
+            hot = self.plot.circle(x='hot_pixels_x', y='hot_pixels_y', source=source, color='red')
+            dead = self.plot.circle(x='dead_pixels_x', y='dead_pixels_y', source=source, color='blue')
+            noisy = self.plot.circle(x='noisy_pixels_x', y='noisy_pixels_y', source=source, color='pink')
 
-        # Add the legend
-        legend = Legend(items=[("Higher than baseline"   , [hot]),
-                               ("Lower than baseline" , [dead]),
-                               ("Noisier than baseline" , [noisy]),
-                               ],
-                        location="center",
-                        orientation='horizontal')
+            # Create hover tools for the bad pixel types
+            hover_tool_hot = HoverTool(tooltips=[('hot (x, y):', '(@hot_pixels_x, @hot_pixels_y)'),
+                                                 ('value:', '@hot_values'),
+                                                 ],
+                                       renderers=[hot])
 
-        self.plot.add_layout(legend, 'below')
+            hover_tool_dead = HoverTool(tooltips=[('dead (x, y):', '(@dead_pixels_x, @dead_pixels_y)'),
+                                                  ('value:', '@dead_values'),
+                                                  ],
+                                        renderers=[dead])
 
+            hover_tool_noisy = HoverTool(tooltips=[('noisy (x, y):', '(@noisy_pixels_x, @noisy_pixels_y)'),
+                                                   ('value:', '@noisy_values'),
+                                                   ],
+                                         renderers=[noisy])
 
+            self.plot.tools.append(hover_tool_hot)
+            self.plot.tools.append(hover_tool_dead)
+            self.plot.tools.append(hover_tool_noisy)
 
+            # Add the legend
+            legend = Legend(items=[("Higher than baseline"   , [hot]),
+                                   ("Lower than baseline" , [dead]),
+                                   ("Noisier than baseline" , [noisy]),
+                                   ],
+                            location="center",
+                            orientation='horizontal')
+
+            self.plot.add_layout(legend, 'below')
+
+        else:
+            # If no mean image is given, we return an empty figure
+            self.plot = figure(title=self.detector, tools='pan,box_zoom,reset,wheel_zoom,save')
 
 
 
