@@ -446,7 +446,7 @@ class DarkImagePlot():
     """
     def __init__(self, detector, data):
         self.detector = detector
-        self.data = data
+        self.image_data = data
 
         self.create_plot()
 
