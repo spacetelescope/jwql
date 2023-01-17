@@ -356,7 +356,7 @@ def dark_monitor_layout(instrument, plots):
             ]
     elif instrument.lower() == 'miri':
         full_frame_lists = [
-            [plots['NIS_CEN']]
+            [plots['MIRIM_FULL']]
         ]
     elif instrument.lower() == 'nirspec':
         full_frame_lists = [
