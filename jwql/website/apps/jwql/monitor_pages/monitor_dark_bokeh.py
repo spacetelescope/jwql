@@ -22,10 +22,12 @@ Use
 import os
 
 from astropy.io import fits
+from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
-from bokeh.models import ColumnDataSource, DatetimeTickFormatter, HoverTool,  LinearAxis, Range1d
+from bokeh.models import ColorBar, ColumnDataSource, DatetimeTickFormatter, HoverTool,  Legend, LinearAxis, LinearColorMapper, Range1d
 from bokeh.models.tickers import LogTicker
 from bokeh.plotting import figure, show
+from bokeh.transform import linear_cmap
 from datetime import datetime, timedelta
 import numpy as np
 
@@ -82,11 +84,11 @@ class DarkMonitorPlots():
                 self.get_mean_dark_images()
 
                 # Create the fiugure
-                self.images[self.detector] = DarkImagePlot(self.detector, self.image_data)
+                self.dark_images[self.aperture] = DarkImagePlot(self.detector, self.image_data).plot
 
             # Now that we have all the data, create the acutal plots
-            self.hist_plots[aperture] = DarkHistPlot(self.aperture, self.hist_data)
-            self.trending_plots[aperture] = DarkTrendPlot(self.aperture, self.mean_dark, self.stdev_dark, self.obstime)
+            self.hist_plots[aperture] = DarkHistPlot(self.aperture, self.hist_data).plot
+            self.trending_plots[aperture] = DarkTrendPlot(self.aperture, self.mean_dark, self.stdev_dark, self.obstime).plot
 
 
     def get_mean_dark_images(self):
@@ -449,49 +451,177 @@ class DarkImagePlot():
         """
 
         """
-                self.image_data[self.detector] = {"image_array": mean_dark_image,
-                                          "hot_pixels": (self._x_coords[hot_idx],
-                                                         self._y_coords[hot_idx]
-                                                         ),
-                                          "dead_pixels": (self._x_coords[dead_idx],
-                                                          self._y_coords[dead_idx]
-                                                          ),
-                                          "noisy_pixels": (self._x_coords[noisy_idx],
-                                                           self._y_coords[noisy_idx]
-                                                           ),
-                                          "baseline_file": self._baseline_files[most_recent_idx]
-                                          }
+        #working example
+        from bokeh.plotting import show
+        image = np.random.random((2048,2048)) * 0.5 + 0.2
+        ny, nx = image.shape
+
+        hot_pixels_x=[500,500, 500, 500]
+        hot_pixels_y=[500,501, 502, 503]
+        dead_pixels_x=[450,450,450,450]
+        dead_pixels_y=[450,451,452,453]
+        noisy_pixels_x=[400,400,400,400]
+        noisy_pixels_y=[400,401,402,403]
+
+        hot_vals = []
+        for x,y in zip(hot_pixels_x, hot_pixels_y):
+            hot_vals.append(image[y, x])
+        dead_vals = []
+        for x,y in zip(dead_pixels_x, dead_pixels_y):
+            dead_vals.append(image[y, x])
+        noisy_vals = []
+        for x,y in zip(noisy_pixels_x, noisy_pixels_y):
+            noisy_vals.append(image[y, x])
+
+        img_mn, img_med, img_dev = sigma_clipped_stats(image[4:2044,4:2044])
+        mapper = LinearColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
+        plot = figure(title='something', tools='pan,box_zoom,reset,wheel_zoom,save')
+        imgplot = plot.image(image=[image], x=0, y=0, dw=nx, dh=ny,
+                                  color_mapper=mapper, level="image")
+        color_bar = ColorBar(color_mapper=mapper, width=8, title='DN/sec')
+        plot.add_layout(color_bar, 'right')
+
+        hover_tool = HoverTool(tooltips=[('(x, y):', '($x{int}, $y{int})'),
+                                 ('value:', '@image')
+                                ],
+                      renderers=[imgplot])
+        plot.tools.append(hover_tool)
+
+        source = ColumnDataSource(data=dict(hot_pixels_x=[500,500, 500, 500],
+                                            hot_pixels_y=[500,501, 502, 503],
+                                            hot_values=hot_vals,
+                                            dead_pixels_x=[450,450,450,450],
+                                            dead_pixels_y=[450,451,452,453],
+                                            dead_values=dead_vals,
+                                            noisy_pixels_x=[400,400,400,400],
+                                            noisy_pixels_y=[400,401,402,403],
+                                            noisy_values=noisy_vals
+                                            )
+                                  )
+        hot = plot.circle(x='hot_pixels_x', y='hot_pixels_y', source=source, color='red')
+        dead = plot.circle(x='dead_pixels_x', y='dead_pixels_y', source=source, color='blue')
+        noisy = plot.circle(x='noisy_pixels_x', y='noisy_pixels_y', source=source, color='pink')
+
+        hover_tool_hot = HoverTool(tooltips=[
+                                             ('hot (x, y):', '(@hot_pixels_x, @hot_pixels_y)'),
+                                             ('value:', '@hot_values'),
+                                            ],
+                                   renderers=[hot])
+
+        hover_tool_dead = HoverTool(tooltips=[
+                                        ('dead (x, y):', '(@dead_pixels_x, @dead_pixels_y)'),
+                                             ],
+                                    renderers=[dead])
+
+        hover_tool_noisy = HoverTool(tooltips=[('noisy (x, y):', '(@noisy_pixels_x, @noisy_pixels_y)'),
+                                              ],
+                                     renderers=[noisy])
+        plot.tools.append(hover_tool_hot)
+        plot.tools.append(hover_tool_dead)
+        plot.tools.append(hover_tool_noisy)
+
+        legend = Legend(items=[("Hotter than baseline"   , [hot]),
+                               ("Lower than baseline" , [dead]),
+                               ("Noisier than baseline" , [noisy]),
+                              ], location="center", orientation='horizontal')
+
+        plot.add_layout(legend, 'below')
+
+        show(plot)
+
         """
 
 
-        source = ColumnDataSource(data=dict(image=self.image_data[self.detector]["image_array"],
-                                            hot_pixels_x=self.image_data[self.detector]["hot_pixels"][0],
-                                            hot_pixels_y=self.image_data[self.detector]["hot_pixels"][1],
-                                            dead_pixels_x=self.image_data[self.detector]["dead_pixels"][0],
-                                            dead_pixels_y=self.image_data[self.detector]["dead_pixels"][1],
-                                            noisy_pixels_x=self.image_data[self.detector]["noisy_pixels"][0],
-                                            noisy_pixels_y=self.image_data[self.detector]["noisy_pixels"][1],
-                                            baseline_file=self.image_data[self.detector]["baseline_file"]
-                                            )
-                                  )
-        ny, nx = self.image_data[self.detector]["image_array"].shape
 
-        self.plot = figure(tooltips=[("x", "$x"), ("y", "$y"), ("value", "@image")])
+        # Get info on image for better display later
+        ny, nx = self.image_data[self.detector]["image_array"].shape
+        img_mn, img_med, img_dev = sigma_clipped_stats(self.image_data[self.detector]["image_array"][4: ny - 4, 4: nx - 4])
+
+        # Create figure
+        self.plot = figure(title=self.detector, tools='pan,box_zoom,reset,wheel_zoom,save')
         self.plot.x_range.range_padding = self.plot.y_range.range_padding = 0
 
-        need to get scaling right
+        # Create the color mapper that will be used to scale the image
+        mapper = LinearColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
 
-        # must give a vector of image data for image parameter
-        self.plot.image(image=[self.image_data[self.detector][0]], x=0, y=0, dw=nx, dh=ny, palette="Spectral11", level="image")
+        # Plot image and add color bar
+        imgplot = self.plot.image(image=[self.image_data[self.detector]["image_array"]], x=0, y=0, dw=nx, dh=ny,
+                                  color_mapper=mapper, level="image")
+
+        color_bar = ColorBar(color_mapper=mapper, width=8, title='DN/sec')
+        self.plot.add_layout(color_bar, 'right')
+
+        # Add hover tool for all pixel values
+        hover_tool = HoverTool(tooltips=[('(x, y):', '($x{int}, $y{int})'),
+                                         ('value:', '@image')
+                                        ],
+                               renderers=[imgplot])
+        self.plot.tools.append(hover_tool)
+
+        # Create lists of hot/dead/noisy pixel values
+        hot_vals = []
+        for x, y in zip(image_data[self.detector]["hot_pixels"][0], image_data[self.detector]["hot_pixels"][1]):
+            hot_vals.append(self.image_data[self.detector]["image_array"][y, x])
+        dead_vals = []
+        for x, y in zip(self.image_data[self.detector]["dead_pixels"][0], self.image_data[self.detector]["dead_pixels"][1]):
+            dead_vals.append(self.image_data[self.detector]["image_array"][y, x])
+        noisy_vals = []
+        for x, y in zip(self.image_data[self.detector]["noisy_pixels"][0], self.image_data[self.detector]["noisy_pixels"][1]):
+            noisy_vals.append(self.image_data[self.detector]["image_array"][y, x])
+
+        source = ColumnDataSource(data=dict(hot_pixels_x=self.image_data[self.detector]["hot_pixels"][0],
+                                            hot_pixels_y=self.image_data[self.detector]["hot_pixels"][1],
+                                            hot_values=hot_vals,
+                                            dead_pixels_x=self.image_data[self.detector]["dead_pixels"][0],
+                                            dead_pixels_y=self.image_data[self.detector]["dead_pixels"][1],
+                                            dead_values=dead_vals,
+                                            noisy_pixels_x=self.image_data[self.detector]["noisy_pixels"][0],
+                                            noisy_pixels_y=self.image_data[self.detector]["noisy_pixels"][1],
+                                            noisy_values=noisy_vals,
+                                            )
+                                  )
 
         # Overplot the bad pixel locations
-        self.plot.scatter(x='hot_pixels_x', y='hot_pixels_y', source=source, color='red', legend_label='')
-        self.plot.scatter(x='dead_pixels_x', y='dead_pixels_y', source=source, color='blue', legend_label='')
-        self.plot.scatter(x='noisy_pixels_x', y='noisy_pixels_y', source=source, color='pink', legend_label='')
+        hot = self.plot.circle(x='hot_pixels_x', y='hot_pixels_y', source=source, color='red')
+        dead = self.plot.circle(x='dead_pixels_x', y='dead_pixels_y', source=source, color='blue')
+        noisy = self.plot.circle(x='noisy_pixels_x', y='noisy_pixels_y', source=source, color='pink')
 
-        for
+        # Create hover tools for the bad pixel types
+        hover_tool_hot = HoverTool(tooltips=[('hot (x, y):', '(@hot_pixels_x, @hot_pixels_y)'),
+                                             ('value:', '@hot_values'),
+                                             ],
+                                   renderers=[hot])
 
-        self.plot.scatter()
+        hover_tool_dead = HoverTool(tooltips=[('dead (x, y):', '(@dead_pixels_x, @dead_pixels_y)'),
+                                              ('value:', '@dead_values'),
+                                              ],
+                                    renderers=[dead])
+
+        hover_tool_noisy = HoverTool(tooltips=[('noisy (x, y):', '(@noisy_pixels_x, @noisy_pixels_y)'),
+                                               ('value:', '@noisy_values'),
+                                               ],
+                                     renderers=[noisy])
+
+        self.plot.tools.append(hover_tool_hot)
+        self.plot.tools.append(hover_tool_dead)
+        self.plot.tools.append(hover_tool_noisy)
+
+        # Add the legend
+        legend = Legend(items=[("Higher than baseline"   , [hot]),
+                               ("Lower than baseline" , [dead]),
+                               ("Noisier than baseline" , [noisy]),
+                               ],
+                        location="center",
+                        orientation='horizontal')
+
+        self.plot.add_layout(legend, 'below')
+
+
+
+
+
+
+
 
 
 

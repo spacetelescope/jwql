@@ -369,14 +369,18 @@ def dark_monitor_layout(instrument, plots):
     # Next create lists of subarrays. Keep the subarrays in the order in which
     # they exist in pyiaf, in order to make the page a little more readable.
     # The dark monitor also populates aperture names using pysiaf.
+    subarrs = [p for p in plots.keys() if p not in FULL_FRAME_APERTURES[instrument.upper()]]
     siaf = pysiaf.Siaf(instrument.lower())
-    all_apertures = np.array(list(n.apernames))
+    all_apertures = np.array(list(siaf.apernames))
 
     indexes = []
-    for key in plots:
-        indexes.append(np.where(all_apertures == key)[0])
+    for key in subarrs:
+        subarr_plot_idx = np.where(all_apertures == key)[0]
+        if len(subarr_plot_idx) > 0:
+            indexes.append(subarr_plot_idx)
+    need to fix indexes and sorting
     to_sort = np.argsort(indexes)
-    sorted_keys = np.array(list(plots.keys()))[to_sort]
+    sorted_keys = np.array(subarrs)[to_sort]
 
     # Place 4 subarray plots in each row. Generate a nested
     # list where each sublist contains the plots to place in
@@ -421,7 +425,7 @@ def dark_monitor_tabs(instrument):
     # Define the layout for each plot type
     histogram_layout = dark_monitor_layout(instrument, plots.hist_plots)
     trending_layout = dark_monitor_layout(instrument, plots.trending_plots)
-    image_layout = dark_monitor_layout(instrument, plots.images)
+    image_layout = dark_monitor_layout(instrument, plots.dark_images)
 
     # Create a tab for each type of plot
     histogram_tab = Panel(child=histogram_layout, title="Histogram")
