@@ -388,7 +388,7 @@ class DarkTrendPlot():
 
         # Plot the "main" amp data along with error bars
         self.plot.scatter(x='time', y='mean_dark', fill_color="navy", alpha=0.75, source=source, legend_label='Full Aperture')
-        self.plot.add_layout(Whisker(source=source, base="mean_dark", upper="error_upper", lower="error_lower", color='navy'))
+        self.plot.add_layout(Whisker(source=source, base="mean_dark", upper="error_upper", lower="error_lower", line_color='navy'))
         hover_tool = HoverTool(tooltips=[('Dark rate:', '@mean_dark'),
                                          ('Date:', '@time{%d %b %Y}')
                                         ])
