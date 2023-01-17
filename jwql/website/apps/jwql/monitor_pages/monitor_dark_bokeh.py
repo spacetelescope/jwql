@@ -564,7 +564,7 @@ class DarkImagePlot():
 
         # Create lists of hot/dead/noisy pixel values
         hot_vals = []
-        for x, y in zip(image_data["hot_pixels"][0], image_data["hot_pixels"][1]):
+        for x, y in zip(self.image_data["hot_pixels"][0], self.image_data["hot_pixels"][1]):
             hot_vals.append(self.image_data["image_array"][y, x])
         dead_vals = []
         for x, y in zip(self.image_data["dead_pixels"][0], self.image_data["dead_pixels"][1]):
