@@ -933,7 +933,7 @@ class Dark():
 
         # Add full image coords to the list of amp_boundaries, so that full
         # frame stats are also calculated.
-        if 'FULL' in self.aperture:
+        if self.aperture in FULL_FRAME_APERTURES[self.instrument.upper()]:
             maxx = 0
             maxy = 0
             for amp in amps:
