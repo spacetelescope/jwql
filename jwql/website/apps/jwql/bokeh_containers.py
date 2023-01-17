@@ -424,7 +424,7 @@ def dark_monitor_tabs(instrument):
     # Define the layout for each plot type
     histogram_layout = dark_monitor_layout(instrument, plots.hist_plots)
     trending_layout = dark_monitor_layout(instrument, plots.trending_plots)
-    image_layout = dark_monitor_layout(instrument, plots.dark_images)
+    image_layout = dark_monitor_layout(instrument, plots.dark_image_data)
 
     # Create a tab for each type of plot
     histogram_tab = Panel(child=histogram_layout, title="Histogram")

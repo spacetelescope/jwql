@@ -52,8 +52,9 @@ class DarkMonitorPlots():
         self.mean_slope_dir = os.path.join(OUTPUTS_DIR, 'dark_monitor', 'mean_slope_images')
         self.instrument = instrument
         self.hist_plots = {}
+        self.trending_d
         self.trending_plots = {}
-        self.dark_images = {}
+        self.dark_image_data = {}
 
         # Get the data from the database
         self.db = DarkMonitorData(self.instrument)
@@ -82,7 +83,7 @@ class DarkMonitorPlots():
                 self.get_mean_dark_images()
 
                 # Create the mean dark image fiugure
-                self.dark_images[self.aperture] = DarkImagePlot(self.detector, self.image_data).plot
+                self.dark_image_data[self.aperture] = DarkImagePlot(self.detector, self.image_data).plot
 
             else:
                 # For apertures that are not full frame, we retrieve only the histogram
@@ -124,18 +125,18 @@ class DarkMonitorPlots():
         image_path = os.path.join(self.mean_slope_dir, self._mean_dark_image_files[hot_idx])
         mean_dark_image = fits.getdata(image_path, 1)
 
-        self.image_data[self.detector] = {"image_array": mean_dark_image,
-                                          "hot_pixels": (self._x_coords[hot_idx],
-                                                         self._y_coords[hot_idx]
-                                                         ),
-                                          "dead_pixels": (self._x_coords[dead_idx],
-                                                          self._y_coords[dead_idx]
-                                                          ),
-                                          "noisy_pixels": (self._x_coords[noisy_idx],
-                                                           self._y_coords[noisy_idx]
-                                                           ),
-                                          "baseline_file": self._baseline_files[hot_idx]
-                                          }
+        self.image_data = {"image_array": mean_dark_image,
+                           "hot_pixels": (self._x_coords[hot_idx],
+                                          self._y_coords[hot_idx]
+                                          ),
+                           "dead_pixels": (self._x_coords[dead_idx],
+                                           self._y_coords[dead_idx]
+                                           ),
+                           "noisy_pixels": (self._x_coords[noisy_idx],
+                                            self._y_coords[noisy_idx]
+                                            ),
+                           "baseline_file": self._baseline_files[hot_idx]
+                           }
 
     def get_latest_histogram_data(self):
         """Organize data for histogram plot. In this case, we only need the
@@ -149,7 +150,6 @@ class DarkMonitorPlots():
         been filtered such that all entries are for the aperture of interest.
 
         """
-
         # Find the index of the most recent entry
         #self._aperture_entries = np.where((self._apertures == aperture))[0]
         latest_date = np.max(self._entry_dates) #[self._aperture_entries])
@@ -539,8 +539,8 @@ class DarkImagePlot():
 
 
         # Get info on image for better display later
-        ny, nx = self.image_data[self.detector]["image_array"].shape
-        img_mn, img_med, img_dev = sigma_clipped_stats(self.image_data[self.detector]["image_array"][4: ny - 4, 4: nx - 4])
+        ny, nx = self.image_data["image_array"].shape
+        img_mn, img_med, img_dev = sigma_clipped_stats(self.image_data["image_array"][4: ny - 4, 4: nx - 4])
 
         # Create figure
         self.plot = figure(title=self.detector, tools='pan,box_zoom,reset,wheel_zoom,save')
@@ -550,7 +550,7 @@ class DarkImagePlot():
         mapper = LinearColorMapper(palette='Viridis256', low=(img_med-5*img_dev) ,high=(img_med+5*img_dev))
 
         # Plot image and add color bar
-        imgplot = self.plot.image(image=[self.image_data[self.detector]["image_array"]], x=0, y=0, dw=nx, dh=ny,
+        imgplot = self.plot.image(image=[self.image_data["image_array"]], x=0, y=0, dw=nx, dh=ny,
                                   color_mapper=mapper, level="image")
 
         color_bar = ColorBar(color_mapper=mapper, width=8, title='DN/sec')
@@ -565,23 +565,23 @@ class DarkImagePlot():
 
         # Create lists of hot/dead/noisy pixel values
         hot_vals = []
-        for x, y in zip(image_data[self.detector]["hot_pixels"][0], image_data[self.detector]["hot_pixels"][1]):
-            hot_vals.append(self.image_data[self.detector]["image_array"][y, x])
+        for x, y in zip(image_data["hot_pixels"][0], image_data["hot_pixels"][1]):
+            hot_vals.append(self.image_data["image_array"][y, x])
         dead_vals = []
-        for x, y in zip(self.image_data[self.detector]["dead_pixels"][0], self.image_data[self.detector]["dead_pixels"][1]):
-            dead_vals.append(self.image_data[self.detector]["image_array"][y, x])
+        for x, y in zip(self.image_data["dead_pixels"][0], self.image_data["dead_pixels"][1]):
+            dead_vals.append(self.image_data["image_array"][y, x])
         noisy_vals = []
-        for x, y in zip(self.image_data[self.detector]["noisy_pixels"][0], self.image_data[self.detector]["noisy_pixels"][1]):
-            noisy_vals.append(self.image_data[self.detector]["image_array"][y, x])
+        for x, y in zip(self.image_data["noisy_pixels"][0], self.image_data["noisy_pixels"][1]):
+            noisy_vals.append(self.image_data["image_array"][y, x])
 
-        source = ColumnDataSource(data=dict(hot_pixels_x=self.image_data[self.detector]["hot_pixels"][0],
-                                            hot_pixels_y=self.image_data[self.detector]["hot_pixels"][1],
+        source = ColumnDataSource(data=dict(hot_pixels_x=self.image_data["hot_pixels"][0],
+                                            hot_pixels_y=self.image_data["hot_pixels"][1],
                                             hot_values=hot_vals,
-                                            dead_pixels_x=self.image_data[self.detector]["dead_pixels"][0],
-                                            dead_pixels_y=self.image_data[self.detector]["dead_pixels"][1],
+                                            dead_pixels_x=self.image_data["dead_pixels"][0],
+                                            dead_pixels_y=self.image_data["dead_pixels"][1],
                                             dead_values=dead_vals,
-                                            noisy_pixels_x=self.image_data[self.detector]["noisy_pixels"][0],
-                                            noisy_pixels_y=self.image_data[self.detector]["noisy_pixels"][1],
+                                            noisy_pixels_x=self.image_data["noisy_pixels"][0],
+                                            noisy_pixels_y=self.image_data["noisy_pixels"][1],
                                             noisy_values=noisy_vals,
                                             )
                                   )
