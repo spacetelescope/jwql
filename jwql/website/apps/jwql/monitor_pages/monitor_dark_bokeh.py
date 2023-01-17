@@ -384,7 +384,7 @@ class DarkTrendPlot():
         # histogram for amp 1, but since the dark_monitor output at the moment is
         # wrong and the histogram for the entire detector is being saved in the entries
         # for each amp, we can get away with using use_amp=1 at the moment.
-        if '5' in self.data:
+        if '5' in self.mean_dark:
             use_amp = '5'
         else:
             use_amp = '1'

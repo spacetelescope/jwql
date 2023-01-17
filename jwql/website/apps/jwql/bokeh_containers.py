@@ -424,15 +424,15 @@ def dark_monitor_tabs(instrument):
     # Define the layout for each plot type
     histogram_layout = dark_monitor_layout(instrument, plots.hist_plots)
     trending_layout = dark_monitor_layout(instrument, plots.trending_plots)
-    image_layout = dark_monitor_layout(instrument, plots.dark_image_data)
+    #image_layout = dark_monitor_layout(instrument, plots.dark_image_data)
 
     # Create a tab for each type of plot
     histogram_tab = Panel(child=histogram_layout, title="Histogram")
     line_tab = Panel(child=trending_layout, title="Trending")
-    image_tab = Panel(child=image_layout, title="Mean Dark Image")
+    #image_tab = Panel(child=image_layout, title="Mean Dark Image")
 
     # Build tabs
-    tabs = Tabs(tabs=[histogram_tab, line_tab, image_tab])
+    tabs = Tabs(tabs=[histogram_tab, line_tab])#, image_tab])
 
     # Return tab HTML and JavaScript to web app
     script, div = components(tabs)
