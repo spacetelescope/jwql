@@ -165,8 +165,8 @@ class DarkMonitorPlots():
         # values are tuples of (x, y) lists
         self.hist_data = {}
         for idx in most_recent_idx:
-            self.hist_data[db.stats_data[idx].amplifier] = (db.stats_data[idx].hist_dark_values,
-                                                            db.stats_data[idx].hist_amplitudes)
+            self.hist_data[self.db.stats_data[idx].amplifier] = (self.db.stats_data[idx].hist_dark_values,
+                                                                 self.db.stats_data[idx].hist_amplitudes)
 
     def get_trending_data(self):
         """Organize data for the trending plot. Here we need all the data for
