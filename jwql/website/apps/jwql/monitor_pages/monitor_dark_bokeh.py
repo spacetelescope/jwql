@@ -136,11 +136,11 @@ class DarkMonitorPlots():
                 mean_dark_image = fits.getdata(image_path, 1)
             else:
                 mean_dark_image = None
-            self.image_data = {"image_array": mean_dark_image}
-
         else:
             self.image_data["hot_pixels"]: ([], [])
             self.image_data["baseline_file"] = ''
+            mean_dark_image = None
+        self.image_data = {"image_array": mean_dark_image}
 
         if len(dead_idx) > 0:
             dead_idx = dead_idx[-1]
