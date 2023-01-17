@@ -378,7 +378,7 @@ def dark_monitor_layout(instrument, plots):
     for key in subarrs:
         subarr_plot_idx = np.where(all_apertures == key)[0]
         if len(subarr_plot_idx) > 0:
-            indexes.append(subarr_plot_idx)
+            indexes.append(subarr_plot_idx[0])
     to_sort = np.argsort(indexes)
     sorted_keys = np.array(subarrs)[to_sort]
 
@@ -391,7 +391,7 @@ def dark_monitor_layout(instrument, plots):
     subarr_lists = []
     for idx in first_col:
         row_keys = sorted_keys[idx: idx + subarr_plots_per_row]
-        row_list = list(plots[row_keys])
+        row_list = [plots[key] for key in row_keys]
         subarr_lists.append(row_list)
 
     # Combine full frame and subarray aperture lists

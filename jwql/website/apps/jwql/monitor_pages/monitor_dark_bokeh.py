@@ -337,7 +337,8 @@ class DarkHistPlot():
         hover_tool = HoverTool(tooltips=[('Dark rate:', '@dark_rate'),
                                          ('Num Pix:', '@num_pix'),
                                          ('CDF:', '@cdf')
-                                        ])
+                                        ],
+                               mode='vline')
         self.plot.tools.append(hover_tool)
 
         # If there are multiple amps to be plotted, do that here
