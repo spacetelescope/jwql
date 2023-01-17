@@ -113,6 +113,8 @@ class DarkMonitorPlots():
         detector/mean dark file/obstimes/basefile, one each for bad pixel
         types 'hot', 'dead', 'noisy'. Make sure to get all three.
         """
+        self.image_data = {}
+
         # Use the most recent entry for each of the three bad pixel types
         hot_idx = np.where(self._types == 'hot')[0]
         dead_idx = np.where(self._types == 'dead')[0]
