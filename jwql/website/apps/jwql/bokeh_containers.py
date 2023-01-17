@@ -378,7 +378,6 @@ def dark_monitor_layout(instrument, plots):
         subarr_plot_idx = np.where(all_apertures == key)[0]
         if len(subarr_plot_idx) > 0:
             indexes.append(subarr_plot_idx)
-    need to fix indexes and sorting
     to_sort = np.argsort(indexes)
     sorted_keys = np.array(subarrs)[to_sort]
 
