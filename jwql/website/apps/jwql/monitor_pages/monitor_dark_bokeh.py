@@ -82,7 +82,7 @@ class DarkMonitorPlots():
                 self.get_mean_dark_images()
 
                 # Create the mean dark image fiugure
-                self.dark_image_data[self.aperture] = DarkImagePlot(self.detector, self.image_data).plot
+                self.dark_image_data[self.aperture] = DarkImagePlot(self.db.detector, self.image_data).plot
 
             else:
                 # For apertures that are not full frame, we retrieve only the histogram
@@ -759,9 +759,9 @@ class DarkMonitorData():
             .all()
 
         if get_pixtable_for_detector:
-            detector = aperture.split('_')[0].upper()
+            self.detector = aperture.split('_')[0].upper()
             self.pixel_data = session.query(self.pixel_table) \
-                .filter(self.pixel_table.detector == detector) \
+                .filter(self.pixel_table.detector == self.detector) \
                 .all()
 
         session.close()
