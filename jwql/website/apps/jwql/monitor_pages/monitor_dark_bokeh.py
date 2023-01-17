@@ -126,9 +126,9 @@ class DarkMonitorPlots():
         # entry for the bad pixels, then set them to empty lists.
         if len(hot_idx) > 0:
             hot_idx = hot_idx[-1]
-            self.image_data["hot_pixels"]: (self._x_coords[hot_idx],
-                                           self._y_coords[hot_idx]
-                                           )
+            self.image_data["hot_pixels"] = (self._x_coords[hot_idx],
+                                             self._y_coords[hot_idx]
+                                             )
             self.image_data["baseline_file"] = self._baseline_files[hot_idx]
 
             image_path = os.path.join(self.mean_slope_dir, self._mean_dark_image_files[hot_idx])
@@ -137,26 +137,26 @@ class DarkMonitorPlots():
             else:
                 mean_dark_image = None
         else:
-            self.image_data["hot_pixels"]: ([], [])
+            self.image_data["hot_pixels"] = ([], [])
             self.image_data["baseline_file"] = ''
             mean_dark_image = None
-        self.image_data = {"image_array": mean_dark_image}
+        self.image_data["image_array"] = mean_dark_image
 
         if len(dead_idx) > 0:
             dead_idx = dead_idx[-1]
-            self.image_data["dead_pixels"]: (self._x_coords[dead_idx],
-                                            self._y_coords[dead_idx]
-                                            )
+            self.image_data["dead_pixels"] = (self._x_coords[dead_idx],
+                                             self._y_coords[dead_idx]
+                                             )
         else:
-            self.image_data["dead_pixels"]: ([], [])
+            self.image_data["dead_pixels"] = ([], [])
 
         if len(noisy_idx) > 0:
             noisy_idx = noisy_idx[-1]
-            self.image_data["noisy_pixels"]: (self._x_coords[noisy_idx],
-                                             self._y_coords[noisy_idx]
-                                             )
+            self.image_data["noisy_pixels"] = (self._x_coords[noisy_idx],
+                                               self._y_coords[noisy_idx]
+                                               )
         else:
-            self.image_data["noisy_pixels"]: ([], [])
+            self.image_data["noisy_pixels"] = ([], [])
 
         #If there is no entry for the mean image file in the pixel table, we
         # may be able to retrieve it from the stats table
