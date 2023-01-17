@@ -52,7 +52,6 @@ class DarkMonitorPlots():
         self.mean_slope_dir = os.path.join(OUTPUTS_DIR, 'dark_monitor', 'mean_slope_images')
         self.instrument = instrument
         self.hist_plots = {}
-        self.trending_d
         self.trending_plots = {}
         self.dark_image_data = {}
 
