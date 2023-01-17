@@ -134,7 +134,7 @@ class DarkMonitorPlots():
                                           "noisy_pixels": (self._x_coords[noisy_idx],
                                                            self._y_coords[noisy_idx]
                                                            ),
-                                          "baseline_file": self._baseline_files[most_recent_idx]
+                                          "baseline_file": self._baseline_files[hot_idx]
                                           }
 
     def get_latest_histogram_data(self):
