@@ -114,9 +114,9 @@ class DarkMonitorPlots():
         types 'hot', 'dead', 'noisy'. Make sure to get all three.
         """
         # Use the most recent entry for each of the three bad pixel types
-        hot_idx = np.where(self._types == 'hot')[0][-1]
-        dead_idx = np.where(self._types == 'dead')[0][-1]
-        noisy_idx = np.where(self._types == 'noisy')[0][-1]
+        hot_idx = np.where(self._types == 'hot')[0]
+        dead_idx = np.where(self._types == 'dead')[0]
+        noisy_idx = np.where(self._types == 'noisy')[0]
 
         # Store the bad pixel data in a dictionary where the keys are the
         # type of bad pixel ('hot_pixel', 'dead_pixel', or 'noisy_pixel'),
