@@ -24,7 +24,7 @@ import os
 from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 from astropy.time import Time
-from bokeh.models import ColorBar, ColumnDataSource, DatetimeTickFormatter, HoverTool,  Legend, LinearAxis, LinearColorMapper, Range1d
+from bokeh.models import ColorBar, ColumnDataSource, DatetimeTickFormatter, HoverTool,  Legend, LinearAxis, LinearColorMapper, Range1d, Whisker
 from bokeh.models.tickers import LogTicker
 from bokeh.plotting import figure, show
 from bokeh.transform import linear_cmap
@@ -375,16 +375,22 @@ class DarkTrendPlot():
             use_amp = '1'
             per_amp = False
 
+        error_lower = self.mean_dark[use_amp] - self.stdev_dark[use_amp]
+        error_upper = self.mean_dark[use_amp] + self.stdev_dark[use_amp]
+
         # Create a ColumnDataSource for the main amp to use
         source = ColumnDataSource(data=dict(mean_dark=self.mean_dark[use_amp],
                                             stdev_dark=self.stdev_dark[use_amp],
+                                            error_lower=error_lower,
+                                            error_upper=error_upper,
                                             time=self.obstime[use_amp]
                                             )
                                   )
         self.plot = figure(title=self.aperture, tools='pan,box_zoom,reset,wheel_zoom,save', background_fill_color="#fafafa")
 
-        # Plot the "main" amp data
+        # Plot the "main" amp data along with error bars
         self.plot.scatter(x='time', y='mean_dark', fill_color="navy", alpha=0.75, source=source, legend_label='Full Aperture')
+        self.plot.add_layout(Whisker(source=source, base="mean_dark", upper="error_upper", lower="error_lower", color='navy'))
         hover_tool = HoverTool(tooltips=[('Dark rate:', '@mean_dark'),
                                          ('Date:', '@time{%d %b %Y}')
                                         ])

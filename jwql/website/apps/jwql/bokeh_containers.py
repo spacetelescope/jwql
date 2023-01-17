@@ -403,7 +403,6 @@ def dark_monitor_layout(instrument, plots):
     return plot_layout
 
 
-
 def dark_monitor_tabs(instrument):
     """Creates the various tabs of the dark monitor results page.
 
