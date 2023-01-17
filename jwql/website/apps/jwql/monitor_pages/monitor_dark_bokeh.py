@@ -167,7 +167,7 @@ class DarkMonitorPlots():
                 mean_dark_image = fits.getdata(image_path, 1)
             else:
                 mean_dark_image = None
-            self.image_data = {"image_array": mean_dark_image}
+            self.image_data["image_array"] = mean_dark_image
 
     def get_latest_histogram_data(self):
         """Organize data for histogram plot. In this case, we only need the
